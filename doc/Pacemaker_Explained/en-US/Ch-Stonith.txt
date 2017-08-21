@@ -148,12 +148,12 @@ indexterm:[Fencing,Property,pcmk_delay_max]
 |pcmk_delay_base
 |time
 |0s
-|Enable a static delay before executing stonith actions. This can e.g. be used
-in two-node clusters to ensure that the nodes don't fence each other if
-separate fencing-resources and different delay-values are being used. The
-node that is fenced with the shorter delay is gonna loose in a fencing-race.
-The overall delay introduced by pacemaker is derived from a random delay value
-adding this static delay so that the sum is kept below the maximum delay.
+|Enable a static delay before executing stonith actions. This can be used
+ e.g. in two-node clusters to ensure that the nodes don't fence each other,
+ by having separate fencing resources with different values. The node that is
+ fenced with the shorter delay will lose a fencing race. The overall delay
+ introduced by pacemaker is derived from this value plus a random delay such
+ that the sum is kept below the maximum delay.
 
 indexterm:[pcmk_delay_base,Fencing]
 indexterm:[Fencing,Property,pcmk_delay_base]

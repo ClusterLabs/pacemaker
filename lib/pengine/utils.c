@@ -1560,7 +1560,7 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
             sort_return(0, "bad magic b");
         }
         /* try to determine the relative age of the operation...
-         * some pending operations (ie. a start) may have been superseded
+         * some pending operations (e.g. a start) may have been superseded
          *   by a subsequent stop
          *
          * [a|b]_id == -1 means it's a shutdown operation and _always_ comes last

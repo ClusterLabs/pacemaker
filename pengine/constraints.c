@@ -2209,8 +2209,7 @@ unpack_colocation_set(xmlNode * set, int score, pe_working_set_t * data_set)
     } else {
         /* Anti-colocating with every prior resource is
          * the only way to ensure the intuitive result
-         * (ie. that no-one in the set can run with anyone
-         * else in the set)
+         * (i.e. that no one in the set can run with anyone else in the set)
          */
 
         for (xml_rsc = __xml_first_child(set); xml_rsc != NULL; xml_rsc = __xml_next_element(xml_rsc)) {

@@ -1109,8 +1109,9 @@ handle_migration_actions(resource_t * rsc, node_t *current, node_t *chosen, pe_w
             /* migrate_to takes place on the source node, but can 
              * have an effect on the target node depending on how
              * the agent is written. Because of this, we have to maintain
-             * a record that the migrate_to occurred incase the source node 
-             * loses membership while the migrate_to action is still in-flight. */
+             * a record that the migrate_to occurred, in case the source node
+             * loses membership while the migrate_to action is still in-flight.
+             */
             add_hash_param(migrate_to->meta, XML_OP_ATTR_PENDING, "true");
         }
     }

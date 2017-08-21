@@ -307,7 +307,7 @@ start_child(pcmk_child_t * child)
             opts_vgrind[3] = NULL;
             opts_vgrind[4] = NULL;
         }
-        opts_default[0] = strdup(child->command);;
+        opts_default[0] = strdup(child->command);
 
         if(gid) {
             if(stack == pcmk_cluster_corosync) {

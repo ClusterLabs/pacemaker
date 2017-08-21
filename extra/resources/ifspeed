@@ -1,8 +1,8 @@
 #!/bin/bash
 #
 # OCF resource agent which monitors state of network interface and records it
-# as a value in CIB based on summ of speeds of its active (up, link detected,
-# not blocked) underlying interfaces.
+# as a node attribute in the CIB based on the sum of speeds of its active (up,
+# link detected, not blocked) underlying interfaces.
 #
 # Copyright (c) 2011 Vladislav Bogdanov <bubble@hoster-ok.com>
 # Partially based on 'ping' RA by Andrew Beekhof
@@ -61,8 +61,8 @@ in "forwarding" state.
 For balancing bonds this RA summs speeds of underlying "up" slave interfaces
 (and applies coefficient 0.8 to result).
 
-For non-balancing bonds ('active-backup' and probably 'brodcast') only speed of
-now active slave is used. 
+For non-balancing bonds ('active-backup' and probably 'broadcast'), only the
+speed of the currently active slave is used. 
 </longdesc>
 <shortdesc lang="en">Network interface speed monitor</shortdesc>
 

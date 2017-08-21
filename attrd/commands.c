@@ -1117,7 +1117,9 @@ write_attribute(attribute_t *a)
     a->unknown_peer_uuids = FALSE;
 
     /* Make the table for the attribute trap */
-    alert_attribute_value = g_hash_table_new_full(crm_strcase_hash, crm_strcase_equal, NULL, free_attribute_value);;
+    alert_attribute_value = g_hash_table_new_full(crm_strcase_hash,
+                                                  crm_strcase_equal, NULL,
+                                                  free_attribute_value);
 
     /* Iterate over each peer value of this attribute */
     g_hash_table_iter_init(&iter, a->values);

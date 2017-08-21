@@ -393,7 +393,7 @@ pe_test_attr_expression_full(xmlNode * expr, GHashTable * hash, crm_time_t * now
         }
 
     } else if (value == NULL || h_val == NULL) {
-        /* the comparision is meaningless from this point on */
+        // The comparison is meaningless from this point on
         accept = FALSE;
 
     } else if (safe_str_eq(op, "lt")) {

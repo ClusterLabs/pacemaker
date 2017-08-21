@@ -97,7 +97,9 @@ typedef struct pe_working_set_s {
 
     GHashTable *config_hash;
     GHashTable *tickets;
-    GHashTable *singletons; /* Actions for which there can be only one - ie. fence nodeX */
+
+    // Actions for which there can be only one (e.g. fence nodeX)
+    GHashTable *singletons;
 
     GListPtr nodes;
     GListPtr resources;

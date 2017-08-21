@@ -60,7 +60,7 @@ remote_proxy_ack_shutdown(lrmd_t *lrmd)
 }
 
 /*!
- * \brief We're not gonna shutdown as response to
+ * \brief We're not going to shutdown as response to
  *        a remote proxy shutdown request.
  *
  * \param[in] lrmd  Connection to proxy
