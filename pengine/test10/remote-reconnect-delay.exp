@@ -1,0 +1,49 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="1"  transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <rsc_op id="23" operation="stop" operation_key="Fencing_stop_0" on_node="rhel7-2" on_node_uuid="2">
+        <primitive id="Fencing" class="stonith" type="fence_xvm"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="rhel7-2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="60000"  multicast_address="239.255.100.100" pcmk_arg_map="domain:uname" pcmk_host_list="rhel7-1 remote-rhel7-1 rhel7-2 remote-rhel7-2 remote-rhel7-3 rhel7-4 remote-rhel7-4 rhel7-5 remote-rhel7-5" pcmk_host_map="remote-rhel7-1:rhel7-1;remote-rhel7-2:rhel7-2;remote-rhel7-3:rhel7-3;remote-rhel7-4:rhel7-4;remote-rhel7-5:rhel7-5;"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <rsc_op id="22" operation="start" operation_key="Fencing_start_0" on_node="rhel7-2" on_node_uuid="2">
+        <primitive id="Fencing" class="stonith" type="fence_xvm"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_node="rhel7-2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="60000"  multicast_address="239.255.100.100" pcmk_arg_map="domain:uname" pcmk_host_list="rhel7-1 remote-rhel7-1 rhel7-2 remote-rhel7-2 remote-rhel7-3 rhel7-4 remote-rhel7-4 rhel7-5 remote-rhel7-5" pcmk_host_map="remote-rhel7-1:rhel7-1;remote-rhel7-2:rhel7-2;remote-rhel7-3:rhel7-3;remote-rhel7-4:rhel7-4;remote-rhel7-5:rhel7-5;"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="23" operation="stop" operation_key="Fencing_stop_0" on_node="rhel7-2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <rsc_op id="8" operation="monitor" operation_key="Fencing_monitor_120000" on_node="rhel7-2" on_node_uuid="2">
+        <primitive id="Fencing" class="stonith" type="fence_xvm"/>
+        <attributes CRM_meta_interval="120000" CRM_meta_name="monitor" CRM_meta_on_node="rhel7-2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="120000"  multicast_address="239.255.100.100" pcmk_arg_map="domain:uname" pcmk_host_list="rhel7-1 remote-rhel7-1 rhel7-2 remote-rhel7-2 remote-rhel7-3 rhel7-4 remote-rhel7-4 rhel7-5 remote-rhel7-5" pcmk_host_map="remote-rhel7-1:rhel7-1;remote-rhel7-2:rhel7-2;remote-rhel7-3:rhel7-3;remote-rhel7-4:rhel7-4;remote-rhel7-5:rhel7-5;"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="22" operation="start" operation_key="Fencing_start_0" on_node="rhel7-2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <pseudo_event id="21" operation="all_stopped" operation_key="all_stopped">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="23" operation="stop" operation_key="Fencing_stop_0" on_node="rhel7-2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+</transition_graph>
