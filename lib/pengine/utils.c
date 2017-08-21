@@ -1767,30 +1767,18 @@ ticket_new(const char *ticket_id, pe_working_set_t * data_set)
 static void
 filter_parameters(xmlNode * param_set, const char *param_string, bool need_present)
 {
-    int len = 0;
-    char *name = NULL;
-    char *match = NULL;
-
-    if (param_set == NULL) {
-        return;
-    }
-
     if (param_set && param_string) {
         xmlAttrPtr xIter = param_set->properties;
 
         while (xIter) {
             const char *prop_name = (const char *)xIter->name;
+            char *name = crm_strdup_printf(" %s ", prop_name);
+            char *match = strstr(param_string, name);
 
+            free(name);
+
+            //  Do now, because current entry might get removed below
             xIter = xIter->next;
-            name = NULL;
-            len = strlen(prop_name) + 3;
-
-            name = malloc(len);
-            if(name) {
-                sprintf(name, " %s ", prop_name);
-                name[len - 1] = 0;
-                match = strstr(param_string, name);
-            }
 
             if (need_present && match == NULL) {
                 crm_trace("%s not found in %s", prop_name, param_string);
@@ -1800,7 +1788,6 @@ filter_parameters(xmlNode * param_set, const char *param_string, bool need_prese
                 crm_trace("%s found in %s", prop_name, param_string);
                 xml_remove_prop(param_set, prop_name);
             }
-            free(name);
         }
     }
 }
