@@ -202,16 +202,12 @@ validate() {
             ocf_log err "Empty iface and ip parameters. Please specify either an interface name or valid ip address."
             exit $OCF_ERR_CONFIGURED
         else
-            # Try to guess interface from IP
-            nic=`get_nic_name_by_ip`
-            if [ -z "${nic}" ];then
-                # findif couldn't find the interface
-                if ocf_is_probe; then
-                    ocf_log info "[$FINDIF] failed"
-                    exit $OCF_NOT_RUNNING
-                else
-                    ocf_log err "[$FINDIF] failed"
-                    exit $rc
+            ipcheck_ipv4 "${OCF_RESKEY_ip}"
+            if [ $? = 1 ] ; then
+                ipcheck_ipv6 "${OCF_RESKEY_ip}"
+                if [ $? = 1 ] ; then
+                  ocf_exit_reason "ip parameter [${OCF_RESKEY_ip}] is not a valid ip address."
+                  exit $OCF_ERR_CONFIGURED
                 fi
             fi
         fi
@@ -439,6 +435,10 @@ update() {
     local nic=${OCF_RESKEY_iface};
     if [ -z "${OCF_RESKEY_iface}" ]; then
         nic=`get_nic_name_by_ip`
+        if [ -z "${nic}" ];then
+            ocf_log err "Could not retrieve network interface name from ip address (${OCF_RESKEY_ip})"
+            exit $OCF_ERR_GENERIC
+        fi
     fi
     local speed=$( iface_get_speed ${nic} )
 
