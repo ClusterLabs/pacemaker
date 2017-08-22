@@ -1154,8 +1154,12 @@ lrmd_tcp_connect_cb(void *userdata, int sock)
      * to avoid all blocking code in the client. */
     native->sock = sock;
 
-    if (lrmd_tls_set_key(&psk_key) != 0) {
+    rc = lrmd_tls_set_key(&psk_key);
+    if (rc != 0) {
+        crm_warn("Setup of the key failed (rc=%d) for remote node %s:%d",
+                 rc, native->server, native->port);
         lrmd_tls_connection_destroy(lrmd);
+        report_async_connection_result(lrmd, rc);
         return;
     }
 
