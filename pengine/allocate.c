@@ -1858,37 +1858,30 @@ apply_container_ordering(action_t *action, pe_working_set_t *data_set)
             order_start_then_action(remote_rsc, action, pe_order_none,
                                     data_set);
             break;
-        case stop_rsc:
-            if(is_set(container->flags, pe_rsc_failed)) {
-                /* When the container representing a guest node fails,
-                 * the stop action for all the resources living in
-                 * that container is implied by the container
-                 * stopping. This is similar to how fencing operations
-                 * work for cluster nodes.
-                 */
-            } else {
-                /* Otherwise, ensure the operation happens before the connection is brought down */
-                order_action_then_stop(action, remote_rsc, pe_order_none,
-                                       data_set);
-            }
-            break;
-        case action_demote:
-            if(is_set(container->flags, pe_rsc_failed)) {
-                /* Just like a stop, the demote is implied by the
-                 * container having failed/stopped
-                 *
-                 * If we really wanted to we would order the demote
-                 * after the stop, IFF the containers current role was
-                 * stopped (otherwise we re-introduce an ordering
-                 * loop)
-                 */
 
+        case stop_rsc:
+        case action_demote:
+            if (is_set(container->flags, pe_rsc_failed)) {
+                /* When the container representing a guest node fails, any stop
+                 * or demote actions for resources running on the guest node
+                 * are implied by the container stopping. This is similar to
+                 * how fencing operations work for cluster nodes and remote
+                 * nodes.
+                 */
             } else {
-                /* Otherwise, ensure the operation happens before the connection is brought down */
+                /* Ensure the operation happens before the connection is brought
+                 * down.
+                 *
+                 * If we really wanted to, we could order these after the
+                 * connection start, IFF the container's current role was
+                 * stopped (otherwise we re-introduce an ordering loop when the
+                 * connection is restarting).
+                 */
                 order_action_then_stop(action, remote_rsc, pe_order_none,
                                        data_set);
             }
             break;
+
         default:
             /* Wait for the connection resource to be up */
             if (is_recurring_action(action)) {
