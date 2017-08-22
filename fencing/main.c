@@ -1289,7 +1289,7 @@ main(int argc, char **argv)
     int argerr = 0;
     int option_index = 0;
     crm_cluster_t cluster;
-    const char *actions[] = { "reboot", "off", "list", "monitor", "status" };
+    const char *actions[] = { "reboot", "off", "on", "list", "monitor", "status" };
 
     crm_log_preinit("stonith-ng", argc, argv);
     crm_set_options(NULL, "mode [options]", long_options,
