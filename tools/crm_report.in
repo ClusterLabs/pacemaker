@@ -18,11 +18,11 @@
  #
 
 
-# Note the quotes around `$TEMP': they are essential!
 TEMP=`getopt				\
     -o hv?xl:f:t:n:T:L:p:c:dSACHu:D:MVse:	\
     --long help,cts:,cts-log:,dest:,node:,nodes:,from:,to:,sos-mode,logfile:,as-directory,single-node,cluster:,user:,max-depth:,version,features,rsh:	\
     -n 'crm_report' -- "$@"`
+# The quotes around $TEMP are essential
 eval set -- "$TEMP"
 
 progname=$(basename "$0")
@@ -43,40 +43,46 @@ log_patterns="CRIT: ERROR:"
 
 usage() {
 cat<<EOF
-$progname - Create a tarball containing everything needed when reporting cluster problems
+$progname - Create archive of everything needed when reporting cluster problems
 
 
-Usage: $progname --from date-time [--to date-time] [additional options] [dest]
+Usage: $progname [options] [DEST]
+
+Required option:
+  -f, --from TIME       time prior to problems beginning
+                        (as "YYYY-M-D H:M:S" including the quotes)
 
 Options:
-  -V			increase verbosity
-  -v,--version          software version
-     --features         software features
-  -f, --from time       time prior to problems beginning: "YYYY-M-D H:M:S"  (do not forget the quotes)
-  -t, --to time	        time at which all problems were resolved: "YYYY-M-D H:M:S" (default: 'now')
-  -T, --cts test	CTS test or set of tests to extract
-      --cts-log		CTS master logfile
-  -n, --nodes nodes	node names for this cluster
-			only needed if the cluster is not active on the current machine
-			accepts both -n "a b" and -n a -n b
-  -l, --logfile file	log file to collect, normally this will be determined automatically
-  -p patt		additional regular expression to match variables to be removed
-			(default: "passw.*")
-  -L patt		additional regular expression to match in log files for analysis
-			(default: $log_patterns)
-  -M			collect only the logs specified by -l
-  -S, --single-node	single node operation; don't try to start report collectors on other nodes
-  -c, --cluster type	force the cluster type (corosync,openais,heartbeat,logmaster)
-  -A, --openais		force the cluster type to be OpenAIS
-  -C, --corosync	force the cluster type to be CoroSync
-  -H, --heartbeat	force the cluster type to be Heartbeat
-  -u, --user user	ssh username for cluster nodes (default: root)
+  -V                    increase verbosity (may be specified multiple times)
+  -v, --version         display software version
+  --features            display software features
+  -t, --to TIME         time at which all problems were resolved
+                        (as "YYYY-M-D H:M:S" including the quotes; default "now")
+  -T, --cts TEST        CTS test or set of tests to extract
+  --cts-log             CTS master logfile
+  -n, --nodes NODES     node names for this cluster (only needed if cluster is
+                        not active on this host; accepts -n "a b" or -n a -n b)
+  -M                    do not search for cluster logs
+  -l, --logfile FILE    log file to collect (in addition to detected logs if -M
+                        is not specified; may be specified multiple times)
+  -p PATT               additional regular expression to match variables to be
+                        masked in ouput (default: "passw.*")
+  -L PATT               additional regular expression to match in log files for
+                        analysis (default: $log_patterns)
+  -S, --single-node     don't attempt to collect data from other nodes
+  -c, --cluster TYPE    force the cluster type instead of detecting
+                        (one of corosync, cman, openais, heartbeat)
+  -A, --openais         force the cluster type to be openais
+  -C, --corosync        force the cluster type to be corosync
+  -H, --heartbeat       force the cluster type to be heartbeat
+  -u, --user USER       username to use when collecting data from other nodes
+                        (default root)
   -D, --depth           search depth to use when attempting to locate files
-  -e, --rsh		specify the remote shell to use (default: ssh -T)
+  -e, --rsh             command to use to run commands on other nodes
+                        (default ssh -T)
   --sos-mode            use defaults suitable for being called by sosreport tool
                         (behavior subject to change and not useful to end users)
-  --dest       		a custom destination directory/file
-  dest			a custom destination directory/file
+  DEST, --dest DEST     custom destination directory or file name
 
 $progname works best when run from a cluster node on a running cluster,
 but can be run from a stopped cluster node or a Pacemaker Remote node.
@@ -84,7 +90,8 @@ but can be run from a stopped cluster node or a Pacemaker Remote node.
 If neither --nodes nor --single-node is given, $progname will guess the
 node list, but may have trouble detecting Pacemaker Remote nodes.
 Unless --single-node is given, the node names (whether specified by --nodes
-or detected automatically) must be resolvable and reachable via ssh.
+or detected automatically) must be resolvable and reachable via the command
+specified by -e/--rsh using the user specified by -u/--user.
 
 Examples:
    $progname -f "2011-12-14 13:05:00" unexplained-apache-failure

@@ -563,10 +563,10 @@ update_action(action_t * then)
 
         if (first == other->action) {
             /*
-             * 'first' was not expanded (ie. from 'start' to 'running'), which could mean it:
+             * 'first' was not expanded (e.g. from 'start' to 'running'), which could mean it:
              * - has no associated resource,
              * - was a primitive,
-             * - was pre-expanded (ie. 'running' instead of 'start')
+             * - was pre-expanded (e.g. 'running' instead of 'start')
              *
              * The third argument here to graph_update_action() is a node which is used under two conditions:
              * - Interleaving, in which case first->node and
@@ -1203,7 +1203,7 @@ should_dump_action(action_t * action)
         /* This is a horrible but convenient hack
          *
          * It mimimizes the number of actions with unsatisfied inputs
-         * (ie. not included in the graph)
+         * (i.e. not included in the graph)
          *
          * This in turn, means we can be more concise when printing
          * aborted/incomplete graphs.

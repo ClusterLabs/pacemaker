@@ -1296,7 +1296,7 @@ crm_acl_get_set_user(xmlNode * request, const char *field, const char *peer_user
         user = requested_user;
     }
 
-    /* Yes, pointer comparision */
+    // This requires pointer comparison, not string comparison
     if(user != crm_element_value(request, XML_ACL_TAG_USER)) {
         crm_xml_add(request, XML_ACL_TAG_USER, user);
     }

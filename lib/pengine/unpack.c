@@ -163,17 +163,6 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
         freeXpathObject(xpathObj);
     }
 
-
-#ifdef REDHAT_COMPAT_6
-    if(is_not_set(data_set->flags, pe_flag_enable_unfencing)) {
-        xpathObj = xpath_search(data_set->input, "//primitive[@type='fence_scsi']");
-        if(xpathObj && numXpathResults(xpathObj) > 0) {
-            set_bit(data_set->flags, pe_flag_enable_unfencing);
-        }
-        freeXpathObject(xpathObj);
-    }
-#endif
-
     data_set->config_hash = config_hash;
 
     unpack_instance_attributes(data_set->input, config, XML_CIB_TAG_PROPSET, NULL, config_hash,
@@ -370,9 +359,11 @@ pe_create_node(const char *id, const char *uname, const char *type,
     new_node->details->attrs = crm_str_table_new();
 
     if (is_remote_node(new_node)) {
-        g_hash_table_insert(new_node->details->attrs, strdup("#kind"), strdup("remote"));
+        g_hash_table_insert(new_node->details->attrs, strdup(CRM_ATTR_KIND),
+                            strdup("remote"));
     } else {
-        g_hash_table_insert(new_node->details->attrs, strdup("#kind"), strdup("cluster"));
+        g_hash_table_insert(new_node->details->attrs, strdup(CRM_ATTR_KIND),
+                            strdup("cluster"));
     }
 
     new_node->details->utilization = crm_str_table_new();
@@ -759,7 +750,8 @@ link_rsc2remotenode(pe_working_set_t *data_set, resource_t *new_rsc)
     } else {
         /* At this point we know if the remote node is a container or baremetal
          * remote node, update the #kind attribute if a container is involved */
-        g_hash_table_replace(remote_node->details->attrs, strdup("#kind"), strdup("container"));
+        g_hash_table_replace(remote_node->details->attrs, strdup(CRM_ATTR_KIND),
+                             strdup("container"));
     }
 }
 
@@ -775,6 +767,18 @@ destroy_tag(gpointer data)
     }
 }
 
+/*!
+ * \internal
+ * \brief Parse configuration XML for resource information
+ *
+ * \param[in]     xml_resources  Top of resource configuration XML
+ * \param[in,out] data_set       Where to put resource information
+ *
+ * \return TRUE
+ *
+ * \note unpack_remote_nodes() MUST be called before this, so that the nodes can
+ *       be used when common_unpack() calls resource_location()
+ */
 gboolean
 unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
 {
@@ -3347,37 +3351,42 @@ add_node_attrs(xmlNode * xml_obj, node_t * node, gboolean overwrite, pe_working_
     const char *cluster_name = NULL;
 
     g_hash_table_insert(node->details->attrs,
-                        strdup("#uname"), strdup(node->details->uname));
+                        strdup(CRM_ATTR_UNAME), strdup(node->details->uname));
 
-    g_hash_table_insert(node->details->attrs, strdup("#" XML_ATTR_ID), strdup(node->details->id));
+    g_hash_table_insert(node->details->attrs, strdup(CRM_ATTR_ID),
+                        strdup(node->details->id));
     if (safe_str_eq(node->details->id, data_set->dc_uuid)) {
         data_set->dc_node = node;
         node->details->is_dc = TRUE;
         g_hash_table_insert(node->details->attrs,
-                            strdup("#" XML_ATTR_DC), strdup(XML_BOOLEAN_TRUE));
+                            strdup(CRM_ATTR_IS_DC), strdup(XML_BOOLEAN_TRUE));
     } else {
         g_hash_table_insert(node->details->attrs,
-                            strdup("#" XML_ATTR_DC), strdup(XML_BOOLEAN_FALSE));
+                            strdup(CRM_ATTR_IS_DC), strdup(XML_BOOLEAN_FALSE));
     }
 
     cluster_name = g_hash_table_lookup(data_set->config_hash, "cluster-name");
     if (cluster_name) {
-        g_hash_table_insert(node->details->attrs, strdup("#cluster-name"), strdup(cluster_name));
+        g_hash_table_insert(node->details->attrs, strdup(CRM_ATTR_CLUSTER_NAME),
+                            strdup(cluster_name));
     }
 
     unpack_instance_attributes(data_set->input, xml_obj, XML_TAG_ATTR_SETS, NULL,
                                node->details->attrs, NULL, overwrite, data_set->now);
 
-    if (g_hash_table_lookup(node->details->attrs, "#site-name") == NULL) {
+    if (g_hash_table_lookup(node->details->attrs, CRM_ATTR_SITE_NAME) == NULL) {
         const char *site_name = g_hash_table_lookup(node->details->attrs, "site-name");
 
         if (site_name) {
-            /* Prefix '#' to the key */
-            g_hash_table_insert(node->details->attrs, strdup("#site-name"), strdup(site_name));
+            g_hash_table_insert(node->details->attrs,
+                                strdup(CRM_ATTR_SITE_NAME),
+                                strdup(site_name));
 
         } else if (cluster_name) {
             /* Default to cluster-name if unset */
-            g_hash_table_insert(node->details->attrs, strdup("#site-name"), strdup(cluster_name));
+            g_hash_table_insert(node->details->attrs,
+                                strdup(CRM_ATTR_SITE_NAME),
+                                strdup(cluster_name));
         }
     }
     return TRUE;

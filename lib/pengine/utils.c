@@ -1560,7 +1560,7 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
             sort_return(0, "bad magic b");
         }
         /* try to determine the relative age of the operation...
-         * some pending operations (ie. a start) may have been superseded
+         * some pending operations (e.g. a start) may have been superseded
          *   by a subsequent stop
          *
          * [a|b]_id == -1 means it's a shutdown operation and _always_ comes last
@@ -1767,30 +1767,18 @@ ticket_new(const char *ticket_id, pe_working_set_t * data_set)
 static void
 filter_parameters(xmlNode * param_set, const char *param_string, bool need_present)
 {
-    int len = 0;
-    char *name = NULL;
-    char *match = NULL;
-
-    if (param_set == NULL) {
-        return;
-    }
-
     if (param_set && param_string) {
         xmlAttrPtr xIter = param_set->properties;
 
         while (xIter) {
             const char *prop_name = (const char *)xIter->name;
+            char *name = crm_strdup_printf(" %s ", prop_name);
+            char *match = strstr(param_string, name);
 
+            free(name);
+
+            //  Do now, because current entry might get removed below
             xIter = xIter->next;
-            name = NULL;
-            len = strlen(prop_name) + 3;
-
-            name = malloc(len);
-            if(name) {
-                sprintf(name, " %s ", prop_name);
-                name[len - 1] = 0;
-                match = strstr(param_string, name);
-            }
 
             if (need_present && match == NULL) {
                 crm_trace("%s not found in %s", prop_name, param_string);
@@ -1800,7 +1788,6 @@ filter_parameters(xmlNode * param_set, const char *param_string, bool need_prese
                 crm_trace("%s found in %s", prop_name, param_string);
                 xml_remove_prop(param_set, prop_name);
             }
-            free(name);
         }
     }
 }
@@ -2010,15 +1997,21 @@ fencing_action_digest_cmp(resource_t * rsc, node_t * node, pe_working_set_t * da
 
     } else if(digest_secure && data->digest_secure_calc) {
         if(strstr(digest_secure, search_secure)) {
-            fprintf(stdout, "Only 'private' parameters to %s for unfencing %s changed\n",
-                    rsc->id, node->details->uname);
+            if (is_set(data_set->flags, pe_flag_sanitized)) {
+                printf("Only 'private' parameters to %s for unfencing %s changed\n",
+                       rsc->id, node->details->uname);
+            }
             data->rc = RSC_DIGEST_MATCH;
         }
     }
 
     if (data->rc == RSC_DIGEST_ALL && is_set(data_set->flags, pe_flag_sanitized) && data->digest_secure_calc) {
-        fprintf(stdout, "Parameters to %s for unfencing %s changed, try '%s:%s:%s'\n",
-                rsc->id, node->details->uname, rsc->id, (const char*)g_hash_table_lookup(rsc->meta, XML_ATTR_TYPE), data->digest_secure_calc);
+        if (is_set(data_set->flags, pe_flag_sanitized)) {
+            printf("Parameters to %s for unfencing %s changed, try '%s:%s:%s'\n",
+                   rsc->id, node->details->uname, rsc->id,
+                   (const char *) g_hash_table_lookup(rsc->meta, XML_ATTR_TYPE),
+                   data->digest_secure_calc);
+        }
     }
 
     free(key);

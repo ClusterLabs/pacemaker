@@ -119,7 +119,7 @@ cli_resource_ban(const char *rsc_id, const char *host, GListPtr allnodes, cib_t 
         crm_xml_add(rule, XML_RULE_ATTR_BOOLEAN_OP, "and");
 
         crm_xml_set_id(expr, "cli-ban-%s-on-%s-expr", rsc_id, host);
-        crm_xml_add(expr, XML_EXPR_ATTR_ATTRIBUTE, "#uname");
+        crm_xml_add(expr, XML_EXPR_ATTR_ATTRIBUTE, CRM_ATTR_UNAME);
         crm_xml_add(expr, XML_EXPR_ATTR_OPERATION, "eq");
         crm_xml_add(expr, XML_EXPR_ATTR_VALUE, host);
         crm_xml_add(expr, XML_EXPR_ATTR_TYPE, "string");
@@ -182,7 +182,7 @@ cli_resource_prefer(const char *rsc_id, const char *host, cib_t * cib_conn)
         crm_xml_add(rule, XML_RULE_ATTR_BOOLEAN_OP, "and");
 
         crm_xml_set_id(expr, "cli-prefer-expr-%s", rsc_id);
-        crm_xml_add(expr, XML_EXPR_ATTR_ATTRIBUTE, "#uname");
+        crm_xml_add(expr, XML_EXPR_ATTR_ATTRIBUTE, CRM_ATTR_UNAME);
         crm_xml_add(expr, XML_EXPR_ATTR_OPERATION, "eq");
         crm_xml_add(expr, XML_EXPR_ATTR_VALUE, host);
         crm_xml_add(expr, XML_EXPR_ATTR_TYPE, "string");

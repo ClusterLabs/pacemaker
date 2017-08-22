@@ -473,13 +473,11 @@ create_remote_resource(
 
         tuple->node->details->remote_rsc = tuple->remote;
 
-        /* #kind is irrelevant to bundles since it is only used in location
-         * constraint rules, and those don't matter for resources inside
-         * bundles. But just for clarity, a bundle is closer to "container"
-         * (guest node) than the "remote" set by pe_create_node().
+        /* A bundle's #kind is closer to "container" (guest node) than the
+         * "remote" set by pe_create_node().
          */
         g_hash_table_insert(tuple->node->details->attrs,
-                            strdup("#kind"), strdup("container"));
+                            strdup(CRM_ATTR_KIND), strdup("container"));
 
         /* One effect of this is that setup_container() will add
          * tuple->remote to tuple->docker's fillers, which will make

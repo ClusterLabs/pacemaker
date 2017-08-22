@@ -290,11 +290,12 @@ commands, invoke it with the `--help` option.
 .Using a sandbox to make multiple changes atomically, discard them and verify the real configuration is untouched
 ======
 ----
- shadow[test] # crm_failcount -G -r rsc_c001n01
-  name=fail-count-rsc_c001n01 value=0
- shadow[test] # crm_standby -v on -N c001n02
- shadow[test] # crm_standby -G -N c001n02
- name=c001n02 scope=nodes value=on
+ shadow[test] # crm_failcount -r rsc_c001n01 -G
+ scope=status  name=fail-count-rsc_c001n01 value=0
+ shadow[test] # crm_standby --node c001n02 -v on
+ shadow[test] # crm_standby --node c001n02 -G
+ scope=nodes  name=standby value=on
+
  shadow[test] # cibadmin --erase --force
  shadow[test] # cibadmin --query
  <cib cib_feature_revision="1" validate-with="pacemaker-1.0" admin_epoch="0" crm_feature_set="3.0" have-quorum="1" epoch="112"

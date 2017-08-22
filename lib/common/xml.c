@@ -781,8 +781,8 @@ __xml_acl_post_process(xmlNode * xml)
         xmlAttr *xIter = NULL;
         char *path = xml_get_path(xml);
 
-        /* Always allow new scaffolding, ie. node with no attributes or only an 'id'
-         * Except in the ACLs section
+        /* Always allow new scaffolding (e.g. node with no attributes or only an
+         * 'id'), except in the ACLs section
          */
 
         for (xIter = crm_first_attr(xml); xIter != NULL; xIter = xIter->next) {

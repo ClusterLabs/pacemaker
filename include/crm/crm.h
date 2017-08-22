@@ -95,9 +95,17 @@ extern char *crm_system_name;
 #  define CRM_SYSTEM_MCP	"pacemakerd"
 
 // Names of internally generated node attributes
+#  define CRM_ATTR_UNAME            "#uname"
+#  define CRM_ATTR_ID               "#id"
+#  define CRM_ATTR_KIND             "#kind"
+#  define CRM_ATTR_ROLE             "#role"
+#  define CRM_ATTR_IS_DC            "#is_dc"
+#  define CRM_ATTR_CLUSTER_NAME     "#cluster-name"
+#  define CRM_ATTR_SITE_NAME        "#site-name"
 #  define CRM_ATTR_UNFENCED         "#node-unfenced"
 #  define CRM_ATTR_DIGESTS_ALL      "#digests-all"
 #  define CRM_ATTR_DIGESTS_SECURE   "#digests-secure"
+#  define CRM_ATTR_RA_VERSION       "#ra-version"
 
 /* Valid operations */
 #  define CRM_OP_NOOP		"noop"

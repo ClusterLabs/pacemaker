@@ -176,7 +176,9 @@ Should the cluster stop all resources?
 | stop-orphan-resources | TRUE |
 indexterm:[stop-orphan-resources,Cluster Option]
 indexterm:[Cluster,Option,stop-orphan-resources]
-Should deleted resources be stopped?
+ Should deleted resources be stopped? This value takes precedence over
+ +is-managed+ (i.e. even unmanaged resources will be stopped if deleted from
+ the configuration when this value is TRUE).
 
 | stop-orphan-actions | TRUE |
 indexterm:[stop-orphan-actions,Cluster Option]

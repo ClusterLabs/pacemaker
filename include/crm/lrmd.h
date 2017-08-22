@@ -174,7 +174,7 @@ enum lrmd_call_options {
      * remotely with the pacemaker_remote daemon, this option means that recurring
      * operations will be dropped once all the remote connections disconnect. */
     lrmd_opt_drop_recurring = 0x00000003,
-    /*! Only send out notifications for recurring operations whenthe result changes */
+    /*! Send notifications for recurring operations only when the result changes */
     lrmd_opt_notify_changes_only = 0x00000004,
 };
 

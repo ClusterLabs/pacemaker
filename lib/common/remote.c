@@ -241,10 +241,12 @@ crm_send_tls(gnutls_session_t * session, const char *buf, size_t len)
         rc = gnutls_record_send(*session, unsent, len);
 
         if (rc == GNUTLS_E_INTERRUPTED || rc == GNUTLS_E_AGAIN) {
-            crm_debug("Retry");
+            crm_trace("Retrying to send %llu bytes",
+                      (unsigned long long) len);
 
         } else if (rc < 0) {
-            crm_err("Connection terminated rc = %d", rc);
+            crm_err("Connection terminated: %s " CRM_XS " rc=%d",
+                    gnutls_strerror(rc), rc);
             break;
 
         } else if (rc < len) {

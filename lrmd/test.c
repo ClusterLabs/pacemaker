@@ -112,7 +112,7 @@ test_exit(int rc)
              event->op_type ? event->op_type : "none",                  \
              services_ocf_exitcode_str(event->rc),                              \
              services_lrm_status_str(event->op_status));                \
-    crm_info("%s", event_buf_v0);;
+    crm_info("%s", event_buf_v0);
 
 static void
 test_shutdown(int nsig)
