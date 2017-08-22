@@ -1206,6 +1206,37 @@ allocate_resources(pe_working_set_t * data_set)
     }
 }
 
+/* We always use pe_order_preserve with these convenience functions to exempt
+ * internally generated constraints from the prohibition of user constraints
+ * involving remote connection resources.
+ *
+ * The start ordering additionally uses pe_order_runnable_left so that the
+ * specified action is not runnable if the start is not runnable.
+ */
+
+static inline void
+order_start_then_action(resource_t *lh_rsc, action_t *rh_action,
+                        enum pe_ordering extra, pe_working_set_t *data_set)
+{
+    if (lh_rsc && rh_action && data_set) {
+        custom_action_order(lh_rsc, start_key(lh_rsc), NULL,
+                            rh_action->rsc, NULL, rh_action,
+                            pe_order_preserve | pe_order_runnable_left | extra,
+                            data_set);
+    }
+}
+
+static inline void
+order_action_then_stop(action_t *lh_action, resource_t *rh_rsc,
+                       enum pe_ordering extra, pe_working_set_t *data_set)
+{
+    if (lh_action && rh_rsc && data_set) {
+        custom_action_order(lh_action->rsc, NULL, lh_action,
+                            rh_rsc, stop_key(rh_rsc), NULL,
+                            pe_order_preserve | extra, data_set);
+    }
+}
+
 static void
 cleanup_orphans(resource_t * rsc, pe_working_set_t * data_set)
 {
@@ -1235,9 +1266,12 @@ cleanup_orphans(resource_t * rsc, pe_working_set_t * data_set)
                         CRM_XS " %s",
                         rsc->id, node->details->uname, clear_op->uuid);
 
-            custom_action_order(rsc, NULL, clear_op,
-                            rsc, generate_op_key(rsc->id, RSC_STOP, 0), NULL,
-                            pe_order_optional, data_set);
+            /* We can't use order_action_then_stop() here because its
+             * pe_order_preserve breaks things
+             */
+            custom_action_order(clear_op->rsc, NULL, clear_op,
+                                rsc, stop_key(rsc), NULL,
+                                pe_order_optional, data_set);
         }
     }
 }
@@ -1817,14 +1851,12 @@ apply_container_ordering(action_t *action, pe_working_set_t *data_set)
         case start_rsc:
         case action_promote:
             /* Force resource recovery if the container is recovered */
-            custom_action_order(container, generate_op_key(container->id, RSC_START, 0), NULL,
-                                action->rsc, NULL, action,
-                                pe_order_preserve | pe_order_implies_then | pe_order_runnable_left, data_set);
+            order_start_then_action(container, action, pe_order_implies_then,
+                                    data_set);
 
             /* Wait for the connection resource to be up too */
-            custom_action_order(remote_rsc, generate_op_key(remote_rsc->id, RSC_START, 0), NULL,
-                                action->rsc, NULL, action,
-                                pe_order_preserve | pe_order_runnable_left, data_set);
+            order_start_then_action(remote_rsc, action, pe_order_none,
+                                    data_set);
             break;
         case stop_rsc:
             if(is_set(container->flags, pe_rsc_failed)) {
@@ -1836,9 +1868,8 @@ apply_container_ordering(action_t *action, pe_working_set_t *data_set)
                  */
             } else {
                 /* Otherwise, ensure the operation happens before the connection is brought down */
-                custom_action_order(action->rsc, NULL, action,
-                                    remote_rsc, generate_op_key(remote_rsc->id, RSC_STOP, 0), NULL,
-                                    pe_order_preserve, data_set);
+                order_action_then_stop(action, remote_rsc, pe_order_none,
+                                       data_set);
             }
             break;
         case action_demote:
@@ -1854,9 +1885,8 @@ apply_container_ordering(action_t *action, pe_working_set_t *data_set)
 
             } else {
                 /* Otherwise, ensure the operation happens before the connection is brought down */
-                custom_action_order(action->rsc, NULL, action,
-                                    remote_rsc, generate_op_key(remote_rsc->id, RSC_STOP, 0), NULL,
-                                    pe_order_preserve, data_set);
+                order_action_then_stop(action, remote_rsc, pe_order_none,
+                                       data_set);
             }
             break;
         default:
@@ -1867,14 +1897,12 @@ apply_container_ordering(action_t *action, pe_working_set_t *data_set)
                  * the connection was re-established
                  */
                 if(task != no_action) {
-                    custom_action_order(remote_rsc, generate_op_key(remote_rsc->id, RSC_START, 0), NULL,
-                                        action->rsc, NULL, action,
-                                        pe_order_preserve | pe_order_runnable_left | pe_order_implies_then, data_set);
+                    order_start_then_action(remote_rsc, action,
+                                            pe_order_implies_then, data_set);
                 }
             } else {
-                custom_action_order(remote_rsc, generate_op_key(remote_rsc->id, RSC_START, 0), NULL,
-                                    action->rsc, NULL, action,
-                                    pe_order_preserve | pe_order_runnable_left, data_set);
+                order_start_then_action(remote_rsc, action, pe_order_none,
+                                        data_set);
             }
             break;
     }
@@ -1988,11 +2016,7 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
     switch (task) {
         case start_rsc:
         case action_promote:
-            /* This as an internally generated constraint exempt from
-             * user constraint prohibitions, and this action isn't runnable
-             * if the connection start isn't runnable.
-             */
-            order_opts = pe_order_preserve | pe_order_runnable_left;
+            order_opts = pe_order_none;
 
             if (state == remote_state_failed) {
                 /* Force recovery, by making this action required */
@@ -2000,10 +2024,7 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
             }
 
             /* Ensure connection is up before running this action */
-            custom_action_order(remote_rsc,
-                                generate_op_key(remote_rsc->id, RSC_START, 0),
-                                NULL, action->rsc, NULL, action, order_opts,
-                                data_set);
+            order_start_then_action(remote_rsc, action, order_opts, data_set);
             break;
 
         case stop_rsc:
@@ -2012,9 +2033,8 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
              */
             if(state == remote_state_resting) {
                 /* Wait for the connection resource to be up and assume everything is as we left it */
-                custom_action_order(remote_rsc, generate_op_key(remote_rsc->id, RSC_START, 0), NULL,
-                                    action->rsc, NULL, action,
-                                    pe_order_preserve | pe_order_runnable_left, data_set);
+                order_start_then_action(remote_rsc, action, pe_order_none,
+                                        data_set);
 
             } else {
                 if(state == remote_state_failed) {
@@ -2026,9 +2046,8 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
                     pe_fence_node(data_set, action->node, "resources are active and the connection is unrecoverable");
                 }
 
-                custom_action_order(action->rsc, NULL, action,
-                                    remote_rsc, generate_op_key(remote_rsc->id, RSC_STOP, 0), NULL,
-                                    pe_order_preserve | pe_order_implies_first, data_set);
+                order_action_then_stop(action, remote_rsc,
+                                       pe_order_implies_first, data_set);
             }
             break;
 
@@ -2038,9 +2057,8 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
              * blocked because the connection start would not be allowed.
              */
             if(state == remote_state_resting || state == remote_state_unknown) {
-                custom_action_order(remote_rsc, generate_op_key(remote_rsc->id, RSC_START, 0), NULL,
-                                    action->rsc, NULL, action,
-                                    pe_order_preserve, data_set);
+                order_start_then_action(remote_rsc, action, pe_order_none,
+                                        data_set);
             } /* Otherwise we can rely on the stop ordering */
             break;
 
@@ -2051,9 +2069,8 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
                  * recurring monitors to be restarted, even if just
                  * the connection was re-established
                  */
-                custom_action_order(remote_rsc, generate_op_key(remote_rsc->id, RSC_START, 0), NULL,
-                                    action->rsc, NULL, action,
-                                    pe_order_preserve | pe_order_runnable_left | pe_order_implies_then, data_set);
+                order_start_then_action(remote_rsc, action,
+                                        pe_order_implies_then, data_set);
 
             } else {
                 if(task == monitor_rsc && state == remote_state_failed) {
@@ -2073,14 +2090,12 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
                      * stopped _before_ we let the connection get
                      * closed
                      */
-                    custom_action_order(action->rsc, NULL, action,
-                                        remote_rsc, generate_op_key(remote_rsc->id, RSC_STOP, 0), NULL,
-                                        pe_order_preserve | pe_order_runnable_left, data_set);
+                    order_action_then_stop(action, remote_rsc,
+                                           pe_order_runnable_left, data_set);
 
                 } else {
-                    custom_action_order(remote_rsc, generate_op_key(remote_rsc->id, RSC_START, 0), NULL,
-                                        action->rsc, NULL, action,
-                                        pe_order_preserve | pe_order_runnable_left, data_set);
+                    order_start_then_action(remote_rsc, action, pe_order_none,
+                                            data_set);
                 }
             }
             break;
