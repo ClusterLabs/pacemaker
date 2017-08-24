@@ -1847,6 +1847,14 @@ apply_container_ordering(action_t *action, pe_working_set_t *data_set)
               is_set(container->flags, pe_rsc_failed)? "failed " : "",
               container->id);
 
+    if (safe_str_eq(action->task, CRMD_ACTION_MIGRATE)
+        || safe_str_eq(action->task, CRMD_ACTION_MIGRATE)) {
+        /* Migration ops map to "no_action", but we need to apply the same
+         * ordering as for stop or demote (see get_router_node()).
+         */
+        task = stop_rsc;
+    }
+
     switch (task) {
         case start_rsc:
         case action_promote:
@@ -2006,6 +2014,15 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
               action->task, action->uuid,
               is_set(remote_rsc->flags, pe_rsc_failed)? "failed " : "",
               remote_rsc->id, state);
+
+    if (safe_str_eq(action->task, CRMD_ACTION_MIGRATE)
+        || safe_str_eq(action->task, CRMD_ACTION_MIGRATE)) {
+        /* Migration ops map to "no_action", but we need to apply the same
+         * ordering as for stop or demote (see get_router_node()).
+         */
+        task = stop_rsc;
+    }
+
     switch (task) {
         case start_rsc:
         case action_promote:
