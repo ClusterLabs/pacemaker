@@ -351,10 +351,10 @@ do_query(const char *attr_name, const char *attr_node, gboolean query_all)
         attr_node = NULL;
     } else if (attr_node == NULL) {
         crm_debug("User did not specify node for query, using localhost");
-        attr_node = "localhost";
+        attr_node = get_hostname(attr_node);
+    } else {
+        attr_node = get_hostname(attr_node);
     }
-
-    attr_node = get_hostname(attr_node);
 
     /* Build and send attrd request, and get XML reply */
     rc = send_attrd_query(attr_name, attr_node, &reply);
