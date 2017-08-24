@@ -2369,18 +2369,19 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
     }
 
     if (rsc->role == rsc->next_role) {
-        action_t *migrate_to = NULL;
+        action_t *migrate_op = NULL;
+
         key = generate_op_key(rsc->id, RSC_MIGRATED, 0);
         possible_matches = find_actions(rsc->actions, key, next);
         free(key);
 
         if (possible_matches) {
-            migrate_to = possible_matches->data;
+            migrate_op = possible_matches->data;
         }
 
         CRM_CHECK(next != NULL,);
         if (next == NULL) {
-        } else if (migrate_to && is_set(migrate_to->flags, pe_action_runnable) && current) {
+        } else if (migrate_op && is_set(migrate_op->flags, pe_action_runnable) && current) {
             LogAction("Migrate", rsc, current, next, start, NULL, terminal);
 
         } else if (is_set(rsc->flags, pe_rsc_reload)) {
