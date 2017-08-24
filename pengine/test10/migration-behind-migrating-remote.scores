@@ -1,0 +1,20 @@
+Allocation scores:
+An invalid transition was produced
+Transition failed: terminated
+Using the original execution date of: 2017-08-21 17:12:54Z
+native_color: Fencing allocation score on node1: 0
+native_color: Fencing allocation score on node2: INFINITY
+native_color: Fencing allocation score on remote1: -INFINITY
+native_color: Fencing allocation score on remote2: -INFINITY
+native_color: remote1 allocation score on node1: 0
+native_color: remote1 allocation score on node2: INFINITY
+native_color: remote1 allocation score on remote1: -INFINITY
+native_color: remote1 allocation score on remote2: -INFINITY
+native_color: remote2 allocation score on node1: 0
+native_color: remote2 allocation score on node2: INFINITY
+native_color: remote2 allocation score on remote1: -INFINITY
+native_color: remote2 allocation score on remote2: -INFINITY
+native_color: rsc1 allocation score on node1: -INFINITY
+native_color: rsc1 allocation score on node2: -INFINITY
+native_color: rsc1 allocation score on remote1: 1
+native_color: rsc1 allocation score on remote2: INFINITY

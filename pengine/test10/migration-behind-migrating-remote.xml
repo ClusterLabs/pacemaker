@@ -1,0 +1,125 @@
+<cib crm_feature_set="3.0.14" validate-with="pacemaker-2.5" epoch="49" num_updates="13" admin_epoch="0" cib-last-written="Mon Aug 21 12:12:00 2017" update-origin="node1" update-client="crm_resource" update-user="remote1" have-quorum="1" dc-uuid="2" execution-date="1503335574">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cts-expected-quorum-votes" name="expected-quorum-votes" value="2"/>
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.17-553.368fb3e.git.el7.centos-368fb3e"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="node1"/>
+      <node id="2" uname="node2"/>
+    </nodes>
+    <resources>
+      <primitive id="Fencing" class="stonith" type="fence_xvm">
+        <meta_attributes id="Fencing-meta">
+        </meta_attributes>
+        <instance_attributes id="Fencing-params">
+          <nvpair id="Fencing-multicast_address" name="multicast_address" value="239.255.100.100"/>
+          <nvpair id="Fencing-pcmk_host_list" name="pcmk_host_list" value="node1 node2 remote-1 remote-2"/>
+        </instance_attributes>
+        <operations>
+          <op id="Fencing-monitor-120s" interval="120s" name="monitor" timeout="120s"/>
+          <op id="Fencing-stop-0" interval="0" name="stop" timeout="60s"/>
+          <op id="Fencing-start-0" interval="0" name="start" timeout="60s"/>
+        </operations>
+      </primitive>
+      <primitive id="rsc1" class="ocf" type="Dummy" provider="pacemaker">
+        <meta_attributes id="rsc1-meta">
+          <nvpair id="rsc1-allow-migrate" name="allow-migrate" value="1"/>
+          <nvpair id="rsc1-resource-stickiness" name="resource-stickiness" value="1"/>
+        </meta_attributes>
+        <instance_attributes id="rsc1-params">
+        </instance_attributes>
+        <operations>
+          <op id="rsc1-monitor-P10S" interval="P10S" name="monitor"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="remote1" provider="pacemaker" type="remote">
+        <instance_attributes id="remote1-instance_attributes">
+        </instance_attributes>
+        <operations>
+          <op id="remote1-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="remote2" provider="pacemaker" type="remote">
+        <instance_attributes id="remote2-instance_attributes">
+        </instance_attributes>
+        <operations>
+          <op id="remote2-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+    </resources>
+    <constraints>
+      <rsc_location id="rsc1-off-node1" rsc="rsc1" node="node1" score="-INFINITY"/>
+      <rsc_location id="rsc1-off-node2" rsc="rsc1" node="node2" score="-INFINITY"/>
+      <rsc_location id="remote1-to-node2" rsc="remote1" node="node2" score="INFINITY"/>
+      <rsc_location id="remote2-to-node2" rsc="remote2" node="node2" score="INFINITY"/>
+      <rsc_location id="Fencing-to-node2" rsc="Fencing" node="node2" score="INFINITY"/>
+      <rsc_location id="rsc1-to-remote2" rsc="rsc1" node="remote2" score="INFINITY"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="1" uname="node1" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="Fencing" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="37:22:0:231989e8-bacb-4b30-ad73-d034cf9fd2ed" transition-magic="0:0;37:22:0:231989e8-bacb-4b30-ad73-d034cf9fd2ed" on_node="node1" call-id="192" rc-code="0" op-status="0" interval="0" last-run="1503335492" last-rc-change="1503335492" exec-time="12" queue-time="0" op-digest="2409d7001df14f35973634911d9875b1" ra-version="0.1"/>
+            <lrm_rsc_op id="Fencing_monitor_120000" operation_key="Fencing_monitor_120000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="25:20:0:231989e8-bacb-4b30-ad73-d034cf9fd2ed" transition-magic="0:0;25:20:0:231989e8-bacb-4b30-ad73-d034cf9fd2ed" on_node="node1" call-id="188" rc-code="0" op-status="0" interval="120000" last-rc-change="1503335472" exec-time="5" queue-time="0" op-digest="87e7768825db29d87bc1f2119ebffe0e" ra-version="0.1"/>
+          </lrm_resource>
+          <lrm_resource id="rsc1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="rsc1_last_0" operation_key="rsc1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="28:16:7:a4c95233-ef19-40fd-89f0-0a7ce1f787a6" transition-magic="0:7;28:16:7:a4c95233-ef19-40fd-89f0-0a7ce1f787a6" on_node="node1" call-id="33" rc-code="7" op-status="0" interval="0" last-run="1503335084" last-rc-change="1503335084" exec-time="54" queue-time="0" op-digest="5de129d7fe42dbcfe537f2c63b1921b6" ra-version="1.0" op-force-restart=" fail_start_on  fake " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-secure-params=" passwd " op-secure-digest="5de129d7fe42dbcfe537f2c63b1921b6"/>
+          </lrm_resource>
+          <lrm_resource id="remote1" type="remote" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="remote1_last_0" operation_key="remote1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="6:29:0:231989e8-bacb-4b30-ad73-d034cf9fd2ed" transition-magic="0:0;6:29:0:231989e8-bacb-4b30-ad73-d034cf9fd2ed" on_node="node1" call-id="18" rc-code="0" op-status="0" interval="0" last-run="1503335525" last-rc-change="1503335525" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" ra-version="0.1" op-force-restart=" reconnect_interval  port " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="remote1_monitor_60000" operation_key="remote1_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="19:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;19:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" on_node="node1" call-id="19" rc-code="0" op-status="0" interval="60000" last-rc-change="1503335516" exec-time="0" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" ra-version="0.1"/>
+          </lrm_resource>
+          <lrm_resource id="remote2" type="remote" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="remote2_last_0" operation_key="remote2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="6:29:0:231989e8-bacb-4b30-ad73-d034cf9fd2ed" transition-magic="0:0;6:29:0:231989e8-bacb-4b30-ad73-d034cf9fd2ed" on_node="node1" call-id="18" rc-code="7" op-status="0" interval="0" last-run="1503335525" last-rc-change="1503335525" exec-time="0" queue-time="0" op-digest="261b4fde9eb7965580f152a20c775486" ra-version="0.1" op-force-restart=" reconnect_interval  port " op-restart-digest="1dbaa1569a09b2a43b8d2b8037a48749"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="2" uname="node2" crmd="online" crm-debug-origin="do_update_resource" in_ccm="true" join="member" expected="member">
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="Fencing" type="fence_xvm" class="stonith">
+            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="38:22:0:231989e8-bacb-4b30-ad73-d034cf9fd2ed" transition-magic="0:0;38:22:0:231989e8-bacb-4b30-ad73-d034cf9fd2ed" on_node="node2" call-id="179" rc-code="0" op-status="0" interval="0" last-run="1503335492" last-rc-change="1503335492" exec-time="34" queue-time="0" op-digest="9a843e3af459b23b342161743e5da19c" ra-version="0.1"/>
+            <lrm_rsc_op id="Fencing_monitor_120000" operation_key="Fencing_monitor_120000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="39:22:0:231989e8-bacb-4b30-ad73-d034cf9fd2ed" transition-magic="0:0;39:22:0:231989e8-bacb-4b30-ad73-d034cf9fd2ed" on_node="node2" call-id="181" rc-code="0" op-status="0" interval="120000" last-rc-change="1503335492" exec-time="15" queue-time="0" op-digest="f17c939f5d0147b0772fb047e175cb1f" ra-version="0.1"/>
+          </lrm_resource>
+          <lrm_resource id="rsc1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="rsc1_last_0" operation_key="rsc1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="9:1:7:2dc02a24-b145-46ac-ba2d-ee462fdab7ab" transition-magic="0:7;9:1:7:2dc02a24-b145-46ac-ba2d-ee462fdab7ab" on_node="node2" call-id="39" rc-code="7" op-status="0" interval="0" last-run="1503334850" last-rc-change="1503334850" exec-time="11" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" ra-version="1.0" op-force-restart=" fail_start_on  fake " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-secure-params=" passwd " op-secure-digest="5de129d7fe42dbcfe537f2c63b1921b6"/>
+          </lrm_resource>
+          <lrm_resource id="remote1" type="remote" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="remote1_last_0" operation_key="remote1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="6:29:0:231989e8-bacb-4b30-ad73-d034cf9fd2ed" transition-magic="0:0;6:29:0:231989e8-bacb-4b30-ad73-d034cf9fd2ed" on_node="node2" call-id="18" rc-code="7" op-status="0" interval="0" last-run="1503335525" last-rc-change="1503335525" exec-time="0" queue-time="0" op-digest="261b4fde9eb7965580f152a20c775486" ra-version="0.1" op-force-restart=" reconnect_interval  port " op-restart-digest="1dbaa1569a09b2a43b8d2b8037a48749"/>
+          </lrm_resource>
+          <lrm_resource id="remote2" type="remote" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="remote2_last_0" operation_key="remote2_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="6:29:0:231989e8-bacb-4b30-ad73-d034cf9fd2ed" transition-magic="0:0;6:29:0:231989e8-bacb-4b30-ad73-d034cf9fd2ed" on_node="node2" call-id="18" rc-code="0" op-status="0" interval="0" last-run="1503335525" last-rc-change="1503335525" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" ra-version="0.1" op-force-restart=" reconnect_interval  port " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="remote2_monitor_60000" operation_key="remote2_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="19:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;19:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" on_node="node1" call-id="19" rc-code="0" op-status="0" interval="60000" last-rc-change="1503335516" exec-time="0" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" ra-version="0.1"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state remote_node="true" id="remote1" uname="remote1" in_ccm="false" crm-debug-origin="post_cache_update">
+      <lrm id="remote1">
+        <lrm_resources>
+          <lrm_resource id="rsc1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="rsc1_last_0" operation_key="rsc1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="6:29:0:231989e8-bacb-4b30-ad73-d034cf9fd2ed" transition-magic="0:0;6:29:0:231989e8-bacb-4b30-ad73-d034cf9fd2ed" on_node="remote1" call-id="18" rc-code="0" op-status="0" interval="0" last-run="1503335525" last-rc-change="1503335525" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" ra-version="0.1" op-force-restart=" reconnect_interval  port " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="rsc1_monitor_10000" operation_key="rsc1_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="19:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;19:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" on_node="remote1" call-id="19" rc-code="0" op-status="0" interval="10000" last-rc-change="1503335516" exec-time="0" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd" ra-version="0.1"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state remote_node="true" id="remote2" uname="remote2" in_ccm="false" crm-debug-origin="post_cache_update">
+      <lrm id="remote2">
+        <lrm_resources>
+          <lrm_resource id="rsc1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="rsc1_last_0" operation_key="rsc1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.14" transition-key="9:1:7:2dc02a24-b145-46ac-ba2d-ee462fdab7ab" transition-magic="0:7;9:1:7:2dc02a24-b145-46ac-ba2d-ee462fdab7ab" on_node="remote2" call-id="39" rc-code="7" op-status="0" interval="0" last-run="1503334850" last-rc-change="1503334850" exec-time="11" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" ra-version="1.0" op-force-restart=" fail_start_on  fake " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-secure-params=" passwd " op-secure-digest="5de129d7fe42dbcfe537f2c63b1921b6"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

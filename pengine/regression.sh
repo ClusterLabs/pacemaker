@@ -297,6 +297,7 @@ do_test bug-1820-1 "Non-migration in a group"
 do_test migrate-5 "Primitive migration with a clone"
 do_test migrate-fencing "Migration after Fencing"
 do_test migrate-both-vms "Migrate two VMs that have no colocation"
+do_test migration-behind-migrating-remote "Migrate resource behind migrating remote connection"
 
 do_test 1-a-then-bm-move-b "Advanced migrate logic. A then B. migrate B."
 do_test 2-am-then-b-move-a "Advanced migrate logic, A then B, migrate A without stopping B"
