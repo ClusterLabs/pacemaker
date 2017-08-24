@@ -413,9 +413,10 @@ graph_update_action(action_t * first, action_t * then, node_t * node,
 }
 
 static void
-mark_start_blocked(resource_t *rsc)
+mark_start_blocked(resource_t *rsc, resource_t *reason)
 {
     GListPtr gIter = rsc->actions;
+    char *reason_text = crm_strdup_printf("colocation with %s", reason->id);
 
     for (; gIter != NULL; gIter = gIter->next) {
         action_t *action = (action_t *) gIter->data;
@@ -424,11 +425,12 @@ mark_start_blocked(resource_t *rsc)
             continue;
         }
         if (is_set(action->flags, pe_action_runnable)) {
-            clear_bit(action->flags, pe_action_runnable);
+            pe_action_set_flag_reason(__FUNCTION__, __LINE__, action, NULL, reason_text, pe_action_runnable, FALSE);
             update_colo_start_chain(action);
             update_action(action);
         }
     }
+    free(reason_text);
 }
 
 void
@@ -445,6 +447,11 @@ update_colo_start_chain(action_t *action)
         return;
     }
 
+    if(rsc->parent) {
+        /* uber_parent() stops _before_ the bundle */
+        rsc = rsc->parent;
+    }
+
     /* if rsc has children, all the children need to have start set to
      * unrunnable before we follow the colo chain for the parent. */
     for (gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
@@ -458,7 +465,7 @@ update_colo_start_chain(action_t *action)
     for (gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
         rsc_colocation_t *colocate_with = (rsc_colocation_t *)gIter->data;
         if (colocate_with->score == INFINITY) {
-            mark_start_blocked(colocate_with->rsc_lh);
+            mark_start_blocked(colocate_with->rsc_lh, action->rsc);
         }
     }
 }
@@ -490,7 +497,7 @@ update_action(action_t * then)
         if (then->required_runnable_before == 0) {
             then->required_runnable_before = 1;
         }
-        clear_bit(then->flags, pe_action_runnable);
+        pe_clear_action_bit(then, pe_action_runnable);
         /* We are relying on the pe_order_one_or_more clause of
          * graph_update_action(), called as part of the:
          *
@@ -1585,7 +1592,7 @@ graph_has_loop(action_t * init_action, action_t * action, action_wrapper_t * wra
     }
 
 done:
-    clear_bit(wrapper->action->flags, pe_action_tracking);
+    pe_clear_action_bit(wrapper->action, pe_action_tracking);
 
     return has_loop;
 }
