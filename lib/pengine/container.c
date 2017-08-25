@@ -769,6 +769,7 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         container_data->docker_host_options = buffer;
         if(container_data->attribute_target) {
             g_hash_table_replace(rsc->meta, strdup(XML_RSC_ATTR_TARGET), strdup(container_data->attribute_target));
+            g_hash_table_replace(container_data->child->meta, strdup(XML_RSC_ATTR_TARGET), strdup(container_data->attribute_target));
         }
 
     } else {

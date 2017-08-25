@@ -1227,25 +1227,25 @@ clone_expand(resource_t * rsc, pe_working_set_t * data_set)
 
     if (clone_data->start_notify) {
         collect_notification_data(rsc, TRUE, TRUE, clone_data->start_notify);
-        expand_notification_data(clone_data->start_notify, data_set);
+        expand_notification_data(rsc, clone_data->start_notify, data_set);
         create_notifications(rsc, clone_data->start_notify, data_set);
     }
 
     if (clone_data->stop_notify) {
         collect_notification_data(rsc, TRUE, TRUE, clone_data->stop_notify);
-        expand_notification_data(clone_data->stop_notify, data_set);
+        expand_notification_data(rsc, clone_data->stop_notify, data_set);
         create_notifications(rsc, clone_data->stop_notify, data_set);
     }
 
     if (clone_data->promote_notify) {
         collect_notification_data(rsc, TRUE, TRUE, clone_data->promote_notify);
-        expand_notification_data(clone_data->promote_notify, data_set);
+        expand_notification_data(rsc, clone_data->promote_notify, data_set);
         create_notifications(rsc, clone_data->promote_notify, data_set);
     }
 
     if (clone_data->demote_notify) {
         collect_notification_data(rsc, TRUE, TRUE, clone_data->demote_notify);
-        expand_notification_data(clone_data->demote_notify, data_set);
+        expand_notification_data(rsc, clone_data->demote_notify, data_set);
         create_notifications(rsc, clone_data->demote_notify, data_set);
     }
 

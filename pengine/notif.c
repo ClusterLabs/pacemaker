@@ -17,6 +17,7 @@
  */
 
 #include <crm_internal.h>
+#include <crm/msg_xml.h>
 #include <allocate.h>
 #include <notif.h>
 #include <utils.h>
@@ -81,33 +82,60 @@ static notify_entry_t *dup_notify_entry(notify_entry_t *entry)
     return dup;
 }
 
-static char *
-expand_node_list(GListPtr list)
+static void
+expand_node_list(GListPtr list, char **uname, char **metal)
 {
     GListPtr gIter = NULL;
     char *node_list = NULL;
+    char *metal_list = NULL;
 
+    CRM_ASSERT(uname != NULL);
     if (list == NULL) {
-        return strdup(" ");
+        *uname = strdup(" ");
+        if(metal) {
+            *metal = strdup(" ");
+        }
+        return;
     }
 
     for (gIter = list; gIter != NULL; gIter = gIter->next) {
+        int len = 0;
+        int existing_len = 0;
         node_t *node = (node_t *) gIter->data;
 
-        if (node->details->uname) {
-            int existing_len = 0;
-            int len = 2 + strlen(node->details->uname);
+        CRM_ASSERT(node->details->uname);
+        len = 2 + strlen(node->details->uname);
 
-            if(node_list) {
-                existing_len = strlen(node_list);
+        if(node_list) {
+            existing_len = strlen(node_list);
+        }
+//            crm_trace("Adding %s (%dc) at offset %d", node->details->uname, len - 2, existing_len);
+        node_list = realloc_safe(node_list, len + existing_len);
+        sprintf(node_list + existing_len, "%s%s", existing_len == 0 ? "":" ", node->details->uname);
+
+        if(metal) {
+            existing_len = 0;
+            if(metal_list) {
+                existing_len = strlen(metal_list);
             }
-            crm_trace("Adding %s (%dc) at offset %d", node->details->uname, len - 2, existing_len);
-            node_list = realloc_safe(node_list, len + existing_len);
-            sprintf(node_list + existing_len, "%s%s", existing_len == 0 ? "":" ", node->details->uname);
+
+            if(node->details->remote_rsc
+               && node->details->remote_rsc->container
+               && node->details->remote_rsc->container->running_on) {
+                node = node->details->remote_rsc->container->running_on->data;
+            }
+
+            CRM_ASSERT(node->details->uname);
+            len = 2 + strlen(node->details->uname);
+            metal_list = realloc_safe(metal_list, len + existing_len);
+            sprintf(metal_list + existing_len, "%s%s", existing_len == 0 ? "":" ", node->details->uname);
         }
     }
 
-    return node_list;
+    *uname = node_list;
+    if(metal) {
+        *metal = metal_list;
+    }
 }
 
 static void
@@ -495,7 +523,7 @@ collect_notification_data(resource_t * rsc, gboolean state, gboolean activity,
 }
 
 gboolean
-expand_notification_data(notify_data_t * n_data, pe_working_set_t * data_set)
+expand_notification_data(resource_t *rsc, notify_data_t * n_data, pe_working_set_t * data_set)
 {
     /* Expand the notification entries into a key=value hashtable
      * This hashtable is later used in action2xml()
@@ -503,6 +531,7 @@ expand_notification_data(notify_data_t * n_data, pe_working_set_t * data_set)
     gboolean required = FALSE;
     char *rsc_list = NULL;
     char *node_list = NULL;
+    char *metal_list = NULL;
     GListPtr nodes = NULL;
 
     if (n_data->stop) {
@@ -576,12 +605,21 @@ expand_notification_data(notify_data_t * n_data, pe_working_set_t * data_set)
     g_hash_table_insert(n_data->keys, strdup("notify_inactive_resource"), rsc_list);
 
     nodes = g_hash_table_get_values(n_data->allowed_nodes);
-    node_list = expand_node_list(nodes);
+    expand_node_list(nodes, &node_list, NULL);
     g_hash_table_insert(n_data->keys, strdup("notify_available_uname"), node_list);
     g_list_free(nodes);
 
-    node_list = expand_node_list(data_set->nodes);
+    expand_node_list(data_set->nodes, &node_list, &metal_list);
     g_hash_table_insert(n_data->keys, strdup("notify_all_uname"), node_list);
+
+    {
+        const char *source = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET);
+        if(safe_str_eq("host", source)) {
+            g_hash_table_insert(n_data->keys, strdup("notify_all_hosts"), metal_list);
+        } else {
+            free(metal_list);
+        }
+    }
 
     if (required && n_data->pre) {
         update_action_flags(n_data->pre, pe_action_optional | pe_action_clear, __FUNCTION__, __LINE__);
