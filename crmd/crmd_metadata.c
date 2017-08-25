@@ -16,9 +16,6 @@
 
 #include "crmd_lrm.h"
 
-/* If we can't successfully get the version from the agent, use this */
-#define DEFAULT_RA_VERSION "0.1"
-
 static regex_t *version_format_regex = NULL;
 
 static void
@@ -121,12 +118,12 @@ ra_version_from_xml(xmlNode *metadata_xml, const lrmd_rsc_info_t *rsc)
     if (version == NULL) {
         crm_debug("Metadata for %s:%s:%s does not specify a version",
                   rsc->class, rsc->provider, rsc->type);
-        version = DEFAULT_RA_VERSION;
+        version = PCMK_DEFAULT_AGENT_VERSION;
 
     } else if (!valid_version_format(version)) {
         crm_notice("%s:%s:%s metadata version has unrecognized format",
                   rsc->class, rsc->provider, rsc->type);
-        version = DEFAULT_RA_VERSION;
+        version = PCMK_DEFAULT_AGENT_VERSION;
 
     } else {
         crm_debug("Metadata for %s:%s:%s has version %s",

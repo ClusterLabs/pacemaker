@@ -463,7 +463,7 @@ systemd_unit_metadata(const char *name, int timeout)
 
     meta = crm_strdup_printf("<?xml version=\"1.0\"?>\n"
                            "<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"
-                           "<resource-agent name=\"%s\" version=\"0.1\">\n"
+                           "<resource-agent name=\"%s\" version=\"" PCMK_DEFAULT_AGENT_VERSION "\">\n"
                            "  <version>1.0</version>\n"
                            "  <longdesc lang=\"en\">\n"
                            "    %s\n"

@@ -69,6 +69,9 @@ extern "C" {
  * reason for a completed operationt */
 #define PCMK_OCF_REASON_PREFIX "ocf-exit-reason:"
 
+// Agent version to use if agent doesn't specify one
+#define PCMK_DEFAULT_AGENT_VERSION "0.1"
+
 enum lsb_exitcode {
     PCMK_LSB_OK                  = 0,
     PCMK_LSB_UNKNOWN_ERROR       = 1,
