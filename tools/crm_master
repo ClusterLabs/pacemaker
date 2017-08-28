@@ -1,7 +1,5 @@
 #!/bin/bash
 
-target=`crm_node -n`
-
 TEMP=`getopt -o qDGQVN:U:v:i:l:r: --long version,help,resource:,node:,uname:,attr-value:,id:,update:,delete-attr,get-value,attr-id:,lifetime:,quiet \
      -n 'crm_master' -- "$@"`
 
@@ -12,7 +10,7 @@ eval set -- "$TEMP"
 
 while true ; do
 	case "$1" in
-	    -N|--node|-U|--uname) target="$2"; shift; shift;;
+	    -N|--node|-U|--uname) options="$options $1 $2"; shift; shift;;
 	    -v|--attr-value|--update|-i|--id|--attr-id|-l|--lifetime) options="$options $1 $2"; shift; shift;;
 	    -Q|-q|--quiet|-D|--delete-attr|-G|--get-value|-V) options="$options $1"; shift;;
 	    -r|--resource) OCF_RESOURCE_INSTANCE=$2; shift; shift;;
@@ -53,4 +51,4 @@ if [ -z "$OCF_RESOURCE_INSTANCE" ]; then
     exit 1
 fi
 
-crm_attribute -N $target -n master-$OCF_RESOURCE_INSTANCE $options
+crm_attribute -n master-$OCF_RESOURCE_INSTANCE $options

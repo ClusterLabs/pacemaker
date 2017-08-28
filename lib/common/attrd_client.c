@@ -257,3 +257,31 @@ attrd_clear_delegate(crm_ipc_t *ipc, const char *host, const char *resource,
               (host? host : "all nodes"), pcmk_strerror(rc), rc);
     return rc;
 }
+
+const char *
+attrd_get_target(const char *name)
+{
+    if(safe_str_eq(name, "auto") || safe_str_eq(name, "localhost")) {
+        name = NULL;
+    }
+
+    if(name != NULL) {
+        return name;
+
+    } else {
+        const char *target = getenv(crm_meta_name(XML_RSC_ATTR_TARGET));
+        const char *host_pyhsical = getenv(crm_meta_name(PCMK_ENV_PHYSICAL_HOST));
+        const char *host_pcmk = getenv("OCF_RESKEY_" CRM_META "_" XML_LRM_ATTR_TARGET);
+
+        /* It is important we use the names by which the PE knows us */
+        if(safe_str_eq(target, "host") && host_pyhsical != NULL) {
+            return host_pyhsical;
+
+        } else if(host_pcmk) {
+            return host_pcmk;
+        }
+    }
+
+    // TODO? Call get_local_node_name() if name == NULL
+    return name;
+}
