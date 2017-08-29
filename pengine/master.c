@@ -455,7 +455,7 @@ master_score(resource_t * rsc, node_t * node, int not_set_value)
     char *attr_name;
     char *name = rsc->id;
     const char *attr_value = NULL;
-    int score = not_set_value, len = 0;
+    int score = not_set_value;
 
     if (rsc->children) {
         GListPtr gIter = rsc->children;
@@ -480,16 +480,26 @@ master_score(resource_t * rsc, node_t * node, int not_set_value)
         }
 
     } else {
-        node_t *match = pe_find_node_id(rsc->running_on, node->details->id);
-        node_t *known = pe_hash_table_lookup(rsc->known_on, node->details->id);
+        node_t *match = NULL;
 
         if (is_not_set(rsc->flags, pe_rsc_unique) && filter_anonymous_instance(rsc, node)) {
             pe_rsc_trace(rsc, "Anonymous clone %s is allowed on %s", rsc->id, node->details->uname);
 
-        } else if (match == NULL && known == NULL) {
-            pe_rsc_trace(rsc, "%s (aka. %s) has been filtered on %s - ignoring", rsc->id,
-                         rsc->clone_name, node->details->uname);
-            return score;
+        } else if (rsc->running_on || g_hash_table_size(rsc->known_on)) {
+            /* If we've probed and/or started the resource anywhere, consider
+             * master scores only from nodes where we know the status. However,
+             * if the status of all nodes is unknown (e.g. cluster startup),
+             * skip this code, to make sure we take into account any permanent
+             * master scores set previously.
+             */
+            node_t *known = pe_hash_table_lookup(rsc->known_on, node->details->id);
+
+            match = pe_find_node_id(rsc->running_on, node->details->id);
+            if ((match == NULL) && (known == NULL)) {
+                pe_rsc_trace(rsc, "skipping %s (aka. %s) master score on %s because inactive",
+                             rsc->id, rsc->clone_name, node->details->uname);
+                return score;
+            }
         }
 
         match = pe_hash_table_lookup(rsc->allowed_nodes, node->details->id);
@@ -510,9 +520,7 @@ master_score(resource_t * rsc, node_t * node, int not_set_value)
         name = rsc->clone_name;
     }
 
-    len = 8 + strlen(name);
-    attr_name = calloc(1, len);
-    sprintf(attr_name, "master-%s", name);
+    attr_name = crm_strdup_printf("master-%s", name);
 
     if (node) {
         attr_value = g_hash_table_lookup(node->details->attrs, attr_name);
