@@ -449,10 +449,23 @@ filter_anonymous_instance(resource_t * rsc, node_t * node)
     return FALSE;
 }
 
+static const char *
+lookup_master_score(node_t *node, const char *name)
+{
+    const char *attr_value = NULL;
+
+    if (node && name) {
+        char *attr_name = crm_strdup_printf("master-%s", name);
+
+        attr_value = g_hash_table_lookup(node->details->attrs, attr_name);
+        free(attr_name);
+    }
+    return attr_value;
+}
+
 static int
 master_score(resource_t * rsc, node_t * node, int not_set_value)
 {
-    char *attr_name;
     char *name = rsc->id;
     const char *attr_value = NULL;
     int score = not_set_value;
@@ -520,19 +533,28 @@ master_score(resource_t * rsc, node_t * node, int not_set_value)
         name = rsc->clone_name;
     }
 
-    attr_name = crm_strdup_printf("master-%s", name);
+    attr_value = lookup_master_score(node, name);
+    pe_rsc_trace(rsc, "master score for %s on %s = %s",
+                 name, node->details->uname, crm_str(attr_value));
 
-    if (node) {
-        attr_value = g_hash_table_lookup(node->details->attrs, attr_name);
-        pe_rsc_trace(rsc, "%s: %s[%s] = %s", rsc->id, attr_name, node->details->uname,
-                     crm_str(attr_value));
+    if ((attr_value == NULL) && is_not_set(rsc->flags, pe_rsc_unique)) {
+        /* If we don't have any LRM history yet, we won't have clone_name -- in
+         * that case, for anonymous clones, try the resource name without any
+         * instance number.
+         */
+        name = clone_strip(rsc->id);
+        if (strcmp(rsc->id, name)) {
+            attr_value = lookup_master_score(node, name);
+            pe_rsc_trace(rsc, "stripped master score for %s on %s = %s",
+                         name, node->details->uname, crm_str(attr_value));
+        }
+        free(name);
     }
 
     if (attr_value != NULL) {
         score = char2score(attr_value);
     }
 
-    free(attr_name);
     return score;
 }
 
