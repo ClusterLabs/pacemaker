@@ -436,6 +436,7 @@ do_test bug-cl-5213 "Ensure role colocation with -INFINITY is enforced"
 do_test bug-cl-5219 "Allow unrelated resources with a common colocation target to remain promoted"
 do_test master-asymmetrical-order "Fix the behaviors of multi-state resources with asymmetrical ordering"
 do_test master-notify "Master promotion with notifies"
+do_test master-score-startup "Use permanent master scores without LRM history"
 
 echo ""
 do_test history-1 "Correctly parse stateful-1 resource state"
