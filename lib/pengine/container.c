@@ -518,10 +518,11 @@ create_remote_resource(
         GHashTableIter gIter;
         GListPtr rsc_iter = NULL;
         node_t *node = NULL;
-        xmlNode *xml_obj = NULL;
         xmlNode *xml_remote = NULL;
         char *id = crm_strdup_printf("%s-%d", data->prefix, tuple->offset);
+        char *port_s = NULL;
         const char *uname = NULL;
+        const char *connect_name = NULL;
 
         if (remote_id_conflict(id, data_set)) {
             free(id);
@@ -530,7 +531,27 @@ create_remote_resource(
             CRM_ASSERT(remote_id_conflict(id, data_set) == FALSE);
         }
 
-        xml_remote = create_resource(id, "pacemaker", "remote");
+        /* Using "#uname" as the server name when the connection does not have
+         * its own IP is a hack that allows nested remotes (i.e. a bundle
+         * running on a remote node).
+         */
+        connect_name = (tuple->ipaddr? tuple->ipaddr : "#uname");
+
+        if (data->control_port == NULL) {
+            port_s = crm_itoa(DEFAULT_REMOTE_PORT);
+        }
+
+        /* This sets tuple->docker as tuple->remote's container, which is
+         * similar to what happens with guest nodes. This is how the PE knows
+         * that the bundle node is fenced by recovering docker, and that
+         * remote should be ordered relative to docker.
+         */
+        xml_remote = pe_create_remote_xml(NULL, id, tuple->docker->id,
+                                          XML_BOOLEAN_FALSE, NULL, "60s", NULL,
+                                          NULL, connect_name,
+                                          (data->control_port?
+                                           data->control_port : port_s));
+        free(port_s);
 
         /* Abandon our created ID, and pull the copy from the XML, because we
          * need something that will get freed during data set cleanup to use as
@@ -539,42 +560,6 @@ create_remote_resource(
         free(id);
         id = NULL;
         uname = ID(xml_remote);
-
-        xml_obj = create_xml_node(xml_remote, "operations");
-        crm_create_op_xml(xml_obj, uname, "monitor", "60s", NULL);
-
-        xml_obj = create_xml_node(xml_remote, XML_TAG_ATTR_SETS);
-        crm_xml_set_id(xml_obj, "%s-attributes-%d", data->prefix, tuple->offset);
-
-        if(tuple->ipaddr) {
-            crm_create_nvpair_xml(xml_obj, NULL, "addr", tuple->ipaddr);
-        } else {
-            // REMOTE_CONTAINER_HACK: Allow remote nodes that start containers with pacemaker remote inside
-            crm_create_nvpair_xml(xml_obj, NULL, "addr", "#uname");
-        }
-
-        if(data->control_port) {
-            crm_create_nvpair_xml(xml_obj, NULL, "port", data->control_port);
-        } else {
-            char *port_s = crm_itoa(DEFAULT_REMOTE_PORT);
-
-            crm_create_nvpair_xml(xml_obj, NULL, "port", port_s);
-            free(port_s);
-        }
-
-        xml_obj = create_xml_node(xml_remote, XML_TAG_META_SETS);
-        crm_xml_set_id(xml_obj, "%s-meta-%d", data->prefix, tuple->offset);
-
-        crm_create_nvpair_xml(xml_obj, NULL,
-                              XML_OP_ATTR_ALLOW_MIGRATE, XML_BOOLEAN_FALSE);
-
-        /* This sets tuple->docker as tuple->remote's container, which is
-         * similar to what happens with guest nodes. This is how the PE knows
-         * that the bundle node is fenced by recovering docker, and that
-         * remote should be ordered relative to docker.
-         */
-        crm_create_nvpair_xml(xml_obj, NULL,
-                              XML_RSC_ATTR_CONTAINER, tuple->docker->id);
 
         /* Ensure a node has been created for the guest (it may have already
          * been, if it has a permanent node attribute), and ensure its weight is

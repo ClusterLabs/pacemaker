@@ -132,3 +132,85 @@ pe_foreach_guest_node(const pe_working_set_t *data_set, const node_t *host,
         }
     }
 }
+
+/*!
+ * \internal
+ * \brief Create CIB XML for an implicit remote connection
+ *
+ * \param[in] parent           If not NULL, use as parent XML element
+ * \param[in] uname            Name of Pacemaker Remote node
+ * \param[in] container        If not NULL, use this as connection container
+ * \param[in] migrateable      If not NULL, use as allow-migrate value
+ * \param[in] is_managed       If not NULL, use as is-managed value
+ * \param[in] interval         If not NULL, create recurring monitor with this interval
+ * \param[in] monitor_timeout  If not NULL, use as remote connect timeout
+ * \param[in] start_timeout    If not NULL, use as remote connect timeout
+ * \param[in] server           If not NULL, use as remote server value
+ * \param[in] port             If not NULL, use as remote port value
+ *
+ * \note We should standardize on a single interval and monitor_timeout, but
+ *       that would cause LRM history entries in active mixed-version clusters
+ *       (and regression tests) to require a new monitor operation due to
+ *       changed parameters. It might be worthwhile to do at a significant
+ *       version bump.
+ */
+xmlNode *
+pe_create_remote_xml(xmlNode *parent, const char *uname,
+                     const char *container_id, const char *migrateable,
+                     const char *is_managed, const char *interval,
+                     const char *monitor_timeout, const char *start_timeout,
+                     const char *server, const char *port)
+{
+    xmlNode *remote;
+    xmlNode *xml_sub;
+
+    remote = create_xml_node(parent, XML_CIB_TAG_RESOURCE);
+
+    // Add identity
+    crm_xml_add(remote, XML_ATTR_ID, uname);
+    crm_xml_add(remote, XML_AGENT_ATTR_CLASS, PCMK_RESOURCE_CLASS_OCF);
+    crm_xml_add(remote, XML_AGENT_ATTR_PROVIDER, "pacemaker");
+    crm_xml_add(remote, XML_ATTR_TYPE, "remote");
+
+    // Add meta-attributes
+    xml_sub = create_xml_node(remote, XML_TAG_META_SETS);
+    crm_xml_set_id(xml_sub, "%s-%s", uname, XML_TAG_META_SETS);
+    crm_create_nvpair_xml(xml_sub, NULL,
+                          XML_RSC_ATTR_INTERNAL_RSC, XML_BOOLEAN_TRUE);
+    if (container_id) {
+        crm_create_nvpair_xml(xml_sub, NULL,
+                              XML_RSC_ATTR_CONTAINER, container_id);
+    }
+    if (migrateable) {
+        crm_create_nvpair_xml(xml_sub, NULL,
+                              XML_OP_ATTR_ALLOW_MIGRATE, migrateable);
+    }
+    if (is_managed) {
+        crm_create_nvpair_xml(xml_sub, NULL, XML_RSC_ATTR_MANAGED, is_managed);
+    }
+
+    // Add instance attributes
+    if (port || server) {
+        xml_sub = create_xml_node(remote, XML_TAG_ATTR_SETS);
+        crm_xml_set_id(xml_sub, "%s-%s", uname, XML_TAG_ATTR_SETS);
+        if (server) {
+            crm_create_nvpair_xml(xml_sub, NULL, "addr", server);
+        }
+        if (port) {
+            crm_create_nvpair_xml(xml_sub, NULL, "port", port);
+        }
+    }
+
+    // Add operations
+    if (interval || start_timeout) {
+        xml_sub = create_xml_node(remote, "operations");
+        if (interval) {
+            crm_create_op_xml(xml_sub, uname, "monitor", interval,
+                              monitor_timeout);
+        }
+        if (start_timeout) {
+            crm_create_op_xml(xml_sub, uname, "start", "0", start_timeout);
+        }
+    }
+    return remote;
+}

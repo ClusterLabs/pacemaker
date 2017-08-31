@@ -408,8 +408,6 @@ remote_id_conflict(const char *remote_name, pe_working_set_t *data)
 static const char *
 expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pe_working_set_t *data)
 {
-    xmlNode *xml_rsc = NULL;
-    xmlNode *xml_tmp = NULL;
     xmlNode *attr_set = NULL;
     xmlNode *attr = NULL;
 
@@ -454,47 +452,9 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pe_working_set_t *data
         return NULL;
     }
 
-    xml_rsc = create_xml_node(parent, XML_CIB_TAG_RESOURCE);
-
-    crm_xml_add(xml_rsc, XML_ATTR_ID, remote_name);
-    crm_xml_add(xml_rsc, XML_AGENT_ATTR_CLASS, PCMK_RESOURCE_CLASS_OCF);
-    crm_xml_add(xml_rsc, XML_AGENT_ATTR_PROVIDER, "pacemaker");
-    crm_xml_add(xml_rsc, XML_ATTR_TYPE, "remote");
-
-    xml_tmp = create_xml_node(xml_rsc, XML_TAG_META_SETS);
-    crm_xml_set_id(xml_tmp, "%s_%s", remote_name, XML_TAG_META_SETS);
-
-    crm_create_nvpair_xml(xml_tmp, NULL, XML_RSC_ATTR_CONTAINER, container_id);
-    crm_create_nvpair_xml(xml_tmp, NULL,
-                          XML_RSC_ATTR_INTERNAL_RSC, XML_BOOLEAN_TRUE);
-    if (remote_allow_migrate) {
-        crm_create_nvpair_xml(xml_tmp, NULL,
-                          XML_OP_ATTR_ALLOW_MIGRATE, remote_allow_migrate);
-    }
-
-    if (container_managed) {
-        crm_create_nvpair_xml(xml_tmp, NULL,
-                              XML_RSC_ATTR_MANAGED, container_managed);
-    }
-
-    xml_tmp = create_xml_node(xml_rsc, "operations");
-    crm_create_op_xml(xml_tmp, remote_name, "monitor", "30s", "30s");
-    if (connect_timeout) {
-        crm_create_op_xml(xml_tmp, remote_name, "start", "0", connect_timeout);
-    }
-
-    if (remote_port || remote_server) {
-        xml_tmp = create_xml_node(xml_rsc, XML_TAG_ATTR_SETS);
-        crm_xml_set_id(xml_tmp, "%s_%s", remote_name, XML_TAG_ATTR_SETS);
-
-        if (remote_server) {
-            crm_create_nvpair_xml(xml_tmp, NULL, "addr", remote_server);
-        }
-        if (remote_port) {
-            crm_create_nvpair_xml(xml_tmp, NULL, "port", remote_port);
-        }
-    }
-
+    pe_create_remote_xml(parent, remote_name, container_id,
+                         remote_allow_migrate, container_managed, "30s", "30s",
+                         connect_timeout, remote_server, remote_port);
     return remote_name;
 }
 
