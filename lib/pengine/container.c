@@ -100,16 +100,6 @@ create_resource(const char *name, const char *provider, const char *kind)
     return rsc;
 }
 
-static void
-create_op(xmlNode *parent, const char *prefix, const char *task, const char *interval) 
-{
-    xmlNode *xml_op = create_xml_node(parent, "op");
-
-    crm_xml_set_id(xml_op, "%s-%s-%s", prefix, task, interval);
-    crm_xml_add(xml_op, XML_LRM_ATTR_INTERVAL, interval);
-    crm_xml_add(xml_op, "name", task);
-}
-
 /*!
  * \internal
  * \brief Check whether cluster can manage resource inside container
@@ -171,7 +161,7 @@ create_ip_resource(
         }
 
         xml_obj = create_xml_node(xml_ip, "operations");
-        create_op(xml_obj, ID(xml_ip), "monitor", "60s");
+        crm_create_op_xml(xml_obj, ID(xml_ip), "monitor", "60s", NULL);
 
         // TODO: Other ops? Timeouts and intervals from underlying resource?
 
@@ -327,7 +317,7 @@ create_docker_resource(
 
 
         xml_obj = create_xml_node(xml_docker, "operations");
-        create_op(xml_obj, ID(xml_docker), "monitor", "60s");
+        crm_create_op_xml(xml_obj, ID(xml_docker), "monitor", "60s", NULL);
 
         // TODO: Other ops? Timeouts and intervals from underlying resource?
 
@@ -485,7 +475,7 @@ create_rkt_resource(
 
 
         xml_obj = create_xml_node(xml_docker, "operations");
-        create_op(xml_obj, ID(xml_docker), "monitor", "60s");
+        crm_create_op_xml(xml_obj, ID(xml_docker), "monitor", "60s", NULL);
 
         // TODO: Other ops? Timeouts and intervals from underlying resource?
 
@@ -551,7 +541,7 @@ create_remote_resource(
         uname = ID(xml_remote);
 
         xml_obj = create_xml_node(xml_remote, "operations");
-        create_op(xml_obj, uname, "monitor", "60s");
+        crm_create_op_xml(xml_obj, uname, "monitor", "60s", NULL);
 
         xml_obj = create_xml_node(xml_remote, XML_TAG_ATTR_SETS);
         crm_xml_set_id(xml_obj, "%s-attributes-%d", data->prefix, tuple->offset);

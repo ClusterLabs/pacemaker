@@ -478,18 +478,9 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pe_working_set_t *data
     }
 
     xml_tmp = create_xml_node(xml_rsc, "operations");
-    attr = create_xml_node(xml_tmp, XML_ATTR_OP);
-    crm_xml_set_id(attr, "%s_%s", remote_name, "monitor-interval-30s");
-    crm_xml_add(attr, XML_ATTR_TIMEOUT, "30s");
-    crm_xml_add(attr, XML_LRM_ATTR_INTERVAL, "30s");
-    crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, "monitor");
-
+    crm_create_op_xml(xml_tmp, remote_name, "monitor", "30s", "30s");
     if (connect_timeout) {
-        attr = create_xml_node(xml_tmp, XML_ATTR_OP);
-        crm_xml_set_id(attr, "%s_%s", remote_name, "start-interval-0");
-        crm_xml_add(attr, XML_ATTR_TIMEOUT, connect_timeout);
-        crm_xml_add(attr, XML_LRM_ATTR_INTERVAL, "0");
-        crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, "start");
+        crm_create_op_xml(xml_tmp, remote_name, "start", "0", connect_timeout);
     }
 
     if (remote_port || remote_server) {
