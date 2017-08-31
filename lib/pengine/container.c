@@ -101,16 +101,6 @@ create_resource(const char *name, const char *provider, const char *kind)
 }
 
 static void
-create_nvp(xmlNode *parent, const char *name, const char *value) 
-{
-    xmlNode *xml_nvp = create_xml_node(parent, XML_CIB_TAG_NVPAIR);
-
-    crm_xml_set_id(xml_nvp, "%s-%s", ID(parent), name);
-    crm_xml_add(xml_nvp, XML_NVPAIR_ATTR_NAME, name);
-    crm_xml_add(xml_nvp, XML_NVPAIR_ATTR_VALUE, value);
-}
-
-static void
 create_op(xmlNode *parent, const char *prefix, const char *task, const char *interval) 
 {
     xmlNode *xml_op = create_xml_node(parent, "op");
@@ -167,16 +157,17 @@ create_ip_resource(
         xml_obj = create_xml_node(xml_ip, XML_TAG_ATTR_SETS);
         crm_xml_set_id(xml_obj, "%s-attributes-%d", data->prefix, tuple->offset);
 
-        create_nvp(xml_obj, "ip", tuple->ipaddr);
+        crm_create_nvpair_xml(xml_obj, NULL, "ip", tuple->ipaddr);
         if(data->host_network) {
-            create_nvp(xml_obj, "nic", data->host_network);
+            crm_create_nvpair_xml(xml_obj, NULL, "nic", data->host_network);
         }
 
         if(data->host_netmask) {
-            create_nvp(xml_obj, "cidr_netmask", data->host_netmask);
+            crm_create_nvpair_xml(xml_obj, NULL,
+                                  "cidr_netmask", data->host_netmask);
 
         } else {
-            create_nvp(xml_obj, "cidr_netmask", "32");
+            crm_create_nvpair_xml(xml_obj, NULL, "cidr_netmask", "32");
         }
 
         xml_obj = create_xml_node(xml_ip, "operations");
@@ -216,10 +207,10 @@ create_docker_resource(
         xml_obj = create_xml_node(xml_docker, XML_TAG_ATTR_SETS);
         crm_xml_set_id(xml_obj, "%s-attributes-%d", data->prefix, tuple->offset);
 
-        create_nvp(xml_obj, "image", data->image);
-        create_nvp(xml_obj, "allow_pull", "true");
-        create_nvp(xml_obj, "force_kill", "false");
-        create_nvp(xml_obj, "reuse", "false");
+        crm_create_nvpair_xml(xml_obj, NULL, "image", data->image);
+        crm_create_nvpair_xml(xml_obj, NULL, "allow_pull", XML_BOOLEAN_TRUE);
+        crm_create_nvpair_xml(xml_obj, NULL, "force_kill", XML_BOOLEAN_FALSE);
+        crm_create_nvpair_xml(xml_obj, NULL, "reuse", XML_BOOLEAN_FALSE);
 
         offset += snprintf(buffer+offset, max-offset, " --restart=no");
 
@@ -285,17 +276,19 @@ create_docker_resource(
             offset += snprintf(buffer+offset, max-offset, " %s", data->docker_host_options);
         }
 
-        create_nvp(xml_obj, "run_opts", buffer);
+        crm_create_nvpair_xml(xml_obj, NULL, "run_opts", buffer);
         free(buffer);
 
-        create_nvp(xml_obj, "mount_points", dbuffer);
+        crm_create_nvpair_xml(xml_obj, NULL, "mount_points", dbuffer);
         free(dbuffer);
 
         if(tuple->child) {
             if(data->docker_run_command) {
-                create_nvp(xml_obj, "run_cmd", data->docker_run_command);
+                crm_create_nvpair_xml(xml_obj, NULL,
+                                      "run_cmd", data->docker_run_command);
             } else {
-                create_nvp(xml_obj, "run_cmd", SBIN_DIR"/pacemaker_remoted");
+                crm_create_nvpair_xml(xml_obj, NULL,
+                                      "run_cmd", SBIN_DIR "/pacemaker_remoted");
             }
 
             /* TODO: Allow users to specify their own?
@@ -303,7 +296,7 @@ create_docker_resource(
              * We just want to know if the container is alive, we'll
              * monitor the child independently
              */
-            create_nvp(xml_obj, "monitor_cmd", "/bin/true"); 
+            crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd", "/bin/true");
         /* } else if(child && data->untrusted) {
          * Support this use-case?
          *
@@ -313,12 +306,15 @@ create_docker_resource(
          * Arguably better to control API access this with ACLs like
          * "normal" remote nodes
          *
-         *     create_nvp(xml_obj, "run_cmd", "/usr/libexec/pacemaker/lrmd");
-         *     create_nvp(xml_obj, "monitor_cmd", "/usr/libexec/pacemaker/lrmd_internal_ctl -c poke");
+         *     crm_create_nvpair_xml(xml_obj, NULL,
+         *                           "run_cmd", "/usr/libexec/pacemaker/lrmd");
+         *     crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd",
+         *         "/usr/libexec/pacemaker/lrmd_internal_ctl -c poke");
          */
         } else {
             if(data->docker_run_command) {
-                create_nvp(xml_obj, "run_cmd", data->docker_run_command);
+                crm_create_nvpair_xml(xml_obj, NULL,
+                                      "run_cmd", data->docker_run_command);
             }
 
             /* TODO: Allow users to specify their own?
@@ -326,7 +322,7 @@ create_docker_resource(
              * We don't know what's in the container, so we just want
              * to know if it is alive
              */
-            create_nvp(xml_obj, "monitor_cmd", "/bin/true");
+            crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd", "/bin/true");
         }
 
 
@@ -367,10 +363,10 @@ create_rkt_resource(
         xml_obj = create_xml_node(xml_docker, XML_TAG_ATTR_SETS);
         crm_xml_set_id(xml_obj, "%s-attributes-%d", data->prefix, tuple->offset);
 
-        create_nvp(xml_obj, "image", data->image);
-        create_nvp(xml_obj, "allow_pull", "true");
-        create_nvp(xml_obj, "force_kill", "false");
-        create_nvp(xml_obj, "reuse", "false");
+        crm_create_nvpair_xml(xml_obj, NULL, "image", data->image);
+        crm_create_nvpair_xml(xml_obj, NULL, "allow_pull", "true");
+        crm_create_nvpair_xml(xml_obj, NULL, "force_kill", "false");
+        crm_create_nvpair_xml(xml_obj, NULL, "reuse", "false");
 
         /* Set a container hostname only if we have an IP to map it to.
          * The user can set -h or --uts=host themselves if they want a nicer
@@ -440,17 +436,17 @@ create_rkt_resource(
             offset += snprintf(buffer+offset, max-offset, " %s", data->docker_host_options);
         }
 
-        create_nvp(xml_obj, "run_opts", buffer);
+        crm_create_nvpair_xml(xml_obj, NULL, "run_opts", buffer);
         free(buffer);
 
-        create_nvp(xml_obj, "mount_points", dbuffer);
+        crm_create_nvpair_xml(xml_obj, NULL, "mount_points", dbuffer);
         free(dbuffer);
 
         if(tuple->child) {
             if(data->docker_run_command) {
-                create_nvp(xml_obj, "run_cmd", data->docker_run_command);
+                crm_create_nvpair_xml(xml_obj, NULL, "run_cmd", data->docker_run_command);
             } else {
-                create_nvp(xml_obj, "run_cmd", SBIN_DIR"/pacemaker_remoted");
+                crm_create_nvpair_xml(xml_obj, NULL, "run_cmd", SBIN_DIR"/pacemaker_remoted");
             }
 
             /* TODO: Allow users to specify their own?
@@ -458,7 +454,7 @@ create_rkt_resource(
              * We just want to know if the container is alive, we'll
              * monitor the child independently
              */
-            create_nvp(xml_obj, "monitor_cmd", "/bin/true");
+            crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd", "/bin/true");
         /* } else if(child && data->untrusted) {
          * Support this use-case?
          *
@@ -468,12 +464,15 @@ create_rkt_resource(
          * Arguably better to control API access this with ACLs like
          * "normal" remote nodes
          *
-         *     create_nvp(xml_obj, "run_cmd", "/usr/libexec/pacemaker/lrmd");
-         *     create_nvp(xml_obj, "monitor_cmd", "/usr/libexec/pacemaker/lrmd_internal_ctl -c poke");
+         *     crm_create_nvpair_xml(xml_obj, NULL,
+         *                           "run_cmd", "/usr/libexec/pacemaker/lrmd");
+         *     crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd",
+         *         "/usr/libexec/pacemaker/lrmd_internal_ctl -c poke");
          */
         } else {
             if(data->docker_run_command) {
-                create_nvp(xml_obj, "run_cmd", data->docker_run_command);
+                crm_create_nvpair_xml(xml_obj, NULL, "run_cmd",
+                                      data->docker_run_command);
             }
 
             /* TODO: Allow users to specify their own?
@@ -481,7 +480,7 @@ create_rkt_resource(
              * We don't know what's in the container, so we just want
              * to know if it is alive
              */
-            create_nvp(xml_obj, "monitor_cmd", "/bin/true");
+            crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd", "/bin/true");
         }
 
 
@@ -558,32 +557,34 @@ create_remote_resource(
         crm_xml_set_id(xml_obj, "%s-attributes-%d", data->prefix, tuple->offset);
 
         if(tuple->ipaddr) {
-            create_nvp(xml_obj, "addr", tuple->ipaddr);
+            crm_create_nvpair_xml(xml_obj, NULL, "addr", tuple->ipaddr);
         } else {
             // REMOTE_CONTAINER_HACK: Allow remote nodes that start containers with pacemaker remote inside
-            create_nvp(xml_obj, "addr", "#uname");
+            crm_create_nvpair_xml(xml_obj, NULL, "addr", "#uname");
         }
 
         if(data->control_port) {
-            create_nvp(xml_obj, "port", data->control_port);
+            crm_create_nvpair_xml(xml_obj, NULL, "port", data->control_port);
         } else {
             char *port_s = crm_itoa(DEFAULT_REMOTE_PORT);
 
-            create_nvp(xml_obj, "port", port_s);
+            crm_create_nvpair_xml(xml_obj, NULL, "port", port_s);
             free(port_s);
         }
 
         xml_obj = create_xml_node(xml_remote, XML_TAG_META_SETS);
         crm_xml_set_id(xml_obj, "%s-meta-%d", data->prefix, tuple->offset);
 
-        create_nvp(xml_obj, XML_OP_ATTR_ALLOW_MIGRATE, "false");
+        crm_create_nvpair_xml(xml_obj, NULL,
+                              XML_OP_ATTR_ALLOW_MIGRATE, XML_BOOLEAN_FALSE);
 
         /* This sets tuple->docker as tuple->remote's container, which is
          * similar to what happens with guest nodes. This is how the PE knows
          * that the bundle node is fenced by recovering docker, and that
          * remote should be ordered relative to docker.
          */
-        create_nvp(xml_obj, XML_RSC_ATTR_CONTAINER, tuple->docker->id);
+        crm_create_nvpair_xml(xml_obj, NULL,
+                              XML_RSC_ATTR_CONTAINER, tuple->docker->id);
 
         /* Ensure a node has been created for the guest (it may have already
          * been, if it has a permanent node attribute), and ensure its weight is
@@ -850,25 +851,27 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         xml_set = create_xml_node(xml_resource, XML_TAG_META_SETS);
         crm_xml_set_id(xml_set, "%s-%s-meta", container_data->prefix, xml_resource->name);
 
-        create_nvp(xml_set, XML_RSC_ATTR_ORDERED, "true");
+        crm_create_nvpair_xml(xml_set, NULL,
+                              XML_RSC_ATTR_ORDERED, XML_BOOLEAN_TRUE);
 
         value = crm_itoa(container_data->replicas);
-        create_nvp(xml_set, XML_RSC_ATTR_INCARNATION_MAX, value);
+        crm_create_nvpair_xml(xml_set, NULL,
+                              XML_RSC_ATTR_INCARNATION_MAX, value);
         free(value);
 
         value = crm_itoa(container_data->replicas_per_host);
-        create_nvp(xml_set, XML_RSC_ATTR_INCARNATION_NODEMAX, value);
+        crm_create_nvpair_xml(xml_set, NULL,
+                              XML_RSC_ATTR_INCARNATION_NODEMAX, value);
         free(value);
 
-        if(container_data->replicas_per_host > 1) {
-            create_nvp(xml_set, XML_RSC_ATTR_UNIQUE, "true");
-        } else {
-            create_nvp(xml_set, XML_RSC_ATTR_UNIQUE, "false");
-        }
+        crm_create_nvpair_xml(xml_set, NULL, XML_RSC_ATTR_UNIQUE,
+                (container_data->replicas_per_host > 1)?
+                XML_BOOLEAN_TRUE : XML_BOOLEAN_FALSE);
 
         if(container_data->masters) {
             value = crm_itoa(container_data->masters);
-            create_nvp(xml_set, XML_RSC_ATTR_MASTER_MAX, value);
+            crm_create_nvpair_xml(xml_set, NULL,
+                                  XML_RSC_ATTR_MASTER_MAX, value);
             free(value);
         }
 

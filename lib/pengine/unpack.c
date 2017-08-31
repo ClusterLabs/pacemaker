@@ -464,28 +464,17 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pe_working_set_t *data
     xml_tmp = create_xml_node(xml_rsc, XML_TAG_META_SETS);
     crm_xml_set_id(xml_tmp, "%s_%s", remote_name, XML_TAG_META_SETS);
 
-    attr = create_xml_node(xml_tmp, XML_CIB_TAG_NVPAIR);
-    crm_xml_set_id(attr, "%s_%s", remote_name, "meta-attributes-container");
-    crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, XML_RSC_ATTR_CONTAINER);
-    crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, container_id);
-
-    attr = create_xml_node(xml_tmp, XML_CIB_TAG_NVPAIR);
-    crm_xml_set_id(attr, "%s_%s", remote_name, "meta-attributes-internal");
-    crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, XML_RSC_ATTR_INTERNAL_RSC);
-    crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, "true");
-
+    crm_create_nvpair_xml(xml_tmp, NULL, XML_RSC_ATTR_CONTAINER, container_id);
+    crm_create_nvpair_xml(xml_tmp, NULL,
+                          XML_RSC_ATTR_INTERNAL_RSC, XML_BOOLEAN_TRUE);
     if (remote_allow_migrate) {
-        attr = create_xml_node(xml_tmp, XML_CIB_TAG_NVPAIR);
-        crm_xml_set_id(attr, "%s_%s", remote_name, "meta-attributes-migrate");
-        crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, XML_OP_ATTR_ALLOW_MIGRATE);
-        crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, remote_allow_migrate);
+        crm_create_nvpair_xml(xml_tmp, NULL,
+                          XML_OP_ATTR_ALLOW_MIGRATE, remote_allow_migrate);
     }
 
     if (container_managed) {
-        attr = create_xml_node(xml_tmp, XML_CIB_TAG_NVPAIR);
-        crm_xml_set_id(attr, "%s_%s", remote_name, "meta-attributes-managed");
-        crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, XML_RSC_ATTR_MANAGED);
-        crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, container_managed);
+        crm_create_nvpair_xml(xml_tmp, NULL,
+                              XML_RSC_ATTR_MANAGED, container_managed);
     }
 
     xml_tmp = create_xml_node(xml_rsc, "operations");
@@ -508,16 +497,10 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pe_working_set_t *data
         crm_xml_set_id(xml_tmp, "%s_%s", remote_name, XML_TAG_ATTR_SETS);
 
         if (remote_server) {
-            attr = create_xml_node(xml_tmp, XML_CIB_TAG_NVPAIR);
-            crm_xml_set_id(attr, "%s_%s", remote_name, "instance-attributes-addr");
-            crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, "addr");
-            crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, remote_server);
+            crm_create_nvpair_xml(xml_tmp, NULL, "addr", remote_server);
         }
         if (remote_port) {
-            attr = create_xml_node(xml_tmp, XML_CIB_TAG_NVPAIR);
-            crm_xml_set_id(attr, "%s_%s", remote_name, "instance-attributes-port");
-            crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, "port");
-            crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, remote_port);
+            crm_create_nvpair_xml(xml_tmp, NULL, "port", remote_port);
         }
     }
 

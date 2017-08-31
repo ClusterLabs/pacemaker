@@ -55,6 +55,8 @@ gboolean add_message_xml(xmlNode * msg, const char *field, xmlNode * xml);
 xmlNode *get_message_xml(xmlNode * msg, const char *field);
 GHashTable *xml2list(xmlNode * parent);
 
+xmlNode *crm_create_nvpair_xml(xmlNode *parent, const char *id,
+                               const char *name, const char *value);
 void hash2nvpair(gpointer key, gpointer value, gpointer user_data);
 void hash2field(gpointer key, gpointer value, gpointer user_data);
 void hash2metafield(gpointer key, gpointer value, gpointer user_data);
