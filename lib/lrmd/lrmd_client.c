@@ -1880,8 +1880,7 @@ lrmd_remote_api_new(const char *nodename, const char *server, int port)
     native->server = server ? strdup(server) : strdup(nodename);
     native->port = port;
     if (native->port == 0) {
-        const char *remote_port_str = getenv("PCMK_remote_port");
-        native->port = remote_port_str ? atoi(remote_port_str) : DEFAULT_REMOTE_PORT;
+        native->port = crm_default_remote_port();
     }
 
     return new_lrmd;

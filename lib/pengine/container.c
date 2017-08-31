@@ -897,6 +897,14 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         if(container_data->control_port) {
             port->source = strdup(container_data->control_port);
         } else {
+            /* If we wanted to respect PCMK_remote_port, we could use
+             * crm_default_remote_port() here and elsewhere in this file instead
+             * of DEFAULT_REMOTE_PORT.
+             *
+             * However, it gains nothing, since we control both the container
+             * environment and the connection resource parameters, and the user
+             * can use a different port if desired by setting control-port.
+             */
             port->source = crm_itoa(DEFAULT_REMOTE_PORT);
         }
         port->target = strdup(port->source);

@@ -616,8 +616,7 @@ main(int argc, char **argv, char **envp)
 
 #ifdef ENABLE_PCMK_REMOTE
     {
-        const char *remote_port_str = getenv("PCMK_remote_port");
-        int remote_port = remote_port_str ? atoi(remote_port_str) : DEFAULT_REMOTE_PORT;
+        int remote_port = crm_default_remote_port();
 
         if (lrmd_init_remote_tls_server(remote_port) < 0) {
             crm_err("Failed to create TLS server on port %d: shutting down and inhibiting respawn", remote_port);

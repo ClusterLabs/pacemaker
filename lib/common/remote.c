@@ -1016,3 +1016,31 @@ crm_remote_accept(int ssock)
 
     return csock;
 }
+
+/*!
+ * \brief Get the default remote connection TCP port on this host
+ *
+ * \return Remote connection TCP port number
+ */
+int
+crm_default_remote_port()
+{
+    static int port = 0;
+
+    if (port == 0) {
+        const char *env = getenv("PCMK_remote_port");
+
+        if (env) {
+            errno = 0;
+            port = strtol(env, NULL, 10);
+            if (errno || (port < 1) || (port > 65535)) {
+                crm_warn("Environment variable PCMK_remote_port has invalid value '%s', using %d instead",
+                         env, DEFAULT_REMOTE_PORT);
+                port = DEFAULT_REMOTE_PORT;
+            }
+        } else {
+            port = DEFAULT_REMOTE_PORT;
+        }
+    }
+    return port;
+}
