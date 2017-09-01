@@ -865,6 +865,7 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         resource_t *new_rsc = NULL;
         container_mount_t *mount = NULL;
         container_port_t *port = NULL;
+        const char *key_loc = NULL;
 
         int offset = 0, max = 1024;
         char *buffer = NULL;
@@ -879,8 +880,33 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
 
         container_data->child = new_rsc;
 
+        /* We map the remote authentication key (likely) used on the DC to the
+         * default key location inside the container. This is only the likely
+         * location because an actual connection will do some validity checking
+         * on the file before using it.
+         *
+         * Mapping to the default location inside the container avoids having to
+         * pass another environment variable to the container.
+         *
+         * This makes several assumptions:
+         * - if PCMK_authkey_location is set, it has the same value on all nodes
+         * - the container technology does not propagate host environment
+         *   variables to the container
+         * - the user does not set this environment variable via their container
+         *   image
+         *
+         * @TODO A convoluted but possible way around the first limitation would
+         *       be to allow a resource parameter to include environment
+         *       variable references in its value, and resolve them on the
+         *       executing node's crmd before sending the command to the lrmd.
+         */
+        key_loc = getenv("PCMK_authkey_location");
+        if (key_loc == NULL) {
+            key_loc = DEFAULT_REMOTE_KEY_LOCATION;
+        }
+
         mount = calloc(1, sizeof(container_mount_t));
-        mount->source = strdup(DEFAULT_REMOTE_KEY_LOCATION);
+        mount->source = strdup(key_loc);
         mount->target = strdup(DEFAULT_REMOTE_KEY_LOCATION);
         mount->options = NULL;
         mount->flags = 0;
