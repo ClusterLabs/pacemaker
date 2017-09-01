@@ -639,18 +639,18 @@ create_container(
 
     if (data->type == PE_CONTAINER_TYPE_DOCKER &&
           create_docker_resource(parent, data, tuple, data_set) == FALSE) {
-        return TRUE;
+        return FALSE;
     }
     if (data->type == PE_CONTAINER_TYPE_RKT &&
           create_rkt_resource(parent, data, tuple, data_set) == FALSE) {
-        return TRUE;
+        return FALSE;
     }
 
     if(create_ip_resource(parent, data, tuple, data_set) == FALSE) {
-        return TRUE;
+        return FALSE;
     }
     if(create_remote_resource(parent, data, tuple, data_set) == FALSE) {
-        return TRUE;
+        return FALSE;
     }
     if(tuple->child && tuple->ipaddr) {
         add_hash_param(tuple->child->meta, "external-ip", tuple->ipaddr);
@@ -669,7 +669,7 @@ create_container(
         set_bit(tuple->remote->flags, pe_rsc_allow_remote_remotes);
     }
 
-    return FALSE;
+    return TRUE;
 }
 
 static void
@@ -973,8 +973,11 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
 
     for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
         container_grouping_t *tuple = (container_grouping_t *)gIter->data;
-        // TODO: Remove from list if create_container() returns TRUE
-        create_container(rsc, container_data, tuple, data_set);
+        if (create_container(rsc, container_data, tuple, data_set) == FALSE) {
+            pe_err("Failed unpacking resource %s", rsc->id);
+            rsc->fns->free(rsc);
+            return FALSE;
+        }
     }
 
     if(container_data->child) {
