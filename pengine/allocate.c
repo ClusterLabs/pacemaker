@@ -1416,7 +1416,14 @@ fence_guest(pe_node_t *node, pe_action_t *done, pe_working_set_t *data_set)
      * it is restarted, so we always order pseudo-fencing after stop, not start
      * (even though start might be closer to what is done for a real reboot).
      */
-    if (stop) {
+    if(stop && is_set(stop->flags, pe_action_pseudo)) {
+        pe_action_t *parent_stonith_op = pe_fence_op(stop->node, NULL, FALSE, NULL, data_set);
+        crm_info("Implying guest node %s is down (action %d) after %s fencing",
+                 node->details->uname, stonith_op->id, stop->node->details->uname);
+        order_actions(parent_stonith_op, stonith_op,
+                      pe_order_runnable_left|pe_order_implies_then);
+
+    } else if (stop) {
         order_actions(stop, stonith_op,
                       pe_order_runnable_left|pe_order_implies_then);
         crm_info("Implying guest node %s is down (action %d) "
