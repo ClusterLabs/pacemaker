@@ -43,15 +43,15 @@ Executing cluster transition:
  * Fencing kiff-01 (reboot)
  * Pseudo action:   lxc-01_kiff-01_stop_0
  * Pseudo action:   lxc-02_kiff-01_stop_0
- * Pseudo action:   R-lxc-01_kiff-01_stop_0
- * Pseudo action:   R-lxc-02_kiff-01_stop_0
  * Pseudo action:   stonith-lxc-02_kiff-01-reboot on lxc-02_kiff-01
  * Pseudo action:   stonith-lxc-01_kiff-01-reboot on lxc-01_kiff-01
  * Pseudo action:   stonith_complete
+ * Pseudo action:   R-lxc-01_kiff-01_stop_0
+ * Pseudo action:   R-lxc-02_kiff-01_stop_0
+ * Pseudo action:   vm-fs_stop_0
  * Pseudo action:   shared0-clone_stop_0
  * Resource action: R-lxc-01_kiff-01 start on kiff-02
  * Resource action: R-lxc-02_kiff-01 start on kiff-02
- * Pseudo action:   vm-fs_stop_0
  * Resource action: lxc-01_kiff-01  start on kiff-02
  * Resource action: lxc-02_kiff-01  start on kiff-02
  * Pseudo action:   shared0_stop_0

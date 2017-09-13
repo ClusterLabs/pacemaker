@@ -113,7 +113,7 @@ Transition Summary:
  * Stop    glance-api:2	(rhos6-node3)
  * Stop       cinder-api                      ( rhos6-node1 )   due to unrunnable keystone-clone running
  * Stop       cinder-scheduler                ( rhos6-node1 )   due to required cinder-api start
- * Stop       cinder-volume                   ( rhos6-node1 )  
+ * Stop       cinder-volume                   ( rhos6-node1 )   due to colocation with cinder-scheduler
  * Stop    swift-account:0	(rhos6-node1)
  * Stop    swift-account:1	(rhos6-node2)
  * Stop    swift-account:2	(rhos6-node3)
@@ -194,7 +194,7 @@ Transition Summary:
  * Stop       heat-api-cloudwatch:0           ( rhos6-node1 )   due to required heat-api-cfn:0 start
  * Stop       heat-api-cloudwatch:1           ( rhos6-node2 )   due to required heat-api-cfn:1 start
  * Stop       heat-api-cloudwatch:2           ( rhos6-node3 )   due to required heat-api-cfn:2 start
- * Stop       heat-engine                     ( rhos6-node2 )   due to required heat-api-cloudwatch-clone running
+ * Stop       heat-engine                     ( rhos6-node2 )   due to colocation with heat-api-cloudwatch-clone
 
 Executing cluster transition:
  * Pseudo action:   glance-api-clone_stop_0

@@ -417,7 +417,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="40" operation="stop" operation_key="R-lxc-02_kiff-01_stop_0"/>
+        <crm_event id="1" operation="stonith" operation_key="stonith-kiff-01-reboot" on_node="kiff-01" on_node_uuid="1"/>
       </trigger>
     </inputs>
   </synapse>
@@ -432,7 +432,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="37" operation="stop" operation_key="R-lxc-01_kiff-01_stop_0"/>
+        <crm_event id="1" operation="stonith" operation_key="stonith-kiff-01-reboot" on_node="kiff-01" on_node_uuid="1"/>
       </trigger>
     </inputs>
   </synapse>
