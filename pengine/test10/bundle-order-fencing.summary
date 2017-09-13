@@ -1,0 +1,222 @@
+Using the original execution date of: 2017-09-12 10:51:59Z
+
+Current cluster status:
+Node controller-0 (1): UNCLEAN (offline)
+Online: [ controller-1 controller-2 ]
+Containers: [ galera-bundle-1:galera-bundle-docker-1 galera-bundle-2:galera-bundle-docker-2 rabbitmq-bundle-1:rabbitmq-bundle-docker-1 rabbitmq-bundle-2:rabbitmq-bundle-docker-2 redis-bundle-1:redis-bundle-docker-1 redis-bundle-2:redis-bundle-docker-2 ]
+
+ Docker container set: rabbitmq-bundle [192.168.24.1:8787/rhosp12/openstack-rabbitmq-docker:pcmklatest]
+   rabbitmq-bundle-0	(ocf::heartbeat:rabbitmq-cluster):	FAILED controller-0 (UNCLEAN)
+   rabbitmq-bundle-1	(ocf::heartbeat:rabbitmq-cluster):	Started controller-1
+   rabbitmq-bundle-2	(ocf::heartbeat:rabbitmq-cluster):	Started controller-2
+ Docker container set: galera-bundle [192.168.24.1:8787/rhosp12/openstack-mariadb-docker:pcmklatest]
+   galera-bundle-0	(ocf::heartbeat:galera):	FAILED Master controller-0 (UNCLEAN)
+   galera-bundle-1	(ocf::heartbeat:galera):	Master controller-1
+   galera-bundle-2	(ocf::heartbeat:galera):	Master controller-2
+ Docker container set: redis-bundle [192.168.24.1:8787/rhosp12/openstack-redis-docker:pcmklatest]
+   redis-bundle-0	(ocf::heartbeat:redis):	FAILED Master controller-0 (UNCLEAN)
+   redis-bundle-1	(ocf::heartbeat:redis):	Slave controller-1
+   redis-bundle-2	(ocf::heartbeat:redis):	Slave controller-2
+ ip-192.168.24.7	(ocf::heartbeat:IPaddr2):	Started controller-0 (UNCLEAN)
+ ip-10.0.0.109	(ocf::heartbeat:IPaddr2):	Started controller-0 (UNCLEAN)
+ ip-172.17.1.14	(ocf::heartbeat:IPaddr2):	Started controller-2
+ ip-172.17.1.19	(ocf::heartbeat:IPaddr2):	Started controller-2
+ ip-172.17.3.19	(ocf::heartbeat:IPaddr2):	Started controller-2
+ ip-172.17.4.11	(ocf::heartbeat:IPaddr2):	Started controller-0 (UNCLEAN)
+ Docker container set: haproxy-bundle [192.168.24.1:8787/rhosp12/openstack-haproxy-docker:pcmklatest]
+   haproxy-bundle-docker-0	(ocf::heartbeat:docker):	Started controller-0 (UNCLEAN)
+   haproxy-bundle-docker-1	(ocf::heartbeat:docker):	Started controller-2
+   haproxy-bundle-docker-2	(ocf::heartbeat:docker):	Started controller-1
+ openstack-cinder-volume	(systemd:openstack-cinder-volume):	Started controller-2
+ stonith-fence_ipmilan-525400efba5c	(stonith:fence_ipmilan):	Started controller-2
+ stonith-fence_ipmilan-5254003e8e97	(stonith:fence_ipmilan):	Started controller-0 (UNCLEAN)
+ stonith-fence_ipmilan-5254000dcb3f	(stonith:fence_ipmilan):	Started controller-0 (UNCLEAN)
+
+Transition Summary:
+ * Fence (off) redis-bundle-0 (resource: redis-bundle-docker-0) 'guest is unclean'
+ * Fence (off) rabbitmq-bundle-0 (resource: rabbitmq-bundle-docker-0) 'guest is unclean'
+ * Fence (off) galera-bundle-0 (resource: galera-bundle-docker-0) 'guest is unclean'
+ * Fence (reboot) controller-0 'peer is no longer part of the cluster'
+ * Stop       rabbitmq-bundle-docker-0               (                   controller-0 )   due to node availability
+ * Stop       rabbitmq-bundle-0                      (                   controller-0 )   due to unrunnable rabbitmq-bundle-docker-0 start
+ * Stop       rabbitmq:0                             (              rabbitmq-bundle-0 )   due to unrunnable rabbitmq-bundle-docker-0 start
+ * Stop       galera-bundle-docker-0                 (                   controller-0 )   due to node availability
+ * Stop       galera-bundle-0                        (                   controller-0 )   due to unrunnable galera-bundle-docker-0 start
+ * Stop       galera:0                               (         Master galera-bundle-0 )   due to unrunnable galera-bundle-docker-0 start
+ * Stop       redis-bundle-docker-0                  (                   controller-0 )   due to node availability
+ * Stop       redis-bundle-0                         (                   controller-0 )   due to unrunnable redis-bundle-docker-0 start
+ * Stop       redis:0                                (          Master redis-bundle-0 )   due to unrunnable redis-bundle-docker-0 start
+ * Promote    redis:1                                ( Slave -> Master redis-bundle-1 )  
+ * Move       ip-192.168.24.7                        (   controller-0 -> controller-2 )  
+ * Move       ip-10.0.0.109                          (   controller-0 -> controller-1 )  
+ * Move       ip-172.17.4.11                         (   controller-0 -> controller-1 )  
+ * Stop       haproxy-bundle-docker-0                (                   controller-0 )   due to node availability
+ * Move       stonith-fence_ipmilan-5254003e8e97     (   controller-0 -> controller-1 )  
+ * Move       stonith-fence_ipmilan-5254000dcb3f     (   controller-0 -> controller-2 )  
+
+Executing cluster transition:
+ * Pseudo action:   rabbitmq-bundle-clone_pre_notify_stop_0
+ * Resource action: redis           cancel=45000 on redis-bundle-1
+ * Resource action: redis           cancel=60000 on redis-bundle-1
+ * Pseudo action:   redis-bundle-master_pre_notify_demote_0
+ * Pseudo action:   stonith-fence_ipmilan-5254003e8e97_stop_0
+ * Pseudo action:   stonith-fence_ipmilan-5254000dcb3f_stop_0
+ * Pseudo action:   haproxy-bundle_stop_0
+ * Pseudo action:   redis-bundle_demote_0
+ * Pseudo action:   galera-bundle_demote_0
+ * Pseudo action:   rabbitmq-bundle_stop_0
+ * Pseudo action:   rabbitmq-bundle_start_0
+ * Fencing controller-0 (reboot)
+ * Resource action: rabbitmq        notify on rabbitmq-bundle-1
+ * Resource action: rabbitmq        notify on rabbitmq-bundle-2
+ * Pseudo action:   rabbitmq-bundle-clone_confirmed-pre_notify_stop_0
+ * Pseudo action:   rabbitmq-bundle-0_stop_0
+ * Pseudo action:   galera-bundle-master_demote_0
+ * Pseudo action:   galera-bundle-0_stop_0
+ * Resource action: redis           notify on redis-bundle-1
+ * Resource action: redis           notify on redis-bundle-2
+ * Pseudo action:   redis-bundle-master_confirmed-pre_notify_demote_0
+ * Pseudo action:   redis-bundle-master_demote_0
+ * Pseudo action:   redis-bundle-0_stop_0
+ * Pseudo action:   haproxy-bundle-docker-0_stop_0
+ * Pseudo action:   stonith-redis-bundle-0-off on redis-bundle-0
+ * Pseudo action:   stonith-rabbitmq-bundle-0-off on rabbitmq-bundle-0
+ * Pseudo action:   stonith-galera-bundle-0-off on galera-bundle-0
+ * Pseudo action:   stonith_complete
+ * Pseudo action:   haproxy-bundle_stopped_0
+ * Pseudo action:   rabbitmq_post_notify_stop_0
+ * Pseudo action:   rabbitmq-bundle-clone_stop_0
+ * Pseudo action:   rabbitmq-bundle-docker-0_stop_0
+ * Pseudo action:   galera_demote_0
+ * Pseudo action:   galera-bundle-master_demoted_0
+ * Pseudo action:   redis_post_notify_stop_0
+ * Pseudo action:   redis_demote_0
+ * Pseudo action:   redis-bundle-master_demoted_0
+ * Pseudo action:   ip-192.168.24.7_stop_0
+ * Pseudo action:   ip-10.0.0.109_stop_0
+ * Pseudo action:   ip-172.17.4.11_stop_0
+ * Pseudo action:   galera-bundle_demoted_0
+ * Pseudo action:   galera-bundle_stop_0
+ * Pseudo action:   rabbitmq_stop_0
+ * Pseudo action:   rabbitmq-bundle-clone_stopped_0
+ * Pseudo action:   galera-bundle-master_stop_0
+ * Pseudo action:   galera-bundle-docker-0_stop_0
+ * Pseudo action:   redis-bundle-master_post_notify_demoted_0
+ * Resource action: ip-192.168.24.7 start on controller-2
+ * Resource action: ip-10.0.0.109   start on controller-1
+ * Resource action: ip-172.17.4.11  start on controller-1
+ * Pseudo action:   rabbitmq-bundle-clone_post_notify_stopped_0
+ * Pseudo action:   galera_stop_0
+ * Pseudo action:   galera-bundle-master_stopped_0
+ * Resource action: redis           notify on redis-bundle-1
+ * Resource action: redis           notify on redis-bundle-2
+ * Pseudo action:   redis-bundle-master_confirmed-post_notify_demoted_0
+ * Pseudo action:   redis-bundle-master_pre_notify_stop_0
+ * Resource action: ip-192.168.24.7 monitor=10000 on controller-2
+ * Resource action: ip-10.0.0.109   monitor=10000 on controller-1
+ * Resource action: ip-172.17.4.11  monitor=10000 on controller-1
+ * Pseudo action:   redis-bundle_demoted_0
+ * Pseudo action:   redis-bundle_stop_0
+ * Pseudo action:   galera-bundle_stopped_0
+ * Pseudo action:   galera-bundle_start_0
+ * Resource action: rabbitmq        notify on rabbitmq-bundle-1
+ * Resource action: rabbitmq        notify on rabbitmq-bundle-2
+ * Pseudo action:   rabbitmq-bundle-clone_confirmed-post_notify_stopped_0
+ * Pseudo action:   rabbitmq-bundle-clone_pre_notify_start_0
+ * Pseudo action:   galera-bundle-master_start_0
+ * Resource action: redis           notify on redis-bundle-1
+ * Resource action: redis           notify on redis-bundle-2
+ * Pseudo action:   redis-bundle-master_confirmed-pre_notify_stop_0
+ * Pseudo action:   redis-bundle-master_stop_0
+ * Pseudo action:   redis-bundle-docker-0_stop_0
+ * Pseudo action:   rabbitmq-bundle_stopped_0
+ * Pseudo action:   rabbitmq_notified_0
+ * Resource action: rabbitmq        notify on rabbitmq-bundle-1
+ * Resource action: rabbitmq        notify on rabbitmq-bundle-2
+ * Pseudo action:   rabbitmq-bundle-clone_confirmed-pre_notify_start_0
+ * Pseudo action:   rabbitmq-bundle-clone_start_0
+ * Pseudo action:   galera-bundle-master_running_0
+ * Pseudo action:   redis_stop_0
+ * Pseudo action:   redis-bundle-master_stopped_0
+ * Pseudo action:   galera-bundle_running_0
+ * Pseudo action:   rabbitmq-bundle-clone_running_0
+ * Pseudo action:   redis-bundle-master_post_notify_stopped_0
+ * Pseudo action:   rabbitmq-bundle-clone_post_notify_running_0
+ * Resource action: redis           notify on redis-bundle-1
+ * Resource action: redis           notify on redis-bundle-2
+ * Pseudo action:   redis-bundle-master_confirmed-post_notify_stopped_0
+ * Pseudo action:   redis-bundle-master_pre_notify_start_0
+ * Pseudo action:   redis-bundle_stopped_0
+ * Pseudo action:   redis-bundle_start_0
+ * Resource action: rabbitmq        notify on rabbitmq-bundle-0
+ * Resource action: rabbitmq        notify on rabbitmq-bundle-1
+ * Resource action: rabbitmq        notify on rabbitmq-bundle-2
+ * Pseudo action:   rabbitmq-bundle-clone_confirmed-post_notify_running_0
+ * Pseudo action:   redis_notified_0
+ * Resource action: redis           notify on redis-bundle-1
+ * Resource action: redis           notify on redis-bundle-2
+ * Pseudo action:   redis-bundle-master_confirmed-pre_notify_start_0
+ * Pseudo action:   redis-bundle-master_start_0
+ * Pseudo action:   rabbitmq-bundle_running_0
+ * Pseudo action:   all_stopped
+ * Pseudo action:   redis-bundle-master_running_0
+ * Resource action: stonith-fence_ipmilan-5254003e8e97 start on controller-1
+ * Resource action: stonith-fence_ipmilan-5254000dcb3f start on controller-2
+ * Pseudo action:   redis-bundle-master_post_notify_running_0
+ * Resource action: stonith-fence_ipmilan-5254003e8e97 monitor=60000 on controller-1
+ * Resource action: stonith-fence_ipmilan-5254000dcb3f monitor=60000 on controller-2
+ * Resource action: redis           notify on redis-bundle-0
+ * Resource action: redis           notify on redis-bundle-1
+ * Resource action: redis           notify on redis-bundle-2
+ * Pseudo action:   redis-bundle-master_confirmed-post_notify_running_0
+ * Pseudo action:   redis-bundle_running_0
+ * Pseudo action:   redis-bundle-master_pre_notify_promote_0
+ * Pseudo action:   redis-bundle_promote_0
+ * Resource action: redis           notify on redis-bundle-0
+ * Resource action: redis           notify on redis-bundle-1
+ * Resource action: redis           notify on redis-bundle-2
+ * Pseudo action:   redis-bundle-master_confirmed-pre_notify_promote_0
+ * Pseudo action:   redis-bundle-master_promote_0
+ * Resource action: redis           promote on redis-bundle-1
+ * Pseudo action:   redis-bundle-master_promoted_0
+ * Pseudo action:   redis-bundle-master_post_notify_promoted_0
+ * Resource action: redis           notify on redis-bundle-0
+ * Resource action: redis           notify on redis-bundle-1
+ * Resource action: redis           notify on redis-bundle-2
+ * Pseudo action:   redis-bundle-master_confirmed-post_notify_promoted_0
+ * Pseudo action:   redis-bundle_promoted_0
+ * Resource action: redis           monitor=20000 on redis-bundle-1
+Using the original execution date of: 2017-09-12 10:51:59Z
+
+Revised cluster status:
+Online: [ controller-1 controller-2 ]
+OFFLINE: [ controller-0 ]
+Containers: [ galera-bundle-1:galera-bundle-docker-1 galera-bundle-2:galera-bundle-docker-2 rabbitmq-bundle-1:rabbitmq-bundle-docker-1 rabbitmq-bundle-2:rabbitmq-bundle-docker-2 redis-bundle-1:redis-bundle-docker-1 redis-bundle-2:redis-bundle-docker-2 ]
+
+ Docker container set: rabbitmq-bundle [192.168.24.1:8787/rhosp12/openstack-rabbitmq-docker:pcmklatest]
+   rabbitmq-bundle-0	(ocf::heartbeat:rabbitmq-cluster):	FAILED
+   rabbitmq-bundle-1	(ocf::heartbeat:rabbitmq-cluster):	Started controller-1
+   rabbitmq-bundle-2	(ocf::heartbeat:rabbitmq-cluster):	Started controller-2
+ Docker container set: galera-bundle [192.168.24.1:8787/rhosp12/openstack-mariadb-docker:pcmklatest]
+   galera-bundle-0	(ocf::heartbeat:galera):	FAILED Master
+   galera-bundle-1	(ocf::heartbeat:galera):	Master controller-1
+   galera-bundle-2	(ocf::heartbeat:galera):	Master controller-2
+ Docker container set: redis-bundle [192.168.24.1:8787/rhosp12/openstack-redis-docker:pcmklatest]
+   redis-bundle-0	(ocf::heartbeat:redis):	FAILED Master
+   redis-bundle-1	(ocf::heartbeat:redis):	Master controller-1
+   redis-bundle-2	(ocf::heartbeat:redis):	Slave controller-2
+ ip-192.168.24.7	(ocf::heartbeat:IPaddr2):	Started controller-2
+ ip-10.0.0.109	(ocf::heartbeat:IPaddr2):	Started controller-1
+ ip-172.17.1.14	(ocf::heartbeat:IPaddr2):	Started controller-2
+ ip-172.17.1.19	(ocf::heartbeat:IPaddr2):	Started controller-2
+ ip-172.17.3.19	(ocf::heartbeat:IPaddr2):	Started controller-2
+ ip-172.17.4.11	(ocf::heartbeat:IPaddr2):	Started controller-1
+ Docker container set: haproxy-bundle [192.168.24.1:8787/rhosp12/openstack-haproxy-docker:pcmklatest]
+   haproxy-bundle-docker-0	(ocf::heartbeat:docker):	Stopped
+   haproxy-bundle-docker-1	(ocf::heartbeat:docker):	Started controller-2
+   haproxy-bundle-docker-2	(ocf::heartbeat:docker):	Started controller-1
+ openstack-cinder-volume	(systemd:openstack-cinder-volume):	Started controller-2
+ stonith-fence_ipmilan-525400efba5c	(stonith:fence_ipmilan):	Started controller-2
+ stonith-fence_ipmilan-5254003e8e97	(stonith:fence_ipmilan):	Started controller-1
+ stonith-fence_ipmilan-5254000dcb3f	(stonith:fence_ipmilan):	Started controller-2
+

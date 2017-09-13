@@ -811,6 +811,8 @@ do_test bundle-order-startup-clone-2 "Bundle startup with clones"
 do_test bundle-order-stop-clone "Stop bundle because clone is stopping"
 do_test bundle-nested-colocation "Colocation of nested connection resources"
 
+do_test bundle-order-fencing "Order pseudo bundle fencing after parent node fencing if both are happening"
+
 echo ""
 do_test whitebox-fail1 "Fail whitebox container rsc."
 do_test whitebox-fail2 "Fail whitebox container rsc lrmd connection."
