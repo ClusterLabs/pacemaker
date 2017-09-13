@@ -691,7 +691,7 @@ create_notifications(resource_t * rsc, notify_data_t * n_data, pe_working_set_t 
                  * action. There's no reason to send the fenced node a stop notification */ 
                 if (stop &&
                     is_set(stop->flags, pe_action_pseudo) &&
-                    current_node->details->unclean) {
+                    (current_node->details->unclean || current_node->details->remote_requires_reset) ) {
 
                     continue;
                 }
