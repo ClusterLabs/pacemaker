@@ -92,7 +92,7 @@ enum container_type {
 };
 
 #define PE_CONTAINER_TYPE_UNKNOWN_S "unknown"
-#define PE_CONTAINER_TYPE_DOCKER_S  "docker"
+#define PE_CONTAINER_TYPE_DOCKER_S  "Docker"
 #define PE_CONTAINER_TYPE_RKT_S     "rkt"
 
 typedef struct container_variant_data_s {
