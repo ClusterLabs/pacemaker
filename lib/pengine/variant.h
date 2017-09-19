@@ -96,7 +96,6 @@ enum container_type {
 #define PE_CONTAINER_TYPE_RKT_S     "rkt"
 
 typedef struct container_variant_data_s {
-        enum container_type type;
         int masters;
         int replicas;
         int replicas_per_host;
@@ -118,7 +117,7 @@ typedef struct container_variant_data_s {
         GListPtr ports;      /*        */
         GListPtr mounts;     /*        */
 
-
+        enum container_type type;
 } container_variant_data_t;
 
 #    define get_container_variant_data(data, rsc)                       \
