@@ -86,14 +86,14 @@ typedef struct
 } container_port_t;
 
 enum container_type {
-        CONTAINER_TYPE_UNKNOWN,
-        CONTAINER_TYPE_DOCKER,
-        CONTAINER_TYPE_RKT
+        PE_CONTAINER_TYPE_UNKNOWN,
+        PE_CONTAINER_TYPE_DOCKER,
+        PE_CONTAINER_TYPE_RKT
 };
 
-#define CONTAINER_TYPE_UNKNOWN_S "unknown"
-#define CONTAINER_TYPE_DOCKER_S  "docker"
-#define CONTAINER_TYPE_RKT_S     "rkt"
+#define PE_CONTAINER_TYPE_UNKNOWN_S "unknown"
+#define PE_CONTAINER_TYPE_DOCKER_S  "docker"
+#define PE_CONTAINER_TYPE_RKT_S     "rkt"
 
 typedef struct container_variant_data_s {
         enum container_type type;

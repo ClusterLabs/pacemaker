@@ -75,10 +75,10 @@ allocate_ip(container_variant_data_t *data, container_grouping_t *tuple, char *b
                     data->prefix, tuple->offset, tuple->ipaddr,
                     data->prefix, tuple->offset, data->prefix, tuple->offset);
 #else
-    if (data->type == CONTAINER_TYPE_DOCKER) {
+    if (data->type == PE_CONTAINER_TYPE_DOCKER) {
         return snprintf(buffer, max, " --add-host=%s-%d:%s",
                         data->prefix, tuple->offset, tuple->ipaddr);
-    } else if (data->type == CONTAINER_TYPE_RKT) {
+    } else if (data->type == PE_CONTAINER_TYPE_RKT) {
         return snprintf(buffer, max, " --hosts-entry=%s=%s-%d",
                         tuple->ipaddr, data->prefix, tuple->offset);
     } else {
@@ -661,11 +661,11 @@ create_container(
     pe_working_set_t * data_set)
 {
 
-    if (data->type == CONTAINER_TYPE_DOCKER &&
+    if (data->type == PE_CONTAINER_TYPE_DOCKER &&
           create_docker_resource(parent, data, tuple, data_set) == FALSE) {
         return TRUE;
     }
-    if (data->type == CONTAINER_TYPE_RKT &&
+    if (data->type == PE_CONTAINER_TYPE_RKT &&
           create_rkt_resource(parent, data, tuple, data_set) == FALSE) {
         return TRUE;
     }
@@ -728,11 +728,11 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
 
     xml_obj = first_named_child(rsc->xml, "docker");
     if (xml_obj != NULL) {
-        container_data->type = CONTAINER_TYPE_DOCKER;
+        container_data->type = PE_CONTAINER_TYPE_DOCKER;
     } else {
         xml_obj = first_named_child(rsc->xml, "rkt");
         if (xml_obj != NULL) {
-            container_data->type = CONTAINER_TYPE_RKT;
+            container_data->type = PE_CONTAINER_TYPE_RKT;
         } else {
             return FALSE;
         }
@@ -1070,12 +1070,12 @@ print_rsc_in_list(resource_t *rsc, const char *pre_text, long options,
 static const char*
 container_type_as_string(enum container_type t)
 {
-    if (t == CONTAINER_TYPE_DOCKER) {
-        return CONTAINER_TYPE_DOCKER_S;
-    } else if (t == CONTAINER_TYPE_RKT) {
-        return CONTAINER_TYPE_RKT_S;
+    if (t == PE_CONTAINER_TYPE_DOCKER) {
+        return PE_CONTAINER_TYPE_DOCKER_S;
+    } else if (t == PE_CONTAINER_TYPE_RKT) {
+        return PE_CONTAINER_TYPE_RKT_S;
     } else {
-        return CONTAINER_TYPE_UNKNOWN_S;
+        return PE_CONTAINER_TYPE_UNKNOWN_S;
     }
 }
 
