@@ -672,6 +672,21 @@ create_container(
     return FALSE;
 }
 
+static void
+mount_add(container_variant_data_t *container_data, const char *source,
+          const char *target, const char *options, int flags)
+{
+    container_mount_t *mount = calloc(1, sizeof(container_mount_t));
+
+    mount->source = strdup(source);
+    mount->target = strdup(target);
+    if (options) {
+        mount->options = strdup(options);
+    }
+    mount->flags = flags;
+    container_data->mounts = g_list_append(container_data->mounts, mount);
+}
+
 static void mount_free(container_mount_t *mount)
 {
     free(mount->source);
@@ -791,21 +806,20 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
     for (xmlNode *xml_child = __xml_first_child_element(xml_obj); xml_child != NULL;
          xml_child = __xml_next_element(xml_child)) {
 
-        container_mount_t *mount = calloc(1, sizeof(container_mount_t));
-        mount->source = crm_element_value_copy(xml_child, "source-dir");
+        const char *source = crm_element_value(xml_child, "source-dir");
+        const char *target = crm_element_value(xml_child, "target-dir");
+        const char *options = crm_element_value(xml_child, "options");
+        int flags = 0;
 
-        if(mount->source == NULL) {
-            mount->source = crm_element_value_copy(xml_child, "source-dir-root");
-            mount->flags = 1;
+        if (source == NULL) {
+            source = crm_element_value(xml_child, "source-dir-root");
+            flags = 1;
         }
-        mount->target = crm_element_value_copy(xml_child, "target-dir");
-        mount->options = crm_element_value_copy(xml_child, "options");
 
-        if(mount->source && mount->target) {
-            container_data->mounts = g_list_append(container_data->mounts, mount);
+        if (source && target) {
+            mount_add(container_data, source, target, options, flags);
         } else {
             pe_err("Invalid mount directive %s", ID(xml_child));
-            mount_free(mount);
         }
     }
 
@@ -863,7 +877,6 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         int lpc = 0;
         GListPtr childIter = NULL;
         resource_t *new_rsc = NULL;
-        container_mount_t *mount = NULL;
         container_port_t *port = NULL;
         const char *key_loc = NULL;
 
@@ -904,20 +917,10 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         if (key_loc == NULL) {
             key_loc = DEFAULT_REMOTE_KEY_LOCATION;
         }
+        mount_add(container_data, key_loc, DEFAULT_REMOTE_KEY_LOCATION, NULL,
+                  0);
 
-        mount = calloc(1, sizeof(container_mount_t));
-        mount->source = strdup(key_loc);
-        mount->target = strdup(DEFAULT_REMOTE_KEY_LOCATION);
-        mount->options = NULL;
-        mount->flags = 0;
-        container_data->mounts = g_list_append(container_data->mounts, mount);
-
-        mount = calloc(1, sizeof(container_mount_t));
-        mount->source = strdup(CRM_LOG_DIR "/bundles");
-        mount->target = strdup("/var/log");
-        mount->options = NULL;
-        mount->flags = 1;
-        container_data->mounts = g_list_append(container_data->mounts, mount);
+        mount_add(container_data, CRM_LOG_DIR "/bundles", "/var/log", NULL, 1);
 
         port = calloc(1, sizeof(container_port_t));
         if(container_data->control_port) {
