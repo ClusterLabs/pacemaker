@@ -74,6 +74,38 @@ static GListPtr get_containers_or_children(resource_t *rsc)
     }
 }
 
+static bool
+migration_threshold_reached(resource_t *rsc, node_t *node,
+                            pe_working_set_t *data_set)
+{
+    int fail_count, countdown;
+
+    /* Migration threshold of 0 means never force away */
+    if (rsc->migration_threshold == 0) {
+        return FALSE;
+    }
+
+    /* If there are no failures, there's no need to force away */
+    fail_count = get_failcount_all(node, rsc, NULL, data_set);
+    if (fail_count <= 0) {
+        return FALSE;
+    }
+
+    /* How many more times recovery will be tried on this node */
+    countdown = QB_MAX(rsc->migration_threshold - fail_count, 0);
+
+    if (countdown == 0) {
+        crm_warn("Forcing %s away from %s after %d failures (max=%d)",
+                 rsc->id, node->details->uname, fail_count,
+                 rsc->migration_threshold);
+        return TRUE;
+    }
+
+    crm_info("%s can fail %d more times on %s before being forced off",
+             rsc->id, countdown, node->details->uname);
+    return FALSE;
+}
+
 node_t *
 container_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
 {
@@ -128,7 +160,7 @@ container_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
             while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & node)) {
                 if(node->details != tuple->node->details) {
                     node->weight = -INFINITY;
-                } else {
+                } else if(migration_threshold_reached(tuple->child, node, data_set) == FALSE) {
                     node->weight = INFINITY;
                 }
             }
@@ -157,6 +189,7 @@ container_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
     clear_bit(rsc->flags, pe_rsc_provisional);
     return NULL;
 }
+
 
 void
 container_create_actions(resource_t * rsc, pe_working_set_t * data_set)
