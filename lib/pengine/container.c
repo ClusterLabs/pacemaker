@@ -75,8 +75,15 @@ allocate_ip(container_variant_data_t *data, container_grouping_t *tuple, char *b
                     data->prefix, tuple->offset, tuple->ipaddr,
                     data->prefix, tuple->offset, data->prefix, tuple->offset);
 #else
-    return snprintf(buffer, max, " --add-host=%s-%d:%s",
-                    data->prefix, tuple->offset, tuple->ipaddr);
+    if (data->type == PE_CONTAINER_TYPE_DOCKER) {
+        return snprintf(buffer, max, " --add-host=%s-%d:%s",
+                        data->prefix, tuple->offset, tuple->ipaddr);
+    } else if (data->type == PE_CONTAINER_TYPE_RKT) {
+        return snprintf(buffer, max, " --hosts-entry=%s=%s-%d",
+                        tuple->ipaddr, data->prefix, tuple->offset);
+    } else {
+        return 0;
+    }
 #endif
 }
 
@@ -335,6 +342,161 @@ create_docker_resource(
         return TRUE;
 }
 
+static bool
+create_rkt_resource(
+    resource_t *parent, container_variant_data_t *data, container_grouping_t *tuple,
+    pe_working_set_t * data_set)
+{
+        int offset = 0, max = 4096;
+        char *buffer = calloc(1, max+1);
+
+        int doffset = 0, dmax = 1024;
+        char *dbuffer = calloc(1, dmax+1);
+
+        char *id = NULL;
+        xmlNode *xml_docker = NULL;
+        xmlNode *xml_obj = NULL;
+
+        int volid = 0;
+
+        id = crm_strdup_printf("%s-rkt-%d", data->prefix, tuple->offset);
+        crm_xml_sanitize_id(id);
+        xml_docker = create_resource(id, "heartbeat", "rkt");
+        free(id);
+
+        xml_obj = create_xml_node(xml_docker, XML_TAG_ATTR_SETS);
+        crm_xml_set_id(xml_obj, "%s-attributes-%d", data->prefix, tuple->offset);
+
+        create_nvp(xml_obj, "image", data->image);
+        create_nvp(xml_obj, "allow_pull", "true");
+        create_nvp(xml_obj, "force_kill", "false");
+        create_nvp(xml_obj, "reuse", "false");
+
+        /* Set a container hostname only if we have an IP to map it to.
+         * The user can set -h or --uts=host themselves if they want a nicer
+         * name for logs, but this makes applications happy who need their
+         * hostname to match the IP they bind to.
+         */
+        if (data->ip_range_start != NULL) {
+            offset += snprintf(buffer+offset, max-offset, " --hostname=%s-%d",
+                               data->prefix, tuple->offset);
+        }
+
+        if(data->docker_network) {
+//        offset += snprintf(buffer+offset, max-offset, " --link-local-ip=%s", tuple->ipaddr);
+            offset += snprintf(buffer+offset, max-offset, " --net=%s", data->docker_network);
+        }
+
+        if(data->control_port) {
+            offset += snprintf(buffer+offset, max-offset, " --environment=PCMK_remote_port=%s", data->control_port);
+        } else {
+            offset += snprintf(buffer+offset, max-offset, " --environment=PCMK_remote_port=%d", DEFAULT_REMOTE_PORT);
+        }
+
+        for(GListPtr pIter = data->mounts; pIter != NULL; pIter = pIter->next) {
+            container_mount_t *mount = pIter->data;
+
+            if(mount->flags) {
+                char *source = crm_strdup_printf(
+                    "%s/%s-%d", mount->source, data->prefix, tuple->offset);
+
+                if(doffset > 0) {
+                    doffset += snprintf(dbuffer+doffset, dmax-doffset, ",");
+                }
+                doffset += snprintf(dbuffer+doffset, dmax-doffset, "%s", source);
+                offset += snprintf(buffer+offset, max-offset, " --volume vol%d,kind=host,source=%s", volid, source);
+                if(mount->options) {
+                    offset += snprintf(buffer+offset, max-offset, ",%s", mount->options);
+                }
+                offset += snprintf(buffer+offset, max-offset, " --mount volume=vol%d,target=%s", volid, mount->target);
+                free(source);
+
+            } else {
+                offset += snprintf(buffer+offset, max-offset, " --volume vol%d,kind=host,source=%s", volid, mount->source);
+                if(mount->options) {
+                    offset += snprintf(buffer+offset, max-offset, ",%s", mount->options);
+                }
+                offset += snprintf(buffer+offset, max-offset, " --mount volume=vol%d,target=%s", volid, mount->target);
+            }
+            volid++;
+        }
+
+        for(GListPtr pIter = data->ports; pIter != NULL; pIter = pIter->next) {
+            container_port_t *port = pIter->data;
+
+            if(tuple->ipaddr) {
+                offset += snprintf(buffer+offset, max-offset, " --port=%s:%s:%s",
+                                   port->target, tuple->ipaddr, port->source);
+            } else {
+                offset += snprintf(buffer+offset, max-offset, " --port=%s:%s", port->target, port->source);
+            }
+        }
+
+        if(data->docker_run_options) {
+            offset += snprintf(buffer+offset, max-offset, " %s", data->docker_run_options);
+        }
+
+        if(data->docker_host_options) {
+            offset += snprintf(buffer+offset, max-offset, " %s", data->docker_host_options);
+        }
+
+        create_nvp(xml_obj, "run_opts", buffer);
+        free(buffer);
+
+        create_nvp(xml_obj, "mount_points", dbuffer);
+        free(dbuffer);
+
+        if(tuple->child) {
+            if(data->docker_run_command) {
+                create_nvp(xml_obj, "run_cmd", data->docker_run_command);
+            } else {
+                create_nvp(xml_obj, "run_cmd", SBIN_DIR"/pacemaker_remoted");
+            }
+
+            /* TODO: Allow users to specify their own?
+             *
+             * We just want to know if the container is alive, we'll
+             * monitor the child independently
+             */
+            create_nvp(xml_obj, "monitor_cmd", "/bin/true");
+        /* } else if(child && data->untrusted) {
+         * Support this use-case?
+         *
+         * The ability to have resources started/stopped by us, but
+         * unable to set attributes, etc.
+         *
+         * Arguably better to control API access this with ACLs like
+         * "normal" remote nodes
+         *
+         *     create_nvp(xml_obj, "run_cmd", "/usr/libexec/pacemaker/lrmd");
+         *     create_nvp(xml_obj, "monitor_cmd", "/usr/libexec/pacemaker/lrmd_internal_ctl -c poke");
+         */
+        } else {
+            if(data->docker_run_command) {
+                create_nvp(xml_obj, "run_cmd", data->docker_run_command);
+            }
+
+            /* TODO: Allow users to specify their own?
+             *
+             * We don't know what's in the container, so we just want
+             * to know if it is alive
+             */
+            create_nvp(xml_obj, "monitor_cmd", "/bin/true");
+        }
+
+
+        xml_obj = create_xml_node(xml_docker, "operations");
+        create_op(xml_obj, ID(xml_docker), "monitor", "60s");
+
+        // TODO: Other ops? Timeouts and intervals from underlying resource?
+
+        if (common_unpack(xml_docker, &tuple->docker, parent, data_set) == FALSE) {
+            return FALSE;
+        }
+        parent->children = g_list_append(parent->children, tuple->docker);
+        return TRUE;
+}
+
 /*!
  * \brief Ban a node from a resource's (and its children's) allowed nodes list
  *
@@ -499,9 +661,15 @@ create_container(
     pe_working_set_t * data_set)
 {
 
-    if(create_docker_resource(parent, data, tuple, data_set) == FALSE) {
+    if (data->type == PE_CONTAINER_TYPE_DOCKER &&
+          create_docker_resource(parent, data, tuple, data_set) == FALSE) {
         return TRUE;
     }
+    if (data->type == PE_CONTAINER_TYPE_RKT &&
+          create_rkt_resource(parent, data, tuple, data_set) == FALSE) {
+        return TRUE;
+    }
+
     if(create_ip_resource(parent, data, tuple, data_set) == FALSE) {
         return TRUE;
     }
@@ -559,8 +727,15 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
     container_data->prefix = strdup(rsc->id);
 
     xml_obj = first_named_child(rsc->xml, "docker");
-    if(xml_obj == NULL) {
-        return FALSE;
+    if (xml_obj != NULL) {
+        container_data->type = PE_CONTAINER_TYPE_DOCKER;
+    } else {
+        xml_obj = first_named_child(rsc->xml, "rkt");
+        if (xml_obj != NULL) {
+            container_data->type = PE_CONTAINER_TYPE_RKT;
+        } else {
+            return FALSE;
+        }
     }
 
     value = crm_element_value(xml_obj, "masters");
@@ -892,6 +1067,18 @@ print_rsc_in_list(resource_t *rsc, const char *pre_text, long options,
     }
 }
 
+static const char*
+container_type_as_string(enum container_type t)
+{
+    if (t == PE_CONTAINER_TYPE_DOCKER) {
+        return PE_CONTAINER_TYPE_DOCKER_S;
+    } else if (t == PE_CONTAINER_TYPE_RKT) {
+        return PE_CONTAINER_TYPE_RKT_S;
+    } else {
+        return PE_CONTAINER_TYPE_UNKNOWN_S;
+    }
+}
+
 static void
 container_print_xml(resource_t * rsc, const char *pre_text, long options, void *print_data)
 {
@@ -908,7 +1095,7 @@ container_print_xml(resource_t * rsc, const char *pre_text, long options, void *
 
     status_print("%s<bundle ", pre_text);
     status_print("id=\"%s\" ", rsc->id);
-    status_print("type=\"docker\" ");
+    status_print("type=\"%s\" ", container_type_as_string(container_data->type));
     status_print("image=\"%s\" ", container_data->image);
     status_print("unique=\"%s\" ", is_set(rsc->flags, pe_rsc_unique)? "true" : "false");
     status_print("managed=\"%s\" ", is_set(rsc->flags, pe_rsc_managed) ? "true" : "false");
@@ -978,8 +1165,9 @@ container_print(resource_t * rsc, const char *pre_text, long options, void *prin
         pre_text = " ";
     }
 
-    status_print("%sDocker container%s: %s [%s]%s%s\n",
-                 pre_text, container_data->replicas>1?" set":"", rsc->id, container_data->image,
+    status_print("%s%s container%s: %s [%s]%s%s\n",
+                 pre_text, container_type_as_string(container_data->type),
+                 container_data->replicas>1?" set":"", rsc->id, container_data->image,
                  is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
                  is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
     if (options & pe_print_html) {
