@@ -573,7 +573,7 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
         rc = 0;
 
     } else {
-        CMD_ERR("Could not send %s op to the crmd", op);
+        crm_debug("Could not send %s op to the crmd", op);
         rc = -ENOTCONN;
     }
 
@@ -627,8 +627,9 @@ cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
 
     } else if (host_uname == NULL) {
         GListPtr lpc = NULL;
+        GListPtr nodes = g_hash_table_get_values(rsc->known_on);
 
-        for (lpc = data_set->nodes; lpc != NULL; lpc = lpc->next) {
+        for (lpc = nodes; lpc != NULL; lpc = lpc->next) {
             node = (node_t *) lpc->data;
 
             if (node->details->online) {
@@ -637,6 +638,7 @@ cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
             }
         }
 
+        g_list_free(nodes);
         return pcmk_ok;
     }
 
