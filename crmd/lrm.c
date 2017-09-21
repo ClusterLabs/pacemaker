@@ -820,6 +820,9 @@ do_lrm_query_internal(lrm_state_t *lrm_state, int update_flags)
 
     xml_state = create_node_state_update(peer, update_flags, NULL,
                                          __FUNCTION__);
+    if (xml_state == NULL) {
+        return NULL;
+    }
 
     xml_data = create_xml_node(xml_state, XML_CIB_TAG_LRM);
     crm_xml_add(xml_data, XML_ATTR_ID, peer->uuid);
