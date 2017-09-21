@@ -167,6 +167,12 @@
 #  define XML_CIB_TAG_ALERTS    	"alerts"
 #  define XML_CIB_TAG_ALERT   		"alert"
 #  define XML_CIB_TAG_ALERT_RECIPIENT	"recipient"
+#  define XML_CIB_TAG_ALERT_SELECT      "select"
+#  define XML_CIB_TAG_ALERT_ATTRIBUTES  "select_attributes"
+#  define XML_CIB_TAG_ALERT_FENCING     "select_fencing"
+#  define XML_CIB_TAG_ALERT_NODES       "select_nodes"
+#  define XML_CIB_TAG_ALERT_RESOURCES   "select_resources"
+#  define XML_CIB_TAG_ALERT_ATTR        "attribute"
 
 #  define XML_CIB_TAG_STATE         	"node_state"
 #  define XML_CIB_TAG_NODE          	"node"
@@ -371,8 +377,6 @@
 #  define XML_ALERT_ATTR_TIMEOUT	"timeout"
 #  define XML_ALERT_ATTR_TSTAMP_FORMAT	"timestamp-format"
 #  define XML_ALERT_ATTR_REC_VALUE	"value"
-#  define XML_ALERT_ATTR_SELECT_KIND	"kind"
-#  define XML_ALERT_ATTR_SELECT_ATTRIBUTE_NAME	"attribute_name"
 
 #  define XML_CIB_TAG_GENERATION_TUPPLE	"generation_tuple"
 
