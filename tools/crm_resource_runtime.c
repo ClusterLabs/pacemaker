@@ -619,7 +619,7 @@ cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
 
             rc = cli_resource_delete(crmd_channel, host_uname, child, operation,
                                      interval, data_set);
-            if(rc != pcmk_ok || (pe_rsc_is_clone(rsc) && is_not_set(rsc->flags, pe_rsc_unique))) {
+            if(rc != pcmk_ok) {
                 return rc;
             }
         }
