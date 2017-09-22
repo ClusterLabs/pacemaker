@@ -899,7 +899,7 @@ unpack_tickets_state(xmlNode * xml_tickets, pe_working_set_t * data_set)
     return TRUE;
 }
 
-/* Compatibility with the deprecated ticket state section:
+/* @COMPAT DC < 1.1.7: Compatibility with the deprecated ticket state section:
  * "/cib/status/tickets/instance_attributes" */
 static void
 get_ticket_state_legacy(gpointer key, gpointer value, gpointer user_data)
@@ -1131,7 +1131,7 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
             xmlNode *xml_tickets = state;
             GHashTable *state_hash = NULL;
 
-            /* Compatibility with the deprecated ticket state section:
+            /* @COMPAT DC < 1.1.7: Compatibility with the deprecated ticket state section:
              * Unpack the attributes in the deprecated "/cib/status/tickets/instance_attributes" if it exists. */
             state_hash = crm_str_table_new();
 
