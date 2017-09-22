@@ -249,7 +249,7 @@ check your installed manual pages for the proper syntax to use.
 == Making Configuration Changes in a Sandbox ==
 
 Often it is desirable to preview the effects of a series of changes
-before updating the configuration atomically.  For this purpose we
+before updating the configuration all at once. For this purpose, we
 have created `crm_shadow` which creates a
 "shadow" copy of the configuration and arranges for all the command
 line tools to use it.
@@ -287,7 +287,7 @@ option.  Again, be sure to follow the on-screen instructions carefully!
 For a full list of `crm_shadow` options and
 commands, invoke it with the `--help` option.
 
-.Using a sandbox to make multiple changes atomically, discard them and verify the real configuration is untouched
+.Use sandbox to make multiple changes all at once, discard them, and verify real configuration is untouched
 ======
 ----
  shadow[test] # crm_failcount -r rsc_c001n01 -G
