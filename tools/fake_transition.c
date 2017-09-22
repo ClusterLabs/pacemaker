@@ -63,8 +63,7 @@ static void
 inject_transient_attr(xmlNode * cib_node, const char *name, const char *value)
 {
     xmlNode *attrs = NULL;
-    xmlNode *container = NULL;
-    xmlNode *nvp = NULL;
+    xmlNode *instance_attrs = NULL;
     xmlChar *node_path;
     const char *node_uuid = ID(cib_node);
 
@@ -79,16 +78,13 @@ inject_transient_attr(xmlNode * cib_node, const char *name, const char *value)
         crm_xml_add(attrs, XML_ATTR_ID, node_uuid);
     }
 
-    container = first_named_child(attrs, XML_TAG_ATTR_SETS);
-    if (container == NULL) {
-        container = create_xml_node(attrs, XML_TAG_ATTR_SETS);
-        crm_xml_add(container, XML_ATTR_ID, node_uuid);
+    instance_attrs = first_named_child(attrs, XML_TAG_ATTR_SETS);
+    if (instance_attrs == NULL) {
+        instance_attrs = create_xml_node(attrs, XML_TAG_ATTR_SETS);
+        crm_xml_add(instance_attrs, XML_ATTR_ID, node_uuid);
     }
 
-    nvp = create_xml_node(container, XML_CIB_TAG_NVPAIR);
-    crm_xml_set_id(nvp, "%s-%s", name, node_uuid);
-    crm_xml_add(nvp, XML_NVPAIR_ATTR_NAME, name);
-    crm_xml_add(nvp, XML_NVPAIR_ATTR_VALUE, value);
+    crm_create_nvpair_xml(instance_attrs, NULL, name, value);
 }
 
 static void

@@ -304,14 +304,10 @@ update_attr_delegate(cib_t * the_cib, int call_options,
     }
 
   do_modify:
-    xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_NVPAIR);
+    xml_obj = crm_create_nvpair_xml(xml_obj, attr_id, attr_name, attr_value);
     if (xml_top == NULL) {
         xml_top = xml_obj;
     }
-
-    crm_xml_add(xml_obj, XML_ATTR_ID, attr_id);
-    crm_xml_add(xml_obj, XML_NVPAIR_ATTR_NAME, attr_name);
-    crm_xml_add(xml_obj, XML_NVPAIR_ATTR_VALUE, attr_value);
 
     crm_log_xml_trace(xml_top, "update_attr");
     rc = cib_internal_op(the_cib, CIB_OP_MODIFY, NULL, section, xml_top, NULL,
@@ -376,10 +372,7 @@ delete_attr_delegate(cib_t * the_cib, int options,
         attr_id = local_attr_id;
     }
 
-    xml_obj = create_xml_node(NULL, XML_CIB_TAG_NVPAIR);
-    crm_xml_add(xml_obj, XML_ATTR_ID, attr_id);
-    crm_xml_add(xml_obj, XML_NVPAIR_ATTR_NAME, attr_name);
-    crm_xml_add(xml_obj, XML_NVPAIR_ATTR_VALUE, attr_value);
+    xml_obj = crm_create_nvpair_xml(NULL, attr_id, attr_name, attr_value);
 
     rc = cib_internal_op(the_cib, CIB_OP_DELETE, NULL, section, xml_obj, NULL,
                          options | cib_quorum_override, user_name);

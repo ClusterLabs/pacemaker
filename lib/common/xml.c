@@ -4818,19 +4818,80 @@ replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update, gboolean 
     return can_delete;
 }
 
+/*!
+ * \brief Create an XML name/value pair
+ *
+ * \param[in] parent  If not NULL, make new XML node a child of this one
+ * \param[in] id      If not NULL, use this as ID (otherwise auto-generate)
+ * \param[in] name    Name to use
+ * \param[in] value   Value to use
+ *
+ * \return New XML object on success, NULL otherwise
+ */
+xmlNode *
+crm_create_nvpair_xml(xmlNode *parent, const char *id, const char *name,
+                      const char *value)
+{
+    xmlNode *nvp;
+
+    /* id can be NULL so we auto-generate one, and name can be NULL if this
+     * will be used to delete a name/value pair by ID, but both can't be NULL
+     */
+    CRM_CHECK(id || name, return NULL);
+
+    nvp = create_xml_node(parent, XML_CIB_TAG_NVPAIR);
+    CRM_CHECK(nvp, return NULL);
+
+    if (id) {
+        crm_xml_add(nvp, XML_ATTR_ID, id);
+    } else {
+        const char *parent_id = ID(parent);
+
+        crm_xml_set_id(nvp, "%s-%s",
+                       (parent_id? parent_id : XML_CIB_TAG_NVPAIR), name);
+    }
+    crm_xml_add(nvp, XML_NVPAIR_ATTR_NAME, name);
+    crm_xml_add(nvp, XML_NVPAIR_ATTR_VALUE, value);
+    return nvp;
+}
+
+/*!
+ * \brief Create a CIB XML element for an operation
+ *
+ * \param[in] parent    If not NULL, make new XML node a child of this one
+ * \param[in] prefix    Generate an ID using this prefix
+ * \param[in] task      Operation task to set
+ * \param[in] interval  Operation interval to set
+ * \param[in] timeout   If not NULL, operation timeout to set
+ *
+ * \return New XML object on success, NULL otherwise
+ */
+xmlNode *
+crm_create_op_xml(xmlNode *parent, const char *prefix, const char *task,
+                  const char *interval, const char *timeout)
+{
+    xmlNode *xml_op;
+
+    CRM_CHECK(prefix && task && interval, return NULL);
+
+    xml_op = create_xml_node(parent, XML_ATTR_OP);
+    crm_xml_set_id(xml_op, "%s-%s-%s", prefix, task, interval);
+    crm_xml_add(xml_op, XML_LRM_ATTR_INTERVAL, interval);
+    crm_xml_add(xml_op, "name", task);
+    if (timeout) {
+        crm_xml_add(xml_op, XML_ATTR_TIMEOUT, timeout);
+    }
+    return xml_op;
+}
+
 void
 hash2nvpair(gpointer key, gpointer value, gpointer user_data)
 {
     const char *name = key;
     const char *s_value = value;
-
     xmlNode *xml_node = user_data;
-    xmlNode *xml_child = create_xml_node(xml_node, XML_CIB_TAG_NVPAIR);
 
-    crm_xml_add(xml_child, XML_ATTR_ID, name);
-    crm_xml_add(xml_child, XML_NVPAIR_ATTR_NAME, name);
-    crm_xml_add(xml_child, XML_NVPAIR_ATTR_VALUE, s_value);
-
+    crm_create_nvpair_xml(xml_node, name, name, s_value);
     crm_trace("dumped: name=%s value=%s", name, s_value);
 }
 

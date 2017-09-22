@@ -408,8 +408,6 @@ remote_id_conflict(const char *remote_name, pe_working_set_t *data)
 static const char *
 expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pe_working_set_t *data)
 {
-    xmlNode *xml_rsc = NULL;
-    xmlNode *xml_tmp = NULL;
     xmlNode *attr_set = NULL;
     xmlNode *attr = NULL;
 
@@ -454,73 +452,9 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pe_working_set_t *data
         return NULL;
     }
 
-    xml_rsc = create_xml_node(parent, XML_CIB_TAG_RESOURCE);
-
-    crm_xml_add(xml_rsc, XML_ATTR_ID, remote_name);
-    crm_xml_add(xml_rsc, XML_AGENT_ATTR_CLASS, PCMK_RESOURCE_CLASS_OCF);
-    crm_xml_add(xml_rsc, XML_AGENT_ATTR_PROVIDER, "pacemaker");
-    crm_xml_add(xml_rsc, XML_ATTR_TYPE, "remote");
-
-    xml_tmp = create_xml_node(xml_rsc, XML_TAG_META_SETS);
-    crm_xml_set_id(xml_tmp, "%s_%s", remote_name, XML_TAG_META_SETS);
-
-    attr = create_xml_node(xml_tmp, XML_CIB_TAG_NVPAIR);
-    crm_xml_set_id(attr, "%s_%s", remote_name, "meta-attributes-container");
-    crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, XML_RSC_ATTR_CONTAINER);
-    crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, container_id);
-
-    attr = create_xml_node(xml_tmp, XML_CIB_TAG_NVPAIR);
-    crm_xml_set_id(attr, "%s_%s", remote_name, "meta-attributes-internal");
-    crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, XML_RSC_ATTR_INTERNAL_RSC);
-    crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, "true");
-
-    if (remote_allow_migrate) {
-        attr = create_xml_node(xml_tmp, XML_CIB_TAG_NVPAIR);
-        crm_xml_set_id(attr, "%s_%s", remote_name, "meta-attributes-migrate");
-        crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, XML_OP_ATTR_ALLOW_MIGRATE);
-        crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, remote_allow_migrate);
-    }
-
-    if (container_managed) {
-        attr = create_xml_node(xml_tmp, XML_CIB_TAG_NVPAIR);
-        crm_xml_set_id(attr, "%s_%s", remote_name, "meta-attributes-managed");
-        crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, XML_RSC_ATTR_MANAGED);
-        crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, container_managed);
-    }
-
-    xml_tmp = create_xml_node(xml_rsc, "operations");
-    attr = create_xml_node(xml_tmp, XML_ATTR_OP);
-    crm_xml_set_id(attr, "%s_%s", remote_name, "monitor-interval-30s");
-    crm_xml_add(attr, XML_ATTR_TIMEOUT, "30s");
-    crm_xml_add(attr, XML_LRM_ATTR_INTERVAL, "30s");
-    crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, "monitor");
-
-    if (connect_timeout) {
-        attr = create_xml_node(xml_tmp, XML_ATTR_OP);
-        crm_xml_set_id(attr, "%s_%s", remote_name, "start-interval-0");
-        crm_xml_add(attr, XML_ATTR_TIMEOUT, connect_timeout);
-        crm_xml_add(attr, XML_LRM_ATTR_INTERVAL, "0");
-        crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, "start");
-    }
-
-    if (remote_port || remote_server) {
-        xml_tmp = create_xml_node(xml_rsc, XML_TAG_ATTR_SETS);
-        crm_xml_set_id(xml_tmp, "%s_%s", remote_name, XML_TAG_ATTR_SETS);
-
-        if (remote_server) {
-            attr = create_xml_node(xml_tmp, XML_CIB_TAG_NVPAIR);
-            crm_xml_set_id(attr, "%s_%s", remote_name, "instance-attributes-addr");
-            crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, "addr");
-            crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, remote_server);
-        }
-        if (remote_port) {
-            attr = create_xml_node(xml_tmp, XML_CIB_TAG_NVPAIR);
-            crm_xml_set_id(attr, "%s_%s", remote_name, "instance-attributes-port");
-            crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, "port");
-            crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, remote_port);
-        }
-    }
-
+    pe_create_remote_xml(parent, remote_name, container_id,
+                         remote_allow_migrate, container_managed, "30s", "30s",
+                         connect_timeout, remote_server, remote_port);
     return remote_name;
 }
 

@@ -1033,13 +1033,15 @@ what is about to happen to it.
 indexterm:[bundle]
 indexterm:[Resource,bundle]
 indexterm:[Docker,bundle]
+indexterm:[rkt,bundle]
 
-Pacemaker (version 1.1.17 and later) supports a special syntax for combining an
-isolated environment with the infrastructure support that it needs: the
-'bundle'.
+Pacemaker supports a special syntax for launching a
+https://en.wikipedia.org/wiki/Operating-system-level_virtualization[container]
+with any infrastructure it requires: the 'bundle'.
 
-The only isolation technology currently supported by Pacemaker bundles
-is https://www.docker.com/[Docker] containers.
+Pacemaker bundles support https://www.docker.com/[Docker] (since version
+1.1.17) and https://coreos.com/rkt/[rkt] (coming in version 1.1.18) container
+technologies.
 footnote:[Docker is a trademark of Docker, Inc. No endorsement by or
 association with Docker, Inc. is implied.]
 
@@ -1094,15 +1096,17 @@ association with Docker, Inc. is implied.]
 
 |=========================================================
 
+A bundle must contain exactly one +<docker>+ or +<rkt>+ element.
+
 === Docker Properties ===
 
-A bundle must contain exactly one +<docker>+ element.
-
-Before configuring a bundle in Pacemaker, the user must install Docker and
-supply a fully configured Docker image on every node allowed to run the bundle.
+Before configuring a Docker bundle in Pacemaker, the user must install Docker
+and supply a fully configured Docker image on every node allowed to run the
+bundle.
 
 Pacemaker will create an implicit +ocf:heartbeat:docker+ resource to manage
-a bundle's Docker container.
+a bundle's Docker container. The user must ensure that resource agent is
+installed on every node allowed to run the bundle.
 
 .Properties of a Bundle's Docker Element
 [width="95%",cols="3m,4,5<",options="header",align="center"]
@@ -1152,14 +1156,82 @@ a bundle's Docker container.
 |This command will be run inside the container when launching it ("PID 1"). If
  the bundle contains a +primitive+, this command 'must' start pacemaker_remoted
  (but could, for example, be a script that does other stuff, too).
- indexterm:[network,Docker]
- indexterm:[Docker,Property,network]
+ indexterm:[run-command,Docker]
+ indexterm:[Docker,Property,run-command]
 
 |options
 |
 |Extra command-line options to pass to `docker run`
  indexterm:[options,Docker]
  indexterm:[Docker,Property,options]
+
+|=========================================================
+
+=== rkt Properties ===
+
+Before configuring a rkt bundle in Pacemaker, the user must install rkt
+and supply a fully configured container image on every node allowed to run the
+bundle.
+
+Pacemaker will create an implicit +ocf:heartbeat:rkt+ resource to manage
+a bundle's rkt container. The user must ensure that resource agent is
+installed on every node allowed to run the bundle.
+
+.Properties of a Bundle's rkt Element
+[width="95%",cols="3m,4,5<",options="header",align="center"]
+|=========================================================
+
+|Field
+|Default
+|Description
+
+|image
+|
+|Container image tag (required)
+ indexterm:[image,rkt]
+ indexterm:[rkt,Property,image]
+
+|replicas
+|Value of +masters+ if that is positive, else 1
+|A positive integer specifying the number of container instances to launch
+ indexterm:[replicas,rkt]
+ indexterm:[rkt,Property,replicas]
+
+|replicas-per-host
+|1
+|A positive integer specifying the number of container instances allowed to run
+ on a single node
+ indexterm:[replicas-per-host,rkt]
+ indexterm:[rkt,Property,replicas-per-host]
+
+|masters
+|0
+|A non-negative integer that, if positive, indicates that the containerized
+ service should be treated as a multistate service, with this many replicas
+ allowed to run the service in the master role
+ indexterm:[masters,rkt]
+ indexterm:[rkt,Property,masters]
+
+|network
+|
+|If specified, this will be passed to +rkt run+ as the
+ network setting for the rkt container.
+ indexterm:[network,rkt]
+ indexterm:[rkt,Property,network]
+
+|run-command
+|`/usr/sbin/pacemaker_remoted` if bundle contains a +primitive+, otherwise none
+|This command will be run inside the container when launching it ("PID 1"). If
+ the bundle contains a +primitive+, this command 'must' start pacemaker_remoted
+ (but could, for example, be a script that does other stuff, too).
+ indexterm:[run-command,rkt]
+ indexterm:[rkt,Property,run-command]
+
+|options
+|
+|Extra command-line options to pass to `rkt run`
+ indexterm:[options,rkt]
+ indexterm:[rkt,Property,options]
 
 |=========================================================
 
@@ -1202,14 +1274,15 @@ indexterm:[bundle,network]
  indexterm:[network,Property,host-interface]
 
 |control-port
-|
+|3121
 |If the bundle contains a +primitive+, the cluster will use this integer TCP
- port for communication with Pacemaker Remote inside the container. This takes
- precedence over the value of any PCMK_remote_port environment variable set
- in the container image. This can allow a +primitive+ to be specified without
- using +ip-range-start+ (in which case +replicas-per-host+ must be 1), or
- allow a bundle to run on a Pacemaker Remote node that is already listening on
- the default port.
+ port for communication with Pacemaker Remote inside the container. Changing
+ this is useful when the container is unable to listen on the default port,
+ for example, when the container uses the host's network rather than
+ +ip-range-start+ (in which case +replicas-per-host+ must be 1), or when the
+ bundle may run on a Pacemaker Remote node that is already listening on the
+ default port. Any PCMK_remote_port environment variable set on the host or in
+ the container is ignored for bundle connections.
  indexterm:[control-port,network]
  indexterm:[network,Property,control-port]
 
@@ -1312,10 +1385,11 @@ indexterm:[bundle,storage,storage-mapping]
 |
 |The start of a path on the host's filesystem that will be mapped into the
  container, using a different subdirectory on the host for each container
- instance. Exactly one of +source-dir+ and +source-dir-root+ must be specified
- in a +storage-mapping+.  Currently, this added, unique tail subdirectory
- corresponds to the replica naming rule elaborated in
+ instance. The subdirectory will be named the same as the bundle host name,
+ as described in
  <<s-resource-bundle-note-replica-names,the note for +ip-range-start+>>.
+ Exactly one of +source-dir+ and +source-dir-root+ must be specified in a
+ +storage-mapping+.
  indexterm:[source-dir-root,storage-mapping]
  indexterm:[storage-mapping,Property,source-dir-root]
 
@@ -1336,14 +1410,22 @@ indexterm:[bundle,storage,storage-mapping]
 
 [NOTE]
 ====
+Pacemaker does not define the behavior if the source directory does not already
+exist on the host. However, it is expected that the container technology and/or
+its resource agent will create the source directory in that case.
+====
+
+[NOTE]
+====
 If the bundle contains a +primitive+,
 Pacemaker will automatically map the equivalent of
 +source-dir=/etc/pacemaker/authkey target-dir=/etc/pacemaker/authkey+
 and +source-dir-root=/var/log/pacemaker/bundles target-dir=/var/log+ into the
 container, so it is not necessary to specify those paths in a
-+storage-mapping+. Newer versions of +ocf:heartbeat:docker+ will automatically
-create the source directories if they do not exist, but the user may want to
-ensure they exist beforehand.
++storage-mapping+. (If the DC node has the PCMK_authkey_location variable set,
+that will be used as the source instead of `/etc/pacemaker/authkey`; the value
+should be identical on all nodes, if used. The user should not set the
+PCMK_authkey_location environment variable inside the container.)
 ====
 
 === Bundle Primitive ===
@@ -1387,7 +1469,10 @@ This includes options such as +priority+, +target-role+, and +is-managed+. See
 
 === Limitations of Bundles ===
 
-Bundle support is considered experimental in Pacemaker 1.1.17.
+Bundle support is considered experimental. Cleaning up a running bundle, or
+restarting pacemaker while a bundle is unmanaged or the cluster is in
+maintenance mode, may cause the bundle to fail. The feature is believed to
+be otherwise production-ready as of version 1.1.18.
 
 Bundles may not be cloned or included in groups. This includes the bundle's
 primitive and any resources implicitly created by Pacemaker for the bundle.

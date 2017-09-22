@@ -900,7 +900,7 @@ handle_blocked_ops(void)
 #define lsb_metadata_template  \
     "<?xml version='1.0'?>\n"                                           \
     "<!DOCTYPE resource-agent SYSTEM 'ra-api-1.dtd'>\n"                 \
-    "<resource-agent name='%s' version='0.1'>\n"                        \
+    "<resource-agent name='%s' version='" PCMK_DEFAULT_AGENT_VERSION "'>\n" \
     "  <version>1.0</version>\n"                                        \
     "  <longdesc lang='en'>\n"                                          \
     "    %s\n"                                                          \
@@ -1167,7 +1167,7 @@ nagios_get_metadata(const char *type, char **output)
 static const char hb_metadata_template[] =
     "<?xml version='1.0'?>\n"
     "<!DOCTYPE resource-agent SYSTEM 'ra-api-1.dtd'>\n"
-    "<resource-agent name='%s' version='0.1'>\n"
+    "<resource-agent name='%s' version='" PCMK_DEFAULT_AGENT_VERSION "'>\n"
     "<version>1.0</version>\n"
     "<longdesc lang='en'>\n"
     "%s"

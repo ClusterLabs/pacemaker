@@ -386,10 +386,7 @@ delete_ticket_state_attr_legacy(const char *ticket_id, const char *set_name, con
         attr_id = local_attr_id;
     }
 
-    xml_obj = create_xml_node(NULL, XML_CIB_TAG_NVPAIR);
-    crm_xml_add(xml_obj, XML_ATTR_ID, attr_id);
-    /*crm_xml_add(xml_obj, XML_NVPAIR_ATTR_NAME, attr_name); */
-
+    xml_obj = crm_create_nvpair_xml(NULL, attr_id, /*attr_name*/ NULL, NULL);
     crm_log_xml_debug(xml_obj, "Delete");
 
     rc = cib->cmds->delete(cib, XML_CIB_TAG_STATUS, xml_obj, cib_options);

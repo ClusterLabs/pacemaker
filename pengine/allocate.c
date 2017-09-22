@@ -1823,10 +1823,7 @@ apply_container_ordering(action_t *action, pe_working_set_t *data_set)
     resource_t *container = NULL;
     enum action_tasks task = text2task(action->task);
 
-    if (action->rsc == NULL) {
-        return;
-    }
-
+    CRM_ASSERT(action->rsc);
     CRM_ASSERT(action->node);
     CRM_ASSERT(is_remote_node(action->node));
 
@@ -1915,9 +1912,7 @@ get_remote_node_state(pe_node_t *node)
     resource_t *remote_rsc = NULL;
     node_t *cluster_node = NULL;
 
-    if(node == NULL) {
-        return remote_state_unknown;
-    }
+    CRM_ASSERT(node);
 
     remote_rsc = node->details->remote_rsc;
     CRM_ASSERT(remote_rsc);
@@ -2121,21 +2116,20 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
 
     for (GListPtr gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
         action_t *action = (action_t *) gIter->data;
+        resource_t *remote = NULL;
 
+        // We are only interested in resource actions
         if (action->rsc == NULL) {
             continue;
         }
 
-        /* Special case. */
-        if (action->rsc &&
-            action->rsc->is_remote_node &&
+        /* Special case: If we are clearing the failcount of an actual
+         * remote connection resource, then make sure this happens before
+         * any start of the resource in this transition.
+         */
+        if (action->rsc->is_remote_node &&
             safe_str_eq(action->task, CRM_OP_CLEAR_FAILCOUNT)) {
 
-            /* If we are clearing the failcount of an actual remote node
-             * connection resource, then make sure this happens before allowing
-             * the connection to start if we are planning on starting the
-             * connection during this transition.
-             */
             custom_action_order(action->rsc,
                 NULL,
                 action,
@@ -2148,17 +2142,41 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
             continue;
         }
 
-        /* If the action occurs on a Pacemaker Remote node, create
+        // We are only interested in actions allocated to a node
+        if (action->node == NULL) {
+            continue;
+        }
+
+        if (is_remote_node(action->node) == FALSE) {
+            continue;
+        }
+
+        /* We are only interested in real actions.
+         *
+         * @TODO This is probably wrong; pseudo-actions might be converted to
+         * real actions and vice versa later in update_actions() at the end of
+         * stage7().
+         */
+        if (is_set(action->flags, pe_action_pseudo)) {
+            continue;
+        }
+
+        remote = action->node->details->remote_rsc;
+        if (remote == NULL) {
+            // Orphaned
+            continue;
+        }
+
+        /* The action occurs across a remote connection, so create
          * ordering constraints that guarantee the action occurs while the node
          * is active (after start, before stop ... things like that).
+         *
+         * This is somewhat brittle in that we need to make sure the results of
+         * this ordering are compatible with the result of get_router_node().
+         * It would probably be better to add XML_LRM_ATTR_ROUTER_NODE as part
+         * of this logic rather than action2xml().
          */
-        if (action->node == NULL ||
-            is_remote_node(action->node) == FALSE ||
-            action->node->details->remote_rsc == NULL ||
-            is_set(action->flags, pe_action_pseudo)) {
-            crm_trace("Nothing required for %s on %s", action->uuid, action->node?action->node->details->uname:"NA");
-
-        } else if(action->node->details->remote_rsc->container) {
+        if (remote->container) {
             crm_trace("Container ordering for %s", action->uuid);
             apply_container_ordering(action, data_set);
 

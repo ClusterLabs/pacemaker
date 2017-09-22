@@ -356,14 +356,10 @@ cli_resource_update_attribute(const char *rsc_id, const char *attr_set, const ch
         }
     }
 
-    xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_NVPAIR);
+    xml_obj = crm_create_nvpair_xml(xml_obj, attr_id, attr_name, attr_value);
     if (xml_top == NULL) {
         xml_top = xml_obj;
     }
-
-    crm_xml_add(xml_obj, XML_ATTR_ID, attr_id);
-    crm_xml_add(xml_obj, XML_NVPAIR_ATTR_NAME, attr_name);
-    crm_xml_add(xml_obj, XML_NVPAIR_ATTR_VALUE, attr_value);
 
     crm_log_xml_debug(xml_top, "Update");
 
@@ -457,10 +453,7 @@ cli_resource_delete_attribute(const char *rsc_id, const char *attr_set, const ch
         attr_id = local_attr_id;
     }
 
-    xml_obj = create_xml_node(NULL, XML_CIB_TAG_NVPAIR);
-    crm_xml_add(xml_obj, XML_ATTR_ID, attr_id);
-    crm_xml_add(xml_obj, XML_NVPAIR_ATTR_NAME, attr_name);
-
+    xml_obj = crm_create_nvpair_xml(NULL, attr_id, attr_name, NULL);
     crm_log_xml_debug(xml_obj, "Delete");
 
     CRM_ASSERT(cib);
