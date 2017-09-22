@@ -700,38 +700,43 @@ build_operation_update(xmlNode * parent, lrmd_rsc_info_t * rsc, lrmd_event_data_
 
     metadata = metadata_cache_get(lrm_state->metadata_cache, rsc);
     if (metadata == NULL) {
-        if (lrm_state_is_local(lrm_state)) {
-            char *metadata_str = NULL;
+        /* For now, we always collect resource agent meta-data via a local,
+         * synchronous, direct execution of the agent. This has multiple issues:
+         * the lrmd should execute agents, not the crmd; meta-data for
+         * Pacemaker Remote nodes should be collected on those nodes, not
+         * locally; and the meta-data call shouldn't eat into the timeout of the
+         * real action being performed.
+         *
+         * These issues are planned to be addressed by having the PE schedule
+         * a meta-data cache check at the beginning of each transition. Once
+         * that is working, this block will only be a fallback in case the
+         * initial collection fails.
+         */
+        char *metadata_str = NULL;
 
-            /* Do a synchronous local execution for local agents.
-             * TODO: We really should do async via lrmd.
-             */
-            int rc = lrm_state_get_metadata(lrm_state, rsc->class,
-                                            rsc->provider, rsc->type,
-                                            &metadata_str, 0);
+        int rc = lrm_state_get_metadata(lrm_state, rsc->class,
+                                        rsc->provider, rsc->type,
+                                        &metadata_str, 0);
 
-            if (rc != pcmk_ok) {
-                crm_warn("Failed to get metadata for %s (%s:%s:%s)",
-                         rsc->id, rsc->class, rsc->provider, rsc->type);
-                return TRUE;
-            }
+        if (rc != pcmk_ok) {
+            crm_warn("Failed to get metadata for %s (%s:%s:%s)",
+                     rsc->id, rsc->class, rsc->provider, rsc->type);
+            return TRUE;
+        }
 
-            metadata = metadata_cache_update(lrm_state->metadata_cache, rsc, metadata_str);
-            free(metadata_str);
-            if (metadata == NULL) {
-                crm_warn("Failed to update metadata for %s (%s:%s:%s)",
-                         rsc->id, rsc->class, rsc->provider, rsc->type);
-                return TRUE;
-            }
-        } else {
-            /* TODO Do async execution via lrmd */
-            crm_warn("Cannot get remote metadata for %s (%s:%s:%s)",
+        metadata = metadata_cache_update(lrm_state->metadata_cache, rsc,
+                                         metadata_str);
+        free(metadata_str);
+        if (metadata == NULL) {
+            crm_warn("Failed to update metadata for %s (%s:%s:%s)",
                      rsc->id, rsc->class, rsc->provider, rsc->type);
             return TRUE;
         }
     }
 
+#if ENABLE_VERSIONED_ATTRS
     crm_xml_add(xml_op, XML_ATTR_RA_VERSION, metadata->ra_version);
+#endif
 
     crm_trace("Including additional digests for %s::%s:%s", rsc->class, rsc->provider, rsc->type);
     append_restart_list(op, metadata, xml_op, caller_version);
@@ -820,6 +825,9 @@ do_lrm_query_internal(lrm_state_t *lrm_state, int update_flags)
 
     xml_state = create_node_state_update(peer, update_flags, NULL,
                                          __FUNCTION__);
+    if (xml_state == NULL) {
+        return NULL;
+    }
 
     xml_data = create_xml_node(xml_state, XML_CIB_TAG_LRM);
     crm_xml_add(xml_data, XML_ATTR_ID, peer->uuid);
@@ -846,12 +854,15 @@ do_lrm_query(gboolean is_replace, const char *node_name)
     xml_state = do_lrm_query_internal(lrm_state,
                                       node_update_cluster|node_update_peer);
 
-    /* In case this function is called to generate a join confirmation to
-     * send to the DC, force the current and expected join state to member.
-     * This isn't necessary for newer DCs but is backward compatible.
-     */
-    crm_xml_add(xml_state, XML_NODE_JOIN_STATE, CRMD_JOINSTATE_MEMBER);
-    crm_xml_add(xml_state, XML_NODE_EXPECTED, CRMD_JOINSTATE_MEMBER);
+    if (xml_state) {
+        /* @COMPAT DC <1.1.8
+         * In case this function is called to generate a join confirmation to
+         * send to the DC, force the current and expected join state to member.
+         * This isn't necessary for newer DCs but is backward compatible.
+         */
+        crm_xml_add(xml_state, XML_NODE_JOIN_STATE, CRMD_JOINSTATE_MEMBER);
+        crm_xml_add(xml_state, XML_NODE_EXPECTED, CRMD_JOINSTATE_MEMBER);
+    }
 
     return xml_state;
 }
@@ -939,7 +950,7 @@ delete_rsc_status(lrm_state_t * lrm_state, const char *rsc_id, int call_options,
 
     CRM_CHECK(rsc_id != NULL, return -ENXIO);
 
-    max = strlen(rsc_template) + strlen(rsc_id) + strlen(lrm_state->node_name) + 1;
+    max = strlen(rsc_template) + strlen(lrm_state->node_name) + strlen(rsc_id) + 1;
     rsc_xpath = calloc(1, max);
     snprintf(rsc_xpath, max, rsc_template, lrm_state->node_name, rsc_id);
 
@@ -1830,6 +1841,7 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
     op->timeout = crm_parse_int(op_timeout, "0");
     op->start_delay = crm_parse_int(op_delay, "0");
 
+#if ENABLE_VERSIONED_ATTRS
     // Resolve any versioned parameters
     if (safe_str_neq(op->op_type, RSC_METADATA)
         && safe_str_neq(op->op_type, CRMD_ACTION_DELETE)
@@ -1885,6 +1897,7 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
 
         lrmd_free_rsc_info(rsc);
     }
+#endif
 
     if (safe_str_neq(operation, RSC_STOP)) {
         op->params = params;

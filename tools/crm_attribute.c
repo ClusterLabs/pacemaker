@@ -300,14 +300,6 @@ main(int argc, char **argv)
              * which is what the admin wanted
              */
             rc = pcmk_ok;
-        } else if (rc != -EINVAL && safe_str_eq(crm_system_name, "crm_failcount")) {
-            char *now_s = NULL;
-            time_t now = time(NULL);
-
-            now_s = crm_itoa(now);
-            update_attr_delegate(the_cib, cib_sync_call, XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL,
-                                 NULL, "last-lrm-refresh", now_s, TRUE, NULL, NULL);
-            free(now_s);
         }
 
     } else if (command == 'v') {

@@ -256,19 +256,21 @@ resources_action_create(const char *name, const char *standard, const char *prov
         /* The "heartbeat" agent class only has positional arguments,
          * which we keyed by their decimal position number. */
         param_num = 1;
-        for (index = 1; index <= MAX_ARGC - 3; index++ ) {
-            snprintf(buf_tmp, sizeof(buf_tmp), "%d", index);
-            value_tmp = g_hash_table_lookup(params, buf_tmp);
-            if (value_tmp == NULL) {
-                /* maybe: strdup("") ??
-                 * But the old lrmd did simply continue as well. */
-                continue;
+        if (params) {
+            for (index = 1; index <= MAX_ARGC - 3; index++ ) {
+                snprintf(buf_tmp, sizeof(buf_tmp), "%d", index);
+                value_tmp = g_hash_table_lookup(params, buf_tmp);
+                if (value_tmp == NULL) {
+                    /* maybe: strdup("") ??
+                     * But the old lrmd did simply continue as well. */
+                    continue;
+                }
+                op->opaque->args[param_num++] = strdup(value_tmp);
             }
-            op->opaque->args[param_num++] = strdup(value_tmp);
         }
 
         /* Add operation code as the last argument, */
-        /* and the teminating NULL pointer */
+        /* and the terminating NULL pointer */
         op->opaque->args[param_num++] = strdup(op->action);
         op->opaque->args[param_num] = NULL;
 #endif
@@ -968,6 +970,8 @@ lsb_meta_helper_get_value(const char *line, char **value, const char *prefix)
     return FALSE;
 }
 
+#define DESC_MAX 2048
+
 static int
 lsb_get_metadata(const char *type, char **output)
 {
@@ -984,8 +988,7 @@ lsb_get_metadata(const char *type, char **output)
     char *s_dscrpt = NULL;
     char *xml_l_dscrpt = NULL;
     int offset = 0;
-    int max = 2048;
-    char description[max];
+    char description[DESC_MAX];
 
     if (type[0] == '/') {
         snprintf(ra_pathname, sizeof(ra_pathname), "%s", type);
@@ -1040,8 +1043,8 @@ lsb_get_metadata(const char *type, char **output)
             while (fgets(buffer, sizeof(buffer), fp)) {
                 if (!strncmp(buffer, "#  ", 3) || !strncmp(buffer, "#\t", 2)) {
                     buffer[0] = ' ';
-                    offset += snprintf(description+offset, max-offset, "%s",
-                                       buffer);
+                    offset += snprintf(description + offset, DESC_MAX - offset,
+                                       "%s", buffer);
                 } else {
                     fputs(buffer, fp);
                     break;      /* Long description ends */

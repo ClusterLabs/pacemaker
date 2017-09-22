@@ -312,14 +312,18 @@ struct resource_s {
 
     pe_working_set_t *cluster;
 
+#if ENABLE_VERSIONED_ATTRS
     xmlNode *versioned_parameters;
+#endif
 };
 
+#if ENABLE_VERSIONED_ATTRS
 // Used as action->action_details if action->rsc is not NULL
 typedef struct pe_rsc_action_details_s {
     xmlNode *versioned_parameters;
     xmlNode *versioned_meta;
 } pe_rsc_action_details_t;
+#endif
 
 struct pe_action_s {
     int id;
@@ -454,7 +458,9 @@ node_t *pe_find_node_id(GListPtr node_list, const char *id);
 node_t *pe_find_node_any(GListPtr node_list, const char *id, const char *uname);
 GListPtr find_operations(const char *rsc, const char *node, gboolean active_filter,
                          pe_working_set_t * data_set);
+#if ENABLE_VERSIONED_ATTRS
 pe_rsc_action_details_t *pe_rsc_action_details(pe_action_t *action);
+#endif
 
 /*!
  * \brief Check whether a resource is any clone type

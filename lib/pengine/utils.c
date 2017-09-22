@@ -36,6 +36,7 @@ void unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * contain
 static xmlNode *find_rsc_op_entry_helper(resource_t * rsc, const char *key,
                                          gboolean include_disabled);
 
+#if ENABLE_VERSIONED_ATTRS
 pe_rsc_action_details_t *
 pe_rsc_action_details(pe_action_t *action)
 {
@@ -79,6 +80,7 @@ pe_free_rsc_action_details(pe_action_t *action)
 
     action->action_details = NULL;
 }
+#endif
 
 /*!
  * \internal
@@ -826,6 +828,7 @@ unpack_timeout(const char *value, action_t *action, xmlNode *xml_obj,
     return timeout;
 }
 
+#if ENABLE_VERSIONED_ATTRS
 static void
 unpack_versioned_meta(xmlNode *versioned_meta, xmlNode *xml_obj, unsigned long long interval, crm_time_t *now)
 {
@@ -854,6 +857,7 @@ unpack_versioned_meta(xmlNode *versioned_meta, xmlNode *xml_obj, unsigned long l
         }
     }
 }
+#endif
 
 void
 unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
@@ -864,7 +868,9 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
     char *value_ms = NULL;
     const char *value = NULL;
     const char *field = NULL;
+#if ENABLE_VERSIONED_ATTRS
     pe_rsc_action_details_t *rsc_details = NULL;
+#endif
 
     CRM_CHECK(action->rsc != NULL, return);
 
@@ -888,11 +894,13 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
     unpack_instance_attributes(data_set->input, xml_obj, XML_TAG_ATTR_SETS,
                                NULL, action->meta, NULL, FALSE, data_set->now);
 
+#if ENABLE_VERSIONED_ATTRS
     rsc_details = pe_rsc_action_details(action);
     pe_unpack_versioned_attributes(data_set->input, xml_obj, XML_TAG_ATTR_SETS, NULL,
                                    rsc_details->versioned_parameters, data_set->now);
     pe_unpack_versioned_attributes(data_set->input, xml_obj, XML_TAG_META_SETS, NULL,
                                    rsc_details->versioned_meta, data_set->now);
+#endif
 
     g_hash_table_remove(action->meta, "id");
 
@@ -1094,8 +1102,10 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
     timeout = unpack_timeout(value, action, xml_obj, interval, data_set->config_hash);
     g_hash_table_replace(action->meta, strdup(XML_ATTR_TIMEOUT), crm_itoa(timeout));
 
+#if ENABLE_VERSIONED_ATTRS
     unpack_versioned_meta(rsc_details->versioned_meta, xml_obj, interval,
                           data_set->now);
+#endif
 }
 
 static xmlNode *
@@ -1244,9 +1254,11 @@ pe_free_action(action_t * action)
     if (action->meta) {
         g_hash_table_destroy(action->meta);
     }
+#if ENABLE_VERSIONED_ATTRS
     if (action->rsc) {
         pe_free_rsc_action_details(action);
     }
+#endif
     free(action->cancel_task);
     free(action->reason);
     free(action->task);
@@ -1828,6 +1840,7 @@ bool fix_remote_addr(resource_t * rsc)
     return TRUE;
 }
 
+#if ENABLE_VERSIONED_ATTRS
 static void
 append_versioned_params(xmlNode *versioned_params, const char *ra_version, xmlNode *params)
 {
@@ -1842,6 +1855,7 @@ append_versioned_params(xmlNode *versioned_params, const char *ra_version, xmlNo
     }
     g_hash_table_destroy(hash);
 }
+#endif
 
 static op_digest_cache_t *
 rsc_action_digest(resource_t * rsc, const char *task, const char *key,
@@ -1853,10 +1867,12 @@ rsc_action_digest(resource_t * rsc, const char *task, const char *key,
     if (data == NULL) {
         GHashTable *local_rsc_params = crm_str_table_new();
         action_t *action = custom_action(rsc, strdup(key), task, node, TRUE, FALSE, data_set);
+#if ENABLE_VERSIONED_ATTRS
         xmlNode *local_versioned_params = create_xml_node(NULL, XML_TAG_RSC_VER_ATTRS);
+        const char *ra_version = NULL;
+#endif
 
         const char *op_version;
-        const char *ra_version = NULL;
         const char *restart_list = NULL;
         const char *secure_list = " passwd password ";
 
@@ -1864,7 +1880,9 @@ rsc_action_digest(resource_t * rsc, const char *task, const char *key,
         CRM_ASSERT(data != NULL);
 
         get_rsc_attributes(local_rsc_params, rsc, node, data_set);
+#if ENABLE_VERSIONED_ATTRS
         pe_get_versioned_attributes(local_versioned_params, rsc, node, data_set);
+#endif
 
         data->params_all = create_xml_node(NULL, XML_TAG_PARAMS);
         if (fix_remote_addr(rsc)) {
@@ -1883,12 +1901,15 @@ rsc_action_digest(resource_t * rsc, const char *task, const char *key,
             restart_list = crm_element_value(xml_op, XML_LRM_ATTR_OP_RESTART);
 
             op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
+#if ENABLE_VERSIONED_ATTRS
             ra_version = crm_element_value(xml_op, XML_ATTR_RA_VERSION);
+#endif
 
         } else {
             op_version = CRM_FEATURE_SET;
         }
 
+#if ENABLE_VERSIONED_ATTRS
         append_versioned_params(local_versioned_params, ra_version, data->params_all);
         append_versioned_params(rsc->versioned_parameters, ra_version, data->params_all);
 
@@ -1896,6 +1917,7 @@ rsc_action_digest(resource_t * rsc, const char *task, const char *key,
             pe_rsc_action_details_t *details = pe_rsc_action_details(action);
             append_versioned_params(details->versioned_parameters, ra_version, data->params_all);
         }
+#endif
 
         filter_action_parameters(data->params_all, op_version);
 

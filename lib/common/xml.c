@@ -129,10 +129,11 @@ static inline bool TRACKING_CHANGES(xmlNode *xml)
         if(buffer && rc < 0) {                                          \
             crm_perror(LOG_ERR, "snprintf failed at offset %d", offset); \
             (buffer)[(offset)] = 0;                                     \
+            break;                                                      \
         } else if(rc >= ((max) - (offset))) {                           \
             char *tmp = NULL;                                           \
             (max) = QB_MAX(CHUNK_SIZE, (max) * 2);                      \
-            tmp = realloc_safe((buffer), (max) + 1);                         \
+            tmp = realloc_safe((buffer), (max));                        \
             CRM_ASSERT(tmp);                                            \
             (buffer) = tmp;                                             \
         } else {                                                        \
@@ -149,7 +150,7 @@ insert_prefix(int options, char **buffer, int *offset, int *max, int depth)
 
         if ((*buffer) == NULL || spaces >= ((*max) - (*offset))) {
             (*max) = QB_MAX(CHUNK_SIZE, (*max) * 2);
-            (*buffer) = realloc_safe((*buffer), (*max) + 1);
+            (*buffer) = realloc_safe((*buffer), (*max));
         }
         memset((*buffer) + (*offset), ' ', spaces);
         (*offset) += spaces;
@@ -1866,11 +1867,10 @@ xml_patch_version_check(xmlNode *xml, xmlNode *patchset, int format)
 }
 
 static int
-xml_apply_patchset_v1(xmlNode *xml, xmlNode *patchset, bool check_version) 
+xml_apply_patchset_v1(xmlNode *xml, xmlNode *patchset)
 {
     int rc = pcmk_ok;
     int root_nodes_seen = 0;
-    char *version = crm_element_value_copy(xml, XML_ATTR_CRM_VERSION);
 
     xmlNode *child_diff = NULL;
     xmlNode *added = find_xml_node(patchset, "diff-added", FALSE);
@@ -1915,7 +1915,6 @@ xml_apply_patchset_v1(xmlNode *xml, xmlNode *patchset, bool check_version)
     purge_diff_markers(xml);       /* Purge prior to checking the digest */
 
     free_xml(old);
-    free(version);
     return rc;
 }
 
@@ -2020,7 +2019,7 @@ __xml_find_path(xmlNode *top, const char *key, int target_position)
 }
 
 static int
-xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset, bool check_version) 
+xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset)
 {
     int rc = pcmk_ok;
     xmlNode *change = NULL;
@@ -2185,10 +2184,10 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
     if(rc == pcmk_ok) {
         switch(format) {
             case 1:
-                rc = xml_apply_patchset_v1(xml, patchset, check_version);
+                rc = xml_apply_patchset_v1(xml, patchset);
                 break;
             case 2:
-                rc = xml_apply_patchset_v2(xml, patchset, check_version);
+                rc = xml_apply_patchset_v2(xml, patchset);
                 break;
             default:
                 crm_err("Unknown patch format: %d", format);
@@ -5149,6 +5148,8 @@ crm_xml_cleanup(void)
     xmlCleanupParser();
 }
 
+#define XPATH_MAX 512
+
 xmlNode *
 expand_idref(xmlNode * input, xmlNode * top)
 {
@@ -5168,11 +5169,11 @@ expand_idref(xmlNode * input, xmlNode * top)
     ref = crm_element_value(result, XML_ATTR_IDREF);
 
     if (ref != NULL) {
-        int xpath_max = 512, offset = 0;
+        int offset = 0;
 
-        xpath_string = calloc(1, xpath_max);
+        xpath_string = calloc(1, XPATH_MAX);
 
-        offset += snprintf(xpath_string + offset, xpath_max - offset, "//%s[@id='%s']", tag, ref);
+        offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "//%s[@id='%s']", tag, ref);
         CRM_LOG_ASSERT(offset > 0);
 
         result = get_xpath_object(xpath_string, top, LOG_ERR);

@@ -558,8 +558,6 @@ master_score(resource_t * rsc, node_t * node, int not_set_value)
     return score;
 }
 
-#define max(a, b) a<b?b:a
-
 static void
 apply_master_prefs(resource_t * rsc)
 {
@@ -601,7 +599,7 @@ apply_master_prefs(resource_t * rsc)
                 }
             }
 
-            new_score = max(child_rsc->priority, score);
+            new_score = QB_MAX(child_rsc->priority, score);
             if (new_score != child_rsc->priority) {
                 pe_rsc_trace(rsc, "\t%s: Updating priority (%d->%d)",
                              child_rsc->id, child_rsc->priority, new_score);

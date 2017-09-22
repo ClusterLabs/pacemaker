@@ -286,7 +286,7 @@ END
 == Configure the Cluster for the DRBD device ==
 
 One handy feature `pcs` has is the ability to queue up several changes
-into a file and commit those changes atomically.  To do this, start by
+into a file and commit those changes all at once. To do this, start by
 populating the file with the current raw XML config from the CIB.
 
 ----
