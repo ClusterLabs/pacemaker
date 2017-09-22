@@ -1866,11 +1866,10 @@ xml_patch_version_check(xmlNode *xml, xmlNode *patchset, int format)
 }
 
 static int
-xml_apply_patchset_v1(xmlNode *xml, xmlNode *patchset, bool check_version) 
+xml_apply_patchset_v1(xmlNode *xml, xmlNode *patchset)
 {
     int rc = pcmk_ok;
     int root_nodes_seen = 0;
-    char *version = crm_element_value_copy(xml, XML_ATTR_CRM_VERSION);
 
     xmlNode *child_diff = NULL;
     xmlNode *added = find_xml_node(patchset, "diff-added", FALSE);
@@ -1915,7 +1914,6 @@ xml_apply_patchset_v1(xmlNode *xml, xmlNode *patchset, bool check_version)
     purge_diff_markers(xml);       /* Purge prior to checking the digest */
 
     free_xml(old);
-    free(version);
     return rc;
 }
 
@@ -2020,7 +2018,7 @@ __xml_find_path(xmlNode *top, const char *key, int target_position)
 }
 
 static int
-xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset, bool check_version) 
+xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset)
 {
     int rc = pcmk_ok;
     xmlNode *change = NULL;
@@ -2185,10 +2183,10 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
     if(rc == pcmk_ok) {
         switch(format) {
             case 1:
-                rc = xml_apply_patchset_v1(xml, patchset, check_version);
+                rc = xml_apply_patchset_v1(xml, patchset);
                 break;
             case 2:
-                rc = xml_apply_patchset_v2(xml, patchset, check_version);
+                rc = xml_apply_patchset_v2(xml, patchset);
                 break;
             default:
                 crm_err("Unknown patch format: %d", format);
