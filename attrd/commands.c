@@ -670,12 +670,12 @@ attrd_peer_remove(const char *host, gboolean uncache, const char *source)
     GHashTableIter aIter;
 
     CRM_CHECK(host != NULL, return);
-    crm_notice("Removing all %s attributes for %s", host, source);
+    crm_notice("Removing all %s attributes for peer %s", host, source);
 
     g_hash_table_iter_init(&aIter, attributes);
     while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
         if(g_hash_table_remove(a->values, host)) {
-            crm_debug("Removed %s[%s] for %s", a->id, host, source);
+            crm_debug("Removed %s[%s] for peer %s", a->id, host, source);
         }
     }
 
