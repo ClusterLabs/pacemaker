@@ -31,6 +31,7 @@ ocf_SCRIPTS	     =  ClusterMon 	\
 			Dummy		\
 			HealthCPU	\
 			HealthSMART	\
+			ifspeed		\
 			o2cb		\
 			ping		\
 			pingd		\
