@@ -700,32 +700,35 @@ build_operation_update(xmlNode * parent, lrmd_rsc_info_t * rsc, lrmd_event_data_
 
     metadata = metadata_cache_get(lrm_state->metadata_cache, rsc);
     if (metadata == NULL) {
-        if (lrm_state_is_local(lrm_state)) {
-            char *metadata_str = NULL;
+        /* For now, we always collect resource agent meta-data via a local,
+         * synchronous, direct execution of the agent. This has multiple issues:
+         * the lrmd should execute agents, not the crmd; meta-data for
+         * Pacemaker Remote nodes should be collected on those nodes, not
+         * locally; and the meta-data call shouldn't eat into the timeout of the
+         * real action being performed.
+         *
+         * These issues are planned to be addressed by having the PE schedule
+         * a meta-data cache check at the beginning of each transition. Once
+         * that is working, this block will only be a fallback in case the
+         * initial collection fails.
+         */
+        char *metadata_str = NULL;
 
-            /* Do a synchronous local execution for local agents.
-             * TODO: We really should do async via lrmd.
-             */
-            int rc = lrm_state_get_metadata(lrm_state, rsc->class,
-                                            rsc->provider, rsc->type,
-                                            &metadata_str, 0);
+        int rc = lrm_state_get_metadata(lrm_state, rsc->class,
+                                        rsc->provider, rsc->type,
+                                        &metadata_str, 0);
 
-            if (rc != pcmk_ok) {
-                crm_warn("Failed to get metadata for %s (%s:%s:%s)",
-                         rsc->id, rsc->class, rsc->provider, rsc->type);
-                return TRUE;
-            }
+        if (rc != pcmk_ok) {
+            crm_warn("Failed to get metadata for %s (%s:%s:%s)",
+                     rsc->id, rsc->class, rsc->provider, rsc->type);
+            return TRUE;
+        }
 
-            metadata = metadata_cache_update(lrm_state->metadata_cache, rsc, metadata_str);
-            free(metadata_str);
-            if (metadata == NULL) {
-                crm_warn("Failed to update metadata for %s (%s:%s:%s)",
-                         rsc->id, rsc->class, rsc->provider, rsc->type);
-                return TRUE;
-            }
-        } else {
-            /* TODO Do async execution via lrmd */
-            crm_warn("Cannot get remote metadata for %s (%s:%s:%s)",
+        metadata = metadata_cache_update(lrm_state->metadata_cache, rsc,
+                                         metadata_str);
+        free(metadata_str);
+        if (metadata == NULL) {
+            crm_warn("Failed to update metadata for %s (%s:%s:%s)",
                      rsc->id, rsc->class, rsc->provider, rsc->type);
             return TRUE;
         }
