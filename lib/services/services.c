@@ -970,6 +970,8 @@ lsb_meta_helper_get_value(const char *line, char **value, const char *prefix)
     return FALSE;
 }
 
+#define DESC_MAX 2048
+
 static int
 lsb_get_metadata(const char *type, char **output)
 {
@@ -986,8 +988,7 @@ lsb_get_metadata(const char *type, char **output)
     char *s_dscrpt = NULL;
     char *xml_l_dscrpt = NULL;
     int offset = 0;
-    int max = 2048;
-    char description[max];
+    char description[DESC_MAX];
 
     if (type[0] == '/') {
         snprintf(ra_pathname, sizeof(ra_pathname), "%s", type);
@@ -1042,8 +1043,8 @@ lsb_get_metadata(const char *type, char **output)
             while (fgets(buffer, sizeof(buffer), fp)) {
                 if (!strncmp(buffer, "#  ", 3) || !strncmp(buffer, "#\t", 2)) {
                     buffer[0] = ' ';
-                    offset += snprintf(description+offset, max-offset, "%s",
-                                       buffer);
+                    offset += snprintf(description + offset, DESC_MAX - offset,
+                                       "%s", buffer);
                 } else {
                     fputs(buffer, fp);
                     break;      /* Long description ends */

@@ -5147,6 +5147,8 @@ crm_xml_cleanup(void)
     xmlCleanupParser();
 }
 
+#define XPATH_MAX 512
+
 xmlNode *
 expand_idref(xmlNode * input, xmlNode * top)
 {
@@ -5166,11 +5168,11 @@ expand_idref(xmlNode * input, xmlNode * top)
     ref = crm_element_value(result, XML_ATTR_IDREF);
 
     if (ref != NULL) {
-        int xpath_max = 512, offset = 0;
+        int offset = 0;
 
-        xpath_string = calloc(1, xpath_max);
+        xpath_string = calloc(1, XPATH_MAX);
 
-        offset += snprintf(xpath_string + offset, xpath_max - offset, "//%s[@id='%s']", tag, ref);
+        offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "//%s[@id='%s']", tag, ref);
         CRM_LOG_ASSERT(offset > 0);
 
         result = get_xpath_object(xpath_string, top, LOG_ERR);

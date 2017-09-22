@@ -335,11 +335,12 @@ inject_resource(xmlNode * cib_node, const char *resource, const char *rclass, co
     return cib_resource;
 }
 
+#define XPATH_MAX 1024
+
 static int
 find_ticket_state(cib_t * the_cib, const char *ticket_id, xmlNode ** ticket_state_xml)
 {
     int offset = 0;
-    static int xpath_max = 1024;
     int rc = pcmk_ok;
     xmlNode *xml_search = NULL;
 
@@ -348,11 +349,11 @@ find_ticket_state(cib_t * the_cib, const char *ticket_id, xmlNode ** ticket_stat
     CRM_ASSERT(ticket_state_xml != NULL);
     *ticket_state_xml = NULL;
 
-    xpath_string = calloc(1, xpath_max);
-    offset += snprintf(xpath_string + offset, xpath_max - offset, "%s", "/cib/status/tickets");
+    xpath_string = calloc(1, XPATH_MAX);
+    offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "%s", "/cib/status/tickets");
 
     if (ticket_id) {
-        offset += snprintf(xpath_string + offset, xpath_max - offset, "/%s[@id=\"%s\"]",
+        offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "/%s[@id=\"%s\"]",
                            XML_CIB_TAG_TICKET_STATE, ticket_id);
     }
     CRM_LOG_ASSERT(offset > 0);

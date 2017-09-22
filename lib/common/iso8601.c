@@ -402,6 +402,8 @@ crm_time_get_isoweek(crm_time_t * dt, uint * y, uint * w, uint * d)
     return TRUE;
 }
 
+#define DATE_MAX 128
+
 char *
 crm_time_as_string(crm_time_t * date_time, int flags)
 {
@@ -426,9 +428,9 @@ crm_time_as_string(crm_time_t * date_time, int flags)
     CRM_CHECK(dt != NULL, return NULL);
     if (flags & crm_time_log_duration) {
         uint h = 0, m = 0, s = 0;
-        int offset = 0, max = 128;
+        int offset = 0;
 
-        date_s = calloc(1, max+1);
+        date_s = calloc(1, DATE_MAX + 1);
         crm_time_get_sec(dt->seconds, &h, &m, &s);
 
         if (date_s == NULL) {
@@ -436,26 +438,26 @@ crm_time_as_string(crm_time_t * date_time, int flags)
         }
 
         if(dt->years) {
-            offset += snprintf(date_s+offset, max-offset, "%4d year%s ", dt->years, dt->years>1?"s":"");
+            offset += snprintf(date_s+offset, DATE_MAX - offset, "%4d year%s ", dt->years, dt->years>1?"s":"");
         }
         if(dt->months) {
-            offset += snprintf(date_s+offset, max-offset, "%2d month%s ", dt->months, dt->months>1?"s":"");
+            offset += snprintf(date_s+offset, DATE_MAX - offset, "%2d month%s ", dt->months, dt->months>1?"s":"");
         }
         if(dt->days) {
-            offset += snprintf(date_s+offset, max-offset, "%2d day%s ", dt->days, dt->days>1?"s":"");
+            offset += snprintf(date_s+offset, DATE_MAX - offset, "%2d day%s ", dt->days, dt->days>1?"s":"");
         }
         if(dt->seconds) {
-            offset += snprintf(date_s+offset, max-offset, "%d seconds ( ", dt->seconds);
+            offset += snprintf(date_s+offset, DATE_MAX - offset, "%d seconds ( ", dt->seconds);
             if(h) {
-                offset += snprintf(date_s+offset, max-offset, "%d hour%s ", h, h>1?"s":"");
+                offset += snprintf(date_s+offset, DATE_MAX - offset, "%d hour%s ", h, h>1?"s":"");
             }
             if(m) {
-                offset += snprintf(date_s+offset, max-offset, "%d minute%s ", m, m>1?"s":"");
+                offset += snprintf(date_s+offset, DATE_MAX - offset, "%d minute%s ", m, m>1?"s":"");
             }
             if(s) {
-                offset += snprintf(date_s+offset, max-offset, "%d second%s ", s, s>1?"s":"");
+                offset += snprintf(date_s+offset, DATE_MAX - offset, "%d second%s ", s, s>1?"s":"");
             }
-            offset += snprintf(date_s+offset, max-offset, ")");
+            offset += snprintf(date_s+offset, DATE_MAX - offset, ")");
         }
         goto done;
     }

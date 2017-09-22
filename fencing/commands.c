@@ -738,22 +738,23 @@ is_nodeid_required(xmlNode * xml)
     return TRUE;
 }
 
+#define MAX_ACTION_LEN 256
+
 static char *
 add_action(char *actions, const char *action)
 {
-    static size_t len = 256;
     int offset = 0;
 
     if (actions == NULL) {
-        actions = calloc(1, len);
+        actions = calloc(1, MAX_ACTION_LEN);
     } else {
         offset = strlen(actions);
     }
 
     if (offset > 0) {
-        offset += snprintf(actions+offset, len-offset, " ");
+        offset += snprintf(actions+offset, MAX_ACTION_LEN - offset, " ");
     }
-    offset += snprintf(actions+offset, len-offset, "%s", action);
+    offset += snprintf(actions+offset, MAX_ACTION_LEN - offset, "%s", action);
 
     return actions;
 }
