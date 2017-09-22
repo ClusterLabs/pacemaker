@@ -2296,7 +2296,7 @@ order_probes(pe_working_set_t * data_set)
                 continue;
             }
 
-            crm_err("Appplying %s before %s %d", first->uuid, start->uuid, uber_parent(first_rsc)->variant);
+            crm_err("Applying %s before %s %d", first->uuid, start->uuid, uber_parent(first_rsc)->variant);
 
             for (pIter = probes; pIter != NULL; pIter = pIter->next) {
                 action_t *probe = (action_t *) pIter->data;
