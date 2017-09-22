@@ -498,7 +498,7 @@ done
         os.system("cat <<-END >>/usr/sbin/fence_dummy_sleep\n%s\nEND" % (dummy_fence_sleep_agent))
         os.system("chmod 711 /usr/sbin/fence_dummy_sleep")
 
-        f = open("/usr/sbin/fence_dummy_monitor", 'w')
+        f = io.open("/usr/sbin/fence_dummy_monitor", 'w')
         f.write(dummy_fence_agent)
         f.close()
         os.system("chmod 711 /usr/sbin/fence_dummy_monitor")
