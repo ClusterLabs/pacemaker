@@ -949,7 +949,9 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
     gboolean needs_maintenance_info = FALSE;
     xmlNode *action_xml = NULL;
     xmlNode *args_xml = NULL;
+#if ENABLE_VERSIONED_ATTRS
     pe_rsc_action_details_t *rsc_details = NULL;
+#endif
 
     if (action == NULL) {
         return NULL;
@@ -983,7 +985,9 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
 
     } else {
         action_xml = create_xml_node(NULL, XML_GRAPH_TAG_RSC_OP);
+#if ENABLE_VERSIONED_ATTRS
         rsc_details = pe_rsc_action_details(action);
+#endif
     }
 
     crm_xml_add_int(action_xml, XML_ATTR_ID, action->id);
@@ -1110,26 +1114,35 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
     g_hash_table_foreach(action->extra, hash2field, args_xml);
     if (action->rsc != NULL && action->node) {
         GHashTable *p = crm_str_table_new();
-        xmlNode *versioned_parameters = create_xml_node(NULL, XML_TAG_RSC_VER_ATTRS);
 
         get_rsc_attributes(p, action->rsc, action->node, data_set);
         g_hash_table_foreach(p, hash2smartfield, args_xml);
-
-        pe_get_versioned_attributes(versioned_parameters, action->rsc, action->node, data_set);
-        if (xml_has_children(versioned_parameters)) {
-            add_node_copy(action_xml, versioned_parameters);
-        }
-
         g_hash_table_destroy(p);
-        free_xml(versioned_parameters);
+
+#if ENABLE_VERSIONED_ATTRS
+        {
+            xmlNode *versioned_parameters = create_xml_node(NULL, XML_TAG_RSC_VER_ATTRS);
+
+            pe_get_versioned_attributes(versioned_parameters, action->rsc,
+                                        action->node, data_set);
+            if (xml_has_children(versioned_parameters)) {
+                add_node_copy(action_xml, versioned_parameters);
+            }
+            free_xml(versioned_parameters);
+        }
+#endif
+
     } else if(action->rsc && action->rsc->variant <= pe_native) {
         g_hash_table_foreach(action->rsc->parameters, hash2smartfield, args_xml);
 
+#if ENABLE_VERSIONED_ATTRS
         if (xml_has_children(action->rsc->versioned_parameters)) {
             add_node_copy(action_xml, action->rsc->versioned_parameters);
         }
+#endif
     }
 
+#if ENABLE_VERSIONED_ATTRS
     if (rsc_details) {
         if (xml_has_children(rsc_details->versioned_parameters)) {
             add_node_copy(action_xml, rsc_details->versioned_parameters);
@@ -1139,6 +1152,7 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
             add_node_copy(action_xml, rsc_details->versioned_meta);
         }
     }
+#endif
 
     g_hash_table_foreach(action->meta, hash2metafield, args_xml);
     if (action->rsc != NULL) {

@@ -20,6 +20,8 @@
 core=`dirname $0`
 . $core/regression.core.sh || exit 1
 
+DO_VERSIONED_TESTS=0
+
 create_mode="true"
 info Generating test outputs for these tests...
 # do_test file description
@@ -314,7 +316,9 @@ do_test 11-a-then-bm-b-move-a-clone-starting "Advanced migrate logic, A clone th
 do_test a-promote-then-b-migrate "A promote then B start. migrate B"
 do_test a-demote-then-b-migrate "A demote then B stop. migrate B"
 
-do_test migrate-versioned "Disable migration for versioned resources"
+if [ $DO_VERSIONED_TESTS -eq 1 ]; then
+	do_test migrate-versioned "Disable migration for versioned resources"
+fi
 
 #echo ""
 #do_test complex1 "Complex	"
@@ -866,16 +870,18 @@ do_test isolation-start-all   "Start docker isolated resources."
 do_test isolation-restart-all "Restart docker isolated resources."
 do_test isolation-clone       "Cloned isolated primitive."
 
-echo ""
-do_test versioned-resources     "Start resources with #ra-version rules"
-do_test restart-versioned       "Restart resources on #ra-version change"
-do_test reload-versioned        "Reload resources on #ra-version change"
+if [ $DO_VERSIONED_TESTS -eq 1 ]; then
+	echo ""
+	do_test versioned-resources     "Start resources with #ra-version rules"
+	do_test restart-versioned       "Restart resources on #ra-version change"
+	do_test reload-versioned        "Reload resources on #ra-version change"
 
-echo ""
-do_test versioned-operations-1  "Use #ra-version to configure operations of native resources"
-do_test versioned-operations-2  "Use #ra-version to configure operations of stonith resources"
-do_test versioned-operations-3  "Use #ra-version to configure operations of master/slave resources"
-do_test versioned-operations-4  "Use #ra-version to configure operations of groups of the resources"
+	echo ""
+	do_test versioned-operations-1  "Use #ra-version to configure operations of native resources"
+	do_test versioned-operations-2  "Use #ra-version to configure operations of stonith resources"
+	do_test versioned-operations-3  "Use #ra-version to configure operations of master/slave resources"
+	do_test versioned-operations-4  "Use #ra-version to configure operations of groups of the resources"
+fi
 
 echo ""
 test_results

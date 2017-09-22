@@ -731,7 +731,9 @@ build_operation_update(xmlNode * parent, lrmd_rsc_info_t * rsc, lrmd_event_data_
         }
     }
 
+#if ENABLE_VERSIONED_ATTRS
     crm_xml_add(xml_op, XML_ATTR_RA_VERSION, metadata->ra_version);
+#endif
 
     crm_trace("Including additional digests for %s::%s:%s", rsc->class, rsc->provider, rsc->type);
     append_restart_list(op, metadata, xml_op, caller_version);
@@ -1836,6 +1838,7 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
     op->timeout = crm_parse_int(op_timeout, "0");
     op->start_delay = crm_parse_int(op_delay, "0");
 
+#if ENABLE_VERSIONED_ATTRS
     // Resolve any versioned parameters
     if (safe_str_neq(op->op_type, RSC_METADATA)
         && safe_str_neq(op->op_type, CRMD_ACTION_DELETE)
@@ -1891,6 +1894,7 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
 
         lrmd_free_rsc_info(rsc);
     }
+#endif
 
     if (safe_str_neq(operation, RSC_STOP)) {
         op->params = params;
