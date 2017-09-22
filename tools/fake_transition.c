@@ -184,23 +184,20 @@ static xmlNode *
 inject_node_state(cib_t * cib_conn, const char *node, const char *uuid)
 {
     int rc = pcmk_ok;
-    int max = strlen(rsc_template) + strlen(node) + 1;
-    char *xpath = NULL;
     xmlNode *cib_object = NULL;
-
-    xpath = calloc(1, max);
+    char *xpath = crm_strdup_printf(node_template, node);
 
     if (bringing_nodes_online) {
         create_node_entry(cib_conn, node);
     }
 
-    snprintf(xpath, max, node_template, node);
     rc = cib_conn->cmds->query(cib_conn, xpath, &cib_object,
                                cib_xpath | cib_sync_call | cib_scope_local);
 
     if (cib_object && ID(cib_object) == NULL) {
         crm_err("Detected multiple node_state entries for xpath=%s, bailing", xpath);
         crm_log_xml_warn(cib_object, "Duplicates");
+        free(xpath);
         crm_exit(ENOTUNIQ);
     }
 
