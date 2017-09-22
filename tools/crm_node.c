@@ -150,9 +150,7 @@ int tools_remove_node_cache(const char *node, const char *target)
     }
 
     if(safe_str_eq(target, CRM_SYSTEM_CRMD)) {
-        admin_uuid = calloc(1, 11);
-        snprintf(admin_uuid, 10, "%d", getpid());
-        admin_uuid[10] = '\0';
+        admin_uuid = crm_getpid_s();
 
         hello = create_hello_message(admin_uuid, "crm_node", "0", "1");
         rc = crm_ipc_send(conn, hello, 0, 0, NULL);

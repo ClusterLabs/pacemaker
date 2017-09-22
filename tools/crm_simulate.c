@@ -432,7 +432,7 @@ setup_input(const char *input, const char *output)
     }
 
     if (output == NULL) {
-        char *pid = crm_itoa(getpid());
+        char *pid = crm_getpid_s();
 
         local_output = get_shadow_file(pid);
         temp_shadow = strdup(local_output);

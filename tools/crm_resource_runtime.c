@@ -552,11 +552,7 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
     crm_xml_add(params, key, "60000");  /* 1 minute */
     free(key);
 
-    our_pid = calloc(1, 11);
-    if (our_pid != NULL) {
-        snprintf(our_pid, 10, "%d", getpid());
-        our_pid[10] = '\0';
-    }
+    our_pid = crm_getpid_s();
     cmd = create_request(op, msg_data, router_node, CRM_SYSTEM_CRMD, crm_system_name, our_pid);
 
 /* 	crm_log_xml_warn(cmd, "send_lrm_rsc_op"); */
@@ -957,7 +953,7 @@ update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
     }
 
     if(simulate) {
-        pid = crm_itoa(getpid());
+        pid = crm_getpid_s();
         shadow_cib = cib_shadow_new(pid);
         shadow_file = get_shadow_file(pid);
 

@@ -586,11 +586,7 @@ main(int argc, char **argv)
         return crm_exit(EX_USAGE);
     }
 
-    our_pid = calloc(1, 11);
-    if (our_pid != NULL) {
-        snprintf(our_pid, 10, "%d", getpid());
-        our_pid[10] = '\0';
-    }
+    our_pid = crm_getpid_s();
 
     if (do_force) {
         crm_debug("Forcing...");

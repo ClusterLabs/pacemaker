@@ -22,6 +22,7 @@
 
 #include <glib.h>       /* for gboolean */
 #include <dirent.h>     /* for struct dirent */
+#include <unistd.h>     /* for getpid() */
 #include <sys/types.h>  /* for uid_t and gid_t */
 
 #include <crm/common/logging.h>
@@ -71,6 +72,12 @@ static inline int
 crm_strlen_zero(const char *s)
 {
     return !s || *s == '\0';
+}
+
+static inline char *
+crm_getpid_s()
+{
+    return crm_strdup_printf("%lu", (unsigned long) getpid());
 }
 
 /* convenience functions for failure-related node attributes */
