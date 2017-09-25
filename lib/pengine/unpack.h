@@ -93,4 +93,23 @@ extern gboolean determine_online_status(xmlNode * node_state, node_t * this_node
 		do_crm_log(log_level, fmt, ##args);	\
 	}
 
+// Some warnings we don't want to print every transition
+
+enum pe_warn_once_e {
+    pe_wo_blind         = 0x0001,
+};
+
+extern uint32_t pe_wo;
+
+#define pe_warn_once(pe_wo_bit, fmt...) do {    \
+        if (is_not_set(pe_wo, pe_wo_bit)) {     \
+            if (pe_wo_bit == pe_wo_blind) {     \
+                crm_warn(fmt);                  \
+            } else {                            \
+                pe_warn(fmt);                   \
+            }                                   \
+            set_bit(pe_wo, pe_wo_bit);          \
+        }                                       \
+    } while (0);
+
 #endif

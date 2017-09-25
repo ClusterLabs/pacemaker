@@ -46,6 +46,9 @@ gboolean unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNod
                        enum action_fail_response *failed, pe_working_set_t * data_set);
 static gboolean determine_remote_online_status(pe_working_set_t * data_set, node_t * this_node);
 
+// Bitmask for warnings we only want to print once
+uint32_t pe_wo = 0;
+
 static gboolean
 is_dangling_container_remote_node(node_t *node)
 {
@@ -477,7 +480,6 @@ handle_startup_fencing(pe_working_set_t *data_set, node_t *new_node)
 {
     static const char *blind_faith = NULL;
     static gboolean unseen_are_unclean = TRUE;
-    static gboolean need_warning = TRUE;
 
     if ((new_node->details->type == node_remote) && (new_node->details->remote_rsc == NULL)) {
         /* Ignore fencing for remote nodes that don't have a connection resource
@@ -491,12 +493,7 @@ handle_startup_fencing(pe_working_set_t *data_set, node_t *new_node)
 
     if (crm_is_true(blind_faith) == FALSE) {
         unseen_are_unclean = FALSE;
-        if (need_warning) {
-            crm_warn("Blind faith: not fencing unseen nodes");
-
-            /* Warn once per run, not per node and transition */
-            need_warning = FALSE;
-        }
+        pe_warn_once(pe_wo_blind, "Blind faith: not fencing unseen nodes");
     }
 
     if (is_set(data_set->flags, pe_flag_stonith_enabled) == FALSE
