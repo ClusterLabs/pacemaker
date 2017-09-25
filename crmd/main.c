@@ -145,6 +145,12 @@ log_deprecation_warnings()
              " (configure alerts instead)",
              name_for_cluster_type(cluster_type));
 #endif
+
+    if (getenv("LRMD_MAX_CHILDREN")) {
+        crm_warn("The LRMD_MAX_CHILDREN environment variable"
+                 " is deprecated and will be removed in a future release"
+                 " (use PCMK_node_action_limit instead)");
+    }
 }
 
 int
