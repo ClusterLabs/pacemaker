@@ -121,11 +121,18 @@ main(int argc, char **argv)
     return crmd_init();
 }
 
+static void
+log_deprecation_warnings()
+{
+}
+
 int
 crmd_init(void)
 {
     int exit_code = 0;
     enum crmd_fsa_state state;
+
+    log_deprecation_warnings();
 
     fsa_state = S_STARTING;
     fsa_input_register = 0;     /* zero out the regester */
