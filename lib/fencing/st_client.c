@@ -564,6 +564,8 @@ make_args(const char *agent, const char *action, const char *victim, uint32_t vi
             value = agent;
 
         } else if (param == NULL) {
+            // @COMPAT config < 1.1.6
+            // pcmk_arg_map is deprecated in favor of pcmk_host_argument
             const char *map = g_hash_table_lookup(device_args, STONITH_ATTR_ARGMAP);
 
             if (map == NULL) {
@@ -571,7 +573,6 @@ make_args(const char *agent, const char *action, const char *victim, uint32_t vi
                 value = g_hash_table_lookup(device_args, param);
 
             } else {
-                /* Legacy handling */
                 append_host_specific_args(alias, map, device_args, &arg_list);
                 value = map;    /* Nothing more to do */
             }
