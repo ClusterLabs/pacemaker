@@ -101,6 +101,7 @@ enum pe_warn_once_e {
     pe_wo_arg_map       = 0x0004,
     pe_wo_stonith_cmd   = 0x0008,
     pe_wo_requires      = 0x0010,
+    pe_wo_isolation     = 0x0020,
 };
 
 extern uint32_t pe_wo;

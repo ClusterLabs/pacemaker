@@ -417,6 +417,10 @@ handle_rsc_isolation(resource_t *rsc)
     set_bit(top->flags, pe_rsc_unique);
 
 set_rsc_opts:
+    pe_warn_once(pe_wo_isolation, "Support for 'isolation' resource meta-attribute"
+                                  " is deprecated and will be removed in a future release"
+                                  " (use bundle syntax instead)");
+
     clear_bit(rsc->flags, pe_rsc_allow_migrate);
     set_bit(rsc->flags, pe_rsc_unique);
     if (pe_rsc_is_clone(top)) {
