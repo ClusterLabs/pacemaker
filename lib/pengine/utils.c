@@ -26,6 +26,8 @@
 #include <crm/pengine/rules.h>
 #include <crm/pengine/internal.h>
 
+#include <unpack.h>
+
 pe_working_set_t *pe_dataset = NULL;
 
 extern xmlNode *get_object_root(const char *object_type, xmlNode * the_root);
@@ -919,6 +921,11 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
 
     /* @COMPAT data sets < 1.1.10 ("requires" on start action not resource) */
     value = g_hash_table_lookup(action->meta, "requires");
+    if (value) {
+        pe_warn_once(pe_wo_requires, "Support for 'requires' operation meta-attribute"
+                                     " is deprecated and will be removed in a future version"
+                                     " (use 'requires' resource meta-attribute instead)");
+    }
 
     if (safe_str_neq(action->task, RSC_START)
         && safe_str_neq(action->task, RSC_PROMOTE)) {

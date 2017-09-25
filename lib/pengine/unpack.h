@@ -100,6 +100,7 @@ enum pe_warn_once_e {
     pe_wo_poweroff      = 0x0002,
     pe_wo_arg_map       = 0x0004,
     pe_wo_stonith_cmd   = 0x0008,
+    pe_wo_requires      = 0x0010,
 };
 
 extern uint32_t pe_wo;
