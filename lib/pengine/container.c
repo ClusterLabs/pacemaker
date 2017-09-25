@@ -348,6 +348,7 @@ disallow_node(resource_t *rsc, const char *uname)
 
     if (match) {
         ((pe_node_t *) match)->weight = -INFINITY;
+        ((pe_node_t *) match)->rsc_discover_mode = discover_never;
     }
     if (rsc->children) {
         GListPtr child;
@@ -434,6 +435,7 @@ create_remote_resource(
         } else {
             node->weight = -INFINITY;
         }
+        node->rsc_discover_mode = discover_never;
 
         /* unpack_remote_nodes() ensures that each remote node and guest node
          * has a pe_node_t entry. Ideally, it would do the same for bundle nodes.
@@ -458,6 +460,7 @@ create_remote_resource(
 
         tuple->node = node_copy(node);
         tuple->node->weight = 500;
+        tuple->node->rsc_discover_mode = discover_exclusive;
 
         if (common_unpack(xml_remote, &tuple->remote, parent, data_set) == FALSE) {
             return FALSE;

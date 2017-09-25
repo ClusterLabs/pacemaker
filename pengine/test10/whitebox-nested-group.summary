@@ -47,8 +47,6 @@ Executing cluster transition:
  * Resource action: fake:0          monitor on c7auto2
  * Resource action: fake:1          monitor on c7auto3
  * Resource action: fake:3          monitor on c7auto1
- * Pseudo action:   fake_clone_start_0
- * Pseudo action:   fake_group_start_0
  * Resource action: fake_fs         monitor on c7auto3
  * Resource action: fake_fs         monitor on c7auto2
  * Resource action: fake_fs         monitor on c7auto1
@@ -58,9 +56,8 @@ Executing cluster transition:
  * Resource action: fake1           start on c7auto3
  * Resource action: fake3           start on c7auto2
  * Resource action: fake4           start on c7auto3
- * Resource action: fake:0          start on c7auto2
- * Resource action: fake:1          start on c7auto3
- * Resource action: fake:3          start on c7auto1
+ * Pseudo action:   fake_clone_start_0
+ * Pseudo action:   fake_group_start_0
  * Resource action: fake_fs         start on c7auto1
  * Resource action: container       start on c7auto1
  * Resource action: c7auto4         start on c7auto1
@@ -69,10 +66,10 @@ Executing cluster transition:
  * Resource action: fake3           monitor=10000 on c7auto2
  * Resource action: fake4           monitor=10000 on c7auto3
  * Resource action: fake5           start on c7auto4
- * Resource action: fake:0          monitor=10000 on c7auto2
- * Resource action: fake:1          monitor=10000 on c7auto3
+ * Resource action: fake:0          start on c7auto2
+ * Resource action: fake:1          start on c7auto3
  * Resource action: fake:2          start on c7auto4
- * Resource action: fake:3          monitor=10000 on c7auto1
+ * Resource action: fake:3          start on c7auto1
  * Pseudo action:   fake_clone_running_0
  * Pseudo action:   fake_group_running_0
  * Resource action: fake_fs         monitor=10000 on c7auto1
@@ -80,7 +77,10 @@ Executing cluster transition:
  * Resource action: c7auto4         monitor=30000 on c7auto1
  * Resource action: fake2           monitor=10000 on c7auto4
  * Resource action: fake5           monitor=10000 on c7auto4
+ * Resource action: fake:0          monitor=10000 on c7auto2
+ * Resource action: fake:1          monitor=10000 on c7auto3
  * Resource action: fake:2          monitor=10000 on c7auto4
+ * Resource action: fake:3          monitor=10000 on c7auto1
 
 Revised cluster status:
 Online: [ c7auto1 c7auto2 c7auto3 ]

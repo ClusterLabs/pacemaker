@@ -35,6 +35,18 @@ Transition Summary:
  * Move       lxc1           ( rhel7-1 -> rhel7-2 )  
 
 Executing cluster transition:
+ * Resource action: rsc_rhel7-1     monitor on lxc2
+ * Resource action: rsc_rhel7-2     monitor on lxc2
+ * Resource action: rsc_rhel7-3     monitor on lxc2
+ * Resource action: rsc_rhel7-4     monitor on lxc2
+ * Resource action: rsc_rhel7-5     monitor on lxc2
+ * Resource action: migrator        monitor on lxc2
+ * Resource action: ping-1          monitor on lxc2
+ * Resource action: stateful-1      monitor on lxc2
+ * Resource action: r192.168.122.207 monitor on lxc2
+ * Resource action: petulant        monitor on lxc2
+ * Resource action: r192.168.122.208 monitor on lxc2
+ * Resource action: lsb-dummy       monitor on lxc2
  * Pseudo action:   lxc-ms-master_demote_0
  * Resource action: lxc1            monitor on rhel7-5
  * Resource action: lxc1            monitor on rhel7-4

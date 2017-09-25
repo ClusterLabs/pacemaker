@@ -1,2 +1,6 @@
  digraph "g" {
+"clvmd_monitor_0 RNVM1" [ style=bold color="green" fontcolor="black"]
+"dlm_monitor_0 RNVM1" [ style=bold color="green" fontcolor="black"]
+"gfs2-lv_1_1_monitor_0 RNVM1" [ style=bold color="green" fontcolor="black"]
+"gfs2-lv_1_2_monitor_0 RNVM1" [ style=bold color="green" fontcolor="black"]
 }

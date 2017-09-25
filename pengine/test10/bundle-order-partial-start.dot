@@ -58,6 +58,8 @@ digraph "g" {
 "rabbitmq-bundle_running_0" [ style=bold color="green" fontcolor="orange"]
 "rabbitmq-bundle_start_0" -> "rabbitmq-bundle-clone_start_0" [ style = bold]
 "rabbitmq-bundle_start_0" [ style=bold color="green" fontcolor="orange"]
+"rabbitmq:0_monitor_0 rabbitmq-bundle-0" -> "rabbitmq-bundle-clone_start_0" [ style = bold]
+"rabbitmq:0_monitor_0 rabbitmq-bundle-0" [ style=bold color="green" fontcolor="black"]
 "rabbitmq:0_monitor_10000 rabbitmq-bundle-0" [ style=bold color="green" fontcolor="black"]
 "rabbitmq:0_post_notify_start_0 rabbitmq-bundle-0" -> "rabbitmq-bundle-clone_confirmed-post_notify_running_0" [ style = bold]
 "rabbitmq:0_post_notify_start_0 rabbitmq-bundle-0" [ style=bold color="green" fontcolor="black"]

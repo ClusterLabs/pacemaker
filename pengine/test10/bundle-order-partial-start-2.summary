@@ -29,6 +29,7 @@ Transition Summary:
  * Start   haproxy-bundle-docker-0	(undercloud)
 
 Executing cluster transition:
+ * Resource action: rabbitmq:0      monitor on rabbitmq-bundle-0
  * Pseudo action:   rabbitmq-bundle-clone_pre_notify_start_0
  * Resource action: galera-bundle-0 stop on undercloud
  * Pseudo action:   redis-bundle-master_pre_notify_promote_0

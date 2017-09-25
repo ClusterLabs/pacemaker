@@ -900,8 +900,7 @@ probe_resources(pe_working_set_t * data_set)
         const char *probed = node_attribute_raw(node, CRM_OP_PROBED);
 
         if (is_container_remote_node(node)) {
-            /* TODO enable guest node probes once ordered probing is implemented */
-            continue;
+            /* Guest node probes and their ordering requirements are now functional */
 
         } else if (node->details->online == FALSE && node->details->remote_rsc) {
             // TODO figure out why this results in fence loop

@@ -395,6 +395,13 @@ enum pe_link_state {
     pe_link_dup,
 };
 
+
+enum rsc_discover_e {
+    discover_always = 0,
+    discover_never,
+    discover_exclusive,
+};
+
 /* *INDENT-OFF* */
 enum pe_ordering {
     pe_order_none                  = 0x0,       /* deleted */

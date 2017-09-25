@@ -75,12 +75,6 @@ struct rsc_ticket_s {
     int role_lh;
 };
 
-enum rsc_discover_e {
-    discover_always = 0,
-    discover_never,
-    discover_exclusive,
-};
-
 struct rsc_to_node_s {
     char *id;
     resource_t *rsc_lh;

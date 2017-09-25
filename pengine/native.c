@@ -2784,10 +2784,6 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
     if (force == FALSE && is_not_set(data_set->flags, pe_flag_startup_probes)) {
         pe_rsc_trace(rsc, "Skipping active resource detection for %s", rsc->id);
         return FALSE;
-    } else if (force == FALSE && is_container_remote_node(node)) {
-        pe_rsc_trace(rsc, "Skipping active resource detection for %s on container %s",
-                     rsc->id, node->details->id);
-        return FALSE;
     }
 
     if (is_remote_node(node)) {
@@ -2847,6 +2843,7 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
     }
 
     allowed = g_hash_table_lookup(rsc->allowed_nodes, node->details->id);
+
     if (rsc->exclusive_discover || top->exclusive_discover) {
         if (allowed == NULL) {
             /* exclusive discover is enabled and this node is not in the allowed list. */    
@@ -2857,11 +2854,77 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
             return FALSE;
         }
     }
+
+    if(allowed == NULL && node->rsc_discover_mode == discover_never) {
+        /* If this node was allowed to host this resource it would
+         * have been explicitly added to the 'allowed_nodes' list.
+         * However it wasn't and the node has discovery disabled, so
+         * no need to probe for this resource.
+         */
+        return FALSE;
+    }
+
     if (allowed && allowed->rsc_discover_mode == discover_never) {
         /* this resource is marked as not needing to be discovered on this node */
         return FALSE;
     }
 
+    if(allowed != NULL && is_container_remote_node(allowed)) {
+        resource_t *remote = allowed->details->remote_rsc;
+
+        if(remote->role == RSC_ROLE_STOPPED) {
+            /* If the container is stopped, then we know anything that
+             * might have been inside it is also stopped and there is
+             * no need to probe.
+             *
+             * If we don't know the container's state on the target
+             * either:
+             *
+             * - the container is running, the transition will abort
+             *   and we'll end up in a different case next time, or
+             *
+             * - the container is stopped
+             *
+             * Either way there is no need to probe.
+             *
+             */
+            if(remote->allocated_to
+               && g_hash_table_lookup(remote->known_on, remote->allocated_to->details->id) == NULL) {
+                /* For safety, we order the 'rsc' start after 'remote'
+                 * has been probed.
+                 *
+                 * Using 'top' helps for groups, but in we may need to
+                 * follow the start's ordering chain backwards.
+                 */
+                custom_action_order(remote, generate_op_key(remote->id, RSC_STATUS, 0), NULL,
+                                    top, generate_op_key(top->id, RSC_START, 0), NULL,
+                                    pe_order_optional, data_set);
+            }
+            return FALSE;
+
+            /* Here we really we want to check if remote->stop is required,
+             * but that information doesn't exist yet
+             */
+        } else if(allowed->details->remote_requires_reset
+                  || allowed->details->unclean
+                  || is_set(remote->flags, pe_rsc_failed)
+                  || remote->next_role == RSC_ROLE_STOPPED
+                  || (remote->allocated_to
+                      && pe_find_node(remote->running_on, remote->allocated_to->details->uname) == NULL)
+            ) {
+            /* The container is stopping or restarting, don't start
+             * 'rsc' until 'remote' stops as this also implies that
+             * 'rsc' is stopped - avoiding the need to probe
+             */
+            custom_action_order(remote, generate_op_key(remote->id, RSC_STOP, 0), NULL,
+                                top, generate_op_key(top->id, RSC_START, 0), NULL,
+                                pe_order_optional, data_set);
+            return FALSE;
+/*      } else {
+ *            The container is running so there is no problem probing it
+ */
+        }
+    }
 
     key = generate_op_key(rsc->id, RSC_STATUS, 0);
     probe = custom_action(rsc, key, RSC_STATUS, node, FALSE, TRUE, data_set);

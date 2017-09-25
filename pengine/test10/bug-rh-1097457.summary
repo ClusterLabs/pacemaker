@@ -41,6 +41,26 @@ Transition Summary:
  * Restart    lamaVM2    (            lama3 )   due to required VM2 start
 
 Executing cluster transition:
+ * Resource action: FSlun1          monitor on lamaVM3
+ * Resource action: FSlun2          monitor on lamaVM3
+ * Resource action: FSlun3          monitor on lamaVM3
+ * Resource action: FSlun3          monitor on lamaVM1
+ * Resource action: FSlun4          monitor on lamaVM1
+ * Resource action: FAKE5-IP        monitor on lamaVM3
+ * Resource action: FAKE5-IP        monitor on lamaVM1
+ * Resource action: FAKE6-IP        monitor on lamaVM3
+ * Resource action: FAKE6-IP        monitor on lamaVM1
+ * Resource action: FAKE5           monitor on lamaVM1
+ * Resource action: FAKE1           monitor on lamaVM3
+ * Resource action: FAKE1-IP        monitor on lamaVM3
+ * Resource action: FAKE2           monitor on lamaVM3
+ * Resource action: FAKE2-IP        monitor on lamaVM3
+ * Resource action: FAKE3           monitor on lamaVM3
+ * Resource action: FAKE3-IP        monitor on lamaVM3
+ * Resource action: FAKE4           monitor on lamaVM3
+ * Resource action: FAKE4           monitor on lamaVM1
+ * Resource action: FAKE4-IP        monitor on lamaVM3
+ * Resource action: FAKE4-IP        monitor on lamaVM1
  * Resource action: lamaVM2         stop on lama3
  * Resource action: VM2             stop on lama3
  * Pseudo action:   stonith-lamaVM2-reboot on lamaVM2

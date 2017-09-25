@@ -21,6 +21,9 @@ Transition Summary:
  * Recover    lxc1           ( 18node2 )  
 
 Executing cluster transition:
+ * Resource action: A               monitor on lxc2
+ * Resource action: B               monitor on lxc2
+ * Resource action: D               monitor on lxc2
  * Resource action: lxc1            stop on 18node2
  * Resource action: container1      stop on 18node2
  * Pseudo action:   stonith-lxc1-reboot on lxc1

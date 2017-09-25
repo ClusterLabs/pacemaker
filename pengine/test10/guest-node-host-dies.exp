@@ -62,6 +62,12 @@
         <pseudo_event id="12" operation="stop" operation_key="rsc_rhel7-1_stop_0"/>
       </trigger>
       <trigger>
+        <pseudo_event id="34" operation="stop" operation_key="lxc1_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="37" operation="stop" operation_key="lxc2_stop_0"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="40" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>

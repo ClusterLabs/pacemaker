@@ -1,34 +1,52 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
   <synapse id="0">
     <action_set>
-      <rsc_op id="37" operation="start" operation_key="VM2_start_0" on_node="lama3" on_node_uuid="2">
+      <rsc_op id="33" operation="monitor" operation_key="FSlun1_monitor_0" on_node="lamaVM3" on_node_uuid="lamaVM3" router_node="lama3">
+        <primitive id="FSlun1" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_on_node="lamaVM3" CRM_meta_on_node_uuid="lamaVM3" CRM_meta_op_target_rc="7" CRM_meta_physical_host="lama3" CRM_meta_timeout="20000"  device="-L FSlun1" directory="/lun1" fstype="ext4"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <rsc_op id="34" operation="monitor" operation_key="FSlun2_monitor_0" on_node="lamaVM3" on_node_uuid="lamaVM3" router_node="lama3">
+        <primitive id="FSlun2" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_on_node="lamaVM3" CRM_meta_on_node_uuid="lamaVM3" CRM_meta_op_target_rc="7" CRM_meta_physical_host="lama3" CRM_meta_timeout="20000"  device="-L FSlun2" directory="/lun2" fstype="ext4"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <rsc_op id="57" operation="start" operation_key="VM2_start_0" on_node="lama3" on_node_uuid="2">
         <primitive id="VM2" class="ocf" provider="heartbeat" type="VirtualDomain"/>
         <attributes CRM_meta_name="start" CRM_meta_on_node="lama3" CRM_meta_on_node_uuid="2" CRM_meta_remote_node="lamaVM2" CRM_meta_timeout="90000000" config="/etc/libvirt/qemu/VM2.xml"  hypervisor="qemu:///system"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="36" operation="stop" operation_key="VM2_stop_0" on_node="lama3" on_node_uuid="2"/>
+        <rsc_op id="56" operation="stop" operation_key="VM2_stop_0" on_node="lama3" on_node_uuid="2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="95" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="115" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="1">
+  <synapse id="3">
     <action_set>
-      <rsc_op id="36" operation="stop" operation_key="VM2_stop_0" on_node="lama3" on_node_uuid="2">
+      <rsc_op id="56" operation="stop" operation_key="VM2_stop_0" on_node="lama3" on_node_uuid="2">
         <primitive id="VM2" class="ocf" provider="heartbeat" type="VirtualDomain"/>
         <attributes CRM_meta_name="stop" CRM_meta_on_node="lama3" CRM_meta_on_node_uuid="2" CRM_meta_remote_node="lamaVM2" CRM_meta_timeout="90000000" config="/etc/libvirt/qemu/VM2.xml"  hypervisor="qemu:///system"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="91" operation="stop" operation_key="lamaVM2_stop_0" on_node="lama3" on_node_uuid="2"/>
+        <rsc_op id="111" operation="stop" operation_key="lamaVM2_stop_0" on_node="lama3" on_node_uuid="2"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="2">
+  <synapse id="4">
     <action_set>
       <rsc_op id="5" operation="monitor" operation_key="VM2_monitor_10000" on_node="lama3" on_node_uuid="2">
         <primitive id="VM2" class="ocf" provider="heartbeat" type="VirtualDomain"/>
@@ -37,58 +55,88 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="37" operation="start" operation_key="VM2_start_0" on_node="lama3" on_node_uuid="2"/>
+        <rsc_op id="57" operation="start" operation_key="VM2_start_0" on_node="lama3" on_node_uuid="2"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="3">
+  <synapse id="5">
     <action_set>
-      <rsc_op id="42" operation="monitor" operation_key="FSlun3_monitor_10000" on_node="lama2" on_node_uuid="1">
+      <rsc_op id="62" operation="monitor" operation_key="FSlun3_monitor_10000" on_node="lama2" on_node_uuid="1">
         <primitive id="FSlun3" class="ocf" provider="heartbeat" type="Filesystem"/>
         <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_fail="fence" CRM_meta_on_node="lama2" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000"  device="-L FSlun3" directory="/lun3" fstype="ext4"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="41" operation="start" operation_key="FSlun3_start_0" on_node="lama2" on_node_uuid="1"/>
+        <rsc_op id="61" operation="start" operation_key="FSlun3_start_0" on_node="lama2" on_node_uuid="1"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="4">
+  <synapse id="6">
     <action_set>
-      <rsc_op id="41" operation="start" operation_key="FSlun3_start_0" on_node="lama2" on_node_uuid="1">
+      <rsc_op id="61" operation="start" operation_key="FSlun3_start_0" on_node="lama2" on_node_uuid="1">
         <primitive id="FSlun3" class="ocf" provider="heartbeat" type="Filesystem"/>
         <attributes CRM_meta_name="start" CRM_meta_on_node="lama2" CRM_meta_on_node_uuid="1" CRM_meta_timeout="60000"  device="-L FSlun3" directory="/lun3" fstype="ext4"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="37" operation="start" operation_key="VM2_start_0" on_node="lama3" on_node_uuid="2"/>
+        <rsc_op id="26" operation="monitor" operation_key="FSlun3_monitor_0" on_node="lamaVM1" on_node_uuid="lamaVM1" router_node="lama2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="40" operation="stop" operation_key="FSlun3_stop_0"/>
+        <rsc_op id="35" operation="monitor" operation_key="FSlun3_monitor_0" on_node="lamaVM3" on_node_uuid="lamaVM3" router_node="lama3"/>
       </trigger>
       <trigger>
-        <pseudo_event id="95" operation="stonith_complete" operation_key="stonith_complete"/>
+        <rsc_op id="57" operation="start" operation_key="VM2_start_0" on_node="lama3" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="60" operation="stop" operation_key="FSlun3_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="115" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="5">
+  <synapse id="7">
     <action_set>
-      <pseudo_event id="40" operation="stop" operation_key="FSlun3_stop_0">
+      <pseudo_event id="60" operation="stop" operation_key="FSlun3_stop_0">
         <attributes CRM_meta_name="stop" CRM_meta_physical_host="lama3" CRM_meta_timeout="60000"  device="-L FSlun3" directory="/lun3" fstype="ext4"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="78" operation="stopped" operation_key="lamaVM2-G4_stopped_0"/>
+        <rsc_op id="26" operation="monitor" operation_key="FSlun3_monitor_0" on_node="lamaVM1" on_node_uuid="lamaVM1" router_node="lama2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="96" operation="stonith" operation_key="stonith-lamaVM2-reboot" on_node="lamaVM2" on_node_uuid="lamaVM2"/>
+        <rsc_op id="35" operation="monitor" operation_key="FSlun3_monitor_0" on_node="lamaVM3" on_node_uuid="lamaVM3" router_node="lama3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="98" operation="stopped" operation_key="lamaVM2-G4_stopped_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="116" operation="stonith" operation_key="stonith-lamaVM2-reboot" on_node="lamaVM2" on_node_uuid="lamaVM2"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="6">
+  <synapse id="8">
+    <action_set>
+      <rsc_op id="35" operation="monitor" operation_key="FSlun3_monitor_0" on_node="lamaVM3" on_node_uuid="lamaVM3" router_node="lama3">
+        <primitive id="FSlun3" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_on_node="lamaVM3" CRM_meta_on_node_uuid="lamaVM3" CRM_meta_op_target_rc="7" CRM_meta_physical_host="lama3" CRM_meta_timeout="20000"  device="-L FSlun3" directory="/lun3" fstype="ext4"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="9">
+    <action_set>
+      <rsc_op id="26" operation="monitor" operation_key="FSlun3_monitor_0" on_node="lamaVM1" on_node_uuid="lamaVM1" router_node="lama2">
+        <primitive id="FSlun3" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_on_node="lamaVM1" CRM_meta_on_node_uuid="lamaVM1" CRM_meta_op_target_rc="7" CRM_meta_physical_host="lama2" CRM_meta_timeout="20000"  device="-L FSlun3" directory="/lun3" fstype="ext4"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="10">
     <action_set>
       <rsc_op id="21" operation="monitor" operation_key="FSlun3_monitor_10000" on_node="lamaVM2" on_node_uuid="lamaVM2" router_node="lama3">
         <primitive id="FSlun3" class="ocf" provider="heartbeat" type="Filesystem"/>
@@ -97,117 +145,255 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="92" operation="start" operation_key="lamaVM2_start_0" on_node="lama3" on_node_uuid="2"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="7">
-    <action_set>
-      <pseudo_event id="78" operation="stopped" operation_key="lamaVM2-G4_stopped_0">
-        <attributes CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="71" operation="stop" operation_key="FAKE4_stop_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="73" operation="stop" operation_key="FAKE4-IP_stop_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="77" operation="stop" operation_key="lamaVM2-G4_stop_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="8">
-    <action_set>
-      <pseudo_event id="77" operation="stop" operation_key="lamaVM2-G4_stop_0">
-        <attributes CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="96" operation="stonith" operation_key="stonith-lamaVM2-reboot" on_node="lamaVM2" on_node_uuid="lamaVM2"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="9">
-    <action_set>
-      <pseudo_event id="76" operation="running" operation_key="lamaVM2-G4_running_0">
-        <attributes CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="72" operation="start" operation_key="FAKE4_start_0" on_node="lamaVM2" on_node_uuid="lamaVM2" router_node="lama3"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="74" operation="start" operation_key="FAKE4-IP_start_0" on_node="lamaVM2" on_node_uuid="lamaVM2" router_node="lama3"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="75" operation="start" operation_key="lamaVM2-G4_start_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="10">
-    <action_set>
-      <pseudo_event id="75" operation="start" operation_key="lamaVM2-G4_start_0">
-        <attributes CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="41" operation="start" operation_key="FSlun3_start_0" on_node="lama2" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="78" operation="stopped" operation_key="lamaVM2-G4_stopped_0"/>
+        <rsc_op id="112" operation="start" operation_key="lamaVM2_start_0" on_node="lama3" on_node_uuid="2"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="11">
     <action_set>
-      <rsc_op id="72" operation="start" operation_key="FAKE4_start_0" on_node="lamaVM2" on_node_uuid="lamaVM2" router_node="lama3">
+      <rsc_op id="27" operation="monitor" operation_key="FSlun4_monitor_0" on_node="lamaVM1" on_node_uuid="lamaVM1" router_node="lama2">
+        <primitive id="FSlun4" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_on_node="lamaVM1" CRM_meta_on_node_uuid="lamaVM1" CRM_meta_op_target_rc="7" CRM_meta_physical_host="lama2" CRM_meta_timeout="20000"  device="-L FSlun4" directory="/lun4" fstype="ext4"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="12">
+    <action_set>
+      <rsc_op id="36" operation="monitor" operation_key="FAKE5-IP_monitor_0" on_node="lamaVM3" on_node_uuid="lamaVM3" router_node="lama3">
+        <primitive id="FAKE5-IP" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_on_node="lamaVM3" CRM_meta_on_node_uuid="lamaVM3" CRM_meta_op_target_rc="7" CRM_meta_physical_host="lama3" CRM_meta_timeout="20000" cidr_netmask="16"  ip="10.1.1.55"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="13">
+    <action_set>
+      <rsc_op id="28" operation="monitor" operation_key="FAKE5-IP_monitor_0" on_node="lamaVM1" on_node_uuid="lamaVM1" router_node="lama2">
+        <primitive id="FAKE5-IP" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_on_node="lamaVM1" CRM_meta_on_node_uuid="lamaVM1" CRM_meta_op_target_rc="7" CRM_meta_physical_host="lama2" CRM_meta_timeout="20000" cidr_netmask="16"  ip="10.1.1.55"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="14">
+    <action_set>
+      <rsc_op id="37" operation="monitor" operation_key="FAKE6-IP_monitor_0" on_node="lamaVM3" on_node_uuid="lamaVM3" router_node="lama3">
+        <primitive id="FAKE6-IP" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_on_node="lamaVM3" CRM_meta_on_node_uuid="lamaVM3" CRM_meta_op_target_rc="7" CRM_meta_physical_host="lama3" CRM_meta_timeout="20000" cidr_netmask="16"  ip="10.1.1.56"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="15">
+    <action_set>
+      <rsc_op id="29" operation="monitor" operation_key="FAKE6-IP_monitor_0" on_node="lamaVM1" on_node_uuid="lamaVM1" router_node="lama2">
+        <primitive id="FAKE6-IP" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_on_node="lamaVM1" CRM_meta_on_node_uuid="lamaVM1" CRM_meta_op_target_rc="7" CRM_meta_physical_host="lama2" CRM_meta_timeout="20000" cidr_netmask="16"  ip="10.1.1.56"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="16">
+    <action_set>
+      <rsc_op id="30" operation="monitor" operation_key="FAKE5_monitor_0" on_node="lamaVM1" on_node_uuid="lamaVM1" router_node="lama2">
+        <primitive id="FAKE5" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_on_node="lamaVM1" CRM_meta_on_node_uuid="lamaVM1" CRM_meta_op_target_rc="7" CRM_meta_physical_host="lama2" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="17">
+    <action_set>
+      <rsc_op id="38" operation="monitor" operation_key="FAKE1_monitor_0" on_node="lamaVM3" on_node_uuid="lamaVM3" router_node="lama3">
+        <primitive id="FAKE1" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_on_node="lamaVM3" CRM_meta_on_node_uuid="lamaVM3" CRM_meta_op_target_rc="7" CRM_meta_physical_host="lama3" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="18">
+    <action_set>
+      <rsc_op id="39" operation="monitor" operation_key="FAKE1-IP_monitor_0" on_node="lamaVM3" on_node_uuid="lamaVM3" router_node="lama3">
+        <primitive id="FAKE1-IP" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_on_node="lamaVM3" CRM_meta_on_node_uuid="lamaVM3" CRM_meta_op_target_rc="7" CRM_meta_physical_host="lama3" CRM_meta_timeout="20000" cidr_netmask="16"  ip="10.1.1.51"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="19">
+    <action_set>
+      <rsc_op id="40" operation="monitor" operation_key="FAKE2_monitor_0" on_node="lamaVM3" on_node_uuid="lamaVM3" router_node="lama3">
+        <primitive id="FAKE2" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_on_node="lamaVM3" CRM_meta_on_node_uuid="lamaVM3" CRM_meta_op_target_rc="7" CRM_meta_physical_host="lama3" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="20">
+    <action_set>
+      <rsc_op id="41" operation="monitor" operation_key="FAKE2-IP_monitor_0" on_node="lamaVM3" on_node_uuid="lamaVM3" router_node="lama3">
+        <primitive id="FAKE2-IP" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_on_node="lamaVM3" CRM_meta_on_node_uuid="lamaVM3" CRM_meta_op_target_rc="7" CRM_meta_physical_host="lama3" CRM_meta_timeout="20000" cidr_netmask="16"  ip="10.1.1.52"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="21">
+    <action_set>
+      <rsc_op id="42" operation="monitor" operation_key="FAKE3_monitor_0" on_node="lamaVM3" on_node_uuid="lamaVM3" router_node="lama3">
+        <primitive id="FAKE3" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_on_node="lamaVM3" CRM_meta_on_node_uuid="lamaVM3" CRM_meta_op_target_rc="7" CRM_meta_physical_host="lama3" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="22">
+    <action_set>
+      <rsc_op id="43" operation="monitor" operation_key="FAKE3-IP_monitor_0" on_node="lamaVM3" on_node_uuid="lamaVM3" router_node="lama3">
+        <primitive id="FAKE3-IP" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_on_node="lamaVM3" CRM_meta_on_node_uuid="lamaVM3" CRM_meta_op_target_rc="7" CRM_meta_physical_host="lama3" CRM_meta_timeout="20000" cidr_netmask="16"  ip="10.1.1.53"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="23">
+    <action_set>
+      <pseudo_event id="98" operation="stopped" operation_key="lamaVM2-G4_stopped_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="91" operation="stop" operation_key="FAKE4_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="93" operation="stop" operation_key="FAKE4-IP_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="97" operation="stop" operation_key="lamaVM2-G4_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="24">
+    <action_set>
+      <pseudo_event id="97" operation="stop" operation_key="lamaVM2-G4_stop_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="116" operation="stonith" operation_key="stonith-lamaVM2-reboot" on_node="lamaVM2" on_node_uuid="lamaVM2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="25">
+    <action_set>
+      <pseudo_event id="96" operation="running" operation_key="lamaVM2-G4_running_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="92" operation="start" operation_key="FAKE4_start_0" on_node="lamaVM2" on_node_uuid="lamaVM2" router_node="lama3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="94" operation="start" operation_key="FAKE4-IP_start_0" on_node="lamaVM2" on_node_uuid="lamaVM2" router_node="lama3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="95" operation="start" operation_key="lamaVM2-G4_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="26">
+    <action_set>
+      <pseudo_event id="95" operation="start" operation_key="lamaVM2-G4_start_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="61" operation="start" operation_key="FSlun3_start_0" on_node="lama2" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="98" operation="stopped" operation_key="lamaVM2-G4_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="27">
+    <action_set>
+      <rsc_op id="92" operation="start" operation_key="FAKE4_start_0" on_node="lamaVM2" on_node_uuid="lamaVM2" router_node="lama3">
         <primitive id="FAKE4" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_name="start" CRM_meta_on_node="lamaVM2" CRM_meta_on_node_uuid="lamaVM2" CRM_meta_physical_host="lama3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="37" operation="start" operation_key="VM2_start_0" on_node="lama3" on_node_uuid="2"/>
+        <rsc_op id="31" operation="monitor" operation_key="FAKE4_monitor_0" on_node="lamaVM1" on_node_uuid="lamaVM1" router_node="lama2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="71" operation="stop" operation_key="FAKE4_stop_0"/>
+        <rsc_op id="44" operation="monitor" operation_key="FAKE4_monitor_0" on_node="lamaVM3" on_node_uuid="lamaVM3" router_node="lama3"/>
       </trigger>
       <trigger>
-        <pseudo_event id="75" operation="start" operation_key="lamaVM2-G4_start_0"/>
+        <rsc_op id="57" operation="start" operation_key="VM2_start_0" on_node="lama3" on_node_uuid="2"/>
       </trigger>
       <trigger>
-        <rsc_op id="92" operation="start" operation_key="lamaVM2_start_0" on_node="lama3" on_node_uuid="2"/>
+        <pseudo_event id="91" operation="stop" operation_key="FAKE4_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="95" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="95" operation="start" operation_key="lamaVM2-G4_start_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="112" operation="start" operation_key="lamaVM2_start_0" on_node="lama3" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="115" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="12">
+  <synapse id="28">
     <action_set>
-      <pseudo_event id="71" operation="stop" operation_key="FAKE4_stop_0">
+      <pseudo_event id="91" operation="stop" operation_key="FAKE4_stop_0">
         <attributes CRM_meta_name="stop" CRM_meta_physical_host="lama3" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="73" operation="stop" operation_key="FAKE4-IP_stop_0"/>
+        <rsc_op id="31" operation="monitor" operation_key="FAKE4_monitor_0" on_node="lamaVM1" on_node_uuid="lamaVM1" router_node="lama2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="77" operation="stop" operation_key="lamaVM2-G4_stop_0"/>
+        <rsc_op id="44" operation="monitor" operation_key="FAKE4_monitor_0" on_node="lamaVM3" on_node_uuid="lamaVM3" router_node="lama3"/>
       </trigger>
       <trigger>
-        <pseudo_event id="96" operation="stonith" operation_key="stonith-lamaVM2-reboot" on_node="lamaVM2" on_node_uuid="lamaVM2"/>
+        <pseudo_event id="93" operation="stop" operation_key="FAKE4-IP_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="97" operation="stop" operation_key="lamaVM2-G4_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="116" operation="stonith" operation_key="stonith-lamaVM2-reboot" on_node="lamaVM2" on_node_uuid="lamaVM2"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="13">
+  <synapse id="29">
+    <action_set>
+      <rsc_op id="44" operation="monitor" operation_key="FAKE4_monitor_0" on_node="lamaVM3" on_node_uuid="lamaVM3" router_node="lama3">
+        <primitive id="FAKE4" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_on_node="lamaVM3" CRM_meta_on_node_uuid="lamaVM3" CRM_meta_op_target_rc="7" CRM_meta_physical_host="lama3" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="30">
+    <action_set>
+      <rsc_op id="31" operation="monitor" operation_key="FAKE4_monitor_0" on_node="lamaVM1" on_node_uuid="lamaVM1" router_node="lama2">
+        <primitive id="FAKE4" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_on_node="lamaVM1" CRM_meta_on_node_uuid="lamaVM1" CRM_meta_op_target_rc="7" CRM_meta_physical_host="lama2" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="31">
     <action_set>
       <rsc_op id="23" operation="monitor" operation_key="FAKE4_monitor_30000" on_node="lamaVM2" on_node_uuid="lamaVM2" router_node="lama3">
         <primitive id="FAKE4" class="ocf" provider="heartbeat" type="Dummy"/>
@@ -216,57 +402,87 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="72" operation="start" operation_key="FAKE4_start_0" on_node="lamaVM2" on_node_uuid="lamaVM2" router_node="lama3"/>
+        <rsc_op id="92" operation="start" operation_key="FAKE4_start_0" on_node="lamaVM2" on_node_uuid="lamaVM2" router_node="lama3"/>
       </trigger>
       <trigger>
-        <rsc_op id="92" operation="start" operation_key="lamaVM2_start_0" on_node="lama3" on_node_uuid="2"/>
+        <rsc_op id="112" operation="start" operation_key="lamaVM2_start_0" on_node="lama3" on_node_uuid="2"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="14">
+  <synapse id="32">
     <action_set>
-      <rsc_op id="74" operation="start" operation_key="FAKE4-IP_start_0" on_node="lamaVM2" on_node_uuid="lamaVM2" router_node="lama3">
+      <rsc_op id="94" operation="start" operation_key="FAKE4-IP_start_0" on_node="lamaVM2" on_node_uuid="lamaVM2" router_node="lama3">
         <primitive id="FAKE4-IP" class="ocf" provider="heartbeat" type="IPaddr2"/>
         <attributes CRM_meta_name="start" CRM_meta_on_node="lamaVM2" CRM_meta_on_node_uuid="lamaVM2" CRM_meta_physical_host="lama3" CRM_meta_timeout="20000" cidr_netmask="16"  ip="10.1.1.54"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="37" operation="start" operation_key="VM2_start_0" on_node="lama3" on_node_uuid="2"/>
+        <rsc_op id="32" operation="monitor" operation_key="FAKE4-IP_monitor_0" on_node="lamaVM1" on_node_uuid="lamaVM1" router_node="lama2"/>
       </trigger>
       <trigger>
-        <rsc_op id="72" operation="start" operation_key="FAKE4_start_0" on_node="lamaVM2" on_node_uuid="lamaVM2" router_node="lama3"/>
+        <rsc_op id="45" operation="monitor" operation_key="FAKE4-IP_monitor_0" on_node="lamaVM3" on_node_uuid="lamaVM3" router_node="lama3"/>
       </trigger>
       <trigger>
-        <pseudo_event id="73" operation="stop" operation_key="FAKE4-IP_stop_0"/>
+        <rsc_op id="57" operation="start" operation_key="VM2_start_0" on_node="lama3" on_node_uuid="2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="75" operation="start" operation_key="lamaVM2-G4_start_0"/>
+        <rsc_op id="92" operation="start" operation_key="FAKE4_start_0" on_node="lamaVM2" on_node_uuid="lamaVM2" router_node="lama3"/>
       </trigger>
       <trigger>
-        <rsc_op id="92" operation="start" operation_key="lamaVM2_start_0" on_node="lama3" on_node_uuid="2"/>
+        <pseudo_event id="93" operation="stop" operation_key="FAKE4-IP_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="95" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="95" operation="start" operation_key="lamaVM2-G4_start_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="112" operation="start" operation_key="lamaVM2_start_0" on_node="lama3" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="115" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="15">
+  <synapse id="33">
     <action_set>
-      <pseudo_event id="73" operation="stop" operation_key="FAKE4-IP_stop_0">
+      <pseudo_event id="93" operation="stop" operation_key="FAKE4-IP_stop_0">
         <attributes CRM_meta_name="stop" CRM_meta_physical_host="lama3" CRM_meta_timeout="20000" cidr_netmask="16"  ip="10.1.1.54"/>
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="77" operation="stop" operation_key="lamaVM2-G4_stop_0"/>
+        <rsc_op id="32" operation="monitor" operation_key="FAKE4-IP_monitor_0" on_node="lamaVM1" on_node_uuid="lamaVM1" router_node="lama2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="96" operation="stonith" operation_key="stonith-lamaVM2-reboot" on_node="lamaVM2" on_node_uuid="lamaVM2"/>
+        <rsc_op id="45" operation="monitor" operation_key="FAKE4-IP_monitor_0" on_node="lamaVM3" on_node_uuid="lamaVM3" router_node="lama3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="97" operation="stop" operation_key="lamaVM2-G4_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="116" operation="stonith" operation_key="stonith-lamaVM2-reboot" on_node="lamaVM2" on_node_uuid="lamaVM2"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="16">
+  <synapse id="34">
+    <action_set>
+      <rsc_op id="45" operation="monitor" operation_key="FAKE4-IP_monitor_0" on_node="lamaVM3" on_node_uuid="lamaVM3" router_node="lama3">
+        <primitive id="FAKE4-IP" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_on_node="lamaVM3" CRM_meta_on_node_uuid="lamaVM3" CRM_meta_op_target_rc="7" CRM_meta_physical_host="lama3" CRM_meta_timeout="20000" cidr_netmask="16"  ip="10.1.1.54"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="35">
+    <action_set>
+      <rsc_op id="32" operation="monitor" operation_key="FAKE4-IP_monitor_0" on_node="lamaVM1" on_node_uuid="lamaVM1" router_node="lama2">
+        <primitive id="FAKE4-IP" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_on_node="lamaVM1" CRM_meta_on_node_uuid="lamaVM1" CRM_meta_op_target_rc="7" CRM_meta_physical_host="lama2" CRM_meta_timeout="20000" cidr_netmask="16"  ip="10.1.1.54"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="36">
     <action_set>
       <rsc_op id="24" operation="monitor" operation_key="FAKE4-IP_monitor_30000" on_node="lamaVM2" on_node_uuid="lamaVM2" router_node="lama3">
         <primitive id="FAKE4-IP" class="ocf" provider="heartbeat" type="IPaddr2"/>
@@ -275,54 +491,54 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="74" operation="start" operation_key="FAKE4-IP_start_0" on_node="lamaVM2" on_node_uuid="lamaVM2" router_node="lama3"/>
+        <rsc_op id="94" operation="start" operation_key="FAKE4-IP_start_0" on_node="lamaVM2" on_node_uuid="lamaVM2" router_node="lama3"/>
       </trigger>
       <trigger>
-        <rsc_op id="92" operation="start" operation_key="lamaVM2_start_0" on_node="lama3" on_node_uuid="2"/>
+        <rsc_op id="112" operation="start" operation_key="lamaVM2_start_0" on_node="lama3" on_node_uuid="2"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="17">
+  <synapse id="37">
     <action_set>
-      <rsc_op id="84" operation="start" operation_key="FAKE6_start_0" internal_operation_key="FAKE6:2_start_0" on_node="lamaVM2" on_node_uuid="lamaVM2" router_node="lama3">
+      <rsc_op id="104" operation="start" operation_key="FAKE6_start_0" internal_operation_key="FAKE6:2_start_0" on_node="lamaVM2" on_node_uuid="lamaVM2" router_node="lama3">
         <primitive id="FAKE6" long-id="FAKE6:2" class="ocf" provider="heartbeat" type="Dummy"/>
         <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="lamaVM2" CRM_meta_on_node_uuid="lamaVM2" CRM_meta_physical_host="lama3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="37" operation="start" operation_key="VM2_start_0" on_node="lama3" on_node_uuid="2"/>
+        <rsc_op id="57" operation="start" operation_key="VM2_start_0" on_node="lama3" on_node_uuid="2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="83" operation="stop" operation_key="FAKE6_stop_0" internal_operation_key="FAKE6:2_stop_0"/>
+        <pseudo_event id="103" operation="stop" operation_key="FAKE6_stop_0" internal_operation_key="FAKE6:2_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="85" operation="start" operation_key="FAKE6-clone_start_0"/>
+        <pseudo_event id="105" operation="start" operation_key="FAKE6-clone_start_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="92" operation="start" operation_key="lamaVM2_start_0" on_node="lama3" on_node_uuid="2"/>
+        <rsc_op id="112" operation="start" operation_key="lamaVM2_start_0" on_node="lama3" on_node_uuid="2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="95" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="115" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="18">
+  <synapse id="38">
     <action_set>
-      <pseudo_event id="83" operation="stop" operation_key="FAKE6_stop_0" internal_operation_key="FAKE6:2_stop_0">
+      <pseudo_event id="103" operation="stop" operation_key="FAKE6_stop_0" internal_operation_key="FAKE6:2_stop_0">
         <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_physical_host="lama3" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="87" operation="stop" operation_key="FAKE6-clone_stop_0"/>
+        <pseudo_event id="107" operation="stop" operation_key="FAKE6-clone_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="96" operation="stonith" operation_key="stonith-lamaVM2-reboot" on_node="lamaVM2" on_node_uuid="lamaVM2"/>
+        <pseudo_event id="116" operation="stonith" operation_key="stonith-lamaVM2-reboot" on_node="lamaVM2" on_node_uuid="lamaVM2"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="19">
+  <synapse id="39">
     <action_set>
       <rsc_op id="22" operation="monitor" operation_key="FAKE6_monitor_30000" internal_operation_key="FAKE6:2_monitor_30000" on_node="lamaVM2" on_node_uuid="lamaVM2" router_node="lama3">
         <primitive id="FAKE6" long-id="FAKE6:2" class="ocf" provider="heartbeat" type="Dummy"/>
@@ -331,89 +547,89 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="84" operation="start" operation_key="FAKE6_start_0" internal_operation_key="FAKE6:2_start_0" on_node="lamaVM2" on_node_uuid="lamaVM2" router_node="lama3"/>
+        <rsc_op id="104" operation="start" operation_key="FAKE6_start_0" internal_operation_key="FAKE6:2_start_0" on_node="lamaVM2" on_node_uuid="lamaVM2" router_node="lama3"/>
       </trigger>
       <trigger>
-        <rsc_op id="92" operation="start" operation_key="lamaVM2_start_0" on_node="lama3" on_node_uuid="2"/>
+        <rsc_op id="112" operation="start" operation_key="lamaVM2_start_0" on_node="lama3" on_node_uuid="2"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="20" priority="1000000">
+  <synapse id="40" priority="1000000">
     <action_set>
-      <pseudo_event id="88" operation="stopped" operation_key="FAKE6-clone_stopped_0">
+      <pseudo_event id="108" operation="stopped" operation_key="FAKE6-clone_stopped_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="83" operation="stop" operation_key="FAKE6_stop_0" internal_operation_key="FAKE6:2_stop_0"/>
+        <pseudo_event id="103" operation="stop" operation_key="FAKE6_stop_0" internal_operation_key="FAKE6:2_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="87" operation="stop" operation_key="FAKE6-clone_stop_0"/>
+        <pseudo_event id="107" operation="stop" operation_key="FAKE6-clone_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="21">
+  <synapse id="41">
     <action_set>
-      <pseudo_event id="87" operation="stop" operation_key="FAKE6-clone_stop_0">
+      <pseudo_event id="107" operation="stop" operation_key="FAKE6-clone_stop_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="96" operation="stonith" operation_key="stonith-lamaVM2-reboot" on_node="lamaVM2" on_node_uuid="lamaVM2"/>
+        <pseudo_event id="116" operation="stonith" operation_key="stonith-lamaVM2-reboot" on_node="lamaVM2" on_node_uuid="lamaVM2"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="22" priority="1000000">
+  <synapse id="42" priority="1000000">
     <action_set>
-      <pseudo_event id="86" operation="running" operation_key="FAKE6-clone_running_0">
+      <pseudo_event id="106" operation="running" operation_key="FAKE6-clone_running_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="84" operation="start" operation_key="FAKE6_start_0" internal_operation_key="FAKE6:2_start_0" on_node="lamaVM2" on_node_uuid="lamaVM2" router_node="lama3"/>
+        <rsc_op id="104" operation="start" operation_key="FAKE6_start_0" internal_operation_key="FAKE6:2_start_0" on_node="lamaVM2" on_node_uuid="lamaVM2" router_node="lama3"/>
       </trigger>
       <trigger>
-        <pseudo_event id="85" operation="start" operation_key="FAKE6-clone_start_0"/>
+        <pseudo_event id="105" operation="start" operation_key="FAKE6-clone_start_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="23">
+  <synapse id="43">
     <action_set>
-      <pseudo_event id="85" operation="start" operation_key="FAKE6-clone_start_0">
+      <pseudo_event id="105" operation="start" operation_key="FAKE6-clone_start_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="88" operation="stopped" operation_key="FAKE6-clone_stopped_0"/>
+        <pseudo_event id="108" operation="stopped" operation_key="FAKE6-clone_stopped_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="24">
+  <synapse id="44">
     <action_set>
-      <rsc_op id="92" operation="start" operation_key="lamaVM2_start_0" on_node="lama3" on_node_uuid="2">
+      <rsc_op id="112" operation="start" operation_key="lamaVM2_start_0" on_node="lama3" on_node_uuid="2">
         <primitive id="lamaVM2" class="ocf" provider="pacemaker" type="remote"/>
         <attributes CRM_meta_container="VM2" CRM_meta_name="start" CRM_meta_on_node="lama3" CRM_meta_on_node_uuid="2" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="37" operation="start" operation_key="VM2_start_0" on_node="lama3" on_node_uuid="2"/>
+        <rsc_op id="57" operation="start" operation_key="VM2_start_0" on_node="lama3" on_node_uuid="2"/>
       </trigger>
       <trigger>
-        <rsc_op id="91" operation="stop" operation_key="lamaVM2_stop_0" on_node="lama3" on_node_uuid="2"/>
+        <rsc_op id="111" operation="stop" operation_key="lamaVM2_stop_0" on_node="lama3" on_node_uuid="2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="95" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="115" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="25">
+  <synapse id="45">
     <action_set>
-      <rsc_op id="91" operation="stop" operation_key="lamaVM2_stop_0" on_node="lama3" on_node_uuid="2">
+      <rsc_op id="111" operation="stop" operation_key="lamaVM2_stop_0" on_node="lama3" on_node_uuid="2">
         <primitive id="lamaVM2" class="ocf" provider="pacemaker" type="remote"/>
         <attributes CRM_meta_container="VM2" CRM_meta_on_node="lama3" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
         <downed>
@@ -423,7 +639,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="26">
+  <synapse id="46">
     <action_set>
       <rsc_op id="4" operation="monitor" operation_key="lamaVM2_monitor_30000" on_node="lama3" on_node_uuid="2">
         <primitive id="lamaVM2" class="ocf" provider="pacemaker" type="remote"/>
@@ -432,13 +648,13 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="92" operation="start" operation_key="lamaVM2_start_0" on_node="lama3" on_node_uuid="2"/>
+        <rsc_op id="112" operation="start" operation_key="lamaVM2_start_0" on_node="lama3" on_node_uuid="2"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="27">
+  <synapse id="47">
     <action_set>
-      <pseudo_event id="96" operation="stonith" operation_key="stonith-lamaVM2-reboot" on_node="lamaVM2" on_node_uuid="lamaVM2">
+      <pseudo_event id="116" operation="stonith" operation_key="stonith-lamaVM2-reboot" on_node="lamaVM2" on_node_uuid="lamaVM2">
         <attributes CRM_meta_fail_count_FSlun3="1" CRM_meta_last_failure_FSlun3="1399961984" CRM_meta_on_node="lamaVM2" CRM_meta_on_node_uuid="lamaVM2" CRM_meta_stonith_action="reboot" />
         <downed>
           <node id="lamaVM2"/>
@@ -447,23 +663,23 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="36" operation="stop" operation_key="VM2_stop_0" on_node="lama3" on_node_uuid="2"/>
+        <rsc_op id="56" operation="stop" operation_key="VM2_stop_0" on_node="lama3" on_node_uuid="2"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="28">
+  <synapse id="48">
     <action_set>
-      <pseudo_event id="95" operation="stonith_complete" operation_key="stonith_complete">
+      <pseudo_event id="115" operation="stonith_complete" operation_key="stonith_complete">
         <attributes />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="96" operation="stonith" operation_key="stonith-lamaVM2-reboot" on_node="lamaVM2" on_node_uuid="lamaVM2"/>
+        <pseudo_event id="116" operation="stonith" operation_key="stonith-lamaVM2-reboot" on_node="lamaVM2" on_node_uuid="lamaVM2"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="29">
+  <synapse id="49">
     <action_set>
       <pseudo_event id="25" operation="all_stopped" operation_key="all_stopped">
         <attributes />
@@ -471,25 +687,25 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="36" operation="stop" operation_key="VM2_stop_0" on_node="lama3" on_node_uuid="2"/>
+        <rsc_op id="56" operation="stop" operation_key="VM2_stop_0" on_node="lama3" on_node_uuid="2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="40" operation="stop" operation_key="FSlun3_stop_0"/>
+        <pseudo_event id="60" operation="stop" operation_key="FSlun3_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="71" operation="stop" operation_key="FAKE4_stop_0"/>
+        <pseudo_event id="91" operation="stop" operation_key="FAKE4_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="73" operation="stop" operation_key="FAKE4-IP_stop_0"/>
+        <pseudo_event id="93" operation="stop" operation_key="FAKE4-IP_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="83" operation="stop" operation_key="FAKE6_stop_0" internal_operation_key="FAKE6:2_stop_0"/>
+        <pseudo_event id="103" operation="stop" operation_key="FAKE6_stop_0" internal_operation_key="FAKE6:2_stop_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="91" operation="stop" operation_key="lamaVM2_stop_0" on_node="lama3" on_node_uuid="2"/>
+        <rsc_op id="111" operation="stop" operation_key="lamaVM2_stop_0" on_node="lama3" on_node_uuid="2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="95" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="115" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
