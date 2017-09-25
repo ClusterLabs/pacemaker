@@ -124,6 +124,14 @@ main(int argc, char **argv)
 static void
 log_deprecation_warnings()
 {
+    enum cluster_type_e cluster_type = get_cluster_type();
+
+    if (cluster_type != pcmk_cluster_corosync) {
+        crm_warn("Support for cluster infrastructure %s "
+                 " is deprecated and will be removed in a future release",
+                 name_for_cluster_type(cluster_type));
+
+    }
 }
 
 int
