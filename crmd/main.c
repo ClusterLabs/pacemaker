@@ -132,6 +132,19 @@ log_deprecation_warnings()
                  name_for_cluster_type(cluster_type));
 
     }
+
+#if ENABLE_SNMP
+    crm_warn("Compile-time support for crm_mon SNMP options"
+             " is deprecated and will be removed in a future release"
+             " (configure alerts instead)",
+             name_for_cluster_type(cluster_type));
+#endif
+#if ENABLE_ESMTP
+    crm_warn("Compile-time support for crm_mon SMTP options"
+             " is deprecated and will be removed in a future release"
+             " (configure alerts instead)",
+             name_for_cluster_type(cluster_type));
+#endif
 }
 
 int
