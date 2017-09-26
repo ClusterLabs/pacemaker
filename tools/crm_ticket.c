@@ -150,11 +150,12 @@ print_ticket_list(pe_working_set_t * data_set, gboolean raw, gboolean details)
     return pcmk_ok;
 }
 
+#define XPATH_MAX 1024
+
 static int
 find_ticket_state(cib_t * the_cib, const char *ticket_id, xmlNode ** ticket_state_xml)
 {
     int offset = 0;
-    static int xpath_max = 1024;
     int rc = pcmk_ok;
     xmlNode *xml_search = NULL;
 
@@ -163,11 +164,11 @@ find_ticket_state(cib_t * the_cib, const char *ticket_id, xmlNode ** ticket_stat
     CRM_ASSERT(ticket_state_xml != NULL);
     *ticket_state_xml = NULL;
 
-    xpath_string = calloc(1, xpath_max);
-    offset += snprintf(xpath_string + offset, xpath_max - offset, "%s", "/cib/status/tickets");
+    xpath_string = calloc(1, XPATH_MAX);
+    offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "%s", "/cib/status/tickets");
 
     if (ticket_id) {
-        offset += snprintf(xpath_string + offset, xpath_max - offset, "/%s[@id=\"%s\"]",
+        offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "/%s[@id=\"%s\"]",
                            XML_CIB_TAG_TICKET_STATE, ticket_id);
     }
 
@@ -198,7 +199,6 @@ static int
 find_ticket_constraints(cib_t * the_cib, const char *ticket_id, xmlNode ** ticket_cons_xml)
 {
     int offset = 0;
-    static int xpath_max = 1024;
     int rc = pcmk_ok;
     xmlNode *xml_search = NULL;
 
@@ -207,13 +207,13 @@ find_ticket_constraints(cib_t * the_cib, const char *ticket_id, xmlNode ** ticke
     CRM_ASSERT(ticket_cons_xml != NULL);
     *ticket_cons_xml = NULL;
 
-    xpath_string = calloc(1, xpath_max);
+    xpath_string = calloc(1, XPATH_MAX);
     offset +=
-        snprintf(xpath_string + offset, xpath_max - offset, "%s/%s",
+        snprintf(xpath_string + offset, XPATH_MAX - offset, "%s/%s",
                  get_object_path(XML_CIB_TAG_CONSTRAINTS), XML_CONS_TAG_RSC_TICKET);
 
     if (ticket_id) {
-        offset += snprintf(xpath_string + offset, xpath_max - offset, "[@ticket=\"%s\"]",
+        offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "[@ticket=\"%s\"]",
                            ticket_id);
     }
 
@@ -285,7 +285,6 @@ find_ticket_state_attr_legacy(cib_t * the_cib, const char *attr, const char *tic
                               const char *attr_name, char **value)
 {
     int offset = 0;
-    static int xpath_max = 1024;
     int rc = pcmk_ok;
     xmlNode *xml_search = NULL;
 
@@ -294,19 +293,19 @@ find_ticket_state_attr_legacy(cib_t * the_cib, const char *attr, const char *tic
     CRM_ASSERT(value != NULL);
     *value = NULL;
 
-    xpath_string = calloc(1, xpath_max);
-    offset += snprintf(xpath_string + offset, xpath_max - offset, "%s", "/cib/status/tickets");
+    xpath_string = calloc(1, XPATH_MAX);
+    offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "%s", "/cib/status/tickets");
 
     if (set_type) {
-        offset += snprintf(xpath_string + offset, xpath_max - offset, "/%s", set_type);
+        offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "/%s", set_type);
         if (set_name) {
-            offset += snprintf(xpath_string + offset, xpath_max - offset, "[@id=\"%s\"]", set_name);
+            offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "[@id=\"%s\"]", set_name);
         }
     }
 
-    offset += snprintf(xpath_string + offset, xpath_max - offset, "//nvpair[");
+    offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "//nvpair[");
     if (attr_id) {
-        offset += snprintf(xpath_string + offset, xpath_max - offset, "@id=\"%s\"", attr_id);
+        offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "@id=\"%s\"", attr_id);
     }
 
     if (attr_name) {
@@ -321,13 +320,13 @@ find_ticket_state_attr_legacy(cib_t * the_cib, const char *attr, const char *tic
         long_key = crm_concat(attr_prefix, ticket_id, '-');
 
         if (attr_id) {
-            offset += snprintf(xpath_string + offset, xpath_max - offset, " and ");
+            offset += snprintf(xpath_string + offset, XPATH_MAX - offset, " and ");
         }
-        offset += snprintf(xpath_string + offset, xpath_max - offset, "@name=\"%s\"", long_key);
+        offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "@name=\"%s\"", long_key);
 
         free(long_key);
     }
-    offset += snprintf(xpath_string + offset, xpath_max - offset, "]");
+    offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "]");
     CRM_LOG_ASSERT(offset > 0);
 
     rc = the_cib->cmds->query(the_cib, xpath_string, &xml_search,
@@ -386,10 +385,7 @@ delete_ticket_state_attr_legacy(const char *ticket_id, const char *set_name, con
         attr_id = local_attr_id;
     }
 
-    xml_obj = create_xml_node(NULL, XML_CIB_TAG_NVPAIR);
-    crm_xml_add(xml_obj, XML_ATTR_ID, attr_id);
-    /*crm_xml_add(xml_obj, XML_NVPAIR_ATTR_NAME, attr_name); */
-
+    xml_obj = crm_create_nvpair_xml(NULL, attr_id, /*attr_name*/ NULL, NULL);
     crm_log_xml_debug(xml_obj, "Delete");
 
     rc = cib->cmds->delete(cib, XML_CIB_TAG_STATUS, xml_obj, cib_options);

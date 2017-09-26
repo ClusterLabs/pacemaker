@@ -16,10 +16,9 @@
 
 #include "crmd_lrm.h"
 
-/* If we can't successfully get the version from the agent, use this */
-#define DEFAULT_RA_VERSION "0.1"
-
+#if ENABLE_VERSIONED_ATTRS
 static regex_t *version_format_regex = NULL;
+#endif
 
 static void
 ra_param_free(void *param)
@@ -74,6 +73,7 @@ metadata_cache_reset(GHashTable *mdc)
     }
 }
 
+#if ENABLE_VERSIONED_ATTRS
 static gboolean
 valid_version_format(const char *version)
 {
@@ -102,17 +102,21 @@ valid_version_format(const char *version)
 
     return regexec(version_format_regex, version, 0, NULL, 0) == 0;
 }
+#endif
 
 void
 metadata_cache_fini()
 {
+#if ENABLE_VERSIONED_ATTRS
     if (version_format_regex) {
         regfree(version_format_regex);
         free(version_format_regex);
         version_format_regex = NULL;
     }
+#endif
 }
 
+#if ENABLE_VERSIONED_ATTRS
 static char *
 ra_version_from_xml(xmlNode *metadata_xml, const lrmd_rsc_info_t *rsc)
 {
@@ -121,12 +125,12 @@ ra_version_from_xml(xmlNode *metadata_xml, const lrmd_rsc_info_t *rsc)
     if (version == NULL) {
         crm_debug("Metadata for %s:%s:%s does not specify a version",
                   rsc->class, rsc->provider, rsc->type);
-        version = DEFAULT_RA_VERSION;
+        version = PCMK_DEFAULT_AGENT_VERSION;
 
     } else if (!valid_version_format(version)) {
         crm_notice("%s:%s:%s metadata version has unrecognized format",
                   rsc->class, rsc->provider, rsc->type);
-        version = DEFAULT_RA_VERSION;
+        version = PCMK_DEFAULT_AGENT_VERSION;
 
     } else {
         crm_debug("Metadata for %s:%s:%s has version %s",
@@ -134,6 +138,7 @@ ra_version_from_xml(xmlNode *metadata_xml, const lrmd_rsc_info_t *rsc)
     }
     return strdup(version);
 }
+#endif
 
 static struct ra_param_s *
 ra_param_from_xml(xmlNode *param_xml, struct ra_metadata_s *md)
@@ -202,7 +207,9 @@ metadata_cache_update(GHashTable *mdc, lrmd_rsc_info_t *rsc,
         goto err;
     }
 
+#if ENABLE_VERSIONED_ATTRS
     md->ra_version = ra_version_from_xml(metadata, rsc);
+#endif
 
     // Check supported actions
     match = first_named_child(metadata, "actions");

@@ -275,7 +275,8 @@ lrmd_server_send_notify(crm_client_t * client, xmlNode * msg)
 static gboolean
 lrmd_exit(gpointer data)
 {
-    crm_info("Terminating with  %d clients", crm_hash_table_size(client_connections));
+    crm_info("Terminating with %d clients",
+             crm_hash_table_size(client_connections));
 
     if (stonith_api) {
         stonith_api->cmds->remove_notification(stonith_api, T_STONITH_NOTIFY_DISCONNECT);
@@ -616,8 +617,7 @@ main(int argc, char **argv, char **envp)
 
 #ifdef ENABLE_PCMK_REMOTE
     {
-        const char *remote_port_str = getenv("PCMK_remote_port");
-        int remote_port = remote_port_str ? atoi(remote_port_str) : DEFAULT_REMOTE_PORT;
+        int remote_port = crm_default_remote_port();
 
         if (lrmd_init_remote_tls_server(remote_port) < 0) {
             crm_err("Failed to create TLS server on port %d: shutting down and inhibiting respawn", remote_port);

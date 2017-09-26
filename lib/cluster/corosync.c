@@ -509,7 +509,7 @@ corosync_initialize_nodelist(void *cluster, gboolean force_member, xmlNode * xml
 
     crm_peer_init();
     crm_trace("Initializing corosync nodelist");
-    for (lpc = 0;; lpc++) {
+    for (lpc = 0; TRUE; lpc++) {
         uint32_t nodeid = 0;
         char *name = NULL;
         char *key = NULL;

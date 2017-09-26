@@ -42,7 +42,7 @@ typedef struct resource_history_s {
 
 void history_free(gpointer data);
 
-/* TDOD - Replace this with lrmd_event_data_t */
+/* TODO - Replace this with lrmd_event_data_t */
 struct recurring_op_s {
     int call_id;
     int interval;

@@ -52,6 +52,9 @@
                                         /* Status of an offline client */
 #  endif
 
+/* public Pacemaker Remote functions (from remote.c) */
+int crm_default_remote_port(void);
+
 /* public string functions (from strings.c) */
 char *crm_itoa_stack(int an_int, char *buf, size_t len);
 char *crm_itoa(int an_int);

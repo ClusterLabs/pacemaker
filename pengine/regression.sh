@@ -20,6 +20,8 @@
 core=`dirname $0`
 . $core/regression.core.sh || exit 1
 
+DO_VERSIONED_TESTS=0
+
 create_mode="true"
 info Generating test outputs for these tests...
 # do_test file description
@@ -297,6 +299,7 @@ do_test bug-1820-1 "Non-migration in a group"
 do_test migrate-5 "Primitive migration with a clone"
 do_test migrate-fencing "Migration after Fencing"
 do_test migrate-both-vms "Migrate two VMs that have no colocation"
+do_test migration-behind-migrating-remote "Migrate resource behind migrating remote connection"
 
 do_test 1-a-then-bm-move-b "Advanced migrate logic. A then B. migrate B."
 do_test 2-am-then-b-move-a "Advanced migrate logic, A then B, migrate A without stopping B"
@@ -313,7 +316,9 @@ do_test 11-a-then-bm-b-move-a-clone-starting "Advanced migrate logic, A clone th
 do_test a-promote-then-b-migrate "A promote then B start. migrate B"
 do_test a-demote-then-b-migrate "A demote then B stop. migrate B"
 
-do_test migrate-versioned "Disable migration for versioned resources"
+if [ $DO_VERSIONED_TESTS -eq 1 ]; then
+	do_test migrate-versioned "Disable migration for versioned resources"
+fi
 
 #echo ""
 #do_test complex1 "Complex	"
@@ -435,6 +440,7 @@ do_test bug-cl-5213 "Ensure role colocation with -INFINITY is enforced"
 do_test bug-cl-5219 "Allow unrelated resources with a common colocation target to remain promoted"
 do_test master-asymmetrical-order "Fix the behaviors of multi-state resources with asymmetrical ordering"
 do_test master-notify "Master promotion with notifies"
+do_test master-score-startup "Use permanent master scores without LRM history"
 
 echo ""
 do_test history-1 "Correctly parse stateful-1 resource state"
@@ -855,6 +861,7 @@ do_test remote-recover-connection "Optimistically recovery of only the connectio
 do_test remote-recover-all        "Fencing when the connection has no home"
 do_test remote-recover-no-resources   "Fencing when the connection has no home and no active resources"
 do_test remote-recover-unknown        "Fencing when the connection has no home and the remote has no operation history"
+do_test remote-reconnect-delay        "Waiting for remote reconnect interval to expire"
 
 echo ""
 do_test resource-discovery      "Exercises resource-discovery location constraint option."
@@ -865,16 +872,18 @@ do_test isolation-start-all   "Start docker isolated resources."
 do_test isolation-restart-all "Restart docker isolated resources."
 do_test isolation-clone       "Cloned isolated primitive."
 
-echo ""
-do_test versioned-resources     "Start resources with #ra-version rules"
-do_test restart-versioned       "Restart resources on #ra-version change"
-do_test reload-versioned        "Reload resources on #ra-version change"
+if [ $DO_VERSIONED_TESTS -eq 1 ]; then
+	echo ""
+	do_test versioned-resources     "Start resources with #ra-version rules"
+	do_test restart-versioned       "Restart resources on #ra-version change"
+	do_test reload-versioned        "Reload resources on #ra-version change"
 
-echo ""
-do_test versioned-operations-1  "Use #ra-version to configure operations of native resources"
-do_test versioned-operations-2  "Use #ra-version to configure operations of stonith resources"
-do_test versioned-operations-3  "Use #ra-version to configure operations of master/slave resources"
-do_test versioned-operations-4  "Use #ra-version to configure operations of groups of the resources"
+	echo ""
+	do_test versioned-operations-1  "Use #ra-version to configure operations of native resources"
+	do_test versioned-operations-2  "Use #ra-version to configure operations of stonith resources"
+	do_test versioned-operations-3  "Use #ra-version to configure operations of master/slave resources"
+	do_test versioned-operations-4  "Use #ra-version to configure operations of groups of the resources"
+fi
 
 echo ""
 test_results

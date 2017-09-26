@@ -73,45 +73,6 @@ get_meta_attrs_from_cib(xmlNode *basenode, crm_alert_entry_t *entry,
                   entry->id, entry->tstamp_format);
     }
 
-    value = g_hash_table_lookup(config_hash, XML_ALERT_ATTR_SELECT_KIND);
-    if (value) {
-        int n = 0;
-        uint32_t flags = crm_alert_none;
-
-        crm_debug("Alert %s has event filter: %s", entry->id, value);
-        while (*value != 0) {
-            while (*value == ',') {
-                ++value;
-            }
-            n = 0;
-            while ((value[n] != ',') && (value[n] != 0)) {
-                ++n;
-            }
-            if (!strncmp(value, "node", n)) {
-                flags |= crm_alert_node;
-            } else if (!strncmp(value, "fencing", n)) {
-                flags |= crm_alert_fencing;
-            } else if (!strncmp(value, "resource", n)) {
-                flags |= crm_alert_resource;
-            } else if (!strncmp(value, "attribute", n)) {
-                flags |= crm_alert_attribute;
-            } else {
-                crm_warn("Unrecognized alert type '%s' for %s", value, entry->id);
-            }
-            value += n;
-        }
-        if (flags) {
-            entry->flags = flags;
-        }
-    }
-
-    value = g_hash_table_lookup(config_hash,
-                                XML_ALERT_ATTR_SELECT_ATTRIBUTE_NAME);
-    if (value) {
-        crm_debug("Alert %s has attribute filter: %s", entry->id, value);
-        entry->select_attribute_name = g_strsplit(value, ",", 0);
-    }
-
     g_hash_table_destroy(config_hash);
 }
 
@@ -146,6 +107,76 @@ get_envvars_from_cib(xmlNode *basenode, crm_alert_entry_t *entry)
         crm_trace("Alert %s: added environment variable %s='%s'",
                   entry->id, name, value);
     }
+}
+
+static void
+unpack_alert_filter(xmlNode *basenode, crm_alert_entry_t *entry)
+{
+    xmlNode *select = first_named_child(basenode, XML_CIB_TAG_ALERT_SELECT);
+    xmlNode *event_type = NULL;
+    uint32_t flags = crm_alert_none;
+
+    for (event_type = __xml_first_child(select); event_type != NULL;
+         event_type = __xml_next(event_type)) {
+
+        const char *tagname = crm_element_name(event_type);
+
+        if (tagname == NULL) {
+            continue;
+
+        } else if (!strcmp(tagname, XML_CIB_TAG_ALERT_FENCING)) {
+            flags |= crm_alert_fencing;
+
+        } else if (!strcmp(tagname, XML_CIB_TAG_ALERT_NODES)) {
+            flags |= crm_alert_node;
+
+        } else if (!strcmp(tagname, XML_CIB_TAG_ALERT_RESOURCES)) {
+            flags |= crm_alert_resource;
+
+        } else if (!strcmp(tagname, XML_CIB_TAG_ALERT_ATTRIBUTES)) {
+            xmlNode *attr;
+            const char *attr_name;
+            int nattrs = 0;
+
+            flags |= crm_alert_attribute;
+            for (attr = first_named_child(event_type, XML_CIB_TAG_ALERT_ATTR);
+                 attr != NULL;
+                 attr = crm_next_same_xml(attr)) {
+
+                attr_name = crm_element_value(attr, XML_NVPAIR_ATTR_NAME);
+                if (attr_name) {
+                    if (nattrs == 0) {
+                        g_strfreev(entry->select_attribute_name);
+                        entry->select_attribute_name = NULL;
+                    }
+                    ++nattrs;
+                    entry->select_attribute_name = realloc_safe(entry->select_attribute_name,
+                                                                (nattrs + 1) * sizeof(char*));
+                    entry->select_attribute_name[nattrs - 1] = strdup(attr_name);
+                    entry->select_attribute_name[nattrs] = NULL;
+                }
+            }
+        }
+    }
+
+    if (flags != crm_alert_none) {
+        entry->flags = flags;
+        crm_debug("Alert %s receives events: attributes:%s, fencing:%s, nodes:%s, resources:%s",
+                  entry->id,
+                  (flags & crm_alert_attribute)?
+                    (entry->select_attribute_name? "some" : "all") : "no",
+                  (flags & crm_alert_fencing)? "yes" : "no",
+                  (flags & crm_alert_node)? "yes" : "no",
+                  (flags & crm_alert_resource)? "yes" : "no");
+    }
+}
+
+static void
+unpack_alert(xmlNode *alert, crm_alert_entry_t *entry, guint *max_timeout)
+{
+    get_envvars_from_cib(alert, entry);
+    get_meta_attrs_from_cib(alert, entry, max_timeout);
+    unpack_alert_filter(alert, entry);
 }
 
 /*!
@@ -202,8 +233,8 @@ pe_unpack_alerts(xmlNode *alerts)
 
         entry = crm_alert_entry_new(alert_id, alert_path);
 
-        get_envvars_from_cib(alert, entry);
-        get_meta_attrs_from_cib(alert, entry, &max_timeout);
+        unpack_alert(alert, entry, &max_timeout);
+
         if (entry->tstamp_format == NULL) {
             entry->tstamp_format = strdup(CRM_ALERT_DEFAULT_TSTAMP_FORMAT);
         }
@@ -220,9 +251,7 @@ pe_unpack_alerts(xmlNode *alerts)
             recipients++;
             recipient_entry->recipient = strdup(crm_element_value(recipient,
                                                 XML_ALERT_ATTR_REC_VALUE));
-            get_envvars_from_cib(recipient, recipient_entry);
-            get_meta_attrs_from_cib(recipient, recipient_entry, &max_timeout);
-
+            unpack_alert(recipient, recipient_entry, &max_timeout);
             alert_list = g_list_prepend(alert_list, recipient_entry);
             crm_debug("Alert %s has recipient %s with value %s and %d envvars",
                       entry->id, ID(recipient), recipient_entry->recipient,

@@ -21,8 +21,7 @@
 
 #  include <crm/cluster.h>
 
-#  define AIS_IPC_NAME  "ais-crm-ipc"
-#  define AIS_IPC_MESSAGE_SIZE 8192*128
+#  define AIS_IPC_MESSAGE_SIZE (8192 * 128)
 #  define CRM_MESSAGE_IPC_ACK	0
 
 #  ifndef INTERFACE_MAX

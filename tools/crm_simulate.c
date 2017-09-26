@@ -432,7 +432,7 @@ setup_input(const char *input, const char *output)
     }
 
     if (output == NULL) {
-        char *pid = crm_itoa(getpid());
+        char *pid = crm_getpid_s();
 
         local_output = get_shadow_file(pid);
         temp_shadow = strdup(local_output);
@@ -558,7 +558,7 @@ profile_all(const char *dir)
 
     if (file_num > 0) {
         struct stat prop;
-        char buffer[FILENAME_MAX + 1];
+        char buffer[FILENAME_MAX];
 
         while (file_num--) {
             if ('.' == namelist[file_num]->d_name[0]) {
@@ -571,7 +571,7 @@ profile_all(const char *dir)
             }
 
             lpc++;
-            snprintf(buffer, FILENAME_MAX, "%s/%s", dir, namelist[file_num]->d_name);
+            snprintf(buffer, sizeof(buffer), "%s/%s", dir, namelist[file_num]->d_name);
             if (stat(buffer, &prop) == 0 && S_ISREG(prop.st_mode)) {
                 profile_one(buffer);
             }

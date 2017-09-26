@@ -210,7 +210,7 @@ main(int argc, char **argv)
     xml_tag = crm_element_name(cib_object);
     if (safe_str_neq(xml_tag, XML_TAG_CIB)) {
         fprintf(stderr,
-                "This tool can only check complete configurations (ie. those starting with <cib>).\n");
+                "This tool can only check complete configurations (i.e. those starting with <cib>).\n");
         rc = -EBADMSG;
         goto done;
     }

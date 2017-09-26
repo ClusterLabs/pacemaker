@@ -197,10 +197,11 @@ set_format_string(int method, const char *daemon)
 
         if (uname(&res) == 0) {
             offset +=
-                snprintf(fmt + offset, FMT_MAX - offset, "%%t [%d] %s %10s: ", getpid(),
-                         res.nodename, daemon);
+                snprintf(fmt + offset, FMT_MAX - offset, "%%t [%lu] %s %10s: ",
+                         (unsigned long) getpid(), res.nodename, daemon);
         } else {
-            offset += snprintf(fmt + offset, FMT_MAX - offset, "%%t [%d] %10s: ", getpid(), daemon);
+            offset += snprintf(fmt + offset, FMT_MAX - offset, "%%t [%lu] %10s: ",
+                               (unsigned long) getpid(), daemon);
         }
     }
 
@@ -368,7 +369,8 @@ crm_control_blackbox(int nsig, bool enable)
         pid_t pid = getpid();
 
         blackbox_file_prefix = malloc(NAME_MAX);
-        snprintf(blackbox_file_prefix, NAME_MAX, "%s/%s-%d", CRM_BLACKBOX_DIR, crm_system_name, pid);
+        snprintf(blackbox_file_prefix, NAME_MAX, "%s/%s-%lu",
+                 CRM_BLACKBOX_DIR, crm_system_name, (unsigned long) pid);
     }
 
     if (enable && qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED) {
@@ -567,7 +569,7 @@ crm_log_filter(struct qb_log_callsite *cs)
             do {
                 offset = next;
                 next = strchrnul(offset, ',');
-                snprintf(token, 499, "%.*s", (int)(next - offset), offset);
+                snprintf(token, sizeof(token), "%.*s", (int)(next - offset), offset);
 
                 tag = g_quark_from_string(token);
                 crm_info("Created GQuark %u from token '%s' in '%s'", tag, token, trace_tags);
@@ -869,7 +871,7 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
             {
                 char path[512];
 
-                snprintf(path, 512, "%s-%d", crm_system_name, getpid());
+                snprintf(path, 512, "%s-%lu", crm_system_name, (unsigned long) getpid());
                 mkdir(path, 0750);
                 chdir(path);
                 crm_info("Changed active directory to %s/%s/%s", base, pwent->pw_name, path);

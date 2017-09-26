@@ -192,7 +192,7 @@ node_list_attr_score(GHashTable * list, const char *attr, const char *value)
     const char *best_node = NULL;
 
     if (attr == NULL) {
-        attr = "#" XML_ATTR_UNAME;
+        attr = CRM_ATTR_UNAME;
     }
 
     g_hash_table_iter_init(&iter, list);
@@ -212,7 +212,7 @@ node_list_attr_score(GHashTable * list, const char *attr, const char *value)
         }
     }
 
-    if (safe_str_neq(attr, "#" XML_ATTR_UNAME)) {
+    if (safe_str_neq(attr, CRM_ATTR_UNAME)) {
         crm_info("Best score for %s=%s was %s with %d",
                  attr, value, best_node ? best_node : "<none>", best_score);
     }
@@ -230,16 +230,25 @@ node_hash_update(GHashTable * list1, GHashTable * list2, const char *attr, float
     node_t *node = NULL;
 
     if (attr == NULL) {
-        attr = "#" XML_ATTR_UNAME;
+        attr = CRM_ATTR_UNAME;
     }
 
     g_hash_table_iter_init(&iter, list1);
     while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
+        float weight_f = 0;
+        int weight = 0;
+
         CRM_LOG_ASSERT(node != NULL);
         if(node == NULL) { continue; };
 
         score = node_list_attr_score(list2, attr, node_attribute_raw(node, attr));
-        new_score = merge_weights(factor * score, node->weight);
+
+        weight_f = factor * score;
+        /* Round the number */
+        /* http://c-faq.com/fp/round.html */
+        weight = (int)(weight_f < 0 ? weight_f - 0.5 : weight_f + 0.5);
+
+        new_score = merge_weights(weight, node->weight);
 
         if (factor < 0 && score < 0) {
             /* Negative preference for a node with a negative score
@@ -510,7 +519,7 @@ native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
             reason = "active";
         }
         pe_rsc_info(rsc, "Unmanaged resource %s allocated to %s: %s", rsc->id,
-                    assign_to ? assign_to->details->uname : "'nowhere'", reason);
+                    (assign_to? assign_to->details->uname : "no node"), reason);
         native_assign_node(rsc, NULL, assign_to, TRUE);
 
     } else if (is_set(data_set->flags, pe_flag_stop_everything)) {
@@ -1100,8 +1109,9 @@ handle_migration_actions(resource_t * rsc, node_t *current, node_t *chosen, pe_w
             /* migrate_to takes place on the source node, but can 
              * have an effect on the target node depending on how
              * the agent is written. Because of this, we have to maintain
-             * a record that the migrate_to occurred incase the source node 
-             * loses membership while the migrate_to action is still in-flight. */
+             * a record that the migrate_to occurred, in case the source node
+             * loses membership while the migrate_to action is still in-flight.
+             */
             add_hash_param(migrate_to->meta, XML_OP_ATTR_PENDING, "true");
         }
     }
@@ -1619,7 +1629,7 @@ influence_priority(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * 
 {
     const char *rh_value = NULL;
     const char *lh_value = NULL;
-    const char *attribute = "#id";
+    const char *attribute = CRM_ATTR_ID;
     int score_multiplier = 1;
 
     if (constraint->node_attribute != NULL) {
@@ -1656,7 +1666,7 @@ colocation_match(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * co
 {
     const char *tmp = NULL;
     const char *value = NULL;
-    const char *attribute = "#id";
+    const char *attribute = CRM_ATTR_ID;
 
     GHashTable *work = NULL;
     gboolean do_check = FALSE;
@@ -2359,18 +2369,19 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
     }
 
     if (rsc->role == rsc->next_role) {
-        action_t *migrate_to = NULL;
+        action_t *migrate_op = NULL;
+
         key = generate_op_key(rsc->id, RSC_MIGRATED, 0);
         possible_matches = find_actions(rsc->actions, key, next);
         free(key);
 
         if (possible_matches) {
-            migrate_to = possible_matches->data;
+            migrate_op = possible_matches->data;
         }
 
         CRM_CHECK(next != NULL,);
         if (next == NULL) {
-        } else if (migrate_to && is_set(migrate_to->flags, pe_action_runnable) && current) {
+        } else if (migrate_op && is_set(migrate_op->flags, pe_action_runnable) && current) {
             LogAction("Migrate", rsc, current, next, start, NULL, terminal);
 
         } else if (is_set(rsc->flags, pe_rsc_reload)) {
@@ -2492,7 +2503,7 @@ StopRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * d
 
         if(is_set(rsc->flags, pe_rsc_needs_unfencing)) {
             action_t *unfence = pe_fence_op(current, "on", TRUE, NULL, data_set);
-            const char *unfenced = node_attribute_raw(current, XML_NODE_IS_UNFENCED);
+            const char *unfenced = node_attribute_raw(current, CRM_ATTR_UNFENCED);
 
             order_actions(stop, unfence, pe_order_implies_first);
             if (unfenced == NULL || safe_str_eq("0", unfenced)) {
@@ -2515,7 +2526,7 @@ StartRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * 
 
     if(is_set(rsc->flags, pe_rsc_needs_unfencing)) {
         action_t *unfence = pe_fence_op(next, "on", TRUE, NULL, data_set);
-        const char *unfenced = node_attribute_raw(next, XML_NODE_IS_UNFENCED);
+        const char *unfenced = node_attribute_raw(next, CRM_ATTR_UNFENCED);
 
         order_actions(unfence, start, pe_order_implies_then);
 

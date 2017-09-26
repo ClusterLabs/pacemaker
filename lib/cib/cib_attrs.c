@@ -50,6 +50,8 @@
                         __VA_ARGS__);                               \
     } while(0)
 
+#define XPATH_MAX 1024
+
 extern int
 find_nvpair_attr_delegate(cib_t * the_cib, const char *attr, const char *section,
                           const char *node_uuid, const char *attr_set_type, const char *set_name,
@@ -57,7 +59,6 @@ find_nvpair_attr_delegate(cib_t * the_cib, const char *attr, const char *section
                           char **value, const char *user_name)
 {
     int offset = 0;
-    static int xpath_max = 1024;
     int rc = pcmk_ok;
 
     char *xpath_string = NULL;
@@ -92,16 +93,16 @@ find_nvpair_attr_delegate(cib_t * the_cib, const char *attr, const char *section
         return -EINVAL;
     }
 
-    xpath_string = calloc(1, xpath_max);
+    xpath_string = calloc(1, XPATH_MAX);
     if (xpath_string == NULL) {
         crm_perror(LOG_CRIT, "Could not create xpath");
         return -ENOMEM;
     }
 
-    attr_snprintf(xpath_string, offset, xpath_max, "%.128s", get_object_path(section));
+    attr_snprintf(xpath_string, offset, XPATH_MAX, "%.128s", get_object_path(section));
 
     if (safe_str_eq(node_type, XML_CIB_TAG_TICKETS)) {
-        attr_snprintf(xpath_string, offset, xpath_max, "//%s", node_type);
+        attr_snprintf(xpath_string, offset, XPATH_MAX, "//%s", node_type);
 
     } else if (node_uuid) {
         const char *node_type = XML_CIB_TAG_NODE;
@@ -110,29 +111,29 @@ find_nvpair_attr_delegate(cib_t * the_cib, const char *attr, const char *section
             node_type = XML_CIB_TAG_STATE;
             set_type = XML_TAG_TRANSIENT_NODEATTRS;
         }
-        attr_snprintf(xpath_string, offset, xpath_max, "//%s[@id='%s']", node_type,
+        attr_snprintf(xpath_string, offset, XPATH_MAX, "//%s[@id='%s']", node_type,
                       node_uuid);
     }
 
     if (set_name) {
-        attr_snprintf(xpath_string, offset, xpath_max, "//%s[@id='%.128s']", set_type,
+        attr_snprintf(xpath_string, offset, XPATH_MAX, "//%s[@id='%.128s']", set_type,
                       set_name);
     } else {
-        attr_snprintf(xpath_string, offset, xpath_max, "//%s", set_type);
+        attr_snprintf(xpath_string, offset, XPATH_MAX, "//%s", set_type);
     }
 
-    attr_snprintf(xpath_string, offset, xpath_max, "//nvpair[");
+    attr_snprintf(xpath_string, offset, XPATH_MAX, "//nvpair[");
     if (attr_id) {
-        attr_snprintf(xpath_string, offset, xpath_max, "@id='%s'", attr_id);
+        attr_snprintf(xpath_string, offset, XPATH_MAX, "@id='%s'", attr_id);
     }
 
     if (attr_name) {
         if (attr_id) {
-            attr_snprintf(xpath_string, offset, xpath_max, " and ");
+            attr_snprintf(xpath_string, offset, XPATH_MAX, " and ");
         }
-        attr_snprintf(xpath_string, offset, xpath_max, "@name='%.128s'", attr_name);
+        attr_snprintf(xpath_string, offset, XPATH_MAX, "@name='%.128s'", attr_name);
     }
-    attr_snprintf(xpath_string, offset, xpath_max, "]");
+    attr_snprintf(xpath_string, offset, XPATH_MAX, "]");
     CRM_LOG_ASSERT(offset > 0);
 
     rc = cib_internal_op(the_cib, CIB_OP_QUERY, NULL, xpath_string, NULL, &xml_search,
@@ -304,14 +305,10 @@ update_attr_delegate(cib_t * the_cib, int call_options,
     }
 
   do_modify:
-    xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_NVPAIR);
+    xml_obj = crm_create_nvpair_xml(xml_obj, attr_id, attr_name, attr_value);
     if (xml_top == NULL) {
         xml_top = xml_obj;
     }
-
-    crm_xml_add(xml_obj, XML_ATTR_ID, attr_id);
-    crm_xml_add(xml_obj, XML_NVPAIR_ATTR_NAME, attr_name);
-    crm_xml_add(xml_obj, XML_NVPAIR_ATTR_VALUE, attr_value);
 
     crm_log_xml_trace(xml_top, "update_attr");
     rc = cib_internal_op(the_cib, CIB_OP_MODIFY, NULL, section, xml_top, NULL,
@@ -376,10 +373,7 @@ delete_attr_delegate(cib_t * the_cib, int options,
         attr_id = local_attr_id;
     }
 
-    xml_obj = create_xml_node(NULL, XML_CIB_TAG_NVPAIR);
-    crm_xml_add(xml_obj, XML_ATTR_ID, attr_id);
-    crm_xml_add(xml_obj, XML_NVPAIR_ATTR_NAME, attr_name);
-    crm_xml_add(xml_obj, XML_NVPAIR_ATTR_VALUE, attr_value);
+    xml_obj = crm_create_nvpair_xml(NULL, attr_id, attr_name, attr_value);
 
     rc = cib_internal_op(the_cib, CIB_OP_DELETE, NULL, section, xml_obj, NULL,
                          options | cib_quorum_override, user_name);

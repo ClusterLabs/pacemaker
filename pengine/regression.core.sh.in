@@ -252,7 +252,6 @@ function do_test {
 	info "	Created expected outputs"
     fi
 
-    sed -i -e '/meta-data/d' $summary_output
     diff $diff_opts $summary $summary_output >/dev/null
     rc2=$?
     if [ $rc2 != 0 ]; then

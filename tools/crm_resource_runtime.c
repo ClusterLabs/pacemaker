@@ -112,13 +112,13 @@ find_rsc_or_clone(const char *rsc, pe_working_set_t * data_set)
     return the_rsc;
 }
 
+#define XPATH_MAX 1024
 
 static int
 find_resource_attr(cib_t * the_cib, const char *attr, const char *rsc, const char *set_type,
                    const char *set_name, const char *attr_id, const char *attr_name, char **value)
 {
     int offset = 0;
-    static int xpath_max = 1024;
     int rc = pcmk_ok;
     xmlNode *xml_search = NULL;
     char *xpath_string = NULL;
@@ -131,31 +131,31 @@ find_resource_attr(cib_t * the_cib, const char *attr, const char *rsc, const cha
         return -ENOTCONN;
     }
 
-    xpath_string = calloc(1, xpath_max);
+    xpath_string = calloc(1, XPATH_MAX);
     offset +=
-        snprintf(xpath_string + offset, xpath_max - offset, "%s", get_object_path("resources"));
+        snprintf(xpath_string + offset, XPATH_MAX - offset, "%s", get_object_path("resources"));
 
-    offset += snprintf(xpath_string + offset, xpath_max - offset, "//*[@id=\"%s\"]", rsc);
+    offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "//*[@id=\"%s\"]", rsc);
 
     if (set_type) {
-        offset += snprintf(xpath_string + offset, xpath_max - offset, "/%s", set_type);
+        offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "/%s", set_type);
         if (set_name) {
-            offset += snprintf(xpath_string + offset, xpath_max - offset, "[@id=\"%s\"]", set_name);
+            offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "[@id=\"%s\"]", set_name);
         }
     }
 
-    offset += snprintf(xpath_string + offset, xpath_max - offset, "//nvpair[");
+    offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "//nvpair[");
     if (attr_id) {
-        offset += snprintf(xpath_string + offset, xpath_max - offset, "@id=\"%s\"", attr_id);
+        offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "@id=\"%s\"", attr_id);
     }
 
     if (attr_name) {
         if (attr_id) {
-            offset += snprintf(xpath_string + offset, xpath_max - offset, " and ");
+            offset += snprintf(xpath_string + offset, XPATH_MAX - offset, " and ");
         }
-        offset += snprintf(xpath_string + offset, xpath_max - offset, "@name=\"%s\"", attr_name);
+        offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "@name=\"%s\"", attr_name);
     }
-    offset += snprintf(xpath_string + offset, xpath_max - offset, "]");
+    offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "]");
     CRM_LOG_ASSERT(offset > 0);
 
     rc = the_cib->cmds->query(the_cib, xpath_string, &xml_search,
@@ -356,14 +356,10 @@ cli_resource_update_attribute(const char *rsc_id, const char *attr_set, const ch
         }
     }
 
-    xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_NVPAIR);
+    xml_obj = crm_create_nvpair_xml(xml_obj, attr_id, attr_name, attr_value);
     if (xml_top == NULL) {
         xml_top = xml_obj;
     }
-
-    crm_xml_add(xml_obj, XML_ATTR_ID, attr_id);
-    crm_xml_add(xml_obj, XML_NVPAIR_ATTR_NAME, attr_name);
-    crm_xml_add(xml_obj, XML_NVPAIR_ATTR_VALUE, attr_value);
 
     crm_log_xml_debug(xml_top, "Update");
 
@@ -457,10 +453,7 @@ cli_resource_delete_attribute(const char *rsc_id, const char *attr_set, const ch
         attr_id = local_attr_id;
     }
 
-    xml_obj = create_xml_node(NULL, XML_CIB_TAG_NVPAIR);
-    crm_xml_add(xml_obj, XML_ATTR_ID, attr_id);
-    crm_xml_add(xml_obj, XML_NVPAIR_ATTR_NAME, attr_name);
-
+    xml_obj = crm_create_nvpair_xml(NULL, attr_id, attr_name, NULL);
     crm_log_xml_debug(xml_obj, "Delete");
 
     CRM_ASSERT(cib);
@@ -559,11 +552,7 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
     crm_xml_add(params, key, "60000");  /* 1 minute */
     free(key);
 
-    our_pid = calloc(1, 11);
-    if (our_pid != NULL) {
-        snprintf(our_pid, 10, "%d", getpid());
-        our_pid[10] = '\0';
-    }
+    our_pid = crm_getpid_s();
     cmd = create_request(op, msg_data, router_node, CRM_SYSTEM_CRMD, crm_system_name, our_pid);
 
 /* 	crm_log_xml_warn(cmd, "send_lrm_rsc_op"); */
@@ -966,7 +955,7 @@ update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
     }
 
     if(simulate) {
-        pid = crm_itoa(getpid());
+        pid = crm_getpid_s();
         shadow_cib = cib_shadow_new(pid);
         shadow_file = get_shadow_file(pid);
 

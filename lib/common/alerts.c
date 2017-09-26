@@ -82,19 +82,18 @@ crm_alert_entry_new(const char *id, const char *path)
 void
 crm_free_alert_entry(crm_alert_entry_t *entry)
 {		
-    free(entry->id);		
-    free(entry->path);		
-    free(entry->tstamp_format);		
-    free(entry->recipient);		
+    if (entry) {
+        free(entry->id);
+        free(entry->path);
+        free(entry->tstamp_format);
+        free(entry->recipient);
 
-    if(entry->select_attribute_name) {
         g_strfreev(entry->select_attribute_name);
+        if (entry->envvars) {
+            g_hash_table_destroy(entry->envvars);
+        }
+        free(entry);
     }
-
-    if (entry->envvars) {		
-        g_hash_table_destroy(entry->envvars);
-    }		
-    free(entry);		
 }		
 
 crm_alert_envvar_t *

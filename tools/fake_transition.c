@@ -63,8 +63,7 @@ static void
 inject_transient_attr(xmlNode * cib_node, const char *name, const char *value)
 {
     xmlNode *attrs = NULL;
-    xmlNode *container = NULL;
-    xmlNode *nvp = NULL;
+    xmlNode *instance_attrs = NULL;
     xmlChar *node_path;
     const char *node_uuid = ID(cib_node);
 
@@ -79,16 +78,13 @@ inject_transient_attr(xmlNode * cib_node, const char *name, const char *value)
         crm_xml_add(attrs, XML_ATTR_ID, node_uuid);
     }
 
-    container = first_named_child(attrs, XML_TAG_ATTR_SETS);
-    if (container == NULL) {
-        container = create_xml_node(attrs, XML_TAG_ATTR_SETS);
-        crm_xml_add(container, XML_ATTR_ID, node_uuid);
+    instance_attrs = first_named_child(attrs, XML_TAG_ATTR_SETS);
+    if (instance_attrs == NULL) {
+        instance_attrs = create_xml_node(attrs, XML_TAG_ATTR_SETS);
+        crm_xml_add(instance_attrs, XML_ATTR_ID, node_uuid);
     }
 
-    nvp = create_xml_node(container, XML_CIB_TAG_NVPAIR);
-    crm_xml_set_id(nvp, "%s-%s", name, node_uuid);
-    crm_xml_add(nvp, XML_NVPAIR_ATTR_NAME, name);
-    crm_xml_add(nvp, XML_NVPAIR_ATTR_VALUE, value);
+    crm_create_nvpair_xml(instance_attrs, NULL, name, value);
 }
 
 static void
@@ -188,23 +184,20 @@ static xmlNode *
 inject_node_state(cib_t * cib_conn, const char *node, const char *uuid)
 {
     int rc = pcmk_ok;
-    int max = strlen(rsc_template) + strlen(node) + 1;
-    char *xpath = NULL;
     xmlNode *cib_object = NULL;
-
-    xpath = calloc(1, max);
+    char *xpath = crm_strdup_printf(node_template, node);
 
     if (bringing_nodes_online) {
         create_node_entry(cib_conn, node);
     }
 
-    snprintf(xpath, max, node_template, node);
     rc = cib_conn->cmds->query(cib_conn, xpath, &cib_object,
                                cib_xpath | cib_sync_call | cib_scope_local);
 
     if (cib_object && ID(cib_object) == NULL) {
         crm_err("Detected multiple node_state entries for xpath=%s, bailing", xpath);
         crm_log_xml_warn(cib_object, "Duplicates");
+        free(xpath);
         crm_exit(ENOTUNIQ);
     }
 
@@ -263,7 +256,7 @@ find_resource_xml(xmlNode * cib_node, const char *resource)
     char *xpath = NULL;
     xmlNode *match = NULL;
     const char *node = crm_element_value(cib_node, XML_ATTR_UNAME);
-    int max = strlen(rsc_template) + strlen(resource) + strlen(node) + 1;
+    int max = strlen(rsc_template) + strlen(node) + strlen(resource) + 1;
 
     xpath = calloc(1, max);
 
@@ -339,11 +332,12 @@ inject_resource(xmlNode * cib_node, const char *resource, const char *rclass, co
     return cib_resource;
 }
 
+#define XPATH_MAX 1024
+
 static int
 find_ticket_state(cib_t * the_cib, const char *ticket_id, xmlNode ** ticket_state_xml)
 {
     int offset = 0;
-    static int xpath_max = 1024;
     int rc = pcmk_ok;
     xmlNode *xml_search = NULL;
 
@@ -352,11 +346,11 @@ find_ticket_state(cib_t * the_cib, const char *ticket_id, xmlNode ** ticket_stat
     CRM_ASSERT(ticket_state_xml != NULL);
     *ticket_state_xml = NULL;
 
-    xpath_string = calloc(1, xpath_max);
-    offset += snprintf(xpath_string + offset, xpath_max - offset, "%s", "/cib/status/tickets");
+    xpath_string = calloc(1, XPATH_MAX);
+    offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "%s", "/cib/status/tickets");
 
     if (ticket_id) {
-        offset += snprintf(xpath_string + offset, xpath_max - offset, "/%s[@id=\"%s\"]",
+        offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "/%s[@id=\"%s\"]",
                            XML_CIB_TAG_TICKET_STATE, ticket_id);
     }
     CRM_LOG_ASSERT(offset > 0);

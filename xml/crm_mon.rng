@@ -307,6 +307,7 @@
             <attribute name="type">
                 <choice>
                     <value>docker</value>
+                    <value>rkt</value>
                 </choice>
             </attribute>
             <attribute name="image"> <text/> </attribute>

@@ -241,10 +241,12 @@ crm_send_tls(gnutls_session_t * session, const char *buf, size_t len)
         rc = gnutls_record_send(*session, unsent, len);
 
         if (rc == GNUTLS_E_INTERRUPTED || rc == GNUTLS_E_AGAIN) {
-            crm_debug("Retry");
+            crm_trace("Retrying to send %llu bytes",
+                      (unsigned long long) len);
 
         } else if (rc < 0) {
-            crm_err("Connection terminated rc = %d", rc);
+            crm_err("Connection terminated: %s " CRM_XS " rc=%d",
+                    gnutls_strerror(rc), rc);
             break;
 
         } else if (rc < len) {
@@ -1013,4 +1015,32 @@ crm_remote_accept(int ssock)
 #endif
 
     return csock;
+}
+
+/*!
+ * \brief Get the default remote connection TCP port on this host
+ *
+ * \return Remote connection TCP port number
+ */
+int
+crm_default_remote_port()
+{
+    static int port = 0;
+
+    if (port == 0) {
+        const char *env = getenv("PCMK_remote_port");
+
+        if (env) {
+            errno = 0;
+            port = strtol(env, NULL, 10);
+            if (errno || (port < 1) || (port > 65535)) {
+                crm_warn("Environment variable PCMK_remote_port has invalid value '%s', using %d instead",
+                         env, DEFAULT_REMOTE_PORT);
+                port = DEFAULT_REMOTE_PORT;
+            }
+        } else {
+            port = DEFAULT_REMOTE_PORT;
+        }
+    }
+    return port;
 }

@@ -167,6 +167,12 @@
 #  define XML_CIB_TAG_ALERTS    	"alerts"
 #  define XML_CIB_TAG_ALERT   		"alert"
 #  define XML_CIB_TAG_ALERT_RECIPIENT	"recipient"
+#  define XML_CIB_TAG_ALERT_SELECT      "select"
+#  define XML_CIB_TAG_ALERT_ATTRIBUTES  "select_attributes"
+#  define XML_CIB_TAG_ALERT_FENCING     "select_fencing"
+#  define XML_CIB_TAG_ALERT_NODES       "select_nodes"
+#  define XML_CIB_TAG_ALERT_RESOURCES   "select_resources"
+#  define XML_CIB_TAG_ALERT_ATTR        "attribute"
 
 #  define XML_CIB_TAG_STATE         	"node_state"
 #  define XML_CIB_TAG_NODE          	"node"
@@ -235,6 +241,8 @@
 #  define XML_OP_ATTR_DEPENDENT "dependent-on"
 #  define XML_OP_ATTR_ORIGIN		"interval-origin"
 #  define XML_OP_ATTR_PENDING		"record-pending"
+#  define XML_OP_ATTR_DIGESTS_ALL       "digests-all"
+#  define XML_OP_ATTR_DIGESTS_SECURE    "digests-secure"
 
 #  define XML_CIB_TAG_LRM		"lrm"
 #  define XML_LRM_TAG_RESOURCES     	"lrm_resources"
@@ -263,7 +271,6 @@
 #  define XML_NODE_IS_PEER    	"crmd"
 #  define XML_NODE_IS_REMOTE    	"remote_node"
 #  define XML_NODE_IS_FENCED		"node_fenced"
-#  define XML_NODE_IS_UNFENCED	    	"node_unfenced"
 #  define XML_NODE_IS_MAINTENANCE   "node_in_maintenance"
 
 #  define XML_CIB_ATTR_SHUTDOWN       	"shutdown"
@@ -371,8 +378,6 @@
 #  define XML_ALERT_ATTR_TIMEOUT	"timeout"
 #  define XML_ALERT_ATTR_TSTAMP_FORMAT	"timestamp-format"
 #  define XML_ALERT_ATTR_REC_VALUE	"value"
-#  define XML_ALERT_ATTR_SELECT_KIND	"kind"
-#  define XML_ALERT_ATTR_SELECT_ATTRIBUTE_NAME	"attribute_name"
 
 #  define XML_CIB_TAG_GENERATION_TUPPLE	"generation_tuple"
 

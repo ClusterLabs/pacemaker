@@ -203,7 +203,7 @@ get_action_timeout(stonith_device_t * device, const char *action, int default_ti
         }
 
         /* If the device config specified an action-specific timeout, use it */
-        snprintf(buffer, sizeof(buffer) - 1, "pcmk_%s_timeout", action);
+        snprintf(buffer, sizeof(buffer), "pcmk_%s_timeout", action);
         value = g_hash_table_lookup(device->params, buffer);
         if (value) {
             return atoi(value);
@@ -738,22 +738,23 @@ is_nodeid_required(xmlNode * xml)
     return TRUE;
 }
 
+#define MAX_ACTION_LEN 256
+
 static char *
 add_action(char *actions, const char *action)
 {
-    static size_t len = 256;
     int offset = 0;
 
     if (actions == NULL) {
-        actions = calloc(1, len);
+        actions = calloc(1, MAX_ACTION_LEN);
     } else {
         offset = strlen(actions);
     }
 
     if (offset > 0) {
-        offset += snprintf(actions+offset, len-offset, " ");
+        offset += snprintf(actions+offset, MAX_ACTION_LEN - offset, " ");
     }
-    offset += snprintf(actions+offset, len-offset, "%s", action);
+    offset += snprintf(actions+offset, MAX_ACTION_LEN - offset, "%s", action);
 
     return actions;
 }

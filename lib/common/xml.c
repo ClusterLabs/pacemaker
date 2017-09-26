@@ -129,10 +129,11 @@ static inline bool TRACKING_CHANGES(xmlNode *xml)
         if(buffer && rc < 0) {                                          \
             crm_perror(LOG_ERR, "snprintf failed at offset %d", offset); \
             (buffer)[(offset)] = 0;                                     \
+            break;                                                      \
         } else if(rc >= ((max) - (offset))) {                           \
             char *tmp = NULL;                                           \
             (max) = QB_MAX(CHUNK_SIZE, (max) * 2);                      \
-            tmp = realloc_safe((buffer), (max) + 1);                         \
+            tmp = realloc_safe((buffer), (max));                        \
             CRM_ASSERT(tmp);                                            \
             (buffer) = tmp;                                             \
         } else {                                                        \
@@ -149,7 +150,7 @@ insert_prefix(int options, char **buffer, int *offset, int *max, int depth)
 
         if ((*buffer) == NULL || spaces >= ((*max) - (*offset))) {
             (*max) = QB_MAX(CHUNK_SIZE, (*max) * 2);
-            (*buffer) = realloc_safe((*buffer), (*max) + 1);
+            (*buffer) = realloc_safe((*buffer), (*max));
         }
         memset((*buffer) + (*offset), ' ', spaces);
         (*offset) += spaces;
@@ -781,8 +782,8 @@ __xml_acl_post_process(xmlNode * xml)
         xmlAttr *xIter = NULL;
         char *path = xml_get_path(xml);
 
-        /* Always allow new scaffolding, ie. node with no attributes or only an 'id'
-         * Except in the ACLs section
+        /* Always allow new scaffolding (e.g. node with no attributes or only an
+         * 'id'), except in the ACLs section
          */
 
         for (xIter = crm_first_attr(xml); xIter != NULL; xIter = xIter->next) {
@@ -1866,11 +1867,10 @@ xml_patch_version_check(xmlNode *xml, xmlNode *patchset, int format)
 }
 
 static int
-xml_apply_patchset_v1(xmlNode *xml, xmlNode *patchset, bool check_version) 
+xml_apply_patchset_v1(xmlNode *xml, xmlNode *patchset)
 {
     int rc = pcmk_ok;
     int root_nodes_seen = 0;
-    char *version = crm_element_value_copy(xml, XML_ATTR_CRM_VERSION);
 
     xmlNode *child_diff = NULL;
     xmlNode *added = find_xml_node(patchset, "diff-added", FALSE);
@@ -1915,7 +1915,6 @@ xml_apply_patchset_v1(xmlNode *xml, xmlNode *patchset, bool check_version)
     purge_diff_markers(xml);       /* Purge prior to checking the digest */
 
     free_xml(old);
-    free(version);
     return rc;
 }
 
@@ -2020,7 +2019,7 @@ __xml_find_path(xmlNode *top, const char *key, int target_position)
 }
 
 static int
-xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset, bool check_version) 
+xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset)
 {
     int rc = pcmk_ok;
     xmlNode *change = NULL;
@@ -2185,10 +2184,10 @@ xml_apply_patchset(xmlNode *xml, xmlNode *patchset, bool check_version)
     if(rc == pcmk_ok) {
         switch(format) {
             case 1:
-                rc = xml_apply_patchset_v1(xml, patchset, check_version);
+                rc = xml_apply_patchset_v1(xml, patchset);
                 break;
             case 2:
-                rc = xml_apply_patchset_v2(xml, patchset, check_version);
+                rc = xml_apply_patchset_v2(xml, patchset);
                 break;
             default:
                 crm_err("Unknown patch format: %d", format);
@@ -4818,19 +4817,80 @@ replace_xml_child(xmlNode * parent, xmlNode * child, xmlNode * update, gboolean 
     return can_delete;
 }
 
+/*!
+ * \brief Create an XML name/value pair
+ *
+ * \param[in] parent  If not NULL, make new XML node a child of this one
+ * \param[in] id      If not NULL, use this as ID (otherwise auto-generate)
+ * \param[in] name    Name to use
+ * \param[in] value   Value to use
+ *
+ * \return New XML object on success, NULL otherwise
+ */
+xmlNode *
+crm_create_nvpair_xml(xmlNode *parent, const char *id, const char *name,
+                      const char *value)
+{
+    xmlNode *nvp;
+
+    /* id can be NULL so we auto-generate one, and name can be NULL if this
+     * will be used to delete a name/value pair by ID, but both can't be NULL
+     */
+    CRM_CHECK(id || name, return NULL);
+
+    nvp = create_xml_node(parent, XML_CIB_TAG_NVPAIR);
+    CRM_CHECK(nvp, return NULL);
+
+    if (id) {
+        crm_xml_add(nvp, XML_ATTR_ID, id);
+    } else {
+        const char *parent_id = ID(parent);
+
+        crm_xml_set_id(nvp, "%s-%s",
+                       (parent_id? parent_id : XML_CIB_TAG_NVPAIR), name);
+    }
+    crm_xml_add(nvp, XML_NVPAIR_ATTR_NAME, name);
+    crm_xml_add(nvp, XML_NVPAIR_ATTR_VALUE, value);
+    return nvp;
+}
+
+/*!
+ * \brief Create a CIB XML element for an operation
+ *
+ * \param[in] parent    If not NULL, make new XML node a child of this one
+ * \param[in] prefix    Generate an ID using this prefix
+ * \param[in] task      Operation task to set
+ * \param[in] interval  Operation interval to set
+ * \param[in] timeout   If not NULL, operation timeout to set
+ *
+ * \return New XML object on success, NULL otherwise
+ */
+xmlNode *
+crm_create_op_xml(xmlNode *parent, const char *prefix, const char *task,
+                  const char *interval, const char *timeout)
+{
+    xmlNode *xml_op;
+
+    CRM_CHECK(prefix && task && interval, return NULL);
+
+    xml_op = create_xml_node(parent, XML_ATTR_OP);
+    crm_xml_set_id(xml_op, "%s-%s-%s", prefix, task, interval);
+    crm_xml_add(xml_op, XML_LRM_ATTR_INTERVAL, interval);
+    crm_xml_add(xml_op, "name", task);
+    if (timeout) {
+        crm_xml_add(xml_op, XML_ATTR_TIMEOUT, timeout);
+    }
+    return xml_op;
+}
+
 void
 hash2nvpair(gpointer key, gpointer value, gpointer user_data)
 {
     const char *name = key;
     const char *s_value = value;
-
     xmlNode *xml_node = user_data;
-    xmlNode *xml_child = create_xml_node(xml_node, XML_CIB_TAG_NVPAIR);
 
-    crm_xml_add(xml_child, XML_ATTR_ID, name);
-    crm_xml_add(xml_child, XML_NVPAIR_ATTR_NAME, name);
-    crm_xml_add(xml_child, XML_NVPAIR_ATTR_VALUE, s_value);
-
+    crm_create_nvpair_xml(xml_node, name, name, s_value);
     crm_trace("dumped: name=%s value=%s", name, s_value);
 }
 
@@ -5088,6 +5148,8 @@ crm_xml_cleanup(void)
     xmlCleanupParser();
 }
 
+#define XPATH_MAX 512
+
 xmlNode *
 expand_idref(xmlNode * input, xmlNode * top)
 {
@@ -5107,11 +5169,11 @@ expand_idref(xmlNode * input, xmlNode * top)
     ref = crm_element_value(result, XML_ATTR_IDREF);
 
     if (ref != NULL) {
-        int xpath_max = 512, offset = 0;
+        int offset = 0;
 
-        xpath_string = calloc(1, xpath_max);
+        xpath_string = calloc(1, XPATH_MAX);
 
-        offset += snprintf(xpath_string + offset, xpath_max - offset, "//%s[@id='%s']", tag, ref);
+        offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "//%s[@id='%s']", tag, ref);
         CRM_LOG_ASSERT(offset > 0);
 
         result = get_xpath_object(xpath_string, top, LOG_ERR);

@@ -46,8 +46,8 @@
 lrmd_t *the_lrmd = NULL;
 crm_cluster_t *attrd_cluster = NULL;
 election_t *writer = NULL;
-int attrd_error = pcmk_ok;
 crm_trigger_t *attrd_config_read = NULL;
+static int attrd_exit_status = pcmk_ok;
 
 static void
 attrd_cpg_dispatch(cpg_handle_t handle,
@@ -87,7 +87,7 @@ attrd_cpg_destroy(gpointer unused)
 
     } else {
         crm_crit("Lost connection to Corosync service!");
-        attrd_error = ECONNRESET;
+        attrd_exit_status = ECONNRESET;
         attrd_shutdown(0);
     }
 }
@@ -97,7 +97,7 @@ attrd_cib_replaced_cb(const char *event, xmlNode * msg)
 {
     crm_notice("Updating all attributes after %s event", event);
     if(election_state(writer) == election_won) {
-        write_attributes(TRUE, FALSE);
+        write_attributes(TRUE);
     }
 }
 
@@ -114,22 +114,65 @@ attrd_cib_destroy_cb(gpointer user_data)
     } else {
         /* eventually this should trigger a reconnect, not a shutdown */
         crm_err("Lost connection to CIB service!");
-        attrd_error = ECONNRESET;
+        attrd_exit_status = ECONNRESET;
         attrd_shutdown(0);
     }
 
     return;
 }
 
-static cib_t *
+static void
+attrd_erase_cb(xmlNode *msg, int call_id, int rc, xmlNode *output,
+               void *user_data)
+{
+    do_crm_log_unlikely((rc? LOG_NOTICE : LOG_DEBUG),
+                        "Cleared transient attributes: %s "
+                        CRM_XS " xpath=%s rc=%d",
+                        pcmk_strerror(rc), (char *) user_data, rc);
+}
+
+#define XPATH_TRANSIENT "//node_state[@uname='%s']/" XML_TAG_TRANSIENT_NODEATTRS
+
+/*!
+ * \internal
+ * \brief Wipe all transient attributes for this node from the CIB
+ *
+ * Clear any previous transient node attributes from the CIB. This is
+ * normally done by the DC's crmd when this node leaves the cluster, but
+ * this handles the case where the node restarted so quickly that the
+ * cluster layer didn't notice.
+ *
+ * \todo If attrd respawns after crashing (see PCMK_respawned), ideally we'd
+ *       skip this and sync our attributes from the writer. However, currently
+ *       we reject any values for us that the writer has, in
+ *       attrd_peer_update().
+ */
+static void
+attrd_erase_attrs()
+{
+    int call_id;
+    char *xpath = crm_strdup_printf(XPATH_TRANSIENT, attrd_cluster->uname);
+
+    crm_info("Clearing transient attributes from CIB " CRM_XS " xpath=%s",
+             xpath);
+
+    call_id = the_cib->cmds->delete(the_cib, xpath, NULL,
+                                    cib_quorum_override | cib_xpath);
+    the_cib->cmds->register_callback_full(the_cib, call_id, 120, FALSE, xpath,
+                                          "attrd_erase_cb", attrd_erase_cb,
+                                          free);
+}
+
+static int
 attrd_cib_connect(int max_retry)
 {
-    int rc = -ENOTCONN;
     static int attempts = 0;
-    cib_t *connection = cib_new();
 
-    if(connection == NULL) {
-        return NULL;
+    int rc = -ENOTCONN;
+
+    the_cib = cib_new();
+    if (the_cib == NULL) {
+        return DAEMON_RESPAWN_STOP;
     }
 
     do {
@@ -139,7 +182,7 @@ attrd_cib_connect(int max_retry)
 
         attempts++;
         crm_debug("CIB signon attempt %d", attempts);
-        rc = connection->cmds->signon(connection, T_ATTRD, cib_command);
+        rc = the_cib->cmds->signon(the_cib, T_ATTRD, cib_command);
 
     } while(rc != pcmk_ok && attempts < max_retry);
 
@@ -148,32 +191,42 @@ attrd_cib_connect(int max_retry)
         goto cleanup;
     }
 
-    crm_info("Connected to the CIB after %d attempts", attempts);
+    crm_debug("Connected to the CIB after %d attempts", attempts);
 
-    rc = connection->cmds->set_connection_dnotify(connection, attrd_cib_destroy_cb);
+    rc = the_cib->cmds->set_connection_dnotify(the_cib, attrd_cib_destroy_cb);
     if (rc != pcmk_ok) {
         crm_err("Could not set disconnection callback");
         goto cleanup;
     }
 
-    rc = connection->cmds->add_notify_callback(connection, T_CIB_REPLACE_NOTIFY, attrd_cib_replaced_cb);
+    rc = the_cib->cmds->add_notify_callback(the_cib, T_CIB_REPLACE_NOTIFY, attrd_cib_replaced_cb);
     if(rc != pcmk_ok) {
         crm_err("Could not set CIB notification callback");
         goto cleanup;
     }
 
-    rc = connection->cmds->add_notify_callback(connection, T_CIB_DIFF_NOTIFY, attrd_cib_updated_cb);
+    rc = the_cib->cmds->add_notify_callback(the_cib, T_CIB_DIFF_NOTIFY, attrd_cib_updated_cb);
     if (rc != pcmk_ok) {
         crm_err("Could not set CIB notification callback (update)");
         goto cleanup;
     }
 
-    return connection;
+    // We have no attribute values in memory, wipe the CIB to match
+    attrd_erase_attrs();
+
+    // Set a trigger for reading the CIB (for the alerts section)
+    attrd_config_read = mainloop_add_trigger(G_PRIORITY_HIGH, attrd_read_options, NULL);
+
+    // Always read the CIB at start-up
+    mainloop_set_trigger(attrd_config_read);
+
+    return pcmk_ok;
 
   cleanup:
-    connection->cmds->signoff(connection);
-    cib_delete(connection);
-    return NULL;
+    the_cib->cmds->signoff(the_cib);
+    cib_delete(the_cib);
+    the_cib = NULL;
+    return DAEMON_RESPAWN_STOP;
 }
 
 static int32_t
@@ -241,6 +294,24 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     return 0;
 }
 
+static int
+attrd_cluster_connect()
+{
+    attrd_cluster = calloc(1, sizeof(crm_cluster_t));
+
+    attrd_cluster->destroy = attrd_cpg_destroy;
+    attrd_cluster->cpg.cpg_deliver_fn = attrd_cpg_dispatch;
+    attrd_cluster->cpg.cpg_confchg_fn = pcmk_cpg_membership;
+
+    crm_set_status_callback(&attrd_peer_change_cb);
+
+    if (crm_cluster_connect(attrd_cluster) == FALSE) {
+        crm_err("Cluster connection failed");
+        return DAEMON_RESPAWN_STOP;
+    }
+    return pcmk_ok;
+}
+
 /* *INDENT-OFF* */
 static struct crm_option long_options[] = {
     /* Top-level Options */
@@ -254,7 +325,6 @@ static struct crm_option long_options[] = {
 int
 main(int argc, char **argv)
 {
-    int rc = pcmk_ok;
     int flag = 0;
     int index = 0;
     int argerr = 0;
@@ -297,37 +367,21 @@ main(int argc, char **argv)
     crm_info("Starting up");
     attributes = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free_attribute);
 
-    attrd_cluster = malloc(sizeof(crm_cluster_t));
-
-    attrd_cluster->destroy = attrd_cpg_destroy;
-    attrd_cluster->cpg.cpg_deliver_fn = attrd_cpg_dispatch;
-    attrd_cluster->cpg.cpg_confchg_fn = pcmk_cpg_membership;
-
-    crm_set_status_callback(&attrd_peer_change_cb);
-
-    if (crm_cluster_connect(attrd_cluster) == FALSE) {
-        crm_err("Cluster connection failed");
-        rc = DAEMON_RESPAWN_STOP;
+    attrd_exit_status = attrd_cluster_connect();
+    if (attrd_exit_status != pcmk_ok) {
         goto done;
     }
     crm_info("Cluster connection active");
 
+    attrd_exit_status = attrd_cib_connect(10);
+    if (attrd_exit_status != pcmk_ok) {
+        goto done;
+    }
+    crm_info("CIB connection active");
+
     writer = election_init(T_ATTRD, attrd_cluster->uname, 120000, attrd_election_cb);
     attrd_init_ipc(&ipcs, attrd_ipc_dispatch);
     crm_info("Accepting attribute updates");
-
-    the_cib = attrd_cib_connect(10);
-    if (the_cib == NULL) {
-        rc = DAEMON_RESPAWN_STOP;
-        goto done;
-    }
-
-    crm_info("CIB connection active");
-
-    attrd_config_read = mainloop_add_trigger(G_PRIORITY_HIGH, attrd_read_options, NULL);
-
-    /* Reading of cib(Alert section) after the start */
-    mainloop_set_trigger(attrd_config_read);
 
     attrd_run_mainloop();
 
@@ -344,8 +398,5 @@ main(int argc, char **argv)
     attrd_lrmd_disconnect();
     attrd_cib_disconnect();
 
-    if(attrd_error) {
-        return crm_exit(attrd_error);
-    }
-    return crm_exit(rc);
+    return crm_exit(attrd_exit_status);
 }

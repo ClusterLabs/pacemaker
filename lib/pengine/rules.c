@@ -160,22 +160,25 @@ pe_test_expression_full(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e 
             accept = test_role_expression(expr, role, now);
             break;
 
+#ifdef ENABLE_VERSIONED_ATTRS
         case version_expr:
-            if (node_hash &&
-                g_hash_table_lookup_extended(node_hash, "#ra-version", NULL, NULL)) {
+            if (node_hash && g_hash_table_lookup_extended(node_hash,
+                                                          CRM_ATTR_RA_VERSION,
+                                                          NULL, NULL)) {
                 accept = test_attr_expression(expr, node_hash, now);
             } else {
                 // we are going to test it when we have ra-version
                 accept = TRUE;
             }
             break;
+#endif
 
         default:
             CRM_CHECK(FALSE /* bad type */ , return FALSE);
             accept = FALSE;
     }
     if (node_hash) {
-        uname = g_hash_table_lookup(node_hash, "#uname");
+        uname = g_hash_table_lookup(node_hash, CRM_ATTR_UNAME);
     }
 
     crm_trace("Expression %s %s on %s",
@@ -201,14 +204,18 @@ find_expression_type(xmlNode * expr)
     } else if (safe_str_neq(tag, "expression")) {
         return not_expr;
 
-    } else if (safe_str_eq(attr, "#uname") || safe_str_eq(attr, "#kind") || safe_str_eq(attr, "#id")) {
+    } else if (safe_str_eq(attr, CRM_ATTR_UNAME)
+               || safe_str_eq(attr, CRM_ATTR_KIND)
+               || safe_str_eq(attr, CRM_ATTR_ID)) {
         return loc_expr;
 
-    } else if (safe_str_eq(attr, "#role")) {
+    } else if (safe_str_eq(attr, CRM_ATTR_ROLE)) {
         return role_expr;
 
-    } else if (safe_str_eq(attr, "#ra-version")) {
+#ifdef ENABLE_VERSIONED_ATTRS
+    } else if (safe_str_eq(attr, CRM_ATTR_RA_VERSION)) {
         return version_expr;
+#endif
     }
 
     return attr_expr;
@@ -390,7 +397,7 @@ pe_test_attr_expression_full(xmlNode * expr, GHashTable * hash, crm_time_t * now
         }
 
     } else if (value == NULL || h_val == NULL) {
-        /* the comparision is meaningless from this point on */
+        // The comparison is meaningless from this point on
         accept = FALSE;
 
     } else if (safe_str_eq(op, "lt")) {
@@ -755,6 +762,7 @@ populate_hash(xmlNode * nvpair_list, GHashTable * hash, gboolean overwrite, xmlN
     }
 }
 
+#ifdef ENABLE_VERSIONED_ATTRS
 static xmlNode*
 get_versioned_rule(xmlNode * attr_set)
 {
@@ -807,6 +815,7 @@ add_versioned_attributes(xmlNode * attr_set, xmlNode * versioned_attrs)
 
     add_node_nocopy(versioned_attrs, NULL, attr_set_copy);
 }
+#endif
 
 typedef struct unpack_data_s {
     gboolean overwrite;
@@ -826,16 +835,20 @@ unpack_attr_set(gpointer data, gpointer user_data)
         return;
     }
 
+#ifdef ENABLE_VERSIONED_ATTRS
     if (get_versioned_rule(pair->attr_set) && !(unpack_data->node_hash &&
-        g_hash_table_lookup_extended(unpack_data->node_hash, "#ra-version", NULL, NULL))) {
+        g_hash_table_lookup_extended(unpack_data->node_hash,
+                                     CRM_ATTR_RA_VERSION, NULL, NULL))) {
         // we haven't actually tested versioned expressions yet
         return;
     }
+#endif
 
     crm_trace("Adding attributes from %s", pair->name);
     populate_hash(pair->attr_set, unpack_data->hash, unpack_data->overwrite, unpack_data->top);
 }
 
+#ifdef ENABLE_VERSIONED_ATTRS
 static void
 unpack_versioned_attr_set(gpointer data, gpointer user_data)
 {
@@ -848,6 +861,7 @@ unpack_versioned_attr_set(gpointer data, gpointer user_data)
 
     add_versioned_attributes(pair->attr_set, unpack_data->hash);
 }
+#endif
 
 static GListPtr
 make_pairs_and_populate_data(xmlNode * top, xmlNode * xml_obj, const char *set_name,
@@ -916,6 +930,7 @@ unpack_instance_attributes(xmlNode * top, xmlNode * xml_obj, const char *set_nam
     }
 }
 
+#ifdef ENABLE_VERSIONED_ATTRS
 void
 pe_unpack_versioned_attributes(xmlNode * top, xmlNode * xml_obj, const char *set_name,
                                GHashTable * node_hash, xmlNode * hash, crm_time_t * now)
@@ -929,6 +944,7 @@ pe_unpack_versioned_attributes(xmlNode * top, xmlNode * xml_obj, const char *set
         g_list_free_full(pairs, free);
     }
 }
+#endif
 
 char *
 pe_expand_re_matches(const char *string, pe_re_match_data_t *match_data)
@@ -987,6 +1003,7 @@ pe_expand_re_matches(const char *string, pe_re_match_data_t *match_data)
     return result;
 }
 
+#ifdef ENABLE_VERSIONED_ATTRS
 GHashTable*
 pe_unpack_versioned_parameters(xmlNode *versioned_params, const char *ra_version)
 {
@@ -997,7 +1014,8 @@ pe_unpack_versioned_parameters(xmlNode *versioned_params, const char *ra_version
         xmlNode *attr_set = __xml_first_child(versioned_params);
 
         if (attr_set) {
-            g_hash_table_insert(node_hash, strdup("#" XML_ATTR_RA_VERSION), strdup(ra_version));
+            g_hash_table_insert(node_hash, strdup(CRM_ATTR_RA_VERSION),
+                                strdup(ra_version));
             unpack_instance_attributes(NULL, versioned_params, crm_element_name(attr_set),
                                        node_hash, hash, NULL, FALSE, NULL);
         }
@@ -1007,3 +1025,4 @@ pe_unpack_versioned_parameters(xmlNode *versioned_params, const char *ra_version
 
     return hash;
 }
+#endif

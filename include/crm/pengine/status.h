@@ -97,7 +97,9 @@ typedef struct pe_working_set_s {
 
     GHashTable *config_hash;
     GHashTable *tickets;
-    GHashTable *singletons; /* Actions for which there can be only one - ie. fence nodeX */
+
+    // Actions for which there can be only one (e.g. fence nodeX)
+    GHashTable *singletons;
 
     GListPtr nodes;
     GListPtr resources;
@@ -310,14 +312,18 @@ struct resource_s {
 
     pe_working_set_t *cluster;
 
+#if ENABLE_VERSIONED_ATTRS
     xmlNode *versioned_parameters;
+#endif
 };
 
+#if ENABLE_VERSIONED_ATTRS
 // Used as action->action_details if action->rsc is not NULL
 typedef struct pe_rsc_action_details_s {
     xmlNode *versioned_parameters;
     xmlNode *versioned_meta;
 } pe_rsc_action_details_t;
+#endif
 
 struct pe_action_s {
     int id;
@@ -329,7 +335,6 @@ struct pe_action_s {
 
     char *task;
     char *uuid;
-    char *reason;
     char *cancel_task;
 
     enum pe_action_flags flags;
@@ -374,6 +379,8 @@ struct pe_action_s {
      * except for API backward compatibility.
      */
     void *action_details; // varies by type of action
+
+    char *reason;
 };
 
 struct ticket_s {
@@ -458,7 +465,9 @@ node_t *pe_find_node_id(GListPtr node_list, const char *id);
 node_t *pe_find_node_any(GListPtr node_list, const char *id, const char *uname);
 GListPtr find_operations(const char *rsc, const char *node, gboolean active_filter,
                          pe_working_set_t * data_set);
+#if ENABLE_VERSIONED_ATTRS
 pe_rsc_action_details_t *pe_rsc_action_details(pe_action_t *action);
+#endif
 
 /*!
  * \brief Check whether a resource is any clone type

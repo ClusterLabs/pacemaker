@@ -1140,7 +1140,8 @@ static void
 stonith_shutdown(int nsig)
 {
     stonith_shutdown_flag = TRUE;
-    crm_info("Terminating with  %d clients", crm_hash_table_size(client_connections));
+    crm_info("Terminating with %d clients",
+             crm_hash_table_size(client_connections));
     if (mainloop != NULL && g_main_is_running(mainloop)) {
         g_main_quit(mainloop);
     } else {
@@ -1289,7 +1290,7 @@ main(int argc, char **argv)
     int argerr = 0;
     int option_index = 0;
     crm_cluster_t cluster;
-    const char *actions[] = { "reboot", "off", "list", "monitor", "status" };
+    const char *actions[] = { "reboot", "off", "on", "list", "monitor", "status" };
 
     crm_log_preinit("stonith-ng", argc, argv);
     crm_set_options(NULL, "mode [options]", long_options,
