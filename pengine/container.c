@@ -885,8 +885,7 @@ container_create_probe(resource_t * rsc, node_t * node, action_t * complete,
                 }
             }
         }
-        if(FALSE && tuple->remote) {
-            // TODO: Needed?
+        if(tuple->remote) {
             any_created |= tuple->remote->cmds->create_probe(tuple->remote, node, complete, force, data_set);
         }
     }
