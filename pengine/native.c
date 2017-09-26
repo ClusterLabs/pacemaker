@@ -2847,10 +2847,12 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
     if (rsc->exclusive_discover || top->exclusive_discover) {
         if (allowed == NULL) {
             /* exclusive discover is enabled and this node is not in the allowed list. */    
+            pe_rsc_trace(rsc, "Skipping probe for %s on node %s, A", rsc->id, node->details->id);
             return FALSE;
         } else if (allowed->rsc_discover_mode != discover_exclusive) {
             /* exclusive discover is enabled and this node is not marked
              * as a node this resource should be discovered on */ 
+            pe_rsc_trace(rsc, "Skipping probe for %s on node %s, B", rsc->id, node->details->id);
             return FALSE;
         }
     }
@@ -2861,16 +2863,18 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
          * However it wasn't and the node has discovery disabled, so
          * no need to probe for this resource.
          */
+        pe_rsc_trace(rsc, "Skipping probe for %s on node %s, C", rsc->id, node->details->id);
         return FALSE;
     }
 
     if (allowed && allowed->rsc_discover_mode == discover_never) {
         /* this resource is marked as not needing to be discovered on this node */
+        pe_rsc_trace(rsc, "Skipping probe for %s on node %s, discovery mode", rsc->id, node->details->id);
         return FALSE;
     }
 
     if(allowed != NULL && is_container_remote_node(allowed)) {
-        resource_t *remote = allowed->details->remote_rsc;
+        resource_t *remote = allowed->details->remote_rsc->container;
 
         if(remote->role == RSC_ROLE_STOPPED) {
             /* If the container is stopped, then we know anything that
@@ -2900,6 +2904,8 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
                                     top, generate_op_key(top->id, RSC_START, 0), NULL,
                                     pe_order_optional, data_set);
             }
+            pe_rsc_trace(rsc, "Skipping probe for %s on node %s, %s is stopped",
+                         rsc->id, node->details->id, remote->id);
             return FALSE;
 
             /* Here we really we want to check if remote->stop is required,
@@ -2919,6 +2925,8 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
             custom_action_order(remote, generate_op_key(remote->id, RSC_STOP, 0), NULL,
                                 top, generate_op_key(top->id, RSC_START, 0), NULL,
                                 pe_order_optional, data_set);
+        pe_rsc_trace(rsc, "Skipping probe for %s on node %s, %s is stopping, restarting or moving",
+                     rsc->id, node->details->id, remote->id);
             return FALSE;
 /*      } else {
  *            The container is running so there is no problem probing it
