@@ -201,7 +201,7 @@ container_color: rabbitmq:0 allocation score on overcloud-galera-2: 0
 container_color: rabbitmq:0 allocation score on overcloud-rabbit-0: 0
 container_color: rabbitmq:0 allocation score on overcloud-rabbit-1: 0
 container_color: rabbitmq:0 allocation score on overcloud-rabbit-2: 0
-container_color: rabbitmq:0 allocation score on rabbitmq-bundle-0: -INFINITY
+container_color: rabbitmq:0 allocation score on rabbitmq-bundle-0: 500
 container_color: rabbitmq:0 allocation score on rabbitmq-bundle-1: -INFINITY
 container_color: rabbitmq:0 allocation score on rabbitmq-bundle-2: -INFINITY
 container_color: rabbitmq:1 allocation score on overcloud-controller-0: 0
@@ -214,7 +214,7 @@ container_color: rabbitmq:1 allocation score on overcloud-rabbit-0: 0
 container_color: rabbitmq:1 allocation score on overcloud-rabbit-1: 0
 container_color: rabbitmq:1 allocation score on overcloud-rabbit-2: 0
 container_color: rabbitmq:1 allocation score on rabbitmq-bundle-0: -INFINITY
-container_color: rabbitmq:1 allocation score on rabbitmq-bundle-1: -INFINITY
+container_color: rabbitmq:1 allocation score on rabbitmq-bundle-1: 500
 container_color: rabbitmq:1 allocation score on rabbitmq-bundle-2: -INFINITY
 container_color: rabbitmq:2 allocation score on overcloud-controller-0: 0
 container_color: rabbitmq:2 allocation score on overcloud-controller-1: 0
@@ -227,7 +227,7 @@ container_color: rabbitmq:2 allocation score on overcloud-rabbit-1: 0
 container_color: rabbitmq:2 allocation score on overcloud-rabbit-2: 0
 container_color: rabbitmq:2 allocation score on rabbitmq-bundle-0: -INFINITY
 container_color: rabbitmq:2 allocation score on rabbitmq-bundle-1: -INFINITY
-container_color: rabbitmq:2 allocation score on rabbitmq-bundle-2: -INFINITY
+container_color: rabbitmq:2 allocation score on rabbitmq-bundle-2: 500
 native_color: galera-bundle-docker-0 allocation score on overcloud-controller-0: -INFINITY
 native_color: galera-bundle-docker-0 allocation score on overcloud-controller-1: -INFINITY
 native_color: galera-bundle-docker-0 allocation score on overcloud-controller-2: -INFINITY

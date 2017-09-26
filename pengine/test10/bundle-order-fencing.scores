@@ -183,7 +183,7 @@ container_color: galera-bundle-master allocation score on rabbitmq-bundle-2: -IN
 container_color: galera:0 allocation score on controller-0: 0
 container_color: galera:0 allocation score on controller-1: 0
 container_color: galera:0 allocation score on controller-2: 0
-container_color: galera:0 allocation score on galera-bundle-0: -INFINITY
+container_color: galera:0 allocation score on galera-bundle-0: INFINITY
 container_color: galera:0 allocation score on galera-bundle-1: -INFINITY
 container_color: galera:0 allocation score on galera-bundle-2: -INFINITY
 container_color: galera:0 allocation score on rabbitmq-bundle-0: -INFINITY
@@ -193,7 +193,7 @@ container_color: galera:1 allocation score on controller-0: 0
 container_color: galera:1 allocation score on controller-1: 0
 container_color: galera:1 allocation score on controller-2: 0
 container_color: galera:1 allocation score on galera-bundle-0: -INFINITY
-container_color: galera:1 allocation score on galera-bundle-1: -INFINITY
+container_color: galera:1 allocation score on galera-bundle-1: INFINITY
 container_color: galera:1 allocation score on galera-bundle-2: -INFINITY
 container_color: galera:1 allocation score on rabbitmq-bundle-0: -INFINITY
 container_color: galera:1 allocation score on rabbitmq-bundle-1: -INFINITY
@@ -203,7 +203,7 @@ container_color: galera:2 allocation score on controller-1: 0
 container_color: galera:2 allocation score on controller-2: 0
 container_color: galera:2 allocation score on galera-bundle-0: -INFINITY
 container_color: galera:2 allocation score on galera-bundle-1: -INFINITY
-container_color: galera:2 allocation score on galera-bundle-2: -INFINITY
+container_color: galera:2 allocation score on galera-bundle-2: INFINITY
 container_color: galera:2 allocation score on rabbitmq-bundle-0: -INFINITY
 container_color: galera:2 allocation score on rabbitmq-bundle-1: -INFINITY
 container_color: galera:2 allocation score on rabbitmq-bundle-2: -INFINITY
@@ -714,7 +714,7 @@ container_color: redis:0 allocation score on galera-bundle-2: -INFINITY
 container_color: redis:0 allocation score on rabbitmq-bundle-0: -INFINITY
 container_color: redis:0 allocation score on rabbitmq-bundle-1: -INFINITY
 container_color: redis:0 allocation score on rabbitmq-bundle-2: -INFINITY
-container_color: redis:0 allocation score on redis-bundle-0: -INFINITY
+container_color: redis:0 allocation score on redis-bundle-0: INFINITY
 container_color: redis:0 allocation score on redis-bundle-1: -INFINITY
 container_color: redis:0 allocation score on redis-bundle-2: -INFINITY
 container_color: redis:1 allocation score on controller-0: 0
@@ -727,7 +727,7 @@ container_color: redis:1 allocation score on rabbitmq-bundle-0: -INFINITY
 container_color: redis:1 allocation score on rabbitmq-bundle-1: -INFINITY
 container_color: redis:1 allocation score on rabbitmq-bundle-2: -INFINITY
 container_color: redis:1 allocation score on redis-bundle-0: -INFINITY
-container_color: redis:1 allocation score on redis-bundle-1: -INFINITY
+container_color: redis:1 allocation score on redis-bundle-1: INFINITY
 container_color: redis:1 allocation score on redis-bundle-2: -INFINITY
 container_color: redis:2 allocation score on controller-0: 0
 container_color: redis:2 allocation score on controller-1: 0
@@ -740,7 +740,7 @@ container_color: redis:2 allocation score on rabbitmq-bundle-1: -INFINITY
 container_color: redis:2 allocation score on rabbitmq-bundle-2: -INFINITY
 container_color: redis:2 allocation score on redis-bundle-0: -INFINITY
 container_color: redis:2 allocation score on redis-bundle-1: -INFINITY
-container_color: redis:2 allocation score on redis-bundle-2: -INFINITY
+container_color: redis:2 allocation score on redis-bundle-2: INFINITY
 galera:0 promotion score on galera-bundle-0: -1
 galera:1 promotion score on galera-bundle-1: 100
 galera:2 promotion score on galera-bundle-2: 100

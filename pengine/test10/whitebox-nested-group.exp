@@ -24,19 +24,10 @@
         <rsc_op id="3" operation="monitor" operation_key="fake1_monitor_0" on_node="c7auto1" on_node_uuid="1"/>
       </trigger>
       <trigger>
-        <rsc_op id="10" operation="monitor" operation_key="c7auto4_monitor_0" on_node="c7auto1" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
         <rsc_op id="11" operation="monitor" operation_key="fake1_monitor_0" on_node="c7auto2" on_node_uuid="2"/>
       </trigger>
       <trigger>
-        <rsc_op id="18" operation="monitor" operation_key="c7auto4_monitor_0" on_node="c7auto2" on_node_uuid="2"/>
-      </trigger>
-      <trigger>
         <rsc_op id="19" operation="monitor" operation_key="fake1_monitor_0" on_node="c7auto3" on_node_uuid="3"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="26" operation="monitor" operation_key="c7auto4_monitor_0" on_node="c7auto3" on_node_uuid="3"/>
       </trigger>
     </inputs>
   </synapse>
@@ -95,19 +86,10 @@
         <rsc_op id="4" operation="monitor" operation_key="fake2_monitor_0" on_node="c7auto1" on_node_uuid="1"/>
       </trigger>
       <trigger>
-        <rsc_op id="10" operation="monitor" operation_key="c7auto4_monitor_0" on_node="c7auto1" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
         <rsc_op id="12" operation="monitor" operation_key="fake2_monitor_0" on_node="c7auto2" on_node_uuid="2"/>
       </trigger>
       <trigger>
-        <rsc_op id="18" operation="monitor" operation_key="c7auto4_monitor_0" on_node="c7auto2" on_node_uuid="2"/>
-      </trigger>
-      <trigger>
         <rsc_op id="20" operation="monitor" operation_key="fake2_monitor_0" on_node="c7auto3" on_node_uuid="3"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="26" operation="monitor" operation_key="c7auto4_monitor_0" on_node="c7auto3" on_node_uuid="3"/>
       </trigger>
       <trigger>
         <rsc_op id="53" operation="start" operation_key="container_start_0" on_node="c7auto1" on_node_uuid="1"/>
@@ -169,19 +151,10 @@
         <rsc_op id="5" operation="monitor" operation_key="fake3_monitor_0" on_node="c7auto1" on_node_uuid="1"/>
       </trigger>
       <trigger>
-        <rsc_op id="10" operation="monitor" operation_key="c7auto4_monitor_0" on_node="c7auto1" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
         <rsc_op id="13" operation="monitor" operation_key="fake3_monitor_0" on_node="c7auto2" on_node_uuid="2"/>
       </trigger>
       <trigger>
-        <rsc_op id="18" operation="monitor" operation_key="c7auto4_monitor_0" on_node="c7auto2" on_node_uuid="2"/>
-      </trigger>
-      <trigger>
         <rsc_op id="21" operation="monitor" operation_key="fake3_monitor_0" on_node="c7auto3" on_node_uuid="3"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="26" operation="monitor" operation_key="c7auto4_monitor_0" on_node="c7auto3" on_node_uuid="3"/>
       </trigger>
     </inputs>
   </synapse>
@@ -237,19 +210,10 @@
         <rsc_op id="6" operation="monitor" operation_key="fake4_monitor_0" on_node="c7auto1" on_node_uuid="1"/>
       </trigger>
       <trigger>
-        <rsc_op id="10" operation="monitor" operation_key="c7auto4_monitor_0" on_node="c7auto1" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
         <rsc_op id="14" operation="monitor" operation_key="fake4_monitor_0" on_node="c7auto2" on_node_uuid="2"/>
       </trigger>
       <trigger>
-        <rsc_op id="18" operation="monitor" operation_key="c7auto4_monitor_0" on_node="c7auto2" on_node_uuid="2"/>
-      </trigger>
-      <trigger>
         <rsc_op id="22" operation="monitor" operation_key="fake4_monitor_0" on_node="c7auto3" on_node_uuid="3"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="26" operation="monitor" operation_key="c7auto4_monitor_0" on_node="c7auto3" on_node_uuid="3"/>
       </trigger>
     </inputs>
   </synapse>
@@ -308,19 +272,10 @@
         <rsc_op id="7" operation="monitor" operation_key="fake5_monitor_0" on_node="c7auto1" on_node_uuid="1"/>
       </trigger>
       <trigger>
-        <rsc_op id="10" operation="monitor" operation_key="c7auto4_monitor_0" on_node="c7auto1" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
         <rsc_op id="15" operation="monitor" operation_key="fake5_monitor_0" on_node="c7auto2" on_node_uuid="2"/>
       </trigger>
       <trigger>
-        <rsc_op id="18" operation="monitor" operation_key="c7auto4_monitor_0" on_node="c7auto2" on_node_uuid="2"/>
-      </trigger>
-      <trigger>
         <rsc_op id="23" operation="monitor" operation_key="fake5_monitor_0" on_node="c7auto3" on_node_uuid="3"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="26" operation="monitor" operation_key="c7auto4_monitor_0" on_node="c7auto3" on_node_uuid="3"/>
       </trigger>
       <trigger>
         <rsc_op id="53" operation="start" operation_key="container_start_0" on_node="c7auto1" on_node_uuid="1"/>
@@ -532,19 +487,10 @@
         <rsc_op id="8" operation="monitor" operation_key="fake:3_monitor_0" on_node="c7auto1" on_node_uuid="1"/>
       </trigger>
       <trigger>
-        <rsc_op id="10" operation="monitor" operation_key="c7auto4_monitor_0" on_node="c7auto1" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
         <rsc_op id="16" operation="monitor" operation_key="fake:0_monitor_0" on_node="c7auto2" on_node_uuid="2"/>
       </trigger>
       <trigger>
-        <rsc_op id="18" operation="monitor" operation_key="c7auto4_monitor_0" on_node="c7auto2" on_node_uuid="2"/>
-      </trigger>
-      <trigger>
         <rsc_op id="24" operation="monitor" operation_key="fake:1_monitor_0" on_node="c7auto3" on_node_uuid="3"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="26" operation="monitor" operation_key="c7auto4_monitor_0" on_node="c7auto3" on_node_uuid="3"/>
       </trigger>
     </inputs>
   </synapse>
@@ -572,17 +518,7 @@
         <attributes CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="10" operation="monitor" operation_key="c7auto4_monitor_0" on_node="c7auto1" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="18" operation="monitor" operation_key="c7auto4_monitor_0" on_node="c7auto2" on_node_uuid="2"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="26" operation="monitor" operation_key="c7auto4_monitor_0" on_node="c7auto3" on_node_uuid="3"/>
-      </trigger>
-    </inputs>
+    <inputs/>
   </synapse>
   <synapse id="40">
     <action_set>
