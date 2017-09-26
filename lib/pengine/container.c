@@ -462,6 +462,9 @@ create_remote_resource(
         tuple->node->weight = 500;
         tuple->node->rsc_discover_mode = discover_exclusive;
 
+        /* Ensure the node shows up as allowed and with the correct discovery set */
+        g_hash_table_insert(tuple->child->allowed_nodes, (gpointer) tuple->node->details->id, node_copy(tuple->node));
+
         if (common_unpack(xml_remote, &tuple->remote, parent, data_set) == FALSE) {
             return FALSE;
         }
