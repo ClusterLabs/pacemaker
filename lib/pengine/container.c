@@ -532,9 +532,9 @@ create_remote_resource(
             CRM_ASSERT(remote_id_conflict(id, data_set) == FALSE);
         }
 
-        /* Using "#uname" as the server name when the connection does not have
-         * its own IP is a hack that allows nested remotes (i.e. a bundle
-         * running on a remote node).
+        /* REMOTE_CONTAINER_HACK: Using "#uname" as the server name when the
+         * connection does not have its own IP is a magic string that we use to
+         * support nested remotes (i.e. a bundle running on a remote node).
          */
         connect_name = (tuple->ipaddr? tuple->ipaddr : "#uname");
 
