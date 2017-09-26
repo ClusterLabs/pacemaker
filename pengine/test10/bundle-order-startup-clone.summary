@@ -31,6 +31,9 @@ Executing cluster transition:
  * Resource action: galera-bundle-docker-0 monitor on metal-3
  * Resource action: galera-bundle-docker-0 monitor on metal-2
  * Resource action: galera-bundle-docker-0 monitor on metal-1
+ * Resource action: galera-bundle-0 monitor on metal-3
+ * Resource action: galera-bundle-0 monitor on metal-2
+ * Resource action: galera-bundle-0 monitor on metal-1
  * Resource action: haproxy-bundle-docker-0 monitor on metal-3
  * Resource action: haproxy-bundle-docker-0 monitor on metal-2
  * Resource action: haproxy-bundle-docker-0 monitor on metal-1
@@ -38,6 +41,9 @@ Executing cluster transition:
  * Resource action: redis-bundle-docker-0 monitor on metal-3
  * Resource action: redis-bundle-docker-0 monitor on metal-2
  * Resource action: redis-bundle-docker-0 monitor on metal-1
+ * Resource action: redis-bundle-0  monitor on metal-3
+ * Resource action: redis-bundle-0  monitor on metal-2
+ * Resource action: redis-bundle-0  monitor on metal-1
  * Pseudo action:   redis-bundle_start_0
  * Pseudo action:   haproxy-bundle_start_0
  * Resource action: haproxy-bundle-docker-0 start on metal-2

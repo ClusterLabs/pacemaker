@@ -41,9 +41,12 @@ Transition Summary:
 Executing cluster transition:
  * Pseudo action:   rabbitmq-bundle-clone_pre_notify_start_0
  * Resource action: rabbitmq-bundle-docker-0 monitor on undercloud
+ * Resource action: rabbitmq-bundle-0 monitor on undercloud
  * Resource action: galera-bundle-docker-0 monitor on undercloud
+ * Resource action: galera-bundle-0 monitor on undercloud
  * Pseudo action:   redis-bundle-master_pre_notify_start_0
  * Resource action: redis-bundle-docker-0 monitor on undercloud
+ * Resource action: redis-bundle-0  monitor on undercloud
  * Resource action: ip-192.168.122.254 monitor on undercloud
  * Resource action: ip-192.168.122.250 monitor on undercloud
  * Resource action: ip-192.168.122.249 monitor on undercloud

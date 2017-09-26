@@ -56,9 +56,21 @@ Transition Summary:
 
 Executing cluster transition:
  * Pseudo action:   rabbitmq-bundle-clone_pre_notify_stop_0
+ * Resource action: rabbitmq-bundle-0 monitor on controller-2
+ * Resource action: rabbitmq-bundle-0 monitor on controller-1
+ * Resource action: rabbitmq-bundle-1 monitor on controller-2
+ * Resource action: rabbitmq-bundle-2 monitor on controller-1
+ * Resource action: galera-bundle-0 monitor on controller-2
+ * Resource action: galera-bundle-0 monitor on controller-1
+ * Resource action: galera-bundle-1 monitor on controller-2
+ * Resource action: galera-bundle-2 monitor on controller-1
  * Resource action: redis           cancel=45000 on redis-bundle-1
  * Resource action: redis           cancel=60000 on redis-bundle-1
  * Pseudo action:   redis-bundle-master_pre_notify_demote_0
+ * Resource action: redis-bundle-0  monitor on controller-2
+ * Resource action: redis-bundle-0  monitor on controller-1
+ * Resource action: redis-bundle-1  monitor on controller-2
+ * Resource action: redis-bundle-2  monitor on controller-1
  * Pseudo action:   stonith-fence_ipmilan-5254003e8e97_stop_0
  * Pseudo action:   stonith-fence_ipmilan-5254000dcb3f_stop_0
  * Pseudo action:   haproxy-bundle_stop_0

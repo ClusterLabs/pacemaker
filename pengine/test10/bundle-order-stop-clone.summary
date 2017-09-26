@@ -28,6 +28,18 @@ Transition Summary:
 
 Executing cluster transition:
  * Pseudo action:   storage-clone_pre_notify_stop_0
+ * Resource action: galera-bundle-0 monitor on metal-3
+ * Resource action: galera-bundle-0 monitor on metal-2
+ * Resource action: galera-bundle-1 monitor on metal-3
+ * Resource action: galera-bundle-1 monitor on metal-1
+ * Resource action: galera-bundle-2 monitor on metal-2
+ * Resource action: galera-bundle-2 monitor on metal-1
+ * Resource action: redis-bundle-0  monitor on metal-3
+ * Resource action: redis-bundle-0  monitor on metal-2
+ * Resource action: redis-bundle-1  monitor on metal-3
+ * Resource action: redis-bundle-1  monitor on metal-1
+ * Resource action: redis-bundle-2  monitor on metal-2
+ * Resource action: redis-bundle-2  monitor on metal-1
  * Pseudo action:   galera-bundle_stop_0
  * Resource action: storage:0       notify on metal-1
  * Resource action: storage:1       notify on metal-2
