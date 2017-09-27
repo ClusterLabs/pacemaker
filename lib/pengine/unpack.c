@@ -2719,7 +2719,6 @@ determine_op_status(
         case PCMK_OCF_OK:
             if (is_probe && target_rc == 7) {
                 result = PCMK_LRM_OP_DONE;
-                set_bit(rsc->flags, pe_rsc_unexpectedly_running);
                 pe_rsc_info(rsc, "Operation %s found resource %s active on %s",
                             task, rsc->id, node->details->uname);
 
