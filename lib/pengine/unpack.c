@@ -218,20 +218,19 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
         data_set->no_quorum_policy = no_quorum_freeze;
 
     } else if (safe_str_eq(value, "suicide")) {
-        gboolean do_panic = FALSE;
+        if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
+            int do_panic = 0;
 
-        crm_element_value_int(data_set->input, XML_ATTR_QUORUM_PANIC, &do_panic);
-
-        if (is_set(data_set->flags, pe_flag_stonith_enabled) == FALSE) {
-            crm_config_err
-                ("Setting no-quorum-policy=suicide makes no sense if stonith-enabled=false");
-        }
-
-        if (do_panic && is_set(data_set->flags, pe_flag_stonith_enabled)) {
-            data_set->no_quorum_policy = no_quorum_suicide;
-
-        } else if (is_set(data_set->flags, pe_flag_have_quorum) == FALSE && do_panic == FALSE) {
-            crm_notice("Resetting no-quorum-policy to 'stop': The cluster has never had quorum");
+            crm_element_value_int(data_set->input, XML_ATTR_QUORUM_PANIC,
+                                  &do_panic);
+            if (do_panic || is_set(data_set->flags, pe_flag_have_quorum)) {
+                data_set->no_quorum_policy = no_quorum_suicide;
+            } else {
+                crm_notice("Resetting no-quorum-policy to 'stop': cluster has never had quorum");
+                data_set->no_quorum_policy = no_quorum_stop;
+            }
+        } else {
+            crm_config_err("Resetting no-quorum-policy to 'stop': stonith is not configured");
             data_set->no_quorum_policy = no_quorum_stop;
         }
 
