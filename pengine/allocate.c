@@ -956,7 +956,7 @@ rsc_discover_filter(resource_t *rsc, node_t *node)
     }
 
     match = g_hash_table_lookup(rsc->allowed_nodes, node->details->id);
-    if (match && match->rsc_discover_mode != discover_exclusive) {
+    if (match && match->rsc_discover_mode != pe_discover_exclusive) {
         match->weight = -INFINITY;
     }
 }

@@ -402,11 +402,10 @@ enum pe_link_state {
     pe_link_dup,
 };
 
-
-enum rsc_discover_e {
-    discover_always = 0,
-    discover_never,
-    discover_exclusive,
+enum pe_discover_e {
+    pe_discover_always = 0,
+    pe_discover_never,
+    pe_discover_exclusive,
 };
 
 /* *INDENT-OFF* */

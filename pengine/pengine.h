@@ -80,7 +80,7 @@ struct rsc_to_node_s {
     resource_t *rsc_lh;
 
     enum rsc_role_e role_filter;
-    enum rsc_discover_e discover_mode;
+    enum pe_discover_e discover_mode;
     GListPtr node_list_rh;      /* node_t* */
 };
 

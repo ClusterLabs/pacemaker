@@ -83,11 +83,11 @@ rsc2node_new(const char *id, resource_t * rsc,
 
 
         if (discover_mode == NULL || safe_str_eq(discover_mode, "always")) {
-            new_con->discover_mode = discover_always;
+            new_con->discover_mode = pe_discover_always;
         } else if (safe_str_eq(discover_mode, "never")) {
-            new_con->discover_mode = discover_never;
+            new_con->discover_mode = pe_discover_never;
         } else if (safe_str_eq(discover_mode, "exclusive")) {
-            new_con->discover_mode = discover_exclusive;
+            new_con->discover_mode = pe_discover_exclusive;
             rsc->exclusive_discover = TRUE;
         } else {
             pe_err("Invalid %s value %s in location constraint", XML_LOCATION_ATTR_DISCOVERY, discover_mode);

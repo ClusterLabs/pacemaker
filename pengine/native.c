@@ -2105,7 +2105,7 @@ native_rsc_location(resource_t * rsc, rsc_to_node_t * constraint)
         }
 
         if (other_node->rsc_discover_mode < constraint->discover_mode) {
-            if (constraint->discover_mode == discover_exclusive) {
+            if (constraint->discover_mode == pe_discover_exclusive) {
                 rsc->exclusive_discover = TRUE;
             }
             /* exclusive > never > always... always is default */
@@ -2860,7 +2860,7 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
             /* exclusive discover is enabled and this node is not in the allowed list. */    
             pe_rsc_trace(rsc, "Skipping probe for %s on node %s, A", rsc->id, node->details->id);
             return FALSE;
-        } else if (allowed->rsc_discover_mode != discover_exclusive) {
+        } else if (allowed->rsc_discover_mode != pe_discover_exclusive) {
             /* exclusive discover is enabled and this node is not marked
              * as a node this resource should be discovered on */ 
             pe_rsc_trace(rsc, "Skipping probe for %s on node %s, B", rsc->id, node->details->id);
@@ -2868,7 +2868,7 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
         }
     }
 
-    if(allowed == NULL && node->rsc_discover_mode == discover_never) {
+    if(allowed == NULL && node->rsc_discover_mode == pe_discover_never) {
         /* If this node was allowed to host this resource it would
          * have been explicitly added to the 'allowed_nodes' list.
          * However it wasn't and the node has discovery disabled, so
@@ -2878,7 +2878,7 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
         return FALSE;
     }
 
-    if (allowed && allowed->rsc_discover_mode == discover_never) {
+    if (allowed && allowed->rsc_discover_mode == pe_discover_never) {
         /* this resource is marked as not needing to be discovered on this node */
         pe_rsc_trace(rsc, "Skipping probe for %s on node %s, discovery mode", rsc->id, node->details->id);
         return FALSE;
