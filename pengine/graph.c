@@ -441,15 +441,14 @@ update_colo_start_chain(action_t *action)
 
     if (is_not_set(action->flags, pe_action_runnable) && safe_str_eq(action->task, RSC_START)) {
         rsc = uber_parent(action->rsc);
+        if (rsc->parent) {
+            // This is a bundle (uber_parent() stops _before_ the bundle)
+            rsc = rsc->parent;
+        }
     }
 
     if (rsc == NULL || rsc->rsc_cons_lhs == NULL) {
         return;
-    }
-
-    if(rsc->parent) {
-        /* uber_parent() stops _before_ the bundle */
-        rsc = rsc->parent;
     }
 
     /* if rsc has children, all the children need to have start set to
