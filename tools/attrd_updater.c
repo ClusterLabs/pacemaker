@@ -32,7 +32,6 @@
 #include <crm/common/ipc.h>
 
 #include <crm/attrd.h>
-#include <crm/cluster.h>
 
 /* *INDENT-OFF* */
 static struct crm_option long_options[] = {
@@ -201,9 +200,6 @@ main(int argc, char **argv)
          */
 
         attr_node = attrd_get_target(attr_node);
-        if (attr_node == NULL) {
-            attr_node = get_local_node_name();
-        }
         crm_exit(do_update(command, attr_node, attr_name, attr_value,
                            attr_section, attr_set, attr_dampen, attr_options));
     }
@@ -354,9 +350,6 @@ do_query(const char *attr_name, const char *attr_node, gboolean query_all)
         attr_node = NULL;
     } else {
         attr_node = attrd_get_target(attr_node);
-        if (attr_node == NULL) {
-            attr_node = get_local_node_name();
-        }
     }
 
     /* Build and send attrd request, and get XML reply */
