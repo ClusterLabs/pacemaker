@@ -899,7 +899,7 @@ probe_resources(pe_working_set_t * data_set)
 
     for (GListPtr gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
-        const char *probed = node_attribute_raw(node, CRM_OP_PROBED);
+        const char *probed = pe_node_attribute_raw(node, CRM_OP_PROBED);
 
         if (is_container_remote_node(node)) {
             /* Guest node probes and their ordering requirements are now functional */

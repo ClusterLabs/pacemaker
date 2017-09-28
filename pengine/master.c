@@ -457,7 +457,7 @@ lookup_master_score(resource_t * rsc, node_t *node, const char *name)
     if (node && name) {
         char *attr_name = crm_strdup_printf("master-%s", name);
 
-        attr_value = node_attribute_calculated(node, attr_name, rsc);
+        attr_value = pe_node_attribute_calculated(node, attr_name, rsc);
         free(attr_name);
     }
     return attr_value;
@@ -984,10 +984,10 @@ node_hash_update_one(GHashTable * hash, node_t * other, const char *attr, int sc
         attr = CRM_ATTR_UNAME;
     }
  
-    value = node_attribute_raw(other, attr);
+    value = pe_node_attribute_raw(other, attr);
     g_hash_table_iter_init(&iter, hash);
     while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-        const char *tmp = node_attribute_raw(node, attr);
+        const char *tmp = pe_node_attribute_raw(node, attr);
 
         if (safe_str_eq(value, tmp)) {
             crm_trace("%s: %d + %d", node->details->uname, node->weight, other->weight);
