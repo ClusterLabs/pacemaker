@@ -208,7 +208,7 @@ struct node_s {
 #  define pe_rsc_allow_migrate  0x00800000ULL
 
 #  define pe_rsc_failure_ignored 0x01000000ULL
-#  define pe_rsc_unexpectedly_running 0x02000000ULL
+#  define pe_rsc_unexpectedly_running 0x02000000ULL // obsolete (not set or used by cluster)
 #  define pe_rsc_maintenance	 0x04000000ULL
 
 #  define pe_rsc_needs_quorum	 0x10000000ULL
@@ -402,11 +402,10 @@ enum pe_link_state {
     pe_link_dup,
 };
 
-
-enum rsc_discover_e {
-    discover_always = 0,
-    discover_never,
-    discover_exclusive,
+enum pe_discover_e {
+    pe_discover_always = 0,
+    pe_discover_never,
+    pe_discover_exclusive,
 };
 
 /* *INDENT-OFF* */

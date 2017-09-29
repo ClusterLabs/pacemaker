@@ -1996,8 +1996,8 @@ fencing_action_digest_cmp(resource_t * rsc, node_t * node, pe_working_set_t * da
     char *key = generate_op_key(rsc->id, STONITH_DIGEST_TASK, 0);
     op_digest_cache_t *data = rsc_action_digest(rsc, STONITH_DIGEST_TASK, key, node, NULL, data_set);
 
-    const char *digest_all = node_attribute_raw(node, CRM_ATTR_DIGESTS_ALL);
-    const char *digest_secure = node_attribute_raw(node, CRM_ATTR_DIGESTS_SECURE);
+    const char *digest_all = pe_node_attribute_raw(node, CRM_ATTR_DIGESTS_ALL);
+    const char *digest_secure = pe_node_attribute_raw(node, CRM_ATTR_DIGESTS_SECURE);
 
     /* No 'reloads' for fencing device changes
      *

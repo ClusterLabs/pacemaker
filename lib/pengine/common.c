@@ -433,7 +433,7 @@ add_hash_param(GHashTable * hash, const char *name, const char *value)
 }
 
 const char *
-node_attribute_calculated(pe_node_t *node, const char *name, resource_t *rsc) 
+pe_node_attribute_calculated(pe_node_t *node, const char *name, resource_t *rsc)
 {
     const char *source;
 
@@ -471,11 +471,10 @@ node_attribute_calculated(pe_node_t *node, const char *name, resource_t *rsc)
 }
 
 const char *
-node_attribute_raw(pe_node_t *node, const char *name) 
+pe_node_attribute_raw(pe_node_t *node, const char *name)
 {
     if(node == NULL) {
         return NULL;
     }
     return g_hash_table_lookup(node->details->attrs, name);
 }
-

@@ -919,7 +919,7 @@ attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *da
             }
         } else {
             /* Remove all attribute values associated with lost nodes */
-            attrd_peer_remove(peer->uname, FALSE, "peer loss");
+            attrd_peer_remove(peer->uname, FALSE, "loss");
             if (peer_writer && safe_str_eq(peer->uname, peer_writer)) {
                 free(peer_writer);
                 peer_writer = NULL;

@@ -968,7 +968,7 @@ get_node_score(const char *rule, const char *score, gboolean raw, node_t * node,
         score_f = char2score(score);
 
     } else {
-        const char *attr_score = node_attribute_calculated(node, score, rsc);
+        const char *attr_score = pe_node_attribute_calculated(node, score, rsc);
 
         if (attr_score == NULL) {
             crm_debug("Rule %s: node %s did not have a value for %s",

@@ -400,6 +400,10 @@ indexterm:[Resource,Option,multiple-active]
 |Whether the cluster should try to "live migrate" this resource when it needs
 to be moved (see <<s-migrating-resources>>)
 
+|container-attribute-target
+|
+|Specific to bundle resources; see <<s-bundle-attributes>>
+
 |remote-node
 |
 |The name of the Pacemaker Remote guest node this resource is associated with,

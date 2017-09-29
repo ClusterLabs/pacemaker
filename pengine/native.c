@@ -203,7 +203,7 @@ node_list_attr_score(GHashTable * list, const char *attr, const char *value)
             weight = -INFINITY;
         }
         if (weight > best_score || best_node == NULL) {
-            const char *tmp = node_attribute_raw(node, attr);
+            const char *tmp = pe_node_attribute_raw(node, attr);
 
             if (safe_str_eq(value, tmp)) {
                 best_score = weight;
@@ -241,7 +241,7 @@ node_hash_update(GHashTable * list1, GHashTable * list2, const char *attr, float
         CRM_LOG_ASSERT(node != NULL);
         if(node == NULL) { continue; };
 
-        score = node_list_attr_score(list2, attr, node_attribute_raw(node, attr));
+        score = node_list_attr_score(list2, attr, pe_node_attribute_raw(node, attr));
 
         weight_f = factor * score;
         /* Round the number */
@@ -1640,8 +1640,8 @@ influence_priority(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * 
         return;
     }
 
-    lh_value = node_attribute_raw(rsc_lh->allocated_to, attribute);
-    rh_value = node_attribute_raw(rsc_rh->allocated_to, attribute);
+    lh_value = pe_node_attribute_raw(rsc_lh->allocated_to, attribute);
+    rh_value = pe_node_attribute_raw(rsc_rh->allocated_to, attribute);
 
     if (!safe_str_eq(lh_value, rh_value)) {
         if(constraint->score == INFINITY && constraint->role_lh == RSC_ROLE_MASTER) {
@@ -1679,7 +1679,7 @@ colocation_match(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * co
     }
 
     if (rsc_rh->allocated_to) {
-        value = node_attribute_raw(rsc_rh->allocated_to, attribute);
+        value = pe_node_attribute_raw(rsc_rh->allocated_to, attribute);
         do_check = TRUE;
 
     } else if (constraint->score < 0) {
@@ -1693,7 +1693,7 @@ colocation_match(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * co
 
     g_hash_table_iter_init(&iter, work);
     while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-        tmp = node_attribute_raw(node, attribute);
+        tmp = pe_node_attribute_raw(node, attribute);
         if (do_check && safe_str_eq(tmp, value)) {
             if (constraint->score < INFINITY) {
                 pe_rsc_trace(rsc_lh, "%s: %s.%s += %d", constraint->id, rsc_lh->id,
@@ -2105,7 +2105,7 @@ native_rsc_location(resource_t * rsc, rsc_to_node_t * constraint)
         }
 
         if (other_node->rsc_discover_mode < constraint->discover_mode) {
-            if (constraint->discover_mode == discover_exclusive) {
+            if (constraint->discover_mode == pe_discover_exclusive) {
                 rsc->exclusive_discover = TRUE;
             }
             /* exclusive > never > always... always is default */
@@ -2503,7 +2503,7 @@ StopRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * d
 
         if(is_set(rsc->flags, pe_rsc_needs_unfencing)) {
             action_t *unfence = pe_fence_op(current, "on", TRUE, NULL, data_set);
-            const char *unfenced = node_attribute_raw(current, CRM_ATTR_UNFENCED);
+            const char *unfenced = pe_node_attribute_raw(current, CRM_ATTR_UNFENCED);
 
             order_actions(stop, unfence, pe_order_implies_first);
             if (unfenced == NULL || safe_str_eq("0", unfenced)) {
@@ -2526,7 +2526,7 @@ StartRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * 
 
     if(is_set(rsc->flags, pe_rsc_needs_unfencing)) {
         action_t *unfence = pe_fence_op(next, "on", TRUE, NULL, data_set);
-        const char *unfenced = node_attribute_raw(next, CRM_ATTR_UNFENCED);
+        const char *unfenced = pe_node_attribute_raw(next, CRM_ATTR_UNFENCED);
 
         order_actions(unfence, start, pe_order_implies_then);
 
@@ -2860,7 +2860,7 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
             /* exclusive discover is enabled and this node is not in the allowed list. */    
             pe_rsc_trace(rsc, "Skipping probe for %s on node %s, A", rsc->id, node->details->id);
             return FALSE;
-        } else if (allowed->rsc_discover_mode != discover_exclusive) {
+        } else if (allowed->rsc_discover_mode != pe_discover_exclusive) {
             /* exclusive discover is enabled and this node is not marked
              * as a node this resource should be discovered on */ 
             pe_rsc_trace(rsc, "Skipping probe for %s on node %s, B", rsc->id, node->details->id);
@@ -2868,7 +2868,7 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
         }
     }
 
-    if(allowed == NULL && node->rsc_discover_mode == discover_never) {
+    if(allowed == NULL && node->rsc_discover_mode == pe_discover_never) {
         /* If this node was allowed to host this resource it would
          * have been explicitly added to the 'allowed_nodes' list.
          * However it wasn't and the node has discovery disabled, so
@@ -2878,7 +2878,7 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
         return FALSE;
     }
 
-    if (allowed && allowed->rsc_discover_mode == discover_never) {
+    if (allowed && allowed->rsc_discover_mode == pe_discover_never) {
         /* this resource is marked as not needing to be discovered on this node */
         pe_rsc_trace(rsc, "Skipping probe for %s on node %s, discovery mode", rsc->id, node->details->id);
         return FALSE;
