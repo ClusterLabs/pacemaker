@@ -277,8 +277,6 @@ main(int argc, char **argv)
     bool recursive = FALSE;
     char *our_pid = NULL;
 
-    /* Not all commands set these appropriately, but the defaults here are
-     * sufficient to get the logic right. */
     bool require_resource = TRUE; /* whether command requires that resource be specified */
     bool require_dataset = TRUE;  /* whether command requires populated dataset instance */
     bool require_crmd = FALSE;    /* whether command requires connection to CRMd */
@@ -546,6 +544,11 @@ main(int argc, char **argv)
                 ++argerr;
                 break;
         }
+    }
+
+    // Catch the case where the user didn't specify a command
+    if (rsc_cmd == 'L') {
+        require_resource = FALSE;
     }
 
     if (optind < argc
