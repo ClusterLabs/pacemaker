@@ -487,41 +487,44 @@ main(int argc, char **argv)
             case 'I':
                 interval = optarg;
                 break;
-
-            case 'F':
+            
+            case 'D':
+                require_dataset = FALSE; 
                 crm_log_args(argc, argv);
-                require_crmd = TRUE;
                 rsc_cmd = flag;
                 break;
 
+            case 'F':
+                require_crmd = TRUE;
             case 'U':
             case 'B':
             case 'M':
-            case 'D':
                 crm_log_args(argc, argv);
                 rsc_cmd = flag;
                 break;
 
-            case 'L':
             case 'c':
+            case 'L':
             case 'l':
+            case 'O':
+            case 'o':
+            case 'Y':
+                 require_resource = FALSE;
             case 'q':
             case 'w':
             case 'W':
-            case 'O':
-            case 'o':
             case 'A':
             case 'a':
-            case 'Y':
                 rsc_cmd = flag;
                 break;
 
             case 'j':
                 print_pending = TRUE;
                 break;
+            case 'S':
+                require_dataset = FALSE;  
             case 'p':
             case 'd':
-            case 'S':
                 crm_log_args(argc, argv);
                 prop_name = optarg;
                 rsc_cmd = flag;
@@ -594,7 +597,7 @@ main(int argc, char **argv)
     }
 
     data_set.input = NULL; /* make clean-up easier */
-
+ 
     /* If user specified resource, look for it, even if it's optional for command */
     if (rsc_id) {
         require_resource = TRUE;
@@ -603,6 +606,13 @@ main(int argc, char **argv)
     /* We need a dataset to find a resource, even if command doesn't need it */
     if (require_resource) {
         require_dataset = TRUE;
+    }
+    
+    if(require_resource && rsc_id == NULL)
+    {
+        CMD_ERR("Must supply a resource id with -r");
+        rc = -ENXIO;
+        goto bail;
     }
 
     /* Establish a connection to the CIB */
@@ -644,7 +654,7 @@ main(int argc, char **argv)
             rc = -ENXIO;
         }
     }
-
+    
     /* Establish a connection to the CRMd if needed */
     if (require_crmd) {
         xmlNode *xml = NULL;
@@ -687,12 +697,6 @@ main(int argc, char **argv)
 
     } else if (rsc_cmd == 0 && rsc_long_cmd && safe_str_eq(rsc_long_cmd, "restart")) {
         resource_t *rsc = NULL;
-
-        rc = -ENXIO;
-        if (rsc_id == NULL) {
-            CMD_ERR("Must supply a resource id with -r");
-            goto bail;
-        }
 
         rsc = pe_find_resource(data_set.resources, rsc_id);
 
@@ -772,30 +776,15 @@ main(int argc, char **argv)
         CMD_ERR("Resource '%s' not found: %s", crm_str(rsc_id), pcmk_strerror(rc));
 
     } else if (rsc_cmd == 'W') {
-        if (rsc_id == NULL) {
-            CMD_ERR("Must supply a resource id with -r");
-            rc = -ENXIO;
-            goto bail;
-        }
         rc = cli_resource_search(rsc_id, &data_set);
         if (rc >= 0) {
             rc = pcmk_ok;
         }
 
     } else if (rsc_cmd == 'q') {
-        if (rsc_id == NULL) {
-            CMD_ERR("Must supply a resource id with -r");
-            rc = -ENXIO;
-            goto bail;
-        }
         rc = cli_resource_print(rsc_id, &data_set, TRUE);
 
     } else if (rsc_cmd == 'w') {
-        if (rsc_id == NULL) {
-            CMD_ERR("Must supply a resource id with -r");
-            rc = -ENXIO;
-            goto bail;
-        }
         rc = cli_resource_print(rsc_id, &data_set, FALSE);
 
     } else if(rsc_cmd == 'Y') {
@@ -811,12 +800,6 @@ main(int argc, char **argv)
         cli_resource_why(cib_conn,data_set.resources,rsc_id,dest);
     } else if (rsc_cmd == 'U') {
         node_t *dest = NULL;
-
-        if (rsc_id == NULL) {
-            CMD_ERR("No value specified for --resource");
-            rc = -ENXIO;
-            goto bail;
-        }
 
         if (host_uname) {
             dest = pe_find_node(data_set.nodes, host_uname);
@@ -839,11 +822,9 @@ main(int argc, char **argv)
         node_t *dest = pe_find_node(data_set.nodes, host_uname);
 
         rc = -ENXIO;
-        if (rsc_id == NULL) {
-            CMD_ERR("No value specified for --resource");
-            goto bail;
-        } else if(rsc == NULL) {
+        if(rsc == NULL) {
             CMD_ERR("Resource '%s' not moved: unknown", rsc_id);
+            goto bail;
 
         } else if (dest == NULL) {
             CMD_ERR("Error performing operation: node '%s' is unknown", host_uname);
@@ -853,13 +834,6 @@ main(int argc, char **argv)
 
     } else if (rsc_cmd == 'B' || rsc_cmd == 'M') {
         resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
-
-        rc = -ENXIO;
-        if (rsc_id == NULL) {
-            CMD_ERR("No value specified for --resource");
-            goto bail;
-        }
-
         rc = -EINVAL;
         if(rsc == NULL) {
             CMD_ERR("Resource '%s' not moved: unknown", rsc_id);
@@ -899,22 +873,12 @@ main(int argc, char **argv)
         }
 
     } else if (rsc_cmd == 'G') {
-        if (rsc_id == NULL) {
-            CMD_ERR("Must supply a resource id with -r");
-            rc = -ENXIO;
-            goto bail;
-        }
         rc = cli_resource_print_property(rsc_id, prop_name, &data_set);
 
     } else if (rsc_cmd == 'S') {
         xmlNode *msg_data = NULL;
 
-        if ((rsc_id == NULL) || !strlen(rsc_id)) {
-            CMD_ERR("Must specify -r with resource id");
-            rc = -ENXIO;
-            goto bail;
-
-        } else if ((rsc_type == NULL) || !strlen(rsc_type)) {
+        if ((rsc_type == NULL) || !strlen(rsc_type)) {
             CMD_ERR("Must specify -t with resource type");
             rc = -ENXIO;
             goto bail;
@@ -939,20 +903,9 @@ main(int argc, char **argv)
         free_xml(msg_data);
 
     } else if (rsc_cmd == 'g') {
-        if (rsc_id == NULL) {
-            CMD_ERR("Must supply a resource id with -r");
-            rc = -ENXIO;
-            goto bail;
-        }
-
         rc = cli_resource_print_attribute(rsc_id, prop_name, &data_set);
 
     } else if (rsc_cmd == 'p') {
-        if (rsc_id == NULL) {
-            CMD_ERR("Must supply a resource id with -r");
-            rc = -ENXIO;
-            goto bail;
-        }
         if (prop_value == NULL || strlen(prop_value) == 0) {
             CMD_ERR("You need to supply a value with the -v option");
             rc = -EINVAL;
@@ -964,17 +917,10 @@ main(int argc, char **argv)
                                prop_value, recursive, cib_conn, &data_set);
 
     } else if (rsc_cmd == 'd') {
-        if (rsc_id == NULL) {
-            CMD_ERR("Must supply a resource id with -r");
-            rc = -ENXIO;
-            goto bail;
-        }
         /* coverity[var_deref_model] False positive */
         rc = cli_resource_delete_attribute(rsc_id, prop_set, prop_id, prop_name, cib_conn, &data_set);
-
-	}else if ((rsc_cmd == 'C') && (rsc_id)) {
+    } else if ((rsc_cmd == 'C') && (rsc_id)) {
         resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
-
         if(do_force == FALSE) {
             rsc = uber_parent(rsc);
         }
@@ -1056,12 +1002,6 @@ main(int argc, char **argv)
     } else if (rsc_cmd == 'D') {
         xmlNode *msg_data = NULL;
 
-        if (rsc_id == NULL) {
-            CMD_ERR("Must supply a resource id with -r");
-            rc = -ENXIO;
-            goto bail;
-
-        }
         if (rsc_type == NULL) {
             CMD_ERR("You need to specify a resource type with -t");
             rc = -ENXIO;
