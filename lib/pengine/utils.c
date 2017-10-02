@@ -2157,10 +2157,12 @@ pe_fence_op(node_t * node, const char *op, bool optional, const char *reason, pe
                     digests_secure+digests_secure_offset, max-digests_secure_offset,
                     "%s:%s:%s,", match->id, (const char*)g_hash_table_lookup(match->meta, XML_ATTR_TYPE), data->digest_secure_calc);
             }
-            add_hash_param(stonith_op->meta, strdup(XML_OP_ATTR_DIGESTS_ALL),
-                           digests_all);
-            add_hash_param(stonith_op->meta, strdup(XML_OP_ATTR_DIGESTS_SECURE),
-                           digests_secure);
+            g_hash_table_insert(stonith_op->meta,
+                                strdup(XML_OP_ATTR_DIGESTS_ALL),
+                                digests_all);
+            g_hash_table_insert(stonith_op->meta,
+                                strdup(XML_OP_ATTR_DIGESTS_SECURE),
+                                digests_secure);
         }
 
     } else {
