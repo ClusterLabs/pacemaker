@@ -890,10 +890,6 @@ main(int argc, char **argv)
             CMD_ERR("Must supply -v with new value");
             rc = -EINVAL;
             goto bail;
-
-        } else if (cib_conn == NULL) {
-            rc = -ENOTCONN;
-            goto bail;
         }
 
         CRM_LOG_ASSERT(prop_name != NULL);
@@ -1008,10 +1004,6 @@ main(int argc, char **argv)
         if (rsc_type == NULL) {
             CMD_ERR("You need to specify a resource type with -t");
             rc = -ENXIO;
-            goto bail;
-
-        } else if (cib_conn == NULL) {
-            rc = -ENOTCONN;
             goto bail;
         }
 
