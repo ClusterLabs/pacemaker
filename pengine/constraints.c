@@ -2647,31 +2647,27 @@ unpack_rsc_ticket_set(xmlNode * set, ticket_t * ticket, const char *loss_policy,
 {
     xmlNode *xml_rsc = NULL;
     resource_t *resource = NULL;
-    const char *set_id = ID(set);
-    const char *role = crm_element_value(set, "role");
+    const char *set_id = NULL;
+    const char *role = NULL;
 
-    if (set == NULL) {
-        crm_config_err("No resource_set object to process.");
-        return FALSE;
-    }
+    CRM_CHECK(set != NULL, return FALSE);
+    CRM_CHECK(ticket != NULL, return FALSE);
 
+    set_id = ID(set);
     if (set_id == NULL) {
         crm_config_err("resource_set must have an id");
         return FALSE;
     }
 
-    if (ticket == NULL) {
-        crm_config_err("No dependented ticket specified for '%s'", set_id);
-        return FALSE;
-    }
+    role = crm_element_value(set, "role");
 
-    for (xml_rsc = __xml_first_child(set); xml_rsc != NULL; xml_rsc = __xml_next_element(xml_rsc)) {
-        if (crm_str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, TRUE)) {
-            EXPAND_CONSTRAINT_IDREF(set_id, resource, ID(xml_rsc));
-            pe_rsc_trace(resource, "Resource '%s' depends on ticket '%s'", resource->id,
-                         ticket->id);
-            rsc_ticket_new(set_id, resource, ticket, role, loss_policy, data_set);
-        }
+    for (xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
+         xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
+
+        EXPAND_CONSTRAINT_IDREF(set_id, resource, ID(xml_rsc));
+        pe_rsc_trace(resource, "Resource '%s' depends on ticket '%s'",
+                     resource->id, ticket->id);
+        rsc_ticket_new(set_id, resource, ticket, role, loss_policy, data_set);
     }
 
     return TRUE;
