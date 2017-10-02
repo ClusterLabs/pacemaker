@@ -339,8 +339,9 @@ indexterm:[Resource,Option,target-role]
  indexterm:[Resource,Option,resource-stickiness]
 
 |requires
-|fencing (unless +stonith-enabled+ is +false+ or +class+ is
-+stonith+, in which case it defaults to quorum)
+|+quorum+ for resources with a +class+ of +stonith+,
+ otherwise +unfencing+ if unfencing is active in the cluser,
+ otherwise +fencing+ if +stonith-enabled+ is true, otherwise +quorum+
 |Conditions under which the resource can be started '(since 1.1.8)'
 Allowed values:
 
