@@ -258,6 +258,8 @@ attrd_clear_delegate(crm_ipc_t *ipc, const char *host, const char *resource,
     return rc;
 }
 
+#define LRM_TARGET_ENV "OCF_RESKEY_" CRM_META "_" XML_LRM_ATTR_TARGET
+
 const char *
 attrd_get_target(const char *name)
 {
@@ -269,19 +271,27 @@ attrd_get_target(const char *name)
         return name;
 
     } else {
-        const char *target = getenv(crm_meta_name(XML_RSC_ATTR_TARGET));
-        const char *host_pyhsical = getenv(crm_meta_name(PCMK_ENV_PHYSICAL_HOST));
-        const char *host_pcmk = getenv("OCF_RESKEY_" CRM_META "_" XML_LRM_ATTR_TARGET);
+        char *target_var = crm_meta_name(XML_RSC_ATTR_TARGET);
+        char *phys_var = crm_meta_name(PCMK_ENV_PHYSICAL_HOST);
+        const char *target = getenv(target_var);
+        const char *host_physical = getenv(phys_var);
 
         /* It is important we use the names by which the PE knows us */
-        if(safe_str_eq(target, "host") && host_pyhsical != NULL) {
-            return host_pyhsical;
+        if (host_physical && safe_str_eq(target, "host")) {
+            name = host_physical;
 
-        } else if(host_pcmk) {
-            return host_pcmk;
+        } else {
+            const char *host_pcmk = getenv(LRM_TARGET_ENV);
+
+            if (host_pcmk) {
+                name = host_pcmk;
+            }
         }
+        free(target_var);
+        free(phys_var);
     }
 
     // TODO? Call get_local_node_name() if name == NULL
+    // (currently would require linkage against libcrmcluster)
     return name;
 }

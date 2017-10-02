@@ -139,29 +139,39 @@ pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason)
     }
 }
 
+// nvpair with provides or requires set to unfencing
+#define XPATH_UNFENCING_NVPAIR XML_CIB_TAG_NVPAIR                \
+    "[(@" XML_NVPAIR_ATTR_NAME "='" XML_RSC_ATTR_PROVIDES "'"    \
+    "or @" XML_NVPAIR_ATTR_NAME "='" XML_RSC_ATTR_REQUIRES "') " \
+    "and @" XML_NVPAIR_ATTR_VALUE "='unfencing']"
+
+// unfencing in rsc_defaults or any resource
+#define XPATH_ENABLE_UNFENCING \
+    "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_RESOURCES   \
+    "//" XPATH_UNFENCING_NVPAIR                                               \
+    "|/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_RSCCONFIG  \
+    "/" XPATH_UNFENCING_NVPAIR
+
+static
+void set_if_xpath(unsigned long long flag, const char *xpath,
+                  pe_working_set_t *data_set)
+{
+    xmlXPathObjectPtr result = NULL;
+
+    if (is_not_set(data_set->flags, flag)) {
+        result = xpath_search(data_set->input, xpath);
+        if (result && (numXpathResults(result) > 0)) {
+            set_bit(data_set->flags, flag);
+        }
+        freeXpathObject(result);
+    }
+}
+
 gboolean
 unpack_config(xmlNode * config, pe_working_set_t * data_set)
 {
     const char *value = NULL;
     GHashTable *config_hash = crm_str_table_new();
-
-    xmlXPathObjectPtr xpathObj = NULL;
-
-    if(is_not_set(data_set->flags, pe_flag_enable_unfencing)) {
-        xpathObj = xpath_search(data_set->input, "//nvpair[@name='provides' and @value='unfencing']");
-        if(xpathObj && numXpathResults(xpathObj) > 0) {
-            set_bit(data_set->flags, pe_flag_enable_unfencing);
-        }
-        freeXpathObject(xpathObj);
-    }
-
-    if(is_not_set(data_set->flags, pe_flag_enable_unfencing)) {
-        xpathObj = xpath_search(data_set->input, "//nvpair[@name='requires' and @value='unfencing']");
-        if(xpathObj && numXpathResults(xpathObj) > 0) {
-            set_bit(data_set->flags, pe_flag_enable_unfencing);
-        }
-        freeXpathObject(xpathObj);
-    }
 
     data_set->config_hash = config_hash;
 
@@ -180,6 +190,11 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
         crm_notice("Watchdog will be used via SBD if fencing is required");
         set_bit(data_set->flags, pe_flag_have_stonith_resource);
     }
+
+    /* Set certain flags via xpath here, so they can be used before the relevant
+     * configuration sections are unpacked.
+     */
+    set_if_xpath(pe_flag_enable_unfencing, XPATH_ENABLE_UNFENCING, data_set);
 
     value = pe_pref(data_set->config_hash, "stonith-timeout");
     data_set->stonith_timeout = crm_get_msec(value);
@@ -218,20 +233,19 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
         data_set->no_quorum_policy = no_quorum_freeze;
 
     } else if (safe_str_eq(value, "suicide")) {
-        gboolean do_panic = FALSE;
+        if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
+            int do_panic = 0;
 
-        crm_element_value_int(data_set->input, XML_ATTR_QUORUM_PANIC, &do_panic);
-
-        if (is_set(data_set->flags, pe_flag_stonith_enabled) == FALSE) {
-            crm_config_err
-                ("Setting no-quorum-policy=suicide makes no sense if stonith-enabled=false");
-        }
-
-        if (do_panic && is_set(data_set->flags, pe_flag_stonith_enabled)) {
-            data_set->no_quorum_policy = no_quorum_suicide;
-
-        } else if (is_set(data_set->flags, pe_flag_have_quorum) == FALSE && do_panic == FALSE) {
-            crm_notice("Resetting no-quorum-policy to 'stop': The cluster has never had quorum");
+            crm_element_value_int(data_set->input, XML_ATTR_QUORUM_PANIC,
+                                  &do_panic);
+            if (do_panic || is_set(data_set->flags, pe_flag_have_quorum)) {
+                data_set->no_quorum_policy = no_quorum_suicide;
+            } else {
+                crm_notice("Resetting no-quorum-policy to 'stop': cluster has never had quorum");
+                data_set->no_quorum_policy = no_quorum_stop;
+            }
+        } else {
+            crm_config_err("Resetting no-quorum-policy to 'stop': stonith is not configured");
             data_set->no_quorum_policy = no_quorum_stop;
         }
 

@@ -71,11 +71,9 @@ cluster_status(pe_working_set_t * data_set)
         data_set->now = crm_time_new(NULL);
     }
 
-    if (data_set->dc_uuid == NULL
-        && data_set->input != NULL
-        && crm_element_value(data_set->input, XML_ATTR_DC_UUID) != NULL) {
-        /* this should always be present */
-        data_set->dc_uuid = crm_element_value_copy(data_set->input, XML_ATTR_DC_UUID);
+    if (data_set->dc_uuid == NULL) {
+        data_set->dc_uuid = crm_element_value_copy(data_set->input,
+                                                   XML_ATTR_DC_UUID);
     }
 
     clear_bit(data_set->flags, pe_flag_have_quorum);
@@ -236,7 +234,6 @@ set_working_set_defaults(pe_working_set_t * data_set)
     pe_dataset = data_set;
     memset(data_set, 0, sizeof(pe_working_set_t));
 
-    data_set->dc_uuid = NULL;
     data_set->order_id = 1;
     data_set->action_id = 1;
     data_set->no_quorum_policy = no_quorum_freeze;
