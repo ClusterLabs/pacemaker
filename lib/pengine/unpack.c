@@ -226,6 +226,12 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
     }
 
     value = pe_pref(data_set->config_hash, "default-resource-stickiness");
+    if (value) {
+        pe_warn_once(pe_wo_default_stick,
+                     "Support for 'default-resource-stickiness' cluster property"
+                     " is deprecated and will be removed in a future release"
+                     " (use resource-stickiness in rsc_defaults instead)");
+    }
     data_set->default_resource_stickiness = char2score(value);
     crm_debug("Default stickiness: %d", data_set->default_resource_stickiness);
 
