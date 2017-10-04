@@ -820,6 +820,17 @@ unpack_timeout(const char *value, action_t *action, xmlNode *xml_obj,
 
     if (value == NULL && config_hash) {
         value = pe_pref(config_hash, "default-action-timeout");
+        if (value) {
+            pe_warn_once(pe_wo_default_timeo,
+                         "Support for 'default-action-timeout' cluster property"
+                         " is deprecated and will be removed in a future release"
+                         " (use 'timeout' in op_defaults instead)");
+
+        }
+    }
+
+    if (value == NULL) {
+        value = CRM_DEFAULT_OP_TIMEOUT_S;
     }
 
     timeout = crm_get_msec(value);

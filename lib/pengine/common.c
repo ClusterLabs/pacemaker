@@ -125,8 +125,8 @@ pe_cluster_option pe_opts[] = {
 	  "The \"correct\" value will depend on the speed and load of your network and cluster nodes." },
 	{ "migration-limit", NULL, "integer", NULL, "-1", &check_number,
 	  "The number of migration jobs that the TE is allowed to execute in parallel on a node"},
-	{ "default-action-timeout", "default_action_timeout", "time", NULL, CRM_DEFAULT_OP_TIMEOUT_S, &check_time,
-	  "How long to wait for actions to complete", NULL },
+    { "default-action-timeout", "default_action_timeout", "time", NULL, NULL,
+      &check_time, "Deprecated (use 'timeout' in op_defaults instead)", NULL },
 
 	/* Orphans and stopping */
 	{ "stop-all-resources", NULL, "boolean", NULL, "false", &check_boolean,
