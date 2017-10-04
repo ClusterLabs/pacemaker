@@ -103,6 +103,7 @@ enum pe_warn_once_e {
     pe_wo_requires      = 0x0010,
     pe_wo_isolation     = 0x0020,
     pe_wo_default_stick = 0x0040,
+    pe_wo_default_isman = 0x0080,
 };
 
 extern uint32_t pe_wo;
