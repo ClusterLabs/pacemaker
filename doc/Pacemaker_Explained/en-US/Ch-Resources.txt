@@ -340,7 +340,7 @@ indexterm:[Resource,Option,target-role]
 
 |requires
 |+quorum+ for resources with a +class+ of +stonith+,
- otherwise +unfencing+ if unfencing is active in the cluser,
+ otherwise +unfencing+ if unfencing is active in the cluster,
  otherwise +fencing+ if +stonith-enabled+ is true, otherwise +quorum+
 |Conditions under which the resource can be started '(since 1.1.8)'
 Allowed values:
@@ -350,12 +350,12 @@ Allowed values:
   the configured nodes are active
 * +fencing:+ The cluster can only start this resource if a majority
   of the configured nodes are active _and_ any failed or unknown nodes
-  have been powered off
+  have been <<ch-stonith,fenced>>
 * +unfencing:+
   The cluster can only start this resource if a majority
   of the configured nodes are active _and_ any failed or unknown nodes
-  have been powered off _and_ only on nodes that have been 'unfenced'
-  '(since 1.1.9)'
+  have been fenced _and_ only on nodes that have been
+  <<s-unfencing,unfenced>> '(since 1.1.9)'
 
 indexterm:[requires,Resource Option]
 indexterm:[Resource,Option,requires]
