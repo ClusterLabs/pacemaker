@@ -305,3 +305,68 @@ The same principle applies for +meta_attributes+ and
 </primitive>
 -------
 =====
+
+== Tagging Configuration Elements ==
+
+Pacemaker allows you to 'tag' any configuration element that has an XML ID.
+
+The main purpose of tagging is to support higher-level user interface tools;
+Pacemaker itself only uses tags within constraints. Therefore, what you can
+do with tags mostly depends on the tools you use.
+
+=== Configuring Tags ===
+
+A tag is simply a named list of XML IDs.
+
+.Tag referencing three resources
+====
+[source,XML]
+----
+<tags>
+  <tag id="all-vms">
+    <obj_ref id="vm1"/>
+    <obj_ref id="vm2"/>
+    <obj_ref id="vm3"/>
+  </tag>
+</tags>
+----
+====
+
+What you can do with this new tag depends on what your higher-level tools
+support. For example, a tool might allow you to enable or disable all of
+the tagged resources at once, or show the status of just the tagged
+resources.
+
+A single configuration element can be listed in any number of tags.
+
+=== Using Tags in Constraints and Resource Sets ===
+
+Pacemaker itself only uses tags in constraints. If you supply a tag name
+instead of a resource name in any constraint, the constraint will apply to
+all resources listed in that tag.
+
+.Constraint using a tag
+====
+[source,XML]
+----
+<rsc_order id="order1" first="storage" then="all-vms" kind="Mandatory" />
+----
+====
+
+In the example above, assuming the +all-vms+ tag is defined as in the previous
+example, the constraint will behave the same as:
+
+.Equivalent constraints without tags
+====
+[source,XML]
+----
+<rsc_order id="order1-1" first="storage" then="vm1" kind="Mandatory" />
+<rsc_order id="order1-2" first="storage" then="vm2" kind="Mandatory" />
+<rsc_order id="order1-3" first="storage" then="vm2" kind="Mandatory" />
+----
+====
+
+A tag may be used directly in the constraint, or indirectly by being
+listed in a <<s-resource-sets,resource set>> used in the constraint.
+When used in a resource set, an expanded tag will honor the set's
++sequential+ property.
