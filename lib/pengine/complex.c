@@ -680,18 +680,36 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
         /* Make a best-effort guess at a migration threshold for people with 0.6 configs
          * try with underscores and hyphens, from both the resource and global defaults section
          */
+        const char *legacy = NULL;
 
-        value = g_hash_table_lookup((*rsc)->meta, "resource-failure-stickiness");
-        if (value == NULL) {
-            value = g_hash_table_lookup((*rsc)->meta, "resource_failure_stickiness");
+        legacy = g_hash_table_lookup((*rsc)->meta,
+                                     "resource-failure-stickiness");
+        if (legacy == NULL) {
+            legacy = g_hash_table_lookup((*rsc)->meta,
+                                         "resource_failure_stickiness");
         }
-        if (value == NULL) {
-            value =
-                g_hash_table_lookup(data_set->config_hash, "default-resource-failure-stickiness");
+        if (legacy) {
+            value = legacy;
+            pe_warn_once(pe_wo_rsc_failstick,
+                         "Support for 'resource-failure-stickiness' resource meta-attribute"
+                         " is deprecated and will be removed in a future release"
+                         " (use 'migration-threshold' resource meta-attribute instead)");
         }
-        if (value == NULL) {
-            value =
-                g_hash_table_lookup(data_set->config_hash, "default_resource_failure_stickiness");
+
+        legacy = g_hash_table_lookup(data_set->config_hash,
+                                     "default-resource-failure-stickiness");
+        if (legacy == NULL) {
+            legacy = g_hash_table_lookup(data_set->config_hash,
+                                         "default_resource_failure_stickiness");
+        }
+        if (legacy) {
+            if (value == NULL) {
+                value = legacy;
+            }
+            pe_warn_once(pe_wo_default_rscfs,
+                         "Support for 'default-resource-failure-stickiness' cluster option"
+                         " is deprecated and will be removed in a future release"
+                         " (use 'migration-threshold' in rsc_defaults instead)");
         }
 
         if (value) {

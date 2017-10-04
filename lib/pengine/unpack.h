@@ -105,6 +105,8 @@ enum pe_warn_once_e {
     pe_wo_default_stick = 0x0040,
     pe_wo_default_isman = 0x0080,
     pe_wo_default_timeo = 0x0100,
+    pe_wo_rsc_failstick = 0x0200,
+    pe_wo_default_rscfs = 0x0400,
 };
 
 extern uint32_t pe_wo;
