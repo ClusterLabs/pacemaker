@@ -2589,10 +2589,19 @@ rsc_ticket_new(const char *id, resource_t * rsc_lh, ticket_t * ticket,
     new_rsc_ticket->role_lh = text2role(state_lh);
 
     if (safe_str_eq(loss_policy, "fence")) {
+        if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
+            new_rsc_ticket->loss_policy = loss_ticket_fence;
+        } else {
+            crm_config_err("Resetting %s loss-policy to 'stop': fencing is not configured",
+                           ticket->id);
+            loss_policy = "stop";
+        }
+    }
+
+    if (new_rsc_ticket->loss_policy == loss_ticket_fence) {
         crm_debug("On loss of ticket '%s': Fence the nodes running %s (%s)",
                   new_rsc_ticket->ticket->id, new_rsc_ticket->rsc_lh->id,
                   role2text(new_rsc_ticket->role_lh));
-        new_rsc_ticket->loss_policy = loss_ticket_fence;
 
     } else if (safe_str_eq(loss_policy, "freeze")) {
         crm_debug("On loss of ticket '%s': Freeze %s (%s)",

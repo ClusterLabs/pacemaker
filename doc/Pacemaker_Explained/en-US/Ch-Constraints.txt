@@ -380,29 +380,42 @@ constraint, or alternatively, a group (see <<group-resources>>).
 === Colocation Properties ===
 
 .Properties of a rsc_colocation Constraint
-[width="95%",cols="2m,5<",options="header",align="center"]
+[width="95%",cols="1m,1,4<",options="header",align="center"]
 |=========================================================
 
 |Field
+|Default
 |Description
 
 |id
-|A unique name for the constraint.
-indexterm:[id,Colocation Constraints]
-indexterm:[Constraints,Colocation,id]
+|
+|A unique name for the constraint (required).
+ indexterm:[id,Colocation Constraints]
+ indexterm:[Constraints,Colocation,id]
 
 |rsc
-|The name of a resource that should be located relative to +with-rsc+.
-indexterm:[rsc,Colocation Constraints]
-indexterm:[Constraints,Colocation,rsc]
+|
+|The name of a resource that should be located relative to +with-rsc+ (required).
+ indexterm:[rsc,Colocation Constraints]
+ indexterm:[Constraints,Colocation,rsc]
 
 |with-rsc
+|
 |The name of the resource used as the colocation target. The cluster will
-decide where to put this resource first and then decide where to put +rsc+.
+ decide where to put this resource first and then decide where to put +rsc+ (required).
  indexterm:[with-rsc,Colocation Constraints]
  indexterm:[Constraints,Colocation,with-rsc]
 
+|node-attribute
+|#uname
+|The node attribute that must be the same on the node running +rsc+ and the
+ node running +with-rsc+ for the constraint to be satisfied. (For details,
+ see <<s-coloc-attribute>>.)
+ indexterm:[node-attribute,Colocation Constraints]
+ indexterm:[Constraints,Colocation,node-attribute]
+
 |score
+|
 |Positive values indicate the resources should run on the same
  node. Negative values indicate the resources should run on
  different nodes. Values of \+/- +INFINITY+ change "should" to "must".
@@ -468,6 +481,20 @@ mandatory.
 [source,XML]
 <rsc_colocation id="colocate-maybe" rsc="A" with-rsc="B" score="500"/>
 ====
+
+[[s-coloc-attribute]]
+=== Colocation by Node Attribute ===
+
+The +node+attribute+ property of a colocation constraints allows you to express
+the requirement, "these resources must be on similar nodes".
+
+As an example, imagine that you have two Storage Area Networks (SANs) that are
+not controlled by the cluster, and each node is connected to one or the other.
+You may have two resources +r1+ and +r2+ such that +r2+ needs to use the same
+SAN as +r1+, but doesn't necessarily have to be on the same exact node.
+In such a case, you could define a <<s-node-attributes,node attribute>> named
++san+, with the value +san1+ or +san2+ on each node as appropriate. Then, you
+could colocate +r2+ with +r1+ using +node-attribute+ set to +san+.
 
 [[s-resource-sets]]
 == Resource Sets ==

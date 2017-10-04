@@ -46,6 +46,9 @@ gboolean unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNod
                        enum action_fail_response *failed, pe_working_set_t * data_set);
 static gboolean determine_remote_online_status(pe_working_set_t * data_set, node_t * this_node);
 
+// Bitmask for warnings we only want to print once
+uint32_t pe_wo = 0;
+
 static gboolean
 is_dangling_container_remote_node(node_t *node)
 {
@@ -297,6 +300,15 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
               is_set(data_set->flags,
                      pe_flag_start_failure_fatal) ? "always fatal" : "handled by failcount");
 
+    if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
+        set_config_flag(data_set, "startup-fencing", pe_flag_startup_fencing);
+    }
+    if (is_set(data_set->flags, pe_flag_startup_fencing)) {
+        crm_trace("Unseen nodes will be fenced");
+    } else {
+        pe_warn_once(pe_wo_blind, "Blind faith: not fencing unseen nodes");
+    }
+
     node_score_red = char2score(pe_pref(data_set->config_hash, "node-health-red"));
     node_score_green = char2score(pe_pref(data_set->config_hash, "node-health-green"));
     node_score_yellow = char2score(pe_pref(data_set->config_hash, "node-health-yellow"));
@@ -475,10 +487,6 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pe_working_set_t *data
 static void
 handle_startup_fencing(pe_working_set_t *data_set, node_t *new_node)
 {
-    static const char *blind_faith = NULL;
-    static gboolean unseen_are_unclean = TRUE;
-    static gboolean need_warning = TRUE;
-
     if ((new_node->details->type == node_remote) && (new_node->details->remote_rsc == NULL)) {
         /* Ignore fencing for remote nodes that don't have a connection resource
          * associated with them. This happens when remote node entries get left
@@ -487,28 +495,13 @@ handle_startup_fencing(pe_working_set_t *data_set, node_t *new_node)
         return;
     }
 
-    blind_faith = pe_pref(data_set->config_hash, "startup-fencing");
-
-    if (crm_is_true(blind_faith) == FALSE) {
-        unseen_are_unclean = FALSE;
-        if (need_warning) {
-            crm_warn("Blind faith: not fencing unseen nodes");
-
-            /* Warn once per run, not per node and transition */
-            need_warning = FALSE;
-        }
-    }
-
-    if (is_set(data_set->flags, pe_flag_stonith_enabled) == FALSE
-        || unseen_are_unclean == FALSE) {
-        /* blind faith... */
-        new_node->details->unclean = FALSE;
+    if (is_set(data_set->flags, pe_flag_startup_fencing)) {
+        // All nodes are unclean until we've seen their status entry
+        new_node->details->unclean = TRUE;
 
     } else {
-        /* all nodes are unclean until we've seen their
-         * status entry
-         */
-        new_node->details->unclean = TRUE;
+        // Blind faith ...
+        new_node->details->unclean = FALSE;
     }
 
     /* We need to be able to determine if a node's status section
