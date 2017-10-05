@@ -1210,7 +1210,9 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
             crm_trace("determining node state");
             determine_online_status(state, this_node, data_set);
 
-            if (this_node->details->online && data_set->no_quorum_policy == no_quorum_suicide) {
+            if (is_not_set(data_set->flags, pe_flag_have_quorum)
+                && this_node->details->online
+                && (data_set->no_quorum_policy == no_quorum_suicide)) {
                 /* Everything else should flow from this automatically
                  * At least until the PE becomes able to migrate off healthy resources
                  */
