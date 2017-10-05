@@ -132,6 +132,7 @@ bool crm_op_needs_metadata(const char *rsc_class, const char *op);
 xmlNode *crm_create_op_xml(xmlNode *parent, const char *prefix,
                            const char *task, const char *interval,
                            const char *timeout);
+#define CRM_DEFAULT_OP_TIMEOUT_S "20s"
 
 int compare_version(const char *version1, const char *version2);
 

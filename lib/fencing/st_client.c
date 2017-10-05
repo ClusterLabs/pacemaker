@@ -1277,11 +1277,11 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
 
             tmp = create_xml_node(actions, "action");
             crm_xml_add(tmp, "name", "stop");
-            crm_xml_add(tmp, "timeout", "20s");
+            crm_xml_add(tmp, "timeout", CRM_DEFAULT_OP_TIMEOUT_S);
 
             tmp = create_xml_node(actions, "action");
             crm_xml_add(tmp, "name", "start");
-            crm_xml_add(tmp, "timeout", "20s");
+            crm_xml_add(tmp, "timeout", CRM_DEFAULT_OP_TIMEOUT_S);
         }
 
         freeXpathObject(xpathObj);
