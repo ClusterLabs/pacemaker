@@ -121,11 +121,45 @@ main(int argc, char **argv)
     return crmd_init();
 }
 
+static void
+log_deprecation_warnings()
+{
+    enum cluster_type_e cluster_type = get_cluster_type();
+
+    if (cluster_type != pcmk_cluster_corosync) {
+        crm_warn("Support for cluster infrastructure %s "
+                 " is deprecated and will be removed in a future release",
+                 name_for_cluster_type(cluster_type));
+
+    }
+
+#if ENABLE_SNMP
+    crm_warn("Compile-time support for crm_mon SNMP options"
+             " is deprecated and will be removed in a future release"
+             " (configure alerts instead)",
+             name_for_cluster_type(cluster_type));
+#endif
+#if ENABLE_ESMTP
+    crm_warn("Compile-time support for crm_mon SMTP options"
+             " is deprecated and will be removed in a future release"
+             " (configure alerts instead)",
+             name_for_cluster_type(cluster_type));
+#endif
+
+    if (getenv("LRMD_MAX_CHILDREN")) {
+        crm_warn("The LRMD_MAX_CHILDREN environment variable"
+                 " is deprecated and will be removed in a future release"
+                 " (use PCMK_node_action_limit instead)");
+    }
+}
+
 int
 crmd_init(void)
 {
     int exit_code = 0;
     enum crmd_fsa_state state;
+
+    log_deprecation_warnings();
 
     fsa_state = S_STARTING;
     fsa_input_register = 0;     /* zero out the regester */

@@ -1,0 +1,21 @@
+Using the original execution date of: 2017-08-21 17:12:54Z
+
+Current cluster status:
+Online: [ node1 node2 node3 ]
+
+ Fencing	(stonith:fence_xvm):	Stopped
+
+Transition Summary:
+ * Start      Fencing     ( node1 )   due to no quorum (blocked)
+
+Executing cluster transition:
+ * Resource action: Fencing         monitor on node3
+ * Resource action: Fencing         monitor on node2
+ * Resource action: Fencing         monitor on node1
+Using the original execution date of: 2017-08-21 17:12:54Z
+
+Revised cluster status:
+Online: [ node1 node2 node3 ]
+
+ Fencing	(stonith:fence_xvm):	Stopped
+

@@ -555,6 +555,8 @@ main(int argc, char **argv, char **envp)
 
         switch (flag) {
             case 'r':
+                crm_warn("The -r option to lrmd is deprecated (and ignored) "
+                         "and will be removed in a future release");
                 break;
             case 'l':
                 crm_add_logfile(optarg);

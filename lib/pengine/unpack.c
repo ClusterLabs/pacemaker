@@ -142,6 +142,8 @@ pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason)
     }
 }
 
+// @TODO xpaths can't handle templates, rules, or id-refs
+
 // nvpair with provides or requires set to unfencing
 #define XPATH_UNFENCING_NVPAIR XML_CIB_TAG_NVPAIR                \
     "[(@" XML_NVPAIR_ATTR_NAME "='" XML_RSC_ATTR_PROVIDES "'"    \
@@ -151,9 +153,9 @@ pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason)
 // unfencing in rsc_defaults or any resource
 #define XPATH_ENABLE_UNFENCING \
     "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_RESOURCES   \
-    "//" XPATH_UNFENCING_NVPAIR                                               \
+    "//" XML_TAG_META_SETS "/" XPATH_UNFENCING_NVPAIR                                               \
     "|/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_RSCCONFIG  \
-    "/" XPATH_UNFENCING_NVPAIR
+    "/" XML_TAG_META_SETS "/" XPATH_UNFENCING_NVPAIR
 
 static
 void set_if_xpath(unsigned long long flag, const char *xpath,
@@ -1210,7 +1212,9 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
             crm_trace("determining node state");
             determine_online_status(state, this_node, data_set);
 
-            if (this_node->details->online && data_set->no_quorum_policy == no_quorum_suicide) {
+            if (is_not_set(data_set->flags, pe_flag_have_quorum)
+                && this_node->details->online
+                && (data_set->no_quorum_policy == no_quorum_suicide)) {
                 /* Everything else should flow from this automatically
                  * At least until the PE becomes able to migrate off healthy resources
                  */

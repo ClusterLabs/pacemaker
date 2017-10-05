@@ -1,0 +1,11 @@
+digraph "g" {
+"Fencing_monitor_0 node1" -> "Fencing_start_0 node1" [ style = bold]
+"Fencing_monitor_0 node1" [ style=bold color="green" fontcolor="black"]
+"Fencing_monitor_0 node2" -> "Fencing_start_0 node1" [ style = bold]
+"Fencing_monitor_0 node2" [ style=bold color="green" fontcolor="black"]
+"Fencing_monitor_0 node3" -> "Fencing_start_0 node1" [ style = bold]
+"Fencing_monitor_0 node3" [ style=bold color="green" fontcolor="black"]
+"Fencing_monitor_120000 node1" [ style=bold color="green" fontcolor="black"]
+"Fencing_start_0 node1" -> "Fencing_monitor_120000 node1" [ style = bold]
+"Fencing_start_0 node1" [ style=bold color="green" fontcolor="black"]
+}
