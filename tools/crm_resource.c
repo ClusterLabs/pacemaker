@@ -388,10 +388,6 @@ main(int argc, char **argv)
     crm_set_options(NULL, "(query|command) [options]", long_options,
                     "Perform tasks related to cluster resources.\nAllows resources to be queried (definition and location), modified, and moved around the cluster.\n");
 
-    if (argc < 2) {
-        crm_help('?', EX_USAGE);
-    }
-
     while (1) {
         flag = crm_get_option_long(argc, argv, &option_index, &longname);
         if (flag == -1)
