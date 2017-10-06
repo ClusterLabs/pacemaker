@@ -32,6 +32,8 @@
 #  include <sysexits.h>
 #  include <glib.h>
 
+#  include <libxml/tree.h>
+
 #  include <crm/lrmd.h>
 
 #  if SUPPORT_HEARTBEAT
