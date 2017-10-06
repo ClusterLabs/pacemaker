@@ -1833,7 +1833,7 @@ bool fix_remote_addr(resource_t * rsc)
     };
     const char *value_list[] = {
         "remote",
-        "ocf",
+        PCMK_RESOURCE_CLASS_OCF,
         "pacemaker"
     };
 
