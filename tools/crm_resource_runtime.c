@@ -34,7 +34,6 @@ do_find_resource(const char *rsc, resource_t * the_rsc, pe_working_set_t * data_
     for (lpc = the_rsc->running_on; lpc != NULL; lpc = lpc->next) {
         node_t *node = (node_t *) lpc->data;
 
-        crm_trace("resource %s is running on: %s", rsc, node->details->uname);
         if (BE_QUIET) {
             fprintf(stdout, "%s\n", node->details->uname);
         } else {
@@ -1081,7 +1080,7 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
     int sleep_interval = 2;
     int timeout = timeout_ms / 1000;
 
-    bool is_clone = FALSE;
+    bool stop_via_ban = FALSE;
     char *rsc_id = NULL;
     char *orig_target_role = NULL;
 
@@ -1106,8 +1105,8 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
     attr_set_type = XML_TAG_META_SETS;
 
     rsc_id = strdup(rsc->id);
-    if(pe_rsc_is_clone(rsc)) {
-        is_clone = TRUE;
+    if ((pe_rsc_is_clone(rsc) || pe_bundle_replicas(rsc)) && host) {
+        stop_via_ban = TRUE;
     }
 
     /*
@@ -1142,8 +1141,8 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
 
     dump_list(current_active, "Origin");
 
-    if(is_clone && host) {
-        /* Stop the clone instance by banning it from the host */
+    if (stop_via_ban) {
+        /* Stop the clone or bundle instance by banning it from the host */
         BE_QUIET = TRUE;
         rc = cli_resource_ban(rsc_id, host, NULL, cib);
 
@@ -1225,7 +1224,7 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
 
     }
 
-    if(is_clone && host) {
+    if (stop_via_ban) {
         rc = cli_resource_clear(rsc_id, host, NULL, cib);
 
     } else if (orig_target_role) {
@@ -1306,7 +1305,7 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
     goto done;
 
   failure:
-    if(is_clone && host) {
+    if (stop_via_ban) {
         cli_resource_clear(rsc_id, host, NULL, cib);
     } else if (orig_target_role) {
         cli_resource_update_attribute(rsc_id, NULL, NULL,
