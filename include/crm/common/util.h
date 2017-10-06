@@ -185,5 +185,8 @@ int crm_exit(int rc);
 bool pcmk_acl_required(const char *user);
 
 char *crm_generate_ra_key(const char *class, const char *provider, const char *type);
+bool crm_provider_required(const char *standard);
+int crm_parse_agent_spec(const char *spec, char **standard, char **provider,
+                         char **type);
 
 #endif

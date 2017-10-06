@@ -172,8 +172,7 @@ resources_action_create(const char *name, const char *standard, const char *prov
         goto return_error;
     }
 
-    if (!strcasecmp(standard, PCMK_RESOURCE_CLASS_OCF)
-        && crm_strlen_zero(provider)) {
+    if (crm_provider_required(standard) && crm_strlen_zero(provider)) {
         crm_err("Cannot create OCF operation for %s without provider", name);
         goto return_error;
     }
@@ -212,7 +211,7 @@ resources_action_create(const char *name, const char *standard, const char *prov
     }
     op->action = strdup(action);
 
-    if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_OCF) == 0) {
+    if (crm_provider_required(op->standard)) {
         op->provider = strdup(provider);
         op->params = params;
         params = NULL;
@@ -1386,7 +1385,7 @@ resources_list_standards(void)
 GList *
 resources_list_providers(const char *standard)
 {
-    if (strcasecmp(standard, PCMK_RESOURCE_CLASS_OCF) == 0) {
+    if (crm_provider_required(standard)) {
         return resources_os_list_ocf_providers();
     }
 

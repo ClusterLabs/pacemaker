@@ -529,7 +529,7 @@ common_print(resource_t * rsc, const char *pre_text, const char *name, node_t *n
     }
     offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", name);
     offset += snprintf(buffer + offset, LINE_MAX - offset, "\t(%s", class);
-    if (safe_str_eq(class, PCMK_RESOURCE_CLASS_OCF)) {
+    if (crm_provider_required(class)) {
         const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
         offset += snprintf(buffer + offset, LINE_MAX - offset, "::%s", prov);
     }
@@ -812,7 +812,7 @@ get_rscs_brief(GListPtr rsc_list, GHashTable * rsc_table, GHashTable * active_ta
         }
 
         offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", class);
-        if (safe_str_eq(class, PCMK_RESOURCE_CLASS_OCF)) {
+        if (crm_provider_required(class)) {
             const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
             offset += snprintf(buffer + offset, LINE_MAX - offset, "::%s", prov);
         }

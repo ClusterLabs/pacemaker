@@ -1435,7 +1435,7 @@ lrmd_api_register_rsc(lrmd_t * lrmd,
     if (!class || !type || !rsc_id) {
         return -EINVAL;
     }
-    if (safe_str_eq(class, PCMK_RESOURCE_CLASS_OCF) && !provider) {
+    if (crm_provider_required(class) && !provider) {
         return -EINVAL;
     }
 
@@ -1522,7 +1522,7 @@ lrmd_api_get_rsc_info(lrmd_t * lrmd, const char *rsc_id, enum lrmd_call_options 
     if (!class || !type) {
         free_xml(output);
         return NULL;
-    } else if (safe_str_eq(class, PCMK_RESOURCE_CLASS_OCF) && !provider) {
+    } else if (crm_provider_required(class) && !provider) {
         free_xml(output);
         return NULL;
     }
