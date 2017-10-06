@@ -361,11 +361,11 @@ class Environment:
                 elif args[i+1] == "phd":
                     self["DoStonith"]=1
                     self["stonith-type"] = "fence_phd_kvm"
-                    self["stonith-params"] = "pcmk_arg_map=domain:uname,delay=0"
+                    self["stonith-params"] = "pcmk_host_argument=domain,delay=0"
                 elif args[i+1] == "rhcs" or args[i+1] == "xvm" or args[i+1] == "virt":
                     self["DoStonith"]=1
                     self["stonith-type"] = "fence_xvm"
-                    self["stonith-params"] = "pcmk_arg_map=domain:uname,delay=0"
+                    self["stonith-params"] = "pcmk_host_argument=domain,delay=0"
                 elif args[i+1] == "docker":
                     self["DoStonith"]=1
                     self["stonith-type"] = "fence_docker_cts"
