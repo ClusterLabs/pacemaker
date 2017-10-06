@@ -299,8 +299,7 @@ inject_resource(xmlNode * cib_node, const char *resource, const char *rclass, co
         fprintf(stderr, "Invalid class for %s: %s\n", resource, rclass);
         return NULL;
 
-    } else if (safe_str_eq(rclass, PCMK_RESOURCE_CLASS_OCF)
-               && rprovider == NULL) {
+    } else if (crm_provider_required(rclass) && (rprovider == NULL)) {
         fprintf(stderr, "Please specify the provider for resource %s\n", resource);
         return NULL;
     }
