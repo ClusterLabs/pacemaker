@@ -459,32 +459,28 @@ main(int argc, char **argv)
                     return crm_exit(rc);
 
                 } else if (safe_str_eq("show-metadata", longname)) {
-                    char standard[512];
-                    char provider[512];
-                    char type[512];
+                    char *standard = NULL;
+                    char *provider = NULL;
+                    char *type = NULL;
                     char *metadata = NULL;
                     lrmd_t *lrmd_conn = lrmd_api_new();
 
-                    rc = sscanf(optarg, "%[^:]:%[^:]:%s", standard, provider, type);
-                    if (rc == 3) {
-                        rc = lrmd_conn->cmds->get_metadata(lrmd_conn, standard, provider, type,
+                    rc = crm_parse_agent_spec(optarg, &standard, &provider, &type);
+                    if (rc == pcmk_ok) {
+                        rc = lrmd_conn->cmds->get_metadata(lrmd_conn, standard,
+                                                           provider, type,
                                                            &metadata, 0);
-
-                    } else if (rc == 2) {
-                        rc = lrmd_conn->cmds->get_metadata(lrmd_conn, standard, NULL, provider,
-                                                           &metadata, 0);
-
-                    } else if (rc < 2) {
+                    } else {
                         fprintf(stderr,
-                                "Please specify standard:type or standard:provider:type, not %s\n",
+                                "'%s' is not a valid agent specification\n",
                                 optarg);
-                        rc = -EINVAL;
                     }
 
                     if (metadata) {
                         printf("%s\n", metadata);
                     } else {
-                        fprintf(stderr, "Metadata query for %s failed: %d\n", optarg, rc);
+                        fprintf(stderr, "Metadata query for %s failed: %s\n",
+                                optarg, pcmk_strerror(rc));
                     }
                     lrmd_api_delete(lrmd_conn);
                     return crm_exit(rc);
