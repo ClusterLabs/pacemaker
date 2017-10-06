@@ -1314,3 +1314,23 @@ container_resource_state(const resource_t * rsc, gboolean current)
     enum rsc_role_e container_role = RSC_ROLE_UNKNOWN;
     return container_role;
 }
+
+/*!
+ * \brief Get the number of configured replicas in a bundle
+ *
+ * \param[in] rsc  Bundle resource
+ *
+ * \return Number of configured replicas, or 0 on error
+ */
+int
+pe_bundle_replicas(const resource_t *rsc)
+{
+    if ((rsc == NULL) || (rsc->variant != pe_container)) {
+        return 0;
+    } else {
+        container_variant_data_t *container_data = NULL;
+
+        get_container_variant_data(container_data, rsc);
+        return container_data->replicas;
+    }
+}

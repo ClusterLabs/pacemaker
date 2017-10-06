@@ -464,6 +464,7 @@ node_t *pe_find_node_id(GListPtr node_list, const char *id);
 node_t *pe_find_node_any(GListPtr node_list, const char *id, const char *uname);
 GListPtr find_operations(const char *rsc, const char *node, gboolean active_filter,
                          pe_working_set_t * data_set);
+int pe_bundle_replicas(const resource_t *rsc);
 #if ENABLE_VERSIONED_ATTRS
 pe_rsc_action_details_t *pe_rsc_action_details(pe_action_t *action);
 #endif
