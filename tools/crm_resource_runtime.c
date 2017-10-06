@@ -496,7 +496,7 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
         return -EINVAL;
 
     } else if (host_uname == NULL) {
-        CMD_ERR("Please supply a hostname with -H");
+        CMD_ERR("Please supply a node name with --node");
         return -EINVAL;
     } else {
         node_t *node = pe_find_node(data_set->nodes, host_uname);
