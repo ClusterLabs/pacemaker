@@ -23,7 +23,7 @@ AM_CPPFLAGS			= -I$(top_srcdir)/include
 lib_LTLIBRARIES			= libcrmservice.la
 noinst_HEADERS			= pcmk-dbus.h upstart.h systemd.h services_private.h
 
-libcrmservice_la_LDFLAGS	= -version-info 5:0:2
+libcrmservice_la_LDFLAGS	= -version-info 6:0:3
 libcrmservice_la_CPPFLAGS	= -DOCF_ROOT_DIR=\"@OCF_ROOT_DIR@\" $(AM_CPPFLAGS)
 libcrmservice_la_CFLAGS		= $(GIO_CFLAGS)
 
