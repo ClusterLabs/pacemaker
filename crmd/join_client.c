@@ -286,12 +286,12 @@ do_cl_join_finalize_respond(long long action,
                   join_id, fsa_our_dc);
 
         /*
-         * If this is the node's first join since the crmd started on it, clear
-         * any previous transient node attributes, to handle the case where
-         * the node restarted so quickly that the cluster layer didn't notice.
+         * If this is the node's first join since the crmd started on it,
+         * set its initial state (standby or member) according to the user's
+         * preference.
          *
-         * Do not remove the resources though, they'll be cleaned up in
-         * do_dc_join_ack(). Removing them here creates a race condition if the
+         * We do not clear the LRM history here. Even if the DC failed to do it
+         * when we last left, removing them here creates a race condition if the
          * crmd is being recovered. Instead of a list of active resources from
          * the lrmd, we may end up with a blank status section. If we are _NOT_
          * lucky, we will probe for the "wrong" instance of anonymous clones and
@@ -299,10 +299,6 @@ do_cl_join_finalize_respond(long long action,
          */
         if (first_join && is_not_set(fsa_input_register, R_SHUTDOWN)) {
             first_join = FALSE;
-            erase_status_tag(fsa_our_uname, XML_TAG_TRANSIENT_NODEATTRS, 0);
-            update_attrd(fsa_our_uname, "terminate", NULL, NULL, FALSE);
-            update_attrd(fsa_our_uname, XML_CIB_ATTR_SHUTDOWN, "0", NULL, FALSE);
-
             if (start_state) {
                 set_join_state(start_state);
             }

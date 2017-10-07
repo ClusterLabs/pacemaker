@@ -147,6 +147,24 @@ get_action_delay_max(stonith_device_t * device, const char * action)
     return delay_max_ms;
 }
 
+static int
+get_action_delay_base(stonith_device_t * device, const char * action)
+{
+    const char *value = NULL;
+    int delay_base_ms = 0;
+
+    if (safe_str_neq(action, "off") && safe_str_neq(action, "reboot")) {
+        return 0;
+    }
+
+    value = g_hash_table_lookup(device->params, STONITH_ATTR_DELAY_BASE);
+    if (value) {
+       delay_base_ms = crm_get_msec(value);
+    }
+
+    return delay_base_ms;
+}
+
 /*!
  * \internal
  * \brief Override STONITH timeout with pcmk_*_timeout if available
@@ -185,7 +203,7 @@ get_action_timeout(stonith_device_t * device, const char *action, int default_ti
         }
 
         /* If the device config specified an action-specific timeout, use it */
-        snprintf(buffer, sizeof(buffer) - 1, "pcmk_%s_timeout", action);
+        snprintf(buffer, sizeof(buffer), "pcmk_%s_timeout", action);
         value = g_hash_table_lookup(device->params, buffer);
         if (value) {
             return atoi(value);
@@ -424,6 +442,7 @@ static void
 schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
 {
     int delay_max = 0;
+    int delay_base = 0;
 
     CRM_CHECK(cmd != NULL, return);
     CRM_CHECK(device != NULL, return);
@@ -453,11 +472,26 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
     mainloop_set_trigger(device->work);
 
     delay_max = get_action_delay_max(device, cmd->action);
+    delay_base = get_action_delay_base(device, cmd->action);
+    if (delay_max == 0) {
+        delay_max = delay_base;
+    }
+    if (delay_max < delay_base) {
+        crm_warn("Base-delay (%dms) is larger than max-delay (%dms) "
+                 "for %s on %s - limiting to max-delay",
+                 delay_base, delay_max, cmd->action, device->id);
+        delay_base = delay_max;
+    }
     if (delay_max > 0) {
-        cmd->start_delay = rand() % delay_max;
-        crm_notice("Delaying %s on %s for %lldms (timeout=%ds)",
-                    cmd->action, device->id, cmd->start_delay, cmd->timeout);
-        cmd->delay_id = g_timeout_add(cmd->start_delay, start_delay_helper, cmd);
+        cmd->start_delay =
+            ((delay_max != delay_base)?(rand() % (delay_max - delay_base)):0)
+            + delay_base;
+        crm_notice("Delaying %s on %s for %lldms (timeout=%ds, base=%dms, "
+                   "max=%dms)",
+                    cmd->action, device->id, cmd->start_delay, cmd->timeout,
+                    delay_base, delay_max);
+        cmd->delay_id =
+            g_timeout_add(cmd->start_delay, start_delay_helper, cmd);
     }
 }
 
@@ -475,7 +509,6 @@ free_device(gpointer data)
 
         crm_warn("Removal of device '%s' purged operation %s", device->id, cmd->action);
         cmd->done_cb(0, -ENODEV, NULL, cmd);
-        free_async_command(cmd);
     }
     g_list_free(device->pending_ops);
 
@@ -496,8 +529,7 @@ build_port_aliases(const char *hostmap, GListPtr * targets)
 {
     char *name = NULL;
     int last = 0, lpc = 0, max = 0, added = 0;
-    GHashTable *aliases =
-        g_hash_table_new_full(crm_strcase_hash, crm_strcase_equal, g_hash_destroy_str, g_hash_destroy_str);
+    GHashTable *aliases = crm_strcase_table_new();
 
     if (hostmap == NULL) {
         return aliases;
@@ -659,8 +691,7 @@ get_agent_metadata(const char *agent)
     char *buffer = NULL;
 
     if(metadata_cache == NULL) {
-        metadata_cache = g_hash_table_new_full(
-            crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+        metadata_cache = crm_str_table_new();
     }
 
     buffer = g_hash_table_lookup(metadata_cache, agent);
@@ -707,22 +738,23 @@ is_nodeid_required(xmlNode * xml)
     return TRUE;
 }
 
+#define MAX_ACTION_LEN 256
+
 static char *
 add_action(char *actions, const char *action)
 {
-    static size_t len = 256;
     int offset = 0;
 
     if (actions == NULL) {
-        actions = calloc(1, len);
+        actions = calloc(1, MAX_ACTION_LEN);
     } else {
         offset = strlen(actions);
     }
 
     if (offset > 0) {
-        offset += snprintf(actions+offset, len-offset, " ");
+        offset += snprintf(actions+offset, MAX_ACTION_LEN - offset, " ");
     }
-    offset += snprintf(actions+offset, len-offset, "%s", action);
+    offset += snprintf(actions+offset, MAX_ACTION_LEN - offset, "%s", action);
 
     return actions;
 }
@@ -1728,6 +1760,7 @@ add_action_specific_attributes(xmlNode *xml, const char *action,
 {
     int action_specific_timeout;
     int delay_max;
+    int delay_base;
 
     CRM_CHECK(xml && action && device, return);
 
@@ -1748,6 +1781,23 @@ add_action_specific_attributes(xmlNode *xml, const char *action,
         crm_trace("Action %s has maximum random delay %dms on %s",
                   action, delay_max, device->id);
         crm_xml_add_int(xml, F_STONITH_DELAY_MAX, delay_max / 1000);
+    }
+
+    delay_base = get_action_delay_base(device, action);
+    if (delay_base > 0) {
+        crm_xml_add_int(xml, F_STONITH_DELAY_BASE, delay_base / 1000);
+    }
+
+    if ((delay_max > 0) && (delay_base == 0)) {
+        crm_trace("Action %s has maximum random delay %dms on %s",
+                  action, delay_max, device->id);
+    } else if ((delay_max == 0) && (delay_base > 0)) {
+        crm_trace("Action %s has a static delay of %dms on %s",
+                  action, delay_base, device->id);
+    } else if ((delay_max > 0) && (delay_base > 0)) {
+        crm_trace("Action %s has a minimum delay of %dms and a randomly chosen "
+                  "maximum delay of %dms on %s",
+                  action, delay_base, delay_max, device->id);
     }
 }
 

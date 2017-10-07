@@ -1300,12 +1300,15 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     }
 
     if (rc == pcmk_ok && is_not_set(call_options, cib_dryrun)) {
-        crm_trace("Activating %d %s %s", is_set(call_options, cib_zero_copy),
+        crm_trace("Activating %s->%s%s%s",
                   crm_element_value(current_cib, XML_ATTR_NUMUPDATES),
-                  crm_element_value(result_cib, XML_ATTR_NUMUPDATES));
+                  crm_element_value(result_cib, XML_ATTR_NUMUPDATES),
+                  (is_set(call_options, cib_zero_copy)? " zero-copy" : ""),
+                  (config_changed? " changed" : ""));
         if(is_not_set(call_options, cib_zero_copy)) {
             rc = activateCibXml(result_cib, config_changed, op);
-            crm_trace("Activated %d %s", rc, crm_element_value(current_cib, XML_ATTR_NUMUPDATES));
+            crm_trace("Activated %s (%d)",
+                      crm_element_value(current_cib, XML_ATTR_NUMUPDATES), rc);
         }
 
         if (rc == pcmk_ok && cib_internal_config_changed(*cib_diff)) {

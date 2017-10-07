@@ -11,12 +11,12 @@ Online: [ node2 ]
  rsc6	(ocf::pacemaker:Dummy):	Started node1
 
 Transition Summary:
- * Move    rsc1	(Started node1 -> node2)
- * Move    rsc2	(Started node1 -> node2)
- * Move    rsc3	(Started node1 -> node2)
- * Move    rsc4	(Started node1 -> node2)
- * Move    rsc5	(Started node1 -> node2)
- * Move    rsc6	(Started node1 -> node2)
+ * Move       rsc1    ( node1 -> node2 )  
+ * Move       rsc2    ( node1 -> node2 )  
+ * Move       rsc3    ( node1 -> node2 )  
+ * Move       rsc4    ( node1 -> node2 )  
+ * Move       rsc5    ( node1 -> node2 )  
+ * Move       rsc6    ( node1 -> node2 )  
 
 Executing cluster transition:
  * Resource action: rsc6            stop on node1

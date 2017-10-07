@@ -13,10 +13,10 @@ Online: [ node2 ]
      Started: [ node1 node2 ]
 
 Transition Summary:
- * Stop    stonithclone:1	(node1)
- * Stop    evmsclone:1	(node1)
- * Stop    imagestoreclone:1	(node1)
- * Stop    configstoreclone:1	(node1)
+ * Stop    stonithclone:1	(node1)  	due to node availability
+ * Stop    evmsclone:1	(node1)  	due to node availability
+ * Stop    imagestoreclone:1	(node1)  	due to node availability
+ * Stop    configstoreclone:1	(node1)  	due to node availability
 
 Executing cluster transition:
  * Pseudo action:   stonithcloneset_stop_0

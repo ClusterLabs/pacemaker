@@ -67,6 +67,8 @@ typedef struct device_properties_s {
     int custom_action_timeout[st_phase_max];
     /* Action-specific maximum random delay for each phase */
     int delay_max[st_phase_max];
+    /* Action-specific base delay for each phase */
+    int delay_base[st_phase_max];
 } device_properties_t;
 
 typedef struct st_query_result_s {
@@ -1676,6 +1678,13 @@ parse_action_specific(xmlNode *xml, const char *peer, const char *device,
                   peer, device, props->delay_max[phase], action);
     }
 
+    props->delay_base[phase] = 0;
+    crm_element_value_int(xml, F_STONITH_DELAY_BASE, &props->delay_base[phase]);
+    if (props->delay_base[phase]) {
+        crm_trace("Peer %s with device %s returned base delay %d for %s",
+                  peer, device, props->delay_base[phase], action);
+    }
+
     /* Handle devices with automatic unfencing */
     if (safe_str_eq(action, "on")) {
         int required = 0;
@@ -1764,7 +1773,7 @@ add_result(remote_fencing_op_t *op, const char *host, int ndevices, xmlNode *xml
 
     CRM_CHECK(result != NULL, return NULL);
     result->host = strdup(host);
-    result->devices = g_hash_table_new_full(crm_str_hash, g_str_equal, free, free);
+    result->devices = crm_str_table_new();
 
     /* Each child element describes one capable device available to the peer */
     for (child = __xml_first_child(xml); child != NULL; child = __xml_next(child)) {

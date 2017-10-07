@@ -14,26 +14,26 @@ OFFLINE: [ rhel7-auto1 ]
  FAKE6	(ocf::heartbeat:Dummy):	Started rhel7-auto4 (UNCLEAN)
 
 Transition Summary:
- * Fence rhel7-auto4
- * Recover rhel7-auto4	(Started rhel7-auto2)
+ * Fence (reboot) rhel7-auto4 'FAKE2 is thought to be active there'
+ * Recover    rhel7-auto4     (                rhel7-auto2 )  
  * Start   FAKE1	(rhel7-auto2)
- * Move    FAKE2	(Started rhel7-auto4 -> rhel7-auto3)
- * Move    FAKE6	(Started rhel7-auto4 -> rhel7-auto2)
+ * Move       FAKE2           ( rhel7-auto4 -> rhel7-auto3 )  
+ * Move       FAKE6           ( rhel7-auto4 -> rhel7-auto2 )  
 
 Executing cluster transition:
  * Resource action: FAKE3           monitor=10000 on rhel7-auto2
  * Resource action: FAKE4           monitor=10000 on rhel7-auto3
  * Fencing rhel7-auto4 (reboot)
- * Pseudo action:   stonith_complete
- * Resource action: FAKE1           start on rhel7-auto2
  * Pseudo action:   FAKE2_stop_0
  * Pseudo action:   FAKE6_stop_0
+ * Pseudo action:   stonith_complete
  * Resource action: rhel7-auto4     stop on rhel7-auto2
- * Resource action: FAKE1           monitor=10000 on rhel7-auto2
+ * Resource action: FAKE1           start on rhel7-auto2
  * Resource action: FAKE2           start on rhel7-auto3
  * Resource action: FAKE6           start on rhel7-auto2
  * Pseudo action:   all_stopped
  * Resource action: rhel7-auto4     start on rhel7-auto2
+ * Resource action: FAKE1           monitor=10000 on rhel7-auto2
  * Resource action: FAKE2           monitor=10000 on rhel7-auto3
  * Resource action: FAKE6           monitor=10000 on rhel7-auto2
  * Resource action: rhel7-auto4     monitor=60000 on rhel7-auto2

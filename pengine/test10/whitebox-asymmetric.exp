@@ -1,49 +1,104 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
   <synapse id="0">
     <action_set>
-      <rsc_op id="5" operation="monitor" operation_key="nfs_mount_monitor_10000" on_node="18node2" on_node_uuid="18node2" router_node="18builder">
-        <primitive id="nfs_mount" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="18node2" CRM_meta_on_node_uuid="18node2" CRM_meta_timeout="20000" />
+      <rsc_op id="2" operation="monitor" operation_key="webserver_monitor_0" on_node="18node2" on_node_uuid="18node2" router_node="18builder">
+        <primitive id="webserver" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_on_node="18node2" CRM_meta_on_node_uuid="18node2" CRM_meta_op_target_rc="7" CRM_meta_physical_host="18builder" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="4" operation="start" operation_key="nfs_mount_start_0" on_node="18node2" on_node_uuid="18node2" router_node="18builder"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="10" operation="start" operation_key="18node2_start_0" on_node="18builder" on_node_uuid="5"/>
+        <rsc_op id="14" operation="start" operation_key="18node2_start_0" on_node="18builder" on_node_uuid="5"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="1">
     <action_set>
-      <rsc_op id="4" operation="start" operation_key="nfs_mount_start_0" on_node="18node2" on_node_uuid="18node2" router_node="18builder">
+      <rsc_op id="9" operation="monitor" operation_key="nfs_mount_monitor_10000" on_node="18node2" on_node_uuid="18node2" router_node="18builder">
         <primitive id="nfs_mount" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_on_node="18node2" CRM_meta_on_node_uuid="18node2" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="18node2" CRM_meta_on_node_uuid="18node2" CRM_meta_physical_host="18builder" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="10" operation="start" operation_key="18node2_start_0" on_node="18builder" on_node_uuid="5"/>
+        <rsc_op id="8" operation="start" operation_key="nfs_mount_start_0" on_node="18node2" on_node_uuid="18node2" router_node="18builder"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="14" operation="start" operation_key="18node2_start_0" on_node="18builder" on_node_uuid="5"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="2">
     <action_set>
-      <rsc_op id="11" operation="monitor" operation_key="18node2_monitor_30000" on_node="18builder" on_node_uuid="5">
+      <rsc_op id="8" operation="start" operation_key="nfs_mount_start_0" on_node="18node2" on_node_uuid="18node2" router_node="18builder">
+        <primitive id="nfs_mount" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_on_node="18node2" CRM_meta_on_node_uuid="18node2" CRM_meta_physical_host="18builder" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="3" operation="monitor" operation_key="nfs_mount_monitor_0" on_node="18node2" on_node_uuid="18node2" router_node="18builder"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="14" operation="start" operation_key="18node2_start_0" on_node="18builder" on_node_uuid="5"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <rsc_op id="3" operation="monitor" operation_key="nfs_mount_monitor_0" on_node="18node2" on_node_uuid="18node2" router_node="18builder">
+        <primitive id="nfs_mount" class="ocf" provider="pacemaker" type="Dummy"/>
+        <attributes CRM_meta_on_node="18node2" CRM_meta_on_node_uuid="18node2" CRM_meta_op_target_rc="7" CRM_meta_physical_host="18builder" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="14" operation="start" operation_key="18node2_start_0" on_node="18builder" on_node_uuid="5"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="4">
+    <action_set>
+      <rsc_op id="4" operation="monitor" operation_key="vg_tags_monitor_0" on_node="18node2" on_node_uuid="18node2" router_node="18builder">
+        <primitive id="vg_tags" class="ocf" provider="heartbeat" type="LVM"/>
+        <attributes CRM_meta_on_node="18node2" CRM_meta_on_node_uuid="18node2" CRM_meta_op_target_rc="7" CRM_meta_physical_host="18builder" CRM_meta_timeout="20000"  exclusive="true" volgrpname="vg_tags"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="14" operation="start" operation_key="18node2_start_0" on_node="18builder" on_node_uuid="5"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="5">
+    <action_set>
+      <rsc_op id="5" operation="monitor" operation_key="vg_tags_dup_monitor_0" on_node="18node2" on_node_uuid="18node2" router_node="18builder">
+        <primitive id="vg_tags_dup" class="ocf" provider="heartbeat" type="LVM"/>
+        <attributes CRM_meta_on_node="18node2" CRM_meta_on_node_uuid="18node2" CRM_meta_op_target_rc="7" CRM_meta_physical_host="18builder" CRM_meta_timeout="20000"  exclusive="true" volgrpname="fakesss"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="14" operation="start" operation_key="18node2_start_0" on_node="18builder" on_node_uuid="5"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="6">
+    <action_set>
+      <rsc_op id="15" operation="monitor" operation_key="18node2_monitor_30000" on_node="18builder" on_node_uuid="5">
         <primitive id="18node2" class="ocf" provider="pacemaker" type="remote"/>
         <attributes CRM_meta_container="container2" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="18builder" CRM_meta_on_node_uuid="5" CRM_meta_timeout="30000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="10" operation="start" operation_key="18node2_start_0" on_node="18builder" on_node_uuid="5"/>
+        <rsc_op id="14" operation="start" operation_key="18node2_start_0" on_node="18builder" on_node_uuid="5"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="3">
+  <synapse id="7">
     <action_set>
-      <rsc_op id="10" operation="start" operation_key="18node2_start_0" on_node="18builder" on_node_uuid="5">
+      <rsc_op id="14" operation="start" operation_key="18node2_start_0" on_node="18builder" on_node_uuid="5">
         <primitive id="18node2" class="ocf" provider="pacemaker" type="remote"/>
         <attributes CRM_meta_container="container2" CRM_meta_name="start" CRM_meta_on_node="18builder" CRM_meta_on_node_uuid="5" CRM_meta_timeout="60000" />
       </rsc_op>

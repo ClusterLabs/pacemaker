@@ -85,6 +85,16 @@ typedef struct
 
 } container_port_t;
 
+enum container_type {
+        PE_CONTAINER_TYPE_UNKNOWN,
+        PE_CONTAINER_TYPE_DOCKER,
+        PE_CONTAINER_TYPE_RKT
+};
+
+#define PE_CONTAINER_TYPE_UNKNOWN_S "unknown"
+#define PE_CONTAINER_TYPE_DOCKER_S  "Docker"
+#define PE_CONTAINER_TYPE_RKT_S     "rkt"
+
 typedef struct container_variant_data_s {
         int masters;
         int replicas;
@@ -100,6 +110,7 @@ typedef struct container_variant_data_s {
         char *docker_host_options;
         char *docker_run_options;
         char *docker_run_command;
+        const char *attribute_target;
 
         resource_t *child;
 
@@ -107,7 +118,7 @@ typedef struct container_variant_data_s {
         GListPtr ports;      /*        */
         GListPtr mounts;     /*        */
 
-
+        enum container_type type;
 } container_variant_data_t;
 
 #    define get_container_variant_data(data, rsc)                       \

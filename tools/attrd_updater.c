@@ -198,6 +198,8 @@ main(int argc, char **argv)
          * every update, even in clusters with no remote nodes. Since we haven't
          * had user requests for this support, we'll leave it as it is for now.
          */
+
+        attr_node = attrd_get_target(attr_node);
         crm_exit(do_update(command, attr_node, attr_name, attr_value,
                            attr_section, attr_set, attr_dampen, attr_options));
     }
@@ -346,9 +348,8 @@ do_query(const char *attr_name, const char *attr_node, gboolean query_all)
     /* Decide which node(s) to query */
     if (query_all == TRUE) {
         attr_node = NULL;
-    } else if (attr_node == NULL) {
-        crm_debug("User did not specify node for query, using localhost");
-        attr_node = "localhost";
+    } else {
+        attr_node = attrd_get_target(attr_node);
     }
 
     /* Build and send attrd request, and get XML reply */

@@ -203,7 +203,7 @@ spawn_child(crm_child_t * child)
             opts_vgrind[3] = NULL;
             opts_vgrind[4] = NULL;
         }
-        opts_default[0] = ais_strdup(child->command);;
+        opts_default[0] = ais_strdup(child->command);
 
         if (uid && initgroups(child->uid, gid) < 0) {
             ais_perror("Cannot initialize groups for %s", child->uid);

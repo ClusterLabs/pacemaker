@@ -1,4 +1,7 @@
 digraph "g" {
+"A_monitor_0 lxc2" -> "A_start_0 lxc1" [ style = bold]
+"A_monitor_0 lxc2" -> "A_stop_0 18node1" [ style = bold]
+"A_monitor_0 lxc2" [ style=bold color="green" fontcolor="black"]
 "A_monitor_10000 lxc1" [ style=bold color="green" fontcolor="black"]
 "A_start_0 lxc1" -> "A_monitor_10000 lxc1" [ style = bold]
 "A_start_0 lxc1" [ style=bold color="green" fontcolor="black"]
@@ -11,6 +14,7 @@ digraph "g" {
 "B_stop_0 lxc2" -> "B_start_0 18node3" [ style = bold]
 "B_stop_0 lxc2" -> "all_stopped" [ style = bold]
 "B_stop_0 lxc2" [ style=bold color="green" fontcolor="black"]
+"D_monitor_0 lxc2" [ style=bold color="green" fontcolor="black"]
 "M-clone_running_0" [ style=bold color="green" fontcolor="orange"]
 "M-clone_start_0" -> "M-clone_running_0" [ style = bold]
 "M-clone_start_0" -> "M_start_0 lxc1" [ style = bold]

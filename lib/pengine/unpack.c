@@ -46,6 +46,9 @@ gboolean unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNod
                        enum action_fail_response *failed, pe_working_set_t * data_set);
 static gboolean determine_remote_online_status(pe_working_set_t * data_set, node_t * this_node);
 
+// Bitmask for warnings we only want to print once
+uint32_t pe_wo = 0;
+
 static gboolean
 is_dangling_container_remote_node(node_t *node)
 {
@@ -121,6 +124,7 @@ pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason)
                      reason);
         }
         node->details->unclean = TRUE;
+        pe_fence_op(node, NULL, TRUE, reason, data_set);
 
     } else if (node->details->unclean) {
         crm_trace("Cluster node %s %s because %s",
@@ -134,6 +138,37 @@ pe_fence_node(pe_working_set_t * data_set, node_t * node, const char *reason)
                  pe_can_fence(data_set, node)? "will be fenced" : "is unclean",
                  reason);
         node->details->unclean = TRUE;
+        pe_fence_op(node, NULL, TRUE, reason, data_set);
+    }
+}
+
+// @TODO xpaths can't handle templates, rules, or id-refs
+
+// nvpair with provides or requires set to unfencing
+#define XPATH_UNFENCING_NVPAIR XML_CIB_TAG_NVPAIR                \
+    "[(@" XML_NVPAIR_ATTR_NAME "='" XML_RSC_ATTR_PROVIDES "'"    \
+    "or @" XML_NVPAIR_ATTR_NAME "='" XML_RSC_ATTR_REQUIRES "') " \
+    "and @" XML_NVPAIR_ATTR_VALUE "='unfencing']"
+
+// unfencing in rsc_defaults or any resource
+#define XPATH_ENABLE_UNFENCING \
+    "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_RESOURCES   \
+    "//" XML_TAG_META_SETS "/" XPATH_UNFENCING_NVPAIR                                               \
+    "|/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_RSCCONFIG  \
+    "/" XML_TAG_META_SETS "/" XPATH_UNFENCING_NVPAIR
+
+static
+void set_if_xpath(unsigned long long flag, const char *xpath,
+                  pe_working_set_t *data_set)
+{
+    xmlXPathObjectPtr result = NULL;
+
+    if (is_not_set(data_set->flags, flag)) {
+        result = xpath_search(data_set->input, xpath);
+        if (result && (numXpathResults(result) > 0)) {
+            set_bit(data_set->flags, flag);
+        }
+        freeXpathObject(result);
     }
 }
 
@@ -141,37 +176,7 @@ gboolean
 unpack_config(xmlNode * config, pe_working_set_t * data_set)
 {
     const char *value = NULL;
-    GHashTable *config_hash =
-        g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
-
-    xmlXPathObjectPtr xpathObj = NULL;
-
-    if(is_not_set(data_set->flags, pe_flag_enable_unfencing)) {
-        xpathObj = xpath_search(data_set->input, "//nvpair[@name='provides' and @value='unfencing']");
-        if(xpathObj && numXpathResults(xpathObj) > 0) {
-            set_bit(data_set->flags, pe_flag_enable_unfencing);
-        }
-        freeXpathObject(xpathObj);
-    }
-
-    if(is_not_set(data_set->flags, pe_flag_enable_unfencing)) {
-        xpathObj = xpath_search(data_set->input, "//nvpair[@name='requires' and @value='unfencing']");
-        if(xpathObj && numXpathResults(xpathObj) > 0) {
-            set_bit(data_set->flags, pe_flag_enable_unfencing);
-        }
-        freeXpathObject(xpathObj);
-    }
-
-
-#ifdef REDHAT_COMPAT_6
-    if(is_not_set(data_set->flags, pe_flag_enable_unfencing)) {
-        xpathObj = xpath_search(data_set->input, "//primitive[@type='fence_scsi']");
-        if(xpathObj && numXpathResults(xpathObj) > 0) {
-            set_bit(data_set->flags, pe_flag_enable_unfencing);
-        }
-        freeXpathObject(xpathObj);
-    }
-#endif
+    GHashTable *config_hash = crm_str_table_new();
 
     data_set->config_hash = config_hash;
 
@@ -190,6 +195,11 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
         crm_notice("Watchdog will be used via SBD if fencing is required");
         set_bit(data_set->flags, pe_flag_have_stonith_resource);
     }
+
+    /* Set certain flags via xpath here, so they can be used before the relevant
+     * configuration sections are unpacked.
+     */
+    set_if_xpath(pe_flag_enable_unfencing, XPATH_ENABLE_UNFENCING, data_set);
 
     value = pe_pref(data_set->config_hash, "stonith-timeout");
     data_set->stonith_timeout = crm_get_msec(value);
@@ -216,6 +226,12 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
     }
 
     value = pe_pref(data_set->config_hash, "default-resource-stickiness");
+    if (value) {
+        pe_warn_once(pe_wo_default_stick,
+                     "Support for 'default-resource-stickiness' cluster property"
+                     " is deprecated and will be removed in a future release"
+                     " (use resource-stickiness in rsc_defaults instead)");
+    }
     data_set->default_resource_stickiness = char2score(value);
     crm_debug("Default stickiness: %d", data_set->default_resource_stickiness);
 
@@ -228,20 +244,19 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
         data_set->no_quorum_policy = no_quorum_freeze;
 
     } else if (safe_str_eq(value, "suicide")) {
-        gboolean do_panic = FALSE;
+        if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
+            int do_panic = 0;
 
-        crm_element_value_int(data_set->input, XML_ATTR_QUORUM_PANIC, &do_panic);
-
-        if (is_set(data_set->flags, pe_flag_stonith_enabled) == FALSE) {
-            crm_config_err
-                ("Setting no-quorum-policy=suicide makes no sense if stonith-enabled=false");
-        }
-
-        if (do_panic && is_set(data_set->flags, pe_flag_stonith_enabled)) {
-            data_set->no_quorum_policy = no_quorum_suicide;
-
-        } else if (is_set(data_set->flags, pe_flag_have_quorum) == FALSE && do_panic == FALSE) {
-            crm_notice("Resetting no-quorum-policy to 'stop': The cluster has never had quorum");
+            crm_element_value_int(data_set->input, XML_ATTR_QUORUM_PANIC,
+                                  &do_panic);
+            if (do_panic || is_set(data_set->flags, pe_flag_have_quorum)) {
+                data_set->no_quorum_policy = no_quorum_suicide;
+            } else {
+                crm_notice("Resetting no-quorum-policy to 'stop': cluster has never had quorum");
+                data_set->no_quorum_policy = no_quorum_stop;
+            }
+        } else {
+            crm_config_err("Resetting no-quorum-policy to 'stop': stonith is not configured");
             data_set->no_quorum_policy = no_quorum_stop;
         }
 
@@ -282,8 +297,12 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
 
     if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
         clear_bit(data_set->flags, pe_flag_is_managed_default);
-    } else {
+    } else if (pe_pref(data_set->config_hash, "is-managed-default")) {
         set_config_flag(data_set, "is-managed-default", pe_flag_is_managed_default);
+        pe_warn_once(pe_wo_default_isman,
+                     "Support for 'is-managed-default' cluster property"
+                     " is deprecated and will be removed in a future release"
+                     " (use is-managed in rsc_defaults instead)");
     }
     crm_trace("By default resources are %smanaged",
               is_set(data_set->flags, pe_flag_is_managed_default) ? "" : "not ");
@@ -292,6 +311,15 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
     crm_trace("Start failures are %s",
               is_set(data_set->flags,
                      pe_flag_start_failure_fatal) ? "always fatal" : "handled by failcount");
+
+    if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
+        set_config_flag(data_set, "startup-fencing", pe_flag_startup_fencing);
+    }
+    if (is_set(data_set->flags, pe_flag_startup_fencing)) {
+        crm_trace("Unseen nodes will be fenced");
+    } else {
+        pe_warn_once(pe_wo_blind, "Blind faith: not fencing unseen nodes");
+    }
 
     node_score_red = char2score(pe_pref(data_set->config_hash, "node-health-red"));
     node_score_green = char2score(pe_pref(data_set->config_hash, "node-health-green"));
@@ -366,19 +394,17 @@ pe_create_node(const char *id, const char *uname, const char *type,
         new_node->details->type = node_member;
     }
 
-    new_node->details->attrs = g_hash_table_new_full(crm_str_hash, g_str_equal,
-                                                     g_hash_destroy_str,
-                                                     g_hash_destroy_str);
+    new_node->details->attrs = crm_str_table_new();
 
     if (is_remote_node(new_node)) {
-        g_hash_table_insert(new_node->details->attrs, strdup("#kind"), strdup("remote"));
+        g_hash_table_insert(new_node->details->attrs, strdup(CRM_ATTR_KIND),
+                            strdup("remote"));
     } else {
-        g_hash_table_insert(new_node->details->attrs, strdup("#kind"), strdup("cluster"));
+        g_hash_table_insert(new_node->details->attrs, strdup(CRM_ATTR_KIND),
+                            strdup("cluster"));
     }
 
-    new_node->details->utilization =
-        g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str,
-                              g_hash_destroy_str);
+    new_node->details->utilization = crm_str_table_new();
 
     new_node->details->digest_cache =
         g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str,
@@ -420,8 +446,6 @@ remote_id_conflict(const char *remote_name, pe_working_set_t *data)
 static const char *
 expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pe_working_set_t *data)
 {
-    xmlNode *xml_rsc = NULL;
-    xmlNode *xml_tmp = NULL;
     xmlNode *attr_set = NULL;
     xmlNode *attr = NULL;
 
@@ -466,83 +490,15 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pe_working_set_t *data
         return NULL;
     }
 
-    xml_rsc = create_xml_node(parent, XML_CIB_TAG_RESOURCE);
-
-    crm_xml_add(xml_rsc, XML_ATTR_ID, remote_name);
-    crm_xml_add(xml_rsc, XML_AGENT_ATTR_CLASS, PCMK_RESOURCE_CLASS_OCF);
-    crm_xml_add(xml_rsc, XML_AGENT_ATTR_PROVIDER, "pacemaker");
-    crm_xml_add(xml_rsc, XML_ATTR_TYPE, "remote");
-
-    xml_tmp = create_xml_node(xml_rsc, XML_TAG_META_SETS);
-    crm_xml_set_id(xml_tmp, "%s_%s", remote_name, XML_TAG_META_SETS);
-
-    attr = create_xml_node(xml_tmp, XML_CIB_TAG_NVPAIR);
-    crm_xml_set_id(attr, "%s_%s", remote_name, "meta-attributes-container");
-    crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, XML_RSC_ATTR_CONTAINER);
-    crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, container_id);
-
-    attr = create_xml_node(xml_tmp, XML_CIB_TAG_NVPAIR);
-    crm_xml_set_id(attr, "%s_%s", remote_name, "meta-attributes-internal");
-    crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, XML_RSC_ATTR_INTERNAL_RSC);
-    crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, "true");
-
-    if (remote_allow_migrate) {
-        attr = create_xml_node(xml_tmp, XML_CIB_TAG_NVPAIR);
-        crm_xml_set_id(attr, "%s_%s", remote_name, "meta-attributes-migrate");
-        crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, XML_OP_ATTR_ALLOW_MIGRATE);
-        crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, remote_allow_migrate);
-    }
-
-    if (container_managed) {
-        attr = create_xml_node(xml_tmp, XML_CIB_TAG_NVPAIR);
-        crm_xml_set_id(attr, "%s_%s", remote_name, "meta-attributes-managed");
-        crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, XML_RSC_ATTR_MANAGED);
-        crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, container_managed);
-    }
-
-    xml_tmp = create_xml_node(xml_rsc, "operations");
-    attr = create_xml_node(xml_tmp, XML_ATTR_OP);
-    crm_xml_set_id(attr, "%s_%s", remote_name, "monitor-interval-30s");
-    crm_xml_add(attr, XML_ATTR_TIMEOUT, "30s");
-    crm_xml_add(attr, XML_LRM_ATTR_INTERVAL, "30s");
-    crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, "monitor");
-
-    if (connect_timeout) {
-        attr = create_xml_node(xml_tmp, XML_ATTR_OP);
-        crm_xml_set_id(attr, "%s_%s", remote_name, "start-interval-0");
-        crm_xml_add(attr, XML_ATTR_TIMEOUT, connect_timeout);
-        crm_xml_add(attr, XML_LRM_ATTR_INTERVAL, "0");
-        crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, "start");
-    }
-
-    if (remote_port || remote_server) {
-        xml_tmp = create_xml_node(xml_rsc, XML_TAG_ATTR_SETS);
-        crm_xml_set_id(xml_tmp, "%s_%s", remote_name, XML_TAG_ATTR_SETS);
-
-        if (remote_server) {
-            attr = create_xml_node(xml_tmp, XML_CIB_TAG_NVPAIR);
-            crm_xml_set_id(attr, "%s_%s", remote_name, "instance-attributes-addr");
-            crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, "addr");
-            crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, remote_server);
-        }
-        if (remote_port) {
-            attr = create_xml_node(xml_tmp, XML_CIB_TAG_NVPAIR);
-            crm_xml_set_id(attr, "%s_%s", remote_name, "instance-attributes-port");
-            crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, "port");
-            crm_xml_add(attr, XML_NVPAIR_ATTR_VALUE, remote_port);
-        }
-    }
-
+    pe_create_remote_xml(parent, remote_name, container_id,
+                         remote_allow_migrate, container_managed, "30s", "30s",
+                         connect_timeout, remote_server, remote_port);
     return remote_name;
 }
 
 static void
 handle_startup_fencing(pe_working_set_t *data_set, node_t *new_node)
 {
-    static const char *blind_faith = NULL;
-    static gboolean unseen_are_unclean = TRUE;
-    static gboolean need_warning = TRUE;
-
     if ((new_node->details->type == node_remote) && (new_node->details->remote_rsc == NULL)) {
         /* Ignore fencing for remote nodes that don't have a connection resource
          * associated with them. This happens when remote node entries get left
@@ -551,28 +507,13 @@ handle_startup_fencing(pe_working_set_t *data_set, node_t *new_node)
         return;
     }
 
-    blind_faith = pe_pref(data_set->config_hash, "startup-fencing");
-
-    if (crm_is_true(blind_faith) == FALSE) {
-        unseen_are_unclean = FALSE;
-        if (need_warning) {
-            crm_warn("Blind faith: not fencing unseen nodes");
-
-            /* Warn once per run, not per node and transition */
-            need_warning = FALSE;
-        }
-    }
-
-    if (is_set(data_set->flags, pe_flag_stonith_enabled) == FALSE
-        || unseen_are_unclean == FALSE) {
-        /* blind faith... */
-        new_node->details->unclean = FALSE;
+    if (is_set(data_set->flags, pe_flag_startup_fencing)) {
+        // All nodes are unclean until we've seen their status entry
+        new_node->details->unclean = TRUE;
 
     } else {
-        /* all nodes are unclean until we've seen their
-         * status entry
-         */
-        new_node->details->unclean = TRUE;
+        // Blind faith ...
+        new_node->details->unclean = FALSE;
     }
 
     /* We need to be able to determine if a node's status section
@@ -762,7 +703,8 @@ link_rsc2remotenode(pe_working_set_t *data_set, resource_t *new_rsc)
     } else {
         /* At this point we know if the remote node is a container or baremetal
          * remote node, update the #kind attribute if a container is involved */
-        g_hash_table_replace(remote_node->details->attrs, strdup("#kind"), strdup("container"));
+        g_hash_table_replace(remote_node->details->attrs, strdup(CRM_ATTR_KIND),
+                             strdup("container"));
     }
 }
 
@@ -778,6 +720,18 @@ destroy_tag(gpointer data)
     }
 }
 
+/*!
+ * \internal
+ * \brief Parse configuration XML for resource information
+ *
+ * \param[in]     xml_resources  Top of resource configuration XML
+ * \param[in,out] data_set       Where to put resource information
+ *
+ * \return TRUE
+ *
+ * \note unpack_remote_nodes() MUST be called before this, so that the nodes can
+ *       be used when common_unpack() calls resource_location()
+ */
 gboolean
 unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
 {
@@ -964,7 +918,7 @@ unpack_tickets_state(xmlNode * xml_tickets, pe_working_set_t * data_set)
     return TRUE;
 }
 
-/* Compatibility with the deprecated ticket state section:
+/* @COMPAT DC < 1.1.7: Compatibility with the deprecated ticket state section:
  * "/cib/status/tickets/instance_attributes" */
 static void
 get_ticket_state_legacy(gpointer key, gpointer value, gpointer user_data)
@@ -1073,7 +1027,7 @@ unpack_handle_remote_attrs(node_t *this_node, xmlNode *state, pe_working_set_t *
     attrs = find_xml_node(state, XML_TAG_TRANSIENT_NODEATTRS, FALSE);
     add_node_attrs(attrs, this_node, TRUE, data_set);
 
-    shutdown = g_hash_table_lookup(this_node->details->attrs, XML_CIB_ATTR_SHUTDOWN);
+    shutdown = pe_node_attribute_raw(this_node, XML_CIB_ATTR_SHUTDOWN);
     if (shutdown != NULL && safe_str_neq("0", shutdown)) {
         crm_info("Node %s is shutting down", this_node->details->uname);
         this_node->details->shutdown = TRUE;
@@ -1082,18 +1036,18 @@ unpack_handle_remote_attrs(node_t *this_node, xmlNode *state, pe_working_set_t *
         }
     }
  
-    if (crm_is_true(g_hash_table_lookup(this_node->details->attrs, "standby"))) {
+    if (crm_is_true(pe_node_attribute_raw(this_node, "standby"))) {
         crm_info("Node %s is in standby-mode", this_node->details->uname);
         this_node->details->standby = TRUE;
     }
 
-    if (crm_is_true(g_hash_table_lookup(this_node->details->attrs, "maintenance")) ||
+    if (crm_is_true(pe_node_attribute_raw(this_node, "maintenance")) ||
         (rsc && !is_set(rsc->flags, pe_rsc_managed))) {
         crm_info("Node %s is in maintenance-mode", this_node->details->uname);
         this_node->details->maintenance = TRUE;
     }
 
-    resource_discovery_enabled = g_hash_table_lookup(this_node->details->attrs, XML_NODE_ATTR_RSC_DISCOVERY);
+    resource_discovery_enabled = pe_node_attribute_raw(this_node, XML_NODE_ATTR_RSC_DISCOVERY);
     if (resource_discovery_enabled && !crm_is_true(resource_discovery_enabled)) {
         if (is_baremetal_remote_node(this_node) && is_not_set(data_set->flags, pe_flag_stonith_enabled)) {
             crm_warn("ignoring %s attribute on baremetal remote node %s, disabling resource discovery requires stonith to be enabled.",
@@ -1196,11 +1150,9 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
             xmlNode *xml_tickets = state;
             GHashTable *state_hash = NULL;
 
-            /* Compatibility with the deprecated ticket state section:
+            /* @COMPAT DC < 1.1.7: Compatibility with the deprecated ticket state section:
              * Unpack the attributes in the deprecated "/cib/status/tickets/instance_attributes" if it exists. */
-            state_hash =
-                g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str,
-                                      g_hash_destroy_str);
+            state_hash = crm_str_table_new();
 
             unpack_instance_attributes(data_set->input, xml_tickets, XML_TAG_ATTR_SETS, NULL,
                                        state_hash, NULL, TRUE, data_set->now);
@@ -1251,17 +1203,17 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
             attrs = find_xml_node(state, XML_TAG_TRANSIENT_NODEATTRS, FALSE);
             add_node_attrs(attrs, this_node, TRUE, data_set);
 
-            if (crm_is_true(g_hash_table_lookup(this_node->details->attrs, "standby"))) {
+            if (crm_is_true(pe_node_attribute_raw(this_node, "standby"))) {
                 crm_info("Node %s is in standby-mode", this_node->details->uname);
                 this_node->details->standby = TRUE;
             }
 
-            if (crm_is_true(g_hash_table_lookup(this_node->details->attrs, "maintenance"))) {
+            if (crm_is_true(pe_node_attribute_raw(this_node, "maintenance"))) {
                 crm_info("Node %s is in maintenance-mode", this_node->details->uname);
                 this_node->details->maintenance = TRUE;
             }
 
-            resource_discovery_enabled = g_hash_table_lookup(this_node->details->attrs, XML_NODE_ATTR_RSC_DISCOVERY);
+            resource_discovery_enabled = pe_node_attribute_raw(this_node, XML_NODE_ATTR_RSC_DISCOVERY);
             if (resource_discovery_enabled && !crm_is_true(resource_discovery_enabled)) {
                 crm_warn("ignoring %s attribute on node %s, disabling resource discovery is not allowed on cluster nodes",
                     XML_NODE_ATTR_RSC_DISCOVERY, this_node->details->uname);
@@ -1270,7 +1222,9 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
             crm_trace("determining node state");
             determine_online_status(state, this_node, data_set);
 
-            if (this_node->details->online && data_set->no_quorum_policy == no_quorum_suicide) {
+            if (is_not_set(data_set->flags, pe_flag_have_quorum)
+                && this_node->details->online
+                && (data_set->no_quorum_policy == no_quorum_suicide)) {
                 /* Everything else should flow from this automatically
                  * At least until the PE becomes able to migrate off healthy resources
                  */
@@ -1284,7 +1238,7 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
         crm_trace("Start another loop");
     }
 
-    // Now catch any nodes we didnt see
+    // Now catch any nodes we didn't see
     unpack_node_loop(status, is_set(data_set->flags, pe_flag_stonith_enabled), data_set);
 
     for (GListPtr gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
@@ -1347,7 +1301,7 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
     const char *is_peer = crm_element_value(node_state, XML_NODE_IS_PEER);
     const char *in_cluster = crm_element_value(node_state, XML_NODE_IN_CLUSTER);
     const char *exp_state = crm_element_value(node_state, XML_NODE_EXPECTED);
-    const char *terminate = g_hash_table_lookup(this_node->details->attrs, "terminate");
+    const char *terminate = pe_node_attribute_raw(this_node, "terminate");
 
 /*
   - XML_NODE_IN_CLUSTER    ::= true|false
@@ -1521,7 +1475,7 @@ determine_online_status(xmlNode * node_state, node_t * this_node, pe_working_set
 
     this_node->details->shutdown = FALSE;
     this_node->details->expected_up = FALSE;
-    shutdown = g_hash_table_lookup(this_node->details->attrs, XML_CIB_ATTR_SHUTDOWN);
+    shutdown = pe_node_attribute_raw(this_node, XML_CIB_ATTR_SHUTDOWN);
 
     if (shutdown != NULL && safe_str_neq("0", shutdown)) {
         this_node->details->shutdown = TRUE;
@@ -2037,7 +1991,7 @@ process_rsc_state(resource_t * rsc, node_t * node,
                 }
             }
 
-            /* require the stop action regardless if fencing is occuring or not. */
+            /* require the stop action regardless if fencing is occurring or not. */
             if (rsc->role > RSC_ROLE_STOPPED) {
                 stop_action(rsc, node, FALSE);
             }
@@ -2347,9 +2301,6 @@ unpack_lrm_resources(node_t * node, xmlNode * lrm_rsc_list, pe_working_set_t * d
 {
     xmlNode *rsc_entry = NULL;
     gboolean found_orphaned_container_filler = FALSE;
-    GListPtr unexpected_containers = NULL;
-    GListPtr gIter = NULL;
-    resource_t *remote = NULL;
 
     CRM_CHECK(node != NULL, return FALSE);
 
@@ -2359,31 +2310,13 @@ unpack_lrm_resources(node_t * node, xmlNode * lrm_rsc_list, pe_working_set_t * d
          rsc_entry = __xml_next_element(rsc_entry)) {
 
         if (crm_str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, TRUE)) {
-            resource_t *rsc;
-            rsc = unpack_lrm_rsc_state(node, rsc_entry, data_set);
+            resource_t *rsc = unpack_lrm_rsc_state(node, rsc_entry, data_set);
             if (!rsc) {
                 continue;
             }
             if (is_set(rsc->flags, pe_rsc_orphan_container_filler)) {
                 found_orphaned_container_filler = TRUE;
             }
-            if (is_set(rsc->flags, pe_rsc_unexpectedly_running)) {
-                remote = rsc_contains_remote_node(data_set, rsc);
-                if (remote) {
-                    unexpected_containers = g_list_append(unexpected_containers, remote);
-                }
-            }
-        }
-    }
-
-    /* If a container resource is unexpectedly up... and the remote-node
-     * connection resource for that container is not up, the entire container
-     * must be recovered. */
-    for (gIter = unexpected_containers; gIter != NULL; gIter = gIter->next) {
-        remote = (resource_t *) gIter->data;
-        if (remote->role != RSC_ROLE_STARTED) {
-            crm_warn("Recovering container resource %s. Resource is unexpectedly running and involves a remote-node.", remote->container->id);
-            set_bit(remote->container->flags, pe_rsc_failed);
         }
     }
 
@@ -2393,7 +2326,6 @@ unpack_lrm_resources(node_t * node, xmlNode * lrm_rsc_list, pe_working_set_t * d
     if (found_orphaned_container_filler) {
         handle_orphaned_container_fillers(lrm_rsc_list, data_set);
     }
-    g_list_free(unexpected_containers);
     return TRUE;
 }
 
@@ -2808,7 +2740,6 @@ determine_op_status(
         case PCMK_OCF_OK:
             if (is_probe && target_rc == 7) {
                 result = PCMK_LRM_OP_DONE;
-                set_bit(rsc->flags, pe_rsc_unexpectedly_running);
                 pe_rsc_info(rsc, "Operation %s found resource %s active on %s",
                             task, rsc->id, node->details->uname);
 
@@ -3164,7 +3095,8 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
     CRM_CHECK(status <= PCMK_LRM_OP_NOT_INSTALLED, return FALSE);
     CRM_CHECK(status >= PCMK_LRM_OP_PENDING, return FALSE);
 
-    if (safe_str_eq(task, CRMD_ACTION_NOTIFY)) {
+    if (safe_str_eq(task, CRMD_ACTION_NOTIFY) ||
+        safe_str_eq(task, CRMD_ACTION_METADATA)) {
         /* safe to ignore these */
         return TRUE;
     }
@@ -3351,37 +3283,42 @@ add_node_attrs(xmlNode * xml_obj, node_t * node, gboolean overwrite, pe_working_
     const char *cluster_name = NULL;
 
     g_hash_table_insert(node->details->attrs,
-                        strdup("#uname"), strdup(node->details->uname));
+                        strdup(CRM_ATTR_UNAME), strdup(node->details->uname));
 
-    g_hash_table_insert(node->details->attrs, strdup("#" XML_ATTR_ID), strdup(node->details->id));
+    g_hash_table_insert(node->details->attrs, strdup(CRM_ATTR_ID),
+                        strdup(node->details->id));
     if (safe_str_eq(node->details->id, data_set->dc_uuid)) {
         data_set->dc_node = node;
         node->details->is_dc = TRUE;
         g_hash_table_insert(node->details->attrs,
-                            strdup("#" XML_ATTR_DC), strdup(XML_BOOLEAN_TRUE));
+                            strdup(CRM_ATTR_IS_DC), strdup(XML_BOOLEAN_TRUE));
     } else {
         g_hash_table_insert(node->details->attrs,
-                            strdup("#" XML_ATTR_DC), strdup(XML_BOOLEAN_FALSE));
+                            strdup(CRM_ATTR_IS_DC), strdup(XML_BOOLEAN_FALSE));
     }
 
     cluster_name = g_hash_table_lookup(data_set->config_hash, "cluster-name");
     if (cluster_name) {
-        g_hash_table_insert(node->details->attrs, strdup("#cluster-name"), strdup(cluster_name));
+        g_hash_table_insert(node->details->attrs, strdup(CRM_ATTR_CLUSTER_NAME),
+                            strdup(cluster_name));
     }
 
     unpack_instance_attributes(data_set->input, xml_obj, XML_TAG_ATTR_SETS, NULL,
                                node->details->attrs, NULL, overwrite, data_set->now);
 
-    if (g_hash_table_lookup(node->details->attrs, "#site-name") == NULL) {
-        const char *site_name = g_hash_table_lookup(node->details->attrs, "site-name");
+    if (pe_node_attribute_raw(node, CRM_ATTR_SITE_NAME) == NULL) {
+        const char *site_name = pe_node_attribute_raw(node, "site-name");
 
         if (site_name) {
-            /* Prefix '#' to the key */
-            g_hash_table_insert(node->details->attrs, strdup("#site-name"), strdup(site_name));
+            g_hash_table_insert(node->details->attrs,
+                                strdup(CRM_ATTR_SITE_NAME),
+                                strdup(site_name));
 
         } else if (cluster_name) {
             /* Default to cluster-name if unset */
-            g_hash_table_insert(node->details->attrs, strdup("#site-name"), strdup(cluster_name));
+            g_hash_table_insert(node->details->attrs,
+                                strdup(CRM_ATTR_SITE_NAME),
+                                strdup(cluster_name));
         }
     }
     return TRUE;

@@ -67,10 +67,12 @@ The user we want to run crm_mon as
 
 <parameter name="update" unique="0">
 <longdesc lang="en">
-How frequently should we update the cluster status
+How frequently should we update the cluster status (in milliseconds).
+For compatibility with old documentation, values less than 1000 will be treated
+as seconds.
 </longdesc>
-<shortdesc lang="en">Update interval</shortdesc>
-<content type="integer" default="15" />
+<shortdesc lang="en">Update interval in milliseconds</shortdesc>
+<content type="integer" default="15000" />
 </parameter>
 
 <parameter name="extra_options" unique="0">
@@ -245,7 +247,9 @@ fi
 : ${OCF_RESKEY_pidfile:="/tmp/ClusterMon_${OCF_RESOURCE_INSTANCE}.pid"}
 : ${OCF_RESKEY_htmlfile:="/tmp/ClusterMon_${OCF_RESOURCE_INSTANCE}.html"}
 
-OCF_RESKEY_update=`expr $OCF_RESKEY_update / 1000`
+if [ ${OCF_RESKEY_update} -ge 1000 ]; then
+	OCF_RESKEY_update=$(( $OCF_RESKEY_update / 1000 ))
+fi
 
 CMON_CMD="${HA_SBIN_DIR}/crm_mon -p $OCF_RESKEY_pidfile -d -i $OCF_RESKEY_update $OCF_RESKEY_extra_options -h $OCF_RESKEY_htmlfile"
 

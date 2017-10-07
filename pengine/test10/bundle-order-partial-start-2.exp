@@ -1,111 +1,262 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
-  <synapse id="0">
+  <synapse id="0" priority="1000000">
     <action_set>
-      <rsc_op id="25" operation="monitor" operation_key="rabbitmq:0_monitor_10000" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0" router_node="undercloud">
+      <rsc_op id="130" operation="notify" operation_key="rabbitmq:0_post_notify_start_0" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0" router_node="undercloud">
         <primitive id="rabbitmq" long-id="rabbitmq:0" class="ocf" provider="heartbeat" type="rabbitmq-cluster"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="rabbitmq-bundle-0" CRM_meta_on_node_uuid="rabbitmq-bundle-0" CRM_meta_timeout="40000"  set_policy="ha-all ^(?!amq\.).* {&quot;ha-mode&quot;:&quot;all&quot;}"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="galera-bundle-0 rabbitmq-bundle-0 redis-bundle-0 undercloud" CRM_meta_notify_available_uname="rabbitmq-bundle-0 undercloud" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="rabbitmq:0" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="rabbitmq:0" CRM_meta_notify_start_uname="rabbitmq-bundle-0" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_on_node="rabbitmq-bundle-0" CRM_meta_on_node_uuid="rabbitmq-bundle-0" CRM_meta_physical_host="undercloud" CRM_meta_timeout="20000"  set_policy="ha-all ^(?!amq\.).* {&quot;ha-mode&quot;:&quot;all&quot;}"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="24" operation="start" operation_key="rabbitmq:0_start_0" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0" router_node="undercloud"/>
+        <pseudo_event id="32" operation="notify" operation_key="rabbitmq-bundle-clone_post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="1">
     <action_set>
-      <rsc_op id="24" operation="start" operation_key="rabbitmq:0_start_0" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0" router_node="undercloud">
+      <rsc_op id="27" operation="monitor" operation_key="rabbitmq:0_monitor_10000" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0" router_node="undercloud">
         <primitive id="rabbitmq" long-id="rabbitmq:0" class="ocf" provider="heartbeat" type="rabbitmq-cluster"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="rabbitmq-bundle-0" CRM_meta_on_node_uuid="rabbitmq-bundle-0" CRM_meta_timeout="200000"  set_policy="ha-all ^(?!amq\.).* {&quot;ha-mode&quot;:&quot;all&quot;}"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="rabbitmq-bundle-0" CRM_meta_on_node_uuid="rabbitmq-bundle-0" CRM_meta_physical_host="undercloud" CRM_meta_timeout="40000"  set_policy="ha-all ^(?!amq\.).* {&quot;ha-mode&quot;:&quot;all&quot;}"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="26" operation="start" operation_key="rabbitmq-bundle-clone_start_0"/>
+        <rsc_op id="26" operation="start" operation_key="rabbitmq:0_start_0" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0" router_node="undercloud"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="33" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="2">
     <action_set>
-      <rsc_op id="40" operation="monitor" operation_key="galera:0_monitor_30000" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="undercloud">
-        <primitive id="galera" long-id="galera:0" class="ocf" provider="heartbeat" type="galera"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="galera-bundle-0" CRM_meta_on_node_uuid="galera-bundle-0" CRM_meta_role="Slave" CRM_meta_timeout="30000" additional_parameters="--open-files-limit=16384" cluster_host_map="galera-bundle-0:undercloud"  enable_creation="true" wsrep_cluster_address="gcomm://undercloud"/>
+      <rsc_op id="26" operation="start" operation_key="rabbitmq:0_start_0" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0" router_node="undercloud">
+        <primitive id="rabbitmq" long-id="rabbitmq:0" class="ocf" provider="heartbeat" type="rabbitmq-cluster"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="galera-bundle-0 rabbitmq-bundle-0 redis-bundle-0 undercloud" CRM_meta_notify_available_uname="rabbitmq-bundle-0 undercloud" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="rabbitmq:0" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="rabbitmq:0" CRM_meta_notify_start_uname="rabbitmq-bundle-0" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_on_node="rabbitmq-bundle-0" CRM_meta_on_node_uuid="rabbitmq-bundle-0" CRM_meta_physical_host="undercloud" CRM_meta_timeout="200000"  set_policy="ha-all ^(?!amq\.).* {&quot;ha-mode&quot;:&quot;all&quot;}"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="33" operation="start" operation_key="galera-bundle-0_start_0" on_node="undercloud" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="38" operation="start" operation_key="galera:0_start_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="undercloud"/>
+        <pseudo_event id="28" operation="start" operation_key="rabbitmq-bundle-clone_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="3">
     <action_set>
-      <rsc_op id="39" operation="monitor" operation_key="galera:0_monitor_20000" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="undercloud">
-        <primitive id="galera" long-id="galera:0" class="ocf" provider="heartbeat" type="galera"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="20000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="galera-bundle-0" CRM_meta_on_node_uuid="galera-bundle-0" CRM_meta_timeout="30000" additional_parameters="--open-files-limit=16384" cluster_host_map="galera-bundle-0:undercloud"  enable_creation="true" wsrep_cluster_address="gcomm://undercloud"/>
+      <rsc_op id="16" operation="monitor" operation_key="rabbitmq:0_monitor_0" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0" router_node="undercloud">
+        <primitive id="rabbitmq" long-id="rabbitmq:0" class="ocf" provider="heartbeat" type="rabbitmq-cluster"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_on_node="rabbitmq-bundle-0" CRM_meta_on_node_uuid="rabbitmq-bundle-0" CRM_meta_op_target_rc="7" CRM_meta_physical_host="undercloud" CRM_meta_timeout="40000"  set_policy="ha-all ^(?!amq\.).* {&quot;ha-mode&quot;:&quot;all&quot;}"/>
       </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="4" priority="1000000">
+    <action_set>
+      <pseudo_event id="33" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-post_notify_running_0">
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
+      </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="33" operation="start" operation_key="galera-bundle-0_start_0" on_node="undercloud" on_node_uuid="1"/>
+        <pseudo_event id="32" operation="notify" operation_key="rabbitmq-bundle-clone_post_notify_running_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="38" operation="start" operation_key="galera:0_start_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="undercloud"/>
+        <rsc_op id="130" operation="notify" operation_key="rabbitmq:0_post_notify_start_0" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0" router_node="undercloud"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="4">
+  <synapse id="5" priority="1000000">
     <action_set>
-      <rsc_op id="38" operation="start" operation_key="galera:0_start_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="undercloud">
-        <primitive id="galera" long-id="galera:0" class="ocf" provider="heartbeat" type="galera"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="galera-bundle-0" CRM_meta_on_node_uuid="galera-bundle-0" CRM_meta_timeout="120000" additional_parameters="--open-files-limit=16384" cluster_host_map="galera-bundle-0:undercloud"  enable_creation="true" wsrep_cluster_address="gcomm://undercloud"/>
-      </rsc_op>
+      <pseudo_event id="32" operation="notify" operation_key="rabbitmq-bundle-clone_post_notify_running_0">
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
+      </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="31" operation="start" operation_key="galera-bundle-docker-0_start_0" on_node="undercloud" on_node_uuid="1"/>
+        <pseudo_event id="29" operation="running" operation_key="rabbitmq-bundle-clone_running_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="33" operation="start" operation_key="galera-bundle-0_start_0" on_node="undercloud" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="41" operation="start" operation_key="galera-bundle-master_start_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="5">
-    <action_set>
-      <rsc_op id="31" operation="start" operation_key="galera-bundle-docker-0_start_0" on_node="undercloud" on_node_uuid="1">
-        <primitive id="galera-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="undercloud" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/galera-bundle-0" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no --net=host -e PCMK_remote_port=3123 -v /var/lib/kolla/config_files/mysql.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/mysql:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/mysql:/var/lib/mysql:rw -v /var/log/mariadb:/var/log/mariadb:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/galera-bundle-0:/var/log -p 3123:3123 --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
-      </rsc_op>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="30" operation="stop" operation_key="galera-bundle-docker-0_stop_0" on_node="undercloud" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="34" operation="start" operation_key="galera-bundle_start_0"/>
+        <pseudo_event id="31" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="6">
     <action_set>
-      <rsc_op id="30" operation="stop" operation_key="galera-bundle-docker-0_stop_0" on_node="undercloud" on_node_uuid="1">
+      <pseudo_event id="31" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-pre_notify_start_0">
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="30" operation="notify" operation_key="rabbitmq-bundle-clone_pre_notify_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="7">
+    <action_set>
+      <pseudo_event id="30" operation="notify" operation_key="rabbitmq-bundle-clone_pre_notify_start_0">
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="8" priority="1000000">
+    <action_set>
+      <pseudo_event id="29" operation="running" operation_key="rabbitmq-bundle-clone_running_0">
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="26" operation="start" operation_key="rabbitmq:0_start_0" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0" router_node="undercloud"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="28" operation="start" operation_key="rabbitmq-bundle-clone_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="9">
+    <action_set>
+      <pseudo_event id="28" operation="start" operation_key="rabbitmq-bundle-clone_start_0">
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="16" operation="monitor" operation_key="rabbitmq:0_monitor_0" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0" router_node="undercloud"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="22" operation="start" operation_key="rabbitmq-bundle_start_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="31" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-pre_notify_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="10">
+    <action_set>
+      <rsc_op id="50" operation="monitor" operation_key="galera:0_monitor_30000" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="undercloud">
+        <primitive id="galera" long-id="galera:0" class="ocf" provider="heartbeat" type="galera"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="galera-bundle-0" CRM_meta_on_node_uuid="galera-bundle-0" CRM_meta_physical_host="undercloud" CRM_meta_role="Slave" CRM_meta_timeout="30000" additional_parameters="--open-files-limit=16384" cluster_host_map="galera-bundle-0:undercloud"  enable_creation="true" wsrep_cluster_address="gcomm://undercloud"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="43" operation="start" operation_key="galera-bundle-0_start_0" on_node="undercloud" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="48" operation="start" operation_key="galera:0_start_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="undercloud"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="11">
+    <action_set>
+      <rsc_op id="49" operation="monitor" operation_key="galera:0_monitor_20000" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="undercloud">
+        <primitive id="galera" long-id="galera:0" class="ocf" provider="heartbeat" type="galera"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="20000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="galera-bundle-0" CRM_meta_on_node_uuid="galera-bundle-0" CRM_meta_physical_host="undercloud" CRM_meta_timeout="30000" additional_parameters="--open-files-limit=16384" cluster_host_map="galera-bundle-0:undercloud"  enable_creation="true" wsrep_cluster_address="gcomm://undercloud"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="43" operation="start" operation_key="galera-bundle-0_start_0" on_node="undercloud" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="48" operation="start" operation_key="galera:0_start_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="undercloud"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="12">
+    <action_set>
+      <rsc_op id="48" operation="start" operation_key="galera:0_start_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="undercloud">
+        <primitive id="galera" long-id="galera:0" class="ocf" provider="heartbeat" type="galera"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="galera-bundle-0" CRM_meta_on_node_uuid="galera-bundle-0" CRM_meta_physical_host="undercloud" CRM_meta_timeout="120000" additional_parameters="--open-files-limit=16384" cluster_host_map="galera-bundle-0:undercloud"  enable_creation="true" wsrep_cluster_address="gcomm://undercloud"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="41" operation="start" operation_key="galera-bundle-docker-0_start_0" on_node="undercloud" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="43" operation="start" operation_key="galera-bundle-0_start_0" on_node="undercloud" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="51" operation="start" operation_key="galera-bundle-master_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="13">
+    <action_set>
+      <rsc_op id="15" operation="monitor" operation_key="galera:0_monitor_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="undercloud">
+        <primitive id="galera" long-id="galera:0" class="ocf" provider="heartbeat" type="galera"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_on_node="galera-bundle-0" CRM_meta_on_node_uuid="galera-bundle-0" CRM_meta_op_target_rc="7" CRM_meta_physical_host="undercloud" CRM_meta_timeout="30000" additional_parameters="--open-files-limit=16384" cluster_host_map="galera-bundle-0:undercloud"  enable_creation="true" wsrep_cluster_address="gcomm://undercloud"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="43" operation="start" operation_key="galera-bundle-0_start_0" on_node="undercloud" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="14" priority="1000000">
+    <action_set>
+      <pseudo_event id="52" operation="running" operation_key="galera-bundle-master_running_0">
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="48" operation="start" operation_key="galera:0_start_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="undercloud"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="51" operation="start" operation_key="galera-bundle-master_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="15">
+    <action_set>
+      <pseudo_event id="51" operation="start" operation_key="galera-bundle-master_start_0">
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="15" operation="monitor" operation_key="galera:0_monitor_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="undercloud"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="44" operation="start" operation_key="galera-bundle_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="16">
+    <action_set>
+      <rsc_op id="41" operation="start" operation_key="galera-bundle-docker-0_start_0" on_node="undercloud" on_node_uuid="1">
         <primitive id="galera-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
         <attributes CRM_meta_on_node="undercloud" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/galera-bundle-0" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no --net=host -e PCMK_remote_port=3123 -v /var/lib/kolla/config_files/mysql.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/mysql:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/mysql:/var/lib/mysql:rw -v /var/log/mariadb:/var/log/mariadb:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/galera-bundle-0:/var/log -p 3123:3123 --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="32" operation="stop" operation_key="galera-bundle-0_stop_0" on_node="undercloud" on_node_uuid="1"/>
+        <rsc_op id="40" operation="stop" operation_key="galera-bundle-docker-0_stop_0" on_node="undercloud" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="44" operation="start" operation_key="galera-bundle_start_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="7">
+  <synapse id="17">
+    <action_set>
+      <rsc_op id="40" operation="stop" operation_key="galera-bundle-docker-0_stop_0" on_node="undercloud" on_node_uuid="1">
+        <primitive id="galera-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="undercloud" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/galera-bundle-0" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no --net=host -e PCMK_remote_port=3123 -v /var/lib/kolla/config_files/mysql.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/mysql:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/mysql:/var/lib/mysql:rw -v /var/log/mariadb:/var/log/mariadb:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/galera-bundle-0:/var/log -p 3123:3123 --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="42" operation="stop" operation_key="galera-bundle-0_stop_0" on_node="undercloud" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="18">
     <action_set>
       <rsc_op id="3" operation="monitor" operation_key="galera-bundle-docker-0_monitor_60000" on_node="undercloud" on_node_uuid="1">
         <primitive id="galera-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
@@ -114,29 +265,29 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="31" operation="start" operation_key="galera-bundle-docker-0_start_0" on_node="undercloud" on_node_uuid="1"/>
+        <rsc_op id="41" operation="start" operation_key="galera-bundle-docker-0_start_0" on_node="undercloud" on_node_uuid="1"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="8">
+  <synapse id="19">
     <action_set>
-      <rsc_op id="33" operation="start" operation_key="galera-bundle-0_start_0" on_node="undercloud" on_node_uuid="1">
+      <rsc_op id="43" operation="start" operation_key="galera-bundle-0_start_0" on_node="undercloud" on_node_uuid="1">
         <primitive id="galera-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
         <attributes CRM_meta_container="galera-bundle-docker-0" CRM_meta_on_node="undercloud" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" addr="undercloud"  port="3123"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="31" operation="start" operation_key="galera-bundle-docker-0_start_0" on_node="undercloud" on_node_uuid="1"/>
+        <rsc_op id="41" operation="start" operation_key="galera-bundle-docker-0_start_0" on_node="undercloud" on_node_uuid="1"/>
       </trigger>
       <trigger>
-        <rsc_op id="32" operation="stop" operation_key="galera-bundle-0_stop_0" on_node="undercloud" on_node_uuid="1"/>
+        <rsc_op id="42" operation="stop" operation_key="galera-bundle-0_stop_0" on_node="undercloud" on_node_uuid="1"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="9">
+  <synapse id="20">
     <action_set>
-      <rsc_op id="32" operation="stop" operation_key="galera-bundle-0_stop_0" on_node="undercloud" on_node_uuid="1">
+      <rsc_op id="42" operation="stop" operation_key="galera-bundle-0_stop_0" on_node="undercloud" on_node_uuid="1">
         <primitive id="galera-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
         <attributes CRM_meta_container="galera-bundle-docker-0" CRM_meta_on_node="undercloud" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" addr="undercloud"  port="3123"/>
         <downed>
@@ -146,7 +297,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="10">
+  <synapse id="21">
     <action_set>
       <rsc_op id="4" operation="monitor" operation_key="galera-bundle-0_monitor_60000" on_node="undercloud" on_node_uuid="1">
         <primitive id="galera-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
@@ -155,246 +306,277 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="33" operation="start" operation_key="galera-bundle-0_start_0" on_node="undercloud" on_node_uuid="1"/>
+        <rsc_op id="43" operation="start" operation_key="galera-bundle-0_start_0" on_node="undercloud" on_node_uuid="1"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="11">
+  <synapse id="22" priority="1000000">
     <action_set>
-      <rsc_op id="64" operation="monitor" operation_key="redis_monitor_20000" internal_operation_key="redis:0_monitor_20000" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="undercloud">
+      <rsc_op id="136" operation="notify" operation_key="redis_post_notify_promote_0" internal_operation_key="redis:0_post_notify_promote_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="undercloud">
         <primitive id="redis" long-id="redis:0" class="ocf" provider="heartbeat" type="redis"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="20000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="redis-bundle-0" CRM_meta_on_node_uuid="redis-bundle-0" CRM_meta_op_target_rc="8" CRM_meta_role="Master" CRM_meta_timeout="60000"  wait_last_known_master="true"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="redis:0" CRM_meta_notify_active_uname="redis-bundle-0" CRM_meta_notify_all_uname="galera-bundle-0 rabbitmq-bundle-0 redis-bundle-0 undercloud" CRM_meta_notify_available_uname="redis-bundle-0 galera-bundle-0 rabbitmq-bundle-0 undercloud" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="redis:0" CRM_meta_notify_promote_uname="redis-bundle-0" CRM_meta_notify_slave_resource="redis:0" CRM_meta_notify_slave_uname="redis-bundle-0" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_on_node="redis-bundle-0" CRM_meta_on_node_uuid="redis-bundle-0" CRM_meta_physical_host="undercloud" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="63" operation="promote" operation_key="redis_promote_0" internal_operation_key="redis:0_promote_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="undercloud"/>
+        <pseudo_event id="91" operation="notify" operation_key="redis-bundle-master_post_notify_promoted_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="12">
+  <synapse id="23">
     <action_set>
-      <rsc_op id="63" operation="promote" operation_key="redis_promote_0" internal_operation_key="redis:0_promote_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="undercloud">
+      <rsc_op id="135" operation="notify" operation_key="redis_pre_notify_promote_0" internal_operation_key="redis:0_pre_notify_promote_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="undercloud">
         <primitive id="redis" long-id="redis:0" class="ocf" provider="heartbeat" type="redis"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="promote" CRM_meta_notify="false" CRM_meta_on_node="redis-bundle-0" CRM_meta_on_node_uuid="redis-bundle-0" CRM_meta_timeout="120000"  wait_last_known_master="true"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="redis:0" CRM_meta_notify_active_uname="redis-bundle-0" CRM_meta_notify_all_uname="galera-bundle-0 rabbitmq-bundle-0 redis-bundle-0 undercloud" CRM_meta_notify_available_uname="redis-bundle-0 galera-bundle-0 rabbitmq-bundle-0 undercloud" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="redis:0" CRM_meta_notify_promote_uname="redis-bundle-0" CRM_meta_notify_slave_resource="redis:0" CRM_meta_notify_slave_uname="redis-bundle-0" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_on_node="redis-bundle-0" CRM_meta_on_node_uuid="redis-bundle-0" CRM_meta_physical_host="undercloud" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="69" operation="promote" operation_key="redis-bundle-master_promote_0"/>
+        <pseudo_event id="89" operation="notify" operation_key="redis-bundle-master_pre_notify_promote_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="13">
+  <synapse id="24">
     <action_set>
-      <rsc_op id="90" operation="monitor" operation_key="haproxy-bundle-docker-0_monitor_60000" on_node="undercloud" on_node_uuid="1">
+      <rsc_op id="74" operation="monitor" operation_key="redis_monitor_20000" internal_operation_key="redis:0_monitor_20000" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="undercloud">
+        <primitive id="redis" long-id="redis:0" class="ocf" provider="heartbeat" type="redis"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="20000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="redis-bundle-0" CRM_meta_on_node_uuid="redis-bundle-0" CRM_meta_op_target_rc="8" CRM_meta_physical_host="undercloud" CRM_meta_role="Master" CRM_meta_timeout="60000"  wait_last_known_master="true"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="73" operation="promote" operation_key="redis_promote_0" internal_operation_key="redis:0_promote_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="undercloud"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="92" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_promoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="25">
+    <action_set>
+      <rsc_op id="73" operation="promote" operation_key="redis_promote_0" internal_operation_key="redis:0_promote_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="undercloud">
+        <primitive id="redis" long-id="redis:0" class="ocf" provider="heartbeat" type="redis"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="promote" CRM_meta_notify="true" CRM_meta_notify_active_resource="redis:0" CRM_meta_notify_active_uname="redis-bundle-0" CRM_meta_notify_all_uname="galera-bundle-0 rabbitmq-bundle-0 redis-bundle-0 undercloud" CRM_meta_notify_available_uname="redis-bundle-0 galera-bundle-0 rabbitmq-bundle-0 undercloud" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource="redis:0" CRM_meta_notify_promote_uname="redis-bundle-0" CRM_meta_notify_slave_resource="redis:0" CRM_meta_notify_slave_uname="redis-bundle-0" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_on_node="redis-bundle-0" CRM_meta_on_node_uuid="redis-bundle-0" CRM_meta_physical_host="undercloud" CRM_meta_timeout="120000"  wait_last_known_master="true"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="87" operation="promote" operation_key="redis-bundle-master_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="26" priority="1000000">
+    <action_set>
+      <pseudo_event id="92" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_promoted_0">
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="promote" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="91" operation="notify" operation_key="redis-bundle-master_post_notify_promoted_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="136" operation="notify" operation_key="redis_post_notify_promote_0" internal_operation_key="redis:0_post_notify_promote_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="undercloud"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="27" priority="1000000">
+    <action_set>
+      <pseudo_event id="91" operation="notify" operation_key="redis-bundle-master_post_notify_promoted_0">
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="promote" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="88" operation="promoted" operation_key="redis-bundle-master_promoted_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="90" operation="notified" operation_key="redis-bundle-master_confirmed-pre_notify_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="28">
+    <action_set>
+      <pseudo_event id="90" operation="notified" operation_key="redis-bundle-master_confirmed-pre_notify_promote_0">
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="promote" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="89" operation="notify" operation_key="redis-bundle-master_pre_notify_promote_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="135" operation="notify" operation_key="redis_pre_notify_promote_0" internal_operation_key="redis:0_pre_notify_promote_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="undercloud"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="29">
+    <action_set>
+      <pseudo_event id="89" operation="notify" operation_key="redis-bundle-master_pre_notify_promote_0">
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="promote" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="30" priority="1000000">
+    <action_set>
+      <pseudo_event id="88" operation="promoted" operation_key="redis-bundle-master_promoted_0">
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="73" operation="promote" operation_key="redis_promote_0" internal_operation_key="redis:0_promote_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="undercloud"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="31">
+    <action_set>
+      <pseudo_event id="87" operation="promote" operation_key="redis-bundle-master_promote_0">
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="90" operation="notified" operation_key="redis-bundle-master_confirmed-pre_notify_promote_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="99" operation="promote" operation_key="redis-bundle_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="32">
+    <action_set>
+      <rsc_op id="116" operation="monitor" operation_key="haproxy-bundle-docker-0_monitor_60000" on_node="undercloud" on_node_uuid="1">
         <primitive id="haproxy-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
         <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="undercloud" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest" monitor_cmd="/bin/true" mount_points="" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no --net=host -e PCMK_remote_port=3121 -v /var/lib/kolla/config_files/haproxy.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/haproxy/etc:/etc:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="89" operation="start" operation_key="haproxy-bundle-docker-0_start_0" on_node="undercloud" on_node_uuid="1"/>
+        <rsc_op id="115" operation="start" operation_key="haproxy-bundle-docker-0_start_0" on_node="undercloud" on_node_uuid="1"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="14">
+  <synapse id="33">
     <action_set>
-      <rsc_op id="89" operation="start" operation_key="haproxy-bundle-docker-0_start_0" on_node="undercloud" on_node_uuid="1">
+      <rsc_op id="115" operation="start" operation_key="haproxy-bundle-docker-0_start_0" on_node="undercloud" on_node_uuid="1">
         <primitive id="haproxy-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
         <attributes CRM_meta_on_node="undercloud" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest" monitor_cmd="/bin/true" mount_points="" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no --net=host -e PCMK_remote_port=3121 -v /var/lib/kolla/config_files/haproxy.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/haproxy/etc:/etc:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="15" operation="monitor" operation_key="haproxy-bundle-docker-0_monitor_0" on_node="undercloud" on_node_uuid="1"/>
+        <rsc_op id="17" operation="monitor" operation_key="haproxy-bundle-docker-0_monitor_0" on_node="undercloud" on_node_uuid="1"/>
       </trigger>
       <trigger>
-        <pseudo_event id="91" operation="start" operation_key="haproxy-bundle_start_0"/>
+        <pseudo_event id="117" operation="start" operation_key="haproxy-bundle_start_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="15">
+  <synapse id="34">
     <action_set>
-      <rsc_op id="15" operation="monitor" operation_key="haproxy-bundle-docker-0_monitor_0" on_node="undercloud" on_node_uuid="1">
+      <rsc_op id="17" operation="monitor" operation_key="haproxy-bundle-docker-0_monitor_0" on_node="undercloud" on_node_uuid="1">
         <primitive id="haproxy-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
         <attributes CRM_meta_on_node="undercloud" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest" monitor_cmd="/bin/true" mount_points="" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no --net=host -e PCMK_remote_port=3121 -v /var/lib/kolla/config_files/haproxy.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/haproxy/etc:/etc:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
       </rsc_op>
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="16" priority="1000000">
+  <synapse id="35" priority="1000000">
     <action_set>
-      <pseudo_event id="92" operation="running" operation_key="haproxy-bundle_running_0">
+      <pseudo_event id="118" operation="running" operation_key="haproxy-bundle_running_0">
         <attributes CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="89" operation="start" operation_key="haproxy-bundle-docker-0_start_0" on_node="undercloud" on_node_uuid="1"/>
+        <rsc_op id="115" operation="start" operation_key="haproxy-bundle-docker-0_start_0" on_node="undercloud" on_node_uuid="1"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="17">
+  <synapse id="36">
     <action_set>
-      <pseudo_event id="91" operation="start" operation_key="haproxy-bundle_start_0">
-        <attributes CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs/>
-  </synapse>
-  <synapse id="18" priority="1000000">
-    <action_set>
-      <pseudo_event id="74" operation="promoted" operation_key="redis-bundle_promoted_0">
-        <attributes CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="70" operation="promoted" operation_key="redis-bundle-master_promoted_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="19">
-    <action_set>
-      <pseudo_event id="73" operation="promote" operation_key="redis-bundle_promote_0">
+      <pseudo_event id="117" operation="start" operation_key="haproxy-bundle_start_0">
         <attributes CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="20" priority="1000000">
+  <synapse id="37" priority="1000000">
     <action_set>
-      <pseudo_event id="70" operation="promoted" operation_key="redis-bundle-master_promoted_0">
-        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="63" operation="promote" operation_key="redis_promote_0" internal_operation_key="redis:0_promote_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="undercloud"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="21">
-    <action_set>
-      <pseudo_event id="69" operation="promote" operation_key="redis-bundle-master_promote_0">
-        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="73" operation="promote" operation_key="redis-bundle_promote_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="22" priority="1000000">
-    <action_set>
-      <pseudo_event id="42" operation="running" operation_key="galera-bundle-master_running_0">
-        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="38" operation="start" operation_key="galera:0_start_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="undercloud"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="41" operation="start" operation_key="galera-bundle-master_start_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="23">
-    <action_set>
-      <pseudo_event id="41" operation="start" operation_key="galera-bundle-master_start_0">
-        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="34" operation="start" operation_key="galera-bundle_start_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="24" priority="1000000">
-    <action_set>
-      <pseudo_event id="35" operation="running" operation_key="galera-bundle_running_0">
+      <pseudo_event id="100" operation="promoted" operation_key="redis-bundle_promoted_0">
         <attributes CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="31" operation="start" operation_key="galera-bundle-docker-0_start_0" on_node="undercloud" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="42" operation="running" operation_key="galera-bundle-master_running_0"/>
+        <pseudo_event id="92" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_promoted_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="25">
+  <synapse id="38">
     <action_set>
-      <pseudo_event id="34" operation="start" operation_key="galera-bundle_start_0">
-        <attributes CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="21" operation="running" operation_key="rabbitmq-bundle_running_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="74" operation="promoted" operation_key="redis-bundle_promoted_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="92" operation="running" operation_key="haproxy-bundle_running_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="26" priority="1000000">
-    <action_set>
-      <pseudo_event id="27" operation="running" operation_key="rabbitmq-bundle-clone_running_0">
-        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="24" operation="start" operation_key="rabbitmq:0_start_0" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0" router_node="undercloud"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="26" operation="start" operation_key="rabbitmq-bundle-clone_start_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="27">
-    <action_set>
-      <pseudo_event id="26" operation="start" operation_key="rabbitmq-bundle-clone_start_0">
-        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="20" operation="start" operation_key="rabbitmq-bundle_start_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="28" priority="1000000">
-    <action_set>
-      <pseudo_event id="21" operation="running" operation_key="rabbitmq-bundle_running_0">
-        <attributes CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="27" operation="running" operation_key="rabbitmq-bundle-clone_running_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="29">
-    <action_set>
-      <pseudo_event id="20" operation="start" operation_key="rabbitmq-bundle_start_0">
+      <pseudo_event id="99" operation="promote" operation_key="redis-bundle_promote_0">
         <attributes CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="30">
+  <synapse id="39" priority="1000000">
+    <action_set>
+      <pseudo_event id="45" operation="running" operation_key="galera-bundle_running_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="41" operation="start" operation_key="galera-bundle-docker-0_start_0" on_node="undercloud" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="52" operation="running" operation_key="galera-bundle-master_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="40">
+    <action_set>
+      <pseudo_event id="44" operation="start" operation_key="galera-bundle_start_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="23" operation="running" operation_key="rabbitmq-bundle_running_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="100" operation="promoted" operation_key="redis-bundle_promoted_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="118" operation="running" operation_key="haproxy-bundle_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="41" priority="1000000">
+    <action_set>
+      <pseudo_event id="23" operation="running" operation_key="rabbitmq-bundle_running_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="33" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-post_notify_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="42">
+    <action_set>
+      <pseudo_event id="22" operation="start" operation_key="rabbitmq-bundle_start_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="43">
     <action_set>
       <pseudo_event id="14" operation="all_stopped" operation_key="all_stopped">
         <attributes />
@@ -402,10 +584,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="30" operation="stop" operation_key="galera-bundle-docker-0_stop_0" on_node="undercloud" on_node_uuid="1"/>
+        <rsc_op id="40" operation="stop" operation_key="galera-bundle-docker-0_stop_0" on_node="undercloud" on_node_uuid="1"/>
       </trigger>
       <trigger>
-        <rsc_op id="32" operation="stop" operation_key="galera-bundle-0_stop_0" on_node="undercloud" on_node_uuid="1"/>
+        <rsc_op id="42" operation="stop" operation_key="galera-bundle-0_stop_0" on_node="undercloud" on_node_uuid="1"/>
       </trigger>
     </inputs>
   </synapse>

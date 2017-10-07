@@ -9,8 +9,8 @@ Online: [ 18node1 18node2 18node3 ]
      Stopped: [ 18node1 18node2 18node3 ]
 
 Transition Summary:
- * Fence lxc2 (resource: container2)
- * Fence lxc1 (resource: container1)
+ * Fence (reboot) lxc2 (resource: container2) 'guest is unclean'
+ * Fence (reboot) lxc1 (resource: container1) 'guest is unclean'
  * Start   container1	(18node1)
  * Start   container2	(18node1)
  * Recover lxc-ms:0	(Master lxc1)

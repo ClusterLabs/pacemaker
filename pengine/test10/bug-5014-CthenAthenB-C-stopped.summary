@@ -8,8 +8,8 @@ Online: [ fc16-builder ]
  ClusterIP3	(ocf::heartbeat:IPaddr2):	Stopped ( disabled ) 
 
 Transition Summary:
- * Start   ClusterIP	(fc16-builder - blocked)
- * Start   ClusterIP2	(fc16-builder - blocked)
+ * Start      ClusterIP     ( fc16-builder )   due to unrunnable ClusterIP3 start (blocked)
+ * Start      ClusterIP2    ( fc16-builder )   due to unrunnable ClusterIP start (blocked)
 
 Executing cluster transition:
  * Resource action: ClusterIP       monitor on fc16-builder

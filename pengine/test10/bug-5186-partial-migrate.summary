@@ -25,27 +25,27 @@ Online: [ bl460g1n6 bl460g1n8 ]
      Started: [ bl460g1n6 bl460g1n8 ]
 
 Transition Summary:
- * Fence bl460g1n7
- * Move    prmDummy	(Started bl460g1n7 -> bl460g1n6)
- * Move    prmVM2	(Started bl460g1n7 -> bl460g1n8)
- * Move    prmStonith8-1	(Started bl460g1n7 -> bl460g1n6)
- * Move    prmStonith8-2	(Started bl460g1n7 -> bl460g1n6)
- * Stop    prmDiskd1:0	(bl460g1n7)
- * Stop    prmDiskd2:0	(bl460g1n7)
- * Stop    prmPing:0	(bl460g1n7)
+ * Fence (reboot) bl460g1n7 'prmDummy is thought to be active there'
+ * Move       prmDummy          ( bl460g1n7 -> bl460g1n6 )  
+ * Move       prmVM2            ( bl460g1n7 -> bl460g1n8 )  
+ * Move       prmStonith8-1     ( bl460g1n7 -> bl460g1n6 )  
+ * Move       prmStonith8-2     ( bl460g1n7 -> bl460g1n6 )  
+ * Stop    prmDiskd1:0	(bl460g1n7)  	due to node availability
+ * Stop    prmDiskd2:0	(bl460g1n7)  	due to node availability
+ * Stop    prmPing:0	(bl460g1n7)  	due to node availability
 
 Executing cluster transition:
  * Resource action: prmVM2          stop on bl460g1n6
  * Pseudo action:   grpStonith8_stop_0
  * Pseudo action:   prmStonith8-2_stop_0
  * Fencing bl460g1n7 (reboot)
- * Pseudo action:   stonith_complete
  * Pseudo action:   prmDummy_stop_0
  * Pseudo action:   prmVM2_stop_0
  * Pseudo action:   prmStonith8-1_stop_0
  * Pseudo action:   clnDiskd1_stop_0
  * Pseudo action:   clnDiskd2_stop_0
  * Pseudo action:   clnPing_stop_0
+ * Pseudo action:   stonith_complete
  * Resource action: prmDummy        start on bl460g1n6
  * Resource action: prmVM2          start on bl460g1n8
  * Pseudo action:   grpStonith8_stopped_0

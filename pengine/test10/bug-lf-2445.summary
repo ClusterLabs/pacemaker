@@ -7,7 +7,7 @@ Online: [ node1 node2 ]
      P:1	(ocf::pacemaker:Dummy):	Started node1
 
 Transition Summary:
- * Move    P:1	(Started node1 -> node2)
+ * Move       P:1     ( node1 -> node2 )  
 
 Executing cluster transition:
  * Pseudo action:   C_stop_0

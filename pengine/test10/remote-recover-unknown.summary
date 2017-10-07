@@ -38,21 +38,21 @@ RemoteOnline: [ galera-0 galera-1 galera-2 messaging-0 messaging-1 messaging-2 ]
  stonith-fence_ipmilan-5254005bdbb5	(stonith:fence_ipmilan):	Started controller-1 (UNCLEAN)
 
 Transition Summary:
- * Fence messaging-1
- * Fence galera-2
- * Fence controller-1
- * Stop    messaging-1	(controller-1)
- * Move    galera-0	(Started controller-1 -> controller-2)
- * Stop    galera-2	(controller-1)
- * Stop    rabbitmq:2	(messaging-1)
- * Stop    redis:0	(controller-1)
- * Move    ip-172.17.1.14	(Started controller-1 -> controller-2)
- * Move    ip-172.17.1.17	(Started controller-1 -> controller-2)
- * Move    ip-172.17.4.11	(Started controller-1 -> controller-2)
- * Stop    haproxy:0	(controller-1)
- * Restart stonith-fence_ipmilan-525400bbf613	(Started controller-0)
- * Restart stonith-fence_ipmilan-525400b4f6bd	(Started controller-0)
- * Move    stonith-fence_ipmilan-5254005bdbb5	(Started controller-1 -> controller-2)
+ * Fence (reboot) galera-2 'resources are in an unknown state and the connection is unrecoverable'
+ * Fence (reboot) messaging-1 'resources are active and the connection is unrecoverable'
+ * Fence (reboot) controller-1 'peer is no longer part of the cluster'
+ * Stop    messaging-1	(controller-1)  	due to node availability
+ * Move       galera-0                               ( controller-1 -> controller-2 )  
+ * Stop    galera-2	(controller-1)  	due to node availability
+ * Stop    rabbitmq:2	(messaging-1)  	due to node availability
+ * Stop       redis:0                                (           Slave controller-1 )   due to node availability
+ * Move       ip-172.17.1.14                         ( controller-1 -> controller-2 )  
+ * Move       ip-172.17.1.17                         ( controller-1 -> controller-2 )  
+ * Move       ip-172.17.4.11                         ( controller-1 -> controller-2 )  
+ * Stop    haproxy:0	(controller-1)  	due to node availability
+ * Restart    stonith-fence_ipmilan-525400bbf613     (                 controller-0 )  
+ * Restart    stonith-fence_ipmilan-525400b4f6bd     (                 controller-0 )  
+ * Move       stonith-fence_ipmilan-5254005bdbb5     ( controller-1 -> controller-2 )  
 
 Executing cluster transition:
  * Pseudo action:   redis-master_pre_notify_stop_0
@@ -69,33 +69,33 @@ Executing cluster transition:
  * Pseudo action:   redis-master_stop_0
  * Pseudo action:   haproxy-clone_stop_0
  * Fencing galera-2 (reboot)
- * Pseudo action:   redis_stop_0
- * Pseudo action:   redis-master_stopped_0
- * Pseudo action:   haproxy_stop_0
- * Pseudo action:   haproxy-clone_stopped_0
  * Fencing messaging-1 (reboot)
  * Pseudo action:   stonith_complete
  * Resource action: galera-0        start on controller-2
  * Pseudo action:   rabbitmq_post_notify_stop_0
  * Pseudo action:   rabbitmq-clone_stop_0
  * Resource action: galera          monitor=10000 on galera-0
- * Pseudo action:   redis-master_post_notify_stopped_0
- * Pseudo action:   ip-172.17.1.14_stop_0
- * Pseudo action:   ip-172.17.1.17_stop_0
- * Pseudo action:   ip-172.17.4.11_stop_0
+ * Pseudo action:   redis_stop_0
+ * Pseudo action:   redis-master_stopped_0
+ * Pseudo action:   haproxy_stop_0
+ * Pseudo action:   haproxy-clone_stopped_0
  * Resource action: galera-0        monitor=20000 on controller-2
  * Resource action: rabbitmq        notify on messaging-2
  * Resource action: rabbitmq        notify on messaging-0
  * Pseudo action:   rabbitmq_notified_0
  * Pseudo action:   rabbitmq_stop_0
  * Pseudo action:   rabbitmq-clone_stopped_0
+ * Pseudo action:   redis-master_post_notify_stopped_0
+ * Pseudo action:   ip-172.17.1.14_stop_0
+ * Pseudo action:   ip-172.17.1.17_stop_0
+ * Pseudo action:   ip-172.17.4.11_stop_0
+ * Pseudo action:   messaging-1_stop_0
  * Resource action: redis           notify on controller-0
  * Resource action: redis           notify on controller-2
  * Pseudo action:   redis-master_confirmed-post_notify_stopped_0
  * Resource action: ip-172.17.1.14  start on controller-2
  * Resource action: ip-172.17.1.17  start on controller-2
  * Resource action: ip-172.17.4.11  start on controller-2
- * Pseudo action:   messaging-1_stop_0
  * Pseudo action:   redis_notified_0
  * Resource action: ip-172.17.1.14  monitor=10000 on controller-2
  * Resource action: ip-172.17.1.17  monitor=10000 on controller-2

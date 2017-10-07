@@ -17,11 +17,13 @@
  */
 
 #include <crmd_messages.h>
+#include <crmd_metadata.h>
 
 extern gboolean verify_stopped(enum crmd_fsa_state cur_state, int log_level);
 extern void lrm_clear_last_failure(const char *rsc_id, const char *node_name,
                                    const char *operation, int interval);
 void lrm_op_callback(lrmd_event_data_t * op);
+lrmd_t *crmd_local_lrmd_conn(void);
 
 typedef struct resource_history_s {
     char *id;
@@ -40,7 +42,7 @@ typedef struct resource_history_s {
 
 void history_free(gpointer data);
 
-/* TDOD - Replace this with lrmd_event_data_t */
+/* TODO - Replace this with lrmd_event_data_t */
 struct recurring_op_s {
     int call_id;
     int interval;
@@ -65,6 +67,7 @@ typedef struct lrm_state_s {
     GHashTable *pending_ops;
     GHashTable *deletion_ops;
     GHashTable *rsc_info_cache;
+    GHashTable *metadata_cache; // key = class[:provider]:agent, value = ra_metadata_s
 
     int num_lrm_register_fails;
 } lrm_state_t;
@@ -82,9 +85,10 @@ lrm_state_is_local(lrm_state_t *lrm_state);
 
 /*!
  * \brief Clear all state information from a single state entry.
+ * \note It sometimes useful to save metadata cache when it won't go stale.
  * \note This does not close the lrmd connection
  */
-void lrm_state_reset_tables(lrm_state_t * lrm_state);
+void lrm_state_reset_tables(lrm_state_t * lrm_state, gboolean reset_metadata);
 GList *lrm_state_get_list(void);
 
 /*!

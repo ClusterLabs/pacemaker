@@ -12,9 +12,9 @@ Online: [ pcmk-1 pcmk-2 pcmk-3 ]
      Started: [ pcmk-1 pcmk-2 pcmk-3 ]
 
 Transition Summary:
- * Restart dummy	(Started pcmk-1)
- * Recover child-2:0	(Started pcmk-1)
- * Restart child-3:0	(Started pcmk-1)
+ * Restart    dummy         ( pcmk-1 )   due to required clone-3 running
+ * Recover    child-2:0     ( pcmk-1 )  
+ * Restart    child-3:0     ( pcmk-1 )   due to required child-2:0 start
 
 Executing cluster transition:
  * Resource action: dummy           stop on pcmk-1

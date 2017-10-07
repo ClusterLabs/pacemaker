@@ -18,34 +18,18 @@
 
 #include <crm_internal.h>
 
-#include <sys/param.h>
-#include <crm/crm.h>
-#include <crmd_fsa.h>
-
-#include <sys/types.h>
-#include <sys/wait.h>
-
-#include <unistd.h>             /* for access */
-
-#include <sys/types.h>          /* for calls to open */
-#include <sys/stat.h>           /* for calls to open */
-#include <fcntl.h>              /* for calls to open */
-#include <pwd.h>                /* for getpwuid */
-#include <grp.h>                /* for initgroups */
-
-#include <sys/time.h>           /* for getrlimit */
-#include <sys/resource.h>       /* for getrlimit */
-
-#include <errno.h>
-
-#include <crm/msg_xml.h>
-#include <crm/common/xml.h>
-#include <crm/cluster.h>
-#include <crmd_messages.h>
-#include <crmd_callbacks.h>
+#include <unistd.h>  /* pid_t, sleep, ssize_t */
 
 #include <crm/cib.h>
+#include <crm/cluster.h>
+#include <crm/common/xml.h>
+#include <crm/crm.h>
+#include <crm/msg_xml.h>
+
 #include <crmd.h>
+#include <crmd_fsa.h>
+#include <crmd_messages.h>  /* register_fsa_error_adv */
+
 
 struct crm_subsystem_s *pe_subsystem = NULL;
 void do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data);
@@ -92,7 +76,7 @@ pe_ipc_destroy(gpointer user_data)
                  CRM_XS " pid=%d uuid=%s", pe_subsystem->pid, uuid_str);
 
         /*
-         *The PE died...
+         * The PE died...
          *
          * Save the current CIB so that we have a chance of
          * figuring out what killed it.

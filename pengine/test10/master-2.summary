@@ -10,11 +10,10 @@ Online: [ node1 node2 ]
      child_rsc1:4	(ocf::heartbeat:apache):	Stopped 
 
 Transition Summary:
- * Start   child_rsc1:0	(node1)
  * Promote child_rsc1:0	(Stopped -> Master node1)
  * Start   child_rsc1:1	(node2)
  * Start   child_rsc1:2	(node1)
- * Start   child_rsc1:3	(node2)
+ * Promote    child_rsc1:3     ( Stopped -> Master node2 )  
 
 Executing cluster transition:
  * Resource action: child_rsc1:0    monitor on node2
@@ -49,6 +48,7 @@ Executing cluster transition:
  * Pseudo action:   rsc1_confirmed-pre_notify_promote_0
  * Pseudo action:   rsc1_promote_0
  * Resource action: child_rsc1:0    promote on node1
+ * Resource action: child_rsc1:3    promote on node2
  * Pseudo action:   rsc1_promoted_0
  * Pseudo action:   rsc1_post_notify_promoted_0
  * Resource action: child_rsc1:0    notify on node1
@@ -64,6 +64,6 @@ Online: [ node1 node2 ]
      child_rsc1:0	(ocf::heartbeat:apache):	Master node1
      child_rsc1:1	(ocf::heartbeat:apache):	Slave node2 
      child_rsc1:2	(ocf::heartbeat:apache):	Slave node1 
-     child_rsc1:3	(ocf::heartbeat:apache):	Slave node2 
+     child_rsc1:3	(ocf::heartbeat:apache):	Master node2
      child_rsc1:4	(ocf::heartbeat:apache):	Stopped 
 

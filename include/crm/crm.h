@@ -33,7 +33,7 @@
 
 #  include <libxml/tree.h>
 
-#  define CRM_FEATURE_SET		"3.0.13"
+#  define CRM_FEATURE_SET		"3.0.14"
 
 #  define EOS		'\0'
 #  define DIMOF(a)	((int) (sizeof(a)/sizeof(a[0])) )
@@ -93,6 +93,19 @@ extern char *crm_system_name;
 #  define CRM_SYSTEM_TENGINE	"tengine"
 #  define CRM_SYSTEM_STONITHD	"stonithd"
 #  define CRM_SYSTEM_MCP	"pacemakerd"
+
+// Names of internally generated node attributes
+#  define CRM_ATTR_UNAME            "#uname"
+#  define CRM_ATTR_ID               "#id"
+#  define CRM_ATTR_KIND             "#kind"
+#  define CRM_ATTR_ROLE             "#role"
+#  define CRM_ATTR_IS_DC            "#is_dc"
+#  define CRM_ATTR_CLUSTER_NAME     "#cluster-name"
+#  define CRM_ATTR_SITE_NAME        "#site-name"
+#  define CRM_ATTR_UNFENCED         "#node-unfenced"
+#  define CRM_ATTR_DIGESTS_ALL      "#digests-all"
+#  define CRM_ATTR_DIGESTS_SECURE   "#digests-secure"
+#  define CRM_ATTR_RA_VERSION       "#ra-version"
 
 /* Valid operations */
 #  define CRM_OP_NOOP		"noop"
@@ -174,6 +187,8 @@ extern char *crm_system_name;
 #  define CRMD_ACTION_NOTIFIED		"notified"
 
 #  define CRMD_ACTION_STATUS		"monitor"
+#  define CRMD_ACTION_METADATA		"meta-data"
+#  define CRMD_METADATA_CALL_TIMEOUT   30000
 
 /* short names */
 #  define RSC_DELETE	CRMD_ACTION_DELETE
@@ -197,6 +212,7 @@ extern char *crm_system_name;
 #  define RSC_NOTIFIED	CRMD_ACTION_NOTIFIED
 
 #  define RSC_STATUS	CRMD_ACTION_STATUS
+#  define RSC_METADATA	CRMD_ACTION_METADATA
 /* *INDENT-ON* */
 
 typedef GList *GListPtr;
@@ -204,11 +220,6 @@ typedef GList *GListPtr;
 #  include <crm/common/logging.h>
 #  include <crm/common/util.h>
 #  include <crm/error.h>
-
-#  define crm_str_hash g_str_hash_traditional
-
-guint crm_strcase_hash(gconstpointer v);
-guint g_str_hash_traditional(gconstpointer v);
 
 static inline const char *crm_action_str(const char *task, int interval) {
     if(safe_str_eq(task, RSC_STATUS) && !interval) {

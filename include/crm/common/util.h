@@ -30,6 +30,9 @@
 #  include <limits.h>
 #  include <signal.h>
 #  include <sysexits.h>
+#  include <glib.h>
+
+#  include <libxml/tree.h>
 
 #  include <crm/lrmd.h>
 
@@ -51,6 +54,9 @@
                                         /* Status of an offline client */
 #  endif
 
+/* public Pacemaker Remote functions (from remote.c) */
+int crm_default_remote_port(void);
+
 /* public string functions (from strings.c) */
 char *crm_itoa_stack(int an_int, char *buf, size_t len);
 char *crm_itoa(int an_int);
@@ -60,8 +66,11 @@ int crm_parse_int(const char *text, const char *default_text);
 char * crm_strip_trailing_newline(char *str);
 gboolean crm_str_eq(const char *a, const char *b, gboolean use_case);
 gboolean safe_str_neq(const char *a, const char *b);
+guint crm_strcase_hash(gconstpointer v);
+guint g_str_hash_traditional(gconstpointer v);
 
 #  define safe_str_eq(a, b) crm_str_eq(a, b, FALSE)
+#  define crm_str_hash g_str_hash_traditional
 
 /* used with hash tables where case does not matter */
 static inline gboolean
@@ -69,6 +78,34 @@ crm_strcase_equal(gconstpointer a, gconstpointer b)
 {
     return crm_str_eq((const char *) a, (const char *) b, FALSE);
 }
+
+/*!
+ * \brief Create hash table with dynamically allocated string keys/values
+ *
+ * \return Newly hash table
+ * \note It is the caller's responsibility to free the result, using
+ *       g_hash_table_destroy().
+ */
+static inline GHashTable *
+crm_str_table_new()
+{
+    return g_hash_table_new_full(crm_str_hash, g_str_equal, free, free);
+}
+
+/*!
+ * \brief Create hash table with case-insensitive dynamically allocated string keys/values
+ *
+ * \return Newly hash table
+ * \note It is the caller's responsibility to free the result, using
+ *       g_hash_table_destroy().
+ */
+static inline GHashTable *
+crm_strcase_table_new()
+{
+    return g_hash_table_new_full(crm_strcase_hash, crm_strcase_equal, free, free);
+}
+
+GHashTable *crm_str_table_dup(GHashTable *old_table);
 
 #  define crm_atoi(text, default_text) crm_parse_int(text, default_text)
 
@@ -81,13 +118,24 @@ int char2score(const char *score);
 char *score2char(int score);
 char *score2char_stack(int score, char *buf, size_t len);
 
+/* public operation functions (from operations.c) */
+gboolean parse_op_key(const char *key, char **rsc_id, char **op_type,
+                      int *interval);
+gboolean decode_transition_key(const char *key, char **uuid, int *action,
+                               int *transition_id, int *target_rc);
+gboolean decode_transition_magic(const char *magic, char **uuid,
+                                 int *transition_id, int *action_id,
+                                 int *op_status, int *op_rc, int *target_rc);
+int rsc_op_expected_rc(lrmd_event_data_t *event);
+gboolean did_rsc_op_fail(lrmd_event_data_t *event, int target_rc);
+bool crm_op_needs_metadata(const char *rsc_class, const char *op);
+xmlNode *crm_create_op_xml(xmlNode *parent, const char *prefix,
+                           const char *task, const char *interval,
+                           const char *timeout);
+#define CRM_DEFAULT_OP_TIMEOUT_S "20s"
+
 int compare_version(const char *version1, const char *version2);
 
-gboolean parse_op_key(const char *key, char **rsc_id, char **op_type, int *interval);
-gboolean decode_transition_key(const char *key, char **uuid, int *action, int *transition_id,
-                               int *target_rc);
-gboolean decode_transition_magic(const char *magic, char **uuid, int *transition_id, int *action_id,
-                                 int *op_status, int *op_rc, int *target_rc);
 /* coverity[+kill] */
 void crm_abort(const char *file, const char *function, int line,
                const char *condition, gboolean do_core, gboolean do_fork);
@@ -122,9 +170,6 @@ crm_hash_table_size(GHashTable * hashtable)
 char *crm_meta_name(const char *field);
 const char *crm_meta_value(GHashTable * hash, const char *field);
 
-int rsc_op_expected_rc(lrmd_event_data_t * event);
-gboolean did_rsc_op_fail(lrmd_event_data_t * event, int target_rc);
-
 char *crm_md5sum(const char *buffer);
 
 char *crm_generate_uuid(void);
@@ -138,5 +183,10 @@ void crm_gnutls_global_init(void);
 
 int crm_exit(int rc);
 bool pcmk_acl_required(const char *user);
+
+char *crm_generate_ra_key(const char *class, const char *provider, const char *type);
+bool crm_provider_required(const char *standard);
+int crm_parse_agent_spec(const char *spec, char **standard, char **provider,
+                         char **type);
 
 #endif

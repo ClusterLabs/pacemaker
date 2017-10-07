@@ -8,7 +8,7 @@ Online: [ pcmk-1 pcmk-2 ]
      r192.168.122.115	(ocf::heartbeat:IPaddr2):	Started pcmk-1 
 
 Transition Summary:
- * Stop    r192.168.122.115	(pcmk-1)
+ * Stop    r192.168.122.115	(pcmk-1)  	due to node availability
 
 Executing cluster transition:
  * Pseudo action:   group-1_stop_0

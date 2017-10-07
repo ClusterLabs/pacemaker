@@ -21,8 +21,7 @@
 
 #  include <crm/cluster.h>
 
-#  define AIS_IPC_NAME  "ais-crm-ipc"
-#  define AIS_IPC_MESSAGE_SIZE 8192*128
+#  define AIS_IPC_MESSAGE_SIZE (8192 * 128)
 #  define CRM_MESSAGE_IPC_ACK	0
 
 #  ifndef INTERFACE_MAX
@@ -76,10 +75,9 @@ struct crm_ais_quorum_resp_s {
 /* *INDENT-OFF* */
 enum crm_proc_flag {
     crm_proc_none      = 0x00000001,
-    /* These values are sent over the network by the legacy plugin
-     * Therefor changing any of these values is going to break compatibility
-     *
-     * So don't
+    /* @COMPAT These values are sent over the network by the legacy plugin.
+     * Therefore, changing any of these values is going to break compatibility.
+     * So don't.
      */
 
     /* 3 messaging types */

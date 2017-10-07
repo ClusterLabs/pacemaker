@@ -18,9 +18,9 @@ RemoteOFFLINE: [ remote1 ]
 Transition Summary:
  * Start   remote1	(18builder)
  * Start   FAKE1	(18node2)
- * Move    FAKE2	(Started 18node2 -> 18node3)
- * Move    FAKE3	(Started 18builder -> 18node4)
- * Move    FAKE4	(Started 18node1 -> remote1)
+ * Move       FAKE2            (   18node2 -> 18node3 )  
+ * Move       FAKE3            ( 18builder -> 18node4 )  
+ * Move       FAKE4            (   18node1 -> remote1 )  
  * Start   FAKE5	(18builder)
  * Start   FAKECLONE1:0	(18node1)
  * Start   FAKECLONE1:1	(18node2)

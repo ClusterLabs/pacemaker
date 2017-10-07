@@ -26,6 +26,10 @@ Containers: [ RNVM1:VM1 ]
 Transition Summary:
 
 Executing cluster transition:
+ * Resource action: dlm             monitor on RNVM1
+ * Resource action: clvmd           monitor on RNVM1
+ * Resource action: gfs2-lv_1_1     monitor on RNVM1
+ * Resource action: gfs2-lv_1_2     monitor on RNVM1
 
 Revised cluster status:
 Online: [ lama2 lama3 ]

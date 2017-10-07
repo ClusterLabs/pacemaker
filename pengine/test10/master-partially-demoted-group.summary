@@ -22,14 +22,14 @@ Online: [ sd01-0 sd01-1 ]
      Slaves: [ sd01-0 ]
 
 Transition Summary:
- * Move    vip-164	(Started sd01-1 -> sd01-0)
- * Move    vip-165	(Started sd01-1 -> sd01-0)
- * Move    cdev-pool-0-iscsi-target	(Started sd01-1 -> sd01-0)
- * Move    cdev-pool-0-iscsi-lun-1	(Started sd01-1 -> sd01-0)
- * Demote  vip-164-fw:0	(Master -> Slave sd01-1)
+ * Move       vip-164                      (       sd01-1 -> sd01-0 )  
+ * Move       vip-165                      (       sd01-1 -> sd01-0 )  
+ * Move       cdev-pool-0-iscsi-target     (       sd01-1 -> sd01-0 )  
+ * Move       cdev-pool-0-iscsi-lun-1      (       sd01-1 -> sd01-0 )  
+ * Demote     vip-164-fw:0                 ( Master -> Slave sd01-1 )  
  * Promote vip-164-fw:1	(Slave -> Master sd01-0)
  * Promote vip-165-fw:1	(Slave -> Master sd01-0)
- * Demote  cdev-pool-0-drbd:0	(Master -> Slave sd01-1)
+ * Demote     cdev-pool-0-drbd:0           ( Master -> Slave sd01-1 )  
  * Promote cdev-pool-0-drbd:1	(Slave -> Master sd01-0)
 
 Executing cluster transition:

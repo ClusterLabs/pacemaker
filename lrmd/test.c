@@ -112,7 +112,7 @@ test_exit(int rc)
              event->op_type ? event->op_type : "none",                  \
              services_ocf_exitcode_str(event->rc),                              \
              services_lrm_status_str(event->op_status));                \
-    crm_info("%s", event_buf_v0);;
+    crm_info("%s", event_buf_v0);
 
 static void
 test_shutdown(int nsig)
@@ -415,9 +415,8 @@ generate_params(void)
         goto param_gen_bail;
     }
 
-    params = g_hash_table_new_full(crm_str_hash,
-                                   g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
-    meta = g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+    params = crm_str_table_new();
+    meta = crm_str_table_new();
 
     get_rsc_attributes(params, rsc, NULL, &data_set);
     get_meta_attributes(meta, rsc, NULL, &data_set);

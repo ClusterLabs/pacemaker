@@ -35,8 +35,8 @@ Online: [ cl-virt-1 cl-virt-2 ]
      Slaves: [ cl-virt-1 ]
 
 Transition Summary:
- * Restart pingd:0	(Started cl-virt-1)
- * Restart pingd:1	(Started cl-virt-2)
+ * Restart    pingd:0     ( cl-virt-1 )  
+ * Restart    pingd:1     ( cl-virt-2 )  
 
 Executing cluster transition:
  * Cluster action:  clear_failcount for pingd on cl-virt-1

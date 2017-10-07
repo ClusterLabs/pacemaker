@@ -53,36 +53,6 @@ int last_cib_op_done = 0;
 char *peer_writer = NULL;
 GHashTable *attributes = NULL;
 
-typedef struct attribute_s {
-    char *uuid; /* TODO: Remove if at all possible */
-    char *id;
-    char *set;
-
-    GHashTable *values;
-
-    int update;
-    int timeout_ms;
-
-    /* TODO: refactor these three as a bitmask */
-    bool changed; /* whether attribute value has changed since last write */
-    bool unknown_peer_uuids; /* whether we know we're missing a peer uuid */
-    gboolean is_private; /* whether to keep this attribute out of the CIB */
-
-    mainloop_timer_t *timer;
-
-    char *user;
-
-} attribute_t;
-
-typedef struct attribute_value_s {
-        uint32_t nodeid;
-        gboolean is_remote;
-        char *nodename;
-        char *current;
-        char *requested;
-} attribute_value_t;
-
-
 void write_attribute(attribute_t *a);
 void write_or_elect_attribute(attribute_t *a);
 void attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter);
@@ -393,7 +363,7 @@ attrd_client_refresh(void)
     }
 
     crm_info("Updating all attributes");
-    write_attributes(TRUE, FALSE);
+    write_attributes(TRUE);
 }
 
 /*!
@@ -700,12 +670,12 @@ attrd_peer_remove(const char *host, gboolean uncache, const char *source)
     GHashTableIter aIter;
 
     CRM_CHECK(host != NULL, return);
-    crm_notice("Removing all %s attributes for %s", host, source);
+    crm_notice("Removing all %s attributes for peer %s", host, source);
 
     g_hash_table_iter_init(&aIter, attributes);
     while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
         if(g_hash_table_remove(a->values, host)) {
-            crm_debug("Removed %s[%s] for %s", a->id, host, source);
+            crm_debug("Removed %s[%s] for peer %s", a->id, host, source);
         }
     }
 
@@ -762,97 +732,105 @@ attrd_lookup_or_create_value(GHashTable *values, const char *host, xmlNode *xml)
 void
 attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
 {
-    bool changed = FALSE;
+    bool update_both = FALSE;
     attribute_t *a;
     attribute_value_t *v = NULL;
-    int dampen = 0;
 
     const char *op = crm_element_value(xml, F_ATTRD_TASK);
     const char *attr = crm_element_value(xml, F_ATTRD_ATTRIBUTE);
     const char *value = crm_element_value(xml, F_ATTRD_VALUE);
-    const char *dvalue = crm_element_value(xml, F_ATTRD_DAMPEN);
 
     if (attr == NULL) {
-        crm_warn("Peer update did not specify attribute");
+        crm_warn("Could not update attribute: peer did not specify name");
         return;
     }
 
+    update_both = ((op == NULL) // ATTRD_OP_SYNC_RESPONSE has no F_ATTRD_TASK
+                   || safe_str_eq(op, ATTRD_OP_UPDATE_BOTH));
+
+    // Look up or create attribute entry
     a = g_hash_table_lookup(attributes, attr);
-    if(a == NULL) {
-        if (op == NULL /* The xml children from an ATTRD_OP_SYNC_RESPONSE have no F_ATTRD_TASK */
-            || safe_str_eq(op, ATTRD_OP_UPDATE)
-            || safe_str_eq(op, ATTRD_OP_UPDATE_BOTH)) {
+    if (a == NULL) {
+        if (update_both || safe_str_eq(op, ATTRD_OP_UPDATE)) {
             a = create_attribute(xml);
         } else {
-            crm_warn("Update error (attribute %s not found)", attr);
-            return;
-        }
-    }
-    
-    if (op == NULL /* The xml children from an ATTRD_OP_SYNC_RESPONSE have no F_ATTRD_TASK */
-        || safe_str_eq(op, ATTRD_OP_UPDATE_BOTH)
-        || safe_str_eq(op, ATTRD_OP_UPDATE_DELAY)) {
-        if (dvalue) {
-            dampen = crm_get_msec(dvalue); 
-            if (dampen >= 0) {
-                if (a->timeout_ms != dampen) {
-                    mainloop_timer_stop(a->timer);
-                    mainloop_timer_del(a->timer);
-                    a->timeout_ms = dampen;
-                    if (dampen > 0) {
-                        a->timer = mainloop_timer_add(a->id, a->timeout_ms, FALSE, attribute_timer_cb, a);
-                        crm_info("Update attribute %s with delay %dms (%s)", a->id, dampen, dvalue);
-                    } else {
-                        a->timer = NULL;
-                        crm_info("Update attribute %s with not delay", a->id);
-                    }
-                    //if dampen is changed, attrd writes in a current value immediately.
-                    write_or_elect_attribute(a);
-                    if (safe_str_eq(op, ATTRD_OP_UPDATE_DELAY)) {
-                        return;
-                    }
-                } else {
-                    if (safe_str_eq(op, ATTRD_OP_UPDATE_DELAY)) {
-                        crm_trace("Unchanged attribute %s with delay %dms (%s).(ATTRD_OP_UPDATE_DELAY)", a->id, dampen, dvalue);
-                        return;
-                    }
-                }
-            } else {
-                crm_warn("Update error (A positive number is necessary for delay parameter. attribute %s : %dms (%s))", a->id, dampen, dvalue);
-                return;
-            }
-        } else {
-            crm_warn("Update error (delay parameter is necessary for the update of the attribute %s)", a->id);
+            crm_warn("Could not update %s: attribute not found", attr);
             return;
         }
     }
 
-    if(host == NULL) {
+    // Update attribute dampening
+    if (update_both || safe_str_eq(op, ATTRD_OP_UPDATE_DELAY)) {
+        const char *dvalue = crm_element_value(xml, F_ATTRD_DAMPEN);
+        int dampen = 0;
+
+        if (dvalue == NULL) {
+            crm_warn("Could not update %s: peer did not specify value for delay",
+                     attr);
+            return;
+        }
+
+        dampen = crm_get_msec(dvalue);
+        if (dampen < 0) {
+            crm_warn("Could not update %s: invalid delay value %dms (%s)",
+                     attr, dampen, dvalue);
+            return;
+        }
+
+        if (a->timeout_ms != dampen) {
+            mainloop_timer_stop(a->timer);
+            mainloop_timer_del(a->timer);
+            a->timeout_ms = dampen;
+            if (dampen > 0) {
+                a->timer = mainloop_timer_add(attr, a->timeout_ms, FALSE,
+                                              attribute_timer_cb, a);
+                crm_info("Update attribute %s delay to %dms (%s)",
+                         attr, dampen, dvalue);
+            } else {
+                a->timer = NULL;
+                crm_info("Update attribute %s to remove delay", attr);
+            }
+
+            /* If dampening changed, do an immediate write-out,
+             * otherwise repeated dampening changes would prevent write-outs
+             */
+            write_or_elect_attribute(a);
+        }
+
+        if (!update_both) {
+            return;
+        }
+    }
+
+    // If no host was specified, update all hosts recursively
+    if (host == NULL) {
         GHashTableIter vIter;
-        g_hash_table_iter_init(&vIter, a->values);
 
         crm_debug("Setting %s for all hosts to %s", attr, value);
-
         xml_remove_prop(xml, F_ATTRD_HOST_ID);
+        g_hash_table_iter_init(&vIter, a->values);
         while (g_hash_table_iter_next(&vIter, (gpointer *) & host, NULL)) {
             attrd_peer_update(peer, xml, host, filter);
         }
         return;
     }
 
+    // Update attribute value for one host
+
     v = attrd_lookup_or_create_value(a->values, host, xml);
 
-    if(filter
-              && safe_str_neq(v->current, value)
-              && safe_str_eq(host, attrd_cluster->uname)) {
+    if (filter && safe_str_neq(v->current, value)
+        && safe_str_eq(host, attrd_cluster->uname)) {
+
         xmlNode *sync = create_xml_node(NULL, __FUNCTION__);
+
         crm_notice("%s[%s]: local value '%s' takes priority over '%s' from %s",
-                   a->id, host, v->current, value, peer->uname);
+                   attr, host, v->current, value, peer->uname);
 
         crm_xml_add(sync, F_ATTRD_TASK, ATTRD_OP_SYNC_RESPONSE);
         v = g_hash_table_lookup(a->values, host);
-        build_attribute_xml(sync, a->id, a->set, a->uuid, a->timeout_ms, a->user, a->is_private,
-                            v->nodename, v->nodeid, v->current);
+        build_attribute_xml(sync, attr, a->set, a->uuid, a->timeout_ms, a->user,
+                            a->is_private, v->nodename, v->nodeid, v->current);
 
         crm_xml_add_int(sync, F_ATTRD_WRITER, election_state(writer));
 
@@ -860,28 +838,23 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
         send_attrd_message(NULL, sync);
         free_xml(sync);
 
-    } else if(safe_str_neq(v->current, value)) {
-        crm_info("Setting %s[%s]: %s -> %s from %s", attr, host, v->current, value, peer->uname);
+    } else if (safe_str_neq(v->current, value)) {
+        crm_info("Setting %s[%s]: %s -> %s from %s",
+                 attr, host, v->current, value, peer->uname);
         free(v->current);
-        if(value) {
-            v->current = strdup(value);
-        } else {
-            v->current = NULL;
-        }
-        changed = TRUE;
-    } else {
-        crm_trace("Unchanged %s[%s] from %s is %s", attr, host, peer->uname, value);
-    }
+        v->current = (value? strdup(value) : NULL);
+        a->changed = TRUE;
 
-    a->changed |= changed;
-
-    if(changed) {
-        if(a->timer) {
-            crm_trace("Delayed write out (%dms) for %s", a->timeout_ms, a->id);
+        // Write out new value or start dampening timer
+        if (a->timer) {
+            crm_trace("Delayed write out (%dms) for %s", a->timeout_ms, attr);
             mainloop_timer_start(a->timer);
         } else {
             write_or_elect_attribute(a);
         }
+
+    } else {
+        crm_trace("Unchanged %s[%s] from %s is %s", attr, host, peer->uname, value);
     }
 
     /* If this is a cluster node whose node ID we are learning, remember it */
@@ -890,11 +863,10 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
 
         crm_node_t *known_peer = crm_get_peer(v->nodeid, host);
 
-        crm_trace("We know %s's node id now: %s",
+        crm_trace("Learned %s has node id %s",
                   known_peer->uname, known_peer->uuid);
         if (election_state(writer) == election_won) {
-            write_attributes(FALSE, TRUE);
-            return;
+            write_attributes(FALSE);
         }
     }
 }
@@ -921,8 +893,6 @@ write_or_elect_attribute(attribute_t *a)
 gboolean
 attrd_election_cb(gpointer user_data)
 {
-    crm_trace("Election complete");
-
     free(peer_writer);
     peer_writer = strdup(attrd_cluster->uname);
 
@@ -930,7 +900,7 @@ attrd_election_cb(gpointer user_data)
     attrd_peer_sync(NULL, NULL);
 
     /* Update the CIB after an election */
-    write_attributes(TRUE, FALSE);
+    write_attributes(TRUE);
     return FALSE;
 }
 
@@ -949,7 +919,7 @@ attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *da
             }
         } else {
             /* Remove all attribute values associated with lost nodes */
-            attrd_peer_remove(peer->uname, FALSE, "peer loss");
+            attrd_peer_remove(peer->uname, FALSE, "loss");
             if (peer_writer && safe_str_eq(peer->uname, peer_writer)) {
                 free(peer_writer);
                 peer_writer = NULL;
@@ -1012,15 +982,16 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
 }
 
 void
-write_attributes(bool all, bool peer_discovered)
+write_attributes(bool all)
 {
     GHashTableIter iter;
     attribute_t *a = NULL;
 
+    crm_debug("Writing out %s attributes", all? "all" : "changed");
     g_hash_table_iter_init(&iter, attributes);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & a)) {
-        if (peer_discovered && a->unknown_peer_uuids) {
-            /* a new peer uuid has been discovered, try writing this attribute again. */
+        if (!all && a->unknown_peer_uuids) {
+            // Try writing this attribute again, in case peer ID was learned
             a->changed = TRUE;
         }
 
@@ -1069,6 +1040,40 @@ build_update_element(xmlNode *parent, attribute_t *a, const char *nodeid, const 
     }
 }
 
+static void
+set_alert_attribute_value(GHashTable *t, attribute_value_t *v)
+{
+    attribute_value_t *a_v = NULL;
+    a_v = calloc(1, sizeof(attribute_value_t));
+    CRM_ASSERT(a_v != NULL);
+
+    a_v->nodeid = v->nodeid;
+    a_v->nodename = strdup(v->nodename);
+
+    if (v->current != NULL) {
+        a_v->current = strdup(v->current);
+    }
+
+    g_hash_table_replace(t, a_v->nodename, a_v);
+}
+
+static void
+send_alert_attributes_value(attribute_t *a, GHashTable *t)
+{
+    int rc = 0;
+    attribute_value_t *at = NULL;
+    GHashTableIter vIter;
+
+    g_hash_table_iter_init(&vIter, t);
+
+    while (g_hash_table_iter_next(&vIter, NULL, (gpointer *) & at)) {
+        rc = attrd_send_attribute_alert(at->nodename, at->nodeid,
+                                        a->id, at->current);
+        crm_trace("Sent alerts for %s[%s]=%s: nodeid=%d rc=%d",
+                  a->id, at->nodename, at->current, at->nodeid, rc);
+    }
+}
+
 void
 write_attribute(attribute_t *a)
 {
@@ -1077,6 +1082,7 @@ write_attribute(attribute_t *a)
     attribute_value_t *v = NULL;
     GHashTableIter iter;
     enum cib_call_options flags = cib_quorum_override;
+    GHashTable *alert_attribute_value = NULL;
 
     if (a == NULL) {
         return;
@@ -1112,6 +1118,11 @@ write_attribute(attribute_t *a)
     /* We will check all peers' uuids shortly, so initialize this to false */
     a->unknown_peer_uuids = FALSE;
 
+    /* Make the table for the attribute trap */
+    alert_attribute_value = g_hash_table_new_full(crm_strcase_hash,
+                                                  crm_strcase_equal, NULL,
+                                                  free_attribute_value);
+
     /* Iterate over each peer value of this attribute */
     g_hash_table_iter_init(&iter, a->values);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & v)) {
@@ -1120,7 +1131,7 @@ write_attribute(attribute_t *a)
         /* If the value's peer info does not correspond to a peer, ignore it */
         if (peer == NULL) {
             crm_notice("Update error (peer not found): %s[%s]=%s failed (host=%p)",
-                       v->nodename, a->id, v->current, peer);
+                       a->id, v->nodename, v->current, peer);
             continue;
         }
 
@@ -1139,16 +1150,19 @@ write_attribute(attribute_t *a)
         /* If the peer is found, but its uuid is unknown, defer write */
         if (peer->uuid == NULL) {
             a->unknown_peer_uuids = TRUE;
-            crm_notice("Update error (unknown peer uuid, retry will be attempted once uuid is discovered): %s[%s]=%s failed (host=%p)",
-                       v->nodename, a->id, v->current, peer);
+            crm_notice("Update %s[%s]=%s postponed: unknown peer UUID, will retry if UUID is learned",
+                       a->id, v->nodename, v->current, peer);
             continue;
         }
 
         /* Add this value to status update XML */
-        crm_debug("Update: %s[%s]=%s (%s %u %u %s)", v->nodename, a->id,
+        crm_debug("Update: %s[%s]=%s (%s %u %u %s)", a->id, v->nodename,
                   v->current, peer->uuid, peer->id, v->nodeid, peer->uname);
         build_update_element(xml_top, a, peer->uuid, v->current);
         cib_updates++;
+
+        /* Preservation of the attribute to transmit alert */
+        set_alert_attribute_value(alert_attribute_value, v);
 
         free(v->requested);
         v->requested = NULL;
@@ -1180,6 +1194,11 @@ write_attribute(attribute_t *a)
                                               strdup(a->id),
                                               "attrd_cib_callback",
                                               attrd_cib_callback, free);
+        /* Transmit alert of the attribute */
+        send_alert_attributes_value(a, alert_attribute_value);
+
     }
+
+    g_hash_table_destroy(alert_attribute_value);
     free_xml(xml_top);
 }

@@ -21,6 +21,14 @@
           <nvpair id="FAKE-meta_attributes-remote-node" name="remote-node" value="remote1"/>
         </meta_attributes>
       </primitive>
+      <primitive class="ocf" id="FAKE-crashed" provider="pacemaker" type="Dummy">
+        <operations>
+          <op id="FAKE-crashed-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+        <meta_attributes id="FAKE-crashed-meta_attributes">
+          <nvpair id="FAKE-crashed-meta_attributes-remote-node" name="remote-node" value="remote2"/>
+        </meta_attributes>
+      </primitive>
     </resources>
     <constraints/>
   </configuration>
@@ -35,6 +43,9 @@
         <lrm_resources>
           <lrm_resource id="FAKE" type="Dummy" class="ocf" provider="pacemaker">
             <lrm_rsc_op id="FAKE_last_failure_0" operation_key="FAKE_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="6:12:7:a4f42c3a-abaf-4801-a5c0-5956eecf3e7f" transition-magic="0:0;6:12:7:a4f42c3a-abaf-4801-a5c0-5956eecf3e7f" call-id="28" rc-code="0" op-status="0" interval="0" last-run="1383341551" last-rc-change="1383341551" exec-time="16" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state  op_sleep " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="FAKE-crashed" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="FAKE-crashed_last_failure_0" operation_key="FAKE-crashed_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.7" transition-key="6:12:7:a4f42c3a-abaf-4801-a5c0-5956eecf3e7f" transition-magic="0:0;6:12:7:a4f42c3a-abaf-4801-a5c0-5956eecf3e7f" call-id="28" rc-code="1" op-status="0" interval="0" last-run="1383341551" last-rc-change="1383341551" exec-time="16" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state  op_sleep " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>

@@ -16,11 +16,11 @@ Online: [ node1 node2 ]
      child_rsc2:4	(heartbeat:apache):	Started node2
 
 Transition Summary:
- * Move    child_rsc1:2	(Started node1 -> node2)
- * Move    child_rsc1:3	(Started node1 -> node2)
- * Stop    child_rsc1:4	(node1)
- * Move    child_rsc2:3	(Started node2 -> node1)
- * Move    child_rsc2:4	(Started node2 -> node1)
+ * Move       child_rsc1:2     ( node1 -> node2 )  
+ * Move       child_rsc1:3     ( node1 -> node2 )  
+ * Stop    child_rsc1:4	(node1)  	due to node availability
+ * Move       child_rsc2:3     ( node2 -> node1 )  
+ * Move       child_rsc2:4     ( node2 -> node1 )  
 
 Executing cluster transition:
  * Resource action: child_rsc1:0    monitor on node2

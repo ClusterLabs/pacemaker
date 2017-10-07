@@ -10,20 +10,20 @@ Online: [ node2 ]
  rsc3	(heartbeat:apache):	Started node2
 
 Transition Summary:
- * Fence node1
+ * Fence (reboot) node1 'peer process is no longer available'
  * Start   stonith-1	(node2)
- * Move    rsc1	(Started node1 -> node2)
- * Move    rsc2	(Started node1 -> node2)
- * Restart rsc3	(Started node2)
+ * Move       rsc1          ( node1 -> node2 )  
+ * Move       rsc2          ( node1 -> node2 )  
+ * Restart    rsc3          (          node2 )  
 
 Executing cluster transition:
  * Resource action: stonith-1       monitor on node2
  * Resource action: rsc1            monitor on node2
  * Resource action: rsc2            monitor on node2
  * Fencing node1 (reboot)
- * Pseudo action:   stonith_complete
  * Pseudo action:   group1_stop_0
  * Pseudo action:   rsc2_stop_0
+ * Pseudo action:   stonith_complete
  * Pseudo action:   rsc1_stop_0
  * Pseudo action:   group1_stopped_0
  * Resource action: rsc3            stop on node2

@@ -16,10 +16,10 @@ Online: [ DEM-1 DEM-2 ]
      Started: [ DEM-1 DEM-2 ]
 
 Transition Summary:
- * Move    ipv6_dem_tas_dns	(Started DEM-1 -> DEM-2)
- * Move    d_bird_subnet_state	(Started DEM-1 -> DEM-2)
- * Move    ip_mgmt	(Started DEM-1 -> DEM-2)
- * Move    ip_trf_tas	(Started DEM-1 -> DEM-2)
+ * Move       ipv6_dem_tas_dns        ( DEM-1 -> DEM-2 )  
+ * Move       d_bird_subnet_state     ( DEM-1 -> DEM-2 )  
+ * Move       ip_mgmt                 ( DEM-1 -> DEM-2 )  
+ * Move       ip_trf_tas              ( DEM-1 -> DEM-2 )  
 
 Executing cluster transition:
  * Pseudo action:   svc_stop_0

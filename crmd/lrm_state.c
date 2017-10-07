@@ -26,7 +26,11 @@
 #include <crmd_messages.h>
 #include <crmd_callbacks.h>
 #include <crmd_lrm.h>
+#include <crmd_alerts.h>
 #include <crm/pengine/rules.h>
+#include <crm/pengine/rules_internal.h>
+#include <crm/transition.h>
+#include <crm/lrmd_alerts_internal.h>
 
 GHashTable *lrm_state_table = NULL;
 extern GHashTable *proxy_table;
@@ -140,6 +144,8 @@ lrm_state_create(const char *node_name)
     state->resource_history = g_hash_table_new_full(crm_str_hash,
                                                     g_str_equal, NULL, history_free);
 
+    state->metadata_cache = metadata_cache_new();
+
     g_hash_table_insert(lrm_state_table, (char *)state->node_name, state);
     return state;
 
@@ -194,13 +200,14 @@ internal_lrm_state_destroy(gpointer data)
         crm_trace("Destroying pending op cache with %d members", g_hash_table_size(lrm_state->pending_ops));
         g_hash_table_destroy(lrm_state->pending_ops);
     }
+    metadata_cache_free(lrm_state->metadata_cache);
 
     free((char *)lrm_state->node_name);
     free(lrm_state);
 }
 
 void
-lrm_state_reset_tables(lrm_state_t * lrm_state)
+lrm_state_reset_tables(lrm_state_t * lrm_state, gboolean reset_metadata)
 {
     if (lrm_state->resource_history) {
         crm_trace("Re-setting history op cache with %d members",
@@ -221,6 +228,9 @@ lrm_state_reset_tables(lrm_state_t * lrm_state)
         crm_trace("Re-setting rsc info cache with %d members",
                   g_hash_table_size(lrm_state->rsc_info_cache));
         g_hash_table_remove_all(lrm_state->rsc_info_cache);
+    }
+    if (reset_metadata) {
+        metadata_cache_reset(lrm_state->metadata_cache);
     }
 }
 
@@ -463,8 +473,7 @@ remote_config_check(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
     } else {
         lrmd_t * lrmd = (lrmd_t *)user_data;
         crm_time_t *now = crm_time_new(NULL);
-        GHashTable *config_hash = g_hash_table_new_full(
-            crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+        GHashTable *config_hash = crm_str_table_new();
 
         crm_debug("Call %d : Parsing CIB options", call_id);
 
@@ -596,9 +605,6 @@ lrm_state_get_metadata(lrm_state_t * lrm_state,
     if (!lrm_state->conn) {
         return -ENOTCONN;
     }
-
-    /* Optimize this... only retrieve metadata from local lrmd connection. Perhaps consider
-     * caching result. */
     return ((lrmd_t *) lrm_state->conn)->cmds->get_metadata(lrm_state->conn, class, provider, agent,
                                                             output, options);
 }
@@ -715,3 +721,77 @@ lrm_state_unregister_rsc(lrm_state_t * lrm_state,
     return ((lrmd_t *) lrm_state->conn)->cmds->unregister_rsc(lrm_state->conn, rsc_id, options);
 }
 
+/*
+ * functions for sending alerts via local LRMD connection
+ */
+
+static GListPtr crmd_alert_list = NULL;
+
+void
+crmd_unpack_alerts(xmlNode *alerts)
+{
+    pe_free_alert_list(crmd_alert_list);
+    crmd_alert_list = pe_unpack_alerts(alerts);
+}
+
+void
+crmd_alert_node_event(crm_node_t *node)
+{
+    lrm_state_t *lrm_state;
+
+    if (crmd_alert_list == NULL) {
+        return;
+    }
+
+    lrm_state = lrm_state_find(fsa_our_uname);
+    if (lrm_state == NULL) {
+        return;
+    }
+
+    lrmd_send_node_alert((lrmd_t *) lrm_state->conn, crmd_alert_list,
+                         node->uname, node->id, node->state);
+}
+
+void
+crmd_alert_fencing_op(stonith_event_t * e)
+{
+    char *desc;
+    lrm_state_t *lrm_state;
+
+    if (crmd_alert_list == NULL) {
+        return;
+    }
+
+    lrm_state = lrm_state_find(fsa_our_uname);
+    if (lrm_state == NULL) {
+        return;
+    }
+
+    desc = crm_strdup_printf("Operation %s of %s by %s for %s@%s: %s (ref=%s)",
+                             e->action, e->target,
+                             (e->executioner? e->executioner : "<no-one>"),
+                             e->client_origin, e->origin,
+                             pcmk_strerror(e->result), e->id);
+
+    lrmd_send_fencing_alert((lrmd_t *) lrm_state->conn, crmd_alert_list,
+                            e->target, e->operation, desc, e->result);
+    free(desc);
+}
+
+void
+crmd_alert_resource_op(const char *node, lrmd_event_data_t * op)
+{
+    lrm_state_t *lrm_state;
+
+    if (crmd_alert_list == NULL) {
+        return;
+    }
+
+    lrm_state = lrm_state_find(fsa_our_uname);
+    if (lrm_state == NULL) {
+        return;
+    }
+
+    lrmd_send_resource_alert((lrmd_t *) lrm_state->conn, crmd_alert_list, node,
+                             op);
+}

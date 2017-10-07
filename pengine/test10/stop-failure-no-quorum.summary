@@ -15,17 +15,17 @@ Online: [ pcmk-1 ]
  Fencing	(stonith:fence_xvm):	Stopped 
 
 Transition Summary:
- * Fence pcmk-2
- * Start   dlm:0	(pcmk-1 - blocked)
- * Stop    clvm:0	(pcmk-2)
- * Start   clvm:2	(pcmk-1 - blocked)
- * Start   ClusterIP	(pcmk-1 - blocked)
- * Start   Fencing	(pcmk-1 - blocked)
+ * Fence (reboot) pcmk-2 'clvm:0 failed there'
+ * Start      dlm:0         ( pcmk-1 )   due to no quorum (blocked)
+ * Stop    clvm:0	(pcmk-2)  	due to node availability
+ * Start      clvm:2        ( pcmk-1 )   due to no quorum (blocked)
+ * Start      ClusterIP     ( pcmk-1 )   due to no quorum (blocked)
+ * Start      Fencing       ( pcmk-1 )   due to no quorum (blocked)
 
 Executing cluster transition:
  * Fencing pcmk-2 (reboot)
- * Pseudo action:   stonith_complete
  * Pseudo action:   clvm-clone_stop_0
+ * Pseudo action:   stonith_complete
  * Pseudo action:   clvm_stop_0
  * Pseudo action:   clvm-clone_stopped_0
  * Pseudo action:   all_stopped

@@ -32,15 +32,35 @@ Containers: [ lamaVM1:VM1 lamaVM2:VM2 lamaVM3:VM3 ]
      Started: [ lamaVM1 lamaVM2 lamaVM3 ]
 
 Transition Summary:
- * Fence lamaVM2 (resource: VM2)
- * Recover VM2	(Started lama3)
- * Recover FSlun3	(Started lamaVM2 -> lama2)
- * Restart FAKE4	(Started lamaVM2)
- * Restart FAKE4-IP	(Started lamaVM2)
- * Restart FAKE6:2	(Started lamaVM2)
- * Restart lamaVM2	(Started lama3)
+ * Fence (reboot) lamaVM2 (resource: VM2) 'guest is unclean'
+ * Recover    VM2        (            lama3 )  
+ * Recover    FSlun3     ( lamaVM2 -> lama2 )  
+ * Restart    FAKE4      (          lamaVM2 )   due to required VM2 start
+ * Restart    FAKE4-IP   (          lamaVM2 )   due to required VM2 start
+ * Restart    FAKE6:2    (          lamaVM2 )   due to required VM2 start
+ * Restart    lamaVM2    (            lama3 )   due to required VM2 start
 
 Executing cluster transition:
+ * Resource action: FSlun1          monitor on lamaVM3
+ * Resource action: FSlun2          monitor on lamaVM3
+ * Resource action: FSlun3          monitor on lamaVM3
+ * Resource action: FSlun3          monitor on lamaVM1
+ * Resource action: FSlun4          monitor on lamaVM1
+ * Resource action: FAKE5-IP        monitor on lamaVM3
+ * Resource action: FAKE5-IP        monitor on lamaVM1
+ * Resource action: FAKE6-IP        monitor on lamaVM3
+ * Resource action: FAKE6-IP        monitor on lamaVM1
+ * Resource action: FAKE5           monitor on lamaVM1
+ * Resource action: FAKE1           monitor on lamaVM3
+ * Resource action: FAKE1-IP        monitor on lamaVM3
+ * Resource action: FAKE2           monitor on lamaVM3
+ * Resource action: FAKE2-IP        monitor on lamaVM3
+ * Resource action: FAKE3           monitor on lamaVM3
+ * Resource action: FAKE3-IP        monitor on lamaVM3
+ * Resource action: FAKE4           monitor on lamaVM3
+ * Resource action: FAKE4           monitor on lamaVM1
+ * Resource action: FAKE4-IP        monitor on lamaVM3
+ * Resource action: FAKE4-IP        monitor on lamaVM1
  * Resource action: lamaVM2         stop on lama3
  * Resource action: VM2             stop on lama3
  * Pseudo action:   stonith-lamaVM2-reboot on lamaVM2

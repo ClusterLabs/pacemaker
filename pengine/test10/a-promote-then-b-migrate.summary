@@ -9,7 +9,7 @@ Online: [ node1 node2 ]
 
 Transition Summary:
  * Promote rsc1:1	(Slave -> Master node2)
- * Migrate rsc2	(Started node1 -> node2)
+ * Migrate    rsc2       (        node1 -> node2 )  
 
 Executing cluster transition:
  * Resource action: rsc1:1          cancel=10000 on node2

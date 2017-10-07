@@ -33,6 +33,7 @@ unpack_action(synapse_t * parent, xmlNode * xml_action)
 {
     crm_action_t *action = NULL;
     const char *value = crm_element_value(xml_action, XML_ATTR_ID);
+    xmlNode *rsc_xml = NULL;
 
     if (value == NULL) {
         crm_err("Actions must have an id!");
@@ -48,6 +49,10 @@ unpack_action(synapse_t * parent, xmlNode * xml_action)
     }
 
     action->id = crm_parse_int(value, NULL);
+    if (action->id > parent->graph->max_action_id) {
+        parent->graph->max_action_id = action->id;
+    }
+
     action->type = action_type_rsc;
     action->xml = copy_xml(xml_action);
     action->synapse = parent;
@@ -87,6 +92,24 @@ unpack_action(synapse_t * parent, xmlNode * xml_action)
 
     crm_trace("Action %d has timer set to %dms", action->id, action->timeout);
 
+    action->task = crm_element_value_copy(action->xml, XML_LRM_ATTR_TASK);
+
+    rsc_xml = find_xml_node(action->xml, XML_CIB_TAG_RESOURCE, FALSE);
+    if (!rsc_xml) {
+        return action;
+    }
+
+    value = crm_element_value(rsc_xml, XML_ATTR_ID_LONG);
+    if (value != NULL) {
+        g_hash_table_insert(action->params, strdup(XML_ATTR_ID_LONG), strdup(value));
+    }
+
+    action->rsc_info = calloc(1, sizeof(lrmd_rsc_info_t));
+    action->rsc_info->id = crm_element_value_copy(rsc_xml, XML_ATTR_ID);
+    action->rsc_info->class = crm_element_value_copy(rsc_xml, XML_AGENT_ATTR_CLASS);
+    action->rsc_info->provider = crm_element_value_copy(rsc_xml, XML_AGENT_ATTR_PROVIDER);
+    action->rsc_info->type = crm_element_value_copy(rsc_xml, XML_ATTR_TYPE);
+
     return action;
 }
 
@@ -109,9 +132,12 @@ unpack_synapse(crm_graph_t * new_graph, xmlNode * xml_synapse)
         new_synapse->priority = crm_parse_int(value, NULL);
     }
 
-    new_graph->num_synapses++;
     CRM_CHECK(new_synapse->id >= 0, free(new_synapse);
               return NULL);
+
+    new_graph->num_synapses++;
+
+    new_synapse->graph = new_graph;
 
     crm_trace("look for actions in synapse %s", crm_element_value(xml_synapse, XML_ATTR_ID));
 
@@ -124,11 +150,12 @@ unpack_synapse(crm_graph_t * new_graph, xmlNode * xml_synapse)
                  action = __xml_next(action)) {
                 crm_action_t *new_action = unpack_action(new_synapse, action);
 
-                new_graph->num_actions++;
-
                 if (new_action == NULL) {
                     continue;
                 }
+
+                new_graph->num_actions++;
+
                 crm_trace("Adding action %d to synapse %d", new_action->id, new_synapse->id);
 
                 new_synapse->actions = g_list_append(new_synapse->actions, new_action);
@@ -164,6 +191,8 @@ unpack_synapse(crm_graph_t * new_graph, xmlNode * xml_synapse)
     return new_synapse;
 }
 
+static void destroy_action(crm_action_t * action);
+
 crm_graph_t *
 unpack_graph(xmlNode * xml_graph, const char *reference)
 {
@@ -190,6 +219,7 @@ unpack_graph(xmlNode * xml_graph, const char *reference)
     new_graph->transition_timeout = -1;
     new_graph->stonith_timeout = -1;
     new_graph->completion_action = tg_done;
+    new_graph->max_action_id = 0;
 
     if (reference) {
         new_graph->source = strdup(reference);
@@ -250,6 +280,8 @@ destroy_action(crm_action_t * action)
     }
     free_xml(action->xml);
     free(action->timer);
+    free(action->task);
+    lrmd_free_rsc_info(action->rsc_info);
     free(action);
 }
 
@@ -310,7 +342,7 @@ convert_graph_action(xmlNode * resource, crm_action_t * action, int status, int 
 
     op->rsc_id = strdup(ID(action_resource));
     op->interval = action->interval;
-    op->op_type = strdup(crm_element_value(action->xml, XML_LRM_ATTR_TASK));
+    op->op_type = strdup(action->task);
 
     op->rc = rc;
     op->op_status = status;
@@ -322,6 +354,10 @@ convert_graph_action(xmlNode * resource, crm_action_t * action, int status, int 
 
     g_hash_table_iter_init(&iter, action->params);
     while (g_hash_table_iter_next(&iter, (void **)&name, (void **)&value)) {
+        if (safe_str_eq(name, XML_ATTR_ID_LONG)) {
+            continue;
+        }
+
         g_hash_table_insert(op->params, strdup(name), strdup(value));
     }
 

@@ -8,7 +8,7 @@ Online: [ hs21c ]
  nfs_1	(ocf::heartbeat:Filesystem):	Stopped 
 
 Transition Summary:
- * Fence hs21d
+ * Fence (reboot) hs21d 'node is unclean'
  * Start   stonith-1	(hs21c)
  * Start   apache_1	(hs21c)
  * Start   nfs_1	(hs21c)

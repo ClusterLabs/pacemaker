@@ -20,14 +20,14 @@ Online: [ sapcl01 ]
      oralsnr_25	(ocf::heartbeat:oralsnr):	Started sapcl03
 
 Transition Summary:
- * Move    IPaddr_192_168_1_102	(Started sapcl02 -> sapcl01)
- * Move    LVM_12	(Started sapcl02 -> sapcl01)
- * Move    Filesystem_13	(Started sapcl02 -> sapcl01)
- * Move    IPaddr_192_168_1_104	(Started sapcl03 -> sapcl01)
- * Move    LVM_22	(Started sapcl03 -> sapcl01)
- * Move    Filesystem_23	(Started sapcl03 -> sapcl01)
- * Move    oracle_24	(Started sapcl03 -> sapcl01)
- * Move    oralsnr_25	(Started sapcl03 -> sapcl01)
+ * Move       IPaddr_192_168_1_102     ( sapcl02 -> sapcl01 )  
+ * Move       LVM_12                   ( sapcl02 -> sapcl01 )  
+ * Move       Filesystem_13            ( sapcl02 -> sapcl01 )  
+ * Move       IPaddr_192_168_1_104     ( sapcl03 -> sapcl01 )  
+ * Move       LVM_22                   ( sapcl03 -> sapcl01 )  
+ * Move       Filesystem_23            ( sapcl03 -> sapcl01 )  
+ * Move       oracle_24                ( sapcl03 -> sapcl01 )  
+ * Move       oralsnr_25               ( sapcl03 -> sapcl01 )  
 
 Executing cluster transition:
  * Pseudo action:   app02_stop_0

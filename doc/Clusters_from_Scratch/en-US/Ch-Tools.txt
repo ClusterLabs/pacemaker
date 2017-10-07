@@ -16,7 +16,7 @@ configuring a cluster, and pack them into one simple-to-use command
 line tool.
 
 They even allow you to queue up several changes at once and commit
-them atomically.
+them all at once.
 
 Two popular command-line shells are `pcs` and
 `crmsh`.  This edition of Clusters from Scratch is based on `pcs`.

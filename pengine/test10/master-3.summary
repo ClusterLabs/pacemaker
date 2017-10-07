@@ -11,7 +11,6 @@ Online: [ node1 node2 ]
 
 Transition Summary:
  * Start   child_rsc1:0	(node1)
- * Start   child_rsc1:1	(node2)
  * Promote child_rsc1:1	(Stopped -> Master node2)
  * Start   child_rsc1:2	(node1)
  * Start   child_rsc1:3	(node2)

@@ -11,7 +11,7 @@ Online: [ wc01 wc02 wc03 ]
 
 Transition Summary:
  * Start   stonith-1	(wc01)
- * Stop    apache2:2	(wc02)
+ * Stop    apache2:2	(wc02)  	due to node availability
 
 Executing cluster transition:
  * Resource action: stonith-1       monitor on wc03

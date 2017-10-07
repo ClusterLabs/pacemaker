@@ -955,7 +955,7 @@ Set 'dummy' option: id=dummy-instance_attributes-delay set=dummy-instance_attrib
 * Passed: crm_resource   - List the configured resources
 =#=#=#= Begin test: Require a destination when migrating a resource that is stopped =#=#=#=
 Resource 'dummy' not moved: active in 0 locations.
-You can prevent 'dummy' from running on a specific location with: --ban --host <name>
+You can prevent 'dummy' from running on a specific location with: --ban --node <name>
 Error performing operation: Invalid argument
 =#=#=#= Current cib after: Require a destination when migrating a resource that is stopped =#=#=#=
 <cib epoch="17" num_updates="0" admin_epoch="1">
@@ -1085,8 +1085,8 @@ Online: [ node1 ]
  Fence	(stonith:fence_true):	Stopped
 
 Transition Summary:
- * Start   dummy	(node1)
- * Start   Fence	(node1)
+ * Start      dummy   ( node1 )  
+ * Start      Fence   ( node1 )  
 
 Executing cluster transition:
  * Resource action: dummy           monitor on node1
@@ -1799,7 +1799,7 @@ Performing requested modifications
  + Bringing node node3 online
 
 Transition Summary:
- * Move    Fence	(Started node1 -> node2)
+ * Move       Fence   ( node1 -> node2 )  
 
 Executing cluster transition:
  * Resource action: dummy           monitor on node3
@@ -2074,7 +2074,7 @@ Online: [ node1 node2 node3 ]
  Fence	(stonith:fence_true):	Started node2
 
 Transition Summary:
- * Move    dummy	(Started node1 -> node3)
+ * Move       dummy   ( node1 -> node3 )  
 
 Executing cluster transition:
  * Resource action: dummy           stop on node1

@@ -10,10 +10,10 @@ Online: [ xenserver1 xenserver2 ]
      res_Dummy3	(ocf::heartbeat:Dummy):	Started xenserver1
 
 Transition Summary:
- * Stop    res_Dummy1:0	(xenserver1)
- * Stop    res_Dummy1:1	(xenserver2)
- * Stop    res_Dummy2	(Started xenserver1)
- * Stop    res_Dummy3	(Started xenserver1)
+ * Stop    res_Dummy1:0	(xenserver1)  	due to node availability
+ * Stop    res_Dummy1:1	(xenserver2)  	due to node availability
+ * Stop       res_Dummy2       ( xenserver1 )   due to unrunnable cl_res_Dummy1 running
+ * Stop       res_Dummy3       ( xenserver1 )   due to unrunnable cl_res_Dummy1 running
 
 Executing cluster transition:
  * Pseudo action:   gr_Dummy_stop_0

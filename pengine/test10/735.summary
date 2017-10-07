@@ -13,7 +13,7 @@ OFFLINE: [ hadev1 ]
      child_DoFencing:2	(stonith:ssh):	Stopped 
 
 Transition Summary:
- * Move    rsc_hadev1	(Started hadev2 -> hadev3)
+ * Move       rsc_hadev1            ( hadev2 -> hadev3 )  
  * Start   rsc_hadev3	(hadev3)
  * Start   child_DoFencing:0	(hadev2)
  * Start   child_DoFencing:1	(hadev3)

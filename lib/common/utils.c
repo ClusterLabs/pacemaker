@@ -23,7 +23,6 @@
 #  define _GNU_SOURCE
 #endif
 
-#include <sys/param.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
@@ -34,7 +33,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <limits.h>
-#include <ctype.h>
 #include <pwd.h>
 #include <time.h>
 #include <libgen.h>
@@ -43,7 +41,6 @@
 #include <qb/qbdefs.h>
 
 #include <crm/crm.h>
-#include <crm/lrmd.h>
 #include <crm/services.h>
 #include <crm/msg_xml.h>
 #include <crm/cib/internal.h>
@@ -298,65 +295,80 @@ cluster_option(GHashTable * options, gboolean(*validate) (const char *),
                const char *name, const char *old_name, const char *def_value)
 {
     const char *value = NULL;
+    char *new_value = NULL;
 
     CRM_ASSERT(name != NULL);
 
-    if (options != NULL) {
+    if (options) {
         value = g_hash_table_lookup(options, name);
-    }
 
-    if (value == NULL && old_name && options != NULL) {
-        value = g_hash_table_lookup(options, old_name);
-        if (value != NULL) {
-            crm_config_warn("Using deprecated name '%s' for"
-                            " cluster option '%s'", old_name, name);
-            g_hash_table_insert(options, strdup(name), strdup(value));
+        if ((value == NULL) && old_name) {
             value = g_hash_table_lookup(options, old_name);
+            if (value != NULL) {
+                crm_config_warn("Support for legacy name '%s' for cluster option '%s'"
+                                " is deprecated and will be removed in a future release",
+                                old_name, name);
+
+                // Inserting copy with current name ensures we only warn once
+                new_value = strdup(value);
+                g_hash_table_insert(options, strdup(name), new_value);
+                value = new_value;
+            }
+        }
+
+        if (value && validate && (validate(value) == FALSE)) {
+            crm_config_err("Resetting cluster option '%s' to default: value '%s' is invalid",
+                           name, value);
+            value = NULL;
+        }
+
+        if (value) {
+            return value;
         }
     }
+
+    // No value found, use default
+    value = def_value;
 
     if (value == NULL) {
-        crm_trace("Using default value '%s' for cluster option '%s'", def_value, name);
-
-        if (options == NULL) {
-            return def_value;
-
-        } else if(def_value == NULL) {
-            return def_value;
-        }
-
-        g_hash_table_insert(options, strdup(name), strdup(def_value));
-        value = g_hash_table_lookup(options, name);
+        crm_trace("No value or default provided for cluster option '%s'",
+                  name);
+        return NULL;
     }
 
-    if (validate && validate(value) == FALSE) {
-        crm_config_err("Value '%s' for cluster option '%s' is invalid."
-                       "  Defaulting to %s", value, name, def_value);
-        g_hash_table_replace(options, strdup(name), strdup(def_value));
-        value = g_hash_table_lookup(options, name);
+    if (validate) {
+        CRM_CHECK(validate(value) != FALSE,
+                  crm_err("Bug: default value for cluster option '%s' is invalid", name);
+                  return NULL);
     }
 
+    crm_trace("Using default value '%s' for cluster option '%s'",
+              value, name);
+    if (options) {
+        new_value = strdup(value);
+        g_hash_table_insert(options, strdup(name), new_value);
+        value = new_value;
+    }
     return value;
 }
 
 const char *
 get_cluster_pref(GHashTable * options, pe_cluster_option * option_list, int len, const char *name)
 {
-    int lpc = 0;
     const char *value = NULL;
-    gboolean found = FALSE;
 
-    for (lpc = 0; lpc < len; lpc++) {
+    for (int lpc = 0; lpc < len; lpc++) {
         if (safe_str_eq(name, option_list[lpc].name)) {
-            found = TRUE;
             value = cluster_option(options,
                                    option_list[lpc].is_valid,
                                    option_list[lpc].name,
-                                   option_list[lpc].alt_name, option_list[lpc].default_value);
+                                   option_list[lpc].alt_name,
+                                   option_list[lpc].default_value);
+            return value;
         }
     }
-    CRM_CHECK(found, crm_err("No option named: %s", name));
-    return value;
+    CRM_CHECK(FALSE, crm_err("Bug: looking for unknown option '%s'", name));
+    return NULL;
 }
 
 void
@@ -420,25 +432,25 @@ generate_hash_key(const char *crm_msg_reference, const char *sys)
 int
 crm_user_lookup(const char *name, uid_t * uid, gid_t * gid)
 {
-    int rc = -1;
+    int rc = pcmk_ok;
     char *buffer = NULL;
     struct passwd pwd;
     struct passwd *pwentry = NULL;
 
     buffer = calloc(1, PW_BUFFER_LEN);
-    getpwnam_r(name, &pwd, buffer, PW_BUFFER_LEN, &pwentry);
+    rc = getpwnam_r(name, &pwd, buffer, PW_BUFFER_LEN, &pwentry);
     if (pwentry) {
-        rc = 0;
         if (uid) {
             *uid = pwentry->pw_uid;
         }
         if (gid) {
             *gid = pwentry->pw_gid;
         }
-        crm_trace("Cluster user %s has uid=%d gid=%d", name, pwentry->pw_uid, pwentry->pw_gid);
+        crm_trace("User %s has uid=%d gid=%d", name, pwentry->pw_uid, pwentry->pw_gid);
 
     } else {
-        crm_err("Cluster user %s does not exist", name);
+        rc = rc? -rc : -EINVAL;
+        crm_info("User %s lookup: %s", name, pcmk_strerror(rc));
     }
 
     free(buffer);
@@ -635,332 +647,6 @@ crm_get_msec(const char *input)
     /* dret += 0.5; */
     /* msec = (long long)dret; */
     return msec;
-}
-
-/*!
- * \brief Generate an operation key
- *
- * \param[in] rsc_id    ID of resource being operated on
- * \param[in] op_type   Operation name
- * \param[in] interval  Operation interval
- *
- * \return Newly allocated memory containing operation key as string
- *
- * \note It is the caller's responsibility to free() the result.
- */
-char *
-generate_op_key(const char *rsc_id, const char *op_type, int interval)
-{
-    CRM_ASSERT(rsc_id != NULL);
-    CRM_ASSERT(op_type != NULL);
-    CRM_ASSERT(interval >= 0);
-    return crm_strdup_printf("%s_%s_%d", rsc_id, op_type, interval);
-}
-
-gboolean
-parse_op_key(const char *key, char **rsc_id, char **op_type, int *interval)
-{
-    char *notify = NULL;
-    char *mutable_key = NULL;
-    char *mutable_key_ptr = NULL;
-    int len = 0, offset = 0, ch = 0;
-
-    CRM_CHECK(key != NULL, return FALSE);
-
-    *interval = 0;
-    len = strlen(key);
-    offset = len - 1;
-
-    crm_trace("Source: %s", key);
-
-    while (offset > 0 && isdigit(key[offset])) {
-        int digits = len - offset;
-
-        ch = key[offset] - '0';
-        CRM_CHECK(ch < 10, return FALSE);
-        CRM_CHECK(ch >= 0, return FALSE);
-        while (digits > 1) {
-            digits--;
-            ch = ch * 10;
-        }
-        *interval += ch;
-        offset--;
-    }
-
-    crm_trace("  Interval: %d", *interval);
-    CRM_CHECK(key[offset] == '_', return FALSE);
-
-    mutable_key = strdup(key);
-    mutable_key[offset] = 0;
-    offset--;
-
-    while (offset > 0 && key[offset] != '_') {
-        offset--;
-    }
-
-    CRM_CHECK(key[offset] == '_', free(mutable_key);
-              return FALSE);
-
-    mutable_key_ptr = mutable_key + offset + 1;
-
-    crm_trace("  Action: %s", mutable_key_ptr);
-
-    *op_type = strdup(mutable_key_ptr);
-
-    mutable_key[offset] = 0;
-    offset--;
-
-    CRM_CHECK(mutable_key != mutable_key_ptr, free(mutable_key);
-              return FALSE);
-
-    notify = strstr(mutable_key, "_post_notify");
-    if (notify && safe_str_eq(notify, "_post_notify")) {
-        notify[0] = 0;
-    }
-
-    notify = strstr(mutable_key, "_pre_notify");
-    if (notify && safe_str_eq(notify, "_pre_notify")) {
-        notify[0] = 0;
-    }
-
-    crm_trace("  Resource: %s", mutable_key);
-    *rsc_id = mutable_key;
-
-    return TRUE;
-}
-
-char *
-generate_notify_key(const char *rsc_id, const char *notify_type, const char *op_type)
-{
-    int len = 12;
-    char *op_id = NULL;
-
-    CRM_CHECK(rsc_id != NULL, return NULL);
-    CRM_CHECK(op_type != NULL, return NULL);
-    CRM_CHECK(notify_type != NULL, return NULL);
-
-    len += strlen(op_type);
-    len += strlen(rsc_id);
-    len += strlen(notify_type);
-    if(len > 0) {
-        op_id = malloc(len);
-    }
-    if (op_id != NULL) {
-        sprintf(op_id, "%s_%s_notify_%s_0", rsc_id, notify_type, op_type);
-    }
-    return op_id;
-}
-
-char *
-generate_transition_magic_v202(const char *transition_key, int op_status)
-{
-    int len = 80;
-    char *fail_state = NULL;
-
-    CRM_CHECK(transition_key != NULL, return NULL);
-
-    len += strlen(transition_key);
-
-    fail_state = malloc(len);
-    if (fail_state != NULL) {
-        snprintf(fail_state, len, "%d:%s", op_status, transition_key);
-    }
-    return fail_state;
-}
-
-char *
-generate_transition_magic(const char *transition_key, int op_status, int op_rc)
-{
-    int len = 80;
-    char *fail_state = NULL;
-
-    CRM_CHECK(transition_key != NULL, return NULL);
-
-    len += strlen(transition_key);
-
-    fail_state = malloc(len);
-    if (fail_state != NULL) {
-        snprintf(fail_state, len, "%d:%d;%s", op_status, op_rc, transition_key);
-    }
-    return fail_state;
-}
-
-gboolean
-decode_transition_magic(const char *magic, char **uuid, int *transition_id, int *action_id,
-                        int *op_status, int *op_rc, int *target_rc)
-{
-    int res = 0;
-    char *key = NULL;
-    gboolean result = TRUE;
-
-    CRM_CHECK(magic != NULL, return FALSE);
-    CRM_CHECK(op_rc != NULL, return FALSE);
-    CRM_CHECK(op_status != NULL, return FALSE);
-
-    key = calloc(1, strlen(magic) + 1);
-    res = sscanf(magic, "%d:%d;%s", op_status, op_rc, key);
-    if (res != 3) {
-        crm_warn("Only found %d items in: '%s'", res, magic);
-        free(key);
-        return FALSE;
-    }
-
-    CRM_CHECK(decode_transition_key(key, uuid, transition_id, action_id, target_rc), result = FALSE);
-
-    free(key);
-    return result;
-}
-
-char *
-generate_transition_key(int transition_id, int action_id, int target_rc, const char *node)
-{
-    int len = 40;
-    char *fail_state = NULL;
-
-    CRM_CHECK(node != NULL, return NULL);
-
-    len += strlen(node);
-
-    fail_state = malloc(len);
-    if (fail_state != NULL) {
-        snprintf(fail_state, len, "%d:%d:%d:%-*s", action_id, transition_id, target_rc, 36, node);
-    }
-    return fail_state;
-}
-
-gboolean
-decode_transition_key(const char *key, char **uuid, int *transition_id, int *action_id,
-                      int *target_rc)
-{
-    int res = 0;
-    gboolean done = FALSE;
-
-    CRM_CHECK(uuid != NULL, return FALSE);
-    CRM_CHECK(target_rc != NULL, return FALSE);
-    CRM_CHECK(action_id != NULL, return FALSE);
-    CRM_CHECK(transition_id != NULL, return FALSE);
-
-    *uuid = calloc(1, 37);
-    res = sscanf(key, "%d:%d:%d:%36s", action_id, transition_id, target_rc, *uuid);
-    switch (res) {
-        case 4:
-            /* Post Pacemaker 0.6 */
-            done = TRUE;
-            break;
-        case 3:
-        case 2:
-            /* this can be tricky - the UUID might start with an integer */
-
-            /* Until Pacemaker 0.6 */
-            done = TRUE;
-            *target_rc = -1;
-            res = sscanf(key, "%d:%d:%36s", action_id, transition_id, *uuid);
-            if (res == 2) {
-                *action_id = -1;
-                res = sscanf(key, "%d:%36s", transition_id, *uuid);
-                CRM_CHECK(res == 2, done = FALSE);
-
-            } else if (res != 3) {
-                CRM_CHECK(res == 3, done = FALSE);
-            }
-            break;
-
-        case 1:
-            /* Prior to Heartbeat 2.0.8 */
-            done = TRUE;
-            *action_id = -1;
-            *target_rc = -1;
-            res = sscanf(key, "%d:%36s", transition_id, *uuid);
-            CRM_CHECK(res == 2, done = FALSE);
-            break;
-        default:
-            crm_crit("Unhandled sscanf result (%d) for %s", res, key);
-    }
-
-    if (strlen(*uuid) != 36) {
-        crm_warn("Bad UUID (%s) in sscanf result (%d) for %s", *uuid, res, key);
-    }
-
-    if (done == FALSE) {
-        crm_err("Cannot decode '%s' rc=%d", key, res);
-
-        free(*uuid);
-        *uuid = NULL;
-        *target_rc = -1;
-        *action_id = -1;
-        *transition_id = -1;
-    }
-
-    return done;
-}
-
-void
-filter_action_parameters(xmlNode * param_set, const char *version)
-{
-    char *key = NULL;
-    char *timeout = NULL;
-    char *interval = NULL;
-
-    const char *attr_filter[] = {
-        XML_ATTR_ID,
-        XML_ATTR_CRM_VERSION,
-        XML_LRM_ATTR_OP_DIGEST,
-        XML_LRM_ATTR_TARGET,
-        XML_LRM_ATTR_TARGET_UUID,
-        "pcmk_external_ip"
-    };
-
-    gboolean do_delete = FALSE;
-    int lpc = 0;
-    static int meta_len = 0;
-
-    if (meta_len == 0) {
-        meta_len = strlen(CRM_META);
-    }
-
-    if (param_set == NULL) {
-        return;
-    }
-
-    for (lpc = 0; lpc < DIMOF(attr_filter); lpc++) {
-        xml_remove_prop(param_set, attr_filter[lpc]);
-    }
-
-    key = crm_meta_name(XML_LRM_ATTR_INTERVAL);
-    interval = crm_element_value_copy(param_set, key);
-    free(key);
-
-    key = crm_meta_name(XML_ATTR_TIMEOUT);
-    timeout = crm_element_value_copy(param_set, key);
-
-    if (param_set) {
-        xmlAttrPtr xIter = param_set->properties;
-
-        while (xIter) {
-            const char *prop_name = (const char *)xIter->name;
-
-            xIter = xIter->next;
-            do_delete = FALSE;
-            if (strncasecmp(prop_name, CRM_META, meta_len) == 0) {
-                do_delete = TRUE;
-            }
-
-            if (do_delete) {
-                xml_remove_prop(param_set, prop_name);
-            }
-        }
-    }
-
-    if (crm_get_msec(interval) > 0 && compare_version(version, "1.0.8") > 0) {
-        /* Re-instate the operation's timeout value */
-        if (timeout != NULL) {
-            crm_xml_add(param_set, key, timeout);
-        }
-    }
-
-    free(interval);
-    free(timeout);
-    free(key);
 }
 
 extern bool crm_is_daemon;
@@ -1546,254 +1232,6 @@ stonith_ipc_server_init(qb_ipcs_service_t **ipcs, struct qb_ipcs_service_handler
     }
 }
 
-#define FAKE_TE_ID	"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-static void
-append_digest(lrmd_event_data_t * op, xmlNode * update, const char *version, const char *magic,
-              int level)
-{
-    /* this will enable us to later determine that the
-     *   resource's parameters have changed and we should force
-     *   a restart
-     */
-    char *digest = NULL;
-    xmlNode *args_xml = NULL;
-
-    if (op->params == NULL) {
-        return;
-    }
-
-    args_xml = create_xml_node(NULL, XML_TAG_PARAMS);
-    g_hash_table_foreach(op->params, hash2field, args_xml);
-    filter_action_parameters(args_xml, version);
-#ifdef ENABLE_VERSIONED_ATTRS
-    crm_summarize_versioned_params(args_xml, op->versioned_params);
-#endif
-    digest = calculate_operation_digest(args_xml, version);
-
-#if 0
-    if (level < get_crm_log_level()
-        && op->interval == 0 && crm_str_eq(op->op_type, CRMD_ACTION_START, TRUE)) {
-        char *digest_source = dump_xml_unformatted(args_xml);
-
-        do_crm_log(level, "Calculated digest %s for %s (%s). Source: %s\n",
-                   digest, ID(update), magic, digest_source);
-        free(digest_source);
-    }
-#endif
-    crm_xml_add(update, XML_LRM_ATTR_OP_DIGEST, digest);
-
-    free_xml(args_xml);
-    free(digest);
-}
-
-int
-rsc_op_expected_rc(lrmd_event_data_t * op)
-{
-    int rc = 0;
-
-    if (op && op->user_data) {
-        int dummy = 0;
-        char *uuid = NULL;
-
-        decode_transition_key(op->user_data, &uuid, &dummy, &dummy, &rc);
-        free(uuid);
-    }
-    return rc;
-}
-
-gboolean
-did_rsc_op_fail(lrmd_event_data_t * op, int target_rc)
-{
-    switch (op->op_status) {
-        case PCMK_LRM_OP_CANCELLED:
-        case PCMK_LRM_OP_PENDING:
-            return FALSE;
-            break;
-
-        case PCMK_LRM_OP_NOTSUPPORTED:
-        case PCMK_LRM_OP_TIMEOUT:
-        case PCMK_LRM_OP_ERROR:
-            return TRUE;
-            break;
-
-        default:
-            if (target_rc != op->rc) {
-                return TRUE;
-            }
-    }
-
-    return FALSE;
-}
-
-xmlNode *
-create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char * caller_version,
-                        int target_rc, const char * node, const char * origin, int level)
-{
-    char *key = NULL;
-    char *magic = NULL;
-    char *op_id = NULL;
-    char *op_id_additional = NULL;
-    char *local_user_data = NULL;
-    const char *exit_reason = NULL;
-
-    xmlNode *xml_op = NULL;
-    const char *task = NULL;
-    gboolean dc_munges_migrate_ops = (compare_version(caller_version, "3.0.3") < 0);
-    gboolean dc_needs_unique_ops = (compare_version(caller_version, "3.0.6") < 0);
-
-    CRM_CHECK(op != NULL, return NULL);
-    do_crm_log(level, "%s: Updating resource %s after %s op %s (interval=%d)",
-               origin, op->rsc_id, op->op_type, services_lrm_status_str(op->op_status),
-               op->interval);
-
-    crm_trace("DC version: %s", caller_version);
-
-    task = op->op_type;
-    /* remap the task name under various scenarios
-     * this makes life easier for the PE when trying determine the current state
-     */
-    if (crm_str_eq(task, "reload", TRUE)) {
-        if (op->op_status == PCMK_LRM_OP_DONE) {
-            task = CRMD_ACTION_START;
-        } else {
-            task = CRMD_ACTION_STATUS;
-        }
-
-    } else if (dc_munges_migrate_ops && crm_str_eq(task, CRMD_ACTION_MIGRATE, TRUE)) {
-        /* if the migrate_from fails it will have enough info to do the right thing */
-        if (op->op_status == PCMK_LRM_OP_DONE) {
-            task = CRMD_ACTION_STOP;
-        } else {
-            task = CRMD_ACTION_STATUS;
-        }
-
-    } else if (dc_munges_migrate_ops
-               && op->op_status == PCMK_LRM_OP_DONE
-               && crm_str_eq(task, CRMD_ACTION_MIGRATED, TRUE)) {
-        task = CRMD_ACTION_START;
-    }
-
-    key = generate_op_key(op->rsc_id, task, op->interval);
-    if (dc_needs_unique_ops && op->interval > 0) {
-        op_id = strdup(key);
-
-    } else if (crm_str_eq(task, CRMD_ACTION_NOTIFY, TRUE)) {
-        const char *n_type = crm_meta_value(op->params, "notify_type");
-        const char *n_task = crm_meta_value(op->params, "notify_operation");
-
-        CRM_LOG_ASSERT(n_type != NULL);
-        CRM_LOG_ASSERT(n_task != NULL);
-        op_id = generate_notify_key(op->rsc_id, n_type, n_task);
-
-        /* these are not yet allowed to fail */
-        op->op_status = PCMK_LRM_OP_DONE;
-        op->rc = 0;
-
-    } else if (did_rsc_op_fail(op, target_rc)) {
-        op_id = generate_op_key(op->rsc_id, "last_failure", 0);
-        if (op->interval == 0) {
-            /* Ensure 'last' gets updated too in case recording-pending="true" */
-            op_id_additional = generate_op_key(op->rsc_id, "last", 0);
-        }
-        exit_reason = op->exit_reason;
-
-    } else if (op->interval > 0) {
-        op_id = strdup(key);
-
-    } else {
-        op_id = generate_op_key(op->rsc_id, "last", 0);
-    }
-
-  again:
-    xml_op = find_entity(parent, XML_LRM_TAG_RSC_OP, op_id);
-    if (xml_op == NULL) {
-        xml_op = create_xml_node(parent, XML_LRM_TAG_RSC_OP);
-    }
-
-    if (op->user_data == NULL) {
-        crm_debug("Generating fake transition key for:"
-                  " %s_%s_%d %d from %s",
-                  op->rsc_id, op->op_type, op->interval, op->call_id, origin);
-        local_user_data = generate_transition_key(-1, op->call_id, target_rc, FAKE_TE_ID);
-        op->user_data = local_user_data;
-    }
-
-    if(magic == NULL) {
-        magic = generate_transition_magic(op->user_data, op->op_status, op->rc);
-    }
-
-    crm_xml_add(xml_op, XML_ATTR_ID, op_id);
-    crm_xml_add(xml_op, XML_LRM_ATTR_TASK_KEY, key);
-    crm_xml_add(xml_op, XML_LRM_ATTR_TASK, task);
-    crm_xml_add(xml_op, XML_ATTR_ORIGIN, origin);
-    crm_xml_add(xml_op, XML_ATTR_CRM_VERSION, caller_version);
-    crm_xml_add(xml_op, XML_ATTR_TRANSITION_KEY, op->user_data);
-    crm_xml_add(xml_op, XML_ATTR_TRANSITION_MAGIC, magic);
-    crm_xml_add(xml_op, XML_LRM_ATTR_EXIT_REASON, exit_reason);
-    crm_xml_add(xml_op, XML_LRM_ATTR_TARGET, node); /* For context during triage */
-
-    crm_xml_add_int(xml_op, XML_LRM_ATTR_CALLID, op->call_id);
-    crm_xml_add_int(xml_op, XML_LRM_ATTR_RC, op->rc);
-    crm_xml_add_int(xml_op, XML_LRM_ATTR_OPSTATUS, op->op_status);
-    crm_xml_add_int(xml_op, XML_LRM_ATTR_INTERVAL, op->interval);
-
-    if (compare_version("2.1", caller_version) <= 0) {
-        if (op->t_run || op->t_rcchange || op->exec_time || op->queue_time) {
-            crm_trace("Timing data (%s_%s_%d): last=%u change=%u exec=%u queue=%u",
-                      op->rsc_id, op->op_type, op->interval,
-                      op->t_run, op->t_rcchange, op->exec_time, op->queue_time);
-
-            if (op->interval == 0) {
-                /* The values are the same for non-recurring ops */
-                crm_xml_add_int(xml_op, XML_RSC_OP_LAST_RUN, op->t_run);
-                crm_xml_add_int(xml_op, XML_RSC_OP_LAST_CHANGE, op->t_run);
-
-            } else if(op->t_rcchange) {
-                /* last-run is not accurate for recurring ops */
-                crm_xml_add_int(xml_op, XML_RSC_OP_LAST_CHANGE, op->t_rcchange);
-
-            } else {
-                /* ...but is better than nothing otherwise */
-                crm_xml_add_int(xml_op, XML_RSC_OP_LAST_CHANGE, op->t_run);
-            }
-
-            crm_xml_add_int(xml_op, XML_RSC_OP_T_EXEC, op->exec_time);
-            crm_xml_add_int(xml_op, XML_RSC_OP_T_QUEUE, op->queue_time);
-        }
-    }
-
-    if (crm_str_eq(op->op_type, CRMD_ACTION_MIGRATE, TRUE)
-        || crm_str_eq(op->op_type, CRMD_ACTION_MIGRATED, TRUE)) {
-        /*
-         * Record migrate_source and migrate_target always for migrate ops.
-         */
-        const char *name = XML_LRM_ATTR_MIGRATE_SOURCE;
-
-        crm_xml_add(xml_op, name, crm_meta_value(op->params, name));
-
-        name = XML_LRM_ATTR_MIGRATE_TARGET;
-        crm_xml_add(xml_op, name, crm_meta_value(op->params, name));
-    }
-
-    append_digest(op, xml_op, caller_version, magic, LOG_DEBUG);
-
-    if (op_id_additional) {
-        free(op_id);
-        op_id = op_id_additional;
-        op_id_additional = NULL;
-        goto again;
-    }
-
-    if (local_user_data) {
-        free(local_user_data);
-        op->user_data = NULL;
-    }
-    free(magic);
-    free(op_id);
-    free(key);
-    return xml_op;
-}
-
 bool
 pcmk_acl_required(const char *user) 
 {
@@ -1873,7 +1311,7 @@ crm_acl_get_set_user(xmlNode * request, const char *field, const char *peer_user
         user = requested_user;
     }
 
-    /* Yes, pointer comparision */
+    // This requires pointer comparison, not string comparison
     if(user != crm_element_value(request, XML_ACL_TAG_USER)) {
         crm_xml_add(request, XML_ACL_TAG_USER, user);
     }
@@ -2018,3 +1456,95 @@ crm_gnutls_global_init(void)
     gnutls_global_init();
 }
 #endif
+
+char *
+crm_generate_ra_key(const char *class, const char *provider, const char *type)
+{
+    if (!class && !provider && !type) {
+        return NULL;
+    }
+
+    return crm_strdup_printf("%s%s%s:%s",
+                             (class? class : ""),
+                             (provider? ":" : ""), (provider? provider : ""),
+                             (type? type : ""));
+}
+
+/*!
+ * \brief Check whether a resource standard requires a provider to be specified
+ *
+ * \param[in] standard  Standard name
+ *
+ * \return TRUE if standard requires a provider, FALSE otherwise
+ */
+bool
+crm_provider_required(const char *standard)
+{
+    CRM_CHECK(standard != NULL, return FALSE);
+
+    /* @TODO
+     * - this should probably be case-sensitive, but isn't,
+     *   for backward compatibility
+     * - it might be nice to keep standards' capabilities (supports provider,
+     *   master/slave, etc.) as structured data somewhere
+     */
+    if (!strcasecmp(standard, PCMK_RESOURCE_CLASS_OCF)) {
+        return TRUE;
+    }
+    return FALSE;
+}
+
+/*!
+ * \brief Parse a "standard[:provider]:type" agent specification
+ *
+ * \param[in]  spec      Agent specification
+ * \param[out] standard  Newly allocated memory containing agent standard (or NULL)
+ * \param[out] provider  Newly allocated memory containing agent provider (or NULL)
+ * \param[put] type      Newly allocated memory containing agent type (or NULL)
+ *
+ * \return pcmk_ok if the string could be parsed, -EINVAL otherwise
+ *
+ * \note It is acceptable for the type to contain a ':' if the standard supports
+ *       that. For example, systemd supports the form "systemd:UNIT@A:B".
+ * \note It is the caller's responsibility to free the returned values.
+ */
+int
+crm_parse_agent_spec(const char *spec, char **standard, char **provider,
+                     char **type)
+{
+    char *colon;
+
+    CRM_CHECK(spec && standard && provider && type, return -EINVAL);
+    *standard = NULL;
+    *provider = NULL;
+    *type = NULL;
+
+    colon = strchr(spec, ':');
+    if ((colon == NULL) || (colon == spec)) {
+        return -EINVAL;
+    }
+
+    *standard = calloc(colon - spec + 1, sizeof(char));
+    strncpy(*standard, spec, colon - spec);
+    spec = colon + 1;
+
+    if (crm_provider_required(*standard)) {
+        colon = strchr(spec, ':');
+        if ((colon == NULL) || (colon == spec)) {
+            free(*standard);
+            return -EINVAL;
+        }
+        *provider = calloc(colon - spec + 1, sizeof(char));
+        strncpy(*provider, spec, colon - spec);
+        spec = colon + 1;
+    }
+
+    if (*spec == '\0') {
+        free(*standard);
+        free(*provider);
+        return -EINVAL;
+    }
+
+    *type = strdup(spec);
+    return pcmk_ok;
+}

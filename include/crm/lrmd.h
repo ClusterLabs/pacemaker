@@ -17,16 +17,16 @@
  *
  */
 
+#ifndef LRMD__H
+#  define LRMD__H
+
 /**
  * \file
- * \brief Local Resource Manager 
+ * \brief Local Resource Manager
  * \ingroup lrmd
  */
 #include <stdbool.h>
 #include <crm/services.h>
-
-#ifndef LRMD__H
-#  define LRMD__H
 
 typedef struct lrmd_s lrmd_t;
 typedef struct lrmd_key_value_s {
@@ -81,6 +81,10 @@ typedef struct lrmd_key_value_s {
 #define F_LRMD_RSC_DELETED      "lrmd_rsc_deleted"
 #define F_LRMD_RSC              "lrmd_rsc"
 
+#define F_LRMD_ALERT_ID           "lrmd_alert_id"
+#define F_LRMD_ALERT_PATH         "lrmd_alert_path"
+#define F_LRMD_ALERT              "lrmd_alert"
+
 #define LRMD_OP_RSC_CHK_REG       "lrmd_rsc_check_register"
 #define LRMD_OP_RSC_REG           "lrmd_rsc_register"
 #define LRMD_OP_RSC_EXEC          "lrmd_rsc_exec"
@@ -91,6 +95,7 @@ typedef struct lrmd_key_value_s {
 #define LRMD_OP_POKE              "lrmd_rsc_poke"
 #define LRMD_OP_NEW_CLIENT        "lrmd_rsc_new_client"
 #define LRMD_OP_CHECK             "lrmd_check"
+#define LRMD_OP_ALERT_EXEC        "lrmd_alert_exec"
 
 #define LRMD_IPC_OP_NEW           "new"
 #define LRMD_IPC_OP_DESTROY       "destroy"
@@ -169,7 +174,7 @@ enum lrmd_call_options {
      * remotely with the pacemaker_remote daemon, this option means that recurring
      * operations will be dropped once all the remote connections disconnect. */
     lrmd_opt_drop_recurring = 0x00000003,
-    /*! Only send out notifications for recurring operations whenthe result changes */
+    /*! Send notifications for recurring operations only when the result changes */
     lrmd_opt_notify_changes_only = 0x00000004,
 };
 
@@ -184,10 +189,6 @@ enum lrmd_callback_event {
 };
 
 /* *INDENT-ON* */
-
-#ifdef ENABLE_VERSIONED_ATTRS
-#include <libxml/tree.h>
-#endif
 
 typedef struct lrmd_event_data_s {
     /*! Type of event, register, unregister, call_completed... */
@@ -240,13 +241,6 @@ typedef struct lrmd_event_data_s {
 
     /*! exit failure reason string from resource agent operation */
     const char *exit_reason;
-
-#ifdef ENABLE_VERSIONED_ATTRS
-    /* This is an xmlNode containing the versioned parameters
-     * that should be evaluated */
-    xmlNode *versioned_params;
-#endif
-
 } lrmd_event_data_t;
 
 lrmd_event_data_t *lrmd_copy_event(lrmd_event_data_t * event);
@@ -408,9 +402,24 @@ typedef struct lrmd_api_operations_s {
     int (*cancel) (lrmd_t * lrmd, const char *rsc_id, const char *action, int interval);
 
     /*!
-     * \brief Get the metadata documentation for a resource.
+     * \brief Get resource metadata for a specified resource agent
      *
-     * \note Value is returned in output.  Output must be freed when set
+     * \param[in]  lrmd      LRMD connection (unused)
+     * \param[in]  class     Resource agent class
+     * \param[in]  provider  Resource agent provider
+     * \param[in]  agent     Resource agent type
+     * \param[out] output    Metadata will be stored here (must not be NULL)
+     * \param[in]  options   Options to use with any LRMD API calls (unused)
+     *
+     * \note Caller is responsible for freeing output. This call is currently
+     *       always synchronous (blocking), and always done directly by the
+     *       library (not via the LRMD connection). This means that it is based
+     *       on the local host environment, even if the lrmd connection is to a
+     *       remote node, so (for most resource agent classes) this will fail if
+     *       the agent is not installed locally. This also means that, if an
+     *       external agent must be executed, it will be executed by the
+     *       caller's user, not the lrmd's.
+     * \todo Add a metadata call to the LRMD API and let the server handle this.
      *
      * \retval lrmd_ok success
      * \retval negative error code on failure
@@ -453,6 +462,25 @@ typedef struct lrmd_api_operations_s {
      * \retval negative error code on failure
      */
     int (*list_standards) (lrmd_t * lrmd, lrmd_list_t ** standards);
+
+    /*!
+     * \brief Execute an alert agent
+     *
+     * \note Asynchronous, command is queued in daemon on function return, but
+     *       execution of command is not synced.
+     *
+     * \note Operations on individual alerts are guaranteed to occur
+     *       in the order the client api calls them in.
+     *
+     * \note Operations between different alerts are not guaranteed
+     *       to occur in any specific order in relation to one another
+     *       regardless of what order the client api is called in.
+     * \retval call_id to track async event result on success
+     * \retval negative error code on failure
+     */
+    int (*exec_alert) (lrmd_t *lrmd, const char *alert_id,
+                       const char *alert_path, int timeout, /* ms */
+                       lrmd_key_value_t *params); /* ownership of params is given up to api here */
 
 } lrmd_api_operations_t;
 

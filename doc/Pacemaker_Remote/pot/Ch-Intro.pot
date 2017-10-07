@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2017-05-08 11:19-0500\n"
-"PO-Revision-Date: 2017-05-08 11:19-0500\n"
+"POT-Creation-Date: 2017-10-06 19:59-0500\n"
+"PO-Revision-Date: 2017-10-06 19:59-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -160,11 +160,6 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "Remote nodes can recover without being fenced when the cluster node hosting their connection fails"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Running pacemaker_remote within LXC environments is deprecated due to newly added Pacemaker support for isolated resources"
 msgstr ""
 
 #. Tag: para

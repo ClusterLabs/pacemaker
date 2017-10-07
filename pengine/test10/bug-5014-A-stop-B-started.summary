@@ -7,7 +7,7 @@ Online: [ fc16-builder ]
  ClusterIP2	(ocf::heartbeat:IPaddr2):	Started fc16-builder
 
 Transition Summary:
- * Stop    ClusterIP	(fc16-builder)
+ * Stop    ClusterIP	(fc16-builder)  	due to node availability
 
 Executing cluster transition:
  * Resource action: ClusterIP       stop on fc16-builder

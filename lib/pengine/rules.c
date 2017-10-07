@@ -162,8 +162,9 @@ pe_test_expression_full(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e 
 
 #ifdef ENABLE_VERSIONED_ATTRS
         case version_expr:
-            if (node_hash &&
-                g_hash_table_lookup_extended(node_hash, "#ra-version", NULL, NULL)) {
+            if (node_hash && g_hash_table_lookup_extended(node_hash,
+                                                          CRM_ATTR_RA_VERSION,
+                                                          NULL, NULL)) {
                 accept = test_attr_expression(expr, node_hash, now);
             } else {
                 // we are going to test it when we have ra-version
@@ -177,7 +178,7 @@ pe_test_expression_full(xmlNode * expr, GHashTable * node_hash, enum rsc_role_e 
             accept = FALSE;
     }
     if (node_hash) {
-        uname = g_hash_table_lookup(node_hash, "#uname");
+        uname = g_hash_table_lookup(node_hash, CRM_ATTR_UNAME);
     }
 
     crm_trace("Expression %s %s on %s",
@@ -203,14 +204,16 @@ find_expression_type(xmlNode * expr)
     } else if (safe_str_neq(tag, "expression")) {
         return not_expr;
 
-    } else if (safe_str_eq(attr, "#uname") || safe_str_eq(attr, "#kind") || safe_str_eq(attr, "#id")) {
+    } else if (safe_str_eq(attr, CRM_ATTR_UNAME)
+               || safe_str_eq(attr, CRM_ATTR_KIND)
+               || safe_str_eq(attr, CRM_ATTR_ID)) {
         return loc_expr;
 
-    } else if (safe_str_eq(attr, "#role")) {
+    } else if (safe_str_eq(attr, CRM_ATTR_ROLE)) {
         return role_expr;
 
 #ifdef ENABLE_VERSIONED_ATTRS
-    } else if (safe_str_eq(attr, "#ra-version")) {
+    } else if (safe_str_eq(attr, CRM_ATTR_RA_VERSION)) {
         return version_expr;
 #endif
     }
@@ -394,7 +397,7 @@ pe_test_attr_expression_full(xmlNode * expr, GHashTable * hash, crm_time_t * now
         }
 
     } else if (value == NULL || h_val == NULL) {
-        /* the comparision is meaningless from this point on */
+        // The comparison is meaningless from this point on
         accept = FALSE;
 
     } else if (safe_str_eq(op, "lt")) {
@@ -779,69 +782,34 @@ get_versioned_rule(xmlNode * attr_set)
     return NULL;
 }
 
-static gboolean
-versioned_attr(xmlNode * versioned_attrs, const char * name)
-{
-    xmlNode *attrs = NULL;
-    xmlNode *attr = NULL;
-
-    if (!name) {
-        return FALSE;
-    }
-
-    for (attrs = __xml_first_child(versioned_attrs); attrs != NULL; attrs = __xml_next_element(attrs)) {
-        for (attr = __xml_first_child(attrs); attr != NULL; attr = __xml_next_element(attr)) {
-            if (safe_str_eq(crm_element_value(attr, XML_NVPAIR_ATTR_NAME), name)) {
-                return TRUE;
-            }
-        }
-    }
-
-    return FALSE;
-}
-
 static void
 add_versioned_attributes(xmlNode * attr_set, xmlNode * versioned_attrs)
 {
     xmlNode *attr_set_copy = NULL;
     xmlNode *rule = NULL;
+    xmlNode *expr = NULL;
 
-    CRM_CHECK(versioned_attrs != NULL, return);
+    if (!attr_set || !versioned_attrs) {
+        return;
+    }
 
     attr_set_copy = copy_xml(attr_set);
 
     rule = get_versioned_rule(attr_set_copy);
-    if (rule) {
-        xmlNode *expr = __xml_first_child(rule);
+    if (!rule) {
+        free_xml(attr_set_copy);
+        return;
+    }
 
-        while (expr != NULL) {
-            if (find_expression_type(expr) != version_expr) {
-                xmlNode *node = expr;
-                expr = __xml_next_element(expr);
-                free_xml(node);
-            } else {
-                expr = __xml_next_element(expr);
-            }
-        }
-    } else {
-        xmlNode *attr = __xml_first_child(attr_set_copy);
+    expr = __xml_first_child(rule);
+    while (expr != NULL) {
+        if (find_expression_type(expr) != version_expr) {
+            xmlNode *node = expr;
 
-        while (attr != NULL) {
-            if (safe_str_eq((const char*) attr->name, XML_TAG_RULE)) {
-                free_xml(attr_set_copy);
-                return;
-            } else if (!versioned_attr(versioned_attrs, crm_element_value(attr, XML_NVPAIR_ATTR_NAME))) {
-                xmlNode *node = attr;
-                attr = __xml_next_element(attr);
-                free_xml(node);
-            } else {
-                attr = __xml_next_element(attr);
-            }
-        }
-
-        if (!xml_has_children(attr_set_copy)) {
-            free_xml(attr_set_copy);
-            return;
+            expr = __xml_next_element(expr);
+            free_xml(node);
+        } else {
+            expr = __xml_next_element(expr);
         }
     }
 
@@ -869,7 +837,8 @@ unpack_attr_set(gpointer data, gpointer user_data)
 
 #ifdef ENABLE_VERSIONED_ATTRS
     if (get_versioned_rule(pair->attr_set) && !(unpack_data->node_hash &&
-        g_hash_table_lookup_extended(unpack_data->node_hash, "#ra-version", NULL, NULL))) {
+        g_hash_table_lookup_extended(unpack_data->node_hash,
+                                     CRM_ATTR_RA_VERSION, NULL, NULL))) {
         // we haven't actually tested versioned expressions yet
         return;
     }
@@ -889,7 +858,7 @@ unpack_versioned_attr_set(gpointer data, gpointer user_data)
     if (test_ruleset(pair->attr_set, unpack_data->node_hash, unpack_data->now) == FALSE) {
         return;
     }
-    
+
     add_versioned_attributes(pair->attr_set, unpack_data->hash);
 }
 #endif
@@ -1033,3 +1002,27 @@ pe_expand_re_matches(const char *string, pe_re_match_data_t *match_data)
 
     return result;
 }
+
+#ifdef ENABLE_VERSIONED_ATTRS
+GHashTable*
+pe_unpack_versioned_parameters(xmlNode *versioned_params, const char *ra_version)
+{
+    GHashTable *hash = crm_str_table_new();
+
+    if (versioned_params && ra_version) {
+        GHashTable *node_hash = crm_str_table_new();
+        xmlNode *attr_set = __xml_first_child(versioned_params);
+
+        if (attr_set) {
+            g_hash_table_insert(node_hash, strdup(CRM_ATTR_RA_VERSION),
+                                strdup(ra_version));
+            unpack_instance_attributes(NULL, versioned_params, crm_element_name(attr_set),
+                                       node_hash, hash, NULL, FALSE, NULL);
+        }
+
+        g_hash_table_destroy(node_hash);
+    }
+
+    return hash;
+}
+#endif

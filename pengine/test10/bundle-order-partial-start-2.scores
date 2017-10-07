@@ -29,7 +29,7 @@ container_color: galera-bundle-docker-0 allocation score on undercloud: INFINITY
 container_color: galera-bundle-master allocation score on galera-bundle-0: -INFINITY
 container_color: galera-bundle-master allocation score on rabbitmq-bundle-0: -INFINITY
 container_color: galera-bundle-master allocation score on undercloud: 0
-container_color: galera:0 allocation score on galera-bundle-0: -INFINITY
+container_color: galera:0 allocation score on galera-bundle-0: 500
 container_color: galera:0 allocation score on rabbitmq-bundle-0: -INFINITY
 container_color: galera:0 allocation score on undercloud: 0
 container_color: haproxy-bundle allocation score on galera-bundle-0: -INFINITY
@@ -112,7 +112,7 @@ container_color: rabbitmq-bundle-clone allocation score on rabbitmq-bundle-0: 0
 container_color: rabbitmq-bundle-clone allocation score on undercloud: 0
 container_color: rabbitmq-bundle-docker-0 allocation score on rabbitmq-bundle-0: -INFINITY
 container_color: rabbitmq-bundle-docker-0 allocation score on undercloud: INFINITY
-container_color: rabbitmq:0 allocation score on rabbitmq-bundle-0: 0
+container_color: rabbitmq:0 allocation score on rabbitmq-bundle-0: 500
 container_color: rabbitmq:0 allocation score on undercloud: 0
 container_color: redis-bundle allocation score on galera-bundle-0: -INFINITY
 container_color: redis-bundle allocation score on rabbitmq-bundle-0: -INFINITY
@@ -132,7 +132,7 @@ container_color: redis-bundle-master allocation score on redis-bundle-0: -INFINI
 container_color: redis-bundle-master allocation score on undercloud: 0
 container_color: redis:0 allocation score on galera-bundle-0: -INFINITY
 container_color: redis:0 allocation score on rabbitmq-bundle-0: -INFINITY
-container_color: redis:0 allocation score on redis-bundle-0: -INFINITY
+container_color: redis:0 allocation score on redis-bundle-0: INFINITY
 container_color: redis:0 allocation score on undercloud: 0
 galera:0 promotion score on galera-bundle-0: -1
 native_color: galera-bundle-0 allocation score on galera-bundle-0: -INFINITY

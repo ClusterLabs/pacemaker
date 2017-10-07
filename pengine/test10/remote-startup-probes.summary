@@ -12,8 +12,8 @@ RemoteOFFLINE: [ remote1 ]
 
 Transition Summary:
  * Start   remote1	(18builder)
- * Move    FAKE1	(Started 18builder -> 18node2)
- * Move    FAKE2	(Started 18node2 -> remote1)
+ * Move       FAKE1       ( 18builder -> 18node2 )  
+ * Move       FAKE2       (   18node2 -> remote1 )  
 
 Executing cluster transition:
  * Resource action: remote1         start on 18builder

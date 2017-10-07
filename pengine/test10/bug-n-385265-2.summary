@@ -7,8 +7,8 @@ Online: [ ih01 ih02 ]
      resource_idvscommon	(ocf::dfs:idvs):	Started ih02
 
 Transition Summary:
- * Recover resource_ip_common	(Started ih02 -> ih01)
- * Move    resource_idvscommon	(Started ih02 -> ih01)
+ * Recover    resource_ip_common     ( ih02 -> ih01 )  
+ * Move       resource_idvscommon    ( ih02 -> ih01 )  
 
 Executing cluster transition:
  * Pseudo action:   group_common_stop_0

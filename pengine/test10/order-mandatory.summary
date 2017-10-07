@@ -9,8 +9,8 @@ Online: [ node1 ]
 
 Transition Summary:
  * Start   rsc1	(node1)
- * Restart rsc2	(Started node1)
- * Stop    rsc4	(Started node1)
+ * Restart    rsc2    ( node1 )   due to required rsc1 start
+ * Stop       rsc4    ( node1 )   due to unrunnable rsc3 start
 
 Executing cluster transition:
  * Resource action: rsc1            start on node1

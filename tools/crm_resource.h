@@ -86,6 +86,8 @@ int cli_resource_delete_attribute(const char *rsc_id, const char *attr_set, cons
 
 int update_working_set_xml(pe_working_set_t *data_set, xmlNode **xml);
 int wait_till_stable(int timeout_ms, cib_t * cib);
+void cli_resource_why(cib_t *cib_conn,GListPtr resources,const char* rsc,node_t *node) ;
+
 
 extern xmlNode *do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, crm_time_t * now);
 extern void cleanup_alloc_calculations(pe_working_set_t * data_set);

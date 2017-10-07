@@ -32,12 +32,11 @@
 #include <crm/crm.h>
 #include <crm/cib/internal.h>
 #include <crm/msg_xml.h>
+#include <crm/pengine/rules.h>
 #include <crm/common/ipc.h>
 #include <crm/common/ipcs.h>
 #include <crm/cluster/internal.h>
-
 #include <crm/common/xml.h>
-
 #include <crm/attrd.h>
 
 #include <attrd_common.h>
@@ -49,15 +48,17 @@ ll_cluster_t *attrd_cluster_conn;
 
 char *attrd_uname = NULL;
 char *attrd_uuid = NULL;
+uint32_t attrd_nodeid = 0;
 
 GHashTable *attr_hash = NULL;
-cib_t *cib_conn = NULL;
+lrmd_t *the_lrmd = NULL;
+crm_trigger_t *attrd_config_read = NULL;
 
 /* Convenience macro for registering a CIB callback.
- * Check cib_conn != NULL before using.
+ * Check the_cib != NULL before using.
  */
 #define register_cib_callback(call_id, data, fn, free_fn) \
-    cib_conn->cmds->register_callback_full(cib_conn, call_id, 120, FALSE, \
+    the_cib->cmds->register_callback_full(the_cib, call_id, 120, FALSE, \
                                            data, #fn, fn, free_fn)
 
 typedef struct attr_hash_entry_s {
@@ -341,7 +342,7 @@ remote_clear_failure(xmlNode *xml)
     int rc = pcmk_ok;
     char *xpath;
 
-    if (cib_conn == NULL) {
+    if (the_cib == NULL) {
         crm_info("Ignoring request to clear %s on %s because not connected to CIB",
                  (rsc? rsc : "all resources"),
                  (host? host: "all remote nodes"));
@@ -389,7 +390,7 @@ remote_clear_failure(xmlNode *xml)
     }
 
     crm_trace("Clearing attributes matching %s", xpath);
-    rc = cib_conn->cmds->delete(cib_conn, xpath, NULL, cib_xpath|cib_multiple);
+    rc = the_cib->cmds->delete(the_cib, xpath, NULL, cib_xpath|cib_multiple);
     register_cib_callback(rc, xpath, remote_clear_callback, free);
 }
 
@@ -600,6 +601,17 @@ cib_connect(void *user_data)
             crm_err("Could not set CIB notification callback");
             was_err = TRUE;
         }
+        if (was_err == FALSE) {
+            if (pcmk_ok != local_conn->cmds->add_notify_callback(local_conn, T_CIB_DIFF_NOTIFY, attrd_cib_updated_cb)) {
+                crm_err("Could not set CIB notification callback (update)");
+                was_err = TRUE;
+            }
+
+        }
+        attrd_config_read = mainloop_add_trigger(G_PRIORITY_HIGH, attrd_read_options, NULL);
+
+        /* Reading of cib(Alert section) after the start */
+        mainloop_set_trigger(attrd_config_read);
     }
 
     if (was_err) {
@@ -607,7 +619,7 @@ cib_connect(void *user_data)
         crm_exit(DAEMON_RESPAWN_STOP);
     }
 
-    cib_conn = local_conn;
+    the_cib = local_conn;
 
     crm_info("Sending full refresh now that we're connected to the cib");
     g_hash_table_foreach(attr_hash, local_update_for_hash_entry, NULL);
@@ -679,6 +691,7 @@ main(int argc, char **argv)
 
         attrd_uname = cluster.uname;
         attrd_uuid = cluster.uuid;
+        attrd_nodeid = cluster.nodeid;
 #if SUPPORT_HEARTBEAT
         attrd_cluster_conn = cluster.hb_conn;
 #endif
@@ -729,10 +742,8 @@ main(int argc, char **argv)
 
     qb_ipcs_destroy(ipcs);
 
-    if (cib_conn) {
-        cib_conn->cmds->signoff(cib_conn);
-        cib_delete(cib_conn);
-    }
+    attrd_lrmd_disconnect();
+    attrd_cib_disconnect();
 
     g_hash_table_destroy(attr_hash);
     free(attrd_uuid);
@@ -810,7 +821,7 @@ attrd_perform_update(attr_hash_entry_t * hash_entry)
     if (hash_entry == NULL) {
         return;
 
-    } else if (cib_conn == NULL) {
+    } else if (the_cib == NULL) {
         crm_info("Delaying operation %s=%s: cib not connected", hash_entry->id,
                  crm_str(hash_entry->value));
         return;
@@ -825,7 +836,7 @@ attrd_perform_update(attr_hash_entry_t * hash_entry)
 
     if (hash_entry->value == NULL) {
         /* delete the attr */
-        rc = delete_attr_delegate(cib_conn, cib_none, hash_entry->section, attrd_uuid, NULL,
+        rc = delete_attr_delegate(the_cib, cib_none, hash_entry->section, attrd_uuid, NULL,
                                   hash_entry->set, hash_entry->uuid, hash_entry->id, NULL, FALSE,
                                   user_name);
 
@@ -847,22 +858,22 @@ attrd_perform_update(attr_hash_entry_t * hash_entry)
                       hash_entry->uuid ? hash_entry->uuid : "<n/a>", hash_entry->set,
                       hash_entry->section);
         }
-
     } else {
         /* send update */
-        rc = update_attr_delegate(cib_conn, cib_none, hash_entry->section,
+        rc = update_attr_delegate(the_cib, cib_none, hash_entry->section,
                                   attrd_uuid, NULL, hash_entry->set, hash_entry->uuid,
                                   hash_entry->id, hash_entry->value, FALSE, user_name, NULL);
         if (rc < 0) {
-            crm_notice("Sent update %s=%s failed: %s", hash_entry->id, hash_entry->value,
-                       pcmk_strerror(rc));
-        }
-        if (safe_str_neq(hash_entry->value, hash_entry->stored_value) || rc < 0) {
+            crm_notice("Could not update %s=%s: %s (%d)", hash_entry->id,
+                       hash_entry->value, pcmk_strerror(rc), rc);
+        } else if (safe_str_neq(hash_entry->value, hash_entry->stored_value)) {
             crm_notice("Sent update %d: %s=%s", rc, hash_entry->id, hash_entry->value);
         } else {
             crm_trace("Sent update %d: %s=%s", rc, hash_entry->id, hash_entry->value);
         }
     }
+    attrd_send_attribute_alert(attrd_uname, attrd_nodeid,
+                               hash_entry->id, hash_entry->value);
 
     data = calloc(1, sizeof(struct attrd_callback_s));
     data->attr = strdup(hash_entry->id);
@@ -1007,7 +1018,7 @@ update_remote_attr(const char *host, const char *name, const char *value,
 
     if (name == NULL) {
         rc = -EINVAL;
-    } else if (cib_conn == NULL) {
+    } else if (the_cib == NULL) {
         rc = -ENOTCONN;
     }
     if (rc != pcmk_ok) {
@@ -1017,14 +1028,17 @@ update_remote_attr(const char *host, const char *name, const char *value,
     }
 
     if (value == NULL) {
-        rc = delete_attr_delegate(cib_conn, cib_none, section,
+        rc = delete_attr_delegate(the_cib, cib_none, section,
                                   host, NULL, NULL, NULL, name, NULL,
                                   FALSE, user_name);
     } else {
-        rc = update_attr_delegate(cib_conn, cib_none, section,
+        rc = update_attr_delegate(the_cib, cib_none, section,
                                   host, NULL, NULL, NULL, name, value,
                                   FALSE, user_name, "remote");
     }
+
+    attrd_send_attribute_alert(host, 0, name, (value? value : ""));
+
     crm_trace("%s submitted as CIB call %d", desc, rc);
     register_cib_callback(rc, desc, remote_attr_callback, free);
 }

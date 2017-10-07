@@ -37,10 +37,8 @@ Online: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.ed
  Proxy	(ocf::heartbeat:VirtualDomain):	Stopped 
 
 Transition Summary:
- * Start   AdminDrbd:0	(hypatia-corosync.nevis.columbia.edu)
- * Promote AdminDrbd:0	(Stopped -> Master hypatia-corosync.nevis.columbia.edu)
- * Start   AdminDrbd:1	(orestes-corosync.nevis.columbia.edu)
- * Promote AdminDrbd:1	(Stopped -> Master orestes-corosync.nevis.columbia.edu)
+ * Promote    AdminDrbd:0                ( Stopped -> Master hypatia-corosync.nevis.columbia.edu )  
+ * Promote    AdminDrbd:1                ( Stopped -> Master orestes-corosync.nevis.columbia.edu )  
  * Start   CronAmbientTemperature	(hypatia-corosync.nevis.columbia.edu)
  * Start   StonithHypatia	(orestes-corosync.nevis.columbia.edu)
  * Start   StonithOrestes	(hypatia-corosync.nevis.columbia.edu)

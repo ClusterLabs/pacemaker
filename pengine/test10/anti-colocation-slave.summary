@@ -9,9 +9,9 @@ Online: [ sle12sp2-1 sle12sp2-2 ]
  dummy1	(ocf::pacemaker:Dummy):	Started sle12sp2-1 
 
 Transition Summary:
- * Demote  state1:0	(Master -> Slave sle12sp2-1)
+ * Demote     state1:0     ( Master -> Slave sle12sp2-1 )  
  * Promote state1:1	(Slave -> Master sle12sp2-2)
- * Move    dummy1	(Started sle12sp2-1 -> sle12sp2-2)
+ * Move       dummy1       (   sle12sp2-1 -> sle12sp2-2 )  
 
 Executing cluster transition:
  * Resource action: dummy1          stop on sle12sp2-1

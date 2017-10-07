@@ -70,7 +70,11 @@ element rsc_order: Relax-NG validity error : Element constraints has extra conte
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
 (   schemas.c:NNN   )   trace: update_validation:	pacemaker-2.9 validation failed
-Your current configuration pacemaker-1.2 could not validate with any schema in range [pacemaker-1.2, pacemaker-2.9], cannot upgrade to pacemaker-2.0.
+(   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-2.10' validation (16 of X)
+element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
+element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+(   schemas.c:NNN   )   trace: update_validation:	pacemaker-2.10 validation failed
+Your current configuration pacemaker-1.2 could not validate with any schema in range [pacemaker-1.2, pacemaker-2.10], cannot upgrade to pacemaker-2.0.
 =#=#=#= End test: Run crm_simulate with invalid CIB (enum violation) - Required key not available (126) =#=#=#=
 * Passed: crm_simulate   - Run crm_simulate with invalid CIB (enum violation)
 =#=#=#= Begin test: Try to make resulting CIB invalid (unrecognized validate-with) =#=#=#=
@@ -93,7 +97,7 @@ Call failed: Update does not conform to the configured schema
 =#=#=#= End test: Try to make resulting CIB invalid (unrecognized validate-with) - Update does not conform to the configured schema (203) =#=#=#=
 * Passed: cibadmin       - Try to make resulting CIB invalid (unrecognized validate-with)
 =#=#=#= Begin test: Run crm_simulate with invalid CIB (unrecognized validate-with) =#=#=#=
-(   schemas.c:NNN   )   debug: update_validation:	Unknown validation type
+(   schemas.c:NNN   )   debug: update_validation:	Unknown validation schema
 (   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-0.6' validation (0 of X)
 element rsc_order: validity error : Element rsc_order does not carry attribute to
 element rsc_order: validity error : Element rsc_order does not carry attribute from
@@ -150,7 +154,10 @@ element cib: Relax-NG validity error : Invalid attribute validate-with for eleme
 (   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-2.9' validation (15 of X)
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
 (   schemas.c:NNN   )   trace: update_validation:	pacemaker-2.9 validation failed
-Your current configuration pacemaker-9999.0 could not validate with any schema in range [unknown, pacemaker-2.9], cannot upgrade to pacemaker-2.0.
+(   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-2.10' validation (16 of X)
+element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
+(   schemas.c:NNN   )   trace: update_validation:	pacemaker-2.10 validation failed
+Your current configuration pacemaker-9999.0 could not validate with any schema in range [unknown, pacemaker-2.10], cannot upgrade to pacemaker-2.0.
 =#=#=#= End test: Run crm_simulate with invalid CIB (unrecognized validate-with) - Required key not available (126) =#=#=#=
 * Passed: crm_simulate   - Run crm_simulate with invalid CIB (unrecognized validate-with)
 =#=#=#= Begin test: Try to make resulting CIB invalid, but possibly recoverable (valid with X.Y+1) =#=#=#=
@@ -207,8 +214,11 @@ element tags: Relax-NG validity error : Element configuration has extra content:
 (   schemas.c:NNN   )   debug: update_validation:	pacemaker-2.8-style configuration is also valid for pacemaker-2.9
 (   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-2.9' validation (15 of X)
 (   schemas.c:NNN   )   debug: update_validation:	Configuration valid for schema: pacemaker-2.9
-(   schemas.c:NNN   )   trace: update_validation:	Stopping at pacemaker-2.9
-(   schemas.c:NNN   )    info: update_validation:	Transformed the configuration from pacemaker-1.2 to pacemaker-2.9
+(   schemas.c:NNN   )   debug: update_validation:	pacemaker-2.9-style configuration is also valid for pacemaker-2.10
+(   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-2.10' validation (16 of X)
+(   schemas.c:NNN   )   debug: update_validation:	Configuration valid for schema: pacemaker-2.10
+(   schemas.c:NNN   )   trace: update_validation:	Stopping at pacemaker-2.10
+(   schemas.c:NNN   )    info: update_validation:	Transformed the configuration from pacemaker-1.2 to pacemaker-2.10
 error: unpack_resources:	Resource start-up disabled since no STONITH resources have been defined
 error: unpack_resources:	Either configure some or disable STONITH with the stonith-enabled option
 error: unpack_resources:	NOTE: Clusters with shared data need STONITH to ensure data integrity
@@ -338,6 +348,8 @@ element rsc_order: Relax-NG validity error : Invalid attribute first-action for 
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
 element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
+element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
+element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
 =#=#=#= Current cib after: Make resulting CIB invalid, and without validate-with attribute =#=#=#=
 <cib epoch="31" num_updates="0" admin_epoch="0" validate-with="none">
   <configuration>
@@ -367,6 +379,8 @@ bad-1.2.xml:10: element rsc_order: validity error : Element rsc_order does not c
 bad-1.2.xml:10: element rsc_order: validity error : No declaration for attribute first of element rsc_order
 bad-1.2.xml:10: element rsc_order: validity error : No declaration for attribute first-action of element rsc_order
 bad-1.2.xml:10: element rsc_order: validity error : No declaration for attribute then of element rsc_order
+bad-1.2.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
+bad-1.2.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
 bad-1.2.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order
 bad-1.2.xml:10: element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
 bad-1.2.xml:10: element rsc_order: Relax-NG validity error : Invalid attribute first-action for element rsc_order

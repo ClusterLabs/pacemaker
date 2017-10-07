@@ -25,12 +25,12 @@ Online: [ act1 act2 act3 sby1 sby2 ]
      prmApPostgreSQLDB3	(ocf::pacemaker:Dummy):	Started act3
 
 Transition Summary:
- * Move    prmExPostgreSQLDB1	(Started act1 -> sby1)
- * Move    prmFsPostgreSQLDB1-1	(Started act1 -> sby1)
- * Move    prmFsPostgreSQLDB1-2	(Started act1 -> sby1)
- * Move    prmFsPostgreSQLDB1-3	(Started act1 -> sby1)
- * Move    prmIpPostgreSQLDB1	(Started act1 -> sby1)
- * Recover prmApPostgreSQLDB1	(Started act1 -> sby1)
+ * Move       prmExPostgreSQLDB1     ( act1 -> sby1 )  
+ * Move       prmFsPostgreSQLDB1-1   ( act1 -> sby1 )  
+ * Move       prmFsPostgreSQLDB1-2   ( act1 -> sby1 )  
+ * Move       prmFsPostgreSQLDB1-3   ( act1 -> sby1 )  
+ * Move       prmIpPostgreSQLDB1     ( act1 -> sby1 )  
+ * Recover    prmApPostgreSQLDB1     ( act1 -> sby1 )  
 
 Executing cluster transition:
  * Pseudo action:   grpPostgreSQLDB1_stop_0

@@ -15,9 +15,9 @@ Online: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 ]
      Stopped: [ rhel7-auto3 ]
 
 Transition Summary:
- * Move    A:0	(Started rhel7-auto4 -> rhel7-auto3)
- * Move    B:0	(Started rhel7-auto4 -> rhel7-auto3)
- * Move    C:0	(Started rhel7-auto4 -> rhel7-auto3)
+ * Move       A:0     ( rhel7-auto4 -> rhel7-auto3 )  
+ * Move       B:0     ( rhel7-auto4 -> rhel7-auto3 )  
+ * Move       C:0     ( rhel7-auto4 -> rhel7-auto3 )  
 
 Executing cluster transition:
  * Pseudo action:   C-clone_stop_0

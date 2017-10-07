@@ -39,9 +39,14 @@ Transition Summary:
  * Start   openstack-cinder-volume-docker-0	(undercloud)
 
 Executing cluster transition:
+ * Pseudo action:   rabbitmq-bundle-clone_pre_notify_start_0
  * Resource action: rabbitmq-bundle-docker-0 monitor on undercloud
+ * Resource action: rabbitmq-bundle-0 monitor on undercloud
  * Resource action: galera-bundle-docker-0 monitor on undercloud
+ * Resource action: galera-bundle-0 monitor on undercloud
+ * Pseudo action:   redis-bundle-master_pre_notify_start_0
  * Resource action: redis-bundle-docker-0 monitor on undercloud
+ * Resource action: redis-bundle-0  monitor on undercloud
  * Resource action: ip-192.168.122.254 monitor on undercloud
  * Resource action: ip-192.168.122.250 monitor on undercloud
  * Resource action: ip-192.168.122.249 monitor on undercloud
@@ -52,8 +57,11 @@ Executing cluster transition:
  * Resource action: openstack-cinder-volume-docker-0 monitor on undercloud
  * Pseudo action:   openstack-cinder-volume_start_0
  * Pseudo action:   rabbitmq-bundle_start_0
+ * Pseudo action:   rabbitmq-bundle-clone_confirmed-pre_notify_start_0
+ * Pseudo action:   rabbitmq-bundle-clone_start_0
  * Resource action: rabbitmq-bundle-docker-0 start on undercloud
  * Resource action: rabbitmq-bundle-0 start on undercloud
+ * Pseudo action:   redis-bundle-master_confirmed-pre_notify_start_0
  * Resource action: ip-192.168.122.254 start on undercloud
  * Resource action: ip-192.168.122.250 start on undercloud
  * Resource action: ip-192.168.122.249 start on undercloud
@@ -63,8 +71,8 @@ Executing cluster transition:
  * Resource action: openstack-cinder-volume-docker-0 start on undercloud
  * Pseudo action:   openstack-cinder-volume_running_0
  * Pseudo action:   haproxy-bundle_start_0
- * Pseudo action:   rabbitmq-bundle-clone_start_0
  * Resource action: rabbitmq:0      start on rabbitmq-bundle-0
+ * Pseudo action:   rabbitmq-bundle-clone_running_0
  * Resource action: rabbitmq-bundle-docker-0 monitor=60000 on undercloud
  * Resource action: rabbitmq-bundle-0 monitor=60000 on undercloud
  * Resource action: ip-192.168.122.254 monitor=10000 on undercloud
@@ -77,28 +85,33 @@ Executing cluster transition:
  * Resource action: openstack-cinder-volume-docker-0 monitor=60000 on undercloud
  * Pseudo action:   haproxy-bundle_running_0
  * Pseudo action:   redis-bundle_start_0
- * Pseudo action:   rabbitmq-bundle-clone_running_0
- * Pseudo action:   rabbitmq-bundle_running_0
- * Resource action: rabbitmq:0      monitor=10000 on rabbitmq-bundle-0
+ * Pseudo action:   rabbitmq-bundle-clone_post_notify_running_0
+ * Pseudo action:   redis-bundle-master_start_0
  * Resource action: redis-bundle-docker-0 start on undercloud
  * Resource action: redis-bundle-0  start on undercloud
  * Resource action: haproxy-bundle-docker-0 monitor=60000 on undercloud
- * Pseudo action:   redis-bundle-master_start_0
+ * Resource action: rabbitmq:0      notify on rabbitmq-bundle-0
+ * Pseudo action:   rabbitmq-bundle-clone_confirmed-post_notify_running_0
  * Resource action: redis:0         start on redis-bundle-0
+ * Pseudo action:   redis-bundle-master_running_0
  * Resource action: redis-bundle-docker-0 monitor=60000 on undercloud
  * Resource action: redis-bundle-0  monitor=60000 on undercloud
- * Pseudo action:   redis-bundle-master_running_0
+ * Pseudo action:   rabbitmq-bundle_running_0
+ * Resource action: rabbitmq:0      monitor=10000 on rabbitmq-bundle-0
+ * Pseudo action:   redis-bundle-master_post_notify_running_0
+ * Resource action: redis:0         notify on redis-bundle-0
+ * Pseudo action:   redis-bundle-master_confirmed-post_notify_running_0
  * Pseudo action:   redis-bundle_running_0
  * Pseudo action:   galera-bundle_start_0
+ * Pseudo action:   galera-bundle-master_start_0
  * Resource action: galera-bundle-docker-0 start on undercloud
  * Resource action: galera-bundle-0 start on undercloud
  * Resource action: redis:0         monitor=60000 on redis-bundle-0
  * Resource action: redis:0         monitor=45000 on redis-bundle-0
- * Pseudo action:   galera-bundle-master_start_0
  * Resource action: galera:0        start on galera-bundle-0
+ * Pseudo action:   galera-bundle-master_running_0
  * Resource action: galera-bundle-docker-0 monitor=60000 on undercloud
  * Resource action: galera-bundle-0 monitor=60000 on undercloud
- * Pseudo action:   galera-bundle-master_running_0
  * Pseudo action:   galera-bundle_running_0
  * Resource action: galera:0        monitor=30000 on galera-bundle-0
  * Resource action: galera:0        monitor=20000 on galera-bundle-0

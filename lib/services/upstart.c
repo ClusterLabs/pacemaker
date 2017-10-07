@@ -316,7 +316,7 @@ upstart_job_metadata(const char *name)
 {
     return crm_strdup_printf("<?xml version=\"1.0\"?>\n"
                            "<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"
-                           "<resource-agent name=\"%s\" version=\"0.1\">\n"
+                           "<resource-agent name=\"%s\" version=\"" PCMK_DEFAULT_AGENT_VERSION "\">\n"
                            "  <version>1.0</version>\n"
                            "  <longdesc lang=\"en\">\n"
                            "    Upstart agent for controlling the system %s service\n"

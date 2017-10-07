@@ -248,8 +248,7 @@ native_parameter(resource_t * rsc, node_t * node, gboolean create, const char *n
             pe_rsc_trace(rsc, "Creating default hash");
         }
 
-        local_hash = g_hash_table_new_full(crm_str_hash, g_str_equal,
-                                           g_hash_destroy_str, g_hash_destroy_str);
+        local_hash = crm_str_table_new();
 
         get_rsc_attributes(local_hash, rsc, node, data_set);
 
@@ -530,7 +529,7 @@ common_print(resource_t * rsc, const char *pre_text, const char *name, node_t *n
     }
     offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", name);
     offset += snprintf(buffer + offset, LINE_MAX - offset, "\t(%s", class);
-    if (safe_str_eq(class, PCMK_RESOURCE_CLASS_OCF)) {
+    if (crm_provider_required(class)) {
         const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
         offset += snprintf(buffer + offset, LINE_MAX - offset, "::%s", prov);
     }
@@ -813,7 +812,7 @@ get_rscs_brief(GListPtr rsc_list, GHashTable * rsc_table, GHashTable * active_ta
         }
 
         offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", class);
-        if (safe_str_eq(class, PCMK_RESOURCE_CLASS_OCF)) {
+        if (crm_provider_required(class)) {
             const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
             offset += snprintf(buffer + offset, LINE_MAX - offset, "::%s", prov);
         }
@@ -843,7 +842,7 @@ get_rscs_brief(GListPtr rsc_list, GHashTable * rsc_table, GHashTable * active_ta
 
                 node_table = g_hash_table_lookup(active_table, node->details->uname);
                 if (node_table == NULL) {
-                    node_table = g_hash_table_new_full(crm_str_hash, g_str_equal, free, free);
+                    node_table = crm_str_table_new();
                     g_hash_table_insert(active_table, strdup(node->details->uname), node_table);
                 }
 
@@ -873,7 +872,7 @@ void
 print_rscs_brief(GListPtr rsc_list, const char *pre_text, long options,
                  void *print_data, gboolean print_all)
 {
-    GHashTable *rsc_table = g_hash_table_new_full(crm_str_hash, g_str_equal, free, free);
+    GHashTable *rsc_table = crm_str_table_new();
     GHashTable *active_table = g_hash_table_new_full(crm_str_hash, g_str_equal,
                                                      free, destroy_node_table);
     GHashTableIter hash_iter;

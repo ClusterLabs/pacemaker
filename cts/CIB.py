@@ -302,10 +302,10 @@ class CIB11(ConfigBase):
                 # Now commit the levels themselves
                 stl.commit()
 
-        o = Option(self.Factory, "stonith-enabled", self.CM.Env["DoFencing"])
+        o = Option(self.Factory)
+        o["stonith-enabled"] = self.CM.Env["DoFencing"]
         o["start-failure-is-fatal"] = "false"
         o["pe-input-series-max"] = "5000"
-        o["default-action-timeout"] = "90s"
         o["shutdown-escalation"] = "5min"
         o["batch-limit"] = "10"
         o["dc-deadtime"] = "5s"
@@ -315,6 +315,10 @@ class CIB11(ConfigBase):
         if self.CM.Env["DoBSC"] == 1:
             o["ident-string"] = "Linux-HA TEST configuration file - REMOVEME!!"
 
+        o.commit()
+
+        o = OpDefaults(self.Factory)
+        o["timeout"] = "90s"
         o.commit()
 
         # Commit the nodes section if we defined one
@@ -547,7 +551,7 @@ if __name__ == '__main__':
         "--stack", "corosync",
         "--test-ip-base", "fe80::1234:56:7890:1000",
         "--stonith", "rhcs",
-        "--stonith-args", "pcmk_arg_map=domain:uname"
+        "--stonith-args", "pcmk_host_argument=domain"
     ]
     env = CTS.CtsLab(args)
     cm = CM_ais.crm_mcp(env)

@@ -8,9 +8,9 @@ Node node3 (uuid3): UNCLEAN (offline)
  lsb_dummy	(lsb:/usr/lib/heartbeat/cts/LSBDummy):	Stopped
 
 Transition Summary:
- * Fence node3
- * Fence node2
- * Fence node1
+ * Fence (reboot) node3 'peer is no longer part of the cluster'
+ * Fence (reboot) node2 'peer is no longer part of the cluster'
+ * Fence (reboot) node1 'peer is no longer part of the cluster'
 
 Executing cluster transition:
  * Fencing node3 (reboot)

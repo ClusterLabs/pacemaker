@@ -21,13 +21,25 @@ Containers: [ galera-bundle-0:galera-bundle-docker-0 galera-bundle-1:galera-bund
    redis-bundle-2	(ocf::heartbeat:redis):	Master metal-3
 
 Transition Summary:
- * Stop    storage:0	(metal-1)
- * Stop    galera-bundle-docker-0	(metal-1)
- * Stop    galera-bundle-0	(Started metal-1)
- * Stop    galera:0	(Slave galera-bundle-0)
+ * Stop    storage:0	(metal-1)  	due to node availability
+ * Stop    galera-bundle-docker-0	(metal-1)  	due to node availability
+ * Stop       galera-bundle-0            (               metal-1 )   due to unrunnable galera-bundle-docker-0 start
+ * Stop    galera:0	(Slave galera-bundle-0) 	due to unrunnable galera-bundle-docker-0 start
 
 Executing cluster transition:
  * Pseudo action:   storage-clone_pre_notify_stop_0
+ * Resource action: galera-bundle-0 monitor on metal-3
+ * Resource action: galera-bundle-0 monitor on metal-2
+ * Resource action: galera-bundle-1 monitor on metal-3
+ * Resource action: galera-bundle-1 monitor on metal-1
+ * Resource action: galera-bundle-2 monitor on metal-2
+ * Resource action: galera-bundle-2 monitor on metal-1
+ * Resource action: redis-bundle-0  monitor on metal-3
+ * Resource action: redis-bundle-0  monitor on metal-2
+ * Resource action: redis-bundle-1  monitor on metal-3
+ * Resource action: redis-bundle-1  monitor on metal-1
+ * Resource action: redis-bundle-2  monitor on metal-2
+ * Resource action: redis-bundle-2  monitor on metal-1
  * Pseudo action:   galera-bundle_stop_0
  * Resource action: storage:0       notify on metal-1
  * Resource action: storage:1       notify on metal-2
@@ -35,8 +47,8 @@ Executing cluster transition:
  * Pseudo action:   storage-clone_confirmed-pre_notify_stop_0
  * Pseudo action:   galera-bundle-master_stop_0
  * Resource action: galera:0        stop on galera-bundle-0
- * Resource action: galera-bundle-0 stop on metal-1
  * Pseudo action:   galera-bundle-master_stopped_0
+ * Resource action: galera-bundle-0 stop on metal-1
  * Resource action: galera-bundle-docker-0 stop on metal-1
  * Pseudo action:   galera-bundle_stopped_0
  * Pseudo action:   galera-bundle_start_0

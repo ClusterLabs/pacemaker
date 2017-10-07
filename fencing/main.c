@@ -781,7 +781,7 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
             }
             free(mutable);
 
-        } else if(strstr(xpath, "/"XML_CIB_TAG_RESOURCES)) {
+        } else if(strstr(xpath, XML_CIB_TAG_RESOURCES)) {
             shortpath = strrchr(xpath, '/'); CRM_ASSERT(shortpath);
             reason = crm_strdup_printf("%s %s", op, shortpath+1);
             needs_update = TRUE;
@@ -1140,7 +1140,8 @@ static void
 stonith_shutdown(int nsig)
 {
     stonith_shutdown_flag = TRUE;
-    crm_info("Terminating with  %d clients", crm_hash_table_size(client_connections));
+    crm_info("Terminating with %d clients",
+             crm_hash_table_size(client_connections));
     if (mainloop != NULL && g_main_is_running(mainloop)) {
         g_main_quit(mainloop);
     } else {
@@ -1289,7 +1290,7 @@ main(int argc, char **argv)
     int argerr = 0;
     int option_index = 0;
     crm_cluster_t cluster;
-    const char *actions[] = { "reboot", "off", "list", "monitor", "status" };
+    const char *actions[] = { "reboot", "off", "on", "list", "monitor", "status" };
 
     crm_log_preinit("stonith-ng", argc, argv);
     crm_set_options(NULL, "mode [options]", long_options,
@@ -1378,10 +1379,21 @@ main(int argc, char **argv)
 
         printf("  <parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_DELAY_MAX);
         printf
-            ("    <shortdesc lang=\"en\">Enable random delay for stonith actions and specify the maximum of random delay</shortdesc>\n");
+            ("    <shortdesc lang=\"en\">Enable a random delay for stonith actions and specify the maximum of random delay.</shortdesc>\n");
         printf
             ("    <longdesc lang=\"en\">This prevents double fencing when using slow devices such as sbd.\n"
-             "Use this to enable random delay for stonith actions and specify the maximum of random delay.</longdesc>\n");
+             "Use this to enable a random delay for stonith actions.\n"
+             "The overall delay is derived from this random delay value adding a static delay so that the sum is kept below the maximum delay.</longdesc>\n");
+        printf("    <content type=\"time\" default=\"0s\"/>\n");
+        printf("  </parameter>\n");
+
+        printf("  <parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_DELAY_BASE);
+        printf
+            ("    <shortdesc lang=\"en\">Enable a base delay for stonith actions and specify base delay value.</shortdesc>\n");
+        printf
+            ("    <longdesc lang=\"en\">This prevents double fencing when different delays are configured on the nodes.\n"
+             "Use this to enable a static delay for stonith actions.\n"
+             "The overall delay is derived from a random delay value adding this static delay so that the sum is kept below the maximum delay.</longdesc>\n");
         printf("    <content type=\"time\" default=\"0s\"/>\n");
         printf("  </parameter>\n");
 

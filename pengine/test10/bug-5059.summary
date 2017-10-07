@@ -17,7 +17,6 @@ OFFLINE: [ gluster04.h ]
 
 Transition Summary:
  * Promote p_stateful1:0	(Slave -> Master gluster01.h)
- * Start   p_stateful2:0	(gluster01.h)
  * Promote p_stateful2:0	(Stopped -> Master gluster01.h)
  * Start   p_stateful2:1	(gluster02.h)
 

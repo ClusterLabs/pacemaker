@@ -8,8 +8,8 @@ Online: [ node1 node2 ]
      Slaves: [ node1 ]
 
 Transition Summary:
- * Move    A	(Started node1 -> node2)
- * Demote  MS_RSC_NATIVE:0	(Master -> Slave node2)
+ * Move       A                   (        node1 -> node2 )  
+ * Demote     MS_RSC_NATIVE:0     ( Master -> Slave node2 )  
  * Promote MS_RSC_NATIVE:1	(Slave -> Master node1)
 
 Executing cluster transition:

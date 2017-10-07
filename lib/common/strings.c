@@ -229,26 +229,79 @@ crm_str_eq(const char *a, const char *b, gboolean use_case)
     return FALSE;
 }
 
+static inline const char * null2emptystr(const char *);
+static inline const char *
+null2emptystr(const char *input)
+{
+    return (input == NULL) ? "" : input;
+}
+
+static inline int crm_ends_with_internal(const char *, const char *, gboolean);
+static inline int
+crm_ends_with_internal(const char *s, const char *match, gboolean as_extension)
+{
+    if ((s == NULL) || (match == NULL)) {
+        return 0;
+    } else {
+        size_t slen, mlen;
+
+        if (match[0] != '\0'
+            && (as_extension /* following commented out for inefficiency:
+                || strchr(&match[1], match[0]) == NULL */))
+                return !strcmp(null2emptystr(strrchr(s, match[0])), match);
+
+        if ((mlen = strlen(match)) == 0)
+            return 1;
+        slen = strlen(s);
+        return ((slen >= mlen) && !strcmp(s + slen - mlen, match));
+    }
+}
+
 /*!
  * \internal
  * \brief Check whether a string ends with a certain sequence
  *
  * \param[in] s      String to check
- * \param[in] match  Sequence to match against end of s
+ * \param[in] match  Sequence to match against end of \p s
  *
- * \return TRUE if s ends with match, FALSE otherwise
+ * \return \c TRUE if \p s ends (verbatim, i.e., case sensitively)
+ *         with match (including empty string), \c FALSE otherwise
+ *
+ * \see crm_ends_with_ext()
  */
 gboolean
 crm_ends_with(const char *s, const char *match)
 {
-    if ((s == NULL) || (match == NULL)) {
-        return FALSE;
-    } else {
-        size_t slen = strlen(s);
-        size_t mlen = strlen(match);
+    return crm_ends_with_internal(s, match, FALSE);
+}
 
-        return ((slen >= mlen) && !strcmp(s + slen - mlen, match));
-    }
+/*!
+ * \internal
+ * \brief Check whether a string ends with a certain "extension"
+ *
+ * \param[in] s      String to check
+ * \param[in] match  Extension to match against end of \p s, that is,
+ *                   its first character must not occur anywhere
+ *                   in the rest of that very sequence (example: file
+ *                   extension where the last dot is its delimiter,
+ *                   e.g., ".html"); incorrect results may be
+ *                   returned otherwise.
+ *
+ * \return \c TRUE if \p s ends (verbatim, i.e., case sensitively)
+ *         with "extension" designated as \p match (including empty
+ *         string), \c FALSE otherwise
+ *
+ * \note Main incentive to prefer this function over \c crm_ends_with
+ *       where possible is the efficiency (at the cost of added
+ *       restriction on \p match as stated; the complexity class
+ *       remains the same, though: BigO(M+N) vs. BigO(M+2N)).
+ *
+ * \see crm_ends_with()
+ */
+gboolean
+crm_ends_with_ext(const char *s, const char *match)
+{
+    return crm_ends_with_internal(s, match, TRUE);
 }
 
 /*
@@ -288,6 +341,26 @@ crm_strcase_hash(gconstpointer v)
     return h;
 }
 
+static void
+copy_str_table_entry(gpointer key, gpointer value, gpointer user_data)
+{
+    if (key && value && user_data) {
+        g_hash_table_insert((GHashTable*)user_data, strdup(key), strdup(value));
+    }
+}
+
+GHashTable *
+crm_str_table_dup(GHashTable *old_table)
+{
+    GHashTable *new_table = NULL;
+
+    if (old_table) {
+        new_table = crm_str_table_new();
+        g_hash_table_foreach(old_table, copy_str_table_entry, new_table);
+    }
+    return new_table;
+}
+
 char *
 add_list_element(char *list, const char *value)
 {
@@ -317,7 +390,7 @@ crm_compress_string(const char *data, int length, int max, char **result, unsign
     struct timespec before_t;
 
     if(max == 0) {
-        max = (length * 1.1) + 600; /* recomended size */
+        max = (length * 1.1) + 600; /* recommended size */
     }
 
 #ifdef CLOCK_MONOTONIC
@@ -342,12 +415,12 @@ crm_compress_string(const char *data, int length, int max, char **result, unsign
 #ifdef CLOCK_MONOTONIC
     clock_gettime(CLOCK_MONOTONIC, &after_t);
 
-    crm_info("Compressed %d bytes into %d (ratio %d:1) in %dms",
+    crm_trace("Compressed %d bytes into %d (ratio %d:1) in %ldms",
              length, *result_len, length / (*result_len),
              (after_t.tv_sec - before_t.tv_sec) * 1000 + (after_t.tv_nsec -
                                                           before_t.tv_nsec) / 1000000);
 #else
-    crm_info("Compressed %d bytes into %d (ratio %d:1)",
+    crm_trace("Compressed %d bytes into %d (ratio %d:1)",
              length, *result_len, length / (*result_len));
 #endif
 

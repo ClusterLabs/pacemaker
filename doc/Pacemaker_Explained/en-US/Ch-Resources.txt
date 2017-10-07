@@ -339,8 +339,9 @@ indexterm:[Resource,Option,target-role]
  indexterm:[Resource,Option,resource-stickiness]
 
 |requires
-|fencing (unless +stonith-enabled+ is +false+ or +class+ is
-+stonith+, in which case it defaults to quorum)
+|+quorum+ for resources with a +class+ of +stonith+,
+ otherwise +unfencing+ if unfencing is active in the cluster,
+ otherwise +fencing+ if +stonith-enabled+ is true, otherwise +quorum+
 |Conditions under which the resource can be started '(since 1.1.8)'
 Allowed values:
 
@@ -349,12 +350,12 @@ Allowed values:
   the configured nodes are active
 * +fencing:+ The cluster can only start this resource if a majority
   of the configured nodes are active _and_ any failed or unknown nodes
-  have been powered off
+  have been <<ch-stonith,fenced>>
 * +unfencing:+
   The cluster can only start this resource if a majority
   of the configured nodes are active _and_ any failed or unknown nodes
-  have been powered off _and_ only on nodes that have been 'unfenced'
-  '(since 1.1.9)'
+  have been fenced _and_ only on nodes that have been
+  <<s-unfencing,unfenced>> '(since 1.1.9)'
 
 indexterm:[requires,Resource Option]
 indexterm:[Resource,Option,requires]
@@ -399,6 +400,10 @@ indexterm:[Resource,Option,multiple-active]
 |TRUE for ocf:pacemaker:remote resources, FALSE otherwise
 |Whether the cluster should try to "live migrate" this resource when it needs
 to be moved (see <<s-migrating-resources>>)
+
+|container-attribute-target
+|
+|Specific to bundle resources; see <<s-bundle-attributes>>
 
 |remote-node
 |

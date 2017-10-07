@@ -413,9 +413,10 @@ graph_update_action(action_t * first, action_t * then, node_t * node,
 }
 
 static void
-mark_start_blocked(resource_t *rsc)
+mark_start_blocked(resource_t *rsc, resource_t *reason)
 {
     GListPtr gIter = rsc->actions;
+    char *reason_text = crm_strdup_printf("colocation with %s", reason->id);
 
     for (; gIter != NULL; gIter = gIter->next) {
         action_t *action = (action_t *) gIter->data;
@@ -424,11 +425,12 @@ mark_start_blocked(resource_t *rsc)
             continue;
         }
         if (is_set(action->flags, pe_action_runnable)) {
-            clear_bit(action->flags, pe_action_runnable);
+            pe_action_set_flag_reason(__FUNCTION__, __LINE__, action, NULL, reason_text, pe_action_runnable, FALSE);
             update_colo_start_chain(action);
             update_action(action);
         }
     }
+    free(reason_text);
 }
 
 void
@@ -439,6 +441,10 @@ update_colo_start_chain(action_t *action)
 
     if (is_not_set(action->flags, pe_action_runnable) && safe_str_eq(action->task, RSC_START)) {
         rsc = uber_parent(action->rsc);
+        if (rsc->parent) {
+            // This is a bundle (uber_parent() stops _before_ the bundle)
+            rsc = rsc->parent;
+        }
     }
 
     if (rsc == NULL || rsc->rsc_cons_lhs == NULL) {
@@ -458,7 +464,7 @@ update_colo_start_chain(action_t *action)
     for (gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
         rsc_colocation_t *colocate_with = (rsc_colocation_t *)gIter->data;
         if (colocate_with->score == INFINITY) {
-            mark_start_blocked(colocate_with->rsc_lh);
+            mark_start_blocked(colocate_with->rsc_lh, action->rsc);
         }
     }
 }
@@ -490,7 +496,7 @@ update_action(action_t * then)
         if (then->required_runnable_before == 0) {
             then->required_runnable_before = 1;
         }
-        clear_bit(then->flags, pe_action_runnable);
+        pe_clear_action_bit(then, pe_action_runnable);
         /* We are relying on the pe_order_one_or_more clause of
          * graph_update_action(), called as part of the:
          *
@@ -538,7 +544,6 @@ update_action(action_t * then)
 
         if (first->rsc && then->rsc && (first->rsc != then->rsc)
             && (is_parent(then->rsc, first->rsc) == FALSE)) {
-
             first = rsc_expand_action(first);
         }
         if (first != other->action) {
@@ -564,10 +569,10 @@ update_action(action_t * then)
 
         if (first == other->action) {
             /*
-             * 'first' was not expanded (ie. from 'start' to 'running'), which could mean it:
+             * 'first' was not expanded (e.g. from 'start' to 'running'), which could mean it:
              * - has no associated resource,
              * - was a primitive,
-             * - was pre-expanded (ie. 'running' instead of 'start')
+             * - was pre-expanded (e.g. 'running' instead of 'start')
              *
              * The third argument here to graph_update_action() is a node which is used under two conditions:
              * - Interleaving, in which case first->node and
@@ -950,6 +955,9 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
     gboolean needs_maintenance_info = FALSE;
     xmlNode *action_xml = NULL;
     xmlNode *args_xml = NULL;
+#if ENABLE_VERSIONED_ATTRS
+    pe_rsc_action_details_t *rsc_details = NULL;
+#endif
 
     if (action == NULL) {
         return NULL;
@@ -983,6 +991,9 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
 
     } else {
         action_xml = create_xml_node(NULL, XML_GRAPH_TAG_RSC_OP);
+#if ENABLE_VERSIONED_ATTRS
+        rsc_details = pe_rsc_action_details(action);
+#endif
     }
 
     crm_xml_add_int(action_xml, XML_ATTR_ID, action->id);
@@ -1108,34 +1119,46 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
 
     g_hash_table_foreach(action->extra, hash2field, args_xml);
     if (action->rsc != NULL && action->node) {
-        GHashTable *p = g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
-#ifdef ENABLE_VERSIONED_ATTRS
-        xmlNode *versioned_parameters = create_xml_node(NULL, XML_TAG_VER_ATTRS);
-#endif
+        GHashTable *p = crm_str_table_new();
 
         get_rsc_attributes(p, action->rsc, action->node, data_set);
         g_hash_table_foreach(p, hash2smartfield, args_xml);
+        g_hash_table_destroy(p);
 
-#ifdef ENABLE_VERSIONED_ATTRS
-        pe_get_versioned_attributes(versioned_parameters, action->rsc, action->node, data_set);
-        if (xml_has_children(versioned_parameters)) {
-            add_node_copy(action_xml, versioned_parameters);
+#if ENABLE_VERSIONED_ATTRS
+        {
+            xmlNode *versioned_parameters = create_xml_node(NULL, XML_TAG_RSC_VER_ATTRS);
+
+            pe_get_versioned_attributes(versioned_parameters, action->rsc,
+                                        action->node, data_set);
+            if (xml_has_children(versioned_parameters)) {
+                add_node_copy(action_xml, versioned_parameters);
+            }
+            free_xml(versioned_parameters);
         }
 #endif
 
-        g_hash_table_destroy(p);
-#ifdef ENABLE_VERSIONED_ATTRS
-        free_xml(versioned_parameters);
-#endif
     } else if(action->rsc && action->rsc->variant <= pe_native) {
         g_hash_table_foreach(action->rsc->parameters, hash2smartfield, args_xml);
-#ifdef ENABLE_VERSIONED_ATTRS
-        
+
+#if ENABLE_VERSIONED_ATTRS
         if (xml_has_children(action->rsc->versioned_parameters)) {
             add_node_copy(action_xml, action->rsc->versioned_parameters);
         }
 #endif
     }
+
+#if ENABLE_VERSIONED_ATTRS
+    if (rsc_details) {
+        if (xml_has_children(rsc_details->versioned_parameters)) {
+            add_node_copy(action_xml, rsc_details->versioned_parameters);
+        }
+
+        if (xml_has_children(rsc_details->versioned_meta)) {
+            add_node_copy(action_xml, rsc_details->versioned_meta);
+        }
+    }
+#endif
 
     g_hash_table_foreach(action->meta, hash2metafield, args_xml);
     if (action->rsc != NULL) {
@@ -1157,6 +1180,45 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
 
         if(value) {
             hash2smartfield((gpointer)"pcmk_external_ip", (gpointer)value, (gpointer)args_xml);
+        }
+
+        if(is_container_remote_node(action->node)) {
+            pe_node_t *host = NULL;
+            enum action_tasks task = text2task(action->task);
+
+            if(task == action_notify || task == action_notified) {
+                const char *n_task = g_hash_table_lookup(action->meta, "notify_operation");
+                task = text2task(n_task);
+            }
+
+            // Differentiate between up and down actions
+            switch (task) {
+                case stop_rsc:
+                case stopped_rsc:
+                case action_demote:
+                case action_demoted:
+                    if(action->node->details->remote_rsc->container->running_on) {
+                        host = action->node->details->remote_rsc->container->running_on->data;
+                    }
+                    break;
+                case start_rsc:
+                case started_rsc:
+                case monitor_rsc:
+                case action_promote:
+                case action_promoted:
+                    if(action->node->details->remote_rsc->container->allocated_to) {
+                        host = action->node->details->remote_rsc->container->allocated_to;
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+            if(host) {
+                hash2metafield((gpointer)XML_RSC_ATTR_TARGET,
+                               (gpointer)g_hash_table_lookup(action->rsc->meta, XML_RSC_ATTR_TARGET), (gpointer)args_xml);
+                hash2metafield((gpointer)PCMK_ENV_PHYSICAL_HOST, (gpointer)host->details->uname, (gpointer)args_xml);
+            }
         }
 
     } else if (safe_str_eq(action->task, CRM_OP_FENCE) && action->node) {
@@ -1200,7 +1262,7 @@ should_dump_action(action_t * action)
         /* This is a horrible but convenient hack
          *
          * It mimimizes the number of actions with unsatisfied inputs
-         * (ie. not included in the graph)
+         * (i.e. not included in the graph)
          *
          * This in turn, means we can be more concise when printing
          * aborted/incomplete graphs.
@@ -1543,7 +1605,7 @@ graph_has_loop(action_t * init_action, action_t * action, action_wrapper_t * wra
     }
 
 done:
-    clear_bit(wrapper->action->flags, pe_action_tracking);
+    pe_clear_action_bit(wrapper->action, pe_action_tracking);
 
     return has_loop;
 }

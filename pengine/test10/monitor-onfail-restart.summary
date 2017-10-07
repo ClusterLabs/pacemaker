@@ -6,7 +6,7 @@ OFFLINE: [ fc16-builder2 ]
  A	(ocf::pacemaker:Dummy):	FAILED fc16-builder 
 
 Transition Summary:
- * Recover A	(Started fc16-builder)
+ * Recover    A       ( fc16-builder )  
 
 Executing cluster transition:
  * Resource action: A               stop on fc16-builder

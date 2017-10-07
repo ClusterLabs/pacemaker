@@ -8,8 +8,8 @@ Node hs21d (737318c6-0f92-4592-9754-45967d45aff7): UNCLEAN (offline)
  nfs_1	(ocf::heartbeat:Filesystem):	Stopped 
 
 Transition Summary:
- * Fence hs21d
- * Fence hs21c
+ * Fence (reboot) hs21d 'node is unclean'
+ * Fence (reboot) hs21c 'node is unclean'
 
 Executing cluster transition:
  * Fencing hs21d (reboot)

@@ -402,6 +402,8 @@ crm_time_get_isoweek(crm_time_t * dt, uint * y, uint * w, uint * d)
     return TRUE;
 }
 
+#define DATE_MAX 128
+
 char *
 crm_time_as_string(crm_time_t * date_time, int flags)
 {
@@ -426,9 +428,9 @@ crm_time_as_string(crm_time_t * date_time, int flags)
     CRM_CHECK(dt != NULL, return NULL);
     if (flags & crm_time_log_duration) {
         uint h = 0, m = 0, s = 0;
-        int offset = 0, max = 128;
+        int offset = 0;
 
-        date_s = calloc(1, max+1);
+        date_s = calloc(1, DATE_MAX);
         crm_time_get_sec(dt->seconds, &h, &m, &s);
 
         if (date_s == NULL) {
@@ -436,45 +438,45 @@ crm_time_as_string(crm_time_t * date_time, int flags)
         }
 
         if(dt->years) {
-            offset += snprintf(date_s+offset, max-offset, "%4d year%s ", dt->years, dt->years>1?"s":"");
+            offset += snprintf(date_s+offset, DATE_MAX - offset, "%4d year%s ", dt->years, dt->years>1?"s":"");
         }
         if(dt->months) {
-            offset += snprintf(date_s+offset, max-offset, "%2d month%s ", dt->months, dt->months>1?"s":"");
+            offset += snprintf(date_s+offset, DATE_MAX - offset, "%2d month%s ", dt->months, dt->months>1?"s":"");
         }
         if(dt->days) {
-            offset += snprintf(date_s+offset, max-offset, "%2d day%s ", dt->days, dt->days>1?"s":"");
+            offset += snprintf(date_s+offset, DATE_MAX - offset, "%2d day%s ", dt->days, dt->days>1?"s":"");
         }
         if(dt->seconds) {
-            offset += snprintf(date_s+offset, max-offset, "%d seconds ( ", dt->seconds);
+            offset += snprintf(date_s+offset, DATE_MAX - offset, "%d seconds ( ", dt->seconds);
             if(h) {
-                offset += snprintf(date_s+offset, max-offset, "%d hour%s ", h, h>1?"s":"");
+                offset += snprintf(date_s+offset, DATE_MAX - offset, "%u hour%s ", h, h>1?"s":"");
             }
             if(m) {
-                offset += snprintf(date_s+offset, max-offset, "%d minute%s ", m, m>1?"s":"");
+                offset += snprintf(date_s+offset, DATE_MAX - offset, "%u minute%s ", m, m>1?"s":"");
             }
             if(s) {
-                offset += snprintf(date_s+offset, max-offset, "%d second%s ", s, s>1?"s":"");
+                offset += snprintf(date_s+offset, DATE_MAX - offset, "%u second%s ", s, s>1?"s":"");
             }
-            offset += snprintf(date_s+offset, max-offset, ")");
+            offset += snprintf(date_s+offset, DATE_MAX - offset, ")");
         }
         goto done;
     }
 
     if (flags & crm_time_log_date) {
-        date_s = calloc(1, 32);
+        date_s = calloc(1, 34);
         if (date_s == NULL) {
             goto done;
 
         } else if (flags & crm_time_seconds) {
             unsigned long long s = crm_time_get_seconds(date_time);
 
-            snprintf(date_s, 31, "%lld", s); /* Durations may not be +ve */
+            snprintf(date_s, 32, "%lld", s); /* Durations may not be +ve */
             goto done;
 
         } else if (flags & crm_time_epoch) {
             unsigned long long s = crm_time_get_seconds_since_epoch(date_time);
 
-            snprintf(date_s, 31, "%lld", s); /* Durations may not be +ve */
+            snprintf(date_s, 32, "%lld", s); /* Durations may not be +ve */
             goto done;
 
         } else if (flags & crm_time_weeks) {
@@ -482,7 +484,7 @@ crm_time_as_string(crm_time_t * date_time, int flags)
             uint y, w, d;
 
             if (crm_time_get_isoweek(dt, &y, &w, &d)) {
-                snprintf(date_s, 31, "%d-W%.2d-%d", y, w, d);
+                snprintf(date_s, 34, "%u-W%.2u-%u", y, w, d);
             }
 
         } else if (flags & crm_time_ordinal) {
@@ -490,7 +492,7 @@ crm_time_as_string(crm_time_t * date_time, int flags)
             uint y, d;
 
             if (crm_time_get_ordinal(dt, &y, &d)) {
-                snprintf(date_s, 31, "%d-%.3d", y, d);
+                snprintf(date_s, 22, "%u-%.3u", y, d);
             }
 
         } else {
@@ -498,7 +500,7 @@ crm_time_as_string(crm_time_t * date_time, int flags)
             uint y, m, d;
 
             if (crm_time_get_gregorian(dt, &y, &m, &d)) {
-                snprintf(date_s, 31, "%.4d-%.2d-%.2d", y, m, d);
+                snprintf(date_s, 33, "%.4u-%.2u-%.2u", y, m, d);
             }
         }
     }
@@ -506,26 +508,26 @@ crm_time_as_string(crm_time_t * date_time, int flags)
     if (flags & crm_time_log_timeofday) {
         uint h, m, s;
 
-        time_s = calloc(1, 32);
+        time_s = calloc(1, 33);
         if (time_s == NULL) {
             goto cleanup;
         }
 
         if (crm_time_get_timeofday(dt, &h, &m, &s)) {
-            snprintf(time_s, 31, "%.2d:%.2d:%.2d", h, m, s);
+            snprintf(time_s, 33, "%.2u:%.2u:%.2u", h, m, s);
         }
 
         if (dt->offset != 0) {
             crm_time_get_sec(dt->offset, &h, &m, &s);
         }
 
-        offset_s = calloc(1, 32);
+        offset_s = calloc(1, 31);
         if ((flags & crm_time_log_with_timezone) == 0 || dt->offset == 0) {
             crm_trace("flags %6x %6x", flags, crm_time_log_with_timezone);
             snprintf(offset_s, 31, "Z");
 
         } else {
-            snprintf(offset_s, 31, " %c%.2d:%.2d", dt->offset < 0 ? '-' : '+', h, m);
+            snprintf(offset_s, 24, " %c%.2u:%.2u", dt->offset < 0 ? '-' : '+', h, m);
         }
     }
 

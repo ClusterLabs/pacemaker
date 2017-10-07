@@ -174,11 +174,16 @@ set_ocf_env_with_prefix(gpointer key, gpointer value, gpointer user_data)
     set_ocf_env(buffer, value, user_data);
 }
 
+/*!
+ * \internal
+ * \brief Add environment variables suitable for an action
+ *
+ * \param[in] op  Action to use
+ */
 static void
-add_OCF_env_vars(svc_action_t * op)
+add_action_env_vars(const svc_action_t *op)
 {
-    if ((op->standard == NULL)
-        || (strcasecmp(PCMK_RESOURCE_CLASS_OCF, op->standard) != 0)) {
+    if (safe_str_eq(op->standard, PCMK_RESOURCE_CLASS_OCF) == FALSE) {
         return;
     }
 
@@ -432,8 +437,21 @@ action_launch_child(svc_action_t *op)
         }
     }
 #endif
-    /* Setup environment correctly */
-    add_OCF_env_vars(op);
+
+    add_action_env_vars(op);
+
+    /* Become the desired user */
+    if (op->opaque->uid && (geteuid() == 0)) {
+        if (op->opaque->gid && (setgid(op->opaque->gid) < 0)) {
+            crm_perror(LOG_ERR, "setting group to %d", op->opaque->gid);
+            _exit(PCMK_OCF_NOT_CONFIGURED);
+        }
+        if (setuid(op->opaque->uid) < 0) {
+            crm_perror(LOG_ERR, "setting user to %d", op->opaque->uid);
+            _exit(PCMK_OCF_NOT_CONFIGURED);
+        }
+        /* We could do initgroups() here if we kept a copy of the username */
+    }
 
     /* execute the RA */
     execvp(op->opaque->exec, op->opaque->args);

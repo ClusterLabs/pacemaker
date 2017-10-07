@@ -93,7 +93,7 @@ Description:
       The election algorithm has been adapted from
       http://www.cs.indiana.edu/cgi-bin/techreports/TRNNN.cgi?trnum=TR521
 
-      Loosly known as the Bully Algorithm, its major points are:
+      Loosely known as the Bully Algorithm, its major points are:
       - Election is initiated by any node (N) notices that the controller
 	is no longer responding
       - Concurrent multiple elections are possible

@@ -21,9 +21,6 @@
 #  define LRMD_PVT__H
 
 #  include <glib.h>
-#ifdef ENABLE_VERSIONED_ATTRS
-#  include <regex.h>
-#endif
 #  include <crm/common/ipcs.h>
 #  include <crm/lrmd.h>
 #  include <crm/stonith-ng.h>
@@ -36,10 +33,6 @@
 #define LRMD_ISOLATION_PROVIDER ".isolation"
 
 GHashTable *rsc_list;
-#ifdef ENABLE_VERSIONED_ATTRS
-extern regex_t *version_format_regex;
-extern GHashTable *ra_version_hash;
-#endif
 
 typedef struct lrmd_rsc_s {
     char *rsc_id;
@@ -118,5 +111,6 @@ crm_client_t *ipc_proxy_get_provider(void);
 int ipc_proxy_shutdown_req(crm_client_t *ipc_proxy);
 #endif
 
+int process_lrmd_alert_exec(crm_client_t *client, uint32_t id, xmlNode *request);
+void lrmd_drain_alerts(GMainContext *ctx);
 #endif
-

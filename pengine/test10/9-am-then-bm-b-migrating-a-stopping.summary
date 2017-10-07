@@ -7,8 +7,8 @@ Online: [ 18node1 18node2 18node3 ]
  B	(ocf::heartbeat:Dummy):	Started 18node2 
 
 Transition Summary:
- * Stop    A	(18node1)
- * Stop    B	(Started 18node2)
+ * Stop    A	(18node1)  	due to node availability
+ * Stop       B       ( 18node2 )   due to unrunnable A start
 
 Executing cluster transition:
  * Resource action: B               stop on 18node2

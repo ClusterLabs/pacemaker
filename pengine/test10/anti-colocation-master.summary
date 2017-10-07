@@ -10,9 +10,9 @@ Online: [ sle12sp2-1 sle12sp2-2 ]
      Slaves: [ sle12sp2-2 ]
 
 Transition Summary:
- * Move    dummy1	(Started sle12sp2-2 -> sle12sp2-1)
+ * Move       dummy1     (   sle12sp2-2 -> sle12sp2-1 )  
  * Promote state1:0	(Slave -> Master sle12sp2-2)
- * Demote  state1:1	(Master -> Slave sle12sp2-1)
+ * Demote     state1:1   ( Master -> Slave sle12sp2-1 )  
 
 Executing cluster transition:
  * Resource action: dummy1          stop on sle12sp2-2

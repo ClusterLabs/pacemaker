@@ -34,7 +34,6 @@ do_find_resource(const char *rsc, resource_t * the_rsc, pe_working_set_t * data_
     for (lpc = the_rsc->running_on; lpc != NULL; lpc = lpc->next) {
         node_t *node = (node_t *) lpc->data;
 
-        crm_trace("resource %s is running on: %s", rsc, node->details->uname);
         if (BE_QUIET) {
             fprintf(stdout, "%s\n", node->details->uname);
         } else {
@@ -112,13 +111,13 @@ find_rsc_or_clone(const char *rsc, pe_working_set_t * data_set)
     return the_rsc;
 }
 
+#define XPATH_MAX 1024
 
 static int
 find_resource_attr(cib_t * the_cib, const char *attr, const char *rsc, const char *set_type,
                    const char *set_name, const char *attr_id, const char *attr_name, char **value)
 {
     int offset = 0;
-    static int xpath_max = 1024;
     int rc = pcmk_ok;
     xmlNode *xml_search = NULL;
     char *xpath_string = NULL;
@@ -131,31 +130,31 @@ find_resource_attr(cib_t * the_cib, const char *attr, const char *rsc, const cha
         return -ENOTCONN;
     }
 
-    xpath_string = calloc(1, xpath_max);
+    xpath_string = calloc(1, XPATH_MAX);
     offset +=
-        snprintf(xpath_string + offset, xpath_max - offset, "%s", get_object_path("resources"));
+        snprintf(xpath_string + offset, XPATH_MAX - offset, "%s", get_object_path("resources"));
 
-    offset += snprintf(xpath_string + offset, xpath_max - offset, "//*[@id=\"%s\"]", rsc);
+    offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "//*[@id=\"%s\"]", rsc);
 
     if (set_type) {
-        offset += snprintf(xpath_string + offset, xpath_max - offset, "/%s", set_type);
+        offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "/%s", set_type);
         if (set_name) {
-            offset += snprintf(xpath_string + offset, xpath_max - offset, "[@id=\"%s\"]", set_name);
+            offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "[@id=\"%s\"]", set_name);
         }
     }
 
-    offset += snprintf(xpath_string + offset, xpath_max - offset, "//nvpair[");
+    offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "//nvpair[");
     if (attr_id) {
-        offset += snprintf(xpath_string + offset, xpath_max - offset, "@id=\"%s\"", attr_id);
+        offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "@id=\"%s\"", attr_id);
     }
 
     if (attr_name) {
         if (attr_id) {
-            offset += snprintf(xpath_string + offset, xpath_max - offset, " and ");
+            offset += snprintf(xpath_string + offset, XPATH_MAX - offset, " and ");
         }
-        offset += snprintf(xpath_string + offset, xpath_max - offset, "@name=\"%s\"", attr_name);
+        offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "@name=\"%s\"", attr_name);
     }
-    offset += snprintf(xpath_string + offset, xpath_max - offset, "]");
+    offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "]");
     CRM_LOG_ASSERT(offset > 0);
 
     rc = the_cib->cmds->query(the_cib, xpath_string, &xml_search,
@@ -326,7 +325,7 @@ cli_resource_update_attribute(const char *rsc_id, const char *attr_set, const ch
 
         } else {
             value = crm_element_value(cib_top, XML_ATTR_VALIDATION);
-            if (crm_ends_with(value, "-0.6")) {
+            if (crm_ends_with_ext(value, "-0.6")) {
                 use_attributes_tag = TRUE;
             }
         }
@@ -356,14 +355,10 @@ cli_resource_update_attribute(const char *rsc_id, const char *attr_set, const ch
         }
     }
 
-    xml_obj = create_xml_node(xml_obj, XML_CIB_TAG_NVPAIR);
+    xml_obj = crm_create_nvpair_xml(xml_obj, attr_id, attr_name, attr_value);
     if (xml_top == NULL) {
         xml_top = xml_obj;
     }
-
-    crm_xml_add(xml_obj, XML_ATTR_ID, attr_id);
-    crm_xml_add(xml_obj, XML_NVPAIR_ATTR_NAME, attr_name);
-    crm_xml_add(xml_obj, XML_NVPAIR_ATTR_VALUE, attr_value);
 
     crm_log_xml_debug(xml_top, "Update");
 
@@ -457,10 +452,7 @@ cli_resource_delete_attribute(const char *rsc_id, const char *attr_set, const ch
         attr_id = local_attr_id;
     }
 
-    xml_obj = create_xml_node(NULL, XML_CIB_TAG_NVPAIR);
-    crm_xml_add(xml_obj, XML_ATTR_ID, attr_id);
-    crm_xml_add(xml_obj, XML_NVPAIR_ATTR_NAME, attr_name);
-
+    xml_obj = crm_create_nvpair_xml(NULL, attr_id, attr_name, NULL);
     crm_log_xml_debug(xml_obj, "Delete");
 
     CRM_ASSERT(cib);
@@ -503,7 +495,7 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
         return -EINVAL;
 
     } else if (host_uname == NULL) {
-        CMD_ERR("Please supply a hostname with -H");
+        CMD_ERR("Please supply a node name with --node");
         return -EINVAL;
     } else {
         node_t *node = pe_find_node(data_set->nodes, host_uname);
@@ -559,11 +551,7 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
     crm_xml_add(params, key, "60000");  /* 1 minute */
     free(key);
 
-    our_pid = calloc(1, 11);
-    if (our_pid != NULL) {
-        snprintf(our_pid, 10, "%d", getpid());
-        our_pid[10] = '\0';
-    }
+    our_pid = crm_getpid_s();
     cmd = create_request(op, msg_data, router_node, CRM_SYSTEM_CRMD, crm_system_name, our_pid);
 
 /* 	crm_log_xml_warn(cmd, "send_lrm_rsc_op"); */
@@ -573,7 +561,7 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
         rc = 0;
 
     } else {
-        CMD_ERR("Could not send %s op to the crmd", op);
+        crm_debug("Could not send %s op to the crmd", op);
         rc = -ENOTCONN;
     }
 
@@ -619,7 +607,7 @@ cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
 
             rc = cli_resource_delete(crmd_channel, host_uname, child, operation,
                                      interval, data_set);
-            if(rc != pcmk_ok || (pe_rsc_is_clone(rsc) && is_not_set(rsc->flags, pe_rsc_unique))) {
+            if(rc != pcmk_ok) {
                 return rc;
             }
         }
@@ -627,8 +615,9 @@ cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
 
     } else if (host_uname == NULL) {
         GListPtr lpc = NULL;
+        GListPtr nodes = g_hash_table_get_values(rsc->known_on);
 
-        for (lpc = data_set->nodes; lpc != NULL; lpc = lpc->next) {
+        for (lpc = nodes; lpc != NULL; lpc = lpc->next) {
             node = (node_t *) lpc->data;
 
             if (node->details->online) {
@@ -637,6 +626,7 @@ cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
             }
         }
 
+        g_list_free(nodes);
         return pcmk_ok;
     }
 
@@ -747,11 +737,9 @@ generate_resource_params(resource_t * rsc, pe_working_set_t * data_set)
         return NULL;
     }
 
-    params =
-        g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
-    meta = g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
-    combined =
-        g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+    params = crm_str_table_new();
+    meta = crm_str_table_new();
+    combined = crm_str_table_new();
 
     get_rsc_attributes(params, rsc, NULL /* TODO: Pass in local node */ , data_set);
     get_meta_attributes(meta, rsc, NULL /* TODO: Pass in local node */ , data_set);
@@ -853,7 +841,8 @@ get_active_resources(const char *host, GList *rsc_list)
     return active;
 }
 
-static GList *subtract_lists(GList *from, GList *items) 
+static GList*
+subtract_lists(GList *from, GList *items) 
 {
     GList *item = NULL;
     GList *result = g_list_copy(from);
@@ -965,7 +954,7 @@ update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
     }
 
     if(simulate) {
-        pid = crm_itoa(getpid());
+        pid = crm_getpid_s();
         shadow_cib = cib_shadow_new(pid);
         shadow_file = get_shadow_file(pid);
 
@@ -1091,7 +1080,7 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
     int sleep_interval = 2;
     int timeout = timeout_ms / 1000;
 
-    bool is_clone = FALSE;
+    bool stop_via_ban = FALSE;
     char *rsc_id = NULL;
     char *orig_target_role = NULL;
 
@@ -1116,8 +1105,8 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
     attr_set_type = XML_TAG_META_SETS;
 
     rsc_id = strdup(rsc->id);
-    if(pe_rsc_is_clone(rsc)) {
-        is_clone = TRUE;
+    if ((pe_rsc_is_clone(rsc) || pe_bundle_replicas(rsc)) && host) {
+        stop_via_ban = TRUE;
     }
 
     /*
@@ -1152,8 +1141,8 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
 
     dump_list(current_active, "Origin");
 
-    if(is_clone && host) {
-        /* Stop the clone instance by banning it from the host */
+    if (stop_via_ban) {
+        /* Stop the clone or bundle instance by banning it from the host */
         BE_QUIET = TRUE;
         rc = cli_resource_ban(rsc_id, host, NULL, cib);
 
@@ -1235,7 +1224,7 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
 
     }
 
-    if(is_clone && host) {
+    if (stop_via_ban) {
         rc = cli_resource_clear(rsc_id, host, NULL, cib);
 
     } else if (orig_target_role) {
@@ -1316,7 +1305,7 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
     goto done;
 
   failure:
-    if(is_clone && host) {
+    if (stop_via_ban) {
         cli_resource_clear(rsc_id, host, NULL, cib);
     } else if (orig_target_role) {
         cli_resource_update_attribute(rsc_id, NULL, NULL,
@@ -1712,4 +1701,101 @@ cli_resource_move(const char *rsc_id, const char *host_name, cib_t * cib, pe_wor
     }
 
     return rc;
+}
+
+static void
+cli_resource_why_without_rsc_and_host(cib_t *cib_conn,GListPtr resources)
+{
+    GListPtr lpc = NULL;
+    GListPtr hosts = NULL;
+
+    for (lpc = resources; lpc != NULL; lpc = lpc->next) {
+        resource_t *rsc = (resource_t *) lpc->data;
+        rsc->fns->location(rsc, &hosts, TRUE);
+
+	if ( hosts == NULL ) {
+	    printf("Resource %s is not running\n",rsc->id);
+	} else {
+	    printf("Resource %s is running\n",rsc->id);
+	}
+
+        cli_resource_check(cib_conn, rsc);
+        g_list_free(hosts);
+        hosts = NULL;
+     }
+
+}
+
+static void
+cli_resource_why_with_rsc_and_host(cib_t *cib_conn,GListPtr resources,const char* rsc_id,const char* host_uname)
+{
+    resource_t *rsc = NULL;
+
+    rsc = pe_find_resource(resources, rsc_id);
+    if((resource_is_running_on(rsc,host_uname))) {
+        printf("Resource %s is running on host %s\n",rsc->id,host_uname);
+    } else {
+        printf("Resource %s is assigned host %s but not running\n",rsc->id,host_uname);
+    }     
+    cli_resource_check(cib_conn, rsc);
+}
+
+static void 
+cli_resource_why_without_rsc_with_host(cib_t *cib_conn,GListPtr resources,node_t *node)
+{
+    const char* host_uname =  node->details->uname;
+    GListPtr allResources = node->details->allocated_rsc; 
+    GListPtr activeResources = node->details->running_rsc;
+    GListPtr unactiveResources = subtract_lists(allResources,activeResources);
+    GListPtr lpc = NULL;
+
+    for (lpc = activeResources; lpc != NULL; lpc = lpc->next) {
+        resource_t *rsc = (resource_t *) lpc->data;
+        printf("Resource %s is running on host %s\n",rsc->id,host_uname);
+        cli_resource_check(cib_conn,rsc);
+    }
+    
+    for(lpc = unactiveResources; lpc != NULL; lpc = lpc->next) {
+        resource_t *rsc = (resource_t *) lpc->data;
+        printf("Resource %s is assigned host %s but not running\n",rsc->id,host_uname);
+        cli_resource_check(cib_conn,rsc);
+     }
+
+     g_list_free(allResources);
+     g_list_free(activeResources);
+     g_list_free(unactiveResources);
+}
+
+static void
+cli_resource_why_with_rsc_without_host(cib_t *cib_conn,GListPtr resources,const char* rsc_id)
+{
+    resource_t *rsc = NULL;
+    GListPtr hosts = NULL;
+
+    rsc = pe_find_resource(resources, rsc_id);
+    rsc->fns->location(rsc, &hosts, TRUE);
+    if ( hosts == NULL ) {
+        printf("Resource %s is not running\n", rsc->id);
+    } else {
+	printf("Resource %s is running\n",rsc->id);
+    }
+    cli_resource_check(cib_conn, rsc);
+
+    g_list_free(hosts);
+    hosts = NULL;
+}
+
+void cli_resource_why(cib_t *cib_conn,GListPtr resources,const char* rsc_id,node_t *node)
+{
+    const char* host_uname = node == NULL ? NULL : node->details->uname; 
+
+    if (rsc_id == NULL && host_uname == NULL) {
+        cli_resource_why_without_rsc_and_host(cib_conn,resources); 
+    } else if (rsc_id != NULL && host_uname != NULL) {
+        cli_resource_why_with_rsc_and_host(cib_conn,resources,rsc_id,host_uname);
+    } else if (rsc_id == NULL && host_uname != NULL) {
+        cli_resource_why_without_rsc_with_host(cib_conn,resources,node);
+    } else if (rsc_id != NULL && host_uname == NULL) {
+        cli_resource_why_with_rsc_without_host(cib_conn,resources,rsc_id);
+    } 
 }

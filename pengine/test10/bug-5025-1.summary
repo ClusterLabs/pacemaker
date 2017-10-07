@@ -7,7 +7,7 @@ OFFLINE: [ fc16-builder2 fc16-builder3 ]
  A	(ocf::pacemaker:Dummy):	Started fc16-builder
 
 Transition Summary:
- * Reload  A	(Started fc16-builder)
+ * Reload     A       ( fc16-builder )  
 
 Executing cluster transition:
  * Cluster action:  clear_failcount for A on fc16-builder

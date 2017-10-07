@@ -25,7 +25,7 @@ Online: [ pcmk-1 pcmk-2 pcmk-3 ]
      Stopped: [ pcmk-4 ]
 
 Transition Summary:
- * Start   migrator	(pcmk-3 - blocked)
+ * Start      migrator     ( pcmk-3 )   blocked
 
 Executing cluster transition:
 

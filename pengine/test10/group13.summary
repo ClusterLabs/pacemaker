@@ -8,7 +8,7 @@ Online: [ jamesltc ]
      resource_fs	(ocf::heartbeat:Filesystem):	Stopped 
 
 Transition Summary:
- * Stop    resource_nfs	(jamesltc)
+ * Stop    resource_nfs	(jamesltc)  	due to node availability
 
 Executing cluster transition:
  * Pseudo action:   nfs_stop_0

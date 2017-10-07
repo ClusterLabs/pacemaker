@@ -12,7 +12,7 @@ Online: [ hadev1 hadev2 hadev3 ]
      child_DoFencing:2	(stonith:ssh):	Stopped 
 
 Transition Summary:
- * Move    rsc_hadev1	(Started hadev3 -> hadev1)
+ * Move       rsc_hadev1            ( hadev3 -> hadev1 )  
  * Start   child_DoFencing:2	(hadev1)
 
 Executing cluster transition:

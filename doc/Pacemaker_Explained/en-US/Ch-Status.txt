@@ -122,14 +122,14 @@ also store information about failed resources here.
   <instance_attributes id="status-cl-virt-1">
      <nvpair id="status-cl-virt-1-pingd" name="pingd" value="3"/>
      <nvpair id="status-cl-virt-1-probe_complete" name="probe_complete" value="true"/>
-     <nvpair id="status-cl-virt-1-fail-count-pingd:0" name="fail-count-pingd:0" value="1"/>
+     <nvpair id="status-cl-virt-1-fail-count-pingd:0.monitor_30000" name="fail-count-pingd:0#monitor_30000" value="1"/>
      <nvpair id="status-cl-virt-1-last-failure-pingd:0" name="last-failure-pingd:0" value="1239009742"/>
   </instance_attributes>
 </transient_attributes>
 -----
 ======
 
-In the above example, we can see that the +pingd:0+ resource has
+In the above example, we can see that a monitor on the +pingd:0+ resource has
 failed once, at 09:22:22 UTC 6 April 2009.
 footnote:[
 You can use the standard `date` command to print a human-readable version of

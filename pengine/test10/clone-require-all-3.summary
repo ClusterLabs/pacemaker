@@ -13,11 +13,11 @@ Online: [ rhel7-auto3 rhel7-auto4 ]
      Stopped: [ rhel7-auto1 rhel7-auto2 ]
 
 Transition Summary:
- * Move    shooter	(Started rhel7-auto1 -> rhel7-auto3)
- * Stop    A:0	(rhel7-auto1)
- * Stop    A:1	(rhel7-auto2)
- * Stop    B:0	(Started rhel7-auto3)
- * Stop    B:1	(Started rhel7-auto4)
+ * Move       shooter     ( rhel7-auto1 -> rhel7-auto3 )  
+ * Stop    A:0	(rhel7-auto1)  	due to node availability
+ * Stop    A:1	(rhel7-auto2)  	due to node availability
+ * Stop       B:0         (                rhel7-auto3 )   due to unrunnable clone-one-or-more:order-A-clone-B-clone-mandatory
+ * Stop       B:1         (                rhel7-auto4 )   due to unrunnable clone-one-or-more:order-A-clone-B-clone-mandatory
 
 Executing cluster transition:
  * Resource action: shooter         stop on rhel7-auto1

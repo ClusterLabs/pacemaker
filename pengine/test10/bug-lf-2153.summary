@@ -18,8 +18,8 @@ Online: [ alice ]
      res_portblock_iscsivg01_unblock	(ocf::heartbeat:portblock):	Started alice
 
 Transition Summary:
- * Stop    res_drbd_iscsivg01:0	(bob)
- * Stop    res_tgtd:0	(bob)
+ * Stop       res_drbd_iscsivg01:0     ( Slave bob )   due to node availability
+ * Stop    res_tgtd:0	(bob)  	due to node availability
 
 Executing cluster transition:
  * Pseudo action:   ms_drbd_iscsivg01_pre_notify_stop_0

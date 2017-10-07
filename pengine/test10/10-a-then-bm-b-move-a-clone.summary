@@ -8,8 +8,8 @@ Online: [ f20node2 ]
  vm	(ocf::heartbeat:Dummy):	Started f20node1 
 
 Transition Summary:
- * Stop    myclone:1	(f20node1)
- * Migrate vm	(Started f20node1 -> f20node2)
+ * Stop    myclone:1	(f20node1)  	due to node availability
+ * Migrate    vm            ( f20node1 -> f20node2 )  
 
 Executing cluster transition:
  * Resource action: vm              migrate_to on f20node1

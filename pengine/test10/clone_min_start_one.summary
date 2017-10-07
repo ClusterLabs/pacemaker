@@ -10,9 +10,9 @@ Online: [ c7auto3 c7auto4 ]
  FAKE	(ocf::heartbeat:Dummy):	Stopped
 
 Transition Summary:
- * Move    shooter	(Started c7auto1 -> c7auto3)
+ * Move       shooter         ( c7auto1 -> c7auto3 )  
  * Start   FAKECLONE:0	(c7auto3)
- * Start   FAKE	(c7auto4 - blocked)
+ * Start      FAKE            (            c7auto4 )   due to unrunnable clone-one-or-more:order-FAKECLONE-clone-FAKE-mandatory (blocked)
 
 Executing cluster transition:
  * Resource action: shooter         stop on c7auto1

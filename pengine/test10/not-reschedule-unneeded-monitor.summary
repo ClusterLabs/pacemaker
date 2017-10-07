@@ -14,7 +14,7 @@ Online: [ castor kimball ]
      Started: [ castor kimball ]
 
 Transition Summary:
- * Recover sle12-kvm	(Started castor -> kimball)
+ * Recover    sle12-kvm     ( castor -> kimball )  
 
 Executing cluster transition:
  * Resource action: sle12-kvm       stop on castor

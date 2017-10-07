@@ -347,8 +347,7 @@ cli_resource_print_attribute(const char *rsc, const char *attr, pe_working_set_t
                 " returning the default value for %s", the_rsc->id, crm_str(value));
     }
 
-    params = g_hash_table_new_full(crm_str_hash, g_str_equal,
-                                   g_hash_destroy_str, g_hash_destroy_str);
+    params = crm_str_table_new();
 
     if (safe_str_eq(attr_set_type, XML_TAG_ATTR_SETS)) {
         get_rsc_attributes(params, the_rsc, current, data_set);

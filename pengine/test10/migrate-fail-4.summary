@@ -7,7 +7,7 @@ Online: [ hex-13 hex-14 ]
      Started: [ hex-13 hex-14 ]
 
 Transition Summary:
- * Restart test-vm	(Started hex-13)
+ * Restart    test-vm     ( hex-13 )  
 
 Executing cluster transition:
  * Resource action: test-vm         stop on hex-14

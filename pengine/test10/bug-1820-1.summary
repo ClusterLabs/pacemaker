@@ -10,8 +10,8 @@ Online: [ star world ]
 Transition Summary:
  * Shutdown star
  * Start   p1	(world)
- * Migrate test1	(Started star -> world)
- * Migrate test2	(Started star -> world)
+ * Migrate    test1   ( star -> world )  
+ * Migrate    test2   ( star -> world )  
 
 Executing cluster transition:
  * Resource action: p1              monitor on world

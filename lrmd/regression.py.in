@@ -297,7 +297,7 @@ class Tests(object):
         self.rsc_classes = output_from_command("crm_resource --list-standards")
         self.rsc_classes = self.rsc_classes[:-1] # Strip trailing empty line
         self.need_authkey = 0
-        self.action_timeout = " -t 5000 "
+        self.action_timeout = " -t 7000 "
         if self.tls:
             self.rsc_classes.remove("stonith")
         if "systemd" in self.rsc_classes:
@@ -457,40 +457,37 @@ def main():
 if __name__ == "__main__":
     main()
 """)
-        dummy_fence_agent = ("""#!/usr/bin/python
-from __future__ import print_function, unicode_literals, absolute_import, division
-import sys
-def main():
-    for line in sys.stdin.readlines():
-        if line.count("monitor") > 0:
-            sys.exit(0)
-        if line.count("metadata") > 0:
-            print('<resource-agent name="fence_dummy_monitor" shortdesc="Dummy Fence agent for testing">')
-            print('  <longdesc>dummy description.</longdesc>')
-            print('  <vendor-url>http://www.example.com</vendor-url>')
-            print('  <parameters>')
-            print('    <parameter name="action" unique="0" required="1">')
-            print('      <getopt mixed="-o, --action=[action]"/>')
-            print('      <content type="string" default="reboot"/>')
-            print('      <shortdesc lang="en">Fencing Action</shortdesc>')
-            print('    </parameter>')
-            print('    <parameter name="port" unique="0" required="0">')
-            print('      <getopt mixed="-n, --plug=[id]"/>')
-            print('      <content type="string"/>')
-            print('      <shortdesc lang="en">Physical plug number or name of virtual machine</shortdesc>')
-            print('    </parameter>')
-            print('  </parameters>')
-            print('  <actions>')
-            print('    <action name="on"/>')
-            print('    <action name="off"/>')
-            print('    <action name="monitor"/>')
-            print('    <action name="metadata"/>')
-            print('  </actions>')
-            print('</resource-agent>')
-            sys.exit(0)
-    sys.exit(-1)
-if __name__ == "__main__":
-    main()
+        dummy_fence_agent = ("""#!/bin/sh
+while read line; do
+    case ${line} in
+    *monitor*) exit 0;;
+    *metadata*)
+        echo '<resource-agent name="fence_dummy_monitor" shortdesc="Dummy Fence agent for testing">'
+        echo '  <longdesc>dummy description.</longdesc>'
+        echo '  <vendor-url>http://www.example.com</vendor-url>'
+        echo '  <parameters>'
+        echo '    <parameter name="action" unique="0" required="1">'
+        echo '      <getopt mixed="-o, --action=[action]"/>'
+        echo '      <content type="string" default="reboot"/>'
+        echo '      <shortdesc lang="en">Fencing Action</shortdesc>'
+        echo '    </parameter>'
+        echo '    <parameter name="port" unique="0" required="0">'
+        echo '      <getopt mixed="-n, --plug=[id]"/>'
+        echo '      <content type="string"/>'
+        echo '      <shortdesc lang="en">Physical plug number or name of virtual machine</shortdesc>'
+        echo '    </parameter>'
+        echo '  </parameters>'
+        echo '  <actions>'
+        echo '    <action name="on"/>'
+        echo '    <action name="off"/>'
+        echo '    <action name="monitor"/>'
+        echo '    <action name="metadata"/>'
+        echo '  </actions>'
+        echo '</resource-agent>'
+        exit 0;;
+    esac
+    exit -1
+done
 """)
 
         os.system("cat <<-END >>/etc/init/lrmd_dummy_daemon.conf\n%s\nEND" % (dummy_upstart_job))
@@ -501,7 +498,9 @@ if __name__ == "__main__":
         os.system("cat <<-END >>/usr/sbin/fence_dummy_sleep\n%s\nEND" % (dummy_fence_sleep_agent))
         os.system("chmod 711 /usr/sbin/fence_dummy_sleep")
 
-        os.system("cat <<-END >>/usr/sbin/fence_dummy_monitor\n%s\nEND" % (dummy_fence_agent))
+        f = io.open("/usr/sbin/fence_dummy_monitor", 'w')
+        f.write(dummy_fence_agent)
+        f.close()
         os.system("chmod 711 /usr/sbin/fence_dummy_monitor")
 
         if os.path.exists("%s/cts/LSBDummy" % BUILD_DIR):
@@ -918,52 +917,6 @@ if __name__ == "__main__":
         test.add_cmd("-c exec -r test_rsc -a stop %s -l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:stop rc:ok op_status:complete\"" % (timeout))
         test.add_cmd("-c unregister_rsc -r test_rsc %s -l \"NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete\"" % (timeout))
 
-    def build_versioned_tests(self):
-        """ Register tests for versioned resource parameters """
-
-        ### Verify that versioned resource parameters are chosen properly ###
-
-        # We'll default to one state file, then check the version to use a different one
-        state_file_default = "@CRM_RSCTMP_DIR@/versioned_params_default.state"
-        state_file_expected = "@CRM_RSCTMP_DIR@/versioned_params_expected.state"
-
-        # Versioned attributes are passed as a single key-value pair.
-        # Here, we define the value to choose the state file;
-        # ocf:heartbeat:Dummy should always be at least version 0.9.
-        versioned_key = "#versioned_attributes"
-        versioned_attrs = """<versioned_attributes>
-          <instance_attributes id="id01" score="2">
-            <rule id="id02" score="INFINITY">
-              <expression id="id03" type="version" attribute="#ra-version" operation="gt" value="0.8"/>
-            </rule>
-            <nvpair id="id04" name="state" value="%s"/>
-          </instance_attributes>
-          <instance_attributes id="id05" score="1">
-            <nvpair id="id06" name="state" value="%s"/>
-          </instance_attributes>
-        </versioned_attributes>""" % (state_file_expected, state_file_default)
-        cmd_params = "-k '%s' -v '%s' " % (versioned_key, versioned_attrs)
-
-        test = self.new_test("versioned_params", "Verify use of versioned resource parameters")
-
-        # First, remove the possible state files, so we can reliably tell what gets created.
-        test.add_sys_cmd("rm", "-f %s %s" % (state_file_expected, state_file_default))
-
-        # Register and start the resource.
-        test.add_cmd("-c register_rsc -r test_rsc -P pacemaker -C ocf -T Dummy "
-                     "-l 'NEW_EVENT event_type:register rsc_id:test_rsc action:none rc:ok op_status:complete' "
-                     "%s" % (self.action_timeout))
-        test.add_cmd("-c exec -r test_rsc -a start -t 6000 %s" % cmd_params)
-
-        # Check the created state file.
-        test.add_expected_fail_sys_cmd("ls", state_file_default, 2)
-        test.add_sys_cmd("ls", state_file_expected)
-
-        # Stop and unregister the resource.
-        test.add_cmd("-c exec -r test_rsc -a stop -t 4000 %s" % cmd_params)
-        test.add_cmd("-c unregister_rsc -r test_rsc " + self.action_timeout +
-                     "-l \"NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
-
     def build_custom_tests(self):
         """ Register tests that target specific cases """
 
@@ -1263,7 +1216,6 @@ def main(argv):
     tests.build_generic_tests()
     tests.build_multi_rsc_tests()
     tests.build_negative_tests()
-    #tests.build_versioned_tests()
     tests.build_custom_tests()
     tests.build_stress_tests()
 

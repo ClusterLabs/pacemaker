@@ -957,7 +957,7 @@ unpack_location(xmlNode * xml_obj, pe_working_set_t * data_set)
 }
 
 static int
-get_node_score(const char *rule, const char *score, gboolean raw, node_t * node)
+get_node_score(const char *rule, const char *score, gboolean raw, node_t * node, resource_t *rsc)
 {
     int score_f = 0;
 
@@ -968,7 +968,7 @@ get_node_score(const char *rule, const char *score, gboolean raw, node_t * node)
         score_f = char2score(score);
 
     } else {
-        const char *attr_score = g_hash_table_lookup(node->details->attrs, score);
+        const char *attr_score = pe_node_attribute_calculated(node, score, rsc);
 
         if (attr_score == NULL) {
             crm_debug("Rule %s: node %s did not have a value for %s",
@@ -1060,7 +1060,7 @@ generate_location_rule(resource_t * rsc, xmlNode * rule_xml, const char *discove
         for (gIter = match_L; gIter != NULL; gIter = gIter->next) {
             node_t *node = (node_t *) gIter->data;
 
-            node->weight = get_node_score(rule_id, score, raw_score, node);
+            node->weight = get_node_score(rule_id, score, raw_score, node, rsc);
         }
     }
 
@@ -1073,7 +1073,7 @@ generate_location_rule(resource_t * rsc, xmlNode * rule_xml, const char *discove
         crm_trace("Rule %s %s on %s", ID(rule_xml), accept ? "passed" : "failed",
                   node->details->uname);
 
-        score_f = get_node_score(rule_id, score, raw_score, node);
+        score_f = get_node_score(rule_id, score, raw_score, node, rsc);
 /* 			if(accept && score_f == -INFINITY) { */
 /* 				accept = FALSE; */
 /* 			} */
@@ -1268,7 +1268,7 @@ rsc_colocation_new(const char *id, const char *node_attr, int score,
     new_con->node_attribute = node_attr;
 
     if (node_attr == NULL) {
-        node_attr = "#" XML_ATTR_UNAME;
+        node_attr = CRM_ATTR_UNAME;
     }
 
     pe_rsc_trace(rsc_lh, "%s ==> %s (%s %d)", rsc_lh->id, rsc_rh->id, node_attr, score);
@@ -2209,8 +2209,7 @@ unpack_colocation_set(xmlNode * set, int score, pe_working_set_t * data_set)
     } else {
         /* Anti-colocating with every prior resource is
          * the only way to ensure the intuitive result
-         * (ie. that no-one in the set can run with anyone
-         * else in the set)
+         * (i.e. that no one in the set can run with anyone else in the set)
          */
 
         for (xml_rsc = __xml_first_child(set); xml_rsc != NULL; xml_rsc = __xml_next_element(xml_rsc)) {
@@ -2590,10 +2589,19 @@ rsc_ticket_new(const char *id, resource_t * rsc_lh, ticket_t * ticket,
     new_rsc_ticket->role_lh = text2role(state_lh);
 
     if (safe_str_eq(loss_policy, "fence")) {
+        if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
+            new_rsc_ticket->loss_policy = loss_ticket_fence;
+        } else {
+            crm_config_err("Resetting %s loss-policy to 'stop': fencing is not configured",
+                           ticket->id);
+            loss_policy = "stop";
+        }
+    }
+
+    if (new_rsc_ticket->loss_policy == loss_ticket_fence) {
         crm_debug("On loss of ticket '%s': Fence the nodes running %s (%s)",
                   new_rsc_ticket->ticket->id, new_rsc_ticket->rsc_lh->id,
                   role2text(new_rsc_ticket->role_lh));
-        new_rsc_ticket->loss_policy = loss_ticket_fence;
 
     } else if (safe_str_eq(loss_policy, "freeze")) {
         crm_debug("On loss of ticket '%s': Freeze %s (%s)",
@@ -2648,31 +2656,27 @@ unpack_rsc_ticket_set(xmlNode * set, ticket_t * ticket, const char *loss_policy,
 {
     xmlNode *xml_rsc = NULL;
     resource_t *resource = NULL;
-    const char *set_id = ID(set);
-    const char *role = crm_element_value(set, "role");
+    const char *set_id = NULL;
+    const char *role = NULL;
 
-    if (set == NULL) {
-        crm_config_err("No resource_set object to process.");
-        return FALSE;
-    }
+    CRM_CHECK(set != NULL, return FALSE);
+    CRM_CHECK(ticket != NULL, return FALSE);
 
+    set_id = ID(set);
     if (set_id == NULL) {
         crm_config_err("resource_set must have an id");
         return FALSE;
     }
 
-    if (ticket == NULL) {
-        crm_config_err("No dependented ticket specified for '%s'", set_id);
-        return FALSE;
-    }
+    role = crm_element_value(set, "role");
 
-    for (xml_rsc = __xml_first_child(set); xml_rsc != NULL; xml_rsc = __xml_next_element(xml_rsc)) {
-        if (crm_str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, TRUE)) {
-            EXPAND_CONSTRAINT_IDREF(set_id, resource, ID(xml_rsc));
-            pe_rsc_trace(resource, "Resource '%s' depends on ticket '%s'", resource->id,
-                         ticket->id);
-            rsc_ticket_new(set_id, resource, ticket, role, loss_policy, data_set);
-        }
+    for (xml_rsc = first_named_child(set, XML_TAG_RESOURCE_REF);
+         xml_rsc != NULL; xml_rsc = crm_next_same_xml(xml_rsc)) {
+
+        EXPAND_CONSTRAINT_IDREF(set_id, resource, ID(xml_rsc));
+        pe_rsc_trace(resource, "Resource '%s' depends on ticket '%s'",
+                     resource->id, ticket->id);
+        rsc_ticket_new(set_id, resource, ticket, role, loss_policy, data_set);
     }
 
     return TRUE;

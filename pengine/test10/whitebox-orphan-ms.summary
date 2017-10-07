@@ -27,12 +27,13 @@ Containers: [ lxc1:container1 lxc2:container2 ]
  container1	(ocf::heartbeat:VirtualDomain):	 ORPHANED Started 18node1 
 
 Transition Summary:
- * Move    FencingFail	(Started 18node3 -> 18node1)
- * Stop    container2	(18node1)
- * Stop    lxc1	(18node1)
- * Demote  lxc-ms	(Master -> Stopped lxc1)
- * Stop    lxc2	(18node1)
- * Stop    container1	(18node1)
+ * Move       FencingFail     ( 18node3 -> 18node1 )  
+ * Stop    container2	(18node1)  	due to node availability
+ * Stop    lxc1	(18node1)  	due to node availability
+ * Stop       lxc-ms          (        Master lxc1 )  
+ * Stop       lxc-ms          (        Master lxc2 )  
+ * Stop    lxc2	(18node1)  	due to node availability
+ * Stop    container1	(18node1)  	due to node availability
 
 Executing cluster transition:
  * Resource action: FencingFail     stop on 18node3

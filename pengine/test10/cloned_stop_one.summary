@@ -12,8 +12,8 @@ Online: [ c7auto1 c7auto2 c7auto4 ]
      Stopped: [ c7auto1 c7auto2 ]
 
 Transition Summary:
- * Stop    FAKECLONE:2	(c7auto3)
- * Stop    FAKECLONE2:0	(c7auto3)
+ * Stop    FAKECLONE:2	(c7auto3)  	due to node availability
+ * Stop    FAKECLONE2:0	(c7auto3)  	due to node availability
 
 Executing cluster transition:
  * Pseudo action:   FAKECLONE2-clone_stop_0

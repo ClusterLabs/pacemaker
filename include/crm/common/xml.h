@@ -55,6 +55,9 @@ gboolean add_message_xml(xmlNode * msg, const char *field, xmlNode * xml);
 xmlNode *get_message_xml(xmlNode * msg, const char *field);
 GHashTable *xml2list(xmlNode * parent);
 
+xmlNode *crm_create_nvpair_xml(xmlNode *parent, const char *id,
+                               const char *name, const char *value);
+
 void hash2nvpair(gpointer key, gpointer value, gpointer user_data);
 void hash2field(gpointer key, gpointer value, gpointer user_data);
 void hash2metafield(gpointer key, gpointer value, gpointer user_data);
@@ -242,7 +245,7 @@ gboolean validate_xml(xmlNode * xml_blob, const char *validation, gboolean to_lo
 gboolean validate_xml_verbose(xmlNode * xml_blob);
 
 /*!
- * \brief Try update CIB XML to the highest pacemaker's standard if feasible
+ * \brief Update CIB XML to most recent schema version
  *
  * "Update" means either actively employ XSLT-based transformation(s)
  * (if intermediate product to transform valid per its declared schema version,
@@ -348,6 +351,7 @@ __xml_next_element(xmlNode * child)
 void free_xml(xmlNode * child);
 
 xmlNode *first_named_child(xmlNode * parent, const char *name);
+xmlNode *crm_next_same_xml(xmlNode *sibling);
 
 xmlNode *sorted_xml(xmlNode * input, xmlNode * parent, gboolean recursive);
 xmlXPathObjectPtr xpath_search(xmlNode * xml_top, const char *path);
@@ -394,5 +398,10 @@ char * crm_xml_escape(const char *text);
 void crm_xml_sanitize_id(char *id);
 void crm_xml_set_id(xmlNode *xml, const char *format, ...)
     __attribute__ ((__format__ (__printf__, 2, 3)));
+
+/*!
+ * \brief xmlNode destructor which can be used in glib collections
+ */
+void crm_destroy_xml(gpointer data);
 
 #endif

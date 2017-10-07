@@ -172,8 +172,7 @@ resources_action_create(const char *name, const char *standard, const char *prov
         goto return_error;
     }
 
-    if (!strcasecmp(standard, PCMK_RESOURCE_CLASS_OCF)
-        && crm_strlen_zero(provider)) {
+    if (crm_provider_required(standard) && crm_strlen_zero(provider)) {
         crm_err("Cannot create OCF operation for %s without provider", name);
         goto return_error;
     }
@@ -212,7 +211,7 @@ resources_action_create(const char *name, const char *standard, const char *prov
     }
     op->action = strdup(action);
 
-    if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_OCF) == 0) {
+    if (crm_provider_required(op->standard)) {
         op->provider = strdup(provider);
         op->params = params;
         params = NULL;
@@ -256,19 +255,21 @@ resources_action_create(const char *name, const char *standard, const char *prov
         /* The "heartbeat" agent class only has positional arguments,
          * which we keyed by their decimal position number. */
         param_num = 1;
-        for (index = 1; index <= MAX_ARGC - 3; index++ ) {
-            snprintf(buf_tmp, sizeof(buf_tmp), "%d", index);
-            value_tmp = g_hash_table_lookup(params, buf_tmp);
-            if (value_tmp == NULL) {
-                /* maybe: strdup("") ??
-                 * But the old lrmd did simply continue as well. */
-                continue;
+        if (params) {
+            for (index = 1; index <= MAX_ARGC - 3; index++ ) {
+                snprintf(buf_tmp, sizeof(buf_tmp), "%d", index);
+                value_tmp = g_hash_table_lookup(params, buf_tmp);
+                if (value_tmp == NULL) {
+                    /* maybe: strdup("") ??
+                     * But the old lrmd did simply continue as well. */
+                    continue;
+                }
+                op->opaque->args[param_num++] = strdup(value_tmp);
             }
-            op->opaque->args[param_num++] = strdup(value_tmp);
         }
 
         /* Add operation code as the last argument, */
-        /* and the teminating NULL pointer */
+        /* and the terminating NULL pointer */
         op->opaque->args[param_num++] = strdup(op->action);
         op->opaque->args[param_num] = NULL;
 #endif
@@ -373,6 +374,114 @@ services_action_create_generic(const char *exec, const char *args[])
     }
 
     return op;
+}
+
+/*!
+ * \brief Create an alert agent action
+ *
+ * \param[in] id        Alert ID
+ * \param[in] exec      Path to alert agent executable
+ * \param[in] timeout   Action timeout
+ * \param[in] params    Parameters to use with action
+ * \param[in] sequence  Action sequence number
+ * \param[in] cb_data   Data to pass to callback function
+ *
+ * \return New action on success, NULL on error
+ * \note It is the caller's responsibility to free cb_data.
+ *       The caller should not free params explicitly.
+ */
+svc_action_t *
+services_alert_create(const char *id, const char *exec, int timeout,
+                      GHashTable *params, int sequence, void *cb_data)
+{
+    svc_action_t *action = services_action_create_generic(exec, NULL);
+
+    CRM_ASSERT(action);
+    action->timeout = timeout;
+    action->id = strdup(id);
+    action->params = params;
+    action->sequence = sequence;
+    action->cb_data = cb_data;
+    return action;
+}
+
+/*!
+ * \brief Set the user and group that an action will execute as
+ *
+ * \param[in,out] action  Action to modify
+ * \param[in]     user    Name of user to execute action as
+ * \param[in]     group   Name of group to execute action as
+ *
+ * \return pcmk_ok on success, -errno otherwise
+ *
+ * \note This will have no effect unless the process executing the action runs
+ *       as root, and the action is not a systemd or upstart action.
+ *       We could implement this for systemd by adding User= and Group= to
+ *       [Service] in the override file, but that seems more likely to cause
+ *       problems than be useful.
+ */
+int
+services_action_user(svc_action_t *op, const char *user)
+{
+    CRM_CHECK((op != NULL) && (user != NULL), return -EINVAL);
+    return crm_user_lookup(user, &(op->opaque->uid), &(op->opaque->gid));
+}
+
+static void
+set_alert_env(gpointer key, gpointer value, gpointer user_data)
+{
+    int rc;
+
+    if (value) {
+        rc = setenv(key, value, 1);
+    } else {
+        rc = unsetenv(key);
+    }
+
+    if (rc < 0) {
+        crm_perror(LOG_ERR, "setenv %s=%s",
+                  (char*)key, (value? (char*)value : ""));
+    } else {
+        crm_trace("setenv %s=%s", (char*)key, (value? (char*)value : ""));
+    }
+}
+
+static void
+unset_alert_env(gpointer key, gpointer value, gpointer user_data)
+{
+    if (unsetenv(key) < 0) {
+        crm_perror(LOG_ERR, "unset %s", (char*)key);
+    } else {
+        crm_trace("unset %s", (char*)key);
+    }
+}
+
+/*!
+ * \brief Execute an alert agent action
+ *
+ * \param[in] action  Action to execute
+ * \param[in] cb      Function to call when action completes
+ *
+ * \return TRUE if the library will free action, FALSE otherwise
+ *
+ * \note If this function returns FALSE, it is the caller's responsibility to
+ *       free the action with services_action_free().
+ */
+gboolean
+services_alert_async(svc_action_t *action, void (*cb)(svc_action_t *op))
+{
+    gboolean responsible;
+
+    action->synchronous = false;
+    action->opaque->callback = cb;
+    if (action->params) {
+        g_hash_table_foreach(action->params, set_alert_env, NULL);
+    }
+    responsible = services_os_action_execute(action);
+    if (action->params) {
+        g_hash_table_foreach(action->params, unset_alert_env, NULL);
+    }
+    return responsible;
 }
 
 #if SUPPORT_DBUS
@@ -789,6 +898,391 @@ handle_blocked_ops(void)
     processing_blocked_ops = FALSE;
 }
 
+#define lsb_metadata_template  \
+    "<?xml version='1.0'?>\n"                                           \
+    "<!DOCTYPE resource-agent SYSTEM 'ra-api-1.dtd'>\n"                 \
+    "<resource-agent name='%s' version='" PCMK_DEFAULT_AGENT_VERSION "'>\n" \
+    "  <version>1.0</version>\n"                                        \
+    "  <longdesc lang='en'>\n"                                          \
+    "    %s\n"                                                          \
+    "  </longdesc>\n"                                                   \
+    "  <shortdesc lang='en'>%s</shortdesc>\n"                           \
+    "  <parameters>\n"                                                  \
+    "  </parameters>\n"                                                 \
+    "  <actions>\n"                                                     \
+    "    <action name='meta-data'    timeout='5' />\n"                  \
+    "    <action name='start'        timeout='15' />\n"                 \
+    "    <action name='stop'         timeout='15' />\n"                 \
+    "    <action name='status'       timeout='15' />\n"                 \
+    "    <action name='restart'      timeout='15' />\n"                 \
+    "    <action name='force-reload' timeout='15' />\n"                 \
+    "    <action name='monitor'      timeout='15' interval='15' />\n"   \
+    "  </actions>\n"                                                    \
+    "  <special tag='LSB'>\n"                                           \
+    "    <Provides>%s</Provides>\n"                                     \
+    "    <Required-Start>%s</Required-Start>\n"                         \
+    "    <Required-Stop>%s</Required-Stop>\n"                           \
+    "    <Should-Start>%s</Should-Start>\n"                             \
+    "    <Should-Stop>%s</Should-Stop>\n"                               \
+    "    <Default-Start>%s</Default-Start>\n"                           \
+    "    <Default-Stop>%s</Default-Stop>\n"                             \
+    "  </special>\n"                                                    \
+    "</resource-agent>\n"
+
+#define LSB_INITSCRIPT_INFOBEGIN_TAG "### BEGIN INIT INFO"
+#define LSB_INITSCRIPT_INFOEND_TAG "### END INIT INFO"
+#define PROVIDES    "# Provides:"
+#define REQ_START   "# Required-Start:"
+#define REQ_STOP    "# Required-Stop:"
+#define SHLD_START  "# Should-Start:"
+#define SHLD_STOP   "# Should-Stop:"
+#define DFLT_START  "# Default-Start:"
+#define DFLT_STOP   "# Default-Stop:"
+#define SHORT_DSCR  "# Short-Description:"
+#define DESCRIPTION "# Description:"
+
+#define lsb_meta_helper_free_value(m)           \
+    do {                                        \
+        if ((m) != NULL) {                      \
+            xmlFree(m);                         \
+            (m) = NULL;                         \
+        }                                       \
+    } while(0)
+
+/*!
+ * \internal
+ * \brief Grab an LSB header value
+ *
+ * \param[in]     line    Line read from LSB init script
+ * \param[in,out] value   If not set, will be set to XML-safe copy of value
+ * \param[in]     prefix  Set value if line starts with this pattern
+ *
+ * \return TRUE if value was set, FALSE otherwise
+ */
+static inline gboolean
+lsb_meta_helper_get_value(const char *line, char **value, const char *prefix)
+{
+    if (!*value && !strncasecmp(line, prefix, strlen(prefix))) {
+        *value = (char *)xmlEncodeEntitiesReentrant(NULL, BAD_CAST line+strlen(prefix));
+        return TRUE;
+    }
+    return FALSE;
+}
+
+#define DESC_MAX 2048
+
+static int
+lsb_get_metadata(const char *type, char **output)
+{
+    char ra_pathname[PATH_MAX] = { 0, };
+    FILE *fp;
+    char buffer[1024];
+    char *provides = NULL;
+    char *req_start = NULL;
+    char *req_stop = NULL;
+    char *shld_start = NULL;
+    char *shld_stop = NULL;
+    char *dflt_start = NULL;
+    char *dflt_stop = NULL;
+    char *s_dscrpt = NULL;
+    char *xml_l_dscrpt = NULL;
+    int offset = 0;
+    char description[DESC_MAX];
+
+    if (type[0] == '/') {
+        snprintf(ra_pathname, sizeof(ra_pathname), "%s", type);
+    } else {
+        snprintf(ra_pathname, sizeof(ra_pathname), "%s/%s",
+                 LSB_ROOT_DIR, type);
+    }
+
+    crm_trace("Looking into %s", ra_pathname);
+    fp = fopen(ra_pathname, "r");
+    if (fp == NULL) {
+        return -errno;
+    }
+
+    /* Enter into the LSB-compliant comment block */
+    while (fgets(buffer, sizeof(buffer), fp)) {
+
+        /* Assume each of the following eight arguments contain one line */
+        if (lsb_meta_helper_get_value(buffer, &provides, PROVIDES)) {
+            continue;
+        }
+        if (lsb_meta_helper_get_value(buffer, &req_start, REQ_START)) {
+            continue;
+        }
+        if (lsb_meta_helper_get_value(buffer, &req_stop, REQ_STOP)) {
+            continue;
+        }
+        if (lsb_meta_helper_get_value(buffer, &shld_start, SHLD_START)) {
+            continue;
+        }
+        if (lsb_meta_helper_get_value(buffer, &shld_stop, SHLD_STOP)) {
+            continue;
+        }
+        if (lsb_meta_helper_get_value(buffer, &dflt_start, DFLT_START)) {
+            continue;
+        }
+        if (lsb_meta_helper_get_value(buffer, &dflt_stop, DFLT_STOP)) {
+            continue;
+        }
+        if (lsb_meta_helper_get_value(buffer, &s_dscrpt, SHORT_DSCR)) {
+            continue;
+        }
+
+        /* Long description may cross multiple lines */
+        if ((offset == 0)
+            && !strncasecmp(buffer, DESCRIPTION, strlen(DESCRIPTION))) {
+            /* Between # and keyword, more than one space, or a tab
+             * character, indicates the continuation line.
+             *
+             * Extracted from LSB init script standard
+             */
+            while (fgets(buffer, sizeof(buffer), fp)) {
+                if (!strncmp(buffer, "#  ", 3) || !strncmp(buffer, "#\t", 2)) {
+                    buffer[0] = ' ';
+                    offset += snprintf(description + offset, DESC_MAX - offset,
+                                       "%s", buffer);
+                } else {
+                    fputs(buffer, fp);
+                    break;      /* Long description ends */
+                }
+            }
+            continue;
+        }
+
+        if ((xml_l_dscrpt == NULL) && (offset > 0)) {
+            xml_l_dscrpt = (char *)xmlEncodeEntitiesReentrant(NULL, BAD_CAST(description));
+        }
+
+        if (!strncasecmp(buffer, LSB_INITSCRIPT_INFOEND_TAG,
+                         strlen(LSB_INITSCRIPT_INFOEND_TAG))) {
+            /* Get to the out border of LSB comment block */
+            break;
+        }
+        if (buffer[0] != '#') {
+            break;              /* Out of comment block in the beginning */
+        }
+    }
+    fclose(fp);
+
+    *output = crm_strdup_printf(lsb_metadata_template, type,
+                                (xml_l_dscrpt? xml_l_dscrpt : type),
+                                (s_dscrpt? s_dscrpt : type),
+                                (provides? provides : ""),
+                                (req_start? req_start : ""),
+                                (req_stop? req_stop : ""),
+                                (shld_start? shld_start : ""),
+                                (shld_stop? shld_stop : ""),
+                                (dflt_start? dflt_start : ""),
+                                (dflt_stop? dflt_stop : ""));
+
+    lsb_meta_helper_free_value(xml_l_dscrpt);
+    lsb_meta_helper_free_value(s_dscrpt);
+    lsb_meta_helper_free_value(provides);
+    lsb_meta_helper_free_value(req_start);
+    lsb_meta_helper_free_value(req_stop);
+    lsb_meta_helper_free_value(shld_start);
+    lsb_meta_helper_free_value(shld_stop);
+    lsb_meta_helper_free_value(dflt_start);
+    lsb_meta_helper_free_value(dflt_stop);
+
+    crm_trace("Created fake metadata: %llu",
+              (unsigned long long) strlen(*output));
+    return pcmk_ok;
+}
+
+#if SUPPORT_NAGIOS
+static int
+nagios_get_metadata(const char *type, char **output)
+{
+    int rc = pcmk_ok;
+    FILE *file_strm = NULL;
+    int start = 0, length = 0, read_len = 0;
+    char *metadata_file = NULL;
+    int len = 36;
+
+    len += strlen(NAGIOS_METADATA_DIR);
+    len += strlen(type);
+    metadata_file = calloc(1, len);
+    CRM_CHECK(metadata_file != NULL, return -ENOMEM);
+
+    sprintf(metadata_file, "%s/%s.xml", NAGIOS_METADATA_DIR, type);
+    file_strm = fopen(metadata_file, "r");
+    if (file_strm == NULL) {
+        crm_err("Metadata file %s does not exist", metadata_file);
+        free(metadata_file);
+        return -EIO;
+    }
+
+    /* see how big the file is */
+    start = ftell(file_strm);
+    fseek(file_strm, 0L, SEEK_END);
+    length = ftell(file_strm);
+    fseek(file_strm, 0L, start);
+
+    CRM_ASSERT(length >= 0);
+    CRM_ASSERT(start == ftell(file_strm));
+
+    if (length <= 0) {
+        crm_info("%s was not valid", metadata_file);
+        free(*output);
+        *output = NULL;
+        rc = -EIO;
+
+    } else {
+        crm_trace("Reading %d bytes from file", length);
+        *output = calloc(1, (length + 1));
+        read_len = fread(*output, 1, length, file_strm);
+        if (read_len != length) {
+            crm_err("Calculated and read bytes differ: %d vs. %d",
+                    length, read_len);
+            free(*output);
+            *output = NULL;
+            rc = -EIO;
+        }
+    }
+
+    fclose(file_strm);
+    free(metadata_file);
+    return rc;
+}
+#endif
+
+#if SUPPORT_HEARTBEAT
+/* strictly speaking, support for class=heartbeat style scripts
+ * does not require "heartbeat support" to be enabled.
+ * But since those scripts are part of the "heartbeat" package usually,
+ * and are very unlikely to be present in any other deployment,
+ * I leave it inside this ifdef.
+ *
+ * Yes, I know, these are legacy and should die,
+ * or at least be rewritten to be a proper OCF style agent.
+ * But they exist, and custom scripts following these rules do, too.
+ *
+ * Taken from the old "glue" lrmd, see
+ * http://hg.linux-ha.org/glue/file/0a7add1d9996/lib/plugins/lrm/raexechb.c#l49
+ * http://hg.linux-ha.org/glue/file/0a7add1d9996/lib/plugins/lrm/raexechb.c#l393
+ */
+
+static const char hb_metadata_template[] =
+    "<?xml version='1.0'?>\n"
+    "<!DOCTYPE resource-agent SYSTEM 'ra-api-1.dtd'>\n"
+    "<resource-agent name='%s' version='" PCMK_DEFAULT_AGENT_VERSION "'>\n"
+    "<version>1.0</version>\n"
+    "<longdesc lang='en'>\n"
+    "%s"
+    "</longdesc>\n"
+    "<shortdesc lang='en'>%s</shortdesc>\n"
+    "<parameters>\n"
+    "<parameter name='1' unique='1' required='0'>\n"
+    "<longdesc lang='en'>\n"
+    "This argument will be passed as the first argument to the "
+    "heartbeat resource agent (assuming it supports one)\n"
+    "</longdesc>\n"
+    "<shortdesc lang='en'>argv[1]</shortdesc>\n"
+    "<content type='string' default=' ' />\n"
+    "</parameter>\n"
+    "<parameter name='2' unique='1' required='0'>\n"
+    "<longdesc lang='en'>\n"
+    "This argument will be passed as the second argument to the "
+    "heartbeat resource agent (assuming it supports one)\n"
+    "</longdesc>\n"
+    "<shortdesc lang='en'>argv[2]</shortdesc>\n"
+    "<content type='string' default=' ' />\n"
+    "</parameter>\n"
+    "<parameter name='3' unique='1' required='0'>\n"
+    "<longdesc lang='en'>\n"
+    "This argument will be passed as the third argument to the "
+    "heartbeat resource agent (assuming it supports one)\n"
+    "</longdesc>\n"
+    "<shortdesc lang='en'>argv[3]</shortdesc>\n"
+    "<content type='string' default=' ' />\n"
+    "</parameter>\n"
+    "<parameter name='4' unique='1' required='0'>\n"
+    "<longdesc lang='en'>\n"
+    "This argument will be passed as the fourth argument to the "
+    "heartbeat resource agent (assuming it supports one)\n"
+    "</longdesc>\n"
+    "<shortdesc lang='en'>argv[4]</shortdesc>\n"
+    "<content type='string' default=' ' />\n"
+    "</parameter>\n"
+    "<parameter name='5' unique='1' required='0'>\n"
+    "<longdesc lang='en'>\n"
+    "This argument will be passed as the fifth argument to the "
+    "heartbeat resource agent (assuming it supports one)\n"
+    "</longdesc>\n"
+    "<shortdesc lang='en'>argv[5]</shortdesc>\n"
+    "<content type='string' default=' ' />\n"
+    "</parameter>\n"
+    "</parameters>\n"
+    "<actions>\n"
+    "<action name='start'   timeout='15' />\n"
+    "<action name='stop'    timeout='15' />\n"
+    "<action name='status'  timeout='15' />\n"
+    "<action name='monitor' timeout='15' interval='15' start-delay='15' />\n"
+    "<action name='meta-data'  timeout='5' />\n"
+    "</actions>\n"
+    "<special tag='heartbeat'>\n"
+    "</special>\n"
+    "</resource-agent>\n";
+
+static int
+heartbeat_get_metadata(const char *type, char **output)
+{
+    *output = crm_strdup_printf(hb_metadata_template, type, type, type);
+    crm_trace("Created fake metadata: %llu",
+              (unsigned long long) strlen(*output));
+    return pcmk_ok;
+}
+#endif
+
+static gboolean
+action_get_metadata(svc_action_t *op)
+{
+    const char *class = op->standard;
+
+    if (op->agent == NULL) {
+        crm_err("meta-data requested without specifying agent");
+        return FALSE;
+    }
+
+    if (class == NULL) {
+        crm_err("meta-data requested for agent %s without specifying class",
+                op->agent);
+        return FALSE;
+    }
+
+    if (!strcmp(class, PCMK_RESOURCE_CLASS_SERVICE)) {
+        class = resources_find_service_class(op->agent);
+    }
+
+    if (class == NULL) {
+        crm_err("meta-data requested for %s, but could not determine class",
+                op->agent);
+        return FALSE;
+    }
+
+    if (safe_str_eq(class, PCMK_RESOURCE_CLASS_LSB)) {
+        return (lsb_get_metadata(op->agent, &op->stdout_data) >= 0);
+    }
+
+#if SUPPORT_NAGIOS
+    if (safe_str_eq(class, PCMK_RESOURCE_CLASS_NAGIOS)) {
+        return (nagios_get_metadata(op->agent, &op->stdout_data) >= 0);
+    }
+#endif
+
+#if SUPPORT_HEARTBEAT
+    if (safe_str_eq(class, PCMK_RESOURCE_CLASS_HB)) {
+        return (heartbeat_get_metadata(op->agent, &op->stdout_data) >= 0);
+    }
+#endif
+
+    return action_exec_helper(op);
+}
+
 gboolean
 services_action_sync(svc_action_t * op)
 {
@@ -800,8 +1294,21 @@ services_action_sync(svc_action_t * op)
     }
 
     op->synchronous = true;
-    rc = action_exec_helper(op);
-    crm_trace(" > %s_%s_%d: %s = %d", op->rsc, op->action, op->interval, op->opaque->exec, op->rc);
+
+    if (safe_str_eq(op->action, "meta-data")) {
+        /* Synchronous meta-data operations are handled specially. Since most
+         * resource classes don't provide any meta-data, it has to be
+         * synthesized from available information about the agent.
+         *
+         * services_action_async() doesn't treat meta-data actions specially, so
+         * it will result in an error for classes that don't support the action.
+         */
+        rc = action_get_metadata(op);
+    } else {
+        rc = action_exec_helper(op);
+    }
+    crm_trace(" > %s_%s_%d: %s = %d",
+              op->rsc, op->action, op->interval, op->opaque->exec, op->rc);
     if (op->stdout_data) {
         crm_trace(" >  stdout: %s", op->stdout_data);
     }
@@ -878,7 +1385,7 @@ resources_list_standards(void)
 GList *
 resources_list_providers(const char *standard)
 {
-    if (strcasecmp(standard, PCMK_RESOURCE_CLASS_OCF) == 0) {
+    if (crm_provider_required(standard)) {
         return resources_os_list_ocf_providers();
     }
 

@@ -17,18 +17,17 @@ Online: [ node2 ]
      Started: [ node2 ]
 
 Transition Summary:
- * Fence node1
- * Stop    stonithclone:1	(node1)
- * Stop    evmsclone:1	(node1)
- * Stop    imagestoreclone:1	(node1)
- * Stop    configstoreclone:1	(node1)
+ * Fence (reboot) node1 'peer is no longer part of the cluster'
+ * Stop    stonithclone:1	(node1)  	due to node availability
+ * Stop    evmsclone:1	(node1)  	due to node availability
+ * Stop    imagestoreclone:1	(node1)  	due to node availability
+ * Stop    configstoreclone:1	(node1)  	due to node availability
 
 Executing cluster transition:
  * Pseudo action:   evmscloneset_pre_notify_stop_0
  * Pseudo action:   imagestorecloneset_pre_notify_stop_0
  * Pseudo action:   configstorecloneset_pre_notify_stop_0
  * Fencing node1 (reboot)
- * Pseudo action:   stonith_complete
  * Pseudo action:   stonithcloneset_stop_0
  * Resource action: evmsclone:1     notify on node2
  * Pseudo action:   evmsclone:0_post_notify_stop_0
@@ -41,6 +40,7 @@ Executing cluster transition:
  * Pseudo action:   configstoreclone:0_post_notify_stop_0
  * Pseudo action:   configstorecloneset_confirmed-pre_notify_stop_0
  * Pseudo action:   configstorecloneset_stop_0
+ * Pseudo action:   stonith_complete
  * Pseudo action:   stonithclone:0_stop_0
  * Pseudo action:   stonithcloneset_stopped_0
  * Pseudo action:   imagestoreclone:0_stop_0

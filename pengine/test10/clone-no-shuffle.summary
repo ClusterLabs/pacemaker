@@ -10,7 +10,7 @@ Online: [ dktest1sles10 dktest2sles10 ]
 
 Transition Summary:
  * Start   stonith-1	(dktest1sles10)
- * Demote  drbd1:0	(Master -> Stopped dktest2sles10)
+ * Stop       drbd1:0       ( Master dktest2sles10 )   due to node availability
  * Start   drbd1:1	(dktest1sles10)
  * Stop    testip	(dktest2sles10)
 

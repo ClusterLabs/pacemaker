@@ -14,13 +14,16 @@ Containers: [ lxc2:container2 ]
  D	(ocf::pacemaker:Dummy):	Started 18node1
 
 Transition Summary:
- * Fence lxc1 (resource: container1)
- * Recover container1	(Started 18node2)
- * Recover M:4	(Started lxc1)
- * Recover B	(Started lxc1)
- * Restart lxc1	(Started 18node2)
+ * Fence (reboot) lxc1 (resource: container1) 'guest is unclean'
+ * Recover    container1     ( 18node2 )  
+ * Recover    M:4            (    lxc1 )  
+ * Recover    B              (    lxc1 )  
+ * Restart    lxc1           ( 18node2 )   due to required container1 start
 
 Executing cluster transition:
+ * Resource action: A               monitor on lxc2
+ * Resource action: B               monitor on lxc2
+ * Resource action: D               monitor on lxc2
  * Resource action: lxc1            stop on 18node2
  * Resource action: container1      stop on 18node2
  * Pseudo action:   stonith-lxc1-reboot on lxc1

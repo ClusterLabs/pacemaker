@@ -11,17 +11,18 @@ Containers: [ lxc1:container1 lxc2:container2 ]
  A	(ocf::pacemaker:Dummy):	Started lxc1
 
 Transition Summary:
- * Move    container1	(Started 18node1 -> 18node2)
- * Restart M:3	(Started lxc1)
- * Restart A	(Started lxc1)
- * Move    lxc1	(Started 18node1 -> 18node2)
+ * Move       container1     ( 18node1 -> 18node2 )  
+ * Restart    M:3            (               lxc1 )   due to required container1 start
+ * Restart    A              (               lxc1 )   due to required container1 start
+ * Move       lxc1           ( 18node1 -> 18node2 )  
 
 Executing cluster transition:
  * Pseudo action:   M-clone_stop_0
- * Resource action: A               stop on lxc1
+ * Resource action: A               monitor on lxc2
  * Resource action: M               stop on lxc1
  * Pseudo action:   M-clone_stopped_0
  * Pseudo action:   M-clone_start_0
+ * Resource action: A               stop on lxc1
  * Resource action: lxc1            stop on 18node1
  * Resource action: container1      stop on 18node1
  * Pseudo action:   all_stopped

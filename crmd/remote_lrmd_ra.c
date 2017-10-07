@@ -377,8 +377,7 @@ report_remote_ra_result(remote_ra_cmd_t * cmd)
     if (cmd->params) {
         lrmd_key_value_t *tmp;
 
-        op.params = g_hash_table_new_full(crm_str_hash,
-                                          g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+        op.params = crm_str_table_new();
         for (tmp = cmd->params; tmp; tmp = tmp->next) {
             g_hash_table_insert(op.params, strdup(tmp->key), strdup(tmp->value));
         }
@@ -604,7 +603,7 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
             cmd->rc = PCMK_OCF_UNKNOWN_ERROR;
 
         } else {
-            lrm_state_reset_tables(lrm_state);
+            lrm_state_reset_tables(lrm_state, TRUE);
             cmd->rc = PCMK_OCF_OK;
             cmd->op_status = PCMK_LRM_OP_DONE;
             ra_data->active = TRUE;
@@ -680,8 +679,9 @@ handle_remote_ra_stop(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd)
         /* delete pending ops when ever the remote connection is intentionally stopped */
         g_hash_table_remove_all(lrm_state->pending_ops);
     } else {
-        /* we no longer hold the history if this connection has been migrated */
-        lrm_state_reset_tables(lrm_state);
+        /* we no longer hold the history if this connection has been migrated,
+         * however, we keep metadata cache for future use */
+        lrm_state_reset_tables(lrm_state, FALSE);
     }
 
     ra_data->active = FALSE;

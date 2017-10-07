@@ -31,18 +31,18 @@ Online: [ ibm1 va1 ]
 
 Transition Summary:
  * Shutdown ibm1
- * Start   DcIPaddr	(va1 - blocked)
- * Start   ocf_127.0.0.11	(va1 - blocked)
- * Start   heartbeat_127.0.0.12	(va1 - blocked)
- * Start   ocf_127.0.0.13	(va1 - blocked)
- * Start   lsb_dummy	(va1 - blocked)
- * Start   rsc_sgi2	(va1 - blocked)
- * Start   rsc_ibm1	(va1 - blocked)
- * Start   rsc_va1	(va1 - blocked)
- * Start   rsc_test02	(va1 - blocked)
- * Stop    child_DoFencing:1	(ibm1)
- * Start   ocf_msdummy:0	(va1 - blocked)
- * Start   ocf_msdummy:1	(va1 - blocked)
+ * Start      DcIPaddr                 (   va1 )   due to no quorum (blocked)
+ * Start      ocf_127.0.0.11           (   va1 )   due to no quorum (blocked)
+ * Start      heartbeat_127.0.0.12     (   va1 )   due to no quorum (blocked)
+ * Start      ocf_127.0.0.13           (   va1 )   due to no quorum (blocked)
+ * Start      lsb_dummy                (   va1 )   due to no quorum (blocked)
+ * Start      rsc_sgi2                 (   va1 )   due to no quorum (blocked)
+ * Start      rsc_ibm1                 (   va1 )   due to no quorum (blocked)
+ * Start      rsc_va1                  (   va1 )   due to no quorum (blocked)
+ * Start      rsc_test02               (   va1 )   due to no quorum (blocked)
+ * Stop    child_DoFencing:1	(ibm1)  	due to node availability
+ * Promote    ocf_msdummy:0            ( Stopped -> Master va1 )   due to node availability (blocked)
+ * Start      ocf_msdummy:1            (   va1 )   due to no quorum (blocked)
 
 Executing cluster transition:
  * Resource action: child_DoFencing:1 monitor on va1

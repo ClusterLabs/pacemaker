@@ -9,7 +9,7 @@ OFFLINE: [ fc16-builder2 ]
  C	(ocf::pacemaker:Dummy):	Started fc16-builder
 
 Transition Summary:
- * Stop    B	(fc16-builder)
+ * Stop    B	(fc16-builder)  	due to node availability
 
 Executing cluster transition:
  * Resource action: B               stop on fc16-builder

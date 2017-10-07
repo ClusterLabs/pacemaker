@@ -61,7 +61,7 @@ container_color: galera-bundle-master allocation score on metal-1: 0
 container_color: galera-bundle-master allocation score on metal-2: 0
 container_color: galera-bundle-master allocation score on metal-3: 0
 container_color: galera-bundle-master allocation score on rabbitmq-bundle-0: 0
-container_color: galera:0 allocation score on galera-bundle-0: -INFINITY
+container_color: galera:0 allocation score on galera-bundle-0: 500
 container_color: galera:0 allocation score on metal-1: 0
 container_color: galera:0 allocation score on metal-2: 0
 container_color: galera:0 allocation score on metal-3: 0
@@ -115,7 +115,7 @@ container_color: redis:0 allocation score on metal-1: 0
 container_color: redis:0 allocation score on metal-2: 0
 container_color: redis:0 allocation score on metal-3: 0
 container_color: redis:0 allocation score on rabbitmq-bundle-0: 0
-container_color: redis:0 allocation score on redis-bundle-0: -INFINITY
+container_color: redis:0 allocation score on redis-bundle-0: 500
 galera:0 promotion score on galera-bundle-0: -1
 native_color: galera-bundle-0 allocation score on galera-bundle-0: -INFINITY
 native_color: galera-bundle-0 allocation score on metal-1: 10000

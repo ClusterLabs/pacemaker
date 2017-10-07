@@ -15,13 +15,13 @@ Online: [ xen-b ]
  Email_Alerting	(ocf::heartbeat:MailTo):	Started xen-b
 
 Transition Summary:
- * Restart xen-a-fencing	(Started xen-b)
+ * Restart    xen-a-fencing     (          xen-b )  
  * Stop    xen-b-fencing	(xen-a)
- * Migrate db	(Started xen-a -> xen-b)
- * Migrate core-101	(Started xen-a -> xen-b)
- * Migrate core-200	(Started xen-a -> xen-b)
- * Migrate edge	(Started xen-a -> xen-b)
- * Migrate base	(Started xen-a -> xen-b)
+ * Migrate    db                ( xen-a -> xen-b )  
+ * Migrate    core-101          ( xen-a -> xen-b )  
+ * Migrate    core-200          ( xen-a -> xen-b )  
+ * Migrate    edge              ( xen-a -> xen-b )  
+ * Migrate    base              ( xen-a -> xen-b )  
 
 Executing cluster transition:
  * Resource action: xen-a-fencing   stop on xen-b

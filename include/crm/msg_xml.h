@@ -84,6 +84,7 @@
 #  define XML_ATTR_CRM_VERSION		"crm_feature_set"
 #  define XML_ATTR_DIGEST		"digest"
 #  define XML_ATTR_VALIDATION		"validate-with"
+#  define XML_ATTR_RA_VERSION		"ra-version"
 
 #  define XML_ATTR_QUORUM_PANIC		"no-quorum-panic"
 #  define XML_ATTR_HAVE_QUORUM		"have-quorum"
@@ -166,6 +167,12 @@
 #  define XML_CIB_TAG_ALERTS    	"alerts"
 #  define XML_CIB_TAG_ALERT   		"alert"
 #  define XML_CIB_TAG_ALERT_RECIPIENT	"recipient"
+#  define XML_CIB_TAG_ALERT_SELECT      "select"
+#  define XML_CIB_TAG_ALERT_ATTRIBUTES  "select_attributes"
+#  define XML_CIB_TAG_ALERT_FENCING     "select_fencing"
+#  define XML_CIB_TAG_ALERT_NODES       "select_nodes"
+#  define XML_CIB_TAG_ALERT_RESOURCES   "select_resources"
+#  define XML_CIB_TAG_ALERT_ATTR        "attribute"
 
 #  define XML_CIB_TAG_STATE         	"node_state"
 #  define XML_CIB_TAG_NODE          	"node"
@@ -177,9 +184,9 @@
 #  define XML_TAG_ATTR_SETS	   	"instance_attributes"
 #  define XML_TAG_META_SETS	   	"meta_attributes"
 #  define XML_TAG_ATTRS			"attributes"
-#ifdef ENABLE_VERSIONED_ATTRS
-#  define XML_TAG_VER_ATTRS		"versioned_attributes"
-#endif
+#  define XML_TAG_RSC_VER_ATTRS	"rsc_versioned_attrs"
+#  define XML_TAG_OP_VER_ATTRS         "op_versioned_attrs"
+#  define XML_TAG_OP_VER_META          "op_versioned_meta"
 #  define XML_TAG_PARAMS		"parameters"
 #  define XML_TAG_PARAM			"param"
 #  define XML_TAG_UTILIZATION		"utilization"
@@ -193,6 +200,7 @@
 
 #  define XML_CIB_TAG_RSC_TEMPLATE	"template"
 
+#  define XML_RSC_ATTR_TARGET           "container-attribute-target"
 #  define XML_RSC_ATTR_ISOLATION_INSTANCE	"isolation-instance"
 #  define XML_RSC_ATTR_ISOLATION_WRAPPER    "isolation-wrapper"
 #  define XML_RSC_ATTR_ISOLATION_HOST   "isolation-host"
@@ -233,6 +241,8 @@
 #  define XML_OP_ATTR_DEPENDENT "dependent-on"
 #  define XML_OP_ATTR_ORIGIN		"interval-origin"
 #  define XML_OP_ATTR_PENDING		"record-pending"
+#  define XML_OP_ATTR_DIGESTS_ALL       "digests-all"
+#  define XML_OP_ATTR_DIGESTS_SECURE    "digests-secure"
 
 #  define XML_CIB_TAG_LRM		"lrm"
 #  define XML_LRM_TAG_RESOURCES     	"lrm_resources"
@@ -242,6 +252,8 @@
 #  define XML_LRM_TAG_RSC_OP		"lrm_rsc_op"
 #  define XML_AGENT_ATTR_CLASS		"class"
 #  define XML_AGENT_ATTR_PROVIDER	"provider"
+
+/* @COMPAT This was never used but is kept for API compatibility */
 #  define XML_LRM_TAG_ATTRIBUTES	"attributes"
 
 #  define XML_CIB_ATTR_REPLACE       	"replace"

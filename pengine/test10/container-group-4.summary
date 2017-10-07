@@ -8,9 +8,9 @@ Online: [ node1 node2 ]
      rsc2	(ocf::pacemaker:Dummy):	Started node1
 
 Transition Summary:
- * Move    container1	(Started node1 -> node2)
- * Recover rsc1	(Started node1 -> node2)
- * Move    rsc2	(Started node1 -> node2)
+ * Move       container1     ( node1 -> node2 )  
+ * Recover    rsc1           ( node1 -> node2 )  
+ * Move       rsc2           ( node1 -> node2 )  
 
 Executing cluster transition:
  * Pseudo action:   container-group_stop_0

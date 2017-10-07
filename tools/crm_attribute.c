@@ -246,15 +246,13 @@ main(int argc, char **argv)
 
     } else if (safe_str_eq(type, XML_CIB_TAG_CRMCONFIG)) {
     } else if (safe_str_neq(type, XML_CIB_TAG_TICKETS)) {
+        /* If we are being called from a resource agent via the cluster,
+         * the correct local node name will be passed as an environment
+         * variable. Otherwise, we have to ask the cluster.
+         */
+        dest_uname = attrd_get_target(dest_uname);
         if (dest_uname == NULL) {
-            /* If we are being called from a resource agent via the cluster,
-             * the correct local node name will be passed as an environment
-             * variable. Otherwise, we have to ask the cluster.
-             */
-            dest_uname = getenv("OCF_RESKEY_" CRM_META "_" XML_LRM_ATTR_TARGET);
-            if (dest_uname == NULL) {
-                dest_uname = get_local_node_name();
-            }
+            dest_uname = get_local_node_name();
         }
 
         rc = query_node_uuid(the_cib, dest_uname, &dest_node, &is_remote_node);
@@ -300,14 +298,6 @@ main(int argc, char **argv)
              * which is what the admin wanted
              */
             rc = pcmk_ok;
-        } else if (rc != -EINVAL && safe_str_eq(crm_system_name, "crm_failcount")) {
-            char *now_s = NULL;
-            time_t now = time(NULL);
-
-            now_s = crm_itoa(now);
-            update_attr_delegate(the_cib, cib_sync_call, XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL,
-                                 NULL, "last-lrm-refresh", now_s, TRUE, NULL, NULL);
-            free(now_s);
         }
 
     } else if (command == 'v') {

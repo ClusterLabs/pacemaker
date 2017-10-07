@@ -164,6 +164,64 @@ instance attributes are completely up to the particular agent.
 =====
 
 
+== Alert Filters ==
+
+By default, an alert agent will be called for node events, fencing events, and
+resource events. An agent may choose to ignore certain types of events, but
+there is still the overhead of calling it for those events. To eliminate that
+overhead, you may select which types of events the agent should receive
+(since version 1.1.18).
+
+.Alert configuration to receive only node events and fencing events
+=====
+[source,XML]
+-----
+<configuration>
+    <alerts>
+        <alert id="my-alert" path="/path/to/my-script.sh">
+            <select>
+              <select_nodes />
+              <select_fencing />
+            </select>
+            <recipient id="my-alert-recipient1" value="someuser@example.com"/>
+        </alert>
+    </alerts>
+</configuration>
+-----
+=====
+
+The possible options within +<select>+ are +<select_nodes>+,
++<select_fencing>+, +<select_resources>+, and +<select_attributes>+.
+
+With +<select_attributes>+ (the only event type not enabled by default), the
+agent will receive alerts when a node attribute changes. If you wish the agent
+to be called only when certain attributes change, you can configure that as well.
+
+.Alert configuration to be called when certain node attributes change
+=====
+[source,XML]
+-----
+<configuration>
+    <alerts>
+        <alert id="my-alert" path="/path/to/my-script.sh">
+            <select>
+              <select_attributes>
+                <attribute id="alert-standby" name="standby" />
+                <attribute id="alert-shutdown" name="shutdown" />
+              </select_attributes>
+            </select>
+            <recipient id="my-alert-recipient1" value="someuser@example.com"/>
+        </alert>
+    </alerts>
+</configuration>
+-----
+=====
+
+Node attribute alerts are currently considered experimental. Alerts may be
+limited to attributes set via attrd_updater, and agents may be called multiple
+times with the same attribute value.
+
+
 == Using the Sample Alert Agents ==
 
 Pacemaker provides several sample alert agents, installed in
@@ -212,8 +270,8 @@ See their source code for the full set of instance attributes they support.
 -----
 =====
 
-== Writing an Alert Agent ==
 
+== Writing an Alert Agent ==
 
 .Environment variables passed to alert agents
 
@@ -224,7 +282,7 @@ See their source code for the full set of instance attributes they support.
 |Description
 
 |CRM_alert_kind
-|The type of alert (+node+, +fencing+, or +resource+)
+|The type of alert (+node+, +fencing+, +resource+, or +attribute+)
  indexterm:[Environment Variable,CRM_alert_,kind]
 
 |CRM_alert_version
@@ -293,6 +351,14 @@ See their source code for the full set of instance attributes they support.
 |A numerical code used by Pacemaker to represent the operation result
  (+resource+ alerts only)
  indexterm:[Environment Variable,CRM_alert_,status]
+
+|CRM_alert_attribute_name
+|The name of the node attribute that changed (+attribute+ alerts only)
+ indexterm:[Environment Variable,CRM_alert_,attribute_name]
+
+|CRM_alert_attribute_value
+|The new value of the node attribute that changed (+attribute+ alerts only)
+ indexterm:[Environment Variable,CRM_alert_,attribute_value]
 
 |=========================================================
 

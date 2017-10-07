@@ -273,9 +273,15 @@ typedef struct op_digest_cache_s {
 op_digest_cache_t *rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
                                          pe_working_set_t * data_set);
 
-action_t *pe_fence_op(node_t * node, const char *op, bool optional, pe_working_set_t * data_set);
+action_t *pe_fence_op(node_t * node, const char *op, bool optional, const char *reason, pe_working_set_t * data_set);
 void trigger_unfencing(
     resource_t * rsc, node_t *node, const char *reason, action_t *dependency, pe_working_set_t * data_set);
+
+void pe_action_set_reason(pe_action_t *action, const char *reason, bool overwrite);
+void pe_action_set_flag_reason(const char *function, long line, pe_action_t *action, pe_action_t *reason, const char *text, enum pe_action_flags flags, bool overwrite);
+
+#define pe_action_required(action, reason, text) pe_action_set_flag_reason(__FUNCTION__, __LINE__, action, reason, text, pe_action_optional, FALSE)
+#define pe_action_implies(action, reason, flag) pe_action_set_flag_reason(__FUNCTION__, __LINE__, action, reason, NULL, flag, FALSE)
 
 void set_bit_recursive(resource_t * rsc, unsigned long long flag);
 void clear_bit_recursive(resource_t * rsc, unsigned long long flag);
@@ -292,5 +298,7 @@ bool remote_id_conflict(const char *remote_name, pe_working_set_t *data);
 void common_print(resource_t * rsc, const char *pre_text, const char *name, node_t *node, long options, void *print_data);
 resource_t *find_container_child(const char *stem, resource_t * rsc, node_t *node);
 bool fix_remote_addr(resource_t * rsc);
+const char *pe_node_attribute_calculated(pe_node_t *node, const char *name, resource_t *rsc);
+const char *pe_node_attribute_raw(pe_node_t *node, const char *name);
 
 #endif

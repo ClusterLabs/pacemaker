@@ -182,7 +182,7 @@ Online: [ mgmt01 v03-a v03-b ]
  dist.fly-uni.org-vm	(ocf::vds-ok:VirtualDomain):	Stopped ( disabled ) 
 
 Transition Summary:
- * Reload  c5-x64-devel.vds-ok.com-vm	(Started v03-a)
+ * Reload     c5-x64-devel.vds-ok.com-vm     ( v03-a )  
 
 Executing cluster transition:
  * Resource action: vd01-b.cdev.ttc.prague.cz.vds-ok.com-vm monitor=10000 on v03-b

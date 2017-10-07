@@ -89,13 +89,16 @@ pe_cluster_option pe_opts[] = {
 	  "What to do when the cluster does not have quorum", NULL },
 	{ "symmetric-cluster", "symmetric_cluster", "boolean", NULL, "true", &check_boolean,
 	  "All resources can run anywhere by default", NULL },
-	{ "default-resource-stickiness", "default_resource_stickiness", "integer", NULL, "0", &check_number, "", NULL },
-	{ "is-managed-default", "is_managed_default", "boolean", NULL, "true", &check_boolean,
-	  "Should the cluster start/stop resources as required", NULL },
+    { "default-resource-stickiness", "default_resource_stickiness", "integer",
+      NULL, NULL, &check_number,
+      "Deprecated (use resource-stickiness in rsc_defaults instead)", NULL },
+    { "is-managed-default", "is_managed_default", "boolean", NULL, NULL,
+      &check_boolean, "Deprecated (use is-managed in rsc_defaults instead)",
+      NULL },
 	{ "maintenance-mode", NULL, "boolean", NULL, "false", &check_boolean,
 	  "Should the cluster monitor resources and start/stop them as required", NULL },
 	{ "start-failure-is-fatal", NULL, "boolean", NULL, "true", &check_boolean, "Always treat start failures as fatal",
-	  "This was the old default.  However when set to FALSE, the cluster will instead use the resource's failcount and value for resource-failure-stickiness" },
+	  "When set to TRUE, the cluster will immediately ban a resource from a node if it fails to start there. When FALSE, the cluster will instead check the resource's fail count against its migration-threshold." },
 	{ "enable-startup-probes", NULL, "boolean", NULL, "true", &check_boolean,
 	  "Should the cluster check for active resources during startup", NULL },
 
@@ -122,8 +125,8 @@ pe_cluster_option pe_opts[] = {
 	  "The \"correct\" value will depend on the speed and load of your network and cluster nodes." },
 	{ "migration-limit", NULL, "integer", NULL, "-1", &check_number,
 	  "The number of migration jobs that the TE is allowed to execute in parallel on a node"},
-	{ "default-action-timeout", "default_action_timeout", "time", NULL, "20s", &check_time,
-	  "How long to wait for actions to complete", NULL },
+    { "default-action-timeout", "default_action_timeout", "time", NULL, NULL,
+      &check_time, "Deprecated (use 'timeout' in op_defaults instead)", NULL },
 
 	/* Orphans and stopping */
 	{ "stop-all-resources", NULL, "boolean", NULL, "false", &check_boolean,
@@ -430,4 +433,51 @@ add_hash_param(GHashTable * hash, const char *name, const char *value)
     } else if (g_hash_table_lookup(hash, name) == NULL) {
         g_hash_table_insert(hash, strdup(name), strdup(value));
     }
+}
+
+const char *
+pe_node_attribute_calculated(pe_node_t *node, const char *name, resource_t *rsc)
+{
+    const char *source;
+
+    if(node == NULL) {
+        return NULL;
+
+    } else if(rsc == NULL) {
+        return g_hash_table_lookup(node->details->attrs, name);
+    }
+
+    source = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET);
+    if(source == NULL || safe_str_eq("host", source) == FALSE) {
+        return g_hash_table_lookup(node->details->attrs, name);
+    }
+
+    /* Use attributes set for the containers location
+     * instead of for the container itself
+     *
+     * Useful when the container is using the host's local
+     * storage
+     */
+
+    CRM_ASSERT(node->details->remote_rsc);
+    CRM_ASSERT(node->details->remote_rsc->container);
+
+    if(node->details->remote_rsc->container->running_on) {
+        pe_node_t *host = node->details->remote_rsc->container->running_on->data;
+        pe_rsc_trace(rsc, "%s: Looking for %s on the container host %s", rsc->id, name, host->details->uname);
+        return g_hash_table_lookup(host->details->attrs, name);
+    }
+
+    pe_rsc_trace(rsc, "%s: Not looking for %s on the container host: %s is inactive",
+                 rsc->id, name, node->details->remote_rsc->container->id);
+    return NULL;
+}
+
+const char *
+pe_node_attribute_raw(pe_node_t *node, const char *name)
+{
+    if(node == NULL) {
+        return NULL;
+    }
+    return g_hash_table_lookup(node->details->attrs, name);
 }

@@ -1,68 +1,67 @@
  <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
    <synapse id="0">
      <action_set>
-      <crm_event id="5" operation="stonith" operation_key="stonith-node3-reboot" on_node="node3" on_node_uuid="uuid3">
-        <attributes CRM_meta_on_node="node3" CRM_meta_on_node_uuid="uuid3" CRM_meta_stonith_action="reboot" />
-        <downed>
-          <node id="uuid3"/>
-        </downed>
-      </crm_event>
+      <pseudo_event id="5" operation="stonith_complete" operation_key="stonith_complete">
+        <attributes />
+      </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-        <crm_event id="3" operation="stonith" operation_key="stonith-node1-reboot" on_node="node1" on_node_uuid="uuid1"/>
+        <crm_event id="2" operation="stonith" operation_key="stonith-node2-reboot" on_node="node2" on_node_uuid="uuid2"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="1">
      <action_set>
-      <crm_event id="4" operation="stonith" operation_key="stonith-node2-reboot" on_node="node2" on_node_uuid="uuid2">
-        <attributes CRM_meta_on_node="node2" CRM_meta_on_node_uuid="uuid2" CRM_meta_op_no_wait="true" CRM_meta_stonith_action="reboot" />
-        <downed>
-          <node id="uuid2"/>
-        </downed>
-      </crm_event>
+      <pseudo_event id="4" operation="all_stopped" operation_key="all_stopped">
+        <attributes />
+      </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="5" operation="stonith" operation_key="stonith-node3-reboot" on_node="node3" on_node_uuid="uuid3"/>
+        <pseudo_event id="5" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="2">
     <action_set>
-      <crm_event id="3" operation="stonith" operation_key="stonith-node1-reboot" on_node="node1" on_node_uuid="uuid1">
-        <attributes CRM_meta_on_node="node1" CRM_meta_on_node_uuid="uuid1" CRM_meta_stonith_action="reboot" />
+      <crm_event id="3" operation="stonith" operation_key="stonith-node3-reboot" on_node="node3" on_node_uuid="uuid3">
+        <attributes CRM_meta_on_node="node3" CRM_meta_on_node_uuid="uuid3" CRM_meta_stonith_action="reboot" />
         <downed>
-          <node id="uuid1"/>
+          <node id="uuid3"/>
         </downed>
        </crm_event>
      </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-node1-reboot" on_node="node1" on_node_uuid="uuid1"/>
+      </trigger>
+    </inputs>
    </synapse>
   <synapse id="3">
      <action_set>
-      <pseudo_event id="2" operation="stonith_complete" operation_key="stonith_complete">
-        <attributes />
-      </pseudo_event>
+      <crm_event id="2" operation="stonith" operation_key="stonith-node2-reboot" on_node="node2" on_node_uuid="uuid2">
+        <attributes CRM_meta_on_node="node2" CRM_meta_on_node_uuid="uuid2" CRM_meta_op_no_wait="true" CRM_meta_stonith_action="reboot" />
+        <downed>
+          <node id="uuid2"/>
+        </downed>
+      </crm_event>
      </action_set>
      <inputs>
        <trigger>
-        <crm_event id="4" operation="stonith" operation_key="stonith-node2-reboot" on_node="node2" on_node_uuid="uuid2"/>
+        <crm_event id="3" operation="stonith" operation_key="stonith-node3-reboot" on_node="node3" on_node_uuid="uuid3"/>
        </trigger>
      </inputs>
    </synapse>
   <synapse id="4">
     <action_set>
-      <pseudo_event id="1" operation="all_stopped" operation_key="all_stopped">
-        <attributes />
-      </pseudo_event>
+      <crm_event id="1" operation="stonith" operation_key="stonith-node1-reboot" on_node="node1" on_node_uuid="uuid1">
+        <attributes CRM_meta_on_node="node1" CRM_meta_on_node_uuid="uuid1" CRM_meta_stonith_action="reboot" />
+        <downed>
+          <node id="uuid1"/>
+        </downed>
+      </crm_event>
      </action_set>
-     <inputs>
-       <trigger>
-        <pseudo_event id="2" operation="stonith_complete" operation_key="stonith_complete"/>
-       </trigger>
-     </inputs>
+    <inputs/>
    </synapse>
  </transition_graph>
-

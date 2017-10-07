@@ -9,8 +9,8 @@ Online: [ fc16-builder fc16-builder2 ]
  MASTER_IP	(ocf::pacemaker:Dummy):	Started fc16-builder2
 
 Transition Summary:
- * Move    SLAVE_IP	(Started fc16-builder -> fc16-builder2)
- * Move    MASTER_IP	(Started fc16-builder2 -> fc16-builder)
+ * Move       SLAVE_IP     ( fc16-builder -> fc16-builder2 )  
+ * Move       MASTER_IP    ( fc16-builder2 -> fc16-builder )  
 
 Executing cluster transition:
  * Resource action: SLAVE_IP        stop on fc16-builder

@@ -34,7 +34,7 @@ Containers: [ galera-bundle-0:galera-bundle-docker-0 galera-bundle-1:galera-bund
    openstack-cinder-backup-docker-0	(ocf::heartbeat:docker):	Started overcloud-controller-1
 
 Transition Summary:
- * Fence overcloud-novacompute-0
+ * Fence (reboot) overcloud-novacompute-0 'the connection is unrecoverable'
  * Start   fence1	(overcloud-controller-0)
  * Stop    overcloud-novacompute-0	(overcloud-controller-0)
 
@@ -43,6 +43,24 @@ Executing cluster transition:
  * Resource action: fence1          monitor on overcloud-controller-1
  * Resource action: fence1          monitor on overcloud-controller-0
  * Resource action: overcloud-novacompute-0 stop on overcloud-controller-0
+ * Resource action: rabbitmq-bundle-0 monitor on overcloud-controller-2
+ * Resource action: rabbitmq-bundle-0 monitor on overcloud-controller-1
+ * Resource action: rabbitmq-bundle-1 monitor on overcloud-controller-2
+ * Resource action: rabbitmq-bundle-1 monitor on overcloud-controller-0
+ * Resource action: rabbitmq-bundle-2 monitor on overcloud-controller-1
+ * Resource action: rabbitmq-bundle-2 monitor on overcloud-controller-0
+ * Resource action: galera-bundle-0 monitor on overcloud-controller-2
+ * Resource action: galera-bundle-0 monitor on overcloud-controller-1
+ * Resource action: galera-bundle-1 monitor on overcloud-controller-2
+ * Resource action: galera-bundle-1 monitor on overcloud-controller-0
+ * Resource action: galera-bundle-2 monitor on overcloud-controller-1
+ * Resource action: galera-bundle-2 monitor on overcloud-controller-0
+ * Resource action: redis-bundle-0  monitor on overcloud-controller-2
+ * Resource action: redis-bundle-0  monitor on overcloud-controller-1
+ * Resource action: redis-bundle-1  monitor on overcloud-controller-2
+ * Resource action: redis-bundle-1  monitor on overcloud-controller-0
+ * Resource action: redis-bundle-2  monitor on overcloud-controller-1
+ * Resource action: redis-bundle-2  monitor on overcloud-controller-0
  * Fencing overcloud-novacompute-0 (reboot)
  * Pseudo action:   stonith_complete
  * Pseudo action:   all_stopped

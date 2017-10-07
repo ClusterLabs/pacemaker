@@ -9,7 +9,7 @@ Online: [ sle12sp2-1 sle12sp2-2 ]
  dummy2	(ocf::pacemaker:Dummy):	Started sle12sp2-1 
 
 Transition Summary:
- * Stop    dummy2	(Started sle12sp2-1)
+ * Stop       dummy2     ( sle12sp2-1 )   due to unrunnable dummy1 start
 
 Executing cluster transition:
  * Resource action: dummy2          stop on sle12sp2-1

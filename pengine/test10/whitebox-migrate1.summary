@@ -14,10 +14,10 @@ Containers: [ rhel7-node1:remote-rsc ]
  remote-rsc	(ocf::heartbeat:Dummy):	Started rhel7-node2 
 
 Transition Summary:
- * Move    shooter1	(Started rhel7-node3 -> rhel7-node2)
- * Move    FAKE3	(Started rhel7-node3 -> rhel7-node2)
- * Migrate remote-rsc	(Started rhel7-node2 -> rhel7-node3)
- * Migrate rhel7-node1	(Started rhel7-node2 -> rhel7-node3)
+ * Move       shooter1        ( rhel7-node3 -> rhel7-node2 )  
+ * Move       FAKE3           ( rhel7-node3 -> rhel7-node2 )  
+ * Migrate    remote-rsc      ( rhel7-node2 -> rhel7-node3 )  
+ * Migrate    rhel7-node1     ( rhel7-node2 -> rhel7-node3 )  
 
 Executing cluster transition:
  * Resource action: shooter1        stop on rhel7-node3

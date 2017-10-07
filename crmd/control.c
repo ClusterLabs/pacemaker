@@ -35,6 +35,8 @@
 #include <crmd_messages.h>
 #include <crmd_callbacks.h>
 #include <crmd_lrm.h>
+#include <crmd_alerts.h>
+#include <crmd_metadata.h>
 #include <tengine.h>
 #include <throttle.h>
 
@@ -184,7 +186,7 @@ do_shutdown(long long action,
         if (is_set(fsa_input_register, pe_subsystem->flag_connected)) {
             crm_info("Terminating the %s", pe_subsystem->name);
             if (stop_subsystem(pe_subsystem, TRUE) == FALSE) {
-                /* its gone... */
+                /* It's gone ... */
                 crm_err("Faking %s exit", pe_subsystem->name);
                 clear_bit(fsa_input_register, pe_subsystem->flag_connected);
             } else {
@@ -230,7 +232,6 @@ extern char *max_generation_from;
 extern xmlNode *max_generation_xml;
 extern GHashTable *resource_history;
 extern GHashTable *voted;
-extern GHashTable *metadata_hash;
 extern char *te_client_id;
 
 void log_connected_client(gpointer key, gpointer value, gpointer user_data);
@@ -347,10 +348,7 @@ crmd_exit(int rc)
     free(te_subsystem); te_subsystem = NULL;
     free(cib_subsystem); cib_subsystem = NULL;
 
-    if (metadata_hash) {
-        crm_trace("Destroying reload cache with %d members", g_hash_table_size(metadata_hash));
-        g_hash_table_destroy(metadata_hash); metadata_hash = NULL;
-    }
+    metadata_cache_fini();
 
     election_fini(fsa_election);
     fsa_election = NULL;
@@ -419,8 +417,6 @@ crmd_exit(int rc)
 
         /* Don't re-enter this block */
         crmd_mainloop = NULL;
-
-        crmd_drain_alerts(ctx);
 
         /* no signals on final draining anymore */
         mainloop_destroy_signal(SIGCHLD);
@@ -590,12 +586,12 @@ do_startup(long long action,
         finalization_timer->callback = crm_timer_popped;
         finalization_timer->repeat = FALSE;
         /* for possible enabling... a bug in the join protocol left
-         *    a slave in S_PENDING while we think its in S_NOT_DC
+         *    a slave in S_PENDING while we think it's in S_NOT_DC
          *
          * raising I_FINALIZED put us into a transition loop which is
          *    never resolved.
          * in this loop we continually send probes which the node
-         *    NACK's because its in S_PENDING
+         *    NACK's because it's in S_PENDING
          *
          * if we have nodes where heartbeat is active but the
          *    CRM is not... then this will be handled in the
@@ -994,9 +990,6 @@ crmd_pref(GHashTable * options, const char *name)
 static void
 config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
-#ifdef RHEL7_COMPAT
-    const char *script = NULL;
-#endif
     const char *value = NULL;
     GHashTable *config_hash = NULL;
     crm_time_t *now = crm_time_new(NULL);
@@ -1031,18 +1024,19 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     }
 
     crm_debug("Call %d : Parsing CIB options", call_id);
-    config_hash =
-        g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
-
+    config_hash = crm_str_table_new();
     unpack_instance_attributes(crmconfig, crmconfig, XML_CIB_TAG_PROPSET, NULL, config_hash,
                                CIB_OPTIONS_FIRST, FALSE, now);
 
     verify_crmd_options(config_hash);
 
 #ifdef RHEL7_COMPAT
-    script = crmd_pref(config_hash, "notification-agent");
-    value  = crmd_pref(config_hash, "notification-recipient");
-    crmd_enable_alerts(script, value);
+    {
+        const char *script = crmd_pref(config_hash, "notification-agent");
+        const char *recip  = crmd_pref(config_hash, "notification-recipient");
+
+        pe_enable_legacy_alerts(script, recip);
+    }
 #endif
 
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
@@ -1102,7 +1096,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     }
 
     alerts = first_named_child(output, XML_CIB_TAG_ALERTS);
-    parse_alerts(alerts);
+    crmd_unpack_alerts(alerts);
 
     set_bit(fsa_input_register, R_READ_CONFIG);
     crm_trace("Triggering FSA: %s", __FUNCTION__);

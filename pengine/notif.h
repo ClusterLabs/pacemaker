@@ -28,7 +28,7 @@ notify_data_t * create_notification_boundaries(resource_t *rsc,
 void collect_notification_data(resource_t *rsc, gboolean state,
                                gboolean activity, notify_data_t *n_data);
 
-gboolean expand_notification_data(notify_data_t *n_data,
+gboolean expand_notification_data(resource_t *rsc, notify_data_t *n_data,
                                   pe_working_set_t *data_set);
 
 void create_notifications(resource_t *rsc, notify_data_t *n_data,

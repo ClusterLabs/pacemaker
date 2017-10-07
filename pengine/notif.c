@@ -17,6 +17,7 @@
  */
 
 #include <crm_internal.h>
+#include <crm/msg_xml.h>
 #include <allocate.h>
 #include <notif.h>
 #include <utils.h>
@@ -81,33 +82,64 @@ static notify_entry_t *dup_notify_entry(notify_entry_t *entry)
     return dup;
 }
 
-static char *
-expand_node_list(GListPtr list)
+static void
+expand_node_list(GListPtr list, char **uname, char **metal)
 {
     GListPtr gIter = NULL;
     char *node_list = NULL;
+    char *metal_list = NULL;
 
+    CRM_ASSERT(uname != NULL);
     if (list == NULL) {
-        return strdup(" ");
+        *uname = strdup(" ");
+        if(metal) {
+            *metal = strdup(" ");
+        }
+        return;
     }
 
     for (gIter = list; gIter != NULL; gIter = gIter->next) {
+        int len = 0;
+        int existing_len = 0;
         node_t *node = (node_t *) gIter->data;
 
-        if (node->details->uname) {
-            int existing_len = 0;
-            int len = 2 + strlen(node->details->uname);
+        if (node->details->uname == NULL) {
+            continue;
+        }
+        len = 2 + strlen(node->details->uname);
 
-            if(node_list) {
-                existing_len = strlen(node_list);
+        if(node_list) {
+            existing_len = strlen(node_list);
+        }
+//            crm_trace("Adding %s (%dc) at offset %d", node->details->uname, len - 2, existing_len);
+        node_list = realloc_safe(node_list, len + existing_len);
+        sprintf(node_list + existing_len, "%s%s", existing_len == 0 ? "":" ", node->details->uname);
+
+        if(metal) {
+            existing_len = 0;
+            if(metal_list) {
+                existing_len = strlen(metal_list);
             }
-            crm_trace("Adding %s (%dc) at offset %d", node->details->uname, len - 2, existing_len);
-            node_list = realloc_safe(node_list, len + existing_len);
-            sprintf(node_list + existing_len, "%s%s", existing_len == 0 ? "":" ", node->details->uname);
+
+            if(node->details->remote_rsc
+               && node->details->remote_rsc->container
+               && node->details->remote_rsc->container->running_on) {
+                node = node->details->remote_rsc->container->running_on->data;
+            }
+
+            if (node->details->uname == NULL) {
+                continue;
+            }
+            len = 2 + strlen(node->details->uname);
+            metal_list = realloc_safe(metal_list, len + existing_len);
+            sprintf(metal_list + existing_len, "%s%s", existing_len == 0 ? "":" ", node->details->uname);
         }
     }
 
-    return node_list;
+    *uname = node_list;
+    if(metal) {
+        *metal = metal_list;
+    }
 }
 
 static void
@@ -305,8 +337,7 @@ create_notification_boundaries(resource_t * rsc, const char *action, action_t * 
 
     n_data = calloc(1, sizeof(notify_data_t));
     n_data->action = action;
-    n_data->keys =
-        g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+    n_data->keys = crm_str_table_new();
 
     if (start) {
         /* create pre-event notification wrappers */
@@ -496,7 +527,7 @@ collect_notification_data(resource_t * rsc, gboolean state, gboolean activity,
 }
 
 gboolean
-expand_notification_data(notify_data_t * n_data, pe_working_set_t * data_set)
+expand_notification_data(resource_t *rsc, notify_data_t * n_data, pe_working_set_t * data_set)
 {
     /* Expand the notification entries into a key=value hashtable
      * This hashtable is later used in action2xml()
@@ -504,6 +535,8 @@ expand_notification_data(notify_data_t * n_data, pe_working_set_t * data_set)
     gboolean required = FALSE;
     char *rsc_list = NULL;
     char *node_list = NULL;
+    char *metal_list = NULL;
+    const char *source = NULL;
     GListPtr nodes = NULL;
 
     if (n_data->stop) {
@@ -577,11 +610,18 @@ expand_notification_data(notify_data_t * n_data, pe_working_set_t * data_set)
     g_hash_table_insert(n_data->keys, strdup("notify_inactive_resource"), rsc_list);
 
     nodes = g_hash_table_get_values(n_data->allowed_nodes);
-    node_list = expand_node_list(nodes);
+    expand_node_list(nodes, &node_list, NULL);
     g_hash_table_insert(n_data->keys, strdup("notify_available_uname"), node_list);
     g_list_free(nodes);
 
-    node_list = expand_node_list(data_set->nodes);
+    source = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET);
+    if (safe_str_eq("host", source)) {
+        expand_node_list(data_set->nodes, &node_list, &metal_list);
+        g_hash_table_insert(n_data->keys, strdup("notify_all_hosts"),
+                            metal_list);
+    } else {
+        expand_node_list(data_set->nodes, &node_list, NULL);
+    }
     g_hash_table_insert(n_data->keys, strdup("notify_all_uname"), node_list);
 
     if (required && n_data->pre) {
@@ -654,7 +694,7 @@ create_notifications(resource_t * rsc, notify_data_t * n_data, pe_working_set_t 
                  * action. There's no reason to send the fenced node a stop notification */ 
                 if (stop &&
                     is_set(stop->flags, pe_action_pseudo) &&
-                    current_node->details->unclean) {
+                    (current_node->details->unclean || current_node->details->remote_requires_reset) ) {
 
                     continue;
                 }

@@ -275,7 +275,8 @@ lrmd_server_send_notify(crm_client_t * client, xmlNode * msg)
 static gboolean
 lrmd_exit(gpointer data)
 {
-    crm_info("Terminating with  %d clients", crm_hash_table_size(client_connections));
+    crm_info("Terminating with %d clients",
+             crm_hash_table_size(client_connections));
 
     if (stonith_api) {
         stonith_api->cmds->remove_notification(stonith_api, T_STONITH_NOTIFY_DISCONNECT);
@@ -285,15 +286,6 @@ lrmd_exit(gpointer data)
     if (ipcs) {
         mainloop_del_ipc_server(ipcs);
     }
-#ifdef ENABLE_VERSIONED_ATTRS
-    if (version_format_regex) {
-        regfree(version_format_regex);
-        free(version_format_regex);
-    }
-    if (ra_version_hash) {
-        g_hash_table_destroy(ra_version_hash);
-    }
-#endif
 
 #ifdef ENABLE_PCMK_REMOTE
     lrmd_tls_server_destroy();
@@ -302,6 +294,11 @@ lrmd_exit(gpointer data)
 
     crm_client_cleanup();
     g_hash_table_destroy(rsc_list);
+
+    if (mainloop) {
+        lrmd_drain_alerts(g_main_loop_get_context(mainloop));
+    }
+
     crm_exit(pcmk_ok);
     return FALSE;
 }
@@ -558,6 +555,8 @@ main(int argc, char **argv, char **envp)
 
         switch (flag) {
             case 'r':
+                crm_warn("The -r option to lrmd is deprecated (and ignored) "
+                         "and will be removed in a future release");
                 break;
             case 'l':
                 crm_add_logfile(optarg);
@@ -620,8 +619,7 @@ main(int argc, char **argv, char **envp)
 
 #ifdef ENABLE_PCMK_REMOTE
     {
-        const char *remote_port_str = getenv("PCMK_remote_port");
-        int remote_port = remote_port_str ? atoi(remote_port_str) : DEFAULT_REMOTE_PORT;
+        int remote_port = crm_default_remote_port();
 
         if (lrmd_init_remote_tls_server(remote_port) < 0) {
             crm_err("Failed to create TLS server on port %d: shutting down and inhibiting respawn", remote_port);

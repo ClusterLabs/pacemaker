@@ -22,62 +22,76 @@ Containers: [ galera-bundle-0:galera-bundle-docker-0 rabbitmq-bundle-0:rabbitmq-
 
 Transition Summary:
  * Shutdown undercloud
- * Stop    rabbitmq-bundle-docker-0	(undercloud)
- * Stop    rabbitmq-bundle-0	(undercloud)
- * Stop    rabbitmq:0	(Started rabbitmq-bundle-0)
- * Stop    galera-bundle-docker-0	(undercloud)
- * Stop    galera-bundle-0	(undercloud)
- * Demote  galera:0	(Master -> Slave galera-bundle-0)
- * Restart galera:0	(Slave galera-bundle-0)
- * Stop    redis-bundle-docker-0	(undercloud)
- * Stop    redis-bundle-0	(undercloud)
- * Demote  redis:0	(Master -> Slave redis-bundle-0)
- * Restart redis:0	(Slave redis-bundle-0)
- * Stop    ip-192.168.122.254	(undercloud)
- * Stop    ip-192.168.122.250	(undercloud)
- * Stop    ip-192.168.122.249	(undercloud)
- * Stop    ip-192.168.122.253	(undercloud)
- * Stop    ip-192.168.122.247	(undercloud)
- * Stop    ip-192.168.122.248	(undercloud)
- * Stop    haproxy-bundle-docker-0	(undercloud)
- * Stop    openstack-cinder-volume-docker-0	(undercloud)
+ * Stop    rabbitmq-bundle-docker-0	(undercloud)  	due to node availability
+ * Stop    rabbitmq-bundle-0	(undercloud)  	due to node availability
+ * Stop       rabbitmq:0                           (               rabbitmq-bundle-0 )   due to unrunnable rabbitmq-bundle-0 start
+ * Stop    galera-bundle-docker-0	(undercloud)  	due to node availability
+ * Stop    galera-bundle-0	(undercloud)  	due to node availability
+ * Stop       galera:0                             ( Master galera-bundle-0 )   due to unrunnable galera-bundle-0 start
+ * Stop    redis-bundle-docker-0	(undercloud)  	due to node availability
+ * Stop    redis-bundle-0	(undercloud)  	due to node availability
+ * Stop       redis:0                              (  Master redis-bundle-0 )   due to unrunnable redis-bundle-0 start
+ * Stop    ip-192.168.122.254	(undercloud)  	due to node availability
+ * Stop    ip-192.168.122.250	(undercloud)  	due to node availability
+ * Stop    ip-192.168.122.249	(undercloud)  	due to node availability
+ * Stop    ip-192.168.122.253	(undercloud)  	due to node availability
+ * Stop    ip-192.168.122.247	(undercloud)  	due to node availability
+ * Stop    ip-192.168.122.248	(undercloud)  	due to node availability
+ * Stop    haproxy-bundle-docker-0	(undercloud)  	due to node availability
+ * Stop    openstack-cinder-volume-docker-0	(undercloud)  	due to node availability
 
 Executing cluster transition:
+ * Pseudo action:   rabbitmq-bundle-clone_pre_notify_stop_0
  * Resource action: galera          cancel=10000 on galera-bundle-0
  * Resource action: redis           cancel=20000 on redis-bundle-0
+ * Pseudo action:   redis-bundle-master_pre_notify_demote_0
  * Pseudo action:   openstack-cinder-volume_stop_0
  * Pseudo action:   redis-bundle_demote_0
- * Pseudo action:   redis-bundle-master_demote_0
  * Pseudo action:   galera-bundle_demote_0
- * Pseudo action:   galera-bundle-master_demote_0
  * Pseudo action:   rabbitmq-bundle_stop_0
- * Resource action: galera          demote on galera-bundle-0
- * Resource action: redis           demote on redis-bundle-0
+ * Resource action: rabbitmq        notify on rabbitmq-bundle-0
+ * Pseudo action:   rabbitmq-bundle-clone_confirmed-pre_notify_stop_0
+ * Pseudo action:   rabbitmq-bundle-clone_stop_0
+ * Pseudo action:   galera-bundle-master_demote_0
+ * Resource action: redis           notify on redis-bundle-0
+ * Pseudo action:   redis-bundle-master_confirmed-pre_notify_demote_0
+ * Pseudo action:   redis-bundle-master_demote_0
  * Resource action: openstack-cinder-volume-docker-0 stop on undercloud
  * Pseudo action:   openstack-cinder-volume_stopped_0
- * Pseudo action:   redis-bundle-master_demoted_0
- * Pseudo action:   galera-bundle-master_demoted_0
- * Pseudo action:   rabbitmq-bundle-clone_stop_0
  * Resource action: rabbitmq        stop on rabbitmq-bundle-0
+ * Pseudo action:   rabbitmq-bundle-clone_stopped_0
  * Resource action: rabbitmq-bundle-0 stop on undercloud
- * Pseudo action:   redis-bundle_demoted_0
+ * Resource action: galera          demote on galera-bundle-0
+ * Pseudo action:   galera-bundle-master_demoted_0
+ * Resource action: redis           demote on redis-bundle-0
+ * Pseudo action:   redis-bundle-master_demoted_0
  * Pseudo action:   galera-bundle_demoted_0
  * Pseudo action:   galera-bundle_stop_0
- * Pseudo action:   rabbitmq-bundle-clone_stopped_0
+ * Pseudo action:   rabbitmq-bundle-clone_post_notify_stopped_0
  * Resource action: rabbitmq-bundle-docker-0 stop on undercloud
  * Pseudo action:   galera-bundle-master_stop_0
- * Pseudo action:   rabbitmq-bundle_stopped_0
+ * Pseudo action:   redis-bundle-master_post_notify_demoted_0
+ * Pseudo action:   rabbitmq-bundle-clone_confirmed-post_notify_stopped_0
  * Resource action: galera          stop on galera-bundle-0
- * Resource action: galera-bundle-0 stop on undercloud
  * Pseudo action:   galera-bundle-master_stopped_0
+ * Resource action: galera-bundle-0 stop on undercloud
+ * Resource action: redis           notify on redis-bundle-0
+ * Pseudo action:   redis-bundle-master_confirmed-post_notify_demoted_0
+ * Pseudo action:   redis-bundle-master_pre_notify_stop_0
+ * Pseudo action:   redis-bundle_demoted_0
+ * Pseudo action:   rabbitmq-bundle_stopped_0
  * Resource action: galera-bundle-docker-0 stop on undercloud
+ * Resource action: redis           notify on redis-bundle-0
+ * Pseudo action:   redis-bundle-master_confirmed-pre_notify_stop_0
  * Pseudo action:   galera-bundle_stopped_0
  * Pseudo action:   redis-bundle_stop_0
  * Pseudo action:   redis-bundle-master_stop_0
  * Resource action: redis           stop on redis-bundle-0
- * Resource action: redis-bundle-0  stop on undercloud
  * Pseudo action:   redis-bundle-master_stopped_0
+ * Resource action: redis-bundle-0  stop on undercloud
+ * Pseudo action:   redis-bundle-master_post_notify_stopped_0
  * Resource action: redis-bundle-docker-0 stop on undercloud
+ * Pseudo action:   redis-bundle-master_confirmed-post_notify_stopped_0
  * Pseudo action:   redis-bundle_stopped_0
  * Pseudo action:   haproxy-bundle_stop_0
  * Resource action: haproxy-bundle-docker-0 stop on undercloud

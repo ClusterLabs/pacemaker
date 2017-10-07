@@ -6,13 +6,13 @@ Online: [ node1 node2 ]
  rsc1	(ocf::pacemaker:Dummy):	Started node2
 
 Transition Summary:
- * Fence node2
+ * Fence (reboot) node2 'deadman ticket was lost'
  * Stop    rsc1	(node2)
 
 Executing cluster transition:
  * Fencing node2 (reboot)
- * Pseudo action:   stonith_complete
  * Pseudo action:   rsc1_stop_0
+ * Pseudo action:   stonith_complete
  * Pseudo action:   all_stopped
 
 Revised cluster status:

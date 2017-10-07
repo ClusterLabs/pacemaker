@@ -707,8 +707,7 @@ st_fail_count_increment(const char *target)
     struct st_fail_rec *rec = NULL;
 
     if (stonith_failures == NULL) {
-        stonith_failures =
-            g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, free);
+        stonith_failures = crm_str_table_new();
     }
 
     rec = g_hash_table_lookup(stonith_failures, target);
@@ -789,16 +788,28 @@ tengine_stonith_callback(stonith_t * stonith, stonith_callback_data_t * data)
     }
 
     stop_te_timer(action->timer);
-
     if (rc == pcmk_ok) {
         const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
         const char *uuid = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
         const char *op = crm_meta_value(action->params, "stonith_action"); 
 
-        crm_debug("Stonith operation %d for %s passed", call_id, target);
+        crm_info("Stonith operation %d for %s passed", call_id, target);
         if (action->confirmed == FALSE) {
             te_action_confirmed(action);
-            if (action->sent_update == FALSE && safe_str_neq("on", op)) {
+            if (safe_str_eq("on", op)) {
+                const char *value = NULL;
+                char *now = crm_itoa(time(NULL));
+
+                update_attrd(target, CRM_ATTR_UNFENCED, now, NULL, FALSE);
+                free(now);
+
+                value = crm_meta_value(action->params, XML_OP_ATTR_DIGESTS_ALL);
+                update_attrd(target, CRM_ATTR_DIGESTS_ALL, value, NULL, FALSE);
+
+                value = crm_meta_value(action->params, XML_OP_ATTR_DIGESTS_SECURE);
+                update_attrd(target, CRM_ATTR_DIGESTS_SECURE, value, NULL, FALSE);
+
+            } else if (action->sent_update == FALSE) {
                 send_stonith_update(action, target, uuid);
                 action->sent_update = TRUE;
             }

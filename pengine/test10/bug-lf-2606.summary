@@ -12,20 +12,20 @@ Online: [ node1 ]
      Slaves: [ node1 ]
 
 Transition Summary:
- * Fence node2
+ * Fence (reboot) node2 'rsc1 failed there'
  * Stop    rsc1	(node2)
- * Move    rsc2	(Started node2 -> node1)
- * Demote  rsc3:1	(Master -> Stopped node2)
+ * Move       rsc2       ( node2 -> node1 )  
+ * Stop       rsc3:1     (   Master node2 )   due to node availability
 
 Executing cluster transition:
  * Pseudo action:   ms3_demote_0
  * Fencing node2 (reboot)
- * Pseudo action:   stonith_complete
  * Pseudo action:   rsc1_stop_0
  * Pseudo action:   rsc2_stop_0
  * Pseudo action:   rsc3:1_demote_0
  * Pseudo action:   ms3_demoted_0
  * Pseudo action:   ms3_stop_0
+ * Pseudo action:   stonith_complete
  * Resource action: rsc2            start on node1
  * Pseudo action:   rsc3:1_stop_0
  * Pseudo action:   ms3_stopped_0

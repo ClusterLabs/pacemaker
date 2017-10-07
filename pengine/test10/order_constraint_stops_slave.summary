@@ -9,8 +9,8 @@ OFFLINE: [ fc16-builder2 ]
  NATIVE_RSC_B	(ocf::pacemaker:Dummy):	Started fc16-builder ( disabled ) 
 
 Transition Summary:
- * Stop    NATIVE_RSC_A:0	(Slave fc16-builder)
- * Stop    NATIVE_RSC_B	(fc16-builder)
+ * Stop    NATIVE_RSC_A:0	(Slave fc16-builder) 	due to required NATIVE_RSC_B start
+ * Stop    NATIVE_RSC_B	(fc16-builder)  	due to node availability
 
 Executing cluster transition:
  * Pseudo action:   MASTER_RSC_A_pre_notify_stop_0

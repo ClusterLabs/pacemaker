@@ -25,33 +25,41 @@ Containers: [ lxc-01_kiff-02:R-lxc-01_kiff-02 lxc-02_kiff-02:R-lxc-02_kiff-02 ]
  vm-fs	(ocf::heartbeat:Filesystem):	FAILED lxc-01_kiff-01
 
 Transition Summary:
- * Fence lxc-02_kiff-01 (resource: R-lxc-02_kiff-01)
- * Fence lxc-01_kiff-01 (resource: R-lxc-01_kiff-01)
- * Fence kiff-01
- * Move    fence-kiff-02	(Started kiff-01 -> kiff-02)
- * Stop    dlm:0	(kiff-01)
- * Stop    clvmd:0	(kiff-01)
- * Stop    shared0:0	(kiff-01)
- * Recover R-lxc-01_kiff-01	(Started kiff-01 -> kiff-02)
- * Move    R-lxc-02_kiff-01	(Started kiff-01 -> kiff-02)
- * Recover vm-fs	(Started lxc-01_kiff-01)
- * Move    lxc-01_kiff-01	(Started kiff-01 -> kiff-02)
- * Move    lxc-02_kiff-01	(Started kiff-01 -> kiff-02)
+ * Fence (reboot) lxc-02_kiff-01 (resource: R-lxc-02_kiff-01) 'guest is unclean'
+ * Fence (reboot) lxc-01_kiff-01 (resource: R-lxc-01_kiff-01) 'guest is unclean'
+ * Fence (reboot) kiff-01 'peer is no longer part of the cluster'
+ * Move       fence-kiff-02        ( kiff-01 -> kiff-02 )  
+ * Stop    dlm:0	(kiff-01)  	due to node availability
+ * Stop    clvmd:0	(kiff-01)  	due to node availability
+ * Stop    shared0:0	(kiff-01)  	due to node availability
+ * Recover    R-lxc-01_kiff-01     ( kiff-01 -> kiff-02 )  
+ * Move       R-lxc-02_kiff-01     ( kiff-01 -> kiff-02 )  
+ * Recover    vm-fs                (     lxc-01_kiff-01 )  
+ * Move       lxc-01_kiff-01       ( kiff-01 -> kiff-02 )  
+ * Move       lxc-02_kiff-01       ( kiff-01 -> kiff-02 )  
 
 Executing cluster transition:
  * Pseudo action:   fence-kiff-02_stop_0
+ * Resource action: dlm             monitor on lxc-02_kiff-02
+ * Resource action: dlm             monitor on lxc-01_kiff-02
+ * Resource action: clvmd           monitor on lxc-02_kiff-02
+ * Resource action: clvmd           monitor on lxc-01_kiff-02
+ * Resource action: shared0         monitor on lxc-02_kiff-02
+ * Resource action: shared0         monitor on lxc-01_kiff-02
+ * Resource action: vm-fs           monitor on lxc-02_kiff-02
+ * Resource action: vm-fs           monitor on lxc-01_kiff-02
  * Fencing kiff-01 (reboot)
  * Pseudo action:   lxc-01_kiff-01_stop_0
  * Pseudo action:   lxc-02_kiff-01_stop_0
- * Pseudo action:   R-lxc-01_kiff-01_stop_0
- * Pseudo action:   R-lxc-02_kiff-01_stop_0
  * Pseudo action:   stonith-lxc-02_kiff-01-reboot on lxc-02_kiff-01
  * Pseudo action:   stonith-lxc-01_kiff-01-reboot on lxc-01_kiff-01
  * Pseudo action:   stonith_complete
+ * Pseudo action:   R-lxc-01_kiff-01_stop_0
+ * Pseudo action:   R-lxc-02_kiff-01_stop_0
+ * Pseudo action:   vm-fs_stop_0
  * Pseudo action:   shared0-clone_stop_0
  * Resource action: R-lxc-01_kiff-01 start on kiff-02
  * Resource action: R-lxc-02_kiff-01 start on kiff-02
- * Pseudo action:   vm-fs_stop_0
  * Resource action: lxc-01_kiff-01  start on kiff-02
  * Resource action: lxc-02_kiff-01  start on kiff-02
  * Pseudo action:   shared0_stop_0

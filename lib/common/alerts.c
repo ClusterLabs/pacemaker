@@ -18,22 +18,16 @@
 
 #include <crm_internal.h>
 #include <crm/crm.h>
+#include <crm/lrmd.h>
 #include <crm/msg_xml.h>
 #include <crm/common/alerts_internal.h>
-
-typedef struct {
-    char *name;
-    char *value;
-} envvar_t;
-
-GListPtr crm_alert_list = NULL;
-guint crm_alert_max_alert_timeout = CRM_ALERT_DEFAULT_TIMEOUT_MS;
+#include <crm/cib/internal.h> /* for F_CIB_UPDATE_RESULT */
 
 /*		
  * to allow script compatibility we can have more than one		
  * set of environment variables		
  */
-const char *crm_alert_keys[14][3] =		
+const char *crm_alert_keys[CRM_ALERT_INTERNAL_KEY_MAX][3] =		
 {		
     [CRM_alert_recipient]     = {"CRM_notify_recipient",     "CRM_alert_recipient",     NULL},		
     [CRM_alert_node]          = {"CRM_notify_node",          "CRM_alert_node",          NULL},		
@@ -47,174 +41,98 @@ const char *crm_alert_keys[14][3] =
     [CRM_alert_rc]            = {"CRM_notify_rc",            "CRM_alert_rc",            NULL},		
     [CRM_alert_kind]          = {"CRM_notify_kind",          "CRM_alert_kind",          NULL},		
     [CRM_alert_version]       = {"CRM_notify_version",       "CRM_alert_version",       NULL},		
-    [CRM_alert_node_sequence] = {"CRM_notify_node_sequence", "CRM_alert_node_sequence", NULL},		
-    [CRM_alert_timestamp]     = {"CRM_notify_timestamp",     "CRM_alert_timestamp",     NULL}		
+    [CRM_alert_node_sequence] = {"CRM_notify_node_sequence", CRM_ALERT_NODE_SEQUENCE, NULL},		
+    [CRM_alert_timestamp]     = {"CRM_notify_timestamp",     "CRM_alert_timestamp",     NULL},
+    [CRM_alert_attribute_name]     = {"CRM_notify_attribute_name",     "CRM_alert_attribute_name",     NULL},
+    [CRM_alert_attribute_value]     = {"CRM_notify_attribute_value",     "CRM_alert_attribute_value",     NULL}
 };
 
-static void		
-free_envvar_entry(envvar_t *entry)		
+void
+crm_free_alert_envvar(crm_alert_envvar_t *entry)
 {		
     free(entry->name);		
     free(entry->value);		
     free(entry);		
 }		
 
-static void		
-crm_free_alert_list_entry(crm_alert_entry_t *entry)		
+/*!
+ * \brief Create a new alert entry structure
+ *
+ * \param[in] id  ID to use
+ * \param[in] path  Path to alert agent executable
+ *
+ * \return Pointer to newly allocated alert entry
+ * \note Non-string fields will be filled in with defaults.
+ *       It is the caller's responsibility to free the result,
+ *       using crm_free_alert_entry().
+ */
+crm_alert_entry_t *
+crm_alert_entry_new(const char *id, const char *path)
+{
+    crm_alert_entry_t *entry = calloc(1, sizeof(crm_alert_entry_t));
+
+    CRM_ASSERT(entry && id && path);
+    entry->id = strdup(id);
+    entry->path = strdup(path);
+    entry->timeout = CRM_ALERT_DEFAULT_TIMEOUT_MS;
+    entry->flags = crm_alert_default;
+    return entry;
+}
+
+void
+crm_free_alert_entry(crm_alert_entry_t *entry)
 {		
-    free(entry->id);		
-    free(entry->path);		
-    free(entry->tstamp_format);		
-    free(entry->recipient);		
-    if (entry->envvars) {		
-        g_list_free_full(entry->envvars,		
-                         (GDestroyNotify) free_envvar_entry);		
-    }		
-    free(entry);		
+    if (entry) {
+        free(entry->id);
+        free(entry->path);
+        free(entry->tstamp_format);
+        free(entry->recipient);
+
+        g_strfreev(entry->select_attribute_name);
+        if (entry->envvars) {
+            g_hash_table_destroy(entry->envvars);
+        }
+        free(entry);
+    }
 }		
 
-void		
-crm_free_alert_list()		
+crm_alert_envvar_t *
+crm_dup_alert_envvar(crm_alert_envvar_t *src)
 {		
-    if (crm_alert_list) {		
-        g_list_free_full(crm_alert_list, (GDestroyNotify) crm_free_alert_list_entry);		
-        crm_alert_list = NULL;		
-    }		
-}		
-
-static gpointer		
-copy_envvar_entry(envvar_t * src,		
-                  gpointer data)		
-{		
-    envvar_t *dst = calloc(1, sizeof(envvar_t));		
+    crm_alert_envvar_t *dst = calloc(1, sizeof(crm_alert_envvar_t));		
 
     CRM_ASSERT(dst);		
     dst->name = strdup(src->name);		
     dst->value = src->value?strdup(src->value):NULL;		
-    return (gpointer) dst;		
-}		
-
-static GListPtr		
-add_dup_envvar(crm_alert_entry_t *entrys,		
-               envvar_t *entry)		
-{		
-    entrys->envvars = g_list_prepend(entrys->envvars, copy_envvar_entry(entry, NULL));		
-    return entrys->envvars;
-}		
-
-GListPtr		
-crm_drop_envvars(crm_alert_entry_t *entry, int count)		
-{		
-    int i;		
-		
-    for (i = 0;		
-         (entry->envvars) && ((count < 0) || (i < count));		
-         i++) {		
-        free_envvar_entry((envvar_t *) g_list_first(entry->envvars)->data);		
-        entry->envvars = g_list_delete_link(entry->envvars,		
-                                         g_list_first(entry->envvars));		
-    }		
-    return entry->envvars;		
-}		
-
-static GListPtr		
-copy_envvar_list_remove_dupes(crm_alert_entry_t *entry)		
-{		
-    GListPtr dst = NULL, ls, ld;		
-
-    /* we are adding to the front so variable dupes coming via		
-     * recipient-section have got precedence over those in the		
-     * global section - we don't expect that many variables here		
-     * that it pays off to go for a hash-table to make dupe elimination		
-     * more efficient - maybe later when we might decide to do more		
-     * with the variables than cycling through them		
-     */		
-
-    for (ls = g_list_first(entry->envvars); ls; ls = g_list_next(ls)) {		
-        for (ld = g_list_first(dst); ld; ld = g_list_next(ld)) {		
-            if (!strcmp(((envvar_t *)(ls->data))->name,		
-                        ((envvar_t *)(ld->data))->name)) {		
-                break;		
-            }		
-        }		
-        if (!ld) {		
-            dst = g_list_prepend(dst,		
-                    copy_envvar_entry((envvar_t *)(ls->data), NULL));		
-        }		
-    }		
-
     return dst;		
 }		
 
-void		
-crm_add_dup_alert_list_entry(crm_alert_entry_t *entry)		
-{		
-    crm_alert_entry_t *new_entry =		
-        (crm_alert_entry_t *) calloc(1, sizeof(crm_alert_entry_t));		
-
-    CRM_ASSERT(new_entry);		
-    *new_entry = (crm_alert_entry_t) {		
-        .id = strdup(entry->id),		
-        .path = strdup(entry->path),		
-        .timeout = entry->timeout,		
-        .tstamp_format = entry->tstamp_format?strdup(entry->tstamp_format):NULL,		
-        .recipient = entry->recipient?strdup(entry->recipient):NULL,		
-        .envvars = entry->envvars?		
-            copy_envvar_list_remove_dupes(entry)		
-            :NULL		
-    };		
-    crm_alert_list = g_list_prepend(crm_alert_list, new_entry);		
-}		
-
-GListPtr		
-crm_get_envvars_from_cib(xmlNode *basenode, crm_alert_entry_t *entry, int *count)		
-{		
-    xmlNode *envvar;		
-    xmlNode *pair;		
-
-    if ((!basenode) ||		
-        (!(envvar = first_named_child(basenode, XML_TAG_ATTR_SETS)))) {		
-        return entry->envvars;		
-    }		
-
-    for (pair = first_named_child(envvar, XML_CIB_TAG_NVPAIR);		
-         pair; pair = __xml_next(pair)) {		
-
-        envvar_t envvar_entry = (envvar_t) {		
-            .name = (char *) crm_element_value(pair, XML_NVPAIR_ATTR_NAME),		
-            .value = (char *) crm_element_value(pair, XML_NVPAIR_ATTR_VALUE)		
-        };		
-        crm_trace("Found environment variable %s = '%s'", envvar_entry.name,		
-                  envvar_entry.value?envvar_entry.value:"");		
-        (*count)++;		
-        add_dup_envvar(entry, &envvar_entry);		
-    }		
-
-    return entry->envvars;		
-}
-
-void
-crm_set_alert_key(enum crm_alert_keys_e name, const char *value)
+/*!
+ * \internal
+ * \brief Duplicate an alert entry
+ *
+ * \param[in] entry  Alert entry to duplicate
+ *
+ * \return Duplicate of alert entry
+ */
+crm_alert_entry_t *
+crm_dup_alert_entry(crm_alert_entry_t *entry)
 {
-    const char **key;
+    crm_alert_entry_t *new_entry = crm_alert_entry_new(entry->id, entry->path);
 
-    for (key = crm_alert_keys[name]; *key; key++) {
-        crm_trace("Setting alert key %s = '%s'", *key, value);
-        if (value) {
-            setenv(*key, value, 1);
-        } else {
-            unsetenv(*key);
-        }
+    new_entry->timeout = entry->timeout;
+    new_entry->flags = entry->flags;
+    new_entry->envvars = crm_str_table_dup(entry->envvars);
+    if (entry->tstamp_format) {
+        new_entry->tstamp_format = strdup(entry->tstamp_format);
     }
-}
-
-void
-crm_set_alert_key_int(enum crm_alert_keys_e name, int value)
-{
-    char *s = crm_itoa(value);
-
-    crm_set_alert_key(name, s);
-    free(s);
+    if (entry->recipient) {
+        new_entry->recipient = strdup(entry->recipient);
+    }
+    if (entry->select_attribute_name) {
+        new_entry->select_attribute_name = g_strdupv(entry->select_attribute_name);
+    }
+    return new_entry;
 }
 
 void
@@ -232,32 +150,141 @@ crm_unset_alert_keys()
 }
 
 void
-crm_set_envvar_list(crm_alert_entry_t *entry)
+crm_insert_alert_key(GHashTable *table, enum crm_alert_keys_e name,
+                     const char *value)
 {
-    GListPtr l;
-
-    for (l = g_list_first(entry->envvars); l; l = g_list_next(l)) {
-        envvar_t *env = (envvar_t *)(l->data);
-
-        crm_trace("Setting environment variable %s = '%s'", env->name,
-                  env->value?env->value:"");
-        if (env->value) {
-            setenv(env->name, env->value, 1);
+    for (const char **key = crm_alert_keys[name]; *key; key++) {
+        crm_trace("Inserting alert key %s = '%s'", *key, value);
+        if (value) {
+            g_hash_table_insert(table, strdup(*key), strdup(value));
         } else {
-            unsetenv(env->name);
+            g_hash_table_remove(table, *key);
         }
     }
 }
 
 void
+crm_insert_alert_key_int(GHashTable *table, enum crm_alert_keys_e name,
+                         int value)
+{
+    for (const char **key = crm_alert_keys[name]; *key; key++) {
+        crm_trace("Inserting alert key %s = %d", *key, value);
+        g_hash_table_insert(table, strdup(*key), crm_itoa(value));
+    }
+}
+
+static void
+set_envvar(gpointer key, gpointer value, gpointer user_data)
+{
+    gboolean always_unset = GPOINTER_TO_INT(user_data);
+
+    crm_trace("%s environment variable %s='%s'",
+              (value? "Setting" : "Unsetting"),
+              (char*)key, (value? (char*)value : ""));
+    if (value && !always_unset) {
+        setenv(key, value, 1);
+    } else {
+        unsetenv(key);
+    }
+}
+
+void
+crm_set_envvar_list(crm_alert_entry_t *entry)
+{
+    if (entry->envvars) {
+        g_hash_table_foreach(entry->envvars, set_envvar, GINT_TO_POINTER(FALSE));
+    }
+}
+
+/*
+ * \note We have no way of restoring a previous value if one was set.
+ */
+void
 crm_unset_envvar_list(crm_alert_entry_t *entry)
 {
-    GListPtr l;
-
-    for (l = g_list_first(entry->envvars); l; l = g_list_next(l)) {
-        envvar_t *env = (envvar_t *)(l->data);
-
-        crm_trace("Unsetting environment variable %s", env->name);
-        unsetenv(env->name);
+    if (entry->envvars) {
+        g_hash_table_foreach(entry->envvars, set_envvar, GINT_TO_POINTER(TRUE));
     }
+}
+
+#define XPATH_PATCHSET1_DIFF "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED
+
+#define XPATH_PATCHSET1_CRMCONFIG XPATH_PATCHSET1_DIFF "//" XML_CIB_TAG_CRMCONFIG
+#define XPATH_PATCHSET1_ALERTS    XPATH_PATCHSET1_DIFF "//" XML_CIB_TAG_ALERTS
+
+#define XPATH_PATCHSET1_EITHER \
+    XPATH_PATCHSET1_CRMCONFIG " | " XPATH_PATCHSET1_ALERTS
+
+#define XPATH_CONFIG "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION
+
+#define XPATH_CRMCONFIG XPATH_CONFIG "/" XML_CIB_TAG_CRMCONFIG "/"
+#define XPATH_ALERTS    XPATH_CONFIG "/" XML_CIB_TAG_ALERTS
+
+/*!
+ * \internal
+ * \brief Check whether a CIB update affects alerts
+ *
+ * \param[in] msg     XML containing CIB update
+ * \param[in] config  Whether to check for crmconfig change as well
+ *
+ * \return TRUE if update affects alerts, FALSE otherwise
+ */
+bool
+crm_patchset_contains_alert(xmlNode *msg, bool config)
+{
+    int rc = -1;
+    int format= 1;
+    xmlNode *patchset = get_message_xml(msg, F_CIB_UPDATE_RESULT);
+    xmlNode *change = NULL;
+    xmlXPathObject *xpathObj = NULL;
+
+    CRM_CHECK(msg != NULL, return FALSE);
+
+    crm_element_value_int(msg, F_CIB_RC, &rc);
+    if (rc < pcmk_ok) {
+        crm_trace("Ignore failed CIB update: %s (%d)", pcmk_strerror(rc), rc);
+        return FALSE;
+    }
+
+    crm_element_value_int(patchset, "format", &format);
+    if (format == 1) {
+        const char *diff = (config? XPATH_PATCHSET1_EITHER : XPATH_PATCHSET1_ALERTS);
+
+        if ((xpathObj = xpath_search(msg, diff)) != NULL) {
+            freeXpathObject(xpathObj);
+            return TRUE;
+        }
+    } else if (format == 2) {
+        for (change = __xml_first_child(patchset); change != NULL; change = __xml_next(change)) {
+            const char *xpath = crm_element_value(change, XML_DIFF_PATH);
+
+            if (xpath == NULL) {
+                continue;
+            }
+
+            if ((!config || !strstr(xpath, XPATH_CRMCONFIG))
+                && !strstr(xpath, XPATH_ALERTS)) {
+
+                /* this is not a change to an existing section ... */
+
+                xmlNode *section = NULL;
+                const char *name = NULL;
+
+                if ((strcmp(xpath, XPATH_CONFIG) != 0) ||
+                    ((section = __xml_first_child(change)) == NULL) ||
+                    ((name = crm_element_name(section)) == NULL) ||
+                    (strcmp(name, XML_CIB_TAG_ALERTS) != 0)) {
+
+                    /* ... nor is it a newly added alerts section */
+                    continue;
+                }
+            }
+
+            return TRUE;
+        }
+
+    } else {
+        crm_warn("Unknown patch format: %d", format);
+    }
+    return FALSE;
 }

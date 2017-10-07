@@ -15,12 +15,12 @@ Online: [ deglxen001 ]
      Started: [ deglxen001 deglxen002 ]
 
 Transition Summary:
- * Migrate degllx62-vm	(Started deglxen002 -> deglxen001)
+ * Migrate    degllx62-vm             ( deglxen002 -> deglxen001 )  
  * Stop    degllx61-vm	(deglxen001)
- * Stop    nfs-xen_config:1	(deglxen002)
- * Stop    nfs-xen_swapfiles:1	(deglxen002)
- * Stop    nfs-xen_images:1	(deglxen002)
- * Stop    prim-ping:1	(deglxen002)
+ * Stop    nfs-xen_config:1	(deglxen002)  	due to node availability
+ * Stop    nfs-xen_swapfiles:1	(deglxen002)  	due to node availability
+ * Stop    nfs-xen_images:1	(deglxen002)  	due to node availability
+ * Stop    prim-ping:1	(deglxen002)  	due to node availability
 
 Executing cluster transition:
  * Resource action: degllx61-vm     stop on deglxen001

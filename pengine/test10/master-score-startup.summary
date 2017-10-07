@@ -1,0 +1,52 @@
+
+Current cluster status:
+Online: [ srv1 srv2 ]
+
+ Master/Slave Set: pgsql-ha [pgsqld]
+     Stopped: [ srv1 srv2 ]
+ pgsql-master-ip	(ocf::heartbeat:IPaddr2):	Stopped
+
+Transition Summary:
+ * Promote    pgsqld:0            ( Stopped -> Master srv1 )  
+ * Start      pgsqld:1            (                   srv2 )  
+ * Start      pgsql-master-ip     (                   srv1 )  
+
+Executing cluster transition:
+ * Resource action: pgsqld:0        monitor on srv1
+ * Resource action: pgsqld:1        monitor on srv2
+ * Pseudo action:   pgsql-ha_pre_notify_start_0
+ * Resource action: pgsql-master-ip monitor on srv2
+ * Resource action: pgsql-master-ip monitor on srv1
+ * Pseudo action:   pgsql-ha_confirmed-pre_notify_start_0
+ * Pseudo action:   pgsql-ha_start_0
+ * Resource action: pgsqld:0        start on srv1
+ * Resource action: pgsqld:1        start on srv2
+ * Pseudo action:   pgsql-ha_running_0
+ * Pseudo action:   pgsql-ha_post_notify_running_0
+ * Resource action: pgsqld:0        notify on srv1
+ * Resource action: pgsqld:1        notify on srv2
+ * Pseudo action:   pgsql-ha_confirmed-post_notify_running_0
+ * Pseudo action:   pgsql-ha_pre_notify_promote_0
+ * Resource action: pgsqld:0        notify on srv1
+ * Resource action: pgsqld:1        notify on srv2
+ * Pseudo action:   pgsql-ha_confirmed-pre_notify_promote_0
+ * Pseudo action:   pgsql-ha_promote_0
+ * Resource action: pgsqld:0        promote on srv1
+ * Pseudo action:   pgsql-ha_promoted_0
+ * Pseudo action:   pgsql-ha_post_notify_promoted_0
+ * Resource action: pgsqld:0        notify on srv1
+ * Resource action: pgsqld:1        notify on srv2
+ * Pseudo action:   pgsql-ha_confirmed-post_notify_promoted_0
+ * Resource action: pgsql-master-ip start on srv1
+ * Resource action: pgsqld:0        monitor=15000 on srv1
+ * Resource action: pgsqld:1        monitor=16000 on srv2
+ * Resource action: pgsql-master-ip monitor=10000 on srv1
+
+Revised cluster status:
+Online: [ srv1 srv2 ]
+
+ Master/Slave Set: pgsql-ha [pgsqld]
+     Masters: [ srv1 ]
+     Slaves: [ srv2 ]
+ pgsql-master-ip	(ocf::heartbeat:IPaddr2):	Started srv1
+

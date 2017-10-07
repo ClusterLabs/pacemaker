@@ -18,31 +18,18 @@
 
 #include <crm_internal.h>
 
-#include <unistd.h>             /* for access */
-#include <sys/types.h>          /* for calls to open */
-#include <sys/stat.h>           /* for calls to open */
-#include <fcntl.h>              /* for calls to open */
-#include <pwd.h>                /* for getpwuid */
-#include <grp.h>                /* for initgroups */
 #include <errno.h>
+#include <fcntl.h>   /* open */
+#include <sys/resource.h>  /* getrlimit */
+#include <sys/stat.h>  /* open, stat */
+#include <sys/time.h>  /* getrlimit */
+#include <unistd.h>  /* access, fork, pid_t, setpgid */
 
-#include <sys/wait.h>
-#include <sys/time.h>           /* for getrlimit */
-#include <sys/param.h>
-#include <sys/types.h>
-#include <sys/resource.h>       /* for getrlimit */
-
-#include <crm/crm.h>
-#include <crm/msg_xml.h>
-#include <crm/common/xml.h>
-#include <crm/cib.h>
-
-#include <crmd_fsa.h>
-#include <crmd_messages.h>
-#include <crmd_callbacks.h>
-
-#include <crmd.h>
 #include <crm/common/util.h>
+#include <crm/crm.h>  /* DAEMON_RESPAWN_STOP */
+
+#include <crmd_fsa.h>  /* fsa_input_register */
+
 
 static void
 crmd_child_exit(mainloop_child_t * p, pid_t pid, int core, int signo, int exitcode)

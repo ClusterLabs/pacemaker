@@ -22,6 +22,7 @@
 
 #include <glib.h>       /* for gboolean */
 #include <dirent.h>     /* for struct dirent */
+#include <unistd.h>     /* for getpid() */
 #include <sys/types.h>  /* for uid_t and gid_t */
 
 #include <crm/common/logging.h>
@@ -62,6 +63,7 @@ char *crm_concat(const char *prefix, const char *suffix, char join);
 void g_hash_destroy_str(gpointer data);
 long long crm_int_helper(const char *text, char **end_text);
 gboolean crm_ends_with(const char *s, const char *match);
+gboolean crm_ends_with_ext(const char *s, const char *match);
 char *add_list_element(char *list, const char *value);
 bool crm_compress_string(const char *data, int length, int max, char **result,
                          unsigned int *result_len);
@@ -70,6 +72,12 @@ static inline int
 crm_strlen_zero(const char *s)
 {
     return !s || *s == '\0';
+}
+
+static inline char *
+crm_getpid_s()
+{
+    return crm_strdup_printf("%lu", (unsigned long) getpid());
 }
 
 /* convenience functions for failure-related node attributes */

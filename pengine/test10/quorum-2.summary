@@ -7,8 +7,8 @@ Online: [ node1 node2 ]
  rsc3	(heartbeat:apache):	Stopped 
 
 Transition Summary:
- * Move    rsc2	(Started node1 -> node2)
- * Start   rsc3	(node1 - blocked)
+ * Move       rsc2    ( node1 -> node2 )  
+ * Start      rsc3    (          node1 )   due to quorum freeze (blocked)
 
 Executing cluster transition:
  * Resource action: rsc1            monitor on node2
