@@ -245,6 +245,7 @@ metadata_cache_update(GHashTable *mdc, lrmd_rsc_info_t *rsc,
     }
 
     g_hash_table_replace(mdc, key, md);
+    free_xml(metadata);
     return md;
 
 err:
