@@ -483,6 +483,7 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
         delay_base = delay_max;
     }
     if (delay_max > 0) {
+        // coverity[dont_call] We're not using rand() for security
         cmd->start_delay =
             ((delay_max != delay_base)?(rand() % (delay_max - delay_base)):0)
             + delay_base;

@@ -22,6 +22,8 @@ static char *notify_target = NULL;
 void
 pe_enable_legacy_alerts(const char *script, const char *target)
 {
+    static bool need_warning = TRUE;
+
     free(notify_script);
     notify_script = (script && strcmp(script, "/dev/null"))?
                     strdup(script) : NULL;
@@ -30,10 +32,12 @@ pe_enable_legacy_alerts(const char *script, const char *target)
     notify_target = target? strdup(target): NULL;
 
     if (notify_script || notify_target) {
-        pe_warn_once(pe_wo_legacy_notifs,
-                     "Support for 'notification-agent' and 'notification-target' cluster options"
+        if (need_warning) {
+            crm_warn("Support for 'notification-agent' and 'notification-target' cluster options"
                      " is deprecated and will be removed in a future release"
                      " (use alerts feature instead)");
+            need_warning = FALSE;
+        }
     }
 }
 #endif

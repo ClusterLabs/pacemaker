@@ -369,7 +369,7 @@ main(int argc, char **argv)
 
     char *xml_file = NULL;
     crm_ipc_t *crmd_channel = NULL;
-    pe_working_set_t data_set;
+    pe_working_set_t data_set = { 0, };
     cib_t *cib_conn = NULL;
     bool recursive = FALSE;
     char *our_pid = NULL;
@@ -574,15 +574,19 @@ main(int argc, char **argv)
             case 'I':
                 interval = optarg;
                 break;
-            
+
             case 'D':
-                require_dataset = FALSE; 
+                require_dataset = FALSE;
                 crm_log_args(argc, argv);
                 rsc_cmd = flag;
                 break;
 
             case 'F':
                 require_crmd = TRUE;
+                crm_log_args(argc, argv);
+                rsc_cmd = flag;
+                break;
+
             case 'U':
             case 'B':
             case 'M':
@@ -596,7 +600,10 @@ main(int argc, char **argv)
             case 'O':
             case 'o':
             case 'Y':
-                 require_resource = FALSE;
+                require_resource = FALSE;
+                rsc_cmd = flag;
+                break;
+
             case 'q':
             case 'w':
             case 'W':
@@ -608,14 +615,21 @@ main(int argc, char **argv)
             case 'j':
                 print_pending = TRUE;
                 break;
+
             case 'S':
-                require_dataset = FALSE;  
+                require_dataset = FALSE;
+                crm_log_args(argc, argv);
+                prop_name = optarg;
+                rsc_cmd = flag;
+                break;
+
             case 'p':
             case 'd':
                 crm_log_args(argc, argv);
                 prop_name = optarg;
                 rsc_cmd = flag;
                 break;
+
             case 'G':
             case 'g':
                 prop_name = optarg;
