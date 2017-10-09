@@ -14,12 +14,27 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Resource Templates"
+msgid "Reusing Parts of the Configuration"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "If you want to create lots of resources with similar configurations, defining a resource template simplifies the task. Once defined, it can be referenced in primitives or in certain types of constraints."
+msgid "Pacemaker provides multiple ways to simplify the configuration XML by reusing parts of it in multiple places."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Besides simplifying the XML, this also allows you to manipulate multiple configuration elements with a single reference."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Reusing Resource Definitions"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If you want to create lots of resources with similar configurations, defining a <emphasis>resource template</emphasis> simplifies the task. Once defined, it can be referenced in primitives or in certain types of constraints."
 msgstr ""
 
 #. Tag: title
@@ -170,7 +185,7 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Referencing Templates in Constraints"
+msgid "Using Templates in Constraints"
 msgstr ""
 
 #. Tag: para
@@ -233,7 +248,7 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Referencing Resource Templates in Sequential Resource Sets"
+msgid "Using Templates in Resource Sets"
 msgstr ""
 
 #. Tag: para
@@ -243,7 +258,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "For example:"
+msgid "For example, given the example templates earlier in this section, then:"
 msgstr ""
 
 #. Tag: programlisting
@@ -252,6 +267,43 @@ msgid "&lt;rsc_order id=\"order1\" score=\"INFINITY\"&gt;\n"
 "  &lt;resource_set id=\"order1-0\"&gt;\n"
 "    &lt;resource_ref id=\"base-rsc\"/&gt;\n"
 "    &lt;resource_ref id=\"vm-template\"/&gt;\n"
+"    &lt;resource_ref id=\"top-rsc\"/&gt;\n"
+"  &lt;/resource_set&gt;\n"
+"&lt;/rsc_order&gt;"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "is the equivalent of the following constraint using a sequential resource set:"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;rsc_order id=\"order1\" score=\"INFINITY\"&gt;\n"
+"  &lt;resource_set id=\"order1-0\"&gt;\n"
+"    &lt;resource_ref id=\"base-rsc\"/&gt;\n"
+"    &lt;resource_ref id=\"vm1\"/&gt;\n"
+"    &lt;resource_ref id=\"vm2\"/&gt;\n"
+"    &lt;resource_ref id=\"top-rsc\"/&gt;\n"
+"  &lt;/resource_set&gt;\n"
+"&lt;/rsc_order&gt;"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Or, if the resources referencing the template can run in parallel, then:"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;rsc_order id=\"order2\" score=\"INFINITY\"&gt;\n"
+"  &lt;resource_set id=\"order2-0\"&gt;\n"
+"    &lt;resource_ref id=\"base-rsc\"/&gt;\n"
+"  &lt;/resource_set&gt;\n"
+"  &lt;resource_set id=\"order2-1\" sequential=\"false\"&gt;\n"
+"    &lt;resource_ref id=\"vm-template\"/&gt;\n"
+"  &lt;/resource_set&gt;\n"
+"  &lt;resource_set id=\"order2-2\"&gt;\n"
 "    &lt;resource_ref id=\"top-rsc\"/&gt;\n"
 "  &lt;/resource_set&gt;\n"
 "&lt;/rsc_order&gt;"
@@ -264,11 +316,15 @@ msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "&lt;rsc_order id=\"order1\" score=\"INFINITY\"&gt;\n"
-"  &lt;resource_set id=\"order1-0\"&gt;\n"
+msgid "&lt;rsc_order id=\"order2\" score=\"INFINITY\"&gt;\n"
+"  &lt;resource_set id=\"order2-0\"&gt;\n"
 "    &lt;resource_ref id=\"base-rsc\"/&gt;\n"
+"  &lt;/resource_set&gt;\n"
+"  &lt;resource_set id=\"order2-1\" sequential=\"false\"&gt;\n"
 "    &lt;resource_ref id=\"vm1\"/&gt;\n"
 "    &lt;resource_ref id=\"vm2\"/&gt;\n"
+"  &lt;/resource_set&gt;\n"
+"  &lt;resource_set id=\"order2-2\"&gt;\n"
 "    &lt;resource_ref id=\"top-rsc\"/&gt;\n"
 "  &lt;/resource_set&gt;\n"
 "&lt;/rsc_order&gt;"
@@ -276,42 +332,174 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Referencing Resource Templates in Parallel Resource Sets"
+msgid "Reusing Rules, Options and Sets of Operations"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "If the resources referencing the template can run in parallel:"
+msgid "Sometimes a number of constraints need to use the same set of rules, and resources need to set the same options and parameters. To simplify this situation, you can refer to an existing object using an <literal>id-ref</literal> instead of an <literal>id</literal>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "So if for one resource you have"
 msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "&lt;rsc_order id=\"order2\" score=\"INFINITY\"&gt;\n"
-"  &lt;resource_set id=\"order2-0\"&gt;\n"
-"    &lt;resource_ref id=\"base-rsc\"/&gt;\n"
-"  &lt;/resource_set&gt;\n"
-"  &lt;resource_set id=\"order2-1\" sequential=\"false\"&gt;\n"
-"    &lt;resource_ref id=\"vm-template\"/&gt;\n"
-"  &lt;/resource_set&gt;\n"
-"  &lt;resource_set id=\"order2-2\"&gt;\n"
-"    &lt;resource_ref id=\"top-rsc\"/&gt;\n"
-"  &lt;/resource_set&gt;\n"
-"&lt;/rsc_order&gt;"
+msgid "&lt;rsc_location id=\"WebServer-connectivity\" rsc=\"Webserver\"&gt;\n"
+"   &lt;rule id=\"ping-prefer-rule\" score-attribute=\"pingd\" &gt;\n"
+"    &lt;expression id=\"ping-prefer\" attribute=\"pingd\" operation=\"defined\"/&gt;\n"
+"   &lt;/rule&gt;\n"
+"&lt;/rsc_location&gt;"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Then instead of duplicating the rule for all your other resources, you can instead specify:"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Referencing rules from other constraints"
 msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "&lt;rsc_order id=\"order2\" score=\"INFINITY\"&gt;\n"
-"  &lt;resource_set id=\"order2-0\"&gt;\n"
-"    &lt;resource_ref id=\"base-rsc\"/&gt;\n"
-"  &lt;/resource_set&gt;\n"
-"  &lt;resource_set id=\"order2-1\" sequential=\"false\"&gt;\n"
-"    &lt;resource_ref id=\"vm1\"/&gt;\n"
-"    &lt;resource_ref id=\"vm2\"/&gt;\n"
-"  &lt;/resource_set&gt;\n"
-"  &lt;resource_set id=\"order2-2\"&gt;\n"
-"    &lt;resource_ref id=\"top-rsc\"/&gt;\n"
-"  &lt;/resource_set&gt;\n"
-"&lt;/rsc_order&gt;"
+msgid "&lt;rsc_location id=\"WebDB-connectivity\" rsc=\"WebDB\"&gt;\n"
+"      &lt;rule id-ref=\"ping-prefer-rule\"/&gt;\n"
+"&lt;/rsc_location&gt;"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The cluster will insist that the <literal>rule</literal> exists somewhere. Attempting to add a reference to a non-existing rule will cause a validation failure, as will attempting to remove a <literal>rule</literal> that is referenced elsewhere."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The same principle applies for <literal>meta_attributes</literal> and <literal>instance_attributes</literal> as illustrated in the example below:"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Referencing attributes, options, and operations from other resources"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;primitive id=\"mySpecialRsc\" class=\"ocf\" type=\"Special\" provider=\"me\"&gt;\n"
+"   &lt;instance_attributes id=\"mySpecialRsc-attrs\" score=\"1\" &gt;\n"
+"     &lt;nvpair id=\"default-interface\" name=\"interface\" value=\"eth0\"/&gt;\n"
+"     &lt;nvpair id=\"default-port\" name=\"port\" value=\"9999\"/&gt;\n"
+"   &lt;/instance_attributes&gt;\n"
+"   &lt;meta_attributes id=\"mySpecialRsc-options\"&gt;\n"
+"     &lt;nvpair id=\"failure-timeout\" name=\"failure-timeout\" value=\"5m\"/&gt;\n"
+"     &lt;nvpair id=\"migration-threshold\" name=\"migration-threshold\" value=\"1\"/&gt;\n"
+"     &lt;nvpair id=\"stickiness\" name=\"resource-stickiness\" value=\"0\"/&gt;\n"
+"   &lt;/meta_attributes&gt;\n"
+"   &lt;operations id=\"health-checks\"&gt;\n"
+"     &lt;op id=\"health-check\" name=\"monitor\" interval=\"60s\"/&gt;\n"
+"     &lt;op id=\"health-check\" name=\"monitor\" interval=\"30min\"/&gt;\n"
+"   &lt;/operations&gt;\n"
+"&lt;/primitive&gt;\n"
+"&lt;primitive id=\"myOtherlRsc\" class=\"ocf\" type=\"Other\" provider=\"me\"&gt;\n"
+"   &lt;instance_attributes id-ref=\"mySpecialRsc-attrs\"/&gt;\n"
+"   &lt;meta_attributes id-ref=\"mySpecialRsc-options\"/&gt;\n"
+"   &lt;operations id-ref=\"health-checks\"/&gt;\n"
+"&lt;/primitive&gt;"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Tagging Configuration Elements"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Pacemaker allows you to <emphasis>tag</emphasis> any configuration element that has an XML ID."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The main purpose of tagging is to support higher-level user interface tools; Pacemaker itself only uses tags within constraints. Therefore, what you can do with tags mostly depends on the tools you use."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Configuring Tags"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "A tag is simply a named list of XML IDs."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Tag referencing three resources"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;tags&gt;\n"
+"  &lt;tag id=\"all-vms\"&gt;\n"
+"    &lt;obj_ref id=\"vm1\"/&gt;\n"
+"    &lt;obj_ref id=\"vm2\"/&gt;\n"
+"    &lt;obj_ref id=\"vm3\"/&gt;\n"
+"  &lt;/tag&gt;\n"
+"&lt;/tags&gt;"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "What you can do with this new tag depends on what your higher-level tools support. For example, a tool might allow you to enable or disable all of the tagged resources at once, or show the status of just the tagged resources."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "A single configuration element can be listed in any number of tags."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Using Tags in Constraints and Resource Sets"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Pacemaker itself only uses tags in constraints. If you supply a tag name instead of a resource name in any constraint, the constraint will apply to all resources listed in that tag."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Constraint using a tag"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;rsc_order id=\"order1\" first=\"storage\" then=\"all-vms\" kind=\"Mandatory\" /&gt;"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In the example above, assuming the <literal>all-vms</literal> tag is defined as in the previous example, the constraint will behave the same as:"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Equivalent constraints without tags"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;rsc_order id=\"order1-1\" first=\"storage\" then=\"vm1\" kind=\"Mandatory\" /&gt;\n"
+"&lt;rsc_order id=\"order1-2\" first=\"storage\" then=\"vm2\" kind=\"Mandatory\" /&gt;\n"
+"&lt;rsc_order id=\"order1-3\" first=\"storage\" then=\"vm2\" kind=\"Mandatory\" /&gt;"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "A tag may be used directly in the constraint, or indirectly by being listed in a <link linkend=\"s-resource-sets\">resource set</link> used in the constraint. When used in a resource set, an expanded tag will honor the set’s <literal>sequential</literal> property."
 msgstr ""
 

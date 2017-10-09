@@ -1041,7 +1041,7 @@ https://en.wikipedia.org/wiki/Operating-system-level_virtualization[container]
 with any infrastructure it requires: the 'bundle'.
 
 Pacemaker bundles support https://www.docker.com/[Docker] (since version
-1.1.17) and https://coreos.com/rkt/[rkt] (coming in version 1.1.18) container
+1.1.17) and https://coreos.com/rkt/[rkt] (since version 1.1.18) container
 technologies.
 footnote:[Docker is a trademark of Docker, Inc. No endorsement by or
 association with Docker, Inc. is implied.]

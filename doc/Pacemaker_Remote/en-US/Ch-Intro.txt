@@ -77,6 +77,10 @@ due to important bug fixes. An overview of changes in pacemaker_remote
 capability by version (aside from bug fixes, which are included in every
 version):
 
+.1.1.18
+* Support for unfencing remote nodes (useful with "fabric fencing" agents)
+* Guest nodes are now probed for resource status before starting resources
+
 .1.1.16
 * Support for watchdog-based fencing (sbd) on remote nodes
 
