@@ -190,8 +190,11 @@ schema_sort(const struct dirent **a, const struct dirent **b)
     schema_version_t a_version = SCHEMA_ZERO;
     schema_version_t b_version = SCHEMA_ZERO;
 
-    version_from_filename(a[0]->d_name, &a_version);
-    version_from_filename(b[0]->d_name, &b_version);
+    if (!version_from_filename(a[0]->d_name, &a_version)
+        || !version_from_filename(b[0]->d_name, &b_version)) {
+        // Shouldn't be possible, but makes static analysis happy
+        return 0;
+    }
 
     for (int i = 0; i < 2; ++i) {
         if (a_version.v[i] < b_version.v[i]) {
@@ -294,13 +297,19 @@ crm_schema_init(void)
             schema_version_t version = SCHEMA_ZERO;
             char *transform = NULL;
 
-            version_from_filename(namelist[lpc]->d_name, &version);
+            if (!version_from_filename(namelist[lpc]->d_name, &version)) {
+                // Shouldn't be possible, but makes static analysis happy
+                crm_err("Skipping schema '%s': could not parse version",
+                        namelist[lpc]->d_name);
+                free(namelist[lpc]);
+                continue;
+            }
             if ((lpc + 1) < max) {
                 schema_version_t next_version = SCHEMA_ZERO;
 
-                version_from_filename(namelist[lpc+1]->d_name, &next_version);
+                if (version_from_filename(namelist[lpc+1]->d_name, &next_version)
+                    && (version.v[0] < next_version.v[0])) {
 
-                if (version.v[0] < next_version.v[0]) {
                     struct stat s;
                     char *xslt = NULL;
 
