@@ -28,8 +28,6 @@
 
 extern gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set);
 
-static int master_score(resource_t * rsc, node_t * node, int not_set_value);
-
 static void
 child_promoting_constraints(clone_variant_data_t * clone_data, enum pe_ordering type,
                             resource_t * rsc, resource_t * child, resource_t * last,
@@ -469,6 +467,9 @@ master_score(resource_t * rsc, node_t * node, int not_set_value)
     char *name = rsc->id;
     const char *attr_value = NULL;
     int score = not_set_value;
+    node_t *match = NULL;
+
+    CRM_CHECK(node != NULL, return not_set_value);
 
     if (rsc->children) {
         GListPtr gIter = rsc->children;
@@ -486,44 +487,34 @@ master_score(resource_t * rsc, node_t * node, int not_set_value)
         return score;
     }
 
-    if (node == NULL) {
-        if (rsc->fns->state(rsc, TRUE) < RSC_ROLE_STARTED) {
-            pe_rsc_trace(rsc, "Ignoring master score for %s: unknown state", rsc->id);
+    if (is_not_set(rsc->flags, pe_rsc_unique) && filter_anonymous_instance(rsc, node)) {
+        pe_rsc_trace(rsc, "Anonymous clone %s is allowed on %s", rsc->id, node->details->uname);
+
+    } else if (rsc->running_on || g_hash_table_size(rsc->known_on)) {
+        /* If we've probed and/or started the resource anywhere, consider
+         * master scores only from nodes where we know the status. However,
+         * if the status of all nodes is unknown (e.g. cluster startup),
+         * skip this code, to make sure we take into account any permanent
+         * master scores set previously.
+         */
+        node_t *known = pe_hash_table_lookup(rsc->known_on, node->details->id);
+
+        match = pe_find_node_id(rsc->running_on, node->details->id);
+        if ((match == NULL) && (known == NULL)) {
+            pe_rsc_trace(rsc, "skipping %s (aka. %s) master score on %s because inactive",
+                         rsc->id, rsc->clone_name, node->details->uname);
             return score;
         }
+    }
 
-    } else {
-        node_t *match = NULL;
+    match = pe_hash_table_lookup(rsc->allowed_nodes, node->details->id);
+    if (match == NULL) {
+        return score;
 
-        if (is_not_set(rsc->flags, pe_rsc_unique) && filter_anonymous_instance(rsc, node)) {
-            pe_rsc_trace(rsc, "Anonymous clone %s is allowed on %s", rsc->id, node->details->uname);
-
-        } else if (rsc->running_on || g_hash_table_size(rsc->known_on)) {
-            /* If we've probed and/or started the resource anywhere, consider
-             * master scores only from nodes where we know the status. However,
-             * if the status of all nodes is unknown (e.g. cluster startup),
-             * skip this code, to make sure we take into account any permanent
-             * master scores set previously.
-             */
-            node_t *known = pe_hash_table_lookup(rsc->known_on, node->details->id);
-
-            match = pe_find_node_id(rsc->running_on, node->details->id);
-            if ((match == NULL) && (known == NULL)) {
-                pe_rsc_trace(rsc, "skipping %s (aka. %s) master score on %s because inactive",
-                             rsc->id, rsc->clone_name, node->details->uname);
-                return score;
-            }
-        }
-
-        match = pe_hash_table_lookup(rsc->allowed_nodes, node->details->id);
-        if (match == NULL) {
-            return score;
-
-        } else if (match->weight < 0) {
-            pe_rsc_trace(rsc, "%s on %s has score: %d - ignoring",
-                         rsc->id, match->details->uname, match->weight);
-            return score;
-        }
+    } else if (match->weight < 0) {
+        pe_rsc_trace(rsc, "%s on %s has score: %d - ignoring",
+                     rsc->id, match->details->uname, match->weight);
+        return score;
     }
 
     if (rsc->clone_name) {
@@ -723,7 +714,6 @@ master_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
         switch (next_role) {
             case RSC_ROLE_STARTED:
             case RSC_ROLE_UNKNOWN:
-                CRM_CHECK(chosen != NULL, break);
                 /*
                  * Default to -1 if no value is set
                  *
