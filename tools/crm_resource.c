@@ -369,7 +369,7 @@ main(int argc, char **argv)
 
     char *xml_file = NULL;
     crm_ipc_t *crmd_channel = NULL;
-    pe_working_set_t data_set;
+    pe_working_set_t data_set = { 0, };
     cib_t *cib_conn = NULL;
     bool recursive = FALSE;
     char *our_pid = NULL;
