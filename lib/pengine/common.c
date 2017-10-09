@@ -359,6 +359,7 @@ role2text(enum rsc_role_e role)
     }
     CRM_CHECK(role >= RSC_ROLE_UNKNOWN, return RSC_ROLE_UNKNOWN_S);
     CRM_CHECK(role < RSC_ROLE_MAX, return RSC_ROLE_UNKNOWN_S);
+    // coverity[dead_error_line]
     return RSC_ROLE_UNKNOWN_S;
 }
 
