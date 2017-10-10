@@ -894,8 +894,12 @@ build_device_from_xml(xmlNode * msg)
     }
 
     device->work = mainloop_add_trigger(G_PRIORITY_HIGH, stonith_device_dispatch, device);
-    /* TODO: Hook up priority */
-
+    
+    value = g_hash_table_lookup(device->params, "priority");
+    int priority = crm_atoi(value, NULL);
+    if (!priority) {
+        device->priority = value;
+    }
     return device;
 }
 
