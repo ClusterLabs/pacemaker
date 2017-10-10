@@ -199,6 +199,7 @@ inject_node_state(cib_t * cib_conn, const char *node, const char *uuid)
         crm_log_xml_warn(cib_object, "Duplicates");
         free(xpath);
         crm_exit(ENOTUNIQ);
+        return NULL; // not reached, but makes static analysis happy
     }
 
     if (rc == -ENXIO) {
