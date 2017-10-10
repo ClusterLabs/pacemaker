@@ -254,6 +254,9 @@
       <trigger>
         <rsc_op id="42" operation="stop" operation_key="galera-bundle-0_stop_0" on_node="undercloud" on_node_uuid="1"/>
       </trigger>
+      <trigger>
+        <pseudo_event id="46" operation="stop" operation_key="galera-bundle_stop_0"/>
+      </trigger>
     </inputs>
   </synapse>
   <synapse id="18">
@@ -525,6 +528,26 @@
   </synapse>
   <synapse id="39" priority="1000000">
     <action_set>
+      <pseudo_event id="47" operation="stopped" operation_key="galera-bundle_stopped_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="40" operation="stop" operation_key="galera-bundle-docker-0_stop_0" on_node="undercloud" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="40">
+    <action_set>
+      <pseudo_event id="46" operation="stop" operation_key="galera-bundle_stop_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="41" priority="1000000">
+    <action_set>
       <pseudo_event id="45" operation="running" operation_key="galera-bundle_running_0">
         <attributes CRM_meta_timeout="20000" />
       </pseudo_event>
@@ -538,7 +561,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="40">
+  <synapse id="42">
     <action_set>
       <pseudo_event id="44" operation="start" operation_key="galera-bundle_start_0">
         <attributes CRM_meta_timeout="20000" />
@@ -549,6 +572,9 @@
         <pseudo_event id="23" operation="running" operation_key="rabbitmq-bundle_running_0"/>
       </trigger>
       <trigger>
+        <pseudo_event id="47" operation="stopped" operation_key="galera-bundle_stopped_0"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="100" operation="promoted" operation_key="redis-bundle_promoted_0"/>
       </trigger>
       <trigger>
@@ -556,7 +582,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="41" priority="1000000">
+  <synapse id="43" priority="1000000">
     <action_set>
       <pseudo_event id="23" operation="running" operation_key="rabbitmq-bundle_running_0">
         <attributes CRM_meta_timeout="20000" />
@@ -568,7 +594,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="42">
+  <synapse id="44">
     <action_set>
       <pseudo_event id="22" operation="start" operation_key="rabbitmq-bundle_start_0">
         <attributes CRM_meta_timeout="20000" />
@@ -576,7 +602,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="43">
+  <synapse id="45">
     <action_set>
       <pseudo_event id="14" operation="all_stopped" operation_key="all_stopped">
         <attributes />
