@@ -495,18 +495,30 @@ container_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc, rsc_colocatio
 enum pe_action_flags
 container_action_flags(action_t * action, node_t * node)
 {
+    GListPtr containers = NULL;
     enum pe_action_flags flags = 0;
     container_variant_data_t *data = NULL;
 
     get_container_variant_data(data, action->rsc);
     if(data->child) {
-        flags = summary_action_flags(action, data->child->children, node);
-
-    } else {
-        GListPtr containers = get_container_list(action->rsc);
-        flags = summary_action_flags(action, containers, node);
-        g_list_free(containers);
+        enum action_tasks task = get_complex_task(data->child, action->task, TRUE);
+        switch(task) {
+            case no_action:
+            case action_notify:
+            case action_notified:
+            case action_promote:
+            case action_promoted:
+            case action_demote:
+            case action_demoted:
+                return summary_action_flags(action, data->child->children, node);
+            default:
+                break;
+        }
     }
+
+    containers = get_container_list(action->rsc);
+    flags = summary_action_flags(action, containers, node);
+    g_list_free(containers);
     return flags;
 }
 
