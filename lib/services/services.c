@@ -904,7 +904,7 @@ handle_blocked_ops(void)
     "<resource-agent name='%s' version='" PCMK_DEFAULT_AGENT_VERSION "'>\n" \
     "  <version>1.0</version>\n"                                        \
     "  <longdesc lang='en'>\n"                                          \
-    "    %s\n"                                                          \
+    "%s"                                                                \
     "  </longdesc>\n"                                                   \
     "  <shortdesc lang='en'>%s</shortdesc>\n"                           \
     "  <parameters>\n"                                                  \
@@ -978,8 +978,8 @@ static int
 lsb_get_metadata(const char *type, char **output)
 {
     char ra_pathname[PATH_MAX] = { 0, };
-    FILE *fp;
-    char buffer[1024];
+    FILE *fp = NULL;
+    char buffer[1024] = { 0, };
     char *provides = NULL;
     char *req_start = NULL;
     char *req_stop = NULL;
@@ -1048,27 +1048,37 @@ lsb_get_metadata(const char *type, char **output)
         /* Long description may cross multiple lines */
         if ((offset == 0) // haven't already found long description
             && !strncmp(buffer, DESCRIPTION, strlen(DESCRIPTION))) {
+            bool processed_line = TRUE;
 
-            /* Between # and keyword, more than one space, or a tab
-             * character, indicates the continuation line.
-             *
-             * Extracted from LSB init script standard
-             */
+            // Get remainder of description line itself
+            offset += snprintf(description, DESC_MAX, "%s",
+                               buffer + strlen(DESCRIPTION));
+
+            // Read any continuation lines of the description
+            buffer[0] = '\0';
             while (fgets(buffer, sizeof(buffer), fp)) {
                 if (!strncmp(buffer, "#  ", 3) || !strncmp(buffer, "#\t", 2)) {
-                    buffer[0] = ' ';
+                    /* '#' followed by a tab or more than one space indicates a
+                     * continuation of the long description.
+                     */
                     offset += snprintf(description + offset, DESC_MAX - offset,
-                                       "%s", buffer);
+                                       "%s", buffer + 1);
                 } else {
-                    fputs(buffer, fp);
-                    break;      /* Long description ends */
+                    /* This line is not part of the long description,
+                     * so continue with normal processing.
+                     */
+                    processed_line = FALSE;
+                    break;
                 }
             }
-            continue;
-        }
 
-        if ((xml_l_dscrpt == NULL) && (offset > 0)) {
+            // Make long description safe to use in XML
             xml_l_dscrpt = (char *)xmlEncodeEntitiesReentrant(NULL, BAD_CAST(description));
+
+            if (processed_line) {
+                // We grabbed the line into the long description
+                continue;
+            }
         }
 
         // Stop if we leave the header block
