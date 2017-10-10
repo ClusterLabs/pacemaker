@@ -897,7 +897,7 @@ build_device_from_xml(xmlNode * msg)
     
     value = g_hash_table_lookup(device->params, "priority");
     int priority = crm_atoi(value, NULL);
-    if (!priority) {
+    if (priority<0) {
         device->priority = value;
     }
     return device;
