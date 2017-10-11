@@ -644,6 +644,11 @@ cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
         return -EOPNOTSUPP;
     }
 
+    if(getenv("CIB_file") != NULL) {
+        printf("Would have cleaned up %s on %s\n", rsc->id, host_uname);
+        return rc;
+     }
+
     /* Erase the resource's entire LRM history in the CIB, even if we're only
      * clearing a single operation's fail count. If we erased only entries for a
      * single operation, we might wind up with a wrong idea of the current

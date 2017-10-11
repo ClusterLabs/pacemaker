@@ -748,7 +748,7 @@ main(int argc, char **argv)
     }
     
     /* Establish a connection to the CRMd if needed */
-    if (require_crmd) {
+    if (getenv("CIB_file") == NULL && require_crmd) {
         xmlNode *xml = NULL;
         mainloop_io_t *source =
             mainloop_add_ipc_client(CRM_SYSTEM_CRMD, G_PRIORITY_DEFAULT, 0, NULL, &crm_callbacks);
