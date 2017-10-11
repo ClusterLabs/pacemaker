@@ -22,6 +22,8 @@
 #include <crm/pengine/internal.h>
 #include <crm/msg_xml.h>
 
+#include <unpack.h>
+
 void populate_hash(xmlNode * nvpair_list, GHashTable * hash, const char **attrs, int attrs_length);
 
 resource_object_functions_t resource_class_functions[] = {
@@ -415,10 +417,47 @@ handle_rsc_isolation(resource_t *rsc)
     set_bit(top->flags, pe_rsc_unique);
 
 set_rsc_opts:
+    pe_warn_once(pe_wo_isolation, "Support for 'isolation' resource meta-attribute"
+                                  " is deprecated and will be removed in a future release"
+                                  " (use bundle syntax instead)");
+
     clear_bit(rsc->flags, pe_rsc_allow_migrate);
     set_bit(rsc->flags, pe_rsc_unique);
     if (pe_rsc_is_clone(top)) {
         add_hash_param(rsc->meta, XML_RSC_ATTR_UNIQUE, XML_BOOLEAN_TRUE);
+    }
+}
+
+static void
+check_deprecated_stonith(resource_t *rsc)
+{
+    GHashTableIter iter;
+    char *key;
+
+    g_hash_table_iter_init(&iter, rsc->parameters);
+    while (g_hash_table_iter_next(&iter, (gpointer *) &key, NULL)) {
+        if (!strncmp(key, "pcmk_", 5)) {
+            char *cmp = key + 5; // the part after "pcmk_"
+
+            if (!strcmp(cmp, "poweroff_action")) {
+                pe_warn_once(pe_wo_poweroff,
+                             "Support for the 'pcmk_poweroff_action' stonith resource parameter"
+                             " is deprecated and will be removed in a future version"
+                             " (use 'pcmk_off_action' instead)");
+
+            } else if (!strcmp(cmp, "arg_map")) {
+                pe_warn_once(pe_wo_arg_map,
+                             "Support for the 'pcmk_arg_map' stonith resource parameter"
+                             " is deprecated and will be removed in a future version"
+                             " (use 'pcmk_host_argument' instead)");
+
+            } else if (crm_ends_with(cmp, "_cmd")) {
+                pe_warn_once(pe_wo_stonith_cmd,
+                             "Support for the 'pcmk_*_cmd' stonith resource parameters"
+                             " is deprecated and will be removed in a future version"
+                             " (use 'pcmk_*_action' instead)");
+            }
+        }
     }
 }
 
@@ -641,18 +680,36 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
         /* Make a best-effort guess at a migration threshold for people with 0.6 configs
          * try with underscores and hyphens, from both the resource and global defaults section
          */
+        const char *legacy = NULL;
 
-        value = g_hash_table_lookup((*rsc)->meta, "resource-failure-stickiness");
-        if (value == NULL) {
-            value = g_hash_table_lookup((*rsc)->meta, "resource_failure_stickiness");
+        legacy = g_hash_table_lookup((*rsc)->meta,
+                                     "resource-failure-stickiness");
+        if (legacy == NULL) {
+            legacy = g_hash_table_lookup((*rsc)->meta,
+                                         "resource_failure_stickiness");
         }
-        if (value == NULL) {
-            value =
-                g_hash_table_lookup(data_set->config_hash, "default-resource-failure-stickiness");
+        if (legacy) {
+            value = legacy;
+            pe_warn_once(pe_wo_rsc_failstick,
+                         "Support for 'resource-failure-stickiness' resource meta-attribute"
+                         " is deprecated and will be removed in a future release"
+                         " (use 'migration-threshold' resource meta-attribute instead)");
         }
-        if (value == NULL) {
-            value =
-                g_hash_table_lookup(data_set->config_hash, "default_resource_failure_stickiness");
+
+        legacy = g_hash_table_lookup(data_set->config_hash,
+                                     "default-resource-failure-stickiness");
+        if (legacy == NULL) {
+            legacy = g_hash_table_lookup(data_set->config_hash,
+                                         "default_resource_failure_stickiness");
+        }
+        if (legacy) {
+            if (value == NULL) {
+                value = legacy;
+            }
+            pe_warn_once(pe_wo_default_rscfs,
+                         "Support for 'default-resource-failure-stickiness' cluster option"
+                         " is deprecated and will be removed in a future release"
+                         " (use 'migration-threshold' in rsc_defaults instead)");
         }
 
         if (value) {
@@ -681,6 +738,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     if (safe_str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH)) {
         set_bit(data_set->flags, pe_flag_have_stonith_resource);
         set_bit((*rsc)->flags, pe_rsc_fence_device);
+        check_deprecated_stonith(*rsc);
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_REQUIRES);

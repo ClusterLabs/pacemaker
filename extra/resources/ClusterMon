@@ -247,7 +247,7 @@ fi
 : ${OCF_RESKEY_pidfile:="/tmp/ClusterMon_${OCF_RESOURCE_INSTANCE}.pid"}
 : ${OCF_RESKEY_htmlfile:="/tmp/ClusterMon_${OCF_RESOURCE_INSTANCE}.html"}
 
-if [ ${OSC_RESKEY_update} -ge 1000 ]; then
+if [ ${OCF_RESKEY_update} -ge 1000 ]; then
 	OCF_RESKEY_update=$(( $OCF_RESKEY_update / 1000 ))
 fi
 

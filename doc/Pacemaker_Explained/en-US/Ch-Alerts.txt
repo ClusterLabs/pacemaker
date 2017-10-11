@@ -166,12 +166,11 @@ instance attributes are completely up to the particular agent.
 
 == Alert Filters ==
 
-'Coming in 1.1.18'
-
 By default, an alert agent will be called for node events, fencing events, and
 resource events. An agent may choose to ignore certain types of events, but
 there is still the overhead of calling it for those events. To eliminate that
-overhead, you may select which types of events the agent should receive.
+overhead, you may select which types of events the agent should receive
+(since version 1.1.18).
 
 .Alert configuration to receive only node events and fencing events
 =====

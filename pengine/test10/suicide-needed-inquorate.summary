@@ -1,0 +1,27 @@
+Using the original execution date of: 2017-08-21 17:12:54Z
+
+Current cluster status:
+Node node1 (1): UNCLEAN (online)
+Node node2 (2): UNCLEAN (online)
+Node node3 (3): UNCLEAN (online)
+
+ Fencing	(stonith:fence_xvm):	Stopped
+
+Transition Summary:
+ * Fence (reboot) node3 'cluster does not have quorum'
+ * Fence (reboot) node2 'cluster does not have quorum'
+ * Fence (reboot) node1 'cluster does not have quorum'
+
+Executing cluster transition:
+ * Fencing node1 (reboot)
+ * Fencing node3 (reboot)
+ * Fencing node2 (reboot)
+ * Pseudo action:   stonith_complete
+ * Pseudo action:   all_stopped
+Using the original execution date of: 2017-08-21 17:12:54Z
+
+Revised cluster status:
+OFFLINE: [ node1 node2 node3 ]
+
+ Fencing	(stonith:fence_xvm):	Stopped
+

@@ -749,6 +749,7 @@ indexterm:[resource-stickiness,Multi-State]
 As with regular clones, multi-state resources are
 slightly sticky by default. See <<s-clone-stickiness>> for details.
 
+[[s-master-scores]]
 === Which Resource Instance is Promoted ===
 
 During the start operation, most resource agents should call
@@ -1040,7 +1041,7 @@ https://en.wikipedia.org/wiki/Operating-system-level_virtualization[container]
 with any infrastructure it requires: the 'bundle'.
 
 Pacemaker bundles support https://www.docker.com/[Docker] (since version
-1.1.17) and https://coreos.com/rkt/[rkt] (coming in version 1.1.18) container
+1.1.17) and https://coreos.com/rkt/[rkt] (since version 1.1.18) container
 technologies.
 footnote:[Docker is a trademark of Docker, Inc. No endorsement by or
 association with Docker, Inc. is implied.]
@@ -1457,6 +1458,40 @@ distinct network space inside the container) works in combination with
 container share the host's network space), a unique +control-port+ should be
 specified for each bundle. Any firewall must allow access to the
 +control-port+.
+====
+
+[[s-bundle-attributes]]
+=== Bundle Node Attributes ===
+
+If the bundle has a +primitive+, the primitive's resource agent may want to set
+node attributes such as <<s-master-scores,master scores>>. However, with
+containers, it is not apparent which node should get the attribute.
+
+If the container uses shared storage that is the same no matter which node the
+container is hosted on, then it is appropriate to use the master score on the
+bundle node itself.
+
+On the other hand, if the container uses storage exported from the underlying host,
+then it may be more appropriate to use the master score on the underlying host.
+
+Since this depends on the particular situation, the
++container-attribute-target+ resource meta-attribute allows the user to specify
+which approach to use. If it is set to +host+, then user-defined node attributes
+will be checked on the underlying host. If it is anything else, the local node
+(in this case the bundle node) is used as usual.
+
+This only applies to user-defined attributes; the cluster will always check the
+local node for cluster-defined attributes such as +#uname+.
+
+If +container-attribute-target+ is +host+, the cluster will pass additional
+environment variables to the primitive's resource agent that allow it to set
+node attributes appropriately: +container_attribute_target+ (identical to the
+meta-attribute value) and +physical_host+ (the name of the underlying host).
+
+[NOTE]
+====
+It is up to the resource agent to check for the additional variables and use
+them when setting node attributes.
 ====
 
 === Bundle Meta-Attributes ===

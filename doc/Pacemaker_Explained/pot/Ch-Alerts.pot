@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2017-05-08 11:19-0500\n"
-"PO-Revision-Date: 2017-05-08 11:19-0500\n"
+"POT-Creation-Date: 2017-10-06 19:59-0500\n"
+"PO-Revision-Date: 2017-10-06 19:59-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -24,7 +24,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<emphasis>Alerts</emphasis> may be configured to take some external action when a cluster event occurs (node failure, resource starting or stopping, etc.)."
+msgid "<emphasis>Alerts</emphasis> (available since Pacemaker 1.1.15) may be configured to take some external action when a cluster event occurs (node failure, resource starting or stopping, etc.)."
 msgstr ""
 
 #. Tag: title
@@ -238,6 +238,78 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
+msgid "Alert Filters"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis>Coming in 1.1.18</emphasis>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "By default, an alert agent will be called for node events, fencing events, and resource events. An agent may choose to ignore certain types of events, but there is still the overhead of calling it for those events. To eliminate that overhead, you may select which types of events the agent should receive."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Alert configuration to receive only node events and fencing events"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;configuration&gt;\n"
+"    &lt;alerts&gt;\n"
+"        &lt;alert id=\"my-alert\" path=\"/path/to/my-script.sh\"&gt;\n"
+"            &lt;select&gt;\n"
+"              &lt;select_nodes /&gt;\n"
+"              &lt;select_fencing /&gt;\n"
+"            &lt;/select&gt;\n"
+"            &lt;recipient id=\"my-alert-recipient1\" value=\"someuser@example.com\"/&gt;\n"
+"        &lt;/alert&gt;\n"
+"    &lt;/alerts&gt;\n"
+"&lt;/configuration&gt;"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The possible options within <literal>&lt;select&gt;</literal> are <literal>&lt;select_nodes&gt;</literal>, <literal>&lt;select_fencing&gt;</literal>, <literal>&lt;select_resources&gt;</literal>, and <literal>&lt;select_attributes&gt;</literal>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "With <literal>&lt;select_attributes&gt;</literal> (the only event type not enabled by default), the agent will receive alerts when a node attribute changes. If you wish the agent to be called only when certain attributes change, you can configure that as well."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Alert configuration to be called when certain node attributes change"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;configuration&gt;\n"
+"    &lt;alerts&gt;\n"
+"        &lt;alert id=\"my-alert\" path=\"/path/to/my-script.sh\"&gt;\n"
+"            &lt;select&gt;\n"
+"              &lt;select_attributes&gt;\n"
+"                &lt;attribute id=\"alert-standby\" name=\"standby\" /&gt;\n"
+"                &lt;attribute id=\"alert-shutdown\" name=\"shutdown\" /&gt;\n"
+"              &lt;/select_attributes&gt;\n"
+"            &lt;/select&gt;\n"
+"            &lt;recipient id=\"my-alert-recipient1\" value=\"someuser@example.com\"/&gt;\n"
+"        &lt;/alert&gt;\n"
+"    &lt;/alerts&gt;\n"
+"&lt;/configuration&gt;"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Node attribute alerts are currently considered experimental. Alerts may be limited to attributes set via attrd_updater, and agents may be called multiple times with the same attribute value."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
 msgid "Using the Sample Alert Agents"
 msgstr ""
 
@@ -316,7 +388,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The type of alert (<literal>node</literal>, <literal>fencing</literal>, or <literal>resource</literal>) <indexterm> <primary>Environment Variable</primary><secondary>CRM_alert_</secondary><tertiary>kind</tertiary> </indexterm> <indexterm> <primary>CRM_alert_</primary><secondary>kind</secondary> </indexterm> <indexterm> <primary>kind</primary> </indexterm>"
+msgid "The type of alert (<literal>node</literal>, <literal>fencing</literal>, <literal>resource</literal>, or <literal>attribute</literal>) <indexterm> <primary>Environment Variable</primary><secondary>CRM_alert_</secondary><tertiary>kind</tertiary> </indexterm> <indexterm> <primary>CRM_alert_</primary><secondary>kind</secondary> </indexterm> <indexterm> <primary>kind</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -447,6 +519,26 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "A numerical code used by Pacemaker to represent the operation result (<literal>resource</literal> alerts only) <indexterm> <primary>Environment Variable</primary><secondary>CRM_alert_</secondary><tertiary>status</tertiary> </indexterm> <indexterm> <primary>CRM_alert_</primary><secondary>status</secondary> </indexterm> <indexterm> <primary>status</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>CRM_alert_attribute_name</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The name of the node attribute that changed (<literal>attribute</literal> alerts only) <indexterm> <primary>Environment Variable</primary><secondary>CRM_alert_</secondary><tertiary>attribute_name</tertiary> </indexterm> <indexterm> <primary>CRM_alert_</primary><secondary>attribute_name</secondary> </indexterm> <indexterm> <primary>attribute_name</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>CRM_alert_attribute_value</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The new value of the node attribute that changed (<literal>attribute</literal> alerts only) <indexterm> <primary>Environment Variable</primary><secondary>CRM_alert_</secondary><tertiary>attribute_value</tertiary> </indexterm> <indexterm> <primary>CRM_alert_</primary><secondary>attribute_value</secondary> </indexterm> <indexterm> <primary>attribute_value</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para

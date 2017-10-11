@@ -55,28 +55,29 @@ enum pe_find {
     pe_find_inactive = 0x010,
 };
 
-#  define pe_flag_have_quorum		0x00000001ULL
-#  define pe_flag_symmetric_cluster	0x00000002ULL
-#  define pe_flag_is_managed_default	0x00000004ULL
-#  define pe_flag_maintenance_mode	0x00000008ULL
+#  define pe_flag_have_quorum           0x00000001ULL
+#  define pe_flag_symmetric_cluster     0x00000002ULL
+#  define pe_flag_is_managed_default    0x00000004ULL
+#  define pe_flag_maintenance_mode      0x00000008ULL
 
-#  define pe_flag_stonith_enabled	0x00000010ULL
-#  define pe_flag_have_stonith_resource	0x00000020ULL
-#  define pe_flag_enable_unfencing	0x00000040ULL
-#  define pe_flag_concurrent_fencing	0x00000080ULL
+#  define pe_flag_stonith_enabled       0x00000010ULL
+#  define pe_flag_have_stonith_resource 0x00000020ULL
+#  define pe_flag_enable_unfencing      0x00000040ULL
+#  define pe_flag_concurrent_fencing    0x00000080ULL
 
-#  define pe_flag_stop_rsc_orphans	0x00000100ULL
-#  define pe_flag_stop_action_orphans	0x00000200ULL
-#  define pe_flag_stop_everything	0x00000400ULL
+#  define pe_flag_stop_rsc_orphans      0x00000100ULL
+#  define pe_flag_stop_action_orphans   0x00000200ULL
+#  define pe_flag_stop_everything       0x00000400ULL
 
-#  define pe_flag_start_failure_fatal	0x00001000ULL
-#  define pe_flag_remove_after_stop	0x00002000ULL
+#  define pe_flag_start_failure_fatal   0x00001000ULL
+#  define pe_flag_remove_after_stop     0x00002000ULL
+#  define pe_flag_startup_fencing       0x00004000ULL
 
-#  define pe_flag_startup_probes	0x00010000ULL
-#  define pe_flag_have_status		0x00020000ULL
-#  define pe_flag_have_remote_nodes	0x00040000ULL
+#  define pe_flag_startup_probes        0x00010000ULL
+#  define pe_flag_have_status           0x00020000ULL
+#  define pe_flag_have_remote_nodes     0x00040000ULL
 
-#  define pe_flag_quick_location  	0x00100000ULL
+#  define pe_flag_quick_location        0x00100000ULL
 #  define pe_flag_sanitized             0x00200000ULL
 
 typedef struct pe_working_set_s {
@@ -178,43 +179,42 @@ struct node_s {
 
 #  include <crm/pengine/complex.h>
 
-#  define pe_rsc_orphan		0x00000001ULL
-#  define pe_rsc_managed	0x00000002ULL
-#  define pe_rsc_block          0x00000004ULL   /* Further operations are prohibited due to failure policy */
-#  define pe_rsc_orphan_container_filler	0x00000008ULL
+#  define pe_rsc_orphan                     0x00000001ULL
+#  define pe_rsc_managed                    0x00000002ULL
+#  define pe_rsc_block                      0x00000004ULL
+#  define pe_rsc_orphan_container_filler    0x00000008ULL
 
-#  define pe_rsc_notify		0x00000010ULL
-#  define pe_rsc_unique		0x00000020ULL
-#  define pe_rsc_fence_device   0x00000040ULL
+#  define pe_rsc_notify                     0x00000010ULL
+#  define pe_rsc_unique                     0x00000020ULL
+#  define pe_rsc_fence_device               0x00000040ULL
 
-#  define pe_rsc_provisional	0x00000100ULL
-#  define pe_rsc_allocating	0x00000200ULL
-#  define pe_rsc_merging	0x00000400ULL
-#  define pe_rsc_munging	0x00000800ULL
+#  define pe_rsc_provisional                0x00000100ULL
+#  define pe_rsc_allocating                 0x00000200ULL
+#  define pe_rsc_merging                    0x00000400ULL
+#  define pe_rsc_munging                    0x00000800ULL
 
-#  define pe_rsc_try_reload     0x00001000ULL
-#  define pe_rsc_reload         0x00002000ULL
+#  define pe_rsc_try_reload                 0x00001000ULL
+#  define pe_rsc_reload                     0x00002000ULL
+#  define pe_rsc_allow_remote_remotes       0x00004000ULL
 
-#  define pe_rsc_allow_remote_remotes 0x00004000ULL
+#  define pe_rsc_failed                     0x00010000ULL
+#  define pe_rsc_shutdown                   0x00020000ULL
+#  define pe_rsc_runnable                   0x00040000ULL
+#  define pe_rsc_start_pending              0x00080000ULL
 
-#  define pe_rsc_failed		0x00010000ULL
-#  define pe_rsc_shutdown	0x00020000ULL
-#  define pe_rsc_runnable	0x00040000ULL
-#  define pe_rsc_start_pending	0x00080000ULL
+#  define pe_rsc_starting                   0x00100000ULL
+#  define pe_rsc_stopping                   0x00200000ULL
+#  define pe_rsc_migrating                  0x00400000ULL
+#  define pe_rsc_allow_migrate              0x00800000ULL
 
-#  define pe_rsc_starting       0x00100000ULL
-#  define pe_rsc_stopping       0x00200000ULL
-#  define pe_rsc_migrating      0x00400000ULL
-#  define pe_rsc_allow_migrate  0x00800000ULL
+#  define pe_rsc_failure_ignored            0x01000000ULL
+#  define pe_rsc_unexpectedly_running       0x02000000ULL
+#  define pe_rsc_maintenance                0x04000000ULL
 
-#  define pe_rsc_failure_ignored 0x01000000ULL
-#  define pe_rsc_unexpectedly_running 0x02000000ULL
-#  define pe_rsc_maintenance	 0x04000000ULL
-
-#  define pe_rsc_needs_quorum	 0x10000000ULL
-#  define pe_rsc_needs_fencing	 0x20000000ULL
-#  define pe_rsc_needs_unfencing 0x40000000ULL
-#  define pe_rsc_have_unfencing  0x80000000ULL /* obsolete (not set or used by cluster) */
+#  define pe_rsc_needs_quorum               0x10000000ULL
+#  define pe_rsc_needs_fencing              0x20000000ULL
+#  define pe_rsc_needs_unfencing            0x40000000ULL
+#  define pe_rsc_have_unfencing             0x80000000ULL // obsolete (not set or used by cluster)
 
 enum pe_graph_flags {
     pe_graph_none = 0x00000,
@@ -402,11 +402,10 @@ enum pe_link_state {
     pe_link_dup,
 };
 
-
-enum rsc_discover_e {
-    discover_always = 0,
-    discover_never,
-    discover_exclusive,
+enum pe_discover_e {
+    pe_discover_always = 0,
+    pe_discover_never,
+    pe_discover_exclusive,
 };
 
 /* *INDENT-OFF* */
@@ -465,6 +464,7 @@ node_t *pe_find_node_id(GListPtr node_list, const char *id);
 node_t *pe_find_node_any(GListPtr node_list, const char *id, const char *uname);
 GListPtr find_operations(const char *rsc, const char *node, gboolean active_filter,
                          pe_working_set_t * data_set);
+int pe_bundle_replicas(const resource_t *rsc);
 #if ENABLE_VERSIONED_ATTRS
 pe_rsc_action_details_t *pe_rsc_action_details(pe_action_t *action);
 #endif

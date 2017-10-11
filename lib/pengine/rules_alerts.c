@@ -28,6 +28,13 @@ pe_enable_legacy_alerts(const char *script, const char *target)
 
     free(notify_target);
     notify_target = target? strdup(target): NULL;
+
+    if (notify_script || notify_target) {
+        pe_warn_once(pe_wo_legacy_notifs,
+                     "Support for 'notification-agent' and 'notification-target' cluster options"
+                     " is deprecated and will be removed in a future release"
+                     " (use alerts feature instead)");
+    }
 }
 #endif
 

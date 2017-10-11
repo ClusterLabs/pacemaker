@@ -121,7 +121,7 @@ iso8601_SOURCES		= test.iso8601.c
 iso8601_LDADD		= $(COMMONLIBS)
 
 attrd_updater_SOURCES	= attrd_updater.c
-attrd_updater_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la $(COMMONLIBS)
+attrd_updater_LDADD	= $(COMMONLIBS)
 
 crm_ticket_SOURCES	= crm_ticket.c
 crm_ticket_LDADD	= $(top_builddir)/lib/pengine/libpe_rules.la  \

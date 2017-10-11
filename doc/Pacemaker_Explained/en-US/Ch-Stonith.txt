@@ -79,7 +79,7 @@ can be revisited if it becomes a significant limitation for people.
 See the table below or run `man stonithd` to see special instance attributes
 that may be set for any fencing resource, regardless of fence agent.
 
-.Properties of Fencing Resources
+.Additional Properties of Fencing Resources
 [width="95%",cols="5m,2,3,10<a",options="header",align="center"]
 |=========================================================
 
@@ -100,6 +100,14 @@ that may be set for any fencing resource, regardless of fence agent.
 |integer
 |0
 |The priority of the STONITH resource. Devices are tried in order of highest priority to lowest.
+ indexterm:[priority,Fencing]
+ indexterm:[Fencing,Property,priority]
+
+|provides
+|string
+|
+|Any special capability provided by the fence device. Currently, only one such
+ capability is meaningful: +unfencing+ (see <<s-unfencing>>).
  indexterm:[priority,Fencing]
  indexterm:[Fencing,Property,priority]
 
@@ -334,6 +342,25 @@ to alter the number of times Pacemaker retries before giving up.
  indexterm:[Fencing,Property,pcmk_status_retries]
 
 |=========================================================
+
+[[s-unfencing]]
+== Unfencing ==
+
+Most fence devices cut the power to the target. By contrast, fence devices that
+perform 'fabric fencing' cut off a node's access to some critical resource,
+such as a shared disk or a network switch.
+
+With fabric fencing, it is expected that the cluster will fence the node, and
+then a system administrator must manually investigate what went wrong, correct
+any issues found, then reboot (or restart the cluster services on) the node.
+
+Once the node reboots and rejoins the cluster, some fabric fencing devices
+require that an explicit command to restore the node's access to the critical
+resource. This capability is called 'unfencing' and is typically implemented
+as the fence agent's +on+ command.
+
+If any cluster resource has +requires+ set to +unfencing+, then that resource
+will not be probed or started on a node until that node has been unfenced.
 
 == Configuring STONITH ==
 

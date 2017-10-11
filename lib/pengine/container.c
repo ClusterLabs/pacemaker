@@ -93,7 +93,7 @@ create_resource(const char *name, const char *provider, const char *kind)
     xmlNode *rsc = create_xml_node(NULL, XML_CIB_TAG_RESOURCE);
 
     crm_xml_add(rsc, XML_ATTR_ID, name);
-    crm_xml_add(rsc, XML_AGENT_ATTR_CLASS, "ocf");
+    crm_xml_add(rsc, XML_AGENT_ATTR_CLASS, PCMK_RESOURCE_CLASS_OCF);
     crm_xml_add(rsc, XML_AGENT_ATTR_PROVIDER, provider);
     crm_xml_add(rsc, XML_ATTR_TYPE, kind);
 
@@ -499,7 +499,7 @@ disallow_node(resource_t *rsc, const char *uname)
 
     if (match) {
         ((pe_node_t *) match)->weight = -INFINITY;
-        ((pe_node_t *) match)->rsc_discover_mode = discover_never;
+        ((pe_node_t *) match)->rsc_discover_mode = pe_discover_never;
     }
     if (rsc->children) {
         GListPtr child;
@@ -532,9 +532,9 @@ create_remote_resource(
             CRM_ASSERT(remote_id_conflict(id, data_set) == FALSE);
         }
 
-        /* Using "#uname" as the server name when the connection does not have
-         * its own IP is a hack that allows nested remotes (i.e. a bundle
-         * running on a remote node).
+        /* REMOTE_CONTAINER_HACK: Using "#uname" as the server name when the
+         * connection does not have its own IP is a magic string that we use to
+         * support nested remotes (i.e. a bundle running on a remote node).
          */
         connect_name = (tuple->ipaddr? tuple->ipaddr : "#uname");
 
@@ -573,7 +573,7 @@ create_remote_resource(
         } else {
             node->weight = -INFINITY;
         }
-        node->rsc_discover_mode = discover_never;
+        node->rsc_discover_mode = pe_discover_never;
 
         /* unpack_remote_nodes() ensures that each remote node and guest node
          * has a pe_node_t entry. Ideally, it would do the same for bundle nodes.
@@ -598,7 +598,7 @@ create_remote_resource(
 
         tuple->node = node_copy(node);
         tuple->node->weight = 500;
-        tuple->node->rsc_discover_mode = discover_exclusive;
+        tuple->node->rsc_discover_mode = pe_discover_exclusive;
 
         /* Ensure the node shows up as allowed and with the correct discovery set */
         g_hash_table_insert(tuple->child->allowed_nodes, (gpointer) tuple->node->details->id, node_copy(tuple->node));
@@ -1167,10 +1167,8 @@ tuple_print(container_grouping_t * tuple, const char *pre_text, long options, vo
         offset += snprintf(buffer + offset, LINE_MAX - offset, " (%s)", tuple->ipaddr);
     }
 
-    if(tuple->docker && tuple->docker->running_on != NULL) {
+    if (tuple->docker->running_on) {
         node = tuple->docker->running_on->data;
-    } else if (tuple->docker == NULL && rsc->running_on != NULL) {
-        node = rsc->running_on->data;
     }
     common_print(rsc, pre_text, buffer, node, options, print_data);
 }
@@ -1315,4 +1313,24 @@ container_resource_state(const resource_t * rsc, gboolean current)
 {
     enum rsc_role_e container_role = RSC_ROLE_UNKNOWN;
     return container_role;
+}
+
+/*!
+ * \brief Get the number of configured replicas in a bundle
+ *
+ * \param[in] rsc  Bundle resource
+ *
+ * \return Number of configured replicas, or 0 on error
+ */
+int
+pe_bundle_replicas(const resource_t *rsc)
+{
+    if ((rsc == NULL) || (rsc->variant != pe_container)) {
+        return 0;
+    } else {
+        container_variant_data_t *container_data = NULL;
+
+        get_container_variant_data(container_data, rsc);
+        return container_data->replicas;
+    }
 }

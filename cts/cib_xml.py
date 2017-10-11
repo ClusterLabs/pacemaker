@@ -105,16 +105,27 @@ class FencingTopology(XmlBase):
 
 
 class Option(XmlBase):
-    def __init__(self, Factory, name=None, value=None, section="cib-bootstrap-options"):
+    def __init__(self, Factory, section="cib-bootstrap-options"):
         XmlBase.__init__(self, Factory, "cluster_property_set", section)
-        if name and value:
-            self.add_child(XmlBase(Factory, "nvpair", "cts-%s" % name, name=name, value=value))
 
     def __setitem__(self, key, value):
         self.add_child(XmlBase(self.Factory, "nvpair", "cts-%s" % key, name=key, value=value))
 
     def commit(self):
         self._run("modify", self.show(), "crm_config", "--allow-create")
+
+
+class OpDefaults(XmlBase):
+    def __init__(self, Factory):
+        XmlBase.__init__(self, Factory, "op_defaults", None)
+        self.meta = XmlBase(self.Factory, "meta_attributes", "cts-op_defaults-meta")
+        self.add_child(self.meta)
+
+    def __setitem__(self, key, value):
+        self.meta.add_child(XmlBase(self.Factory, "nvpair", "cts-op_defaults-%s" % key, name=key, value=value))
+
+    def commit(self):
+        self._run("modify", self.show(), "configuration", "--allow-create")
 
 
 class Alerts(XmlBase):

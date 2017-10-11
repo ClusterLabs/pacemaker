@@ -1,3 +1,52 @@
+* Fri Oct 06 2017 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.18-rc1
+- Update source tarball to revision: cb21fde
+- Changesets: 428
+- Diff:       153 files changed, 7895 insertions(+), 4415 deletions(-)
+
+- Features added since Pacemaker-1.1.17
+  + warnings are now logged when using legacy syntax to be removed in 2.0
+  + agents: ifspeed agent is now installed when building
+  + alerts: support alert filters
+  + alerts: support alerts for node attribute changes (experimental)
+  + crmd,pengine: support unfencing of remote nodes
+  + pengine: bundles now support all constraint types
+  + pengine: bundles now support rkt containers
+  + pengine: bundles support new container-attribute-target parameter
+  + pengine: guest nodes are now probed like any other node
+  + pengine,tools: logs and crm_mon show why resources changed state
+  + stonith-ng: support new fencing resource parameter pcmk_delay_base
+  + tools: new crm_resource option --why explains why resources are stopped
+
+- Changes since Pacemaker-1.1.17
+  + many documentation improvements
+  + agents: ifspeed properly calculates speed of hfi1 interfaces
+  + agents: ClusterMon now interprets "update" less than 1000 as seconds
+  + attrd: don't lose attributes set between attrd start-up and cluster join
+  + attrd: fix multiple minor memory leaks
+  + crmd: correctly record that unfencing is complete
+  + lrmd: remote resource operations return immediate error if key setup fails
+  + pengine: validate no-quorum-policy=suicide correctly
+  + pengine: avoid crash when alerts section has comments
+  + pengine: detect permanent master scores at start-up
+  + pengine: do not re-add a node's default score for each location constraint
+  + pengine: allow resources inside bundles to receive clone notifications
+  + pengine: default to non-interleaved bundle ordering for safety
+  + pengine: ensure bundle nodes and child resources are correctly cleaned up
+  + pengine: prevent graph loops when fencing the host underneath a bundle
+  + pengine: probe bundle connection resources
+  + pengine: bundles now respect PCMK_authkey_location
+  + pengine: fix multiple memory issues (use-after-free, use-of-NULL) with bundles
+  + pengine: resources in bundles respect failcounts
+  + pengine: ensure nested container connections run on the same host
+  + pengine: ensure unrecoverable remote nodes are fenced even if no resources can run on them
+  + pengine: handle resource migrating behind a migrating remote connection
+  + pengine: make sure calculated resource scores are consistent on different architectures
+  + pengine: retrigger unfencing for changed device parameters only when necessary
+  + stonith-ng: make fencing-device reappear properly after reenabling
+  + stonith-ng: include pcmk_on_action in meta-data so 'on' can be overridden
+  + tools: allow crm_report to work with no log files specified
+  + tools: fix use-after-free in crm_diff introduced in 1.1.17
+
 * Thu Jul 06 2017 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.17-1
 - Update source tarball to revision: 301bc44
 - Changesets: 539

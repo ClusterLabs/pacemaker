@@ -4854,35 +4854,6 @@ crm_create_nvpair_xml(xmlNode *parent, const char *id, const char *name,
     return nvp;
 }
 
-/*!
- * \brief Create a CIB XML element for an operation
- *
- * \param[in] parent    If not NULL, make new XML node a child of this one
- * \param[in] prefix    Generate an ID using this prefix
- * \param[in] task      Operation task to set
- * \param[in] interval  Operation interval to set
- * \param[in] timeout   If not NULL, operation timeout to set
- *
- * \return New XML object on success, NULL otherwise
- */
-xmlNode *
-crm_create_op_xml(xmlNode *parent, const char *prefix, const char *task,
-                  const char *interval, const char *timeout)
-{
-    xmlNode *xml_op;
-
-    CRM_CHECK(prefix && task && interval, return NULL);
-
-    xml_op = create_xml_node(parent, XML_ATTR_OP);
-    crm_xml_set_id(xml_op, "%s-%s-%s", prefix, task, interval);
-    crm_xml_add(xml_op, XML_LRM_ATTR_INTERVAL, interval);
-    crm_xml_add(xml_op, "name", task);
-    if (timeout) {
-        crm_xml_add(xml_op, XML_ATTR_TIMEOUT, timeout);
-    }
-    return xml_op;
-}
-
 void
 hash2nvpair(gpointer key, gpointer value, gpointer user_data)
 {

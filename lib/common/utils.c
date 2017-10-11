@@ -295,65 +295,80 @@ cluster_option(GHashTable * options, gboolean(*validate) (const char *),
                const char *name, const char *old_name, const char *def_value)
 {
     const char *value = NULL;
+    char *new_value = NULL;
 
     CRM_ASSERT(name != NULL);
 
-    if (options != NULL) {
+    if (options) {
         value = g_hash_table_lookup(options, name);
-    }
 
-    if (value == NULL && old_name && options != NULL) {
-        value = g_hash_table_lookup(options, old_name);
-        if (value != NULL) {
-            crm_config_warn("Using deprecated name '%s' for"
-                            " cluster option '%s'", old_name, name);
-            g_hash_table_insert(options, strdup(name), strdup(value));
+        if ((value == NULL) && old_name) {
             value = g_hash_table_lookup(options, old_name);
+            if (value != NULL) {
+                crm_config_warn("Support for legacy name '%s' for cluster option '%s'"
+                                " is deprecated and will be removed in a future release",
+                                old_name, name);
+
+                // Inserting copy with current name ensures we only warn once
+                new_value = strdup(value);
+                g_hash_table_insert(options, strdup(name), new_value);
+                value = new_value;
+            }
+        }
+
+        if (value && validate && (validate(value) == FALSE)) {
+            crm_config_err("Resetting cluster option '%s' to default: value '%s' is invalid",
+                           name, value);
+            value = NULL;
+        }
+
+        if (value) {
+            return value;
         }
     }
+
+    // No value found, use default
+    value = def_value;
 
     if (value == NULL) {
-        crm_trace("Using default value '%s' for cluster option '%s'", def_value, name);
-
-        if (options == NULL) {
-            return def_value;
-
-        } else if(def_value == NULL) {
-            return def_value;
-        }
-
-        g_hash_table_insert(options, strdup(name), strdup(def_value));
-        value = g_hash_table_lookup(options, name);
+        crm_trace("No value or default provided for cluster option '%s'",
+                  name);
+        return NULL;
     }
 
-    if (validate && validate(value) == FALSE) {
-        crm_config_err("Value '%s' for cluster option '%s' is invalid."
-                       "  Defaulting to %s", value, name, def_value);
-        g_hash_table_replace(options, strdup(name), strdup(def_value));
-        value = g_hash_table_lookup(options, name);
+    if (validate) {
+        CRM_CHECK(validate(value) != FALSE,
+                  crm_err("Bug: default value for cluster option '%s' is invalid", name);
+                  return NULL);
     }
 
+    crm_trace("Using default value '%s' for cluster option '%s'",
+              value, name);
+    if (options) {
+        new_value = strdup(value);
+        g_hash_table_insert(options, strdup(name), new_value);
+        value = new_value;
+    }
     return value;
 }
 
 const char *
 get_cluster_pref(GHashTable * options, pe_cluster_option * option_list, int len, const char *name)
 {
-    int lpc = 0;
     const char *value = NULL;
-    gboolean found = FALSE;
 
-    for (lpc = 0; lpc < len; lpc++) {
+    for (int lpc = 0; lpc < len; lpc++) {
         if (safe_str_eq(name, option_list[lpc].name)) {
-            found = TRUE;
             value = cluster_option(options,
                                    option_list[lpc].is_valid,
                                    option_list[lpc].name,
-                                   option_list[lpc].alt_name, option_list[lpc].default_value);
+                                   option_list[lpc].alt_name,
+                                   option_list[lpc].default_value);
+            return value;
         }
     }
-    CRM_CHECK(found, crm_err("No option named: %s", name));
-    return value;
+    CRM_CHECK(FALSE, crm_err("Bug: looking for unknown option '%s'", name));
+    return NULL;
 }
 
 void
@@ -1453,4 +1468,83 @@ crm_generate_ra_key(const char *class, const char *provider, const char *type)
                              (class? class : ""),
                              (provider? ":" : ""), (provider? provider : ""),
                              (type? type : ""));
+}
+
+/*!
+ * \brief Check whether a resource standard requires a provider to be specified
+ *
+ * \param[in] standard  Standard name
+ *
+ * \return TRUE if standard requires a provider, FALSE otherwise
+ */
+bool
+crm_provider_required(const char *standard)
+{
+    CRM_CHECK(standard != NULL, return FALSE);
+
+    /* @TODO
+     * - this should probably be case-sensitive, but isn't,
+     *   for backward compatibility
+     * - it might be nice to keep standards' capabilities (supports provider,
+     *   master/slave, etc.) as structured data somewhere
+     */
+    if (!strcasecmp(standard, PCMK_RESOURCE_CLASS_OCF)) {
+        return TRUE;
+    }
+    return FALSE;
+}
+
+/*!
+ * \brief Parse a "standard[:provider]:type" agent specification
+ *
+ * \param[in]  spec      Agent specification
+ * \param[out] standard  Newly allocated memory containing agent standard (or NULL)
+ * \param[out] provider  Newly allocated memory containing agent provider (or NULL)
+ * \param[put] type      Newly allocated memory containing agent type (or NULL)
+ *
+ * \return pcmk_ok if the string could be parsed, -EINVAL otherwise
+ *
+ * \note It is acceptable for the type to contain a ':' if the standard supports
+ *       that. For example, systemd supports the form "systemd:UNIT@A:B".
+ * \note It is the caller's responsibility to free the returned values.
+ */
+int
+crm_parse_agent_spec(const char *spec, char **standard, char **provider,
+                     char **type)
+{
+    char *colon;
+
+    CRM_CHECK(spec && standard && provider && type, return -EINVAL);
+    *standard = NULL;
+    *provider = NULL;
+    *type = NULL;
+
+    colon = strchr(spec, ':');
+    if ((colon == NULL) || (colon == spec)) {
+        return -EINVAL;
+    }
+
+    *standard = calloc(colon - spec + 1, sizeof(char));
+    strncpy(*standard, spec, colon - spec);
+    spec = colon + 1;
+
+    if (crm_provider_required(*standard)) {
+        colon = strchr(spec, ':');
+        if ((colon == NULL) || (colon == spec)) {
+            free(*standard);
+            return -EINVAL;
+        }
+        *provider = calloc(colon - spec + 1, sizeof(char));
+        strncpy(*provider, spec, colon - spec);
+        spec = colon + 1;
+    }
+
+    if (*spec == '\0') {
+        free(*standard);
+        free(*provider);
+        return -EINVAL;
+    }
+
+    *type = strdup(spec);
+    return pcmk_ok;
 }

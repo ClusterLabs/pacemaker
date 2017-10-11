@@ -1359,7 +1359,7 @@ clone_create_probe(resource_t * rsc, node_t * node, action_t * complete,
 
     if (rsc->exclusive_discover) {
         node_t *allowed = g_hash_table_lookup(rsc->allowed_nodes, node->details->id);
-        if (allowed && allowed->rsc_discover_mode != discover_exclusive) {
+        if (allowed && allowed->rsc_discover_mode != pe_discover_exclusive) {
             /* exclusive discover is enabled and this node is not marked
              * as a node this resource should be discovered on
              *

@@ -103,7 +103,9 @@ expand_node_list(GListPtr list, char **uname, char **metal)
         int existing_len = 0;
         node_t *node = (node_t *) gIter->data;
 
-        CRM_ASSERT(node->details->uname);
+        if (node->details->uname == NULL) {
+            continue;
+        }
         len = 2 + strlen(node->details->uname);
 
         if(node_list) {
@@ -125,7 +127,9 @@ expand_node_list(GListPtr list, char **uname, char **metal)
                 node = node->details->remote_rsc->container->running_on->data;
             }
 
-            CRM_ASSERT(node->details->uname);
+            if (node->details->uname == NULL) {
+                continue;
+            }
             len = 2 + strlen(node->details->uname);
             metal_list = realloc_safe(metal_list, len + existing_len);
             sprintf(metal_list + existing_len, "%s%s", existing_len == 0 ? "":" ", node->details->uname);
@@ -532,6 +536,7 @@ expand_notification_data(resource_t *rsc, notify_data_t * n_data, pe_working_set
     char *rsc_list = NULL;
     char *node_list = NULL;
     char *metal_list = NULL;
+    const char *source = NULL;
     GListPtr nodes = NULL;
 
     if (n_data->stop) {
@@ -609,17 +614,15 @@ expand_notification_data(resource_t *rsc, notify_data_t * n_data, pe_working_set
     g_hash_table_insert(n_data->keys, strdup("notify_available_uname"), node_list);
     g_list_free(nodes);
 
-    expand_node_list(data_set->nodes, &node_list, &metal_list);
-    g_hash_table_insert(n_data->keys, strdup("notify_all_uname"), node_list);
-
-    {
-        const char *source = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET);
-        if(safe_str_eq("host", source)) {
-            g_hash_table_insert(n_data->keys, strdup("notify_all_hosts"), metal_list);
-        } else {
-            free(metal_list);
-        }
+    source = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET);
+    if (safe_str_eq("host", source)) {
+        expand_node_list(data_set->nodes, &node_list, &metal_list);
+        g_hash_table_insert(n_data->keys, strdup("notify_all_hosts"),
+                            metal_list);
+    } else {
+        expand_node_list(data_set->nodes, &node_list, NULL);
     }
+    g_hash_table_insert(n_data->keys, strdup("notify_all_uname"), node_list);
 
     if (required && n_data->pre) {
         update_action_flags(n_data->pre, pe_action_optional | pe_action_clear, __FUNCTION__, __LINE__);

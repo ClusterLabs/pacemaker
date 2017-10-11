@@ -1,0 +1,6 @@
+digraph "g" {
+"Fencing_monitor_0 node1" [ style=bold color="green" fontcolor="black"]
+"Fencing_monitor_0 node2" [ style=bold color="green" fontcolor="black"]
+"Fencing_monitor_0 node3" [ style=bold color="green" fontcolor="black"]
+"Fencing_monitor_120000 node1" [ style=dashed color="red" fontcolor="black"]
+}

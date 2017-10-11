@@ -32,6 +32,8 @@
 #  include <sysexits.h>
 #  include <glib.h>
 
+#  include <libxml/tree.h>
+
 #  include <crm/lrmd.h>
 
 #  if SUPPORT_HEARTBEAT
@@ -127,6 +129,10 @@ gboolean decode_transition_magic(const char *magic, char **uuid,
 int rsc_op_expected_rc(lrmd_event_data_t *event);
 gboolean did_rsc_op_fail(lrmd_event_data_t *event, int target_rc);
 bool crm_op_needs_metadata(const char *rsc_class, const char *op);
+xmlNode *crm_create_op_xml(xmlNode *parent, const char *prefix,
+                           const char *task, const char *interval,
+                           const char *timeout);
+#define CRM_DEFAULT_OP_TIMEOUT_S "20s"
 
 int compare_version(const char *version1, const char *version2);
 
@@ -179,5 +185,8 @@ int crm_exit(int rc);
 bool pcmk_acl_required(const char *user);
 
 char *crm_generate_ra_key(const char *class, const char *provider, const char *type);
+bool crm_provider_required(const char *standard);
+int crm_parse_agent_spec(const char *spec, char **standard, char **provider,
+                         char **type);
 
 #endif

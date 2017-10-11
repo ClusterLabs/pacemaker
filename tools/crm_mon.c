@@ -1726,7 +1726,7 @@ print_node_attribute(gpointer name, gpointer user_data)
     const char *value = NULL;
     struct mon_attr_data *data = (struct mon_attr_data *) user_data;
 
-    value = node_attribute_raw(data->node, name);
+    value = pe_node_attribute_raw(data->node, name);
 
     /* Print attribute name and value */
     switch (output_format) {

@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2017-05-08 11:19-0500\n"
-"PO-Revision-Date: 2017-05-08 11:19-0500\n"
+"POT-Creation-Date: 2017-10-06 19:59-0500\n"
+"PO-Revision-Date: 2017-10-06 19:59-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -19,7 +19,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "These alternative configurations may be appropriate in limited cases, such as a test cluster, but are not the best method in most situations. They are presented here for completeness and as an example of pacemaker’s flexibility to suit your needs."
+msgid "These alternative configurations may be appropriate in limited cases, such as a test cluster, but are not the best method in most situations. They are presented here for completeness and as an example of Pacemaker’s flexibility to suit your needs."
 msgstr ""
 
 #. Tag: title
@@ -29,7 +29,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The preferred use of virtual machines in a pacemaker cluster is as a cluster resource, whether opaque or as a guest node. However, it is possible to run the full cluster stack on a virtual node instead."
+msgid "The preferred use of virtual machines in a Pacemaker cluster is as a cluster resource, whether opaque or as a guest node. However, it is possible to run the full cluster stack on a virtual node instead."
 msgstr ""
 
 #. Tag: para
@@ -74,7 +74,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The preferred means of integrating containers into Pacemaker is as a cluster resource, whether opaque or using Pacemaker’s built-in resource isolation support.<footnote><para>Documentation for this support is planned but not yet available.</para></footnote>"
+msgid "The preferred means of integrating containers into Pacemaker is as a cluster resource, whether opaque or using Pacemaker’s <emphasis>bundle</emphasis> resource type."
 msgstr ""
 
 #. Tag: para

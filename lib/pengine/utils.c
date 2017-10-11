@@ -26,6 +26,8 @@
 #include <crm/pengine/rules.h>
 #include <crm/pengine/internal.h>
 
+#include <unpack.h>
+
 pe_working_set_t *pe_dataset = NULL;
 
 extern xmlNode *get_object_root(const char *object_type, xmlNode * the_root);
@@ -818,6 +820,17 @@ unpack_timeout(const char *value, action_t *action, xmlNode *xml_obj,
 
     if (value == NULL && config_hash) {
         value = pe_pref(config_hash, "default-action-timeout");
+        if (value) {
+            pe_warn_once(pe_wo_default_timeo,
+                         "Support for 'default-action-timeout' cluster property"
+                         " is deprecated and will be removed in a future release"
+                         " (use 'timeout' in op_defaults instead)");
+
+        }
+    }
+
+    if (value == NULL) {
+        value = CRM_DEFAULT_OP_TIMEOUT_S;
     }
 
     timeout = crm_get_msec(value);
@@ -919,6 +932,11 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
 
     /* @COMPAT data sets < 1.1.10 ("requires" on start action not resource) */
     value = g_hash_table_lookup(action->meta, "requires");
+    if (value) {
+        pe_warn_once(pe_wo_requires, "Support for 'requires' operation meta-attribute"
+                                     " is deprecated and will be removed in a future version"
+                                     " (use 'requires' resource meta-attribute instead)");
+    }
 
     if (safe_str_neq(action->task, RSC_START)
         && safe_str_neq(action->task, RSC_PROMOTE)) {
@@ -1815,7 +1833,7 @@ bool fix_remote_addr(resource_t * rsc)
     };
     const char *value_list[] = {
         "remote",
-        "ocf",
+        PCMK_RESOURCE_CLASS_OCF,
         "pacemaker"
     };
 
@@ -1996,8 +2014,8 @@ fencing_action_digest_cmp(resource_t * rsc, node_t * node, pe_working_set_t * da
     char *key = generate_op_key(rsc->id, STONITH_DIGEST_TASK, 0);
     op_digest_cache_t *data = rsc_action_digest(rsc, STONITH_DIGEST_TASK, key, node, NULL, data_set);
 
-    const char *digest_all = node_attribute_raw(node, CRM_ATTR_DIGESTS_ALL);
-    const char *digest_secure = node_attribute_raw(node, CRM_ATTR_DIGESTS_SECURE);
+    const char *digest_all = pe_node_attribute_raw(node, CRM_ATTR_DIGESTS_ALL);
+    const char *digest_secure = pe_node_attribute_raw(node, CRM_ATTR_DIGESTS_SECURE);
 
     /* No 'reloads' for fencing device changes
      *
@@ -2157,10 +2175,12 @@ pe_fence_op(node_t * node, const char *op, bool optional, const char *reason, pe
                     digests_secure+digests_secure_offset, max-digests_secure_offset,
                     "%s:%s:%s,", match->id, (const char*)g_hash_table_lookup(match->meta, XML_ATTR_TYPE), data->digest_secure_calc);
             }
-            add_hash_param(stonith_op->meta, strdup(XML_OP_ATTR_DIGESTS_ALL),
-                           digests_all);
-            add_hash_param(stonith_op->meta, strdup(XML_OP_ATTR_DIGESTS_SECURE),
-                           digests_secure);
+            g_hash_table_insert(stonith_op->meta,
+                                strdup(XML_OP_ATTR_DIGESTS_ALL),
+                                digests_all);
+            g_hash_table_insert(stonith_op->meta,
+                                strdup(XML_OP_ATTR_DIGESTS_SECURE),
+                                digests_secure);
         }
 
     } else {
