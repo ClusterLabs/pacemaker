@@ -248,13 +248,19 @@ set_working_set_defaults(pe_working_set_t * data_set)
 resource_t *
 pe_find_resource(GListPtr rsc_list, const char *id)
 {
+    return pe_find_resource_with_flags(rsc_list, id, pe_find_renamed | pe_find_current);
+}
+
+resource_t *
+pe_find_resource_with_flags(GListPtr rsc_list, const char *id, enum pe_find flags)
+{
     GListPtr rIter = NULL;
 
     for (rIter = rsc_list; id && rIter; rIter = rIter->next) {
         resource_t *parent = rIter->data;
 
         resource_t *match =
-            parent->fns->find_rsc(parent, id, NULL, pe_find_renamed | pe_find_current);
+            parent->fns->find_rsc(parent, id, NULL, flags);
         if (match != NULL) {
             return match;
         }

@@ -49,9 +49,10 @@ enum pe_restart {
 };
 
 enum pe_find {
-    pe_find_renamed = 0x001,
-    pe_find_clone = 0x004,
-    pe_find_current = 0x008,
+    pe_find_renamed  = 0x001,
+    pe_find_anon     = 0x002,
+    pe_find_clone    = 0x004,
+    pe_find_current  = 0x008,
     pe_find_inactive = 0x010,
 };
 
@@ -459,6 +460,7 @@ gboolean cluster_status(pe_working_set_t * data_set);
 void set_working_set_defaults(pe_working_set_t * data_set);
 void cleanup_calculations(pe_working_set_t * data_set);
 resource_t *pe_find_resource(GListPtr rsc_list, const char *id_rh);
+resource_t *pe_find_resource_with_flags(GListPtr rsc_list, const char *id, enum pe_find flags);
 node_t *pe_find_node(GListPtr node_list, const char *uname);
 node_t *pe_find_node_id(GListPtr node_list, const char *id);
 node_t *pe_find_node_any(GListPtr node_list, const char *id, const char *uname);

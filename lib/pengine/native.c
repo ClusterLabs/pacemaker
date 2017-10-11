@@ -180,14 +180,19 @@ native_find_rsc(resource_t * rsc, const char *id, node_t * on_node, int flags)
             match = TRUE;
         }
 
-    } else {
-        if (strcmp(rsc->id, id) == 0) {
-            match = TRUE;
+    } else if (strcmp(rsc->id, id) == 0) {
+        match = TRUE;
 
-        } else if (is_set(flags, pe_find_renamed)
-                   && rsc->clone_name && strcmp(rsc->clone_name, id) == 0) {
+    } else if (is_set(flags, pe_find_renamed)
+               && rsc->clone_name && strcmp(rsc->clone_name, id) == 0) {
+        match = TRUE;
+
+    } else if (is_set(flags, pe_find_anon) && is_not_set(rsc->flags, pe_rsc_unique)) {
+        char *tmp = clone_strip(rsc->id);
+        if(strcmp(tmp, id) == 0) {
             match = TRUE;
         }
+        free(tmp);
     }
 
     if (match && on_node) {
