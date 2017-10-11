@@ -617,6 +617,10 @@ cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
         GListPtr lpc = NULL;
         GListPtr nodes = g_hash_table_get_values(rsc->known_on);
 
+        if(nodes == NULL) {
+            nodes = node_list_dup(data_set->nodes, FALSE, FALSE);
+        }
+
         for (lpc = nodes; lpc != NULL; lpc = lpc->next) {
             node = (node_t *) lpc->data;
 
