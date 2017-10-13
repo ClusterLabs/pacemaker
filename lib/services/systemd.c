@@ -391,52 +391,68 @@ systemd_unit_listall(void)
     }
 
     dbus_message_iter_recurse(&args, &unit);
-    while (dbus_message_iter_get_arg_type (&unit) != DBUS_TYPE_INVALID) {
+    for (; dbus_message_iter_get_arg_type(&unit) != DBUS_TYPE_INVALID;
+        dbus_message_iter_next(&unit)) {
+
         DBusBasicValue value;
+        const char *match = NULL;
+        char *unit_name = NULL;
+        char *basename = NULL;
 
         if(!pcmk_dbus_type_check(reply, &unit, DBUS_TYPE_STRUCT, __FUNCTION__, __LINE__)) {
+            crm_debug("ListUnitFiles reply has unexpected type");
             continue;
         }
 
         dbus_message_iter_recurse(&unit, &elem);
         if(!pcmk_dbus_type_check(reply, &elem, DBUS_TYPE_STRING, __FUNCTION__, __LINE__)) {
+            crm_debug("ListUnitFiles reply does not contain a string");
             continue;
         }
 
         dbus_message_iter_get_basic(&elem, &value);
-        crm_trace("DBus ListUnitFiles listed: %s", value.str);
-        if(value.str) {
-            const char *match = systemd_unit_extension(value.str);
-
-            if (match) {
-                char *unit_name = NULL;
-                char *basename = NULL;
-
-                // ListUnitFiles returns full path names
-                basename = strrchr(value.str, '/');
-                if (basename) {
-                    basename = basename + 1;
-                } else {
-                    basename = value.str;
-                }
-
-                if (!strcmp(match, ".service")) {
-                    // Service is the "default" unit type, so strip it
-                    unit_name = strndup(basename, match - basename);
-
-                } else if (!strcmp(match, ".mount")
-                           || !strcmp(match, ".socket")) {
-                    // Only list things we can start and stop
-                    unit_name = strdup(basename);
-                }
-                if (unit_name) {
-                    nfiles++;
-                    // @TODO sort alphabetically
-                    units = g_list_prepend(units, unit_name);
-                }
-            }
+        if (value.str == NULL) {
+            crm_debug("ListUnitFiles reply did not provide a string");
+            continue;
         }
-        dbus_message_iter_next (&unit);
+        crm_trace("DBus ListUnitFiles listed: %s", value.str);
+
+        match = systemd_unit_extension(value.str);
+        if (match == NULL) {
+            // Unit files always have an extension, so skip if not present
+            crm_debug("ListUnitFiles entry '%s' does not have an extension",
+                      value.str);
+            continue;
+        }
+
+        // ListUnitFiles returns full path names
+        basename = strrchr(value.str, '/');
+        if (basename) {
+            basename = basename + 1;
+        } else {
+            basename = value.str;
+        }
+
+        /* Unit files will include types (such as .target) that we can't manage,
+         * so filter the replies here.
+         */
+        if (!strcmp(match, ".service")) {
+            // Service is the "default" unit type, so strip it
+            unit_name = strndup(basename, match - basename);
+
+        } else if (!strcmp(match, ".mount")
+                   || !strcmp(match, ".socket")) {
+            unit_name = strdup(basename);
+        }
+        if (unit_name == NULL) {
+            crm_trace("ListUnitFiles entry '%s' is not manageable",
+                      value.str);
+            continue;
+        }
+
+        nfiles++;
+        // @TODO sort alphabetically
+        units = g_list_prepend(units, unit_name);
     }
 
     dbus_message_unref(reply);
