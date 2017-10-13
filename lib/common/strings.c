@@ -236,6 +236,35 @@ null2emptystr(const char *input)
     return (input == NULL) ? "" : input;
 }
 
+/*!
+ * \brief Check whether a string starts with a certain sequence
+ *
+ * \param[in] str    String to check
+ * \param[in] match  Sequence to match against beginning of \p str
+ *
+ * \return \c TRUE if \p str begins with match, \c FALSE otherwise
+ * \note This is equivalent to !strncmp(s, prefix, strlen(prefix))
+ *       but is likely less efficient when prefix is a string literal
+ *       if the compiler optimizes away the strlen() at compile time,
+ *       and more efficient otherwise.
+ */
+bool
+crm_starts_with(const char *str, const char *prefix)
+{
+    const char *s = str;
+    const char *p = prefix;
+
+    if (!s || !p) {
+        return FALSE;
+    }
+    while (*s && *p) {
+        if (*s++ != *p++) {
+            return FALSE;
+        }
+    }
+    return (*p == 0);
+}
+
 static inline int crm_ends_with_internal(const char *, const char *, gboolean);
 static inline int
 crm_ends_with_internal(const char *s, const char *match, gboolean as_extension)
