@@ -427,3 +427,27 @@ crm_compress_string(const char *data, int length, int max, char **result, unsign
     *result = compressed;
     return TRUE;
 }
+
+/*!
+ * \brief Compare two strings alphabetically (case-insensitive)
+ *
+ * \param[in] a  First string to compare
+ * \param[in] b  Second string to compare
+ *
+ * \return 0 if strings are equal, -1 if a < b, 1 if a > b
+ *
+ * \note Usable as a GCompareFunc with g_list_sort().
+ *       NULL is considered less than non-NULL.
+ */
+gint
+crm_alpha_sort(gconstpointer a, gconstpointer b)
+{
+    if (!a && !b) {
+        return 0;
+    } else if (!a) {
+        return -1;
+    } else if (!b) {
+        return 1;
+    }
+    return strcasecmp(a, b);
+}

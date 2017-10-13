@@ -1,0 +1,34 @@
+Allocation scores:
+clone_color: rsc2-master allocation score on node1: 0
+clone_color: rsc2-master allocation score on node2: 0
+clone_color: rsc2-master allocation score on remote1: -INFINITY
+clone_color: rsc2:0 allocation score on node1: 1
+clone_color: rsc2:0 allocation score on node2: 0
+clone_color: rsc2:0 allocation score on remote1: -INFINITY
+clone_color: rsc2:1 allocation score on node1: 0
+clone_color: rsc2:1 allocation score on node2: 11
+clone_color: rsc2:1 allocation score on remote1: -INFINITY
+clone_color: rsc2:2 allocation score on node1: 0
+clone_color: rsc2:2 allocation score on node2: 10
+clone_color: rsc2:2 allocation score on remote1: -INFINITY
+native_color: killer allocation score on node1: 0
+native_color: killer allocation score on node2: 0
+native_color: killer allocation score on remote1: -INFINITY
+native_color: remote1 allocation score on node1: 0
+native_color: remote1 allocation score on node2: -INFINITY
+native_color: remote1 allocation score on remote1: -INFINITY
+native_color: rsc1 allocation score on node1: 0
+native_color: rsc1 allocation score on node2: 0
+native_color: rsc1 allocation score on remote1: 0
+native_color: rsc2:0 allocation score on node1: -INFINITY
+native_color: rsc2:0 allocation score on node2: -INFINITY
+native_color: rsc2:0 allocation score on remote1: -INFINITY
+native_color: rsc2:1 allocation score on node1: -INFINITY
+native_color: rsc2:1 allocation score on node2: 11
+native_color: rsc2:1 allocation score on remote1: -INFINITY
+native_color: rsc2:2 allocation score on node1: -INFINITY
+native_color: rsc2:2 allocation score on node2: -INFINITY
+native_color: rsc2:2 allocation score on remote1: -INFINITY
+rsc2:0 promotion score on none: 0
+rsc2:1 promotion score on node2: 10
+rsc2:2 promotion score on none: 0

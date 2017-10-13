@@ -837,10 +837,19 @@ crm_update_peer(const char *source, unsigned int id, uint64_t born, uint64_t see
 void
 crm_update_peer_uname(crm_node_t *node, const char *uname)
 {
-    int i, len = strlen(uname);
+    CRM_CHECK(uname != NULL,
+              crm_err("Bug: can't update node name without name"); return);
+    CRM_CHECK(node != NULL,
+              crm_err("Bug: can't update node name to %s without node", uname);
+              return);
 
-    for (i = 0; i < len; i++) {
-        if (uname[i] >= 'A' && uname[i] <= 'Z') {
+    if (safe_str_eq(uname, node->uname)) {
+        crm_debug("Node uname '%s' did not change", uname);
+        return;
+    }
+
+    for (const char *c = uname; *c; ++c) {
+        if ((*c >= 'A') && (*c <= 'Z')) {
             crm_warn("Node names with capitals are discouraged, consider changing '%s'",
                      uname);
             break;
@@ -849,6 +858,8 @@ crm_update_peer_uname(crm_node_t *node, const char *uname)
 
     free(node->uname);
     node->uname = strdup(uname);
+    CRM_ASSERT(node->uname != NULL);
+
     if (crm_status_callback) {
         crm_status_callback(crm_status_uname, node, NULL);
     }
