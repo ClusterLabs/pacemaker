@@ -1,0 +1,54 @@
+
+Current cluster status:
+Node node1 (1): UNCLEAN (offline)
+Online: [ node2 ]
+RemoteOnline: [ remote1 ]
+
+ remote1	(ocf::pacemaker:remote):	Started node1 (UNCLEAN)
+ killer	(stonith:fence_xvm):	Started node2
+ rsc1	(ocf::pacemaker:Dummy):	Started remote1
+ Master/Slave Set: rsc2-master [rsc2]
+     rsc2	(ocf::pacemaker:Stateful):	Master node1 (UNCLEAN)
+     Masters: [ node2 ]
+     Stopped: [ remote1 ]
+
+Transition Summary:
+ * Fence (reboot) remote1 'resources are active and the connection is unrecoverable'
+ * Fence (reboot) node1 'peer is no longer part of the cluster'
+ * Stop       remote1     (            node1 )   due to node availability
+ * Restart    killer      (            node2 )  
+ * Move       rsc1        ( remote1 -> node2 )  
+ * Stop       rsc2:0      (     Master node1 )   due to node availability
+
+Executing cluster transition:
+ * Resource action: killer          stop on node2
+ * Resource action: rsc1            monitor on node2
+ * Fencing node1 (reboot)
+ * Fencing remote1 (reboot)
+ * Pseudo action:   stonith_complete
+ * Pseudo action:   rsc1_stop_0
+ * Pseudo action:   rsc2-master_demote_0
+ * Pseudo action:   remote1_stop_0
+ * Resource action: rsc1            start on node2
+ * Pseudo action:   rsc2_demote_0
+ * Pseudo action:   rsc2-master_demoted_0
+ * Pseudo action:   rsc2-master_stop_0
+ * Resource action: rsc1            monitor=10000 on node2
+ * Pseudo action:   rsc2_stop_0
+ * Pseudo action:   rsc2-master_stopped_0
+ * Pseudo action:   all_stopped
+ * Resource action: killer          start on node2
+ * Resource action: killer          monitor=60000 on node2
+
+Revised cluster status:
+Online: [ node2 ]
+OFFLINE: [ node1 ]
+RemoteOFFLINE: [ remote1 ]
+
+ remote1	(ocf::pacemaker:remote):	Stopped
+ killer	(stonith:fence_xvm):	Started node2
+ rsc1	(ocf::pacemaker:Dummy):	Started node2
+ Master/Slave Set: rsc2-master [rsc2]
+     Masters: [ node2 ]
+     Stopped: [ node1 remote1 ]
+
