@@ -774,8 +774,7 @@ calculate_system_health(gpointer gKey, gpointer gValue, gpointer user_data)
         return;
     }
 
-    /* Does it start with #health? */
-    if (0 == strncmp(key, "#health", 7)) {
+    if (crm_starts_with(key, "#health")) {
         int score;
 
         /* Convert the value into an integer */
