@@ -165,6 +165,7 @@ create_ip_resource(
 
         // TODO: Other ops? Timeouts and intervals from underlying resource?
 
+        crm_log_xml_trace(xml_ip, "Container-ip");
         if (common_unpack(xml_ip, &tuple->ip, parent, data_set) == false) {
             return FALSE;
         }
@@ -320,7 +321,7 @@ create_docker_resource(
         crm_create_op_xml(xml_obj, ID(xml_docker), "monitor", "60s", NULL);
 
         // TODO: Other ops? Timeouts and intervals from underlying resource?
-
+        crm_log_xml_trace(xml_docker, "Contaner-docker");
         if (common_unpack(xml_docker, &tuple->docker, parent, data_set) == FALSE) {
             return FALSE;
         }
@@ -603,6 +604,7 @@ create_remote_resource(
         /* Ensure the node shows up as allowed and with the correct discovery set */
         g_hash_table_insert(tuple->child->allowed_nodes, (gpointer) tuple->node->details->id, node_copy(tuple->node));
 
+        crm_log_xml_trace(xml_remote, "Contaner-remote");
         if (common_unpack(xml_remote, &tuple->remote, parent, data_set) == FALSE) {
             return FALSE;
         }
