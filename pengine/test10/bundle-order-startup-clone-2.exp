@@ -597,7 +597,11 @@
         <attributes CRM_meta_container="galera-bundle-docker-0" CRM_meta_on_node="metal-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="metal-1"  port="3123"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="68" operation="start" operation_key="galera-bundle-docker-0_start_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="37">
     <action_set>
@@ -606,7 +610,11 @@
         <attributes CRM_meta_container="galera-bundle-docker-0" CRM_meta_on_node="metal-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="metal-1"  port="3123"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="68" operation="start" operation_key="galera-bundle-docker-0_start_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="38">
     <action_set>
@@ -615,7 +623,11 @@
         <attributes CRM_meta_container="galera-bundle-docker-0" CRM_meta_on_node="metal-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="metal-1"  port="3123"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="68" operation="start" operation_key="galera-bundle-docker-0_start_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="39">
     <action_set>
@@ -739,7 +751,11 @@
         <attributes CRM_meta_container="galera-bundle-docker-1" CRM_meta_on_node="metal-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="metal-2"  port="3123"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="72" operation="start" operation_key="galera-bundle-docker-1_start_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="47">
     <action_set>
@@ -748,7 +764,11 @@
         <attributes CRM_meta_container="galera-bundle-docker-1" CRM_meta_on_node="metal-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="metal-2"  port="3123"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="72" operation="start" operation_key="galera-bundle-docker-1_start_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="48">
     <action_set>
@@ -757,7 +777,11 @@
         <attributes CRM_meta_container="galera-bundle-docker-1" CRM_meta_on_node="metal-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="metal-2"  port="3123"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="72" operation="start" operation_key="galera-bundle-docker-1_start_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="49">
     <action_set>
@@ -881,7 +905,11 @@
         <attributes CRM_meta_container="galera-bundle-docker-2" CRM_meta_on_node="metal-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="metal-3"  port="3123"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="76" operation="start" operation_key="galera-bundle-docker-2_start_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="57">
     <action_set>
@@ -890,7 +918,11 @@
         <attributes CRM_meta_container="galera-bundle-docker-2" CRM_meta_on_node="metal-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="metal-3"  port="3123"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="76" operation="start" operation_key="galera-bundle-docker-2_start_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="58">
     <action_set>
@@ -899,7 +931,11 @@
         <attributes CRM_meta_container="galera-bundle-docker-2" CRM_meta_on_node="metal-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="metal-3"  port="3123"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="76" operation="start" operation_key="galera-bundle-docker-2_start_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="59">
     <action_set>
@@ -1814,7 +1850,11 @@
         <attributes CRM_meta_container="redis-bundle-docker-0" CRM_meta_on_node="metal-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="metal-1"  port="3124"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="115" operation="start" operation_key="redis-bundle-docker-0_start_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="112">
     <action_set>
@@ -1823,7 +1863,11 @@
         <attributes CRM_meta_container="redis-bundle-docker-0" CRM_meta_on_node="metal-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="metal-1"  port="3124"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="115" operation="start" operation_key="redis-bundle-docker-0_start_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="113">
     <action_set>
@@ -1832,7 +1876,11 @@
         <attributes CRM_meta_container="redis-bundle-docker-0" CRM_meta_on_node="metal-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="metal-1"  port="3124"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="115" operation="start" operation_key="redis-bundle-docker-0_start_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="114">
     <action_set>
@@ -1956,7 +2004,11 @@
         <attributes CRM_meta_container="redis-bundle-docker-1" CRM_meta_on_node="metal-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="metal-2"  port="3124"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="119" operation="start" operation_key="redis-bundle-docker-1_start_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="122">
     <action_set>
@@ -1965,7 +2017,11 @@
         <attributes CRM_meta_container="redis-bundle-docker-1" CRM_meta_on_node="metal-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="metal-2"  port="3124"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="119" operation="start" operation_key="redis-bundle-docker-1_start_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="123">
     <action_set>
@@ -1974,7 +2030,11 @@
         <attributes CRM_meta_container="redis-bundle-docker-1" CRM_meta_on_node="metal-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="metal-2"  port="3124"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="119" operation="start" operation_key="redis-bundle-docker-1_start_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="124">
     <action_set>
@@ -2098,7 +2158,11 @@
         <attributes CRM_meta_container="redis-bundle-docker-2" CRM_meta_on_node="metal-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="metal-3"  port="3124"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="123" operation="start" operation_key="redis-bundle-docker-2_start_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="132">
     <action_set>
@@ -2107,7 +2171,11 @@
         <attributes CRM_meta_container="redis-bundle-docker-2" CRM_meta_on_node="metal-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="metal-3"  port="3124"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="123" operation="start" operation_key="redis-bundle-docker-2_start_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="133">
     <action_set>
@@ -2116,7 +2184,11 @@
         <attributes CRM_meta_container="redis-bundle-docker-2" CRM_meta_on_node="metal-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="metal-3"  port="3124"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="123" operation="start" operation_key="redis-bundle-docker-2_start_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="134" priority="1000000">
     <action_set>

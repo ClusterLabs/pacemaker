@@ -29,41 +29,41 @@ Transition Summary:
 
 Executing cluster transition:
  * Pseudo action:   rabbitmq-bundle-clone_pre_notify_start_0
- * Resource action: rabbitmq-bundle-0 monitor on overcloud-galera-2
- * Resource action: rabbitmq-bundle-0 monitor on overcloud-galera-1
- * Resource action: rabbitmq-bundle-0 monitor on overcloud-galera-0
- * Resource action: rabbitmq-bundle-0 monitor on overcloud-controller-2
- * Resource action: rabbitmq-bundle-0 monitor on overcloud-controller-1
- * Resource action: rabbitmq-bundle-0 monitor on overcloud-controller-0
- * Resource action: rabbitmq-bundle-1 monitor on overcloud-galera-2
- * Resource action: rabbitmq-bundle-1 monitor on overcloud-galera-1
- * Resource action: rabbitmq-bundle-1 monitor on overcloud-galera-0
- * Resource action: rabbitmq-bundle-1 monitor on overcloud-controller-2
- * Resource action: rabbitmq-bundle-1 monitor on overcloud-controller-1
- * Resource action: rabbitmq-bundle-1 monitor on overcloud-controller-0
- * Resource action: rabbitmq-bundle-2 monitor on overcloud-galera-2
- * Resource action: rabbitmq-bundle-2 monitor on overcloud-galera-1
- * Resource action: rabbitmq-bundle-2 monitor on overcloud-galera-0
- * Resource action: rabbitmq-bundle-2 monitor on overcloud-controller-2
- * Resource action: rabbitmq-bundle-2 monitor on overcloud-controller-1
- * Resource action: rabbitmq-bundle-2 monitor on overcloud-controller-0
  * Pseudo action:   rabbitmq-bundle_stop_0
  * Pseudo action:   rabbitmq-bundle_start_0
  * Pseudo action:   rabbitmq-bundle-clone_confirmed-pre_notify_start_0
  * Resource action: rabbitmq-bundle-docker-0 stop on overcloud-rabbit-0
  * Resource action: rabbitmq-bundle-docker-0 start on overcloud-rabbit-0
  * Resource action: rabbitmq-bundle-docker-0 monitor=60000 on overcloud-rabbit-0
- * Resource action: rabbitmq-bundle-0 start on overcloud-controller-0
+ * Resource action: rabbitmq-bundle-0 monitor on overcloud-galera-2
+ * Resource action: rabbitmq-bundle-0 monitor on overcloud-galera-1
+ * Resource action: rabbitmq-bundle-0 monitor on overcloud-galera-0
+ * Resource action: rabbitmq-bundle-0 monitor on overcloud-controller-2
+ * Resource action: rabbitmq-bundle-0 monitor on overcloud-controller-1
+ * Resource action: rabbitmq-bundle-0 monitor on overcloud-controller-0
  * Resource action: rabbitmq-bundle-docker-1 stop on overcloud-rabbit-1
  * Resource action: rabbitmq-bundle-docker-1 start on overcloud-rabbit-1
  * Resource action: rabbitmq-bundle-docker-1 monitor=60000 on overcloud-rabbit-1
- * Resource action: rabbitmq-bundle-1 start on overcloud-controller-1
+ * Resource action: rabbitmq-bundle-1 monitor on overcloud-galera-2
+ * Resource action: rabbitmq-bundle-1 monitor on overcloud-galera-1
+ * Resource action: rabbitmq-bundle-1 monitor on overcloud-galera-0
+ * Resource action: rabbitmq-bundle-1 monitor on overcloud-controller-2
+ * Resource action: rabbitmq-bundle-1 monitor on overcloud-controller-1
+ * Resource action: rabbitmq-bundle-1 monitor on overcloud-controller-0
  * Resource action: rabbitmq-bundle-docker-2 stop on overcloud-rabbit-2
  * Resource action: rabbitmq-bundle-docker-2 start on overcloud-rabbit-2
  * Resource action: rabbitmq-bundle-docker-2 monitor=60000 on overcloud-rabbit-2
- * Resource action: rabbitmq-bundle-2 start on overcloud-controller-2
+ * Resource action: rabbitmq-bundle-2 monitor on overcloud-galera-2
+ * Resource action: rabbitmq-bundle-2 monitor on overcloud-galera-1
+ * Resource action: rabbitmq-bundle-2 monitor on overcloud-galera-0
+ * Resource action: rabbitmq-bundle-2 monitor on overcloud-controller-2
+ * Resource action: rabbitmq-bundle-2 monitor on overcloud-controller-1
+ * Resource action: rabbitmq-bundle-2 monitor on overcloud-controller-0
  * Pseudo action:   rabbitmq-bundle_stopped_0
  * Pseudo action:   all_stopped
+ * Resource action: rabbitmq-bundle-0 start on overcloud-controller-0
+ * Resource action: rabbitmq-bundle-1 start on overcloud-controller-1
+ * Resource action: rabbitmq-bundle-2 start on overcloud-controller-2
  * Resource action: rabbitmq:0      monitor on rabbitmq-bundle-0
  * Resource action: rabbitmq:1      monitor on rabbitmq-bundle-1
  * Resource action: rabbitmq:2      monitor on rabbitmq-bundle-2

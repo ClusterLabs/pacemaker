@@ -11,6 +11,7 @@ digraph "g" {
 "galera-bundle-docker-0_monitor_0 undercloud" -> "galera-bundle-master_start_0" [ style = bold]
 "galera-bundle-docker-0_monitor_0 undercloud" [ style=bold color="green" fontcolor="black"]
 "galera-bundle-docker-0_monitor_60000 undercloud" [ style=bold color="green" fontcolor="black"]
+"galera-bundle-docker-0_start_0 undercloud" -> "galera-bundle-0_monitor_0 undercloud" [ style = bold]
 "galera-bundle-docker-0_start_0 undercloud" -> "galera-bundle-0_start_0 undercloud" [ style = bold]
 "galera-bundle-docker-0_start_0 undercloud" -> "galera-bundle-docker-0_monitor_60000 undercloud" [ style = bold]
 "galera-bundle-docker-0_start_0 undercloud" -> "galera-bundle_running_0" [ style = bold]

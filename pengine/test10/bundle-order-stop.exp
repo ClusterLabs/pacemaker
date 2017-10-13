@@ -128,7 +128,7 @@
     <action_set>
       <rsc_op id="20" operation="stop" operation_key="rabbitmq-bundle-0_stop_0" on_node="undercloud" on_node_uuid="1">
         <primitive id="rabbitmq-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="rabbitmq-bundle-docker-0" CRM_meta_on_node="undercloud" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" addr="#uname"  port="3121"/>
+        <attributes CRM_meta_container="rabbitmq-bundle-docker-0" CRM_meta_on_node="undercloud" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" addr="undercloud"  port="3121"/>
         <downed>
           <node id="rabbitmq-bundle-0"/>
         </downed>
@@ -261,7 +261,7 @@
     <action_set>
       <rsc_op id="40" operation="stop" operation_key="galera-bundle-0_stop_0" on_node="undercloud" on_node_uuid="1">
         <primitive id="galera-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="galera-bundle-docker-0" CRM_meta_on_node="undercloud" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" addr="#uname"  port="3123"/>
+        <attributes CRM_meta_container="galera-bundle-docker-0" CRM_meta_on_node="undercloud" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" addr="undercloud"  port="3123"/>
         <downed>
           <node id="galera-bundle-0"/>
         </downed>
@@ -549,7 +549,7 @@
     <action_set>
       <rsc_op id="63" operation="stop" operation_key="redis-bundle-0_stop_0" on_node="undercloud" on_node_uuid="1">
         <primitive id="redis-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="redis-bundle-docker-0" CRM_meta_on_node="undercloud" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" addr="#uname"  port="3124"/>
+        <attributes CRM_meta_container="redis-bundle-docker-0" CRM_meta_on_node="undercloud" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" addr="undercloud"  port="3124"/>
         <downed>
           <node id="redis-bundle-0"/>
         </downed>

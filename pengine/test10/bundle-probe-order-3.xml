@@ -1,0 +1,117 @@
+<cib crm_feature_set="3.0.12" validate-with="pacemaker-2.8" epoch="295" num_updates="9" admin_epoch="0" cib-last-written="Thu Oct 12 09:31:55 2017" update-origin="centos1" update-client="crmd" update-user="hacluster" have-quorum="1" dc-uuid="1" execution-date="1507793517">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.16-12.bundle.3.el7.centos.4-94ff4df"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="ratester"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1507793515"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="centos1"/>
+      <node id="2" uname="centos2"/>
+      <node id="3" uname="centos3"/>
+    </nodes>
+    <resources>
+      <bundle id="galera-bundle">
+        <meta_attributes id="galera-bundle-meta_attributes">
+          <nvpair id="galera-bundle-meta_attributes-is-managed" name="is-managed" value="false"/>
+        </meta_attributes>
+        <docker masters="3" network="host" replicas="3" image="docker.io/tripleoupstream/centos-binary-mariadb:latest" run-command="/usr/sbin/pacemaker_remoted" options="--user=root --log-driver=journald"/>
+        <network control-port="3123"/>
+        <storage>
+          <storage-mapping target-dir="/etc/libqb/force-filesystem-sockets" options="ro" id="map1" source-dir="/foo"/>
+          <storage-mapping target-dir="/etc/my.cnf.d/galera.cnf" options="ro" id="map2" source-dir="/etc/my.cnf.d/galera.cnf"/>
+          <storage-mapping target-dir="/var/lib/mysql" options="rw" id="map3" source-dir="/var/lib/mysql"/>
+        </storage>
+        <primitive class="ocf" id="galera" provider="heartbeat" type="galera">
+          <instance_attributes id="galera-instance_attributes">
+            <nvpair id="galera-instance_attributes-cluster_host_map" name="cluster_host_map" value="centos1:centos1;centos2:centos2;centos3:centos3"/>
+            <nvpair id="galera-instance_attributes-enable_creation" name="enable_creation" value="true"/>
+            <nvpair id="galera-instance_attributes-wsrep_cluster_address" name="wsrep_cluster_address" value="gcomm://centos1,centos2,centos3"/>
+          </instance_attributes>
+          <meta_attributes id="galera-meta_attributes">
+            <nvpair id="galera-meta_attributes-container-attribute-target" name="container-attribute-target" value="host"/>
+            <nvpair id="galera-meta_attributes-is-managed" name="is-managed" value="false"/>
+          </meta_attributes>
+          <operations>
+            <op id="galera-demote-interval-0s" interval="0s" name="demote" timeout="120"/>
+            <op id="galera-monitor-interval-20" interval="20" name="monitor" timeout="30"/>
+            <op id="galera-monitor-interval-10" interval="10" name="monitor" role="Master" timeout="30"/>
+            <op id="galera-monitor-interval-30" interval="30" name="monitor" role="Slave" timeout="30"/>
+            <op id="galera-promote-interval-0s" interval="0s" name="promote" on-fail="block"/>
+            <op id="galera-start-interval-0s" interval="0s" name="start" timeout="120"/>
+            <op id="galera-stop-interval-0s" interval="0s" name="stop" timeout="120"/>
+          </operations>
+        </primitive>
+      </bundle>
+    </resources>
+    <constraints>
+      <rsc_location id="cli-ban-galera-bundle-on-centos1" rsc="galera-bundle" role="Started" node="centos1" score="-INFINITY"/>
+      <rsc_location id="cli-ban-galera-bundle-on-centos3" rsc="galera-bundle" role="Started" node="centos3" score="-INFINITY"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="3" uname="centos3" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="3">
+        <lrm_resources>
+          <lrm_resource id="galera-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera-bundle-docker-0_last_0" operation_key="galera-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="13:83:7:43285c5e-b25f-4c08-8e26-b680d050db82" transition-magic="0:7;13:83:7:43285c5e-b25f-4c08-8e26-b680d050db82" on_node="centos3" call-id="71" rc-code="7" op-status="0" interval="0" last-run="1507793516" last-rc-change="1507793516" exec-time="61" queue-time="0" op-digest="22ac554c0c3ba5fdd85d5f4134db6003"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-docker-1" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera-bundle-docker-1_last_0" operation_key="galera-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="15:83:7:43285c5e-b25f-4c08-8e26-b680d050db82" transition-magic="0:7;15:83:7:43285c5e-b25f-4c08-8e26-b680d050db82" on_node="centos3" call-id="75" rc-code="7" op-status="0" interval="0" last-run="1507793516" last-rc-change="1507793516" exec-time="69" queue-time="0" op-digest="5360882c871c1235885143790c91b5f0"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="3">
+        <instance_attributes id="status-3">
+          <nvpair id="status-3-shutdown" name="shutdown" value="0"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="1" uname="centos1" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="galera-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera-bundle-docker-0_last_0" operation_key="galera-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="1:83:7:43285c5e-b25f-4c08-8e26-b680d050db82" transition-magic="0:7;1:83:7:43285c5e-b25f-4c08-8e26-b680d050db82" on_node="centos1" call-id="69" rc-code="7" op-status="0" interval="0" last-run="1507793516" last-rc-change="1507793516" exec-time="51" queue-time="0" op-digest="22ac554c0c3ba5fdd85d5f4134db6003"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-1" type="remote" class="ocf" provider="pacemaker" container="galera-bundle-docker-1">
+            <lrm_rsc_op id="galera-bundle-1_last_0" operation_key="galera-bundle-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="4:83:7:43285c5e-b25f-4c08-8e26-b680d050db82" transition-magic="0:7;4:83:7:43285c5e-b25f-4c08-8e26-b680d050db82" on_node="centos1" call-id="11" rc-code="7" op-status="0" interval="0" last-run="1507793516" last-rc-change="1507793516" exec-time="0" queue-time="0" op-digest="9f3901600fcaa04276113ecd13872e61" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-docker-1" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera-bundle-docker-1_last_0" operation_key="galera-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="3:83:7:43285c5e-b25f-4c08-8e26-b680d050db82" transition-magic="0:7;3:83:7:43285c5e-b25f-4c08-8e26-b680d050db82" on_node="centos1" call-id="73" rc-code="7" op-status="0" interval="0" last-run="1507793516" last-rc-change="1507793516" exec-time="91" queue-time="0" op-digest="5360882c871c1235885143790c91b5f0"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="1">
+        <instance_attributes id="status-1">
+          <nvpair id="status-1-shutdown" name="shutdown" value="0"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="2" uname="centos2" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="galera-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera-bundle-docker-0_last_failure_0" operation_key="galera-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="7:83:7:43285c5e-b25f-4c08-8e26-b680d050db82" transition-magic="0:0;7:83:7:43285c5e-b25f-4c08-8e26-b680d050db82" on_node="centos2" call-id="80" rc-code="0" op-status="0" interval="0" last-run="1507793516" last-rc-change="1507793516" exec-time="135" queue-time="0" op-digest="22ac554c0c3ba5fdd85d5f4134db6003"/>
+            <lrm_rsc_op id="galera-bundle-docker-0_last_0" operation_key="galera-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="7:83:7:43285c5e-b25f-4c08-8e26-b680d050db82" transition-magic="0:0;7:83:7:43285c5e-b25f-4c08-8e26-b680d050db82" on_node="centos2" call-id="80" rc-code="0" op-status="0" interval="0" last-run="1507793516" last-rc-change="1507793516" exec-time="135" queue-time="0" op-digest="22ac554c0c3ba5fdd85d5f4134db6003"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="2">
+        <instance_attributes id="status-2">
+          <nvpair id="status-2-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-2-master-galera" name="master-galera" value="100"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state remote_node="true" id="galera-bundle-0" uname="galera-bundle-0" in_ccm="true" crm-debug-origin="remote_ra_maintenance" node_fenced="0" node_in_maintenance="1">
+      <lrm id="galera-bundle-0">
+        <lrm_resources/>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

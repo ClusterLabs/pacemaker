@@ -823,6 +823,10 @@ do_test bundle-nested-colocation "Colocation of nested connection resources"
 
 do_test bundle-order-fencing "Order pseudo bundle fencing after parent node fencing if both are happening"
 
+do_test bundle-probe-order-1 "order 1"
+do_test bundle-probe-order-2 "order 2"
+do_test bundle-probe-order-3 "order 3"
+
 echo ""
 do_test whitebox-fail1 "Fail whitebox container rsc."
 do_test whitebox-fail2 "Fail whitebox container rsc lrmd connection."
