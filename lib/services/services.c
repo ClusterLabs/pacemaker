@@ -929,6 +929,9 @@ handle_blocked_ops(void)
     "  </special>\n"                                                    \
     "</resource-agent>\n"
 
+/* See "Comment Conventions for Init Scripts" in the LSB core specification at:
+ * http://refspecs.linuxfoundation.org/lsb.shtml
+ */
 #define LSB_INITSCRIPT_INFOBEGIN_TAG "### BEGIN INIT INFO"
 #define LSB_INITSCRIPT_INFOEND_TAG "### END INIT INFO"
 #define PROVIDES    "# Provides:"
@@ -962,7 +965,7 @@ handle_blocked_ops(void)
 static inline gboolean
 lsb_meta_helper_get_value(const char *line, char **value, const char *prefix)
 {
-    if (!*value && !strncasecmp(line, prefix, strlen(prefix))) {
+    if (!*value && !strncmp(line, prefix, strlen(prefix))) {
         *value = (char *)xmlEncodeEntitiesReentrant(NULL, BAD_CAST line+strlen(prefix));
         return TRUE;
     }
@@ -987,7 +990,8 @@ lsb_get_metadata(const char *type, char **output)
     char *s_dscrpt = NULL;
     char *xml_l_dscrpt = NULL;
     int offset = 0;
-    char description[DESC_MAX];
+    bool in_header = FALSE;
+    char description[DESC_MAX] = { 0, };
 
     if (type[0] == '/') {
         snprintf(ra_pathname, sizeof(ra_pathname), "%s", type);
@@ -1004,6 +1008,16 @@ lsb_get_metadata(const char *type, char **output)
 
     /* Enter into the LSB-compliant comment block */
     while (fgets(buffer, sizeof(buffer), fp)) {
+
+        // Ignore lines up to and including the block delimiter
+        if (!strncmp(buffer, LSB_INITSCRIPT_INFOBEGIN_TAG,
+                     strlen(LSB_INITSCRIPT_INFOBEGIN_TAG))) {
+            in_header = TRUE;
+            continue;
+        }
+        if (!in_header) {
+            continue;
+        }
 
         /* Assume each of the following eight arguments contain one line */
         if (lsb_meta_helper_get_value(buffer, &provides, PROVIDES)) {
@@ -1032,8 +1046,9 @@ lsb_get_metadata(const char *type, char **output)
         }
 
         /* Long description may cross multiple lines */
-        if ((offset == 0)
-            && !strncasecmp(buffer, DESCRIPTION, strlen(DESCRIPTION))) {
+        if ((offset == 0) // haven't already found long description
+            && !strncmp(buffer, DESCRIPTION, strlen(DESCRIPTION))) {
+
             /* Between # and keyword, more than one space, or a tab
              * character, indicates the continuation line.
              *
@@ -1056,13 +1071,13 @@ lsb_get_metadata(const char *type, char **output)
             xml_l_dscrpt = (char *)xmlEncodeEntitiesReentrant(NULL, BAD_CAST(description));
         }
 
-        if (!strncasecmp(buffer, LSB_INITSCRIPT_INFOEND_TAG,
-                         strlen(LSB_INITSCRIPT_INFOEND_TAG))) {
-            /* Get to the out border of LSB comment block */
+        // Stop if we leave the header block
+        if (!strncmp(buffer, LSB_INITSCRIPT_INFOEND_TAG,
+                     strlen(LSB_INITSCRIPT_INFOEND_TAG))) {
             break;
         }
         if (buffer[0] != '#') {
-            break;              /* Out of comment block in the beginning */
+            break;
         }
     }
     fclose(fp);
