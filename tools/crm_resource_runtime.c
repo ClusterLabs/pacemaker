@@ -1525,6 +1525,7 @@ cli_resource_execute(const char *rsc_id, const char *rsc_action, GHashTable *ove
     }
 
 
+    setenv("HA_debug", do_trace ? "1" : "0", 1);
     if(do_trace) {
         setenv("OCF_TRACE_RA", "1", 1);
     }
