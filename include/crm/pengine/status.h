@@ -429,6 +429,10 @@ enum pe_ordering {
                                                  * ensure instances of 'then' on 'nodeX' are too.
                                                  * Only really useful if 'then' is a clone and 'first' is not
                                                  */
+    pe_order_probe                 = 0x800,     /* If 'first->rsc' is
+                                                 *  - running but about to stop, ignore the constraint
+                                                 *  - otherwise, behave as runnable_left
+                                                 */
 
     pe_order_restart               = 0x1000,    /* 'then' is runnable if 'first' is optional or runnable */
     pe_order_stonith_stop          = 0x2000,    /* only applies if the action is non-pseudo */

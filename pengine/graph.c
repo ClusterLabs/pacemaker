@@ -294,6 +294,26 @@ graph_update_action(action_t * first, action_t * then, node_t * node,
         }
     }
 
+    if (then->rsc && is_set(type, pe_order_probe)) {
+        processed = TRUE;
+
+        if (is_not_set(first_flags, pe_action_runnable) && first->rsc->running_on != NULL) {
+            pe_rsc_trace(then->rsc, "Ignoring %s then %s - %s is about to be stopped",
+                         first->uuid, then->uuid, first->rsc->id);
+
+        } else {
+            pe_rsc_trace(then->rsc, "Enforcing %s then %s", first->uuid, then->uuid);
+            changed |= then->rsc->cmds->update_actions(first, then, node, first_flags,
+                                                       pe_action_runnable, pe_order_runnable_left);
+        }
+
+        if (changed) {
+            pe_rsc_trace(then->rsc, "runnable: %s then %s: changed", first->uuid, then->uuid);
+        } else {
+            crm_trace("runnable: %s then %s", first->uuid, then->uuid);
+        }
+    }
+
     if (type & pe_order_runnable_left) {
         processed = TRUE;
         if (then->rsc) {

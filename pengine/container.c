@@ -823,16 +823,27 @@ container_expand(resource_t * rsc, pe_working_set_t * data_set)
     for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
         container_grouping_t *tuple = (container_grouping_t *)gIter->data;
 
-
         CRM_ASSERT(tuple);
-        if (tuple->docker && tuple->remote && tuple->docker->allocated_to
-            && fix_remote_addr(tuple->remote)) {
+        if (tuple->remote && tuple->docker && fix_remote_addr(tuple->remote)) {
 
             // REMOTE_CONTAINER_HACK: Allow remote nodes that start containers with pacemaker remote inside
+            pe_node_t *node = tuple->docker->allocated_to;
             xmlNode *nvpair = get_xpath_object("//nvpair[@name='addr']", tuple->remote->xml, LOG_ERR);
 
-            g_hash_table_replace(tuple->remote->parameters, strdup("addr"), strdup(tuple->docker->allocated_to->details->uname));
-            crm_xml_add(nvpair, "value", tuple->docker->allocated_to->details->uname);
+            if(node == NULL && tuple->docker->running_on) {
+                /* If it wont be running anywhere after the
+                 * transition, go with where it's running now.
+                 */
+                node = tuple->docker->running_on->data;
+            }
+
+            if(node != NULL) {
+                g_hash_table_replace(tuple->remote->parameters, strdup("addr"), strdup(node->details->uname));
+                crm_xml_add(nvpair, "value", node->details->uname);
+
+            } else if(fix_remote_addr(tuple->remote)) {
+                crm_trace("Cannot fix address for %s", tuple->remote->id);
+            }
         }
         if(tuple->ip) {
             tuple->ip->cmds->expand(tuple->ip, data_set);
@@ -897,8 +908,18 @@ container_create_probe(resource_t * rsc, node_t * node, action_t * complete,
                 }
             }
         }
-        if(tuple->remote) {
-            any_created |= tuple->remote->cmds->create_probe(tuple->remote, node, complete, force, data_set);
+        if(tuple->remote && tuple->remote->cmds->create_probe(tuple->remote, node, complete, force, data_set)) {
+            /* Do not probe the remote resource until we know where docker is running
+             * Required for REMOTE_CONTAINER_HACK to correctly probe remote resources
+             */
+            char *probe_uuid = generate_op_key(tuple->remote->id, RSC_STATUS, 0);
+            action_t *probe = find_first_action(tuple->remote->actions, probe_uuid, NULL, node);
+            any_created = TRUE;
+
+            crm_trace("Ordering %s probe on %s", tuple->remote->id, node->details->uname);
+            custom_action_order(tuple->docker, generate_op_key(tuple->docker->id, RSC_START, 0), NULL,
+                                tuple->remote, NULL, probe, pe_order_probe, data_set);
+            free(probe_uuid);
         }
     }
     return any_created;
