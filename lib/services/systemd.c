@@ -451,13 +451,13 @@ systemd_unit_listall(void)
         }
 
         nfiles++;
-        // @TODO sort alphabetically
         units = g_list_prepend(units, unit_name);
     }
 
     dbus_message_unref(reply);
 
     crm_trace("Found %d manageable systemd unit files", nfiles);
+    units = g_list_sort(units, crm_alpha_sort);
     return units;
 }
 
