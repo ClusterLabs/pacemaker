@@ -557,7 +557,7 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char * c
     crm_xml_add(xml_op, XML_ATTR_CRM_VERSION, caller_version);
     crm_xml_add(xml_op, XML_ATTR_TRANSITION_KEY, op->user_data);
     crm_xml_add(xml_op, XML_ATTR_TRANSITION_MAGIC, magic);
-    crm_xml_add(xml_op, XML_LRM_ATTR_EXIT_REASON, exit_reason);
+    crm_xml_add(xml_op, XML_LRM_ATTR_EXIT_REASON, exit_reason == NULL ? "" : exit_reason);
     crm_xml_add(xml_op, XML_LRM_ATTR_TARGET, node); /* For context during triage */
 
     crm_xml_add_int(xml_op, XML_LRM_ATTR_CALLID, op->call_id);
