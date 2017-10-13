@@ -488,7 +488,7 @@ common_print(resource_t * rsc, const char *pre_text, const char *name, node_t *n
 
     if (rsc->meta) {
         const char *is_internal = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INTERNAL_RSC);
-        if (crm_is_true(is_internal)) {
+        if (crm_is_true(is_internal) && is_not_set(options, pe_print_clone_details)) {
             crm_trace("skipping print of internal resource %s", rsc->id);
             return;
         }
