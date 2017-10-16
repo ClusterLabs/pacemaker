@@ -546,6 +546,17 @@ update_action(action_t * then)
 
         clear_bit(changed, pe_graph_updated_first);
 
+        if (first->rsc && is_set(other->type, pe_order_then_cancels_first)
+            && is_not_set(then->flags, pe_action_optional)) {
+
+            /* 'then' is required, so we must abandon 'first'
+             * (e.g. a required stop cancels any reload).
+             * Only used with reload actions as 'first'.
+             */
+            set_bit(other->action->flags, pe_action_optional);
+            clear_bit(first->rsc->flags, pe_rsc_reload);
+        }
+
         if (first->rsc && then->rsc && (first->rsc != then->rsc)
             && (is_parent(then->rsc, first->rsc) == FALSE)) {
             first = rsc_expand_action(first);

@@ -443,6 +443,7 @@ enum pe_ordering {
     pe_order_anti_colocation       = 0x800000,
 
     pe_order_preserve              = 0x1000000, /* Hack for breaking user ordering constraints with container resources */
+    pe_order_then_cancels_first    = 0x2000000, // if 'then' becomes required, 'first' becomes optional
     pe_order_trace                 = 0x4000000, /* test marker */
 };
 /* *INDENT-ON* */

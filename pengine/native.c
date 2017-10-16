@@ -79,8 +79,6 @@ gboolean (*rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX])(resource_t*,node_t*,gb
 };
 /* *INDENT-ON* */
 
-static action_t * get_first_named_action(resource_t * rsc, const char *action, gboolean only_valid, node_t * current);
-
 static gboolean
 native_choose_node(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
 {
@@ -3250,42 +3248,10 @@ enum stack_activity {
     stack_middle = 4,
 };
 
-static action_t *
-get_first_named_action(resource_t * rsc, const char *action, gboolean only_valid, node_t * current)
-{
-    action_t *a = NULL;
-    GListPtr action_list = NULL;
-    char *key = generate_op_key(rsc->id, action, 0);
-
-    action_list = find_actions(rsc->actions, key, current);
-
-    if (action_list == NULL || action_list->data == NULL) {
-        crm_trace("%s: no %s action", rsc->id, action);
-        free(key);
-        return NULL;
-    }
-
-    a = action_list->data;
-    g_list_free(action_list);
-
-    if (only_valid && is_set(a->flags, pe_action_pseudo)) {
-        crm_trace("%s: pseudo", key);
-        a = NULL;
-
-    } else if (only_valid && is_not_set(a->flags, pe_action_runnable)) {
-        crm_trace("%s: runnable", key);
-        a = NULL;
-    }
-
-    free(key);
-    return a;
-}
-
 void
 ReloadRsc(resource_t * rsc, node_t *node, pe_working_set_t * data_set)
 {
     GListPtr gIter = NULL;
-    action_t *other = NULL;
     action_t *reload = NULL;
 
     if (rsc->children) {
@@ -3316,20 +3282,16 @@ ReloadRsc(resource_t * rsc, node_t *node, pe_working_set_t * data_set)
 
     pe_rsc_trace(rsc, "Processing %s", rsc->id);
     set_bit(rsc->flags, pe_rsc_reload);
-    
+
     reload = custom_action(
         rsc, reload_key(rsc), CRMD_ACTION_RELOAD, node, FALSE, TRUE, data_set);
 
-    /* stop = stop_action(rsc, node, optional); */
-    other = get_first_named_action(rsc, RSC_STOP, TRUE, node);
-    if (other != NULL) {
-        order_actions(reload, other, pe_order_optional);
-    }
-
-    other = get_first_named_action(rsc, RSC_DEMOTE, TRUE, node);
-    if (other != NULL) {
-        order_actions(reload, other, pe_order_optional);
-    }
+    custom_action_order(NULL, NULL, reload, rsc, stop_key(rsc), NULL,
+                        pe_order_optional|pe_order_then_cancels_first,
+                        data_set);
+    custom_action_order(NULL, NULL, reload, rsc, demote_key(rsc), NULL,
+                        pe_order_optional|pe_order_then_cancels_first,
+                        data_set);
 }
 
 void
