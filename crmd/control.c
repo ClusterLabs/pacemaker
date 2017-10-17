@@ -43,6 +43,11 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#ifdef RHEL7_COMPAT
+// for pe_enable_legacy_alerts()
+#include <crm/pengine/rules_internal.h>
+#endif
+
 qb_ipcs_service_t *ipcs = NULL;
 
 extern gboolean crm_connect_corosync(crm_cluster_t * cluster);
