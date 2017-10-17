@@ -67,6 +67,7 @@ gboolean crm_ends_with_ext(const char *s, const char *match);
 char *add_list_element(char *list, const char *value);
 bool crm_compress_string(const char *data, int length, int max, char **result,
                          unsigned int *result_len);
+gint crm_alpha_sort(gconstpointer a, gconstpointer b);
 
 static inline int
 crm_strlen_zero(const char *s)

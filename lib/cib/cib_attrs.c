@@ -416,6 +416,7 @@ get_uuid_from_result(xmlNode *result, char **uuid, int *is_remote)
     tag = (const char *) (result->name);
     if (safe_str_eq(tag, "xpath-query")) {
         result = __xml_first_child(result);
+        CRM_CHECK(result != NULL, return rc);
         tag = (const char *) (result->name);
     }
 

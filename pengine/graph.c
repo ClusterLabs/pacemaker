@@ -442,7 +442,11 @@ update_colo_start_chain(action_t *action)
     if (is_not_set(action->flags, pe_action_runnable) && safe_str_eq(action->task, RSC_START)) {
         rsc = uber_parent(action->rsc);
         if (rsc->parent) {
-            // This is a bundle (uber_parent() stops _before_ the bundle)
+            /* For bundles, uber_parent() returns the clone/master, not the
+             * bundle, so the existence of rsc->parent implies this is a bundle.
+             * In this case, we need the bundle resource, so that we can check
+             * if all containers are stopped/stopping.
+             */
             rsc = rsc->parent;
         }
     }
