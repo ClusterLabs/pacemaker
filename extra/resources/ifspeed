@@ -1,8 +1,8 @@
 #!/bin/bash
 #
 # OCF resource agent which monitors state of network interface and records it
-# as a value in CIB based on summ of speeds of its active (up, link detected,
-# not blocked) underlying interfaces.
+# as a node attribute in the CIB based on the sum of speeds of its active (up,
+# link detected, not blocked) underlying interfaces.
 #
 # Copyright (c) 2011 Vladislav Bogdanov <bubble@hoster-ok.com>
 # Partially based on 'ping' RA by Andrew Beekhof
@@ -68,8 +68,8 @@ in "forwarding" state.
 For balancing bonds this RA summs speeds of underlying "up" slave interfaces
 (and applies coefficient 0.8 to result).
 
-For non-balancing bonds ('active-backup' and probably 'brodcast') only speed of
-now active slave is used.
+For non-balancing bonds ('active-backup' and probably 'broadcast'), only the
+speed of the currently active slave is used.
 </longdesc>
 <shortdesc lang="en">Network interface speed monitor</shortdesc>
 
@@ -244,6 +244,8 @@ iface_get_speed() {
             bond_get_speed ${iface}
         elif iface_is_vlan ${iface} ; then
             iface_get_speed $( vlan_get_phy ${iface} )
+        elif iface_is_hfi1 "${iface}" ; then
+            hfi1_get_speed "${iface}"
         else
             read speed < "/sys/class/net/${iface}/speed"
             echo ${speed}
@@ -264,6 +266,12 @@ iface_is_bridge() {
 iface_is_bond() {
     local iface=$1
     [ -e "/sys/class/net/${iface}/bonding" ] && return 0 || return 1
+}
+
+iface_is_hfi1() {
+    local iface=$1
+    driver=$(readlink /sys/class/net/${iface}/device/driver)
+    [[ $(basename ${driver}) =~ "hfi1" ]] && return 0 || return 1
 }
 
 vlan_get_phy() {
@@ -363,6 +371,23 @@ bridge_get_speed() {
     else # Expect sub-shell
         echo ${aggregate_speed}
     fi
+}
+
+hfi1_get_speed() {
+    local iface=$1
+    local hfi1_speed
+    local hfi1_value
+    local hfi1_desc
+
+    # Currently (9/14/2017 Intel Omni Path v10.5.0.0.155) Intel doesn't have Dual/Multiple ports Host Channel Adapters
+    # and it's save to use such method to get a speed.
+    # Example of output:
+    # [root@es-host0 ~]# cat /sys/class/net/ib0/device/infiniband/*/ports/*/rate
+    # 100 Gb/sec (4X EDR)
+    read hfi1_speed hfi1_value hfi1_desc < /sys/class/net/${iface}/device/infiniband/*/ports/*/rate
+
+    # hfi1_value always in Gb/sec, so we need to convert hfi1_speed in Mb/sec
+    echo $(( hfi1_speed * 1000 ))
 }
 
 bond_get_slaves() {
