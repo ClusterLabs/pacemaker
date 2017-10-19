@@ -1548,11 +1548,13 @@ cli_resource_execute(const char *rsc_id, const char *rsc_action, GHashTable *ove
         char *local_copy = NULL;
 
         if (op->status == PCMK_LRM_OP_DONE) {
-            printf("Operation %s for %s (%s:%s:%s) returned %d\n",
-                   action, rsc->id, rclass, rprov ? rprov : "", rtype, op->rc);
+            printf("Operation %s for %s (%s:%s:%s) returned: '%s' (%d)\n",
+                   action, rsc->id, rclass, rprov ? rprov : "", rtype,
+                   services_ocf_exitcode_str(op->rc), op->rc);
         } else {
-            printf("Operation %s for %s (%s:%s:%s) failed: %d\n",
-                   action, rsc->id, rclass, rprov ? rprov : "", rtype, op->status);
+            printf("Operation %s for %s (%s:%s:%s) failed: '%s' (%d)\n",
+                   action, rsc->id, rclass, rprov ? rprov : "", rtype,
+                   services_lrm_status_str(op->status), op->status);
         }
 
         /* hide output for validate-all if not in verbose */
