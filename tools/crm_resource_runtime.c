@@ -617,7 +617,7 @@ cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
         GListPtr lpc = NULL;
         GListPtr nodes = g_hash_table_get_values(rsc->known_on);
 
-        if(nodes == NULL) {
+        if(nodes == NULL || do_force) {
             nodes = node_list_dup(data_set->nodes, FALSE, FALSE);
         }
 
@@ -665,9 +665,17 @@ cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
                rsc->id, host_uname, pcmk_strerror(rc));
         return rc;
     }
+
     if (node->details->remote_rsc == NULL) {
         crmd_replies_needed++;
     }
+
+    crm_trace("Processing %d mainloop inputs", crmd_replies_needed);
+    while(g_main_context_iteration(NULL, FALSE)) {
+        crm_trace("Processed mainloop input, %d still remaining",
+                  crmd_replies_needed);
+    }
+    crmd_replies_needed = 0;
 
     rsc_name = rsc_fail_name(rsc);
     if (is_remote_node(node)) {
