@@ -38,7 +38,7 @@ extern bool print_pending;
 extern bool scope_master;
 extern bool do_force;
 extern bool BE_QUIET;
-extern bool do_trace;
+extern int resource_verbose;
 
 extern int cib_options;
 extern int crmd_replies_needed;

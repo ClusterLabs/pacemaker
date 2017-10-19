@@ -19,7 +19,7 @@
 
 #include <crm_resource.h>
 
-bool do_trace = FALSE;
+int resource_verbose = 0;
 bool do_force = FALSE;
 int crmd_replies_needed = 1; /* The welcome message */
 
@@ -1525,8 +1525,8 @@ cli_resource_execute(const char *rsc_id, const char *rsc_action, GHashTable *ove
     }
 
 
-    setenv("HA_debug", do_trace ? "1" : "0", 1);
-    if(do_trace) {
+    setenv("HA_debug", resource_verbose > 0 ? "1" : "0", 1);
+    if(resource_verbose > 1) {
         setenv("OCF_TRACE_RA", "1", 1);
     }
 
@@ -1548,15 +1548,17 @@ cli_resource_execute(const char *rsc_id, const char *rsc_action, GHashTable *ove
         char *local_copy = NULL;
 
         if (op->status == PCMK_LRM_OP_DONE) {
-            printf("Operation %s for %s (%s:%s:%s) returned %d\n",
-                   action, rsc->id, rclass, rprov ? rprov : "", rtype, op->rc);
+            printf("Operation %s for %s (%s:%s:%s) returned: '%s' (%d)\n",
+                   action, rsc->id, rclass, rprov ? rprov : "", rtype,
+                   services_ocf_exitcode_str(op->rc), op->rc);
         } else {
-            printf("Operation %s for %s (%s:%s:%s) failed: %d\n",
-                   action, rsc->id, rclass, rprov ? rprov : "", rtype, op->status);
+            printf("Operation %s for %s (%s:%s:%s) failed: '%s' (%d)\n",
+                   action, rsc->id, rclass, rprov ? rprov : "", rtype,
+                   services_lrm_status_str(op->status), op->status);
         }
 
         /* hide output for validate-all if not in verbose */
-        if (!do_trace && safe_str_eq(action, "validate-all"))
+        if (resource_verbose == 0 && safe_str_eq(action, "validate-all"))
             goto done;
 
         if (op->stdout_data) {
