@@ -566,7 +566,7 @@ main(int argc, char **argv)
                 }
                 break;
             case 'V':
-                do_trace = TRUE;
+                resource_verbose++;
                 crm_bump_log_level(argc, argv);
                 break;
             case '$':
