@@ -617,8 +617,22 @@ cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
         GListPtr lpc = NULL;
         GListPtr nodes = g_hash_table_get_values(rsc->known_on);
 
-        if(nodes == NULL || do_force) {
+        if(nodes == NULL && do_force) {
             nodes = node_list_dup(data_set->nodes, FALSE, FALSE);
+
+        } else if(nodes == NULL && rsc->exclusive_discover) {
+            GHashTableIter iter;
+            pe_node_t *node = NULL;
+
+            g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+            while (g_hash_table_iter_next(&iter, NULL, (void**)&node)) {
+                if(node->weight >= 0) {
+                    nodes = g_list_prepend(nodes, node);
+                }
+            }
+
+        } else if(nodes == NULL) {
+            nodes = g_hash_table_get_values(rsc->allowed_nodes);
         }
 
         for (lpc = nodes; lpc != NULL; lpc = lpc->next) {
