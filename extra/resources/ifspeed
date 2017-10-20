@@ -7,12 +7,16 @@
 # Copyright (c) 2011 Vladislav Bogdanov <bubble@hoster-ok.com>
 # Partially based on 'ping' RA by Andrew Beekhof
 #
+# Change on 2017 by Tomer Azran <tomerazran@gmail.com>:
+#     Add "ip" parameter to detect network interface name by ip address:
+#     http://lists.clusterlabs.org/pipermail/users/2017-August/006224.html
+#
 # OCF instance parameters:
 #    OCF_RESKEY_name:         name of attribute to set in CIB
 #    OCF_RESKEY_iface:        network interface to monitor
 #    OCF_RESKEY_bridge_ports: if not null and OCF_RESKEY_iface is a bridge, list of
 #                             bridge ports to consider.
-#                             Default is all ports which have designated_bridge=root_id 
+#                             Default is all ports which have designated_bridge=root_id
 #    OCF_RESKEY_weight_base:  Relative weight of 1Gbps. This can be used to tune
 #                             value of resulting CIB attribute.
 #
@@ -21,6 +25,9 @@
 : ${OCF_FUNCTIONS=${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs}
 . ${OCF_FUNCTIONS}
 : ${__OCF_ACTION=$1}
+
+. ${OCF_FUNCTIONS_DIR}/findif.sh
+FINDIF=findif
 
 # Defaults
 OCF_RESKEY_name_default="ifspeed"
@@ -62,7 +69,7 @@ For balancing bonds this RA summs speeds of underlying "up" slave interfaces
 (and applies coefficient 0.8 to result).
 
 For non-balancing bonds ('active-backup' and probably 'broadcast'), only the
-speed of the currently active slave is used. 
+speed of the currently active slave is used.
 </longdesc>
 <shortdesc lang="en">Network interface speed monitor</shortdesc>
 
@@ -76,12 +83,23 @@ The name of the attribute to set.  This is the name to be used in the constraint
 <content type="string" default="${OCF_RESKEY_name_default}"/>
 </parameter>
 
-<parameter name="iface" unique="0" required="1">
+<parameter name="iface" unique="0" required="0">
 <longdesc lang="en">
 Network interface to monitor.
 </longdesc>
 <shortdesc lang="en">Network interface</shortdesc>
 <content type="string" default=""/>
+</parameter>
+
+<parameter name="ip" unique="0" required="0">
+<longdesc lang="en">
+Try to detect interface name by detecting the interface that holds the IP address.
+The IPv4 (dotted quad notation) or IPv6 address (colon hexadecimal notation)
+example IPv4 "192.168.1.1".
+example IPv6 "2001:db8:DC28:0:0:FC57:D4C8:1FFF".
+</longdesc>
+<shortdesc lang="en">IPv4 or IPv6 address</shortdesc>
+<content type="string" default="" />
 </parameter>
 
 <parameter name="bridge_ports" unique="0">
@@ -165,13 +183,36 @@ monitor() {
     return ${ret}
 }
 
+# This function tries to guess nic interface by IP
+get_nic_name_by_ip(){
+    # $FINDIF takes its parameters from the environment
+    NICINFO=$( ${FINDIF} )
+    rc=$?
+    if [ $rc -eq 0 ];then
+        NICINFO=`echo "${NICINFO}" | sed -e 's/netmask\ //;s/broadcast\ //'`
+        echo "${NICINFO}" | cut -d" " -f1
+    else
+        echo ""
+    fi
+}
+
 validate() {
     # Check the interface parameter
-    if [ -z "${OCF_RESKEY_iface}" ]; then 
-        ocf_log err "Empty iface parameter.  Please specify network interface to check"
-        exit $OCF_ERR_CONFIGURED
+    if [ -z "${OCF_RESKEY_iface}" ]; then
+        if [ -z "${OCF_RESKEY_ip}" ]; then
+            ocf_log err "Empty iface and ip parameters. Please specify either an interface name or valid ip address."
+            exit $OCF_ERR_CONFIGURED
+        else
+            ipcheck_ipv4 "${OCF_RESKEY_ip}"
+            if [ $? -eq 1 ] ; then
+                ipcheck_ipv6 "${OCF_RESKEY_ip}"
+                if [ $? = 1 ] ; then
+                  ocf_exit_reason "ip parameter [${OCF_RESKEY_ip}] is not a valid ip address."
+                  exit $OCF_ERR_CONFIGURED
+                fi
+            fi
+        fi
     fi
-
     return $OCF_SUCCESS
 }
 
@@ -263,7 +304,7 @@ bridge_get_root_ports() {
 
     root_ports=${root_ports# }
 
-    if [ -n "$2" ] ; then # Record value in specified var. This expects we were called not in a sub-shell. 
+    if [ -n "$2" ] ; then # Record value in specified var. This expects we were called not in a sub-shell.
         eval $2=\${root_ports}
     else # Expect sub-shell
         echo ${root_ports}
@@ -307,7 +348,7 @@ bridge_get_active_ports() {
         fi
     done
     if [ ${warn} -eq 1 ] ; then
-        ocf_log warning "More then one upstream port in bridge '${bridge}' is in forwarding state while STP is enabled: ${active_ports}" 
+        ocf_log warning "More then one upstream port in bridge '${bridge}' is in forwarding state while STP is enabled: ${active_ports}"
     fi
     echo "${active_ports# }"
 }
@@ -326,7 +367,7 @@ bridge_get_speed() {
     for port in ${ports} ; do
         : $(( aggregate_speed += $( iface_get_speed ${port} ) ))
     done
-    if [ -n "$2" ] ; then # Record value in specified var. This expects we were called not in a sub-shell. 
+    if [ -n "$2" ] ; then # Record value in specified var. This expects we were called not in a sub-shell.
         eval $2=\${aggregate_speed}
     else # Expect sub-shell
         echo ${aggregate_speed}
@@ -345,7 +386,7 @@ hfi1_get_speed() {
     # [root@es-host0 ~]# cat /sys/class/net/ib0/device/infiniband/*/ports/*/rate
     # 100 Gb/sec (4X EDR)
     read hfi1_speed hfi1_value hfi1_desc < /sys/class/net/${iface}/device/infiniband/*/ports/*/rate
-    
+
     # hfi1_value always in Gb/sec, so we need to convert hfi1_speed in Mb/sec
     echo $(( hfi1_speed * 1000 ))
 }
@@ -354,7 +395,7 @@ bond_get_slaves() {
     local iface=$1
     local slaves
     read slaves < "/sys/class/net/${iface}/bonding/slaves"
-    if [ -n "$2" ] ; then # Record value in specified var. This expects we were called not in a sub-shell. 
+    if [ -n "$2" ] ; then # Record value in specified var. This expects we were called not in a sub-shell.
         eval $2=\${slaves}
     else # Expect sub-shell
         echo ${slaves}
@@ -365,7 +406,7 @@ bond_get_active_iface() {
     local iface=$1
     local active
     read active < "/sys/class/net/${iface}/bonding/active_slave"
-    if [ -n "$2" ] ; then # Record value in specified var. This expects we were called not in a sub-shell. 
+    if [ -n "$2" ] ; then # Record value in specified var. This expects we were called not in a sub-shell.
         eval $2=\${active}
     else # Expect sub-shell
         echo ${active}
@@ -409,7 +450,7 @@ bond_get_speed() {
         bond_get_active_iface ${iface} active_iface
         aggregate_speed=$( iface_get_speed $active_iface )
     fi
-    if [ -n "$2" ] ; then # Record value in specified var. This expects we were called not in a sub-shell. 
+    if [ -n "$2" ] ; then # Record value in specified var. This expects we were called not in a sub-shell.
         eval $2=\${aggregate_speed}
     else # Expect sub-shell
         echo ${aggregate_speed}
@@ -417,12 +458,20 @@ bond_get_speed() {
 }
 
 update() {
-    local speed=$( iface_get_speed ${OCF_RESKEY_iface} )
+    local nic=${OCF_RESKEY_iface};
+    if [ -z "${OCF_RESKEY_iface}" ]; then
+        nic=`get_nic_name_by_ip`
+        if [ -z "${nic}" ];then
+            ocf_log err "Could not retrieve network interface name from ip address (${OCF_RESKEY_ip})"
+            exit $OCF_ERR_GENERIC
+        fi
+    fi
+    local speed=$( iface_get_speed ${nic} )
 
     : $(( score = speed * ${OCF_RESKEY_weight_base} / 1000 ))
     if [ "$__OCF_ACTION" = "start" ] ; then
         attrd_updater -n ${OCF_RESKEY_name} -B ${score} -d ${OCF_RESKEY_dampen} ${attrd_options}
-    else 
+    else
         attrd_updater -n ${OCF_RESKEY_name} -v ${score} -d ${OCF_RESKEY_dampen} ${attrd_options}
     fi
     rc=$?
