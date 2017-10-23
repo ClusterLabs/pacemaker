@@ -12,7 +12,7 @@
     <action_set>
       <rsc_op id="13" operation="monitor" operation_key="galera-bundle-docker-0_monitor_60000" on_node="centos2" on_node_uuid="2">
         <primitive id="galera-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="centos2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="docker.io/tripleoupstream/centos-binary-mariadb:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/galera-bundle-0" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3123 -v /foo:/etc/libqb/force-filesystem-sockets:ro -v /etc/my.cnf.d/galera.cnf:/etc/my.cnf.d/galera.cnf:ro -v /var/lib/mysql:/var/lib/mysql:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/galera-bundle-0:/var/log -p 3123:3123 --user=root --log-driver=journald "/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="centos2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="docker.io/tripleoupstream/centos-binary-mariadb:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/galera-bundle-0" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3123 -v /foo:/etc/libqb/force-filesystem-sockets:ro -v /etc/my.cnf.d/galera.cnf:/etc/my.cnf.d/galera.cnf:ro -v /var/lib/mysql:/var/lib/mysql:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/galera-bundle-0:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -30,7 +30,7 @@
     <action_set>
       <rsc_op id="3" operation="monitor" operation_key="galera-bundle-docker-1_monitor_0" on_node="centos2" on_node_uuid="2">
         <primitive id="galera-bundle-docker-1" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="centos2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="docker.io/tripleoupstream/centos-binary-mariadb:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/galera-bundle-1" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3123 -v /foo:/etc/libqb/force-filesystem-sockets:ro -v /etc/my.cnf.d/galera.cnf:/etc/my.cnf.d/galera.cnf:ro -v /var/lib/mysql:/var/lib/mysql:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/galera-bundle-1:/var/log -p 3123:3123 --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="centos2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="docker.io/tripleoupstream/centos-binary-mariadb:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/galera-bundle-1" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3123 -v /foo:/etc/libqb/force-filesystem-sockets:ro -v /etc/my.cnf.d/galera.cnf:/etc/my.cnf.d/galera.cnf:ro -v /var/lib/mysql:/var/lib/mysql:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/galera-bundle-1:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -39,7 +39,7 @@
     <action_set>
       <rsc_op id="8" operation="monitor" operation_key="galera-bundle-docker-2_monitor_0" on_node="centos3" on_node_uuid="3">
         <primitive id="galera-bundle-docker-2" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="centos3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="docker.io/tripleoupstream/centos-binary-mariadb:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/galera-bundle-2" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3123 -v /foo:/etc/libqb/force-filesystem-sockets:ro -v /etc/my.cnf.d/galera.cnf:/etc/my.cnf.d/galera.cnf:ro -v /var/lib/mysql:/var/lib/mysql:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/galera-bundle-2:/var/log -p 3123:3123 --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="centos3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="docker.io/tripleoupstream/centos-binary-mariadb:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/galera-bundle-2" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3123 -v /foo:/etc/libqb/force-filesystem-sockets:ro -v /etc/my.cnf.d/galera.cnf:/etc/my.cnf.d/galera.cnf:ro -v /var/lib/mysql:/var/lib/mysql:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/galera-bundle-2:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -48,7 +48,7 @@
     <action_set>
       <rsc_op id="5" operation="monitor" operation_key="galera-bundle-docker-2_monitor_0" on_node="centos2" on_node_uuid="2">
         <primitive id="galera-bundle-docker-2" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="centos2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="docker.io/tripleoupstream/centos-binary-mariadb:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/galera-bundle-2" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3123 -v /foo:/etc/libqb/force-filesystem-sockets:ro -v /etc/my.cnf.d/galera.cnf:/etc/my.cnf.d/galera.cnf:ro -v /var/lib/mysql:/var/lib/mysql:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/galera-bundle-2:/var/log -p 3123:3123 --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="centos2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="docker.io/tripleoupstream/centos-binary-mariadb:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/galera-bundle-2" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3123 -v /foo:/etc/libqb/force-filesystem-sockets:ro -v /etc/my.cnf.d/galera.cnf:/etc/my.cnf.d/galera.cnf:ro -v /var/lib/mysql:/var/lib/mysql:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/galera-bundle-2:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -57,7 +57,7 @@
     <action_set>
       <rsc_op id="1" operation="monitor" operation_key="galera-bundle-docker-2_monitor_0" on_node="centos1" on_node_uuid="1">
         <primitive id="galera-bundle-docker-2" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="centos1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="docker.io/tripleoupstream/centos-binary-mariadb:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/galera-bundle-2" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3123 -v /foo:/etc/libqb/force-filesystem-sockets:ro -v /etc/my.cnf.d/galera.cnf:/etc/my.cnf.d/galera.cnf:ro -v /var/lib/mysql:/var/lib/mysql:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/galera-bundle-2:/var/log -p 3123:3123 --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="centos1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="docker.io/tripleoupstream/centos-binary-mariadb:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/galera-bundle-2" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3123 -v /foo:/etc/libqb/force-filesystem-sockets:ro -v /etc/my.cnf.d/galera.cnf:/etc/my.cnf.d/galera.cnf:ro -v /var/lib/mysql:/var/lib/mysql:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/galera-bundle-2:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs/>
