@@ -2907,6 +2907,10 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
         if (digest_data->rc == RSC_DIGEST_UNKNOWN) {
             crm_trace("rsc op %s/%s on node %s does not have a op digest to compare against", rsc->id,
                       key, node->details->id);
+        } else if(container_fix_remote_addr(rsc) && digest_data->rc != RSC_DIGEST_MATCH) {
+            // We can't sanely check the changing 'addr' attribute. Yet
+            crm_trace("Ignoring rsc op %s/%s on node %s", rsc->id, key, node->details->id);
+
         } else if (digest_data->rc != RSC_DIGEST_MATCH) {
             clear_reason = "resource parameters have changed";
         }
