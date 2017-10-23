@@ -898,17 +898,13 @@ probe_resources(pe_working_set_t * data_set)
         node_t *node = (node_t *) gIter->data;
         const char *probed = pe_node_attribute_raw(node, CRM_OP_PROBED);
 
-        if (is_container_remote_node(node)) {
-            /* Guest node probes and their ordering requirements are now functional */
+        if (node->details->online == FALSE) {
 
-        } else if (node->details->online == FALSE && node->details->remote_rsc) {
-            enum remote_connection_state state = get_remote_node_state(node);
-            if(state == remote_state_failed) {
+            if (is_baremetal_remote_node(node) && node->details->remote_rsc
+                && (get_remote_node_state(node) == remote_state_failed)) {
+
                 pe_fence_node(data_set, node, "the connection is unrecoverable");
             }
-            continue;
-
-        } else if(node->details->online == FALSE) {
             continue;
 
         } else if (node->details->unclean) {
