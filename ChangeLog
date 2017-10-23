@@ -1,9 +1,20 @@
+* Mon Oct 23 2017 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.18-rc3
+- Update source tarball to revision: 24b36d4
+- Changesets: 19
+- Diff:       18 files changed, 113 insertions(+), 82 deletions(-)
+
+- Changes since Pacemaker-1.1.18-rc2
+  + crmd: fix regression for legacy stacks introduced in rc1
+  + lrmd: allow pre-1.1.15 cluster nodes to connect to current Pacemaker Remote
+  + pengine: don't schedule reload and restart in same transition
+    (fixes CLBZ#5309, a regression introduced in 1.1.15)
+  + pengine: fix use-after-free memory issue re-introduced by merge
+  + tools: improve messages for crm_resource --force-* options
+
 * Mon Oct 16 2017 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.18-rc2
 - Update source tarball to revision: 62e8d4b
 - Changesets: 31
 - Diff:       23 files changed, 484 insertions(+), 284 deletions(-)
-
-- Features added since Pacemaker-1.1.18-rc1
 
 - Changes since Pacemaker-1.1.18-rc1
   + fix regressions introduced in rc1 (don't break crm_resource --lifetime,

@@ -1,0 +1,75 @@
+<cib crm_feature_set="3.0.7" validate-with="pacemaker-1.2" epoch="79" num_updates="0" admin_epoch="0" cib-last-written="Mon Dec 12 20:28:26 2016" update-origin="node1" update-client="cibadmin" update-user="root" have-quorum="1" dc-uuid="1" execution-date="1481574506">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.16-1"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="cluster"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1481569160"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="node1" />
+      <node id="2" uname="node2" />
+    </nodes>
+    <resources>
+      <primitive id="Fencing" class="stonith" type="fence_xvm">
+        <meta_attributes id="Fencing-meta">
+        </meta_attributes>
+        <instance_attributes id="Fencing-params">
+          <nvpair id="Fencing-multicast_address" name="multicast_address" value="239.255.100.100"/>
+          <nvpair id="Fencing-pcmk_host_list" name="pcmk_host_list" value="node1 node2"/>
+        </instance_attributes>
+        <operations>
+          <op id="Fencing-monitor-120s" interval="120s" name="monitor" timeout="120s"/>
+        </operations>
+      </primitive>
+      <clone id="cl-rsc1">
+        <primitive id="rsc1" class="ocf" provider="pacemaker" type="Dummy">
+          <meta_attributes id="rsc1-meta" />
+          <instance_attributes id="rsc1-instance" />
+          <operations>
+            <op name="monitor" interval="120" timeout="60" id="rsc1-monitor-120"/>
+          </operations>
+        </primitive>
+      </clone>
+      <clone id="cl-rsc2">
+        <meta_attributes id="cl-rsc2-meta_attributes">
+          <nvpair name="interleave" value="true" id="cl-rsc2-meta_attributes-interleave"/>
+        </meta_attributes>
+        <primitive id="rsc2" class="ocf" provider="custom" type="drbd-conf">
+          <instance_attributes id="rsc2-instance_attributes-0">
+            <nvpair name="name" value="storage" id="rsc2-instance_attributes-0-name"/>
+            <nvpair name="minor" value="0" id="rsc2-instance_attributes-0-minor"/>
+            <nvpair name="block_device" value="/dev/VG_LOCAL/STORAGE_REPLICA" id="rsc2-instance_attributes-0-block_device"/>
+          </instance_attributes>
+          <operations>
+            <op name="monitor" interval="200" timeout="20" id="rsc2-monitor-200"/>
+          </operations>
+        </primitive>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_order id="rsc2-after-rsc1" score="INFINITY" first="cl-rsc1" first-action="start" then="cl-rsc2" then-action="start"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="1" uname="node1" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="rsc2" type="drbd-conf" class="ocf" provider="custom">
+            <lrm_rsc_op id="rsc2_last_0" operation_key="rsc2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.11" transition-key="398:1:0:869e8bd0-6e94-403e-be1a-cbaee812e740" transition-magic="0:0;398:1:0:869e8bd0-6e94-403e-be1a-cbaee812e740" on_node="node1" call-id="277" rc-code="0" op-status="0" interval="0" last-run="1481567978" last-rc-change="1481567978" exec-time="312" queue-time="0" op-digest="f2ee9bb733c6b1e04b6b03933cae3481" op-force-restart=" name  minor  block_device " op-restart-digest="41b1da4c2ea2b5ced1c615df108064b0"/>
+            <lrm_rsc_op id="rsc2_monitor_200000" operation_key="rsc2_monitor_200000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.11" transition-key="399:1:0:869e8bd0-6e94-403e-be1a-cbaee812e740" transition-magic="0:0;399:1:0:869e8bd0-6e94-403e-be1a-cbaee812e740" on_node="node1" call-id="294" rc-code="0" op-status="0" interval="200000" last-rc-change="1481567979" exec-time="37" queue-time="62" op-digest="c2fb74c6b28a8e8e687a52f4134a0147"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="2" uname="node2" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="2">
+        <lrm_resources>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

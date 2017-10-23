@@ -965,7 +965,7 @@ handle_blocked_ops(void)
 static inline gboolean
 lsb_meta_helper_get_value(const char *line, char **value, const char *prefix)
 {
-    if (!*value && !strncmp(line, prefix, strlen(prefix))) {
+    if (!*value && crm_starts_with(line, prefix)) {
         *value = (char *)xmlEncodeEntitiesReentrant(NULL, BAD_CAST line+strlen(prefix));
         return TRUE;
     }
@@ -1010,8 +1010,7 @@ lsb_get_metadata(const char *type, char **output)
     while (fgets(buffer, sizeof(buffer), fp)) {
 
         // Ignore lines up to and including the block delimiter
-        if (!strncmp(buffer, LSB_INITSCRIPT_INFOBEGIN_TAG,
-                     strlen(LSB_INITSCRIPT_INFOBEGIN_TAG))) {
+        if (crm_starts_with(buffer, LSB_INITSCRIPT_INFOBEGIN_TAG)) {
             in_header = TRUE;
             continue;
         }
@@ -1047,7 +1046,7 @@ lsb_get_metadata(const char *type, char **output)
 
         /* Long description may cross multiple lines */
         if ((offset == 0) // haven't already found long description
-            && !strncmp(buffer, DESCRIPTION, strlen(DESCRIPTION))) {
+            && crm_starts_with(buffer, DESCRIPTION)) {
             bool processed_line = TRUE;
 
             // Get remainder of description line itself
@@ -1057,7 +1056,8 @@ lsb_get_metadata(const char *type, char **output)
             // Read any continuation lines of the description
             buffer[0] = '\0';
             while (fgets(buffer, sizeof(buffer), fp)) {
-                if (!strncmp(buffer, "#  ", 3) || !strncmp(buffer, "#\t", 2)) {
+                if (crm_starts_with(buffer, "#  ")
+                    || crm_starts_with(buffer, "#\t")) {
                     /* '#' followed by a tab or more than one space indicates a
                      * continuation of the long description.
                      */
@@ -1082,8 +1082,7 @@ lsb_get_metadata(const char *type, char **output)
         }
 
         // Stop if we leave the header block
-        if (!strncmp(buffer, LSB_INITSCRIPT_INFOEND_TAG,
-                     strlen(LSB_INITSCRIPT_INFOEND_TAG))) {
+        if (crm_starts_with(buffer, LSB_INITSCRIPT_INFOEND_TAG)) {
             break;
         }
         if (buffer[0] != '#') {

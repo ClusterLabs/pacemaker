@@ -436,7 +436,7 @@ check_deprecated_stonith(resource_t *rsc)
 
     g_hash_table_iter_init(&iter, rsc->parameters);
     while (g_hash_table_iter_next(&iter, (gpointer *) &key, NULL)) {
-        if (!strncmp(key, "pcmk_", 5)) {
+        if (crm_starts_with(key, "pcmk_")) {
             char *cmp = key + 5; // the part after "pcmk_"
 
             if (!strcmp(cmp, "poweroff_action")) {

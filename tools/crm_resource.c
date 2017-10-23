@@ -431,6 +431,7 @@ main(int argc, char **argv)
     bool require_crmd = FALSE;    /* whether command requires connection to CRMd */
 
     int rc = pcmk_ok;
+    int is_ocf_rc = 0;
     int option_index = 0;
     int timeout_ms = 0;
     int argerr = 0;
@@ -565,7 +566,7 @@ main(int argc, char **argv)
                 }
                 break;
             case 'V':
-                do_trace = TRUE;
+                resource_verbose++;
                 crm_bump_log_level(argc, argv);
                 break;
             case '$':
@@ -871,6 +872,9 @@ main(int argc, char **argv)
 
     } else if (rsc_cmd == 0 && rsc_long_cmd) { /* validate or force-(stop|start|check) */
         rc = cli_resource_execute(rsc_id, rsc_long_cmd, override_params, cib_conn, &data_set);
+        if (rc >= 0) {
+            is_ocf_rc = 1;
+        }
 
     } else if (rsc_cmd == 'A' || rsc_cmd == 'a') {
         GListPtr lpc = NULL;
@@ -1188,7 +1192,7 @@ main(int argc, char **argv)
         CMD_ERR("Error performing operation: %s", pcmk_strerror(rc));
         CMD_ERR("Try using -f");
 
-    } else if (rc != pcmk_ok) {
+    } else if (rc != pcmk_ok && !is_ocf_rc) {
         CMD_ERR("Error performing operation: %s", pcmk_strerror(rc));
     }
 
