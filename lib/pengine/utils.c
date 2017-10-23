@@ -1836,42 +1836,6 @@ filter_parameters(xmlNode * param_set, const char *param_string, bool need_prese
     }
 }
 
-bool fix_remote_addr(resource_t * rsc)
-{
-    const char *name;
-    const char *value;
-    const char *attr_list[] = {
-        XML_ATTR_TYPE,
-        XML_AGENT_ATTR_CLASS,
-        XML_AGENT_ATTR_PROVIDER
-    };
-    const char *value_list[] = {
-        "remote",
-        PCMK_RESOURCE_CLASS_OCF,
-        "pacemaker"
-    };
-
-    if(rsc == NULL) {
-        return FALSE;
-    }
-
-    name = "addr";
-    value = g_hash_table_lookup(rsc->parameters, name);
-    if (safe_str_eq(value, "#uname") == FALSE) {
-        return FALSE;
-    }
-
-    for (int lpc = 0; lpc < DIMOF(attr_list); lpc++) {
-        name = attr_list[lpc];
-        value = crm_element_value(rsc->xml, attr_list[lpc]);
-        if (safe_str_eq(value, value_list[lpc]) == FALSE) {
-            return FALSE;
-        }
-    }
-
-    return TRUE;
-}
-
 #if ENABLE_VERSIONED_ATTRS
 static void
 append_versioned_params(xmlNode *versioned_params, const char *ra_version, xmlNode *params)
@@ -1917,10 +1881,10 @@ rsc_action_digest(resource_t * rsc, const char *task, const char *key,
 #endif
 
         data->params_all = create_xml_node(NULL, XML_TAG_PARAMS);
-        if (fix_remote_addr(rsc)) {
-            // REMOTE_CONTAINER_HACK: Allow remote nodes that start containers with pacemaker remote inside
-            crm_xml_add(data->params_all, "addr", node->details->uname);
-            crm_trace("Fixing addr for %s on %s", rsc->id, node->details->uname);
+
+        // REMOTE_CONTAINER_HACK: Allow remote nodes that start containers with pacemaker remote inside
+        if (container_fix_remote_addr_in(rsc, data->params_all, "addr")) {
+            crm_trace("Fixed addr for %s on %s", rsc->id, node->details->uname);
         }
 
         g_hash_table_foreach(local_rsc_params, hash2field, data->params_all);

@@ -824,25 +824,16 @@ container_expand(resource_t * rsc, pe_working_set_t * data_set)
         container_grouping_t *tuple = (container_grouping_t *)gIter->data;
 
         CRM_ASSERT(tuple);
-        if (tuple->remote && tuple->docker && fix_remote_addr(tuple->remote)) {
-
+        if (tuple->remote && tuple->docker && container_fix_remote_addr(tuple->remote)) {
             // REMOTE_CONTAINER_HACK: Allow remote nodes that start containers with pacemaker remote inside
-            pe_node_t *node = tuple->docker->allocated_to;
             xmlNode *nvpair = get_xpath_object("//nvpair[@name='addr']", tuple->remote->xml, LOG_ERR);
+            const char *calculated_addr = container_fix_remote_addr_in(tuple->remote, nvpair, "value");
 
-            if(node == NULL && tuple->docker->running_on) {
-                /* If it wont be running anywhere after the
-                 * transition, go with where it's running now.
-                 */
-                node = tuple->docker->running_on->data;
-            }
-
-            if(node != NULL) {
-                g_hash_table_replace(tuple->remote->parameters, strdup("addr"), strdup(node->details->uname));
-                crm_xml_add(nvpair, "value", node->details->uname);
-
-            } else if(fix_remote_addr(tuple->remote)) {
-                crm_trace("Cannot fix address for %s", tuple->remote->id);
+            if (calculated_addr) {
+                crm_trace("Fixed addr for %s on %s", tuple->remote->id, calculated_addr);
+                g_hash_table_replace(tuple->remote->parameters, strdup("addr"), strdup(calculated_addr));
+            } else {
+                crm_err("Could not fix addr for %s", tuple->remote->id);
             }
         }
         if(tuple->ip) {
