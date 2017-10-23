@@ -254,7 +254,8 @@ create_docker_resource(
             if(tuple->ipaddr) {
                 offset += snprintf(buffer+offset, max-offset, " -p %s:%s:%s",
                                    tuple->ipaddr, port->source, port->target);
-            } else {
+            } else if(safe_str_neq(data->docker_network, "host")) {
+                // No need to do port mapping if net=host
                 offset += snprintf(buffer+offset, max-offset, " -p %s:%s", port->source, port->target);
             }
         }
