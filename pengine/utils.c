@@ -184,20 +184,26 @@ sort_node_weight(gconstpointer a, gconstpointer b, gpointer data)
 
     if (safe_str_eq(pe_dataset->placement_strategy, "balanced")) {
         result = compare_capacity(node1, node2);
-        if (result != 0) {
-            return result;
+        if (result < 0) {
+            crm_trace("%s > %s : capacity (%d)",
+                      node1->details->uname, node2->details->uname, result);
+            return -1;
+        } else if (result > 0) {
+            crm_trace("%s < %s : capacity (%d)",
+                      node1->details->uname, node2->details->uname, result);
+            return 1;
         }
     }
 
     /* now try to balance resources across the cluster */
     if (node1->details->num_resources < node2->details->num_resources) {
-        crm_trace("%s (%d) < %s (%d) : resources",
+        crm_trace("%s (%d) > %s (%d) : resources",
                   node1->details->uname, node1->details->num_resources,
                   node2->details->uname, node2->details->num_resources);
         return -1;
 
     } else if (node1->details->num_resources > node2->details->num_resources) {
-        crm_trace("%s (%d) > %s (%d) : resources",
+        crm_trace("%s (%d) < %s (%d) : resources",
                   node1->details->uname, node1->details->num_resources,
                   node2->details->uname, node2->details->num_resources);
         return 1;
@@ -209,7 +215,7 @@ sort_node_weight(gconstpointer a, gconstpointer b, gpointer data)
                   node2->details->uname, node2->details->num_resources);
         return -1;
     } else if (active && active->details == node2->details) {
-        crm_trace("%s (%d) > %s (%d) : active",
+        crm_trace("%s (%d) < %s (%d) : active",
                   node1->details->uname, node1->details->num_resources,
                   node2->details->uname, node2->details->num_resources);
         return 1;

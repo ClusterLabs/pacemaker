@@ -1265,8 +1265,6 @@ tuple_free(container_grouping_t *tuple)
         free_xml(tuple->ip->xml);
         tuple->ip->xml = NULL;
         tuple->ip->fns->free(tuple->ip);
-        tuple->ip->xml = NULL;
-        free_xml(tuple->ip->xml);
         tuple->ip = NULL;
     }
     if(tuple->docker) {

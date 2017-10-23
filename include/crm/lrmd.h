@@ -35,7 +35,18 @@ typedef struct lrmd_key_value_s {
     struct lrmd_key_value_s *next;
 } lrmd_key_value_t;
 
+/* This should be bumped every time there is an incompatible change that
+ * prevents older clients from connecting to this version of the server.
+ */
 #define LRMD_PROTOCOL_VERSION "1.1"
+
+/* This is the version that the client version will actually be compared
+ * against. This should be identical to LRMD_PROTOCOL_VERSION. However, we
+ * accidentally bumped LRMD_PROTOCOL_VERSION in 6424a647 (1.1.15) when we didn't
+ * need to, so for now it's different. If we ever have a truly incompatible
+ * bump, we can drop this and compare against LRMD_PROTOCOL_VERSION.
+ */
+#define LRMD_MIN_PROTOCOL_VERSION "1.0"
 
 /* *INDENT-OFF* */
 #define DEFAULT_REMOTE_KEY_LOCATION "/etc/pacemaker/authkey"

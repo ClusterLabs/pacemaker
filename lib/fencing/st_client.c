@@ -1172,8 +1172,8 @@ stonith_api_device_list(stonith_t * stonith, int call_options, const char *names
                     free(namelist[file_num]);
                     continue;
 
-                } else if (0 != strncmp(RH_STONITH_PREFIX,
-                                        namelist[file_num]->d_name, strlen(RH_STONITH_PREFIX))) {
+                } else if (!crm_starts_with(namelist[file_num]->d_name,
+                                            RH_STONITH_PREFIX)) {
                     free(namelist[file_num]);
                     continue;
                 }
