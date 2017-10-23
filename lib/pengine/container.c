@@ -602,8 +602,15 @@ create_remote_resource(
         tuple->node->rsc_discover_mode = pe_discover_exclusive;
 
         /* Ensure the node shows up as allowed and with the correct discovery set */
+        g_hash_table_destroy(tuple->child->allowed_nodes);
+        tuple->child->allowed_nodes = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, g_hash_destroy_str);
         g_hash_table_insert(tuple->child->allowed_nodes, (gpointer) tuple->node->details->id, node_copy(tuple->node));
 
+        {
+            node_t *copy = node_copy(tuple->node);
+            copy->weight = -INFINITY;
+            g_hash_table_insert(tuple->child->parent->allowed_nodes, (gpointer) tuple->node->details->id, copy);
+        }
         crm_log_xml_trace(xml_remote, "Contaner-remote");
         if (common_unpack(xml_remote, &tuple->remote, parent, data_set) == FALSE) {
             return FALSE;
@@ -618,6 +625,7 @@ create_remote_resource(
         }
 
         tuple->node->details->remote_rsc = tuple->remote;
+        tuple->remote->container = tuple->docker; // Ensures is_container_remote_node() functions correctly immediately
 
         /* A bundle's #kind is closer to "container" (guest node) than the
          * "remote" set by pe_create_node().
@@ -951,6 +959,7 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         for(childIter = container_data->child->children; childIter != NULL; childIter = childIter->next) {
             container_grouping_t *tuple = calloc(1, sizeof(container_grouping_t));
             tuple->child = childIter->data;
+            tuple->child->exclusive_discover = TRUE;
             tuple->offset = lpc++;
 
             // Ensure the child's notify gets set based on the underlying primitive's value
