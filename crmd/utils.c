@@ -1020,3 +1020,33 @@ void crmd_peer_down(crm_node_t *peer, bool full)
     crm_update_peer_join(__FUNCTION__, peer, crm_join_none);
     crm_update_peer_expected(__FUNCTION__, peer, CRMD_JOINSTATE_DOWN);
 }
+
+unsigned int
+cib_op_timeout(unsigned int max)
+{
+    unsigned int global_max = 0;
+
+    if (global_max == 0) {
+        const char *env = getenv("PCMK_cib_timeout");
+        unsigned int global_default = 1 + crm_active_peers();
+
+        if(crm_remote_peer_cache) {
+            global_default += g_hash_table_size(crm_remote_peer_cache);
+        }
+
+        global_default *= 10;
+
+        if (env) {
+            int env_max = crm_parse_int(env, "0");
+
+            global_max = (env_max > 0) ? QB_MAX(global_default, env_max) : global_default;
+
+        } else {
+            global_max = global_default;
+        }
+        crm_trace("Calculated timeout: %us (%s)", global_max, env);
+    }
+
+    return QB_MAX(max, global_max);
+}
+
