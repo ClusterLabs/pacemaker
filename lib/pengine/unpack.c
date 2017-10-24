@@ -598,6 +598,7 @@ setup_container(resource_t * rsc, pe_working_set_t * data_set)
 
         if (container) {
             rsc->container = container;
+            set_bit(container->flags, pe_rsc_is_container);
             container->fillers = g_list_append(container->fillers, rsc);
             pe_rsc_trace(rsc, "Resource %s's container is %s", rsc->id, container_id);
         } else {
