@@ -826,6 +826,7 @@ do_test bundle-order-fencing "Order pseudo bundle fencing after parent node fenc
 do_test bundle-probe-order-1 "order 1"
 do_test bundle-probe-order-2 "order 2"
 do_test bundle-probe-order-3 "order 3"
+do_test bundle-probe-remotes "Ensure remotes get probed too"
 
 echo ""
 do_test whitebox-fail1 "Fail whitebox container rsc."

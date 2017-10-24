@@ -1,0 +1,65 @@
+<cib crm_feature_set="3.0.12" validate-with="pacemaker-2.8" epoch="3259" num_updates="9052" admin_epoch="0" cib-last-written="Tue Oct 24 00:23:29 2017" update-origin="c09-h05-r630" update-client="crmd" update-user="hacluster" have-quorum="1" dc-uuid="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.16-12.el7.12-94ff4df"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="test"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1508466790"/>
+        <nvpair id="cib-bootstrap-options-cluster-ipc-limit" name="cluster-ipc-limit" value="1024"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="c09-h05-r630"/>
+      <node id="2" uname="c09-h06-r630"/>
+      <node id="3" uname="c09-h07-r630"/>
+    </nodes>
+    <resources>
+      <primitive class="ocf" id="c09-h08-r630" provider="pacemaker" type="remote">
+        <operations>
+          <op id="c09-h08-r630-monitor-interval-60s" interval="60s" name="monitor" timeout="30"/>
+          <op id="c09-h08-r630-start-interval-0s" interval="0s" name="start" timeout="60"/>
+          <op id="c09-h08-r630-stop-interval-0s" interval="0s" name="stop" timeout="60"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="c09-h09-r630" provider="pacemaker" type="remote">
+        <operations>
+          <op id="c09-h09-r630-monitor-interval-60s" interval="60s" name="monitor" timeout="30"/>
+          <op id="c09-h09-r630-start-interval-0s" interval="0s" name="start" timeout="60"/>
+          <op id="c09-h09-r630-stop-interval-0s" interval="0s" name="stop" timeout="60"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="c09-h10-r630" provider="pacemaker" type="remote">
+        <operations>
+          <op id="c09-h10-r630-monitor-interval-60s" interval="60s" name="monitor" timeout="30"/>
+          <op id="c09-h10-r630-start-interval-0s" interval="0s" name="start" timeout="60"/>
+          <op id="c09-h10-r630-stop-interval-0s" interval="0s" name="stop" timeout="60"/>
+        </operations>
+      </primitive>
+      <bundle id="scale1-bundle">
+        <docker image="beekhof:remote" options="--user=root --log-driver=journald" replicas="6" run-command="/usr/sbin/pacemaker_remoted" network="host"/>
+        <network control-port="3131"/>
+        <storage>
+          <storage-mapping id="dev-log-1" source-dir="/dev/log" target-dir="/dev/log"/>
+        </storage>
+        <primitive class="ocf" id="dummy1" provider="pacemaker" type="Dummy">
+          <operations>
+            <op id="dummy1-monitor-interval-10" interval="10" name="monitor" timeout="20"/>
+            <op id="dummy1-start-interval-0s" interval="0s" name="start" timeout="20"/>
+            <op id="dummy1-stop-interval-0s" interval="0s" name="stop" timeout="20"/>
+          </operations>
+        </primitive>
+      </bundle>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="1" uname="c09-h05-r630" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member"/>
+    <node_state id="2" uname="c09-h06-r630" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member"/>
+    <node_state id="3" uname="c09-h07-r630" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member"/>
+    <node_state remote_node="true" id="c09-h09-r630" uname="c09-h09-r630" in_ccm="true" crm-debug-origin="do_update_resource" node_fenced="0"/>
+    <node_state remote_node="true" id="c09-h10-r630" uname="c09-h10-r630" in_ccm="true" crm-debug-origin="do_update_resource" node_fenced="0"/>
+  </status>
+</cib>
