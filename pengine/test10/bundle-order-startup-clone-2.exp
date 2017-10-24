@@ -509,19 +509,7 @@
         <rsc_op id="19" operation="monitor" operation_key="galera-bundle-docker-0_monitor_0" on_node="metal-2" on_node_uuid="2"/>
       </trigger>
       <trigger>
-        <rsc_op id="21" operation="monitor" operation_key="galera-bundle-docker-1_monitor_0" on_node="metal-2" on_node_uuid="2"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="23" operation="monitor" operation_key="galera-bundle-docker-2_monitor_0" on_node="metal-2" on_node_uuid="2"/>
-      </trigger>
-      <trigger>
         <rsc_op id="35" operation="monitor" operation_key="galera-bundle-docker-0_monitor_0" on_node="metal-3" on_node_uuid="3"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="37" operation="monitor" operation_key="galera-bundle-docker-1_monitor_0" on_node="metal-3" on_node_uuid="3"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="39" operation="monitor" operation_key="galera-bundle-docker-2_monitor_0" on_node="metal-3" on_node_uuid="3"/>
       </trigger>
       <trigger>
         <pseudo_event id="80" operation="start" operation_key="galera-bundle_start_0"/>
@@ -651,13 +639,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="3" operation="monitor" operation_key="galera-bundle-docker-0_monitor_0" on_node="metal-1" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
         <rsc_op id="5" operation="monitor" operation_key="galera-bundle-docker-1_monitor_0" on_node="metal-1" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="7" operation="monitor" operation_key="galera-bundle-docker-2_monitor_0" on_node="metal-1" on_node_uuid="1"/>
       </trigger>
       <trigger>
         <rsc_op id="19" operation="monitor" operation_key="galera-bundle-docker-0_monitor_0" on_node="metal-2" on_node_uuid="2"/>
@@ -669,13 +651,7 @@
         <rsc_op id="23" operation="monitor" operation_key="galera-bundle-docker-2_monitor_0" on_node="metal-2" on_node_uuid="2"/>
       </trigger>
       <trigger>
-        <rsc_op id="35" operation="monitor" operation_key="galera-bundle-docker-0_monitor_0" on_node="metal-3" on_node_uuid="3"/>
-      </trigger>
-      <trigger>
         <rsc_op id="37" operation="monitor" operation_key="galera-bundle-docker-1_monitor_0" on_node="metal-3" on_node_uuid="3"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="39" operation="monitor" operation_key="galera-bundle-docker-2_monitor_0" on_node="metal-3" on_node_uuid="3"/>
       </trigger>
       <trigger>
         <pseudo_event id="80" operation="start" operation_key="galera-bundle_start_0"/>
@@ -805,19 +781,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="3" operation="monitor" operation_key="galera-bundle-docker-0_monitor_0" on_node="metal-1" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="5" operation="monitor" operation_key="galera-bundle-docker-1_monitor_0" on_node="metal-1" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
         <rsc_op id="7" operation="monitor" operation_key="galera-bundle-docker-2_monitor_0" on_node="metal-1" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="19" operation="monitor" operation_key="galera-bundle-docker-0_monitor_0" on_node="metal-2" on_node_uuid="2"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="21" operation="monitor" operation_key="galera-bundle-docker-1_monitor_0" on_node="metal-2" on_node_uuid="2"/>
       </trigger>
       <trigger>
         <rsc_op id="23" operation="monitor" operation_key="galera-bundle-docker-2_monitor_0" on_node="metal-2" on_node_uuid="2"/>
@@ -971,19 +935,7 @@
         <rsc_op id="25" operation="monitor" operation_key="haproxy-bundle-docker-0_monitor_0" on_node="metal-2" on_node_uuid="2"/>
       </trigger>
       <trigger>
-        <rsc_op id="26" operation="monitor" operation_key="haproxy-bundle-docker-1_monitor_0" on_node="metal-2" on_node_uuid="2"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="27" operation="monitor" operation_key="haproxy-bundle-docker-2_monitor_0" on_node="metal-2" on_node_uuid="2"/>
-      </trigger>
-      <trigger>
         <rsc_op id="41" operation="monitor" operation_key="haproxy-bundle-docker-0_monitor_0" on_node="metal-3" on_node_uuid="3"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="42" operation="monitor" operation_key="haproxy-bundle-docker-1_monitor_0" on_node="metal-3" on_node_uuid="3"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="43" operation="monitor" operation_key="haproxy-bundle-docker-2_monitor_0" on_node="metal-3" on_node_uuid="3"/>
       </trigger>
       <trigger>
         <pseudo_event id="111" operation="start" operation_key="haproxy-bundle_start_0"/>
@@ -1039,13 +991,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="9" operation="monitor" operation_key="haproxy-bundle-docker-0_monitor_0" on_node="metal-1" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
         <rsc_op id="10" operation="monitor" operation_key="haproxy-bundle-docker-1_monitor_0" on_node="metal-1" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="11" operation="monitor" operation_key="haproxy-bundle-docker-2_monitor_0" on_node="metal-1" on_node_uuid="1"/>
       </trigger>
       <trigger>
         <rsc_op id="25" operation="monitor" operation_key="haproxy-bundle-docker-0_monitor_0" on_node="metal-2" on_node_uuid="2"/>
@@ -1057,13 +1003,7 @@
         <rsc_op id="27" operation="monitor" operation_key="haproxy-bundle-docker-2_monitor_0" on_node="metal-2" on_node_uuid="2"/>
       </trigger>
       <trigger>
-        <rsc_op id="41" operation="monitor" operation_key="haproxy-bundle-docker-0_monitor_0" on_node="metal-3" on_node_uuid="3"/>
-      </trigger>
-      <trigger>
         <rsc_op id="42" operation="monitor" operation_key="haproxy-bundle-docker-1_monitor_0" on_node="metal-3" on_node_uuid="3"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="43" operation="monitor" operation_key="haproxy-bundle-docker-2_monitor_0" on_node="metal-3" on_node_uuid="3"/>
       </trigger>
       <trigger>
         <pseudo_event id="111" operation="start" operation_key="haproxy-bundle_start_0"/>
@@ -1119,19 +1059,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="9" operation="monitor" operation_key="haproxy-bundle-docker-0_monitor_0" on_node="metal-1" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="10" operation="monitor" operation_key="haproxy-bundle-docker-1_monitor_0" on_node="metal-1" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
         <rsc_op id="11" operation="monitor" operation_key="haproxy-bundle-docker-2_monitor_0" on_node="metal-1" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="25" operation="monitor" operation_key="haproxy-bundle-docker-0_monitor_0" on_node="metal-2" on_node_uuid="2"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="26" operation="monitor" operation_key="haproxy-bundle-docker-1_monitor_0" on_node="metal-2" on_node_uuid="2"/>
       </trigger>
       <trigger>
         <rsc_op id="27" operation="monitor" operation_key="haproxy-bundle-docker-2_monitor_0" on_node="metal-2" on_node_uuid="2"/>
@@ -1762,19 +1690,7 @@
         <rsc_op id="28" operation="monitor" operation_key="redis-bundle-docker-0_monitor_0" on_node="metal-2" on_node_uuid="2"/>
       </trigger>
       <trigger>
-        <rsc_op id="30" operation="monitor" operation_key="redis-bundle-docker-1_monitor_0" on_node="metal-2" on_node_uuid="2"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="32" operation="monitor" operation_key="redis-bundle-docker-2_monitor_0" on_node="metal-2" on_node_uuid="2"/>
-      </trigger>
-      <trigger>
         <rsc_op id="44" operation="monitor" operation_key="redis-bundle-docker-0_monitor_0" on_node="metal-3" on_node_uuid="3"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="46" operation="monitor" operation_key="redis-bundle-docker-1_monitor_0" on_node="metal-3" on_node_uuid="3"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="48" operation="monitor" operation_key="redis-bundle-docker-2_monitor_0" on_node="metal-3" on_node_uuid="3"/>
       </trigger>
       <trigger>
         <pseudo_event id="127" operation="start" operation_key="redis-bundle_start_0"/>
@@ -1904,13 +1820,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="12" operation="monitor" operation_key="redis-bundle-docker-0_monitor_0" on_node="metal-1" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
         <rsc_op id="14" operation="monitor" operation_key="redis-bundle-docker-1_monitor_0" on_node="metal-1" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="16" operation="monitor" operation_key="redis-bundle-docker-2_monitor_0" on_node="metal-1" on_node_uuid="1"/>
       </trigger>
       <trigger>
         <rsc_op id="28" operation="monitor" operation_key="redis-bundle-docker-0_monitor_0" on_node="metal-2" on_node_uuid="2"/>
@@ -1922,13 +1832,7 @@
         <rsc_op id="32" operation="monitor" operation_key="redis-bundle-docker-2_monitor_0" on_node="metal-2" on_node_uuid="2"/>
       </trigger>
       <trigger>
-        <rsc_op id="44" operation="monitor" operation_key="redis-bundle-docker-0_monitor_0" on_node="metal-3" on_node_uuid="3"/>
-      </trigger>
-      <trigger>
         <rsc_op id="46" operation="monitor" operation_key="redis-bundle-docker-1_monitor_0" on_node="metal-3" on_node_uuid="3"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="48" operation="monitor" operation_key="redis-bundle-docker-2_monitor_0" on_node="metal-3" on_node_uuid="3"/>
       </trigger>
       <trigger>
         <pseudo_event id="127" operation="start" operation_key="redis-bundle_start_0"/>
@@ -2058,19 +1962,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="12" operation="monitor" operation_key="redis-bundle-docker-0_monitor_0" on_node="metal-1" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="14" operation="monitor" operation_key="redis-bundle-docker-1_monitor_0" on_node="metal-1" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
         <rsc_op id="16" operation="monitor" operation_key="redis-bundle-docker-2_monitor_0" on_node="metal-1" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="28" operation="monitor" operation_key="redis-bundle-docker-0_monitor_0" on_node="metal-2" on_node_uuid="2"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="30" operation="monitor" operation_key="redis-bundle-docker-1_monitor_0" on_node="metal-2" on_node_uuid="2"/>
       </trigger>
       <trigger>
         <rsc_op id="32" operation="monitor" operation_key="redis-bundle-docker-2_monitor_0" on_node="metal-2" on_node_uuid="2"/>
