@@ -1047,6 +1047,10 @@ cib_op_timeout(unsigned int max)
         crm_trace("Calculated timeout: %us (%s)", global_max, env);
     }
 
+    if(fsa_cib_conn) {
+        fsa_cib_conn->call_timeout = QB_MAX(max, global_max);
+    }
+
     return QB_MAX(max, global_max);
 }
 
