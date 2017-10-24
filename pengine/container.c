@@ -894,7 +894,7 @@ container_create_probe(resource_t * rsc, node_t * node, action_t * complete,
 
                         custom_action_order(tuple->docker, generate_op_key(tuple->docker->id, RSC_STATUS, 0), NULL,
                                             other->docker, generate_op_key(other->docker->id, RSC_START, 0), NULL,
-                                            pe_order_optional, data_set);
+                                            pe_order_optional|pe_order_same_node, data_set);
                     }
                 }
             }
