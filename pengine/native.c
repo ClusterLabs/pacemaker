@@ -2884,8 +2884,8 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
         return FALSE;
     }
 
-    if(allowed != NULL && is_container_remote_node(allowed)) {
-        resource_t *remote = allowed->details->remote_rsc->container;
+    if(is_container_remote_node(node)) {
+        resource_t *remote = node->details->remote_rsc->container;
 
         if(remote->role == RSC_ROLE_STOPPED) {
             /* If the container is stopped, then we know anything that
@@ -2922,8 +2922,8 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
             /* Here we really we want to check if remote->stop is required,
              * but that information doesn't exist yet
              */
-        } else if(allowed->details->remote_requires_reset
-                  || allowed->details->unclean
+        } else if(node->details->remote_requires_reset
+                  || node->details->unclean
                   || is_set(remote->flags, pe_rsc_failed)
                   || remote->next_role == RSC_ROLE_STOPPED
                   || (remote->allocated_to
