@@ -147,9 +147,16 @@ native_choose_node(resource_t * rsc, node_t * prefer, pe_working_set_t * data_se
         pe_rsc_trace(rsc, "Chose node %s for %s from %d candidates",
                      chosen ? chosen->details->uname : "<none>", rsc->id, length);
 
-        if (chosen && chosen->weight > 0 && can_run_resources(chosen)) {
+        if (!pe_rsc_is_unique_clone(rsc->parent)
+            && chosen && (chosen->weight > 0) && can_run_resources(chosen)) {
             /* If the resource is already running on a node, prefer that node if
              * it is just as good as the chosen node.
+             *
+             * We don't do this for unique clone instances, because
+             * distribute_children() has already assigned instances to their
+             * running nodes when appropriate, and if we get here, we don't want
+             * remaining unallocated instances to prefer a node that's already
+             * running another instance.
              */
             node_t *running = g_list_nth_data(rsc->running_on, 0);
 
