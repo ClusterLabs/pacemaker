@@ -349,9 +349,6 @@
      </action_set>
      <inputs>
        <trigger>
-        <rsc_op id="11" operation="monitor" operation_key="imagestoreclone:0_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="55" operation="stop" operation_key="imagestorecloneset_stop_0"/>
        </trigger>
      </inputs>

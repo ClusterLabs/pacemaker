@@ -17,6 +17,7 @@ Executing cluster transition:
  * Resource action: DcIPaddr        monitor on c001n08
  * Resource action: DcIPaddr        monitor on c001n03
  * Resource action: DcIPaddr        monitor on c001n01
+ * Resource action: rsc_c001n08     stop on c001n08
  * Resource action: rsc_c001n08     monitor on c001n03
  * Resource action: rsc_c001n08     monitor on c001n02
  * Resource action: rsc_c001n08     monitor on c001n01
@@ -26,7 +27,6 @@ Executing cluster transition:
  * Resource action: rsc_c001n01     monitor on c001n08
  * Resource action: rsc_c001n01     monitor on c001n03
  * Resource action: rsc_c001n01     monitor on c001n02
- * Resource action: rsc_c001n08     stop on c001n08
  * Pseudo action:   all_stopped
 
 Revised cluster status:

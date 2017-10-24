@@ -125,9 +125,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="12" operation="monitor" operation_key="child_DoFencing:0_monitor_0" on_node="hadev1" on_node_uuid="6125a0df-456a-4395-829a-418e9a380d36"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="31" operation="stop" operation_key="DoFencing_stop_0"/>
       </trigger>
     </inputs>

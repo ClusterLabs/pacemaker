@@ -328,9 +328,6 @@
      </action_set>
      <inputs>
        <trigger>
-        <rsc_op id="5" operation="monitor" operation_key="child_rsc2:0_monitor_0" on_node="node2" on_node_uuid="uuid2"/>
-       </trigger>
-       <trigger>
         <pseudo_event id="30" operation="stop" operation_key="rsc2_stop_0"/>
        </trigger>
      </inputs>

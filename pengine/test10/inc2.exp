@@ -108,9 +108,6 @@
      </action_set>
      <inputs>
        <trigger>
-        <rsc_op id="6" operation="monitor" operation_key="child_rsc1:4_monitor_0" on_node="node2" on_node_uuid="uuid2"/>
-       </trigger>
-       <trigger>
         <pseudo_event id="18" operation="stop" operation_key="rsc1_stop_0"/>
        </trigger>
      </inputs>
