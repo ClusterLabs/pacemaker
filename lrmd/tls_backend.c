@@ -298,6 +298,7 @@ lrmd_init_remote_tls_server()
     int port = crm_default_remote_port();
     struct addrinfo hints, *res = NULL, *iter;
     char port_str[6]; // at most "65535"
+    gnutls_datum_t psk_key = { NULL, 0 };
 
     static struct mainloop_fd_callbacks remote_listen_fd_callbacks = {
         .dispatch = lrmd_remote_listen,
@@ -313,6 +314,16 @@ lrmd_init_remote_tls_server()
     gnutls_psk_allocate_server_credentials(&psk_cred_s);
     gnutls_psk_set_server_credentials_function(psk_cred_s, lrmd_tls_server_key_cb);
     gnutls_psk_set_server_dh_params(psk_cred_s, dh_params);
+
+    /* The key callback won't get called until the first client connection
+     * attempt. Do it once here, so we can warn the user at start-up if we can't
+     * read the key. We don't error out, though, because it's fine if the key is
+     * going to be added later.
+     */
+    rc = lrmd_tls_set_key(&psk_key);
+    if (rc != 0) {
+        crm_warn("A cluster connection will not be possible until the key is available");
+    }
 
     memset(&hints, 0, sizeof(struct addrinfo));
     /* Bind to the wildcard address (INADDR_ANY or IN6ADDR_ANY_INIT).
