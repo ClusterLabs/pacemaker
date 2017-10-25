@@ -697,7 +697,7 @@ check_connect_finished(gpointer userdata)
     rc = select(sock + 1, &rset, &wset, NULL, &ts);
 
     if (rc < 0) {
-        rc = errno;
+        rc = -errno;
         if ((errno == EINPROGRESS) || (errno == EAGAIN)) {
             /* reschedule if there is still time left */
             if ((time(NULL) - cb_data->start) < (cb_data->timeout / 1000)) {
