@@ -723,19 +723,18 @@ check_connect_finished(gpointer userdata)
     /* can we read or write to the socket now? */
     if (FD_ISSET(sock, &rset) || FD_ISSET(sock, &wset)) {
         if (getsockopt(sock, SOL_SOCKET, SO_ERROR, &error, &len) < 0) {
+            rc = -errno;
             crm_trace("fd %d: call to getsockopt failed", sock);
-            rc = -1;
             goto dispatch_done;
         }
-
         if (error) {
             crm_trace("fd %d: error returned from getsockopt: %d", sock, error);
-            rc = -1;
+            rc = -error;
             goto dispatch_done;
         }
     } else {
         crm_trace("neither read nor write set after select");
-        rc = -1;
+        rc = -EAGAIN;
         goto dispatch_done;
     }
 
