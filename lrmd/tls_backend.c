@@ -291,19 +291,20 @@ bind_and_listen(struct addrinfo *addr)
 }
 
 int
-lrmd_init_remote_tls_server(int port)
+lrmd_init_remote_tls_server()
 {
     int rc;
     int filter;
+    int port = crm_default_remote_port();
     struct addrinfo hints, *res = NULL, *iter;
-    char port_str[16];
+    char port_str[6]; // at most "65535"
 
     static struct mainloop_fd_callbacks remote_listen_fd_callbacks = {
         .dispatch = lrmd_remote_listen,
         .destroy = lrmd_remote_connection_destroy,
     };
 
-    crm_notice("Starting a tls listener on port %d.", port);
+    crm_notice("Starting TLS listener on port %d", port);
     crm_gnutls_global_init();
     gnutls_global_set_log_function(debug_log);
 
@@ -314,7 +315,10 @@ lrmd_init_remote_tls_server(int port)
     gnutls_psk_set_server_dh_params(psk_cred_s, dh_params);
 
     memset(&hints, 0, sizeof(struct addrinfo));
-    hints.ai_flags = AI_PASSIVE; /* Only return socket addresses with wildcard INADDR_ANY or IN6ADDR_ANY_INIT */
+    /* Bind to the wildcard address (INADDR_ANY or IN6ADDR_ANY_INIT).
+     * @TODO allow user to specify a specific address
+     */
+    hints.ai_flags = AI_PASSIVE;
     hints.ai_family = AF_UNSPEC; /* Return IPv6 or IPv4 */
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
@@ -322,7 +326,8 @@ lrmd_init_remote_tls_server(int port)
     snprintf(port_str, sizeof(port_str), "%d", port);
     rc = getaddrinfo(NULL, port_str, &hints, &res);
     if (rc) {
-        crm_err("getaddrinfo: %s", gai_strerror(rc));
+        crm_err("Unable to get IP address info for local node: %s",
+                gai_strerror(rc));
         return -1;
     }
 
