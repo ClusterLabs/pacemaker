@@ -772,16 +772,15 @@ internal_tcp_connect_async(int sock,
     int timer;
     struct tcp_async_cb_data *cb_data = NULL;
 
-    if ((flag = fcntl(sock, F_GETFL)) >= 0) {
-        if (fcntl(sock, F_SETFL, flag | O_NONBLOCK) < 0) {
-            crm_err("fcntl() write failed");
-            return -1;
-        }
+    flag = fcntl(sock, F_GETFL);
+    if ((flag >= 0) && (fcntl(sock, F_SETFL, flag | O_NONBLOCK) < 0)) {
+        crm_perror(LOG_WARNING, "setting socket non-blocking");
+        return -1;
     }
 
     rc = connect(sock, addr, addrlen);
-
     if (rc < 0 && (errno != EINPROGRESS) && (errno != EAGAIN)) {
+        crm_perror(LOG_WARNING, "connect");
         return -1;
     }
 
@@ -809,7 +808,8 @@ internal_tcp_connect_async(int sock,
      * At some point we should figure out a way to use a mainloop fd callback for this.
      * Something about the way mainloop is currently polling prevents this from working at the
      * moment though. */
-    crm_trace("fd %d: scheduling to check if connect finished in %dms second", sock, interval);
+    crm_trace("Scheduling check in %dms for whether connect to fd %d finished",
+              interval, sock);
     timer = g_timeout_add(interval, check_connect_finished, cb_data);
     if (timer_id) {
         *timer_id = timer;
@@ -821,18 +821,16 @@ internal_tcp_connect_async(int sock,
 static int
 internal_tcp_connect(int sock, const struct sockaddr *addr, socklen_t addrlen)
 {
-    int flag = 0;
     int rc = connect(sock, addr, addrlen);
 
     if (rc == 0) {
-        if ((flag = fcntl(sock, F_GETFL)) >= 0) {
-            if (fcntl(sock, F_SETFL, flag | O_NONBLOCK) < 0) {
-                crm_err("fcntl() write failed");
-                return -1;
-            }
+        int flag = fcntl(sock, F_GETFL);
+
+        if ((flag >= 0) && (fcntl(sock, F_SETFL, flag | O_NONBLOCK) < 0)) {
+            crm_perror(LOG_WARNING, "setting socket non-blocking");
+            rc = -1;
         }
     }
-
     return rc;
 }
 
@@ -854,24 +852,23 @@ crm_remote_tcp_connect_async(const char *host, int port, int timeout, /*ms */
     int ret_ga;
     int sock = -1;
 
-    /* getaddrinfo */
+    // Get host's IP address(es)
     memset(&hints, 0, sizeof(struct addrinfo));
     hints.ai_family = AF_UNSPEC;        /* Allow IPv4 or IPv6 */
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_CANONNAME;
-
-    crm_debug("Looking up %s", server);
     ret_ga = getaddrinfo(server, NULL, &hints, &res);
     if (ret_ga) {
-        crm_err("getaddrinfo: %s", gai_strerror(ret_ga));
-        return -1;
+        crm_err("Unable to get IP address info for %s: %s",
+                server, gai_strerror(ret_ga));
+        goto async_cleanup;
     }
-
     if (!res || !res->ai_addr) {
-        crm_err("getaddrinfo failed");
+        crm_err("Unable to get IP address info for %s: no result", server);
         goto async_cleanup;
     }
 
+    // getaddrinfo() returns a list of host's addresses, try them in order
     for (rp = res; rp != NULL; rp = rp->ai_next) {
         struct sockaddr *addr = rp->ai_addr;
 
@@ -882,12 +879,12 @@ crm_remote_tcp_connect_async(const char *host, int port, int timeout, /*ms */
         if (rp->ai_canonname) {
             server = res->ai_canonname;
         }
-        crm_debug("Got address %s for %s", server, host);
+        crm_debug("Got canonical name %s for %s", server, host);
 
-        /* create socket */
         sock = socket(rp->ai_family, SOCK_STREAM, IPPROTO_TCP);
         if (sock == -1) {
-            crm_err("Socket creation failed for remote client connection.");
+            crm_perror(LOG_WARNING, "creating socket for connection to %s",
+                       server);
             continue;
         }
 
@@ -901,7 +898,7 @@ crm_remote_tcp_connect_async(const char *host, int port, int timeout, /*ms */
 
         memset(buffer, 0, DIMOF(buffer));
         crm_sockaddr2str(addr, buffer);
-        crm_info("Attempting to connect to remote server at %s:%d", buffer, port);
+        crm_info("Attempting TCP connection to %s:%d", buffer, port);
 
         if (callback) {
             if (internal_tcp_connect_async
@@ -909,10 +906,8 @@ crm_remote_tcp_connect_async(const char *host, int port, int timeout, /*ms */
                 goto async_cleanup; /* Success for now, we'll hear back later in the callback */
             }
 
-        } else {
-            if (internal_tcp_connect(sock, rp->ai_addr, rp->ai_addrlen) == 0) {
-                break;          /* Success */
-            }
+        } else if (internal_tcp_connect(sock, rp->ai_addr, rp->ai_addrlen) == 0) {
+            break;          /* Success */
         }
 
         close(sock);

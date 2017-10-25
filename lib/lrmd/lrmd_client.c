@@ -1133,7 +1133,7 @@ lrmd_tcp_connect_cb(void *userdata, int sock)
 {
     lrmd_t *lrmd = userdata;
     lrmd_private_t *native = lrmd->private;
-    char name[256] = { 0, };
+    char *name;
     static struct mainloop_fd_callbacks lrmd_tls_callbacks = {
         .dispatch = lrmd_tls_dispatch,
         .destroy = lrmd_tls_connection_destroy,
@@ -1145,19 +1145,22 @@ lrmd_tcp_connect_cb(void *userdata, int sock)
 
     if (rc < 0) {
         lrmd_tls_connection_destroy(lrmd);
-        crm_info("remote lrmd connect to %s at port %d failed", native->server, native->port);
+        crm_info("Could not connect to remote LRMD at %s:%d",
+                 native->server, native->port);
         report_async_connection_result(lrmd, rc);
         return;
     }
 
-    /* TODO continue with tls stuff now that tcp connect passed. make this async as well soon
-     * to avoid all blocking code in the client. */
+    /* The TCP connection was successful, so establish the TLS connection.
+     * @TODO make this async to avoid blocking code in client
+     */
+
     native->sock = sock;
 
     rc = lrmd_tls_set_key(&psk_key);
     if (rc != 0) {
-        crm_warn("Setup of the key failed (rc=%d) for remote node %s:%d",
-                 rc, native->server, native->port);
+        crm_warn("Could not set key for remote LRMD at %s:%d " CRM_XS " rc=%d",
+                 native->server, native->port, rc);
         lrmd_tls_connection_destroy(lrmd);
         report_async_connection_result(lrmd, rc);
         return;
@@ -1170,8 +1173,8 @@ lrmd_tcp_connect_cb(void *userdata, int sock)
     native->remote->tls_session = create_psk_tls_session(sock, GNUTLS_CLIENT, native->psk_cred_c);
 
     if (crm_initiate_client_tls_handshake(native->remote, LRMD_CLIENT_HANDSHAKE_TIMEOUT) != 0) {
-        crm_warn("Client tls handshake failed for server %s:%d. Disconnecting", native->server,
-                 native->port);
+        crm_warn("Disconnecting after TLS handshake with remote LRMD %s:%d failed",
+                 native->server, native->port);
         gnutls_deinit(*native->remote->tls_session);
         gnutls_free(native->remote->tls_session);
         native->remote->tls_session = NULL;
@@ -1180,42 +1183,38 @@ lrmd_tcp_connect_cb(void *userdata, int sock)
         return;
     }
 
-    crm_info("Remote lrmd client TLS connection established with server %s:%d", native->server,
-             native->port);
+    crm_info("TLS connection to remote LRMD %s:%d succeeded",
+             native->server, native->port);
 
-    snprintf(name, 128, "remote-lrmd-%s:%d", native->server, native->port);
+    name = crm_strdup_printf("remote-lrmd-%s:%d", native->server, native->port);
 
     native->process_notify = mainloop_add_trigger(G_PRIORITY_HIGH, lrmd_tls_dispatch, lrmd);
     native->source =
         mainloop_add_fd(name, G_PRIORITY_HIGH, native->sock, lrmd, &lrmd_tls_callbacks);
 
     rc = lrmd_handshake(lrmd, name);
-    report_async_connection_result(lrmd, rc);
+    free(name);
 
+    report_async_connection_result(lrmd, rc);
     return;
 }
 
 static int
 lrmd_tls_connect_async(lrmd_t * lrmd, int timeout /*ms */ )
 {
-    int rc = -1;
     int sock = 0;
     int timer_id = 0;
-
     lrmd_private_t *native = lrmd->private;
 
     lrmd_gnutls_global_init();
-
-    sock = crm_remote_tcp_connect_async(native->server, native->port, timeout, &timer_id, lrmd,
-                                      lrmd_tcp_connect_cb);
-
-    if (sock != -1) {
-        native->sock = sock;
-        rc = 0;
-        native->async_timer = timer_id;
+    sock = crm_remote_tcp_connect_async(native->server, native->port, timeout,
+                                        &timer_id, lrmd, lrmd_tcp_connect_cb);
+    if (sock < 0) {
+        return sock;
     }
-
-    return rc;
+    native->sock = sock;
+    native->async_timer = timer_id;
+    return pcmk_ok;
 }
 
 static int
@@ -1267,12 +1266,13 @@ lrmd_tls_connect(lrmd_t * lrmd, int *fd)
     if (fd) {
         *fd = sock;
     } else {
-        char name[256] = { 0, };
-        snprintf(name, 128, "remote-lrmd-%s:%d", native->server, native->port);
+        char *name = crm_strdup_printf("remote-lrmd-%s:%d",
+                                       native->server, native->port);
 
         native->process_notify = mainloop_add_trigger(G_PRIORITY_HIGH, lrmd_tls_dispatch, lrmd);
         native->source =
             mainloop_add_fd(name, G_PRIORITY_HIGH, native->sock, lrmd, &lrmd_tls_callbacks);
+        free(name);
     }
     return pcmk_ok;
 }
