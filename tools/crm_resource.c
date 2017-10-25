@@ -180,6 +180,12 @@ static struct crm_option long_options[] = {
     {"validate",   0, 0, 0, "\t\tCall the validate-all action of the local given resource"},
     {
         "cleanup", 0, 0, 'C',
+        "\t\tDelete failed operations from a resource's history allowing its current state to be rechecked.\n"
+        "\t\t\t\tOptionally filtered by --resource, --node, --operation, and --interval (otherwise all).\n"
+        "\t\t\t\tUnless --force is specified, resource's group or clone (if any) will also be cleaned"
+    },
+    {
+        "refresh", 0, 0, 'R',
         "\t\tDelete resource's history (including failures) so its current state is rechecked.\n"
         "\t\t\t\tOptionally filtered by --resource, --node, --operation, and --interval (otherwise all).\n"
         "\t\t\t\tUnless --force is specified, resource's group or clone (if any) will also be cleaned"
@@ -324,7 +330,6 @@ static struct crm_option long_options[] = {
     {"un-migrate", 0, 0, 'U', NULL, pcmk_option_hidden},
     {"un-move",    0, 0, 'U', NULL, pcmk_option_hidden},
 
-    {"refresh",    0, 0, 'R', NULL, pcmk_option_hidden},
     {"reprobe",    0, 0, 'P', NULL, pcmk_option_hidden},
 
     {"-spacer-", 1, 0, '-', "\nExamples:", pcmk_option_paragraph},
@@ -350,6 +355,7 @@ static struct crm_option long_options[] = {
     {0, 0, 0, 0}
 };
 /* *INDENT-ON* */
+
 
 int
 main(int argc, char **argv)
@@ -379,6 +385,7 @@ main(int argc, char **argv)
     bool require_resource = TRUE; /* whether command requires that resource be specified */
     bool require_dataset = TRUE;  /* whether command requires populated dataset instance */
     bool require_crmd = FALSE;    /* whether command requires connection to CRMd */
+    bool just_errors = TRUE;      /* whether cleanup command deletes all history or just errors */
 
     int rc = pcmk_ok;
     int option_index = 0;
@@ -560,12 +567,20 @@ main(int argc, char **argv)
                 timeout_ms = crm_get_msec(optarg);
                 break;
 
-            case 'C':
             case 'R':
             case 'P':
                 crm_log_args(argc, argv);
                 require_resource = FALSE;
                 require_crmd = TRUE;
+                just_errors = FALSE;
+                rsc_cmd = 'C';
+                break;
+
+            case 'C':
+                crm_log_args(argc, argv);
+                require_resource = FALSE;
+                require_crmd = TRUE;
+                just_errors = TRUE;
                 rsc_cmd = 'C';
                 break;
 
@@ -1009,6 +1024,33 @@ main(int argc, char **argv)
     } else if (rsc_cmd == 'd') {
         /* coverity[var_deref_model] False positive */
         rc = cli_resource_delete_attribute(rsc_id, prop_set, prop_id, prop_name, cib_conn, &data_set);
+    } else if (rsc_cmd == 'C' && just_errors) {
+        crmd_replies_needed = 0;
+        for (xmlNode *xml_op = __xml_first_child(data_set.failed); xml_op != NULL;
+             xml_op = __xml_next(xml_op)) {
+
+            const char *node = crm_element_value(xml_op, XML_ATTR_UNAME);
+            const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
+            const char *task_interval = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
+            const char *resource_name = crm_element_value(xml_op, XML_LRM_ATTR_RSCID);
+            resource_t *rsc = NULL;
+            if(resource_name == NULL) {
+                continue;
+            }
+
+            /* TODO: Filter by node, resource and operation if supplied */
+            rsc = pe_find_resource_with_flags(
+                data_set.resources, resource_name, pe_find_renamed | pe_find_current | pe_find_anon);
+            if(rsc) {
+                crm_debug("Erasing %s failure for %s (%s detected) on %s",
+                          task, rsc->id, resource_name, node);
+                rc = cli_resource_delete(crmd_channel, node, rsc, task, task_interval, &data_set);
+
+            } else {
+                rc = -ENODEV;
+            }
+        }
+
     } else if ((rsc_cmd == 'C') && (rsc_id)) {
         resource_t *rsc = pe_find_resource_with_flags(data_set.resources, rsc_id, pe_find_renamed | pe_find_current | pe_find_anon);
         if(do_force == FALSE) {

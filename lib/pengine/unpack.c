@@ -2552,7 +2552,7 @@ unpack_rsc_migration_failure(resource_t *rsc, node_t *node, xmlNode *xml_op, pe_
 }
 
 static void
-record_failed_op(xmlNode *op, node_t* node, pe_working_set_t * data_set)
+record_failed_op(xmlNode *op, node_t* node, resource_t *rsc, pe_working_set_t * data_set)
 {
     xmlNode *xIter = NULL;
     const char *op_key = crm_element_value(op, XML_LRM_ATTR_TASK_KEY);
@@ -2573,6 +2573,7 @@ record_failed_op(xmlNode *op, node_t* node, pe_working_set_t * data_set)
 
     crm_trace("Adding entry %s on %s", op_key, node->details->uname);
     crm_xml_add(op, XML_ATTR_UNAME, node->details->uname);
+    crm_xml_add(op, XML_LRM_ATTR_RSCID, rsc->id);
     add_node_copy(data_set->failed, op);
 }
 
@@ -2612,7 +2613,7 @@ unpack_rsc_op_failure(resource_t * rsc, node_t * node, int rc, xmlNode * xml_op,
                  task, rsc->id, node->details->uname, services_ocf_exitcode_str(rc),
                  rc);
 
-        record_failed_op(xml_op, node, data_set);
+        record_failed_op(xml_op, node, rsc, data_set);
 
     } else {
         crm_trace("Processing failed op %s for %s on %s: %s (%d)",
@@ -3135,7 +3136,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
         /* Add them to the failed list to highlight them for the user */
         if ((node->details->shutdown == FALSE) || (node->details->online == TRUE)) {
             crm_trace("Remapping %d to %d", PCMK_OCF_DEGRADED, PCMK_OCF_OK);
-            record_failed_op(xml_op, node, data_set);
+            record_failed_op(xml_op, node, rsc, data_set);
         }
 
     } else if (rc == PCMK_OCF_DEGRADED_MASTER && safe_str_eq(task, CRMD_ACTION_STATUS)) {
@@ -3144,7 +3145,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
         /* Add them to the failed list to highlight them for the user */
         if ((node->details->shutdown == FALSE) || (node->details->online == TRUE)) {
             crm_trace("Remapping %d to %d", PCMK_OCF_DEGRADED_MASTER, PCMK_OCF_RUNNING_MASTER);
-            record_failed_op(xml_op, node, data_set);
+            record_failed_op(xml_op, node, rsc, data_set);
         }
     }
 
@@ -3250,7 +3251,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
                 crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
                 set_bit(rsc->flags, pe_rsc_failure_ignored);
 
-                record_failed_op(xml_op, node, data_set);
+                record_failed_op(xml_op, node, rsc, data_set);
 
                 if (failure_strategy == action_fail_restart_container && *on_fail <= action_fail_recover) {
                     *on_fail = failure_strategy;
