@@ -215,6 +215,8 @@ create_docker_resource(
                                data->prefix, tuple->offset);
         }
 
+        offset += snprintf(buffer+offset, max-offset, " -e PCMK_stderr=1");
+
         if(data->docker_network) {
 //        offset += snprintf(buffer+offset, max-offset, " --link-local-ip=%s", tuple->ipaddr);
             offset += snprintf(buffer+offset, max-offset, " --net=%s", data->docker_network);
