@@ -835,13 +835,21 @@ internal_tcp_connect(int sock, const struct sockaddr *addr, socklen_t addrlen)
 
 /*!
  * \internal
- * \brief tcp connection to server at specified port
- * \retval negative, failed to connect.
- * \retval positive, sock fd
+ * \brief Connect to server at specified TCP port
+ *
+ * \param[in]  host      Name of server to connect to
+ * \param[in]  port      Server port to connect to
+ * \param[in]  timeout   Report error if not connected in this many milliseconds
+ * \param[out] timer_id  If non-NULL, will be set to timer ID, if asynchronous
+ * \param[in]  userdata  Data to pass to callback, if asynchronous
+ * \param[in]  callback  If non-NULL, connect asynchronously then call this
+ *
+ * \return File descriptor of connected socket on success, -ENOTCONN otherwise
  */
 int
-crm_remote_tcp_connect_async(const char *host, int port, int timeout, /*ms */
-                             int *timer_id, void *userdata, void (*callback) (void *userdata, int sock))
+crm_remote_tcp_connect_async(const char *host, int port, int timeout,
+                             int *timer_id, void *userdata,
+                             void (*callback) (void *userdata, int sock))
 {
     char buffer[INET6_ADDRSTRLEN];
     struct addrinfo *res = NULL;
@@ -849,7 +857,7 @@ crm_remote_tcp_connect_async(const char *host, int port, int timeout, /*ms */
     struct addrinfo hints;
     const char *server = host;
     int ret_ga;
-    int sock = -1;
+    int sock = -ENOTCONN;
 
     // Get host's IP address(es)
     memset(&hints, 0, sizeof(struct addrinfo));
@@ -884,6 +892,7 @@ crm_remote_tcp_connect_async(const char *host, int port, int timeout, /*ms */
         if (sock == -1) {
             crm_perror(LOG_WARNING, "creating socket for connection to %s",
                        server);
+            sock = -ENOTCONN;
             continue;
         }
 
@@ -910,7 +919,7 @@ crm_remote_tcp_connect_async(const char *host, int port, int timeout, /*ms */
         }
 
         close(sock);
-        sock = -1;
+        sock = -ENOTCONN;
     }
 
 async_cleanup:

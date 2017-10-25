@@ -1078,27 +1078,23 @@ set_key(gnutls_datum_t * key, const char *location)
 int
 lrmd_tls_set_key(gnutls_datum_t * key)
 {
-    int rc = 0;
     const char *specific_location = getenv("PCMK_authkey_location");
 
     if (set_key(key, specific_location) == 0) {
         crm_debug("Using custom authkey location %s", specific_location);
-        return 0;
+        return pcmk_ok;
 
     } else if (specific_location) {
         crm_err("No valid lrmd remote key found at %s, trying default location", specific_location);
     }
 
-    if (set_key(key, DEFAULT_REMOTE_KEY_LOCATION) != 0) {
-        rc = set_key(key, ALT_REMOTE_KEY_LOCATION);
-    }
-
-    if (rc) {
+    if ((set_key(key, DEFAULT_REMOTE_KEY_LOCATION) != 0)
+        && (set_key(key, ALT_REMOTE_KEY_LOCATION) != 0)) {
         crm_err("No valid lrmd remote key found at %s", DEFAULT_REMOTE_KEY_LOCATION);
-        return -1;
+        return -ENOKEY;
     }
 
-    return rc;
+    return pcmk_ok;
 }
 
 static void
@@ -1179,7 +1175,7 @@ lrmd_tcp_connect_cb(void *userdata, int sock)
         gnutls_free(native->remote->tls_session);
         native->remote->tls_session = NULL;
         lrmd_tls_connection_destroy(lrmd);
-        report_async_connection_result(lrmd, -1);
+        report_async_connection_result(lrmd, -EKEYREJECTED);
         return;
     }
 
@@ -1224,6 +1220,7 @@ lrmd_tls_connect(lrmd_t * lrmd, int *fd)
         .dispatch = lrmd_tls_dispatch,
         .destroy = lrmd_tls_connection_destroy,
     };
+    int rc;
 
     lrmd_private_t *native = lrmd->private;
     int sock;
@@ -1240,9 +1237,10 @@ lrmd_tls_connect(lrmd_t * lrmd, int *fd)
 
     native->sock = sock;
 
-    if (lrmd_tls_set_key(&psk_key) != 0) {
+    rc = lrmd_tls_set_key(&psk_key);
+    if (rc < 0) {
         lrmd_tls_connection_destroy(lrmd);
-        return -1;
+        return rc;
     }
 
     gnutls_psk_allocate_client_credentials(&native->psk_cred_c);
@@ -1257,7 +1255,7 @@ lrmd_tls_connect(lrmd_t * lrmd, int *fd)
         gnutls_free(native->remote->tls_session);
         native->remote->tls_session = NULL;
         lrmd_tls_connection_destroy(lrmd);
-        return -1;
+        return -EKEYREJECTED;
     }
 
     crm_info("Remote lrmd client TLS connection established with server %s:%d", native->server,
