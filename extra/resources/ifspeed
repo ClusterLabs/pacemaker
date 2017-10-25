@@ -13,6 +13,7 @@
 #
 # OCF instance parameters:
 #    OCF_RESKEY_name:         name of attribute to set in CIB
+#    OCF_RESKEY_ip            ip address to check
 #    OCF_RESKEY_iface:        network interface to monitor
 #    OCF_RESKEY_bridge_ports: if not null and OCF_RESKEY_iface is a bridge, list of
 #                             bridge ports to consider.
@@ -185,12 +186,14 @@ monitor() {
 
 # This function tries to guess nic interface by IP
 get_nic_name_by_ip(){
-    # $FINDIF takes its parameters from the environment
+    # $FINDIF takes its parameters from the environment.
+    # Its output is as follows:
+    # [NIC_NAME] netmask [NETMASK] broadcast [BROADCAST}
     NICINFO=$( ${FINDIF} )
     rc=$?
     if [ $rc -eq 0 ];then
-        NICINFO=`echo "${NICINFO}" | sed -e 's/netmask\ //;s/broadcast\ //'`
-        echo "${NICINFO}" | cut -d" " -f1
+        # Get NIC_NAME part of findif function output.
+        echo "${NICINFO%% *}"
     else
         echo ""
     fi
@@ -206,7 +209,7 @@ validate() {
             ipcheck_ipv4 "${OCF_RESKEY_ip}"
             if [ $? -eq 1 ] ; then
                 ipcheck_ipv6 "${OCF_RESKEY_ip}"
-                if [ $? = 1 ] ; then
+                if [ $? -eq 1 ] ; then
                   ocf_exit_reason "ip parameter [${OCF_RESKEY_ip}] is not a valid ip address."
                   exit $OCF_ERR_CONFIGURED
                 fi
@@ -458,20 +461,21 @@ bond_get_speed() {
 }
 
 update() {
+    local speed;
     local nic=${OCF_RESKEY_iface};
     if [ -z "${OCF_RESKEY_iface}" ]; then
-        nic=`get_nic_name_by_ip`
+        nic=$( get_nic_name_by_ip )
         if [ -z "${nic}" ];then
             ocf_log err "Could not retrieve network interface name from ip address (${OCF_RESKEY_ip})"
             exit $OCF_ERR_GENERIC
         fi
     fi
-    local speed=$( iface_get_speed ${nic} )
+    speed=$( iface_get_speed ${nic} )
 
     : $(( score = speed * ${OCF_RESKEY_weight_base} / 1000 ))
     if [ "$__OCF_ACTION" = "start" ] ; then
         attrd_updater -n ${OCF_RESKEY_name} -B ${score} -d ${OCF_RESKEY_dampen} ${attrd_options}
-    else
+    else 
         attrd_updater -n ${OCF_RESKEY_name} -v ${score} -d ${OCF_RESKEY_dampen} ${attrd_options}
     fi
     rc=$?
