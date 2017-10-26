@@ -33,7 +33,6 @@
 
 #include <stdlib.h>
 #include <errno.h>
-#include <fcntl.h>
 #include <glib.h>
 
 #include <bzlib.h>
@@ -766,14 +765,15 @@ internal_tcp_connect_async(int sock,
                            int *timer_id, void *userdata, void (*callback) (void *userdata, int sock))
 {
     int rc = 0;
-    int flag = 0;
     int interval = 500;
     int timer;
     struct tcp_async_cb_data *cb_data = NULL;
 
-    flag = fcntl(sock, F_GETFL);
-    if ((flag >= 0) && (fcntl(sock, F_SETFL, flag | O_NONBLOCK) < 0)) {
-        crm_perror(LOG_WARNING, "setting socket non-blocking");
+    rc = crm_set_nonblocking(sock);
+    if (rc < 0) {
+        crm_warn("Could not set socket non-blocking: %s " CRM_XS " rc=%d",
+                 pcmk_strerror(rc), rc);
+        close(sock);
         return -1;
     }
 
@@ -822,15 +822,21 @@ internal_tcp_connect(int sock, const struct sockaddr *addr, socklen_t addrlen)
 {
     int rc = connect(sock, addr, addrlen);
 
-    if (rc == 0) {
-        int flag = fcntl(sock, F_GETFL);
-
-        if ((flag >= 0) && (fcntl(sock, F_SETFL, flag | O_NONBLOCK) < 0)) {
-            crm_perror(LOG_WARNING, "setting socket non-blocking");
-            rc = -1;
-        }
+    if (rc < 0) {
+        rc = -errno;
+        crm_warn("Could not connect socket: %s " CRM_XS " rc=%d",
+                 pcmk_strerror(rc), rc);
+        return rc;
     }
-    return rc;
+
+    rc = crm_set_nonblocking(sock);
+    if (rc < 0) {
+        crm_warn("Could not set socket non-blocking: %s " CRM_XS " rc=%d",
+                 pcmk_strerror(rc), rc);
+        return rc;
+    }
+
+    return pcmk_ok;
 }
 
 /*!
@@ -970,7 +976,6 @@ crm_remote_accept(int ssock)
 {
     int csock = 0;
     int rc = 0;
-    int flag = 0;
     unsigned laddr = 0;
     struct sockaddr_storage addr;
     char addr_str[INET6_ADDRSTRLEN];
@@ -991,16 +996,12 @@ crm_remote_accept(int ssock)
         return -1;
     }
 
-    if ((flag = fcntl(csock, F_GETFL)) >= 0) {
-        if ((rc = fcntl(csock, F_SETFL, flag | O_NONBLOCK)) < 0) {
-            crm_err("fcntl() write failed");
-            close(csock);
-            return rc;
-        }
-    } else {
-        crm_err("fcntl() read failed");
+    rc = crm_set_nonblocking(csock);
+    if (rc < 0) {
+        crm_err("Could not set socket non-blocking: %s " CRM_XS " rc=%d",
+                pcmk_strerror(rc), rc);
         close(csock);
-        return flag;
+        return rc;
     }
 
 #ifdef TCP_USER_TIMEOUT

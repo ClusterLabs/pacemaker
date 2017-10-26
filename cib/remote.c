@@ -31,7 +31,6 @@
 
 #include <stdlib.h>
 #include <errno.h>
-#include <fcntl.h>
 #include <glib.h>
 
 #include <crm/msg_xml.h>
@@ -288,7 +287,7 @@ cib_remote_listen(gpointer data)
     struct sockaddr_storage addr;
     char ipstr[INET6_ADDRSTRLEN];
     int ssock = *(int *)data;
-    int flag;
+    int rc;
 
     crm_client_t *new_client = NULL;
 
@@ -310,14 +309,10 @@ cib_remote_listen(gpointer data)
     crm_debug("New %s connection from %s",
               ((ssock == remote_tls_fd)? "secure" : "clear-text"), ipstr);
 
-    if ((flag = fcntl(csock, F_GETFL)) >= 0) {
-        if (fcntl(csock, F_SETFL, flag | O_NONBLOCK) < 0) {
-            crm_err("fcntl() write failed");
-            close(csock);
-            return TRUE;
-        }
-    } else {
-        crm_err("fcntl() read failed");
+    rc = crm_set_nonblocking(csock);
+    if (rc < 0) {
+        crm_err("Could not set socket non-blocking: %s " CRM_XS " rc=%d",
+                pcmk_strerror(rc), rc);
         close(csock);
         return TRUE;
     }
