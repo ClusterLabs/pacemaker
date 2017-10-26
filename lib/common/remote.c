@@ -342,7 +342,7 @@ crm_remote_send(crm_remote_t * remote, xmlNode * msg)
     struct crm_remote_header_v0 *header;
 
     if (xml_text == NULL) {
-        crm_err("Invalid XML, can not send msg");
+        crm_err("Could not send remote message: no message provided");
         return -EINVAL;
     }
 
@@ -365,7 +365,8 @@ crm_remote_send(crm_remote_t * remote, xmlNode * msg)
               (int)iov[0].iov_len, *(int*)(void*)xml_text);
     rc = crm_remote_sendv(remote, iov, 2);
     if (rc < 0) {
-        crm_err("Failed to send remote msg, rc = %d", rc);
+        crm_err("Could not send remote message: %s " CRM_XS " rc=%d",
+                pcmk_strerror(rc), rc);
     }
 
     free(iov[0].iov_base);

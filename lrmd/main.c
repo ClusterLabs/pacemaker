@@ -224,7 +224,7 @@ int
 lrmd_server_send_reply(crm_client_t * client, uint32_t id, xmlNode * reply)
 {
 
-    crm_trace("sending reply to client (%s) with msg id %d", client->id, id);
+    crm_trace("Sending reply (%d) to client (%s)", id, client->id);
     switch (client->kind) {
         case CRM_CLIENT_IPC:
             return crm_ipcs_send(client, id, reply, FALSE);
@@ -233,7 +233,8 @@ lrmd_server_send_reply(crm_client_t * client, uint32_t id, xmlNode * reply)
             return lrmd_tls_send_msg(client->remote, reply, id, "reply");
 #endif
         default:
-            crm_err("Unknown lrmd client type %d", client->kind);
+            crm_err("Could not send reply: unknown client type %d",
+                    client->kind);
     }
     return -ENOTCONN;
 }
@@ -241,24 +242,24 @@ lrmd_server_send_reply(crm_client_t * client, uint32_t id, xmlNode * reply)
 int
 lrmd_server_send_notify(crm_client_t * client, xmlNode * msg)
 {
-    crm_trace("sending notify to client (%s)", client->id);
+    crm_trace("Sending notification to client (%s)", client->id);
     switch (client->kind) {
         case CRM_CLIENT_IPC:
             if (client->ipcs == NULL) {
-                crm_trace("Asked to send event to disconnected local client");
+                crm_trace("Could not notify local client: disconnected");
                 return -ENOTCONN;
             }
             return crm_ipcs_send(client, 0, msg, crm_ipc_server_event);
 #ifdef ENABLE_PCMK_REMOTE
         case CRM_CLIENT_TLS:
             if (client->remote == NULL) {
-                crm_trace("Asked to send event to disconnected remote client");
+                crm_trace("Could not notify remote client: disconnected");
                 return -ENOTCONN;
             }
             return lrmd_tls_send_msg(client->remote, msg, 0, "notify");
 #endif
         default:
-            crm_err("Unknown lrmd client type %d", client->kind);
+            crm_err("Could not notify client: unknown type %d", client->kind);
     }
     return -ENOTCONN;
 }
