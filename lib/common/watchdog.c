@@ -254,24 +254,31 @@ crm_get_sbd_timeout(void)
 gboolean
 check_sbd_timeout(const char *value)
 {
-    long sbd_timeout = crm_get_sbd_timeout();
-    long st_timeout = crm_get_msec(value);
+    long st_timeout = value? crm_get_msec(value) : 0;
 
-    if(value == NULL || st_timeout <= 0) {
-        crm_notice("Watchdog may be enabled but stonith-watchdog-timeout is disabled: %s", value);
+    if (st_timeout <= 0) {
+        crm_debug("Watchdog may be enabled but stonith-watchdog-timeout is disabled (%s)",
+                  value? value : "default");
 
-    } else if(pcmk_locate_sbd() == 0) {
-        do_crm_log_always(LOG_EMERG, "Shutting down: stonith-watchdog-timeout is configured (%ldms) but SBD is not active", st_timeout);
+    } else if (pcmk_locate_sbd() == 0) {
+        do_crm_log_always(LOG_EMERG,
+                          "Shutting down: stonith-watchdog-timeout configured (%s) but SBD not active",
+                          value);
         crm_exit(DAEMON_RESPAWN_STOP);
         return FALSE;
 
-    } else if(st_timeout < sbd_timeout) {
-        do_crm_log_always(LOG_EMERG, "Shutting down: stonith-watchdog-timeout (%ldms) is too short (must be greater than %ldms)",
-                          st_timeout, sbd_timeout);
-        crm_exit(DAEMON_RESPAWN_STOP);
-        return FALSE;
+    } else {
+        long sbd_timeout = crm_get_sbd_timeout();
+
+        if (st_timeout < sbd_timeout) {
+            do_crm_log_always(LOG_EMERG,
+                              "Shutting down: stonith-watchdog-timeout (%s) too short (must be >%ldms)",
+                              value, sbd_timeout);
+            crm_exit(DAEMON_RESPAWN_STOP);
+            return FALSE;
+        }
+        crm_info("Watchdog configured with stonith-watchdog-timeout %s and SBD timeout %ldms",
+                 value, sbd_timeout);
     }
-
-    crm_info("Watchdog functionality is consistent: %s delay exceeds timeout of %ldms", value, sbd_timeout);
     return TRUE;
 }
