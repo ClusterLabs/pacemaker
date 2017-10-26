@@ -55,6 +55,17 @@ services_action_create(const char *name, const char *action, int interval, int t
                                    action, interval, timeout, NULL, 0);
 }
 
+/*!
+ * \brief Find first service class that can provide a specified agent
+ *
+ * \param[in] agent  Name of agent to search for
+ *
+ * \return Service class if found, NULL otherwise
+ *
+ * \note The priority is LSB, then systemd, then upstart. It would be preferable
+ *       to put systemd first, but LSB merely requires a file existence check,
+ *       while systemd requires contacting D-Bus.
+ */
 const char *
 resources_find_service_class(const char *agent)
 {
