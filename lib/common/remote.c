@@ -677,7 +677,7 @@ static gboolean
 check_connect_finished(gpointer userdata)
 {
     struct tcp_async_cb_data *cb_data = userdata;
-    int rc = 0;
+    int cb_arg = 0; // socket fd on success, -errno on error
     int sock = cb_data->sock;
     int error = 0;
 
@@ -694,62 +694,62 @@ check_connect_finished(gpointer userdata)
     wset = rset;
 
     crm_trace("fd %d: checking to see if connect finished", sock);
-    rc = select(sock + 1, &rset, &wset, NULL, &ts);
+    cb_arg = select(sock + 1, &rset, &wset, NULL, &ts);
 
-    if (rc < 0) {
-        rc = -errno;
+    if (cb_arg < 0) {
+        cb_arg = -errno;
         if ((errno == EINPROGRESS) || (errno == EAGAIN)) {
             /* reschedule if there is still time left */
             if ((time(NULL) - cb_data->start) < (cb_data->timeout / 1000)) {
                 goto reschedule;
             } else {
-                rc = -ETIMEDOUT;
+                cb_arg = -ETIMEDOUT;
             }
         }
-        crm_trace("fd %d: select failed %d connect dispatch ", sock, rc);
+        crm_trace("fd %d: select failed %d connect dispatch ", sock, cb_arg);
         goto dispatch_done;
-    } else if (rc == 0) {
+    } else if (cb_arg == 0) {
         if ((time(NULL) - cb_data->start) < (cb_data->timeout / 1000)) {
             goto reschedule;
         }
         crm_debug("fd %d: timeout during select", sock);
-        rc = -ETIMEDOUT;
+        cb_arg = -ETIMEDOUT;
         goto dispatch_done;
     } else {
         crm_trace("fd %d: select returned success", sock);
-        rc = 0;
+        cb_arg = 0;
     }
 
     /* can we read or write to the socket now? */
     if (FD_ISSET(sock, &rset) || FD_ISSET(sock, &wset)) {
         if (getsockopt(sock, SOL_SOCKET, SO_ERROR, &error, &len) < 0) {
-            rc = -errno;
+            cb_arg = -errno;
             crm_trace("fd %d: call to getsockopt failed", sock);
             goto dispatch_done;
         }
         if (error) {
             crm_trace("fd %d: error returned from getsockopt: %d", sock, error);
-            rc = -error;
+            cb_arg = -error;
             goto dispatch_done;
         }
     } else {
         crm_trace("neither read nor write set after select");
-        rc = -EAGAIN;
+        cb_arg = -EAGAIN;
         goto dispatch_done;
     }
 
   dispatch_done:
-    if (!rc) {
+    if (!cb_arg) {
         crm_trace("fd %d: connected", sock);
         /* Success, set the return code to the sock to report to the callback */
-        rc = cb_data->sock;
+        cb_arg = cb_data->sock;
         cb_data->sock = 0;
     } else {
         close(sock);
     }
 
     if (cb_data->callback) {
-        cb_data->callback(cb_data->userdata, rc);
+        cb_data->callback(cb_data->userdata, cb_arg);
     }
     free(cb_data);
     return FALSE;
