@@ -531,6 +531,7 @@ main(int argc, char **argv)
                         crm_info("Got: '%s'='%s'", optarg, env);
                         params = stonith_key_value_add(params, optarg, env);
                     }
+                    free(key);
                 }
                 break;
             case 0:
