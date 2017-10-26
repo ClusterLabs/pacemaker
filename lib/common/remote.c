@@ -230,7 +230,7 @@ crm_send_tls(gnutls_session_t * session, const char *buf, size_t len)
     int total_send;
 
     if (buf == NULL) {
-        return -1;
+        return -EINVAL;
     }
 
     total_send = len;
@@ -246,6 +246,7 @@ crm_send_tls(gnutls_session_t * session, const char *buf, size_t len)
         } else if (rc < 0) {
             crm_err("Connection terminated: %s " CRM_XS " rc=%d",
                     gnutls_strerror(rc), rc);
+            rc = -ECONNABORTED;
             break;
 
         } else if (rc < len) {
@@ -271,7 +272,7 @@ crm_send_plaintext(int sock, const char *buf, size_t len)
     int total_send;
 
     if (buf == NULL) {
-        return -1;
+        return -EINVAL;
     }
     total_send = len;
 
@@ -280,6 +281,7 @@ crm_send_plaintext(int sock, const char *buf, size_t len)
   retry:
     rc = write(sock, unsent, len);
     if (rc < 0) {
+        rc = -errno;
         switch (errno) {
             case EINTR:
             case EAGAIN:
@@ -332,7 +334,7 @@ crm_remote_sendv(crm_remote_t * remote, struct iovec * iov, int iovs)
 int
 crm_remote_send(crm_remote_t * remote, xmlNode * msg)
 {
-    int rc = -1;
+    int rc = pcmk_ok;
     static uint64_t id = 0;
     char *xml_text = dump_xml_unformatted(msg);
 
@@ -341,7 +343,7 @@ crm_remote_send(crm_remote_t * remote, xmlNode * msg)
 
     if (xml_text == NULL) {
         crm_err("Invalid XML, can not send msg");
-        return -1;
+        return -EINVAL;
     }
 
     header = calloc(1, sizeof(struct crm_remote_header_v0));
