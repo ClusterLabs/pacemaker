@@ -1124,15 +1124,9 @@ nagios_get_metadata(const char *type, char **output)
     int rc = pcmk_ok;
     FILE *file_strm = NULL;
     int start = 0, length = 0, read_len = 0;
-    char *metadata_file = NULL;
-    int len = 36;
+    char *metadata_file = crm_strdup_printf("%s/%s.xml",
+                                            NAGIOS_METADATA_DIR, type);
 
-    len += strlen(NAGIOS_METADATA_DIR);
-    len += strlen(type);
-    metadata_file = calloc(1, len);
-    CRM_CHECK(metadata_file != NULL, return -ENOMEM);
-
-    sprintf(metadata_file, "%s/%s.xml", NAGIOS_METADATA_DIR, type);
     file_strm = fopen(metadata_file, "r");
     if (file_strm == NULL) {
         crm_err("Metadata file %s does not exist", metadata_file);
