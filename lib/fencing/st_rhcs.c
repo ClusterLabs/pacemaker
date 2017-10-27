@@ -163,3 +163,21 @@ stonith__agent_is_rhcs(const char *agent)
     free(buffer);
     return (rc >= 0) && S_ISREG(prop.st_mode);
 }
+
+int
+stonith__rhcs_validate(stonith_t *st, int call_options, const char *target,
+                       const char *agent, GHashTable *params, int timeout,
+                       char **output, char **error_output)
+{
+    int rc = pcmk_ok;
+    stonith_action_t *action = stonith_action_create(agent, "validate-all",
+                                                     target, 0, timeout, params,
+                                                     NULL);
+
+    rc = stonith__execute(action);
+    if (rc == pcmk_ok) {
+        stonith__action_result(action, &rc, output, error_output);
+    }
+    stonith__destroy_action(action);
+    return rc;
+}

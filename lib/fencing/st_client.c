@@ -26,6 +26,10 @@
 
 #include <crm/common/mainloop.h>
 
+#if SUPPORT_CIBSECRETS
+#  include <crm/common/cib_secrets.h>
+#endif
+
 CRM_TRACE_INIT_DATA(stonith);
 
 struct stonith_action_s {
@@ -672,8 +676,9 @@ stonith_action_create(const char *agent,
     stonith_action_t *action;
 
     action = calloc(1, sizeof(stonith_action_t));
-    crm_debug("Initiating action %s for agent %s (target=%s)", _action, agent, victim);
     action->args = make_args(agent, _action, victim, victim_nodeid, device_args, port_map);
+    crm_debug("Preparing '%s' action for %s using agent %s",
+              _action, (victim? victim : "no target"), agent);
     action->agent = strdup(agent);
     action->action = strdup(_action);
     if (victim) {
@@ -2146,6 +2151,81 @@ stonith_api_delete(stonith_t * stonith)
     }
 }
 
+static int
+stonith_api_validate(stonith_t *st, int call_options, const char *rsc_id,
+                     const char *namespace_s, const char *agent,
+                     stonith_key_value_t *params, int timeout, char **output,
+                     char **error_output)
+{
+    /* Validation should be done directly via the agent, so we can get it from
+     * stonith_admin when the cluster is not running, which is important for
+     * higher-level tools.
+     */
+
+    int rc = pcmk_ok;
+
+    /* Use a dummy node name in case the agent requires a target. We assume the
+     * actual target doesn't matter for validation purposes (if in practice,
+     * that is incorrect, we will need to allow the caller to pass the target).
+     */
+    const char *target = "node1";
+
+    GHashTable *params_table = crm_str_table_new();
+
+    // Convert parameter list to a hash table
+    for (; params; params = params->next) {
+
+        // Strip out Pacemaker-implemented parameters
+        if (!crm_starts_with(params->key, "pcmk_")
+                && strcmp(params->key, "provides")
+                && strcmp(params->key, "stonith-timeout")) {
+            g_hash_table_insert(params_table, strdup(params->key),
+                                strdup(params->value));
+        }
+    }
+
+#if SUPPORT_CIBSECRETS
+    rc = replace_secret_params(rsc_id, params_table);
+    if (rc < 0) {
+        crm_warn("Could not replace secret parameters for validation of %s: %s",
+                 agent, pcmk_strerror(rc));
+    }
+#endif
+
+    if (output) {
+        *output = NULL;
+    }
+    if (error_output) {
+        *error_output = NULL;
+    }
+
+    switch (stonith_get_namespace(agent, namespace_s)) {
+        case st_namespace_rhcs:
+            rc = stonith__rhcs_validate(st, call_options, target, agent,
+                                        params_table, timeout, output,
+                                        error_output);
+            break;
+
+#if HAVE_STONITH_STONITH_H
+        case st_namespace_lha:
+            rc = stonith__lha_validate(st, call_options, target, agent,
+                                       params_table, timeout, output,
+                                       error_output);
+            break;
+#endif
+
+        default:
+            rc = -EINVAL;
+            errno = EINVAL;
+            crm_perror(LOG_ERR,
+                       "Agent %s not found or does not support validation",
+                       agent);
+            break;
+    }
+    g_hash_table_destroy(params_table);
+    return rc;
+}
+
 stonith_t *
 stonith_api_new(void)
 {
@@ -2193,6 +2273,8 @@ stonith_api_new(void)
     new_stonith->cmds->register_callback     = stonith_api_add_callback;
     new_stonith->cmds->remove_notification   = stonith_api_del_notification;
     new_stonith->cmds->register_notification = stonith_api_add_notification;
+
+    new_stonith->cmds->validate              = stonith_api_validate;
 /* *INDENT-ON* */
 
     return new_stonith;

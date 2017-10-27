@@ -127,11 +127,17 @@ xmlNode *create_device_registration_xml(const char *id,
 int stonith__list_lha_agents(stonith_key_value_t **devices);
 int stonith__lha_metadata(const char *agent, int timeout, char **output);
 bool stonith__agent_is_lha(const char *agent);
+int stonith__lha_validate(stonith_t *st, int call_options, const char *target,
+                          const char *agent, GHashTable *params,
+                          int timeout, char **output, char **error_output);
 #  endif
 
 // utilities from st_rhcs.c
 int stonith__list_rhcs_agents(stonith_key_value_t **devices);
 int stonith__rhcs_metadata(const char *agent, int timeout, char **output);
 bool stonith__agent_is_rhcs(const char *agent);
+int stonith__rhcs_validate(stonith_t *st, int call_options, const char *target,
+                           const char *agent, GHashTable *params,
+                           int timeout, char **output, char **error_output);
 
 #endif

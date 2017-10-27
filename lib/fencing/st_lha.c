@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
+#include <errno.h>
 #include <glib.h>
 
 #include <crm/crm.h>
@@ -242,4 +243,14 @@ const char *
 i_hate_pils(int rc)
 {
     return PIL_strerror(rc);
+}
+
+int
+stonith__lha_validate(stonith_t *st, int call_options, const char *target,
+                      const char *agent, GHashTable *params, int timeout,
+                      char **output, char **error_output)
+{
+    errno = EOPNOTSUPP;
+    crm_perror(LOG_ERR, "Cannot validate Linux-HA fence agents");
+    return -EOPNOTSUPP;
 }
