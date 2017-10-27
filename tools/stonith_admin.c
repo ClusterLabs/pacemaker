@@ -51,7 +51,7 @@ static struct crm_option long_options[] = {
 
     {   "register", required_argument, NULL, 'R',
         "Register the named stonith device. Requires: --agent.\n"
-        "\t\t\tOptional: any number of --option and/or --env entries."
+        "\t\t\tOptional: --option, --env-option."
     },
     {   "deregister", required_argument, NULL, 'D',
         "De-register the named stonith device."
@@ -89,6 +89,11 @@ static struct crm_option long_options[] = {
     {   "query", required_argument, NULL, 'Q',
         "Check the named device's status. Optional: --timeout."
     },
+    {   "validate", no_argument, NULL, 'K',
+        "\tValidate a fence device configuration.\n"
+        "\t\t\tRequires: --agent. Optional: --option, --env-option,\n"
+        "\t\t\t--quiet (print no output, only return status).\n"
+    },
 
     {   "-spacer-", no_argument, NULL, '-', "\nFencing Commands:" },
 
@@ -119,17 +124,19 @@ static struct crm_option long_options[] = {
 
     {   "agent", required_argument, NULL, 'a',
         "The agent to use (for example, fence_xvm;\n"
-        "\t\t\twith --register, --metadata)."
+        "\t\t\twith --register, --metadata, --validate)."
     },
     {   "option", required_argument, NULL, 'o',
         "Specify a device configuration parameter as NAME=VALUE\n"
-        "\t\t\t(with --register)."
+        "\t\t\t(may be specified multiple times; with --register,\n"
+        "\t\t\t--validate)."
     },
     {   "env-option", required_argument, NULL, 'e',
         "Specify a device configuration parameter with the\n"
         "\t\t\tspecified name, using the value of the\n"
         "\t\t\tenvironment variable of the same name prefixed with\n"
-        "\t\t\tOCF_RESKEY_ (with --register)."
+        "\t\t\tOCF_RESKEY_ (may be specified multiple times;\n"
+        "\t\t\twith --register, --validate)."
     },
     {   "tag", required_argument, NULL, 'T',
         "Identify fencing operations in logs with the specified\n"
@@ -137,8 +144,12 @@ static struct crm_option long_options[] = {
         "\t\t\tstonith_admin (used with most commands)."
     },
     {   "device", required_argument, NULL, 'v',
-        "A device to associate with a given host and\n"
-        "\t\t\tstonith level (with --register-level)."
+        "Device ID (with --register-level, device to associate with\n"
+        "\t\t\ta given host and level; may be specified multiple times)"
+#if SUPPORT_CIBSECRETS
+        "\n\t\t\t(with --validate, name to use to load CIB secrets)"
+#endif
+        "."
     },
     {   "index", required_argument, NULL, 'i',
         "The stonith level (1-9) (with --register-level,\n"
@@ -387,6 +398,32 @@ show_history(stonith_t *st, const char *target, int timeout, int quiet,
     return rc;
 }
 
+static int
+validate(stonith_t *st, const char *agent, const char *id,
+         stonith_key_value_t *params, int timeout, int quiet)
+{
+    int rc = 1;
+    char *output = NULL;
+    char *error_output = NULL;
+
+    // @TODO allow rsc_id for CIB secrets
+    rc = st->cmds->validate(st, st_opt_sync_call, id, NULL, agent, params,
+                            timeout, &output, &error_output);
+
+    if (!quiet) {
+        printf("Validation of %s %s\n", agent, (rc? "failed" : "succeeded"));
+        if (output && *output) {
+            puts(output);
+            free(output);
+        }
+        if (error_output && *error_output) {
+            puts(error_output);
+            free(error_output);
+        }
+    }
+    return rc;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -438,6 +475,7 @@ main(int argc, char **argv)
                 crm_help(flag, CRM_EX_OK);
                 break;
             case 'I':
+            case 'K':
                 no_connect = 1;
                 /* fall through */
             case 'L':
@@ -679,6 +717,15 @@ main(int argc, char **argv)
             break;
         case 'H':
             rc = show_history(st, target, timeout, quiet, verbose);
+            break;
+        case 'K':
+            if (agent == NULL) {
+                printf("Please specify an agent to validate with --agent\n");
+                exit_code = CRM_EX_USAGE;
+                goto done;
+            }
+            device = (devices? devices->key : NULL);
+            rc = validate(st, agent, device, params, timeout, quiet);
             break;
     }
 
