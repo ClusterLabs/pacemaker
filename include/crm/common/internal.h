@@ -42,6 +42,7 @@ void crm_sync_directory(const char *name);
 
 char *crm_read_contents(const char *filename);
 int crm_write_sync(int fd, const char *contents);
+int crm_set_nonblocking(int fd);
 
 
 /* internal procfs utilities (from procfs.c) */
