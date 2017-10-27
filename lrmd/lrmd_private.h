@@ -61,7 +61,7 @@ typedef struct lrmd_rsc_s {
 
 #  ifdef HAVE_GNUTLS_GNUTLS_H
 /* in remote_tls.c */
-int lrmd_init_remote_tls_server(int port);
+int lrmd_init_remote_tls_server(void);
 void lrmd_tls_server_destroy(void);
 
 /* Hidden in lrmd client lib */

@@ -17,7 +17,6 @@
 #include <errno.h>
 #include <unistd.h>
 #include <dirent.h>
-#include <fcntl.h>
 #include <string.h>
 #include <sys/time.h>
 #include <sys/resource.h>
@@ -35,20 +34,6 @@
 #if SUPPORT_CIBSECRETS
 #  include "crm/common/cib_secrets.h"
 #endif
-
-static inline void
-set_fd_opts(int fd, int opts)
-{
-    int flag;
-
-    if ((flag = fcntl(fd, F_GETFL)) >= 0) {
-        if (fcntl(fd, F_SETFL, flag | opts) < 0) {
-            crm_err("fcntl() write failed");
-        }
-    } else {
-        crm_err("fcntl() read failed");
-    }
-}
 
 static gboolean
 svc_read_output(int fd, svc_action_t * op, bool is_stderr)
@@ -626,6 +611,7 @@ services_os_action_execute(svc_action_t * op)
 {
     int stdout_fd[2];
     int stderr_fd[2];
+    int rc;
     struct stat st;
     sigset_t *pmask;
 
@@ -654,7 +640,7 @@ services_os_action_execute(svc_action_t * op)
 
     /* Fail fast */
     if(stat(op->opaque->exec, &st) != 0) {
-        int rc = errno;
+        rc = errno;
         crm_warn("Cannot execute '%s': %s (%d)", op->opaque->exec, pcmk_strerror(rc), rc);
         services_handle_exec_error(op, rc);
         if (!op->synchronous) {
@@ -664,7 +650,7 @@ services_os_action_execute(svc_action_t * op)
     }
 
     if (pipe(stdout_fd) < 0) {
-        int rc = errno;
+        rc = errno;
 
         crm_err("pipe(stdout_fd) failed. '%s': %s (%d)", op->opaque->exec, pcmk_strerror(rc), rc);
 
@@ -676,7 +662,7 @@ services_os_action_execute(svc_action_t * op)
     }
 
     if (pipe(stderr_fd) < 0) {
-        int rc = errno;
+        rc = errno;
 
         close(stdout_fd[0]);
         close(stdout_fd[1]);
@@ -706,8 +692,16 @@ services_os_action_execute(svc_action_t * op)
             crm_perror(LOG_ERR, "pipe() failed");
         }
 
-        set_fd_opts(sigchld_pipe[0], O_NONBLOCK);
-        set_fd_opts(sigchld_pipe[1], O_NONBLOCK);
+        rc = crm_set_nonblocking(sigchld_pipe[0]);
+        if (rc < 0) {
+            crm_warn("Could not set pipe input non-blocking: %s " CRM_XS " rc=%d",
+                     pcmk_strerror(rc), rc);
+        }
+        rc = crm_set_nonblocking(sigchld_pipe[1]);
+        if (rc < 0) {
+            crm_warn("Could not set pipe output non-blocking: %s " CRM_XS " rc=%d",
+                     pcmk_strerror(rc), rc);
+        }
 
         sa.sa_handler = sigchld_handler;
         sa.sa_flags = 0;
@@ -723,23 +717,22 @@ services_os_action_execute(svc_action_t * op)
     op->pid = fork();
     switch (op->pid) {
         case -1:
-            {
-                int rc = errno;
+            rc = errno;
 
-                close(stdout_fd[0]);
-                close(stdout_fd[1]);
-                close(stderr_fd[0]);
-                close(stderr_fd[1]);
+            close(stdout_fd[0]);
+            close(stdout_fd[1]);
+            close(stderr_fd[0]);
+            close(stderr_fd[1]);
 
-                crm_err("Could not execute '%s': %s (%d)", op->opaque->exec, pcmk_strerror(rc), rc);
-                services_handle_exec_error(op, rc);
-                if (!op->synchronous) {
-                    return operation_finalize(op);
-                }
-
-                sigchld_cleanup();
-                return FALSE;
+            crm_err("Could not execute '%s': %s (%d)", op->opaque->exec, pcmk_strerror(rc), rc);
+            services_handle_exec_error(op, rc);
+            if (!op->synchronous) {
+                return operation_finalize(op);
             }
+
+            sigchld_cleanup();
+            return FALSE;
+
         case 0:                /* Child */
             close(stdout_fd[0]);
             close(stderr_fd[0]);
@@ -769,10 +762,20 @@ services_os_action_execute(svc_action_t * op)
     close(stderr_fd[1]);
 
     op->opaque->stdout_fd = stdout_fd[0];
-    set_fd_opts(op->opaque->stdout_fd, O_NONBLOCK);
+    rc = crm_set_nonblocking(op->opaque->stdout_fd);
+    if (rc < 0) {
+        crm_warn("Could not set child output non-blocking: %s "
+                 CRM_XS " rc=%d",
+                 pcmk_strerror(rc), rc);
+    }
 
     op->opaque->stderr_fd = stderr_fd[0];
-    set_fd_opts(op->opaque->stderr_fd, O_NONBLOCK);
+    rc = crm_set_nonblocking(op->opaque->stderr_fd);
+    if (rc < 0) {
+        crm_warn("Could not set child error output non-blocking: %s "
+                 CRM_XS " rc=%d",
+                 pcmk_strerror(rc), rc);
+    }
 
     if (op->synchronous) {
         action_synced_wait(op, pmask);

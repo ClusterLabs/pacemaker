@@ -42,6 +42,7 @@ typedef struct remote_ra_cmd_s {
     char *action;
     /*! some string the client wants us to give it back */
     char *userdata;
+    char *exit_reason;          // descriptive text on error
     /*! start delay in ms */
     int start_delay;
     /*! timer id used for start delay. */
@@ -114,6 +115,7 @@ free_cmd(gpointer user_data)
     free(cmd->rsc_id);
     free(cmd->action);
     free(cmd->userdata);
+    free(cmd->exit_reason);
     lrmd_key_value_freeall(cmd->params);
     free(cmd);
 }
@@ -352,6 +354,7 @@ report_remote_ra_result(remote_ra_cmd_t * cmd)
     op.rsc_id = cmd->rsc_id;
     op.op_type = cmd->action;
     op.user_data = cmd->userdata;
+    op.exit_reason = cmd->exit_reason;
     op.timeout = cmd->timeout;
     op.interval = cmd->interval;
     op.rc = cmd->rc;
@@ -590,17 +593,24 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
 
         if (op->connection_rc < 0) {
             update_remaining_timeout(cmd);
-            /* There isn't much of a reason to reschedule if the timeout is too small */
-            if (cmd->remaining_timeout > 3000) {
+
+            if (op->connection_rc == -ENOKEY) {
+                // Hard error, don't retry
+                cmd->op_status = PCMK_LRM_OP_ERROR;
+                cmd->rc = PCMK_OCF_INVALID_PARAM;
+                cmd->exit_reason = strdup("Authentication key not readable");
+
+            } else if (cmd->remaining_timeout > 3000) {
                 crm_trace("rescheduling start, remaining timeout %d", cmd->remaining_timeout);
                 g_timeout_add(1000, retry_start_cmd_cb, lrm_state);
                 return;
+
             } else {
                 crm_trace("can't reschedule start, remaining timeout too small %d",
                           cmd->remaining_timeout);
+                cmd->op_status = PCMK_LRM_OP_TIMEOUT;
+                cmd->rc = PCMK_OCF_UNKNOWN_ERROR;
             }
-            cmd->op_status = PCMK_LRM_OP_TIMEOUT;
-            cmd->rc = PCMK_OCF_UNKNOWN_ERROR;
 
         } else {
             lrm_state_reset_tables(lrm_state, TRUE);

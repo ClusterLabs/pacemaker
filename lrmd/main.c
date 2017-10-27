@@ -618,15 +618,11 @@ main(int argc, char **argv, char **envp)
     }
 
 #ifdef ENABLE_PCMK_REMOTE
-    {
-        int remote_port = crm_default_remote_port();
-
-        if (lrmd_init_remote_tls_server(remote_port) < 0) {
-            crm_err("Failed to create TLS server on port %d: shutting down and inhibiting respawn", remote_port);
-            crm_exit(DAEMON_RESPAWN_STOP);
-        }
-        ipc_proxy_init();
+    if (lrmd_init_remote_tls_server() < 0) {
+        crm_err("Failed to create TLS listener: shutting down and staying down");
+        crm_exit(DAEMON_RESPAWN_STOP);
     }
+    ipc_proxy_init();
 #endif
 
     mainloop_add_signal(SIGTERM, lrmd_shutdown);
