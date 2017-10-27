@@ -556,16 +556,10 @@ main(int argc, char **argv)
         crm_help('?', EX_USAGE);
     }
 
-    crm_debug("Create");
     st = stonith_api_new();
-    crm_debug("Created");
 
     if (!no_connect) {
-        crm_debug("Connecting as %s", async_fence_data.name);
         rc = st->cmds->connect(st, async_fence_data.name, NULL);
-
-        crm_debug("Connect: %d", rc);
-
         if (rc < 0) {
             goto done;
         }
@@ -697,15 +691,9 @@ main(int argc, char **argv)
   done:
     free(async_fence_data.name);
     crm_info("Command returned: %s (%d)", pcmk_strerror(rc), rc);
-    if (rc < 0) {
-        printf("Command failed: %s\n", pcmk_strerror(rc));
-    }
 
     stonith_key_value_freeall(params, 1, 1);
     st->cmds->disconnect(st);
-    crm_debug("Disconnect: %d", rc);
-
-    crm_debug("Destroy");
     stonith_api_delete(st);
 
     return rc;
