@@ -914,15 +914,17 @@ internal_stonith_action_execute(stonith_action_t * action)
 
     /* parent */
     action->pid = pid;
-    ret = fcntl(p_read_fd, F_SETFL, fcntl(p_read_fd, F_GETFL, 0) | O_NONBLOCK);
+    ret = crm_set_nonblocking(p_read_fd);
     if (ret < 0) {
-        crm_perror(LOG_NOTICE, "Could not change the output of %s to be non-blocking",
-                   action->agent);
+        crm_notice("Could not set output of %s to be non-blocking: %s "
+                   CRM_XS " rc=%d",
+                   action->agent, pcmk_strerror(rc), rc);
     }
-    ret = fcntl(p_stderr_fd, F_SETFL, fcntl(p_stderr_fd, F_GETFL, 0) | O_NONBLOCK);
+    ret = crm_set_nonblocking(p_stderr_fd);
     if (ret < 0) {
-        crm_perror(LOG_NOTICE, "Could not change the stderr of %s to be non-blocking",
-                   action->agent);
+        crm_notice("Could not set error output of %s to be non-blocking: %s "
+                   CRM_XS " rc=%d",
+                   action->agent, pcmk_strerror(rc), rc);
     }
 
     do {
