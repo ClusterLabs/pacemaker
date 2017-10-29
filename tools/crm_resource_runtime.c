@@ -672,6 +672,7 @@ cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
      * single operation, we might wind up with a wrong idea of the current
      * resource state, and we might not re-probe the resource.
      */
+    crmd_replies_needed++;
     rc = send_lrm_rsc_op(crmd_channel, CRM_OP_LRM_DELETE, host_uname, rsc->id,
                          TRUE, data_set);
     if (rc != pcmk_ok) {
@@ -680,16 +681,15 @@ cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
         return rc;
     }
 
-    if (node->details->remote_rsc == NULL) {
-        crmd_replies_needed++;
-    }
-
     crm_trace("Processing %d mainloop inputs", crmd_replies_needed);
     while(g_main_context_iteration(NULL, FALSE)) {
         crm_trace("Processed mainloop input, %d still remaining",
                   crmd_replies_needed);
     }
-    crmd_replies_needed = 0;
+
+    if(crmd_replies_needed < 0) {
+        crmd_replies_needed = 0;
+    }
 
     rsc_name = rsc_fail_name(rsc);
     if (is_remote_node(node)) {

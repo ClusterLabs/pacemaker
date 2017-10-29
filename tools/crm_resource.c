@@ -1034,11 +1034,19 @@ main(int argc, char **argv)
             const char *task_interval = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
             const char *resource_name = crm_element_value(xml_op, XML_LRM_ATTR_RSCID);
             resource_t *rsc = NULL;
+
             if(resource_name == NULL) {
+                continue;
+            } else if(host_uname && safe_str_neq(host_uname, node)) {
+                continue;
+            } else if(rsc_id && safe_str_neq(rsc_id, resource_name)) {
+                continue;
+            } else if(operation && safe_str_neq(operation, task)) {
+                continue;
+            } else if(interval && safe_str_neq(interval, task_interval)) {
                 continue;
             }
 
-            /* TODO: Filter by node, resource and operation if supplied */
             rsc = pe_find_resource_with_flags(
                 data_set.resources, resource_name, pe_find_renamed | pe_find_current | pe_find_anon);
             if(rsc) {
@@ -1049,6 +1057,9 @@ main(int argc, char **argv)
             } else {
                 rc = -ENODEV;
             }
+        }
+        if (rc == pcmk_ok) {
+            start_mainloop();
         }
 
     } else if ((rsc_cmd == 'C') && (rsc_id)) {
