@@ -1447,7 +1447,8 @@ wait_till_stable(int timeout_ms, cib_t * cib)
 }
 
 int
-cli_resource_execute(const char *rsc_id, const char *rsc_action, GHashTable *override_hash, cib_t * cib, pe_working_set_t *data_set)
+cli_resource_execute(const char *rsc_id, const char *rsc_action, GHashTable *override_hash,
+                     int timeout_ms, cib_t * cib, pe_working_set_t *data_set)
 {
     int rc = pcmk_ok;
     svc_action_t *op = NULL;
@@ -1457,10 +1458,6 @@ cli_resource_execute(const char *rsc_id, const char *rsc_action, GHashTable *ove
     const char *action = NULL;
     GHashTable *params = NULL;
     resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
-
-    xmlNode *child = NULL;
-    const char *timeout = NULL;
-    long timeout_ms = 0;
 
     if (rsc == NULL) {
         CMD_ERR("Must supply a resource id with -r");
@@ -1513,42 +1510,22 @@ cli_resource_execute(const char *rsc_id, const char *rsc_action, GHashTable *ove
     params = generate_resource_params(rsc, data_set);
 
     /* add meta_timeout env needed by some resource agents */
-    child = first_named_child(rsc->xml, "operations");
-    for (child = first_named_child(child, XML_ATTR_OP);
-         child != NULL; child = crm_next_same_xml(child)) {
-        if (safe_str_eq(action, crm_element_value(child, XML_NVPAIR_ATTR_NAME))) {
-            timeout = crm_element_value(child, XML_ATTR_TIMEOUT);
-            break;
-        }
-    }
-    if (timeout == NULL && data_set->op_defaults) {
-        GHashTable *action_meta = crm_str_table_new();
-        unpack_instance_attributes(data_set->input, data_set->op_defaults, XML_TAG_META_SETS,
-                                   NULL, action_meta, NULL, FALSE, data_set->now);
-        timeout = g_hash_table_lookup(action_meta, XML_ATTR_TIMEOUT);
-    }
-    if (timeout == NULL && data_set->config_hash) {
-        timeout = pe_pref(data_set->config_hash, "default-action-timeout");
-    }
-    if (timeout == NULL) {
-        timeout = CRM_DEFAULT_OP_TIMEOUT_S;
-    }
-    timeout_ms = crm_get_msec(timeout);
-    if (timeout_ms < 0) {
-        timeout_ms = 0;
+    if (timeout_ms == 0) {
+        timeout_ms = pe_get_configured_timeout(rsc, action, data_set);
     }
     g_hash_table_insert(params, strdup("CRM_meta_timeout"),
-                        crm_strdup_printf("%ld", timeout_ms));
+                        crm_strdup_printf("%d", timeout_ms));
 
     /* add crm_feature_set env needed by some resource agents */
     g_hash_table_insert(params, strdup(XML_ATTR_CRM_VERSION), strdup(CRM_FEATURE_SET));
 
-    op = resources_action_create(rsc->id, rclass, rprov, rtype, action, 0, -1, params, 0);
+    op = resources_action_create(rsc->id, rclass, rprov, rtype, action, 0,
+                                 timeout_ms, params, 0);
     if (op == NULL) {
         /* Re-run with stderr enabled so we can display a sane error message */
         crm_enable_stderr(TRUE);
         op = resources_action_create(rsc->id, rclass, rprov, rtype, action, 0,
-                                     -1, params, 0);
+                                     timeout_ms, params, 0);
 
         /* We know op will be NULL, but this makes static analysis happy */
         services_action_free(op);

@@ -841,6 +841,44 @@ unpack_timeout(const char *value, action_t *action, xmlNode *xml_obj,
     return timeout;
 }
 
+int
+pe_get_configured_timeout(resource_t *rsc, const char *action, pe_working_set_t *data_set)
+{
+    xmlNode *child = NULL;
+    const char *timeout = NULL;
+    int timeout_ms = 0;
+
+    for (child = first_named_child(rsc->ops_xml, XML_ATTR_OP);
+         child != NULL; child = crm_next_same_xml(child)) {
+        if (safe_str_eq(action, crm_element_value(child, XML_NVPAIR_ATTR_NAME))) {
+            timeout = crm_element_value(child, XML_ATTR_TIMEOUT);
+            break;
+        }
+    }
+
+    if (timeout == NULL && data_set->op_defaults) {
+        GHashTable *action_meta = crm_str_table_new();
+        unpack_instance_attributes(data_set->input, data_set->op_defaults, XML_TAG_META_SETS,
+                                   NULL, action_meta, NULL, FALSE, data_set->now);
+        timeout = g_hash_table_lookup(action_meta, XML_ATTR_TIMEOUT);
+    }
+
+    if (timeout == NULL && data_set->config_hash) {
+        timeout = pe_pref(data_set->config_hash, "default-action-timeout");
+    }
+
+    if (timeout == NULL) {
+        timeout = CRM_DEFAULT_OP_TIMEOUT_S;
+    }
+
+    timeout_ms = crm_get_msec(timeout);
+    if (timeout_ms < 0) {
+        timeout_ms = 0;
+    }
+
+    return timeout_ms;
+}
+
 #if ENABLE_VERSIONED_ATTRS
 static void
 unpack_versioned_meta(xmlNode *versioned_meta, xmlNode *xml_obj, unsigned long long interval, crm_time_t *now)
