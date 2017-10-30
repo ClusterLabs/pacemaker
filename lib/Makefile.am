@@ -39,5 +39,5 @@ clean-local:
 	rm -f *.pc
 
 ## Subdirectories...
-SUBDIRS	= gnu common pengine transition cib fencing services lrmd cluster
+SUBDIRS	= gnu common pengine cib fencing services lrmd cluster transition
 DIST_SUBDIRS =  $(SUBDIRS)
