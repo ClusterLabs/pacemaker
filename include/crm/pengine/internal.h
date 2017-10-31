@@ -217,6 +217,9 @@ extern action_t *custom_action(resource_t * rsc, char *key, const char *task, no
 		rsc, demoted_key(rsc), CRMD_ACTION_DEMOTED, node,	\
 		optional, TRUE, data_set)
 
+extern int pe_get_configured_timeout(resource_t *rsc, const char *action,
+                                     pe_working_set_t *data_set);
+
 extern action_t *find_first_action(GListPtr input, const char *uuid, const char *task,
                                    node_t * on_node);
 extern enum action_tasks get_complex_task(resource_t * rsc, const char *name,

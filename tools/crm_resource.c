@@ -356,7 +356,7 @@ static struct crm_option long_options[] = {
     },
     {
         "timeout", required_argument, NULL, 'T',
-        "\t(Advanced) Abort if command does not finish in this time (with --restart, --wait)"
+        "\t(Advanced) Abort if command does not finish in this time (with --restart, --wait, --force-*)"
     },
     {
         "force", no_argument, NULL, 'f',
@@ -871,7 +871,8 @@ main(int argc, char **argv)
         rc = wait_till_stable(timeout_ms, cib_conn);
 
     } else if (rsc_cmd == 0 && rsc_long_cmd) { /* validate or force-(stop|start|check) */
-        rc = cli_resource_execute(rsc_id, rsc_long_cmd, override_params, cib_conn, &data_set);
+        rc = cli_resource_execute(rsc_id, rsc_long_cmd, override_params,
+                                  timeout_ms, cib_conn, &data_set);
         if (rc >= 0) {
             is_ocf_rc = 1;
         }
