@@ -45,55 +45,132 @@
 
 /* *INDENT-OFF* */
 static struct crm_option long_options[] = {
-    {"help",        0, 0, '?', "\tThis text"},
-    {"version",     0, 0, '$', "\tVersion information"  },
-    {"verbose",     0, 0, 'V', "\tIncrease debug output"},
-    {"quiet",       0, 0, 'q', "\tPrint only essential output"},
+    {   "help", no_argument, NULL, '?',
+        "\tDisplay this text and exit."
+    },
+    {   "version", no_argument, NULL, '$',
+        "\tDisplay version information and exit."
+    },
+    {   "verbose", no_argument, NULL, 'V',
+        "\tIncrease debug output (may be specified multiple times)."
+    },
+    {   "quiet", no_argument, NULL, 'q',
+        "\tBe less descriptive in output."
+    },
 
-    {"-spacer-",    0, 0, '-', "Commands:"},
-    {"list",            1, 0, 'l', "List devices that can terminate the specified host"},
-    {"list-registered", 0, 0, 'L', "List all registered devices"},
-    {"list-installed",  0, 0, 'I', "List all installed devices"},
-    {"list-targets",  1, 0, 's', "List the device's target"},
+    {   "-spacer-", no_argument, NULL, '-', "\nDevice definition commands:" },
 
-    {"-spacer-",    0, 0, '-', ""},
-    {"metadata",    0, 0, 'M', "Check the device's metadata"},
-    {"query",       1, 0, 'Q', "Check the device's status"},
-    {"fence",       1, 0, 'F', "Fence the named host"},
-    {"unfence",     1, 0, 'U', "Unfence the named host"},
-    {"reboot",      1, 0, 'B', "Reboot the named host"},
-    {"confirm",     1, 0, 'C', "Confirm the named host is now safely down"},
-    {"history",     1, 0, 'H', "Retrieve last fencing operation for specified node (or '*' for all)"},
-    {"last",        1, 0, 'h', "Indicate when the named node was last fenced. Optional: --as-node-id"},
+    {   "register", required_argument, NULL, 'R',
+        "Register the named stonith device. Requires: --agent.\n"
+        "\t\t\tOptional: any number of --option and/or --env entries."
+    },
+    {   "deregister", required_argument, NULL, 'D',
+        "De-register the named stonith device."
+    },
+    {   "register-level", required_argument, NULL, 'r',
+        "Register a stonith level for the named target,\n"
+        "\t\t\tspecified as one of NAME, @PATTERN, or ATTR=VALUE.\n"
+        "\t\t\tRequires: --index and one or more --device entries."
+    },
+    {   "deregister-level", required_argument, NULL, 'd',
+        "Unregister a stonith level for the named target,\n"
+        "\t\t\tspecified as for --register-level. Requires: --index."
+    },
 
-    {"-spacer-",    0, 0, '-', ""},
-    {"register",    1, 0, 'R', "Register the named stonith device. Requires: --agent, optional: --option"},
-    {"deregister",  1, 0, 'D', "De-register the named stonith device"},
+    {   "-spacer-", no_argument, NULL, '-', "\nQueries:" },
 
-    {"register-level",    1, 0, 'r',
-     "Register a stonith level for the named target, specified as one of:\n\t"
-     "NAME, @PATTERN, or ATTR=VALUE. Requires: --index, one or more --device entries"},
-    {"deregister-level",  1, 0, 'd', "De-register a stonith level for the named target\n\t"
-     "Target is specified as for --register-level. Requires: --index"},
+    {   "list", required_argument, NULL, 'l',
+        "List devices that can terminate the specified host.\n"
+        "\t\t\tOptional: --timeout."
+    },
+    {   "list-registered", no_argument, NULL, 'L',
+        "List all registered devices. Optional: --timeout."
+    },
+    {   "list-installed", no_argument, NULL, 'I',
+        "List all installed devices. Optional: --timeout."
+    },
+    {   "list-targets", required_argument, NULL, 's',
+        "List the targets that can be fenced by the\n"
+        "\t\t\tnamed device. Optional: --timeout."
+    },
+    {   "metadata", no_argument, NULL, 'M',
+        "\tShow agent metadata. Requires: --agent.\n"
+        "\t\t\tOptional: --timeout."
+    },
+    {   "query", required_argument, NULL, 'Q',
+        "Check the named device's status. Optional: --timeout."
+    },
 
-    {"-spacer-",    0, 0, '-', ""},
-    {"-spacer-",    0, 0, '-', "Options and modifiers:"},
-    {"agent",       1, 0, 'a', "The agent (eg. fence_xvm) to instantiate when calling with --register"},
-    {"env-option",  1, 0, 'e'},
-    {"option",      1, 0, 'o'},
-    {"tag",         1, 0, 'T', "Identify fencing operations with the specified tag.\n\t"
-     "Useful when there are multiple entities that might be invoking stonith_admin(8)"},
+    {   "-spacer-", no_argument, NULL, '-', "\nFencing Commands:" },
 
-    {"device",      1, 0, 'v', "A device to associate with a given host and stonith level"},
-    {"index",       1, 0, 'i', "The stonith level (1-9)"},
+    {   "fence", required_argument, NULL, 'F',
+        "Fence named host. Optional: --timeout, --tolerance."
+    },
+    {   "unfence", required_argument, NULL, 'U',
+        "Unfence named host. Optional: --timeout, --tolerance."
+    },
+    {   "reboot", required_argument, NULL, 'B',
+        "Reboot named host. Optional: --timeout, --tolerance."
+    },
+    {   "confirm", required_argument, NULL, 'C',
+        "Tell cluster that named host is now safely down."
+    },
+    {   "history", required_argument, NULL, 'H',
+        "Show last successful fencing operation for named node\n"
+        "\t\t\t(or '*' for all nodes). Optional: --timeout, --quiet\n"
+        "\t\t\t(show only the operation's epoch timestamp),\n"
+        "\t\t\t--verbose (show all recorded and pending operations)."
+    },
+    {   "last", required_argument, NULL, 'h',
+        "Indicate when the named node was last fenced.\n"
+        "\t\t\tOptional: --as-node-id."
+    },
 
-    {"timeout",     1, 0, 't', "Operation timeout in seconds"},
-    {"as-node-id",  0, 0, 'n', "(Advanced) The supplied node is the corosync nodeid (Only for use with --last)" },
-    {"tolerance",   1, 0,   0, "(Advanced) Do nothing if an equivalent --fence request succeeded less than N seconds earlier" },
+    {   "-spacer-", no_argument, NULL, '-', "\nAdditional Options:" },
 
-    {"list-all",    0, 0, 'L', "legacy alias for --list-registered"},
+    {   "agent", required_argument, NULL, 'a',
+        "The agent to use (for example, fence_xvm;\n"
+        "\t\t\twith --register, --metadata)."
+    },
+    {   "option", required_argument, NULL, 'o',
+        "Specify a device configuration parameter as NAME=VALUE\n"
+        "\t\t\t(with --register)."
+    },
+    {   "env-option", required_argument, NULL, 'e',
+        "Specify a device configuration parameter with the\n"
+        "\t\t\tspecified name, using the value of the\n"
+        "\t\t\tenvironment variable of the same name prefixed with\n"
+        "\t\t\tOCF_RESKEY_ (with --register)."
+    },
+    {   "tag", required_argument, NULL, 'T',
+        "Identify fencing operations in logs with the specified\n"
+        "\t\t\ttag; useful when multiple entities might invoke\n"
+        "\t\t\tstonith_admin (used with most commands)."
+    },
+    {   "device", required_argument, NULL, 'v',
+        "A device to associate with a given host and\n"
+        "\t\t\tstonith level (with --register-level)."
+    },
+    {   "index", required_argument, NULL, 'i',
+        "The stonith level (1-9) (with --register-level,\n"
+        "\t\t\t--deregister-level)."
+    },
+    {   "timeout", required_argument, NULL, 't',
+        "Operation timeout in seconds (default 120;\n"
+        "\t\t\tused with most commands)."
+    },
+    {   "as-node-id", no_argument, NULL, 'n',
+        "(Advanced) The supplied node is the corosync node ID\n"
+        "\t\t\t(with --last)."
+    },
+    {   "tolerance", required_argument, NULL,   0,
+        "(Advanced) Do nothing if an equivalent --fence request\n"
+        "\t\t\tsucceeded less than this many seconds earlier\n"
+        "\t\t\t(with --fence, --unfence, --reboot)."
+    },
 
-    {0, 0, 0, 0}
+    {   "list-all", no_argument, NULL, 'L', NULL, pcmk_option_hidden },
+    { 0, 0, 0, 0 }
 };
 /* *INDENT-ON* */
 
@@ -240,6 +317,33 @@ handle_level(stonith_t *st, char *target, int fence_level,
                                        name, value, fence_level);
 }
 
+static char *
+fence_action_str(const char *action)
+{
+    char *str = NULL;
+
+    if (action == NULL) {
+        str = strdup("unknown");
+    } else if (action[0] == 'o') { // on, off
+        str = crm_concat("turn", action, ' ');
+    } else {
+        str = strdup(action);
+    }
+    return str;
+}
+
+static void
+print_fence_event(stonith_history_t *event)
+{
+    char *action_s = fence_action_str(event->action);
+    time_t complete = event->completed;
+
+    printf("%s was able to %s node %s on behalf of %s from %s at %s\n",
+           (event->delegate? event->delegate : "This node"), action_s,
+           event->target, event->client, event->origin, ctime(&complete));
+    free(action_s);
+}
+
 static int
 show_history(stonith_t *st, const char *target, int timeout, int quiet,
              int verbose)
@@ -260,32 +364,23 @@ show_history(stonith_t *st, const char *target, int timeout, int quiet,
 
         if (quiet || !verbose) {
             continue;
-        } else if (hp->action == NULL) {
-            action_s = strdup("unknown");
-        } else if (hp->action[0] != 'r') {
-            action_s = crm_concat("turn", hp->action, ' ');
-        } else {
-            action_s = strdup(hp->action);
         }
 
         if (hp->state == st_failed) {
+            action_s = fence_action_str(hp->action);
             printf("%s failed to %s node %s on behalf of %s from %s at %s\n",
                    hp->delegate ? hp->delegate : "We", action_s, hp->target,
                    hp->client, hp->origin, ctime(&complete));
 
-        } else if (hp->state == st_done && hp->delegate) {
-            printf("%s was able to %s node %s on behalf of %s from %s at %s\n",
-                   hp->delegate, action_s, hp->target,
-                   hp->client, hp->origin, ctime(&complete));
-
         } else if (hp->state == st_done) {
-            printf("We were able to %s node %s on behalf of %s from %s at %s\n",
-                   action_s, hp->target, hp->client, hp->origin, ctime(&complete));
+            print_fence_event(latest);
+
         } else {
             /* ocf:pacemaker:controld depends on "wishes to" being
              * in this output, when used with older versions of DLM
              * that don't report stateful_merge_wait
              */
+            action_s = fence_action_str(hp->action);
             printf("%s at %s wishes to %s node %s - %d %d\n",
                    hp->client, hp->origin, action_s, hp->target, hp->state, hp->completed);
         }
@@ -296,23 +391,8 @@ show_history(stonith_t *st, const char *target, int timeout, int quiet,
     if (latest) {
         if (quiet) {
             printf("%d\n", latest->completed);
-        } else {
-            char *action_s = NULL;
-            time_t complete = latest->completed;
-
-            if (latest->action == NULL) {
-                action_s = strdup("unknown");
-            } else if (latest->action[0] != 'r') {
-                action_s = crm_concat("turn", latest->action, ' ');
-            } else {
-                action_s = strdup(latest->action);
-            }
-
-            printf("%s was able to %s node %s on behalf of %s from %s at %s\n",
-                   latest->delegate ? latest->delegate : "We", action_s, latest->target,
-                   latest->client, latest->origin, ctime(&complete));
-
-            free(action_s);
+        } else if (!verbose) { // already printed if verbose
+            print_fence_event(latest);
         }
     }
     return rc;
@@ -348,9 +428,8 @@ main(int argc, char **argv)
     stonith_key_value_t *dIter = NULL;
 
     crm_log_cli_init("stonith_admin");
-    crm_set_options(NULL, "mode [options]", long_options,
-                    "Provides access to the stonith-ng API.\n"
-                    "\nAllows the administrator to add/remove/list devices, check device and host status and fence hosts\n");
+    crm_set_options(NULL, "<command> [<options>]", long_options,
+                    "access the Pacemaker fencing API");
 
     async_fence_data.name = strdup(crm_system_name);
 
@@ -455,6 +534,7 @@ main(int argc, char **argv)
                         crm_info("Got: '%s'='%s'", optarg, env);
                         params = stonith_key_value_add(params, optarg, env);
                     }
+                    free(key);
                 }
                 break;
             case 0:
@@ -476,16 +556,10 @@ main(int argc, char **argv)
         crm_help('?', EX_USAGE);
     }
 
-    crm_debug("Create");
     st = stonith_api_new();
-    crm_debug("Created");
 
     if (!no_connect) {
-        crm_debug("Connecting as %s", async_fence_data.name);
         rc = st->cmds->connect(st, async_fence_data.name, NULL);
-
-        crm_debug("Connect: %d", rc);
-
         if (rc < 0) {
             goto done;
         }
@@ -617,15 +691,9 @@ main(int argc, char **argv)
   done:
     free(async_fence_data.name);
     crm_info("Command returned: %s (%d)", pcmk_strerror(rc), rc);
-    if (rc < 0) {
-        printf("Command failed: %s\n", pcmk_strerror(rc));
-    }
 
     stonith_key_value_freeall(params, 1, 1);
     st->cmds->disconnect(st);
-    crm_debug("Disconnect: %d", rc);
-
-    crm_debug("Destroy");
     stonith_api_delete(st);
 
     return rc;
