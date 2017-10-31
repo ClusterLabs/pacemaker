@@ -42,8 +42,6 @@ typedef struct synapse_s {
 
     GListPtr actions;           /* crm_action_t* */
     GListPtr inputs;            /* crm_action_t* */
-
-    crm_graph_t *graph;
 } synapse_t;
 
 typedef struct crm_action_s {
@@ -64,10 +62,6 @@ typedef struct crm_action_s {
     gboolean can_fail;
 
     xmlNode *xml;
-
-    char *task;
-
-    lrmd_rsc_info_t *rsc_info;
 
 } crm_action_t;
 
@@ -121,9 +115,6 @@ struct crm_graph_s {
     GListPtr synapses;          /* synpase_t* */
 
     int migration_limit;
-
-    int max_action_id;
-
 };
 
 typedef struct crm_graph_functions_s {
