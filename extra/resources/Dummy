@@ -199,6 +199,31 @@ dummy_monitor() {
     fi
     
     if [ -f "${OCF_RESKEY_state}" ]; then
+        # Multiple monitor levels are defined to support various tests
+        case "$OCF_CHECK_LEVEL" in
+            10)
+            # monitor level with delay, useful for testing timeouts
+            sleep 30
+            ;;
+
+            20)
+            # monitor level that fails intermittently
+            n=$(expr $(dd if=/dev/urandom bs=1 count=1 2>/dev/null | od | head -1 | cut -f2 -d' ') % 5)
+            if [ $n -eq 1 ]; then
+                ocf_exit_reason "smoke detected near CPU fan"
+                return $OCF_ERR_GENERIC
+            fi
+            ;;
+
+            30)
+            # monitor level that always fails
+            ocf_exit_reason "hyperdrive quota reached"
+            return $OCF_ERR_GENERIC
+            ;;
+
+            *)
+            ;;
+        esac
         return $OCF_SUCCESS
     fi
     return $OCF_NOT_RUNNING

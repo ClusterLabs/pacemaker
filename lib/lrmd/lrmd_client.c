@@ -553,19 +553,9 @@ lrmd_tls_connection_destroy(gpointer userdata)
 int
 lrmd_tls_send_msg(crm_remote_t * session, xmlNode * msg, uint32_t id, const char *msg_type)
 {
-    int rc = -1;
-
     crm_xml_add_int(msg, F_LRMD_REMOTE_MSG_ID, id);
     crm_xml_add(msg, F_LRMD_REMOTE_MSG_TYPE, msg_type);
-
-    rc = crm_remote_send(session, msg);
-
-    if (rc < 0) {
-        crm_err("Failed to send remote lrmd tls msg, rc = %d", rc);
-        return rc;
-    }
-
-    return rc;
+    return crm_remote_send(session, msg);
 }
 
 static xmlNode *

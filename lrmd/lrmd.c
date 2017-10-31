@@ -396,6 +396,7 @@ send_client_notify(gpointer key, gpointer value, gpointer user_data)
 {
     xmlNode *update_msg = user_data;
     crm_client_t *client = value;
+    int rc;
 
     if (client == NULL) {
         crm_err("Asked to send event to  NULL client");
@@ -405,8 +406,11 @@ send_client_notify(gpointer key, gpointer value, gpointer user_data)
         return;
     }
 
-    if (lrmd_server_send_notify(client, update_msg) <= 0) {
-        crm_warn("Notification of client %s/%s failed", client->name, client->id);
+    rc = lrmd_server_send_notify(client, update_msg);
+    if ((rc <= 0) && (rc != -ENOTCONN)) {
+        crm_warn("Could not notify client %s/%s: %s " CRM_XS " rc=%d",
+                 client->name, client->id,
+                 (rc? pcmk_strerror(rc) : "no data sent"), rc);
     }
 }
 
