@@ -467,7 +467,7 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
             did_change = check_action_definition(rsc, node, rsc_op, data_set);
         }
 
-        if (did_change && get_failcount(node, rsc, NULL, data_set)) {
+        if (did_change && get_failcount_full(node, rsc, NULL, TRUE, NULL, data_set)) {
             char *key = NULL;
             action_t *action_clear = NULL;
 
@@ -1250,7 +1250,7 @@ cleanup_orphans(resource_t * rsc, pe_working_set_t * data_set)
     for (gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
 
-        if (node->details->online && get_failcount(node, rsc, NULL, data_set)) {
+        if (node->details->online && get_failcount_full(node, rsc, NULL, TRUE, NULL, data_set)) {
             char *key = generate_op_key(rsc->id, CRM_OP_CLEAR_FAILCOUNT, 0);
             action_t *clear_op = custom_action(rsc, key, CRM_OP_CLEAR_FAILCOUNT,
                                                node, FALSE, TRUE, data_set);

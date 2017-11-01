@@ -17,13 +17,6 @@
 #include <crm/common/util.h>
 #include <crm/pengine/internal.h>
 
-int
-get_failcount(node_t *node, resource_t *rsc, time_t *last_failure,
-              pe_working_set_t *data_set)
-{
-    return get_failcount_full(node, rsc, last_failure, TRUE, NULL, data_set);
-}
-
 static gboolean
 is_matched_failure(const char *rsc_id, xmlNode *conf_op_xml,
                    xmlNode *lrm_op_xml)
@@ -310,7 +303,7 @@ get_failcount_all(node_t *node, resource_t *rsc, time_t *last_failure,
 {
     int failcount_all = 0;
 
-    failcount_all = get_failcount(node, rsc, last_failure, data_set);
+    failcount_all = get_failcount_full(node, rsc, last_failure, TRUE, NULL, data_set);
 
     if (rsc->fillers) {
         GListPtr gIter = NULL;
@@ -319,8 +312,8 @@ get_failcount_all(node_t *node, resource_t *rsc, time_t *last_failure,
             resource_t *filler = (resource_t *) gIter->data;
             time_t filler_last_failure = 0;
 
-            failcount_all += get_failcount(node, filler, &filler_last_failure,
-                                           data_set);
+            failcount_all += get_failcount_full(node, filler, &filler_last_failure,
+                                                TRUE, NULL, data_set);
 
             if (last_failure && filler_last_failure > *last_failure) {
                 *last_failure = filler_last_failure;
