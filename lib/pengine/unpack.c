@@ -2883,14 +2883,14 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
 
     if (expired) {
         if (failure_timeout > 0) {
-            int fc = get_failcount_full(node, rsc, &last_failure, FALSE, xml_op, data_set);
-            if(fc) {
-                if (get_failcount_full(node, rsc, &last_failure, TRUE, xml_op, data_set) == 0) {
-                    clear_reason = "it expired";
+            if (pe_get_failcount(node, rsc, &last_failure, FALSE, xml_op, data_set)) {
 
+                if (pe_get_failcount(node, rsc, &last_failure, TRUE, xml_op, data_set) == 0) {
+                    clear_reason = "it expired";
                 } else {
                     expired = FALSE;
                 }
+
             } else if (rsc->remote_reconnect_interval && strstr(ID(xml_op), "last_failure")) {
                 /* always clear last failure when reconnect interval is set */
                 clear_reason = "reconnect interval is set";

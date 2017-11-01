@@ -1247,7 +1247,10 @@ print_rsc_history_start(FILE *stream, pe_working_set_t *data_set, node_t *node,
                         resource_t *rsc, const char *rsc_id, gboolean all)
 {
     time_t last_failure = 0;
-    int failcount = rsc? get_failcount_full(node, rsc, &last_failure, FALSE, NULL, data_set) : 0;
+    int failcount = rsc?
+                    pe_get_failcount(node, rsc, &last_failure, FALSE, NULL,
+                                     data_set)
+                    : 0;
 
     if (!all && !failcount && (last_failure <= 0)) {
         return;

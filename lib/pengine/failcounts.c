@@ -234,8 +234,8 @@ generate_fail_regexes(resource_t *rsc, pe_working_set_t *data_set,
 }
 
 int
-get_failcount_full(node_t *node, resource_t *rsc, time_t *last_failure,
-                   bool effective, xmlNode *xml_op, pe_working_set_t *data_set)
+pe_get_failcount(node_t *node, resource_t *rsc, time_t *last_failure,
+                 bool effective, xmlNode *xml_op, pe_working_set_t *data_set)
 {
     char *key = NULL;
     const char *value = NULL;
@@ -303,7 +303,7 @@ get_failcount_all(node_t *node, resource_t *rsc, time_t *last_failure,
 {
     int failcount_all = 0;
 
-    failcount_all = get_failcount_full(node, rsc, last_failure, TRUE, NULL, data_set);
+    failcount_all = pe_get_failcount(node, rsc, last_failure, TRUE, NULL, data_set);
 
     if (rsc->fillers) {
         GListPtr gIter = NULL;
@@ -312,8 +312,8 @@ get_failcount_all(node_t *node, resource_t *rsc, time_t *last_failure,
             resource_t *filler = (resource_t *) gIter->data;
             time_t filler_last_failure = 0;
 
-            failcount_all += get_failcount_full(node, filler, &filler_last_failure,
-                                                TRUE, NULL, data_set);
+            failcount_all += pe_get_failcount(node, filler, &filler_last_failure,
+                                              TRUE, NULL, data_set);
 
             if (last_failure && filler_last_failure > *last_failure) {
                 *last_failure = filler_last_failure;
