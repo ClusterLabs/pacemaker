@@ -2883,9 +2883,11 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
 
     if (expired) {
         if (failure_timeout > 0) {
-            if (pe_get_failcount(node, rsc, &last_failure, FALSE, xml_op, data_set)) {
+            if (pe_get_failcount(node, rsc, &last_failure, pe_fc_default,
+                                 xml_op, data_set)) {
 
-                if (pe_get_failcount(node, rsc, &last_failure, TRUE, xml_op, data_set) == 0) {
+                if (pe_get_failcount(node, rsc, &last_failure, pe_fc_effective,
+                                     xml_op, data_set) == 0) {
                     clear_reason = "it expired";
                 } else {
                     expired = FALSE;

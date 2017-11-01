@@ -112,8 +112,16 @@ extern node_t *node_copy(const node_t *this_node);
 extern time_t get_effective_time(pe_working_set_t * data_set);
 
 /* Failure handling utilities (from failcounts.c) */
+
+// bit flags for fail count handling options
+enum pe_fc_flags_e {
+    pe_fc_default   = 0x00,
+    pe_fc_effective = 0x01, // don't count expired failures
+};
+
 int pe_get_failcount(node_t *node, resource_t *rsc, time_t *last_failure,
-                     bool effective, xmlNode *xml_op, pe_working_set_t *data_set);
+                     uint32_t flags, xmlNode *xml_op,
+                     pe_working_set_t *data_set);
 extern int get_failcount_all(node_t * node, resource_t * rsc, time_t *last_failure,
                              pe_working_set_t * data_set);
 

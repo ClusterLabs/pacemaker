@@ -235,7 +235,7 @@ generate_fail_regexes(resource_t *rsc, pe_working_set_t *data_set,
 
 int
 pe_get_failcount(node_t *node, resource_t *rsc, time_t *last_failure,
-                 bool effective, xmlNode *xml_op, pe_working_set_t *data_set)
+                 uint32_t flags, xmlNode *xml_op, pe_working_set_t *data_set)
 {
     char *key = NULL;
     const char *value = NULL;
@@ -273,7 +273,9 @@ pe_get_failcount(node_t *node, resource_t *rsc, time_t *last_failure,
     }
 
     /* If all failures have expired, ignore fail count */
-    if (effective && (failcount > 0) && (last > 0) && rsc->failure_timeout) {
+    if (is_set(flags, pe_fc_effective) && (failcount > 0) && (last > 0)
+        && rsc->failure_timeout) {
+
         time_t now = get_effective_time(data_set);
 
         if (now > (last + rsc->failure_timeout)) {
@@ -301,9 +303,8 @@ int
 get_failcount_all(node_t *node, resource_t *rsc, time_t *last_failure,
                   pe_working_set_t *data_set)
 {
-    int failcount_all = 0;
-
-    failcount_all = pe_get_failcount(node, rsc, last_failure, TRUE, NULL, data_set);
+    int failcount_all = pe_get_failcount(node, rsc, last_failure,
+                                         pe_fc_effective, NULL, data_set);
 
     if (rsc->fillers) {
         GListPtr gIter = NULL;
@@ -312,8 +313,9 @@ get_failcount_all(node_t *node, resource_t *rsc, time_t *last_failure,
             resource_t *filler = (resource_t *) gIter->data;
             time_t filler_last_failure = 0;
 
-            failcount_all += pe_get_failcount(node, filler, &filler_last_failure,
-                                              TRUE, NULL, data_set);
+            failcount_all += pe_get_failcount(node, filler,
+                                              &filler_last_failure,
+                                              pe_fc_effective, NULL, data_set);
 
             if (last_failure && filler_last_failure > *last_failure) {
                 *last_failure = filler_last_failure;
