@@ -85,6 +85,11 @@ migration_threshold_reached(resource_t *rsc, node_t *node,
         return FALSE;
     }
 
+    // If we're ignoring failures, also ignore the migration threshold
+    if (is_set(rsc->flags, pe_rsc_failure_ignored)) {
+        return FALSE;
+    }
+
     /* If there are no failures, there's no need to force away */
     fail_count = get_failcount_all(node, rsc, NULL, data_set);
     if (fail_count <= 0) {
