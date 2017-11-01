@@ -1,0 +1,15 @@
+digraph "g" {
+"all_stopped" [ style=bold color="green" fontcolor="orange"]
+"fence_db1_monitor_60000 407892-db2" [ style=bold color="green" fontcolor="black"]
+"fence_db1_start_0 407892-db2" -> "fence_db1_monitor_60000 407892-db2" [ style = bold]
+"fence_db1_start_0 407892-db2" [ style=bold color="green" fontcolor="black"]
+"fence_db1_stop_0 407892-db2" -> "all_stopped" [ style = bold]
+"fence_db1_stop_0 407892-db2" -> "fence_db1_start_0 407892-db2" [ style = bold]
+"fence_db1_stop_0 407892-db2" [ style=bold color="green" fontcolor="black"]
+"fence_db2_monitor_60000 407888-db1" [ style=bold color="green" fontcolor="black"]
+"fence_db2_start_0 407888-db1" -> "fence_db2_monitor_60000 407888-db1" [ style = bold]
+"fence_db2_start_0 407888-db1" [ style=bold color="green" fontcolor="black"]
+"fence_db2_stop_0 407888-db1" -> "all_stopped" [ style = bold]
+"fence_db2_stop_0 407888-db1" -> "fence_db2_start_0 407888-db1" [ style = bold]
+"fence_db2_stop_0 407888-db1" [ style=bold color="green" fontcolor="black"]
+}

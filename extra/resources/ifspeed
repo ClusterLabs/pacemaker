@@ -24,10 +24,15 @@
 # Initialization:
 
 : ${OCF_FUNCTIONS=${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs}
-. ${OCF_FUNCTIONS}
+
+# If these aren't available, we can still show help,
+# which is all that is needed to build the man pages.
+[ -r "${OCF_FUNCTIONS}" ] && . "${OCF_FUNCTIONS}"
+[ -r "${OCF_FUNCTIONS_DIR}/findif.sh" ] && . "${OCF_FUNCTIONS_DIR}/findif.sh"
+: ${OCF_SUCCESS=0}
+
 : ${__OCF_ACTION=$1}
 
-. ${OCF_FUNCTIONS_DIR}/findif.sh
 FINDIF=findif
 
 # Defaults

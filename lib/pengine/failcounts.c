@@ -17,13 +17,6 @@
 #include <crm/common/util.h>
 #include <crm/pengine/internal.h>
 
-int
-get_failcount(node_t *node, resource_t *rsc, time_t *last_failure,
-              pe_working_set_t *data_set)
-{
-    return get_failcount_full(node, rsc, last_failure, TRUE, NULL, data_set);
-}
-
 static gboolean
 is_matched_failure(const char *rsc_id, xmlNode *conf_op_xml,
                    xmlNode *lrm_op_xml)
@@ -241,8 +234,8 @@ generate_fail_regexes(resource_t *rsc, pe_working_set_t *data_set,
 }
 
 int
-get_failcount_full(node_t *node, resource_t *rsc, time_t *last_failure,
-                   bool effective, xmlNode *xml_op, pe_working_set_t *data_set)
+pe_get_failcount(node_t *node, resource_t *rsc, time_t *last_failure,
+                 uint32_t flags, xmlNode *xml_op, pe_working_set_t *data_set)
 {
     char *key = NULL;
     const char *value = NULL;
@@ -280,7 +273,9 @@ get_failcount_full(node_t *node, resource_t *rsc, time_t *last_failure,
     }
 
     /* If all failures have expired, ignore fail count */
-    if (effective && (failcount > 0) && (last > 0) && rsc->failure_timeout) {
+    if (is_set(flags, pe_fc_effective) && (failcount > 0) && (last > 0)
+        && rsc->failure_timeout) {
+
         time_t now = get_effective_time(data_set);
 
         if (now > (last + rsc->failure_timeout)) {
@@ -290,7 +285,30 @@ get_failcount_full(node_t *node, resource_t *rsc, time_t *last_failure,
         }
     }
 
-    if (failcount > 0) {
+    if (is_set(flags, pe_fc_fillers) && rsc->fillers) {
+        GListPtr gIter = NULL;
+
+        for (gIter = rsc->fillers; gIter != NULL; gIter = gIter->next) {
+            resource_t *filler = (resource_t *) gIter->data;
+            time_t filler_last_failure = 0;
+
+            failcount += pe_get_failcount(node, filler, &filler_last_failure,
+                                          flags, xml_op, data_set);
+
+            if (last_failure && filler_last_failure > *last_failure) {
+                *last_failure = filler_last_failure;
+            }
+        }
+
+        if (failcount > 0) {
+            char *score = score2char(failcount);
+
+            crm_info("Container %s and the resources within it have failed %s times on %s",
+                     rsc->id, score, node->details->uname);
+            free(score);
+        }
+
+    } else if (failcount > 0) {
         char *score = score2char(failcount);
 
         crm_info("%s has failed %s times on %s",
@@ -298,43 +316,6 @@ get_failcount_full(node_t *node, resource_t *rsc, time_t *last_failure,
         free(score);
     }
 
+
     return failcount;
-}
-
-/* If it's a resource container, get its failcount plus all the failcounts of
- * the resources within it
- */
-int
-get_failcount_all(node_t *node, resource_t *rsc, time_t *last_failure,
-                  pe_working_set_t *data_set)
-{
-    int failcount_all = 0;
-
-    failcount_all = get_failcount(node, rsc, last_failure, data_set);
-
-    if (rsc->fillers) {
-        GListPtr gIter = NULL;
-
-        for (gIter = rsc->fillers; gIter != NULL; gIter = gIter->next) {
-            resource_t *filler = (resource_t *) gIter->data;
-            time_t filler_last_failure = 0;
-
-            failcount_all += get_failcount(node, filler, &filler_last_failure,
-                                           data_set);
-
-            if (last_failure && filler_last_failure > *last_failure) {
-                *last_failure = filler_last_failure;
-            }
-        }
-
-        if (failcount_all != 0) {
-            char *score = score2char(failcount_all);
-
-            crm_info("Container %s and the resources within it have failed %s times on %s",
-                     rsc->id, score, node->details->uname);
-            free(score);
-        }
-    }
-
-    return failcount_all;
 }
