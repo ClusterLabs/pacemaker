@@ -117,13 +117,12 @@ extern time_t get_effective_time(pe_working_set_t * data_set);
 enum pe_fc_flags_e {
     pe_fc_default   = 0x00,
     pe_fc_effective = 0x01, // don't count expired failures
+    pe_fc_fillers   = 0x02, // if container, include filler failures in count
 };
 
 int pe_get_failcount(node_t *node, resource_t *rsc, time_t *last_failure,
                      uint32_t flags, xmlNode *xml_op,
                      pe_working_set_t *data_set);
-extern int get_failcount_all(node_t * node, resource_t * rsc, time_t *last_failure,
-                             pe_working_set_t * data_set);
 
 /* Binary like operators for lists of nodes */
 extern void node_list_exclude(GHashTable * list, GListPtr list2, gboolean merge_scores);

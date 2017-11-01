@@ -285,7 +285,30 @@ pe_get_failcount(node_t *node, resource_t *rsc, time_t *last_failure,
         }
     }
 
-    if (failcount > 0) {
+    if (is_set(flags, pe_fc_fillers) && rsc->fillers) {
+        GListPtr gIter = NULL;
+
+        for (gIter = rsc->fillers; gIter != NULL; gIter = gIter->next) {
+            resource_t *filler = (resource_t *) gIter->data;
+            time_t filler_last_failure = 0;
+
+            failcount += pe_get_failcount(node, filler, &filler_last_failure,
+                                          flags, xml_op, data_set);
+
+            if (last_failure && filler_last_failure > *last_failure) {
+                *last_failure = filler_last_failure;
+            }
+        }
+
+        if (failcount > 0) {
+            char *score = score2char(failcount);
+
+            crm_info("Container %s and the resources within it have failed %s times on %s",
+                     rsc->id, score, node->details->uname);
+            free(score);
+        }
+
+    } else if (failcount > 0) {
         char *score = score2char(failcount);
 
         crm_info("%s has failed %s times on %s",
@@ -293,43 +316,6 @@ pe_get_failcount(node_t *node, resource_t *rsc, time_t *last_failure,
         free(score);
     }
 
+
     return failcount;
-}
-
-/* If it's a resource container, get its failcount plus all the failcounts of
- * the resources within it
- */
-int
-get_failcount_all(node_t *node, resource_t *rsc, time_t *last_failure,
-                  pe_working_set_t *data_set)
-{
-    int failcount_all = pe_get_failcount(node, rsc, last_failure,
-                                         pe_fc_effective, NULL, data_set);
-
-    if (rsc->fillers) {
-        GListPtr gIter = NULL;
-
-        for (gIter = rsc->fillers; gIter != NULL; gIter = gIter->next) {
-            resource_t *filler = (resource_t *) gIter->data;
-            time_t filler_last_failure = 0;
-
-            failcount_all += pe_get_failcount(node, filler,
-                                              &filler_last_failure,
-                                              pe_fc_effective, NULL, data_set);
-
-            if (last_failure && filler_last_failure > *last_failure) {
-                *last_failure = filler_last_failure;
-            }
-        }
-
-        if (failcount_all != 0) {
-            char *score = score2char(failcount_all);
-
-            crm_info("Container %s and the resources within it have failed %s times on %s",
-                     rsc->id, score, node->details->uname);
-            free(score);
-        }
-    }
-
-    return failcount_all;
 }
