@@ -1097,9 +1097,32 @@ unpack_node_loop(xmlNode * status, bool fence, pe_working_set_t * data_set)
             process = TRUE;
 
         } else if (is_remote_node(this_node)) {
+            bool check = FALSE;
             resource_t *rsc = this_node->details->remote_rsc;
 
-            if (fence || (rsc && rsc->role == RSC_ROLE_STARTED)) {
+            if(fence) {
+                check = TRUE;
+
+            } else if(rsc == NULL) {
+                /* Not ready yet */
+
+            } else if (is_container_remote_node(this_node)
+                       && rsc->role == RSC_ROLE_STARTED
+                       && rsc->container->role == RSC_ROLE_STARTED) {
+                /* Both the connection and the underlying container
+                 * need to be known 'up' before we volunterily process
+                 * resources inside it
+                 */
+                check = TRUE;
+                crm_trace("Checking node %s/%s/%s status %d/%d/%d", id, rsc->id, rsc->container->id, fence, rsc->role, RSC_ROLE_STARTED);
+
+            } else if (is_container_remote_node(this_node) == FALSE
+                       && rsc->role == RSC_ROLE_STARTED) {
+                check = TRUE;
+                crm_trace("Checking node %s/%s status %d/%d/%d", id, rsc->id, fence, rsc->role, RSC_ROLE_STARTED);
+            }
+
+            if (check) {
                 determine_remote_online_status(data_set, this_node);
                 unpack_handle_remote_attrs(this_node, state, data_set);
                 process = TRUE;
