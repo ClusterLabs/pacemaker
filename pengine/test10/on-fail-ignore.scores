@@ -1,0 +1,8 @@
+Allocation scores:
+Using the original execution date of: 2017-10-26 14:23:50Z
+native_color: fence_db1 allocation score on 407888-db1: 0
+native_color: fence_db1 allocation score on 407892-db2: 100
+native_color: fence_db2 allocation score on 407888-db1: 100
+native_color: fence_db2 allocation score on 407892-db2: 0
+native_color: nfs_snet_ip allocation score on 407888-db1: 100
+native_color: nfs_snet_ip allocation score on 407892-db2: 0
