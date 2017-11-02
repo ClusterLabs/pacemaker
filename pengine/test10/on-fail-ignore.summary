@@ -8,8 +8,8 @@ Online: [ 407888-db1 407892-db2 ]
  nfs_snet_ip	(ocf::heartbeat:IPaddr2):	Started 407888-db1 (failure ignored)
 
 Transition Summary:
- * Restart    fence_db1     ( 407892-db2 )  
- * Restart    fence_db2     ( 407888-db1 )  
+ * Restart    fence_db1     ( 407892-db2 )   due to resource definition change
+ * Restart    fence_db2     ( 407888-db1 )   due to resource definition change
 
 Executing cluster transition:
  * Resource action: fence_db1       stop on 407892-db2
