@@ -3008,18 +3008,6 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
                         top, reload_key(rsc), NULL,
                         pe_order_optional, data_set);
 
-    if(node->details->shutdown == FALSE
-       && is_not_set(rsc->flags, pe_rsc_failed)
-       && rsc->next_role != RSC_ROLE_STOPPED) {
-        /* Avoid trying to move resources before we know the location
-         * elsewhere, but stopping should always be allowed.
-         * Especially if the resource has failed.
-         */
-        custom_action_order(rsc, NULL, probe,
-                            rsc, generate_op_key(rsc->id, RSC_STOP, 0), NULL,
-                            pe_order_optional, data_set);
-    }
-
     if(is_set(rsc->flags, pe_rsc_fence_device) && is_set(data_set->flags, pe_flag_enable_unfencing)) {
         /* Normally rsc.start depends on probe complete which depends
          * on rsc.probe. But this can't be the case in this scenario as
