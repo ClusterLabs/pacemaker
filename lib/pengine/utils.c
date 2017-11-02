@@ -1485,17 +1485,11 @@ resource_node_score(resource_t * rsc, node_t * node, int score, const char *tag)
 {
     node_t *match = NULL;
 
-    if(rsc->exclusive_discover && safe_str_eq(tag, "symmetric_default")) {
-        /* A terrible implementation via string comparision but
-         * exclusive resources should not have the symmetric_default
-         * constraint applied to them.
-         */
-        return;
-
-    } else if(node->rsc_discover_mode == pe_discover_never && safe_str_eq(tag, "symmetric_default")) {
-        /* Another terrible implementation via string comparision but
-         * exclusive node should also not be included in the
-         * symmetric_default constraint.
+    if ((rsc->exclusive_discover || (node->rsc_discover_mode == pe_discover_never))
+        && safe_str_eq(tag, "symmetric_default")) {
+        /* This string comparision may be fragile, but exclusive resources and
+         * exclusive nodes should not have the symmetric_default constraint
+         * applied to them.
          */
         return;
 

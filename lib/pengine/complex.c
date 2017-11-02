@@ -827,6 +827,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     }
 
     if (is_set(data_set->flags, pe_flag_symmetric_cluster)) {
+        // This tag must stay exactly the same because it is tested elsewhere
         resource_location(*rsc, NULL, 0, "symmetric_default", data_set);
     } else if (container_remote_node) {
         /* remote resources tied to a container resource must always be allowed
