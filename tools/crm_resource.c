@@ -57,7 +57,6 @@ resource_ipc_connection_destroy(gpointer user_data)
     crm_exit(1);
 }
 
-static bool mainloop_running = FALSE;
 static void
 start_mainloop(void)
 {
@@ -65,7 +64,6 @@ start_mainloop(void)
         return;
     }
 
-    mainloop_running = TRUE;
     mainloop = g_main_new(FALSE);
     fprintf(stderr, "Waiting for %d replies from the CRMd", crmd_replies_needed);
     crm_debug("Waiting for %d replies from the CRMd", crmd_replies_needed);
@@ -83,7 +81,7 @@ resource_ipc_callback(const char *buffer, ssize_t length, gpointer userdata)
     crm_log_xml_trace(msg, "[inbound]");
 
     crmd_replies_needed--;
-    if (crmd_replies_needed == 0 && mainloop_running) {
+    if (crmd_replies_needed == 0 && g_main_loop_is_running(mainloop)) {
         fprintf(stderr, " OK\n");
         crm_debug("Got all the replies we expected");
         return crm_exit(pcmk_ok);
