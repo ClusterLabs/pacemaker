@@ -23,17 +23,17 @@ Executing cluster transition:
  * Pseudo action:   export_home_ocfs2_clone_set_pre_notify_start_0
  * Pseudo action:   group_nfs_stop_0
  * Resource action: resource_ipaddr1_single monitor on power720-1
+ * Resource action: resource_nfsserver_single stop on power720-2
  * Resource action: resource_nfsserver_single monitor on power720-1
  * Resource action: export_home_ocfs2:1 notify on power720-2
  * Pseudo action:   export_home_ocfs2_clone_set_confirmed-pre_notify_start_0
  * Pseudo action:   export_home_ocfs2_clone_set_start_0
- * Resource action: resource_nfsserver_single stop on power720-2
- * Resource action: export_home_ocfs2:0 start on power720-1
- * Pseudo action:   export_home_ocfs2_clone_set_running_0
  * Resource action: resource_ipaddr1_single stop on power720-2
  * Pseudo action:   all_stopped
- * Pseudo action:   export_home_ocfs2_clone_set_post_notify_running_0
+ * Resource action: export_home_ocfs2:0 start on power720-1
+ * Pseudo action:   export_home_ocfs2_clone_set_running_0
  * Pseudo action:   group_nfs_stopped_0
+ * Pseudo action:   export_home_ocfs2_clone_set_post_notify_running_0
  * Resource action: export_home_ocfs2:0 notify on power720-1
  * Resource action: export_home_ocfs2:1 notify on power720-2
  * Pseudo action:   export_home_ocfs2_clone_set_confirmed-post_notify_running_0

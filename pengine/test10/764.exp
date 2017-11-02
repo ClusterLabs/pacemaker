@@ -6,11 +6,7 @@
         <attributes CRM_meta_on_node="posic043" CRM_meta_on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596" CRM_meta_timeout="20000"  ip="127.0.0.10"/>
        </rsc_op>
      </action_set>
-     <inputs>
-       <trigger>
-        <rsc_op id="5" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad"/>
-       </trigger>
-     </inputs>
+    <inputs/>
    </synapse>
   <synapse id="1">
      <action_set>
@@ -28,11 +24,7 @@
         <attributes CRM_meta_on_node="posic041" CRM_meta_on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad" CRM_meta_timeout="20000"  ip="127.0.0.11"/>
        </rsc_op>
      </action_set>
-     <inputs>
-       <trigger>
-        <rsc_op id="9" operation="monitor" operation_key="rsc_posic041_monitor_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596"/>
-       </trigger>
-     </inputs>
+    <inputs/>
    </synapse>
   <synapse id="3">
      <action_set>
@@ -50,11 +42,7 @@
         <attributes CRM_meta_on_node="posic041" CRM_meta_on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad" CRM_meta_timeout="20000"  ip="127.0.0.12"/>
        </rsc_op>
      </action_set>
-     <inputs>
-       <trigger>
-        <rsc_op id="10" operation="monitor" operation_key="rsc_posic042_monitor_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596"/>
-       </trigger>
-     </inputs>
+    <inputs/>
    </synapse>
   <synapse id="5">
      <action_set>
@@ -72,11 +60,7 @@
         <attributes CRM_meta_on_node="posic043" CRM_meta_on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596" CRM_meta_timeout="20000"  ip="127.0.0.13"/>
        </rsc_op>
      </action_set>
-     <inputs>
-       <trigger>
-        <rsc_op id="6" operation="monitor" operation_key="rsc_posic043_monitor_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad"/>
-       </trigger>
-     </inputs>
+    <inputs/>
    </synapse>
   <synapse id="7">
      <action_set>
@@ -94,11 +78,7 @@
         <attributes CRM_meta_on_node="posic041" CRM_meta_on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad" CRM_meta_timeout="20000"  ip="127.0.0.14"/>
        </rsc_op>
      </action_set>
-     <inputs>
-       <trigger>
-        <rsc_op id="11" operation="monitor" operation_key="rsc_posic044_monitor_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596"/>
-       </trigger>
-     </inputs>
+    <inputs/>
    </synapse>
   <synapse id="9">
     <action_set>

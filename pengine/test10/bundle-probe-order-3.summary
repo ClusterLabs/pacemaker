@@ -11,7 +11,6 @@ Online: [ centos1 centos2 centos3 ]
 Transition Summary:
 
 Executing cluster transition:
- * Resource action: galera-bundle-docker-0 monitor=60000 on centos2
  * Resource action: galera-bundle-0 monitor on centos3
  * Resource action: galera-bundle-0 monitor on centos2
  * Resource action: galera-bundle-0 monitor on centos1

@@ -555,7 +555,7 @@
     <action_set>
       <rsc_op id="72" operation="monitor" operation_key="scale1-bundle-docker-0_monitor_60000" on_node="c09-h05-r630" on_node_uuid="1">
         <primitive id="scale1-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="c09-h05-r630" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-0" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-0:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="c09-h05-r630" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-0" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-0:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -568,7 +568,7 @@
     <action_set>
       <rsc_op id="71" operation="start" operation_key="scale1-bundle-docker-0_start_0" on_node="c09-h05-r630" on_node_uuid="1">
         <primitive id="scale1-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h05-r630" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-0" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-0:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h05-r630" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-0" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-0:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -614,7 +614,7 @@
     <action_set>
       <rsc_op id="59" operation="monitor" operation_key="scale1-bundle-docker-0_monitor_0" on_node="c09-h10-r630" on_node_uuid="c09-h10-r630" router_node="c09-h07-r630">
         <primitive id="scale1-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h10-r630" CRM_meta_on_node_uuid="c09-h10-r630" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-0" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-0:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h10-r630" CRM_meta_on_node_uuid="c09-h10-r630" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-0" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-0:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -627,7 +627,7 @@
     <action_set>
       <rsc_op id="53" operation="monitor" operation_key="scale1-bundle-docker-0_monitor_0" on_node="c09-h09-r630" on_node_uuid="c09-h09-r630" router_node="c09-h06-r630">
         <primitive id="scale1-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h09-r630" CRM_meta_on_node_uuid="c09-h09-r630" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-0" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-0:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h09-r630" CRM_meta_on_node_uuid="c09-h09-r630" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-0" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-0:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -640,7 +640,7 @@
     <action_set>
       <rsc_op id="47" operation="monitor" operation_key="scale1-bundle-docker-0_monitor_0" on_node="c09-h08-r630" on_node_uuid="c09-h08-r630" router_node="c09-h05-r630">
         <primitive id="scale1-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h08-r630" CRM_meta_on_node_uuid="c09-h08-r630" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-0" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-0:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h08-r630" CRM_meta_on_node_uuid="c09-h08-r630" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-0" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-0:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -653,7 +653,7 @@
     <action_set>
       <rsc_op id="35" operation="monitor" operation_key="scale1-bundle-docker-0_monitor_0" on_node="c09-h07-r630" on_node_uuid="3">
         <primitive id="scale1-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h07-r630" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-0" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-0:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h07-r630" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-0" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-0:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -662,7 +662,7 @@
     <action_set>
       <rsc_op id="20" operation="monitor" operation_key="scale1-bundle-docker-0_monitor_0" on_node="c09-h06-r630" on_node_uuid="2">
         <primitive id="scale1-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h06-r630" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-0" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-0:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h06-r630" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-0" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-0:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -671,7 +671,7 @@
     <action_set>
       <rsc_op id="5" operation="monitor" operation_key="scale1-bundle-docker-0_monitor_0" on_node="c09-h05-r630" on_node_uuid="1">
         <primitive id="scale1-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h05-r630" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-0" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-0:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h05-r630" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-0" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-0:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -754,7 +754,7 @@
     <action_set>
       <rsc_op id="76" operation="monitor" operation_key="scale1-bundle-docker-1_monitor_60000" on_node="c09-h06-r630" on_node_uuid="2">
         <primitive id="scale1-bundle-docker-1" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="c09-h06-r630" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-1" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-1:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="c09-h06-r630" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-1" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-1:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -767,7 +767,7 @@
     <action_set>
       <rsc_op id="75" operation="start" operation_key="scale1-bundle-docker-1_start_0" on_node="c09-h06-r630" on_node_uuid="2">
         <primitive id="scale1-bundle-docker-1" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h06-r630" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-1" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-1:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h06-r630" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-1" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-1:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -813,7 +813,7 @@
     <action_set>
       <rsc_op id="60" operation="monitor" operation_key="scale1-bundle-docker-1_monitor_0" on_node="c09-h10-r630" on_node_uuid="c09-h10-r630" router_node="c09-h07-r630">
         <primitive id="scale1-bundle-docker-1" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h10-r630" CRM_meta_on_node_uuid="c09-h10-r630" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-1" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-1:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h10-r630" CRM_meta_on_node_uuid="c09-h10-r630" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-1" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-1:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -826,7 +826,7 @@
     <action_set>
       <rsc_op id="54" operation="monitor" operation_key="scale1-bundle-docker-1_monitor_0" on_node="c09-h09-r630" on_node_uuid="c09-h09-r630" router_node="c09-h06-r630">
         <primitive id="scale1-bundle-docker-1" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h09-r630" CRM_meta_on_node_uuid="c09-h09-r630" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-1" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-1:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h09-r630" CRM_meta_on_node_uuid="c09-h09-r630" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-1" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-1:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -839,7 +839,7 @@
     <action_set>
       <rsc_op id="48" operation="monitor" operation_key="scale1-bundle-docker-1_monitor_0" on_node="c09-h08-r630" on_node_uuid="c09-h08-r630" router_node="c09-h05-r630">
         <primitive id="scale1-bundle-docker-1" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h08-r630" CRM_meta_on_node_uuid="c09-h08-r630" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-1" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-1:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h08-r630" CRM_meta_on_node_uuid="c09-h08-r630" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-1" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-1:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -852,7 +852,7 @@
     <action_set>
       <rsc_op id="37" operation="monitor" operation_key="scale1-bundle-docker-1_monitor_0" on_node="c09-h07-r630" on_node_uuid="3">
         <primitive id="scale1-bundle-docker-1" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h07-r630" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-1" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-1:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h07-r630" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-1" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-1:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -861,7 +861,7 @@
     <action_set>
       <rsc_op id="22" operation="monitor" operation_key="scale1-bundle-docker-1_monitor_0" on_node="c09-h06-r630" on_node_uuid="2">
         <primitive id="scale1-bundle-docker-1" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h06-r630" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-1" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-1:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h06-r630" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-1" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-1:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -870,7 +870,7 @@
     <action_set>
       <rsc_op id="7" operation="monitor" operation_key="scale1-bundle-docker-1_monitor_0" on_node="c09-h05-r630" on_node_uuid="1">
         <primitive id="scale1-bundle-docker-1" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h05-r630" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-1" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-1:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h05-r630" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-1" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-1:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -953,7 +953,7 @@
     <action_set>
       <rsc_op id="80" operation="monitor" operation_key="scale1-bundle-docker-2_monitor_60000" on_node="c09-h07-r630" on_node_uuid="3">
         <primitive id="scale1-bundle-docker-2" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="c09-h07-r630" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-2" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-2:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="c09-h07-r630" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-2" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-2:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -966,7 +966,7 @@
     <action_set>
       <rsc_op id="79" operation="start" operation_key="scale1-bundle-docker-2_start_0" on_node="c09-h07-r630" on_node_uuid="3">
         <primitive id="scale1-bundle-docker-2" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h07-r630" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-2" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-2:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h07-r630" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-2" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-2:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1012,7 +1012,7 @@
     <action_set>
       <rsc_op id="61" operation="monitor" operation_key="scale1-bundle-docker-2_monitor_0" on_node="c09-h10-r630" on_node_uuid="c09-h10-r630" router_node="c09-h07-r630">
         <primitive id="scale1-bundle-docker-2" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h10-r630" CRM_meta_on_node_uuid="c09-h10-r630" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-2" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-2:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h10-r630" CRM_meta_on_node_uuid="c09-h10-r630" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-2" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-2:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1025,7 +1025,7 @@
     <action_set>
       <rsc_op id="55" operation="monitor" operation_key="scale1-bundle-docker-2_monitor_0" on_node="c09-h09-r630" on_node_uuid="c09-h09-r630" router_node="c09-h06-r630">
         <primitive id="scale1-bundle-docker-2" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h09-r630" CRM_meta_on_node_uuid="c09-h09-r630" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-2" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-2:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h09-r630" CRM_meta_on_node_uuid="c09-h09-r630" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-2" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-2:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1038,7 +1038,7 @@
     <action_set>
       <rsc_op id="49" operation="monitor" operation_key="scale1-bundle-docker-2_monitor_0" on_node="c09-h08-r630" on_node_uuid="c09-h08-r630" router_node="c09-h05-r630">
         <primitive id="scale1-bundle-docker-2" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h08-r630" CRM_meta_on_node_uuid="c09-h08-r630" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-2" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-2:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h08-r630" CRM_meta_on_node_uuid="c09-h08-r630" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-2" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-2:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1051,7 +1051,7 @@
     <action_set>
       <rsc_op id="39" operation="monitor" operation_key="scale1-bundle-docker-2_monitor_0" on_node="c09-h07-r630" on_node_uuid="3">
         <primitive id="scale1-bundle-docker-2" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h07-r630" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-2" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-2:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h07-r630" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-2" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-2:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -1060,7 +1060,7 @@
     <action_set>
       <rsc_op id="24" operation="monitor" operation_key="scale1-bundle-docker-2_monitor_0" on_node="c09-h06-r630" on_node_uuid="2">
         <primitive id="scale1-bundle-docker-2" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h06-r630" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-2" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-2:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h06-r630" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-2" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-2:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -1069,7 +1069,7 @@
     <action_set>
       <rsc_op id="9" operation="monitor" operation_key="scale1-bundle-docker-2_monitor_0" on_node="c09-h05-r630" on_node_uuid="1">
         <primitive id="scale1-bundle-docker-2" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h05-r630" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-2" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-2:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h05-r630" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-2" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-2:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -1152,7 +1152,7 @@
     <action_set>
       <rsc_op id="84" operation="monitor" operation_key="scale1-bundle-docker-3_monitor_60000" on_node="c09-h08-r630" on_node_uuid="c09-h08-r630" router_node="c09-h05-r630">
         <primitive id="scale1-bundle-docker-3" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="c09-h08-r630" CRM_meta_on_node_uuid="c09-h08-r630" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-3" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-3:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="c09-h08-r630" CRM_meta_on_node_uuid="c09-h08-r630" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-3" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-3:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1168,7 +1168,7 @@
     <action_set>
       <rsc_op id="83" operation="start" operation_key="scale1-bundle-docker-3_start_0" on_node="c09-h08-r630" on_node_uuid="c09-h08-r630" router_node="c09-h05-r630">
         <primitive id="scale1-bundle-docker-3" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h08-r630" CRM_meta_on_node_uuid="c09-h08-r630" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-3" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-3:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h08-r630" CRM_meta_on_node_uuid="c09-h08-r630" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-3" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-3:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1217,7 +1217,7 @@
     <action_set>
       <rsc_op id="62" operation="monitor" operation_key="scale1-bundle-docker-3_monitor_0" on_node="c09-h10-r630" on_node_uuid="c09-h10-r630" router_node="c09-h07-r630">
         <primitive id="scale1-bundle-docker-3" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h10-r630" CRM_meta_on_node_uuid="c09-h10-r630" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-3" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-3:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h10-r630" CRM_meta_on_node_uuid="c09-h10-r630" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-3" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-3:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1230,7 +1230,7 @@
     <action_set>
       <rsc_op id="56" operation="monitor" operation_key="scale1-bundle-docker-3_monitor_0" on_node="c09-h09-r630" on_node_uuid="c09-h09-r630" router_node="c09-h06-r630">
         <primitive id="scale1-bundle-docker-3" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h09-r630" CRM_meta_on_node_uuid="c09-h09-r630" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-3" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-3:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h09-r630" CRM_meta_on_node_uuid="c09-h09-r630" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-3" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-3:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1243,7 +1243,7 @@
     <action_set>
       <rsc_op id="50" operation="monitor" operation_key="scale1-bundle-docker-3_monitor_0" on_node="c09-h08-r630" on_node_uuid="c09-h08-r630" router_node="c09-h05-r630">
         <primitive id="scale1-bundle-docker-3" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h08-r630" CRM_meta_on_node_uuid="c09-h08-r630" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-3" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-3:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h08-r630" CRM_meta_on_node_uuid="c09-h08-r630" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-3" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-3:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1256,7 +1256,7 @@
     <action_set>
       <rsc_op id="41" operation="monitor" operation_key="scale1-bundle-docker-3_monitor_0" on_node="c09-h07-r630" on_node_uuid="3">
         <primitive id="scale1-bundle-docker-3" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h07-r630" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-3" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-3:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h07-r630" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-3" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-3:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -1265,7 +1265,7 @@
     <action_set>
       <rsc_op id="26" operation="monitor" operation_key="scale1-bundle-docker-3_monitor_0" on_node="c09-h06-r630" on_node_uuid="2">
         <primitive id="scale1-bundle-docker-3" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h06-r630" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-3" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-3:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h06-r630" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-3" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-3:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -1274,7 +1274,7 @@
     <action_set>
       <rsc_op id="11" operation="monitor" operation_key="scale1-bundle-docker-3_monitor_0" on_node="c09-h05-r630" on_node_uuid="1">
         <primitive id="scale1-bundle-docker-3" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h05-r630" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-3" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-3:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h05-r630" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-3" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-3:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -1357,7 +1357,7 @@
     <action_set>
       <rsc_op id="88" operation="monitor" operation_key="scale1-bundle-docker-4_monitor_60000" on_node="c09-h09-r630" on_node_uuid="c09-h09-r630" router_node="c09-h06-r630">
         <primitive id="scale1-bundle-docker-4" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="c09-h09-r630" CRM_meta_on_node_uuid="c09-h09-r630" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-4" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-4:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="c09-h09-r630" CRM_meta_on_node_uuid="c09-h09-r630" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-4" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-4:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1373,7 +1373,7 @@
     <action_set>
       <rsc_op id="87" operation="start" operation_key="scale1-bundle-docker-4_start_0" on_node="c09-h09-r630" on_node_uuid="c09-h09-r630" router_node="c09-h06-r630">
         <primitive id="scale1-bundle-docker-4" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h09-r630" CRM_meta_on_node_uuid="c09-h09-r630" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-4" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-4:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h09-r630" CRM_meta_on_node_uuid="c09-h09-r630" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-4" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-4:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1422,7 +1422,7 @@
     <action_set>
       <rsc_op id="63" operation="monitor" operation_key="scale1-bundle-docker-4_monitor_0" on_node="c09-h10-r630" on_node_uuid="c09-h10-r630" router_node="c09-h07-r630">
         <primitive id="scale1-bundle-docker-4" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h10-r630" CRM_meta_on_node_uuid="c09-h10-r630" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-4" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-4:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h10-r630" CRM_meta_on_node_uuid="c09-h10-r630" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-4" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-4:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1435,7 +1435,7 @@
     <action_set>
       <rsc_op id="57" operation="monitor" operation_key="scale1-bundle-docker-4_monitor_0" on_node="c09-h09-r630" on_node_uuid="c09-h09-r630" router_node="c09-h06-r630">
         <primitive id="scale1-bundle-docker-4" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h09-r630" CRM_meta_on_node_uuid="c09-h09-r630" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-4" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-4:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h09-r630" CRM_meta_on_node_uuid="c09-h09-r630" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-4" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-4:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1448,7 +1448,7 @@
     <action_set>
       <rsc_op id="51" operation="monitor" operation_key="scale1-bundle-docker-4_monitor_0" on_node="c09-h08-r630" on_node_uuid="c09-h08-r630" router_node="c09-h05-r630">
         <primitive id="scale1-bundle-docker-4" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h08-r630" CRM_meta_on_node_uuid="c09-h08-r630" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-4" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-4:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h08-r630" CRM_meta_on_node_uuid="c09-h08-r630" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-4" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-4:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1461,7 +1461,7 @@
     <action_set>
       <rsc_op id="43" operation="monitor" operation_key="scale1-bundle-docker-4_monitor_0" on_node="c09-h07-r630" on_node_uuid="3">
         <primitive id="scale1-bundle-docker-4" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h07-r630" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-4" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-4:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h07-r630" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-4" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-4:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -1470,7 +1470,7 @@
     <action_set>
       <rsc_op id="28" operation="monitor" operation_key="scale1-bundle-docker-4_monitor_0" on_node="c09-h06-r630" on_node_uuid="2">
         <primitive id="scale1-bundle-docker-4" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h06-r630" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-4" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-4:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h06-r630" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-4" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-4:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -1479,7 +1479,7 @@
     <action_set>
       <rsc_op id="13" operation="monitor" operation_key="scale1-bundle-docker-4_monitor_0" on_node="c09-h05-r630" on_node_uuid="1">
         <primitive id="scale1-bundle-docker-4" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h05-r630" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-4" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-4:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h05-r630" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-4" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-4:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -1562,7 +1562,7 @@
     <action_set>
       <rsc_op id="92" operation="monitor" operation_key="scale1-bundle-docker-5_monitor_60000" on_node="c09-h10-r630" on_node_uuid="c09-h10-r630" router_node="c09-h07-r630">
         <primitive id="scale1-bundle-docker-5" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="c09-h10-r630" CRM_meta_on_node_uuid="c09-h10-r630" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-5" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-5:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="c09-h10-r630" CRM_meta_on_node_uuid="c09-h10-r630" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-5" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-5:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1578,7 +1578,7 @@
     <action_set>
       <rsc_op id="91" operation="start" operation_key="scale1-bundle-docker-5_start_0" on_node="c09-h10-r630" on_node_uuid="c09-h10-r630" router_node="c09-h07-r630">
         <primitive id="scale1-bundle-docker-5" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h10-r630" CRM_meta_on_node_uuid="c09-h10-r630" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-5" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-5:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h10-r630" CRM_meta_on_node_uuid="c09-h10-r630" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-5" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-5:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1627,7 +1627,7 @@
     <action_set>
       <rsc_op id="64" operation="monitor" operation_key="scale1-bundle-docker-5_monitor_0" on_node="c09-h10-r630" on_node_uuid="c09-h10-r630" router_node="c09-h07-r630">
         <primitive id="scale1-bundle-docker-5" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h10-r630" CRM_meta_on_node_uuid="c09-h10-r630" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-5" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-5:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h10-r630" CRM_meta_on_node_uuid="c09-h10-r630" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-5" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-5:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1640,7 +1640,7 @@
     <action_set>
       <rsc_op id="58" operation="monitor" operation_key="scale1-bundle-docker-5_monitor_0" on_node="c09-h09-r630" on_node_uuid="c09-h09-r630" router_node="c09-h06-r630">
         <primitive id="scale1-bundle-docker-5" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h09-r630" CRM_meta_on_node_uuid="c09-h09-r630" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-5" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-5:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h09-r630" CRM_meta_on_node_uuid="c09-h09-r630" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-5" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-5:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1653,7 +1653,7 @@
     <action_set>
       <rsc_op id="52" operation="monitor" operation_key="scale1-bundle-docker-5_monitor_0" on_node="c09-h08-r630" on_node_uuid="c09-h08-r630" router_node="c09-h05-r630">
         <primitive id="scale1-bundle-docker-5" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h08-r630" CRM_meta_on_node_uuid="c09-h08-r630" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-5" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-5:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h08-r630" CRM_meta_on_node_uuid="c09-h08-r630" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-5" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-5:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1666,7 +1666,7 @@
     <action_set>
       <rsc_op id="45" operation="monitor" operation_key="scale1-bundle-docker-5_monitor_0" on_node="c09-h07-r630" on_node_uuid="3">
         <primitive id="scale1-bundle-docker-5" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h07-r630" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-5" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-5:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h07-r630" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-5" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-5:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -1675,7 +1675,7 @@
     <action_set>
       <rsc_op id="30" operation="monitor" operation_key="scale1-bundle-docker-5_monitor_0" on_node="c09-h06-r630" on_node_uuid="2">
         <primitive id="scale1-bundle-docker-5" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h06-r630" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-5" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-5:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h06-r630" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-5" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-5:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -1684,7 +1684,7 @@
     <action_set>
       <rsc_op id="15" operation="monitor" operation_key="scale1-bundle-docker-5_monitor_0" on_node="c09-h05-r630" on_node_uuid="1">
         <primitive id="scale1-bundle-docker-5" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="c09-h05-r630" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-5" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-5:/var/log --user=root --log-driver=journald "/>
+        <attributes CRM_meta_on_node="c09-h05-r630" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="beekhof:remote" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/scale1-bundle-5" reuse="false" run_cmd="/usr/sbin/pacemaker_remoted" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3131 -v /dev/log:/dev/log -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/scale1-bundle-5:/var/log --user=root --log-driver=journald "/>
       </rsc_op>
     </action_set>
     <inputs/>

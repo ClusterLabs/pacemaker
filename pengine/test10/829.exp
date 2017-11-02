@@ -83,15 +83,6 @@
       <trigger>
         <crm_event id="1" operation="stonith" operation_key="stonith-c001n02-reboot" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
       </trigger>
-      <trigger>
-        <rsc_op id="12" operation="monitor" operation_key="rsc_c001n02_monitor_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="19" operation="monitor" operation_key="rsc_c001n02_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="23" operation="monitor" operation_key="rsc_c001n02_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
-      </trigger>
     </inputs>
   </synapse>
   <synapse id="7">

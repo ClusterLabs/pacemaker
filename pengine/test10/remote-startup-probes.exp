@@ -57,11 +57,7 @@
         <attributes CRM_meta_on_node="18builder" CRM_meta_on_node_uuid="5" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="7" operation="monitor" operation_key="FAKE1_monitor_0" on_node="remote1" on_node_uuid="remote1" router_node="18builder"/>
-      </trigger>
-    </inputs>
+    <inputs/>
   </synapse>
   <synapse id="5">
     <action_set>
@@ -118,11 +114,7 @@
         <attributes CRM_meta_on_node="18node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="8" operation="monitor" operation_key="FAKE2_monitor_0" on_node="remote1" on_node_uuid="remote1" router_node="18builder"/>
-      </trigger>
-    </inputs>
+    <inputs/>
   </synapse>
   <synapse id="9">
     <action_set>

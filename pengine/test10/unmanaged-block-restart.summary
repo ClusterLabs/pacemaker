@@ -10,8 +10,8 @@ Online: [ yingying.site ]
 
 Transition Summary:
  * Start   rsc1	(yingying.site)
- * Stop       rsc2    ( yingying.site )   due to required rsc1 start (blocked)
- * Stop       rsc3    ( yingying.site )   due to required rsc2 start (blocked)
+ * Stop       rsc2    ( yingying.site )   due to unrunnable rsc3 stop (blocked)
+ * Stop       rsc3    ( yingying.site )   due to required rsc2 stop (blocked)
 
 Executing cluster transition:
  * Pseudo action:   group1_stop_0

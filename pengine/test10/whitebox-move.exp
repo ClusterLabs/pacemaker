@@ -155,11 +155,7 @@
         <attributes CRM_meta_on_node="lxc1" CRM_meta_on_node_uuid="lxc1" CRM_meta_physical_host="18node1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="10" operation="monitor" operation_key="A_monitor_0" on_node="lxc2" on_node_uuid="lxc2" router_node="18node2"/>
-      </trigger>
-    </inputs>
+    <inputs/>
   </synapse>
   <synapse id="11">
     <action_set>

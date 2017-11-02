@@ -16,7 +16,7 @@ Online: [ deglxen001 ]
 
 Transition Summary:
  * Migrate    degllx62-vm             ( deglxen002 -> deglxen001 )  
- * Stop    degllx61-vm	(deglxen001)
+ * Stop       degllx61-vm             (               deglxen001 )   due to node availability
  * Stop    nfs-xen_config:1	(deglxen002)  	due to node availability
  * Stop    nfs-xen_swapfiles:1	(deglxen002)  	due to node availability
  * Stop    nfs-xen_images:1	(deglxen002)  	due to node availability

@@ -10,7 +10,7 @@ OFFLINE: [ fc16-builder2 ]
 
 Transition Summary:
  * Stop       NATIVE_RSC_A:0     ( Slave fc16-builder )   due to node availability
- * Stop    NATIVE_RSC_B	(fc16-builder)
+ * Stop       NATIVE_RSC_B       (       fc16-builder )   due to node availability
 
 Executing cluster transition:
  * Pseudo action:   MASTER_RSC_A_pre_notify_stop_0

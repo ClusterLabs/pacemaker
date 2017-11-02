@@ -20,12 +20,12 @@ Containers: [ pgsr01:prmDB1 ]
 Transition Summary:
  * Fence (off) pgsr02 (resource: prmDB2) 'guest is unclean'
  * Stop    prmDB2	(bl460g8n4)  	due to node availability
- * Restart    prmStonith1-2     (        bl460g8n4 )  
- * Restart    prmStonith2-2     (        bl460g8n3 )  
+ * Restart    prmStonith1-2     (        bl460g8n4 )   due to resource definition change
+ * Restart    prmStonith2-2     (        bl460g8n3 )   due to resource definition change
  * Recover    vip-master        ( pgsr02 -> pgsr01 )  
  * Recover    vip-rep           ( pgsr02 -> pgsr01 )  
  * Stop       pgsql:0           (    Master pgsr02 )   due to node availability
- * Stop    pgsr02	(bl460g8n4)
+ * Stop       pgsr02            (        bl460g8n4 )   due to node availability
 
 Executing cluster transition:
  * Pseudo action:   grpStonith1_stop_0

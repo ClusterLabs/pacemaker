@@ -1,10 +1,8 @@
 digraph "g" {
 "all_stopped" [ style=bold color="green" fontcolor="orange"]
 "galera-bundle-0_monitor_0 metal-2" -> "galera-bundle-0_start_0 metal-1" [ style = dashed]
-"galera-bundle-0_monitor_0 metal-2" -> "galera-bundle-0_stop_0 metal-1" [ style = bold]
 "galera-bundle-0_monitor_0 metal-2" [ style=bold color="green" fontcolor="black"]
 "galera-bundle-0_monitor_0 metal-3" -> "galera-bundle-0_start_0 metal-1" [ style = dashed]
-"galera-bundle-0_monitor_0 metal-3" -> "galera-bundle-0_stop_0 metal-1" [ style = bold]
 "galera-bundle-0_monitor_0 metal-3" [ style=bold color="green" fontcolor="black"]
 "galera-bundle-0_monitor_60000 metal-1" [ style=dashed color="red" fontcolor="black"]
 "galera-bundle-0_start_0 metal-1" -> "galera-bundle-0_monitor_60000 metal-1" [ style = dashed]

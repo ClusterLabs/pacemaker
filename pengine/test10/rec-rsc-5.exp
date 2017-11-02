@@ -93,9 +93,6 @@
       <trigger>
         <crm_event id="1" operation="stonith" operation_key="stonith-node2-reboot" on_node="node2" on_node_uuid="uuid2"/>
       </trigger>
-      <trigger>
-        <rsc_op id="5" operation="monitor" operation_key="rsc2_monitor_0" on_node="node1" on_node_uuid="uuid1"/>
-      </trigger>
     </inputs>
   </synapse>
   <synapse id="7">

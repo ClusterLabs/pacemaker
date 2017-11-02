@@ -56,7 +56,6 @@ digraph "g" {
 "dlm_stop_0 virt-1" -> "stonith 'on' virt-1" [ style = bold]
 "dlm_stop_0 virt-1" [ style=bold color="green" fontcolor="black"]
 "fencing_monitor_0 virt-3" -> "fencing_start_0 virt-1" [ style = bold]
-"fencing_monitor_0 virt-3" -> "fencing_stop_0 virt-1" [ style = bold]
 "fencing_monitor_0 virt-3" [ style=bold color="green" fontcolor="black"]
 "fencing_start_0 virt-1" [ style=bold color="green" fontcolor="black"]
 "fencing_stop_0 virt-1" -> "all_stopped" [ style = bold]

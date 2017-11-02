@@ -23,16 +23,16 @@ Transition Summary:
  * Stop       keystone:0            ( rhos4-node4 )   due to unrunnable qpidd-clone running
  * Stop       keystone:1            ( rhos4-node3 )   due to unrunnable qpidd-clone running
  * Stop       glance-fs:0           ( rhos4-node4 )   due to required keystone-clone running
- * Stop       glance-registry:0     ( rhos4-node4 )   due to required glance-fs:0 start
+ * Stop       glance-registry:0     ( rhos4-node4 )   due to required glance-fs:0 stop
  * Stop       glance-api:0          ( rhos4-node4 )   due to required glance-registry:0 start
  * Stop       glance-fs:1           ( rhos4-node3 )   due to required keystone-clone running
- * Stop       glance-registry:1     ( rhos4-node3 )   due to required glance-fs:1 start
+ * Stop       glance-registry:1     ( rhos4-node3 )   due to required glance-fs:1 stop
  * Stop       glance-api:1          ( rhos4-node3 )   due to required glance-registry:1 start
  * Stop       cinder-api:0          ( rhos4-node4 )   due to required glance-clone running
- * Stop       cinder-scheduler:0    ( rhos4-node4 )   due to required cinder-api:0 start
+ * Stop       cinder-scheduler:0    ( rhos4-node4 )   due to required cinder-api:0 stop
  * Stop       cinder-volume:0       ( rhos4-node4 )   due to required cinder-scheduler:0 start
  * Stop       cinder-api:1          ( rhos4-node3 )   due to required glance-clone running
- * Stop       cinder-scheduler:1    ( rhos4-node3 )   due to required cinder-api:1 start
+ * Stop       cinder-scheduler:1    ( rhos4-node3 )   due to required cinder-api:1 stop
  * Stop       cinder-volume:1       ( rhos4-node3 )   due to required cinder-scheduler:1 start
 
 Executing cluster transition:

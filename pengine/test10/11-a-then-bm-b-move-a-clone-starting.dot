@@ -12,7 +12,6 @@
 "myclone-clone_stopped_0" -> "myclone-clone_start_0" [ style = bold]
 "myclone-clone_stopped_0" [ style=bold color="green" fontcolor="orange"]
 "myclone_monitor_0 f20node2" -> "myclone-clone_start_0" [ style = bold]
-"myclone_monitor_0 f20node2" -> "myclone_stop_0 f20node1" [ style = bold]
 "myclone_monitor_0 f20node2" [ style=bold color="green" fontcolor="black"]
 "myclone_start_0 f20node2" -> "myclone-clone_running_0" [ style = bold]
 "myclone_start_0 f20node2" [ style=bold color="green" fontcolor="black"]

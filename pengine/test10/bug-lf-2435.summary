@@ -10,7 +10,7 @@ Online: [ c19.chepkov.lan c21.chepkov.lan ]
 
 Transition Summary:
  * Move       dummy2     ( c20.chepkov.lan -> c21.chepkov.lan )  
- * Stop    dummy3	(c21.chepkov.lan)
+ * Stop       dummy3     (                    c21.chepkov.lan )   due to node availability
 
 Executing cluster transition:
  * Resource action: dummy2          stop on c20.chepkov.lan

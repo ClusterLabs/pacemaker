@@ -11,7 +11,7 @@ OFFLINE: [ rhel7-alt3 ]
 
 Transition Summary:
  * Fence (reboot) rhel7-alt4 'fake is active there (fencing will be revoked if remote connection can be re-established elsewhere)'
- * Stop    fake	(rhel7-alt4)
+ * Stop       fake    ( rhel7-alt4 )   due to node availability
 
 Executing cluster transition:
  * Fencing rhel7-alt4 (reboot)

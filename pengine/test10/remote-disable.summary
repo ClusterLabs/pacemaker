@@ -13,7 +13,7 @@ RemoteOnline: [ remote1 ]
 
 Transition Summary:
  * Stop    remote1	(18builder)  	due to node availability
- * Stop    FAKE2	(remote1)
+ * Stop       FAKE2       (   remote1 )   due to node availability
 
 Executing cluster transition:
  * Resource action: FAKE2           stop on remote1
