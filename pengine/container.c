@@ -912,12 +912,17 @@ container_create_probe(resource_t * rsc, node_t * node, action_t * complete,
              */
             char *probe_uuid = generate_op_key(tuple->remote->id, RSC_STATUS, 0);
             action_t *probe = find_first_action(tuple->remote->actions, probe_uuid, NULL, node);
-            any_created = TRUE;
 
-            crm_trace("Ordering %s probe on %s", tuple->remote->id, node->details->uname);
-            custom_action_order(tuple->docker, generate_op_key(tuple->docker->id, RSC_START, 0), NULL,
-                                tuple->remote, NULL, probe, pe_order_probe, data_set);
             free(probe_uuid);
+            if (probe) {
+                any_created = TRUE;
+                crm_trace("Ordering %s probe on %s",
+                          tuple->remote->id, node->details->uname);
+                custom_action_order(tuple->docker,
+                                    generate_op_key(tuple->docker->id, RSC_START, 0),
+                                    NULL, tuple->remote, NULL, probe,
+                                    pe_order_probe, data_set);
+            }
         }
     }
     return any_created;
