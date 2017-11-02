@@ -12,7 +12,7 @@ RemoteOnline: [ remote1 ]
  FAKE4	(ocf::heartbeat:Dummy):	Started 18node1
 
 Transition Summary:
- * Stop    remote1	(18builder)
+ * Stop       remote1     ( 18builder )   due to node availability
 
 Executing cluster transition:
  * Resource action: FAKE1           monitor on remote1

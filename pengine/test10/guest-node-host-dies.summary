@@ -14,7 +14,7 @@ Transition Summary:
  * Fence (reboot) lxc2 (resource: container2) 'guest is unclean'
  * Fence (reboot) lxc1 (resource: container1) 'guest is unclean'
  * Fence (reboot) rhel7-1 'rsc_rhel7-1 is thought to be active there'
- * Restart    Fencing         (            rhel7-4 )  
+ * Restart    Fencing         (            rhel7-4 )   due to resource definition change
  * Move       rsc_rhel7-1     ( rhel7-1 -> rhel7-5 )  
  * Recover    container1      ( rhel7-1 -> rhel7-2 )  
  * Recover    container2      ( rhel7-1 -> rhel7-3 )  

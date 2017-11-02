@@ -502,18 +502,30 @@ container_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc, rsc_colocatio
 enum pe_action_flags
 container_action_flags(action_t * action, node_t * node)
 {
+    GListPtr containers = NULL;
     enum pe_action_flags flags = 0;
     container_variant_data_t *data = NULL;
 
     get_container_variant_data(data, action->rsc);
     if(data->child) {
-        flags = summary_action_flags(action, data->child->children, node);
-
-    } else {
-        GListPtr containers = get_container_list(action->rsc);
-        flags = summary_action_flags(action, containers, node);
-        g_list_free(containers);
+        enum action_tasks task = get_complex_task(data->child, action->task, TRUE);
+        switch(task) {
+            case no_action:
+            case action_notify:
+            case action_notified:
+            case action_promote:
+            case action_promoted:
+            case action_demote:
+            case action_demoted:
+                return summary_action_flags(action, data->child->children, node);
+            default:
+                break;
+        }
     }
+
+    containers = get_container_list(action->rsc);
+    flags = summary_action_flags(action, containers, node);
+    g_list_free(containers);
     return flags;
 }
 
@@ -818,16 +830,18 @@ container_expand(resource_t * rsc, pe_working_set_t * data_set)
     for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
         container_grouping_t *tuple = (container_grouping_t *)gIter->data;
 
-
         CRM_ASSERT(tuple);
-        if (tuple->docker && tuple->remote && tuple->docker->allocated_to
-            && fix_remote_addr(tuple->remote)) {
-
+        if (tuple->remote && tuple->docker && container_fix_remote_addr(tuple->remote)) {
             // REMOTE_CONTAINER_HACK: Allow remote nodes that start containers with pacemaker remote inside
             xmlNode *nvpair = get_xpath_object("//nvpair[@name='addr']", tuple->remote->xml, LOG_ERR);
+            const char *calculated_addr = container_fix_remote_addr_in(tuple->remote, nvpair, "value");
 
-            g_hash_table_replace(tuple->remote->parameters, strdup("addr"), strdup(tuple->docker->allocated_to->details->uname));
-            crm_xml_add(nvpair, "value", tuple->docker->allocated_to->details->uname);
+            if (calculated_addr) {
+                crm_trace("Fixed addr for %s on %s", tuple->remote->id, calculated_addr);
+                g_hash_table_replace(tuple->remote->parameters, strdup("addr"), strdup(calculated_addr));
+            } else {
+                crm_err("Could not fix addr for %s", tuple->remote->id);
+            }
         }
         if(tuple->ip) {
             tuple->ip->cmds->expand(tuple->ip, data_set);
@@ -887,13 +901,23 @@ container_create_probe(resource_t * rsc, node_t * node, action_t * complete,
 
                         custom_action_order(tuple->docker, generate_op_key(tuple->docker->id, RSC_STATUS, 0), NULL,
                                             other->docker, generate_op_key(other->docker->id, RSC_START, 0), NULL,
-                                            pe_order_optional, data_set);
+                                            pe_order_optional|pe_order_same_node, data_set);
                     }
                 }
             }
         }
-        if(tuple->remote) {
-            any_created |= tuple->remote->cmds->create_probe(tuple->remote, node, complete, force, data_set);
+        if(tuple->remote && tuple->remote->cmds->create_probe(tuple->remote, node, complete, force, data_set)) {
+            /* Do not probe the remote resource until we know where docker is running
+             * Required for REMOTE_CONTAINER_HACK to correctly probe remote resources
+             */
+            char *probe_uuid = generate_op_key(tuple->remote->id, RSC_STATUS, 0);
+            action_t *probe = find_first_action(tuple->remote->actions, probe_uuid, NULL, node);
+            any_created = TRUE;
+
+            crm_trace("Ordering %s probe on %s", tuple->remote->id, node->details->uname);
+            custom_action_order(tuple->docker, generate_op_key(tuple->docker->id, RSC_START, 0), NULL,
+                                tuple->remote, NULL, probe, pe_order_probe, data_set);
+            free(probe_uuid);
         }
     }
     return any_created;

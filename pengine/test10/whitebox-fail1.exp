@@ -196,9 +196,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="13" operation="monitor" operation_key="B_monitor_0" on_node="lxc2" on_node_uuid="lxc2" router_node="18node2"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="49" operation="stonith" operation_key="stonith-lxc1-reboot" on_node="lxc1" on_node_uuid="lxc1"/>
       </trigger>
     </inputs>

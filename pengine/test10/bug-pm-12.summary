@@ -11,8 +11,8 @@ Online: [ node-a node-b ]
          stateful-2:1	(ocf::heartbeat:Stateful):	Master node-a
 
 Transition Summary:
- * Restart stateful-2:0	(Slave node-b)
- * Restart stateful-2:1	(Master node-a)
+ * Restart    stateful-2:0     (  Slave node-b )   due to resource definition change
+ * Restart    stateful-2:1     ( Master node-a )   due to resource definition change
 
 Executing cluster transition:
  * Pseudo action:   ms-sf_demote_0

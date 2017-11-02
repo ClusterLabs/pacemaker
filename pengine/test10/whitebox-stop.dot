@@ -1,7 +1,6 @@
 digraph "g" {
 "A_monitor_0 lxc2" [ style=bold color="green" fontcolor="black"]
 "B_monitor_0 lxc2" -> "B_start_0 lxc2" [ style = bold]
-"B_monitor_0 lxc2" -> "B_stop_0 lxc1" [ style = bold]
 "B_monitor_0 lxc2" [ style=bold color="green" fontcolor="black"]
 "B_monitor_10000 lxc2" [ style=bold color="green" fontcolor="black"]
 "B_start_0 lxc2" -> "B_monitor_10000 lxc2" [ style = bold]

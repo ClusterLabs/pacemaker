@@ -57,6 +57,7 @@ resource_ipc_connection_destroy(gpointer user_data)
     crm_exit(1);
 }
 
+static bool mainloop_running = FALSE;
 static void
 start_mainloop(void)
 {
@@ -64,6 +65,7 @@ start_mainloop(void)
         return;
     }
 
+    mainloop_running = TRUE;
     mainloop = g_main_new(FALSE);
     fprintf(stderr, "Waiting for %d replies from the CRMd", crmd_replies_needed);
     crm_debug("Waiting for %d replies from the CRMd", crmd_replies_needed);
@@ -81,7 +83,7 @@ resource_ipc_callback(const char *buffer, ssize_t length, gpointer userdata)
     crm_log_xml_trace(msg, "[inbound]");
 
     crmd_replies_needed--;
-    if (crmd_replies_needed == 0) {
+    if (crmd_replies_needed == 0 && mainloop_running) {
         fprintf(stderr, " OK\n");
         crm_debug("Got all the replies we expected");
         return crm_exit(pcmk_ok);
@@ -210,6 +212,11 @@ static struct crm_option long_options[] = {
     },
     {
         "cleanup", no_argument, NULL, 'C',
+        "\t\tDelete failed operations from a resource's history allowing its current state to be rechecked.\n"
+        "\t\t\t\tOptionally filtered by --resource, --node, --operation, and --interval (otherwise all).\n"
+    },
+    {
+        "refresh", no_argument, NULL, 'R',
         "\t\tDelete resource's history (including failures) so its current state is rechecked.\n"
         "\t\t\t\tOptionally filtered by --resource, --node, --operation, and --interval (otherwise all).\n"
         "\t\t\t\tUnless --force is specified, resource's group or clone (if any) will also be cleaned"
@@ -374,7 +381,6 @@ static struct crm_option long_options[] = {
     {"un-migrate", no_argument, NULL, 'U', NULL, pcmk_option_hidden},
     {"un-move", no_argument, NULL, 'U', NULL, pcmk_option_hidden},
 
-    {"refresh", no_argument, NULL, 'R', NULL, pcmk_option_hidden},
     {"reprobe", no_argument, NULL, 'P', NULL, pcmk_option_hidden},
 
     {"-spacer-", 1, NULL, '-', "\nExamples:", pcmk_option_paragraph},
@@ -400,6 +406,7 @@ static struct crm_option long_options[] = {
     {0, 0, 0, 0}
 };
 /* *INDENT-ON* */
+
 
 int
 main(int argc, char **argv)
@@ -429,6 +436,7 @@ main(int argc, char **argv)
     bool require_resource = TRUE; /* whether command requires that resource be specified */
     bool require_dataset = TRUE;  /* whether command requires populated dataset instance */
     bool require_crmd = FALSE;    /* whether command requires connection to CRMd */
+    bool just_errors = TRUE;      /* whether cleanup command deletes all history or just errors */
 
     int rc = pcmk_ok;
     int is_ocf_rc = 0;
@@ -611,12 +619,20 @@ main(int argc, char **argv)
                 timeout_ms = crm_get_msec(optarg);
                 break;
 
-            case 'C':
             case 'R':
             case 'P':
                 crm_log_args(argc, argv);
                 require_resource = FALSE;
                 require_crmd = TRUE;
+                just_errors = FALSE;
+                rsc_cmd = 'C';
+                break;
+
+            case 'C':
+                crm_log_args(argc, argv);
+                require_resource = FALSE;
+                require_crmd = TRUE;
+                just_errors = TRUE;
                 rsc_cmd = 'C';
                 break;
 
@@ -815,7 +831,7 @@ main(int argc, char **argv)
     }
     
     /* Establish a connection to the CRMd if needed */
-    if (require_crmd) {
+    if (getenv("CIB_file") == NULL && require_crmd) {
         xmlNode *xml = NULL;
         mainloop_io_t *source =
             mainloop_add_ipc_client(CRM_SYSTEM_CRMD, G_PRIORITY_DEFAULT, 0, NULL, &crm_callbacks);
@@ -857,7 +873,7 @@ main(int argc, char **argv)
     } else if (rsc_cmd == 0 && rsc_long_cmd && safe_str_eq(rsc_long_cmd, "restart")) {
         resource_t *rsc = NULL;
 
-        rsc = pe_find_resource(data_set.resources, rsc_id);
+        rsc = pe_find_resource_with_flags(data_set.resources, rsc_id, pe_find_renamed | pe_find_current | pe_find_anon);
 
         rc = -EINVAL;
         if (rsc == NULL) {
@@ -879,7 +895,7 @@ main(int argc, char **argv)
 
     } else if (rsc_cmd == 'A' || rsc_cmd == 'a') {
         GListPtr lpc = NULL;
-        resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
+        resource_t *rsc = pe_find_resource_with_flags(data_set.resources, rsc_id, pe_find_renamed | pe_find_current | pe_find_anon);
         xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set.input);
 
         if (rsc == NULL) {
@@ -981,7 +997,7 @@ main(int argc, char **argv)
         rc = cli_resource_move(rsc_id, host_uname, cib_conn, &data_set);
 
     } else if (rsc_cmd == 'B' && host_uname) {
-        resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
+        resource_t *rsc = pe_find_resource_with_flags(data_set.resources, rsc_id, pe_find_renamed | pe_find_current | pe_find_anon);
         node_t *dest = pe_find_node(data_set.nodes, host_uname);
 
         rc = -ENXIO;
@@ -996,7 +1012,7 @@ main(int argc, char **argv)
         rc = cli_resource_ban(rsc_id, dest->details->uname, NULL, cib_conn);
 
     } else if (rsc_cmd == 'B' || rsc_cmd == 'M') {
-        resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
+        resource_t *rsc = pe_find_resource_with_flags(data_set.resources, rsc_id, pe_find_renamed | pe_find_current | pe_find_anon);
         rc = -EINVAL;
         if(rsc == NULL) {
             CMD_ERR("Resource '%s' not moved: unknown", rsc_id);
@@ -1078,8 +1094,46 @@ main(int argc, char **argv)
     } else if (rsc_cmd == 'd') {
         /* coverity[var_deref_model] False positive */
         rc = cli_resource_delete_attribute(rsc_id, prop_set, prop_id, prop_name, cib_conn, &data_set);
+    } else if (rsc_cmd == 'C' && just_errors) {
+        crmd_replies_needed = 0;
+        for (xmlNode *xml_op = __xml_first_child(data_set.failed); xml_op != NULL;
+             xml_op = __xml_next(xml_op)) {
+
+            const char *node = crm_element_value(xml_op, XML_ATTR_UNAME);
+            const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
+            const char *task_interval = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
+            const char *resource_name = crm_element_value(xml_op, XML_LRM_ATTR_RSCID);
+            resource_t *rsc = NULL;
+
+            if(resource_name == NULL) {
+                continue;
+            } else if(host_uname && safe_str_neq(host_uname, node)) {
+                continue;
+            } else if(rsc_id && safe_str_neq(rsc_id, resource_name)) {
+                continue;
+            } else if(operation && safe_str_neq(operation, task)) {
+                continue;
+            } else if(interval && safe_str_neq(interval, task_interval)) {
+                continue;
+            }
+
+            rsc = pe_find_resource_with_flags(
+                data_set.resources, resource_name, pe_find_renamed | pe_find_current | pe_find_anon);
+            if(rsc) {
+                crm_debug("Erasing %s failure for %s (%s detected) on %s",
+                          task, rsc->id, resource_name, node);
+                rc = cli_resource_delete(crmd_channel, node, rsc, task, task_interval, &data_set);
+
+            } else {
+                rc = -ENODEV;
+            }
+        }
+        if (rc == pcmk_ok) {
+            start_mainloop();
+        }
+
     } else if ((rsc_cmd == 'C') && (rsc_id)) {
-        resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
+        resource_t *rsc = pe_find_resource_with_flags(data_set.resources, rsc_id, pe_find_renamed | pe_find_current | pe_find_anon);
         if(do_force == FALSE) {
             rsc = uber_parent(rsc);
         }

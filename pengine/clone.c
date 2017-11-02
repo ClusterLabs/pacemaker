@@ -1168,17 +1168,6 @@ summary_action_flags(action_t * action, GListPtr children, node_t * node)
             if (is_set(child_flags, pe_action_runnable)) {
                 any_runnable = TRUE;
             }
-
-        } else {
-
-            GListPtr gIter2 = child->actions;
-
-            for (; gIter2 != NULL; gIter2 = gIter2->next) {
-                action_t *op = (action_t *) gIter2->data;
-
-                pe_rsc_trace(child, "%s on %s (%s)", op->uuid,
-                             op->node ? op->node->details->uname : "none", op->task);
-            }
         }
     }
 

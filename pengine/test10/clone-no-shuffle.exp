@@ -419,11 +419,7 @@
         <attributes CRM_meta_on_node="dktest2sles10" CRM_meta_on_node_uuid="6676c8d5-552e-4a86-a2ea-172e954f7342" CRM_meta_timeout="20000" broadcast="10.200.200.255" cidr_netmask="24"  ip="10.200.200.222" nic="eth1"/>
        </rsc_op>
      </action_set>
-     <inputs>
-       <trigger>
-        <rsc_op id="6" operation="monitor" operation_key="testip_monitor_0" on_node="dktest1sles10" on_node_uuid="c563f60c-45a8-439e-85dc-645f4ecc150d"/>
-       </trigger>
-     </inputs>
+    <inputs/>
    </synapse>
   <synapse id="31">
      <action_set>

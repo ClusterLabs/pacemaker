@@ -17,7 +17,7 @@ Online: [ ha1.test.anchor.net.au ha2.test.anchor.net.au ]
      Slaves: [ ha1.test.anchor.net.au ]
 
 Transition Summary:
- * Stop    child1-service	(ha2.test.anchor.net.au)
+ * Stop       child1-service     ( ha2.test.anchor.net.au )   due to node availability
 
 Executing cluster transition:
  * Resource action: child1-service  stop on ha2.test.anchor.net.au

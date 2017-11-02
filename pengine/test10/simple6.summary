@@ -7,7 +7,7 @@ Online: [ node1 ]
 
 Transition Summary:
  * Start   rsc2	(node1)
- * Stop    rsc1	(node1)
+ * Stop       rsc1    ( node1 )   due to node availability
 
 Executing cluster transition:
  * Resource action: rsc2            monitor on node1

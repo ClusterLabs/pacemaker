@@ -617,6 +617,24 @@ cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
         GListPtr lpc = NULL;
         GListPtr nodes = g_hash_table_get_values(rsc->known_on);
 
+        if(nodes == NULL && do_force) {
+            nodes = node_list_dup(data_set->nodes, FALSE, FALSE);
+
+        } else if(nodes == NULL && rsc->exclusive_discover) {
+            GHashTableIter iter;
+            pe_node_t *node = NULL;
+
+            g_hash_table_iter_init(&iter, rsc->allowed_nodes);
+            while (g_hash_table_iter_next(&iter, NULL, (void**)&node)) {
+                if(node->weight >= 0) {
+                    nodes = g_list_prepend(nodes, node);
+                }
+            }
+
+        } else if(nodes == NULL) {
+            nodes = g_hash_table_get_values(rsc->allowed_nodes);
+        }
+
         for (lpc = nodes; lpc != NULL; lpc = lpc->next) {
             node = (node_t *) lpc->data;
 
@@ -644,11 +662,17 @@ cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
         return -EOPNOTSUPP;
     }
 
+    if(getenv("CIB_file") != NULL) {
+        printf("Would have cleaned up %s on %s\n", rsc->id, host_uname);
+        return rc;
+     }
+
     /* Erase the resource's entire LRM history in the CIB, even if we're only
      * clearing a single operation's fail count. If we erased only entries for a
      * single operation, we might wind up with a wrong idea of the current
      * resource state, and we might not re-probe the resource.
      */
+    crmd_replies_needed++;
     rc = send_lrm_rsc_op(crmd_channel, CRM_OP_LRM_DELETE, host_uname, rsc->id,
                          TRUE, data_set);
     if (rc != pcmk_ok) {
@@ -656,8 +680,15 @@ cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
                rsc->id, host_uname, pcmk_strerror(rc));
         return rc;
     }
-    if (node->details->remote_rsc == NULL) {
-        crmd_replies_needed++;
+
+    crm_trace("Processing %d mainloop inputs", crmd_replies_needed);
+    while(g_main_context_iteration(NULL, FALSE)) {
+        crm_trace("Processed mainloop input, %d still remaining",
+                  crmd_replies_needed);
+    }
+
+    if(crmd_replies_needed < 0) {
+        crmd_replies_needed = 0;
     }
 
     rsc_name = rsc_fail_name(rsc);

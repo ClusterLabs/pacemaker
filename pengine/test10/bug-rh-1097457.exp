@@ -105,12 +105,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="26" operation="monitor" operation_key="FSlun3_monitor_0" on_node="lamaVM1" on_node_uuid="lamaVM1" router_node="lama2"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="35" operation="monitor" operation_key="FSlun3_monitor_0" on_node="lamaVM3" on_node_uuid="lamaVM3" router_node="lama3"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="98" operation="stopped" operation_key="lamaVM2-G4_stopped_0"/>
       </trigger>
       <trigger>
@@ -359,12 +353,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="31" operation="monitor" operation_key="FAKE4_monitor_0" on_node="lamaVM1" on_node_uuid="lamaVM1" router_node="lama2"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="44" operation="monitor" operation_key="FAKE4_monitor_0" on_node="lamaVM3" on_node_uuid="lamaVM3" router_node="lama3"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="93" operation="stop" operation_key="FAKE4-IP_stop_0"/>
       </trigger>
       <trigger>
@@ -450,12 +438,6 @@
       </pseudo_event>
     </action_set>
     <inputs>
-      <trigger>
-        <rsc_op id="32" operation="monitor" operation_key="FAKE4-IP_monitor_0" on_node="lamaVM1" on_node_uuid="lamaVM1" router_node="lama2"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="45" operation="monitor" operation_key="FAKE4-IP_monitor_0" on_node="lamaVM3" on_node_uuid="lamaVM3" router_node="lama3"/>
-      </trigger>
       <trigger>
         <pseudo_event id="97" operation="stop" operation_key="lamaVM2-G4_stop_0"/>
       </trigger>

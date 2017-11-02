@@ -11,12 +11,13 @@ Online: [ c001n01 c001n02 c001n03 c001n08 ]
  rsc_c001n01	(ocf::heartbeat:IPaddr):	Started c001n01
 
 Transition Summary:
- * Stop    rsc_c001n08	(c001n08)
+ * Stop       rsc_c001n08     ( c001n08 )   due to node availability
 
 Executing cluster transition:
  * Resource action: DcIPaddr        monitor on c001n08
  * Resource action: DcIPaddr        monitor on c001n03
  * Resource action: DcIPaddr        monitor on c001n01
+ * Resource action: rsc_c001n08     stop on c001n08
  * Resource action: rsc_c001n08     monitor on c001n03
  * Resource action: rsc_c001n08     monitor on c001n02
  * Resource action: rsc_c001n08     monitor on c001n01
@@ -26,7 +27,6 @@ Executing cluster transition:
  * Resource action: rsc_c001n01     monitor on c001n08
  * Resource action: rsc_c001n01     monitor on c001n03
  * Resource action: rsc_c001n01     monitor on c001n02
- * Resource action: rsc_c001n08     stop on c001n08
  * Pseudo action:   all_stopped
 
 Revised cluster status:

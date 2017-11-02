@@ -302,16 +302,20 @@
     <action_set>
       <rsc_op id="41" operation="stop" operation_key="rabbitmq-bundle-docker-0_stop_0" on_node="overcloud-rabbit-0" on_node_uuid="overcloud-rabbit-0" router_node="overcloud-controller-0">
         <primitive id="rabbitmq-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="overcloud-rabbit-0" CRM_meta_on_node_uuid="overcloud-rabbit-0" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-rabbitmq:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/rabbitmq-bundle-0" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no --net=host -e PCMK_remote_port=3121 -v /var/lib/kolla/config_files/rabbitmq.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/puppet-generated/rabbitmq/:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/rabbitmq:/var/lib/rabbitmq:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/rabbitmq-bundle-0:/var/log -p 3121:3121 --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+        <attributes CRM_meta_on_node="overcloud-rabbit-0" CRM_meta_on_node_uuid="overcloud-rabbit-0" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-rabbitmq:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/rabbitmq-bundle-0" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3121 -v /var/lib/kolla/config_files/rabbitmq.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/puppet-generated/rabbitmq/:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/rabbitmq:/var/lib/rabbitmq:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/rabbitmq-bundle-0:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <pseudo_event id="52" operation="stop" operation_key="rabbitmq-bundle_stop_0"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="19">
     <action_set>
       <rsc_op id="11" operation="start" operation_key="rabbitmq-bundle-docker-0_start_0" on_node="overcloud-rabbit-0" on_node_uuid="overcloud-rabbit-0" router_node="overcloud-controller-0">
         <primitive id="rabbitmq-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="overcloud-rabbit-0" CRM_meta_on_node_uuid="overcloud-rabbit-0" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-rabbitmq:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/rabbitmq-bundle-0" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no --net=host -e PCMK_remote_port=3121 -v /var/lib/kolla/config_files/rabbitmq.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/puppet-generated/rabbitmq/:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/rabbitmq:/var/lib/rabbitmq:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/rabbitmq-bundle-0:/var/log -p 3121:3121 --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+        <attributes CRM_meta_on_node="overcloud-rabbit-0" CRM_meta_on_node_uuid="overcloud-rabbit-0" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-rabbitmq:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/rabbitmq-bundle-0" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3121 -v /var/lib/kolla/config_files/rabbitmq.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/puppet-generated/rabbitmq/:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/rabbitmq:/var/lib/rabbitmq:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/rabbitmq-bundle-0:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -327,7 +331,7 @@
     <action_set>
       <rsc_op id="7" operation="monitor" operation_key="rabbitmq-bundle-docker-0_monitor_60000" on_node="overcloud-rabbit-0" on_node_uuid="overcloud-rabbit-0" router_node="overcloud-controller-0">
         <primitive id="rabbitmq-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="overcloud-rabbit-0" CRM_meta_on_node_uuid="overcloud-rabbit-0" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-rabbitmq:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/rabbitmq-bundle-0" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no --net=host -e PCMK_remote_port=3121 -v /var/lib/kolla/config_files/rabbitmq.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/puppet-generated/rabbitmq/:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/rabbitmq:/var/lib/rabbitmq:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/rabbitmq-bundle-0:/var/log -p 3121:3121 --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="overcloud-rabbit-0" CRM_meta_on_node_uuid="overcloud-rabbit-0" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-rabbitmq:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/rabbitmq-bundle-0" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3121 -v /var/lib/kolla/config_files/rabbitmq.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/puppet-generated/rabbitmq/:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/rabbitmq:/var/lib/rabbitmq:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/rabbitmq-bundle-0:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -387,7 +391,11 @@
         <attributes CRM_meta_container="rabbitmq-bundle-docker-0" CRM_meta_on_node="overcloud-galera-2" CRM_meta_on_node_uuid="6" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="overcloud-rabbit-0"  port="3121"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="11" operation="start" operation_key="rabbitmq-bundle-docker-0_start_0" on_node="overcloud-rabbit-0" on_node_uuid="overcloud-rabbit-0" router_node="overcloud-controller-0"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="24">
     <action_set>
@@ -396,7 +404,11 @@
         <attributes CRM_meta_container="rabbitmq-bundle-docker-0" CRM_meta_on_node="overcloud-galera-1" CRM_meta_on_node_uuid="5" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="overcloud-rabbit-0"  port="3121"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="11" operation="start" operation_key="rabbitmq-bundle-docker-0_start_0" on_node="overcloud-rabbit-0" on_node_uuid="overcloud-rabbit-0" router_node="overcloud-controller-0"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="25">
     <action_set>
@@ -405,7 +417,11 @@
         <attributes CRM_meta_container="rabbitmq-bundle-docker-0" CRM_meta_on_node="overcloud-galera-0" CRM_meta_on_node_uuid="4" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="overcloud-rabbit-0"  port="3121"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="11" operation="start" operation_key="rabbitmq-bundle-docker-0_start_0" on_node="overcloud-rabbit-0" on_node_uuid="overcloud-rabbit-0" router_node="overcloud-controller-0"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="26">
     <action_set>
@@ -414,7 +430,11 @@
         <attributes CRM_meta_container="rabbitmq-bundle-docker-0" CRM_meta_on_node="overcloud-controller-2" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="overcloud-rabbit-0"  port="3121"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="11" operation="start" operation_key="rabbitmq-bundle-docker-0_start_0" on_node="overcloud-rabbit-0" on_node_uuid="overcloud-rabbit-0" router_node="overcloud-controller-0"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="27">
     <action_set>
@@ -423,7 +443,11 @@
         <attributes CRM_meta_container="rabbitmq-bundle-docker-0" CRM_meta_on_node="overcloud-controller-1" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="overcloud-rabbit-0"  port="3121"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="11" operation="start" operation_key="rabbitmq-bundle-docker-0_start_0" on_node="overcloud-rabbit-0" on_node_uuid="overcloud-rabbit-0" router_node="overcloud-controller-0"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="28">
     <action_set>
@@ -432,22 +456,30 @@
         <attributes CRM_meta_container="rabbitmq-bundle-docker-0" CRM_meta_on_node="overcloud-controller-0" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="overcloud-rabbit-0"  port="3121"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="11" operation="start" operation_key="rabbitmq-bundle-docker-0_start_0" on_node="overcloud-rabbit-0" on_node_uuid="overcloud-rabbit-0" router_node="overcloud-controller-0"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="29">
     <action_set>
       <rsc_op id="44" operation="stop" operation_key="rabbitmq-bundle-docker-1_stop_0" on_node="overcloud-rabbit-1" on_node_uuid="overcloud-rabbit-1" router_node="overcloud-controller-1">
         <primitive id="rabbitmq-bundle-docker-1" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="overcloud-rabbit-1" CRM_meta_on_node_uuid="overcloud-rabbit-1" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-rabbitmq:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/rabbitmq-bundle-1" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no --net=host -e PCMK_remote_port=3121 -v /var/lib/kolla/config_files/rabbitmq.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/puppet-generated/rabbitmq/:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/rabbitmq:/var/lib/rabbitmq:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/rabbitmq-bundle-1:/var/log -p 3121:3121 --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+        <attributes CRM_meta_on_node="overcloud-rabbit-1" CRM_meta_on_node_uuid="overcloud-rabbit-1" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-rabbitmq:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/rabbitmq-bundle-1" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3121 -v /var/lib/kolla/config_files/rabbitmq.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/puppet-generated/rabbitmq/:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/rabbitmq:/var/lib/rabbitmq:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/rabbitmq-bundle-1:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <pseudo_event id="52" operation="stop" operation_key="rabbitmq-bundle_stop_0"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="30">
     <action_set>
       <rsc_op id="12" operation="start" operation_key="rabbitmq-bundle-docker-1_start_0" on_node="overcloud-rabbit-1" on_node_uuid="overcloud-rabbit-1" router_node="overcloud-controller-1">
         <primitive id="rabbitmq-bundle-docker-1" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="overcloud-rabbit-1" CRM_meta_on_node_uuid="overcloud-rabbit-1" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-rabbitmq:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/rabbitmq-bundle-1" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no --net=host -e PCMK_remote_port=3121 -v /var/lib/kolla/config_files/rabbitmq.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/puppet-generated/rabbitmq/:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/rabbitmq:/var/lib/rabbitmq:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/rabbitmq-bundle-1:/var/log -p 3121:3121 --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+        <attributes CRM_meta_on_node="overcloud-rabbit-1" CRM_meta_on_node_uuid="overcloud-rabbit-1" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-rabbitmq:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/rabbitmq-bundle-1" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3121 -v /var/lib/kolla/config_files/rabbitmq.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/puppet-generated/rabbitmq/:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/rabbitmq:/var/lib/rabbitmq:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/rabbitmq-bundle-1:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -463,7 +495,7 @@
     <action_set>
       <rsc_op id="8" operation="monitor" operation_key="rabbitmq-bundle-docker-1_monitor_60000" on_node="overcloud-rabbit-1" on_node_uuid="overcloud-rabbit-1" router_node="overcloud-controller-1">
         <primitive id="rabbitmq-bundle-docker-1" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="overcloud-rabbit-1" CRM_meta_on_node_uuid="overcloud-rabbit-1" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-rabbitmq:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/rabbitmq-bundle-1" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no --net=host -e PCMK_remote_port=3121 -v /var/lib/kolla/config_files/rabbitmq.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/puppet-generated/rabbitmq/:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/rabbitmq:/var/lib/rabbitmq:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/rabbitmq-bundle-1:/var/log -p 3121:3121 --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="overcloud-rabbit-1" CRM_meta_on_node_uuid="overcloud-rabbit-1" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-rabbitmq:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/rabbitmq-bundle-1" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3121 -v /var/lib/kolla/config_files/rabbitmq.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/puppet-generated/rabbitmq/:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/rabbitmq:/var/lib/rabbitmq:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/rabbitmq-bundle-1:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -523,7 +555,11 @@
         <attributes CRM_meta_container="rabbitmq-bundle-docker-1" CRM_meta_on_node="overcloud-galera-2" CRM_meta_on_node_uuid="6" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="overcloud-rabbit-1"  port="3121"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="12" operation="start" operation_key="rabbitmq-bundle-docker-1_start_0" on_node="overcloud-rabbit-1" on_node_uuid="overcloud-rabbit-1" router_node="overcloud-controller-1"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="35">
     <action_set>
@@ -532,7 +568,11 @@
         <attributes CRM_meta_container="rabbitmq-bundle-docker-1" CRM_meta_on_node="overcloud-galera-1" CRM_meta_on_node_uuid="5" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="overcloud-rabbit-1"  port="3121"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="12" operation="start" operation_key="rabbitmq-bundle-docker-1_start_0" on_node="overcloud-rabbit-1" on_node_uuid="overcloud-rabbit-1" router_node="overcloud-controller-1"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="36">
     <action_set>
@@ -541,7 +581,11 @@
         <attributes CRM_meta_container="rabbitmq-bundle-docker-1" CRM_meta_on_node="overcloud-galera-0" CRM_meta_on_node_uuid="4" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="overcloud-rabbit-1"  port="3121"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="12" operation="start" operation_key="rabbitmq-bundle-docker-1_start_0" on_node="overcloud-rabbit-1" on_node_uuid="overcloud-rabbit-1" router_node="overcloud-controller-1"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="37">
     <action_set>
@@ -550,7 +594,11 @@
         <attributes CRM_meta_container="rabbitmq-bundle-docker-1" CRM_meta_on_node="overcloud-controller-2" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="overcloud-rabbit-1"  port="3121"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="12" operation="start" operation_key="rabbitmq-bundle-docker-1_start_0" on_node="overcloud-rabbit-1" on_node_uuid="overcloud-rabbit-1" router_node="overcloud-controller-1"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="38">
     <action_set>
@@ -559,7 +607,11 @@
         <attributes CRM_meta_container="rabbitmq-bundle-docker-1" CRM_meta_on_node="overcloud-controller-1" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="overcloud-rabbit-1"  port="3121"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="12" operation="start" operation_key="rabbitmq-bundle-docker-1_start_0" on_node="overcloud-rabbit-1" on_node_uuid="overcloud-rabbit-1" router_node="overcloud-controller-1"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="39">
     <action_set>
@@ -568,22 +620,30 @@
         <attributes CRM_meta_container="rabbitmq-bundle-docker-1" CRM_meta_on_node="overcloud-controller-0" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="overcloud-rabbit-1"  port="3121"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="12" operation="start" operation_key="rabbitmq-bundle-docker-1_start_0" on_node="overcloud-rabbit-1" on_node_uuid="overcloud-rabbit-1" router_node="overcloud-controller-1"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="40">
     <action_set>
       <rsc_op id="47" operation="stop" operation_key="rabbitmq-bundle-docker-2_stop_0" on_node="overcloud-rabbit-2" on_node_uuid="overcloud-rabbit-2" router_node="overcloud-controller-2">
         <primitive id="rabbitmq-bundle-docker-2" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="overcloud-rabbit-2" CRM_meta_on_node_uuid="overcloud-rabbit-2" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-rabbitmq:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/rabbitmq-bundle-2" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no --net=host -e PCMK_remote_port=3121 -v /var/lib/kolla/config_files/rabbitmq.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/puppet-generated/rabbitmq/:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/rabbitmq:/var/lib/rabbitmq:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/rabbitmq-bundle-2:/var/log -p 3121:3121 --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+        <attributes CRM_meta_on_node="overcloud-rabbit-2" CRM_meta_on_node_uuid="overcloud-rabbit-2" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-rabbitmq:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/rabbitmq-bundle-2" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3121 -v /var/lib/kolla/config_files/rabbitmq.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/puppet-generated/rabbitmq/:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/rabbitmq:/var/lib/rabbitmq:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/rabbitmq-bundle-2:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <pseudo_event id="52" operation="stop" operation_key="rabbitmq-bundle_stop_0"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="41">
     <action_set>
       <rsc_op id="13" operation="start" operation_key="rabbitmq-bundle-docker-2_start_0" on_node="overcloud-rabbit-2" on_node_uuid="overcloud-rabbit-2" router_node="overcloud-controller-2">
         <primitive id="rabbitmq-bundle-docker-2" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_on_node="overcloud-rabbit-2" CRM_meta_on_node_uuid="overcloud-rabbit-2" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-rabbitmq:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/rabbitmq-bundle-2" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no --net=host -e PCMK_remote_port=3121 -v /var/lib/kolla/config_files/rabbitmq.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/puppet-generated/rabbitmq/:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/rabbitmq:/var/lib/rabbitmq:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/rabbitmq-bundle-2:/var/log -p 3121:3121 --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+        <attributes CRM_meta_on_node="overcloud-rabbit-2" CRM_meta_on_node_uuid="overcloud-rabbit-2" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-rabbitmq:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/rabbitmq-bundle-2" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3121 -v /var/lib/kolla/config_files/rabbitmq.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/puppet-generated/rabbitmq/:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/rabbitmq:/var/lib/rabbitmq:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/rabbitmq-bundle-2:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -599,7 +659,7 @@
     <action_set>
       <rsc_op id="9" operation="monitor" operation_key="rabbitmq-bundle-docker-2_monitor_60000" on_node="overcloud-rabbit-2" on_node_uuid="overcloud-rabbit-2" router_node="overcloud-controller-2">
         <primitive id="rabbitmq-bundle-docker-2" class="ocf" provider="heartbeat" type="docker"/>
-        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="overcloud-rabbit-2" CRM_meta_on_node_uuid="overcloud-rabbit-2" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-rabbitmq:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/rabbitmq-bundle-2" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no --net=host -e PCMK_remote_port=3121 -v /var/lib/kolla/config_files/rabbitmq.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/puppet-generated/rabbitmq/:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/rabbitmq:/var/lib/rabbitmq:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/rabbitmq-bundle-2:/var/log -p 3121:3121 --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="overcloud-rabbit-2" CRM_meta_on_node_uuid="overcloud-rabbit-2" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-rabbitmq:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/rabbitmq-bundle-2" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3121 -v /var/lib/kolla/config_files/rabbitmq.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/puppet-generated/rabbitmq/:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/rabbitmq:/var/lib/rabbitmq:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/rabbitmq-bundle-2:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -659,7 +719,11 @@
         <attributes CRM_meta_container="rabbitmq-bundle-docker-2" CRM_meta_on_node="overcloud-galera-2" CRM_meta_on_node_uuid="6" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="overcloud-rabbit-2"  port="3121"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="13" operation="start" operation_key="rabbitmq-bundle-docker-2_start_0" on_node="overcloud-rabbit-2" on_node_uuid="overcloud-rabbit-2" router_node="overcloud-controller-2"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="46">
     <action_set>
@@ -668,7 +732,11 @@
         <attributes CRM_meta_container="rabbitmq-bundle-docker-2" CRM_meta_on_node="overcloud-galera-1" CRM_meta_on_node_uuid="5" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="overcloud-rabbit-2"  port="3121"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="13" operation="start" operation_key="rabbitmq-bundle-docker-2_start_0" on_node="overcloud-rabbit-2" on_node_uuid="overcloud-rabbit-2" router_node="overcloud-controller-2"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="47">
     <action_set>
@@ -677,7 +745,11 @@
         <attributes CRM_meta_container="rabbitmq-bundle-docker-2" CRM_meta_on_node="overcloud-galera-0" CRM_meta_on_node_uuid="4" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="overcloud-rabbit-2"  port="3121"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="13" operation="start" operation_key="rabbitmq-bundle-docker-2_start_0" on_node="overcloud-rabbit-2" on_node_uuid="overcloud-rabbit-2" router_node="overcloud-controller-2"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="48">
     <action_set>
@@ -686,7 +758,11 @@
         <attributes CRM_meta_container="rabbitmq-bundle-docker-2" CRM_meta_on_node="overcloud-controller-2" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="overcloud-rabbit-2"  port="3121"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="13" operation="start" operation_key="rabbitmq-bundle-docker-2_start_0" on_node="overcloud-rabbit-2" on_node_uuid="overcloud-rabbit-2" router_node="overcloud-controller-2"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="49">
     <action_set>
@@ -695,7 +771,11 @@
         <attributes CRM_meta_container="rabbitmq-bundle-docker-2" CRM_meta_on_node="overcloud-controller-1" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="overcloud-rabbit-2"  port="3121"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="13" operation="start" operation_key="rabbitmq-bundle-docker-2_start_0" on_node="overcloud-rabbit-2" on_node_uuid="overcloud-rabbit-2" router_node="overcloud-controller-2"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="50">
     <action_set>
@@ -704,9 +784,39 @@
         <attributes CRM_meta_container="rabbitmq-bundle-docker-2" CRM_meta_on_node="overcloud-controller-0" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="overcloud-rabbit-2"  port="3121"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="13" operation="start" operation_key="rabbitmq-bundle-docker-2_start_0" on_node="overcloud-rabbit-2" on_node_uuid="overcloud-rabbit-2" router_node="overcloud-controller-2"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="51" priority="1000000">
+    <action_set>
+      <pseudo_event id="53" operation="stopped" operation_key="rabbitmq-bundle_stopped_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="41" operation="stop" operation_key="rabbitmq-bundle-docker-0_stop_0" on_node="overcloud-rabbit-0" on_node_uuid="overcloud-rabbit-0" router_node="overcloud-controller-0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="44" operation="stop" operation_key="rabbitmq-bundle-docker-1_stop_0" on_node="overcloud-rabbit-1" on_node_uuid="overcloud-rabbit-1" router_node="overcloud-controller-1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="47" operation="stop" operation_key="rabbitmq-bundle-docker-2_stop_0" on_node="overcloud-rabbit-2" on_node_uuid="overcloud-rabbit-2" router_node="overcloud-controller-2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="52">
+    <action_set>
+      <pseudo_event id="52" operation="stop" operation_key="rabbitmq-bundle_stop_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="53" priority="1000000">
     <action_set>
       <pseudo_event id="51" operation="running" operation_key="rabbitmq-bundle_running_0">
         <attributes CRM_meta_timeout="20000" />
@@ -727,7 +837,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="52">
+  <synapse id="54">
     <action_set>
       <pseudo_event id="50" operation="start" operation_key="rabbitmq-bundle_start_0">
         <attributes CRM_meta_timeout="20000" />
@@ -735,7 +845,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="53">
+  <synapse id="55">
     <action_set>
       <pseudo_event id="10" operation="all_stopped" operation_key="all_stopped">
         <attributes />

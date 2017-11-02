@@ -12,7 +12,7 @@ Transition Summary:
  * Start   rsc4	(node1)
  * Move       rsc3       ( node1 -> node2 )  
  * Stop    rsc2:0	(node1)  	due to node availability
- * Stop    rsc1	(node2)
+ * Stop       rsc1       (          node2 )   due to node availability
 
 Executing cluster transition:
  * Resource action: rsc3            stop on node1

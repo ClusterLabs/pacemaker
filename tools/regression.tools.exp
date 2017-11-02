@@ -1804,9 +1804,9 @@ Transition Summary:
 Executing cluster transition:
  * Resource action: dummy           monitor on node3
  * Resource action: dummy           monitor on node2
+ * Resource action: Fence           stop on node1
  * Resource action: Fence           monitor on node3
  * Resource action: Fence           monitor on node2
- * Resource action: Fence           stop on node1
  * Pseudo action:   all_stopped
  * Resource action: Fence           start on node2
 

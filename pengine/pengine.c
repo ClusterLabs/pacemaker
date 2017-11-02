@@ -18,6 +18,7 @@
 
 #include <crm_internal.h>
 
+#include <sys/stat.h>
 #include <sys/param.h>
 
 #include <crm/crm.h>
@@ -163,7 +164,21 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender)
         crm_xml_add_int(reply, "config-warnings", crm_config_warning);
 
         if (crm_ipcs_send(sender, 0, reply, crm_ipc_server_event) == FALSE) {
-            crm_err("Couldn't send transition graph to peer, discarding");
+            int graph_file_fd = 0;
+            char *graph_file = NULL;
+            umask(S_IWGRP | S_IWOTH | S_IROTH);
+
+            graph_file = g_strdup_printf("%s/pengine.graph.XXXXXX", PE_STATE_DIR);
+            graph_file_fd = mkstemp(graph_file);
+
+            crm_err("Couldn't send transition graph to peer, writing to %s instead",
+                    graph_file);
+
+            crm_xml_add(reply, F_CRM_TGRAPH, graph_file);
+            write_xml_fd(data_set.graph, graph_file, graph_file_fd, FALSE);
+
+            free_xml(first_named_child(reply, F_CRM_DATA));
+            CRM_ASSERT(crm_ipcs_send(sender, 0, reply, crm_ipc_server_event));
         }
 
         free_xml(reply);

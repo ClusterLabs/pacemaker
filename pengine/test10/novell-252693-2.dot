@@ -108,7 +108,6 @@
 "sles10_migrate_to_0 node2" [ style=bold color="green" fontcolor="black" ]
 "sles10_monitor_0 node1" -> "sles10_migrate_to_0 node2" [ style = bold]
 "sles10_monitor_0 node1" -> "sles10_start_0 node1" [ style = bold]
-"sles10_monitor_0 node1" -> "sles10_stop_0 node2" [ style = bold]
 "sles10_monitor_0 node1" [ style=bold color="green" fontcolor="black" ]
 "sles10_monitor_10000 node1" [ style=bold color="green" fontcolor="black" ]
 "sles10_start_0 node1" -> "sles10_monitor_10000 node1" [ style = bold]

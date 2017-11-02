@@ -12,7 +12,6 @@
 "child_192.168.100.182_monitor_5000 c001n03" [ style=dashed color="red" fontcolor="black" ]
 "child_192.168.100.183_monitor_0 c001n03" [ style=bold color="green" fontcolor="black" ]
 "child_192.168.100.183_monitor_5000 c001n03" [ style=dashed color="red" fontcolor="black" ]
-"child_DoFencing:1_monitor_0 c001n03" -> "child_DoFencing:1_stop_0 c001n02" [ style = dashed]
 "child_DoFencing:1_monitor_0 c001n03" [ style=bold color="green" fontcolor="black" ]
 "child_DoFencing:1_stop_0 c001n02" -> "DoFencing_stopped_0" [ style = dashed]
 "child_DoFencing:1_stop_0 c001n02" -> "all_stopped" [ style = dashed]

@@ -149,8 +149,8 @@ Transition Summary:
  * Reload     vds-ok-pool-1-iscsi:0                       (         mgmt01 )  
  * Reload     vds-ok-pool-1-iscsi:1                       (          v03-b )  
  * Reload     vds-ok-pool-1-iscsi:2                       (          v03-a )  
- * Restart    stonith-v03-b                               (          v03-a )  
- * Restart    stonith-v03-a                               (          v03-b )  
+ * Restart    stonith-v03-b                               (          v03-a )   due to resource definition change
+ * Restart    stonith-v03-a                               (          v03-b )   due to resource definition change
  * Migrate    license.anbriz.vds-ok.com-vm                ( v03-b -> v03-a )  
  * Migrate    terminal0.anbriz.vds-ok.com-vm              ( v03-a -> v03-b )  
  * Start   vd01-d.cdev.ttc.prague.cz.vds-ok.com-vm	(v03-a)

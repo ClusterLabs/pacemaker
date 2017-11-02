@@ -305,7 +305,8 @@ node_t *pe_create_node(const char *id, const char *uname, const char *type,
 bool remote_id_conflict(const char *remote_name, pe_working_set_t *data);
 void common_print(resource_t * rsc, const char *pre_text, const char *name, node_t *node, long options, void *print_data);
 resource_t *find_container_child(const char *stem, resource_t * rsc, node_t *node);
-bool fix_remote_addr(resource_t * rsc);
+bool container_fix_remote_addr(resource_t *rsc);
+const char *container_fix_remote_addr_in(resource_t *rsc, xmlNode *xml, const char *field);
 const char *pe_node_attribute_calculated(pe_node_t *node, const char *name, resource_t *rsc);
 const char *pe_node_attribute_raw(pe_node_t *node, const char *name);
 

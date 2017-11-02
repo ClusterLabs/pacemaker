@@ -6,11 +6,7 @@
         <attributes CRM_meta_on_node="virt-1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="8" operation="monitor" operation_key="fencing_monitor_0" on_node="virt-3" on_node_uuid="3"/>
-      </trigger>
-    </inputs>
+    <inputs/>
   </synapse>
   <synapse id="1">
     <action_set>

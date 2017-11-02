@@ -49,9 +49,10 @@ enum pe_restart {
 };
 
 enum pe_find {
-    pe_find_renamed = 0x001,
-    pe_find_clone = 0x004,
-    pe_find_current = 0x008,
+    pe_find_renamed  = 0x001,
+    pe_find_anon     = 0x002,
+    pe_find_clone    = 0x004,
+    pe_find_current  = 0x008,
     pe_find_inactive = 0x010,
 };
 
@@ -210,6 +211,7 @@ struct node_s {
 #  define pe_rsc_failure_ignored            0x01000000ULL
 #  define pe_rsc_unexpectedly_running       0x02000000ULL
 #  define pe_rsc_maintenance                0x04000000ULL
+#  define pe_rsc_is_container               0x08000000ULL
 
 #  define pe_rsc_needs_quorum               0x10000000ULL
 #  define pe_rsc_needs_fencing              0x20000000ULL
@@ -428,6 +430,10 @@ enum pe_ordering {
                                                  * ensure instances of 'then' on 'nodeX' are too.
                                                  * Only really useful if 'then' is a clone and 'first' is not
                                                  */
+    pe_order_probe                 = 0x800,     /* If 'first->rsc' is
+                                                 *  - running but about to stop, ignore the constraint
+                                                 *  - otherwise, behave as runnable_left
+                                                 */
 
     pe_order_restart               = 0x1000,    /* 'then' is runnable if 'first' is optional or runnable */
     pe_order_stonith_stop          = 0x2000,    /* only applies if the action is non-pseudo */
@@ -460,6 +466,7 @@ gboolean cluster_status(pe_working_set_t * data_set);
 void set_working_set_defaults(pe_working_set_t * data_set);
 void cleanup_calculations(pe_working_set_t * data_set);
 resource_t *pe_find_resource(GListPtr rsc_list, const char *id_rh);
+resource_t *pe_find_resource_with_flags(GListPtr rsc_list, const char *id, enum pe_find flags);
 node_t *pe_find_node(GListPtr node_list, const char *uname);
 node_t *pe_find_node_id(GListPtr node_list, const char *id);
 node_t *pe_find_node_any(GListPtr node_list, const char *id, const char *uname);

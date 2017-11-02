@@ -31,11 +31,7 @@
         <attributes CRM_meta_on_node="node1" CRM_meta_on_node_uuid="node1" CRM_meta_timeout="20000" allow_migrate="on" />
        </rsc_op>
      </action_set>
-     <inputs>
-       <trigger>
-        <rsc_op id="3" operation="monitor" operation_key="rsc3_monitor_0" on_node="node2" on_node_uuid="node2"/>
-       </trigger>
-     </inputs>
+    <inputs/>
    </synapse>
   <synapse id="3">
      <action_set>

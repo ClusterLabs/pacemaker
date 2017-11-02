@@ -106,6 +106,7 @@ void st_fail_count_increment(const char *target);
 void abort_for_stonith_failure(enum transition_action abort_action,
                                const char *target, xmlNode *reason);
 void crmd_peer_down(crm_node_t *peer, bool full);
+unsigned int cib_op_timeout(unsigned int max);
 
 /* Convenience macro for registering a CIB callback
  * (assumes that data can be freed with free())
@@ -113,7 +114,7 @@ void crmd_peer_down(crm_node_t *peer, bool full);
 #  define fsa_register_cib_callback(id, flag, data, fn) do {            \
     CRM_ASSERT(fsa_cib_conn);                                           \
     fsa_cib_conn->cmds->register_callback_full(                         \
-            fsa_cib_conn, id, 10 * (1 + crm_active_peers()),            \
+        fsa_cib_conn, id, cib_op_timeout(30),                           \
             flag, data, #fn, fn, free);                                 \
     } while(0)
 

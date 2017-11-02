@@ -547,7 +547,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
 
         } else if (action->node == NULL) {
             pe_rsc_trace(rsc, "Unset runnable on %s", action->uuid);
-            pe_action_set_flag_reason(__FUNCTION__, __LINE__, action, NULL, "node availability", pe_action_runnable, TRUE);
+            pe_clear_action_bit(action, pe_action_runnable);
 
         } else if (is_not_set(rsc->flags, pe_rsc_managed)
                    && g_hash_table_lookup(action->meta, XML_LRM_ATTR_INTERVAL) == NULL) {
@@ -574,7 +574,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
 
         } else if (action->needs == rsc_req_nothing) {
             pe_rsc_trace(rsc, "Action %s does not require anything", action->uuid);
-            free(action->reason); action->reason = NULL;
+            pe_action_set_reason(action, NULL, TRUE);
             pe_set_action_bit(action, pe_action_runnable);
 #if 0
             /*
@@ -599,9 +599,9 @@ custom_action(resource_t * rsc, char *key, const char *task,
                              action->node->details->uname, action->uuid);
             }
 
-        } else {
+        } else if(is_not_set(action->flags, pe_action_runnable)) {
             pe_rsc_trace(rsc, "Action %s is runnable", action->uuid);
-            free(action->reason); action->reason = NULL;
+            //pe_action_set_reason(action, NULL, TRUE);
             pe_set_action_bit(action, pe_action_runnable);
         }
 
@@ -1485,7 +1485,21 @@ resource_node_score(resource_t * rsc, node_t * node, int score, const char *tag)
 {
     node_t *match = NULL;
 
-    if (rsc->children) {
+    if(rsc->exclusive_discover && safe_str_eq(tag, "symmetric_default")) {
+        /* A terrible implementation via string comparision but
+         * exclusive resources should not have the symmetric_default
+         * constraint applied to them.
+         */
+        return;
+
+    } else if(node->rsc_discover_mode == pe_discover_never && safe_str_eq(tag, "symmetric_default")) {
+        /* Another terrible implementation via string comparision but
+         * exclusive node should also not be included in the
+         * symmetric_default constraint.
+         */
+        return;
+
+    } else if (rsc->children) {
         GListPtr gIter = rsc->children;
 
         for (; gIter != NULL; gIter = gIter->next) {
@@ -1860,42 +1874,6 @@ filter_parameters(xmlNode * param_set, const char *param_string, bool need_prese
     }
 }
 
-bool fix_remote_addr(resource_t * rsc)
-{
-    const char *name;
-    const char *value;
-    const char *attr_list[] = {
-        XML_ATTR_TYPE,
-        XML_AGENT_ATTR_CLASS,
-        XML_AGENT_ATTR_PROVIDER
-    };
-    const char *value_list[] = {
-        "remote",
-        PCMK_RESOURCE_CLASS_OCF,
-        "pacemaker"
-    };
-
-    if(rsc == NULL) {
-        return FALSE;
-    }
-
-    name = "addr";
-    value = g_hash_table_lookup(rsc->parameters, name);
-    if (safe_str_eq(value, "#uname") == FALSE) {
-        return FALSE;
-    }
-
-    for (int lpc = 0; lpc < DIMOF(attr_list); lpc++) {
-        name = attr_list[lpc];
-        value = crm_element_value(rsc->xml, attr_list[lpc]);
-        if (safe_str_eq(value, value_list[lpc]) == FALSE) {
-            return FALSE;
-        }
-    }
-
-    return TRUE;
-}
-
 #if ENABLE_VERSIONED_ATTRS
 static void
 append_versioned_params(xmlNode *versioned_params, const char *ra_version, xmlNode *params)
@@ -1941,10 +1919,10 @@ rsc_action_digest(resource_t * rsc, const char *task, const char *key,
 #endif
 
         data->params_all = create_xml_node(NULL, XML_TAG_PARAMS);
-        if (fix_remote_addr(rsc)) {
-            // REMOTE_CONTAINER_HACK: Allow remote nodes that start containers with pacemaker remote inside
-            crm_xml_add(data->params_all, "addr", node->details->uname);
-            crm_trace("Fixing addr for %s on %s", rsc->id, node->details->uname);
+
+        // REMOTE_CONTAINER_HACK: Allow remote nodes that start containers with pacemaker remote inside
+        if (container_fix_remote_addr_in(rsc, data->params_all, "addr")) {
+            crm_trace("Fixed addr for %s on %s", rsc->id, node->details->uname);
         }
 
         g_hash_table_foreach(local_rsc_params, hash2field, data->params_all);
@@ -2013,14 +1991,16 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
     char *key = NULL;
     int interval = 0;
 
-    const char *interval_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
+    const char *op_version;
     const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
+    const char *interval_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
 
     const char *digest_all;
     const char *digest_restart;
 
     CRM_ASSERT(node != NULL);
 
+    op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
     digest_all = crm_element_value(xml_op, XML_LRM_ATTR_OP_DIGEST);
     digest_restart = crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST);
 
@@ -2030,6 +2010,10 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
 
     data->rc = RSC_DIGEST_MATCH;
     if (digest_restart && data->digest_restart_calc && strcmp(data->digest_restart_calc, digest_restart) != 0) {
+        pe_rsc_info(rsc, "Parameters to %s on %s changed: was %s vs. now %s (restart:%s) %s",
+                 key, node->details->uname,
+                 crm_str(digest_restart), data->digest_restart_calc,
+                 op_version, crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
         data->rc = RSC_DIGEST_RESTART;
 
     } else if (digest_all == NULL) {
@@ -2037,6 +2021,10 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
         data->rc = RSC_DIGEST_UNKNOWN;
 
     } else if (strcmp(digest_all, data->digest_all_calc) != 0) {
+        pe_rsc_info(rsc, "Parameters to %s on %s changed: was %s vs. now %s (reload:%s) %s",
+                 key, node->details->uname,
+                 crm_str(digest_all), data->digest_all_calc,
+                 op_version, crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
         data->rc = RSC_DIGEST_ALL;
     }
 
@@ -2366,10 +2354,14 @@ void pe_action_set_flag_reason(const char *function, long line,
 
 void pe_action_set_reason(pe_action_t *action, const char *reason, bool overwrite) 
 {
-    if(action->reason == NULL || overwrite) {
+    if(action->reason && overwrite) {
+        pe_rsc_trace(action->rsc, "Changing %s reason from '%s' to '%s'", action->uuid, action->reason, reason);
         free(action->reason);
+        action->reason = NULL;
+    }
+    if(action->reason == NULL) {
         if(reason) {
-            crm_trace("Set %s reason to '%s'", action->uuid, reason);
+            pe_rsc_trace(action->rsc, "Set %s reason to '%s'", action->uuid, reason);
             action->reason = strdup(reason);
         } else {
             action->reason = NULL;

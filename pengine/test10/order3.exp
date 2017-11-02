@@ -24,9 +24,6 @@
      </action_set>
      <inputs>
        <trigger>
-        <rsc_op id="2" operation="monitor" operation_key="rsc1_monitor_0" on_node="node2" on_node_uuid="uuid2"/>
-       </trigger>
-       <trigger>
         <rsc_op id="8" operation="stop" operation_key="rsc2_stop_0" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
      </inputs>
@@ -71,9 +68,6 @@
      </action_set>
      <inputs>
        <trigger>
-        <rsc_op id="3" operation="monitor" operation_key="rsc2_monitor_0" on_node="node2" on_node_uuid="uuid2"/>
-       </trigger>
-       <trigger>
         <rsc_op id="10" operation="stop" operation_key="rsc3_stop_0" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
      </inputs>
@@ -113,11 +107,7 @@
         <attributes CRM_meta_on_node="node1" CRM_meta_on_node_uuid="uuid1" CRM_meta_timeout="20000" />
        </rsc_op>
      </action_set>
-     <inputs>
-       <trigger>
-        <rsc_op id="4" operation="monitor" operation_key="rsc3_monitor_0" on_node="node2" on_node_uuid="uuid2"/>
-       </trigger>
-     </inputs>
+    <inputs/>
    </synapse>
   <synapse id="8">
      <action_set>
@@ -152,9 +142,6 @@
        </rsc_op>
      </action_set>
      <inputs>
-       <trigger>
-        <rsc_op id="5" operation="monitor" operation_key="rsc4_monitor_0" on_node="node2" on_node_uuid="uuid2"/>
-       </trigger>
        <trigger>
         <rsc_op id="8" operation="stop" operation_key="rsc2_stop_0" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>

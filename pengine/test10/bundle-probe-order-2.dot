@@ -1,0 +1,8 @@
+digraph "g" {
+"galera-bundle-0_monitor_60000 centos2" [ style=bold color="green" fontcolor="black"]
+"galera-bundle-docker-1_monitor_0 centos2" [ style=bold color="green" fontcolor="black"]
+"galera-bundle-docker-2_monitor_0 centos1" [ style=bold color="green" fontcolor="black"]
+"galera-bundle-docker-2_monitor_0 centos2" [ style=bold color="green" fontcolor="black"]
+"galera-bundle-docker-2_monitor_0 centos3" [ style=bold color="green" fontcolor="black"]
+"galera:0_monitor_0 galera-bundle-0" [ style=bold color="green" fontcolor="black"]
+}

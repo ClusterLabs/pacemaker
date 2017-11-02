@@ -52,21 +52,12 @@ Executing cluster transition:
  * Resource action: galera-bundle-docker-0 monitor on metal-3
  * Resource action: galera-bundle-docker-0 monitor on metal-2
  * Resource action: galera-bundle-docker-0 monitor on metal-1
- * Resource action: galera-bundle-0 monitor on metal-3
- * Resource action: galera-bundle-0 monitor on metal-2
- * Resource action: galera-bundle-0 monitor on metal-1
  * Resource action: galera-bundle-docker-1 monitor on metal-3
  * Resource action: galera-bundle-docker-1 monitor on metal-2
  * Resource action: galera-bundle-docker-1 monitor on metal-1
- * Resource action: galera-bundle-1 monitor on metal-3
- * Resource action: galera-bundle-1 monitor on metal-2
- * Resource action: galera-bundle-1 monitor on metal-1
  * Resource action: galera-bundle-docker-2 monitor on metal-3
  * Resource action: galera-bundle-docker-2 monitor on metal-2
  * Resource action: galera-bundle-docker-2 monitor on metal-1
- * Resource action: galera-bundle-2 monitor on metal-3
- * Resource action: galera-bundle-2 monitor on metal-2
- * Resource action: galera-bundle-2 monitor on metal-1
  * Resource action: haproxy-bundle-docker-0 monitor on metal-3
  * Resource action: haproxy-bundle-docker-0 monitor on metal-2
  * Resource action: haproxy-bundle-docker-0 monitor on metal-1
@@ -80,21 +71,12 @@ Executing cluster transition:
  * Resource action: redis-bundle-docker-0 monitor on metal-3
  * Resource action: redis-bundle-docker-0 monitor on metal-2
  * Resource action: redis-bundle-docker-0 monitor on metal-1
- * Resource action: redis-bundle-0  monitor on metal-3
- * Resource action: redis-bundle-0  monitor on metal-2
- * Resource action: redis-bundle-0  monitor on metal-1
  * Resource action: redis-bundle-docker-1 monitor on metal-3
  * Resource action: redis-bundle-docker-1 monitor on metal-2
  * Resource action: redis-bundle-docker-1 monitor on metal-1
- * Resource action: redis-bundle-1  monitor on metal-3
- * Resource action: redis-bundle-1  monitor on metal-2
- * Resource action: redis-bundle-1  monitor on metal-1
  * Resource action: redis-bundle-docker-2 monitor on metal-3
  * Resource action: redis-bundle-docker-2 monitor on metal-2
  * Resource action: redis-bundle-docker-2 monitor on metal-1
- * Resource action: redis-bundle-2  monitor on metal-3
- * Resource action: redis-bundle-2  monitor on metal-2
- * Resource action: redis-bundle-2  monitor on metal-1
  * Pseudo action:   redis-bundle_start_0
  * Pseudo action:   haproxy-bundle_start_0
  * Pseudo action:   storage-clone_confirmed-pre_notify_start_0
@@ -104,24 +86,33 @@ Executing cluster transition:
  * Pseudo action:   redis-bundle-master_confirmed-pre_notify_start_0
  * Pseudo action:   redis-bundle-master_start_0
  * Resource action: redis-bundle-docker-0 start on metal-1
- * Resource action: redis-bundle-0  start on metal-1
+ * Resource action: redis-bundle-0  monitor on metal-3
+ * Resource action: redis-bundle-0  monitor on metal-2
+ * Resource action: redis-bundle-0  monitor on metal-1
  * Resource action: redis-bundle-docker-1 start on metal-2
- * Resource action: redis-bundle-1  start on metal-2
+ * Resource action: redis-bundle-1  monitor on metal-3
+ * Resource action: redis-bundle-1  monitor on metal-2
+ * Resource action: redis-bundle-1  monitor on metal-1
  * Resource action: redis-bundle-docker-2 start on metal-3
- * Resource action: redis-bundle-2  start on metal-3
+ * Resource action: redis-bundle-2  monitor on metal-3
+ * Resource action: redis-bundle-2  monitor on metal-2
+ * Resource action: redis-bundle-2  monitor on metal-1
  * Pseudo action:   haproxy-bundle_running_0
  * Resource action: haproxy-bundle-docker-0 monitor=60000 on metal-1
  * Resource action: haproxy-bundle-docker-1 monitor=60000 on metal-2
  * Resource action: haproxy-bundle-docker-2 monitor=60000 on metal-3
+ * Resource action: redis-bundle-docker-0 monitor=60000 on metal-1
+ * Resource action: redis-bundle-0  start on metal-1
+ * Resource action: redis-bundle-docker-1 monitor=60000 on metal-2
+ * Resource action: redis-bundle-1  start on metal-2
+ * Resource action: redis-bundle-docker-2 monitor=60000 on metal-3
+ * Resource action: redis-bundle-2  start on metal-3
  * Resource action: redis:0         start on redis-bundle-0
  * Resource action: redis:1         start on redis-bundle-1
  * Resource action: redis:2         start on redis-bundle-2
  * Pseudo action:   redis-bundle-master_running_0
- * Resource action: redis-bundle-docker-0 monitor=60000 on metal-1
  * Resource action: redis-bundle-0  monitor=60000 on metal-1
- * Resource action: redis-bundle-docker-1 monitor=60000 on metal-2
  * Resource action: redis-bundle-1  monitor=60000 on metal-2
- * Resource action: redis-bundle-docker-2 monitor=60000 on metal-3
  * Resource action: redis-bundle-2  monitor=60000 on metal-3
  * Pseudo action:   redis-bundle-master_post_notify_running_0
  * Resource action: redis:0         notify on redis-bundle-0
@@ -165,20 +156,29 @@ Executing cluster transition:
  * Resource action: storage:2       monitor=30000 on metal-3
  * Pseudo action:   galera-bundle-master_start_0
  * Resource action: galera-bundle-docker-0 start on metal-1
- * Resource action: galera-bundle-0 start on metal-1
+ * Resource action: galera-bundle-0 monitor on metal-3
+ * Resource action: galera-bundle-0 monitor on metal-2
+ * Resource action: galera-bundle-0 monitor on metal-1
  * Resource action: galera-bundle-docker-1 start on metal-2
- * Resource action: galera-bundle-1 start on metal-2
+ * Resource action: galera-bundle-1 monitor on metal-3
+ * Resource action: galera-bundle-1 monitor on metal-2
+ * Resource action: galera-bundle-1 monitor on metal-1
  * Resource action: galera-bundle-docker-2 start on metal-3
+ * Resource action: galera-bundle-2 monitor on metal-3
+ * Resource action: galera-bundle-2 monitor on metal-2
+ * Resource action: galera-bundle-2 monitor on metal-1
+ * Resource action: galera-bundle-docker-0 monitor=60000 on metal-1
+ * Resource action: galera-bundle-0 start on metal-1
+ * Resource action: galera-bundle-docker-1 monitor=60000 on metal-2
+ * Resource action: galera-bundle-1 start on metal-2
+ * Resource action: galera-bundle-docker-2 monitor=60000 on metal-3
  * Resource action: galera-bundle-2 start on metal-3
  * Resource action: galera:0        start on galera-bundle-0
  * Resource action: galera:1        start on galera-bundle-1
  * Resource action: galera:2        start on galera-bundle-2
  * Pseudo action:   galera-bundle-master_running_0
- * Resource action: galera-bundle-docker-0 monitor=60000 on metal-1
  * Resource action: galera-bundle-0 monitor=60000 on metal-1
- * Resource action: galera-bundle-docker-1 monitor=60000 on metal-2
  * Resource action: galera-bundle-1 monitor=60000 on metal-2
- * Resource action: galera-bundle-docker-2 monitor=60000 on metal-3
  * Resource action: galera-bundle-2 monitor=60000 on metal-3
  * Pseudo action:   galera-bundle_running_0
  * Resource action: galera:0        monitor=30000 on galera-bundle-0

@@ -184,12 +184,33 @@ rsc_expand_action(action_t * action)
 static enum pe_graph_flags
 graph_update_action(action_t * first, action_t * then, node_t * node,
                     enum pe_action_flags first_flags, enum pe_action_flags then_flags,
-                    enum pe_ordering type)
+                    action_wrapper_t *order)
 {
     enum pe_graph_flags changed = pe_graph_none;
+    enum pe_ordering type = order->type;
     gboolean processed = FALSE;
 
     /* TODO: Do as many of these in parallel as possible */
+
+    if(is_set(type, pe_order_implies_then_on_node)) {
+        /* Normally we want the _whole_ 'then' clone to
+         * restart if 'first' is restarted, so then->node is
+         * needed.
+         *
+         * However for unfencing, we want to limit this to
+         * instances on the same node as 'first' (the
+         * unfencing operation), so first->node is supplied.
+         *
+         * Swap the node, from then on we can can treat it
+         * like any other 'pe_order_implies_then'
+         */
+
+        clear_bit(type, pe_order_implies_then_on_node);
+        set_bit(type, pe_order_implies_then);
+        node = first->node;
+    }
+
+    clear_bit(first_flags, pe_action_pseudo);
 
     if (type & pe_order_implies_then) {
         processed = TRUE;
@@ -291,6 +312,28 @@ graph_update_action(action_t * first, action_t * then, node_t * node,
                          then->uuid);
         } else {
             crm_trace("runnable_one_or_more: %s then %s", first->uuid, then->uuid);
+        }
+    }
+
+    if (then->rsc && is_set(type, pe_order_probe)) {
+        processed = TRUE;
+
+        if (is_not_set(first_flags, pe_action_runnable) && first->rsc->running_on != NULL) {
+            pe_rsc_trace(then->rsc, "Ignoring %s then %s - %s is about to be stopped",
+                         first->uuid, then->uuid, first->rsc->id);
+            type = pe_order_none;
+            order->type = pe_order_none;
+
+        } else {
+            pe_rsc_trace(then->rsc, "Enforcing %s then %s", first->uuid, then->uuid);
+            changed |= then->rsc->cmds->update_actions(first, then, node, first_flags,
+                                                       pe_action_runnable, pe_order_runnable_left);
+        }
+
+        if (changed) {
+            pe_rsc_trace(then->rsc, "runnable: %s then %s: changed", first->uuid, then->uuid);
+        } else {
+            crm_trace("runnable: %s then %s", first->uuid, then->uuid);
         }
     }
 
@@ -596,29 +639,8 @@ update_action(action_t * then)
              *   constraint to instances on the supplied node
              *
              */
-            int otype = other->type;
             node_t *node = then->node;
-
-            if(is_set(otype, pe_order_implies_then_on_node)) {
-                /* Normally we want the _whole_ 'then' clone to
-                 * restart if 'first' is restarted, so then->node is
-                 * needed.
-                 *
-                 * However for unfencing, we want to limit this to
-                 * instances on the same node as 'first' (the
-                 * unfencing operation), so first->node is supplied.
-                 *
-                 * Swap the node, from then on we can can treat it
-                 * like any other 'pe_order_implies_then'
-                 */
-
-                clear_bit(otype, pe_order_implies_then_on_node);
-                set_bit(otype, pe_order_implies_then);
-                node = first->node;
-            }
-            clear_bit(first_flags, pe_action_pseudo);
-
-            changed |= graph_update_action(first, then, node, first_flags, then_flags, otype);
+            changed |= graph_update_action(first, then, node, first_flags, then_flags, other);
 
             /* 'first' was for a complex resource (clone, group, etc),
              * create a new dependency if necessary

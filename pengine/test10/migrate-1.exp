@@ -52,9 +52,6 @@
      </action_set>
      <inputs>
        <trigger>
-        <rsc_op id="2" operation="monitor" operation_key="rsc3_monitor_0" on_node="node2" on_node_uuid="node2"/>
-       </trigger>
-      <trigger>
         <rsc_op id="6" operation="migrate_from" operation_key="rsc3_migrate_from_0" on_node="node2" on_node_uuid="node2"/>
       </trigger>
     </inputs>

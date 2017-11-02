@@ -41,7 +41,7 @@ Transition Summary:
  * Stop    mysql-proxy:1	(wc02)  	due to node availability
  * Stop    fs_www:1	(wc02)  	due to node availability
  * Stop    apache2:1	(wc02)  	due to node availability
- * Restart    stonith_rackpdu:0     (                 wc01 )  
+ * Restart    stonith_rackpdu:0     (                 wc01 )   due to resource definition change
  * Stop    stonith_rackpdu:1	(wc02)  	due to node availability
 
 Executing cluster transition:
