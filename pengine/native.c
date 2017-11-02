@@ -2407,7 +2407,8 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
                         next->details->uname);
 
         } else if (start && is_set(start->flags, pe_action_runnable) == FALSE) {
-            LogAction("Stop", rsc, current, NULL, stop, stop->reason?stop:start, terminal);
+            LogAction("Stop", rsc, current, NULL, stop,
+                      (stop && stop->reason)? stop : start, terminal);
             STOP_SANITY_ASSERT(__LINE__);
 
         } else if (moving && current) {
