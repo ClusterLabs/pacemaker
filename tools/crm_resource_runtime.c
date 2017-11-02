@@ -662,8 +662,9 @@ cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
         return -EOPNOTSUPP;
     }
 
-    if(getenv("CIB_file") != NULL) {
-        printf("Would have cleaned up %s on %s\n", rsc->id, host_uname);
+    if (crmd_channel == NULL) {
+        printf("Dry run: skipping clean-up of %s on %s due to CIB_file\n",
+               rsc->id, host_uname);
         return rc;
      }
 

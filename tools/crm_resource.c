@@ -428,6 +428,7 @@ main(int argc, char **argv)
     const char *longname = NULL;
     const char *operation = NULL;
     const char *interval = NULL;
+    const char *cib_file = getenv("CIB_file");
     GHashTable *override_params = NULL;
 
     char *xml_file = NULL;
@@ -627,7 +628,9 @@ main(int argc, char **argv)
             case 'P':
                 crm_log_args(argc, argv);
                 require_resource = FALSE;
-                require_crmd = TRUE;
+                if (cib_file == NULL) {
+                    require_crmd = TRUE;
+                }
                 just_errors = FALSE;
                 rsc_cmd = 'C';
                 break;
@@ -635,7 +638,9 @@ main(int argc, char **argv)
             case 'C':
                 crm_log_args(argc, argv);
                 require_resource = FALSE;
-                require_crmd = TRUE;
+                if (cib_file == NULL) {
+                    require_crmd = TRUE;
+                }
                 just_errors = FALSE; // disable until 2.0.0
                 rsc_cmd = 'C';
                 break;
@@ -833,9 +838,9 @@ main(int argc, char **argv)
             rc = -ENXIO;
         }
     }
-    
+
     /* Establish a connection to the CRMd if needed */
-    if (getenv("CIB_file") == NULL && require_crmd) {
+    if (require_crmd) {
         xmlNode *xml = NULL;
         mainloop_io_t *source =
             mainloop_add_ipc_client(CRM_SYSTEM_CRMD, G_PRIORITY_DEFAULT, 0, NULL, &crm_callbacks);
@@ -1181,6 +1186,13 @@ main(int argc, char **argv)
                 router_node = node->details->uname;
                 attr_options |= attrd_opt_remote;
             }
+        }
+
+        if (crmd_channel == NULL) {
+            printf("Dry run: skipping clean-up of %s due to CIB_file\n",
+                   host_uname? host_uname : "all nodes");
+            rc = pcmk_ok;
+            goto bail;
         }
 
         msg_data = create_xml_node(NULL, "crm-resource-reprobe-op");
