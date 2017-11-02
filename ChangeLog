@@ -1,7 +1,7 @@
 * Thu Nov 02 2017 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.18-rc4
-- Update source tarball to revision: f75cef6
-- Changesets: 111
-- Diff:       42 files changed, 1163 insertions(+), 651 deletions(-)
+- Update source tarball to revision: 88bd30b
+- Changesets: 113
+- Diff:       42 files changed, 1164 insertions(+), 651 deletions(-)
 
 - Features added since Pacemaker-1.1.18-rc3
   + agents: ifspeed agent can optionally detect interface name from IP address
