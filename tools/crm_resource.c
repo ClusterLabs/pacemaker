@@ -105,110 +105,141 @@ struct ipc_client_callbacks crm_callbacks = {
 static struct crm_option long_options[] = {
     /* Top-level Options */
     {
-        "help", 0, 0, '?',
+        "help", no_argument, NULL, '?',
         "\t\tDisplay this text and exit"
     },
     {
-        "version", 0, 0, '$',
+        "version", no_argument, NULL, '$',
         "\t\tDisplay version information and exit"
     },
     {
-        "verbose", 0, 0, 'V',
+        "verbose", no_argument, NULL, 'V',
         "\t\tIncrease debug output (may be specified multiple times)"
     },
     {
-        "quiet", 0, 0, 'Q',
+        "quiet", no_argument, NULL, 'Q',
         "\t\tBe less descriptive in results"
     },
     {
-        "resource", 1, 0, 'r',
+        "resource", required_argument, NULL, 'r',
         "\tResource ID"
     },
 
-    {"-spacer-",1, 0, '-', "\nQueries:"},
-    {"list",       0, 0, 'L', "\t\tList all cluster resources with status"},
+    { "-spacer-", no_argument, NULL, '-', "\nQueries:" },
     {
-        "list-raw", 0, 0, 'l',
+        "list", no_argument, NULL, 'L',
+        "\t\tList all cluster resources with status"},
+    {
+        "list-raw", no_argument, NULL, 'l',
         "\t\tList IDs of all instantiated resources (individual members rather than groups etc.)"
     },
-    {"list-cts",   0, 0, 'c', NULL, pcmk_option_hidden},
     {
-        "list-operations", 0, 0, 'O',
+        "list-cts", no_argument, NULL, 'c',
+        NULL, pcmk_option_hidden
+    },
+    {
+        "list-operations", no_argument, NULL, 'O',
         "\tList active resource operations, optionally filtered by --resource and/or --node"
     },
     {
-        "list-all-operations", 0, 0, 'o',
+        "list-all-operations", no_argument, NULL, 'o',
         "List all resource operations, optionally filtered by --resource and/or --node"
     },
-    {"pending",    0, 0, 'j', "\t\tDisplay pending state if 'record-pending' is enabled", pcmk_option_hidden},
-
-    {"list-standards",        0, 0, 0, "\tList supported standards"},
-    {"list-ocf-providers",    0, 0, 0, "List all available OCF providers"},
-    {"list-agents",           1, 0, 0, "List all agents available for the named standard and/or provider."},
-    {"list-ocf-alternatives", 1, 0, 0, "List all available providers for the named OCF agent"},
-    {"show-metadata",         1, 0, 0, "Show the metadata for the named class:provider:agent"},
-
     {
-        "query-xml", 0, 0, 'q',
+        "pending", no_argument, NULL, 'j',
+        "\t\tDisplay pending state if 'record-pending' is enabled",
+        pcmk_option_hidden
+    },
+    {
+        "list-standards", no_argument, NULL, 0,
+        "\tList supported standards"
+    },
+    {
+        "list-ocf-providers", no_argument, NULL, 0,
+        "List all available OCF providers"
+    },
+    {
+        "list-agents", required_argument, NULL, 0,
+        "List all agents available for the named standard and/or provider."
+    },
+    {
+        "list-ocf-alternatives", required_argument, NULL, 0,
+        "List all available providers for the named OCF agent"
+    },
+    {
+        "show-metadata", required_argument, NULL, 0,
+        "Show the metadata for the named class:provider:agent"
+    },
+    {
+        "query-xml", no_argument, NULL, 'q',
         "\tShow XML configuration of resource (after any template expansion)"
     },
     {
-        "query-xml-raw", 0, 0, 'w',
+        "query-xml-raw", no_argument, NULL, 'w',
         "\tShow XML configuration of resource (before any template expansion)"
     },
     {
-        "get-parameter", 1, 0, 'g',
+        "get-parameter", required_argument, NULL, 'g',
         "Display named parameter for resource.\n"
         "\t\t\t\tUse instance attribute unless --meta or --utilization is specified"
     },
     {
-        "get-property", 1, 0, 'G',
+        "get-property", required_argument, NULL, 'G',
         "Display named property of resource ('class', 'type', or 'provider') (requires --resource)",
         pcmk_option_hidden
     },
     {
-        "locate", 0, 0, 'W',
+        "locate", no_argument, NULL, 'W',
         "\t\tShow node(s) currently running resource"
     },
-    {"stack",      0, 0, 'A', "\t\tDisplay the prerequisites and dependents of a resource"},
-    {"constraints",0, 0, 'a', "\tDisplay the (co)location constraints that apply to a resource"},
     {
-        "why", 0, 0, 'Y',
+        "stack", no_argument, NULL, 'A',
+        "\t\tDisplay the prerequisites and dependents of a resource"
+    },
+    {
+        "constraints", no_argument, NULL, 'a',
+        "\tDisplay the (co)location constraints that apply to a resource"
+    },
+    {
+        "why", no_argument, NULL, 'Y',
         "\t\tShow why resources are not running, optionally filtered by --resource and/or --node"
     },
-    {"-spacer-", 1, 0, '-', "\nCommands:"},
-    {"validate",   0, 0, 0, "\t\tCall the validate-all action of the local given resource"},
+
+    { "-spacer-", no_argument, NULL, '-', "\nCommands:" },
     {
-        "cleanup", 0, 0, 'C',
-        "\t\tDelete failed operations from a resource's history allowing its current state to be rechecked.\n"
-        "\t\t\t\tOptionally filtered by --resource, --node, --operation, and --interval (otherwise all).\n"
-        "\t\t\t\tUnless --force is specified, resource's group or clone (if any) will also be cleaned"
+        "validate", no_argument, NULL, 0,
+        "\t\tCall the validate-all action of the local given resource"
     },
     {
-        "refresh", 0, 0, 'R',
+        "cleanup", no_argument, NULL, 'C',
+        "\t\tDelete failed operations from a resource's history allowing its current state to be rechecked.\n"
+        "\t\t\t\tOptionally filtered by --resource, --node, --operation, and --interval (otherwise all).\n"
+    },
+    {
+        "refresh", no_argument, NULL, 'R',
         "\t\tDelete resource's history (including failures) so its current state is rechecked.\n"
         "\t\t\t\tOptionally filtered by --resource, --node, --operation, and --interval (otherwise all).\n"
         "\t\t\t\tUnless --force is specified, resource's group or clone (if any) will also be cleaned"
     },
     {
-        "set-parameter", 1, 0, 'p',
+        "set-parameter", required_argument, NULL, 'p',
         "Set named parameter for resource (requires -v).\n"
         "\t\t\t\tUse instance attribute unless --meta or --utilization is specified."
     },
     {
-        "delete-parameter", 1, 0, 'd',
+        "delete-parameter", required_argument, NULL, 'd',
         "Delete named parameter for resource.\n"
         "\t\t\t\tUse instance attribute unless --meta or --utilization is specified."
     },
     {
-        "set-property", 1, 0, 'S',
+        "set-property", required_argument, NULL, 'S',
         "Set named property of resource ('class', 'type', or 'provider') (requires -r, -t, -v)",
         pcmk_option_hidden
     },
 
-    {"-spacer-", 1, 0, '-', "\nResource location:"},
+    { "-spacer-", no_argument, NULL, '-', "\nResource location:" },
     {
-        "move",    0, 0, 'M',
+        "move", no_argument, NULL, 'M',
         "\t\tCreate a constraint to move resource. If --node is specified, the constraint\n"
         "\t\t\t\twill be to move to that node, otherwise it will be to ban the current node.\n"
         "\t\t\t\tUnless --force is specified, this will return an error if the resource is\n"
@@ -218,7 +249,7 @@ static struct crm_option long_options[] = {
         "\t\t\t\tuntil the implicit constraint expires or is removed with --clear."
     },
     {
-        "ban",    0, 0, 'B',
+        "ban", no_argument, NULL, 'B',
         "\t\tCreate a constraint to keep resource off a node. Optional: --node, --lifetime, --master.\n"
         "\t\t\t\tNOTE: This will prevent the resource from running on the affected node\n"
         "\t\t\t\tuntil the implicit constraint expires or is removed with --clear.\n"
@@ -227,7 +258,7 @@ static struct crm_option long_options[] = {
         "\t\t\t\t(all other situations result in an error as there is no sane default).\n"
     },
     {
-        "clear", 0, 0, 'U',
+        "clear", no_argument, NULL, 'U',
         "\t\tRemove all constraints created by the --ban and/or --move commands.\n"
         "\t\t\t\tRequires: --resource. Optional: --node, --master.\n"
         "\t\t\t\tIf --node is not specified, all constraints created by --ban and --move\n"
@@ -235,122 +266,142 @@ static struct crm_option long_options[] = {
         "\t\t\t\tany constraint created by --move will be cleared, even if it is not for the specified node."
     },
     {
-        "lifetime", 0, 0, 'u',
-        "\tLifespan (as ISO 8601 duration) of constraints created by the --ban and --move commands\n"
+        "lifetime", required_argument, NULL, 'u',
+        "\tLifespan (as ISO 8601 duration) of created constraints (with -B, -M)\n"
         "\t\t\t\t(see https://en.wikipedia.org/wiki/ISO_8601#Durations)"
     },
     {
-        "master",  0, 0,  0,
-        "\t\tLimit the scope of the --ban, --move, and --clear commands to the Master role.\n"
-        "\t\t\t\tFor --ban and --move, the previous master may remain active in the Slave role."
+        "master", no_argument, NULL, 0,
+        "\t\tLimit scope of command to the Master role (with -B, -M, -U).\n"
+        "\t\t\t\tFor -B and -M, the previous master may remain active in the Slave role."
     },
 
-    {"-spacer-",   1, 0, '-', "\nAdvanced Commands:"},
-    {"delete",     0, 0, 'D', "\t\t(Advanced) Delete a resource from the CIB. Required: -t"},
-    {"fail",       0, 0, 'F', "\t\t(Advanced) Tell the cluster this resource has failed"},
-    {"restart",    0, 0,  0,  "\t\t(Advanced) Tell the cluster to restart this resource and anything that depends on it"},
-    {"wait",       0, 0,  0,  "\t\t(Advanced) Wait until the cluster settles into a stable state"},
+    { "-spacer-", no_argument, NULL, '-', "\nAdvanced Commands:" },
     {
-        "force-demote", 0, 0, 0,
+        "delete", no_argument, NULL, 'D',
+        "\t\t(Advanced) Delete a resource from the CIB. Required: -t"
+    },
+    {
+        "fail", no_argument, NULL, 'F',
+        "\t\t(Advanced) Tell the cluster this resource has failed"
+    },
+    {
+        "restart", no_argument, NULL, 0,
+        "\t\t(Advanced) Tell the cluster to restart this resource and anything that depends on it"
+    },
+    {
+        "wait", no_argument, NULL, 0,
+        "\t\t(Advanced) Wait until the cluster settles into a stable state"
+    },
+    {
+        "force-demote", no_argument, NULL, 0,
         "\t(Advanced) Bypass the cluster and demote a resource on the local node.\n"
         "\t\t\t\tUnless --force is specified, this will refuse to do so if the cluster\n"
         "\t\t\t\tbelieves the resource is a clone instance already running on the local node."
     },
     {
-        "force-stop", 0, 0, 0,
+        "force-stop", no_argument, NULL, 0,
         "\t(Advanced) Bypass the cluster and stop a resource on the local node."
     },
     {
-        "force-start", 0, 0, 0,
+        "force-start", no_argument, NULL, 0,
         "\t(Advanced) Bypass the cluster and start a resource on the local node.\n"
         "\t\t\t\tUnless --force is specified, this will refuse to do so if the cluster\n"
         "\t\t\t\tbelieves the resource is a clone instance already running on the local node."
     },
     {
-        "force-promote", 0, 0, 0,
+        "force-promote", no_argument, NULL, 0,
         "\t(Advanced) Bypass the cluster and promote a resource on the local node.\n"
         "\t\t\t\tUnless --force is specified, this will refuse to do so if the cluster\n"
         "\t\t\t\tbelieves the resource is a clone instance already running on the local node."
     },
     {
-        "force-check", 0, 0, 0,
+        "force-check", no_argument, NULL, 0,
         "\t(Advanced) Bypass the cluster and check the state of a resource on the local node."
     },
 
-    {"-spacer-", 1, 0, '-', "\nAdditional Options:"},
+    { "-spacer-", no_argument, NULL, '-', "\nAdditional Options:" },
     {
-        "node", 1, 0, 'N',
+        "node", required_argument, NULL, 'N',
         "\tNode name"
     },
-    {"recursive",       0, 0,  0,  "\tFollow colocation chains when using --set-parameter"},
     {
-        "resource-type", 1, 0, 't',
+        "recursive", no_argument, NULL, 0,
+        "\tFollow colocation chains when using --set-parameter"
+    },
+    {
+        "resource-type", required_argument, NULL, 't',
         "Resource XML element (primitive, group, etc.) (with -D)"
     },
-    {"parameter-value", 1, 0, 'v', "Value to use with -p"},
     {
-        "meta", 0, 0, 'm',
+        "parameter-value", required_argument, NULL, 'v',
+        "Value to use with -p"
+    },
+    {
+        "meta", no_argument, NULL, 'm',
         "\t\tUse resource meta-attribute instead of instance attribute (with -p, -g, -d)"
     },
     {
-        "utilization", 0, 0, 'z',
+        "utilization", no_argument, NULL, 'z',
         "\tUse resource utilization attribute instead of instance attribute (with -p, -g, -d)"
     },
     {
-        "operation",      required_argument, NULL, 'n',
+        "operation", required_argument, NULL, 'n',
         "\tOperation to clear instead of all (with -C -r)"
     },
     {
-        "interval",       required_argument, NULL, 'I',
+        "interval", required_argument, NULL, 'I',
         "\tInterval of operation to clear (default 0) (with -C -r -n)"
     },
     {
-        "set-name", 1, 0, 's',
+        "set-name", required_argument, NULL, 's',
         "\t(Advanced) XML ID of attributes element to use (with -p, -d)"
     },
     {
-        "nvpair", 1, 0, 'i',
+        "nvpair", required_argument, NULL, 'i',
         "\t(Advanced) XML ID of nvpair element to use (with -p, -d)"
     },
     {
-        "timeout", 1, 0, 'T',
+        "timeout", required_argument, NULL, 'T',
         "\t(Advanced) Abort if command does not finish in this time (with --restart, --wait)"
     },
     {
-        "force", 0, 0, 'f',
+        "force", no_argument, NULL, 'f',
         "\t\tIf making CIB changes, do so regardless of quorum.\n"
         "\t\t\t\tSee help for individual commands for additional behavior.\n"
     },
-
-    {"xml-file", 1, 0, 'x', NULL, pcmk_option_hidden},
+    {
+        "xml-file", required_argument, NULL, 'x',
+        NULL, pcmk_option_hidden
+    },
 
     /* legacy options */
-    {"host-uname", 1, 0, 'H', NULL, pcmk_option_hidden},
-    {"migrate",    0, 0, 'M', NULL, pcmk_option_hidden},
-    {"un-migrate", 0, 0, 'U', NULL, pcmk_option_hidden},
-    {"un-move",    0, 0, 'U', NULL, pcmk_option_hidden},
+    {"host-uname", required_argument, NULL, 'H', NULL, pcmk_option_hidden},
+    {"migrate", no_argument, NULL, 'M', NULL, pcmk_option_hidden},
+    {"un-migrate", no_argument, NULL, 'U', NULL, pcmk_option_hidden},
+    {"un-move", no_argument, NULL, 'U', NULL, pcmk_option_hidden},
 
-    {"reprobe",    0, 0, 'P', NULL, pcmk_option_hidden},
+    {"reprobe", no_argument, NULL, 'P', NULL, pcmk_option_hidden},
 
-    {"-spacer-", 1, 0, '-', "\nExamples:", pcmk_option_paragraph},
-    {"-spacer-", 1, 0, '-', "List the available OCF agents:", pcmk_option_paragraph},
-    {"-spacer-", 1, 0, '-', " crm_resource --list-agents ocf", pcmk_option_example},
-    {"-spacer-", 1, 0, '-', "List the available OCF agents from the linux-ha project:", pcmk_option_paragraph},
-    {"-spacer-", 1, 0, '-', " crm_resource --list-agents ocf:heartbeat", pcmk_option_example},
-    {"-spacer-", 1, 0, '-', "Move 'myResource' to a specific node:", pcmk_option_paragraph},
-    {"-spacer-", 1, 0, '-', " crm_resource --resource myResource --move --node altNode", pcmk_option_example},
-    {"-spacer-", 1, 0, '-', "Allow (but not force) 'myResource' to move back to its original location:", pcmk_option_paragraph},
-    {"-spacer-", 1, 0, '-', " crm_resource --resource myResource --clear", pcmk_option_example},
-    {"-spacer-", 1, 0, '-', "Stop 'myResource' (and anything that depends on it):", pcmk_option_paragraph},
-    {"-spacer-", 1, 0, '-', " crm_resource --resource myResource --set-parameter target-role --meta --parameter-value Stopped", pcmk_option_example},
-    {"-spacer-", 1, 0, '-', "Tell the cluster not to manage 'myResource':", pcmk_option_paragraph},
-    {"-spacer-", 1, 0, '-', "The cluster will not attempt to start or stop the resource under any circumstances."},
-    {"-spacer-", 1, 0, '-', "Useful when performing maintenance tasks on a resource.", pcmk_option_paragraph},
-    {"-spacer-", 1, 0, '-', " crm_resource --resource myResource --set-parameter is-managed --meta --parameter-value false", pcmk_option_example},
-    {"-spacer-", 1, 0, '-', "Erase the operation history of 'myResource' on 'aNode':", pcmk_option_paragraph},
-    {"-spacer-", 1, 0, '-', "The cluster will 'forget' the existing resource state (including any errors) and attempt to recover the resource."},
-    {"-spacer-", 1, 0, '-', "Useful when a resource had failed permanently and has been repaired by an administrator.", pcmk_option_paragraph},
-    {"-spacer-", 1, 0, '-', " crm_resource --resource myResource --cleanup --node aNode", pcmk_option_example},
+    {"-spacer-", 1, NULL, '-', "\nExamples:", pcmk_option_paragraph},
+    {"-spacer-", 1, NULL, '-', "List the available OCF agents:", pcmk_option_paragraph},
+    {"-spacer-", 1, NULL, '-', " crm_resource --list-agents ocf", pcmk_option_example},
+    {"-spacer-", 1, NULL, '-', "List the available OCF agents from the linux-ha project:", pcmk_option_paragraph},
+    {"-spacer-", 1, NULL, '-', " crm_resource --list-agents ocf:heartbeat", pcmk_option_example},
+    {"-spacer-", 1, NULL, '-', "Move 'myResource' to a specific node:", pcmk_option_paragraph},
+    {"-spacer-", 1, NULL, '-', " crm_resource --resource myResource --move --node altNode", pcmk_option_example},
+    {"-spacer-", 1, NULL, '-', "Allow (but not force) 'myResource' to move back to its original location:", pcmk_option_paragraph},
+    {"-spacer-", 1, NULL, '-', " crm_resource --resource myResource --clear", pcmk_option_example},
+    {"-spacer-", 1, NULL, '-', "Stop 'myResource' (and anything that depends on it):", pcmk_option_paragraph},
+    {"-spacer-", 1, NULL, '-', " crm_resource --resource myResource --set-parameter target-role --meta --parameter-value Stopped", pcmk_option_example},
+    {"-spacer-", 1, NULL, '-', "Tell the cluster not to manage 'myResource':", pcmk_option_paragraph},
+    {"-spacer-", 1, NULL, '-', "The cluster will not attempt to start or stop the resource under any circumstances."},
+    {"-spacer-", 1, NULL, '-', "Useful when performing maintenance tasks on a resource.", pcmk_option_paragraph},
+    {"-spacer-", 1, NULL, '-', " crm_resource --resource myResource --set-parameter is-managed --meta --parameter-value false", pcmk_option_example},
+    {"-spacer-", 1, NULL, '-', "Erase the operation history of 'myResource' on 'aNode':", pcmk_option_paragraph},
+    {"-spacer-", 1, NULL, '-', "The cluster will 'forget' the existing resource state (including any errors) and attempt to recover the resource."},
+    {"-spacer-", 1, NULL, '-', "Useful when a resource had failed permanently and has been repaired by an administrator.", pcmk_option_paragraph},
+    {"-spacer-", 1, NULL, '-', " crm_resource --resource myResource --cleanup --node aNode", pcmk_option_example},
 
     {0, 0, 0, 0}
 };
@@ -377,7 +428,7 @@ main(int argc, char **argv)
 
     char *xml_file = NULL;
     crm_ipc_t *crmd_channel = NULL;
-    pe_working_set_t data_set;
+    pe_working_set_t data_set = { 0, };
     cib_t *cib_conn = NULL;
     bool recursive = FALSE;
     char *our_pid = NULL;
@@ -388,6 +439,7 @@ main(int argc, char **argv)
     bool just_errors = TRUE;      /* whether cleanup command deletes all history or just errors */
 
     int rc = pcmk_ok;
+    int is_ocf_rc = 0;
     int option_index = 0;
     int timeout_ms = 0;
     int argerr = 0;
@@ -522,7 +574,7 @@ main(int argc, char **argv)
                 }
                 break;
             case 'V':
-                do_trace = TRUE;
+                resource_verbose++;
                 crm_bump_log_level(argc, argv);
                 break;
             case '$':
@@ -591,15 +643,19 @@ main(int argc, char **argv)
             case 'I':
                 interval = optarg;
                 break;
-            
+
             case 'D':
-                require_dataset = FALSE; 
+                require_dataset = FALSE;
                 crm_log_args(argc, argv);
                 rsc_cmd = flag;
                 break;
 
             case 'F':
                 require_crmd = TRUE;
+                crm_log_args(argc, argv);
+                rsc_cmd = flag;
+                break;
+
             case 'U':
             case 'B':
             case 'M':
@@ -613,7 +669,10 @@ main(int argc, char **argv)
             case 'O':
             case 'o':
             case 'Y':
-                 require_resource = FALSE;
+                require_resource = FALSE;
+                rsc_cmd = flag;
+                break;
+
             case 'q':
             case 'w':
             case 'W':
@@ -625,14 +684,21 @@ main(int argc, char **argv)
             case 'j':
                 print_pending = TRUE;
                 break;
+
             case 'S':
-                require_dataset = FALSE;  
+                require_dataset = FALSE;
+                crm_log_args(argc, argv);
+                prop_name = optarg;
+                rsc_cmd = flag;
+                break;
+
             case 'p':
             case 'd':
                 crm_log_args(argc, argv);
                 prop_name = optarg;
                 rsc_cmd = flag;
                 break;
+
             case 'G':
             case 'g':
                 prop_name = optarg;
@@ -822,6 +888,9 @@ main(int argc, char **argv)
 
     } else if (rsc_cmd == 0 && rsc_long_cmd) { /* validate or force-(stop|start|check) */
         rc = cli_resource_execute(rsc_id, rsc_long_cmd, override_params, cib_conn, &data_set);
+        if (rc >= 0) {
+            is_ocf_rc = 1;
+        }
 
     } else if (rsc_cmd == 'A' || rsc_cmd == 'a') {
         GListPtr lpc = NULL;
@@ -1177,7 +1246,7 @@ main(int argc, char **argv)
         CMD_ERR("Error performing operation: %s", pcmk_strerror(rc));
         CMD_ERR("Try using -f");
 
-    } else if (rc != pcmk_ok) {
+    } else if (rc != pcmk_ok && !is_ocf_rc) {
         CMD_ERR("Error performing operation: %s", pcmk_strerror(rc));
     }
 

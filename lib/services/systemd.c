@@ -357,7 +357,7 @@ systemd_unit_by_name(const gchar * arg_name, svc_action_t *op)
 GList *
 systemd_unit_listall(void)
 {
-    int lpc = 0;
+    int nfiles = 0;
     GList *units = NULL;
     DBusMessageIter args;
     DBusMessageIter unit;
@@ -369,64 +369,95 @@ systemd_unit_listall(void)
     }
 
 /*
-        "  <method name=\"ListUnits\">\n"                               \
-        "   <arg name=\"units\" type=\"a(ssssssouso)\" direction=\"out\"/>\n" \
+        "  <method name=\"ListUnitFiles\">\n"                               \
+        "   <arg name=\"files\" type=\"a(ss)\" direction=\"out\"/>\n" \
         "  </method>\n"                                                 \
 */
 
-    reply = systemd_call_simple_method("ListUnits");
+    reply = systemd_call_simple_method("ListUnitFiles");
     if (reply == NULL) {
         return NULL;
     }
     if (!dbus_message_iter_init(reply, &args)) {
-        crm_err("Could not list systemd units: systemd reply has no arguments");
+        crm_err("Could not list systemd unit files: systemd reply has no arguments");
         dbus_message_unref(reply);
         return NULL;
     }
     if (!pcmk_dbus_type_check(reply, &args, DBUS_TYPE_ARRAY,
                               __FUNCTION__, __LINE__)) {
-        crm_err("Could not list systemd units: systemd reply has invalid arguments");
+        crm_err("Could not list systemd unit files: systemd reply has invalid arguments");
         dbus_message_unref(reply);
         return NULL;
     }
 
     dbus_message_iter_recurse(&args, &unit);
-    while (dbus_message_iter_get_arg_type (&unit) != DBUS_TYPE_INVALID) {
+    for (; dbus_message_iter_get_arg_type(&unit) != DBUS_TYPE_INVALID;
+        dbus_message_iter_next(&unit)) {
+
         DBusBasicValue value;
+        const char *match = NULL;
+        char *unit_name = NULL;
+        char *basename = NULL;
 
         if(!pcmk_dbus_type_check(reply, &unit, DBUS_TYPE_STRUCT, __FUNCTION__, __LINE__)) {
+            crm_debug("ListUnitFiles reply has unexpected type");
             continue;
         }
 
         dbus_message_iter_recurse(&unit, &elem);
         if(!pcmk_dbus_type_check(reply, &elem, DBUS_TYPE_STRING, __FUNCTION__, __LINE__)) {
+            crm_debug("ListUnitFiles reply does not contain a string");
             continue;
         }
 
         dbus_message_iter_get_basic(&elem, &value);
-        crm_trace("DBus ListUnits listed: %s", value.str);
-        if(value.str) {
-            const char *match = systemd_unit_extension(value.str);
-
-            if (match) {
-                char *unit_name;
-
-                if (!strcmp(match, ".service")) {
-                    /* service is the "default" unit type, so strip it */
-                    unit_name = strndup(value.str, match - value.str);
-                } else {
-                    unit_name = strdup(value.str);
-                }
-                lpc++;
-                units = g_list_append(units, unit_name);
-            }
+        if (value.str == NULL) {
+            crm_debug("ListUnitFiles reply did not provide a string");
+            continue;
         }
-        dbus_message_iter_next (&unit);
+        crm_trace("DBus ListUnitFiles listed: %s", value.str);
+
+        match = systemd_unit_extension(value.str);
+        if (match == NULL) {
+            // Unit files always have an extension, so skip if not present
+            crm_debug("ListUnitFiles entry '%s' does not have an extension",
+                      value.str);
+            continue;
+        }
+
+        // ListUnitFiles returns full path names
+        basename = strrchr(value.str, '/');
+        if (basename) {
+            basename = basename + 1;
+        } else {
+            basename = value.str;
+        }
+
+        /* Unit files will include types (such as .target) that we can't manage,
+         * so filter the replies here.
+         */
+        if (!strcmp(match, ".service")) {
+            // Service is the "default" unit type, so strip it
+            unit_name = strndup(basename, match - basename);
+
+        } else if (!strcmp(match, ".mount")
+                   || !strcmp(match, ".socket")) {
+            unit_name = strdup(basename);
+        }
+        if (unit_name == NULL) {
+            crm_trace("ListUnitFiles entry '%s' is not manageable",
+                      value.str);
+            continue;
+        }
+
+        nfiles++;
+        units = g_list_prepend(units, unit_name);
     }
 
     dbus_message_unref(reply);
 
-    crm_trace("Found %d systemd services", lpc);
+    crm_trace("Found %d manageable systemd unit files", nfiles);
+    units = g_list_sort(units, crm_alpha_sort);
     return units;
 }
 

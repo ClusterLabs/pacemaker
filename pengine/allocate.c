@@ -35,20 +35,18 @@
 CRM_TRACE_INIT_DATA(pe_allocate);
 
 void set_alloc_actions(pe_working_set_t * data_set);
-void migrate_reload_madness(pe_working_set_t * data_set);
 extern void ReloadRsc(resource_t * rsc, node_t *node, pe_working_set_t * data_set);
 extern gboolean DeleteRsc(resource_t * rsc, node_t * node, gboolean optional, pe_working_set_t * data_set);
 static void apply_remote_node_ordering(pe_working_set_t *data_set);
 static enum remote_connection_state get_remote_node_state(pe_node_t *node);
-enum remote_connection_state 
-{
+
+enum remote_connection_state {
     remote_state_unknown = 0,
     remote_state_alive = 1,
     remote_state_resting = 2,
     remote_state_failed = 3,
     remote_state_stopped = 4
 };
-
 
 resource_alloc_functions_t resource_class_alloc_functions[] = {
     {
@@ -781,8 +779,7 @@ calculate_system_health(gpointer gKey, gpointer gValue, gpointer user_data)
         return;
     }
 
-    /* Does it start with #health? */
-    if (0 == strncmp(key, "#health", 7)) {
+    if (crm_starts_with(key, "#health")) {
         int score;
 
         /* Convert the value into an integer */
@@ -908,17 +905,13 @@ probe_resources(pe_working_set_t * data_set)
         node_t *node = (node_t *) gIter->data;
         const char *probed = pe_node_attribute_raw(node, CRM_OP_PROBED);
 
-        if (is_container_remote_node(node)) {
-            /* Guest node probes and their ordering requirements are now functional */
+        if (node->details->online == FALSE) {
 
-        } else if (node->details->online == FALSE && node->details->remote_rsc) {
-            enum remote_connection_state state = get_remote_node_state(node);
-            if(state == remote_state_failed) {
+            if (is_baremetal_remote_node(node) && node->details->remote_rsc
+                && (get_remote_node_state(node) == remote_state_failed)) {
+
                 pe_fence_node(data_set, node, "the connection is unrecoverable");
             }
-            continue;
-
-        } else if(node->details->online == FALSE) {
             continue;
 
         } else if (node->details->unclean) {

@@ -1373,11 +1373,10 @@ process_lrmd_signon(crm_client_t * client, uint32_t id, xmlNode * request)
     const char *is_ipc_provider = crm_element_value(request, F_LRMD_IS_IPC_PROVIDER);
     const char *protocol_version = crm_element_value(request, F_LRMD_PROTOCOL_VERSION);
 
-    if (compare_version(protocol_version, LRMD_PROTOCOL_VERSION) < 0) {
+    if (compare_version(protocol_version, LRMD_MIN_PROTOCOL_VERSION) < 0) {
         crm_err("Cluster API version must be greater than or equal to %s, not %s",
-                LRMD_PROTOCOL_VERSION, protocol_version);
+                LRMD_MIN_PROTOCOL_VERSION, protocol_version);
         crm_xml_add_int(reply, F_LRMD_RC, -EPROTO);
-        crm_xml_add(reply, F_LRMD_PROTOCOL_VERSION, LRMD_PROTOCOL_VERSION);
     }
 
     crm_xml_add(reply, F_LRMD_OPERATION, CRM_OP_REGISTER);

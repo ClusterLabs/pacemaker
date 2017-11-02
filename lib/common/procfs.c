@@ -162,7 +162,7 @@ crm_procfs_num_cores(void)
         char buffer[2048];
 
         while (fgets(buffer, sizeof(buffer), stream)) {
-            if (!strncmp(buffer, "cpu", 3) && isdigit(buffer[3])) {
+            if (crm_starts_with(buffer, "cpu") && isdigit(buffer[3])) {
                 ++cores;
             }
         }

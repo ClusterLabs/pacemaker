@@ -42,6 +42,7 @@ void crm_sync_directory(const char *name);
 
 char *crm_read_contents(const char *filename);
 int crm_write_sync(int fd, const char *contents);
+int crm_set_nonblocking(int fd);
 
 
 /* internal procfs utilities (from procfs.c) */
@@ -62,11 +63,13 @@ void crm_schema_cleanup(void);
 char *crm_concat(const char *prefix, const char *suffix, char join);
 void g_hash_destroy_str(gpointer data);
 long long crm_int_helper(const char *text, char **end_text);
+bool crm_starts_with(const char *str, const char *prefix);
 gboolean crm_ends_with(const char *s, const char *match);
 gboolean crm_ends_with_ext(const char *s, const char *match);
 char *add_list_element(char *list, const char *value);
 bool crm_compress_string(const char *data, int length, int max, char **result,
                          unsigned int *result_len);
+gint crm_alpha_sort(gconstpointer a, gconstpointer b);
 
 static inline int
 crm_strlen_zero(const char *s)

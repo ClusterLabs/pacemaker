@@ -199,6 +199,7 @@ inject_node_state(cib_t * cib_conn, const char *node, const char *uuid)
         crm_log_xml_warn(cib_object, "Duplicates");
         free(xpath);
         crm_exit(ENOTUNIQ);
+        return NULL; // not reached, but makes static analysis happy
     }
 
     if (rc == -ENXIO) {
@@ -707,8 +708,16 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
         snprintf(key, strlen(spec), "%s_%s_%d@%s=", resource, op->op_type, op->interval, node);
 
         if (strncasecmp(key, spec, strlen(key)) == 0) {
-            sscanf(spec, "%*[^=]=%d", (int *)&op->rc);
+            rc = sscanf(spec, "%*[^=]=%d", (int *) &op->rc);
+            // ${resource}_${task}_${interval}@${node}=${rc}
 
+            if (rc != 1) {
+                fprintf(stderr,
+                        "Invalid failed operation spec: %s. Result code must be integer\n",
+                        spec);
+                free(key);
+                continue;
+            }
             action->failed = TRUE;
             graph->abort_priority = INFINITY;
             printf("\tPretending action %d failed with rc=%d\n", action->id, op->rc);

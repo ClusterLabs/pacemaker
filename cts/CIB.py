@@ -551,7 +551,6 @@ if __name__ == '__main__':
         "--stack", "corosync",
         "--test-ip-base", "fe80::1234:56:7890:1000",
         "--stonith", "rhcs",
-        "--stonith-args", "pcmk_host_argument=domain"
     ]
     env = CTS.CtsLab(args)
     cm = CM_ais.crm_mcp(env)

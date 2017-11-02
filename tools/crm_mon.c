@@ -3625,6 +3625,7 @@ send_custom_trap(const char *node, const char *rsc, const char *task, int target
     if (pid == 0) {
         /* crm_debug("notification: I am the child. Executing the nofitication program."); */
         execl(external_agent, external_agent, NULL);
+        exit(EXIT_FAILURE);
     }
 
     crm_trace("Finished running custom notification program '%s'.", external_agent);

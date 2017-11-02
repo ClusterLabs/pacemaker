@@ -139,6 +139,7 @@ main(int argc, char **argv)
 #if HAVE_ATOMIC_ATTRD
             case 'A':
                 query_all = TRUE;
+                break;
             case 'p':
                 set_bit(attr_options, attrd_opt_private);
                 break;

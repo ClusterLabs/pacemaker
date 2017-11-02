@@ -485,13 +485,10 @@ update_colo_start_chain(action_t *action)
     if (is_not_set(action->flags, pe_action_runnable) && safe_str_eq(action->task, RSC_START)) {
         rsc = uber_parent(action->rsc);
         if (rsc->parent) {
-            /*
-             * This is a bundle and uber_parent() returns the
-             * container/clone/master not the bundle itself, so if
-             * rsc->parent is not NULL, we must be in a bundle.
-             *
-             * Here we need the bundle so that we can check if all
-             * containers are stopped/stopping.
+            /* For bundles, uber_parent() returns the clone/master, not the
+             * bundle, so the existence of rsc->parent implies this is a bundle.
+             * In this case, we need the bundle resource, so that we can check
+             * if all containers are stopped/stopping.
              */
             rsc = rsc->parent;
         }
@@ -591,6 +588,17 @@ update_action(action_t * then)
         }
 
         clear_bit(changed, pe_graph_updated_first);
+
+        if (first->rsc && is_set(other->type, pe_order_then_cancels_first)
+            && is_not_set(then->flags, pe_action_optional)) {
+
+            /* 'then' is required, so we must abandon 'first'
+             * (e.g. a required stop cancels any reload).
+             * Only used with reload actions as 'first'.
+             */
+            set_bit(other->action->flags, pe_action_optional);
+            clear_bit(first->rsc->flags, pe_rsc_reload);
+        }
 
         if (first->rsc && then->rsc && (first->rsc != then->rsc)
             && (is_parent(then->rsc, first->rsc) == FALSE)) {

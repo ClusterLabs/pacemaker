@@ -299,6 +299,16 @@ do_cl_join_finalize_respond(long long action,
          */
         if (first_join && is_not_set(fsa_input_register, R_SHUTDOWN)) {
             first_join = FALSE;
+#if !HAVE_ATOMIC_ATTRD
+            /* c9d1c3cd made this unnecessary for atomic attrd.
+             * This means that the issue addressed by that commit is still
+             * present for legacy attrd, but given legacy attrd's imminent
+             * demise, this is preferable to making intrusive changes to it.
+             */
+            erase_status_tag(fsa_our_uname, XML_TAG_TRANSIENT_NODEATTRS, 0);
+            update_attrd(fsa_our_uname, "terminate", NULL, NULL, FALSE);
+            update_attrd(fsa_our_uname, XML_CIB_ATTR_SHUTDOWN, "0", NULL, FALSE);
+#endif
             if (start_state) {
                 set_join_state(start_state);
             }

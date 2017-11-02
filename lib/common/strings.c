@@ -236,6 +236,35 @@ null2emptystr(const char *input)
     return (input == NULL) ? "" : input;
 }
 
+/*!
+ * \brief Check whether a string starts with a certain sequence
+ *
+ * \param[in] str    String to check
+ * \param[in] match  Sequence to match against beginning of \p str
+ *
+ * \return \c TRUE if \p str begins with match, \c FALSE otherwise
+ * \note This is equivalent to !strncmp(s, prefix, strlen(prefix))
+ *       but is likely less efficient when prefix is a string literal
+ *       if the compiler optimizes away the strlen() at compile time,
+ *       and more efficient otherwise.
+ */
+bool
+crm_starts_with(const char *str, const char *prefix)
+{
+    const char *s = str;
+    const char *p = prefix;
+
+    if (!s || !p) {
+        return FALSE;
+    }
+    while (*s && *p) {
+        if (*s++ != *p++) {
+            return FALSE;
+        }
+    }
+    return (*p == 0);
+}
+
 static inline int crm_ends_with_internal(const char *, const char *, gboolean);
 static inline int
 crm_ends_with_internal(const char *s, const char *match, gboolean as_extension)
@@ -426,4 +455,28 @@ crm_compress_string(const char *data, int length, int max, char **result, unsign
 
     *result = compressed;
     return TRUE;
+}
+
+/*!
+ * \brief Compare two strings alphabetically (case-insensitive)
+ *
+ * \param[in] a  First string to compare
+ * \param[in] b  Second string to compare
+ *
+ * \return 0 if strings are equal, -1 if a < b, 1 if a > b
+ *
+ * \note Usable as a GCompareFunc with g_list_sort().
+ *       NULL is considered less than non-NULL.
+ */
+gint
+crm_alpha_sort(gconstpointer a, gconstpointer b)
+{
+    if (!a && !b) {
+        return 0;
+    } else if (!a) {
+        return -1;
+    } else if (!b) {
+        return 1;
+    }
+    return strcasecmp(a, b);
 }

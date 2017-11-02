@@ -18,6 +18,8 @@
 
 #include <crm_internal.h>
 
+#include <ctype.h>
+
 #include <crm/pengine/rules.h>
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>
@@ -1236,7 +1238,15 @@ container_print_xml(resource_t * rsc, const char *pre_text, long options, void *
 
     status_print("%s<bundle ", pre_text);
     status_print("id=\"%s\" ", rsc->id);
-    status_print("type=\"%s\" ", container_type_as_string(container_data->type));
+
+    // Always lowercase the container technology type for use as XML value
+    status_print("type=\"");
+    for (const char *c = container_type_as_string(container_data->type);
+         *c; ++c) {
+        status_print("%c", tolower(*c));
+    }
+    status_print("\" ");
+
     status_print("image=\"%s\" ", container_data->image);
     status_print("unique=\"%s\" ", is_set(rsc->flags, pe_rsc_unique)? "true" : "false");
     status_print("managed=\"%s\" ", is_set(rsc->flags, pe_rsc_managed) ? "true" : "false");
@@ -1368,8 +1378,6 @@ tuple_free(container_grouping_t *tuple)
         free_xml(tuple->ip->xml);
         tuple->ip->xml = NULL;
         tuple->ip->fns->free(tuple->ip);
-        tuple->ip->xml = NULL;
-        free_xml(tuple->ip->xml);
         tuple->ip = NULL;
     }
     if(tuple->docker) {

@@ -30,6 +30,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
+#include <fcntl.h>
 #include <dirent.h>
 #include <pwd.h>
 #include <grp.h>
@@ -456,4 +457,26 @@ crm_write_sync(int fd, const char *contents)
     }
     fclose(fp);
     return rc;
+}
+
+/*!
+ * \internal
+ * \brief Set a file descriptor to non-blocking
+ *
+ * \param[in] fd  File descriptor to use
+ *
+ * \return pcmk_ok on success, -errno on error
+ */
+int
+crm_set_nonblocking(int fd)
+{
+    int flag = fcntl(fd, F_GETFL);
+
+    if (flag < 0) {
+        return -errno;
+    }
+    if (fcntl(fd, F_SETFL, flag | O_NONBLOCK) < 0) {
+        return -errno;
+    }
+    return pcmk_ok;
 }

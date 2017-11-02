@@ -904,7 +904,7 @@ handle_blocked_ops(void)
     "<resource-agent name='%s' version='" PCMK_DEFAULT_AGENT_VERSION "'>\n" \
     "  <version>1.0</version>\n"                                        \
     "  <longdesc lang='en'>\n"                                          \
-    "    %s\n"                                                          \
+    "%s"                                                                \
     "  </longdesc>\n"                                                   \
     "  <shortdesc lang='en'>%s</shortdesc>\n"                           \
     "  <parameters>\n"                                                  \
@@ -929,6 +929,9 @@ handle_blocked_ops(void)
     "  </special>\n"                                                    \
     "</resource-agent>\n"
 
+/* See "Comment Conventions for Init Scripts" in the LSB core specification at:
+ * http://refspecs.linuxfoundation.org/lsb.shtml
+ */
 #define LSB_INITSCRIPT_INFOBEGIN_TAG "### BEGIN INIT INFO"
 #define LSB_INITSCRIPT_INFOEND_TAG "### END INIT INFO"
 #define PROVIDES    "# Provides:"
@@ -962,7 +965,7 @@ handle_blocked_ops(void)
 static inline gboolean
 lsb_meta_helper_get_value(const char *line, char **value, const char *prefix)
 {
-    if (!*value && !strncasecmp(line, prefix, strlen(prefix))) {
+    if (!*value && crm_starts_with(line, prefix)) {
         *value = (char *)xmlEncodeEntitiesReentrant(NULL, BAD_CAST line+strlen(prefix));
         return TRUE;
     }
@@ -975,8 +978,8 @@ static int
 lsb_get_metadata(const char *type, char **output)
 {
     char ra_pathname[PATH_MAX] = { 0, };
-    FILE *fp;
-    char buffer[1024];
+    FILE *fp = NULL;
+    char buffer[1024] = { 0, };
     char *provides = NULL;
     char *req_start = NULL;
     char *req_stop = NULL;
@@ -987,7 +990,8 @@ lsb_get_metadata(const char *type, char **output)
     char *s_dscrpt = NULL;
     char *xml_l_dscrpt = NULL;
     int offset = 0;
-    char description[DESC_MAX];
+    bool in_header = FALSE;
+    char description[DESC_MAX] = { 0, };
 
     if (type[0] == '/') {
         snprintf(ra_pathname, sizeof(ra_pathname), "%s", type);
@@ -1004,6 +1008,15 @@ lsb_get_metadata(const char *type, char **output)
 
     /* Enter into the LSB-compliant comment block */
     while (fgets(buffer, sizeof(buffer), fp)) {
+
+        // Ignore lines up to and including the block delimiter
+        if (crm_starts_with(buffer, LSB_INITSCRIPT_INFOBEGIN_TAG)) {
+            in_header = TRUE;
+            continue;
+        }
+        if (!in_header) {
+            continue;
+        }
 
         /* Assume each of the following eight arguments contain one line */
         if (lsb_meta_helper_get_value(buffer, &provides, PROVIDES)) {
@@ -1032,37 +1045,48 @@ lsb_get_metadata(const char *type, char **output)
         }
 
         /* Long description may cross multiple lines */
-        if ((offset == 0)
-            && !strncasecmp(buffer, DESCRIPTION, strlen(DESCRIPTION))) {
-            /* Between # and keyword, more than one space, or a tab
-             * character, indicates the continuation line.
-             *
-             * Extracted from LSB init script standard
-             */
+        if ((offset == 0) // haven't already found long description
+            && crm_starts_with(buffer, DESCRIPTION)) {
+            bool processed_line = TRUE;
+
+            // Get remainder of description line itself
+            offset += snprintf(description, DESC_MAX, "%s",
+                               buffer + strlen(DESCRIPTION));
+
+            // Read any continuation lines of the description
+            buffer[0] = '\0';
             while (fgets(buffer, sizeof(buffer), fp)) {
-                if (!strncmp(buffer, "#  ", 3) || !strncmp(buffer, "#\t", 2)) {
-                    buffer[0] = ' ';
+                if (crm_starts_with(buffer, "#  ")
+                    || crm_starts_with(buffer, "#\t")) {
+                    /* '#' followed by a tab or more than one space indicates a
+                     * continuation of the long description.
+                     */
                     offset += snprintf(description + offset, DESC_MAX - offset,
-                                       "%s", buffer);
+                                       "%s", buffer + 1);
                 } else {
-                    fputs(buffer, fp);
-                    break;      /* Long description ends */
+                    /* This line is not part of the long description,
+                     * so continue with normal processing.
+                     */
+                    processed_line = FALSE;
+                    break;
                 }
             }
-            continue;
-        }
 
-        if ((xml_l_dscrpt == NULL) && (offset > 0)) {
+            // Make long description safe to use in XML
             xml_l_dscrpt = (char *)xmlEncodeEntitiesReentrant(NULL, BAD_CAST(description));
+
+            if (processed_line) {
+                // We grabbed the line into the long description
+                continue;
+            }
         }
 
-        if (!strncasecmp(buffer, LSB_INITSCRIPT_INFOEND_TAG,
-                         strlen(LSB_INITSCRIPT_INFOEND_TAG))) {
-            /* Get to the out border of LSB comment block */
+        // Stop if we leave the header block
+        if (crm_starts_with(buffer, LSB_INITSCRIPT_INFOEND_TAG)) {
             break;
         }
         if (buffer[0] != '#') {
-            break;              /* Out of comment block in the beginning */
+            break;
         }
     }
     fclose(fp);
