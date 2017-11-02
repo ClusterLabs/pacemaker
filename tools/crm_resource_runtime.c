@@ -1452,10 +1452,12 @@ cli_resource_execute(const char *rsc_id, const char *rsc_action, GHashTable *ove
 {
     int rc = pcmk_ok;
     svc_action_t *op = NULL;
+    const char *rid = NULL;
     const char *rtype = NULL;
     const char *rprov = NULL;
     const char *rclass = NULL;
     const char *action = NULL;
+    const char *value = NULL;
     GHashTable *params = NULL;
     resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
 
@@ -1519,12 +1521,15 @@ cli_resource_execute(const char *rsc_id, const char *rsc_action, GHashTable *ove
     /* add crm_feature_set env needed by some resource agents */
     g_hash_table_insert(params, strdup(XML_ATTR_CRM_VERSION), strdup(CRM_FEATURE_SET));
 
-    op = resources_action_create(rsc->id, rclass, rprov, rtype, action, 0,
+    value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_UNIQUE);
+    rid = crm_is_true(value) ? rsc->id : rsc_id;
+
+    op = resources_action_create(rid, rclass, rprov, rtype, action, 0,
                                  timeout_ms, params, 0);
     if (op == NULL) {
         /* Re-run with stderr enabled so we can display a sane error message */
         crm_enable_stderr(TRUE);
-        op = resources_action_create(rsc->id, rclass, rprov, rtype, action, 0,
+        op = resources_action_create(rid, rclass, rprov, rtype, action, 0,
                                      timeout_ms, params, 0);
 
         /* We know op will be NULL, but this makes static analysis happy */
