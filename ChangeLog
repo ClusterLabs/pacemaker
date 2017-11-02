@@ -1,3 +1,32 @@
+* Thu Nov 02 2017 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.18-rc4
+- Update source tarball to revision: f75cef6
+- Changesets: 111
+- Diff:       42 files changed, 1163 insertions(+), 651 deletions(-)
+
+- Features added since Pacemaker-1.1.18-rc3
+  + agents: ifspeed agent can optionally detect interface name from IP address
+
+- Changes since Pacemaker-1.1.18-rc3
+  + crmd: error more quickly if remote start fails due to missing key
+  + pengine: allow resources to stop prior to probes completing
+  + pengine: probe remote nodes for guest node resources
+  + pengine: bundles need to wait only for other containers on the same node to be probed
+  + pengine: correctly defer processing of resources inside containers
+  + pengine: do not always expire failed operations of nested remotes
+  + pengine: do not probe connection resources until the container is active
+  + pengine: don't keep unique instances on same node
+  + pengine: don't probe offline or unclean guest nodes
+  + pengine: exclude exclusive resources and nodes from symmetric default score
+  + pengine: have bundles log to stderr so that 'docker logs' works
+  + pengine: if ignoring failure, also ignore migration-threshold
+  + pengine: only pass requests for promote/demote flags onto the bundle's child
+  + pengine: resources are allowed to stop before their state is known everywhere
+  + pengine: restore the ability to send the transition graph via the disk if it gets too big
+  + pengine: do not map ports into Docker container when net=host is specified
+  + tools: allow crm_resource to operate on anonymous clones in unknown states
+  + tools: crm_resource --cleanup on appropriate nodes if we don't know state of resource
+  + tools: prevent disconnection from crmd during crm_resource --cleanup
+
 * Mon Oct 23 2017 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.18-rc3
 - Update source tarball to revision: 24b36d4
 - Changesets: 19
