@@ -2392,7 +2392,7 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
                         next->details->uname);
 
         } else if (start && is_set(start->flags, pe_action_runnable) == FALSE) {
-            LogAction("Stop", rsc, current, NULL, stop, start, terminal);
+            LogAction("Stop", rsc, current, NULL, stop, stop->reason?stop:start, terminal);
             STOP_SANITY_ASSERT(__LINE__);
 
         } else if (moving && current) {
@@ -2433,7 +2433,7 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
                 STOP_SANITY_ASSERT(__LINE__);
             }
 
-            LogAction("Stop", rsc, node, NULL, stop_op, start, terminal);
+            LogAction("Stop", rsc, node, NULL, stop_op, stop_op->reason?stop_op:start, terminal);
         }
 
         free(key);
@@ -2493,6 +2493,10 @@ StopRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * d
         pe_rsc_trace(rsc, "%s on %s", rsc->id, current->details->uname);
         stop = stop_action(rsc, current, optional);
 
+        if(rsc->allocated_to == NULL) {
+            pe_action_set_reason(stop, "node availability", TRUE);
+        }
+
         if (is_not_set(rsc->flags, pe_rsc_managed)) {
             update_action_flags(stop, pe_action_runnable | pe_action_clear, __FUNCTION__, __LINE__);
         }
@@ -2521,7 +2525,7 @@ StartRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * 
     action_t *start = NULL;
 
     CRM_ASSERT(rsc);
-    pe_rsc_trace(rsc, "%s on %s %d", rsc->id, next ? next->details->uname : "N/A", optional);
+    pe_rsc_trace(rsc, "%s on %s %d %d", rsc->id, next ? next->details->uname : "N/A", optional, next ? next->weight : 0);
     start = start_action(rsc, next, TRUE);
 
     if(is_set(rsc->flags, pe_rsc_needs_unfencing)) {
@@ -3310,9 +3314,10 @@ ReloadRsc(resource_t * rsc, node_t *node, pe_working_set_t * data_set)
 
     pe_rsc_trace(rsc, "Processing %s", rsc->id);
     set_bit(rsc->flags, pe_rsc_reload);
-    
+
     reload = custom_action(
         rsc, reload_key(rsc), CRMD_ACTION_RELOAD, node, FALSE, TRUE, data_set);
+    pe_action_set_reason(reload, "resource definition change", FALSE);
 
     /* stop = stop_action(rsc, node, optional); */
     other = get_first_named_action(rsc, RSC_STOP, TRUE, node);

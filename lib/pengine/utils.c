@@ -547,7 +547,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
 
         } else if (action->node == NULL) {
             pe_rsc_trace(rsc, "Unset runnable on %s", action->uuid);
-            pe_action_set_flag_reason(__FUNCTION__, __LINE__, action, NULL, "node availability", pe_action_runnable, TRUE);
+            pe_clear_action_bit(action, pe_action_runnable);
 
         } else if (is_not_set(rsc->flags, pe_rsc_managed)
                    && g_hash_table_lookup(action->meta, XML_LRM_ATTR_INTERVAL) == NULL) {
@@ -574,7 +574,7 @@ custom_action(resource_t * rsc, char *key, const char *task,
 
         } else if (action->needs == rsc_req_nothing) {
             pe_rsc_trace(rsc, "Action %s does not require anything", action->uuid);
-            free(action->reason); action->reason = NULL;
+            pe_action_set_reason(action, NULL, TRUE);
             pe_set_action_bit(action, pe_action_runnable);
 #if 0
             /*
@@ -599,9 +599,9 @@ custom_action(resource_t * rsc, char *key, const char *task,
                              action->node->details->uname, action->uuid);
             }
 
-        } else {
+        } else if(is_not_set(action->flags, pe_action_runnable)) {
             pe_rsc_trace(rsc, "Action %s is runnable", action->uuid);
-            free(action->reason); action->reason = NULL;
+            //pe_action_set_reason(action, NULL, TRUE);
             pe_set_action_bit(action, pe_action_runnable);
         }
 
@@ -1953,14 +1953,16 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
     char *key = NULL;
     int interval = 0;
 
-    const char *interval_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
+    const char *op_version;
     const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
+    const char *interval_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
 
     const char *digest_all;
     const char *digest_restart;
 
     CRM_ASSERT(node != NULL);
 
+    op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
     digest_all = crm_element_value(xml_op, XML_LRM_ATTR_OP_DIGEST);
     digest_restart = crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST);
 
@@ -1970,6 +1972,10 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
 
     data->rc = RSC_DIGEST_MATCH;
     if (digest_restart && data->digest_restart_calc && strcmp(data->digest_restart_calc, digest_restart) != 0) {
+        pe_rsc_info(rsc, "Parameters to %s on %s changed: was %s vs. now %s (restart:%s) %s",
+                 key, node->details->uname,
+                 crm_str(digest_restart), data->digest_restart_calc,
+                 op_version, crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
         data->rc = RSC_DIGEST_RESTART;
 
     } else if (digest_all == NULL) {
@@ -1977,6 +1983,10 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
         data->rc = RSC_DIGEST_UNKNOWN;
 
     } else if (strcmp(digest_all, data->digest_all_calc) != 0) {
+        pe_rsc_info(rsc, "Parameters to %s on %s changed: was %s vs. now %s (reload:%s) %s",
+                 key, node->details->uname,
+                 crm_str(digest_all), data->digest_all_calc,
+                 op_version, crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
         data->rc = RSC_DIGEST_ALL;
     }
 
@@ -2306,10 +2316,14 @@ void pe_action_set_flag_reason(const char *function, long line,
 
 void pe_action_set_reason(pe_action_t *action, const char *reason, bool overwrite) 
 {
-    if(action->reason == NULL || overwrite) {
+    if(action->reason && overwrite) {
+        pe_rsc_trace(action->rsc, "Changing %s reason from '%s' to '%s'", action->uuid, action->reason, reason);
         free(action->reason);
+        action->reason = NULL;
+    }
+    if(action->reason == NULL) {
         if(reason) {
-            crm_trace("Set %s reason to '%s'", action->uuid, reason);
+            pe_rsc_trace(action->rsc, "Set %s reason to '%s'", action->uuid, reason);
             action->reason = strdup(reason);
         } else {
             action->reason = NULL;
