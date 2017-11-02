@@ -485,6 +485,7 @@ create_rkt_resource(
 
         // TODO: Other ops? Timeouts and intervals from underlying resource?
 
+        crm_log_xml_trace(xml_docker, "Container-rkt");
         if (common_unpack(xml_docker, &tuple->docker, parent, data_set) == FALSE) {
             return FALSE;
         }
