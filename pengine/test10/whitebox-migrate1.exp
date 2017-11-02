@@ -207,9 +207,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="12" operation="monitor" operation_key="rhel7-node1_monitor_0" on_node="rhel7-node3" on_node_uuid="3"/>
-      </trigger>
-      <trigger>
         <rsc_op id="40" operation="migrate_from" operation_key="rhel7-node1_migrate_from_0" on_node="rhel7-node3" on_node_uuid="3"/>
       </trigger>
     </inputs>

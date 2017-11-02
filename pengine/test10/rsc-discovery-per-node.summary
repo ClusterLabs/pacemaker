@@ -45,10 +45,13 @@ Executing cluster transition:
  * Resource action: FAKE1           monitor on 18node2
  * Resource action: FAKE1           monitor on 18node1
  * Resource action: FAKE1           monitor on 18builder
+ * Resource action: FAKE2           stop on 18node2
  * Resource action: FAKE2           monitor on 18node4
  * Resource action: FAKE2           monitor on 18node3
+ * Resource action: FAKE3           stop on 18builder
  * Resource action: FAKE3           monitor on 18node4
  * Resource action: FAKE3           monitor on 18node3
+ * Resource action: FAKE4           stop on 18node1
  * Resource action: FAKE4           monitor on 18node4
  * Resource action: FAKE4           monitor on 18node3
  * Resource action: FAKE5           monitor on 18node4
@@ -68,11 +71,12 @@ Executing cluster transition:
  * Resource action: FAKECLONE2:3    monitor on 18node4
  * Resource action: FAKECLONE2:5    monitor on 18builder
  * Pseudo action:   FAKECLONE2-clone_start_0
+ * Pseudo action:   all_stopped
  * Resource action: remote1         start on 18builder
  * Resource action: FAKE1           start on 18node2
- * Resource action: FAKE2           stop on 18node2
- * Resource action: FAKE3           stop on 18builder
- * Resource action: FAKE4           stop on 18node1
+ * Resource action: FAKE2           start on 18node3
+ * Resource action: FAKE3           start on 18node4
+ * Resource action: FAKE4           start on remote1
  * Resource action: FAKE5           start on 18builder
  * Resource action: FAKECLONE1:0    start on 18node1
  * Resource action: FAKECLONE1:1    start on 18node2
@@ -88,12 +92,11 @@ Executing cluster transition:
  * Resource action: FAKECLONE2:4    start on remote1
  * Resource action: FAKECLONE2:5    start on 18builder
  * Pseudo action:   FAKECLONE2-clone_running_0
- * Pseudo action:   all_stopped
  * Resource action: remote1         monitor=60000 on 18builder
  * Resource action: FAKE1           monitor=60000 on 18node2
- * Resource action: FAKE2           start on 18node3
- * Resource action: FAKE3           start on 18node4
- * Resource action: FAKE4           start on remote1
+ * Resource action: FAKE2           monitor=60000 on 18node3
+ * Resource action: FAKE3           monitor=60000 on 18node4
+ * Resource action: FAKE4           monitor=60000 on remote1
  * Resource action: FAKE5           monitor=60000 on 18builder
  * Resource action: FAKECLONE1:0    monitor=60000 on 18node1
  * Resource action: FAKECLONE1:1    monitor=60000 on 18node2
@@ -107,9 +110,6 @@ Executing cluster transition:
  * Resource action: FAKECLONE2:3    monitor=60000 on 18node4
  * Resource action: FAKECLONE2:4    monitor=60000 on remote1
  * Resource action: FAKECLONE2:5    monitor=60000 on 18builder
- * Resource action: FAKE2           monitor=60000 on 18node3
- * Resource action: FAKE3           monitor=60000 on 18node4
- * Resource action: FAKE4           monitor=60000 on remote1
 
 Revised cluster status:
 Online: [ 18builder 18node1 18node2 18node3 18node4 ]

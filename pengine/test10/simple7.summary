@@ -6,7 +6,7 @@ Online: [ node1 ]
 
 Transition Summary:
  * Shutdown node1
- * Stop    rsc1	(node1)
+ * Stop       rsc1    ( node1 )   due to node availability
 
 Executing cluster transition:
  * Resource action: rsc1            stop on node1

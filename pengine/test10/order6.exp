@@ -31,11 +31,7 @@
         <attributes CRM_meta_on_node="node1" CRM_meta_on_node_uuid="uuid1" CRM_meta_timeout="20000" />
        </rsc_op>
      </action_set>
-     <inputs>
-       <trigger>
-        <rsc_op id="7" operation="monitor" operation_key="rsc2_monitor_0" on_node="node2" on_node_uuid="uuid2"/>
-       </trigger>
-     </inputs>
+    <inputs/>
    </synapse>
    <synapse id="3">
      <action_set>
@@ -78,11 +74,7 @@
         <attributes CRM_meta_on_node="node1" CRM_meta_on_node_uuid="uuid1" CRM_meta_timeout="20000" />
        </rsc_op>
      </action_set>
-     <inputs>
-       <trigger>
-        <rsc_op id="9" operation="monitor" operation_key="rsc4_monitor_0" on_node="node2" on_node_uuid="uuid2"/>
-       </trigger>
-     </inputs>
+    <inputs/>
    </synapse>
    <synapse id="7">
      <action_set>
@@ -125,11 +117,7 @@
         <attributes CRM_meta_on_node="node2" CRM_meta_on_node_uuid="uuid2" CRM_meta_timeout="20000" />
        </rsc_op>
      </action_set>
-     <inputs>
-       <trigger>
-        <rsc_op id="3" operation="monitor" operation_key="rsc6_monitor_0" on_node="node1" on_node_uuid="uuid1"/>
-       </trigger>
-     </inputs>
+    <inputs/>
    </synapse>
   <synapse id="11">
      <action_set>
@@ -172,11 +160,7 @@
         <attributes CRM_meta_on_node="node2" CRM_meta_on_node_uuid="uuid2" CRM_meta_timeout="20000" />
        </rsc_op>
      </action_set>
-     <inputs>
-       <trigger>
-        <rsc_op id="5" operation="monitor" operation_key="rsc8_monitor_0" on_node="node1" on_node_uuid="uuid1"/>
-       </trigger>
-     </inputs>
+    <inputs/>
    </synapse>
   <synapse id="15">
      <action_set>

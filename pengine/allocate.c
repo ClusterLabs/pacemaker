@@ -318,6 +318,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
 
     } else if (digest_data->rc == RSC_DIGEST_RESTART) {
         /* Changes that force a restart */
+        pe_action_t *required = NULL;
         const char *digest_restart = crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST);
 
         did_change = TRUE;
@@ -328,7 +329,10 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
                  crm_str(digest_restart), digest_data->digest_restart_calc,
                  op_version, crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
 
-        custom_action(rsc, key, task, NULL, FALSE, TRUE, data_set);
+        required = custom_action(rsc, key, task, NULL, TRUE, TRUE, data_set);
+        pe_action_set_flag_reason(__FUNCTION__, __LINE__, required, NULL,
+                                  "resource definition change", pe_action_optional, TRUE);
+
         trigger_unfencing(rsc, active_node, "Device parameters changed", NULL, data_set);
 
     } else if ((digest_data->rc == RSC_DIGEST_ALL) || (digest_data->rc == RSC_DIGEST_UNKNOWN)) {
@@ -365,12 +369,15 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
             free(key);
 
         } else {
+            pe_action_t *required = NULL;
             pe_rsc_trace(rsc, "Resource %s doesn't know how to reload", rsc->id);
 
             /* Re-send the start/demote/promote op
              * Recurring ops will be detected independently
              */
-            custom_action(rsc, key, task, NULL, FALSE, TRUE, data_set);
+            required = custom_action(rsc, key, task, NULL, TRUE, TRUE, data_set);
+            pe_action_set_flag_reason(__FUNCTION__, __LINE__, required, NULL,
+                                      "resource definition change", pe_action_optional, TRUE);
         }
     }
 

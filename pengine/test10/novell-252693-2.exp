@@ -683,9 +683,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="12" operation="monitor" operation_key="sles10_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a"/>
-      </trigger>
-      <trigger>
         <rsc_op id="80" operation="migrate_from" operation_key="sles10_migrate_from_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a"/>
       </trigger>
     </inputs>

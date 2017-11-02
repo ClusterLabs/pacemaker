@@ -17,14 +17,14 @@ Transition Summary:
 
 Executing cluster transition:
  * Resource action: remote1         start on 18builder
+ * Resource action: FAKE1           stop on 18builder
  * Resource action: FAKE1           monitor on remote1
+ * Resource action: FAKE2           stop on 18node2
  * Resource action: FAKE2           monitor on remote1
  * Resource action: FAKE3           monitor on remote1
  * Resource action: FAKE4           monitor on remote1
- * Resource action: remote1         monitor=60000 on 18builder
- * Resource action: FAKE1           stop on 18builder
- * Resource action: FAKE2           stop on 18node2
  * Pseudo action:   all_stopped
+ * Resource action: remote1         monitor=60000 on 18builder
  * Resource action: FAKE1           start on 18node2
  * Resource action: FAKE2           start on remote1
  * Resource action: FAKE1           monitor=60000 on 18node2

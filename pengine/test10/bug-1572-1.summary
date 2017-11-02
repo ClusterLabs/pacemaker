@@ -13,7 +13,7 @@ Online: [ arc-dknightlx arc-tkincaidlx.wsicorp.com ]
 Transition Summary:
  * Shutdown arc-dknightlx
  * Stop       rsc_drbd_7788:0          (               Slave arc-dknightlx )   due to node availability
- * Restart rsc_drbd_7788:1	(Master arc-tkincaidlx.wsicorp.com)
+ * Restart    rsc_drbd_7788:1          ( Master arc-tkincaidlx.wsicorp.com )   due to resource definition change
  * Restart    fs_mirror                (        arc-tkincaidlx.wsicorp.com )   due to required ms_drbd_7788 notified
  * Restart    pgsql_5555               (        arc-tkincaidlx.wsicorp.com )   due to required fs_mirror start
  * Restart    IPaddr_147_81_84_133     (        arc-tkincaidlx.wsicorp.com )   due to required pgsql_5555 start

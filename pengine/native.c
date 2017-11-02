@@ -2405,7 +2405,7 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
                         next->details->uname);
 
         } else if (start && is_set(start->flags, pe_action_runnable) == FALSE) {
-            LogAction("Stop", rsc, current, NULL, stop, start, terminal);
+            LogAction("Stop", rsc, current, NULL, stop, stop->reason?stop:start, terminal);
             STOP_SANITY_ASSERT(__LINE__);
 
         } else if (moving && current) {
@@ -2446,7 +2446,7 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
                 STOP_SANITY_ASSERT(__LINE__);
             }
 
-            LogAction("Stop", rsc, node, NULL, stop_op, start, terminal);
+            LogAction("Stop", rsc, node, NULL, stop_op, stop_op->reason?stop_op:start, terminal);
         }
 
         free(key);
@@ -2506,6 +2506,10 @@ StopRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * d
         pe_rsc_trace(rsc, "%s on %s", rsc->id, current->details->uname);
         stop = stop_action(rsc, current, optional);
 
+        if(rsc->allocated_to == NULL) {
+            pe_action_set_reason(stop, "node availability", TRUE);
+        }
+
         if (is_not_set(rsc->flags, pe_rsc_managed)) {
             update_action_flags(stop, pe_action_runnable | pe_action_clear, __FUNCTION__, __LINE__);
         }
@@ -2534,7 +2538,7 @@ StartRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * 
     action_t *start = NULL;
 
     CRM_ASSERT(rsc);
-    pe_rsc_trace(rsc, "%s on %s %d", rsc->id, next ? next->details->uname : "N/A", optional);
+    pe_rsc_trace(rsc, "%s on %s %d %d", rsc->id, next ? next->details->uname : "N/A", optional, next ? next->weight : 0);
     start = start_action(rsc, next, TRUE);
 
     if(is_set(rsc->flags, pe_rsc_needs_unfencing)) {
@@ -2816,7 +2820,7 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
         if (safe_str_eq(class, PCMK_RESOURCE_CLASS_STONITH)) {
             pe_rsc_trace(rsc, "Skipping probe for %s on node %s, remote-nodes do not run stonith agents.", rsc->id, node->details->id);
             return FALSE;
-        } else if (rsc_contains_remote_node(data_set, rsc)) {
+        } else if (is_container_remote_node(node) && rsc_contains_remote_node(data_set, rsc)) {
             pe_rsc_trace(rsc, "Skipping probe for %s on node %s, remote-nodes can not run resources that contain connection resources.", rsc->id, node->details->id);
             return FALSE;
         } else if (rsc->is_remote_node) {
@@ -2897,8 +2901,8 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
         return FALSE;
     }
 
-    if(allowed != NULL && is_container_remote_node(allowed)) {
-        resource_t *remote = allowed->details->remote_rsc->container;
+    if(is_container_remote_node(node)) {
+        resource_t *remote = node->details->remote_rsc->container;
 
         if(remote->role == RSC_ROLE_STOPPED) {
             /* If the container is stopped, then we know anything that
@@ -2935,8 +2939,8 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
             /* Here we really we want to check if remote->stop is required,
              * but that information doesn't exist yet
              */
-        } else if(allowed->details->remote_requires_reset
-                  || allowed->details->unclean
+        } else if(node->details->remote_requires_reset
+                  || node->details->unclean
                   || is_set(remote->flags, pe_rsc_failed)
                   || remote->next_role == RSC_ROLE_STOPPED
                   || (remote->allocated_to
@@ -3020,12 +3024,6 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
     custom_action_order(rsc, NULL, probe,
                         top, reload_key(rsc), NULL,
                         pe_order_optional, data_set);
-    
-    if (node->details->shutdown == FALSE) {
-        custom_action_order(rsc, NULL, probe,
-                            rsc, generate_op_key(rsc->id, RSC_STOP, 0), NULL,
-                            pe_order_optional, data_set);
-    }
 
     if(is_set(rsc->flags, pe_rsc_fence_device) && is_set(data_set->flags, pe_flag_enable_unfencing)) {
         /* Normally rsc.start depends on probe complete which depends
@@ -3300,6 +3298,7 @@ ReloadRsc(resource_t * rsc, node_t *node, pe_working_set_t * data_set)
 
     reload = custom_action(
         rsc, reload_key(rsc), CRMD_ACTION_RELOAD, node, FALSE, TRUE, data_set);
+    pe_action_set_reason(reload, "resource definition change", FALSE);
 
     custom_action_order(NULL, NULL, reload, rsc, stop_key(rsc), NULL,
                         pe_order_optional|pe_order_then_cancels_first,

@@ -90,22 +90,22 @@ Transition Summary:
  * Stop    cmirrord:3	(hex-9)  	due to node availability
  * Stop    vg1:3	(hex-9)  	due to node availability
  * Stop    ocfs2-1:3	(hex-9)  	due to node availability
- * Stop    vm-03	(hex-9)
- * Stop    vm-06	(hex-9)
- * Stop    vm-09	(hex-9)
- * Stop    vm-13	(hex-9)
- * Stop    vm-17	(hex-9)
- * Stop    vm-21	(hex-9)
- * Stop    vm-25	(hex-9)
- * Stop    vm-29	(hex-9)
- * Stop    vm-33	(hex-9)
- * Stop    vm-37	(hex-9)
- * Stop    vm-41	(hex-9)
- * Stop    vm-45	(hex-9)
- * Stop    vm-49	(hex-9)
- * Stop    vm-53	(hex-9)
- * Stop    vm-57	(hex-9)
- * Stop    vm-61	(hex-9)
+ * Stop       vm-03           (          hex-9 )   due to node availability
+ * Stop       vm-06           (          hex-9 )   due to node availability
+ * Stop       vm-09           (          hex-9 )   due to node availability
+ * Stop       vm-13           (          hex-9 )   due to node availability
+ * Stop       vm-17           (          hex-9 )   due to node availability
+ * Stop       vm-21           (          hex-9 )   due to node availability
+ * Stop       vm-25           (          hex-9 )   due to node availability
+ * Stop       vm-29           (          hex-9 )   due to node availability
+ * Stop       vm-33           (          hex-9 )   due to node availability
+ * Stop       vm-37           (          hex-9 )   due to node availability
+ * Stop       vm-41           (          hex-9 )   due to node availability
+ * Stop       vm-45           (          hex-9 )   due to node availability
+ * Stop       vm-49           (          hex-9 )   due to node availability
+ * Stop       vm-53           (          hex-9 )   due to node availability
+ * Stop       vm-57           (          hex-9 )   due to node availability
+ * Stop       vm-61           (          hex-9 )   due to node availability
 
 Executing cluster transition:
  * Pseudo action:   fencing-sbd_stop_0

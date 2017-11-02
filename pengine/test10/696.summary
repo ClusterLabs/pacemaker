@@ -18,6 +18,7 @@ Transition Summary:
 Executing cluster transition:
  * Resource action: DcIPaddr        monitor on hadev3
  * Resource action: DcIPaddr        monitor on hadev1
+ * Resource action: rsc_hadev1      stop on hadev3
  * Resource action: rsc_hadev1      monitor on hadev2
  * Resource action: rsc_hadev1      monitor on hadev1
  * Resource action: rsc_hadev2      monitor on hadev3
@@ -35,17 +36,16 @@ Executing cluster transition:
  * Resource action: child_DoFencing:2 monitor on hadev2
  * Resource action: child_DoFencing:2 monitor on hadev1
  * Pseudo action:   DoFencing_start_0
+ * Pseudo action:   all_stopped
  * Resource action: DcIPaddr        start on hadev2
- * Resource action: rsc_hadev1      stop on hadev3
+ * Resource action: rsc_hadev1      start on hadev1
  * Resource action: rsc_hadev2      start on hadev2
  * Resource action: child_DoFencing:2 start on hadev1
  * Pseudo action:   DoFencing_running_0
- * Pseudo action:   all_stopped
  * Resource action: DcIPaddr        monitor=5000 on hadev2
- * Resource action: rsc_hadev1      start on hadev1
+ * Resource action: rsc_hadev1      monitor=5000 on hadev1
  * Resource action: rsc_hadev2      monitor=5000 on hadev2
  * Resource action: child_DoFencing:2 monitor=5000 on hadev1
- * Resource action: rsc_hadev1      monitor=5000 on hadev1
 
 Revised cluster status:
 Online: [ hadev1 hadev2 hadev3 ]

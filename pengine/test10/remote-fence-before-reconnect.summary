@@ -13,7 +13,7 @@ Online: [ c7auto1 c7auto2 c7auto3 ]
 
 Transition Summary:
  * Fence (reboot) c7auto4 'remote connection is unrecoverable'
- * Stop    c7auto4	(c7auto1)
+ * Stop       c7auto4     (            c7auto1 )   due to node availability
  * Move       fake2       ( c7auto4 -> c7auto1 )  
 
 Executing cluster transition:

@@ -15,8 +15,8 @@ Online: [ xen-b ]
  Email_Alerting	(ocf::heartbeat:MailTo):	Started xen-b
 
 Transition Summary:
- * Restart    xen-a-fencing     (          xen-b )  
- * Stop    xen-b-fencing	(xen-a)
+ * Restart    xen-a-fencing     (          xen-b )   due to resource definition change
+ * Stop       xen-b-fencing     (          xen-a )   due to node availability
  * Migrate    db                ( xen-a -> xen-b )  
  * Migrate    core-101          ( xen-a -> xen-b )  
  * Migrate    core-200          ( xen-a -> xen-b )  

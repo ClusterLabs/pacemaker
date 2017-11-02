@@ -41,7 +41,7 @@ Transition Summary:
  * Start      rsc_va1                  (   va1 )   due to no quorum (blocked)
  * Start      rsc_test02               (   va1 )   due to no quorum (blocked)
  * Stop    child_DoFencing:1	(ibm1)  	due to node availability
- * Promote    ocf_msdummy:0            ( Stopped -> Master va1 )   due to node availability (blocked)
+ * Promote    ocf_msdummy:0            ( Stopped -> Master va1 )   blocked
  * Start      ocf_msdummy:1            (   va1 )   due to no quorum (blocked)
 
 Executing cluster transition:

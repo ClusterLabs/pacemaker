@@ -32,7 +32,6 @@ Executing cluster transition:
  * Resource action: rabbitmq:0      monitor on rabbitmq-bundle-0
  * Pseudo action:   rabbitmq-bundle-clone_pre_notify_start_0
  * Resource action: galera-bundle-docker-0 monitor on undercloud
- * Resource action: galera-bundle-0 monitor on undercloud
  * Pseudo action:   redis-bundle-master_pre_notify_promote_0
  * Resource action: haproxy-bundle-docker-0 monitor on undercloud
  * Pseudo action:   haproxy-bundle_start_0
@@ -63,10 +62,11 @@ Executing cluster transition:
  * Pseudo action:   galera-bundle_start_0
  * Pseudo action:   galera-bundle-master_start_0
  * Resource action: galera-bundle-docker-0 start on undercloud
+ * Resource action: galera-bundle-0 monitor on undercloud
+ * Resource action: galera-bundle-docker-0 monitor=60000 on undercloud
  * Resource action: galera-bundle-0 start on undercloud
  * Resource action: galera:0        start on galera-bundle-0
  * Pseudo action:   galera-bundle-master_running_0
- * Resource action: galera-bundle-docker-0 monitor=60000 on undercloud
  * Resource action: galera-bundle-0 monitor=60000 on undercloud
  * Pseudo action:   galera-bundle_running_0
  * Resource action: galera:0        monitor=30000 on galera-bundle-0

@@ -62,7 +62,6 @@ digraph "g" {
 "stonithsys2_start_0 sys3" -> "stonithsys2_monitor_15000 sys3" [ style = bold]
 "stonithsys2_start_0 sys3" [ style=bold color="green" fontcolor="black" ]
 "stonithsys3_monitor_0 sys3" -> "stonithsys3_start_0 sys2" [ style = bold]
-"stonithsys3_monitor_0 sys3" -> "stonithsys3_stop_0 sys2" [ style = bold]
 "stonithsys3_monitor_0 sys3" [ style=bold color="green" fontcolor="black" ]
 "stonithsys3_monitor_15000 sys2" [ style=bold color="green" fontcolor="black" ]
 "stonithsys3_start_0 sys2" -> "stonithsys3_monitor_15000 sys2" [ style = bold]

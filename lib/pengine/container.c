@@ -167,6 +167,7 @@ create_ip_resource(
 
         // TODO: Other ops? Timeouts and intervals from underlying resource?
 
+        crm_log_xml_trace(xml_ip, "Container-ip");
         if (common_unpack(xml_ip, &tuple->ip, parent, data_set) == false) {
             return FALSE;
         }
@@ -216,6 +217,8 @@ create_docker_resource(
                                data->prefix, tuple->offset);
         }
 
+        offset += snprintf(buffer+offset, max-offset, " -e PCMK_stderr=1");
+
         if(data->docker_network) {
 //        offset += snprintf(buffer+offset, max-offset, " --link-local-ip=%s", tuple->ipaddr);
             offset += snprintf(buffer+offset, max-offset, " --net=%s", data->docker_network);
@@ -255,7 +258,8 @@ create_docker_resource(
             if(tuple->ipaddr) {
                 offset += snprintf(buffer+offset, max-offset, " -p %s:%s:%s",
                                    tuple->ipaddr, port->source, port->target);
-            } else {
+            } else if(safe_str_neq(data->docker_network, "host")) {
+                // No need to do port mapping if net=host
                 offset += snprintf(buffer+offset, max-offset, " -p %s:%s", port->source, port->target);
             }
         }
@@ -322,7 +326,7 @@ create_docker_resource(
         crm_create_op_xml(xml_obj, ID(xml_docker), "monitor", "60s", NULL);
 
         // TODO: Other ops? Timeouts and intervals from underlying resource?
-
+        crm_log_xml_trace(xml_docker, "Contaner-docker");
         if (common_unpack(xml_docker, &tuple->docker, parent, data_set) == FALSE) {
             return FALSE;
         }
@@ -603,8 +607,16 @@ create_remote_resource(
         tuple->node->rsc_discover_mode = pe_discover_exclusive;
 
         /* Ensure the node shows up as allowed and with the correct discovery set */
+        g_hash_table_destroy(tuple->child->allowed_nodes);
+        tuple->child->allowed_nodes = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, g_hash_destroy_str);
         g_hash_table_insert(tuple->child->allowed_nodes, (gpointer) tuple->node->details->id, node_copy(tuple->node));
 
+        {
+            node_t *copy = node_copy(tuple->node);
+            copy->weight = -INFINITY;
+            g_hash_table_insert(tuple->child->parent->allowed_nodes, (gpointer) tuple->node->details->id, copy);
+        }
+        crm_log_xml_trace(xml_remote, "Contaner-remote");
         if (common_unpack(xml_remote, &tuple->remote, parent, data_set) == FALSE) {
             return FALSE;
         }
@@ -618,6 +630,7 @@ create_remote_resource(
         }
 
         tuple->node->details->remote_rsc = tuple->remote;
+        tuple->remote->container = tuple->docker; // Ensures is_container_remote_node() functions correctly immediately
 
         /* A bundle's #kind is closer to "container" (guest node) than the
          * "remote" set by pe_create_node().
@@ -708,6 +721,105 @@ static void port_free(container_port_t *port)
     free(port->source);
     free(port->target);
     free(port);
+}
+
+static container_grouping_t *
+tuple_for_remote(resource_t *remote) 
+{
+    resource_t *top = remote;
+    container_variant_data_t *container_data = NULL;
+
+    if (top == NULL) {
+        return NULL;
+    }
+
+    while (top->parent != NULL) {
+        top = top->parent;
+    }
+
+    get_container_variant_data(container_data, top);
+    for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
+        container_grouping_t *tuple = (container_grouping_t *)gIter->data;
+        if(tuple->remote == remote) {
+            return tuple;
+        }
+    }
+    CRM_LOG_ASSERT(FALSE);
+    return NULL;
+}
+
+bool
+container_fix_remote_addr(resource_t *rsc) 
+{
+    const char *name;
+    const char *value;
+    const char *attr_list[] = {
+        XML_ATTR_TYPE,
+        XML_AGENT_ATTR_CLASS,
+        XML_AGENT_ATTR_PROVIDER
+    };
+    const char *value_list[] = {
+        "remote",
+        PCMK_RESOURCE_CLASS_OCF,
+        "pacemaker"
+    };
+
+    if(rsc == NULL) {
+        return FALSE;
+    }
+
+    name = "addr";
+    value = g_hash_table_lookup(rsc->parameters, name);
+    if (safe_str_eq(value, "#uname") == FALSE) {
+        return FALSE;
+    }
+
+    for (int lpc = 0; lpc < DIMOF(attr_list); lpc++) {
+        name = attr_list[lpc];
+        value = crm_element_value(rsc->xml, attr_list[lpc]);
+        if (safe_str_eq(value, value_list[lpc]) == FALSE) {
+            return FALSE;
+        }
+    }
+    return TRUE;
+}
+
+const char *
+container_fix_remote_addr_in(resource_t *rsc, xmlNode *xml, const char *field) 
+{
+    // REMOTE_CONTAINER_HACK: Allow remote nodes that start containers with pacemaker remote inside
+
+    pe_node_t *node = NULL;
+    container_grouping_t *tuple = NULL;
+
+    if(container_fix_remote_addr(rsc) == FALSE) {
+        return NULL;
+    }
+
+    tuple = tuple_for_remote(rsc);
+    if(tuple == NULL) {
+        return NULL;
+    }
+
+    node = tuple->docker->allocated_to;
+    if(node == NULL && tuple->docker->running_on) {
+        /* If it wont be running anywhere after the
+         * transition, go with where it's running now.
+         */
+        node = tuple->docker->running_on->data;
+    }
+
+    if(node == NULL) {
+        crm_trace("Cannot fix address for %s", tuple->remote->id);
+        return NULL;
+    }
+
+    crm_trace("Fixing addr for %s on %s", rsc->id, node->details->uname);
+    if(xml != NULL && field != NULL) {
+        crm_xml_add(xml, field, node->details->uname);
+    }
+
+    return node->details->uname;
 }
 
 gboolean
@@ -951,6 +1063,7 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         for(childIter = container_data->child->children; childIter != NULL; childIter = childIter->next) {
             container_grouping_t *tuple = calloc(1, sizeof(container_grouping_t));
             tuple->child = childIter->data;
+            tuple->child->exclusive_discover = TRUE;
             tuple->offset = lpc++;
 
             // Ensure the child's notify gets set based on the underlying primitive's value

@@ -41,13 +41,13 @@ Transition Summary:
  * Stop    ocf_192.168.100.181	(c001n02)  	due to node availability
  * Stop    heartbeat_192.168.100.182	(c001n02)  	due to node availability
  * Stop    ocf_192.168.100.183	(c001n02)  	due to node availability
- * Stop    lsb_dummy	(c001n04)
- * Stop    rsc_c001n03	(c001n05)
- * Stop    rsc_c001n02	(c001n02)
- * Stop    rsc_c001n04	(c001n04)
- * Stop    rsc_c001n05	(c001n05)
- * Stop    rsc_c001n06	(c001n06)
- * Stop    rsc_c001n07	(c001n07)
+ * Stop       lsb_dummy                     (       c001n04 )   due to node availability
+ * Stop       rsc_c001n03                   (       c001n05 )   due to node availability
+ * Stop       rsc_c001n02                   (       c001n02 )   due to node availability
+ * Stop       rsc_c001n04                   (       c001n04 )   due to node availability
+ * Stop       rsc_c001n05                   (       c001n05 )   due to node availability
+ * Stop       rsc_c001n06                   (       c001n06 )   due to node availability
+ * Stop       rsc_c001n07                   (       c001n07 )   due to node availability
  * Stop    child_DoFencing:0	(c001n02)  	due to node availability
  * Stop    child_DoFencing:1	(c001n04)  	due to node availability
  * Stop    child_DoFencing:2	(c001n05)  	due to node availability

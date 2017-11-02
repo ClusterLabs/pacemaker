@@ -58,7 +58,6 @@ digraph "g" {
 "fencing_delete_0 virt-1" -> "fencing_start_0 virt-1" [ style = bold]
 "fencing_delete_0 virt-1" [ style=bold color="green" fontcolor="black"]
 "fencing_monitor_0 virt-3" -> "fencing_start_0 virt-1" [ style = bold]
-"fencing_monitor_0 virt-3" -> "fencing_stop_0 virt-1" [ style = bold]
 "fencing_monitor_0 virt-3" [ style=bold color="green" fontcolor="black"]
 "fencing_start_0 virt-1" [ style=bold color="green" fontcolor="black"]
 "fencing_stop_0 virt-1" -> "all_stopped" [ style = bold]

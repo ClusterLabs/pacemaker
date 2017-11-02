@@ -372,18 +372,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="38" operation="monitor" operation_key="lxc1_monitor_0" on_node="rhel7-2" on_node_uuid="2"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="40" operation="monitor" operation_key="lxc1_monitor_0" on_node="rhel7-3" on_node_uuid="4"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="42" operation="monitor" operation_key="lxc1_monitor_0" on_node="rhel7-4" on_node_uuid="5"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="44" operation="monitor" operation_key="lxc1_monitor_0" on_node="rhel7-5" on_node_uuid="3"/>
-      </trigger>
-      <trigger>
         <rsc_op id="115" operation="demote" operation_key="lxc-ms_demote_0" internal_operation_key="lxc-ms:0_demote_0" on_node="lxc1" on_node_uuid="lxc1" router_node="rhel7-1"/>
       </trigger>
       <trigger>

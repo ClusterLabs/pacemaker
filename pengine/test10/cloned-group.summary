@@ -11,7 +11,7 @@ OFFLINE: [ webcluster02 ]
      Stopped: [ webcluster02 ]
 
 Transition Summary:
- * Restart    apache2:0         ( webcluster01 )  
+ * Restart    apache2:0         ( webcluster01 )   due to resource definition change
  * Restart    mysql-proxy:0     ( webcluster01 )   due to required apache2:0 start
  * Stop    apache2:2	(webcluster01)  	due to node availability
  * Stop    mysql-proxy:2	(webcluster01)  	due to node availability

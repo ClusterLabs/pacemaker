@@ -8,7 +8,7 @@ OFFLINE: [ fc16-builder2 fc16-builder3 ]
  B	(ocf::pacemaker:Dummy):	Started fc16-builder
 
 Transition Summary:
- * Restart    A       ( fc16-builder )  
+ * Restart    A       ( fc16-builder )   due to resource definition change
 
 Executing cluster transition:
  * Resource action: A               stop on fc16-builder

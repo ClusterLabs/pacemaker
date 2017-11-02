@@ -24,24 +24,24 @@ Transition Summary:
 Executing cluster transition:
  * Pseudo action:   M-clone_stop_0
  * Resource action: A               monitor on lxc2
+ * Resource action: B               stop on lxc1
  * Resource action: B               monitor on lxc2
  * Resource action: D               monitor on lxc2
  * Cluster action:  clear_failcount for container1 on 18node2
  * Cluster action:  clear_failcount for lxc1 on 18node2
  * Resource action: M               stop on lxc1
  * Pseudo action:   M-clone_stopped_0
- * Resource action: B               stop on lxc1
+ * Resource action: B               start on lxc2
  * Resource action: lxc1            stop on 18node2
  * Resource action: lxc1            delete on 18node3
  * Resource action: lxc1            delete on 18node2
  * Resource action: lxc1            delete on 18node1
- * Resource action: B               start on lxc2
+ * Resource action: B               monitor=10000 on lxc2
  * Resource action: container1      stop on 18node2
  * Resource action: container1      delete on 18node3
  * Resource action: container1      delete on 18node2
  * Resource action: container1      delete on 18node1
  * Pseudo action:   all_stopped
- * Resource action: B               monitor=10000 on lxc2
 
 Revised cluster status:
 Online: [ 18node1 18node2 18node3 ]

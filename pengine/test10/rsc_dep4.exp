@@ -56,11 +56,7 @@
         <attributes CRM_meta_on_node="node1" CRM_meta_on_node_uuid="node1" CRM_meta_timeout="20000"  priority="2.0"/>
        </rsc_op>
      </action_set>
-     <inputs>
-       <trigger>
-        <rsc_op id="5" operation="monitor" operation_key="rsc4_monitor_0" on_node="node2" on_node_uuid="node2"/>
-       </trigger>
-     </inputs>
+    <inputs/>
    </synapse>
    <synapse id="5" priority="2">
      <action_set>

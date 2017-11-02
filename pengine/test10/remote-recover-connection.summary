@@ -47,8 +47,8 @@ Transition Summary:
  * Move       ip-172.17.1.17                         ( controller-1 -> controller-2 )  
  * Move       ip-172.17.4.11                         ( controller-1 -> controller-2 )  
  * Stop    haproxy:0	(controller-1)  	due to node availability
- * Restart    stonith-fence_ipmilan-525400bbf613     (                 controller-0 )  
- * Restart    stonith-fence_ipmilan-525400b4f6bd     (                 controller-0 )  
+ * Restart    stonith-fence_ipmilan-525400bbf613     (                 controller-0 )   due to resource definition change
+ * Restart    stonith-fence_ipmilan-525400b4f6bd     (                 controller-0 )   due to resource definition change
  * Move       stonith-fence_ipmilan-5254005bdbb5     ( controller-1 -> controller-2 )  
 
 Executing cluster transition:

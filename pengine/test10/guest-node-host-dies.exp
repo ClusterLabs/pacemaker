@@ -461,15 +461,6 @@
       <trigger>
         <crm_event id="1" operation="stonith" operation_key="stonith-rhel7-1-reboot" on_node="rhel7-1" on_node_uuid="1"/>
       </trigger>
-      <trigger>
-        <rsc_op id="6" operation="monitor" operation_key="lxc1_monitor_0" on_node="rhel7-3" on_node_uuid="4"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="7" operation="monitor" operation_key="lxc1_monitor_0" on_node="rhel7-4" on_node_uuid="5"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="9" operation="monitor" operation_key="lxc1_monitor_0" on_node="rhel7-5" on_node_uuid="3"/>
-      </trigger>
     </inputs>
   </synapse>
   <synapse id="28">
@@ -549,15 +540,6 @@
     <inputs>
       <trigger>
         <crm_event id="1" operation="stonith" operation_key="stonith-rhel7-1-reboot" on_node="rhel7-1" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="5" operation="monitor" operation_key="lxc2_monitor_0" on_node="rhel7-2" on_node_uuid="2"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="8" operation="monitor" operation_key="lxc2_monitor_0" on_node="rhel7-4" on_node_uuid="5"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="10" operation="monitor" operation_key="lxc2_monitor_0" on_node="rhel7-5" on_node_uuid="3"/>
       </trigger>
     </inputs>
   </synapse>

@@ -47,12 +47,6 @@
         <crm_event id="1" operation="stonith" operation_key="stonith-kiff-01-reboot" on_node="kiff-01" on_node_uuid="1"/>
       </trigger>
       <trigger>
-        <rsc_op id="11" operation="monitor" operation_key="dlm_monitor_0" internal_operation_key="dlm:0_monitor_0" on_node="lxc-01_kiff-02" on_node_uuid="lxc-01_kiff-02" router_node="kiff-02"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="15" operation="monitor" operation_key="dlm_monitor_0" internal_operation_key="dlm:0_monitor_0" on_node="lxc-02_kiff-02" on_node_uuid="lxc-02_kiff-02" router_node="kiff-02"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="29" operation="stop" operation_key="dlm-clone_stop_0"/>
       </trigger>
       <trigger>
@@ -119,12 +113,6 @@
         <crm_event id="1" operation="stonith" operation_key="stonith-kiff-01-reboot" on_node="kiff-01" on_node_uuid="1"/>
       </trigger>
       <trigger>
-        <rsc_op id="12" operation="monitor" operation_key="clvmd_monitor_0" internal_operation_key="clvmd:0_monitor_0" on_node="lxc-01_kiff-02" on_node_uuid="lxc-01_kiff-02" router_node="kiff-02"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="16" operation="monitor" operation_key="clvmd_monitor_0" internal_operation_key="clvmd:0_monitor_0" on_node="lxc-02_kiff-02" on_node_uuid="lxc-02_kiff-02" router_node="kiff-02"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="36" operation="stop" operation_key="clvmd-clone_stop_0"/>
       </trigger>
       <trigger>
@@ -189,12 +177,6 @@
     <inputs>
       <trigger>
         <crm_event id="1" operation="stonith" operation_key="stonith-kiff-01-reboot" on_node="kiff-01" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="13" operation="monitor" operation_key="shared0_monitor_0" internal_operation_key="shared0:0_monitor_0" on_node="lxc-01_kiff-02" on_node_uuid="lxc-01_kiff-02" router_node="kiff-02"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="17" operation="monitor" operation_key="shared0_monitor_0" internal_operation_key="shared0:0_monitor_0" on_node="lxc-02_kiff-02" on_node_uuid="lxc-02_kiff-02" router_node="kiff-02"/>
       </trigger>
       <trigger>
         <pseudo_event id="43" operation="stop" operation_key="shared0-clone_stop_0"/>
@@ -394,12 +376,6 @@
       </pseudo_event>
     </action_set>
     <inputs>
-      <trigger>
-        <rsc_op id="14" operation="monitor" operation_key="vm-fs_monitor_0" on_node="lxc-01_kiff-02" on_node_uuid="lxc-01_kiff-02" router_node="kiff-02"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="18" operation="monitor" operation_key="vm-fs_monitor_0" on_node="lxc-02_kiff-02" on_node_uuid="lxc-02_kiff-02" router_node="kiff-02"/>
-      </trigger>
       <trigger>
         <pseudo_event id="69" operation="stonith" operation_key="stonith-lxc-01_kiff-01-reboot" on_node="lxc-01_kiff-01" on_node_uuid="lxc-01_kiff-01"/>
       </trigger>

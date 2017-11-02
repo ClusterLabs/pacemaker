@@ -28,7 +28,7 @@ RemoteOFFLINE: [ remote-rhel7-3 ]
  remote-rsc	(ocf::heartbeat:Dummy):	Started rhel7-1
 
 Transition Summary:
- * Restart    Fencing     ( rhel7-2 )  
+ * Restart    Fencing     ( rhel7-2 )   due to resource definition change
 
 Executing cluster transition:
  * Resource action: Fencing         stop on rhel7-2

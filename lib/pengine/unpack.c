@@ -598,6 +598,7 @@ setup_container(resource_t * rsc, pe_working_set_t * data_set)
 
         if (container) {
             rsc->container = container;
+            set_bit(container->flags, pe_rsc_is_container);
             container->fillers = g_list_append(container->fillers, rsc);
             pe_rsc_trace(rsc, "Resource %s's container is %s", rsc->id, container_id);
         } else {
@@ -1096,9 +1097,32 @@ unpack_node_loop(xmlNode * status, bool fence, pe_working_set_t * data_set)
             process = TRUE;
 
         } else if (is_remote_node(this_node)) {
+            bool check = FALSE;
             resource_t *rsc = this_node->details->remote_rsc;
 
-            if (fence || (rsc && rsc->role == RSC_ROLE_STARTED)) {
+            if(fence) {
+                check = TRUE;
+
+            } else if(rsc == NULL) {
+                /* Not ready yet */
+
+            } else if (is_container_remote_node(this_node)
+                       && rsc->role == RSC_ROLE_STARTED
+                       && rsc->container->role == RSC_ROLE_STARTED) {
+                /* Both the connection and the underlying container
+                 * need to be known 'up' before we volunterily process
+                 * resources inside it
+                 */
+                check = TRUE;
+                crm_trace("Checking node %s/%s/%s status %d/%d/%d", id, rsc->id, rsc->container->id, fence, rsc->role, RSC_ROLE_STARTED);
+
+            } else if (is_container_remote_node(this_node) == FALSE
+                       && rsc->role == RSC_ROLE_STARTED) {
+                check = TRUE;
+                crm_trace("Checking node %s/%s status %d/%d/%d", id, rsc->id, fence, rsc->role, RSC_ROLE_STARTED);
+            }
+
+            if (check) {
                 determine_remote_online_status(data_set, this_node);
                 unpack_handle_remote_attrs(this_node, state, data_set);
                 process = TRUE;
@@ -2551,7 +2575,7 @@ unpack_rsc_migration_failure(resource_t *rsc, node_t *node, xmlNode *xml_op, pe_
 }
 
 static void
-record_failed_op(xmlNode *op, node_t* node, pe_working_set_t * data_set)
+record_failed_op(xmlNode *op, node_t* node, resource_t *rsc, pe_working_set_t * data_set)
 {
     xmlNode *xIter = NULL;
     const char *op_key = crm_element_value(op, XML_LRM_ATTR_TASK_KEY);
@@ -2572,6 +2596,7 @@ record_failed_op(xmlNode *op, node_t* node, pe_working_set_t * data_set)
 
     crm_trace("Adding entry %s on %s", op_key, node->details->uname);
     crm_xml_add(op, XML_ATTR_UNAME, node->details->uname);
+    crm_xml_add(op, XML_LRM_ATTR_RSCID, rsc->id);
     add_node_copy(data_set->failed, op);
 }
 
@@ -2611,7 +2636,7 @@ unpack_rsc_op_failure(resource_t * rsc, node_t * node, int rc, xmlNode * xml_op,
                  task, rsc->id, node->details->uname, services_ocf_exitcode_str(rc),
                  rc);
 
-        record_failed_op(xml_op, node, data_set);
+        record_failed_op(xml_op, node, rsc, data_set);
 
     } else {
         crm_trace("Processing failed op %s for %s on %s: %s (%d)",
@@ -2909,6 +2934,10 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
         if (digest_data->rc == RSC_DIGEST_UNKNOWN) {
             crm_trace("rsc op %s/%s on node %s does not have a op digest to compare against", rsc->id,
                       key, node->details->id);
+        } else if(container_fix_remote_addr(rsc) && digest_data->rc != RSC_DIGEST_MATCH) {
+            // We can't sanely check the changing 'addr' attribute. Yet
+            crm_trace("Ignoring rsc op %s/%s on node %s", rsc->id, key, node->details->id);
+
         } else if (digest_data->rc != RSC_DIGEST_MATCH) {
             clear_reason = "resource parameters have changed";
         }
@@ -3132,7 +3161,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
         /* Add them to the failed list to highlight them for the user */
         if ((node->details->shutdown == FALSE) || (node->details->online == TRUE)) {
             crm_trace("Remapping %d to %d", PCMK_OCF_DEGRADED, PCMK_OCF_OK);
-            record_failed_op(xml_op, node, data_set);
+            record_failed_op(xml_op, node, rsc, data_set);
         }
 
     } else if (rc == PCMK_OCF_DEGRADED_MASTER && safe_str_eq(task, CRMD_ACTION_STATUS)) {
@@ -3141,7 +3170,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
         /* Add them to the failed list to highlight them for the user */
         if ((node->details->shutdown == FALSE) || (node->details->online == TRUE)) {
             crm_trace("Remapping %d to %d", PCMK_OCF_DEGRADED_MASTER, PCMK_OCF_RUNNING_MASTER);
-            record_failed_op(xml_op, node, data_set);
+            record_failed_op(xml_op, node, rsc, data_set);
         }
     }
 
@@ -3247,7 +3276,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
                 crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
                 set_bit(rsc->flags, pe_rsc_failure_ignored);
 
-                record_failed_op(xml_op, node, data_set);
+                record_failed_op(xml_op, node, rsc, data_set);
 
                 if (failure_strategy == action_fail_restart_container && *on_fail <= action_fail_recover) {
                     *on_fail = failure_strategy;
