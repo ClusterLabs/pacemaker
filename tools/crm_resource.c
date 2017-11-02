@@ -212,11 +212,14 @@ static struct crm_option long_options[] = {
     },
     {
         "cleanup", no_argument, NULL, 'C',
+#if 0
+        // new behavior disabled until 2.0.0
         "\t\tDelete failed operations from a resource's history allowing its current state to be rechecked.\n"
         "\t\t\t\tOptionally filtered by --resource, --node, --operation, and --interval (otherwise all).\n"
     },
     {
         "refresh", no_argument, NULL, 'R',
+#endif
         "\t\tDelete resource's history (including failures) so its current state is rechecked.\n"
         "\t\t\t\tOptionally filtered by --resource, --node, --operation, and --interval (otherwise all).\n"
         "\t\t\t\tUnless --force is specified, resource's group or clone (if any) will also be cleaned"
@@ -381,6 +384,7 @@ static struct crm_option long_options[] = {
     {"un-migrate", no_argument, NULL, 'U', NULL, pcmk_option_hidden},
     {"un-move", no_argument, NULL, 'U', NULL, pcmk_option_hidden},
 
+    {"refresh",    0, 0, 'R', NULL, pcmk_option_hidden}, // remove this line for 2.0.0
     {"reprobe", no_argument, NULL, 'P', NULL, pcmk_option_hidden},
 
     {"-spacer-", 1, NULL, '-', "\nExamples:", pcmk_option_paragraph},
@@ -632,7 +636,7 @@ main(int argc, char **argv)
                 crm_log_args(argc, argv);
                 require_resource = FALSE;
                 require_crmd = TRUE;
-                just_errors = TRUE;
+                just_errors = FALSE; // disable until 2.0.0
                 rsc_cmd = 'C';
                 break;
 
