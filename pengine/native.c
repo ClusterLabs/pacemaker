@@ -564,7 +564,8 @@ native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
 
         CRM_ASSERT(remote_node != NULL);
         if (rsc->allocated_to && rsc->next_role != RSC_ROLE_STOPPED) {
-            crm_trace("Setting remote node %s to ONLINE", remote_node->details->id);
+            crm_trace("Setting Pacemaker Remote node %s to ONLINE",
+                      remote_node->details->id);
             remote_node->details->online = TRUE;
             /* We shouldn't consider an unseen remote-node unclean if we are going
              * to try and connect to it. Otherwise we get an unnecessary fence */
@@ -573,8 +574,9 @@ native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
             }
 
         } else {
-            crm_trace("Setting remote node %s to SHUTDOWN.  next role = %s, allocated=%s",
-                remote_node->details->id, role2text(rsc->next_role), rsc->allocated_to ? "true" : "false");
+            crm_trace("Setting Pacemaker Remote node %s to SHUTDOWN (next role %s, %sallocated)",
+                      remote_node->details->id, role2text(rsc->next_role),
+                      (rsc->allocated_to? "" : "un"));
             remote_node->details->shutdown = TRUE;
         }
     }
@@ -1115,9 +1117,9 @@ handle_migration_actions(resource_t * rsc, node_t *current, node_t *chosen, pe_w
         add_hash_param(migrate_to->meta, XML_LRM_ATTR_MIGRATE_SOURCE, current->details->uname);
         add_hash_param(migrate_to->meta, XML_LRM_ATTR_MIGRATE_TARGET, chosen->details->uname);
 
-        /* pcmk remote connections don't require pending to be recorded in cib.
-         * We can optimize cib writes by only setting PENDING for non pcmk remote
-         * connection resources */
+        /* Pacemaker Remote connections don't require pending to be recorded in
+         * the CIB. We can reduce CIB writes by not setting PENDING for them.
+         */
         if (rsc->is_remote_node == FALSE) {
             /* migrate_to takes place on the source node, but can 
              * have an effect on the target node depending on how
@@ -2818,13 +2820,19 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
         const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
 
         if (safe_str_eq(class, PCMK_RESOURCE_CLASS_STONITH)) {
-            pe_rsc_trace(rsc, "Skipping probe for %s on node %s, remote-nodes do not run stonith agents.", rsc->id, node->details->id);
+            pe_rsc_trace(rsc,
+                         "Skipping probe for %s on %s because Pacemaker Remote nodes cannot run stonith agents",
+                         rsc->id, node->details->id);
             return FALSE;
         } else if (is_container_remote_node(node) && rsc_contains_remote_node(data_set, rsc)) {
-            pe_rsc_trace(rsc, "Skipping probe for %s on node %s, remote-nodes can not run resources that contain connection resources.", rsc->id, node->details->id);
+            pe_rsc_trace(rsc,
+                         "Skipping probe for %s on %s because guest nodes cannot run resources containing guest nodes",
+                         rsc->id, node->details->id);
             return FALSE;
         } else if (rsc->is_remote_node) {
-            pe_rsc_trace(rsc, "Skipping probe for %s on node %s, remote-nodes can not run connection resources", rsc->id, node->details->id);
+            pe_rsc_trace(rsc,
+                         "Skipping probe for %s on %s because Pacemaker Remote nodes cannot host remote connections",
+                         rsc->id, node->details->id);
             return FALSE;
         }
     }

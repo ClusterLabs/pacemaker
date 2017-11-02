@@ -662,8 +662,9 @@ cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
         return -EOPNOTSUPP;
     }
 
-    if(getenv("CIB_file") != NULL) {
-        printf("Would have cleaned up %s on %s\n", rsc->id, host_uname);
+    if (crmd_channel == NULL) {
+        printf("Dry run: skipping clean-up of %s on %s due to CIB_file\n",
+               rsc->id, host_uname);
         return rc;
      }
 
@@ -672,7 +673,6 @@ cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
      * single operation, we might wind up with a wrong idea of the current
      * resource state, and we might not re-probe the resource.
      */
-    crmd_replies_needed++;
     rc = send_lrm_rsc_op(crmd_channel, CRM_OP_LRM_DELETE, host_uname, rsc->id,
                          TRUE, data_set);
     if (rc != pcmk_ok) {
@@ -680,6 +680,7 @@ cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
                rsc->id, host_uname, pcmk_strerror(rc));
         return rc;
     }
+    crmd_replies_needed++;
 
     crm_trace("Processing %d mainloop inputs", crmd_replies_needed);
     while(g_main_context_iteration(NULL, FALSE)) {

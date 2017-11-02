@@ -326,7 +326,7 @@ create_docker_resource(
         crm_create_op_xml(xml_obj, ID(xml_docker), "monitor", "60s", NULL);
 
         // TODO: Other ops? Timeouts and intervals from underlying resource?
-        crm_log_xml_trace(xml_docker, "Contaner-docker");
+        crm_log_xml_trace(xml_docker, "Container-docker");
         if (common_unpack(xml_docker, &tuple->docker, parent, data_set) == FALSE) {
             return FALSE;
         }
@@ -485,6 +485,7 @@ create_rkt_resource(
 
         // TODO: Other ops? Timeouts and intervals from underlying resource?
 
+        crm_log_xml_trace(xml_docker, "Container-rkt");
         if (common_unpack(xml_docker, &tuple->docker, parent, data_set) == FALSE) {
             return FALSE;
         }
@@ -616,7 +617,7 @@ create_remote_resource(
             copy->weight = -INFINITY;
             g_hash_table_insert(tuple->child->parent->allowed_nodes, (gpointer) tuple->node->details->id, copy);
         }
-        crm_log_xml_trace(xml_remote, "Contaner-remote");
+        crm_log_xml_trace(xml_remote, "Container-remote");
         if (common_unpack(xml_remote, &tuple->remote, parent, data_set) == FALSE) {
             return FALSE;
         }
@@ -803,7 +804,7 @@ container_fix_remote_addr_in(resource_t *rsc, xmlNode *xml, const char *field)
 
     node = tuple->docker->allocated_to;
     if(node == NULL && tuple->docker->running_on) {
-        /* If it wont be running anywhere after the
+        /* If it won't be running anywhere after the
          * transition, go with where it's running now.
          */
         node = tuple->docker->running_on->data;
