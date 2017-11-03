@@ -906,7 +906,10 @@ container_create_probe(resource_t * rsc, node_t * node, action_t * complete,
                 }
             }
         }
-        if(tuple->remote && tuple->remote->cmds->create_probe(tuple->remote, node, complete, force, data_set)) {
+        if (tuple->docker && tuple->remote
+            && tuple->remote->cmds->create_probe(tuple->remote, node, complete,
+                                                 force, data_set)) {
+
             /* Do not probe the remote resource until we know where docker is running
              * Required for REMOTE_CONTAINER_HACK to correctly probe remote resources
              */
