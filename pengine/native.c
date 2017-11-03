@@ -2449,7 +2449,8 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
                 STOP_SANITY_ASSERT(__LINE__);
             }
 
-            LogAction("Stop", rsc, node, NULL, stop_op, stop_op->reason?stop_op:start, terminal);
+            LogAction("Stop", rsc, node, NULL, stop_op,
+                      (stop_op && stop_op->reason)? stop_op : start, terminal);
         }
 
         free(key);
