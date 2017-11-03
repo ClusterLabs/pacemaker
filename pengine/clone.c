@@ -393,7 +393,8 @@ can_run_instance(resource_t * rsc, node_t * node, int limit)
                      rsc->id, node->details->uname);
 
     } else if (local_node->count < limit) {
-        pe_rsc_trace(rsc, "%s can run on %s: %d", rsc->id, node->details->uname, local_node->count);
+        pe_rsc_trace(rsc, "%s can run on %s (already running %d)",
+                     rsc->id, node->details->uname, local_node->count);
         return local_node;
 
     } else {
@@ -415,7 +416,9 @@ color_instance(resource_t * rsc, node_t * prefer, gboolean all_coloc, int limit,
     GHashTable *backup = NULL;
 
     CRM_ASSERT(rsc);
-    pe_rsc_trace(rsc, "Processing %s %d %s", rsc->id, all_coloc, prefer?prefer->details->uname:"none");
+    pe_rsc_trace(rsc, "Checking allocation of %s (preferring %s, using %s parent colocations)",
+                 rsc->id, (prefer? prefer->details->uname: "none"),
+                 (all_coloc? "all" : "some"));
 
     if (is_not_set(rsc->flags, pe_rsc_provisional)) {
         return rsc->fns->location(rsc, NULL, FALSE);
@@ -527,7 +530,7 @@ distribute_children(resource_t *rsc, GListPtr children, GListPtr nodes,
         loop_max = 1;
     }
 
-    pe_rsc_debug(rsc, "Allocating %d %s instances to a possible %d nodes (%d per host, %d optimal)",
+    pe_rsc_debug(rsc, "Allocating up to %d %s instances to a possible %d nodes (at most %d per host, %d optimal)",
                  max, rsc->id, available_nodes, per_host_max, loop_max);
 
     /* Pre-allocate as many instances as we can to their current location */
@@ -539,15 +542,17 @@ distribute_children(resource_t *rsc, GListPtr children, GListPtr nodes,
             node_t *child_node = child->running_on->data;
             node_t *local_node = parent_node_instance(child, child->running_on->data);
 
-            pe_rsc_trace(rsc, "Pre-allocating %s (%d remaining)", child->id, max - allocated);
-            pe_rsc_trace(rsc, "Foo %s to %s %d %d", child->id,
-                         child_node->details->uname, max, available_nodes);
+            pe_rsc_trace(rsc, "Checking pre-allocation of %s to %s (%d remaining of %d)",
+                         child->id, child_node->details->uname, max - allocated, max);
 
             if (can_run_resources(child_node) == FALSE || child_node->weight < 0) {
-                pe_rsc_trace(rsc, "Not Pre-allocating %s", child_node->details->uname);
+                pe_rsc_trace(rsc, "Not pre-allocating because %s can not run %s",
+                             child_node->details->uname, child->id);
 
             } else if(local_node && local_node->count >= loop_max) {
-                pe_rsc_trace(rsc, "Deferring allocation of %s", child_node->details->uname);
+                pe_rsc_trace(rsc,
+                             "Not pre-allocating because %s already allocated optimal instances",
+                             child_node->details->uname);
 
             } else if (color_instance(child, child_node, max < available_nodes, per_host_max, data_set)) {
                 pe_rsc_trace(rsc, "Pre-allocated %s to %s", child->id,

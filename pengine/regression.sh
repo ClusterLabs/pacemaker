@@ -372,6 +372,7 @@ do_test clone-fail-block-colocation "Move colocated group when failed clone has 
 do_test clone-interleave-1 "Clone-3 cannot start on pcmk-1 due to interleaved ordering (no colocation)"
 do_test clone-interleave-2 "Clone-3 must stop on pcmk-1 due to interleaved ordering (no colocation)"
 do_test clone-interleave-3 "Clone-3 must be recovered on pcmk-1 due to interleaved ordering (no colocation)"
+do_test rebalance-unique-clones "Rebalance unique clone instances with no stickiness"
 
 echo ""
 do_test cloned_start_one  "order first clone then clone... first clone_min=2"
@@ -538,6 +539,7 @@ do_test bug-5025-4 "Clear failcount when last failure is a start op and rsc attr
 do_test failcount "Ensure failcounts are correctly expired"
 do_test failcount-block "Ensure failcounts are not expired when on-fail=block is present"
 do_test per-op-failcount "Ensure per-operation failcount is handled and not passed to fence agent"
+do_test on-fail-ignore "Ensure on-fail=ignore works even beyond migration-threshold"
 do_test monitor-onfail-restart "bug-5058 - Monitor failure with on-fail set to restart"
 do_test monitor-onfail-stop    "bug-5058 - Monitor failure wiht on-fail set to stop"
 do_test bug-5059 "No need to restart p_stateful1:*"

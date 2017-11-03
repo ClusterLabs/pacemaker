@@ -7,8 +7,13 @@
 # Copyright (c) 2011 Vladislav Bogdanov <bubble@hoster-ok.com>
 # Partially based on 'ping' RA by Andrew Beekhof
 #
+# Change on 2017 by Tomer Azran <tomerazran@gmail.com>:
+#     Add "ip" parameter to detect network interface name by ip address:
+#     http://lists.clusterlabs.org/pipermail/users/2017-August/006224.html
+#
 # OCF instance parameters:
 #    OCF_RESKEY_name:         name of attribute to set in CIB
+#    OCF_RESKEY_ip            ip address to check
 #    OCF_RESKEY_iface:        network interface to monitor
 #    OCF_RESKEY_bridge_ports: if not null and OCF_RESKEY_iface is a bridge, list of
 #                             bridge ports to consider.
@@ -19,8 +24,16 @@
 # Initialization:
 
 : ${OCF_FUNCTIONS=${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs}
-. ${OCF_FUNCTIONS}
+
+# If these aren't available, we can still show help,
+# which is all that is needed to build the man pages.
+[ -r "${OCF_FUNCTIONS}" ] && . "${OCF_FUNCTIONS}"
+[ -r "${OCF_FUNCTIONS_DIR}/findif.sh" ] && . "${OCF_FUNCTIONS_DIR}/findif.sh"
+: ${OCF_SUCCESS=0}
+
 : ${__OCF_ACTION=$1}
+
+FINDIF=findif
 
 # Defaults
 OCF_RESKEY_name_default="ifspeed"
@@ -82,6 +95,17 @@ Network interface to monitor.
 </longdesc>
 <shortdesc lang="en">Network interface</shortdesc>
 <content type="string" default=""/>
+</parameter>
+
+<parameter name="ip" unique="0" required="0">
+<longdesc lang="en">
+Try to detect interface name by detecting the interface that holds the IP address.
+The IPv4 (dotted quad notation) or IPv6 address (colon hexadecimal notation)
+example IPv4 "192.168.1.1".
+example IPv6 "2001:db8:DC28:0:0:FC57:D4C8:1FFF".
+</longdesc>
+<shortdesc lang="en">IPv4 or IPv6 address</shortdesc>
+<content type="string" default="" />
 </parameter>
 
 <parameter name="bridge_ports" unique="0">
@@ -165,13 +189,38 @@ monitor() {
     return ${ret}
 }
 
+# This function tries to guess nic interface by IP
+get_nic_name_by_ip(){
+    # $FINDIF takes its parameters from the environment.
+    # Its output is as follows:
+    # [NIC_NAME] netmask [NETMASK] broadcast [BROADCAST}
+    NICINFO=$( ${FINDIF} )
+    rc=$?
+    if [ $rc -eq 0 ];then
+        # Get NIC_NAME part of findif function output.
+        echo "${NICINFO%% *}"
+    else
+        echo ""
+    fi
+}
+
 validate() {
     # Check the interface parameter
-    if [ -z "${OCF_RESKEY_iface}" ]; then 
-        ocf_log err "Empty iface parameter.  Please specify network interface to check"
-        exit $OCF_ERR_CONFIGURED
+    if [ -z "${OCF_RESKEY_iface}" ]; then
+        if [ -z "${OCF_RESKEY_ip}" ]; then
+            ocf_log err "Empty iface and ip parameters. Please specify either an interface name or valid ip address."
+            exit $OCF_ERR_CONFIGURED
+        else
+            ipcheck_ipv4 "${OCF_RESKEY_ip}"
+            if [ $? -eq 1 ] ; then
+                ipcheck_ipv6 "${OCF_RESKEY_ip}"
+                if [ $? -eq 1 ] ; then
+                  ocf_exit_reason "ip parameter [${OCF_RESKEY_ip}] is not a valid ip address."
+                  exit $OCF_ERR_CONFIGURED
+                fi
+            fi
+        fi
     fi
-
     return $OCF_SUCCESS
 }
 
@@ -417,7 +466,16 @@ bond_get_speed() {
 }
 
 update() {
-    local speed=$( iface_get_speed ${OCF_RESKEY_iface} )
+    local speed;
+    local nic=${OCF_RESKEY_iface};
+    if [ -z "${OCF_RESKEY_iface}" ]; then
+        nic=$( get_nic_name_by_ip )
+        if [ -z "${nic}" ];then
+            ocf_log err "Could not retrieve network interface name from ip address (${OCF_RESKEY_ip})"
+            exit $OCF_ERR_GENERIC
+        fi
+    fi
+    speed=$( iface_get_speed ${nic} )
 
     : $(( score = speed * ${OCF_RESKEY_weight_base} / 1000 ))
     if [ "$__OCF_ACTION" = "start" ] ; then

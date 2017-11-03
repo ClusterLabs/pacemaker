@@ -66,7 +66,7 @@ Options:
   -l, --logfile FILE    log file to collect (in addition to detected logs if -M
                         is not specified; may be specified multiple times)
   -p PATT               additional regular expression to match variables to be
-                        masked in ouput (default: "passw.*")
+                        masked in output (default: "passw.*")
   -L PATT               additional regular expression to match in log files for
                         analysis (default: $log_patterns)
   -S, --single-node     don't attempt to collect data from other nodes

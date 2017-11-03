@@ -1,0 +1,30 @@
+Using the original execution date of: 2017-10-26 14:23:50Z
+
+Current cluster status:
+Online: [ 407888-db1 407892-db2 ]
+
+ fence_db1	(stonith:fence_ipmilan):	Started 407892-db2
+ fence_db2	(stonith:fence_ipmilan):	Started 407888-db1
+ nfs_snet_ip	(ocf::heartbeat:IPaddr2):	Started 407888-db1 (failure ignored)
+
+Transition Summary:
+ * Restart    fence_db1     ( 407892-db2 )   due to resource definition change
+ * Restart    fence_db2     ( 407888-db1 )   due to resource definition change
+
+Executing cluster transition:
+ * Resource action: fence_db1       stop on 407892-db2
+ * Resource action: fence_db1       start on 407892-db2
+ * Resource action: fence_db1       monitor=60000 on 407892-db2
+ * Resource action: fence_db2       stop on 407888-db1
+ * Resource action: fence_db2       start on 407888-db1
+ * Resource action: fence_db2       monitor=60000 on 407888-db1
+ * Pseudo action:   all_stopped
+Using the original execution date of: 2017-10-26 14:23:50Z
+
+Revised cluster status:
+Online: [ 407888-db1 407892-db2 ]
+
+ fence_db1	(stonith:fence_ipmilan):	Started 407892-db2
+ fence_db2	(stonith:fence_ipmilan):	Started 407888-db1
+ nfs_snet_ip	(ocf::heartbeat:IPaddr2):	Started 407888-db1 (failure ignored)
+

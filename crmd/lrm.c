@@ -2054,25 +2054,22 @@ stop_recurring_actions(gpointer key, gpointer value, gpointer user_data)
 static void
 record_pending_op(const char *node_name, lrmd_rsc_info_t *rsc, lrmd_event_data_t *op)
 {
+    const char *record_pending = NULL;
+
     CRM_CHECK(node_name != NULL, return);
     CRM_CHECK(rsc != NULL, return);
     CRM_CHECK(op != NULL, return);
 
-    if (op->op_type == NULL
+    if ((op->op_type == NULL) || (op->params == NULL)
         || safe_str_eq(op->op_type, CRMD_ACTION_CANCEL)
         || safe_str_eq(op->op_type, CRMD_ACTION_DELETE)) {
         return;
     }
 
-    if (op->params == NULL) {
+    // defaults to true
+    record_pending = crm_meta_value(op->params, XML_OP_ATTR_PENDING);
+    if (record_pending && !crm_is_true(record_pending)) {
         return;
-
-    } else {
-        const char *record_pending = crm_meta_value(op->params, XML_OP_ATTR_PENDING);
-
-        if (record_pending == NULL || crm_is_true(record_pending) == FALSE) {
-            return;
-         }
     }
 
     op->call_id = -1;

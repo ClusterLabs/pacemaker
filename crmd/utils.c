@@ -1021,36 +1021,36 @@ void crmd_peer_down(crm_node_t *peer, bool full)
     crm_update_peer_expected(__FUNCTION__, peer, CRMD_JOINSTATE_DOWN);
 }
 
+#define MIN_CIB_OP_TIMEOUT (30)
+
 unsigned int
-cib_op_timeout(unsigned int max)
+cib_op_timeout()
 {
-    unsigned int global_max = 0;
+    static int env_timeout = -1;
+    unsigned int calculated_timeout = 0;
 
-    if (global_max == 0) {
+    if (env_timeout == -1) {
         const char *env = getenv("PCMK_cib_timeout");
-        unsigned int global_default = 1 + crm_active_peers();
-
-        if(crm_remote_peer_cache) {
-            global_default += g_hash_table_size(crm_remote_peer_cache);
-        }
-
-        global_default *= 10;
 
         if (env) {
-            int env_max = crm_parse_int(env, "0");
-
-            global_max = (env_max > 0) ? QB_MAX(global_default, env_max) : global_default;
-
-        } else {
-            global_max = global_default;
+            env_timeout = crm_parse_int(env, "0");
         }
-        crm_trace("Calculated timeout: %us (%s)", global_max, env);
+        env_timeout = QB_MAX(env_timeout, MIN_CIB_OP_TIMEOUT);
+        crm_trace("Minimum CIB op timeout: %us (environment: %s)",
+                  env_timeout, (env? env : "none"));
     }
 
-    if(fsa_cib_conn) {
-        fsa_cib_conn->call_timeout = QB_MAX(max, global_max);
+    calculated_timeout = 1 + crm_active_peers();
+    if (crm_remote_peer_cache) {
+        calculated_timeout += g_hash_table_size(crm_remote_peer_cache);
     }
+    calculated_timeout *= 10;
 
-    return QB_MAX(max, global_max);
+    calculated_timeout = QB_MAX(calculated_timeout, env_timeout);
+    crm_trace("Calculated timeout: %us", calculated_timeout);
+
+    if (fsa_cib_conn) {
+        fsa_cib_conn->call_timeout = calculated_timeout;
+    }
+    return calculated_timeout;
 }
-

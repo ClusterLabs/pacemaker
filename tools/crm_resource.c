@@ -57,7 +57,6 @@ resource_ipc_connection_destroy(gpointer user_data)
     crm_exit(1);
 }
 
-static bool mainloop_running = FALSE;
 static void
 start_mainloop(void)
 {
@@ -65,7 +64,6 @@ start_mainloop(void)
         return;
     }
 
-    mainloop_running = TRUE;
     mainloop = g_main_new(FALSE);
     fprintf(stderr, "Waiting for %d replies from the CRMd", crmd_replies_needed);
     crm_debug("Waiting for %d replies from the CRMd", crmd_replies_needed);
@@ -83,7 +81,7 @@ resource_ipc_callback(const char *buffer, ssize_t length, gpointer userdata)
     crm_log_xml_trace(msg, "[inbound]");
 
     crmd_replies_needed--;
-    if (crmd_replies_needed == 0 && mainloop_running) {
+    if (crmd_replies_needed == 0 && g_main_loop_is_running(mainloop)) {
         fprintf(stderr, " OK\n");
         crm_debug("Got all the replies we expected");
         return crm_exit(pcmk_ok);
@@ -363,7 +361,7 @@ static struct crm_option long_options[] = {
     },
     {
         "timeout", required_argument, NULL, 'T',
-        "\t(Advanced) Abort if command does not finish in this time (with --restart, --wait)"
+        "\t(Advanced) Abort if command does not finish in this time (with --restart, --wait, --force-*)"
     },
     {
         "force", no_argument, NULL, 'f',
@@ -424,6 +422,7 @@ main(int argc, char **argv)
     const char *longname = NULL;
     const char *operation = NULL;
     const char *interval = NULL;
+    const char *cib_file = getenv("CIB_file");
     GHashTable *override_params = NULL;
 
     char *xml_file = NULL;
@@ -623,7 +622,9 @@ main(int argc, char **argv)
             case 'P':
                 crm_log_args(argc, argv);
                 require_resource = FALSE;
-                require_crmd = TRUE;
+                if (cib_file == NULL) {
+                    require_crmd = TRUE;
+                }
                 just_errors = FALSE;
                 rsc_cmd = 'C';
                 break;
@@ -631,7 +632,9 @@ main(int argc, char **argv)
             case 'C':
                 crm_log_args(argc, argv);
                 require_resource = FALSE;
-                require_crmd = TRUE;
+                if (cib_file == NULL) {
+                    require_crmd = TRUE;
+                }
                 just_errors = TRUE;
                 rsc_cmd = 'C';
                 break;
@@ -829,9 +832,9 @@ main(int argc, char **argv)
             rc = -ENXIO;
         }
     }
-    
+
     /* Establish a connection to the CRMd if needed */
-    if (getenv("CIB_file") == NULL && require_crmd) {
+    if (require_crmd) {
         xmlNode *xml = NULL;
         mainloop_io_t *source =
             mainloop_add_ipc_client(CRM_SYSTEM_CRMD, G_PRIORITY_DEFAULT, 0, NULL, &crm_callbacks);
@@ -887,7 +890,8 @@ main(int argc, char **argv)
         rc = wait_till_stable(timeout_ms, cib_conn);
 
     } else if (rsc_cmd == 0 && rsc_long_cmd) { /* validate or force-(stop|start|check) */
-        rc = cli_resource_execute(rsc_id, rsc_long_cmd, override_params, cib_conn, &data_set);
+        rc = cli_resource_execute(rsc_id, rsc_long_cmd, override_params,
+                                  timeout_ms, cib_conn, &data_set);
         if (rc >= 0) {
             is_ocf_rc = 1;
         }
@@ -1176,6 +1180,13 @@ main(int argc, char **argv)
                 router_node = node->details->uname;
                 attr_options |= attrd_opt_remote;
             }
+        }
+
+        if (crmd_channel == NULL) {
+            printf("Dry run: skipping clean-up of %s due to CIB_file\n",
+                   host_uname? host_uname : "all nodes");
+            rc = pcmk_ok;
+            goto bail;
         }
 
         msg_data = create_xml_node(NULL, "crm-resource-reprobe-op");

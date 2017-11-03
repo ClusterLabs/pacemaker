@@ -112,12 +112,17 @@ extern node_t *node_copy(const node_t *this_node);
 extern time_t get_effective_time(pe_working_set_t * data_set);
 
 /* Failure handling utilities (from failcounts.c) */
-extern int get_failcount(node_t * node, resource_t * rsc, time_t *last_failure,
-                         pe_working_set_t * data_set);
-extern int get_failcount_full(node_t * node, resource_t * rsc, time_t *last_failure,
-                              bool effective, xmlNode * xml_op, pe_working_set_t * data_set);
-extern int get_failcount_all(node_t * node, resource_t * rsc, time_t *last_failure,
-                             pe_working_set_t * data_set);
+
+// bit flags for fail count handling options
+enum pe_fc_flags_e {
+    pe_fc_default   = 0x00,
+    pe_fc_effective = 0x01, // don't count expired failures
+    pe_fc_fillers   = 0x02, // if container, include filler failures in count
+};
+
+int pe_get_failcount(node_t *node, resource_t *rsc, time_t *last_failure,
+                     uint32_t flags, xmlNode *xml_op,
+                     pe_working_set_t *data_set);
 
 /* Binary like operators for lists of nodes */
 extern void node_list_exclude(GHashTable * list, GListPtr list2, gboolean merge_scores);
@@ -216,6 +221,9 @@ extern action_t *custom_action(resource_t * rsc, char *key, const char *task, no
 #  define demoted_action(rsc, node, optional) custom_action(		\
 		rsc, demoted_key(rsc), CRMD_ACTION_DEMOTED, node,	\
 		optional, TRUE, data_set)
+
+extern int pe_get_configured_timeout(resource_t *rsc, const char *action,
+                                     pe_working_set_t *data_set);
 
 extern action_t *find_first_action(GListPtr input, const char *uuid, const char *task,
                                    node_t * on_node);

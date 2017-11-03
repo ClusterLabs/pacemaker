@@ -82,98 +82,113 @@ gboolean (*rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX])(resource_t*,node_t*,gb
 static gboolean
 native_choose_node(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
 {
-    /*
-       1. Sort by weight
-       2. color.chosen_node = the node (of those with the highest wieght)
-       with the fewest resources
-       3. remove color.chosen_node from all other colors
-     */
     GListPtr nodes = NULL;
     node_t *chosen = NULL;
-
-    int lpc = 0;
-    int multiple = 0;
+    node_t *best = NULL;
+    int multiple = 1;
     int length = 0;
     gboolean result = FALSE;
 
     process_utilization(rsc, &prefer, data_set);
 
-    length = g_hash_table_size(rsc->allowed_nodes);
-
     if (is_not_set(rsc->flags, pe_rsc_provisional)) {
         return rsc->allocated_to ? TRUE : FALSE;
     }
 
-    if(rsc->allowed_nodes) {
-        nodes = g_hash_table_get_values(rsc->allowed_nodes);
-        nodes = g_list_sort_with_data(nodes, sort_node_weight, g_list_nth_data(rsc->running_on, 0));
+    // Sort allowed nodes by weight
+    if (rsc->allowed_nodes) {
+        length = g_hash_table_size(rsc->allowed_nodes);
     }
-    if (prefer) {
-        node_t *best = g_list_nth_data(nodes, 0);
+    if (length > 0) {
+        nodes = g_hash_table_get_values(rsc->allowed_nodes);
+        nodes = g_list_sort_with_data(nodes, sort_node_weight,
+                                      g_list_nth_data(rsc->running_on, 0));
 
+        // First node in sorted list has the best score
+        best = g_list_nth_data(nodes, 0);
+    }
+
+    if (prefer && nodes) {
         chosen = g_hash_table_lookup(rsc->allowed_nodes, prefer->details->id);
-        if (chosen && chosen->weight >= 0
-            && chosen->weight >= best->weight /* Possible alternative: (chosen->weight >= INFINITY || best->weight < INFINITY) */
-            && can_run_resources(chosen)) {
-            pe_rsc_trace(rsc,
-                         "Using preferred node %s for %s instead of choosing from %d candidates",
-                         chosen->details->uname, rsc->id, length);
-        } else if (chosen && chosen->weight < 0) {
-            pe_rsc_trace(rsc, "Preferred node %s for %s was unavailable", chosen->details->uname,
-                         rsc->id);
+
+        if (chosen == NULL) {
+            pe_rsc_trace(rsc, "Preferred node %s for %s was unknown",
+                         prefer->details->uname, rsc->id);
+
+        /* Favor the preferred node as long as its weight is at least as good as
+         * the best allowed node's.
+         *
+         * An alternative would be to favor the preferred node even if the best
+         * node is better, when the best node's weight is less than INFINITY.
+         */
+        } else if ((chosen->weight < 0) || (chosen->weight < best->weight)) {
+            pe_rsc_trace(rsc, "Preferred node %s for %s was unsuitable",
+                         chosen->details->uname, rsc->id);
             chosen = NULL;
-        } else if (chosen && can_run_resources(chosen)) {
-            pe_rsc_trace(rsc, "Preferred node %s for %s was unsuitable", chosen->details->uname,
-                         rsc->id);
+
+        } else if (!can_run_resources(chosen)) {
+            pe_rsc_trace(rsc, "Preferred node %s for %s was unavailable",
+                         chosen->details->uname, rsc->id);
             chosen = NULL;
+
         } else {
-            pe_rsc_trace(rsc, "Preferred node %s for %s was unknown", prefer->details->uname,
-                         rsc->id);
+            pe_rsc_trace(rsc,
+                         "Chose preferred node %s for %s (ignoring %d candidates)",
+                         chosen->details->uname, rsc->id, length);
         }
     }
 
-    if (chosen == NULL && rsc->allowed_nodes) {
+    if ((chosen == NULL) && nodes) {
+        /* Either there is no preferred node, or the preferred node is not
+         * available, but there are other nodes allowed to run the resource.
+         */
 
-        chosen = g_list_nth_data(nodes, 0);
+        chosen = best;
         pe_rsc_trace(rsc, "Chose node %s for %s from %d candidates",
                      chosen ? chosen->details->uname : "<none>", rsc->id, length);
 
-        if (chosen && chosen->weight > 0 && can_run_resources(chosen)) {
+        if (!pe_rsc_is_unique_clone(rsc->parent)
+            && chosen && (chosen->weight > 0) && can_run_resources(chosen)) {
+            /* If the resource is already running on a node, prefer that node if
+             * it is just as good as the chosen node.
+             *
+             * We don't do this for unique clone instances, because
+             * distribute_children() has already assigned instances to their
+             * running nodes when appropriate, and if we get here, we don't want
+             * remaining unallocated instances to prefer a node that's already
+             * running another instance.
+             */
             node_t *running = g_list_nth_data(rsc->running_on, 0);
 
-            if (running && can_run_resources(running) == FALSE) {
+            if (running && (can_run_resources(running) == FALSE)) {
                 pe_rsc_trace(rsc, "Current node for %s (%s) can't run resources",
                              rsc->id, running->details->uname);
-                running = NULL;
-            }
+            } else if (running) {
+                for (GList *iter = nodes->next; iter; iter = iter->next) {
+                    node_t *tmp = (node_t *) iter->data;
 
-            for (lpc = 1; lpc < length && running; lpc++) {
-                node_t *tmp = g_list_nth_data(nodes, lpc);
-
-                if (tmp->weight == chosen->weight) {
-                    multiple++;
+                    if (tmp->weight != chosen->weight) {
+                        // The nodes are sorted by weight, so no more are equal
+                        break;
+                    }
                     if (tmp->details == running->details) {
-                        /* prefer the existing node if scores are equal */
+                        // Scores are equal, so prefer the current node
                         chosen = tmp;
                     }
+                    multiple++;
                 }
             }
         }
     }
 
     if (multiple > 1) {
-        int log_level = LOG_INFO;
         static char score[33];
+        int log_level = (chosen->weight >= INFINITY)? LOG_WARNING : LOG_INFO;
 
         score2char_stack(chosen->weight, score, sizeof(score));
-
-        if (chosen->weight >= INFINITY) {
-            log_level = LOG_WARNING;
-        }
-
-        do_crm_log(log_level, "%d nodes with equal score (%s) for"
-                   " running %s resources.  Chose %s.",
-                   multiple, score, rsc->id, chosen->details->uname);
+        do_crm_log(log_level,
+                   "Chose node %s for %s from %d nodes with score %s",
+                   chosen->details->uname, rsc->id, multiple, score);
     }
 
     result = native_assign_node(rsc, nodes, chosen, FALSE);
@@ -549,7 +564,8 @@ native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
 
         CRM_ASSERT(remote_node != NULL);
         if (rsc->allocated_to && rsc->next_role != RSC_ROLE_STOPPED) {
-            crm_trace("Setting remote node %s to ONLINE", remote_node->details->id);
+            crm_trace("Setting Pacemaker Remote node %s to ONLINE",
+                      remote_node->details->id);
             remote_node->details->online = TRUE;
             /* We shouldn't consider an unseen remote-node unclean if we are going
              * to try and connect to it. Otherwise we get an unnecessary fence */
@@ -558,8 +574,9 @@ native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
             }
 
         } else {
-            crm_trace("Setting remote node %s to SHUTDOWN.  next role = %s, allocated=%s",
-                remote_node->details->id, role2text(rsc->next_role), rsc->allocated_to ? "true" : "false");
+            crm_trace("Setting Pacemaker Remote node %s to SHUTDOWN (next role %s, %sallocated)",
+                      remote_node->details->id, role2text(rsc->next_role),
+                      (rsc->allocated_to? "" : "un"));
             remote_node->details->shutdown = TRUE;
         }
     }
@@ -1100,9 +1117,9 @@ handle_migration_actions(resource_t * rsc, node_t *current, node_t *chosen, pe_w
         add_hash_param(migrate_to->meta, XML_LRM_ATTR_MIGRATE_SOURCE, current->details->uname);
         add_hash_param(migrate_to->meta, XML_LRM_ATTR_MIGRATE_TARGET, chosen->details->uname);
 
-        /* pcmk remote connections don't require pending to be recorded in cib.
-         * We can optimize cib writes by only setting PENDING for non pcmk remote
-         * connection resources */
+        /* Pacemaker Remote connections don't require pending to be recorded in
+         * the CIB. We can reduce CIB writes by not setting PENDING for them.
+         */
         if (rsc->is_remote_node == FALSE) {
             /* migrate_to takes place on the source node, but can 
              * have an effect on the target node depending on how
@@ -2390,7 +2407,8 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
                         next->details->uname);
 
         } else if (start && is_set(start->flags, pe_action_runnable) == FALSE) {
-            LogAction("Stop", rsc, current, NULL, stop, stop->reason?stop:start, terminal);
+            LogAction("Stop", rsc, current, NULL, stop,
+                      (stop && stop->reason)? stop : start, terminal);
             STOP_SANITY_ASSERT(__LINE__);
 
         } else if (moving && current) {
@@ -2803,13 +2821,19 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
         const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
 
         if (safe_str_eq(class, PCMK_RESOURCE_CLASS_STONITH)) {
-            pe_rsc_trace(rsc, "Skipping probe for %s on node %s, remote-nodes do not run stonith agents.", rsc->id, node->details->id);
+            pe_rsc_trace(rsc,
+                         "Skipping probe for %s on %s because Pacemaker Remote nodes cannot run stonith agents",
+                         rsc->id, node->details->id);
             return FALSE;
         } else if (is_container_remote_node(node) && rsc_contains_remote_node(data_set, rsc)) {
-            pe_rsc_trace(rsc, "Skipping probe for %s on node %s, remote-nodes can not run resources that contain connection resources.", rsc->id, node->details->id);
+            pe_rsc_trace(rsc,
+                         "Skipping probe for %s on %s because guest nodes cannot run resources containing guest nodes",
+                         rsc->id, node->details->id);
             return FALSE;
         } else if (rsc->is_remote_node) {
-            pe_rsc_trace(rsc, "Skipping probe for %s on node %s, remote-nodes can not run connection resources", rsc->id, node->details->id);
+            pe_rsc_trace(rsc,
+                         "Skipping probe for %s on %s because Pacemaker Remote nodes cannot host remote connections",
+                         rsc->id, node->details->id);
             return FALSE;
         }
     }

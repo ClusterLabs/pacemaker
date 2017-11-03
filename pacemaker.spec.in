@@ -120,6 +120,10 @@
 ## Add option to turn off CMAN support on CMAN-native platforms
 %bcond_without cman
 
+## Add option to turn off SNMP / ESMTP support
+%bcond_without snmp
+%bcond_without esmtp
+
 ## Add option to turn off hardening of libraries and daemon executables
 %bcond_without hardening
 
@@ -395,6 +399,8 @@ export LDFLAGS_HARDENED_LIB="%{?_hardening_ldflags}"
         %{?with_profiling:   --with-profiling}     \
         %{?with_coverage:    --with-coverage}      \
         %{!?with_cman:       --without-cman}       \
+        %{!?with_snmp:       --without-snmp}       \
+        %{!?with_esmtp:      --without-esmtp}      \
         --without-heartbeat                        \
         %{!?with_doc:        --with-brand=}        \
         %{!?with_hardening:  --disable-hardening}  \
