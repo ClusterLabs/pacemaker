@@ -25,7 +25,6 @@
 
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <sys/prctl.h>
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>

@@ -68,7 +68,7 @@ Examples:
 
 For STP-enabled bridges this RA tries to some-how guess network topology and by
 default looks only on ports which are connected to upstream switch. This can be
-overriden by 'bridge_ports' parameter. Active interfaces in this case are those
+overridden by 'bridge_ports' parameter. Active interfaces in this case are those
 in "forwarding" state.
 
 For balancing bonds this RA summs speeds of underlying "up" slave interfaces
