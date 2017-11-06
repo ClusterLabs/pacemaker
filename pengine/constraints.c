@@ -181,9 +181,8 @@ pe_find_constraint_resource(GListPtr rsc_list, const char *id)
 
     for (rIter = rsc_list; id && rIter; rIter = rIter->next) {
         resource_t *parent = rIter->data;
-
-        resource_t *match =
-            parent->fns->find_rsc(parent, id, NULL, pe_find_renamed | pe_find_current);
+        resource_t *match = parent->fns->find_rsc(parent, id, NULL,
+                                                  pe_find_renamed);
 
         if (match != NULL) {
             if(safe_str_neq(match->id, id)) {

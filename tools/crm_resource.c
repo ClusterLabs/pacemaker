@@ -880,8 +880,8 @@ main(int argc, char **argv)
     } else if (rsc_cmd == 0 && rsc_long_cmd && safe_str_eq(rsc_long_cmd, "restart")) {
         resource_t *rsc = NULL;
 
-        rsc = pe_find_resource_with_flags(data_set.resources, rsc_id, pe_find_renamed | pe_find_current | pe_find_anon);
-
+        rsc = pe_find_resource_with_flags(data_set.resources, rsc_id,
+                                          pe_find_renamed | pe_find_anon);
         rc = -EINVAL;
         if (rsc == NULL) {
             CMD_ERR("Resource '%s' not restarted: unknown", rsc_id);
@@ -902,7 +902,8 @@ main(int argc, char **argv)
 
     } else if (rsc_cmd == 'A' || rsc_cmd == 'a') {
         GListPtr lpc = NULL;
-        resource_t *rsc = pe_find_resource_with_flags(data_set.resources, rsc_id, pe_find_renamed | pe_find_current | pe_find_anon);
+        resource_t *rsc = pe_find_resource_with_flags(data_set.resources, rsc_id,
+                                                      pe_find_renamed | pe_find_anon);
         xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set.input);
 
         if (rsc == NULL) {
@@ -1004,7 +1005,8 @@ main(int argc, char **argv)
         rc = cli_resource_move(rsc_id, host_uname, cib_conn, &data_set);
 
     } else if (rsc_cmd == 'B' && host_uname) {
-        resource_t *rsc = pe_find_resource_with_flags(data_set.resources, rsc_id, pe_find_renamed | pe_find_current | pe_find_anon);
+        resource_t *rsc = pe_find_resource_with_flags(data_set.resources, rsc_id,
+                                                      pe_find_renamed | pe_find_anon);
         node_t *dest = pe_find_node(data_set.nodes, host_uname);
 
         rc = -ENXIO;
@@ -1019,7 +1021,8 @@ main(int argc, char **argv)
         rc = cli_resource_ban(rsc_id, dest->details->uname, NULL, cib_conn);
 
     } else if (rsc_cmd == 'B' || rsc_cmd == 'M') {
-        resource_t *rsc = pe_find_resource_with_flags(data_set.resources, rsc_id, pe_find_renamed | pe_find_current | pe_find_anon);
+        resource_t *rsc = pe_find_resource_with_flags(data_set.resources, rsc_id,
+                                                      pe_find_renamed | pe_find_anon);
         rc = -EINVAL;
         if(rsc == NULL) {
             CMD_ERR("Resource '%s' not moved: unknown", rsc_id);
@@ -1124,8 +1127,8 @@ main(int argc, char **argv)
                 continue;
             }
 
-            rsc = pe_find_resource_with_flags(
-                data_set.resources, resource_name, pe_find_renamed | pe_find_current | pe_find_anon);
+            rsc = pe_find_resource_with_flags(data_set.resources, resource_name,
+                                              pe_find_renamed | pe_find_anon);
             if(rsc) {
                 crm_debug("Erasing %s failure for %s (%s detected) on %s",
                           task, rsc->id, resource_name, node);
@@ -1140,7 +1143,8 @@ main(int argc, char **argv)
         }
 
     } else if ((rsc_cmd == 'C') && (rsc_id)) {
-        resource_t *rsc = pe_find_resource_with_flags(data_set.resources, rsc_id, pe_find_renamed | pe_find_current | pe_find_anon);
+        resource_t *rsc = pe_find_resource_with_flags(data_set.resources, rsc_id,
+                                                      pe_find_renamed | pe_find_anon);
         if(do_force == FALSE) {
             rsc = uber_parent(rsc);
         }
