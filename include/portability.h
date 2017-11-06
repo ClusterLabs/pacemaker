@@ -265,6 +265,10 @@ typedef union
 #    define ENOSTR    199
 #  endif
 
+#  ifndef EKEYREJECTED
+#    define EKEYREJECTED 200
+#  endif
+
 /*
  * Some compilers (eg. Sun studio) do not define __FUNCTION__
  */
