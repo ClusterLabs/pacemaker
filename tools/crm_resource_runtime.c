@@ -1484,6 +1484,7 @@ cli_resource_execute(const char *rsc_id, const char *rsc_action, GHashTable *ove
 {
     int rc = pcmk_ok;
     svc_action_t *op = NULL;
+    const char *rid = NULL;
     const char *rtype = NULL;
     const char *rprov = NULL;
     const char *rclass = NULL;
@@ -1551,12 +1552,14 @@ cli_resource_execute(const char *rsc_id, const char *rsc_action, GHashTable *ove
     /* add crm_feature_set env needed by some resource agents */
     g_hash_table_insert(params, strdup(XML_ATTR_CRM_VERSION), strdup(CRM_FEATURE_SET));
 
-    op = resources_action_create(rsc->id, rclass, rprov, rtype, action, 0,
+    rid = pe_rsc_is_anon_clone(rsc->parent) ? rsc_id : rsc->id;
+
+    op = resources_action_create(rid, rclass, rprov, rtype, action, 0,
                                  timeout_ms, params, 0);
     if (op == NULL) {
         /* Re-run with stderr enabled so we can display a sane error message */
         crm_enable_stderr(TRUE);
-        op = resources_action_create(rsc->id, rclass, rprov, rtype, action, 0,
+        op = resources_action_create(rid, rclass, rprov, rtype, action, 0,
                                      timeout_ms, params, 0);
 
         /* We know op will be NULL, but this makes static analysis happy */
