@@ -1457,7 +1457,6 @@ cli_resource_execute(const char *rsc_id, const char *rsc_action, GHashTable *ove
     const char *rprov = NULL;
     const char *rclass = NULL;
     const char *action = NULL;
-    const char *value = NULL;
     GHashTable *params = NULL;
     resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
 
@@ -1521,8 +1520,7 @@ cli_resource_execute(const char *rsc_id, const char *rsc_action, GHashTable *ove
     /* add crm_feature_set env needed by some resource agents */
     g_hash_table_insert(params, strdup(XML_ATTR_CRM_VERSION), strdup(CRM_FEATURE_SET));
 
-    value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_UNIQUE);
-    rid = crm_is_true(value) ? rsc->id : rsc_id;
+    rid = pe_rsc_is_anon_clone(rsc->parent) ? rsc_id : rsc->id;
 
     op = resources_action_create(rid, rclass, rprov, rtype, action, 0,
                                  timeout_ms, params, 0);
