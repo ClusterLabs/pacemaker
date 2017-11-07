@@ -2218,7 +2218,7 @@ get_resource_display_options(void)
         print_opts |= pe_print_pending;
     }
     if (print_clone_detail) {
-        print_opts |= pe_print_clone_details;
+        print_opts |= pe_print_clone_details|pe_print_implicit;
     }
     if (!inactive_resources) {
         print_opts |= pe_print_clone_active;

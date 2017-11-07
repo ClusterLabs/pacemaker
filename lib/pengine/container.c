@@ -1335,7 +1335,7 @@ container_print(resource_t * rsc, const char *pre_text, long options, void *prin
             status_print("<li>");
         }
 
-        if(is_set(options, pe_print_clone_details)) {
+        if (is_set(options, pe_print_implicit)) {
             child_text = crm_strdup_printf("     %s", pre_text);
             if(g_list_length(container_data->tuples) > 1) {
                 status_print("  %sReplica[%d]\n", pre_text, tuple->offset);

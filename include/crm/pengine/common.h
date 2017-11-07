@@ -110,6 +110,7 @@ enum pe_print_options {
     pe_print_pending        = 0x1000,
     pe_print_clone_details  = 0x2000,
     pe_print_clone_active   = 0x4000, // Print clone instances only if active
+    pe_print_implicit       = 0x8000, // Print implicitly created resources
 };
 
 const char *task2text(enum action_tasks task);
