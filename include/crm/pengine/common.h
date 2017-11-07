@@ -88,32 +88,29 @@ enum rsc_role_e {
 
 #  define RSC_ROLE_MAX  RSC_ROLE_MASTER+1
 
-#  define	RSC_ROLE_UNKNOWN_S "Unknown"
-#  define	RSC_ROLE_STOPPED_S "Stopped"
-#  define	RSC_ROLE_STARTED_S "Started"
-#  define	RSC_ROLE_SLAVE_S   "Slave"
-#  define	RSC_ROLE_MASTER_S  "Master"
+#  define RSC_ROLE_UNKNOWN_S "Unknown"
+#  define RSC_ROLE_STOPPED_S "Stopped"
+#  define RSC_ROLE_STARTED_S "Started"
+#  define RSC_ROLE_SLAVE_S   "Slave"
+#  define RSC_ROLE_MASTER_S  "Master"
 
-/* *INDENT-OFF* */
 enum pe_print_options {
-
-	pe_print_log		= 0x0001,
-	pe_print_html		= 0x0002,
-	pe_print_ncurses	= 0x0004,
-	pe_print_printf		= 0x0008,
-	pe_print_dev		= 0x0010,
-	pe_print_details	= 0x0020,
-	pe_print_max_details	= 0x0040,
-	pe_print_rsconly	= 0x0080,
-	pe_print_ops		= 0x0100,
-	pe_print_suppres_nl	= 0x0200,
-	pe_print_xml		= 0x0400,
-	pe_print_brief		= 0x0800,
-	pe_print_pending	= 0x1000,
-        pe_print_clone_details  = 0x2000,
-    pe_print_clone_active   = 0x4000, /* print clone instances only if active */
+    pe_print_log            = 0x0001,
+    pe_print_html           = 0x0002,
+    pe_print_ncurses        = 0x0004,
+    pe_print_printf         = 0x0008,
+    pe_print_dev            = 0x0010,
+    pe_print_details        = 0x0020,
+    pe_print_max_details    = 0x0040,
+    pe_print_rsconly        = 0x0080,
+    pe_print_ops            = 0x0100,
+    pe_print_suppres_nl     = 0x0200,
+    pe_print_xml            = 0x0400,
+    pe_print_brief          = 0x0800,
+    pe_print_pending        = 0x1000,
+    pe_print_clone_details  = 0x2000,
+    pe_print_clone_active   = 0x4000, // Print clone instances only if active
 };
-/* *INDENT-ON* */
 
 const char *task2text(enum action_tasks task);
 enum action_tasks text2task(const char *task);
