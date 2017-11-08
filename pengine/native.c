@@ -2749,12 +2749,12 @@ increment_clone(char *last_rsc_id)
 }
 
 static node_t *
-probe_grouped_clone(resource_t * rsc, node_t * node, pe_working_set_t * data_set)
+probe_anon_group_member(resource_t *rsc, node_t *node,
+                        pe_working_set_t *data_set)
 {
-    node_t *running = NULL;
     resource_t *top = uber_parent(rsc);
 
-    if (running == NULL && is_set(top->flags, pe_rsc_unique) == FALSE) {
+    if (is_not_set(top->flags, pe_rsc_unique)) {
         /* Annoyingly we also need to check any other clone instances
          * Clumsy, but it will work.
          *
@@ -2775,8 +2775,9 @@ probe_grouped_clone(resource_t * rsc, node_t * node, pe_working_set_t * data_set
          */
         char *clone_id = clone_zero(rsc->id);
         resource_t *peer = pe_find_resource(top->children, clone_id);
+        node_t *running = NULL;
 
-        while (peer && running == NULL) {
+        while (peer) {
             running = pe_hash_table_lookup(peer->known_on, node->details->id);
             if (running != NULL) {
                 /* we already know the status of the resource on this node */
@@ -2790,7 +2791,7 @@ probe_grouped_clone(resource_t * rsc, node_t * node, pe_working_set_t * data_set
 
         free(clone_id);
     }
-    return running;
+    return NULL;
 }
 
 gboolean
@@ -2869,8 +2870,8 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
             running = g_hash_table_lookup(rsc->parent->known_on, node->details->id);
 
         } else {
-            /* Grouped anonymous clones need extra special handling */
-            running = probe_grouped_clone(rsc, node, data_set);
+            // Members of anonymous-cloned groups need special handling
+            running = probe_anon_group_member(rsc, node, data_set);
         }
     }
 
