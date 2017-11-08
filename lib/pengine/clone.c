@@ -153,8 +153,6 @@ gboolean
 clone_unpack(resource_t * rsc, pe_working_set_t * data_set)
 {
     int lpc = 0;
-    const char *type = NULL;
-    int num_xml_children = 0;
     xmlNode *a_child = NULL;
     xmlNode *xml_obj = rsc->xml;
     clone_variant_data_t *clone_data = NULL;
@@ -168,8 +166,6 @@ clone_unpack(resource_t * rsc, pe_working_set_t * data_set)
 
     clone_data = calloc(1, sizeof(clone_variant_data_t));
     rsc->variant_opaque = clone_data;
-    clone_data->interleave = FALSE;
-    clone_data->ordered = FALSE;
 
     clone_data->active_clones = 0;
     clone_data->xml_obj_child = NULL;
@@ -185,12 +181,9 @@ clone_unpack(resource_t * rsc, pe_working_set_t * data_set)
         clone_data->clone_max = 1;      /* Handy during crm_verify */
     }
 
-    if (crm_is_true(interleave)) {
-        clone_data->interleave = TRUE;
-    }
-    if (crm_is_true(ordered)) {
-        clone_data->ordered = TRUE;
-    }
+    clone_data->interleave = crm_is_true(interleave);
+    clone_data->ordered = crm_is_true(ordered);
+
     if ((rsc->flags & pe_rsc_unique) == 0 && clone_data->clone_node_max > 1) {
         crm_config_err("Anonymous clones (%s) may only support one copy per node", rsc->id);
         clone_data->clone_node_max = 1;
@@ -202,31 +195,20 @@ clone_unpack(resource_t * rsc, pe_working_set_t * data_set)
     pe_rsc_trace(rsc, "\tClone is unique: %s",
                  is_set(rsc->flags, pe_rsc_unique) ? "true" : "false");
 
-    clone_data->xml_obj_child = find_xml_node(xml_obj, XML_CIB_TAG_GROUP, FALSE);
+    // Clones may contain a single group or primitive
+    for (a_child = __xml_first_child(xml_obj); a_child != NULL;
+         a_child = __xml_next_element(a_child)) {
 
-    if (clone_data->xml_obj_child == NULL) {
-        clone_data->xml_obj_child = find_xml_node(xml_obj, XML_CIB_TAG_RESOURCE, TRUE);
-        for (a_child = __xml_first_child(xml_obj); a_child != NULL; a_child = __xml_next_element(a_child)) {
-            if (crm_str_eq((const char *)a_child->name, XML_CIB_TAG_RESOURCE, TRUE)) {
-                num_xml_children++;
-            }
+        if (crm_str_eq((const char *)a_child->name, XML_CIB_TAG_RESOURCE, TRUE)
+        || crm_str_eq((const char *)a_child->name, XML_CIB_TAG_GROUP, TRUE)) {
+            clone_data->xml_obj_child = a_child;
+            break;
         }
     }
 
     if (clone_data->xml_obj_child == NULL) {
         crm_config_err("%s has nothing to clone", rsc->id);
         return FALSE;
-    }
-
-    for (a_child = __xml_first_child(xml_obj); a_child != NULL; a_child = __xml_next_element(a_child)) {
-        if (crm_str_eq((const char *)a_child->name, type, TRUE)) {
-            num_xml_children++;
-        }
-    }
-
-    if (num_xml_children > 1) {
-        crm_config_err("%s has too many children.  Only the first (%s) will be cloned.",
-                       rsc->id, ID(clone_data->xml_obj_child));
     }
 
     /*
