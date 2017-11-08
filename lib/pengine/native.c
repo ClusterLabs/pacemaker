@@ -188,11 +188,7 @@ native_find_rsc(resource_t * rsc, const char *id, node_t * on_node, int flags)
         match = TRUE;
 
     } else if (is_set(flags, pe_find_anon) && is_not_set(rsc->flags, pe_rsc_unique)) {
-        char *tmp = clone_strip(rsc->id);
-        if(strcmp(tmp, id) == 0) {
-            match = TRUE;
-        }
-        free(tmp);
+        match = pe_base_name_eq(rsc, id);
     }
 
     if (match && on_node) {
