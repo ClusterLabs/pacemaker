@@ -294,83 +294,62 @@ cli_resource_print_colocation(resource_t * rsc, bool dependents, bool recursive,
 }
 
 int
-cli_resource_print(const char *rsc, pe_working_set_t * data_set, bool expanded)
+cli_resource_print(resource_t *rsc, pe_working_set_t *data_set, bool expanded)
 {
     char *rsc_xml = NULL;
-    resource_t *the_rsc = pe_find_resource_with_flags(data_set->resources, rsc,
-                                                      pe_find_renamed|pe_find_any);
     int opts = pe_print_printf;
-
-    if (the_rsc == NULL) {
-        return -ENXIO;
-    }
 
     if (print_pending) {
         opts |= pe_print_pending;
     }
-    the_rsc->fns->print(the_rsc, NULL, opts, stdout);
+    rsc->fns->print(rsc, NULL, opts, stdout);
 
-    if (expanded) {
-        rsc_xml = dump_xml_formatted(the_rsc->xml);
-    } else {
-        if (the_rsc->orig_xml) {
-            rsc_xml = dump_xml_formatted(the_rsc->orig_xml);
-        } else {
-            rsc_xml = dump_xml_formatted(the_rsc->xml);
-        }
-    }
-
+    rsc_xml = dump_xml_formatted((!expanded && rsc->orig_xml)?
+                                 rsc->orig_xml : rsc->xml);
     fprintf(stdout, "%sxml:\n%s\n", expanded ? "" : "raw ", rsc_xml);
-
     free(rsc_xml);
-
     return 0;
 }
 
 int
-cli_resource_print_attribute(const char *rsc, const char *attr, pe_working_set_t * data_set)
+cli_resource_print_attribute(resource_t *rsc, const char *attr, pe_working_set_t * data_set)
 {
     int rc = -ENXIO;
     node_t *current = NULL;
     GHashTable *params = NULL;
-    resource_t *the_rsc = pe_find_resource_with_flags(data_set->resources, rsc,
-                                                      pe_find_renamed|pe_find_any);
     const char *value = NULL;
 
-    if (the_rsc == NULL) {
-        return -ENXIO;
-    }
+    if (g_list_length(rsc->running_on) == 1) {
+        current = rsc->running_on->data;
 
-    if (g_list_length(the_rsc->running_on) == 1) {
-        current = the_rsc->running_on->data;
-
-    } else if (g_list_length(the_rsc->running_on) > 1) {
+    } else if (g_list_length(rsc->running_on) > 1) {
         CMD_ERR("%s is active on more than one node,"
-                " returning the default value for %s", the_rsc->id, crm_str(value));
+                " returning the default value for %s", rsc->id, crm_str(value));
     }
 
     params = crm_str_table_new();
 
     if (safe_str_eq(attr_set_type, XML_TAG_ATTR_SETS)) {
-        get_rsc_attributes(params, the_rsc, current, data_set);
+        get_rsc_attributes(params, rsc, current, data_set);
 
     } else if (safe_str_eq(attr_set_type, XML_TAG_META_SETS)) {
-        /* No need to redirect to the parent */ 
-        get_meta_attributes(params, the_rsc, current, data_set);
+        /* No need to redirect to the parent */
+        get_meta_attributes(params, rsc, current, data_set);
 
     } else {
-        unpack_instance_attributes(data_set->input, the_rsc->xml, XML_TAG_UTILIZATION, NULL,
+        unpack_instance_attributes(data_set->input, rsc->xml,
+                                   XML_TAG_UTILIZATION, NULL,
                                    params, NULL, FALSE, data_set->now);
     }
 
-    crm_debug("Looking up %s in %s", attr, the_rsc->id);
+    crm_debug("Looking up %s in %s", attr, rsc->id);
     value = g_hash_table_lookup(params, attr);
     if (value != NULL) {
         fprintf(stdout, "%s\n", value);
         rc = 0;
 
     } else {
-        CMD_ERR("Attribute '%s' not found for '%s'", attr, the_rsc->id);
+        CMD_ERR("Attribute '%s' not found for '%s'", attr, rsc->id);
     }
 
     g_hash_table_destroy(params);
@@ -379,16 +358,9 @@ cli_resource_print_attribute(const char *rsc, const char *attr, pe_working_set_t
 
 
 int
-cli_resource_print_property(const char *rsc, const char *attr, pe_working_set_t * data_set)
+cli_resource_print_property(resource_t *rsc, const char *attr, pe_working_set_t * data_set)
 {
-    const char *value = NULL;
-    resource_t *the_rsc = pe_find_resource(data_set->resources, rsc);
-
-    if (the_rsc == NULL) {
-        return -ENXIO;
-    }
-
-    value = crm_element_value(the_rsc->xml, attr);
+    const char *value = crm_element_value(rsc->xml, attr);
 
     if (value != NULL) {
         fprintf(stdout, "%s\n", value);

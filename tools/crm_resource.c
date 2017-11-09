@@ -433,6 +433,7 @@ main(int argc, char **argv)
     crm_ipc_t *crmd_channel = NULL;
     pe_working_set_t data_set = { 0, };
     cib_t *cib_conn = NULL;
+    resource_t *rsc = NULL;
     bool recursive = FALSE;
     char *our_pid = NULL;
 
@@ -447,6 +448,7 @@ main(int argc, char **argv)
     int timeout_ms = 0;
     int argerr = 0;
     int flag;
+    int find_flags = 0;           // Flags to use when searching for resource
 
     crm_log_cli_init("crm_resource");
     crm_set_options(NULL, "(query|command) [options]", long_options,
@@ -481,6 +483,7 @@ main(int argc, char **argv)
                     || safe_str_eq("force-check",   longname)) {
                     rsc_cmd = flag;
                     rsc_long_cmd = longname;
+                    find_flags = pe_find_renamed|pe_find_anon;
                     crm_log_args(argc, argv);
 
                 } else if (safe_str_eq("list-ocf-providers", longname)
@@ -631,6 +634,7 @@ main(int argc, char **argv)
                 }
                 just_errors = FALSE;
                 rsc_cmd = 'C';
+                find_flags = pe_find_renamed|pe_find_anon;
                 break;
 
             case 'C':
@@ -641,6 +645,7 @@ main(int argc, char **argv)
                 }
                 just_errors = FALSE; // disable until 2.0.0
                 rsc_cmd = 'C';
+                find_flags = pe_find_renamed|pe_find_anon;
                 break;
 
             case 'n':
@@ -655,6 +660,7 @@ main(int argc, char **argv)
                 require_dataset = FALSE;
                 crm_log_args(argc, argv);
                 rsc_cmd = flag;
+                find_flags = pe_find_renamed|pe_find_any;
                 break;
 
             case 'F':
@@ -668,6 +674,7 @@ main(int argc, char **argv)
             case 'M':
                 crm_log_args(argc, argv);
                 rsc_cmd = flag;
+                find_flags = pe_find_renamed|pe_find_anon;
                 break;
 
             case 'c':
@@ -675,17 +682,27 @@ main(int argc, char **argv)
             case 'l':
             case 'O':
             case 'o':
-            case 'Y':
                 require_resource = FALSE;
                 rsc_cmd = flag;
                 break;
 
+            case 'Y':
+                require_resource = FALSE;
+                rsc_cmd = flag;
+                find_flags = pe_find_renamed|pe_find_anon;
+                break;
+
             case 'q':
             case 'w':
+                rsc_cmd = flag;
+                find_flags = pe_find_renamed|pe_find_any;
+                break;
+
             case 'W':
             case 'A':
             case 'a':
                 rsc_cmd = flag;
+                find_flags = pe_find_renamed|pe_find_anon;
                 break;
 
             case 'j':
@@ -697,6 +714,7 @@ main(int argc, char **argv)
                 crm_log_args(argc, argv);
                 prop_name = optarg;
                 rsc_cmd = flag;
+                find_flags = pe_find_renamed|pe_find_any;
                 break;
 
             case 'p':
@@ -704,12 +722,14 @@ main(int argc, char **argv)
                 crm_log_args(argc, argv);
                 prop_name = optarg;
                 rsc_cmd = flag;
+                find_flags = pe_find_renamed|pe_find_any;
                 break;
 
             case 'G':
             case 'g':
                 prop_name = optarg;
                 rsc_cmd = flag;
+                find_flags = pe_find_renamed|pe_find_any;
                 break;
             case 'h':
             case 'H':
@@ -779,22 +799,15 @@ main(int argc, char **argv)
     }
 
     data_set.input = NULL; /* make clean-up easier */
- 
-    /* If user specified resource, look for it, even if it's optional for command */
-    if (rsc_id) {
-        require_resource = TRUE;
-    }
 
-    /* We need a dataset to find a resource, even if command doesn't need it */
-    if (require_resource) {
-        require_dataset = TRUE;
-    }
-    
-    if(require_resource && rsc_id == NULL)
-    {
+    if (require_resource && !rsc_id) {
         CMD_ERR("Must supply a resource id with -r");
         rc = -ENXIO;
         goto bail;
+    }
+
+    if (find_flags && rsc_id) {
+        require_dataset = TRUE;
     }
 
     /* Establish a connection to the CIB */
@@ -827,14 +840,16 @@ main(int argc, char **argv)
             goto bail;
         }
         cluster_status(&data_set);
+    }
 
-        /* Set rc to -ENXIO if no resource matching rsc_id is found.
-         * This does not bail, but is handled later for certain commands.
-         */
-        if (require_resource && rsc_id
-            && !pe_find_resource_with_flags(data_set.resources, rsc_id,
-                                            pe_find_renamed|pe_find_any)) {
+    // If command requires that resource exist if specified, find it
+    if (find_flags && rsc_id) {
+        rsc = pe_find_resource_with_flags(data_set.resources, rsc_id,
+                                          find_flags);
+        if (rsc == NULL) {
+            CMD_ERR("Resource '%s' not found", rsc_id);
             rc = -ENXIO;
+            goto bail;
         }
     }
 
@@ -867,7 +882,7 @@ main(int argc, char **argv)
 
         rc = pcmk_ok;
         for (lpc = data_set.resources; lpc != NULL; lpc = lpc->next) {
-            resource_t *rsc = (resource_t *) lpc->data;
+            rsc = (resource_t *) lpc->data;
 
             found++;
             cli_resource_print_raw(rsc);
@@ -879,23 +894,14 @@ main(int argc, char **argv)
         }
 
     } else if (rsc_cmd == 0 && rsc_long_cmd && safe_str_eq(rsc_long_cmd, "restart")) {
-        resource_t *rsc = NULL;
-
-        rsc = pe_find_resource_with_flags(data_set.resources, rsc_id,
-                                          pe_find_renamed | pe_find_anon);
-        rc = -EINVAL;
-        if (rsc == NULL) {
-            CMD_ERR("Resource '%s' not restarted: unknown", rsc_id);
-            goto bail;
-        }
-
         rc = cli_resource_restart(rsc, host_uname, timeout_ms, cib_conn);
 
     } else if (rsc_cmd == 0 && rsc_long_cmd && safe_str_eq(rsc_long_cmd, "wait")) {
         rc = wait_till_stable(timeout_ms, cib_conn);
 
-    } else if (rsc_cmd == 0 && rsc_long_cmd) { /* validate or force-(stop|start|check) */
-        rc = cli_resource_execute(rsc_id, rsc_long_cmd, override_params,
+    } else if (rsc_cmd == 0 && rsc_long_cmd) {
+        // validate, force-(stop|start|demote|promote|check)
+        rc = cli_resource_execute(rsc, rsc_id, rsc_long_cmd, override_params,
                                   timeout_ms, cib_conn, &data_set);
         if (rc >= 0) {
             is_ocf_rc = 1;
@@ -903,15 +909,7 @@ main(int argc, char **argv)
 
     } else if (rsc_cmd == 'A' || rsc_cmd == 'a') {
         GListPtr lpc = NULL;
-        resource_t *rsc = pe_find_resource_with_flags(data_set.resources, rsc_id,
-                                                      pe_find_renamed | pe_find_anon);
         xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set.input);
-
-        if (rsc == NULL) {
-            CMD_ERR("Must supply a resource id with -r");
-            rc = -ENXIO;
-            goto bail;
-        }
 
         unpack_constraints(cib_constraints, &data_set);
 
@@ -935,15 +933,12 @@ main(int argc, char **argv)
         cli_resource_print_colocation(rsc, FALSE, rsc_cmd == 'A', 1);
 
     } else if (rsc_cmd == 'c') {
-        int found = 0;
         GListPtr lpc = NULL;
 
         rc = pcmk_ok;
         for (lpc = data_set.resources; lpc != NULL; lpc = lpc->next) {
-            resource_t *rsc = (resource_t *) lpc->data;
-
+            rsc = (resource_t *) lpc->data;
             cli_resource_print_cts(rsc);
-            found++;
         }
         cli_resource_print_cts_constraints(&data_set);
 
@@ -959,24 +954,21 @@ main(int argc, char **argv)
     } else if (rsc_cmd == 'o') {
         rc = cli_resource_print_operations(rsc_id, host_uname, FALSE, &data_set);
 
-    /* All remaining commands require that resource exist */
-    } else if (rc == -ENXIO) {
-        CMD_ERR("Resource '%s' not found: %s", crm_str(rsc_id), pcmk_strerror(rc));
-
     } else if (rsc_cmd == 'W') {
-        rc = cli_resource_search(rsc_id, &data_set);
+        rc = cli_resource_search(rsc, rsc_id, &data_set);
         if (rc >= 0) {
             rc = pcmk_ok;
         }
 
     } else if (rsc_cmd == 'q') {
-        rc = cli_resource_print(rsc_id, &data_set, TRUE);
+        rc = cli_resource_print(rsc, &data_set, TRUE);
 
     } else if (rsc_cmd == 'w') {
-        rc = cli_resource_print(rsc_id, &data_set, FALSE);
+        rc = cli_resource_print(rsc, &data_set, FALSE);
 
-    } else if(rsc_cmd == 'Y') {
+    } else if (rsc_cmd == 'Y') {
         node_t *dest = NULL;
+
         if (host_uname) {
             dest = pe_find_node(data_set.nodes, host_uname);
             if (dest == NULL) {
@@ -985,7 +977,9 @@ main(int argc, char **argv)
                 goto bail;
             }
         }
-        cli_resource_why(cib_conn,data_set.resources,rsc_id,dest);
+        cli_resource_why(cib_conn, data_set.resources, rsc, dest);
+        rc = pcmk_ok;
+
     } else if (rsc_cmd == 'U') {
         node_t *dest = NULL;
 
@@ -1003,32 +997,21 @@ main(int argc, char **argv)
         }
 
     } else if (rsc_cmd == 'M' && host_uname) {
-        rc = cli_resource_move(rsc_id, host_uname, cib_conn, &data_set);
+        rc = cli_resource_move(rsc, rsc_id, host_uname, cib_conn, &data_set);
 
     } else if (rsc_cmd == 'B' && host_uname) {
-        resource_t *rsc = pe_find_resource_with_flags(data_set.resources, rsc_id,
-                                                      pe_find_renamed | pe_find_anon);
         node_t *dest = pe_find_node(data_set.nodes, host_uname);
 
-        rc = -ENXIO;
-        if(rsc == NULL) {
-            CMD_ERR("Resource '%s' not moved: unknown", rsc_id);
-            goto bail;
-
-        } else if (dest == NULL) {
+        if (dest == NULL) {
             CMD_ERR("Error performing operation: node '%s' is unknown", host_uname);
+            rc = -ENXIO;
             goto bail;
         }
         rc = cli_resource_ban(rsc_id, dest->details->uname, NULL, cib_conn);
 
     } else if (rsc_cmd == 'B' || rsc_cmd == 'M') {
-        resource_t *rsc = pe_find_resource_with_flags(data_set.resources, rsc_id,
-                                                      pe_find_renamed | pe_find_anon);
         rc = -EINVAL;
-        if(rsc == NULL) {
-            CMD_ERR("Resource '%s' not moved: unknown", rsc_id);
-
-        } else if(g_list_length(rsc->running_on) == 1) {
+        if (g_list_length(rsc->running_on) == 1) {
             node_t *current = rsc->running_on->data;
             rc = cli_resource_ban(rsc_id, current->details->uname, NULL, cib_conn);
 
@@ -1063,7 +1046,7 @@ main(int argc, char **argv)
         }
 
     } else if (rsc_cmd == 'G') {
-        rc = cli_resource_print_property(rsc_id, prop_name, &data_set);
+        rc = cli_resource_print_property(rsc, prop_name, &data_set);
 
     } else if (rsc_cmd == 'S') {
         xmlNode *msg_data = NULL;
@@ -1089,7 +1072,7 @@ main(int argc, char **argv)
         free_xml(msg_data);
 
     } else if (rsc_cmd == 'g') {
-        rc = cli_resource_print_attribute(rsc_id, prop_name, &data_set);
+        rc = cli_resource_print_attribute(rsc, prop_name, &data_set);
 
     } else if (rsc_cmd == 'p') {
         if (prop_value == NULL || strlen(prop_value) == 0) {
@@ -1099,12 +1082,15 @@ main(int argc, char **argv)
         }
 
         /* coverity[var_deref_model] False positive */
-        rc = cli_resource_update_attribute(rsc_id, prop_set, prop_id, prop_name,
-                               prop_value, recursive, cib_conn, &data_set);
+        rc = cli_resource_update_attribute(rsc, rsc_id, prop_set, prop_id,
+                                           prop_name, prop_value, recursive,
+                                           cib_conn, &data_set);
 
     } else if (rsc_cmd == 'd') {
         /* coverity[var_deref_model] False positive */
-        rc = cli_resource_delete_attribute(rsc_id, prop_set, prop_id, prop_name, cib_conn, &data_set);
+        rc = cli_resource_delete_attribute(rsc, rsc_id, prop_set, prop_id,
+                                           prop_name, cib_conn, &data_set);
+
     } else if (rsc_cmd == 'C' && just_errors) {
         crmd_replies_needed = 0;
         for (xmlNode *xml_op = __xml_first_child(data_set.failed); xml_op != NULL;
@@ -1114,7 +1100,6 @@ main(int argc, char **argv)
             const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
             const char *task_interval = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
             const char *resource_name = crm_element_value(xml_op, XML_LRM_ATTR_RSCID);
-            resource_t *rsc = NULL;
 
             if(resource_name == NULL) {
                 continue;
@@ -1128,37 +1113,31 @@ main(int argc, char **argv)
                 continue;
             }
 
-            rsc = pe_find_resource_with_flags(data_set.resources, resource_name,
-                                              pe_find_renamed | pe_find_anon);
-            if(rsc) {
-                crm_debug("Erasing %s failure for %s (%s detected) on %s",
-                          task, rsc->id, resource_name, node);
-                rc = cli_resource_delete(crmd_channel, node, rsc, task, task_interval, &data_set);
-
-            } else {
-                rc = -ENODEV;
-            }
+            crm_debug("Erasing %s failure for %s (%s detected) on %s",
+                      task, rsc->id, resource_name, node);
+            rc = cli_resource_delete(crmd_channel, node, rsc, task,
+                                     task_interval, &data_set);
         }
+
+        if(rsc && (rc == pcmk_ok) && (BE_QUIET == FALSE)) {
+            /* Now check XML_RSC_ATTR_TARGET_ROLE and XML_RSC_ATTR_MANAGED */
+            cli_resource_check(cib_conn, rsc);
+        }
+
         if (rc == pcmk_ok) {
             start_mainloop();
         }
 
-    } else if ((rsc_cmd == 'C') && (rsc_id)) {
-        resource_t *rsc = pe_find_resource_with_flags(data_set.resources, rsc_id,
-                                                      pe_find_renamed | pe_find_anon);
+    } else if ((rsc_cmd == 'C') && rsc) {
         if(do_force == FALSE) {
             rsc = uber_parent(rsc);
         }
 
-        if(rsc) {
-            crm_debug("Re-checking the state of %s (%s requested) on %s",
-                      rsc->id, rsc_id, host_uname);
-            crmd_replies_needed = 0;
-            rc = cli_resource_delete(crmd_channel, host_uname, rsc, operation,
-                                     interval, &data_set);
-        } else {
-            rc = -ENODEV;
-        }
+        crm_debug("Re-checking the state of %s (%s requested) on %s",
+                  rsc->id, rsc_id, host_uname);
+        crmd_replies_needed = 0;
+        rc = cli_resource_delete(crmd_channel, host_uname, rsc, operation,
+                                 interval, &data_set);
 
         if(rc == pcmk_ok && BE_QUIET == FALSE) {
             /* Now check XML_RSC_ATTR_TARGET_ROLE and XML_RSC_ATTR_MANAGED */
@@ -1223,7 +1202,7 @@ main(int argc, char **argv)
 
         crmd_replies_needed = 0;
         for (rIter = data_set.resources; rIter; rIter = rIter->next) {
-            resource_t *rsc = rIter->data;
+            rsc = rIter->data;
             cli_resource_delete(crmd_channel, host_uname, rsc, NULL, NULL,
                                 &data_set);
         }
