@@ -54,6 +54,7 @@ enum pe_find {
     pe_find_clone    = 0x004, // match only clone instances
     pe_find_current  = 0x008, // match resource active on specified node
     pe_find_inactive = 0x010, // match resource not running anywhere
+    pe_find_any      = 0x020, // match base name of any clone instance
 };
 
 #  define pe_flag_have_quorum           0x00000001ULL
