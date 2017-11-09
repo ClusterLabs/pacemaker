@@ -97,20 +97,6 @@ cli_resource_search(const char *rsc, pe_working_set_t * data_set)
     return found;
 }
 
-resource_t *
-find_rsc_or_clone(const char *rsc, pe_working_set_t * data_set)
-{
-    resource_t *the_rsc = pe_find_resource(data_set->resources, rsc);
-
-    if (the_rsc == NULL) {
-        char *as_clone = crm_concat(rsc, "0", ':');
-
-        the_rsc = pe_find_resource(data_set->resources, as_clone);
-        free(as_clone);
-    }
-    return the_rsc;
-}
-
 #define XPATH_MAX 1024
 
 static int
@@ -266,7 +252,8 @@ cli_resource_update_attribute(const char *rsc_id, const char *attr_set, const ch
     xmlNode *xml_obj = NULL;
 
     bool use_attributes_tag = FALSE;
-    resource_t *rsc = find_rsc_or_clone(rsc_id, data_set);
+    resource_t *rsc = pe_find_resource_with_flags(data_set->resources, rsc_id,
+                                                  pe_find_renamed|pe_find_any);
 
     if (rsc == NULL) {
         return -ENXIO;
@@ -418,7 +405,8 @@ cli_resource_delete_attribute(const char *rsc_id, const char *attr_set, const ch
     int rc = pcmk_ok;
     char *lookup_id = NULL;
     char *local_attr_id = NULL;
-    resource_t *rsc = find_rsc_or_clone(rsc_id, data_set);
+    resource_t *rsc = pe_find_resource_with_flags(data_set->resources, rsc_id,
+                                                  pe_find_renamed|pe_find_any);
 
     if (rsc == NULL) {
         return -ENXIO;

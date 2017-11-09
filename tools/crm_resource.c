@@ -830,9 +830,10 @@ main(int argc, char **argv)
 
         /* Set rc to -ENXIO if no resource matching rsc_id is found.
          * This does not bail, but is handled later for certain commands.
-         * That handling could be done here instead if all flags above set
-         * require_resource appropriately. */
-        if (require_resource && rsc_id && (find_rsc_or_clone(rsc_id, &data_set) == NULL)) {
+         */
+        if (require_resource && rsc_id
+            && !pe_find_resource_with_flags(data_set.resources, rsc_id,
+                                            pe_find_renamed|pe_find_any)) {
             rc = -ENXIO;
         }
     }

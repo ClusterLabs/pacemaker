@@ -47,8 +47,6 @@ extern char *move_lifetime;
 
 extern const char *attr_set_type;
 
-resource_t *find_rsc_or_clone(const char *rsc, pe_working_set_t * data_set);
-
 /* ban */
 int cli_resource_prefer(const char *rsc_id, const char *host, cib_t * cib_conn);
 int cli_resource_ban(const char *rsc_id, const char *host, GListPtr allnodes, cib_t * cib_conn);

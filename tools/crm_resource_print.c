@@ -297,7 +297,8 @@ int
 cli_resource_print(const char *rsc, pe_working_set_t * data_set, bool expanded)
 {
     char *rsc_xml = NULL;
-    resource_t *the_rsc = find_rsc_or_clone(rsc, data_set);
+    resource_t *the_rsc = pe_find_resource_with_flags(data_set->resources, rsc,
+                                                      pe_find_renamed|pe_find_any);
     int opts = pe_print_printf;
 
     if (the_rsc == NULL) {
@@ -332,7 +333,8 @@ cli_resource_print_attribute(const char *rsc, const char *attr, pe_working_set_t
     int rc = -ENXIO;
     node_t *current = NULL;
     GHashTable *params = NULL;
-    resource_t *the_rsc = find_rsc_or_clone(rsc, data_set);
+    resource_t *the_rsc = pe_find_resource_with_flags(data_set->resources, rsc,
+                                                      pe_find_renamed|pe_find_any);
     const char *value = NULL;
 
     if (the_rsc == NULL) {
