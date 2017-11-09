@@ -158,29 +158,51 @@ native_unpack(resource_t * rsc, pe_working_set_t * data_set)
     return TRUE;
 }
 
+static bool
+rsc_is_on_node(resource_t *rsc, node_t *node, int flags)
+{
+    pe_rsc_trace(rsc, "Checking whether %s is on %s",
+                 rsc->id, node->details->uname);
+
+    if (is_set(flags, pe_find_current) && rsc->running_on) {
+
+        for (GListPtr iter = rsc->running_on; iter; iter = iter->next) {
+            node_t *loc = (node_t *) iter->data;
+
+            if (loc->details == node->details) {
+                return TRUE;
+            }
+        }
+
+    } else if (is_set(flags, pe_find_inactive) && (rsc->running_on == NULL)) {
+        return TRUE;
+
+    } else if (is_not_set(flags, pe_find_current) && rsc->allocated_to
+               && (rsc->allocated_to->details == node->details)) {
+        return TRUE;
+    }
+    return FALSE;
+}
+
 resource_t *
 native_find_rsc(resource_t * rsc, const char *id, node_t * on_node, int flags)
 {
-    gboolean match = FALSE;
+    bool match = FALSE;
     resource_t *result = NULL;
-    GListPtr gIter = rsc->children;
 
-    CRM_ASSERT(id != NULL);
+    CRM_CHECK(id && rsc && rsc->id, return NULL);
 
     if (flags & pe_find_clone) {
         const char *rid = ID(rsc->xml);
 
-        if (rsc->parent == NULL) {
+        if (!pe_rsc_is_clone(uber_parent(rsc))) {
             match = FALSE;
 
-        } else if (safe_str_eq(rsc->id, id)) {
-            match = TRUE;
-
-        } else if (safe_str_eq(rid, id)) {
+        } else if (!strcmp(id, rsc->id) || safe_str_eq(id, rid)) {
             match = TRUE;
         }
 
-    } else if (strcmp(rsc->id, id) == 0) {
+    } else if (!strcmp(id, rsc->id)) {
         match = TRUE;
 
     } else if (is_set(flags, pe_find_renamed)
@@ -192,32 +214,18 @@ native_find_rsc(resource_t * rsc, const char *id, node_t * on_node, int flags)
     }
 
     if (match && on_node) {
-        pe_rsc_trace(rsc, "Now checking %s is on %s", rsc->id, on_node->details->uname);
-        if (is_set(flags, pe_find_current) && rsc->running_on) {
+        bool match_node = rsc_is_on_node(rsc, on_node, flags);
 
-            GListPtr gIter = rsc->running_on;
-
-            for (; gIter != NULL; gIter = gIter->next) {
-                node_t *loc = (node_t *) gIter->data;
-
-                if (loc->details == on_node->details) {
-                    return rsc;
-                }
-            }
-
-        } else if (is_set(flags, pe_find_inactive) && rsc->running_on == NULL) {
-            return rsc;
-
-        } else if (is_not_set(flags, pe_find_current) && rsc->allocated_to
-                   && rsc->allocated_to->details == on_node->details) {
-            return rsc;
+        if (match_node == FALSE) {
+            match = FALSE;
         }
+    }
 
-    } else if (match) {
+    if (match) {
         return rsc;
     }
 
-    for (; gIter != NULL; gIter = gIter->next) {
+    for (GListPtr gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         resource_t *child = (resource_t *) gIter->data;
 
         result = rsc->fns->find_rsc(child, id, on_node, flags);
