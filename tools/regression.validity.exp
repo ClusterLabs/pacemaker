@@ -416,7 +416,7 @@ bad-1.2.xml:10: element rsc_order: Relax-NG validity error : Element constraints
 error: unpack_resources:	Resource start-up disabled since no STONITH resources have been defined
 error: unpack_resources:	Either configure some or disable STONITH with the stonith-enabled option
 error: unpack_resources:	NOTE: Clusters with shared data need STONITH to ensure data integrity
-(constraints.:430   )   error: unpack_simple_rsc_order:	Cannot invert rsc_order constraint ord_1-2. Please specify the inverse manually.
+(constraints.:NNN   )   error: unpack_simple_rsc_order:	Cannot invert rsc_order constraint ord_1-2. Please specify the inverse manually.
 
 Current cluster status:
 
