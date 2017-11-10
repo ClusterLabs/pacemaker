@@ -141,7 +141,7 @@ ra_version_from_xml(xmlNode *metadata_xml, const lrmd_rsc_info_t *rsc)
 #endif
 
 static struct ra_param_s *
-ra_param_from_xml(xmlNode *param_xml, struct ra_metadata_s *md)
+ra_param_from_xml(xmlNode *param_xml)
 {
     const char *param_name = crm_element_value(param_xml, "name");
     const char *value;
@@ -160,19 +160,14 @@ ra_param_from_xml(xmlNode *param_xml, struct ra_metadata_s *md)
         return NULL;
     }
 
-    /* Currently, we abuse "unique" to indicate reloadability (as the
-     * inverse of unique). This is nonstandard and should eventually be
-     * replaced once the OCF standard is updated with something better.
-     */
     value = crm_element_value(param_xml, "unique");
-    if (!crm_is_true(value)) {
-        set_bit(p->rap_flags, ra_param_reloadable);
+    if (crm_is_true(value)) {
+        set_bit(p->rap_flags, ra_param_unique);
     }
 
     value = crm_element_value(param_xml, "private");
     if (crm_is_true(value)) {
         set_bit(p->rap_flags, ra_param_private);
-        set_bit(md->ra_flags, ra_uses_private);
     }
     return p;
 }
@@ -235,10 +230,13 @@ metadata_cache_update(GHashTable *mdc, lrmd_rsc_info_t *rsc,
             crm_warn("Metadata for %s:%s:%s has parameter without a name",
                      rsc->class, rsc->provider, rsc->type);
         } else {
-            struct ra_param_s *p = ra_param_from_xml(match, md);
+            struct ra_param_s *p = ra_param_from_xml(match);
 
             if (p == NULL) {
                 goto err;
+            }
+            if (is_set(p->rap_flags, ra_param_private)) {
+                set_bit(md->ra_flags, ra_uses_private);
             }
             md->ra_params = g_list_prepend(md->ra_params, p);
         }
