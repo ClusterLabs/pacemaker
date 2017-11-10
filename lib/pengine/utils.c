@@ -2015,9 +2015,10 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
         data->rc = RSC_DIGEST_UNKNOWN;
 
     } else if (strcmp(digest_all, data->digest_all_calc) != 0) {
-        pe_rsc_info(rsc, "Parameters to %s on %s changed: was %s vs. now %s (reload:%s) %s",
+        pe_rsc_info(rsc, "Parameters to %s on %s changed: was %s vs. now %s (%s:%s) %s",
                  key, node->details->uname,
                  crm_str(digest_all), data->digest_all_calc,
+                 (interval > 0)? "reschedule" : "reload",
                  op_version, crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
         data->rc = RSC_DIGEST_ALL;
     }
