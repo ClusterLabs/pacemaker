@@ -508,7 +508,8 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
 static char *
 build_parameter_list(const lrmd_event_data_t *op,
                      const struct ra_metadata_s *metadata,
-                     xmlNode *result, enum ra_param_flags_e param_type)
+                     xmlNode *result, enum ra_param_flags_e param_type,
+                     bool invert_for_xml)
 {
     int len = 0;
     int max = 0;
@@ -562,7 +563,7 @@ build_parameter_list(const lrmd_event_data_t *op,
             crm_trace("Rejecting %s for %s", param->rap_name, ra_param_flag2text(param_type));
         }
 
-        if (result && accept) {
+        if (result && (invert_for_xml? !accept : accept)) {
             const char *v = g_hash_table_lookup(op->params, param->rap_name);
 
             if (v != NULL) {
@@ -592,8 +593,14 @@ append_restart_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
 
     if (is_set(metadata->ra_flags, ra_supports_reload)) {
         restart = create_xml_node(NULL, XML_TAG_PARAMS);
-        /* Any parameters with unique="1" should be added into the "op-force-restart" list. */
-        list = build_parameter_list(op, metadata, restart, ra_param_reloadable);
+        /* Add any parameters with unique="1" to the "op-force-restart" list.
+         *
+         * (Currently, we abuse "unique=0" to indicate reloadability. This is
+         * nonstandard and should eventually be replaced once the OCF standard
+         * is updated with something better.)
+         */
+        list = build_parameter_list(op, metadata, restart, ra_param_unique,
+                                    FALSE);
 
     } else {
         /* Resource does not support reloads */
@@ -630,7 +637,7 @@ append_secure_list(lrmd_event_data_t *op, struct ra_metadata_s *metadata,
      * the insecure ones
      */
     secure = create_xml_node(NULL, XML_TAG_PARAMS);
-    list = build_parameter_list(op, metadata, secure, ra_param_private);
+    list = build_parameter_list(op, metadata, secure, ra_param_private, TRUE);
 
     if (list != NULL) {
         digest = calculate_operation_digest(secure, version);
