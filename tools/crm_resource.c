@@ -81,7 +81,9 @@ resource_ipc_callback(const char *buffer, ssize_t length, gpointer userdata)
     crm_log_xml_trace(msg, "[inbound]");
 
     crmd_replies_needed--;
-    if (crmd_replies_needed == 0 && g_main_loop_is_running(mainloop)) {
+    if ((crmd_replies_needed == 0) && mainloop
+        && g_main_loop_is_running(mainloop)) {
+
         fprintf(stderr, " OK\n");
         crm_debug("Got all the replies we expected");
         return crm_exit(pcmk_ok);
