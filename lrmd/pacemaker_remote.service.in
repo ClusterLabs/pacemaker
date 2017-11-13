@@ -23,7 +23,7 @@ ExecStart=@sbindir@/pacemaker_remoted
 
 # Uncomment TasksMax if your systemd version supports it.
 # Only systemd v227 and above support this option.
-#TasksMax=infinity
+@SYSTEMD_TASKSMAX_IGNORED@TasksMax=infinity
 
 # Pacemaker Remote can exit only after all managed services have shut down;
 # an HA database could conceivably take even longer than this 

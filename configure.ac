@@ -1231,6 +1231,7 @@ fi
 
 AC_MSG_CHECKING([whether to enable support for managing resources via systemd])
 AC_MSG_RESULT([${enable_systemd}])
+SYSTEMD_TASKSMAX_IGNORED=""
 if test "x${enable_systemd}" = xyes; then
 	HAVE_systemd=1
 	PCMK_FEATURES="$PCMK_FEATURES systemd"
@@ -1245,11 +1246,17 @@ if test "x${enable_systemd}" = xyes; then
 	if test "x${systemdunitdir}" = xno; then
 		AC_MSG_FAILURE([cannot enable systemd when systemdunitdir unresolved])
 	fi
+
+	systemd_version=`$PKG_CONFIG --modversion systemd`
+	if test $systemd_version -lt 227; then
+		SYSTEMD_TASKSMAX_IGNORED="#"
+	fi
 fi
 
 AC_DEFINE_UNQUOTED(SUPPORT_SYSTEMD, $HAVE_systemd, Support systemd based system services)
 AM_CONDITIONAL(BUILD_SYSTEMD, test $HAVE_systemd = 1)
 AC_SUBST(SUPPORT_SYSTEMD)
+AC_SUBST(SYSTEMD_TASKSMAX_IGNORED)
 
 if test "x${enable_upstart}" != xno; then
 	if test $HAVE_dbus = 0; then
