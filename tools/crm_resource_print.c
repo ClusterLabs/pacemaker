@@ -324,7 +324,7 @@ cli_resource_print_attribute(resource_t *rsc, const char *attr, pe_working_set_t
 
     } else if (g_list_length(rsc->running_on) > 1) {
         CMD_ERR("%s is active on more than one node,"
-                " returning the default value for %s", rsc->id, crm_str(value));
+                " returning the default value for %s", rsc->id, crm_str(attr));
     }
 
     params = crm_str_table_new();
