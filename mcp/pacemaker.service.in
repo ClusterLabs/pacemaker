@@ -43,7 +43,7 @@ ExecStart=@sbindir@/pacemakerd -f
 
 # Uncomment TasksMax if your systemd version supports it.
 # Only systemd v227 and above support this option.
-#TasksMax=infinity
+@SYSTEMD_TASKSMAX_IGNORED@TasksMax=infinity
 
 # If pacemakerd doesn't stop, it's probably waiting on a cluster
 # resource.  Sending -KILL will just get the node fenced
