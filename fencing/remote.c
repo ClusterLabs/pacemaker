@@ -722,7 +722,7 @@ topology_matches(const stonith_topology_t *tp, const char *node)
              * matching names of nodes to be targeted.
              */
 
-            if (regcomp(&r_patt, tp->target_pattern, REG_EXTENDED)) {
+            if (regcomp(&r_patt, tp->target_pattern, REG_EXTENDED|REG_NOSUB)) {
                 crm_info("Bad regex '%s' for fencing level", tp->target);
             } else {
                 int status = regexec(&r_patt, node, 0, NULL, 0);

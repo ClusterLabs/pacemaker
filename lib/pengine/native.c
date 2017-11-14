@@ -649,22 +649,22 @@ common_print(resource_t * rsc, const char *pre_text, const char *name, node_t *n
         }
 
         for (; gIter != NULL; gIter = gIter->next) {
-            node_t *node = (node_t *) gIter->data;
+            node_t *n = (node_t *) gIter->data;
 
             counter++;
 
             if (options & pe_print_html) {
-                status_print("<li>\n%s", node->details->uname);
+                status_print("<li>\n%s", n->details->uname);
 
             } else if ((options & pe_print_printf)
                        || (options & pe_print_ncurses)) {
-                status_print(" %s", node->details->uname);
+                status_print(" %s", n->details->uname);
 
             } else if ((options & pe_print_log)) {
-                status_print("\t%d : %s", counter, node->details->uname);
+                status_print("\t%d : %s", counter, n->details->uname);
 
             } else {
-                status_print("%s", node->details->uname);
+                status_print("%s", n->details->uname);
             }
             if (options & pe_print_html) {
                 status_print("</li>\n");
@@ -698,7 +698,7 @@ common_print(resource_t * rsc, const char *pre_text, const char *name, node_t *n
 
     if (options & pe_print_dev) {
         GHashTableIter iter;
-        node_t *node = NULL;
+        node_t *n = NULL;
 
         status_print("%s\t(%s%svariant=%s, priority=%f)", pre_text,
                      is_set(rsc->flags, pe_rsc_provisional) ? "provisional, " : "",
@@ -706,19 +706,19 @@ common_print(resource_t * rsc, const char *pre_text, const char *name, node_t *n
                      crm_element_name(rsc->xml), (double)rsc->priority);
         status_print("%s\tAllowed Nodes", pre_text);
         g_hash_table_iter_init(&iter, rsc->allowed_nodes);
-        while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-            status_print("%s\t * %s %d", pre_text, node->details->uname, node->weight);
+        while (g_hash_table_iter_next(&iter, NULL, (void **)&n)) {
+            status_print("%s\t * %s %d", pre_text, n->details->uname, n->weight);
         }
     }
 
     if (options & pe_print_max_details) {
         GHashTableIter iter;
-        node_t *node = NULL;
+        node_t *n = NULL;
 
         status_print("%s\t=== Allowed Nodes\n", pre_text);
         g_hash_table_iter_init(&iter, rsc->allowed_nodes);
-        while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
-            print_node("\t", node, FALSE);
+        while (g_hash_table_iter_next(&iter, NULL, (void **)&n)) {
+            print_node("\t", n, FALSE);
         }
     }
 }

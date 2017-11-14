@@ -915,6 +915,9 @@ main(int argc, char **argv)
 
         unpack_constraints(cib_constraints, &data_set);
 
+        // Constraints apply to group/clone, not member/instance
+        rsc = uber_parent(rsc);
+
         for (lpc = data_set.resources; lpc != NULL; lpc = lpc->next) {
             resource_t *r = (resource_t *) lpc->data;
 
