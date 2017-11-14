@@ -1001,7 +1001,6 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         GListPtr childIter = NULL;
         resource_t *new_rsc = NULL;
         container_port_t *port = NULL;
-        const char *key_loc = NULL;
 
         int offset = 0, max = 1024;
         char *buffer = NULL;
@@ -1016,32 +1015,29 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
 
         container_data->child = new_rsc;
 
-        /* We map the remote authentication key (likely) used on the DC to the
-         * default key location inside the container. This is only the likely
-         * location because an actual connection will do some validity checking
-         * on the file before using it.
+        /* Currently, we always map the default authentication key location
+         * into the same location inside the container.
          *
-         * Mapping to the default location inside the container avoids having to
-         * pass another environment variable to the container.
+         * Ideally, we would respect the host's PCMK_authkey_location, but:
+         * - it may be different on different nodes;
+         * - the actual connection will do extra checking to make sure the key
+         *   file exists and is readable, that we can't do here on the DC
+         * - tools such as crm_resource and crm_simulate may not have the same
+         *   environment variables as the cluster, causing operation digests to
+         *   differ
          *
-         * This makes several assumptions:
-         * - if PCMK_authkey_location is set, it has the same value on all nodes
-         * - the container technology does not propagate host environment
-         *   variables to the container
-         * - the user does not set this environment variable via their container
-         *   image
+         * Always using the default location inside the container is fine,
+         * because we control the pacemaker_remote environment, and it avoids
+         * having to pass another environment variable to the container.
          *
-         * @TODO A convoluted but possible way around the first limitation would
-         *       be to allow a resource parameter to include environment
-         *       variable references in its value, and resolve them on the
-         *       executing node's crmd before sending the command to the lrmd.
+         * @TODO A better solution may be to have only pacemaker_remote use the
+         * environment variable, and have the cluster nodes use a new
+         * cluster option for key location. This would introduce the limitation
+         * of the location being the same on all cluster nodes, but that's
+         * reasonable.
          */
-        key_loc = getenv("PCMK_authkey_location");
-        if (key_loc == NULL) {
-            key_loc = DEFAULT_REMOTE_KEY_LOCATION;
-        }
-        mount_add(container_data, key_loc, DEFAULT_REMOTE_KEY_LOCATION, NULL,
-                  0);
+        mount_add(container_data, DEFAULT_REMOTE_KEY_LOCATION,
+                  DEFAULT_REMOTE_KEY_LOCATION, NULL, 0);
 
         mount_add(container_data, CRM_LOG_DIR "/bundles", "/var/log", NULL, 1);
 
