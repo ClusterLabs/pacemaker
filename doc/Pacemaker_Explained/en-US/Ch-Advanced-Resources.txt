@@ -1423,10 +1423,13 @@ Pacemaker will automatically map the equivalent of
 +source-dir=/etc/pacemaker/authkey target-dir=/etc/pacemaker/authkey+
 and +source-dir-root=/var/log/pacemaker/bundles target-dir=/var/log+ into the
 container, so it is not necessary to specify those paths in a
-+storage-mapping+. (If the DC node has the PCMK_authkey_location variable set,
-that will be used as the source instead of `/etc/pacemaker/authkey`; the value
-should be identical on all nodes, if used. The user should not set the
-PCMK_authkey_location environment variable inside the container.)
++storage-mapping+.
+====
+
+[IMPORTANT]
+====
+The +PCMK_authkey_location+ environment variable must not be set to anything
+other than the default of `/etc/pacemaker/authkey` on any node in the cluster.
 ====
 
 === Bundle Primitive ===
