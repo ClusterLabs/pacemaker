@@ -17,6 +17,7 @@
  */
 #ifndef PE_INTERNAL__H
 #  define PE_INTERNAL__H
+#  include <string.h>
 #  include <crm/pengine/status.h>
 #  include <crm/pengine/remote.h>
 
@@ -248,8 +249,22 @@ extern resource_t *find_clone_instance(resource_t * rsc, const char *sub_id,
 extern void destroy_ticket(gpointer data);
 extern ticket_t *ticket_new(const char *ticket_id, pe_working_set_t * data_set);
 
+// Resources for manipulating resource names
+const char *pe_base_name_end(const char *id);
 char *clone_strip(const char *last_rsc_id);
 char *clone_zero(const char *last_rsc_id);
+
+static inline bool
+pe_base_name_eq(resource_t *rsc, const char *id)
+{
+    if (id && rsc && rsc->id) {
+        // Number of characters in rsc->id before any clone suffix
+        size_t base_len = pe_base_name_end(rsc->id) - rsc->id + 1;
+
+        return (strlen(id) == base_len) && !strncmp(id, rsc->id, base_len);
+    }
+    return FALSE;
+}
 
 int get_target_rc(xmlNode * xml_op);
 

@@ -14,7 +14,7 @@ enum ra_flags_e {
 };
 
 enum ra_param_flags_e {
-    ra_param_reloadable = 0x01,
+    ra_param_unique     = 0x01,
     ra_param_private    = 0x02,
 };
 
@@ -43,8 +43,8 @@ static inline const char *
 ra_param_flag2text(enum ra_param_flags_e flag)
 {
     switch (flag) {
-        case ra_param_reloadable:
-            return "reloadable";
+        case ra_param_unique:
+            return "unique";
         case ra_param_private:
             return "private";
         default:

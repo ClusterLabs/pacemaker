@@ -764,6 +764,7 @@ for t in $tests; do
         -e 's|^/tmp/[0-9][0-9]*\.||'\
         -e 's/^Entity: line [0-9][0-9]*: //'\
         -e 's/schemas\.c:\([0-9][0-9]*\)/schemas.c:NNN/' \
+        -e 's/constraints\.:\([0-9][0-9]*\)/constraints.:NNN/' \
         -e 's/\(validation ([0-9][0-9]* of \)[0-9][0-9]*\().*\)/\1X\2/' \
 	$test_home/regression.$t.out
 

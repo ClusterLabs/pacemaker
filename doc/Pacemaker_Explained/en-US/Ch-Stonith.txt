@@ -96,12 +96,14 @@ that may be set for any fencing resource, regardless of fence agent.
  indexterm:[stonith-timeout,Fencing]
  indexterm:[Fencing,Property,stonith-timeout]
 
-|priority
-|integer
-|0
-|The priority of the STONITH resource. Devices are tried in order of highest priority to lowest.
+////
+ priority
+ integer
+ 0
+ The priority of the STONITH resource. Devices are tried in order of highest priority to lowest.
  indexterm:[priority,Fencing]
  indexterm:[Fencing,Property,priority]
+////
 
 |provides
 |string

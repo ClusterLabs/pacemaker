@@ -223,6 +223,8 @@ typedef union
 #  endif
 
 /* Replacement error codes for non-linux */
+#  include <errno.h>
+
 #  ifndef ENOTUNIQ
 #    define ENOTUNIQ  190
 #  endif
@@ -261,6 +263,10 @@ typedef union
 
 #  ifndef ENOSTR
 #    define ENOSTR    199
+#  endif
+
+#  ifndef EKEYREJECTED
+#    define EKEYREJECTED 200
 #  endif
 
 /*

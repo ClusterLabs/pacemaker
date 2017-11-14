@@ -1557,91 +1557,89 @@ determine_online_status(xmlNode * node_state, node_t * this_node, pe_working_set
     return online;
 }
 
+/*!
+ * \internal
+ * \brief Find the end of a resource's name, excluding any clone suffix
+ *
+ * \param[in] id  Resource ID to check
+ *
+ * \return Pointer to last character of resource's base name
+ */
+const char *
+pe_base_name_end(const char *id)
+{
+    if (!crm_strlen_zero(id)) {
+        const char *end = id + strlen(id) - 1;
+
+        for (const char *s = end; s > id; --s) {
+            switch (*s) {
+                case '0':
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                case '7':
+                case '8':
+                case '9':
+                    break;
+                case ':':
+                    return (s == end)? s : (s - 1);
+                default:
+                    return end;
+            }
+        }
+        return end;
+    }
+    return NULL;
+}
+
+/*!
+ * \internal
+ * \brief Get a resource name excluding any clone suffix
+ *
+ * \param[in] last_rsc_id  Resource ID to check
+ *
+ * \return Pointer to newly allocated string with resource's base name
+ * \note It is the caller's responsibility to free() the result.
+ *       This asserts on error, so callers can assume result is not NULL.
+ */
 char *
 clone_strip(const char *last_rsc_id)
 {
-    int lpc = 0;
-    char *zero = NULL;
+    const char *end = pe_base_name_end(last_rsc_id);
+    char *basename = NULL;
 
-    CRM_CHECK(last_rsc_id != NULL, return NULL);
-    lpc = strlen(last_rsc_id);
-    while (--lpc > 0) {
-        switch (last_rsc_id[lpc]) {
-            case 0:
-                crm_err("Empty string: %s", last_rsc_id);
-                return NULL;
-                break;
-            case '0':
-            case '1':
-            case '2':
-            case '3':
-            case '4':
-            case '5':
-            case '6':
-            case '7':
-            case '8':
-            case '9':
-                break;
-            case ':':
-                zero = calloc(1, lpc + 1);
-                memcpy(zero, last_rsc_id, lpc);
-                zero[lpc] = 0;
-                return zero;
-            default:
-                goto done;
-        }
-    }
-  done:
-    zero = strdup(last_rsc_id);
-    return zero;
+    CRM_ASSERT(end);
+    basename = strndup(last_rsc_id, end - last_rsc_id + 1);
+    CRM_ASSERT(basename);
+    return basename;
 }
 
+/*!
+ * \internal
+ * \brief Get the name of the first instance of a cloned resource
+ *
+ * \param[in] last_rsc_id  Resource ID to check
+ *
+ * \return Pointer to newly allocated string with resource's base name plus :0
+ * \note It is the caller's responsibility to free() the result.
+ *       This asserts on error, so callers can assume result is not NULL.
+ */
 char *
 clone_zero(const char *last_rsc_id)
 {
-    int lpc = 0;
+    const char *end = pe_base_name_end(last_rsc_id);
+    size_t base_name_len = end - last_rsc_id + 1;
     char *zero = NULL;
 
-    CRM_CHECK(last_rsc_id != NULL, return NULL);
-    if (last_rsc_id != NULL) {
-        lpc = strlen(last_rsc_id);
-    }
-
-    while (--lpc > 0) {
-        switch (last_rsc_id[lpc]) {
-            case 0:
-                return NULL;
-                break;
-            case '0':
-            case '1':
-            case '2':
-            case '3':
-            case '4':
-            case '5':
-            case '6':
-            case '7':
-            case '8':
-            case '9':
-                break;
-            case ':':
-                zero = calloc(1, lpc + 3);
-                memcpy(zero, last_rsc_id, lpc);
-                zero[lpc] = ':';
-                zero[lpc + 1] = '0';
-                zero[lpc + 2] = 0;
-                return zero;
-            default:
-                goto done;
-        }
-    }
-  done:
-    lpc = strlen(last_rsc_id);
-    zero = calloc(1, lpc + 3);
-    memcpy(zero, last_rsc_id, lpc);
-    zero[lpc] = ':';
-    zero[lpc + 1] = '0';
-    zero[lpc + 2] = 0;
-    crm_trace("%s -> %s", last_rsc_id, zero);
+    CRM_ASSERT(end);
+    zero = calloc(base_name_len + 3, sizeof(char));
+    CRM_ASSERT(zero);
+    memcpy(zero, last_rsc_id, base_name_len);
+    zero[base_name_len] = ':';
+    zero[base_name_len + 1] = '0';
     return zero;
 }
 

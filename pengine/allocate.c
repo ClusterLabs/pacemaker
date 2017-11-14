@@ -251,7 +251,6 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
     gboolean did_change = FALSE;
 
     const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
-    const char *op_version;
     const char *digest_secure = NULL;
 
     CRM_CHECK(active_node != NULL, return FALSE);
@@ -299,7 +298,6 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
         task = RSC_START;
     }
 
-    op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
     digest_data = rsc_action_digest_cmp(rsc, xml_op, active_node, data_set);
 
     if(is_set(data_set->flags, pe_flag_sanitized)) {
@@ -319,16 +317,10 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
     } else if (digest_data->rc == RSC_DIGEST_RESTART) {
         /* Changes that force a restart */
         pe_action_t *required = NULL;
-        const char *digest_restart = crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST);
 
         did_change = TRUE;
         key = generate_op_key(rsc->id, task, interval);
         crm_log_xml_info(digest_data->params_restart, "params:restart");
-        pe_rsc_info(rsc, "Parameters to %s on %s changed: was %s vs. now %s (restart:%s) %s",
-                 key, active_node->details->uname,
-                 crm_str(digest_restart), digest_data->digest_restart_calc,
-                 op_version, crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
-
         required = custom_action(rsc, key, task, NULL, TRUE, TRUE, data_set);
         pe_action_set_flag_reason(__FUNCTION__, __LINE__, required, NULL,
                                   "resource definition change", pe_action_optional, TRUE);
@@ -338,16 +330,11 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
     } else if ((digest_data->rc == RSC_DIGEST_ALL) || (digest_data->rc == RSC_DIGEST_UNKNOWN)) {
         /* Changes that can potentially be handled by a reload */
         const char *digest_restart = crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST);
-        const char *digest_all = crm_element_value(xml_op, XML_LRM_ATTR_OP_DIGEST);
 
         did_change = TRUE;
         trigger_unfencing(rsc, active_node, "Device parameters changed (reload)", NULL, data_set);
         crm_log_xml_info(digest_data->params_all, "params:reload");
         key = generate_op_key(rsc->id, task, interval);
-        pe_rsc_info(rsc, "Parameters to %s on %s changed: was %s vs. now %s (reload:%s) %s",
-                 key, active_node->details->uname,
-                 crm_str(digest_all), digest_data->digest_all_calc, op_version,
-                 crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
 
         if (interval > 0) {
             action_t *op = NULL;

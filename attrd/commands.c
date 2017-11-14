@@ -211,7 +211,7 @@ attrd_client_update(xmlNode *xml)
         regex_t *r_patt = calloc(1, sizeof(regex_t));
 
         crm_debug("Setting %s to %s", regex, value);
-        if (regcomp(r_patt, regex, REG_EXTENDED)) {
+        if (regcomp(r_patt, regex, REG_EXTENDED|REG_NOSUB)) {
             crm_err("Bad regex '%s' for update", regex);
 
         } else {

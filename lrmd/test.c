@@ -345,20 +345,6 @@ start_test(gpointer user_data)
     return 0;
 }
 
-static resource_t *
-find_rsc_or_clone(const char *rsc, pe_working_set_t * data_set)
-{
-    resource_t *the_rsc = pe_find_resource(data_set->resources, rsc);
-
-    if (the_rsc == NULL) {
-        char *as_clone = crm_concat(rsc, "0", ':');
-
-        the_rsc = pe_find_resource(data_set->resources, as_clone);
-        free(as_clone);
-    }
-    return the_rsc;
-}
-
 static int
 generate_params(void)
 {
@@ -406,7 +392,8 @@ generate_params(void)
 
     cluster_status(&data_set);
     if (options.rsc_id) {
-        rsc = find_rsc_or_clone(options.rsc_id, &data_set);
+        rsc = pe_find_resource_with_flags(data_set.resources, options.rsc_id,
+                                          pe_find_renamed|pe_find_any);
     }
 
     if (!rsc) {

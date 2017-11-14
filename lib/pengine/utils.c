@@ -2015,9 +2015,10 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
         data->rc = RSC_DIGEST_UNKNOWN;
 
     } else if (strcmp(digest_all, data->digest_all_calc) != 0) {
-        pe_rsc_info(rsc, "Parameters to %s on %s changed: was %s vs. now %s (reload:%s) %s",
+        pe_rsc_info(rsc, "Parameters to %s on %s changed: was %s vs. now %s (%s:%s) %s",
                  key, node->details->uname,
                  crm_str(digest_all), data->digest_all_calc,
+                 (interval > 0)? "reschedule" : "reload",
                  op_version, crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
         data->rc = RSC_DIGEST_ALL;
     }
@@ -2312,7 +2313,8 @@ void pe_action_set_flag_reason(const char *function, long line,
     } else if(is_set(flags, pe_action_requires_any)) {
         change = "required";
     } else {
-        crm_err("Unknown flag change to %s by %s: 0x%.16x", flags, action->uuid, reason->uuid);
+        crm_err("Unknown flag change to %s by %s: 0x%.16x",
+                flags, action->uuid, (reason? reason->uuid : 0));
     }
 
     if(unset) {

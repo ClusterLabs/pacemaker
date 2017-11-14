@@ -1,74 +1,18 @@
-* Thu Nov 02 2017 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.18-rc4
-- Update source tarball to revision: 88bd30b
-- Changesets: 113
-- Diff:       42 files changed, 1164 insertions(+), 651 deletions(-)
-
-- Features added since Pacemaker-1.1.18-rc3
-  + agents: ifspeed agent can optionally detect interface name from IP address
-
-- Changes since Pacemaker-1.1.18-rc3
-  + crmd: error more quickly if remote start fails due to missing key
-  + pengine: allow resources to stop prior to probes completing
-  + pengine: probe remote nodes for guest node resources
-  + pengine: bundles need to wait only for other containers on the same node to be probed
-  + pengine: correctly defer processing of resources inside containers
-  + pengine: do not always expire failed operations of nested remotes
-  + pengine: do not probe connection resources until the container is active
-  + pengine: don't keep unique instances on same node
-  + pengine: don't probe offline or unclean guest nodes
-  + pengine: exclude exclusive resources and nodes from symmetric default score
-  + pengine: have bundles log to stderr so that 'docker logs' works
-  + pengine: if ignoring failure, also ignore migration-threshold
-  + pengine: only pass requests for promote/demote flags onto the bundle's child
-  + pengine: resources are allowed to stop before their state is known everywhere
-  + pengine: restore the ability to send the transition graph via the disk if it gets too big
-  + pengine: do not map ports into Docker container when net=host is specified
-  + tools: allow crm_resource to operate on anonymous clones in unknown states
-  + tools: crm_resource --cleanup on appropriate nodes if we don't know state of resource
-  + tools: prevent disconnection from crmd during crm_resource --cleanup
-
-* Mon Oct 23 2017 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.18-rc3
-- Update source tarball to revision: 24b36d4
-- Changesets: 19
-- Diff:       18 files changed, 113 insertions(+), 82 deletions(-)
-
-- Changes since Pacemaker-1.1.18-rc2
-  + crmd: fix regression for legacy stacks introduced in rc1
-  + lrmd: allow pre-1.1.15 cluster nodes to connect to current Pacemaker Remote
-  + pengine: don't schedule reload and restart in same transition
-    (fixes CLBZ#5309, a regression introduced in 1.1.15)
-  + pengine: fix use-after-free memory issue re-introduced by merge
-  + tools: improve messages for crm_resource --force-* options
-
-* Mon Oct 16 2017 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.18-rc2
-- Update source tarball to revision: 62e8d4b
-- Changesets: 31
-- Diff:       23 files changed, 484 insertions(+), 284 deletions(-)
-
-- Changes since Pacemaker-1.1.18-rc1
-  + fix regressions introduced in rc1 (don't break crm_resource --lifetime,
-    avoid memory leak when caching meta-data,
-    keep previous format of crm_mon XML output for bundles)
-  + crm_mon: avoid infinite process spawning if -E script can't be run
-  + crm_mon: don't show previous exit-reason for failed action with none
-  + libcrmservice: list systemd unit files, not only active units (BZ#5299)
-  + libcrmservice: parse long description correctly for LSB meta-data
-
-* Fri Oct 06 2017 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.18-rc1
-- Update source tarball to revision: cb21fde
-- Changesets: 428
-- Diff:       153 files changed, 7895 insertions(+), 4415 deletions(-)
+* Tue Nov 14 2017 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.18-1
+- Update source tarball to revision: a9fbd15
+- Changesets: 644
+- Diff:       167 files changed, 9753 insertions(+), 5596 deletions(-)
 
 - Features added since Pacemaker-1.1.17
   + warnings are now logged when using legacy syntax to be removed in 2.0
   + agents: ifspeed agent is now installed when building
+  + agents: ifspeed agent can optionally detect interface name from IP address
   + alerts: support alert filters
-  + alerts: support alerts for node attribute changes (experimental)
+  + alerts: experimental support for alerts for node attribute changes
   + crmd,pengine: support unfencing of remote nodes
   + pengine: bundles now support all constraint types
   + pengine: bundles now support rkt containers
   + pengine: bundles support new container-attribute-target parameter
-  + pengine: guest nodes are now probed like any other node
   + pengine,tools: logs and crm_mon show why resources changed state
   + stonith-ng: support new fencing resource parameter pcmk_delay_base
   + tools: new crm_resource option --why explains why resources are stopped
@@ -80,28 +24,50 @@
   + attrd: don't lose attributes set between attrd start-up and cluster join
   + attrd: fix multiple minor memory leaks
   + crmd: correctly record that unfencing is complete
+  + crmd: error more quickly if remote start fails due to missing key
   + lrmd: remote resource operations return immediate error if key setup fails
-  + pengine: validate no-quorum-policy=suicide correctly
-  + pengine: avoid crash when alerts section has comments
-  + pengine: detect permanent master scores at start-up
-  + pengine: do not re-add a node's default score for each location constraint
+  + lrmd: allow pre-1.1.15 cluster nodes to connect to current Pacemaker Remote
+  + pengine: guest nodes are now probed like other nodes
+  + pengine: probe remote nodes for guest node resources
+  + pengine: do not probe guest/bundle connections until guest/bundle is active
+  + pengine: allow resources to stop prior to probes completing
+  + pengine: bundles wait only for other containers on same node to be probed
+  + pengine: have bundles log to stderr so 'docker logs'/'journalctl -M' works
+  + pengine: only pass requests for promote/demote flags onto the bundle's child
+  + pengine: do not map ports into Docker container when net=host is specified
   + pengine: allow resources inside bundles to receive clone notifications
   + pengine: default to non-interleaved bundle ordering for safety
   + pengine: ensure bundle nodes and child resources are correctly cleaned up
   + pengine: prevent graph loops when fencing the host underneath a bundle
-  + pengine: probe bundle connection resources
-  + pengine: bundles now respect PCMK_authkey_location
   + pengine: fix multiple memory issues (use-after-free, use-of-NULL) with bundles
   + pengine: resources in bundles respect failcounts
   + pengine: ensure nested container connections run on the same host
-  + pengine: ensure unrecoverable remote nodes are fenced even if no resources can run on them
+  + pengine: ensure unrecoverable remote nodes are fenced even with no resources
   + pengine: handle resource migrating behind a migrating remote connection
+  + pengine: don't prefer to keep unique instances on same node
+  + pengine: exclude exclusive resources and nodes from symmetric default score
+  + pengine: if ignoring failure, also ignore migration-threshold
+  + pengine: restore the ability to send the transition graph via the disk if it gets too big
+  + pengine: validate no-quorum-policy=suicide correctly
+  + pengine: avoid crash when alerts section has comments
+  + pengine: detect permanent master scores at start-up
+  + pengine: do not re-add a node's default score for each location constraint
   + pengine: make sure calculated resource scores are consistent on different architectures
   + pengine: retrigger unfencing for changed device parameters only when necessary
+  + pengine: don't schedule reload and restart in same transition (CLBZ#5309, regression introduced in 1.1.15)
   + stonith-ng: make fencing-device reappear properly after reenabling
   + stonith-ng: include pcmk_on_action in meta-data so 'on' can be overridden
   + tools: allow crm_report to work with no log files specified
   + tools: fix use-after-free in crm_diff introduced in 1.1.17
+  + tools: allow crm_resource to operate on anonymous clones in unknown states
+  + tools: crm_resource --cleanup on appropriate nodes if we don't know state of resource
+  + tools: prevent disconnection from crmd during crm_resource --cleanup
+  + tools: improve messages for crm_resource --force-* options
+  + tools: crm_mon: avoid infinite process spawning if -E script can't be run
+  + tools: crm_mon: don't show previous exit-reason for failed action with none
+  + libcrmservice: list systemd unit files, not only active units (CLBZ#5299)
+  + libcrmservice: parse long description correctly for LSB meta-data
+
 
 * Thu Jul 06 2017 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.17-1
 - Update source tarball to revision: 301bc44
