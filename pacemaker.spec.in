@@ -315,11 +315,12 @@ License:       GPLv2+ and LGPLv2+
 Summary:       Pacemaker development package
 Group:         Development/Libraries
 Requires:      %{name}-cts = %{version}-%{release}
-Requires:      %{name}-libs = %{version}-%{release}
-Requires:      %{name}-cluster-libs = %{version}-%{release}
-Requires:      libtool-ltdl-devel libqb-devel libuuid-devel
-Requires:      libxml2-devel libxslt-devel bzip2-devel glib2-devel
-Requires:      corosynclib-devel
+Requires:      %{name}-libs%{?_isa} = %{version}-%{release}
+Requires:      %{name}-cluster-libs%{?_isa} = %{version}-%{release}
+Requires:      libtool-ltdl-devel%{?_isa} libuuid-devel%{?_isa}
+Requires:      libxml2-devel%{?_isa} libxslt-devel%{?_isa}
+Requires:      bzip2-devel%{?_isa} glib2-devel%{?_isa}
+Requires:      libqb-devel%{?_isa} corosynclib-devel%{?_isa}
 
 %description -n %{name}-libs-devel
 Pacemaker is an advanced, scalable High-Availability cluster resource
