@@ -18,18 +18,18 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="f75e684a-be1e-4036-89e5-a14f8dcdc947" uname="test02" type="normal">
+      <node id="f75e684a-be1e-4036-89e5-a14f8dcdc947" uname="test02" type="member">
         <instance_attributes id="instance_attributes.id21976">
           <nvpair id="nvpair.id21983" name="master-ocf_msdummy:0" value="1000"/>
         </instance_attributes>
       </node>
-      <node id="b8f81462-2d65-42bf-bbb1-70db0ea29e5b" uname="va1" type="normal">
+      <node id="b8f81462-2d65-42bf-bbb1-70db0ea29e5b" uname="va1" type="member">
         <instance_attributes id="instance_attributes.id22005">
           <nvpair id="nvpair.id22012" name="master-ocf_msdummy:0" value="1000"/>
         </instance_attributes>
       </node>
-      <node id="d0d76dd9-7a01-4c12-bbec-98aa2a669638" uname="ibm1" type="normal"/>
-      <node id="619e8a37-147a-4782-ac11-46afad7c32b8" uname="sgi2" type="normal"/>
+      <node id="d0d76dd9-7a01-4c12-bbec-98aa2a669638" uname="ibm1" type="member"/>
+      <node id="619e8a37-147a-4782-ac11-46afad7c32b8" uname="sgi2" type="member"/>
     </nodes>
     <resources>
       <primitive id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat">
@@ -54,7 +54,7 @@
           </instance_attributes>
           <meta_attributes id="primitive-ocf_127.0.0.11.meta"/>
         </primitive>
-        <primitive id="heartbeat_127.0.0.12" class="heartbeat" type="IPaddr">
+        <primitive id="heartbeat_127.0.0.12" class="ocf" provider="heartbeat" type="IPaddr">
           <operations>
             <op name="monitor" interval="5s" id="heartbeat_127.0.0.12_monitor" timeout="20s"/>
           </operations>
@@ -226,7 +226,7 @@
           <lrm_resource id="rsc_va1" type="IPaddr" class="ocf" provider="heartbeat">
             <lrm_rsc_op id="rsc_va1_monitor_0" interval="0" operation="monitor" transition-key="1:7fb79e63-1c8d-49af-bdb1-520272fa268b" crm_feature_set="2.0" transition-magic="4:7;1:7fb79e63-1c8d-49af-bdb1-520272fa268b" call-id="9" rc-code="7" op-status="4" op-digest="ab6dabe0c35e363af067aa9a7fe53ace"/>
           </lrm_resource>
-          <lrm_resource id="heartbeat_127.0.0.12" type="IPaddr" class="heartbeat">
+          <lrm_resource id="heartbeat_127.0.0.12" type="IPaddr" class="ocf" provider="heartbeat">
             <lrm_rsc_op id="heartbeat_127.0.0.12_monitor_0" interval="0" operation="monitor" transition-key="1:7fb79e63-1c8d-49af-bdb1-520272fa268b" crm_feature_set="2.0" transition-magic="4:7;1:7fb79e63-1c8d-49af-bdb1-520272fa268b" call-id="4" rc-code="7" op-status="4" op-digest="3a7e9efd5dd3647cad2f128f03be30be"/>
           </lrm_resource>
           <lrm_resource id="rsc_sgi2" type="IPaddr" class="ocf" provider="heartbeat">
@@ -283,7 +283,7 @@
           <lrm_resource id="ocf_msdummy:1" type="/usr/lib64/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">
             <lrm_rsc_op id="ocf_msdummy-1_monitor_0" interval="0" operation="monitor" transition-key="1:c5e3db41-7193-4909-8898-3886085c2875" crm_feature_set="2.0" transition-magic="4:7;1:c5e3db41-7193-4909-8898-3886085c2875" call-id="13" rc-code="7" op-status="4" op-digest="ec8db50619941e7d81394ae605c8b3e7"/>
           </lrm_resource>
-          <lrm_resource id="heartbeat_127.0.0.12" type="IPaddr" class="heartbeat">
+          <lrm_resource id="heartbeat_127.0.0.12" type="IPaddr" class="ocf" provider="heartbeat">
             <lrm_rsc_op id="heartbeat_127.0.0.12_monitor_0" interval="0" operation="monitor" transition-key="1:c5e3db41-7193-4909-8898-3886085c2875" crm_feature_set="2.0" transition-magic="4:7;1:c5e3db41-7193-4909-8898-3886085c2875" call-id="4" rc-code="7" op-status="4" op-digest="3a7e9efd5dd3647cad2f128f03be30be"/>
           </lrm_resource>
           <lrm_resource id="child_DoFencing:1" type="ssh" class="stonith">

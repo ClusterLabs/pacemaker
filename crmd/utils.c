@@ -417,9 +417,6 @@ fsa_cause2string(enum crmd_fsa_cause cause)
         case C_HA_MESSAGE:
             causeAsText = "C_HA_MESSAGE";
             break;
-        case C_CCM_CALLBACK:
-            causeAsText = "C_CCM_CALLBACK";
-            break;
         case C_TIMER_POPPED:
             causeAsText = "C_TIMER_POPPED";
             break;
@@ -440,9 +437,6 @@ fsa_cause2string(enum crmd_fsa_cause cause)
             break;
         case C_CRMD_STATUS_CALLBACK:
             causeAsText = "C_CRMD_STATUS_CALLBACK";
-            break;
-        case C_HA_DISCONNECT:
-            causeAsText = "C_HA_DISCONNECT";
             break;
         case C_FSA_INTERNAL:
             causeAsText = "C_FSA_INTERNAL";
@@ -595,12 +589,6 @@ fsa_action2string(long long action)
             break;
         case A_EXIT_1:
             actionAsText = "A_EXIT_1";
-            break;
-        case A_CCM_CONNECT:
-            actionAsText = "A_CCM_CONNECT";
-            break;
-        case A_CCM_DISCONNECT:
-            actionAsText = "A_CCM_DISCONNECT";
             break;
         case O_CIB_RESTART:
             actionAsText = "O_CIB_RESTART";
@@ -867,12 +855,6 @@ fsa_dump_actions(long long action, const char *text)
     }
     if (is_set(action, A_EXIT_1)) {
         crm_trace("Action %.16llx (A_EXIT_1) %s", A_EXIT_1, text);
-    }
-    if (is_set(action, A_CCM_CONNECT)) {
-        crm_trace("Action %.16llx (A_CCM_CONNECT) %s", A_CCM_CONNECT, text);
-    }
-    if (is_set(action, A_CCM_DISCONNECT)) {
-        crm_trace("Action %.16llx (A_CCM_DISCONNECT) %s", A_CCM_DISCONNECT, text);
     }
     if (is_set(action, A_CIB_START)) {
         crm_trace("Action %.16llx (A_CIB_START) %s", A_CIB_START, text);

@@ -32,8 +32,6 @@ class BasePatterns:
             "ReduceCommCmd"  : "",
             "RestoreCommCmd" : "tc qdisc del dev lo root",
 
-            "UUIDQueryCmd"    : "crmadmin -N",
-
             "SetCheckInterval"    : "cibadmin --modify -c --xml-text '<cluster_property_set id=\"cib-bootstrap-options\"><nvpair id=\"cts-recheck-interval-setting\" name=\"cluster-recheck-interval\" value=\"%s\"/></cluster_property_set>'",
             "ClearCheckInterval"    : "cibadmin --delete --xpath \"//nvpair[@name='cluster-recheck-interval']\"",
 
@@ -46,12 +44,11 @@ class BasePatterns:
         self.search = {
             "Pat:DC_IDLE"      : "crmd.*State transition.*-> S_IDLE",
             
-            # This wont work if we have multiple partitions
+            # This won't work if we have multiple partitions
             "Pat:Local_started" : "%s\W.*The local CRM is operational",
             "Pat:Slave_started" : "%s\W.*State transition.*-> S_NOT_DC",
             "Pat:Master_started": "%s\W.*State transition.*-> S_IDLE",
-            "Pat:We_stopped"    : "heartbeat.*%s.*Heartbeat shutdown complete",
-            "Pat:Logd_stopped"  : "%s\W.*logd:.*Exiting write process",
+            "Pat:We_stopped"    : "%s\W.*OVERRIDE THIS PATTERN",
             "Pat:They_stopped"  : "%s\W.*LOST:.* %s ",
             "Pat:They_dead"     : "node %s.*: is dead",
             "Pat:TransitionComplete" : "Transition status: Complete: complete",
@@ -94,61 +91,6 @@ class BasePatterns:
         else:
             print("Unknown template '%s' for %s" % (key, self.name))
             return None
-
-class crm_lha(BasePatterns):
-    def __init__(self, name):
-        BasePatterns.__init__(self, name)
-
-        self.commands.update({
-            "StartCmd"       : "service heartbeat start > /dev/null 2>&1",
-            "StopCmd"        : "service heartbeat stop  > /dev/null 2>&1",
-            "EpochCmd"      : "crm_node -H -e",
-            "QuorumCmd"      : "crm_node -H -q",
-            "PartitionCmd"    : "crm_node -H -p",
-        })
-
-        self.search.update({
-            # Patterns to look for in the log files for various occasions...
-            "Pat:ChildKilled"  : "%s\W.*heartbeat.*%s.*killed by signal 9",
-            "Pat:ChildRespawn" : "%s\W.*heartbeat.*Respawning client.*%s",
-            "Pat:ChildExit"    : "(ERROR|error): Client .* exited with return code",            
-        })
-        self.BadNews = [
-                r"error:",
-                r"crit:",
-                r"ERROR:",
-                r"CRIT:",
-                r"Shutting down...NOW",
-                r"Timer I_TERMINATE just popped",
-                r"input=I_ERROR",
-                r"input=I_FAIL",
-                r"input=I_INTEGRATED cause=C_TIMER_POPPED",
-                r"input=I_FINALIZED cause=C_TIMER_POPPED",
-                r"input=I_ERROR",
-                r", exiting\.",
-                r"WARN.*Ignoring HA message.*vote.*not in our membership list",
-                r"pengine.*Attempting recovery of resource",
-                r"is taking more than 2x its timeout",
-                r"Confirm not received from",
-                r"Welcome reply not received from",
-                r"Attempting to schedule .* after a stop",
-                r"Resource .* was active at shutdown",
-                r"duplicate entries for call_id",
-                r"Search terminated:",
-                r"No need to invoke the TE",
-                r"global_timer_callback:",
-                r"Faking parameter digest creation",
-                r"Parameters to .* action changed:",
-                r"Parameters to .* changed",
-            ]
-
-        self.ignore = self.ignore + [
-                r"(ERROR|error):.*\s+assert\s+at\s+crm_glib_handler:"
-                "(ERROR|error): Message hist queue is filling up",
-                "stonithd.*CRIT: external_hostlist:.*'vmware gethosts' returned an empty hostlist",
-                "stonithd.*(ERROR|error): Could not list nodes for stonith RA external/vmware.",
-                "pengine.*Preventing .* from re-starting",
-                ]
 
 class crm_cs_v0(BasePatterns):
     def __init__(self, name):
@@ -480,9 +422,6 @@ class PatternSelector:
             crm_cs_v0("crm-plugin-v0")
             crm_cman("crm-cman")
             crm_mcp("crm-mcp")
-            crm_lha("crm-lha")
-        elif name == "crm-lha":
-            crm_lha(name)
         elif name == "crm-plugin-v0":
             crm_cs_v0(name)
         elif name == "crm-cman":

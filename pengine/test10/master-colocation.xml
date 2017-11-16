@@ -12,8 +12,8 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="box1" uname="box1" type="normal"/>
-      <node id="box2" uname="box2" type="normal"/>
+      <node id="box1" uname="box1" type="member"/>
+      <node id="box2" uname="box2" type="member"/>
     </nodes>
     <resources>
       <master id="ms-conntrackd">

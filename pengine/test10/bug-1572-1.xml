@@ -19,14 +19,14 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="8c16c69e-f753-49cf-ba89-3ae421940042" uname="arc-dknightlx" type="normal">
+      <node id="8c16c69e-f753-49cf-ba89-3ae421940042" uname="arc-dknightlx" type="member">
         <instance_attributes id="instance_attributes.id21994"/>
         <instance_attributes id="instance_attributes.id22002">
           <nvpair name="master-rsc_drbd_7788:1" id="nvpair.id22009" value="100"/>
           <nvpair id="nvpair.id22019" name="master-rsc_drbd_7788:0" value="100"/>
         </instance_attributes>
       </node>
-      <node id="2ba293d2-2c30-4957-ad8d-59ad15bb7e26" uname="arc-tkincaidlx.wsicorp.com" type="normal">
+      <node id="2ba293d2-2c30-4957-ad8d-59ad15bb7e26" uname="arc-tkincaidlx.wsicorp.com" type="member">
         <instance_attributes id="instance_attributes.id22041"/>
         <instance_attributes id="instance_attributes.id22049">
           <nvpair id="nvpair.id22056" name="master-rsc_drbd_7788:0" value="100"/>

@@ -13,18 +13,18 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="gluster02.h" type="normal" uname="gluster02.h">
+      <node id="gluster02.h" type="member" uname="gluster02.h">
         <instance_attributes id="nodes-gluster02.h">
           <nvpair id="nodes-gluster02.h-standby" name="standby" value="off"/>
         </instance_attributes>
       </node>
-      <node id="gluster03.h" type="normal" uname="gluster03.h">
+      <node id="gluster03.h" type="member" uname="gluster03.h">
         <instance_attributes id="nodes-gluster03.h">
           <nvpair id="nodes-gluster03.h-standby" name="standby" value="on"/>
         </instance_attributes>
       </node>
-      <node id="gluster04.h" type="normal" uname="gluster04.h"/>
-      <node id="gluster01.h" type="normal" uname="gluster01.h"/>
+      <node id="gluster04.h" type="member" uname="gluster04.h"/>
+      <node id="gluster01.h" type="member" uname="gluster01.h"/>
     </nodes>
     <resources>
       <master id="ms_stateful">

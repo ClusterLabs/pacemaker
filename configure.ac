@@ -28,7 +28,6 @@ if test x"${PACKAGE_URL}" = x""; then
 fi
 
 PCMK_FEATURES=""
-HB_PKG=heartbeat
 
 AC_CONFIG_AUX_DIR(.)
 AC_CANONICAL_HOST
@@ -38,7 +37,7 @@ dnl
 dnl Internal header: include/config.h
 dnl   - Contains ALL defines
 dnl   - include/config.h.in is generated automatically by autoheader
-dnl   - NOT to be included in any header files except lha_internal.h
+dnl   - NOT to be included in any header files except crm_internal.h
 dnl     (which is also not to be included in any other header files)
 dnl
 dnl External header: include/crm_config.h
@@ -222,13 +221,6 @@ dnl	initialized in AC_ARG_WITH(ais...) already,
 dnl	don't reset to try if it was given as --without-ais
 )
 
-AC_ARG_WITH(heartbeat,
-    [  --with-heartbeat
-       Support the Heartbeat messaging and membership layer ],
-    [ SUPPORT_HEARTBEAT=$withval ],
-    [ SUPPORT_HEARTBEAT=try ],
-)
-
 AC_ARG_WITH(cman,
     [  --with-cman
        Support the consumption of membership and quorum from cman ],
@@ -334,8 +326,6 @@ AC_ARG_WITH(configdir,
 dnl ===============================================
 dnl General Processing
 dnl ===============================================
-
-AC_SUBST(HB_PKG)
 
 INIT_EXT=""
 echo Our Host OS: $host_os/$host
@@ -1015,14 +1005,10 @@ AC_MSG_NOTICE(New CFLAGS: $CFLAGS)
 AC_DEFINE_UNQUOTED(SUPPORT_PROFILING, $SUPPORT_PROFILING, Support for profiling)
 
 dnl ========================================================================
-dnl    Cluster infrastructure - Heartbeat / LibQB
+dnl    Cluster infrastructure - LibQB
 dnl ========================================================================
 
-dnl Compatibility checks
-AC_CHECK_MEMBERS([struct lrm_ops.fail_rsc],,,[[#include <lrm/lrm_api.h>]])
-
 if test x${enable_no_stack} = xyes; then
-    SUPPORT_HEARTBEAT=no
     SUPPORT_CS=no
 fi
 
@@ -1036,20 +1022,13 @@ PCMK_FEATURES="$PCMK_FEATURES libqb-logging libqb-ipc"
 
 AC_CHECK_FUNCS(qb_ipcs_connection_get_buffer_size, AC_DEFINE(HAVE_IPCS_GET_BUFFER_SIZE,  1, [Have qb_ipcc_get_buffer_size function]))
 
-
-AC_CHECK_HEADERS(heartbeat/hb_config.h)
 AC_CHECK_HEADERS(heartbeat/glue_config.h)
 AC_CHECK_HEADERS(stonith/stonith.h)
-AC_CHECK_HEADERS(agent_config.h)
 
 GLUE_HEADER=none
 HAVE_GLUE=0
 if test "$ac_cv_header_heartbeat_glue_config_h" = "yes";  then
    GLUE_HEADER=glue_config.h
-   HAVE_GLUE=1
-
-elif test "$ac_cv_header_heartbeat_hb_config_h" = "yes"; then
-   GLUE_HEADER=hb_config.h
    HAVE_GLUE=1
 else
    AC_MSG_WARN(cluster-glue development headers were not found)
@@ -1113,10 +1092,6 @@ CRM_CONFIG_CTS="${localstatedir}/lib/pacemaker/cts"
 AC_DEFINE_UNQUOTED(CRM_CONFIG_CTS,"$CRM_CONFIG_CTS", Where to keep cts stateful data)
 AC_SUBST(CRM_CONFIG_CTS)
 
-CRM_LEGACY_CONFIG_DIR="${localstatedir}/lib/heartbeat/crm"
-AC_DEFINE_UNQUOTED(CRM_LEGACY_CONFIG_DIR,"$CRM_LEGACY_CONFIG_DIR", Where Pacemaker used to keep configuration files)
-AC_SUBST(CRM_LEGACY_CONFIG_DIR)
-
 CRM_DAEMON_DIR="${libexecdir}/pacemaker"
 AC_DEFINE_UNQUOTED(CRM_DAEMON_DIR,"$CRM_DAEMON_DIR", Location for Pacemaker daemons)
 AC_SUBST(CRM_DAEMON_DIR)
@@ -1135,12 +1110,6 @@ AC_MSG_CHECKING(Scratch dir for resource agents)
 AC_MSG_RESULT($CRM_RSCTMP_DIR)
 AC_DEFINE_UNQUOTED(CRM_RSCTMP_DIR,"$CRM_RSCTMP_DIR", Where resource agents should keep state files)
 AC_SUBST(CRM_RSCTMP_DIR)
-
-dnl Needed for the location of hostcache in CTS.py
-HA_VARLIBHBDIR=`try_extract_header_define $GLUE_HEADER HA_VARLIBHBDIR ${localstatedir}/lib/heartbeat`
-AC_SUBST(HA_VARLIBHBDIR)
-
-AC_DEFINE_UNQUOTED(UUID_FILE,"$localstatedir/lib/heartbeat/hb_uuid", Location of Heartbeat's UUID file)
 
 OCF_ROOT_DIR=`try_extract_header_define $GLUE_HEADER OCF_ROOT_DIR /usr/lib/ocf`
 if test "X$OCF_ROOT_DIR" = X; then
@@ -1321,35 +1290,6 @@ STACKS=""
 CLUSTERLIBS=""
 
 dnl ========================================================================
-dnl    Cluster stack - Heartbeat
-dnl ========================================================================
-
-case $SUPPORT_HEARTBEAT in
-1|yes|true|try)
-   AC_MSG_CHECKING(for heartbeat support)
-   AC_CHECK_LIB(hbclient, ll_cluster_new, [SUPPORT_HEARTBEAT=1],
-		[if test $SUPPORT_HEARTBEAT != try; then
-			AC_MSG_FAILURE(Unable to support Heartbeat: client libraries not found)
-		fi])
-
-   if test $SUPPORT_HEARTBEAT = 1 ; then
-	STACKS="$STACKS heartbeat"
-	dnl objdump -x ${libdir}/libccmclient.so | grep SONAME | awk '{print $2}'
-	AC_DEFINE_UNQUOTED(CCM_LIBRARY, "libccmclient.so.1", Library to load for ccm support)
-	AC_DEFINE_UNQUOTED(HEARTBEAT_LIBRARY, "libhbclient.so.1", Library to load for heartbeat support)
-	BUILD_ATOMIC_ATTRD=0
-   else
-	SUPPORT_HEARTBEAT=0
-   fi
-   ;;
-*) SUPPORT_HEARTBEAT=0;;
-esac
-
-AM_CONDITIONAL(BUILD_HEARTBEAT_SUPPORT, test $SUPPORT_HEARTBEAT = 1)
-AC_DEFINE_UNQUOTED(SUPPORT_HEARTBEAT, $SUPPORT_HEARTBEAT, Support the Heartbeat messaging and membership layer)
-AC_SUBST(SUPPORT_HEARTBEAT)
-
-dnl ========================================================================
 dnl    Cluster stack - Corosync
 dnl ========================================================================
 
@@ -1478,7 +1418,7 @@ if test x${enable_no_stack} = xyes; then
 else
     AC_MSG_CHECKING(for supported stacks)
     if test x"$STACKS" = x; then
-      AC_MSG_FAILURE(You must support at least one cluster stack (heartbeat or corosync) )
+      AC_MSG_FAILURE(You must support at least one cluster stack)
     fi
     AC_MSG_RESULT($STACKS)
     PCMK_FEATURES="$PCMK_FEATURES $STACKS"
@@ -1685,10 +1625,6 @@ if test $SUPPORT_CIBSECRETS = 1; then
     LRM_CIBSECRETS_DIR="${localstatedir}/lib/pacemaker/lrm/secrets"
     AC_DEFINE_UNQUOTED(LRM_CIBSECRETS_DIR,"$LRM_CIBSECRETS_DIR", Location for CIB secrets)
     AC_SUBST(LRM_CIBSECRETS_DIR)
-
-    LRM_LEGACY_CIBSECRETS_DIR="${localstatedir}/lib/heartbeat/lrm/secrets"
-    AC_DEFINE_UNQUOTED(LRM_LEGACY_CIBSECRETS_DIR,"$LRM_LEGACY_CIBSECRETS_DIR", Legacy location for CIB secrets)
-    AC_SUBST(LRM_LEGACY_CIBSECRETS_DIR)
 fi
 
 dnl ========================================================================
@@ -2062,7 +1998,6 @@ coverage.sh							\
 cts/Makefile					        	\
 	cts/CTSvars.py						\
 	cts/LSBDummy						\
-	cts/HBDummy						\
 	cts/benchmark/Makefile					\
 	cts/benchmark/clubench					\
 	cts/lxc_autogen.sh					\

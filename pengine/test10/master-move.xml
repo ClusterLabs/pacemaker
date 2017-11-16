@@ -3,15 +3,15 @@
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.0.11-1554a83db0d3c3e546cfd3aaff6af1184f79ee87"/>
-        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="Heartbeat"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
         <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
         <nvpair id="cib-bootstrap-options-startup-fencing" name="startup-fencing" value="false"/>
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="11111111-1111-1111-1111-111111111111" type="normal" uname="bl460g1n13"/>
-      <node id="22222222-2222-2222-2222-222222222222" type="normal" uname="bl460g1n14"/>
+      <node id="11111111-1111-1111-1111-111111111111" type="member" uname="bl460g1n13"/>
+      <node id="22222222-2222-2222-2222-222222222222" type="member" uname="bl460g1n14"/>
     </nodes>
     <resources>
       <group id="grpDRBD">

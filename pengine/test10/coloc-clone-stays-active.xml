@@ -16,12 +16,12 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="s01-1" type="normal" uname="s01-1">
+      <node id="s01-1" type="member" uname="s01-1">
         <instance_attributes id="nodes-s01-1">
           <nvpair id="nodes-s01-1-standby" name="standby" value="off"/>
         </instance_attributes>
       </node>
-      <node id="s01-0" type="normal" uname="s01-0">
+      <node id="s01-0" type="member" uname="s01-0">
         <instance_attributes id="nodes-s01-0">
           <nvpair id="nodes-s01-0-standby" name="standby" value="off"/>
         </instance_attributes>
@@ -872,7 +872,7 @@
           <nvpair id="cl-drbdlinks-s01-service-meta_attributes-interleave" name="interleave" value="true"/>
           <nvpair id="cl-drbdlinks-s01-service-meta_attributes-target-role" name="target-role" value="Started"/>
         </meta_attributes>
-        <primitive class="heartbeat" id="drbdlinks-s01-service" type="drbdlinks">
+        <primitive class="ocf" provider="heartbeat" id="drbdlinks-s01-service" type="drbdlinks">
           <instance_attributes id="drbdlinks-s01-service-instance_attributes">
             <nvpair id="drbdlinks-s01-service-instance_attributes-1" name="1" value="-c"/>
             <nvpair id="drbdlinks-s01-service-instance_attributes-2" name="2" value="/mnt/s01-service/drbdlinks-s01-service.conf"/>
@@ -1313,7 +1313,7 @@
           <lrm_resource id="mgmt-vm" type="VirtualDomain" class="ocf" provider="vds-ok">
             <lrm_rsc_op id="mgmt-vm_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.4" transition-key="41:2:7:b06fba1c-f7eb-44b6-9f11-d32190555b3d" transition-magic="0:7;41:2:7:b06fba1c-f7eb-44b6-9f11-d32190555b3d" call-id="53" rc-code="7" op-status="0" interval="0" last-run="1285930830" last-rc-change="1285930830" exec-time="30" queue-time="0" op-digest="5b39b39af86b708f34902c021046ec6a"/>
           </lrm_resource>
-          <lrm_resource id="drbdlinks-s01-service:0" type="drbdlinks" class="heartbeat">
+          <lrm_resource id="drbdlinks-s01-service:0" type="drbdlinks" class="ocf" provider="heartbeat">
             <lrm_rsc_op id="drbdlinks-s01-service:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.4" transition-key="42:2:7:b06fba1c-f7eb-44b6-9f11-d32190555b3d" transition-magic="0:7;42:2:7:b06fba1c-f7eb-44b6-9f11-d32190555b3d" call-id="54" rc-code="7" op-status="0" interval="0" last-run="1285930830" last-rc-change="1285930830" exec-time="30" queue-time="0" op-digest="057a65d665abb4440f4060cdff487643"/>
             <lrm_rsc_op id="drbdlinks-s01-service:0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.4" transition-key="603:5:0:b06fba1c-f7eb-44b6-9f11-d32190555b3d" transition-magic="0:0;603:5:0:b06fba1c-f7eb-44b6-9f11-d32190555b3d" call-id="116" rc-code="0" op-status="0" interval="0" last-run="1285930869" last-rc-change="1285930869" exec-time="1440" queue-time="1000" op-digest="057a65d665abb4440f4060cdff487643"/>
           </lrm_resource>
@@ -1529,7 +1529,7 @@
             <lrm_rsc_op id="drbd-s01-service:1_pre_notify_promote_0" operation="notify" crm-debug-origin="do_update_resource" crm_feature_set="3.0.4" transition-key="708:4:0:b06fba1c-f7eb-44b6-9f11-d32190555b3d" transition-magic="0:0;708:4:0:b06fba1c-f7eb-44b6-9f11-d32190555b3d" call-id="282" rc-code="0" op-status="0" interval="0" last-run="1285930858" last-rc-change="1285930858" exec-time="30" queue-time="290" op-digest="cc15817c1ff9bcd3cc4df641ce456e88"/>
             <lrm_rsc_op id="drbd-s01-service:1_post_notify_promote_0" operation="notify" crm-debug-origin="do_update_resource" crm_feature_set="3.0.4" transition-key="709:4:0:b06fba1c-f7eb-44b6-9f11-d32190555b3d" transition-magic="0:0;709:4:0:b06fba1c-f7eb-44b6-9f11-d32190555b3d" call-id="291" rc-code="0" op-status="0" interval="0" last-run="1285930858" last-rc-change="1285930858" exec-time="40" queue-time="0" op-digest="cc15817c1ff9bcd3cc4df641ce456e88"/>
           </lrm_resource>
-          <lrm_resource id="drbdlinks-s01-service:1" type="drbdlinks" class="heartbeat">
+          <lrm_resource id="drbdlinks-s01-service:1" type="drbdlinks" class="ocf" provider="heartbeat">
             <lrm_rsc_op id="drbdlinks-s01-service:1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.4" transition-key="598:12:0:e105cbc5-30fc-4007-b327-b50bd6ebcd1f" transition-magic="0:0;598:12:0:e105cbc5-30fc-4007-b327-b50bd6ebcd1f" call-id="123" rc-code="0" op-status="0" interval="0" last-run="1285930626" last-rc-change="1285930626" exec-time="1630" queue-time="2000" op-digest="057a65d665abb4440f4060cdff487643"/>
           </lrm_resource>
           <lrm_resource id="tftpd" type="Xinetd" class="ocf" provider="heartbeat">
@@ -1569,7 +1569,7 @@
             <lrm_rsc_op id="vip-238_monitor_30000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.4" transition-key="79:25:0:e105cbc5-30fc-4007-b327-b50bd6ebcd1f" transition-magic="0:0;79:25:0:e105cbc5-30fc-4007-b327-b50bd6ebcd1f" call-id="194" rc-code="0" op-status="0" interval="30000" last-run="1285930807" last-rc-change="1285930777" exec-time="30" queue-time="0" op-digest="b2efb6f5ba4e7013bfadb5b07e821911"/>
             <lrm_rsc_op id="vip-238_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.4" transition-key="84:5:0:b06fba1c-f7eb-44b6-9f11-d32190555b3d" transition-magic="0:0;84:5:0:b06fba1c-f7eb-44b6-9f11-d32190555b3d" call-id="307" rc-code="0" op-status="0" interval="0" last-run="1285930868" last-rc-change="1285930868" exec-time="60" queue-time="0" op-digest="28a3e27c094565033f10453106fff05a"/>
           </lrm_resource>
-          <lrm_resource id="drbdlinks-s01-service:0" type="drbdlinks" class="heartbeat">
+          <lrm_resource id="drbdlinks-s01-service:0" type="drbdlinks" class="ocf" provider="heartbeat">
             <lrm_rsc_op id="drbdlinks-s01-service:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.4" transition-key="86:7:7:e105cbc5-30fc-4007-b327-b50bd6ebcd1f" transition-magic="0:7;86:7:7:e105cbc5-30fc-4007-b327-b50bd6ebcd1f" call-id="53" rc-code="7" op-status="0" interval="0" last-run="1285930574" last-rc-change="1285930574" exec-time="310" queue-time="1000" op-digest="057a65d665abb4440f4060cdff487643"/>
           </lrm_resource>
           <lrm_resource id="vds-tftpboot-fs:0" type="Filesystem" class="ocf" provider="heartbeat">

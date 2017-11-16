@@ -59,7 +59,6 @@ extern "C" {
 #define PCMK_RESOURCE_CLASS_LSB     "lsb"
 #define PCMK_RESOURCE_CLASS_SYSTEMD "systemd"
 #define PCMK_RESOURCE_CLASS_UPSTART "upstart"
-#define PCMK_RESOURCE_CLASS_HB      "heartbeat"
 #define PCMK_RESOURCE_CLASS_NAGIOS  "nagios"
 #define PCMK_RESOURCE_CLASS_STONITH "stonith"
 

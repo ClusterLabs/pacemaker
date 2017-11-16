@@ -233,7 +233,7 @@ BuildRequires: publican inkscape asciidoc
 
 %description
 Pacemaker is an advanced, scalable High-Availability cluster resource
-manager for Corosync, CMAN and/or Linux-HA.
+manager.
 
 It supports more than 16 node clusters with significant capabilities
 for managing resources and dependencies.
@@ -255,7 +255,7 @@ Requires:      perl-TimeDate
 
 %description cli
 Pacemaker is an advanced, scalable High-Availability cluster resource
-manager for Corosync, CMAN and/or Linux-HA.
+manager.
 
 The %{name}-cli package contains command line tools that can be used
 to query and control the cluster from machines that may, or may not,
@@ -268,7 +268,7 @@ Group:         System Environment/Daemons
 
 %description -n %{name}-libs
 Pacemaker is an advanced, scalable High-Availability cluster resource
-manager for Corosync, CMAN and/or Linux-HA.
+manager.
 
 The %{name}-libs package contains shared libraries needed for cluster
 nodes and those just running the CLI tools.
@@ -281,7 +281,7 @@ Requires:      %{name}-libs = %{version}-%{release}
 
 %description -n %{name}-cluster-libs
 Pacemaker is an advanced, scalable High-Availability cluster resource
-manager for Corosync, CMAN and/or Linux-HA.
+manager.
 
 The %{name}-cluster-libs package contains cluster-aware shared
 libraries needed for nodes that will form part of the cluster nodes.
@@ -304,7 +304,7 @@ Requires:      resource-agents
 
 %description remote
 Pacemaker is an advanced, scalable High-Availability cluster resource
-manager for Corosync, CMAN and/or Linux-HA.
+manager.
 
 The %{name}-remote package contains the Pacemaker Remote daemon
 which is capable of extending pacemaker functionality to remote
@@ -324,7 +324,7 @@ Requires:      libqb-devel%{?_isa} corosynclib-devel%{?_isa}
 
 %description -n %{name}-libs-devel
 Pacemaker is an advanced, scalable High-Availability cluster resource
-manager for Corosync, CMAN and/or Linux-HA.
+manager.
 
 The %{name}-libs-devel package contains headers and shared libraries
 for developing tools for Pacemaker.
@@ -362,7 +362,7 @@ Group:         Documentation
 Documentation for Pacemaker.
 
 Pacemaker is an advanced, scalable High-Availability cluster resource
-manager for Corosync, CMAN and/or Linux-HA.
+manager.
 
 %prep
 %setup -q -n %{name}-%{commit}
@@ -402,7 +402,6 @@ export LDFLAGS_HARDENED_LIB="%{?_hardening_ldflags}"
         %{!?with_cman:       --without-cman}       \
         %{!?with_snmp:       --without-snmp}       \
         %{!?with_esmtp:      --without-esmtp}      \
-        --without-heartbeat                        \
         %{!?with_doc:        --with-brand=}        \
         %{!?with_hardening:  --disable-hardening}  \
         --with-initdir=%{_initrddir}               \

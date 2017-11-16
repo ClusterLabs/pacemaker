@@ -19,8 +19,8 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="50e1f0d4-391f-4d48-a087-98972f612b8b" uname="xen-c" type="normal"/>
-      <node id="6a0b1629-ab27-47c7-a6a4-461c94e477f2" uname="xen-b" type="normal"/>
+      <node id="50e1f0d4-391f-4d48-a087-98972f612b8b" uname="xen-c" type="member"/>
+      <node id="6a0b1629-ab27-47c7-a6a4-461c94e477f2" uname="xen-b" type="member"/>
     </nodes>
     <resources>
       <group id="group_1">

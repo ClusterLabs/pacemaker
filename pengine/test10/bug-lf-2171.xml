@@ -6,7 +6,7 @@
         <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
         <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1250086043"/>
-        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="Heartbeat"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-maintenance-mode" name="maintenance-mode" value="false"/>
         <nvpair id="cib-bootstrap-options-node-health-red" name="node-health-red" value="0"/>
         <nvpair id="cib-bootstrap-options-is-managed-default" name="is-managed-default" value="true"/>
@@ -25,12 +25,12 @@
       </meta_attributes>
     </op_defaults>
     <nodes>
-      <node id="ab2e800a-4e31-42e9-9e33-f6ca81a3e9e6" type="normal" uname="xenserver2">
+      <node id="ab2e800a-4e31-42e9-9e33-f6ca81a3e9e6" type="member" uname="xenserver2">
         <instance_attributes id="nodes-ab2e800a-4e31-42e9-9e33-f6ca81a3e9e6">
           <nvpair id="standby-ab2e800a-4e31-42e9-9e33-f6ca81a3e9e6" name="standby" value="off"/>
         </instance_attributes>
       </node>
-      <node id="56cfdd8b-b7ce-4420-b0b0-2e9ec84a9b64" type="normal" uname="xenserver1">
+      <node id="56cfdd8b-b7ce-4420-b0b0-2e9ec84a9b64" type="member" uname="xenserver1">
         <instance_attributes id="nodes-56cfdd8b-b7ce-4420-b0b0-2e9ec84a9b64">
           <nvpair id="nodes-56cfdd8b-b7ce-4420-b0b0-2e9ec84a9b64-standby" name="standby" value="off"/>
         </instance_attributes>

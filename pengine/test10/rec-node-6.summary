@@ -4,8 +4,8 @@ Node node1 (uuid1): UNCLEAN (online)
 Online: [ node2 ]
 
  stonith-1	(stonith:dummy):	Stopped 
- rsc1	(heartbeat:apache):	Started node1
- rsc2	(heartbeat:apache):	Started node1
+ rsc1	(ocf::heartbeat:apache):	Started node1
+ rsc2	(ocf::heartbeat:apache):	Started node1
 
 Transition Summary:
  * Fence (reboot) node1 'peer process is no longer available'
@@ -31,6 +31,6 @@ Online: [ node2 ]
 OFFLINE: [ node1 ]
 
  stonith-1	(stonith:dummy):	Started node2
- rsc1	(heartbeat:apache):	Started node2
- rsc2	(heartbeat:apache):	Started node2
+ rsc1	(ocf::heartbeat:apache):	Started node2
+ rsc2	(ocf::heartbeat:apache):	Started node2
 

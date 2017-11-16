@@ -10,10 +10,10 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="fs1" uname="fs1" type="normal"/>
-      <node id="fs2" uname="fs2" type="normal"/>
-      <node id="web1" uname="web1" type="normal"/>
-      <node id="web2" uname="web2" type="normal"/>
+      <node id="fs1" uname="fs1" type="member"/>
+      <node id="fs2" uname="fs2" type="member"/>
+      <node id="web1" uname="web1" type="member"/>
+      <node id="web2" uname="web2" type="member"/>
     </nodes>
     <resources>
       <clone id="cl-test">

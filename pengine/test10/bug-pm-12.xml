@@ -13,8 +13,8 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="9b262633-815c-4e5e-8f63-76486cab9ad2" uname="node-b" type="normal"/>
-      <node id="babfee4b-9c89-4df2-8ccb-3de2a3587d8d" uname="node-a" type="normal"/>
+      <node id="9b262633-815c-4e5e-8f63-76486cab9ad2" uname="node-b" type="member"/>
+      <node id="babfee4b-9c89-4df2-8ccb-3de2a3587d8d" uname="node-a" type="member"/>
     </nodes>
     <resources>
       <master id="ms-sf">

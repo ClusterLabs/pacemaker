@@ -3,8 +3,6 @@
 ## What is Pacemaker?
 
 Pacemaker is an advanced, scalable high-availability cluster resource manager.
-It runs on top of a cluster communication layer, either Corosync or
-Linux-HA's Heartbeat.
 
 It supports "N-node" clusters with significant capabilities for
 managing resources and dependencies.

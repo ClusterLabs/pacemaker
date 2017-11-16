@@ -325,7 +325,7 @@ Cluster Properties:
 
 The output shows state information automatically obtained about the cluster, including:
 
-* *cluster-infrastructure* - the cluster communications layer in use (heartbeat or corosync)
+* *cluster-infrastructure* - the cluster communications layer in use
 * *cluster-name* - the cluster name chosen by the administrator when the cluster was created
 * *dc-version* - the version (including upstream source-code hash) of Pacemaker used on the Designated Controller
 

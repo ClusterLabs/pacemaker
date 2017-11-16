@@ -15,7 +15,7 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="deglxen001" type="normal" uname="deglxen001">
+      <node id="deglxen001" type="member" uname="deglxen001">
         <utilization id="deglxen001-utilization">
           <nvpair id="deglxen001-utilization-cpu" name="cpu" value="64"/>
           <nvpair id="deglxen001-utilization-memory" name="memory" value="513"/>
@@ -25,7 +25,7 @@
           <nvpair id="deglxen001-instance_attributes-standby" name="standby" value="off"/>
         </instance_attributes>
       </node>
-      <node id="deglxen002" type="normal" uname="deglxen002">
+      <node id="deglxen002" type="member" uname="deglxen002">
         <utilization id="deglxen002-utilization">
           <nvpair id="deglxen002-utilization-cpu" name="cpu" value="64"/>
           <nvpair id="deglxen002-utilization-memory" name="memory" value="513636"/>

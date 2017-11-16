@@ -13,10 +13,10 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="srv01" uname="srv01" type="normal"/>
-      <node id="srv02" uname="srv02" type="normal"/>
-      <node id="srv03" uname="srv03" type="normal"/>
-      <node id="srv04" uname="srv04" type="normal"/>
+      <node id="srv01" uname="srv01" type="member"/>
+      <node id="srv02" uname="srv02" type="member"/>
+      <node id="srv03" uname="srv03" type="member"/>
+      <node id="srv04" uname="srv04" type="member"/>
     </nodes>
     <resources>
       <group id="UMgroup01">

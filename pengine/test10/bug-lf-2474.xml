@@ -11,7 +11,7 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="hex-14" type="normal" uname="hex-14"/>
+      <node id="hex-14" type="member" uname="hex-14"/>
     </nodes>
     <resources>
       <primitive class="ocf" id="dummy-10s-timeout" provider="pacemaker" type="Dummy">

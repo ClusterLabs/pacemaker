@@ -83,7 +83,7 @@ Description:
 
       Once we start and do some basic sanity checks, we go into the
       S_NOT_DC state and await instructions from the DC or input from
-      the CCM which indicates the election algorithm needs to run.
+      the cluster layer which indicates the election algorithm needs to run.
 
       If the election algorithm is triggered we enter the S_ELECTION state
       from where we can either go back to the S_NOT_DC state or progress
@@ -99,7 +99,7 @@ Description:
       - Concurrent multiple elections are possible
       - Algorithm
 	  + N sends ELECTION messages to all nodes that occur earlier in
-	  the CCM's membership list.
+	  the cluster layer's membership list.
 	  + If no one responds, N wins and becomes controller
 	  + N sends out CONTROLLER messages to all other nodes in the
 	  partition
@@ -192,7 +192,7 @@ enum crmd_fsa_input {
     I_RESTART,                  /* The current set of actions needs to be
                                  * restarted
                                  */
-    I_TE_SUCCESS,               /* Some non-resource, non-ccm action is required
+    I_TE_SUCCESS,               /* Some non-resource, non-cluster-layer action is required
                                  * of us, eg. ping
                                  */
 /* 20 */
@@ -250,16 +250,15 @@ enum crmd_fsa_input {
 #  define	A_NOTHING		0x0000000000000000ULL
 
 /* -- Startup actions -- */
-        /* Hook to perform any actions (other than starting the CIB,
-         * connecting to HA or the CCM) that might be needed as part
-         * of the startup.
+        /* Hook to perform any actions (other than connecting to other daemons)
+         * that might be needed as part of the startup.
          */
 #  define	A_STARTUP		0x0000000000000001ULL
         /* Hook to perform any actions that might be needed as part
          * after startup is successful.
          */
 #  define	A_STARTED		0x0000000000000002ULL
-        /* Connect to Heartbeat */
+        /* Connect to cluster layer */
 #  define	A_HA_CONNECT		0x0000000000000004ULL
 #  define	A_HA_DISCONNECT		0x0000000000000008ULL
 
@@ -329,10 +328,6 @@ enum crmd_fsa_input {
 #  define	A_ELECTION_CHECK	0x0000000200000000ULL
 #  define A_DC_JOIN_FINAL		0x0000000400000000ULL
 
-/* -- CCM actions -- */
-#  define	A_CCM_CONNECT		0x0000001000000000ULL
-#  define	A_CCM_DISCONNECT	0x0000002000000000ULL
-
 /* -- CIB actions -- */
 #  define	A_CIB_START		0x0000020000000000ULL
 #  define	A_CIB_STOP		0x0000040000000000ULL
@@ -383,7 +378,7 @@ enum crmd_fsa_input {
 #  define	A_ERROR			0x2000000000000000ULL
 #  define	A_WARN			0x4000000000000000ULL
 
-#  define O_EXIT (A_SHUTDOWN|A_STOP|A_CCM_DISCONNECT|A_LRM_DISCONNECT|A_HA_DISCONNECT|A_EXIT_0|A_CIB_STOP)
+#  define O_EXIT (A_SHUTDOWN|A_STOP|A_LRM_DISCONNECT|A_HA_DISCONNECT|A_EXIT_0|A_CIB_STOP)
 #  define O_RELEASE  (A_DC_TIMER_STOP|A_DC_RELEASE|A_PE_STOP|A_TE_STOP|A_DC_RELEASED)
 #  define	O_PE_RESTART		(A_PE_START|A_PE_STOP)
 #  define	O_TE_RESTART		(A_TE_START|A_TE_STOP)
@@ -438,11 +433,10 @@ enum crmd_fsa_input {
 #  define R_HAVE_CIB	0x00020000ULL   /* Do we have an up-to-date CIB */
 #  define R_CIB_ASKED	0x00040000ULL   /* Have we asked for an up-to-date CIB */
 
-#  define R_MEMBERSHIP	0x00100000ULL   /* Have we got CCM data yet */
+#  define R_MEMBERSHIP	0x00100000ULL   /* Have we got cluster layer data yet */
 #  define R_PEER_DATA	0x00200000ULL   /* Have we got T_CL_STATUS data yet */
 
 #  define R_HA_DISCONNECTED  0x00400000ULL      /* did we sign out of our own accord */
-#  define R_CCM_DISCONNECTED 0x00800000ULL      /* did we sign out of our own accord */
 
 #  define	R_REQ_PEND	0x01000000ULL
                                         /* Are there Requests waiting for
@@ -477,7 +471,6 @@ enum crmd_fsa_cause {
     C_STARTUP,
     C_IPC_MESSAGE,
     C_HA_MESSAGE,
-    C_CCM_CALLBACK,
     C_CRMD_STATUS_CALLBACK,
     C_LRM_OP_CALLBACK,
     C_LRM_MONITOR_CALLBACK,
@@ -485,7 +478,6 @@ enum crmd_fsa_cause {
     C_SHUTDOWN,
     C_HEARTBEAT_FAILED,
     C_SUBSYSTEM_CONNECT,
-    C_HA_DISCONNECT,
     C_FSA_INTERNAL,
     C_ILLEGAL
 };

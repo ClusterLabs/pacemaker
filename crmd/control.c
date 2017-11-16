@@ -51,7 +51,6 @@
 qb_ipcs_service_t *ipcs = NULL;
 
 extern gboolean crm_connect_corosync(crm_cluster_t * cluster);
-extern void crmd_ha_connection_destroy(gpointer user_data);
 
 void crm_shutdown(int nsig);
 gboolean crm_read_options(gpointer user_data);
@@ -99,42 +98,6 @@ do_ha_control(long long action,
 #if SUPPORT_COROSYNC
             registered = crm_connect_corosync(cluster);
 #endif
-        } else if (is_heartbeat_cluster()) {
-#if SUPPORT_HEARTBEAT
-            cluster->destroy = crmd_ha_connection_destroy;
-            cluster->hb_dispatch = crmd_ha_msg_callback;
-
-            registered = crm_cluster_connect(cluster);
-            fsa_cluster_conn = cluster->hb_conn;
-
-            crm_trace("Be informed of Node Status changes");
-            if (registered &&
-                fsa_cluster_conn->llc_ops->set_nstatus_callback(fsa_cluster_conn,
-                                                                crmd_ha_status_callback,
-                                                                fsa_cluster_conn) != HA_OK) {
-
-                crm_err("Cannot set nstatus callback: %s",
-                        fsa_cluster_conn->llc_ops->errmsg(fsa_cluster_conn));
-                registered = FALSE;
-            }
-
-            crm_trace("Be informed of CRM Client Status changes");
-            if (registered &&
-                fsa_cluster_conn->llc_ops->set_cstatus_callback(fsa_cluster_conn,
-                                                                crmd_client_status_callback,
-                                                                fsa_cluster_conn) != HA_OK) {
-
-                crm_err("Cannot set cstatus callback: %s",
-                        fsa_cluster_conn->llc_ops->errmsg(fsa_cluster_conn));
-                registered = FALSE;
-            }
-
-            if (registered) {
-                crm_trace("Requesting an initial dump of CRMD client_status");
-                fsa_cluster_conn->llc_ops->client_status(fsa_cluster_conn, NULL, CRM_SYSTEM_CRMD,
-                                                         -1);
-            }
-#endif
         }
         fsa_election = election_init(NULL, cluster->uname, 60000/*60s*/, election_timeout_popped);
         fsa_our_uname = cluster->uname;
@@ -165,17 +128,10 @@ need_spawn_pengine_from_crmd(void)
 {
 	static int result = -1;
 
-	if (result != -1)
-		return result;
-	if (!is_heartbeat_cluster()) {
-		result = 0;
-		return result;
-	}
-
-	/* NULL, or "strange" value: rather spawn from here. */
-	result = TRUE;
-	crm_str_to_boolean(daemon_option("crmd_spawns_pengine"), &result);
-	return result;
+	if (result == -1) {
+        result = 0;
+    }
+    return result;
 }
 
 /*	 A_SHUTDOWN	*/
@@ -441,45 +397,6 @@ crmd_exit(int rc)
         crm_trace("Closing mainloop %d %d", g_main_loop_is_running(mloop), g_main_context_pending(ctx));
         g_main_loop_quit(mloop);
 
-#if SUPPORT_HEARTBEAT
-        /* Do this only after g_main_loop_quit().
-         *
-         * This interface was broken (incomplete) since it was introduced.
-         * ->delete() does cleanup and free most of it, but it does not
-         * actually remove and destroy the corresponding GSource, so the next
-         * prepare/check iteratioin would find a corrupt (because partially
-         * freed) GSource, and segfault.
-         *
-         * Apparently one was supposed to store the GSource as returned by
-         * G_main_add_ll_cluster(), and g_source_destroy() that "by hand".
-         *
-         * But no-one ever did this, not even in the old hb code when this was
-         * introduced.
-         *
-         * Note that fsa_cluster_conn was set as an "alias" to cluster->hb_conn
-         * in do_ha_control() right after crm_cluster_connect(), and only
-         * happens to still point at that object, because do_ha_control() does
-         * not reset it to NULL after crm_cluster_disconnect() above does
-         * reset cluster->hb_conn to NULL.
-         * Not sure if that's something to cleanup, too.
-         *
-         * I'll try to fix this up in heartbeat proper, so ->delete
-         * will actually remove, and destroy, and unref, and free this thing.
-         * Doing so after g_main_loop_quit() is valid with both old,
-         * and eventually fixed heartbeat.
-         *
-         * If we introduce the "by hand" destroy/remove/unref,
-         * this may break again once heartbeat is fixed :-(
-         *
-         *                                              -- Lars Ellenberg
-         */
-        if (fsa_cluster_conn) {
-            crm_trace("Deleting heartbeat api object");
-            fsa_cluster_conn->llc_ops->delete(fsa_cluster_conn);
-            fsa_cluster_conn = NULL;
-        }
-#endif
-
         /* Won't do anything yet, since we're inside it now */
         g_main_loop_unref(mloop);
 
@@ -598,7 +515,7 @@ do_startup(long long action,
          * in this loop we continually send probes which the node
          *    NACK's because it's in S_PENDING
          *
-         * if we have nodes where heartbeat is active but the
+         * if we have nodes where the cluster layer is active but the
          *    CRM is not... then this will be handled in the
          *    integration phase
          */
@@ -843,21 +760,7 @@ do_started(long long action,
 
     } else if (is_set(fsa_input_register, R_PEER_DATA) == FALSE) {
 
-        /* try reading from HA */
         crm_info("Delaying start, No peer data (%.16llx)", R_PEER_DATA);
-
-#if SUPPORT_HEARTBEAT
-        if (is_heartbeat_cluster()) {
-            HA_Message *msg = NULL;
-
-            crm_trace("Looking for a HA message");
-            msg = fsa_cluster_conn->llc_ops->readmsg(fsa_cluster_conn, 0);
-            if (msg != NULL) {
-                crm_trace("There was a HA message");
-                ha_msg_del(msg);
-            }
-        }
-#endif
         crmd_fsa_stall(TRUE);
         return;
     }
@@ -901,7 +804,7 @@ pe_cluster_option crmd_opts[] = {
           "Version of Pacemaker on the cluster's DC.",
           "Includes the hash which identifies the exact changeset it was built from.  Used for diagnostic purposes."
         },
-	{ "cluster-infrastructure", NULL, "string", NULL, "heartbeat", NULL,
+	{ "cluster-infrastructure", NULL, "string", NULL, "corosync", NULL,
           "The messaging stack on which Pacemaker is currently running.",
           "Used for informational and diagnostic purposes." },
 	{ XML_CONFIG_ATTR_DC_DEADTIME, "dc_deadtime", "time", NULL, "20s", &check_time,

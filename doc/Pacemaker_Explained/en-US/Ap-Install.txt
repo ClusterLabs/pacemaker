@@ -181,17 +181,3 @@ an IP address or start apache is of little use.
 
 The second directive is the one that actually instructs the cluster to
 run Pacemaker.
-
-==== Enabling Pacemaker For Heartbeat ====
-
-See the heartbeat documentation for how to set up a +ha.cf+ configuration file.
-
-To enable the use of pacemaker with heartbeat, add the following to a
-functional +ha.cf+ configuration file and restart Heartbeat:
-
-.Heartbeat configuration fragment to enable Pacemaker
-====
-----
-crm respawn
-----
-====

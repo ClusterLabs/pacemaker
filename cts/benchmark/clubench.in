@@ -50,8 +50,7 @@ test -f $CTSCTRL ||  {
 }
 
 case "$CTS_stack" in
-openais|corosync) HB_REPORT_OPTS="-A";;
-heartbeat) HB_REPORT_OPTS="";;
+openais|corosync) CRM_REPORT_OPTS="-A";;
 *) msg "$CTS_stack: cluster stack not recognized"; exit 1;;
 esac
 
@@ -113,7 +112,7 @@ mkreports() {
 		teststg="`testnum $num`-$type"
 		(
 		cd $ctsdir
-		hb_report $HB_REPORT_OPTS -f cts:$num -n "$nodes" `pwd`/$teststg < /dev/null
+		crm_report $CRM_REPORT_OPTS -f cts:$num -n "$nodes" `pwd`/$teststg < /dev/null
 		)
 	done
 }

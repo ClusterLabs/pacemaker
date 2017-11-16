@@ -16,12 +16,12 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="3f9539b2-cd3b-4176-af89-e1b91fd9c8c7" uname="router1" type="normal"/>
-      <node id="f83e8e33-3e0f-46d6-93d4-8dace5be52db" uname="router2" type="normal"/>
+      <node id="3f9539b2-cd3b-4176-af89-e1b91fd9c8c7" uname="router1" type="member"/>
+      <node id="f83e8e33-3e0f-46d6-93d4-8dace5be52db" uname="router2" type="member"/>
     </nodes>
     <resources>
       <group id="test" description="test resource">
-        <primitive id="test_ip" class="heartbeat" type="IPaddr2_vlan">
+        <primitive id="test_ip" class="ocf" provider="heartbeat" type="IPaddr2_vlan">
           <instance_attributes id="instance_attributes.id21962">
             <nvpair id="nvpair.id21968" name="1" value="10.1.1.1/24/sit0"/>
           </instance_attributes>

@@ -11,13 +11,13 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="c19.chepkov.lan" type="normal" uname="c19.chepkov.lan"/>
-      <node id="c20.chepkov.lan" type="normal" uname="c20.chepkov.lan">
+      <node id="c19.chepkov.lan" type="member" uname="c19.chepkov.lan"/>
+      <node id="c20.chepkov.lan" type="member" uname="c20.chepkov.lan">
         <instance_attributes id="nodes-c20.chepkov.lan">
           <nvpair id="nodes-c20.chepkov.lan-standby" name="standby" value="on"/>
         </instance_attributes>
       </node>
-      <node id="c21.chepkov.lan" type="normal" uname="c21.chepkov.lan"/>
+      <node id="c21.chepkov.lan" type="member" uname="c21.chepkov.lan"/>
     </nodes>
     <resources>
       <primitive class="ocf" id="dummy1" provider="pacemaker" type="Dummy"/>

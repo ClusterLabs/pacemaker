@@ -13,19 +13,19 @@
       <node id="node2" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <primitive id="rsc1" class="heartbeat" type="apache">
+      <primitive id="rsc1" class="ocf" provider="heartbeat" type="apache">
         <instance_attributes id="instance_attributes.id21877">
           <nvpair id="nvpair.id21883" name="priority" value="1.0"/>
         </instance_attributes>
         <meta_attributes id="primitive-rsc1.meta"/>
       </primitive>
-      <primitive id="rsc2" class="heartbeat" type="apache">
+      <primitive id="rsc2" class="ocf" provider="heartbeat" type="apache">
         <instance_attributes id="instance_attributes.id21903">
           <nvpair id="nvpair.id21909" name="priority" value="2.0"/>
         </instance_attributes>
         <meta_attributes id="primitive-rsc2.meta"/>
       </primitive>
-      <primitive id="rsc3" class="heartbeat" type="apache">
+      <primitive id="rsc3" class="ocf" provider="heartbeat" type="apache">
         <instance_attributes id="instance_attributes.id21929">
           <nvpair id="nvpair.id21935" name="priority" value="3.0"/>
         </instance_attributes>

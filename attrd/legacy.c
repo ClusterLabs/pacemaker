@@ -42,9 +42,6 @@
 #include <attrd_common.h>
 
 #define OPTARGS	"hV"
-#if SUPPORT_HEARTBEAT
-ll_cluster_t *attrd_cluster_conn;
-#endif
 
 char *attrd_uname = NULL;
 char *attrd_uuid = NULL;
@@ -424,36 +421,6 @@ process_xml_request(xmlNode *xml)
     }
 }
 
-#if SUPPORT_HEARTBEAT
-static void
-attrd_ha_connection_destroy(gpointer user_data)
-{
-    crm_trace("Invoked");
-    if (attrd_shutting_down()) {
-        /* we signed out, so this is expected */
-        crm_info("Heartbeat disconnection complete");
-        return;
-    }
-
-    crm_crit("Lost connection to heartbeat service!");
-    if (attrd_mainloop_running()) {
-        attrd_quit_mainloop();
-        return;
-    }
-    crm_exit(pcmk_ok);
-}
-
-static void
-attrd_ha_callback(HA_Message * msg, void *private_data)
-{
-    xmlNode *xml = convert_ha_message(NULL, msg, __FUNCTION__);
-
-    process_xml_request(xml);
-    free_xml(xml);
-}
-
-#endif
-
 #if SUPPORT_COROSYNC
 static void
 attrd_cs_dispatch(cpg_handle_t handle,
@@ -676,14 +643,6 @@ main(int argc, char **argv)
         }
 #endif
 
-#if SUPPORT_HEARTBEAT
-        if (is_heartbeat_cluster()) {
-            cluster.hb_conn = NULL;
-            cluster.hb_dispatch = attrd_ha_callback;
-            cluster.destroy = attrd_ha_connection_destroy;
-        }
-#endif
-
         if (FALSE == crm_cluster_connect(&cluster)) {
             crm_err("HA Signon failed");
             was_err = TRUE;
@@ -692,9 +651,6 @@ main(int argc, char **argv)
         attrd_uname = cluster.uname;
         attrd_uuid = cluster.uuid;
         attrd_nodeid = cluster.nodeid;
-#if SUPPORT_HEARTBEAT
-        attrd_cluster_conn = cluster.hb_conn;
-#endif
     }
 
     crm_info("Cluster connection active");
@@ -720,13 +676,6 @@ main(int argc, char **argv)
     crm_notice("Starting mainloop...");
     attrd_run_mainloop();
     crm_notice("Exiting...");
-
-#if SUPPORT_HEARTBEAT
-    if (is_heartbeat_cluster()) {
-        attrd_cluster_conn->llc_ops->signoff(attrd_cluster_conn, TRUE);
-        attrd_cluster_conn->llc_ops->delete(attrd_cluster_conn);
-    }
-#endif
 
     c = qb_ipcs_connection_first_get(ipcs);
     while (c != NULL) {

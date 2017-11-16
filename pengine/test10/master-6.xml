@@ -15,14 +15,14 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" uname="c001n08" type="normal">
+      <node id="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" uname="c001n08" type="member">
         <instance_attributes id="instance_attributes.id21943">
           <nvpair id="nvpair.id21951" name="master-ocf_msdummy:0" value="1000"/>
         </instance_attributes>
       </node>
-      <node id="e9bdfde9-01b0-421f-acd8-8a65a53e775f" uname="c001n02" type="normal"/>
-      <node id="5d9a8c11-8684-43ea-91.0.6e221530c193" uname="c001n03" type="normal"/>
-      <node id="de937e3d-0309-4b5d-b85c-f96edc1ed8e3" uname="c001n01" type="normal"/>
+      <node id="e9bdfde9-01b0-421f-acd8-8a65a53e775f" uname="c001n02" type="member"/>
+      <node id="5d9a8c11-8684-43ea-91.0.6e221530c193" uname="c001n03" type="member"/>
+      <node id="de937e3d-0309-4b5d-b85c-f96edc1ed8e3" uname="c001n01" type="member"/>
     </nodes>
     <resources>
       <primitive id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat">
@@ -47,7 +47,7 @@
           </instance_attributes>
           <meta_attributes id="primitive-ocf_192.168.100.181.meta"/>
         </primitive>
-        <primitive id="heartbeat_192.168.100.182" class="heartbeat" type="IPaddr">
+        <primitive id="heartbeat_192.168.100.182" class="ocf" provider="heartbeat" type="IPaddr">
           <operations>
             <op name="monitor" interval="5s" id="heartbeat_192.168.100.182_monitor" timeout="20s"/>
           </operations>
@@ -229,7 +229,7 @@
           <lrm_resource id="rsc_c001n03" type="IPaddr" class="ocf" provider="heartbeat">
             <lrm_rsc_op id="rsc_c001n03_monitor_0" op-digest="4524426499361a7a84b1803848e28d0c" interval="0" operation="monitor" transition-key="0:b76c3e2e-f4d3-4800-af76-89ec8931503c" crm_feature_set="2.0" transition-magic="4:7;0:b76c3e2e-f4d3-4800-af76-89ec8931503c" call-id="9" rc-code="7" op-status="4"/>
           </lrm_resource>
-          <lrm_resource id="heartbeat_192.168.100.182" type="IPaddr" class="heartbeat">
+          <lrm_resource id="heartbeat_192.168.100.182" type="IPaddr" class="ocf" provider="heartbeat">
             <lrm_rsc_op id="heartbeat_192.168.100.182_monitor_0" op-digest="228e5b6a6590df0e8af9a9964014ed59" interval="0" operation="monitor" transition-key="0:b76c3e2e-f4d3-4800-af76-89ec8931503c" crm_feature_set="2.0" transition-magic="4:7;0:b76c3e2e-f4d3-4800-af76-89ec8931503c" call-id="4" rc-code="7" op-status="4"/>
           </lrm_resource>
           <lrm_resource id="ocf_msdummy:0" type="/usr/lib/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">
@@ -300,7 +300,7 @@
           <lrm_resource id="child_DoFencing:2" type="ssh" class="stonith">
             <lrm_rsc_op id="child_DoFencing-2_monitor_0" op-digest="cd062168f843c5d2a0d53ed7c4789de3" interval="0" operation="monitor" transition-key="4:b76c3e2e-f4d3-4800-af76-89ec8931503c" crm_feature_set="2.0" transition-magic="4:7;4:b76c3e2e-f4d3-4800-af76-89ec8931503c" call-id="21" rc-code="7" op-status="4"/>
           </lrm_resource>
-          <lrm_resource id="heartbeat_192.168.100.182" type="IPaddr" class="heartbeat">
+          <lrm_resource id="heartbeat_192.168.100.182" type="IPaddr" class="ocf" provider="heartbeat">
             <lrm_rsc_op id="heartbeat_192.168.100.182_start_0" op-digest="228e5b6a6590df0e8af9a9964014ed59" operation="start" interval="0" transition-key="7:b76c3e2e-f4d3-4800-af76-89ec8931503c" crm_feature_set="2.0" transition-magic="0:0;7:b76c3e2e-f4d3-4800-af76-89ec8931503c" call-id="31" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="heartbeat_192.168.100.182_monitor_5000" op-digest="69ba9b280a0f25ada1ead264a34aa5ff" interval="5000" operation="monitor" transition-key="7:b76c3e2e-f4d3-4800-af76-89ec8931503c" crm_feature_set="2.0" transition-magic="0:0;7:b76c3e2e-f4d3-4800-af76-89ec8931503c" call-id="35" rc-code="0" op-status="0"/>
           </lrm_resource>
@@ -363,7 +363,7 @@
             <lrm_rsc_op id="child_DoFencing-2_start_0" op-digest="cd062168f843c5d2a0d53ed7c4789de3" operation="start" interval="0" transition-key="6:b76c3e2e-f4d3-4800-af76-89ec8931503c" crm_feature_set="2.0" transition-magic="0:0;6:b76c3e2e-f4d3-4800-af76-89ec8931503c" call-id="16" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="child_DoFencing-2_monitor_20000" op-digest="0236f7c4dbc3d459c82f4f981a7bf5f4" interval="20000" operation="monitor" transition-key="7:b76c3e2e-f4d3-4800-af76-89ec8931503c" crm_feature_set="2.0" transition-magic="0:0;7:b76c3e2e-f4d3-4800-af76-89ec8931503c" call-id="21" rc-code="0" op-status="0"/>
           </lrm_resource>
-          <lrm_resource id="heartbeat_192.168.100.182" type="IPaddr" class="heartbeat">
+          <lrm_resource id="heartbeat_192.168.100.182" type="IPaddr" class="ocf" provider="heartbeat">
             <lrm_rsc_op id="heartbeat_192.168.100.182_monitor_0" op-digest="228e5b6a6590df0e8af9a9964014ed59" interval="0" operation="monitor" transition-key="6:b76c3e2e-f4d3-4800-af76-89ec8931503c" crm_feature_set="2.0" transition-magic="4:7;6:b76c3e2e-f4d3-4800-af76-89ec8931503c" call-id="4" rc-code="7" op-status="4"/>
           </lrm_resource>
           <lrm_resource id="ocf_msdummy:0" type="/usr/lib/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">
@@ -413,7 +413,7 @@
           <lrm_resource id="ocf_msdummy:0" type="/usr/lib/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">
             <lrm_rsc_op id="ocf_msdummy-0_monitor_0" op-digest="ec8db50619941e7d81394ae605c8b3e7" interval="0" operation="monitor" transition-key="8:b76c3e2e-f4d3-4800-af76-89ec8931503c" crm_feature_set="2.0" transition-magic="4:7;8:b76c3e2e-f4d3-4800-af76-89ec8931503c" call-id="12" rc-code="7" op-status="4"/>
           </lrm_resource>
-          <lrm_resource id="heartbeat_192.168.100.182" type="IPaddr" class="heartbeat">
+          <lrm_resource id="heartbeat_192.168.100.182" type="IPaddr" class="ocf" provider="heartbeat">
             <lrm_rsc_op id="heartbeat_192.168.100.182_monitor_0" op-digest="228e5b6a6590df0e8af9a9964014ed59" interval="0" operation="monitor" transition-key="8:b76c3e2e-f4d3-4800-af76-89ec8931503c" crm_feature_set="2.0" transition-magic="4:7;8:b76c3e2e-f4d3-4800-af76-89ec8931503c" call-id="4" rc-code="7" op-status="4"/>
           </lrm_resource>
           <lrm_resource id="ocf_msdummy:1" type="/usr/lib/heartbeat/cts/OCFMSDummy" class="ocf" provider="heartbeat">

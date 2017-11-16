@@ -213,11 +213,8 @@ resources_action_create(const char *name, const char *standard, const char *prov
     op->flags = flags;
     op->id = generate_op_key(name, action, interval);
 
-    if (safe_str_eq(action, "monitor") && (
-#if SUPPORT_HEARTBEAT
-        safe_str_eq(op->standard, PCMK_RESOURCE_CLASS_HB) ||
-#endif
-        safe_str_eq(op->standard, PCMK_RESOURCE_CLASS_LSB))) {
+    if (safe_str_eq(action, "monitor")
+        && safe_str_eq(op->standard, PCMK_RESOURCE_CLASS_LSB)) {
         action = "status";
     }
     op->action = strdup(action);
@@ -246,44 +243,6 @@ resources_action_create(const char *name, const char *standard, const char *prov
         op->opaque->args[0] = strdup(op->opaque->exec);
         op->opaque->args[1] = strdup(op->action);
         op->opaque->args[2] = NULL;
-#if SUPPORT_HEARTBEAT
-    } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_HB) == 0) {
-        int index;
-        int param_num;
-        char buf_tmp[20];
-        void *value_tmp;
-
-        if (op->agent[0] == '/') {
-            /* if given an absolute path, use that instead
-             * of tacking on the HB_RA_DIR path to the front */
-            op->opaque->exec = strdup(op->agent);
-        } else if (asprintf(&op->opaque->exec, "%s/%s", HB_RA_DIR, op->agent) == -1) {
-            crm_err("Internal error: cannot create agent path");
-            goto return_error;
-        }
-        op->opaque->args[0] = strdup(op->opaque->exec);
-
-        /* The "heartbeat" agent class only has positional arguments,
-         * which we keyed by their decimal position number. */
-        param_num = 1;
-        if (params) {
-            for (index = 1; index <= MAX_ARGC - 3; index++ ) {
-                snprintf(buf_tmp, sizeof(buf_tmp), "%d", index);
-                value_tmp = g_hash_table_lookup(params, buf_tmp);
-                if (value_tmp == NULL) {
-                    /* maybe: strdup("") ??
-                     * But the old lrmd did simply continue as well. */
-                    continue;
-                }
-                op->opaque->args[param_num++] = strdup(value_tmp);
-            }
-        }
-
-        /* Add operation code as the last argument, */
-        /* and the terminating NULL pointer */
-        op->opaque->args[param_num++] = strdup(op->action);
-        op->opaque->args[param_num] = NULL;
-#endif
 #if SUPPORT_SYSTEMD
     } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_SYSTEMD) == 0) {
         op->opaque->exec = strdup("systemd-dbus");
@@ -1179,94 +1138,6 @@ nagios_get_metadata(const char *type, char **output)
 }
 #endif
 
-#if SUPPORT_HEARTBEAT
-/* strictly speaking, support for class=heartbeat style scripts
- * does not require "heartbeat support" to be enabled.
- * But since those scripts are part of the "heartbeat" package usually,
- * and are very unlikely to be present in any other deployment,
- * I leave it inside this ifdef.
- *
- * Yes, I know, these are legacy and should die,
- * or at least be rewritten to be a proper OCF style agent.
- * But they exist, and custom scripts following these rules do, too.
- *
- * Taken from the old "glue" lrmd, see
- * http://hg.linux-ha.org/glue/file/0a7add1d9996/lib/plugins/lrm/raexechb.c#l49
- * http://hg.linux-ha.org/glue/file/0a7add1d9996/lib/plugins/lrm/raexechb.c#l393
- */
-
-static const char hb_metadata_template[] =
-    "<?xml version='1.0'?>\n"
-    "<!DOCTYPE resource-agent SYSTEM 'ra-api-1.dtd'>\n"
-    "<resource-agent name='%s' version='" PCMK_DEFAULT_AGENT_VERSION "'>\n"
-    "<version>1.0</version>\n"
-    "<longdesc lang='en'>\n"
-    "%s"
-    "</longdesc>\n"
-    "<shortdesc lang='en'>%s</shortdesc>\n"
-    "<parameters>\n"
-    "<parameter name='1' unique='1' required='0'>\n"
-    "<longdesc lang='en'>\n"
-    "This argument will be passed as the first argument to the "
-    "heartbeat resource agent (assuming it supports one)\n"
-    "</longdesc>\n"
-    "<shortdesc lang='en'>argv[1]</shortdesc>\n"
-    "<content type='string' default=' ' />\n"
-    "</parameter>\n"
-    "<parameter name='2' unique='1' required='0'>\n"
-    "<longdesc lang='en'>\n"
-    "This argument will be passed as the second argument to the "
-    "heartbeat resource agent (assuming it supports one)\n"
-    "</longdesc>\n"
-    "<shortdesc lang='en'>argv[2]</shortdesc>\n"
-    "<content type='string' default=' ' />\n"
-    "</parameter>\n"
-    "<parameter name='3' unique='1' required='0'>\n"
-    "<longdesc lang='en'>\n"
-    "This argument will be passed as the third argument to the "
-    "heartbeat resource agent (assuming it supports one)\n"
-    "</longdesc>\n"
-    "<shortdesc lang='en'>argv[3]</shortdesc>\n"
-    "<content type='string' default=' ' />\n"
-    "</parameter>\n"
-    "<parameter name='4' unique='1' required='0'>\n"
-    "<longdesc lang='en'>\n"
-    "This argument will be passed as the fourth argument to the "
-    "heartbeat resource agent (assuming it supports one)\n"
-    "</longdesc>\n"
-    "<shortdesc lang='en'>argv[4]</shortdesc>\n"
-    "<content type='string' default=' ' />\n"
-    "</parameter>\n"
-    "<parameter name='5' unique='1' required='0'>\n"
-    "<longdesc lang='en'>\n"
-    "This argument will be passed as the fifth argument to the "
-    "heartbeat resource agent (assuming it supports one)\n"
-    "</longdesc>\n"
-    "<shortdesc lang='en'>argv[5]</shortdesc>\n"
-    "<content type='string' default=' ' />\n"
-    "</parameter>\n"
-    "</parameters>\n"
-    "<actions>\n"
-    "<action name='start'   timeout='15' />\n"
-    "<action name='stop'    timeout='15' />\n"
-    "<action name='status'  timeout='15' />\n"
-    "<action name='monitor' timeout='15' interval='15' start-delay='15' />\n"
-    "<action name='meta-data'  timeout='5' />\n"
-    "</actions>\n"
-    "<special tag='heartbeat'>\n"
-    "</special>\n"
-    "</resource-agent>\n";
-
-static int
-heartbeat_get_metadata(const char *type, char **output)
-{
-    *output = crm_strdup_printf(hb_metadata_template, type, type, type);
-    crm_trace("Created fake metadata: %llu",
-              (unsigned long long) strlen(*output));
-    return pcmk_ok;
-}
-#endif
-
 static gboolean
 action_get_metadata(svc_action_t *op)
 {
@@ -1300,12 +1171,6 @@ action_get_metadata(svc_action_t *op)
 #if SUPPORT_NAGIOS
     if (safe_str_eq(class, PCMK_RESOURCE_CLASS_NAGIOS)) {
         return (nagios_get_metadata(op->agent, &op->stdout_data) >= 0);
-    }
-#endif
-
-#if SUPPORT_HEARTBEAT
-    if (safe_str_eq(class, PCMK_RESOURCE_CLASS_HB)) {
-        return (heartbeat_get_metadata(op->agent, &op->stdout_data) >= 0);
     }
 #endif
 
@@ -1359,14 +1224,6 @@ services_list(void)
     return resources_list_agents(PCMK_RESOURCE_CLASS_LSB, NULL);
 }
 
-#if SUPPORT_HEARTBEAT
-static GList *
-resources_os_list_hb_agents(void)
-{
-    return services_os_get_directory_list(HB_RA_DIR, TRUE, TRUE);
-}
-#endif
-
 GList *
 resources_list_standards(void)
 {
@@ -1402,10 +1259,6 @@ resources_list_standards(void)
                                   strdup(PCMK_RESOURCE_CLASS_NAGIOS));
         g_list_free_full(agents, free);
     }
-#endif
-
-#if SUPPORT_HEARTBEAT
-    standards = g_list_append(standards, strdup(PCMK_RESOURCE_CLASS_HB));
 #endif
 
     return standards;
@@ -1460,10 +1313,6 @@ resources_list_agents(const char *standard, const char *provider)
         return resources_os_list_ocf_agents(provider);
     } else if (strcasecmp(standard, PCMK_RESOURCE_CLASS_LSB) == 0) {
         return resources_os_list_lsb_agents();
-#if SUPPORT_HEARTBEAT
-    } else if (strcasecmp(standard, PCMK_RESOURCE_CLASS_HB) == 0) {
-        return resources_os_list_hb_agents();
-#endif
 #if SUPPORT_SYSTEMD
     } else if (strcasecmp(standard, PCMK_RESOURCE_CLASS_SYSTEMD) == 0) {
         return systemd_unit_listall();

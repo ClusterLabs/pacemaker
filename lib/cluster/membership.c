@@ -308,11 +308,6 @@ crm_is_peer_active(const crm_node_t * node)
         return crm_is_corosync_peer_active(node);
     }
 #endif
-#if SUPPORT_HEARTBEAT
-    if (is_heartbeat_cluster()) {
-        return crm_is_heartbeat_peer_active(node);
-    }
-#endif
     crm_err("Unhandled cluster type: %s", name_for_cluster_type(get_cluster_type()));
     return FALSE;
 }
@@ -788,11 +783,6 @@ crm_update_peer(const char *source, unsigned int id, uint64_t born, uint64_t see
             return NULL;
         }
     }
-#if SUPPORT_HEARTBEAT
-    if (born != 0) {
-        node->born = born;
-    }
-#endif
 
 #if SUPPORT_PLUGIN
     /* These were only used by the plugin */

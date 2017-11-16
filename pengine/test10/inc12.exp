@@ -47,7 +47,7 @@
    <synapse id="3">
      <action_set>
       <rsc_op id="27" operation="stop" operation_key="heartbeat_192.168.100.182_stop_0" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5">
-        <primitive id="heartbeat_192.168.100.182" class="heartbeat" type="IPaddr"/>
+        <primitive id="heartbeat_192.168.100.182" class="ocf" provider="heartbeat" type="IPaddr"/>
         <attributes CRM_meta_on_node="c001n02" CRM_meta_on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5" CRM_meta_timeout="10000" >
           <param name="1" value="192.168.100.182"/>
         </attributes>

@@ -22,8 +22,8 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="dresproddns01" type="normal" uname="dresproddns01"/>
-      <node id="dresproddns02" type="normal" uname="dresproddns02"/>
+      <node id="dresproddns01" type="member" uname="dresproddns01"/>
+      <node id="dresproddns02" type="member" uname="dresproddns02"/>
     </nodes>
     <resources>
       <clone id="cl-openfire">

@@ -19,12 +19,12 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="31de4ab3-2d05-476e-8f9a-627ad6cd94ca" uname="wc01" type="normal">
+      <node id="31de4ab3-2d05-476e-8f9a-627ad6cd94ca" uname="wc01" type="member">
         <instance_attributes id="node_1_ia">
           <nvpair id="node_1_cluster_group" name="cluster_group" value="web"/>
         </instance_attributes>
       </node>
-      <node id="f36760d8-d84a-46b2-b452-4c8cac8b3396" uname="wc02" type="normal">
+      <node id="f36760d8-d84a-46b2-b452-4c8cac8b3396" uname="wc02" type="member">
         <instance_attributes id="node_2_ia">
           <nvpair id="node_2_cluster_group" name="cluster_group" value="web"/>
         </instance_attributes>

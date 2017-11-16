@@ -2,7 +2,7 @@
 Current cluster status:
 OFFLINE: [ node1 ]
 
- rsc1	(heartbeat:apache):	Stopped 
+ rsc1	(ocf::heartbeat:apache):	Stopped
 
 Transition Summary:
 
@@ -11,5 +11,5 @@ Executing cluster transition:
 Revised cluster status:
 OFFLINE: [ node1 ]
 
- rsc1	(heartbeat:apache):	Stopped 
+ rsc1	(ocf::heartbeat:apache):	Stopped
 

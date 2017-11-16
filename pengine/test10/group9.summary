@@ -2,16 +2,16 @@
 Current cluster status:
 Online: [ node1 node2 ]
 
- rsc1	(heartbeat:apache):	Started node1
- rsc2	(heartbeat:apache):	Started node1
+ rsc1	(ocf::heartbeat:apache):	Started node1
+ rsc2	(ocf::heartbeat:apache):	Started node1
  Resource Group: foo
-     rsc3	(heartbeat:apache):	Started node1
-     rsc4	(heartbeat:apache):	FAILED node1 
-     rsc5	(heartbeat:apache):	Started node1
+     rsc3	(ocf::heartbeat:apache):	Started node1
+     rsc4	(ocf::heartbeat:apache):	FAILED node1
+     rsc5	(ocf::heartbeat:apache):	Started node1
  Resource Group: bar
-     rsc6	(heartbeat:apache):	Started node1
-     rsc7	(heartbeat:apache):	FAILED node1 
-     rsc8	(heartbeat:apache):	Started node1
+     rsc6	(ocf::heartbeat:apache):	Started node1
+     rsc7	(ocf::heartbeat:apache):	FAILED node1
+     rsc8	(ocf::heartbeat:apache):	Started node1
 
 Transition Summary:
  * Recover    rsc4    (          node1 )  
@@ -52,14 +52,14 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ node1 node2 ]
 
- rsc1	(heartbeat:apache):	Started node1
- rsc2	(heartbeat:apache):	Started node1
+ rsc1	(ocf::heartbeat:apache):	Started node1
+ rsc2	(ocf::heartbeat:apache):	Started node1
  Resource Group: foo
-     rsc3	(heartbeat:apache):	Started node1
-     rsc4	(heartbeat:apache):	Started node1
-     rsc5	(heartbeat:apache):	Started node1
+     rsc3	(ocf::heartbeat:apache):	Started node1
+     rsc4	(ocf::heartbeat:apache):	Started node1
+     rsc5	(ocf::heartbeat:apache):	Started node1
  Resource Group: bar
-     rsc6	(heartbeat:apache):	Started node2
-     rsc7	(heartbeat:apache):	Started node2
-     rsc8	(heartbeat:apache):	Started node2
+     rsc6	(ocf::heartbeat:apache):	Started node2
+     rsc7	(ocf::heartbeat:apache):	Started node2
+     rsc8	(ocf::heartbeat:apache):	Started node2
 

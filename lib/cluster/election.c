@@ -350,9 +350,7 @@ election_count_vote(election_t *e, xmlNode *vote, bool can_win)
         e->voted = crm_str_table_new();
     }
 
-    if (is_heartbeat_cluster()) {
-        use_born_on = TRUE;
-    } else if (is_classic_ais_cluster()) {
+    if (is_classic_ais_cluster()) {
         use_born_on = TRUE;
     }
 

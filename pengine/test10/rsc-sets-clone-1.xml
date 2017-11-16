@@ -13,12 +13,12 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="sys2" type="normal" uname="sys2">
+      <node id="sys2" type="member" uname="sys2">
         <utilization id="sys2-utilization">
           <nvpair id="sys2-utilization-memory" name="memory" value="1536"/>
         </utilization>
       </node>
-      <node id="sys3" type="normal" uname="sys3">
+      <node id="sys3" type="member" uname="sys3">
         <utilization id="sys3-utilization">
           <nvpair id="sys3-utilization-memory" name="memory" value="1536"/>
         </utilization>

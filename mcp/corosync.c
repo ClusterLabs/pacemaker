@@ -395,22 +395,13 @@ mcp_read_config(void)
     }
 
     /* If the user didn't explicitly configure a Pacemaker log file, check
-     * whether they configured a heartbeat or corosync log file, and use that.
+     * whether they configured a corosync log file, and use that.
      *
-     * @COMPAT This should all go away, and we should just rely on the logging
-     * set up by crm_log_init(). We aren't doing this yet because it is a
-     * significant user-visible change that will need to be publicized.
+     * @TODO Maybe we should drop this, and just rely on the logging set up by
+     * crm_log_init(). That would be a significant user-visible change that
+     * would need to be publicized.
      */
-    const_value = daemon_option("debugfile");
-    if (daemon_option("logfile")) {
-        /* File logging is already setup by crm_log_init() */
-
-    } else if(const_value) {
-        /* From when we cared what options heartbeat used */
-        set_daemon_option("logfile", const_value);
-        crm_add_logfile(const_value);
-
-    } else {
+    if (daemon_option("logfile") == NULL) {
         /* Check corosync */
         char *logfile = NULL;
         char *logfile_enabled = NULL;

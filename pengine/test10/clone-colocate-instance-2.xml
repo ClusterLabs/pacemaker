@@ -4,13 +4,13 @@
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.0.7-54d7869bfe3691eb723b1d47810e5585d8246b58"/>
-        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="Heartbeat"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1267177413"/>
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="df0d4306-9cf3-4c5c-a23a-027ac36da131" type="normal" uname="alice.demo"/>
-      <node id="0af1add7-22b5-4342-9816-67e6351605de" type="normal" uname="bob.demo"/>
+      <node id="df0d4306-9cf3-4c5c-a23a-027ac36da131" type="member" uname="alice.demo"/>
+      <node id="0af1add7-22b5-4342-9816-67e6351605de" type="member" uname="bob.demo"/>
     </nodes>
     <resources>
       <primitive class="ocf" id="dummy1" provider="heartbeat" type="Dummy"/>

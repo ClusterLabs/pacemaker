@@ -146,13 +146,11 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
                 fsa_data->data_type = fsa_dt_lrm;
                 break;
 
-            case C_CCM_CALLBACK:
             case C_SUBSYSTEM_CONNECT:
             case C_LRM_MONITOR_CALLBACK:
             case C_TIMER_POPPED:
             case C_SHUTDOWN:
             case C_HEARTBEAT_FAILED:
-            case C_HA_DISCONNECT:
             case C_ILLEGAL:
             case C_UNKNOWN:
             case C_STARTUP:

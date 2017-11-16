@@ -10,8 +10,8 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="1db2544e-c39c-442c-be34-016c812fcf66" uname="dktest2sles10" type="normal"/>
-      <node id="c231fc78-1eba-4b49-a003-a1cfef80bfc6" uname="dktest1sles10" type="normal"/>
+      <node id="1db2544e-c39c-442c-be34-016c812fcf66" uname="dktest2sles10" type="member"/>
+      <node id="c231fc78-1eba-4b49-a003-a1cfef80bfc6" uname="dktest1sles10" type="member"/>
     </nodes>
     <resources>
       <primitive id="mysql-bin" class="ocf" provider="heartbeat" type="mysql">

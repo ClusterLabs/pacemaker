@@ -24,7 +24,7 @@
       </node>
     </nodes>
     <resources>
-      <primitive id="simple-rsc" class="heartbeat" type="apache">
+      <primitive id="simple-rsc" class="ocf" provider="heartbeat" type="apache">
         <meta_attributes id="primitive-simple-rsc.meta"/>
       </primitive>
       <master id="rsc1">

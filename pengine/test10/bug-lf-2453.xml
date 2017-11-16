@@ -12,8 +12,8 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="domu1" uname="domu1" type="normal"/>
-      <node id="domu2" uname="domu2" type="normal"/>
+      <node id="domu1" uname="domu1" type="member"/>
+      <node id="domu2" uname="domu2" type="member"/>
     </nodes>
     <resources>
       <primitive class="ocf" provider="heartbeat" type="IPaddr2" id="PrimitiveResource1">

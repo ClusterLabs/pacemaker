@@ -10,12 +10,12 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="fc16-builder" type="normal" uname="fc16-builder">
+      <node id="fc16-builder" type="member" uname="fc16-builder">
         <instance_attributes id="fc16-builder-instance_attributes">
           <nvpair id="fc16-builder-stuffs" name="give-me-A" value="true"/>
         </instance_attributes>
       </node>
-      <node id="fc16-builder2" uname="fc16-builder2" type="normal">
+      <node id="fc16-builder2" uname="fc16-builder2" type="member">
         <instance_attributes id="fc16-builder2-instance_attributes">
           <nvpair id="fc16-builder2-stuffs" name="give-me-A" value="false"/>
         </instance_attributes>

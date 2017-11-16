@@ -266,16 +266,16 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
 
     switch (data_set->no_quorum_policy) {
         case no_quorum_freeze:
-            crm_debug("On loss of CCM Quorum: Freeze resources");
+            crm_debug("On loss of quorum: Freeze resources");
             break;
         case no_quorum_stop:
-            crm_debug("On loss of CCM Quorum: Stop ALL resources");
+            crm_debug("On loss of quorum: Stop ALL resources");
             break;
         case no_quorum_suicide:
-            crm_notice("On loss of CCM Quorum: Fence all remaining nodes");
+            crm_notice("On loss of quorum: Fence all remaining nodes");
             break;
         case no_quorum_ignore:
-            crm_notice("On loss of CCM Quorum: Ignore");
+            crm_notice("On loss of quorum: Ignore");
             break;
     }
 
@@ -389,8 +389,7 @@ pe_create_node(const char *id, const char *uname, const char *type,
     if (safe_str_eq(type, "remote")) {
         new_node->details->type = node_remote;
         set_bit(data_set->flags, pe_flag_have_remote_nodes);
-    } else if (type == NULL || safe_str_eq(type, "member")
-        || safe_str_eq(type, NORMALNODE)) {
+    } else if ((type == NULL) || safe_str_eq(type, "member")) {
         new_node->details->type = node_member;
     }
 

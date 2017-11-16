@@ -3,17 +3,17 @@ Current cluster status:
 Online: [ node1 node2 ]
 
  Clone Set: rsc1 [child_rsc1] (unique)
-     child_rsc1:0	(heartbeat:apache):	Started node1
-     child_rsc1:1	(heartbeat:apache):	Started node1
-     child_rsc1:2	(heartbeat:apache):	Started node1
-     child_rsc1:3	(heartbeat:apache):	Started node1
-     child_rsc1:4	(heartbeat:apache):	Started node1
+     child_rsc1:0	(ocf::heartbeat:apache):	Started node1
+     child_rsc1:1	(ocf::heartbeat:apache):	Started node1
+     child_rsc1:2	(ocf::heartbeat:apache):	Started node1
+     child_rsc1:3	(ocf::heartbeat:apache):	Started node1
+     child_rsc1:4	(ocf::heartbeat:apache):	Started node1
  Clone Set: rsc2 [child_rsc2] (unique)
-     child_rsc2:0	(heartbeat:apache):	Started node2
-     child_rsc2:1	(heartbeat:apache):	Started node2
-     child_rsc2:2	(heartbeat:apache):	Started node2
-     child_rsc2:3	(heartbeat:apache):	Started node2
-     child_rsc2:4	(heartbeat:apache):	Started node2
+     child_rsc2:0	(ocf::heartbeat:apache):	Started node2
+     child_rsc2:1	(ocf::heartbeat:apache):	Started node2
+     child_rsc2:2	(ocf::heartbeat:apache):	Started node2
+     child_rsc2:3	(ocf::heartbeat:apache):	Started node2
+     child_rsc2:4	(ocf::heartbeat:apache):	Started node2
 
 Transition Summary:
  * Move       child_rsc1:2     ( node1 -> node2 )  
@@ -56,15 +56,15 @@ Revised cluster status:
 Online: [ node1 node2 ]
 
  Clone Set: rsc1 [child_rsc1] (unique)
-     child_rsc1:0	(heartbeat:apache):	Started node1
-     child_rsc1:1	(heartbeat:apache):	Started node1
-     child_rsc1:2	(heartbeat:apache):	Started node2
-     child_rsc1:3	(heartbeat:apache):	Started node2
-     child_rsc1:4	(heartbeat:apache):	Stopped 
+     child_rsc1:0	(ocf::heartbeat:apache):	Started node1
+     child_rsc1:1	(ocf::heartbeat:apache):	Started node1
+     child_rsc1:2	(ocf::heartbeat:apache):	Started node2
+     child_rsc1:3	(ocf::heartbeat:apache):	Started node2
+     child_rsc1:4	(ocf::heartbeat:apache):	Stopped
  Clone Set: rsc2 [child_rsc2] (unique)
-     child_rsc2:0	(heartbeat:apache):	Started node2
-     child_rsc2:1	(heartbeat:apache):	Started node2
-     child_rsc2:2	(heartbeat:apache):	Started node2
-     child_rsc2:3	(heartbeat:apache):	Started node1
-     child_rsc2:4	(heartbeat:apache):	Started node1
+     child_rsc2:0	(ocf::heartbeat:apache):	Started node2
+     child_rsc2:1	(ocf::heartbeat:apache):	Started node2
+     child_rsc2:2	(ocf::heartbeat:apache):	Started node2
+     child_rsc2:3	(ocf::heartbeat:apache):	Started node1
+     child_rsc2:4	(ocf::heartbeat:apache):	Started node1
 

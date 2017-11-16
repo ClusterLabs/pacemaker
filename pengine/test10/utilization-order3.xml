@@ -10,12 +10,12 @@
     <rsc_defaults/>
     <op_defaults/>
     <nodes>
-      <node id="node1" type="normal" uname="node1">
+      <node id="node1" type="member" uname="node1">
         <utilization id="node1-utilization">
           <nvpair id="node1-utilization-memory" name="memory" value="1024"/>
         </utilization>
       </node>
-      <node id="node2" type="normal" uname="node2">
+      <node id="node2" type="member" uname="node2">
         <utilization id="node2-utilization">
           <nvpair id="node2-utilization-memory" name="memory" value="512"/>
         </utilization>

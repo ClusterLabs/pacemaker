@@ -10,12 +10,12 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node uname="raki.linbit" type="normal" id="raki.linbit">
+      <node uname="raki.linbit" type="member" id="raki.linbit">
         <instance_attributes id="nodes-raki.linbit">
           <nvpair name="standby" id="nodes-raki.linbit-standby" value="on"/>
         </instance_attributes>
       </node>
-      <node uname="sambuca.linbit" type="normal" id="sambuca.linbit">
+      <node uname="sambuca.linbit" type="member" id="sambuca.linbit">
         <instance_attributes id="nodes-sambuca.linbit">
           <nvpair name="standby" id="nodes-sambuca.linbit-standby" value="off"/>
         </instance_attributes>

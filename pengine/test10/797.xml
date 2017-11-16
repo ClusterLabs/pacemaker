@@ -246,7 +246,7 @@
             <lrm_rsc_op id="rsc_c001n03_start_0" op-digest="6e0f48b04277dfed400d2ffce5b5ae51" operation="start" interval="0" transition-key="3:449bf7e0-c1b9-4284-91de-1f6860521991" crm_feature_set="2.0" transition-magic="0:0;3:449bf7e0-c1b9-4284-91de-1f6860521991" call-id="3" rc-code="0" op-status="0"/>
             <lrm_rsc_op id="rsc_c001n03_monitor_5000" op-digest="3b337ce52a3a88fb0a61ff74c5e42f0b" interval="5000" operation="monitor" transition-key="3:449bf7e0-c1b9-4284-91de-1f6860521991" crm_feature_set="2.0" transition-magic="0:0;3:449bf7e0-c1b9-4284-91de-1f6860521991" call-id="5" rc-code="0" op-status="0"/>
           </lrm_resource>
-          <lrm_resource id="DcIPaddr" class="heartbeat" type="apache">
+          <lrm_resource id="DcIPaddr" class="ocf" provider="heartbeat" type="apache">
             <lrm_rsc_op id="DcIPaddr_start_0" op-digest="21ccbd2b8e65014ca7b36a2070642a2e" operation="start" interval="0" op-status="0" call-id="68" rc-code="0" transition-key="0:982d639a-546a-48be-ae7d-1e758560d891" crm_feature_set="2.0" transition-magic="0:0;0:982d639a-546a-48be-ae7d-1e758560d891"/>
             <lrm_rsc_op id="DcIPaddr_monitor_5000" op-digest="517d7b3575d97d408fbe19f3cfcc69fe" interval="5000" operation="monitor" op-status="0" call-id="69" rc-code="0" transition-key="0:982d639a-546a-48be-ae7d-1e758560d891" crm_feature_set="2.0" transition-magic="0:0;0:982d639a-546a-48be-ae7d-1e758560d891"/>
           </lrm_resource>

@@ -3,7 +3,7 @@
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7"/>
-        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="Heartbeat"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-symmetric-cluster" name="symmetric-cluster" value="true"/>
         <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1254407771"/>
         <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
@@ -11,8 +11,8 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="70172b50-c0c7-4d98-8b7a-d4b6bda7c9b0" uname="sles11-a" type="normal"/>
-      <node id="7a1be228-afbe-426b-9459-5c6e9d377508" uname="sles11-b" type="normal"/>
+      <node id="70172b50-c0c7-4d98-8b7a-d4b6bda7c9b0" uname="sles11-a" type="member"/>
+      <node id="7a1be228-afbe-426b-9459-5c6e9d377508" uname="sles11-b" type="member"/>
     </nodes>
     <resources>
       <master id="ms_res_Stateful_1">

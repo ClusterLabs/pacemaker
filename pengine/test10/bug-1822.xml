@@ -37,8 +37,8 @@
       </meta_attributes>
     </rsc_defaults>
     <nodes>
-      <node id="4dbb8c56-330e-4835-a15e-c0aa632d4e89" uname="process1a" type="normal"/>
-      <node id="e38f935d-6059-4540-8679-bc32a8256839" uname="process2b" type="normal"/>
+      <node id="4dbb8c56-330e-4835-a15e-c0aa632d4e89" uname="process1a" type="member"/>
+      <node id="e38f935d-6059-4540-8679-bc32a8256839" uname="process2b" type="member"/>
     </nodes>
     <resources>
       <master id="ms-sf">

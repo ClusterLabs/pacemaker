@@ -9,10 +9,10 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="qa-suse-2" type="normal" uname="qa-suse-2"/>
-      <node id="qa-suse-3" type="normal" uname="qa-suse-3"/>
-      <node id="qa-suse-4" type="normal" uname="qa-suse-4"/>
-      <node id="qa-suse-1" type="normal" uname="qa-suse-1"/>
+      <node id="qa-suse-2" type="member" uname="qa-suse-2"/>
+      <node id="qa-suse-3" type="member" uname="qa-suse-3"/>
+      <node id="qa-suse-4" type="member" uname="qa-suse-4"/>
+      <node id="qa-suse-1" type="member" uname="qa-suse-1"/>
     </nodes>
     <resources>
       <primitive class="stonith" id="sbd_stonith" type="external/sbd">

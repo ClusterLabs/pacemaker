@@ -14,12 +14,12 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node uname="ubuntu_2" type="normal" id="ubuntu_2">
+      <node uname="ubuntu_2" type="member" id="ubuntu_2">
         <instance_attributes id="nodes-ubuntu_2">
           <nvpair name="standby" id="nodes-ubuntu_2-standby" value="on"/>
         </instance_attributes>
       </node>
-      <node id="ubuntu_1" uname="ubuntu_1" type="normal">
+      <node id="ubuntu_1" uname="ubuntu_1" type="member">
         <instance_attributes id="nodes-ubuntu_1">
           <nvpair id="nodes-ubuntu_1-standby" name="standby" value="off"/>
         </instance_attributes>

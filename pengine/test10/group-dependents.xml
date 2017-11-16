@@ -11,8 +11,8 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="asttest1" type="normal" uname="asttest1"/>
-      <node id="asttest2" type="normal" uname="asttest2"/>
+      <node id="asttest1" type="member" uname="asttest1"/>
+      <node id="asttest2" type="member" uname="asttest2"/>
     </nodes>
     <resources>
       <clone id="cl_route">

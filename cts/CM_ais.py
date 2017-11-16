@@ -1,4 +1,4 @@
-'''CTS: Cluster Testing System: AIS dependent modules...
+'''CTS: Cluster Testing System: Corosync-dependent modules...
 '''
 
 __copyright__ = '''
@@ -22,18 +22,18 @@ Copyright (C) 2007 Andrew Beekhof <andrew@suse.de>
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA.
 
 from cts.CTSvars import *
-from cts.CM_lha  import crm_lha
+from cts.CM_common  import crm_common
 from cts.CTS     import Process
 from cts.patterns    import PatternSelector
 
 #######################################################################
 #
-#  LinuxHA v2 dependent modules
+#  Corosync-dependent modules
 #
 #######################################################################
 
 
-class crm_ais(crm_lha):
+class crm_ais(crm_common):
     '''
     The crm version 3 cluster manager class.
     It implements the things we need to talk to and manipulate
@@ -41,13 +41,10 @@ class crm_ais(crm_lha):
     '''
     def __init__(self, Environment, randseed=None, name=None):
         if not name: name="crm-ais"
-        crm_lha.__init__(self, Environment, randseed=randseed, name=name)
+        crm_common.__init__(self, Environment, randseed=randseed, name=name)
 
         self.fullcomplist = {}
         self.templates = PatternSelector(self.name)
-
-    def NodeUUID(self, node):
-        return node
 
     def ais_components(self, extra={}):
 

@@ -12,10 +12,10 @@
     </rsc_defaults>
     <op_defaults/>
     <nodes>
-      <node id="pcw2709.see.ed.ac.uk" type="normal" uname="pcw2709.see.ed.ac.uk"/>
-      <node id="pcw2058.see.ed.ac.uk" type="normal" uname="pcw2058.see.ed.ac.uk"/>
-      <node id="pcw2059.see.ed.ac.uk" type="normal" uname="pcw2059.see.ed.ac.uk"/>
-      <node id="pcw2688.see.ed.ac.uk" type="normal" uname="pcw2688.see.ed.ac.uk"/>
+      <node id="pcw2709.see.ed.ac.uk" type="member" uname="pcw2709.see.ed.ac.uk"/>
+      <node id="pcw2058.see.ed.ac.uk" type="member" uname="pcw2058.see.ed.ac.uk"/>
+      <node id="pcw2059.see.ed.ac.uk" type="member" uname="pcw2059.see.ed.ac.uk"/>
+      <node id="pcw2688.see.ed.ac.uk" type="member" uname="pcw2688.see.ed.ac.uk"/>
     </nodes>
     <resources>
       <clone id="cups_clone">

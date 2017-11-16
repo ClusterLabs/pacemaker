@@ -21,11 +21,6 @@
 #  include <crm/common/xml.h>
 #  include <crm/common/util.h>
 
-#  if SUPPORT_HEARTBEAT
-#    include <heartbeat/hb_api.h>
-#    include <ocf/oc_event.h>
-#  endif
-
 #  if SUPPORT_COROSYNC
 #    include <corosync/cpg.h>
 #  endif
@@ -43,7 +38,6 @@ extern unsigned long long crm_peer_seq;
 #define CRM_NODE_LOST      "lost"
 #define CRM_NODE_MEMBER    "member"
 #define CRM_NODE_ACTIVE    CRM_NODE_MEMBER
-#define CRM_NODE_EVICTED   "evicted"
 
 enum crm_join_phase
 {
@@ -71,7 +65,7 @@ enum crm_node_flags
 
 typedef struct crm_peer_node_s {
     uint32_t id;                /* Only used by corosync derivatives */
-    uint64_t born;              /* Only used by heartbeat and the legacy plugin */
+    uint64_t born;              /* Only used by the legacy plugin */
     uint64_t last_seen;
     uint64_t flags;             /* Specified by crm_node_flags enum */
 
@@ -97,11 +91,6 @@ typedef struct crm_cluster_s {
     uint32_t nodeid;
 
     void (*destroy) (gpointer);
-
-#  if SUPPORT_HEARTBEAT
-    ll_cluster_t *hb_conn;
-    void (*hb_dispatch) (HA_Message * msg, void *private);
-#  endif
 
 #  if SUPPORT_COROSYNC
     struct cpg_name group;
@@ -170,10 +159,6 @@ guint reap_crm_member(uint32_t id, const char *name);
 int crm_terminate_member(int nodeid, const char *uname, void *unused);
 int crm_terminate_member_no_mainloop(int nodeid, const char *uname, int *connection);
 
-#  if SUPPORT_HEARTBEAT
-gboolean crm_is_heartbeat_peer_active(const crm_node_t * node);
-#  endif
-
 #  if SUPPORT_COROSYNC
 extern int ais_fd_sync;
 uint32_t get_local_nodeid(cpg_handle_t handle);
@@ -211,7 +196,7 @@ enum cluster_type_e
 {
     pcmk_cluster_unknown     = 0x0001,
     pcmk_cluster_invalid     = 0x0002,
-    pcmk_cluster_heartbeat   = 0x0004,
+    // 0x0004 was heartbeat
     pcmk_cluster_classic_ais = 0x0010,
     pcmk_cluster_corosync    = 0x0020,
     pcmk_cluster_cman        = 0x0040,
@@ -225,7 +210,6 @@ gboolean is_corosync_cluster(void);
 gboolean is_cman_cluster(void);
 gboolean is_openais_cluster(void);
 gboolean is_classic_ais_cluster(void);
-gboolean is_heartbeat_cluster(void);
 
 const char *get_local_node_name(void);
 char *get_node_name(uint32_t nodeid);

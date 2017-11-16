@@ -13,7 +13,7 @@
       <node id="uuid2" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <primitive id="rsc1" class="heartbeat" type="apache">
+      <primitive id="rsc1" class="ocf" provider="heartbeat" type="apache">
         <operations>
           <op name="monitor" interval="5s" id="op.auto-1" timeout="3s"/>
         </operations>

@@ -7,8 +7,8 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="c97a3ee5-02d8-4fad-a9fb-a79ae2b35549" uname="hs21c" type="normal"/>
-      <node id="737318c6-0f92-4592-9754-45967d45aff7" uname="hs21d" type="normal"/>
+      <node id="c97a3ee5-02d8-4fad-a9fb-a79ae2b35549" uname="hs21c" type="member"/>
+      <node id="737318c6-0f92-4592-9754-45967d45aff7" uname="hs21d" type="member"/>
     </nodes>
     <resources>
       <primitive id="stonith-1" class="stonith" type="dummy"/>

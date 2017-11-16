@@ -3,11 +3,11 @@ Current cluster status:
 Online: [ node1 node2 ]
 
  Clone Set: rsc1 [child_rsc1] (unique)
-     child_rsc1:0	(heartbeat:apache):	Started node1
-     child_rsc1:1	(heartbeat:apache):	Started node2
+     child_rsc1:0	(ocf::heartbeat:apache):	Started node1
+     child_rsc1:1	(ocf::heartbeat:apache):	Started node2
  Clone Set: rsc2 [child_rsc2] (unique)
-     child_rsc2:0	(heartbeat:apache):	Started node1
-     child_rsc2:1	(heartbeat:apache):	Stopped 
+     child_rsc2:0	(ocf::heartbeat:apache):	Started node1
+     child_rsc2:1	(ocf::heartbeat:apache):	Stopped
 
 Transition Summary:
  * Move       child_rsc1:1     ( node2 -> node1 )  
@@ -53,9 +53,9 @@ Revised cluster status:
 Online: [ node1 node2 ]
 
  Clone Set: rsc1 [child_rsc1] (unique)
-     child_rsc1:0	(heartbeat:apache):	Started node1
-     child_rsc1:1	(heartbeat:apache):	Started node1
+     child_rsc1:0	(ocf::heartbeat:apache):	Started node1
+     child_rsc1:1	(ocf::heartbeat:apache):	Started node1
  Clone Set: rsc2 [child_rsc2] (unique)
-     child_rsc2:0	(heartbeat:apache):	Stopped 
-     child_rsc2:1	(heartbeat:apache):	Stopped 
+     child_rsc2:0	(ocf::heartbeat:apache):	Stopped
+     child_rsc2:1	(ocf::heartbeat:apache):	Stopped
 

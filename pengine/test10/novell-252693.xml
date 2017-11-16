@@ -13,8 +13,8 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="997c3f45-7e3f-4c70-8d9a-623ba1678a6e" uname="node2" type="normal"/>
-      <node id="3d8227f0-31dd-4801-b0db-987909d4a321" uname="node1" type="normal"/>
+      <node id="997c3f45-7e3f-4c70-8d9a-623ba1678a6e" uname="node2" type="member"/>
+      <node id="3d8227f0-31dd-4801-b0db-987909d4a321" uname="node1" type="member"/>
     </nodes>
     <resources>
       <clone id="stonithcloneset">

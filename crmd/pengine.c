@@ -89,9 +89,6 @@ pe_ipc_destroy(gpointer user_data)
         fsa_register_cib_callback(rc, FALSE, uuid_str, save_cib_contents);
 
     } else {
-        if (is_heartbeat_cluster()) {
-            stop_subsystem(pe_subsystem, FALSE);
-        }
         crm_info("Connection to the Policy Engine released");
     }
 

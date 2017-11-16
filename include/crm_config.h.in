@@ -69,9 +69,6 @@
 /* Set of enabled features */
 #undef CRM_FEATURES
 
-/* Support the Heartbeat messaging and membership layer */
-#undef SUPPORT_HEARTBEAT
-
 /* Support the Corosync messaging and membership layer */
 #undef SUPPORT_COROSYNC
 

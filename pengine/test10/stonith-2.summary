@@ -5,7 +5,7 @@ Online: [ sles-1 sles-2 sles-3 sles-4 sles-6 ]
 
  Resource Group: group-1
      r192.168.100.181	(ocf::heartbeat:IPaddr):	Started sles-1
-     r192.168.100.182	(heartbeat:IPaddr):	Started sles-1
+     r192.168.100.182	(ocf::heartbeat:IPaddr):	Started sles-1
      r192.168.100.183	(ocf::heartbeat:IPaddr):	Started sles-1
  lsb_dummy	(lsb:/usr/share/heartbeat/cts/LSBDummy):	Started sles-2
  migrator	(ocf::heartbeat:Dummy):	Started sles-3
@@ -49,7 +49,7 @@ OFFLINE: [ sles-5 ]
 
  Resource Group: group-1
      r192.168.100.181	(ocf::heartbeat:IPaddr):	Started sles-1
-     r192.168.100.182	(heartbeat:IPaddr):	Started sles-1
+     r192.168.100.182	(ocf::heartbeat:IPaddr):	Started sles-1
      r192.168.100.183	(ocf::heartbeat:IPaddr):	Started sles-1
  lsb_dummy	(lsb:/usr/share/heartbeat/cts/LSBDummy):	Started sles-2
  migrator	(ocf::heartbeat:Dummy):	Started sles-3

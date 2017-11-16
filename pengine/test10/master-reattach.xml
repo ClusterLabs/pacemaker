@@ -16,8 +16,8 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="c738bee8-591f-4653-aaad-20a961923f25" uname="dktest1" type="normal"/>
-      <node id="f430bc66-3388-4b7d-9e99-24fb02855f54" uname="dktest2" type="normal"/>
+      <node id="c738bee8-591f-4653-aaad-20a961923f25" uname="dktest1" type="member"/>
+      <node id="f430bc66-3388-4b7d-9e99-24fb02855f54" uname="dktest2" type="member"/>
     </nodes>
     <resources>
       <master id="ms-drbd1">

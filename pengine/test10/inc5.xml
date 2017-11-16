@@ -14,7 +14,7 @@
     </nodes>
     <resources>
       <clone id="rsc1">
-        <primitive id="child_rsc1" class="heartbeat" type="apache">
+        <primitive id="child_rsc1" class="ocf" provider="heartbeat" type="apache">
           <meta_attributes id="primitive-child_rsc1.meta"/>
         </primitive>
         <meta_attributes id="clone-rsc1.meta">
@@ -25,7 +25,7 @@
         </meta_attributes>
       </clone>
       <clone id="rsc2">
-        <primitive id="child_rsc2" class="heartbeat" type="apache">
+        <primitive id="child_rsc2" class="ocf" provider="heartbeat" type="apache">
           <meta_attributes id="primitive-child_rsc2.meta"/>
         </primitive>
         <meta_attributes id="clone-rsc2.meta">
@@ -36,7 +36,7 @@
         </meta_attributes>
       </clone>
       <clone id="rsc3">
-        <primitive id="child_rsc3" class="heartbeat" type="apache">
+        <primitive id="child_rsc3" class="ocf" provider="heartbeat" type="apache">
           <meta_attributes id="primitive-child_rsc3.meta"/>
         </primitive>
         <meta_attributes id="clone-rsc3.meta">
@@ -47,7 +47,7 @@
         </meta_attributes>
       </clone>
       <clone id="rsc4">
-        <primitive id="child_rsc4" class="heartbeat" type="apache">
+        <primitive id="child_rsc4" class="ocf" provider="heartbeat" type="apache">
           <meta_attributes id="primitive-child_rsc4.meta"/>
         </primitive>
         <meta_attributes id="clone-rsc4.meta">
@@ -58,7 +58,7 @@
         </meta_attributes>
       </clone>
       <clone id="rsc5">
-        <primitive id="child_rsc5" class="heartbeat" type="apache">
+        <primitive id="child_rsc5" class="ocf" provider="heartbeat" type="apache">
           <meta_attributes id="primitive-child_rsc5.meta"/>
         </primitive>
         <meta_attributes id="clone-rsc5.meta">
@@ -69,7 +69,7 @@
         </meta_attributes>
       </clone>
       <clone id="rsc6">
-        <primitive id="child_rsc6" class="heartbeat" type="apache">
+        <primitive id="child_rsc6" class="ocf" provider="heartbeat" type="apache">
           <meta_attributes id="primitive-child_rsc6.meta"/>
         </primitive>
         <meta_attributes id="clone-rsc6.meta">
@@ -80,7 +80,7 @@
         </meta_attributes>
       </clone>
       <clone id="rsc7">
-        <primitive id="child_rsc7" class="heartbeat" type="apache">
+        <primitive id="child_rsc7" class="ocf" provider="heartbeat" type="apache">
           <meta_attributes id="primitive-child_rsc7.meta"/>
         </primitive>
         <meta_attributes id="clone-rsc7.meta">
@@ -91,7 +91,7 @@
         </meta_attributes>
       </clone>
       <clone id="rsc8">
-        <primitive id="child_rsc8" class="heartbeat" type="apache">
+        <primitive id="child_rsc8" class="ocf" provider="heartbeat" type="apache">
           <meta_attributes id="primitive-child_rsc8.meta"/>
         </primitive>
         <meta_attributes id="clone-rsc8.meta">
@@ -118,28 +118,28 @@
       </transient_attributes>
       <lrm id="any">
         <lrm_resources id="lrm_resources.id22337">
-          <lrm_resource id="child_rsc1:0" class="heartbeat" type="apache">
+          <lrm_resource id="child_rsc1:0" class="ocf" provider="heartbeat" type="apache">
             <lrm_rsc_op id="rsc1-child_rsc1-0_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
           </lrm_resource>
-          <lrm_resource id="child_rsc2:0" class="heartbeat" type="apache">
+          <lrm_resource id="child_rsc2:0" class="ocf" provider="heartbeat" type="apache">
             <lrm_rsc_op id="rsc2-child_rsc2-0_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
           </lrm_resource>
-          <lrm_resource id="child_rsc2:1" class="heartbeat" type="apache">
+          <lrm_resource id="child_rsc2:1" class="ocf" provider="heartbeat" type="apache">
             <lrm_rsc_op id="rsc2-child_rsc2-1_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
           </lrm_resource>
-          <lrm_resource id="child_rsc3:0" class="heartbeat" type="apache">
+          <lrm_resource id="child_rsc3:0" class="ocf" provider="heartbeat" type="apache">
             <lrm_rsc_op id="rsc3-child_rsc3-0_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
           </lrm_resource>
-          <lrm_resource id="child_rsc4:0" class="heartbeat" type="apache">
+          <lrm_resource id="child_rsc4:0" class="ocf" provider="heartbeat" type="apache">
             <lrm_rsc_op id="rsc4-child_rsc4-0_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
           </lrm_resource>
-          <lrm_resource id="child_rsc4:1" class="heartbeat" type="apache">
+          <lrm_resource id="child_rsc4:1" class="ocf" provider="heartbeat" type="apache">
             <lrm_rsc_op id="rsc4-child_rsc4-1_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
           </lrm_resource>
-          <lrm_resource id="child_rsc6:0" class="heartbeat" type="apache">
+          <lrm_resource id="child_rsc6:0" class="ocf" provider="heartbeat" type="apache">
             <lrm_rsc_op id="rsc6-child_rsc6-0_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
           </lrm_resource>
-          <lrm_resource id="child_rsc8:0" class="heartbeat" type="apache">
+          <lrm_resource id="child_rsc8:0" class="ocf" provider="heartbeat" type="apache">
             <lrm_rsc_op id="rsc8-child_rsc8-0_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
           </lrm_resource>
         </lrm_resources>
@@ -153,28 +153,28 @@
       </transient_attributes>
       <lrm id="any">
         <lrm_resources id="lrm_resources.id22630">
-          <lrm_resource id="child_rsc1:1" class="heartbeat" type="apache">
+          <lrm_resource id="child_rsc1:1" class="ocf" provider="heartbeat" type="apache">
             <lrm_rsc_op id="rsc1-child_rsc1-1_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
           </lrm_resource>
-          <lrm_resource id="child_rsc3:1" class="heartbeat" type="apache">
+          <lrm_resource id="child_rsc3:1" class="ocf" provider="heartbeat" type="apache">
             <lrm_rsc_op id="rsc3-child_rsc3-1_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
           </lrm_resource>
-          <lrm_resource id="child_rsc5:0" class="heartbeat" type="apache">
+          <lrm_resource id="child_rsc5:0" class="ocf" provider="heartbeat" type="apache">
             <lrm_rsc_op id="rsc5-child_rsc5-0_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
           </lrm_resource>
-          <lrm_resource id="child_rsc5:1" class="heartbeat" type="apache">
+          <lrm_resource id="child_rsc5:1" class="ocf" provider="heartbeat" type="apache">
             <lrm_rsc_op id="rsc5-child_rsc5-1_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
           </lrm_resource>
-          <lrm_resource id="child_rsc6:1" class="heartbeat" type="apache">
+          <lrm_resource id="child_rsc6:1" class="ocf" provider="heartbeat" type="apache">
             <lrm_rsc_op id="rsc6-child_rsc6-1_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
           </lrm_resource>
-          <lrm_resource id="child_rsc7:0" class="heartbeat" type="apache">
+          <lrm_resource id="child_rsc7:0" class="ocf" provider="heartbeat" type="apache">
             <lrm_rsc_op id="rsc7-child_rsc7-0_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
           </lrm_resource>
-          <lrm_resource id="child_rsc7:1" class="heartbeat" type="apache">
+          <lrm_resource id="child_rsc7:1" class="ocf" provider="heartbeat" type="apache">
             <lrm_rsc_op id="rsc7-child_rsc7-1_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
           </lrm_resource>
-          <lrm_resource id="child_rsc8:1" class="heartbeat" type="apache">
+          <lrm_resource id="child_rsc8:1" class="ocf" provider="heartbeat" type="apache">
             <lrm_rsc_op id="rsc8-child_rsc8-1_start_0" operation="start" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" interval="0" op-status="0" rc-code="0" call-id="1" crm_feature_set="1.0.6" transition-magic=""/>
           </lrm_resource>
         </lrm_resources>

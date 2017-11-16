@@ -19,13 +19,12 @@
 ## Cluster Stack Dependencies (Pick at least one)
 * clusterlib-devel (CMAN)
 * corosynclib-devel (Corosync)
-* heartbeat-devel (Heartbeat)
 
 ## Optional Build Dependencies
 * ncurses-devel (interactive crm_mon)
 * systemd-devel (systemd support)
 * dbus-devel (systemd/upstart resource support)
-* cluster-glue-libs-devel (LHA style fencing agents)
+* cluster-glue-libs-devel (Linux-HA style fencing agents)
 * libesmtp-devel (crm_mon --mail-to option)
 * lm_sensors-devel (crm_mon --snmp-traps option)
 * net-snmp-devel (crm_mon --snmp-traps option)

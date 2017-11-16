@@ -28,7 +28,6 @@ fi
 # Target Files
 EVENTS_F=events.txt
 ANALYSIS_F=analysis.txt
-DESCRIPTION_F=description.txt
 HALOG_F=cluster-log.txt
 BT_F=backtraces.txt
 SYSINFO_F=sysinfo.txt
@@ -36,8 +35,6 @@ SYSSTATS_F=sysstats.txt
 DLM_DUMP_F=dlm_dump.txt
 CRM_MON_F=crm_mon.txt
 MEMBERSHIP_F=members.txt
-HB_UUID_F=hb_uuid.txt
-HOSTCACHE=hostcache
 CRM_VERIFY_F=crm_verify.txt
 PERMISSIONS_F=permissions.txt
 CIB_F=cib.xml
@@ -51,7 +48,7 @@ quorum		crmd.*crm_update_quorum|crmd.*ais.disp.*quorum.(lost|ac?quir)
 pause		Process.pause.detected
 resources	lrmd.*rsc:(start|stop)
 stonith		te_fence_node|stonith-ng.*log_oper.*report|stonithd.*(requests|(Succeeded|Failed).to.STONITH|result=)
-start_stop	sutdown.decision|Starting.heartbeat|Corosync.Cluster.Engine|corosync.*Initializing.transport|Executive.Service.RELEASE|crm_shutdown:.Requesting.shutdown|pcmk_shutdown:.Shutdown.complete
+start_stop	shutdown.decision|Corosync.Cluster.Engine|corosync.*Initializing.transport|Executive.Service.RELEASE|crm_shutdown:.Requesting.shutdown|pcmk_shutdown:.Shutdown.complete
 "
 
 # superset of all packages of interest on all distros
@@ -61,11 +58,10 @@ PACKAGES="pacemaker pacemaker-libs pacemaker-cluster-libs libpacemaker3
 pacemaker-remote pacemaker-pygui pacemaker-pymgmt pymgmt-client
 openais libopenais2 libopenais3 corosync libcorosync4
 resource-agents cluster-glue-libs cluster-glue libglue2 ldirectord
-heartbeat heartbeat-common heartbeat-resources libheartbeat2
 ocfs2-tools ocfs2-tools-o2cb ocfs2console
 ocfs2-kmp-default ocfs2-kmp-pae ocfs2-kmp-xen ocfs2-kmp-debug ocfs2-kmp-trace
 drbd drbd-kmp-xen drbd-kmp-pae drbd-kmp-default drbd-kmp-debug drbd-kmp-trace
-drbd-heartbeat drbd-pacemaker drbd-utils drbd-bash-completion drbd-xen
+drbd-pacemaker drbd-utils drbd-bash-completion drbd-xen
 lvm2 lvm2-clvm cmirrord
 libdlm libdlm2 libdlm3
 hawk ruby lighttpd
@@ -162,7 +158,7 @@ detect_daemon_dir() {
     info "Searching for where Pacemaker daemons live... this may take a while"
 
     for d in \
-        {/usr,/usr/local,/opt/local,@exec_prefix@}/{libexec,lib64,lib}/{pacemaker,heartbeat}
+        {/usr,/usr/local,/opt/local,@exec_prefix@}/{libexec,lib64,lib}/pacemaker
     do
         # pacemaker and pacemaker-cts packages can install to daemon directory,
         # so check for a file from each
@@ -188,12 +184,10 @@ detect_daemon_dir() {
 }
 
 detect_cib_dir() {
-    for d in $local_state_dir/lib/{pacemaker/cib,heartbeat/crm}; do
-        if [ "-f $d/cib.xml" ]; then
-            found_dir "config files" "$d"
-            return
-        fi
-    done
+    if [ "-f ${local_state_dir}/lib/pacemaker/cib/cib.xml" ]; then
+        found_dir "config files" "$d"
+        return
+    fi
 
     # Pacemaker Remote nodes don't need a CIB
     if has_remoted; then
@@ -274,11 +268,8 @@ detect_host() {
 
     PE_STATE_DIR=$(detect_pe_dir "$config_root")
 
-    HA_STATE_DIR=$local_state_dir/lib/heartbeat
-    debug "Assuming Heartbeat state files, if any, are located in: $HA_STATE_DIR"
-
     CRM_CORE_DIRS=""
-    for d in $config_root/cores $HA_STATE_DIR/cores $local_state_dir/lib/corosync $local_state_dir/lib/openais; do
+    for d in $config_root/cores $local_state_dir/lib/corosync $local_state_dir/lib/openais; do
 	if [ -d $d ]; then
 	    CRM_CORE_DIRS="$CRM_CORE_DIRS $d"
 	fi
@@ -784,18 +775,6 @@ getcfvar() {
 		NF==2 && match($1,varname":$")==1 { print $2; exit; }
 		'
 	;;
-	heartbeat)
-	    sed 's/#.*//' < $cf_file |
-		grep -w "^$cf_var" |
-		sed 's/^[^[:space:]]*[[:space:]]*//'
-
-	    ;;
-	logd)
-	    sed 's/#.*//' < $cf_file |
-		grep -w "^$cf_var" |
-		sed 's/^[^[:space:]]*[[:space:]]*//'
-
-	    ;;
     esac
 }
 
@@ -829,11 +808,6 @@ get_cluster_type() {
     elif is_running aisexec; then
 	stack="openais"
 
-    elif
-	ps -ef | grep -v -e grep -e "eartbeat/[clasp]" | egrep -qs '[h]eartbeat'
-    then
-	stack="heartbeat"
-
     # Now we're guessing...
 
     elif [ -f /etc/cluster/cluster.conf ]; then
@@ -845,9 +819,6 @@ get_cluster_type() {
 
     elif [ -f /etc/ais/openais.conf ]; then
 	stack="openais"
-
-    elif [ -f /etc/ha.d/ha.cf ]; then
-        stack="heartbeat"
 
     else
         # We still don't know. This might be a Pacemaker Remote node,
@@ -889,12 +860,6 @@ find_cluster_cf() {
 	openais)
 	    # TODO: Technically it could be anywhere :-/
 	    cf="/etc/ais/openais.conf"
-	    if [ -f $cf ]; then
-		echo "$cf"
-	    fi
-	    ;;
-	heartbeat)
-	    cf="/etc/ha.d/ha.cf"
 	    if [ -f $cf ]; then
 		echo "$cf"
 	    fi

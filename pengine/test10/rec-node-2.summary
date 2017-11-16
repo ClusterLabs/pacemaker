@@ -4,14 +4,14 @@ Node node1 (uuid1): UNCLEAN (offline)
 Online: [ node2 ]
 
  stonith-1	(stonith:dummy):	Stopped 
- rsc1	(heartbeat:apache):	Stopped 
- rsc2	(heartbeat:apache):	Stopped 
+ rsc1	(ocf::heartbeat:apache):	Stopped
+ rsc2	(ocf::heartbeat:apache):	Stopped
  Resource Group: group1
-     rsc3	(heartbeat:apache):	Stopped 
-     rsc4	(heartbeat:apache):	Stopped 
+     rsc3	(ocf::heartbeat:apache):	Stopped
+     rsc4	(ocf::heartbeat:apache):	Stopped
  Resource Group: group2
-     rsc5	(heartbeat:apache):	Stopped 
-     rsc6	(heartbeat:apache):	Stopped 
+     rsc5	(ocf::heartbeat:apache):	Stopped
+     rsc6	(ocf::heartbeat:apache):	Stopped
 
 Transition Summary:
  * Fence (reboot) node1 'node is unclean'
@@ -51,12 +51,12 @@ Online: [ node2 ]
 OFFLINE: [ node1 ]
 
  stonith-1	(stonith:dummy):	Started node2
- rsc1	(heartbeat:apache):	Started node2
- rsc2	(heartbeat:apache):	Started node2
+ rsc1	(ocf::heartbeat:apache):	Started node2
+ rsc2	(ocf::heartbeat:apache):	Started node2
  Resource Group: group1
-     rsc3	(heartbeat:apache):	Started node2
-     rsc4	(heartbeat:apache):	Started node2
+     rsc3	(ocf::heartbeat:apache):	Started node2
+     rsc4	(ocf::heartbeat:apache):	Started node2
  Resource Group: group2
-     rsc5	(heartbeat:apache):	Started node2
-     rsc6	(heartbeat:apache):	Started node2
+     rsc5	(ocf::heartbeat:apache):	Started node2
+     rsc6	(ocf::heartbeat:apache):	Started node2
 

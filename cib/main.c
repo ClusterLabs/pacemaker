@@ -62,15 +62,6 @@ int cib_status = pcmk_ok;
 
 crm_cluster_t crm_cluster;
 
-#if SUPPORT_HEARTBEAT
-oc_ev_t *cib_ev_token;
-ll_cluster_t *hb_conn = NULL;
-extern void oc_ev_special(const oc_ev_t *, oc_ev_class_t, int);
-gboolean cib_register_ha(ll_cluster_t * hb_cluster, const char *client_name);
-#else
-void *hb_conn = NULL;
-#endif
-
 GMainLoop *mainloop = NULL;
 const char *cib_root = NULL;
 char *cib_our_uname = NULL;
@@ -217,15 +208,7 @@ main(int argc, char **argv)
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
 
     if (cib_root == NULL) {
-        if ((g_file_test(CRM_CONFIG_DIR "/cib.xml", G_FILE_TEST_EXISTS) == FALSE)
-            && (g_file_test(CRM_LEGACY_CONFIG_DIR "/cib.xml", G_FILE_TEST_EXISTS) == TRUE)) {
-
-            crm_notice("Using legacy config location: " CRM_LEGACY_CONFIG_DIR);
-            cib_root = CRM_LEGACY_CONFIG_DIR;
-
-        } else {
-            cib_root = CRM_CONFIG_DIR;
-        }
+        cib_root = CRM_CONFIG_DIR;
     } else {
         crm_notice("Using custom config location: %s", cib_root);
     }
@@ -244,12 +227,6 @@ main(int argc, char **argv)
               crm_warn("Not all clients gone at exit"));
     g_hash_table_foreach(client_connections, log_cib_client, NULL);
     cib_cleanup();
-
-#if SUPPORT_HEARTBEAT
-    if (hb_conn) {
-        hb_conn->llc_ops->delete(hb_conn);
-    }
-#endif
 
     crm_info("Done");
     return rc;
@@ -276,99 +253,6 @@ unsigned long cib_num_ops = 0;
 const char *cib_stat_interval = "10min";
 unsigned long cib_num_local = 0, cib_num_updates = 0, cib_num_fail = 0;
 unsigned long cib_bad_connects = 0, cib_num_timeouts = 0;
-
-#if SUPPORT_HEARTBEAT
-gboolean ccm_connect(void);
-
-static void
-ccm_connection_destroy(gpointer user_data)
-{
-    crm_err("CCM connection failed... blocking while we reconnect");
-    CRM_ASSERT(ccm_connect());
-    return;
-}
-
-static void *ccm_library = NULL;
-
-gboolean
-ccm_connect(void)
-{
-    gboolean did_fail = TRUE;
-    int num_ccm_fails = 0;
-    int max_ccm_fails = 30;
-    int ret;
-    int cib_ev_fd;
-
-    int (*ccm_api_register) (oc_ev_t ** token) =
-        find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_register", 1);
-
-    int (*ccm_api_set_callback) (const oc_ev_t * token,
-                                 oc_ev_class_t class,
-                                 oc_ev_callback_t * fn,
-                                 oc_ev_callback_t ** prev_fn) =
-        find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_set_callback", 1);
-
-    void (*ccm_api_special) (const oc_ev_t *, oc_ev_class_t, int) =
-        find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_special", 1);
-    int (*ccm_api_activate) (const oc_ev_t * token, int *fd) =
-        find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_activate", 1);
-    int (*ccm_api_unregister) (oc_ev_t * token) =
-        find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_unregister", 1);
-
-    static struct mainloop_fd_callbacks ccm_fd_callbacks = {
-        .dispatch = cib_ccm_dispatch,
-        .destroy = ccm_connection_destroy,
-    };
-
-    while (did_fail) {
-        did_fail = FALSE;
-        crm_info("Registering with CCM...");
-        ret = (*ccm_api_register) (&cib_ev_token);
-        if (ret != 0) {
-            did_fail = TRUE;
-        }
-
-        if (did_fail == FALSE) {
-            crm_trace("Setting up CCM callbacks");
-            ret = (*ccm_api_set_callback) (cib_ev_token, OC_EV_MEMB_CLASS,
-                                           cib_ccm_msg_callback, NULL);
-            if (ret != 0) {
-                crm_warn("CCM callback not set");
-                did_fail = TRUE;
-            }
-        }
-        if (did_fail == FALSE) {
-            (*ccm_api_special) (cib_ev_token, OC_EV_MEMB_CLASS, 0);
-
-            crm_trace("Activating CCM token");
-            ret = (*ccm_api_activate) (cib_ev_token, &cib_ev_fd);
-            if (ret != 0) {
-                crm_warn("CCM Activation failed");
-                did_fail = TRUE;
-            }
-        }
-
-        if (did_fail) {
-            num_ccm_fails++;
-            (*ccm_api_unregister) (cib_ev_token);
-
-            if (num_ccm_fails < max_ccm_fails) {
-                crm_warn("CCM Connection failed %d times (%d max)", num_ccm_fails, max_ccm_fails);
-                sleep(3);
-
-            } else {
-                crm_err("CCM Activation failed %d (max) times", num_ccm_fails);
-                return FALSE;
-            }
-        }
-    }
-
-    crm_debug("CCM Activation passed... all set to go!");
-    mainloop_add_fd("heartbeat-ccm", G_PRIORITY_MEDIUM, cib_ev_fd, cib_ev_token, &ccm_fd_callbacks);
-
-    return TRUE;
-}
-#endif
 
 #if SUPPORT_COROSYNC
 static void
@@ -445,20 +329,6 @@ cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const voi
     }
 }
 
-#if SUPPORT_HEARTBEAT
-static void
-cib_ha_connection_destroy(gpointer user_data)
-{
-    if (cib_shutdown_flag) {
-        crm_info("Heartbeat disconnection complete... exiting");
-        terminate_cib(__FUNCTION__, 0);
-    } else {
-        crm_err("Heartbeat connection lost!  Exiting.");
-        terminate_cib(__FUNCTION__, -1);
-    }
-}
-#endif
-
 int
 cib_init(void)
 {
@@ -467,11 +337,6 @@ cib_init(void)
         crm_cluster.destroy = cib_cs_destroy;
         crm_cluster.cpg.cpg_deliver_fn = cib_cs_dispatch;
         crm_cluster.cpg.cpg_confchg_fn = pcmk_cpg_membership;
-#endif
-    } else if (is_heartbeat_cluster()) {
-#if SUPPORT_HEARTBEAT
-        crm_cluster.hb_dispatch = cib_ha_peer_callback;
-        crm_cluster.destroy = cib_ha_connection_destroy;
 #endif
     }
 
@@ -492,34 +357,6 @@ cib_init(void)
             crm_exit(DAEMON_RESPAWN_STOP);
         }
         cib_our_uname = crm_cluster.uname;
-
-#if SUPPORT_HEARTBEAT
-        if (is_heartbeat_cluster()) {
-
-            gboolean was_error = FALSE;
-
-            hb_conn = crm_cluster.hb_conn;
-            if (was_error == FALSE) {
-                if (HA_OK !=
-                    hb_conn->llc_ops->set_cstatus_callback(hb_conn, cib_client_status_callback,
-                                                           hb_conn)) {
-
-                    crm_err("Cannot set cstatus callback: %s", hb_conn->llc_ops->errmsg(hb_conn));
-                    was_error = TRUE;
-                }
-            }
-
-            if (was_error == FALSE) {
-                was_error = (ccm_connect() == FALSE);
-            }
-
-            if (was_error == FALSE) {
-                /* Async get client status information in the cluster */
-                crm_info("Requesting the list of configured nodes");
-                hb_conn->llc_ops->client_status(hb_conn, NULL, CRM_SYSTEM_CIB, -1);
-            }
-        }
-#endif
 
     } else {
         cib_our_uname = strdup("localhost");

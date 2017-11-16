@@ -10,12 +10,12 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="aa584ceb-0d17-48ed-97c2-250b062e7407" uname="sles236" type="normal">
+      <node id="aa584ceb-0d17-48ed-97c2-250b062e7407" uname="sles236" type="member">
         <instance_attributes id="instance_attributes.id21880">
           <nvpair id="nvpair.id21887" name="standby" value="off"/>
         </instance_attributes>
       </node>
-      <node id="f1c6f9c2-3e78-4ac4-b77c-215b4457fc78" uname="sles238" type="normal">
+      <node id="f1c6f9c2-3e78-4ac4-b77c-215b4457fc78" uname="sles238" type="member">
         <instance_attributes id="instance_attributes.id21908">
           <nvpair name="standby" id="nvpair.id21915" value="off"/>
         </instance_attributes>

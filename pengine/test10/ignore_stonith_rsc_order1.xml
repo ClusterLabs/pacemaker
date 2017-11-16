@@ -9,7 +9,7 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="fc16-builder" type="normal" uname="fc16-builder"/>
+      <node id="fc16-builder" type="member" uname="fc16-builder"/>
     </nodes>
     <resources>
       <primitive class="stonith" id="S_A" type="fence_xvm"/>

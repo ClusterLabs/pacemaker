@@ -17,17 +17,17 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="0bfb78a2-fcd2-4f52-8a06-2d17437a6750" uname="sapcl03" type="normal">
+      <node id="0bfb78a2-fcd2-4f52-8a06-2d17437a6750" uname="sapcl03" type="member">
         <instance_attributes id="instance_attributes.id21974">
           <nvpair name="standby" id="nvpair.id21981" value="off"/>
         </instance_attributes>
       </node>
-      <node id="09fa194c-d7e1-41fa-a0d0-afd79a139181" uname="sapcl02" type="normal">
+      <node id="09fa194c-d7e1-41fa-a0d0-afd79a139181" uname="sapcl02" type="member">
         <instance_attributes id="instance_attributes.id22002">
           <nvpair name="standby" id="nvpair.id22009" value="on"/>
         </instance_attributes>
       </node>
-      <node id="85180fd0-70c9-4136-a5e0-90d89ea6079d" uname="sapcl01" type="normal"/>
+      <node id="85180fd0-70c9-4136-a5e0-90d89ea6079d" uname="sapcl01" type="member"/>
     </nodes>
     <resources>
       <primitive id="stonith-1" class="stonith" type="dummy"/>

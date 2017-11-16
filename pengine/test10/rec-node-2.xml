@@ -12,14 +12,14 @@
     </nodes>
     <resources>
       <primitive id="stonith-1" class="stonith" type="dummy"/>
-      <primitive id="rsc1" class="heartbeat" type="apache">
+      <primitive id="rsc1" class="ocf" provider="heartbeat" type="apache">
         <operations>
           <op name="stop" interval="0" id="stop-1" on-fail="block"/>
           <op name="start" interval="0" id="start-1" requires="quorum"/>
         </operations>
         <meta_attributes id="primitive-rsc1.meta"/>
       </primitive>
-      <primitive id="rsc2" class="heartbeat" type="apache">
+      <primitive id="rsc2" class="ocf" provider="heartbeat" type="apache">
         <operations>
           <op name="stop" interval="0" id="stop-2" on-fail="block"/>
           <op name="start" interval="0" id="start-2" requires="fencing"/>
@@ -27,25 +27,25 @@
         <meta_attributes id="primitive-rsc2.meta"/>
       </primitive>
       <group id="group1">
-        <primitive id="rsc3" class="heartbeat" type="apache">
+        <primitive id="rsc3" class="ocf" provider="heartbeat" type="apache">
           <operations>
             <op name="start" interval="0" id="op.auto-5" requires="quorum"/>
           </operations>
           <meta_attributes id="primitive-rsc3.meta"/>
         </primitive>
-        <primitive id="rsc4" class="heartbeat" type="apache">
+        <primitive id="rsc4" class="ocf" provider="heartbeat" type="apache">
           <meta_attributes id="primitive-rsc4.meta"/>
         </primitive>
         <meta_attributes id="group-group1.meta"/>
       </group>
       <group id="group2">
-        <primitive id="rsc5" class="heartbeat" type="apache">
+        <primitive id="rsc5" class="ocf" provider="heartbeat" type="apache">
           <operations>
             <op name="start" interval="0" id="op.auto-6" requires="fencing"/>
           </operations>
           <meta_attributes id="primitive-rsc5.meta"/>
         </primitive>
-        <primitive id="rsc6" class="heartbeat" type="apache">
+        <primitive id="rsc6" class="ocf" provider="heartbeat" type="apache">
           <meta_attributes id="primitive-rsc6.meta"/>
         </primitive>
         <meta_attributes id="group-group2.meta"/>

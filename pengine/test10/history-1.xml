@@ -17,10 +17,10 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="pcmk-1" uname="pcmk-1" type="normal"/>
-      <node id="pcmk-2" uname="pcmk-2" type="normal"/>
-      <node id="pcmk-3" uname="pcmk-3" type="normal"/>
-      <node id="pcmk-4" uname="pcmk-4" type="normal"/>
+      <node id="pcmk-1" uname="pcmk-1" type="member"/>
+      <node id="pcmk-2" uname="pcmk-2" type="member"/>
+      <node id="pcmk-3" uname="pcmk-3" type="member"/>
+      <node id="pcmk-4" uname="pcmk-4" type="member"/>
     </nodes>
     <resources>
       <clone id="Fencing">

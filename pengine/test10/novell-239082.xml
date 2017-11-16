@@ -23,8 +23,8 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="b292356d-d8af-4360-bcd3-423b3ec7f1be" uname="xen-2" type="normal"/>
-      <node id="00aaa02f-110f-44e6-9a9d-af93827bfdb9" uname="xen-1" type="normal"/>
+      <node id="b292356d-d8af-4360-bcd3-423b3ec7f1be" uname="xen-2" type="member"/>
+      <node id="00aaa02f-110f-44e6-9a9d-af93827bfdb9" uname="xen-1" type="member"/>
     </nodes>
     <resources>
       <primitive id="fs_1" class="ocf" provider="heartbeat" type="Filesystem">

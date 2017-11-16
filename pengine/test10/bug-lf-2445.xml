@@ -7,8 +7,8 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="node1" uname="node1" type="normal"/>
-      <node id="node2" uname="node2" type="normal"/>
+      <node id="node1" uname="node1" type="member"/>
+      <node id="node2" uname="node2" type="member"/>
     </nodes>
     <resources>
       <clone id="C">

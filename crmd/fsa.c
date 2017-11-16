@@ -47,13 +47,9 @@ char *fsa_our_uname = NULL;
 
 char *fsa_cluster_name = NULL;
 
-#if SUPPORT_HEARTBEAT
-ll_cluster_t *fsa_cluster_conn;
-#endif
-
 election_t *fsa_election = NULL;
 
-fsa_timer_t *wait_timer = NULL;        /* How long to wait before retrying to connect to the cib/lrmd/ccm */
+fsa_timer_t *wait_timer = NULL;        // How long to wait before retrying cib/lrmd connection
 fsa_timer_t *recheck_timer = NULL;     /* Periodically re-run the PE to account for time based rules/preferences */
 fsa_timer_t *election_trigger = NULL;  /* How long to wait at startup, or after an election, for the DC to make contact */
 fsa_timer_t *transition_timer = NULL;  /* How long to delay the start of a new transition with the expectation something else might happen too */
@@ -144,7 +140,7 @@ do_fsa_action(fsa_data_t * fsa_data, long long an_action,
 }
 
 static long long startup_actions =
-    A_STARTUP | A_CIB_START | A_LRM_CONNECT | A_CCM_CONNECT | A_HA_CONNECT | A_READCONFIG |
+    A_STARTUP | A_CIB_START | A_LRM_CONNECT | A_HA_CONNECT | A_READCONFIG |
     A_STARTED | A_CL_JOIN_QUERY;
 
 enum crmd_fsa_state
@@ -309,13 +305,6 @@ s_crmd_fsa_actions(fsa_data_t * fsa_data)
             /* sub-system start/connect */
         } else if (fsa_actions & A_LRM_CONNECT) {
             do_fsa_action(fsa_data, A_LRM_CONNECT, do_lrm_control);
-        } else if (fsa_actions & A_CCM_CONNECT) {
-#if SUPPORT_HEARTBEAT
-            if (is_heartbeat_cluster()) {
-                do_fsa_action(fsa_data, A_CCM_CONNECT, do_ccm_control);
-            }
-#endif
-            fsa_actions &= ~A_CCM_CONNECT;
 
         } else if (fsa_actions & A_TE_START) {
             do_fsa_action(fsa_data, A_TE_START, do_te_control);
@@ -420,14 +409,6 @@ s_crmd_fsa_actions(fsa_data_t * fsa_data)
             do_fsa_action(fsa_data, A_SHUTDOWN, do_shutdown);
         } else if (fsa_actions & A_LRM_DISCONNECT) {
             do_fsa_action(fsa_data, A_LRM_DISCONNECT, do_lrm_control);
-        } else if (fsa_actions & A_CCM_DISCONNECT) {
-#if SUPPORT_HEARTBEAT
-            if (is_heartbeat_cluster()) {
-                do_fsa_action(fsa_data, A_CCM_DISCONNECT, do_ccm_control);
-            }
-#endif
-            fsa_actions &= ~A_CCM_DISCONNECT;
-
         } else if (fsa_actions & A_HA_DISCONNECT) {
             do_fsa_action(fsa_data, A_HA_DISCONNECT, do_ha_control);
         } else if (fsa_actions & A_CIB_STOP) {
@@ -453,10 +434,7 @@ log_fsa_input(fsa_data_t * stored_msg)
 {
     CRM_ASSERT(stored_msg);
     crm_trace("Processing queued input %d", stored_msg->id);
-    if (stored_msg->fsa_cause == C_CCM_CALLBACK) {
-        crm_trace("FSA processing CCM callback from %s", stored_msg->origin);
-
-    } else if (stored_msg->fsa_cause == C_LRM_OP_CALLBACK) {
+    if (stored_msg->fsa_cause == C_LRM_OP_CALLBACK) {
         crm_trace("FSA processing LRM callback from %s", stored_msg->origin);
 
     } else if (stored_msg->data == NULL) {

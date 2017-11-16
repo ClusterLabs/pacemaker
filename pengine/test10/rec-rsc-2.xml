@@ -14,7 +14,7 @@
       <node id="uuid2" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <primitive id="rsc1" class="heartbeat" type="apache">
+      <primitive id="rsc1" class="ocf" provider="heartbeat" type="apache">
         <meta_attributes id="primitive-rsc1.meta"/>
       </primitive>
     </resources>
@@ -24,7 +24,7 @@
     <node_state id="uuid1" ha="active" uname="node1" crmd="online" join="member" expected="member" in_ccm="true">
       <lrm id="any">
         <lrm_resources id="lrm_resources.id21911">
-          <lrm_resource id="rsc1" class="heartbeat" type="apache">
+          <lrm_resource id="rsc1" class="ocf" provider="heartbeat" type="apache">
             <lrm_rsc_op id="rsc1_start_0" interval="0" operation="start" op-status="0" rc-code="0" call-id="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" crm_feature_set="1.0.6" transition-magic=""/>
             <lrm_rsc_op id="rsc1_monitor_1" interval="1" operation="monitor" op-status="4" rc-code="1" call-id="2" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" crm_feature_set="1.0.6" transition-magic=""/>
           </lrm_resource>

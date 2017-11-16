@@ -7,12 +7,12 @@
         <nvpair id="cib-bootstrap-options-symmetric-cluster" name="symmetric-cluster" value="true"/>
         <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.0.12-unknown"/>
-        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="Heartbeat"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="26054162-312b-481a-ab8e-6373117ee590" uname="node-0" type="normal"/>
-      <node id="6cd6c3a1-3c0e-45c4-b1c7-8a02db15b9a7" uname="node-2" type="normal"/>
+      <node id="26054162-312b-481a-ab8e-6373117ee590" uname="node-0" type="member"/>
+      <node id="6cd6c3a1-3c0e-45c4-b1c7-8a02db15b9a7" uname="node-2" type="member"/>
     </nodes>
     <resources>
       <clone id="clone-node-app-rsc">

@@ -45,7 +45,6 @@ class Environment:
         self["CIBfilename"] = None
         self["CIBResource"] = 0
         self["DoBSC"]    = 0
-        self["use_logd"] = 0
         self["oprofile"] = []
         self["warn-inactive"] = 0
         self["ListTests"] = 0
@@ -162,10 +161,7 @@ class Environment:
 
     def set_stack(self, name):
         # Normalize stack names
-        if name == "heartbeat" or name == "lha":
-            self.data["Stack"] = "heartbeat"
-
-        elif name == "openais" or name == "ais"  or name == "whitetank":
+        if name == "openais" or name == "ais"  or name == "whitetank":
             self.data["Stack"] = "corosync (plugin v0)"
 
         elif name == "corosync" or name == "cs" or name == "mcp":
@@ -188,9 +184,6 @@ class Environment:
         # Create the Cluster Manager object
         if not "Stack" in self.data:
             return "unknown"
-
-        elif self.data["Stack"] == "heartbeat":
-            return "crm-lha"
 
         elif self.data["Stack"] == "corosync 2.x":
             if self["docker"]:
@@ -232,12 +225,11 @@ class Environment:
 
             if self["have_systemd"]:
             # Systemd
-                atboot = atboot or not self.rsh(self.target, "systemctl is-enabled heartbeat.service")
                 atboot = atboot or not self.rsh(self.target, "systemctl is-enabled corosync.service")
                 atboot = atboot or not self.rsh(self.target, "systemctl is-enabled pacemaker.service")
             else:
                 # SYS-V
-                atboot = atboot or not self.rsh(self.target, "chkconfig --list | grep -e corosync.*on -e heartbeat.*on -e pacemaker.*on")
+                atboot = atboot or not self.rsh(self.target, "chkconfig --list | grep -e corosync.*on -e pacemaker.*on")
 
             self["at-boot"] = atboot
 
@@ -555,9 +547,6 @@ class Environment:
                 else:
                     self.usage(args[i+1])
 
-            elif args[i] == "--heartbeat" or args[i] == "--lha":
-                self["Stack"] = "heartbeat"
-
             elif args[i] == "--hae":
                 self["Stack"] = "openais"
                 self["Schema"] = "hae"
@@ -640,7 +629,7 @@ class Environment:
         print("\t [--nodes 'node list']        list of cluster nodes separated by whitespace")
         print("\t [--group | -g 'name']        use the nodes listed in the named DSH group (~/.dsh/groups/$name)")
         print("\t [--limit-nodes max]          only use the first 'max' cluster nodes supplied with --nodes")
-        print("\t [--stack (v0|v1|cman|corosync|heartbeat|openais)]    which cluster stack is installed")
+        print("\t [--stack (v0|v1|cman|corosync|openais)]    which cluster stack is installed")
         print("\t [--list-tests]               list the valid tests")
         print("\t [--benchmark]                add the timing information")
         print("\t ")

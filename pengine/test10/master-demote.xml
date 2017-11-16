@@ -6,8 +6,8 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2" uname="cxa1" type="normal"/>
-      <node id="97c99ee5-0f0e-4519-845c-14871d0ba045" uname="cxb1" type="normal"/>
+      <node id="c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2" uname="cxa1" type="member"/>
+      <node id="97c99ee5-0f0e-4519-845c-14871d0ba045" uname="cxb1" type="member"/>
     </nodes>
     <resources>
       <primitive id="cyrus_address" class="ocf" type="IPaddr2" provider="heartbeat">

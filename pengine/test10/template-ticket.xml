@@ -7,8 +7,8 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="node1" type="normal" uname="node1"/>
-      <node id="node2" type="normal" uname="node2"/>
+      <node id="node1" type="member" uname="node1"/>
+      <node id="node2" type="member" uname="node2"/>
     </nodes>
     <resources>
       <template class="ocf" id="template1" provider="pacemaker" type="Dummy"/>

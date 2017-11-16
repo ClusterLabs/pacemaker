@@ -628,60 +628,6 @@ cmd_finalize(lrmd_cmd_t * cmd, lrmd_rsc_t * rsc)
     }
 }
 
-#if SUPPORT_HEARTBEAT
-static int pattern_matched(const char *pat, const char *str)
-{
-    if (g_pattern_match_simple(pat, str)) {
-        crm_debug("RA output matched stopped pattern [%s]", pat);
-        return TRUE;
-    }
-    return FALSE;
-}
-
-static int
-hb2uniform_rc(const char *action, int rc, const char *stdout_data)
-{
-    const char *stop_pattern[] = { "*stopped*", "*not*running*" };
-    const char *running_pattern[] = { "*running*", "*OK*" };
-    char *lower_std_output = NULL;
-    int result;
-
-
-    if (rc < 0) {
-        return PCMK_OCF_UNKNOWN_ERROR;
-    }
-
-    /* Treat class heartbeat the same as class lsb. */
-    if (!safe_str_eq(action, "status") && !safe_str_eq(action, "monitor")) {
-        return services_get_ocf_exitcode(action, rc);
-    }
-
-    /* for status though, exit code is ignored,
-     * and the stdout is scanned for specific strings */
-    if (stdout_data == NULL) {
-        crm_warn("No status output from the (hb) resource agent, assuming stopped");
-        return PCMK_OCF_NOT_RUNNING;
-    }
-
-    lower_std_output = g_ascii_strdown(stdout_data, -1);
-
-    if (pattern_matched(stop_pattern[0], lower_std_output) ||
-        pattern_matched(stop_pattern[1], lower_std_output)) {
-        result = PCMK_OCF_NOT_RUNNING;
-    } else if (pattern_matched(running_pattern[0], lower_std_output) ||
-        pattern_matched(running_pattern[1], stdout_data)) {
-            /* "OK" is matched case sensitive */
-        result = PCMK_OCF_OK;
-    } else {
-        /* It didn't say it was running - must be stopped */
-        crm_debug("RA output did not match any pattern, assuming stopped");
-        result = PCMK_OCF_NOT_RUNNING;
-    }
-    free(lower_std_output);
-    return result;
-}
-#endif
-
 static int
 ocf2uniform_rc(int rc)
 {
@@ -760,11 +706,6 @@ static int
 action_get_uniform_rc(svc_action_t * action)
 {
     lrmd_cmd_t *cmd = action->cb_data;
-#if SUPPORT_HEARTBEAT
-    if (safe_str_eq(action->standard, PCMK_RESOURCE_CLASS_HB)) {
-        return hb2uniform_rc(cmd->action, action->rc, action->stdout_data);
-    }
-#endif
     return get_uniform_rc(action->standard, cmd->action, action->rc);
 }
 

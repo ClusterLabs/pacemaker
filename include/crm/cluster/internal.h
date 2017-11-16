@@ -80,8 +80,7 @@ enum crm_proc_flag {
      * So don't.
      */
 
-    /* 3 messaging types */
-    crm_proc_heartbeat = 0x01000000,
+    // Messaging types
     crm_proc_plugin    = 0x00000002,
     crm_proc_cpg       = 0x04000000,
 
@@ -114,9 +113,6 @@ crm_get_cluster_proc()
         case pcmk_cluster_cman:
             return crm_proc_cpg;
 
-        case pcmk_cluster_heartbeat:
-            return crm_proc_heartbeat;
-
         case pcmk_cluster_classic_ais:
             return crm_proc_plugin;
 
@@ -141,9 +137,6 @@ peer2text(enum crm_proc_flag proc)
             break;
         case crm_proc_plugin:
             text = "ais";
-            break;
-        case crm_proc_heartbeat:
-            text = "heartbeat";
             break;
         case crm_proc_cib:
             text = "cib";
@@ -389,22 +382,6 @@ msg_type2text(enum crm_ais_msg_types type)
 enum crm_ais_msg_types text2msg_type(const char *text);
 char *get_ais_data(const AIS_Message * msg);
 gboolean check_message_sanity(const AIS_Message * msg, const char *data);
-
-#  if SUPPORT_HEARTBEAT
-extern ll_cluster_t *heartbeat_cluster;
-gboolean send_ha_message(ll_cluster_t * hb_conn, xmlNode * msg,
-                         const char *node, gboolean force_ordered);
-gboolean ha_msg_dispatch(ll_cluster_t * cluster_conn, gpointer user_data);
-
-gboolean register_heartbeat_conn(crm_cluster_t * cluster);
-xmlNode *convert_ha_message(xmlNode * parent, HA_Message * msg, const char *field);
-gboolean ccm_have_quorum(oc_ed_t event);
-const char *ccm_event_name(oc_ed_t event);
-crm_node_t *crm_update_ccm_node(const oc_ev_membership_t * oc, int offset, const char *state,
-                                uint64_t seq);
-
-gboolean heartbeat_initialize_nodelist(void *cluster, gboolean force_member, xmlNode * xml_parent);
-#  endif
 
 #  if SUPPORT_COROSYNC
 

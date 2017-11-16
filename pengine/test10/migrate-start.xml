@@ -13,8 +13,8 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="dom0-02" uname="dom0-02" type="normal"/>
-      <node id="dom0-01" uname="dom0-01" type="normal"/>
+      <node id="dom0-02" uname="dom0-02" type="member"/>
+      <node id="dom0-01" uname="dom0-01" type="member"/>
     </nodes>
     <resources>
       <primitive class="ocf" id="domU-test01" provider="heartbeat" type="Xen">

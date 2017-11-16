@@ -21,7 +21,7 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="mgmt01" type="normal" uname="mgmt01">
+      <node id="mgmt01" type="member" uname="mgmt01">
         <utilization id="mgmt01-utilization">
           <nvpair id="mgmt01-utilization-cpu-decipct" name="cpu-decipct" value="0"/>
           <nvpair id="mgmt01-utilization-ram-hugepages-mb" name="ram-hugepages-mb" value="0"/>
@@ -30,7 +30,7 @@
           <nvpair id="nodes-mgmt01-standby" name="standby" value="off"/>
         </instance_attributes>
       </node>
-      <node id="v03-a" type="normal" uname="v03-a">
+      <node id="v03-a" type="member" uname="v03-a">
         <instance_attributes id="nodes-v03-a">
           <nvpair id="nodes-v03-a-standby" name="standby" value="off"/>
         </instance_attributes>
@@ -41,7 +41,7 @@
           <nvpair id="nodes-v03-a-utilization-vds-ok-pool-0-usage" name="vds-ok-pool-0-usage" value="99999999"/>
         </utilization>
       </node>
-      <node id="v03-b" type="normal" uname="v03-b">
+      <node id="v03-b" type="member" uname="v03-b">
         <instance_attributes id="nodes-v03-b">
           <nvpair id="nodes-v03-b-standby" name="standby" value="off"/>
         </instance_attributes>

@@ -7,22 +7,22 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="hex-7" uname="hex-7" type="normal">
+      <node id="hex-7" uname="hex-7" type="member">
         <instance_attributes id="nodes-hex-7">
           <nvpair id="nodes-hex-7-standby" name="standby" value="off"/>
         </instance_attributes>
       </node>
-      <node id="hex-8" uname="hex-8" type="normal">
+      <node id="hex-8" uname="hex-8" type="member">
         <instance_attributes id="nodes-hex-8">
           <nvpair id="nodes-hex-8-standby" name="standby" value="off"/>
         </instance_attributes>
       </node>
-      <node id="hex-9" uname="hex-9" type="normal">
+      <node id="hex-9" uname="hex-9" type="member">
         <instance_attributes id="nodes-hex-9">
           <nvpair id="nodes-hex-9-standby" name="standby" value="off"/>
         </instance_attributes>
       </node>
-      <node id="hex-0" uname="hex-0" type="normal">
+      <node id="hex-0" uname="hex-0" type="member">
         <instance_attributes id="nodes-hex-0">
           <nvpair id="nodes-hex-0-standby" name="standby" value="off"/>
         </instance_attributes>

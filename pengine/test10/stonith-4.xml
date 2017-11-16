@@ -7,7 +7,7 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="101" uname="pcmk-1" type="normal"/>
+      <node id="101" uname="pcmk-1" type="member"/>
       <node id="102" uname="pcmk-2"/>
       <node id="103" uname="pcmk-3"/>
       <node id="104" uname="pcmk-4"/>

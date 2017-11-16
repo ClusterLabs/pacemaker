@@ -15,10 +15,10 @@
     </nodes>
     <resources>
       <group id="group1">
-        <primitive id="rsc1" class="heartbeat" type="apache"/>
-        <primitive id="rsc2" class="heartbeat" type="apache"/>
-        <primitive id="rsc3" class="heartbeat" type="apache"/>
-        <primitive id="rsc4" class="heartbeat" type="apache"/>
+        <primitive id="rsc1" class="ocf" provider="heartbeat" type="apache"/>
+        <primitive id="rsc2" class="ocf" provider="heartbeat" type="apache"/>
+        <primitive id="rsc3" class="ocf" provider="heartbeat" type="apache"/>
+        <primitive id="rsc4" class="ocf" provider="heartbeat" type="apache"/>
       </group>
     </resources>
     <constraints/>
@@ -27,16 +27,16 @@
     <node_state id="uuid1" ha="active" uname="node1" crmd="online" join="member" expected="member" in_ccm="true">
       <lrm id="uuid1">
         <lrm_resources>
-          <lrm_resource id="rsc1" class="heartbeat" type="apache">
+          <lrm_resource id="rsc1" class="ocf" provider="heartbeat" type="apache">
             <lrm_rsc_op id="rsc1_last_0" operation_key="rsc1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.6" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
-          <lrm_resource id="rsc2" class="heartbeat" type="apache">
+          <lrm_resource id="rsc2" class="ocf" provider="heartbeat" type="apache">
             <lrm_rsc_op id="rsc2_last_0" operation_key="rsc2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.6" transition-key="1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
-          <lrm_resource id="rsc3" class="heartbeat" type="apache">
+          <lrm_resource id="rsc3" class="ocf" provider="heartbeat" type="apache">
             <lrm_rsc_op id="rsc3_last_0" operation_key="rsc3_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.6" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
-          <lrm_resource id="rsc4" class="heartbeat" type="apache">
+          <lrm_resource id="rsc4" class="ocf" provider="heartbeat" type="apache">
             <lrm_rsc_op id="rsc4_last_0" operation_key="rsc4_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.6" transition-key="1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
@@ -45,16 +45,16 @@
     <node_state id="uuid2" ha="active" uname="node2" crmd="online" join="member" expected="member" in_ccm="true">
       <lrm id="uuid2">
         <lrm_resources>
-          <lrm_resource id="rsc1" class="heartbeat" type="apache">
+          <lrm_resource id="rsc1" class="ocf" provider="heartbeat" type="apache">
             <lrm_rsc_op id="rsc1_last_0" operation_key="rsc1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.6" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
-          <lrm_resource id="rsc2" class="heartbeat" type="apache">
+          <lrm_resource id="rsc2" class="ocf" provider="heartbeat" type="apache">
             <lrm_rsc_op id="rsc2_last_0" operation_key="rsc2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.6" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
-          <lrm_resource id="rsc3" class="heartbeat" type="apache">
+          <lrm_resource id="rsc3" class="ocf" provider="heartbeat" type="apache">
             <lrm_rsc_op id="rsc3_last_0" operation_key="rsc3_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.6" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
-          <lrm_resource id="rsc4" class="heartbeat" type="apache">
+          <lrm_resource id="rsc4" class="ocf" provider="heartbeat" type="apache">
             <lrm_rsc_op id="rsc4_last_0" operation_key="rsc4_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.6" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>

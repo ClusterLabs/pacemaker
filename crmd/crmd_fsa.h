@@ -28,10 +28,6 @@
 #  include <crm/cluster/election.h>
 #  include <crm/common/ipcs.h>
 
-#  if SUPPORT_HEARTBEAT
-extern ll_cluster_t *fsa_cluster_conn;
-#  endif
-
 /* copy from struct client_child in heartbeat.h
  *
  * Plus a couple of other things

@@ -46,8 +46,8 @@ with the tools appropriate to those sources.
 
 The fields used in the +node_state+ objects are named as they are
 largely for historical reasons and are rooted in Pacemaker's origins
-as the Heartbeat resource manager. They have remained unchanged to preserve
-compatibility with older versions.
+as the resource manager for the older Heartbeat project. They have remained
+unchanged to preserve compatibility with older versions.
       
 .Node Status Fields
 [width="95%",cols="1m,4<",options="header",align="center"]
@@ -59,8 +59,7 @@ compatibility with older versions.
 | id |
 indexterm:[id,Node Status]
 indexterm:[Node,Status,id]
-Unique identifier for the node. Corosync-based clusters use a numeric
-counter, while Heartbeat clusters use a (barely) human-readable UUID.
+Unique identifier for the node. Corosync-based clusters use a numeric counter.
 
 | uname |
 indexterm:[uname,Node Status]

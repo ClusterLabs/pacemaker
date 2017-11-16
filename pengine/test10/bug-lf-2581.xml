@@ -9,8 +9,8 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="elvis" type="normal" uname="elvis"/>
-      <node id="queen" type="normal" uname="queen"/>
+      <node id="elvis" type="member" uname="elvis"/>
+      <node id="queen" type="member" uname="queen"/>
     </nodes>
     <resources>
       <clone id="AZ-clone">

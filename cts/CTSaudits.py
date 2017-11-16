@@ -217,7 +217,7 @@ class FileAudit(ClusterAudit):
         self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"])
         for node in self.CM.Env["nodes"]:
 
-            (rc, lsout) = self.CM.rsh(node, "ls -al /var/lib/heartbeat/cores/* | grep core.[0-9]", None)
+            (rc, lsout) = self.CM.rsh(node, "ls -al /var/lib/pacemaker/cores/* | grep core.[0-9]", None)
             for line in lsout:
                 line = line.strip()
                 if line not in self.known:
@@ -419,8 +419,6 @@ class PrimitiveAudit(ClusterAudit):
         return rc
 
     def is_applicable(self):
-        if self.CM["Name"] == "crm-lha":
-            return 1
         if self.CM["Name"] == "crm-ais":
             return 1
         return 0
@@ -591,8 +589,6 @@ class CrmdStateAudit(ClusterAudit):
         return "CrmdStateAudit"
     
     def is_applicable(self):
-        if self.CM["Name"] == "crm-lha":
-            return 1
         if self.CM["Name"] == "crm-ais":
             return 1
         return 0
@@ -703,8 +699,6 @@ class CIBAudit(ClusterAudit):
         return "CibAudit"
     
     def is_applicable(self):
-        if self.CM["Name"] == "crm-lha":
-            return 1
         if self.CM["Name"] == "crm-ais":
             return 1
         return 0
@@ -843,8 +837,6 @@ class PartitionAudit(ClusterAudit):
         return "PartitionAudit"
     
     def is_applicable(self):
-        if self.CM["Name"] == "crm-lha":
-            return 1
         if self.CM["Name"] == "crm-ais":
             return 1
         return 0

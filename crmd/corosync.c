@@ -36,7 +36,6 @@
 #include <sys/stat.h>
 
 extern void post_cache_update(int seq);
-extern void crmd_ha_connection_destroy(gpointer user_data);
 
 /*	 A_HA_CONNECT	*/
 #if SUPPORT_COROSYNC
@@ -101,10 +100,7 @@ crmd_cs_dispatch(cpg_handle_t handle,
             crm_xml_add(xml, F_ORIG, from);
             /* crm_xml_add_int(xml, F_SEQ, wrapper->id); Fake? */
 
-            if (is_heartbeat_cluster()) {
-                flag = crm_proc_heartbeat;
-
-            } else if (is_classic_ais_cluster()) {
+            if (is_classic_ais_cluster()) {
                 flag = crm_proc_plugin;
             }
 

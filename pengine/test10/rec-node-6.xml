@@ -12,13 +12,13 @@
     </nodes>
     <resources>
       <primitive id="stonith-1" class="stonith" type="dummy"/>
-      <primitive id="rsc1" class="heartbeat" type="apache">
+      <primitive id="rsc1" class="ocf" provider="heartbeat" type="apache">
         <operations>
           <op name="stop" interval="0" id="stop-1" on-fail="block"/>
         </operations>
         <meta_attributes id="primitive-rsc1.meta"/>
       </primitive>
-      <primitive id="rsc2" class="heartbeat" type="apache">
+      <primitive id="rsc2" class="ocf" provider="heartbeat" type="apache">
         <operations>
           <op name="stop" interval="0" id="stop-2" on-fail="block"/>
         </operations>
@@ -31,10 +31,10 @@
     <node_state id="uuid1" ha="active" uname="node1" join="member" expected="member" in_ccm="true">
       <lrm id="any">
         <lrm_resources id="lrm_resources.id21944">
-          <lrm_resource id="rsc1" class="heartbeat" type="apache">
+          <lrm_resource id="rsc1" class="ocf" provider="heartbeat" type="apache">
             <lrm_rsc_op id="rsc1_stop_0" operation="stop" interval="0" op-status="4" rc-code="1" call-id="1" op-digest="e84efa5734680badc7f0316955c76514" crm_feature_set="1.0.6" transition-magic=""/>
           </lrm_resource>
-          <lrm_resource id="rsc2" class="heartbeat" type="apache">
+          <lrm_resource id="rsc2" class="ocf" provider="heartbeat" type="apache">
             <lrm_rsc_op id="rsc2_start_0" operation="start" interval="0" op-status="0" rc-code="0" call-id="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" crm_feature_set="1.0.6" transition-magic=""/>
           </lrm_resource>
         </lrm_resources>

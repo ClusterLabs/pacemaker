@@ -18,7 +18,6 @@ schemadir=@CRM_DTD_DIRECTORY@
 ocfdir=@OCF_RA_DIR@
 
 features=@PCMK_FEATURES@
-with_heartbeat=@SUPPORT_HEARTBEAT@
 with_corosync=@SUPPORT_CS@
 with_plugin=@SUPPORT_PLUGIN@
 with_cman=@SUPPORT_CMAN@

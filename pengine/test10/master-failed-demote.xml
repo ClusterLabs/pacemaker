@@ -36,8 +36,8 @@
       </meta_attributes>
     </rsc_defaults>
     <nodes>
-      <node id="888e539a-c6ef-496d-b79a-77cbf0f9e5e4" uname="dl380g5b" type="normal"/>
-      <node id="3831f23f-da0a-470e-b8e7-16e61a18c3c3" uname="dl380g5a" type="normal"/>
+      <node id="888e539a-c6ef-496d-b79a-77cbf0f9e5e4" uname="dl380g5b" type="member"/>
+      <node id="3831f23f-da0a-470e-b8e7-16e61a18c3c3" uname="dl380g5a" type="member"/>
     </nodes>
     <resources>
       <master id="ms-sf">

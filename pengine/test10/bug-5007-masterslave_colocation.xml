@@ -10,8 +10,8 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="fc16-builder" type="normal" uname="fc16-builder"/>
-      <node id="fc16-builder2" type="normal" uname="fc16-builder2"/>
+      <node id="fc16-builder" type="member" uname="fc16-builder"/>
+      <node id="fc16-builder2" type="member" uname="fc16-builder2"/>
     </nodes>
     <resources>
       <master id="MS_DUMMY">

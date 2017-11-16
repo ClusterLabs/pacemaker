@@ -11,25 +11,25 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="11764fd4-c643-4dfe-8687-c50540a00104" uname="power720-1" type="normal">
+      <node id="11764fd4-c643-4dfe-8687-c50540a00104" uname="power720-1" type="member">
         <instance_attributes id="instance_attributes.id22426">
           <nvpair name="cluster_group" value="frontline" id="nvpair.id22433"/>
           <nvpair id="nvpair.id22442" name="standby" value="off"/>
         </instance_attributes>
       </node>
-      <node id="4191b454-c985-4423-a95e-95b287630cff" uname="power720-2" type="normal">
+      <node id="4191b454-c985-4423-a95e-95b287630cff" uname="power720-2" type="member">
         <instance_attributes id="instance_attributes.id22462">
           <nvpair name="cluster_group" value="frontline" id="nvpair.id22469"/>
           <nvpair id="nvpair.id22478" name="standby" value="off"/>
         </instance_attributes>
       </node>
-      <node id="0e3b1105-0152-4dc3-9dcd-4fb9dbefd64f" uname="power720-3" type="normal">
+      <node id="0e3b1105-0152-4dc3-9dcd-4fb9dbefd64f" uname="power720-3" type="member">
         <instance_attributes id="instance_attributes.id22499">
           <nvpair name="cluster_group" value="backline" id="nvpair.id22506"/>
           <nvpair id="nvpair.id22515" name="standby" value="off"/>
         </instance_attributes>
       </node>
-      <node id="1e626dc7-fa07-492e-bb21-8c838bfe7f46" uname="power720-4" type="normal">
+      <node id="1e626dc7-fa07-492e-bb21-8c838bfe7f46" uname="power720-4" type="member">
         <instance_attributes id="instance_attributes.id22536">
           <nvpair name="cluster_group" value="backline" id="nvpair.id22543"/>
           <nvpair id="nvpair.id22552" name="standby" value="off"/>

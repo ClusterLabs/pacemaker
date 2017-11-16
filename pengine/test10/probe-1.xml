@@ -17,7 +17,7 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="52a5ea5e-86ee-442c-b251-0bc9825c517e" uname="c001n05" type="normal">
+      <node id="52a5ea5e-86ee-442c-b251-0bc9825c517e" uname="c001n05" type="member">
         <instance_attributes id="instance_attributes.id21973">
           <nvpair id="nvpair.id21981" name="master-ocf_msdummy:0" value="1000"/>
         </instance_attributes>

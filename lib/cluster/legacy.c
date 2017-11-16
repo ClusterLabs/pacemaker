@@ -695,10 +695,6 @@ init_cs_connection_once(crm_cluster_t * cluster)
                 return FALSE;
             }
             break;
-        case pcmk_cluster_heartbeat:
-            crm_info("Could not find an active corosync based cluster");
-            return FALSE;
-            break;
         default:
             crm_err("Invalid cluster type: %s (%d)", name_for_cluster_type(stack), stack);
             return FALSE;

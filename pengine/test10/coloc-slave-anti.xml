@@ -24,8 +24,8 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="f10a448b-abcb-4743-a7b9-cbb966b46462" uname="sirius" type="normal"/>
-      <node id="26cfbecf-dc25-42e1-84de-325ca9e457b5" uname="pollux" type="normal"/>
+      <node id="f10a448b-abcb-4743-a7b9-cbb966b46462" uname="sirius" type="member"/>
+      <node id="26cfbecf-dc25-42e1-84de-325ca9e457b5" uname="pollux" type="member"/>
     </nodes>
     <resources>
       <clone id="pingd-clone">

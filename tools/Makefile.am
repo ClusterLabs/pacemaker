@@ -45,9 +45,6 @@ test_SCRIPTS		= regression.sh
 test_DATA               = regression.dates.exp regression.tools.exp regression.acls.exp \
 			  regression.validity.exp
 
-if BUILD_HEARTBEAT_SUPPORT
-sbin_PROGRAMS           += crm_uuid
-endif
 if BUILD_SERVICELOG
 sbin_PROGRAMS		+= notifyServicelogEvent
 endif
@@ -65,9 +62,6 @@ crmadmin_LDADD		= $(top_builddir)/lib/pengine/libpe_status.la \
 
 crm_error_SOURCES	= crm_error.c
 crm_error_LDADD		= $(COMMONLIBS)
-
-crm_uuid_SOURCES	= crm_uuid.c
-crm_uuid_LDADD		= $(COMMONLIBS) $(top_builddir)/lib/cluster/libcrmcluster.la
 
 cibadmin_SOURCES	= cibadmin.c
 cibadmin_LDADD		= $(COMMONLIBS)

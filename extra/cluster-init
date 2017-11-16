@@ -4,7 +4,6 @@ accept_defaults=0
 do_raw=0
 ETCHOSTS=0
 CMAN=0
-do_heartbeat=0
 plugin_ver=-1
 pcmk_ver=11
 nodelist=0
@@ -68,7 +67,6 @@ function helptext() {
     echo "-w, --host          Specify a host to operate on/with.  May be specified multiple times"
     echo "-r, --raw-ip        Supplied nodes were listed as their IP addresses"
     echo ""
-    echo "-h, --heartbeat     configure for heartbeat"
     echo "-c, --corosync      configure for corosync"
     echo "-C, --nodelist      configure for corosync with a node list"
     echo "-o, --openais       configure for openais"
@@ -112,7 +110,6 @@ while true; do
 	--hosts) ETCHOSTS=1; shift;;
 
 	cman|--cman) CTYPE=cman; shift;;
-	-h|--heartbeat) CTYPE=heartbeat; shift;;
 	-c|--corosync) CTYPE=corosync; shift;;
 	-C|--nodelist) CTYPE=corosync; nodelist=1; shift;;
 	-o|--openais) CTYPE=openais; shift;;
@@ -198,13 +195,12 @@ done
 
 if [ -z $CTYPE ]; then
     echo ""
-    read -p "Where should Pacemaker obtain membership and quorum from? [corosync] (corosync, cman, plugin, openais, heartbeat) " -t 60 CTYPE
+    read -p "Where should Pacemaker obtain membership and quorum from? [corosync] (corosync, cman, plugin, openais) " -t 60 CTYPE
 fi
 
 case $CTYPE in
     cman) CMAN=1; cs_conf=/etc/cluster/cluster.conf;;
     corosync) cs_conf=/etc/corosync/corosync.conf;;
-    heartbeat) do_heartbeat=1;;
     openais) cs_conf=/etc/ais/openais.conf;;
     plugin)
 	cs_conf=/etc/corosync/corosync.conf
@@ -334,9 +330,6 @@ if [ ! -z $rpm_repo ]; then
     REPO=$rpm_repo/$distro
 fi
 
-if [ $do_heartbeat = 1 ]; then
-    pkgs="$pkgs heartbeat"
-fi
 if [ $CMAN = 1 ]; then
     pkgs="$pkgs cman"
 fi
@@ -430,7 +423,6 @@ chkconfig xinetd on
 service xinetd start &>/dev/null
 
 chkconfig corosync off &> /dev/null
-chkconfig heartbeat off &> /dev/null
 mkdir -p /etc/cluster
 
 info "Turning on core files"
@@ -449,41 +441,6 @@ if [ $CMAN = 1 ]; then
     sed -i.sed "s/.*CMAN_QUORUM_TIMEOUT=.*/CMAN_QUORUM_TIMEOUT=0/g" /etc/sysconfig/cman
 fi
 END
-
-function create_hb_config() {
-    cat <<-END >/tmp/lha.$$
-auth 1
-1 crc
-END
-    printf "%-10s  Installing authkeys\n" ${host}
-    scp -q /tmp/lha.$$ root@${host}:/etc/ha.d/authkeys
-    ssh -l root ${host} -- chmod 600 /etc/ha.d/authkeys
-
-    cat <<-END >/tmp/lha.$$
-traditional_compression off
-compression		bz2
-
-realtime	yes
-conn_logd_time	120
-coredumps	true
-udpport		$cs_port$dsh_group
-
-bcast		eth0
-autojoin	any
-
-logfacility	daemon
-crm		respawn
-
-# 8-node version
-debug		0
-keepalive	1
-warntime	6
-deadtime	10
-initdead	15
-END
-    printf "%-10s  Installing ha.cf\n" ${host}
-    scp -q /tmp/lha.$$ root@${host}:/etc/ha.d/ha.cf
-}
 
 function patch_cs_config() {
     test $num_hosts != 2
@@ -809,10 +766,7 @@ for host in $host_list; do
 	scp ~/.ssh/known_hosts root@${host}:.ssh/known_hosts
     fi
 
-    if [ $do_heartbeat = 1 ]; then
-	create_hb_config ${host}
-
-    elif [ $CMAN = 1 ]; then
+    if [ $CMAN = 1 ]; then
 	create_cman_config
         printf "%-10s  Installed $cs_conf\n" ${host}:
 

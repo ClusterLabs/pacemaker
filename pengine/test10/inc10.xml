@@ -15,18 +15,18 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="bfbe2e3b-51c2-4419-b99e-eb85f9dd0426" uname="xen-4" type="normal"/>
-      <node id="a89a7421-28b8-4d6e-b43f-3a9e563e24ad" uname="xen-3" type="normal">
+      <node id="bfbe2e3b-51c2-4419-b99e-eb85f9dd0426" uname="xen-4" type="member"/>
+      <node id="a89a7421-28b8-4d6e-b43f-3a9e563e24ad" uname="xen-3" type="member">
         <instance_attributes id="instance_attributes.id21970">
           <nvpair id="nvpair.id21977" name="standby" value="false"/>
         </instance_attributes>
       </node>
-      <node id="e3aa8547-3d52-47df-a8a3-ca94538a5282" uname="xen-2" type="normal">
+      <node id="e3aa8547-3d52-47df-a8a3-ca94538a5282" uname="xen-2" type="member">
         <instance_attributes id="instance_attributes.id21998">
           <nvpair id="nvpair.id22005" name="standby" value="true"/>
         </instance_attributes>
       </node>
-      <node id="43746e52-5e02-49bb-a110-c420078855c5" uname="xen-1" type="normal"/>
+      <node id="43746e52-5e02-49bb-a110-c420078855c5" uname="xen-1" type="member"/>
     </nodes>
     <resources>
       <clone id="DoFencing">

@@ -8,9 +8,9 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="sles11-ha1" type="normal" uname="sles11-ha1"/>
-      <node id="sles11-ha2" type="normal" uname="sles11-ha2"/>
-      <node id="sles11-ha3" type="normal" uname="sles11-ha3"/>
+      <node id="sles11-ha1" type="member" uname="sles11-ha1"/>
+      <node id="sles11-ha2" type="member" uname="sles11-ha2"/>
+      <node id="sles11-ha3" type="member" uname="sles11-ha3"/>
     </nodes>
     <resources>
       <clone id="Stinith_Clone_Resource">

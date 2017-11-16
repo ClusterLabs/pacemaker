@@ -10,8 +10,8 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="node-0" type="normal" uname="node-0"/>
-      <node id="node-1" type="normal" uname="node-1"/>
+      <node id="node-0" type="member" uname="node-0"/>
+      <node id="node-1" type="member" uname="node-1"/>
     </nodes>
     <resources>
       <master id="ms0">

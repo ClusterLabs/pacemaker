@@ -973,10 +973,8 @@ main(int argc, char **argv)
 
 
     setenv("LC_ALL", "C", 1);
-    setenv("HA_LOGD", "no", 1);
 
     set_daemon_option("mcp", "true");
-    set_daemon_option("use_logd", "off");
 
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
 

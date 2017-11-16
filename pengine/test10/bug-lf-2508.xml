@@ -3,7 +3,7 @@
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.0.9-0a40fd0cb9f2fcedef9d1967115c912314c57438"/>
-        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="Heartbeat"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="freeze"/>
         <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
         <nvpair id="cib-bootstrap-options-startup-fencing" name="startup-fencing" value="false"/>
@@ -13,10 +13,10 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="e2bc05d5-2a0f-4e2e-8566-bd1000f1cfeb" uname="srv01" type="normal"/>
-      <node id="71085d5e-1c63-49e0-8c8c-400d610b4182" uname="srv02" type="normal"/>
-      <node id="eaf265e7-e271-4901-9f7b-9266b11fa2e7" uname="srv03" type="normal"/>
-      <node id="82d8b53b-a29d-40f5-9a1d-156bf3b7af62" uname="srv04" type="normal"/>
+      <node id="e2bc05d5-2a0f-4e2e-8566-bd1000f1cfeb" uname="srv01" type="member"/>
+      <node id="71085d5e-1c63-49e0-8c8c-400d610b4182" uname="srv02" type="member"/>
+      <node id="eaf265e7-e271-4901-9f7b-9266b11fa2e7" uname="srv03" type="member"/>
+      <node id="82d8b53b-a29d-40f5-9a1d-156bf3b7af62" uname="srv04" type="member"/>
     </nodes>
     <resources>
       <group id="Group01">

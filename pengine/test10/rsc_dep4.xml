@@ -13,25 +13,25 @@
       <node id="node2" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <primitive id="rsc1" class="heartbeat" type="apache">
+      <primitive id="rsc1" class="ocf" provider="heartbeat" type="apache">
         <instance_attributes id="instance_attributes.id21877">
           <nvpair id="nvpair.id21883" name="priority" value="1.0"/>
         </instance_attributes>
         <meta_attributes id="primitive-rsc1.meta"/>
       </primitive>
-      <primitive id="rsc2" class="heartbeat" type="apache">
+      <primitive id="rsc2" class="ocf" provider="heartbeat" type="apache">
         <instance_attributes id="instance_attributes.id21903">
           <nvpair id="nvpair.id21909" name="priority" value="2.0"/>
         </instance_attributes>
         <meta_attributes id="primitive-rsc2.meta"/>
       </primitive>
-      <primitive id="rsc3" class="heartbeat" type="apache">
+      <primitive id="rsc3" class="ocf" provider="heartbeat" type="apache">
         <instance_attributes id="instance_attributes.id21929">
           <nvpair id="nvpair.id21935" name="priority" value="1.0"/>
         </instance_attributes>
         <meta_attributes id="primitive-rsc3.meta"/>
       </primitive>
-      <primitive id="rsc4" class="heartbeat" type="apache">
+      <primitive id="rsc4" class="ocf" provider="heartbeat" type="apache">
         <instance_attributes id="instance_attributes.id21955">
           <nvpair id="nvpair.id21961" name="priority" value="2.0"/>
         </instance_attributes>
@@ -47,10 +47,10 @@
     <node_state id="node1" ha="active" uname="node1" crmd="online" join="member" expected="member" in_ccm="true">
       <lrm id="any">
         <lrm_resources id="lrm_resources.id22023">
-          <lrm_resource id="rsc1" class="heartbeat" type="apache">
+          <lrm_resource id="rsc1" class="ocf" provider="heartbeat" type="apache">
             <lrm_rsc_op id="rsc1_start_0" operation="start" interval="0" op-status="0" rc-code="0" call-id="1" op-digest="9d52bf4c88392688f8b12775fdbb957a" crm_feature_set="1.0.5" transition-magic=""/>
           </lrm_resource>
-          <lrm_resource id="rsc4" class="heartbeat" type="apache">
+          <lrm_resource id="rsc4" class="ocf" provider="heartbeat" type="apache">
             <lrm_rsc_op id="rsc4_start_0" operation="start" interval="0" op-status="0" rc-code="0" call-id="1" op-digest="832a553db174ca6fa88a2fca778f277a" crm_feature_set="1.0.5" transition-magic=""/>
           </lrm_resource>
         </lrm_resources>

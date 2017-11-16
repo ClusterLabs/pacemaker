@@ -283,9 +283,6 @@ class StopTest(CTSTest):
         # Technically we should always be able to notice ourselves stopping
         patterns.append(self.templates["Pat:We_stopped"] % node)
 
-        #if self.Env["use_logd"]:
-        #    patterns.append(self.templates["Pat:Logd_stopped"] % node)
-
         # Any active node needs to notice this one left
         # NOTE: This wont work if we have multiple partitions
         for other in self.Env["nodes"]:
@@ -601,8 +598,6 @@ class SimulStart(CTSTest):
         if not ret:
             return self.failure("Setup failed")
 
-        self.CM.clear_all_caches()
-
         if not self.startall(None):
             return self.failure("Startall failed")
 
@@ -668,7 +663,6 @@ class StopOnebyOne(CTSTest):
         if len(failed) > 0:
             return self.failure("Some node failed to stop: " + repr(failed))
 
-        self.CM.clear_all_caches()
         return self.success()
 
 #     Register StopOnebyOne as a good test to run
@@ -973,7 +967,7 @@ class BandwidthTest(CTSTest):
 #        Tests should not be cluster-manager-specific
 #        If you need to find out cluster manager configuration to do this, then
 #        it should be added to the generic cluster manager API.
-    '''Test the bandwidth which heartbeat uses'''
+    '''Test the bandwidth which the cluster uses'''
     def __init__(self, cm):
         CTSTest.__init__(self, cm)
         self.name = "Bandwidth"
@@ -1409,34 +1403,12 @@ class ComponentFail(CTSTest):
         self.incr(chosen.name)
 
         if chosen.name != "aisexec" and chosen.name != "corosync":
-            if self.Env["Name"] != "crm-lha" or chosen.name != "pengine":
-                self.patterns.append(self.templates["Pat:ChildKilled"] %(node, chosen.name))
-                self.patterns.append(self.templates["Pat:ChildRespawn"] %(node, chosen.name))
+            self.patterns.append(self.templates["Pat:ChildKilled"] %(node, chosen.name))
+            self.patterns.append(self.templates["Pat:ChildRespawn"] %(node, chosen.name))
 
         self.patterns.extend(chosen.pats)
         if node_is_dc:
           self.patterns.extend(chosen.dc_pats)
-
-        # In an ideal world, this next stuff should be in the "chosen" object as a member function
-        if self.Env["Name"] == "crm-lha" and chosen.triggersreboot:
-            # Make sure the node goes down and then comes back up if it should reboot...
-            for other in self.Env["nodes"]:
-                if other != node:
-                    self.patterns.append(self.templates["Pat:They_stopped"] %(other, self.CM.key_for_node(node)))
-            self.patterns.append(self.templates["Pat:Slave_started"] % node)
-            self.patterns.append(self.templates["Pat:Local_started"] % node)
-
-            if chosen.dc_only:
-                # Sometimes these will be in the log, and sometimes they won't...
-                self.okerrpatterns.append("%s .*Process %s:.* exited" % (node, chosen.name))
-                self.okerrpatterns.append("%s .*I_ERROR.*crmdManagedChildDied" % node)
-                self.okerrpatterns.append("%s .*The %s subsystem terminated unexpectedly" % (node, chosen.name))
-                self.okerrpatterns.append("(ERROR|error): Client .* exited with return code")
-            else:
-                # Sometimes this won't be in the log...
-                self.okerrpatterns.append(self.templates["Pat:ChildKilled"] %(node, chosen.name))
-                self.okerrpatterns.append(self.templates["Pat:ChildRespawn"] %(node, chosen.name))
-                self.okerrpatterns.append(self.templates["Pat:ChildExit"])
 
         if chosen.name == "stonith":
             # Ignore actions for STONITH resources
@@ -1828,8 +1800,6 @@ class Reattach(CTSTest):
         ]
 
     def is_applicable(self):
-        if self.Env["Name"] == "crm-lha":
-            return None
         return 1
 
 AllTestClasses.append(Reattach)
@@ -2382,11 +2352,8 @@ class SimulStopLite(CTSTest):
             if self.CM.ShouldBeStatus[node] == "up":
                 self.incr("WasStarted")
                 watchpats.append(self.templates["Pat:We_stopped"] % node)
-                #if self.Env["use_logd"]:
-                #    watchpats.append(self.templates["Pat:Logd_stopped"] % node)
 
         if len(watchpats) == 0:
-            self.CM.clear_all_caches()
             return self.success()
 
         #     Stop all the nodes - at about the same time...
@@ -2398,8 +2365,6 @@ class SimulStopLite(CTSTest):
             if self.CM.ShouldBeStatus[node] == "up":
                 self.CM.StopaCMnoBlock(node)
         if watch.lookforall():
-            self.CM.clear_all_caches()
-
             # Make sure they're completely down with no residule
             for node in self.Env["nodes"]:
                 self.rsh(node, self.templates["StopCmd"])
@@ -2419,7 +2384,6 @@ class SimulStopLite(CTSTest):
         self.logger.log("Warn: All nodes stopped but CTS didnt detect: "
                     + repr(watch.unmatched))
 
-        self.CM.clear_all_caches()
         return self.failure("Missing log message: "+repr(watch.unmatched))
 
     def is_applicable(self):

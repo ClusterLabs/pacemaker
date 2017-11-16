@@ -36,10 +36,6 @@ else
 libcrmcluster_la_SOURCES += corosync.c
 endif
 endif
-if BUILD_HEARTBEAT_SUPPORT
-libcrmcluster_la_SOURCES += heartbeat.c
-#libcrmcluster_la_LIBADD  += -ldl
-endif
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~

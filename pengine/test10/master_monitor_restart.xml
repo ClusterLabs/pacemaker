@@ -10,12 +10,12 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="1048225984" type="normal" uname="node2">
+      <node id="1048225984" type="member" uname="node2">
         <instance_attributes id="nodes-1048225984">
           <nvpair id="nodes-1048225984-standby" name="standby" value="on"/>
         </instance_attributes>
       </node>
-      <node id="1031448768" type="normal" uname="node1">
+      <node id="1031448768" type="member" uname="node1">
         <instance_attributes id="nodes-1031448768">
           <nvpair id="nodes-1031448768-standby" name="standby" value="off"/>
         </instance_attributes>

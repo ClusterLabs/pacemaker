@@ -37,7 +37,6 @@
 #include <crm/attrd.h>
 
 int command = 0;
-int ccm_fd = 0;
 gboolean do_quiet = FALSE;
 
 char *target_uuid = NULL;
@@ -63,20 +62,16 @@ static struct crm_option long_options[] = {
 #ifdef SUPPORT_CS_QUORUM
     {"corosync",   0, 0, 'C', "\tOnly try connecting to an Corosync-based cluster"},
 #endif
-#ifdef SUPPORT_HEARTBEAT
-    {"heartbeat",  0, 0, 'H', "Only try connecting to a Heartbeat-based cluster"},
-#endif
-    
+
     {"-spacer-",      1, 0, '-', "\nCommands:"},
     {"name",	      0, 0, 'n', "\tDisplay the name used by the cluster for this node"},
     {"name-for-id",   1, 0, 'N', "\tDisplay the name used by the cluster for the node with the specified id"},
-    {"epoch",	      0, 0, 'e', "\tDisplay the epoch during which this node joined the cluster"},
     {"quorum",        0, 0, 'q', "\tDisplay a 1 if our partition has quorum, 0 if not"},
-    {"list",          0, 0, 'l', "\tDisplay all known members (past and present) of this cluster (Not available for heartbeat clusters)"},
+    {"list",          0, 0, 'l', "\tDisplay all known members (past and present) of this cluster"},
     {"partition",     0, 0, 'p', "Display the members of this partition"},
     {"cluster-id",    0, 0, 'i', "Display this node's cluster id"},
     {"remove",        1, 0, 'R', "(Advanced) Remove the (stopped) node with the specified name from Pacemaker's configuration and caches"},
-    {"-spacer-",      1, 0, '-', "In the case of Heartbeat, CMAN and Corosync 2.0, requires that the node has already been removed from the underlying cluster"},
+    {"-spacer-",      1, 0, '-', "In the case of CMAN and Corosync 2.0, requires that the node has already been removed from the underlying cluster"},
 
     {"-spacer-", 1, 0, '-', "\nAdditional Options:"},
     {"force",	 0, 0, 'f'},
@@ -298,17 +293,7 @@ try_pacemaker(int command, enum cluster_type_e stack)
         .destroy = node_mcp_destroy
     };
 
-    if (stack == pcmk_cluster_heartbeat) {
-        /* Nothing to do for them */
-        return FALSE;
-    }
-
     switch (command) {
-        case 'e':
-            /* Age only applies to heartbeat clusters */
-            fprintf(stdout, "1\n");
-            crm_exit(pcmk_ok);
-
         case 'R':
             {
                 int lpc = 0;
@@ -352,214 +337,6 @@ try_pacemaker(int command, enum cluster_type_e stack)
     return FALSE;
 }
 
-#if SUPPORT_HEARTBEAT
-#  include <ocf/oc_event.h>
-#  include <ocf/oc_membership.h>
-#  include <clplumbing/cl_uuid.h>
-
-#  define UUID_LEN 16
-
-oc_ev_t *ccm_token = NULL;
-static void *ccm_library = NULL;
-void oc_ev_special(const oc_ev_t *, oc_ev_class_t, int);
-
-static gboolean
-read_local_hb_uuid(void)
-{
-    cl_uuid_t uuid;
-    char *buffer = NULL;
-    long start = 0, read_len = 0;
-
-    FILE *input = fopen(UUID_FILE, "r");
-
-    if (input == NULL) {
-        crm_info("Could not open UUID file %s", UUID_FILE);
-        return FALSE;
-    }
-
-    /* see how big the file is */
-    start = ftell(input);
-    fseek(input, 0L, SEEK_END);
-    if (UUID_LEN != ftell(input)) {
-        fprintf(stderr, "%s must contain exactly %d bytes\n", UUID_FILE, UUID_LEN);
-        abort();
-    }
-
-    fseek(input, 0L, start);
-    if (start != ftell(input)) {
-        fprintf(stderr, "fseek not behaving: %ld vs. %ld\n", start, ftell(input));
-        crm_exit(pcmk_err_generic);
-    }
-
-    buffer = malloc(50);
-    read_len = fread(uuid.uuid, 1, UUID_LEN, input);
-    fclose(input);
-
-    if (read_len != UUID_LEN) {
-        fprintf(stderr, "Expected and read bytes differ: %d vs. %ld\n", UUID_LEN, read_len);
-        crm_exit(pcmk_err_generic);
-
-    } else if (buffer != NULL) {
-        cl_uuid_unparse(&uuid, buffer);
-        fprintf(stdout, "%s\n", buffer);
-        return TRUE;
-
-    } else {
-        fprintf(stderr, "No buffer to unparse\n");
-        crm_exit(ENODATA);
-    }
-
-    free(buffer);
-    return FALSE;
-}
-
-static void
-ccm_age_callback(oc_ed_t event, void *cookie, size_t size, const void *data)
-{
-    int lpc;
-    int node_list_size;
-    const oc_ev_membership_t *oc = (const oc_ev_membership_t *)data;
-
-    int (*ccm_api_callback_done) (void *cookie) =
-        find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_callback_done", 1);
-
-    node_list_size = oc->m_n_member;
-    if (command == 'q') {
-        crm_debug("Processing \"%s\" event.",
-                  event == OC_EV_MS_NEW_MEMBERSHIP ? "NEW MEMBERSHIP" :
-                  event == OC_EV_MS_NOT_PRIMARY ? "NOT PRIMARY" :
-                  event == OC_EV_MS_PRIMARY_RESTORED ? "PRIMARY RESTORED" :
-                  event == OC_EV_MS_EVICTED ? "EVICTED" : "NO QUORUM MEMBERSHIP");
-        if (ccm_have_quorum(event)) {
-            fprintf(stdout, "1\n");
-        } else {
-            fprintf(stdout, "0\n");
-        }
-
-    } else if (command == 'e') {
-        crm_debug("Searching %d members for our birth", oc->m_n_member);
-    }
-    for (lpc = 0; lpc < node_list_size; lpc++) {
-        if (command == 'p') {
-            fprintf(stdout, "%s ", oc->m_array[oc->m_memb_idx + lpc].node_uname);
-
-        } else if (command == 'e') {
-            int (*ccm_api_is_my_nodeid) (const oc_ev_t * token, const oc_node_t * node) =
-                find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_is_my_nodeid", 1);
-            if ((*ccm_api_is_my_nodeid) (ccm_token, &(oc->m_array[lpc]))) {
-                crm_debug("MATCH: nodeid=%d, uname=%s, born=%d",
-                          oc->m_array[oc->m_memb_idx + lpc].node_id,
-                          oc->m_array[oc->m_memb_idx + lpc].node_uname,
-                          oc->m_array[oc->m_memb_idx + lpc].node_born_on);
-                fprintf(stdout, "%d\n", oc->m_array[oc->m_memb_idx + lpc].node_born_on);
-            }
-        }
-    }
-
-    (*ccm_api_callback_done) (cookie);
-
-    if (command == 'p') {
-        fprintf(stdout, "\n");
-    }
-    fflush(stdout);
-    crm_exit(pcmk_ok);
-}
-
-static gboolean
-ccm_age_connect(int *ccm_fd)
-{
-    gboolean did_fail = FALSE;
-    int ret = 0;
-
-    int (*ccm_api_register) (oc_ev_t ** token) =
-        find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_register", 1);
-
-    int (*ccm_api_set_callback) (const oc_ev_t * token,
-                                 oc_ev_class_t class,
-                                 oc_ev_callback_t * fn,
-                                 oc_ev_callback_t ** prev_fn) =
-        find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_set_callback", 1);
-
-    void (*ccm_api_special) (const oc_ev_t *, oc_ev_class_t, int) =
-        find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_special", 1);
-    int (*ccm_api_activate) (const oc_ev_t * token, int *fd) =
-        find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_activate", 1);
-
-    crm_debug("Registering with CCM");
-    ret = (*ccm_api_register) (&ccm_token);
-    if (ret != 0) {
-        crm_info("CCM registration failed: %d", ret);
-        did_fail = TRUE;
-    }
-
-    if (did_fail == FALSE) {
-        crm_debug("Setting up CCM callbacks");
-        ret = (*ccm_api_set_callback) (ccm_token, OC_EV_MEMB_CLASS, ccm_age_callback, NULL);
-        if (ret != 0) {
-            crm_warn("CCM callback not set: %d", ret);
-            did_fail = TRUE;
-        }
-    }
-    if (did_fail == FALSE) {
-        (*ccm_api_special) (ccm_token, OC_EV_MEMB_CLASS, 0 /*don't care */ );
-
-        crm_debug("Activating CCM token");
-        ret = (*ccm_api_activate) (ccm_token, ccm_fd);
-        if (ret != 0) {
-            crm_warn("CCM Activation failed: %d", ret);
-            did_fail = TRUE;
-        }
-    }
-
-    return !did_fail;
-}
-
-static gboolean
-try_heartbeat(int command, enum cluster_type_e stack)
-{
-    crm_debug("Attempting to process %c command", command);
-
-    if (command == 'i') {
-        if (read_local_hb_uuid()) {
-            crm_exit(pcmk_ok);
-        }
-
-    } else if (command == 'R') {
-        if (tools_remove_node_cache(target_uname, CRM_SYSTEM_CRMD)) {
-            crm_err("Failed to connect to "CRM_SYSTEM_CRMD" to remove node '%s'", target_uname);
-            crm_exit(pcmk_err_generic);
-        }
-        crm_exit(pcmk_ok);
-
-    } else if (ccm_age_connect(&ccm_fd)) {
-        int rc = 0;
-        fd_set rset;
-        int (*ccm_api_handle_event) (const oc_ev_t * token) =
-            find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_handle_event", 1);
-
-        while (1) {
-
-            sleep(1);
-            FD_ZERO(&rset);
-            FD_SET(ccm_fd, &rset);
-
-            errno = 0;
-            rc = select(ccm_fd + 1, &rset, NULL, NULL, NULL);
-
-            if (rc > 0 && (*ccm_api_handle_event) (ccm_token) != 0) {
-                crm_err("oc_ev_handle_event failed");
-                return FALSE;
-
-            } else if (rc < 0 && errno != EINTR) {
-                crm_perror(LOG_ERR, "select failed: %d", rc);
-                return FALSE;
-            }
-        }
-    }
-    return FALSE;
-}
-#endif
-
 #if SUPPORT_CMAN
 #  include <libcman.h>
 #  define MAX_NODES 256
@@ -599,11 +376,6 @@ try_cman(int command, enum cluster_type_e stack)
     switch (command) {
         case 'R':
             try_pacemaker(command, stack);
-            break;
-
-        case 'e':
-            /* Age makes no sense (yet?) in a cman cluster */
-            fprintf(stdout, "1\n");
             break;
 
         case 'q':
@@ -832,11 +604,6 @@ try_openais(int command, enum cluster_type_e stack)
                 cib_remove_node(0, target_uname);
                 crm_exit(pcmk_ok);
 
-            case 'e':
-                /* Age makes no sense (yet) in an AIS cluster */
-                fprintf(stdout, "1\n");
-                crm_exit(pcmk_ok);
-
             case 'q':
                 send_cluster_text(crm_class_quorum, NULL, TRUE, NULL, crm_msg_ais);
                 break;
@@ -896,9 +663,6 @@ main(int argc, char **argv)
             case 'Q':
                 do_quiet = TRUE;
                 break;
-            case 'H':
-                set_cluster_type(pcmk_cluster_heartbeat);
-                break;
             case 'A':
                 set_cluster_type(pcmk_cluster_classic_ais);
                 break;
@@ -921,7 +685,6 @@ main(int argc, char **argv)
                 nodeid = crm_parse_int(optarg, NULL);
                 break;
             case 'p':
-            case 'e':
             case 'q':
             case 'i':
             case 'l':
@@ -983,12 +746,6 @@ main(int argc, char **argv)
     /* Only an option if we're using the plugins */
     if (try_stack == pcmk_cluster_classic_ais) {
         try_openais(command, try_stack);
-    }
-#endif
-
-#if SUPPORT_HEARTBEAT
-    if (try_stack == pcmk_cluster_heartbeat) {
-        try_heartbeat(command, try_stack);
     }
 #endif
 

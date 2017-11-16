@@ -3,7 +3,7 @@
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.0.7-b1191b11d4b56dcae8f34715d52532561b875cd5"/>
-        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="Heartbeat"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
         <nvpair name="default-resource-stickiness" id="cib-bootstrap-options-default-resource-stickiness" value="10"/>
@@ -11,8 +11,8 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="3d430f49-b915-4d52-a32b-b0799fa17ae7" uname="ibm2.isg.si" type="normal"/>
-      <node id="4b2047c8-f3a0-4935-84a2-967b548598c9" uname="ibm1.isg.si" type="normal"/>
+      <node id="3d430f49-b915-4d52-a32b-b0799fa17ae7" uname="ibm2.isg.si" type="member"/>
+      <node id="4b2047c8-f3a0-4935-84a2-967b548598c9" uname="ibm1.isg.si" type="member"/>
     </nodes>
     <resources>
       <primitive class="ocf" provider="heartbeat" type="Xen" id="HostingIsg">

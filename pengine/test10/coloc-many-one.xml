@@ -21,16 +21,16 @@
       <node id="node3" uname="node3" type="member"/>
     </nodes>
     <resources>
-      <primitive id="rsc1" class="heartbeat" type="apache">
+      <primitive id="rsc1" class="ocf" provider="heartbeat" type="apache">
         <meta_attributes id="primitive-rsc1.meta"/>
       </primitive>
-      <primitive id="rsc2" class="heartbeat" type="apache">
+      <primitive id="rsc2" class="ocf" provider="heartbeat" type="apache">
         <meta_attributes id="primitive-rsc2.meta"/>
       </primitive>
-      <primitive id="rsc3" class="heartbeat" type="apache">
+      <primitive id="rsc3" class="ocf" provider="heartbeat" type="apache">
         <meta_attributes id="primitive-rsc3.meta"/>
       </primitive>
-      <primitive id="rsc4" class="heartbeat" type="apache">
+      <primitive id="rsc4" class="ocf" provider="heartbeat" type="apache">
         <meta_attributes id="primitive-rsc4.meta"/>
       </primitive>
     </resources>
@@ -49,7 +49,7 @@
       </transient_attributes>
       <lrm id="node1">
         <lrm_resources id="lrm_resources.id22014">
-          <lrm_resource id="rsc2" type="apache" class="heartbeat">
+          <lrm_resource id="rsc2" type="apache" class="ocf" provider="heartbeat">
             <lrm_rsc_op id="rsc2_monitor_0" operation="monitor" transition-key="18:0:3cfbe2a6-650a-440f-b02d-efd4d0021da4" transition-magic="0:7;18:0:3cfbe2a6-650a-440f-b02d-efd4d0021da4" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
@@ -63,7 +63,7 @@
       </transient_attributes>
       <lrm id="node2">
         <lrm_resources id="lrm_resources.id22100">
-          <lrm_resource id="rsc3" type="apache" class="heartbeat">
+          <lrm_resource id="rsc3" type="apache" class="ocf" provider="heartbeat">
             <lrm_rsc_op id="rsc3_monitor_0" operation="monitor" transition-key="18:0:3cfbe2a6-650a-440f-b02d-efd4d0021da4" transition-magic="0:7;18:0:3cfbe2a6-650a-440f-b02d-efd4d0021da4" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>
@@ -77,7 +77,7 @@
       </transient_attributes>
       <lrm id="node3">
         <lrm_resources id="lrm_resources.id22184">
-          <lrm_resource id="rsc2" type="apache" class="heartbeat">
+          <lrm_resource id="rsc2" type="apache" class="ocf" provider="heartbeat">
             <lrm_rsc_op id="rsc2_monitor_0" operation="monitor" transition-key="18:0:3cfbe2a6-650a-440f-b02d-efd4d0021da4" transition-magic="0:7;18:0:3cfbe2a6-650a-440f-b02d-efd4d0021da4" call-id="2" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
         </lrm_resources>

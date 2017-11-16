@@ -292,7 +292,6 @@ inject_resource(xmlNode * cib_node, const char *resource, const char *rclass, co
 
     } else if (safe_str_neq(rclass, PCMK_RESOURCE_CLASS_OCF)
                && safe_str_neq(rclass, PCMK_RESOURCE_CLASS_STONITH)
-               && safe_str_neq(rclass, PCMK_RESOURCE_CLASS_HB)
                && safe_str_neq(rclass, PCMK_RESOURCE_CLASS_SERVICE)
                && safe_str_neq(rclass, PCMK_RESOURCE_CLASS_UPSTART)
                && safe_str_neq(rclass, PCMK_RESOURCE_CLASS_SYSTEMD)
@@ -690,7 +689,10 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
     CRM_ASSERT(cib_node != NULL);
 
     cib_resource = inject_resource(cib_node, resource, rclass, rtype, rprovider);
-    CRM_ASSERT(cib_resource != NULL);
+    if (cib_resource == NULL) {
+        crm_err("invalid resource in transition");
+        return FALSE;
+    }
 
     op = convert_graph_action(cib_resource, action, 0, target_outcome);
     if (op->interval) {

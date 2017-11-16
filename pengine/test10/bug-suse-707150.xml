@@ -14,7 +14,7 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="hex-7" type="normal" uname="hex-7">
+      <node id="hex-7" type="member" uname="hex-7">
         <instance_attributes id="nodes-hex-7">
           <nvpair id="nodes-hex-7-standby" name="standby" value="off"/>
         </instance_attributes>
@@ -22,7 +22,7 @@
           <nvpair id="nodes-hex-7-utilization-memory" name="memory" value="0"/>
         </utilization>
       </node>
-      <node id="hex-8" type="normal" uname="hex-8">
+      <node id="hex-8" type="member" uname="hex-8">
         <instance_attributes id="nodes-hex-8">
           <nvpair id="nodes-hex-8-standby" name="standby" value="off"/>
         </instance_attributes>
@@ -30,7 +30,7 @@
           <nvpair id="nodes-hex-8-utilization-memory" name="memory" value="0"/>
         </utilization>
       </node>
-      <node id="hex-9" type="normal" uname="hex-9">
+      <node id="hex-9" type="member" uname="hex-9">
         <instance_attributes id="nodes-hex-9">
           <nvpair id="nodes-hex-9-standby" name="standby" value="off"/>
         </instance_attributes>
@@ -38,7 +38,7 @@
           <nvpair id="nodes-hex-9-utilization-memory" name="memory" value="1024"/>
         </utilization>
       </node>
-      <node id="hex-0" type="normal" uname="hex-0">
+      <node id="hex-0" type="member" uname="hex-0">
         <instance_attributes id="nodes-hex-0">
           <nvpair id="nodes-hex-0-standby" name="standby" value="off"/>
         </instance_attributes>

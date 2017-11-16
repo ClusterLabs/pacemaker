@@ -16,8 +16,8 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="49e81295-8e2f-4aeb-98f3-a14de6f62298" uname="webcluster01" type="normal"/>
-      <node id="989edcb8-aa41-4aab-9fca-65569015499d" uname="webcluster02" type="normal"/>
+      <node id="49e81295-8e2f-4aeb-98f3-a14de6f62298" uname="webcluster01" type="member"/>
+      <node id="989edcb8-aa41-4aab-9fca-65569015499d" uname="webcluster02" type="member"/>
     </nodes>
     <resources>
       <clone id="apache2_clone">

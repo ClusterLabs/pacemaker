@@ -35,7 +35,6 @@
       <listitem>
         <para>SUSE High Availibility Guide: <ulink url="http://www.suse.com/documentation/sle_ha/book_sleha/data/book_sleha.html"/></para>
       </listitem>
-      <listitem><para>Heartbeat configuration: <ulink url="http://www.linux-ha.org/"/></para></listitem>
       <listitem><para>Corosync Configuration: <ulink url="http://www.corosync.org/"/></para></listitem>
     </itemizedlist>
   </appendix>

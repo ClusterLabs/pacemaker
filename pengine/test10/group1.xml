@@ -15,13 +15,13 @@
     </nodes>
     <resources>
       <group id="rsc1">
-        <primitive id="child_rsc1" class="heartbeat" type="apache">
+        <primitive id="child_rsc1" class="ocf" provider="heartbeat" type="apache">
           <meta_attributes id="primitive-child_rsc1.meta"/>
         </primitive>
-        <primitive id="child_rsc2" class="heartbeat" type="apache">
+        <primitive id="child_rsc2" class="ocf" provider="heartbeat" type="apache">
           <meta_attributes id="primitive-child_rsc2.meta"/>
         </primitive>
-        <primitive id="child_rsc3" class="heartbeat" type="apache">
+        <primitive id="child_rsc3" class="ocf" provider="heartbeat" type="apache">
           <meta_attributes id="primitive-child_rsc3.meta"/>
         </primitive>
         <meta_attributes id="group-rsc1.meta"/>

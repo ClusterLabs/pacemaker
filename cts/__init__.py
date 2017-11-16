@@ -5,7 +5,7 @@ This package provides the following modules:
 CIB
 cib_xml
 CM_ais
-CM_lha
+CM_common
 CTSaudits
 CTS
 CTSscenarios
