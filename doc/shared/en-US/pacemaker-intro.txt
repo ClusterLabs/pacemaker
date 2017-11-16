@@ -1,158 +1,162 @@
-
 == What Is 'Pacemaker'? ==
 
-Pacemaker is a 'cluster resource manager', that is, a logic responsible
-for a life-cycle of deployed software -- indirectly perhaps even whole
-systems or their interconnections -- under its control within a set of
-computers (a.k.a. 'nodes') and driven by
-prescribed rules.
-
-It achieves maximum availability for your cluster services
-(a.k.a. 'resources') by detecting and recovering from node- and
-resource-level failures by making use of the messaging and membership
-capabilities provided by an underlying cluster infrastructure layer
-(currently http://www.corosync.org/[Corosync]), and possibly by
-utilizing other parts of the overall cluster stack.
-
-.High Availability Clusters
-[NOTE]
-For *the goal of minimal downtime* a term 'high availability' was coined
-and together with its acronym, 'HA', is well-established in the sector.
-To differentiate this sort of clusters from high performance computing
-('HPC') ones, should a context require it (apparently, not the case in
-this document), using 'HA cluster' is an option.
+*Pacemaker* is a high-availability 'cluster resource manager' -- software that
+runs on a set of hosts (a 'cluster' of 'nodes') in order to minimize downtime of
+desired services ('resources').
+footnote:[
+'Cluster' is sometimes used in other contexts to refer to hosts grouped
+together for other purposes, such as high-performance computing (HPC), but
+Pacemaker is not intended for those purposes.
+]
 
 Pacemaker's key features include:
 
- * Detection and recovery of node and service-level failures
- * Storage agnostic, no requirement for shared storage
- * Resource agnostic, anything that can be scripted can be clustered
- * Supports 'fencing' (also referred to as the 'STONITH' acronym,
-   <<s-intro-stonith,deciphered>> later on) for ensuring data integrity
- * Supports large and small clusters
- * Supports both quorate and resource-driven clusters
- * Supports practically any redundancy configuration
- * Automatically replicated configuration that can be updated
-   from any node
- * Ability to specify cluster-wide service ordering,
-   colocation and anti-colocation
- * Support for advanced service types
- ** Clones: for services which need to be active on multiple nodes
- ** Multi-state: for services with multiple modes
-    (e.g. master/slave, primary/secondary)
+ * Detection of and recovery from node- and service-level failures
+ * Ability to ensure data integrity by fencing faulty nodes
+ * Support for one or more nodes per cluster
+ * Support for multiple resource interface standards (anything that can be
+   scripted can be clustered)
+ * Support (but no requirement) for shared storage
+ * Support for practically any redundancy configuration (active/passive, N+1,
+   etc.)
+ * Automatically replicated configuration that can be updated from any node
+ * Ability to specify cluster-wide relationships between services,
+   such as ordering, colocation and anti-colocation
+ * Support for advanced service types, such as 'clones' (services that need to
+   be active on multiple nodes), 'stateful resources' (clones that can run in
+   one of two modes), and containerized services
  * Unified, scriptable cluster management tools
+
+.Fencing
+[NOTE]
+====
+'Fencing', also known as 'STONITH' (an acronym for Shoot The Other Node In The
+Head), is the ability to ensure that it is not possible for a node to be
+running a service. This is accomplished via 'fence devices' such as
+intelligent power switches that cut power to the target, or intelligent
+network switches that cut the target's access to the local network.
+
+Pacemaker represents fence devices as a special class of resource.
+
+A cluster cannot safely recover from certain failure conditions, such as an
+unresponsive node, without fencing.
+====
+
+== Cluster Architecture ==
+
+At a high level, a cluster can viewed as having these parts (which together are
+often referred to as the 'cluster stack'):
+
+ * *Resources:* These are the reason for the cluster's being -- the services
+   that need to be kept highly available.
+
+ * *Resource agents:* These are scripts or operating system components that
+   start, stop, and monitor resources, given a set of resource parameters.
+   These provide a uniform interface between Pacemaker and the managed
+   services.
+
+ * *Fence agents:* These are scripts that execute node fencing actions,
+   given a target and fence device parameters.
+
+ * *Cluster membership layer:* This component provides reliable
+   messaging, membership, and quorum information about the cluster.
+   Currently, Pacemaker supports http://www.corosync.org/[Corosync]
+   as this layer.
+
+ * *Cluster resource manager:* Pacemaker provides the brain that processes
+   and reacts to events that occur in the cluster. These events may include
+   nodes joining or leaving the cluster; resource events caused by failures,
+   maintenance, or scheduled activities; and other administrative actions.
+   To achieve the desired availability, Pacemaker may start and stop resources
+   and fence nodes.
+
+ * *Cluster tools:* These provide an interface for users to interact with the
+   cluster. Various command-line and graphical (GUI) interfaces are available.
+
+Most managed services are not, themselves, cluster-aware. However, many popular
+open-source cluster filesystems make use of a common 'Distributed Lock
+Manager' (DLM), which makes direct use of Corosync for its messaging and
+membership capabilities and Pacemaker for the ability to fence nodes.
+
+.Example Cluster Stack
+image::images/pcmk-stack.png["Example cluster stack",width="10cm",height="7.5cm",align="center"]
 
 == Pacemaker Architecture ==
 
-At the highest level, the cluster is made up of three pieces:
+Pacemaker itself is composed of multiple daemons that work together:
 
- * *Non-cluster-aware components*. These pieces
-   include the resources themselves; scripts that start, stop and
-   monitor them; and a local daemon that masks the differences
-   between the different standards these scripts implement.
-   Even though interactions of these resources when run as multiple
-   instances can resemble a distributed system, they still lack
-   the proper HA mechanisms and/or autonomous cluster-wide governance
-   as subsumed in the following item.
-
- * *Resource management*. Pacemaker provides the brain that processes
-   and reacts to events regarding the cluster.  These events include
-   nodes joining or leaving the cluster; resource events caused by
-   failures, maintenance and scheduled activities; and other
-   administrative actions. Pacemaker will compute the ideal state of
-   the cluster and plot a path to achieve it after any of these
-   events. This may include moving resources, stopping nodes and even
-   forcing them offline with remote power switches.
-
- * *Cluster membership layer:* The Corosync project provides reliable
-   messaging, membership, and quorum information about the cluster.
-
-Most managed services are not, themselves, cluster-aware. However,
-many popular open-source cluster filesystems make use of a common 'distributed
-lock manager', which makes direct use of Corosync for its messaging and
-membership capabilities (knowing which nodes are up or down) and Pacemaker for
-the ability to fence nodes.
-
-.The Pacemaker Stack
-image::images/pcmk-stack.png["The Pacemaker stack",width="10cm",height="7.5cm",align="center"]
-
-=== Internal Components ===
-
-Pacemaker itself is composed of five key components:
-
- * 'Cluster Information Base' ('CIB')
- * 'Cluster Resource Management daemon' ('CRMd')
- * 'Local Resource Management daemon' ('LRMd')
- * 'Policy Engine' ('PEngine' or 'PE')
- * Fencing daemon ('STONITHd')
+ * attrd
+ * cib
+ * crmd
+ * lrmd
+ * pacemakerd
+ * pengine
+ * stonithd
 
 .Internal Components
-image::images/pcmk-internals.png["Subsystems of a Pacemaker cluster",align="center",scaledwidth="65%"]
+image::images/pcmk-internals.png["Pacemaker software components",align="center",scaledwidth="65%"]
 
-The CIB uses XML to represent both the cluster's configuration and
-current state of all resources in the cluster. The contents of the CIB
-are automatically kept in sync across the entire cluster and are used by
-the PEngine to compute the ideal state of the cluster and how it should
-be achieved.
+The Pacemaker daemon (pacemakerd) is the master process that spawns all the
+other daemons, and respawns them if they unexpectedly exit.
 
-This list of instructions is then fed to the 'Designated Controller'
-('DC').  Pacemaker centralizes all cluster decision making by electing
-one of the CRMd instances to act as a master. Should the elected CRMd
+The 'Cluster Information Base' (CIB) is an
+https://en.wikipedia.org/wiki/XML[XML] representation of the cluster's
+configuration and the state of all nodes and resources. The CIB daemon (cib)
+keeps the CIB synchronized across the cluster, and handles requests to modify it.
+
+The 'attribute daemon' (attrd) maintains a database of attributes for all
+nodes, keeps it synchronized across the cluster, and handles requests to modify
+them. These attributes are usually recorded in the CIB.
+
+Given a snapshot of the CIB as input, the 'policy engine' (pengine) determines
+what actions are necessary to achieve the desired state of the cluster.
+
+The 'local resource management daemon' (lrmd) handles requests to execute
+resource agents on the local node, and returns the result.
+
+The 'STONITH daemon' (stonithd) handles requests to fence nodes. Given a target
+node, stonithd decides which cluster node(s) should execute which fencing
+device(s), and calls the necessary fencing agents (either directly, or via
+requests to stonithd peers on other nodes), and returns the result.
+
+The 'cluster resource management daemon' ('CRMd') is Pacemaker's coordinator,
+maintaining a consistent view of the cluster membership and orchestrating all
+the other components.
+
+Pacemaker centralizes cluster decision-making by electing one of the CRMd
+instances as the 'Designated Controller' ('DC'). Should the elected CRMd
 process (or the node it is on) fail, a new one is quickly established.
+The DC responds to cluster events by taking a current snapshot of the CIB,
+feeding it to the policy engine, then asking the lrmd (either directly on the
+local node, or via requests to crmd peers on other nodes) and stonithd to
+execute any necessary actions.
 
-The DC carries out the PEngine's instructions in the required order by
-passing them to either the Local Resource Management daemon (LRMd) or
-CRMd peers on other nodes via the cluster messaging infrastructure
-(which in turn passes them on to their LRMd process).
+== Node Redundancy Designs ==
 
-The peer nodes all report the results of their operations back to the DC
-and, based on the expected and actual results, will either execute any
-actions that needed to wait for the previous one to complete, or abort
-processing and ask the PEngine to recalculate the ideal cluster state
-based on the unexpected results.
-
-In some cases, it may be necessary to power off nodes in order to
-protect shared data or complete resource recovery. For this, Pacemaker
-comes with STONITHd. 
-
-[[s-intro-stonith]]
-.STONITH
-[NOTE]
-*STONITH* is an acronym for 'Shoot-The-Other-Node-In-The-Head',
-a recommended practice that misbehaving node is best to be promptly
-'fenced' (shut off, cut from shared resources or otherwise immobilized),
-and is usually implemented with a remote power switch.
-
-In Pacemaker, STONITH devices are modeled as resources (and configured
-in the CIB) to enable them to be easily monitored for failure, however
-STONITHd takes care of understanding the STONITH topology such that its
-clients simply request a node be fenced, and it does the rest.
-
-== Types of Pacemaker Clusters ==
-
-Pacemaker makes no assumptions about your environment. This allows it
-to support practically any
-http://en.wikipedia.org/wiki/High-availability_cluster#Node_configurations[redundancy
-configuration] including 'Active/Active', 'Active/Passive', 'N+1',
+Pacemaker supports practically any
+https://en.wikipedia.org/wiki/High-availability_cluster#Node_configurations[node
+redundancy configuration] including 'Active/Active', 'Active/Passive', 'N+1',
 'N+M', 'N-to-1' and 'N-to-N'.
+
+Active/passive clusters with two (or more) nodes using Pacemaker and
+https://en.wikipedia.org/wiki/Distributed_Replicated_Block_Device:[DRBD] are
+a cost-effective high-availability solution for many situations. One of the
+nodes provides the desired services, and if it fails, the other node takes
+over.
 
 .Active/Passive Redundancy
 image::images/pcmk-active-passive.png["Active/Passive Redundancy",width="10cm",height="7.5cm",align="center"]
 
-Two-node Active/Passive clusters using Pacemaker and 'DRBD' are
-a cost-effective solution for many High Availability situations.
+Pacemaker also supports multiple nodes in a shared-failover design,
+reducing hardware costs by allowing several active/passive clusters to be
+combined and share a common backup node.
 
 .Shared Failover
 image::images/pcmk-shared-failover.png["Shared Failover",width="10cm",height="7.5cm",align="center"]
 
-By supporting many nodes, Pacemaker can dramatically reduce hardware
-costs by allowing several active/passive clusters to be combined and
-share a common backup node.
+When shared storage is available, every node can potentially be used for
+failover. Pacemaker can even run multiple copies of services to spread out the
+workload.
 
 .N to N Redundancy
 image::images/pcmk-active-active.png["N to N Redundancy",width="10cm",height="7.5cm",align="center"]
-
-When shared storage is available, every node can potentially be used for
-failover.  Pacemaker can even run multiple copies of services to spread
-out the workload.
-
