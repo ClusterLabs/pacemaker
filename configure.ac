@@ -469,11 +469,6 @@ darwin*)
 		;;
 esac
 
-dnl Eventually remove this
-if test "$cross_compiling" != "yes"; then
-   CPPFLAGS="$CPPFLAGS -I${prefix}/include/heartbeat"
-fi
-
 AC_SUBST(INIT_EXT)
 AC_MSG_NOTICE(Host CPU: $host_cpu)
 
@@ -1022,27 +1017,17 @@ PCMK_FEATURES="$PCMK_FEATURES libqb-logging libqb-ipc"
 
 AC_CHECK_FUNCS(qb_ipcs_connection_get_buffer_size, AC_DEFINE(HAVE_IPCS_GET_BUFFER_SIZE,  1, [Have qb_ipcc_get_buffer_size function]))
 
-AC_CHECK_HEADERS(heartbeat/glue_config.h)
+dnl Support Linux-HA fence agents if available
+if test "$cross_compiling" != "yes"; then
+   CPPFLAGS="$CPPFLAGS -I${prefix}/include/heartbeat"
+fi
 AC_CHECK_HEADERS(stonith/stonith.h)
-
-GLUE_HEADER=none
-HAVE_GLUE=0
-if test "$ac_cv_header_heartbeat_glue_config_h" = "yes";  then
-   GLUE_HEADER=glue_config.h
-   HAVE_GLUE=1
-else
-   AC_MSG_WARN(cluster-glue development headers were not found)
-fi
-
 if test "$ac_cv_header_stonith_stonith_h" = "yes";  then
-   PCMK_FEATURES="$PCMK_FEATURES lha-fencing"
-fi
-
-if test $HAVE_GLUE = 1; then
    dnl On Debian, AC_CHECK_LIBS fail if a library has any unresolved symbols
    dnl So check for all the dependencies (so they're added to LIBS) before checking for -lplumb
    AC_CHECK_LIB(pils, PILLoadPlugin)
    AC_CHECK_LIB(plumb, G_main_add_IPC_Channel)
+   PCMK_FEATURES="$PCMK_FEATURES lha-fencing"
 fi
 
 dnl ===============================================
@@ -1052,15 +1037,15 @@ CRM_DTD_DIRECTORY="${datadir}/pacemaker"
 AC_DEFINE_UNQUOTED(CRM_DTD_DIRECTORY,"$CRM_DTD_DIRECTORY", Location for the Pacemaker Relax-NG Schema)
 AC_SUBST(CRM_DTD_DIRECTORY)
 
-CRM_CORE_DIR=`try_extract_header_define $GLUE_HEADER HA_COREDIR ${localstatedir}/lib/pacemaker/cores`
+CRM_CORE_DIR="${localstatedir}/lib/pacemaker/cores"
 AC_DEFINE_UNQUOTED(CRM_CORE_DIR,"$CRM_CORE_DIR", Location to store core files produced by Pacemaker daemons)
 AC_SUBST(CRM_CORE_DIR)
 
-CRM_DAEMON_USER=`try_extract_header_define $GLUE_HEADER HA_CCMUSER hacluster`
+CRM_DAEMON_USER="hacluster"
 AC_DEFINE_UNQUOTED(CRM_DAEMON_USER,"$CRM_DAEMON_USER", User to run Pacemaker daemons as)
 AC_SUBST(CRM_DAEMON_USER)
 
-CRM_DAEMON_GROUP=`try_extract_header_define $GLUE_HEADER HA_APIGROUP haclient`
+CRM_DAEMON_GROUP="haclient"
 AC_DEFINE_UNQUOTED(CRM_DAEMON_GROUP,"$CRM_DAEMON_GROUP", Group to run Pacemaker daemons as)
 AC_SUBST(CRM_DAEMON_GROUP)
 
@@ -1096,12 +1081,12 @@ CRM_DAEMON_DIR="${libexecdir}/pacemaker"
 AC_DEFINE_UNQUOTED(CRM_DAEMON_DIR,"$CRM_DAEMON_DIR", Location for Pacemaker daemons)
 AC_SUBST(CRM_DAEMON_DIR)
 
-HB_DAEMON_DIR=`try_extract_header_define $GLUE_HEADER HA_LIBHBDIR $libdir/heartbeat`
+HB_DAEMON_DIR="$libdir/heartbeat"
 AC_DEFINE_UNQUOTED(HB_DAEMON_DIR,"$HB_DAEMON_DIR", Location Heartbeat expects Pacemaker daemons to be in)
 AC_SUBST(HB_DAEMON_DIR)
 
 dnl Needed so that the Corosync plugin can clear out the directory as Heartbeat does
-HA_STATE_DIR=`try_extract_header_define $GLUE_HEADER HA_VARRUNDIR ${localstatedir}/run`
+HA_STATE_DIR="${localstatedir}/run"
 AC_DEFINE_UNQUOTED(HA_STATE_DIR,"$HA_STATE_DIR", Where Heartbeat keeps state files and sockets)
 AC_SUBST(HA_STATE_DIR)
 
@@ -1111,13 +1096,13 @@ AC_MSG_RESULT($CRM_RSCTMP_DIR)
 AC_DEFINE_UNQUOTED(CRM_RSCTMP_DIR,"$CRM_RSCTMP_DIR", Where resource agents should keep state files)
 AC_SUBST(CRM_RSCTMP_DIR)
 
-OCF_ROOT_DIR=`try_extract_header_define $GLUE_HEADER OCF_ROOT_DIR /usr/lib/ocf`
+OCF_ROOT_DIR="/usr/lib/ocf"
 if test "X$OCF_ROOT_DIR" = X; then
   AC_MSG_ERROR(Could not locate OCF directory)
 fi
 AC_SUBST(OCF_ROOT_DIR)
 
-OCF_RA_DIR=`try_extract_header_define $GLUE_HEADER OCF_RA_DIR $OCF_ROOT_DIR/resource.d`
+OCF_RA_DIR="$OCF_ROOT_DIR/resource.d"
 AC_DEFINE_UNQUOTED(OCF_RA_DIR,"$OCF_RA_DIR", Location for OCF RAs)
 AC_SUBST(OCF_RA_DIR)
 
