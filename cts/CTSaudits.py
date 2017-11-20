@@ -419,8 +419,12 @@ class PrimitiveAudit(ClusterAudit):
         return rc
 
     def is_applicable(self):
-        if self.CM["Name"] == "crm-ais":
-            return 1
+        # @TODO Due to long-ago refactoring, this name test would never match,
+        # so this audit (and those derived from it) would never run.
+        # Uncommenting the next lines fixes the name test, but that then
+        # exposes pre-existing bugs that need to be fixed.
+        #if self.CM["Name"] == "crm-corosync":
+        #    return 1
         return 0
 
 
@@ -589,8 +593,12 @@ class CrmdStateAudit(ClusterAudit):
         return "CrmdStateAudit"
     
     def is_applicable(self):
-        if self.CM["Name"] == "crm-ais":
-            return 1
+        # @TODO Due to long-ago refactoring, this name test would never match,
+        # so this audit (and those derived from it) would never run.
+        # Uncommenting the next lines fixes the name test, but that then
+        # exposes pre-existing bugs that need to be fixed.
+        #if self.CM["Name"] == "crm-corosync":
+        #    return 1
         return 0
 
 
@@ -699,8 +707,12 @@ class CIBAudit(ClusterAudit):
         return "CibAudit"
     
     def is_applicable(self):
-        if self.CM["Name"] == "crm-ais":
-            return 1
+        # @TODO Due to long-ago refactoring, this name test would never match,
+        # so this audit (and those derived from it) would never run.
+        # Uncommenting the next lines fixes the name test, but that then
+        # exposes pre-existing bugs that need to be fixed.
+        #if self.CM["Name"] == "crm-corosync":
+        #    return 1
         return 0
 
 
@@ -837,8 +849,12 @@ class PartitionAudit(ClusterAudit):
         return "PartitionAudit"
     
     def is_applicable(self):
-        if self.CM["Name"] == "crm-ais":
-            return 1
+        # @TODO Due to long-ago refactoring, this name test would never match,
+        # so this audit (and those derived from it) would never run.
+        # Uncommenting the next lines fixes the name test, but that then
+        # exposes pre-existing bugs that need to be fixed.
+        #if self.CM["Name"] == "crm-corosync":
+        #    return 1
         return 0
 
 AllAuditClasses.append(DiskAudit)

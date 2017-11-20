@@ -6,7 +6,7 @@
         <nvpair id="option-2" name="no-quorum-policy" value="ignore"/>
         <nvpair id="option-3" name="stonith-enabled" value="false"/>
         <nvpair id="option-4" name="cluster-delay" value="5s"/>
-        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="openais"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="2"/>
         <nvpair id="cib-bootstrap-options-dc-deadtime" name="dc-deadtime" value="10s"/>
         <nvpair id="cib-bootstrap-options-election-timeout" name="election-timeout" value="10s"/>

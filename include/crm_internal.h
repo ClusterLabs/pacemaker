@@ -293,18 +293,10 @@ long crm_read_pidfile(const char *filename);
 
 
 #  if SUPPORT_COROSYNC
-#    if CS_USES_LIBQB
-#      include <qb/qbipc_common.h>
-#      include <corosync/corotypes.h>
+#    include <qb/qbipc_common.h>
+#    include <corosync/corotypes.h>
 typedef struct qb_ipc_request_header cs_ipc_header_request_t;
 typedef struct qb_ipc_response_header cs_ipc_header_response_t;
-#    else
-#      include <corosync/corodefs.h>
-#      include <corosync/coroipcc.h>
-#      include <corosync/coroipc_types.h>
-typedef coroipc_request_header_t cs_ipc_header_request_t;
-typedef coroipc_response_header_t cs_ipc_header_response_t;
-#    endif
 #  else
 typedef struct {
     int size __attribute__ ((aligned(8)));

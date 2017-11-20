@@ -439,7 +439,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
              */
 
 #if SUPPORT_COROSYNC
-            if (is_openais_cluster()) {
+            if (is_corosync_cluster()) {
                 dest = text2msg_type(sys_to);
             }
 #endif
@@ -463,7 +463,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
         crm_node_t *node_to = NULL;
 
 #if SUPPORT_COROSYNC
-        if (is_openais_cluster()) {
+        if (is_corosync_cluster()) {
             dest = text2msg_type(sys_to);
 
             if (dest == crm_msg_none || dest > crm_msg_stonith_ng) {

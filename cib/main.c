@@ -301,7 +301,6 @@ cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const voi
 {
     switch (type) {
         case crm_status_processes:
-#if !SUPPORT_PLUGIN
             if (cib_legacy_mode()
                 && is_not_set(node->processes, crm_get_cluster_proc())) {
 
@@ -313,7 +312,6 @@ cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const voi
                     legacy_mode = FALSE;
                 }
             }
-#endif
             break;
 
         case crm_status_uname:
@@ -332,7 +330,7 @@ cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const voi
 int
 cib_init(void)
 {
-    if (is_openais_cluster()) {
+    if (is_corosync_cluster()) {
 #if SUPPORT_COROSYNC
         crm_cluster.destroy = cib_cs_destroy;
         crm_cluster.cpg.cpg_deliver_fn = cib_cs_dispatch;
@@ -348,7 +346,7 @@ cib_init(void)
     }
 
     if (stand_alone == FALSE) {
-        if (is_openais_cluster()) {
+        if (is_corosync_cluster()) {
             crm_set_status_callback(&cib_peer_update_callback);
         }
 

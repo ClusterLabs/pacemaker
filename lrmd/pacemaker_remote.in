@@ -22,7 +22,6 @@
 
 desc="Pacemaker Remote Agent"
 prog="pacemaker_remoted"
-cman=0
 
 # set secure PATH
 PATH="/sbin:/bin:/usr/sbin:/usr/bin:@sbindir@"

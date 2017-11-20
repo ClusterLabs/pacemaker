@@ -44,6 +44,28 @@ quorum_handle_t pcmk_quorum_handle = 0;
 
 gboolean(*quorum_app_callback) (unsigned long long seq, gboolean quorate) = NULL;
 
+char *
+get_corosync_uuid(crm_node_t *node)
+{
+    if (node && is_corosync_cluster()) {
+        if (node->id > 0) {
+            int len = 32;
+            char *buffer = NULL;
+
+            buffer = calloc(1, (len + 1));
+            if (buffer != NULL) {
+                snprintf(buffer, len, "%u", node->id);
+            }
+
+            return buffer;
+
+        } else {
+            crm_info("Node %s is not yet known by corosync", node->uname);
+        }
+    }
+    return NULL;
+}
+
 /*
  * CFG functionality stolen from node_name() in corosync-quorumtool.c
  * This resolves the first address assigned to a node and returns the name or IP address.
@@ -57,7 +79,6 @@ corosync_node_name(uint64_t /*cmap_handle_t */ cmap_handle, uint32_t nodeid)
     char *name = NULL;
     cmap_handle_t local_handle = 0;
 
-    /* nodeid == 0 == CMAN_NODEID_US */
     if (nodeid == 0) {
         nodeid = get_local_nodeid(0);
     }
@@ -139,25 +160,13 @@ corosync_node_name(uint64_t /*cmap_handle_t */ cmap_handle, uint32_t nodeid)
 void
 terminate_cs_connection(crm_cluster_t *cluster)
 {
-    crm_info("Disconnecting from Corosync");
-
     cluster_disconnect_cpg(cluster);
-
     if (pcmk_quorum_handle) {
-        crm_trace("Disconnecting quorum");
         quorum_finalize(pcmk_quorum_handle);
         pcmk_quorum_handle = 0;
-
-    } else {
-        crm_info("No Quorum connection");
     }
-
     crm_notice("Disconnected from Corosync");
 }
-
-int ais_membership_timer = 0;
-gboolean ais_membership_force = FALSE;
-
 
 static int
 pcmk_quorum_dispatch(gpointer user_data)

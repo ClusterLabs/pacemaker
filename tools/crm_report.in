@@ -19,7 +19,7 @@
 
 
 TEMP=`getopt				\
-    -o hv?xl:f:t:n:T:L:p:c:dSACu:D:MVse:	\
+    -o hv?xl:f:t:n:T:L:p:c:dSCu:D:MVse:	\
     --long help,cts:,cts-log:,dest:,node:,nodes:,from:,to:,sos-mode,logfile:,as-directory,single-node,cluster:,user:,max-depth:,version,features,rsh:	\
     -n 'crm_report' -- "$@"`
 # The quotes around $TEMP are essential
@@ -71,8 +71,7 @@ Options:
                         analysis (default: $log_patterns)
   -S, --single-node     don't attempt to collect data from other nodes
   -c, --cluster TYPE    force the cluster type instead of detecting
-                        (one of corosync, cman, openais)
-  -A, --openais         force the cluster type to be openais
+                        (currently only corosync is supported)
   -C, --corosync        force the cluster type to be corosync
   -u, --user USER       username to use when collecting data from other nodes
                         (default root)
@@ -128,7 +127,6 @@ while true; do
 	-p) sanitize_patterns="$sanitize_patterns $2"; shift; shift;;
 	-L) log_patterns="$log_patterns `echo $2 | sed 's/ /\\\W/g'`"; shift; shift;;
 	-d|--as-directory) compress=0; shift;;
-	-A|--openais)   cluster="openais";   shift;;
 	-C|--corosync)  cluster="corosync";  shift;;
 	-c|--cluster)   cluster="$2"; shift; shift;;
 	-e|--rsh)       rsh="$2";     shift; shift;;
@@ -418,30 +416,7 @@ getnodes() {
     fi
 
     # 3. logs
-    # TODO: This has multiple issues:
-    # * It looks for messages from crm_update_peer(), which is used only by
-    #   legacy plugin clusters; it should work with CMAN and
-    #   corosync2 clusters as well.
-    # * It does a findmsg for "crm_update_peer" (which will hit
-    #   "crm_update_peer_proc" etc.), but then greps for "crm_update_peer:".
-    # * It always uses grep, even though $logfile might be compressed.
-    #   For this reason and efficiency, it would nice if findmsg could
-    #   optionally print the matches instead of the file names.
-    # * It would be nice to skip this step for Pacemaker Remote nodes since their
-    #   logs will not have node names, but it is nontrivial to know that.
-    #   Cluster nodes generally won't get here, but stopped Pacemaker Remote
-    #   nodes will.
-    logfile=$(findmsg 1 "crm_update_peer")
-    debug "Looking for nodes in $logfile"
-    if [ ! -z "$logfile" ]; then
-        grep crm_update_peer: "$logfile" \
-            | sed s/.*crm_update_peer// \
-            | sed s/://g \
-            | awk '{print $2}' \
-            | grep -v "(null)" \
-            | sort -u \
-            | tr '\n' ' '
-    fi
+    # TODO: Look for something like crm_update_peer
 }
 
 if [ "x$tests" != "x" ]; then

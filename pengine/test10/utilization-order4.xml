@@ -10,7 +10,7 @@
         <nvpair id="cib-bootstrap-options-placement-strategy" name="placement-strategy" value="utilization"/>
         <nvpair id="cib-bootstrap-options-batch-limit" name="batch-limit" value="1"/>
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.5-5ce2879aa0d5f43d01629bc20edc6868a9352002"/>
-        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="openais"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1305879804"/>
       </cluster_property_set>
     </crm_config>

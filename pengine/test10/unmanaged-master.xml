@@ -12,7 +12,7 @@
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="stop"/>
         <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="4"/>
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.6-0.61.3faed8c7dd2b.hg.fc15-3faed8c7dd2bb4b25e56eb7b74bcab064267b228"/>
-        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="openais"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-is-managed-default" name="is-managed-default" value="false"/>
       </cluster_property_set>
     </crm_config>

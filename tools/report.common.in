@@ -44,7 +44,7 @@ DRBD_INFO_F=drbd_info.txt
 EVENT_PATTERNS="
 state		do_state_transition
 membership	pcmk_peer_update.*(lost|memb):
-quorum		crmd.*crm_update_quorum|crmd.*ais.disp.*quorum.(lost|ac?quir)
+quorum		crmd.*crm_update_quorum
 pause		Process.pause.detected
 resources	lrmd.*rsc:(start|stop)
 stonith		te_fence_node|stonith-ng.*log_oper.*report|stonithd.*(requests|(Succeeded|Failed).to.STONITH|result=)
@@ -56,7 +56,7 @@ start_stop	shutdown.decision|Corosync.Cluster.Engine|corosync.*Initializing.tran
 # of any of these packages that are installed)
 PACKAGES="pacemaker pacemaker-libs pacemaker-cluster-libs libpacemaker3
 pacemaker-remote pacemaker-pygui pacemaker-pymgmt pymgmt-client
-openais libopenais2 libopenais3 corosync libcorosync4
+corosync corosynclib libcorosync4
 resource-agents cluster-glue-libs cluster-glue libglue2 ldirectord
 ocfs2-tools ocfs2-tools-o2cb ocfs2console
 ocfs2-kmp-default ocfs2-kmp-pae ocfs2-kmp-xen ocfs2-kmp-debug ocfs2-kmp-trace
@@ -269,7 +269,7 @@ detect_host() {
     PE_STATE_DIR=$(detect_pe_dir "$config_root")
 
     CRM_CORE_DIRS=""
-    for d in $config_root/cores $local_state_dir/lib/corosync $local_state_dir/lib/openais; do
+    for d in $config_root/cores $local_state_dir/lib/corosync; do
 	if [ -d $d ]; then
 	    CRM_CORE_DIRS="$CRM_CORE_DIRS $d"
 	fi
@@ -760,10 +760,7 @@ getcfvar() {
 
     [ -f "$cf_file" ] || return
     case $cf_type in
-	cman)
-	    grep $cf_var $cf_file | sed s/.*$cf_var=\"// | sed s/\".*//
-	    ;;
-	corosync|openais)
+	corosync)
 	    sed 's/#.*//' < $cf_file |
 	        if [ $# -eq 2 ]; then
 			getstanza "$cf_var"
@@ -799,26 +796,13 @@ get_cluster_type() {
 	    *objctl) quorum=`$tool -a | grep quorum.provider | sed 's/.*=\s*//'`;;
 	    *cmapctl) quorum=`$tool | grep quorum.provider | sed 's/.*=\s*//'`;;
 	esac
-	if [ x"$quorum" = x"quorum_cman" ]; then
-	    stack="cman"
-	else
-	    stack="corosync"
-	fi
-
-    elif is_running aisexec; then
-	stack="openais"
+        stack="corosync"
 
     # Now we're guessing...
-
-    elif [ -f /etc/cluster/cluster.conf ]; then
-	stack="cman"
 
     # TODO: Technically these could be anywhere :-/
     elif [ -f /etc/corosync/corosync.conf ]; then
 	stack="corosync"
-
-    elif [ -f /etc/ais/openais.conf ]; then
-	stack="openais"
 
     else
         # We still don't know. This might be a Pacemaker Remote node,
@@ -832,13 +816,12 @@ get_cluster_type() {
 
 find_cluster_cf() {
     case $1 in
-	cman) echo "/etc/cluster/cluster.conf";;
 	corosync)
 	    best_size=0
 	    best_file=""
 
 	    # TODO: Technically these could be anywhere :-/
-	    for cf in /etc/ais/openais.conf /etc/corosync/corosync.conf; do
+	    for cf in /etc/corosync/corosync.conf; do
 		if [ -f $cf ]; then
 		    size=`wc -l $cf | awk '{print $1}'`
 		    if [ $size -gt $best_size ]; then
@@ -856,13 +839,6 @@ find_cluster_cf() {
 	    fi
 	    debug "Located corosync config file: $best_file"
 	    echo "$best_file"
-	    ;;
-	openais)
-	    # TODO: Technically it could be anywhere :-/
-	    cf="/etc/ais/openais.conf"
-	    if [ -f $cf ]; then
-		echo "$cf"
-	    fi
 	    ;;
 	any)
 	    # Cluster type is undetermined. Don't complain, because this

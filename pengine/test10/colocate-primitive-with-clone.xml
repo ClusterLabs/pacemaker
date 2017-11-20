@@ -8,7 +8,7 @@
         <nvpair id="cib-bootstrap-options-stonith-timeout" name="stonith-timeout" value="430s"/>
         <nvpair id="cib-bootstrap-options-dc-deadtime" name="dc-deadtime" value="48s"/>
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.0.7-0bf7d14dd5541b31f7dee605e5041bb44d78b336"/>
-        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="openais"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="4"/>
       </cluster_property_set>
     </crm_config>

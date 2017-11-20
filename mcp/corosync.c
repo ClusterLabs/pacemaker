@@ -28,20 +28,10 @@
 #include <corosync/hdb.h>
 #include <corosync/cfg.h>
 #include <corosync/cpg.h>
-#if HAVE_CONFDB
-#  include <corosync/confdb.h>
-#endif
+#include <corosync/cmap.h>
 
 #include <crm/cluster/internal.h>
 #include <crm/common/mainloop.h>
-
-#if SUPPORT_CMAN
-#  include <libcman.h>
-#endif
-
-#if HAVE_CMAP
-#  include <corosync/cmap.h>
-#endif
 
 enum cluster_type_e stack = pcmk_cluster_unknown;
 static corosync_cfg_handle_t cfg_handle;
@@ -150,90 +140,6 @@ cluster_connect_cfg(uint32_t * nodeid)
 }
 
 /* =::=::=::= Configuration =::=::=::= */
-#if HAVE_CONFDB
-static int
-get_config_opt(confdb_handle_t config,
-               hdb_handle_t object_handle, const char *key, char **value, const char *fallback)
-{
-    size_t len = 0;
-    char *env_key = NULL;
-    const char *env_value = NULL;
-    char buffer[256];
-
-    if (*value) {
-        free(*value);
-        *value = NULL;
-    }
-
-    if (object_handle > 0) {
-        if (CS_OK == confdb_key_get(config, object_handle, key, strlen(key), &buffer, &len)) {
-            *value = strdup(buffer);
-        }
-    }
-
-    if (*value) {
-        crm_info("Found '%s' for option: %s", *value, key);
-        return 0;
-    }
-
-    env_key = crm_concat("HA", key, '_');
-    env_value = getenv(env_key);
-    free(env_key);
-
-    if (*value) {
-        crm_info("Found '%s' in ENV for option: %s", *value, key);
-        *value = strdup(env_value);
-        return 0;
-    }
-
-    if (fallback) {
-        crm_info("Defaulting to '%s' for option: %s", fallback, key);
-        *value = strdup(fallback);
-
-    } else {
-        crm_info("No default for option: %s", key);
-    }
-
-    return -1;
-}
-
-static confdb_handle_t
-config_find_init(confdb_handle_t config)
-{
-    cs_error_t rc = CS_OK;
-    confdb_handle_t local_handle = OBJECT_PARENT_HANDLE;
-
-    rc = confdb_object_find_start(config, local_handle);
-    if (rc == CS_OK) {
-        return local_handle;
-    } else {
-        crm_err("Couldn't create search context: %d", rc);
-    }
-    return 0;
-}
-
-static hdb_handle_t
-config_find_next(confdb_handle_t config, const char *name, confdb_handle_t top_handle)
-{
-    cs_error_t rc = CS_OK;
-    hdb_handle_t local_handle = 0;
-
-    if (top_handle == 0) {
-        crm_err("Couldn't search for %s: no valid context", name);
-        return 0;
-    }
-
-    crm_trace("Searching for %s in " HDB_X_FORMAT, name, top_handle);
-    rc = confdb_object_find(config, top_handle, name, strlen(name), &local_handle);
-    if (rc != CS_OK) {
-        crm_info("No additional configuration supplied for: %s", name);
-        local_handle = 0;
-    } else {
-        crm_info("Processing additional %s options...", name);
-    }
-    return local_handle;
-}
-#else
 static int
 get_config_opt(uint64_t unused, cmap_handle_t object_handle, const char *key, char **value,
                const char *fallback)
@@ -253,14 +159,6 @@ get_config_opt(uint64_t unused, cmap_handle_t object_handle, const char *key, ch
     return rc;
 }
 
-#endif
-
-#if HAVE_CONFDB
-#  define KEY_PREFIX ""
-#elif HAVE_CMAP
-#  define KEY_PREFIX "logging."
-#endif
-
 gboolean
 mcp_read_config(void)
 {
@@ -269,31 +167,10 @@ mcp_read_config(void)
 
     const char *const_value = NULL;
 
-#if HAVE_CONFDB
-    char *value = NULL;
-    confdb_handle_t config = 0;
-    confdb_handle_t top_handle = 0;
-    hdb_handle_t local_handle;
-    static confdb_callbacks_t callbacks = { };
-
-    do {
-        rc = confdb_initialize(&config, &callbacks);
-        if (rc != CS_OK) {
-            retries++;
-            printf("confdb connection setup failed: %s.  Retrying in %ds\n", ais_error2text(rc), retries);
-            crm_info("confdb connection setup failed: %s.  Retrying in %ds", ais_error2text(rc), retries);
-            sleep(retries);
-
-        } else {
-            break;
-        }
-
-    } while (retries < 5);
-#elif HAVE_CMAP
     cmap_handle_t local_handle;
     uint64_t config = 0;
 
-    /* There can be only one (possibility if confdb isn't around) */
+    // There can be only one possibility
     do {
         rc = cmap_initialize(&local_handle);
         if (rc != CS_OK) {
@@ -307,7 +184,6 @@ mcp_read_config(void)
         }
 
     } while (retries < 5);
-#endif
 
     if (rc != CS_OK) {
         printf("Could not connect to Cluster Configuration Database API, error %d\n", rc);
@@ -323,53 +199,10 @@ mcp_read_config(void)
         set_daemon_option("cluster_type", "corosync");
         set_daemon_option("quorum_type", "corosync");
 
-#if HAVE_CONFDB
-    } else if (stack == pcmk_cluster_cman) {
-        set_daemon_option("cluster_type", "cman");
-        set_daemon_option("quorum_type", "cman");
-        enable_crmd_as_root(TRUE);
-
-    } else if (stack == pcmk_cluster_classic_ais) {
-        set_daemon_option("cluster_type", "openais");
-        set_daemon_option("quorum_type", "pcmk");
-
-        /* Look for a service block to indicate our plugin is loaded */
-        top_handle = config_find_init(config);
-        local_handle = config_find_next(config, "service", top_handle);
-
-        while (local_handle) {
-            get_config_opt(config, local_handle, "name", &value, NULL);
-            if (safe_str_eq("pacemaker", value)) {
-                get_config_opt(config, local_handle, "ver", &value, "0");
-                if (safe_str_eq(value, "1")) {
-                    get_config_opt(config, local_handle, "use_logd", &value, "no");
-                    set_daemon_option("use_logd", value);
-                    set_daemon_option("LOGD", value);
-
-                    get_config_opt(config, local_handle, "use_mgmtd", &value, "no");
-                    enable_mgmtd(crm_is_true(value));
-
-                } else {
-                    crm_err("We can only start Pacemaker from init if using version 1"
-                            " of the Pacemaker plugin for Corosync.  Terminating.");
-                    crm_exit(DAEMON_RESPAWN_STOP);
-                }
-                break;
-            }
-            local_handle = config_find_next(config, "service", top_handle);
-        }
-        free(value);
-
-#endif
     } else {
         crm_err("Unsupported stack type: %s", name_for_cluster_type(stack));
         return FALSE;
     }
-
-#if HAVE_CONFDB
-    top_handle = config_find_init(config);
-    local_handle = config_find_next(config, "logging", top_handle);
-#endif
 
     /* =::=::= Logging =::=::= */
     if (daemon_option("debug")) {
@@ -379,7 +212,7 @@ mcp_read_config(void)
         /* Check corosync */
         char *debug_enabled = NULL;
 
-        get_config_opt(config, local_handle, KEY_PREFIX "debug", &debug_enabled, "off");
+        get_config_opt(config, local_handle, "logging.debug", &debug_enabled, "off");
 
         if (crm_is_true(debug_enabled)) {
             set_daemon_option("debug", "1");
@@ -406,8 +239,8 @@ mcp_read_config(void)
         char *logfile = NULL;
         char *logfile_enabled = NULL;
 
-        get_config_opt(config, local_handle, KEY_PREFIX "to_logfile", &logfile_enabled, "on");
-        get_config_opt(config, local_handle, KEY_PREFIX "logfile", &logfile, "/var/log/pacemaker.log");
+        get_config_opt(config, local_handle, "logging.to_logfile", &logfile_enabled, "on");
+        get_config_opt(config, local_handle, "logging.logfile", &logfile, "/var/log/pacemaker.log");
 
         if (crm_is_true(logfile_enabled) == FALSE) {
             crm_trace("File logging disabled in corosync");
@@ -432,8 +265,8 @@ mcp_read_config(void)
         char *syslog_enabled = NULL;
         char *syslog_facility = NULL;
 
-        get_config_opt(config, local_handle, KEY_PREFIX "to_syslog", &syslog_enabled, "on");
-        get_config_opt(config, local_handle, KEY_PREFIX "syslog_facility", &syslog_facility, "daemon");
+        get_config_opt(config, local_handle, "logging.to_syslog", &syslog_enabled, "on");
+        get_config_opt(config, local_handle, "logging.syslog_facility", &syslog_facility, "daemon");
 
         if (crm_is_true(syslog_enabled) == FALSE) {
             qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_ENABLED, QB_FALSE);
@@ -455,9 +288,6 @@ mcp_read_config(void)
         setenv("HA_LOGFACILITY", const_value, 1);
     }
 
-#if HAVE_CONFDB
-    confdb_finalize(config);
-#elif HAVE_CMAP
     if(local_handle){
         gid_t gid = 0;
         if (crm_user_lookup(CRM_DAEMON_USER, NULL, &gid) < 0) {
@@ -475,7 +305,6 @@ mcp_read_config(void)
         }
     }
     cmap_finalize(local_handle);
-#endif
 
     return TRUE;
 }

@@ -310,7 +310,6 @@ class CIB11(ConfigBase):
         o["batch-limit"] = "10"
         o["dc-deadtime"] = "5s"
         o["no-quorum-policy"] = no_quorum
-        o["expected-quorum-votes"] = self.num_nodes
 
         if self.CM.Env["DoBSC"] == 1:
             o["ident-string"] = "Linux-HA TEST configuration file - REMOVEME!!"
@@ -537,7 +536,7 @@ if __name__ == '__main__':
     """ Unit test (pass cluster node names as command line arguments) """
 
     import CTS
-    import CM_ais
+    import CM_corosync
     import sys
 
     if len(sys.argv) < 2:
@@ -553,7 +552,7 @@ if __name__ == '__main__':
         "--stonith", "rhcs",
     ]
     env = CTS.CtsLab(args)
-    cm = CM_ais.crm_mcp(env)
+    cm = CM_corosync.crm_corosync(env)
     CibFactory = ConfigFactory(cm)
     cib = CibFactory.createConfig("pacemaker-1.1")
     print(cib.contents())

@@ -53,13 +53,7 @@ static struct crm_option long_options[] = {
     {"quiet",      0, 0, 'Q', "\tEssential output only"},
 
     {"-spacer-",   1, 0, '-', "\nStack:"},
-#if SUPPORT_CMAN
-    {"cman",       0, 0, 'c', "\tOnly try connecting to a cman-based cluster"},
-#endif
-#if SUPPORT_COROSYNC
-    {"openais",    0, 0, 'A', "\tOnly try connecting to an OpenAIS-based cluster"},
-#endif
-#ifdef SUPPORT_CS_QUORUM
+#ifdef SUPPORT_CS
     {"corosync",   0, 0, 'C', "\tOnly try connecting to an Corosync-based cluster"},
 #endif
 
@@ -71,7 +65,7 @@ static struct crm_option long_options[] = {
     {"partition",     0, 0, 'p', "Display the members of this partition"},
     {"cluster-id",    0, 0, 'i', "Display this node's cluster id"},
     {"remove",        1, 0, 'R', "(Advanced) Remove the (stopped) node with the specified name from Pacemaker's configuration and caches"},
-    {"-spacer-",      1, 0, '-', "In the case of CMAN and Corosync 2.0, requires that the node has already been removed from the underlying cluster"},
+    {"-spacer-",      1, 0, '-', "(the node must already have been removed from the underlying cluster stack configuration)"},
 
     {"-spacer-", 1, 0, '-', "\nAdditional Options:"},
     {"force",	 0, 0, 'f'},
@@ -337,191 +331,7 @@ try_pacemaker(int command, enum cluster_type_e stack)
     return FALSE;
 }
 
-#if SUPPORT_CMAN
-#  include <libcman.h>
-#  define MAX_NODES 256
-static bool valid_cman_name(const char *name, uint32_t nodeid) 
-{
-    bool rc = TRUE;
-
-    /* Yes, %d, because that's what CMAN does */
-    char *fakename = crm_strdup_printf("Node%d", nodeid);
-
-    if(crm_str_eq(fakename, name, TRUE)) {
-        rc = FALSE;
-        crm_notice("Ignoring inferred name from cman: %s", fakename);
-    }
-    free(fakename);
-    return rc;
-}
-
-static gboolean
-try_cman(int command, enum cluster_type_e stack)
-{
-
-    int rc = -1, lpc = 0, node_count = 0;
-    cman_node_t node;
-    cman_cluster_t cluster;
-    cman_handle_t cman_handle = NULL;
-    cman_node_t cman_nodes[MAX_NODES];
-
-    memset(&cluster, 0, sizeof(cluster));
-
-    cman_handle = cman_init(NULL);
-    if (cman_handle == NULL || cman_is_active(cman_handle) == FALSE) {
-        crm_info("Couldn't connect to cman");
-        return FALSE;
-    }
-
-    switch (command) {
-        case 'R':
-            try_pacemaker(command, stack);
-            break;
-
-        case 'q':
-            fprintf(stdout, "%d\n", cman_is_quorate(cman_handle));
-            break;
-
-        case 'l':
-        case 'p':
-            memset(cman_nodes, 0, MAX_NODES * sizeof(cman_node_t));
-            rc = cman_get_nodes(cman_handle, MAX_NODES, &node_count, cman_nodes);
-            if (rc != 0) {
-                fprintf(stderr, "Couldn't query cman node list: %d %d", rc, errno);
-                goto cman_bail;
-            }
-
-            for (lpc = 0; lpc < node_count; lpc++) {
-                if(valid_cman_name(cman_nodes[lpc].cn_name, cman_nodes[lpc].cn_nodeid) == FALSE) {
-                    /* The name was invented, but we need to print something, make it the id instead */
-                    printf("%u ", cman_nodes[lpc].cn_nodeid);
-
-                } if (command == 'l') {
-                    printf("%s ", cman_nodes[lpc].cn_name);
-
-                } else if (cman_nodes[lpc].cn_nodeid != 0 && cman_nodes[lpc].cn_member) {
-                    /* Never allow node ID 0 to be considered a member #315711 */
-                    printf("%s ", cman_nodes[lpc].cn_name);
-                }
-            }
-            printf("\n");
-            break;
-
-        case 'i':
-            memset(&node, 0, sizeof(cman_node_t));
-            rc = cman_get_node(cman_handle, CMAN_NODEID_US, &node);
-            if (rc != 0) {
-                fprintf(stderr, "Couldn't query cman node id: %d %d", rc, errno);
-                goto cman_bail;
-            }
-            fprintf(stdout, "%u\n", node.cn_nodeid);
-            break;
-
-        default:
-            fprintf(stderr, "Unknown option '%c'\n", command);
-            crm_help('?', EX_USAGE);
-    }
-    cman_finish(cman_handle);
-    crm_exit(pcmk_ok);
-
-  cman_bail:
-    cman_finish(cman_handle);
-    return crm_exit(EINVAL);
-}
-#endif
-
-#if HAVE_CONFDB
-static void
-ais_membership_destroy(gpointer user_data)
-{
-    crm_err("AIS connection terminated");
-    ais_fd_sync = -1;
-    crm_exit(ENOTCONN);
-}
-
-static gint
-member_sort(gconstpointer a, gconstpointer b)
-{
-    const crm_node_t *node_a = a;
-    const crm_node_t *node_b = b;
-
-    return strcmp(node_a->uname, node_b->uname);
-}
-
-static void
-crm_add_member(gpointer key, gpointer value, gpointer user_data)
-{
-    GList **list = user_data;
-    crm_node_t *node = value;
-
-    if (node->uname != NULL) {
-        *list = g_list_insert_sorted(*list, node, member_sort);
-    }
-}
-
-static void
-ais_membership_dispatch(cpg_handle_t handle,
-                          const struct cpg_name *groupName,
-                          uint32_t nodeid, uint32_t pid, void *msg, size_t msg_len)
-{
-    uint32_t kind = 0;
-    const char *from = NULL;
-    char *data = pcmk_message_common_cs(handle, nodeid, pid, msg, &kind, &from);
-
-    switch (kind) {
-        case crm_class_members:
-        case crm_class_notify:
-        case crm_class_quorum:
-            break;
-        default:
-            free(data);
-            return;
-
-            break;
-    }
-
-    if (command == 'q') {
-        if (crm_have_quorum) {
-            fprintf(stdout, "1\n");
-        } else {
-            fprintf(stdout, "0\n");
-        }
-
-    } else if (command == 'l') {
-        GList *nodes = NULL;
-        GListPtr lpc = NULL;
-
-        g_hash_table_foreach(crm_peer_cache, crm_add_member, &nodes);
-        for (lpc = nodes; lpc != NULL; lpc = lpc->next) {
-            crm_node_t *node = (crm_node_t *) lpc->data;
-
-            fprintf(stdout, "%u %s %s\n", node->id, node->uname, node->state);
-        }
-        fprintf(stdout, "\n");
-
-    } else if (command == 'p') {
-        GList *nodes = NULL;
-        GListPtr lpc = NULL;
-
-        g_hash_table_foreach(crm_peer_cache, crm_add_member, &nodes);
-        for (lpc = nodes; lpc != NULL; lpc = lpc->next) {
-            crm_node_t *node = (crm_node_t *) lpc->data;
-
-            if (node->uname && safe_str_eq(node->state, CRM_NODE_MEMBER)) {
-                fprintf(stdout, "%s ", node->uname);
-            }
-        }
-        fprintf(stdout, "\n");
-    }
-
-    free(data);
-    crm_exit(pcmk_ok);
-
-    return;
-}
-#endif
-
-#ifdef SUPPORT_CS_QUORUM
+#ifdef SUPPORT_CS
 #  include <corosync/quorum.h>
 #  include <corosync/cpg.h>
 
@@ -584,51 +394,6 @@ try_corosync(int command, enum cluster_type_e stack)
 }
 #endif
 
-#if HAVE_CONFDB
-static gboolean
-try_openais(int command, enum cluster_type_e stack)
-{
-    static crm_cluster_t cluster;
-
-    cluster.destroy = ais_membership_destroy;
-    cluster.cpg.cpg_deliver_fn = ais_membership_dispatch;
-    cluster.cpg.cpg_confchg_fn = NULL;
-
-    if (init_cs_connection_once(&cluster)) {
-
-        GMainLoop *amainloop = NULL;
-
-        switch (command) {
-            case 'R':
-                send_cluster_text(crm_class_rmpeer, target_uname, TRUE, NULL, crm_msg_ais);
-                cib_remove_node(0, target_uname);
-                crm_exit(pcmk_ok);
-
-            case 'q':
-                send_cluster_text(crm_class_quorum, NULL, TRUE, NULL, crm_msg_ais);
-                break;
-
-            case 'l':
-            case 'p':
-                crm_info("Requesting the list of configured nodes");
-                send_cluster_text(crm_class_members, __FUNCTION__, TRUE, NULL, crm_msg_ais);
-                break;
-
-            case 'i':
-                printf("%u\n", cluster.nodeid);
-                crm_exit(pcmk_ok);
-
-            default:
-                fprintf(stderr, "Unknown option '%c'\n", command);
-                crm_help('?', EX_USAGE);
-        }
-        amainloop = g_main_new(FALSE);
-        g_main_run(amainloop);
-    }
-    return FALSE;
-}
-#endif
-
 int set_cluster_type(enum cluster_type_e type);
 
 int
@@ -663,14 +428,8 @@ main(int argc, char **argv)
             case 'Q':
                 do_quiet = TRUE;
                 break;
-            case 'A':
-                set_cluster_type(pcmk_cluster_classic_ais);
-                break;
             case 'C':
                 set_cluster_type(pcmk_cluster_corosync);
-                break;
-            case 'c':
-                set_cluster_type(pcmk_cluster_cman);
                 break;
             case 'f':
                 force_flag = TRUE;
@@ -730,22 +489,9 @@ main(int argc, char **argv)
     crm_debug("Attempting to process -%c command for cluster type: %s", command,
               name_for_cluster_type(try_stack));
 
-#if SUPPORT_CMAN
-    if (try_stack == pcmk_cluster_cman) {
-        try_cman(command, try_stack);
-    }
-#endif
-
-#ifdef SUPPORT_CS_QUORUM
+#ifdef SUPPORT_CS
     if (try_stack == pcmk_cluster_corosync) {
         try_corosync(command, try_stack);
-    }
-#endif
-
-#if HAVE_CONFDB
-    /* Only an option if we're using the plugins */
-    if (try_stack == pcmk_cluster_classic_ais) {
-        try_openais(command, try_stack);
     }
 #endif
 

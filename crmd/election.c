@@ -177,12 +177,6 @@ do_dc_takeover(long long action,
     set_bit(fsa_input_register, R_THE_DC);
     execute_stonith_cleanup();
 
-#if SUPPORT_COROSYNC
-    if (is_classic_ais_cluster()) {
-        send_cluster_text(crm_class_quorum, NULL, TRUE, NULL, crm_msg_ais);
-    }
-#endif
-
     election_reset(fsa_election);
     set_bit(fsa_input_register, R_JOIN_OK);
     set_bit(fsa_input_register, R_INVOKE_PE);
@@ -204,7 +198,6 @@ do_dc_takeover(long long action,
                          "cluster-infrastructure", cluster_type, FALSE, NULL, NULL);
 
 #if SUPPORT_COROSYNC
-#  if !SUPPORT_PLUGIN
     if (fsa_cluster_name == NULL && is_corosync_cluster()) {
         char *cluster_name = corosync_cluster_name();
 
@@ -214,7 +207,6 @@ do_dc_takeover(long long action,
         }
         free(cluster_name);
     }
-#  endif
 #endif
 
     mainloop_set_trigger(config_read);

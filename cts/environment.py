@@ -161,20 +161,8 @@ class Environment:
 
     def set_stack(self, name):
         # Normalize stack names
-        if name == "openais" or name == "ais"  or name == "whitetank":
-            self.data["Stack"] = "corosync (plugin v0)"
-
-        elif name == "corosync" or name == "cs" or name == "mcp":
+        if name == "corosync" or name == "cs" or name == "mcp":
             self.data["Stack"] = "corosync 2.x"
-
-        elif name == "cman":
-            self.data["Stack"] = "corosync (cman)"
-
-        elif name == "v1":
-            self.data["Stack"] = "corosync (plugin v1)"
-
-        elif name == "v0":
-            self.data["Stack"] = "corosync (plugin v0)"
 
         else:
             raise ValueError("Unknown stack: "+name)
@@ -187,18 +175,9 @@ class Environment:
 
         elif self.data["Stack"] == "corosync 2.x":
             if self["docker"]:
-                return "crm-mcp-docker"
+                return "crm-corosync-docker"
             else:
-                return "crm-mcp"
-
-        elif self.data["Stack"] == "corosync (cman)":
-            return "crm-cman"
-        
-        elif self.data["Stack"] == "corosync (plugin v1)":
-            return "crm-plugin-v1"
-        
-        elif self.data["Stack"] == "corosync (plugin v0)":
-            return "crm-plugin-v0"
+                return "crm-corosync"
 
         else:
             LogFactory().log("Unknown stack: "+self["stack"])
@@ -469,14 +448,7 @@ class Environment:
                 dsh_file = "%s/.dsh/group/%s" % (os.environ['HOME'], args[i+1])
 
                 # Hacks to make my life easier
-                if args[i+1] == "r6":
-                    self["Stack"] = "cman"
-                    self["DoStonith"]=1
-                    self["stonith-type"] = "fence_xvm"
-                    self["stonith-params"] = "delay=0"
-                    self["IPBase"] = " fe80::1234:56:7890:4000"
-
-                elif args[i+1] == "virt1":
+                if args[i+1] == "virt1":
                     self["Stack"] = "corosync"
                     self["DoStonith"]=1
                     self["stonith-type"] = "fence_xvm"
@@ -535,9 +507,6 @@ class Environment:
                 skipthis=1
                 self["Schema"] = args[i+1]
 
-            elif args[i] == "--ais":
-                self["Stack"] = "openais"
-
             elif args[i] == "--at-boot" or args[i] == "--cluster-starts-at-boot":
                 skipthis=1
                 if args[i+1] == "1" or args[i+1] == "yes":
@@ -547,15 +516,9 @@ class Environment:
                 else:
                     self.usage(args[i+1])
 
-            elif args[i] == "--hae":
-                self["Stack"] = "openais"
-                self["Schema"] = "hae"
-
             elif args[i] == "--stack":
                 if args[i+1] == "fedora" or args[i+1] == "fedora-17" or args[i+1] == "fedora-18":
                     self["Stack"] = "corosync"
-                elif args[i+1] == "rhel-6":
-                    self["Stack"] = "cman"
                 elif args[i+1] == "rhel-7":
                     self["Stack"] = "corosync"
                 else:
@@ -629,7 +592,7 @@ class Environment:
         print("\t [--nodes 'node list']        list of cluster nodes separated by whitespace")
         print("\t [--group | -g 'name']        use the nodes listed in the named DSH group (~/.dsh/groups/$name)")
         print("\t [--limit-nodes max]          only use the first 'max' cluster nodes supplied with --nodes")
-        print("\t [--stack (v0|v1|cman|corosync|openais)]    which cluster stack is installed")
+        print("\t [--stack corosync]           which cluster stack is installed")
         print("\t [--list-tests]               list the valid tests")
         print("\t [--benchmark]                add the timing information")
         print("\t ")

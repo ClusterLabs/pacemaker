@@ -21,7 +21,3 @@ headerdir=$(pkgincludedir)/crm/cluster
 
 noinst_HEADERS		= internal.h election.h
 header_HEADERS		= 
-
-if BUILD_CS_PLUGIN
-header_HEADERS        += plugin.h 
-endif

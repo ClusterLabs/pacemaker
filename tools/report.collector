@@ -214,8 +214,7 @@ getconfig() {
     if is_running crmd; then
         dump_status_and_config
 	case $cluster in
-	    cman)             crm_node -p --cman > $target/$MEMBERSHIP_F 2>&1;;
-	    corosync|openais) crm_node -p --openais > $target/$MEMBERSHIP_F 2>&1;;
+	    corosync)         crm_node -p --corosync > $target/$MEMBERSHIP_F 2>&1;;
 	    *) 	              crm_node -p > $target/$MEMBERSHIP_F 2>&1;;
 	esac
 	echo "$host" > $target/RUNNING
@@ -447,13 +446,6 @@ sys_info() {
     cibadmin --version 2>&1 | head -1
     cibadmin -! 2>&1
     case $cluster in
-	openais)
-	    echo openais # version: how?
-	    ;;
-	cman)
-	    cman_tool -V 2>&1 | head -1
-	    /usr/sbin/corosync -v 2>&1 | head -1
-	    ;;
 	corosync)
 	    /usr/sbin/corosync -v 2>&1 | head -1
 	    ;;
@@ -565,7 +557,7 @@ get_logfiles() {
     facility_var="logfacility"
 
     case $cf_type in
-	cman|openais|corosync)
+	corosync)
             if [ -f "$cf_file" ]; then
                 debug "Reading $cf_type log settings from $cf_file"
                 if iscfvartrue $cf_type to_syslog "$cf_file"; then
@@ -751,7 +743,7 @@ getbacktraces  $LOG_START $LOG_END > $REPORT_HOME/$REPORT_TARGET/$BT_F
 getblackboxes  $LOG_START $LOG_END $REPORT_HOME/$REPORT_TARGET
 
 case $cluster in
-    cman|corosync)
+    corosync)
 	if is_running corosync; then
             corosync-blackbox >corosync-blackbox-live.txt 2>&1
 #           corosync-fplay > corosync-blackbox.txt

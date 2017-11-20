@@ -304,7 +304,7 @@ crm_is_peer_active(const crm_node_t * node)
         return FALSE;
     }
 #if SUPPORT_COROSYNC
-    if (is_openais_cluster()) {
+    if (is_corosync_cluster()) {
         return crm_is_corosync_peer_active(node);
     }
 #endif
@@ -402,7 +402,6 @@ destroy_crm_node(gpointer data)
 
     crm_trace("Destroying entry for node %u: %s", node->id, node->uname);
 
-    free(node->addr);
     free(node->uname);
     free(node->state);
     free(node->uuid);
@@ -637,11 +636,9 @@ crm_remove_conflicting_peer(crm_node_t *node)
         return 0;
     }
 
-#  if !SUPPORT_PLUGIN
     if (corosync_cmap_has_config("nodelist") != 0) {
         return 0;
     }
-#  endif
 
     g_hash_table_iter_init(&iter, crm_peer_cache);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &existing_node)) {
@@ -737,84 +734,6 @@ crm_get_peer(unsigned int id, const char *uname)
 
 /*!
  * \internal
- * \brief Update all of a node's information (process list, state, etc.)
- *
- * \param[in] source      Caller's function name (for log messages)
- *
- * \return NULL if node was reaped from peer caches, pointer to node otherwise
- *
- * \note This function should not be called within a peer cache iteration,
- *       otherwise reaping could invalidate the iterator.
- */
-crm_node_t *
-crm_update_peer(const char *source, unsigned int id, uint64_t born, uint64_t seen, int32_t votes,
-                uint32_t children, const char *uuid, const char *uname, const char *addr,
-                const char *state)
-{
-#if SUPPORT_PLUGIN
-    gboolean addr_changed = FALSE;
-    gboolean votes_changed = FALSE;
-#endif
-    crm_node_t *node = NULL;
-
-    id = get_corosync_id(id, uuid);
-    node = crm_get_peer(id, uname);
-
-    CRM_ASSERT(node != NULL);
-
-    if (node->uuid == NULL) {
-        if (is_openais_cluster()) {
-            /* Yes, overrule whatever was passed in */
-            crm_peer_uuid(node);
-
-        } else if (uuid != NULL) {
-            node->uuid = strdup(uuid);
-        }
-    }
-
-    if (children > 0) {
-        if (crm_update_peer_proc(source, node, children, state) == NULL) {
-            return NULL;
-        }
-    }
-
-    if (state != NULL) {
-        if (crm_update_peer_state(source, node, state, seen) == NULL) {
-            return NULL;
-        }
-    }
-
-#if SUPPORT_PLUGIN
-    /* These were only used by the plugin */
-    if (born != 0) {
-        node->born = born;
-    }
-
-    if (votes > 0 && node->votes != votes) {
-        votes_changed = TRUE;
-        node->votes = votes;
-    }
-
-    if (addr != NULL) {
-        if (node->addr == NULL || crm_str_eq(node->addr, addr, FALSE) == FALSE) {
-            addr_changed = TRUE;
-            free(node->addr);
-            node->addr = strdup(addr);
-        }
-    }
-    if (addr_changed || votes_changed) {
-        crm_info("%s: Node %s: id=%u state=%s addr=%s%s votes=%d%s born=" U64T " seen=" U64T
-                 " proc=%.32x", source, node->uname, node->id, node->state,
-                 node->addr, addr_changed ? " (new)" : "", node->votes,
-                 votes_changed ? " (new)" : "", node->born, node->last_seen, node->processes);
-    }
-#endif
-
-    return node;
-}
-
-/*!
- * \internal
  * \brief Update a node's uname
  *
  * \param[in] node        Node object to update
@@ -855,7 +774,7 @@ crm_update_peer_uname(crm_node_t *node, const char *uname)
     }
 
 #if SUPPORT_COROSYNC
-    if (is_openais_cluster() && !is_set(node->flags, crm_remote_node)) {
+    if (is_corosync_cluster() && !is_set(node->flags, crm_remote_node)) {
         crm_remove_conflicting_peer(node);
     }
 #endif
@@ -903,13 +822,6 @@ crm_update_peer_proc(const char *source, crm_node_t * node, uint32_t flag, const
             set_bit(node->processes, flag);
             changed = TRUE;
         }
-#if SUPPORT_PLUGIN
-    } else if (safe_str_eq(status, CRM_NODE_MEMBER)) {
-        if (flag > 0 && node->processes != flag) {
-            node->processes = flag;
-            changed = TRUE;
-        }
-#endif
 
     } else if (node->processes & flag) {
         clear_bit(node->processes, flag);

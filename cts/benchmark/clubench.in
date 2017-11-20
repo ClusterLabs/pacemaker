@@ -50,7 +50,7 @@ test -f $CTSCTRL ||  {
 }
 
 case "$CTS_stack" in
-openais|corosync) CRM_REPORT_OPTS="-A";;
+corosync) CRM_REPORT_OPTS="--corosync";;
 *) msg "$CTS_stack: cluster stack not recognized"; exit 1;;
 esac
 

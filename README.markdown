@@ -45,7 +45,6 @@ This is not an exhaustive list:
 * pcs: https://github.com/ClusterLabs/pcs
 * LCMC: http://lcmc.sourceforge.net/
 * hawk: https://github.com/ClusterLabs/hawk
-* Pacemaker-mgmt: https://github.com/ClusterLabs/pacemaker-mgmt
 * Striker: https://github.com/ClusterLabs/striker
 
 ## How can I help?

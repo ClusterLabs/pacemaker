@@ -1441,7 +1441,7 @@ main(int argc, char **argv)
 
     if (stand_alone == FALSE) {
 
-        if (is_openais_cluster()) {
+        if (is_corosync_cluster()) {
 #if SUPPORT_COROSYNC
             cluster.destroy = stonith_peer_cs_destroy;
             cluster.cpg.cpg_deliver_fn = stonith_peer_ais_callback;

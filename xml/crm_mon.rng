@@ -46,10 +46,12 @@
                     </element>
                     <element name="nodes_configured">
                         <attribute name="number"> <data type="int" /> </attribute>
-                        <choice>
-                            <attribute name="expected_votes"> <data type="int" /> </attribute>
-                            <attribute name="expected_votes"> <value>unknown</value> </attribute>
-                        </choice>
+                        <optional>
+                          <choice>
+                              <attribute name="expected_votes"> <data type="int" /> </attribute>
+                              <attribute name="expected_votes"> <value>unknown</value> </attribute>
+                          </choice>
+                        </optional>
                     </element>
                     <element name="resources_configured">
                         <attribute name="number"> <data type="int" /> </attribute>

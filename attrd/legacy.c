@@ -636,7 +636,7 @@ main(int argc, char **argv)
     if (was_err == FALSE) {
 
 #if SUPPORT_COROSYNC
-        if (is_openais_cluster()) {
+        if (is_corosync_cluster()) {
             cluster.destroy = attrd_cs_destroy;
             cluster.cpg.cpg_deliver_fn = attrd_cs_dispatch;
             cluster.cpg.cpg_confchg_fn = pcmk_cpg_membership;

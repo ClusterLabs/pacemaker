@@ -21,7 +21,8 @@ disadvantages.
 |Allows change of messaging layer
 indexterm:[Cluster,switching between stacks]
 indexterm:[Changing cluster stack]
-footnote:[For example, switching from Corosync 1 to Corosync 2.]
+footnote:[Currently, Corosync 2 is the only supported cluster stack, but that
+is likely to change in the future.]
 
 |Complete cluster shutdown
 indexterm:[upgrade,shutdown]
@@ -70,8 +71,9 @@ then upgrades all the nodes before restarting the cluster.
 .. Check the configuration with the `crm_verify` tool.
 . On each node:
 .. Start the cluster software.
-   The messaging layer can be either Corosync version 1 or Corosync version 2
-   and does not need to be the same one before the upgrade.
+   Currently, only Corosync version 2 is supported as the cluster layer,
+   but if another stack is supported in the future, the stack does not need to
+   be the same one before the upgrade.
 
 One variation of this approach is to build a new cluster on new hosts.
 This allows the new version to be tested beforehand, and minimizes downtime by
@@ -148,8 +150,8 @@ To perform a rolling upgrade, on each node in turn:
 . If this is the first node to be upgraded, check the configuration
   with the `crm_verify` tool.
 . Start the messaging layer.
-  This must be the same messaging layer (Corosync version 1 or 2)
-  that the rest of the cluster is using.
+  This must be the same messaging layer (currently only Corosync 2 is
+  supported) that the rest of the cluster is using.
 
 [NOTE]
 ====
@@ -193,9 +195,10 @@ This method may not be used if the cluster contains any Pacemaker Remote nodes.
   at the same time, that will be more likely to cause outages in the detached
   services (certainly, if a reboot is required).
 . Check the configuration with the `crm_verify` tool.
-. On each node, start the cluster software. The messaging layer can be either
-  Corosync version 1 or 2 and does not need to be the same one as before the
-  upgrade.
+. On each node, start the cluster software.
+  Currently, only Corosync version 2 is supported as the cluster layer,
+  but if another stack is supported in the future, the stack does not need to
+  be the same one before the upgrade.
 . Verify that the cluster re-detected all resources correctly.
 . Allow the cluster to resume managing resources again:
 +

@@ -154,10 +154,6 @@ do_pe_control(long long action,
                 return;
             }
 
-            /* if (is_openais_cluster()) { */
-            /*     pe_subsystem->pid = pe_subsystem->ipc->farside_pid; */
-            /* } */
-
             set_bit(fsa_input_register, pe_subsystem->flag_connected);
 
         } else {

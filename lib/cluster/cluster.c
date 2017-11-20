@@ -36,62 +36,6 @@
 
 CRM_TRACE_INIT_DATA(cluster);
 
-static gboolean
-uname_is_uuid(void)
-{
-    static const char *uuid_pref = NULL;
-
-    if (uuid_pref == NULL) {
-        uuid_pref = getenv("PCMK_uname_is_uuid");
-    }
-
-    if (uuid_pref == NULL) {
-        /* true is legacy mode */
-        uuid_pref = "false";
-    }
-
-    return crm_is_true(uuid_pref);
-}
-
-int
-get_corosync_id(int id, const char *uuid)
-{
-    if (id == 0 && !uname_is_uuid() && is_corosync_cluster()) {
-        id = crm_atoi(uuid, "0");
-    }
-
-    return id;
-}
-
-char *
-get_corosync_uuid(crm_node_t *node)
-{
-    if(node == NULL) {
-        return NULL;
-
-    } else if (!uname_is_uuid() && is_corosync_cluster()) {
-        if (node->id > 0) {
-            int len = 32;
-            char *buffer = NULL;
-
-            buffer = calloc(1, (len + 1));
-            if (buffer != NULL) {
-                snprintf(buffer, len, "%u", node->id);
-            }
-
-            return buffer;
-
-        } else {
-            crm_info("Node %s is not yet known by corosync", node->uname);
-        }
-
-    } else if (node->uname != NULL) {
-        return strdup(node->uname);
-    }
-
-    return NULL;
-}
-
 const char *
 crm_peer_uuid(crm_node_t *peer)
 {
@@ -108,14 +52,9 @@ crm_peer_uuid(crm_node_t *peer)
 
     switch (type) {
         case pcmk_cluster_corosync:
+#if SUPPORT_COROSYNC
             uuid = get_corosync_uuid(peer);
-            break;
-
-        case pcmk_cluster_cman:
-        case pcmk_cluster_classic_ais:
-            if (peer->uname) {
-                uuid = strdup(peer->uname);
-            }
+#endif
             break;
 
         case pcmk_cluster_unknown:
@@ -133,15 +72,20 @@ crm_cluster_connect(crm_cluster_t * cluster)
 {
     enum cluster_type_e type = get_cluster_type();
 
-    crm_notice("Connecting to cluster infrastructure: %s", name_for_cluster_type(type));
+    crm_notice("Connecting to cluster infrastructure: %s",
+               name_for_cluster_type(type));
+    switch (type) {
+        case pcmk_cluster_corosync:
 #if SUPPORT_COROSYNC
-    if (is_openais_cluster()) {
-        crm_peer_init();
-        return init_cs_connection(cluster);
-    }
+            if (is_corosync_cluster()) {
+                crm_peer_init();
+                return init_cs_connection(cluster);
+            }
 #endif
-
-    crm_info("Unsupported cluster stack: %s", getenv("HA_cluster_type"));
+            break;
+        default:
+            break;
+    }
     return FALSE;
 }
 
@@ -149,31 +93,36 @@ void
 crm_cluster_disconnect(crm_cluster_t * cluster)
 {
     enum cluster_type_e type = get_cluster_type();
-    const char *type_str = name_for_cluster_type(type);
 
-    crm_info("Disconnecting from cluster infrastructure: %s", type_str);
+    crm_info("Disconnecting from cluster infrastructure: %s",
+             name_for_cluster_type(type));
+    switch (type) {
+        case pcmk_cluster_corosync:
 #if SUPPORT_COROSYNC
-    if (is_openais_cluster()) {
-        crm_peer_destroy();
-        terminate_cs_connection(cluster);
-        crm_info("Disconnected from %s", type_str);
-        return;
-    }
+            if (is_corosync_cluster()) {
+                crm_peer_destroy();
+                terminate_cs_connection(cluster);
+            }
 #endif
-
-    crm_info("Unsupported cluster stack: %s", getenv("HA_cluster_type"));
+            break;
+        default:
+            break;
+    }
 }
 
 gboolean
 send_cluster_message(crm_node_t * node, enum crm_ais_msg_types service, xmlNode * data,
                      gboolean ordered)
 {
-
+    switch (get_cluster_type()) {
+        case pcmk_cluster_corosync:
 #if SUPPORT_COROSYNC
-    if (is_openais_cluster()) {
-        return send_cluster_message_cs(data, FALSE, node, service);
-    }
+            return send_cluster_message_cs(data, FALSE, node, service);
 #endif
+            break;
+        default:
+            break;
+    }
     return FALSE;
 }
 
@@ -205,23 +154,11 @@ get_node_name(uint32_t nodeid)
 
     stack = get_cluster_type();
     switch (stack) {
-#if SUPPORT_PLUGIN
-        case pcmk_cluster_classic_ais:
-            name = classic_node_name(nodeid);
-            break;
-#else
 #  if SUPPORT_COROSYNC
         case pcmk_cluster_corosync:
             name = corosync_node_name(0, nodeid);
             break;
 #  endif
-#endif
-
-#if SUPPORT_CMAN
-        case pcmk_cluster_cman:
-            name = cman_node_name(nodeid);
-            break;
-#endif
 
         default:
             crm_err("Unknown cluster type: %s (%d)", name_for_cluster_type(stack), stack);
@@ -286,17 +223,13 @@ crm_peer_uname(const char *uuid)
     node = NULL;
 
 #if SUPPORT_COROSYNC
-    if (is_openais_cluster()) {
-        if (uname_is_uuid() == FALSE && is_corosync_cluster()) {
-            uint32_t id = crm_int_helper(uuid, NULL);
-            if(id != 0) {
-                node = crm_find_peer(id, NULL);
-            } else {
-                crm_err("Invalid node id: %s", uuid);
-            }
+    if (is_corosync_cluster()) {
+        uint32_t id = crm_int_helper(uuid, NULL);
 
+        if (id != 0) {
+            node = crm_find_peer(id, NULL);
         } else {
-            node = crm_find_peer(0, uuid);
+            crm_err("Invalid node id: %s", uuid);
         }
 
         if (node) {
@@ -326,10 +259,6 @@ const char *
 name_for_cluster_type(enum cluster_type_e type)
 {
     switch (type) {
-        case pcmk_cluster_classic_ais:
-            return "classic openais (with plugin)";
-        case pcmk_cluster_cman:
-            return "cman";
         case pcmk_cluster_corosync:
             return "corosync";
         case pcmk_cluster_unknown:
@@ -376,7 +305,7 @@ get_cluster_type(void)
         return cluster_type;
     }
 
-    cluster = getenv("HA_cluster_type");
+    cluster = daemon_option("cluster_type");
 
 #if SUPPORT_COROSYNC
     /* If nothing is defined in the environment, try corosync (if supported) */
@@ -395,17 +324,8 @@ get_cluster_type(void)
     if (cluster == NULL) {
 
 #if SUPPORT_COROSYNC
-    } else if (safe_str_eq(cluster, "openais")
-               || safe_str_eq(cluster, "classic openais (with plugin)")) {
-        cluster_type = pcmk_cluster_classic_ais;
-
     } else if (safe_str_eq(cluster, "corosync")) {
         cluster_type = pcmk_cluster_corosync;
-#endif
-
-#if SUPPORT_CMAN
-    } else if (safe_str_eq(cluster, "cman")) {
-        cluster_type = pcmk_cluster_cman;
 #endif
 
     } else {
@@ -430,36 +350,9 @@ get_cluster_type(void)
 }
 
 gboolean
-is_cman_cluster(void)
-{
-    return get_cluster_type() == pcmk_cluster_cman;
-}
-
-gboolean
 is_corosync_cluster(void)
 {
     return get_cluster_type() == pcmk_cluster_corosync;
-}
-
-gboolean
-is_classic_ais_cluster(void)
-{
-    return get_cluster_type() == pcmk_cluster_classic_ais;
-}
-
-gboolean
-is_openais_cluster(void)
-{
-    enum cluster_type_e type = get_cluster_type();
-
-    if (type == pcmk_cluster_classic_ais) {
-        return TRUE;
-    } else if (type == pcmk_cluster_corosync) {
-        return TRUE;
-    } else if (type == pcmk_cluster_cman) {
-        return TRUE;
-    }
-    return FALSE;
 }
 
 gboolean

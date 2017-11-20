@@ -92,33 +92,37 @@ class BasePatterns:
             print("Unknown template '%s' for %s" % (key, self.name))
             return None
 
-class crm_cs_v0(BasePatterns):
+
+class crm_corosync(BasePatterns):
+    '''
+    Patterns for Corosync version 2 cluster manager class
+    '''
+
     def __init__(self, name):
         BasePatterns.__init__(self, name)
 
         self.commands.update({
-            "EpochCmd"      : "crm_node -e --openais",
-            "QuorumCmd"      : "crm_node -q --openais",
-            "PartitionCmd"    : "crm_node -p --openais",
-            "StartCmd"       : "service corosync start",
-            "StopCmd"        : "service corosync stop",
+            "StartCmd"       : "service corosync start && service pacemaker start",
+            "StopCmd"        : "service pacemaker stop; [ ! -e /usr/sbin/pacemaker_remoted ] || service pacemaker_remote stop; service corosync stop",
+
+            "EpochCmd"      : "crm_node -e",
+            "QuorumCmd"      : "crm_node -q",
+            "PartitionCmd"    : "crm_node -p",
         })
 
         self.search.update({
-# The next pattern is too early
-#            "Pat:We_stopped"   : "%s.*Service engine unloaded: Pacemaker Cluster Manager",
-# The next pattern would be preferred, but it doesn't always come out
-#            "Pat:We_stopped"   : "%s.*Corosync Cluster Engine exiting with status",
-            "Pat:We_stopped"   : "%s\W.*Service engine unloaded: corosync cluster quorum service",
+            # Close enough... "Corosync Cluster Engine exiting normally" isn't printed
+            #   reliably and there's little interest in doing anything about it
+            "Pat:We_stopped"   : "%s\W.*Unloading all Corosync service engines",
             "Pat:They_stopped" : "%s\W.*crmd.*Node %s(\[|\s).*state is now lost",
-            "Pat:They_dead"    : "corosync:.*Node %s is now: lost",
+            "Pat:They_dead"    : "crmd.*Node %s(\[|\s).*state is now lost",
 
-            "Pat:ChildExit"    : "Child process .* exited",
-            "Pat:ChildKilled"  : "%s\W.*corosync.*Child process %s terminated with signal 9",
-            "Pat:ChildRespawn" : "%s\W.*corosync.*Respawning failed child process: %s",
+            "Pat:ChildExit"    : "The .* process exited",
+            "Pat:ChildKilled"  : "%s\W.*pacemakerd.*The %s process .* terminated with signal 9",
+            "Pat:ChildRespawn" : "%s\W.*pacemakerd.*Respawning failed child process: %s",
 
             "Pat:InfraUp"      : "%s\W.*corosync.*Initializing transport",
-            "Pat:PacemakerUp"  : "%s\W.*corosync.*CRM: Initialized",
+            "Pat:PacemakerUp"  : "%s\W.*pacemakerd.*Starting Pacemaker",
         })
 
         self.ignore = self.ignore + [
@@ -186,13 +190,9 @@ class crm_cs_v0(BasePatterns):
             r"warn.*:\s*Continuing but .* will NOT be used",
             r"warn.*:\s*Cluster configuration file .* is corrupt",
             #r"Executing .* fencing operation",
-            #r"fence_pcmk.* Call to fence",
-            #r"fence_pcmk",
-            r"cman killed by node",
             r"Election storm",
             r"stalled the FSA with pending inputs",
         ]
-
 
         self.components["common-ignore"] = [
                     "Pending action:",
@@ -232,7 +232,6 @@ class crm_cs_v0(BasePatterns):
             r"lrmd.*error:.*LRMD lost STONITH connection",
             r"crmd.*State transition .* S_RECOVERY",
             r"crmd.*error:.*Input (I_ERROR|I_TERMINATE ) .*received in state",
-            r"crmd.*error:.*Connection to cman failed",
             r"crmd.*error:.*Could not recover from internal error",
             r"error:.*Connection to cib_(shm|rw).* (failed|closed)",
             r"error:.*STONITH connection failed",
@@ -329,87 +328,18 @@ class crm_cs_v0(BasePatterns):
         ]
         self.components["stonith-ignore"].extend(self.components["common-ignore"])
 
-class crm_mcp(crm_cs_v0):
+
+class crm_corosync_docker(crm_corosync):
     '''
-    The crm version 4 cluster manager class.
-    It implements the things we need to talk to and manipulate
-    crm clusters running on top of native corosync (no plugins)
-    '''
-    def __init__(self, name):
-        crm_cs_v0.__init__(self, name)
-
-        self.commands.update({
-            "StartCmd"       : "service corosync start && service pacemaker start",
-            "StopCmd"        : "service pacemaker stop; [ ! -e /usr/sbin/pacemaker_remoted ] || service pacemaker_remote stop; service corosync stop",
-
-            "EpochCmd"      : "crm_node -e",
-            "QuorumCmd"      : "crm_node -q",
-            "PartitionCmd"    : "crm_node -p",
-        })
-
-        self.search.update({
-            # Close enough... "Corosync Cluster Engine exiting normally" isn't printed
-            #   reliably and there's little interest in doing anything about it
-            "Pat:We_stopped"   : "%s\W.*Unloading all Corosync service engines",
-            "Pat:They_stopped" : "%s\W.*crmd.*Node %s(\[|\s).*state is now lost",
-            "Pat:They_dead"    : "crmd.*Node %s(\[|\s).*state is now lost",
-
-            "Pat:ChildExit"    : "The .* process exited",
-            "Pat:ChildKilled"  : "%s\W.*pacemakerd.*The %s process .* terminated with signal 9",
-            "Pat:ChildRespawn" : "%s\W.*pacemakerd.*Respawning failed child process: %s",
-
-            "Pat:PacemakerUp"  : "%s\W.*pacemakerd.*Starting Pacemaker",
-        })
-
-#        if self.Env["have_systemd"]:
-#            self.update({
-#                # When systemd is in use, we can look for this instead
-#                "Pat:We_stopped"   : "%s.*Stopped Corosync Cluster Engine",
-#            })
-
-class crm_mcp_docker(crm_mcp):
-    '''
-    The crm version 4 cluster manager class.
-    It implements the things we need to talk to and manipulate
-    crm clusters running on top of native corosync (no plugins)
+    Patterns for Corosync version 2 cluster manager class
     '''
     def __init__(self, name):
-        crm_mcp.__init__(self, name)
+        crm_corosync.__init__(self, name)
 
         self.commands.update({
             "StartCmd"       : "pcmk_start",
             "StopCmd"        : "pcmk_stop",
         })
-
-class crm_cman(crm_cs_v0):
-    '''
-    The crm version 3 cluster manager class.
-    It implements the things we need to talk to and manipulate
-    crm clusters running on top of openais
-    '''
-    def __init__(self, name):
-        crm_cs_v0.__init__(self, name)
-
-        self.commands.update({
-            "StartCmd"       : "service pacemaker start",
-            "StopCmd"        : "service pacemaker stop; [ ! -e /usr/sbin/pacemaker_remoted ] || service pacemaker_remote stop",
-
-            "EpochCmd"      : "crm_node -e --cman",
-            "QuorumCmd"      : "crm_node -q --cman",
-            "PartitionCmd"    : "crm_node -p --cman",
-        })
-
-        self.search.update({
-            "Pat:We_stopped"   : "%s.*Unloading all Corosync service engines",
-            "Pat:They_stopped" : "%s\W.*crmd.*Node %s(\[|\s).*state is now lost",
-            "Pat:They_dead"    : "crmd.*Node %s(\[|\s).*state is now lost",
-
-            "Pat:ChildKilled"  : "%s\W.*pacemakerd.*The %s process .* terminated with signal 9",
-            "Pat:ChildRespawn" : "%s\W.*pacemakerd.*Respawning failed child process: %s",
-
-            "Pat:PacemakerUp"  : "%s\W.*pacemakerd.*Starting Pacemaker",
-        })
-
 
 
 class PatternSelector:
@@ -419,17 +349,11 @@ class PatternSelector:
         self.base = BasePatterns("crm-base")
 
         if not name:
-            crm_cs_v0("crm-plugin-v0")
-            crm_cman("crm-cman")
-            crm_mcp("crm-mcp")
-        elif name == "crm-plugin-v0":
-            crm_cs_v0(name)
-        elif name == "crm-cman":
-            crm_cman(name)
-        elif name == "crm-mcp":
-            crm_mcp(name)
-        elif name == "crm-mcp-docker":
-            crm_mcp_docker(name)
+            crm_corosync("crm-corosync")
+        elif name == "crm-corosync":
+            crm_corosync(name)
+        elif name == "crm-corosync-docker":
+            crm_corosync_docker(name)
 
     def get_variant(self, variant):
         if variant in patternvariants:
@@ -450,7 +374,7 @@ class PatternSelector:
     def __getitem__(self, key):
         return self.get_template(self.name, key)
 
-# python cts/CTSpatt.py -k crm-mcp -t StartCmd
+# python cts/CTSpatt.py -k crm-corosync -t StartCmd
 if __name__ == '__main__':
 
     pdir=os.path.dirname(sys.path[0])

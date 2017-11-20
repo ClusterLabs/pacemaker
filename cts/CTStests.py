@@ -866,11 +866,6 @@ class ValgrindTest(CTSTest):
         if not ret:
             return self.failure("Start all nodes failed")
 
-        for node in self.Env["nodes"]:
-            (rc, output) = self.rsh(node, "ps u --ppid `pidofproc aisexec`", None)
-            for line in output:
-                self.debug(line)
-
         return self.success()
 
     def teardown(self, node):
@@ -890,7 +885,6 @@ class ValgrindTest(CTSTest):
         self.stop = StopTest(self.CM)
 
         for node in self.Env["nodes"]:
-            (rc, ps_out) = self.rsh(node, "ps u --ppid `pidofproc aisexec`", None)
             rc = self.stop(node)
             if not rc:
                 self.failure("Couldn't shut down %s" % node)
@@ -899,8 +893,6 @@ class ValgrindTest(CTSTest):
             if rc != 1:
                 leaked.append(node)
                 self.failure("Valgrind errors detected on %s" % node)
-                for line in ps_out:
-                    self.logger.log(line)
                 (rc, output) = self.rsh(node, "grep -e lost: -e SUMMARY: %s" % self.logger.logPat, None)
                 for line in output:
                     self.logger.log(line)
@@ -1402,7 +1394,7 @@ class ComponentFail(CTSTest):
         self.debug("...component %s (dc=%d,boot=%d)" % (chosen.name, node_is_dc,chosen.triggersreboot))
         self.incr(chosen.name)
 
-        if chosen.name != "aisexec" and chosen.name != "corosync":
+        if chosen.name != "corosync":
             self.patterns.append(self.templates["Pat:ChildKilled"] %(node, chosen.name))
             self.patterns.append(self.templates["Pat:ChildRespawn"] %(node, chosen.name))
 
@@ -2141,8 +2133,6 @@ class NearQuorumPointTest(CTSTest):
         return self.failure()
 
     def is_applicable(self):
-        if self.Env["Name"] == "crm-cman":
-            return None
         return 1
 
 AllTestClasses.append(NearQuorumPointTest)

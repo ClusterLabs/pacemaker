@@ -38,10 +38,9 @@ What Messaging Layers are Supported?::
  indexterm:[Messaging Layers]
 
  * http://www.corosync.org/[Corosync] version 2
- * http://www.corosync.org/[Corosync] version 1 (combined with either CMAN or
-   the pacemaker plugin)
- * Historically, Pacemaker also supported Heartbeat. Support for this legacy
-   stack was dropped with Pacemaker 2.0.
+ * Historically, Pacemaker also supported Corosync version 1 (with either CMAN
+   or a pacemaker plugin) and Heartbeat. Support for these legacy stacks was
+   dropped with Pacemaker 2.0.
   
 
 Can I Choose Which Messaging Layer to Use at Run Time?::

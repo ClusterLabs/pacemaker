@@ -50,7 +50,9 @@
 
 qb_ipcs_service_t *ipcs = NULL;
 
+#if SUPPORT_COROSYNC
 extern gboolean crm_connect_corosync(crm_cluster_t * cluster);
+#endif
 
 void crm_shutdown(int nsig);
 gboolean crm_read_options(gpointer user_data);
@@ -94,7 +96,7 @@ do_ha_control(long long action,
         crm_set_status_callback(&peer_update_callback);
         crm_set_autoreap(FALSE);
 
-        if (is_openais_cluster()) {
+        if (is_corosync_cluster()) {
 #if SUPPORT_COROSYNC
             registered = crm_connect_corosync(cluster);
 #endif
@@ -123,17 +125,6 @@ do_ha_control(long long action,
     }
 }
 
-static bool
-need_spawn_pengine_from_crmd(void)
-{
-	static int result = -1;
-
-	if (result == -1) {
-        result = 0;
-    }
-    return result;
-}
-
 /*	 A_SHUTDOWN	*/
 void
 do_shutdown(long long action,
@@ -142,21 +133,6 @@ do_shutdown(long long action,
 {
     /* just in case */
     set_bit(fsa_input_register, R_SHUTDOWN);
-
-    if (need_spawn_pengine_from_crmd()) {
-        if (is_set(fsa_input_register, pe_subsystem->flag_connected)) {
-            crm_info("Terminating the %s", pe_subsystem->name);
-            if (stop_subsystem(pe_subsystem, TRUE) == FALSE) {
-                /* It's gone ... */
-                crm_err("Faking %s exit", pe_subsystem->name);
-                clear_bit(fsa_input_register, pe_subsystem->flag_connected);
-            } else {
-                crm_info("Waiting for subsystems to exit");
-                crmd_fsa_stall(FALSE);
-            }
-        }
-        crm_info("All subsystems stopped, continuing");
-    }
 
     if (stonith_api) {
         /* Prevent it from coming up again */
@@ -593,12 +569,6 @@ do_startup(long long action,
         was_error = TRUE;
     }
 
-    if (was_error == FALSE && need_spawn_pengine_from_crmd()) {
-        if (start_subsystem(pe_subsystem) == FALSE) {
-            was_error = TRUE;
-        }
-    }
-
     if (was_error) {
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
     }
@@ -867,10 +837,6 @@ pe_cluster_option crmd_opts[] = {
           "How many times stonith can fail before it will no longer be attempted on a target"
         },   
 	{ "no-quorum-policy", "no_quorum_policy", "enum", "stop, freeze, ignore, suicide", "stop", &check_quorum, NULL, NULL },
-
-#if SUPPORT_PLUGIN
-	{ XML_ATTR_EXPECTED_VOTES, NULL, "integer", NULL, "2", &check_number, "The number of nodes expected to be in the cluster", "Used to calculate quorum in openais based clusters." },
-#endif
 };
 /* *INDENT-ON* */
 
@@ -986,14 +952,6 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     value = crmd_pref(config_hash, "crmd-finalization-timeout");
     finalization_timer->period_ms = crm_get_msec(value);
-
-#if SUPPORT_COROSYNC
-    if (is_classic_ais_cluster()) {
-        value = crmd_pref(config_hash, XML_ATTR_EXPECTED_VOTES);
-        crm_debug("Sending expected-votes=%s to corosync", value);
-        send_cluster_text(crm_class_quorum, value, TRUE, NULL, crm_msg_ais);
-    }
-#endif
 
     free(fsa_cluster_name);
     fsa_cluster_name = NULL;

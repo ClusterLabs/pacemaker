@@ -27,7 +27,7 @@ ctslibdir	= $(pyexecdir)/cts
 ctslib_PYTHON	=	__init__.py		\
 			CTSvars.py		\
 			CM_common.py		\
-			CM_ais.py		\
+			CM_corosync.py		\
 			CTS.py			\
 			CTSaudits.py		\
 			CTStests.py		\

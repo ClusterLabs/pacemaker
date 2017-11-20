@@ -47,7 +47,7 @@ You can install CTS from source, although many distributions provide
 packages that include it (e.g. pacemaker-cts or pacemaker-dev).
 Typically, packages will install CTS as /usr/share/pacemaker/tests/cts.
 
-Configure cluster communications (Corosync or CMAN) on the
+Configure cluster communications (Corosync) on the
 cluster machines and verify everything works.
 
 NOTE: Do not run the cluster on the test exerciser machine.

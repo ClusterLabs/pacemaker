@@ -30,10 +30,6 @@ extern GHashTable *crm_peer_cache;
 extern GHashTable *crm_remote_peer_cache;
 extern unsigned long long crm_peer_seq;
 
-#  ifndef CRM_SERVICE
-#    define CRM_SERVICE PCMK_SERVICE_ID
-#  endif
-
 /* *INDENT-OFF* */
 #define CRM_NODE_LOST      "lost"
 #define CRM_NODE_MEMBER    "member"
@@ -65,11 +61,10 @@ enum crm_node_flags
 
 typedef struct crm_peer_node_s {
     uint32_t id;                /* Only used by corosync derivatives */
-    uint64_t born;              /* Only used by the legacy plugin */
     uint64_t last_seen;
     uint64_t flags;             /* Specified by crm_node_flags enum */
 
-    int32_t votes;              /* Only used by the legacy plugin */
+    int32_t votes;              // Abused as time_t to expire peer-lost status
     uint32_t processes;
     enum crm_join_phase join;
 
@@ -78,7 +73,6 @@ typedef struct crm_peer_node_s {
     char *state;
     char *expected;
 
-    char *addr;                 /* Only used by the legacy plugin */
     char *version;              /* Unused */
 } crm_node_t;
 
@@ -106,14 +100,8 @@ void crm_cluster_disconnect(crm_cluster_t * cluster);
 /* *INDENT-OFF* */
 enum crm_ais_msg_class {
     crm_class_cluster = 0,
-    crm_class_members = 1,
-    crm_class_notify  = 2,
-    crm_class_nodeid  = 3,
-    crm_class_rmpeer  = 4,
-    crm_class_quorum  = 5,
 };
 
-/* order here matters - it's used to index into the crm_children array */
 enum crm_ais_msg_types {
     crm_msg_none     = 0,
     crm_msg_ais      = 1,
@@ -160,7 +148,6 @@ int crm_terminate_member(int nodeid, const char *uname, void *unused);
 int crm_terminate_member_no_mainloop(int nodeid, const char *uname, int *connection);
 
 #  if SUPPORT_COROSYNC
-extern int ais_fd_sync;
 uint32_t get_local_nodeid(cpg_handle_t handle);
 
 gboolean cluster_connect_cpg(crm_cluster_t *cluster);
@@ -174,6 +161,8 @@ void pcmk_cpg_membership(cpg_handle_t handle,
 gboolean crm_is_corosync_peer_active(const crm_node_t * node);
 gboolean send_cluster_text(int class, const char *data, gboolean local,
                        crm_node_t * node, enum crm_ais_msg_types dest);
+char *pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void *msg,
+                        uint32_t *kind, const char **from);
 #  endif
 
 const char *crm_peer_uuid(crm_node_t *node);
@@ -197,9 +186,9 @@ enum cluster_type_e
     pcmk_cluster_unknown     = 0x0001,
     pcmk_cluster_invalid     = 0x0002,
     // 0x0004 was heartbeat
-    pcmk_cluster_classic_ais = 0x0010,
+    // 0x0010 was corosync 1 with plugin
     pcmk_cluster_corosync    = 0x0020,
-    pcmk_cluster_cman        = 0x0040,
+    // 0x0040 was corosync 1 with CMAN
 };
 /* *INDENT-ON* */
 
@@ -207,17 +196,9 @@ enum cluster_type_e get_cluster_type(void);
 const char *name_for_cluster_type(enum cluster_type_e type);
 
 gboolean is_corosync_cluster(void);
-gboolean is_cman_cluster(void);
-gboolean is_openais_cluster(void);
-gboolean is_classic_ais_cluster(void);
 
 const char *get_local_node_name(void);
 char *get_node_name(uint32_t nodeid);
-
-#  if SUPPORT_COROSYNC
-char *pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void *msg,
-                        uint32_t *kind, const char **from);
-#  endif
 
 static inline const char *
 crm_join_phase_str(enum crm_join_phase phase)

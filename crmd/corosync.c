@@ -35,22 +35,16 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#if SUPPORT_COROSYNC
+
 extern void post_cache_update(int seq);
 
 /*	 A_HA_CONNECT	*/
-#if SUPPORT_COROSYNC
 
 static void
-crmd_cs_dispatch(cpg_handle_t handle,
-                         const struct cpg_name *groupName,
-                         uint32_t nodeid, uint32_t pid, void *msg, size_t msg_len)
+crmd_cs_dispatch(cpg_handle_t handle, const struct cpg_name *groupName,
+                 uint32_t nodeid, uint32_t pid, void *msg, size_t msg_len)
 {
-    int seq = 0;
-    xmlNode *xml = NULL;
-    const char *seq_s = NULL;
-    crm_node_t *peer = NULL;
-    enum crm_proc_flag flag = crm_proc_cpg;
-
     uint32_t kind = 0;
     const char *from = NULL;
     char *data = pcmk_message_common_cs(handle, nodeid, pid, msg, &kind, &from);
@@ -58,99 +52,43 @@ crmd_cs_dispatch(cpg_handle_t handle,
     if(data == NULL) {
         return;
     }
-    xml = string2xml(data);
-    if (xml == NULL) {
-        crm_err("Could not parse message content (%d): %.100s", kind, data);
-        free(data);
-        return;
+    if (kind == crm_class_cluster) {
+        crm_node_t *peer = NULL;
+        xmlNode *xml = string2xml(data);
+
+        if (xml == NULL) {
+            crm_err("Could not parse message content (%d): %.100s", kind, data);
+            free(data);
+            return;
+        }
+
+        crm_xml_add(xml, F_ORIG, from);
+        /* crm_xml_add_int(xml, F_SEQ, wrapper->id); Fake? */
+
+        peer = crm_get_peer(0, from);
+        if (is_not_set(peer->processes, crm_proc_cpg)) {
+            /* If we can still talk to our peer process on that node,
+             * then it must be part of the corosync membership
+             */
+            crm_warn("Receiving messages from a node we think is dead: %s[%d]",
+                     peer->uname, peer->id);
+            crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cpg,
+                                 ONLINESTATUS);
+        }
+        crmd_ha_msg_filter(xml);
+        free_xml(xml);
+    } else {
+        crm_err("Invalid message class (%d): %.100s", kind, data);
     }
-
-    switch (kind) {
-        case crm_class_members:
-            seq_s = crm_element_value(xml, "id");
-            seq = crm_int_helper(seq_s, NULL);
-            set_bit(fsa_input_register, R_PEER_DATA);
-            post_cache_update(seq);
-
-            /* fall through */
-        case crm_class_quorum:
-            crm_update_quorum(crm_have_quorum, FALSE);
-            if (AM_I_DC) {
-                const char *votes = crm_element_value(xml, "expected");
-
-                if (votes == NULL || check_number(votes) == FALSE) {
-                    crm_log_xml_err(xml, "Invalid quorum/membership update");
-
-                } else {
-                    int rc = update_attr_delegate(fsa_cib_conn,
-                                                  cib_quorum_override | cib_scope_local |
-                                                  cib_inhibit_notify,
-                                                  XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
-                                                  XML_ATTR_EXPECTED_VOTES, votes, FALSE, NULL, NULL);
-
-                    crm_info("Setting expected votes to %s", votes);
-                    if (pcmk_ok > rc) {
-                        crm_err("Quorum update failed: %s", pcmk_strerror(rc));
-                    }
-                }
-            }
-            break;
-
-        case crm_class_cluster:
-            crm_xml_add(xml, F_ORIG, from);
-            /* crm_xml_add_int(xml, F_SEQ, wrapper->id); Fake? */
-
-            if (is_classic_ais_cluster()) {
-                flag = crm_proc_plugin;
-            }
-
-            peer = crm_get_peer(0, from);
-            if (is_not_set(peer->processes, flag)) {
-                /* If we can still talk to our peer process on that node,
-                 * then its also part of the corosync membership
-                 */
-                crm_warn("Receiving messages from a node we think is dead: %s[%d]", peer->uname,
-                         peer->id);
-                crm_update_peer_proc(__FUNCTION__, peer, flag, ONLINESTATUS);
-            }
-            crmd_ha_msg_filter(xml);
-            break;
-
-        case crm_class_rmpeer:
-            /* Ignore */
-            break;
-
-        case crm_class_notify:
-        case crm_class_nodeid:
-            crm_err("Unexpected message class (%d): %.100s", kind, data);
-            break;
-
-        default:
-            crm_err("Invalid message class (%d): %.100s", kind, data);
-    }
-
     free(data);
-    free_xml(xml);
 }
 
 static gboolean
-crmd_cman_dispatch(unsigned long long seq, gboolean quorate)
+crmd_quorum_callback(unsigned long long seq, gboolean quorate)
 {
     crm_update_quorum(quorate, FALSE);
     post_cache_update(seq);
     return TRUE;
-}
-
-static void
-crmd_quorum_destroy(gpointer user_data)
-{
-    if (is_not_set(fsa_input_register, R_HA_DISCONNECTED)) {
-        crm_err("connection terminated");
-        crmd_exit(ENOLINK);
-
-    } else {
-        crm_info("connection closed");
-    }
 }
 
 static void
@@ -165,46 +103,23 @@ crmd_cs_destroy(gpointer user_data)
     }
 }
 
-#  if SUPPORT_CMAN
-static void
-crmd_cman_destroy(gpointer user_data)
-{
-    if (is_not_set(fsa_input_register, R_HA_DISCONNECTED)) {
-        crm_err("connection terminated");
-        crmd_exit(ENOLINK);
-
-    } else {
-        crm_info("connection closed");
-    }
-}
-#  endif
-
 extern gboolean crm_connect_corosync(crm_cluster_t * cluster);
 
 gboolean
 crm_connect_corosync(crm_cluster_t * cluster)
 {
-    gboolean rc = FALSE;
-
-    if (is_openais_cluster()) {
+    if (is_corosync_cluster()) {
         crm_set_status_callback(&peer_update_callback);
         cluster->cpg.cpg_deliver_fn = crmd_cs_dispatch;
         cluster->cpg.cpg_confchg_fn = pcmk_cpg_membership;
         cluster->destroy = crmd_cs_destroy;
 
-        rc = crm_cluster_connect(cluster);
+        if (crm_cluster_connect(cluster)) {
+            cluster_connect_quorum(crmd_quorum_callback, crmd_cs_destroy);
+            return TRUE;
+        }
     }
-
-    if (rc && is_corosync_cluster()) {
-        cluster_connect_quorum(crmd_cman_dispatch, crmd_quorum_destroy);
-    }
-#  if SUPPORT_CMAN
-    if (rc && is_cman_cluster()) {
-        init_cman_connection(crmd_cman_dispatch, crmd_cman_destroy);
-        set_bit(fsa_input_register, R_MEMBERSHIP);
-    }
-#  endif
-    return rc;
+    return FALSE;
 }
 
 #endif

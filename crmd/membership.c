@@ -319,11 +319,9 @@ populate_cib_nodes(enum node_update_flags flags, const char *source)
     xmlNode *node_list = create_xml_node(NULL, XML_CIB_TAG_NODES);
 
 #if SUPPORT_COROSYNC
-#  if !SUPPORT_PLUGIN
     if (is_not_set(flags, node_update_quick) && is_corosync_cluster()) {
         from_hashtable = corosync_initialize_nodelist(NULL, FALSE, node_list);
     }
-#  endif
 #endif
 
     if (from_hashtable) {

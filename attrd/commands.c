@@ -31,8 +31,8 @@
 #include <internal.h>
 
 /*
- * Legacy attrd (all pre-1.1.11 Pacemaker versions, plus all versions when using
- * CMAN or corosync-plugin stacks) is unversioned.
+ * Legacy attrd (all pre-1.1.11 Pacemaker versions, plus all versions when used
+ * with the no-longer-supported CMAN or corosync-plugin stacks) is unversioned.
  *
  * With atomic attrd, each attrd will send ATTRD_PROTOCOL_VERSION with every
  * peer request and reply. Currently, there is no way to know the minimum

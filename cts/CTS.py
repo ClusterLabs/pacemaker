@@ -396,12 +396,6 @@ class ClusterManager(UserDict):
             if self.ShouldBeStatus[peer] != "up":
                 stonithPats.append(self.templates["Pat:Fencing_ok"] % peer)
                 stonithPats.append(self.templates["Pat:Fencing_start"] % peer)
-            elif self.Env["Stack"] == "corosync (cman)":
-                # There is a delay between gaining quorum and CMAN starting fencing
-                # This can mean that even nodes that are fully up get fenced
-                # There is no use fighting it, just look for everyone so that CTS doesn't get confused
-                stonithPats.append(self.templates["Pat:Fencing_ok"] % peer)
-                stonithPats.append(self.templates["Pat:Fencing_start"] % peer)
 
         stonith = LogWatcher(self.Env["LogFileName"], stonithPats, "StartupFencing", 0, hosts=self.Env["nodes"], kind=self.Env["LogWatcher"])
         stonith.setwatch()

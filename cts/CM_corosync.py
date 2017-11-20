@@ -32,22 +32,24 @@ from cts.patterns    import PatternSelector
 #
 #######################################################################
 
-
-class crm_ais(crm_common):
+class crm_corosync(crm_common):
     '''
-    The crm version 3 cluster manager class.
-    It implements the things we need to talk to and manipulate
-    crm clusters running on top of openais
+    Corosync version 2 cluster manager class
     '''
     def __init__(self, Environment, randseed=None, name=None):
-        if not name: name="crm-ais"
+        if not name: name="crm-corosync"
         crm_common.__init__(self, Environment, randseed=randseed, name=name)
 
         self.fullcomplist = {}
         self.templates = PatternSelector(self.name)
 
-    def ais_components(self, extra={}):
+        if self.Env["have_systemd"]:
+            self.update({
+                # When systemd is in use, we can look for this instead
+                "Pat:We_stopped"   : "%s.*Corosync Cluster Engine exiting normally",
+            })
 
+    def Components(self):
         complist = []
         if not len(self.fullcomplist.keys()):
             for c in ["cib", "lrmd", "crmd", "attrd" ]:
@@ -71,8 +73,13 @@ class crm_ais(crm_common):
                 badnews_ignore = self.templates.get_component(self.name, "stonith-ignore"),
                 common_ignore = self.templates.get_component(self.name, "common-ignore"))
 
-            # add (or replace) any extra components passed in
-            self.fullcomplist.update(extra)
+            # add (or replace) extra components
+            self.fullcomplist["corosync"] = Process(
+                self, "corosync", 
+                pats = self.templates.get_component(self.name, "corosync"),
+                badnews_ignore = self.templates.get_component(self.name, "corosync-ignore"),
+                common_ignore = self.templates.get_component(self.name, "common-ignore")
+            )
 
         # Processes running under valgrind can't be shot with "killall -9 processname",
         # so don't include them in the returned list
@@ -87,65 +94,3 @@ class crm_ais(crm_common):
             complist.append(self.fullcomplist[key])
 
         return complist
-
-
-class crm_cs_v0(crm_ais):
-    '''
-    The crm version 3 cluster manager class.
-    It implements the things we need to talk to and manipulate
-
-    crm clusters running against version 0 of our plugin
-    '''
-    def __init__(self, Environment, randseed=None, name=None):
-        if not name: name="crm-plugin-v0"
-        crm_ais.__init__(self, Environment, randseed=randseed, name=name)
-
-    def Components(self):
-        extra = {}
-        extra["corosync"] = Process(
-            self, "corosync", 
-            pats = self.templates.get_component(self.name, "corosync"),
-            badnews_ignore = self.templates.get_component(self.name, "corosync-ignore"),
-            common_ignore = self.templates.get_component(self.name, "common-ignore")
-        )
-        return self.ais_components(extra=extra)
-
-
-class crm_cs_v1(crm_cs_v0):
-    '''
-    The crm version 3 cluster manager class.
-    It implements the things we need to talk to and manipulate
-
-    crm clusters running on top of version 1 of our plugin
-    '''
-    def __init__(self, Environment, randseed=None, name=None):
-        if not name: name="crm-plugin-v1"
-        crm_cs_v0.__init__(self, Environment, randseed=randseed, name=name)
-
-
-class crm_mcp(crm_cs_v0):
-    '''
-    The crm version 4 cluster manager class.
-    It implements the things we need to talk to and manipulate
-    crm clusters running on top of native corosync (no plugins)
-    '''
-    def __init__(self, Environment, randseed=None, name=None):
-        if not name: name="crm-mcp"
-        crm_cs_v0.__init__(self, Environment, randseed=randseed, name=name)
-
-        if self.Env["have_systemd"]:
-            self.update({
-                # When systemd is in use, we can look for this instead
-                "Pat:We_stopped"   : "%s.*Corosync Cluster Engine exiting normally",
-            })
-
-
-class crm_cman(crm_cs_v0):
-    '''
-    The crm version 3 cluster manager class.
-    It implements the things we need to talk to and manipulate
-    crm clusters running on top of openais
-    '''
-    def __init__(self, Environment, randseed=None, name=None):
-        if not name: name="crm-cman"
-        crm_cs_v0.__init__(self, Environment, randseed=randseed, name=name)

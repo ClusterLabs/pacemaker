@@ -114,8 +114,7 @@ node (*pcmk-1* in the example below).
 
 . Stop the cluster on the host to be removed. How to do this will vary with
   your operating system and installed versions of cluster software, for example,
-  `pcs cluster stop` if you are using pcs for cluster management, or
-  `service corosync stop` on a host using corosync 1.x with the pacemaker plugin.
+  `pcs cluster stop` if you are using pcs for cluster management.
 . From one of the remaining active cluster nodes, tell Pacemaker to forget
   about the removed host, which will also delete the node from the CIB:
 +
@@ -138,17 +137,3 @@ To replace an existing cluster node:
 . Make sure the old node is completely stopped.
 . Give the new machine the same hostname and IP address as the old one.
 . Follow the procedure above for adding a node.
-
-////
-== Managing Nodes in a CMAN-based Cluster ==
-
-=== Adding a New CMAN Node ===
-
-indexterm:[CMAN,Add Cluster Node]
-indexterm:[Add Cluster Node,CMAN]
-
-=== Removing a CMAN Node ===
-
-indexterm:[CMAN,Remove Cluster Node]
-indexterm:[Remove Cluster Node,CMAN]
-////
