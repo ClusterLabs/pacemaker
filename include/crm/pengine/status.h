@@ -309,7 +309,6 @@ struct resource_s {
 
     char *pending_task;
 
-    const char *isolation_wrapper;
     gboolean exclusive_discover;
     int remote_reconnect_interval;
 

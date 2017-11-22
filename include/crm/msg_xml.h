@@ -200,10 +200,6 @@
 #  define XML_CIB_TAG_RSC_TEMPLATE	"template"
 
 #  define XML_RSC_ATTR_TARGET           "container-attribute-target"
-#  define XML_RSC_ATTR_ISOLATION_INSTANCE	"isolation-instance"
-#  define XML_RSC_ATTR_ISOLATION_WRAPPER    "isolation-wrapper"
-#  define XML_RSC_ATTR_ISOLATION_HOST   "isolation-host"
-#  define XML_RSC_ATTR_ISOLATION    	"isolation"
 #  define XML_RSC_ATTR_RESTART	  	"restart-type"
 #  define XML_RSC_ATTR_ORDERED		"ordered"
 #  define XML_RSC_ATTR_INTERLEAVE	"interleave"

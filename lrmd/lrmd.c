@@ -67,9 +67,6 @@ typedef struct lrmd_cmd_s {
     char *output;
     char *userdata_str;
 
-    /* when set, this cmd should go through a container wrapper */
-    const char *isolation_wrapper;
-
 #ifdef HAVE_SYS_TIMEB_H
     /* recurring and systemd operations may involve more than one lrmd command
      * per operation, so they need info about original and most recent
@@ -162,7 +159,7 @@ build_rsc_from_xml(xmlNode * msg)
 }
 
 static lrmd_cmd_t *
-create_lrmd_cmd(xmlNode * msg, crm_client_t * client, lrmd_rsc_t *rsc)
+create_lrmd_cmd(xmlNode * msg, crm_client_t * client)
 {
     int call_options = 0;
     xmlNode *rsc_xml = get_xpath_object("//" F_LRMD_RSC, msg, LOG_ERR);
@@ -186,18 +183,6 @@ create_lrmd_cmd(xmlNode * msg, crm_client_t * client, lrmd_rsc_t *rsc)
     cmd->rsc_id = crm_element_value_copy(rsc_xml, F_LRMD_RSC_ID);
 
     cmd->params = xml2list(rsc_xml);
-    cmd->isolation_wrapper = g_hash_table_lookup(cmd->params, "CRM_meta_isolation_wrapper");
-
-    if (cmd->isolation_wrapper) {
-        if (g_hash_table_lookup(cmd->params, "CRM_meta_isolation_instance") == NULL) {
-            g_hash_table_insert(cmd->params, strdup("CRM_meta_isolation_instance"), strdup(rsc->rsc_id));
-        }
-        if (rsc->provider) {
-            g_hash_table_insert(cmd->params, strdup("CRM_meta_provider"), strdup(rsc->provider));
-        }
-        g_hash_table_insert(cmd->params, strdup("CRM_meta_class"), strdup(rsc->class));
-        g_hash_table_insert(cmd->params, strdup("CRM_meta_type"), strdup(rsc->type));
-    }
 
     if (safe_str_eq(g_hash_table_lookup(cmd->params, "CRM_meta_on_fail"), "block")) {
         crm_debug("Setting flag to leave pid group on timeout and only kill action pid for %s_%s_%d", cmd->rsc_id, cmd->action, cmd->interval);
@@ -1139,28 +1124,11 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 
     params_copy = crm_str_table_dup(cmd->params);
 
-    if (cmd->isolation_wrapper) {
-        g_hash_table_remove(params_copy, "CRM_meta_isolation_wrapper");
-        action = resources_action_create(rsc->rsc_id,
-                                         PCMK_RESOURCE_CLASS_OCF,
-                                         LRMD_ISOLATION_PROVIDER,
-                                         cmd->isolation_wrapper,
-                                         cmd->action, /*action will be normalized in wrapper*/
-                                         cmd->interval,
-                                         cmd->timeout,
-                                         params_copy,
-                                         cmd->service_flags);
-    } else {
-        action = resources_action_create(rsc->rsc_id,
-                                         rsc->class,
-                                         rsc->provider,
-                                         rsc->type,
-                                         normalize_action_name(rsc, cmd->action),
-                                         cmd->interval,
-                                         cmd->timeout,
-                                         params_copy,
-                                         cmd->service_flags);
-    }
+    action = resources_action_create(rsc->rsc_id, rsc->class, rsc->provider,
+                                     rsc->type,
+                                     normalize_action_name(rsc, cmd->action),
+                                     cmd->interval, cmd->timeout, params_copy,
+                                     cmd->service_flags);
 
     if (!action) {
         crm_err("Failed to create action, action:%s on resource %s", cmd->action, rsc->rsc_id);
@@ -1460,7 +1428,7 @@ process_lrmd_rsc_exec(crm_client_t * client, uint32_t id, xmlNode * request)
         return -ENODEV;
     }
 
-    cmd = create_lrmd_cmd(request, client, rsc);
+    cmd = create_lrmd_cmd(request, client);
     call_id = cmd->call_id;
 
     /* Don't reference cmd after handing it off to be scheduled.

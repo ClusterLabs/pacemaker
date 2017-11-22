@@ -880,11 +880,6 @@ echo ""
 do_test resource-discovery      "Exercises resource-discovery location constraint option."
 do_test rsc-discovery-per-node  "Disable resource discovery per node"
 
-echo ""
-do_test isolation-start-all   "Start docker isolated resources."
-do_test isolation-restart-all "Restart docker isolated resources."
-do_test isolation-clone       "Cloned isolated primitive."
-
 if [ $DO_VERSIONED_TESTS -eq 1 ]; then
 	echo ""
 	do_test versioned-resources     "Start resources with #ra-version rules"
