@@ -267,7 +267,6 @@ long crm_read_pidfile(const char *filename);
 #  define F_ATTRD_IS_PRIVATE     "attr_is_private"
 #  define F_ATTRD_SECTION	"attr_section"
 #  define F_ATTRD_DAMPEN	"attr_dampening"
-#  define F_ATTRD_IGNORE_LOCALLY "attr_ignore_locally"
 #  define F_ATTRD_HOST		"attr_host"
 #  define F_ATTRD_HOST_ID	"attr_host_id"
 #  define F_ATTRD_USER		"attr_user"
