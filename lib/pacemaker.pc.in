@@ -17,7 +17,7 @@ schemadir=@CRM_DTD_DIRECTORY@
 ocfdir=@OCF_RA_DIR@
 
 features=@PCMK_FEATURES@
-with_corosync=@SUPPORT_CS@
+with_corosync=@SUPPORT_COROSYNC@
 
 with_upstart=@SUPPORT_UPSTART@
 with_systemd=@SUPPORT_SYSTEMD@

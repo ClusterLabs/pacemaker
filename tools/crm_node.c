@@ -53,7 +53,7 @@ static struct crm_option long_options[] = {
     {"quiet",      0, 0, 'Q', "\tEssential output only"},
 
     {"-spacer-",   1, 0, '-', "\nStack:"},
-#ifdef SUPPORT_CS
+#if SUPPORT_COROSYNC
     {"corosync",   0, 0, 'C', "\tOnly try connecting to an Corosync-based cluster"},
 #endif
 
@@ -331,7 +331,7 @@ try_pacemaker(int command, enum cluster_type_e stack)
     return FALSE;
 }
 
-#ifdef SUPPORT_CS
+#if SUPPORT_COROSYNC
 #  include <corosync/quorum.h>
 #  include <corosync/cpg.h>
 
@@ -489,7 +489,7 @@ main(int argc, char **argv)
     crm_debug("Attempting to process -%c command for cluster type: %s", command,
               name_for_cluster_type(try_stack));
 
-#ifdef SUPPORT_CS
+#if SUPPORT_COROSYNC
     if (try_stack == pcmk_cluster_corosync) {
         try_corosync(command, try_stack);
     }
