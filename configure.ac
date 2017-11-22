@@ -82,7 +82,6 @@ CC_IN_CONFIGURE=yes
 export CC_IN_CONFIGURE
 
 LDD=ldd
-BUILD_ATOMIC_ATTRD=1
 
 dnl ========================================================================
 dnl Compiler characteristics
@@ -1272,9 +1271,6 @@ AC_DEFINE_UNQUOTED(SUPPORT_COROSYNC, $SUPPORT_CS,    Support the Corosync messag
 AM_CONDITIONAL(BUILD_CS_SUPPORT, test $SUPPORT_CS = 1)
 AC_SUBST(SUPPORT_COROSYNC)
 
-AM_CONDITIONAL(BUILD_ATOMIC_ATTRD, test $BUILD_ATOMIC_ATTRD = 1)
-AC_DEFINE_UNQUOTED(HAVE_ATOMIC_ATTRD, $BUILD_ATOMIC_ATTRD, Support the new atomic attrd)
-
 dnl
 dnl    Cluster stack - Sanity
 dnl
@@ -1291,9 +1287,7 @@ else
     PCMK_FEATURES="$PCMK_FEATURES $STACKS"
 fi
 
-if test ${BUILD_ATOMIC_ATTRD} = 1; then
-    PCMK_FEATURES="$PCMK_FEATURES atomic-attrd"
-fi
+PCMK_FEATURES="$PCMK_FEATURES atomic-attrd"
 AC_SUBST(CLUSTERLIBS)
 
 dnl ========================================================================

@@ -33,12 +33,7 @@ attrd_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la	\
                 $(top_builddir)/lib/lrmd/liblrmd.la             \
 		$(CLUSTERLIBS)
 
-attrd_SOURCES	=
-if BUILD_ATOMIC_ATTRD
-attrd_SOURCES	+= main.c commands.c attrd_common.c attrd_common_alerts.c
-else
-attrd_SOURCES	+= legacy.c attrd_common.c attrd_common_alerts.c
-endif
+attrd_SOURCES	= main.c commands.c attrd_common.c attrd_common_alerts.c
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~
