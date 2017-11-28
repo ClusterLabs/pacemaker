@@ -7,4 +7,17 @@
 #ifndef CRM_COMPATIBILITY__H
 #  define CRM_COMPATIBILITY__H
 
+/* Heartbeat-specific definitions. Support for heartbeat has been removed
+ * entirely, so any code branches relying on these should be deleted.
+ */
+#define ACTIVESTATUS "active"
+#define DEADSTATUS "dead"
+#define PINGSTATUS "ping"
+#define JOINSTATUS "join"
+#define LEAVESTATUS "leave"
+#define NORMALNODE "normal"
+#define CRM_NODE_EVICTED "evicted"
+#define CRM_LEGACY_CONFIG_DIR "/var/lib/heartbeat/crm"
+#define HA_VARLIBHBDIR "/var/lib/heartbeat"
+
 #endif
