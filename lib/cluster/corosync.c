@@ -49,16 +49,7 @@ get_corosync_uuid(crm_node_t *node)
 {
     if (node && is_corosync_cluster()) {
         if (node->id > 0) {
-            int len = 32;
-            char *buffer = NULL;
-
-            buffer = calloc(1, (len + 1));
-            if (buffer != NULL) {
-                snprintf(buffer, len, "%u", node->id);
-            }
-
-            return buffer;
-
+            return crm_strdup_printf("%u", node->id);
         } else {
             crm_info("Node %s is not yet known by corosync", node->uname);
         }
