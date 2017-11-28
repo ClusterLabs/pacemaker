@@ -19,5 +19,40 @@
 #define CRM_NODE_EVICTED "evicted"
 #define CRM_LEGACY_CONFIG_DIR "/var/lib/heartbeat/crm"
 #define HA_VARLIBHBDIR "/var/lib/heartbeat"
+#define pcmk_cluster_heartbeat 0x0004
+
+/* Corosync-version-1-specific definitions */
+
+/* Support for corosync version 1 has been removed entirely, so any code
+ * branches relying on these should be deleted.
+ */
+#define PCMK_SERVICE_ID 9
+#define CRM_SERVICE PCMK_SERVICE_ID
+#define XML_ATTR_EXPECTED_VOTES "expected-quorum-votes"
+#define crm_class_members 1
+#define crm_class_notify 2
+#define crm_class_nodeid 3
+#define crm_class_rmpeer 4
+#define crm_class_quorum 5
+#define pcmk_cluster_classic_ais 0x0010
+#define pcmk_cluster_cman 0x0040
+static int ais_fd_sync = -1;
+
+// These are always true now
+#define CS_USES_LIBQB 1
+#define HAVE_CMAP 1
+#define SUPPORT_CS_QUORUM 1
+#define SUPPORT_AIS 1
+#define AIS_COROSYNC 1
+
+// These are always false now
+#define HAVE_CONFDB 0
+#define SUPPORT_CMAN 0
+#define SUPPORT_PLUGIN 0
+#define is_classic_ais_cluster() 0
+#define is_cman_cluster() 0
+
+// These have newer names
+#define is_openais_cluster() is_corosync_cluster()
 
 #endif
