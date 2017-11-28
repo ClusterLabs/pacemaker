@@ -10,7 +10,6 @@
         <nvpair id="nvpair.id21897" name="no-quorum-policy" value="ignore"/>
         <nvpair id="nvpair.id21906" name="stonith-enabled" value="false"/>
         <nvpair id="nvpair.id21915" name="stonith-action" value="reboot"/>
-        <nvpair id="nvpair.id21924" name="default-resource-failure-stickiness" value="50"/>
         <nvpair id="nvpair.id21934" name="is-managed-default" value="true"/>
         <nvpair id="nvpair.id21943" name="cluster-delay" value="10"/>
         <nvpair id="nvpair.id21952" name="batch-limit" value="30"/>

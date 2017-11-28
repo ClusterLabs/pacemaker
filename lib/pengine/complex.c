@@ -625,50 +625,6 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_FAIL_STICKINESS);
     if (value != NULL && safe_str_neq("default", value)) {
         (*rsc)->migration_threshold = char2score(value);
-
-    } else if (value == NULL) {
-        /* Make a best-effort guess at a migration threshold for people with 0.6 configs
-         * try with underscores and hyphens, from both the resource and global defaults section
-         */
-        const char *legacy = NULL;
-
-        legacy = g_hash_table_lookup(data_set->config_hash,
-                                     "default-resource-failure-stickiness");
-        if (legacy == NULL) {
-            legacy = g_hash_table_lookup(data_set->config_hash,
-                                         "default_resource_failure_stickiness");
-        }
-        if (legacy) {
-            if (value == NULL) {
-                value = legacy;
-            }
-            pe_warn_once(pe_wo_default_rscfs,
-                         "Support for 'default-resource-failure-stickiness' cluster option"
-                         " is deprecated and will be removed in a future release"
-                         " (use 'migration-threshold' in rsc_defaults instead)");
-        }
-
-        if (value) {
-            int fail_sticky = char2score(value);
-
-            if (fail_sticky == -INFINITY) {
-                (*rsc)->migration_threshold = 1;
-                pe_rsc_info((*rsc),
-                            "Set a migration threshold of %d for %s based on a failure-stickiness of %s",
-                            (*rsc)->migration_threshold, (*rsc)->id, value);
-
-            } else if ((*rsc)->stickiness != 0 && fail_sticky != 0) {
-                (*rsc)->migration_threshold = (*rsc)->stickiness / fail_sticky;
-                if ((*rsc)->migration_threshold < 0) {
-                    /* Make sure it's positive */
-                    (*rsc)->migration_threshold = 0 - (*rsc)->migration_threshold;
-                }
-                (*rsc)->migration_threshold += 1;
-                pe_rsc_info((*rsc),
-                            "Calculated a migration threshold for %s of %d based on a stickiness of %d/%s",
-                            (*rsc)->id, (*rsc)->migration_threshold, (*rsc)->stickiness, value);
-            }
-        }
     }
 
     if (safe_str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH)) {

@@ -5,7 +5,6 @@
         <nvpair id="nvpair.id21848" name="symmetric-cluster" value="true"/>
         <nvpair id="nvpair.id21857" name="no-quorum-policy" value="stop"/>
         <nvpair id="nvpair.id21866" name="default-resource-stickiness" value="0"/>
-        <nvpair id="nvpair.id21876" name="default_resource_failure_stickiness" value="0"/>
         <nvpair id="nvpair.id21885" name="stonith-enabled" value="true"/>
         <nvpair id="nvpair.id21894" name="stonith-action" value="reboot"/>
         <nvpair id="nvpair.id21903" name="stop-orphan-resources" value="true"/>
