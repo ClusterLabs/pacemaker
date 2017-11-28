@@ -58,4 +58,13 @@ static int ais_fd_sync = -1;
 #define SUPPORT_CS
 #endif
 
+/* Isolation-specific definitions. Support for the resource isolation feature
+ * has been removed * entirely, so any code branches relying on these should be
+ * deleted.
+ */
+#define XML_RSC_ATTR_ISOLATION_INSTANCE "isolation-instance"
+#define XML_RSC_ATTR_ISOLATION_WRAPPER "isolation-wrapper"
+#define XML_RSC_ATTR_ISOLATION_HOST "isolation-host"
+#define XML_RSC_ATTR_ISOLATION "isolation"
+
 #endif
