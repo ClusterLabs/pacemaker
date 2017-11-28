@@ -3,14 +3,14 @@
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.2-ecb1e2ea172ba2551f0bd763e557fccde68c849b"/>
-        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="openais"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="2"/>
         <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="hpn07" type="normal" uname="hpn07"/>
-      <node id="hpn08" type="normal" uname="hpn08"/>
+      <node id="hpn07" type="member" uname="hpn07"/>
+      <node id="hpn08" type="member" uname="hpn08"/>
     </nodes>
     <resources>
       <primitive class="ocf" id="p_dummy1" provider="pacemaker" type="Dummy"/>

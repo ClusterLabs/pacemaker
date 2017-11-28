@@ -2,12 +2,12 @@
 Current cluster status:
 Online: [ node1 node2 ]
 
- rsc1	(heartbeat:apache):	Stopped 
+ rsc1	(ocf::heartbeat:apache):	Stopped
  Resource Group: rsc2
-     child_rsc1	(heartbeat:apache):	Stopped 
-     child_rsc2	(heartbeat:apache):	Stopped 
-     child_rsc3	(heartbeat:apache):	Stopped 
- rsc3	(heartbeat:apache):	Stopped 
+     child_rsc1	(ocf::heartbeat:apache):	Stopped
+     child_rsc2	(ocf::heartbeat:apache):	Stopped
+     child_rsc3	(ocf::heartbeat:apache):	Stopped
+ rsc3	(ocf::heartbeat:apache):	Stopped
 
 Transition Summary:
  * Start   rsc1	(node1)
@@ -38,10 +38,10 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ node1 node2 ]
 
- rsc1	(heartbeat:apache):	Started node1
+ rsc1	(ocf::heartbeat:apache):	Started node1
  Resource Group: rsc2
-     child_rsc1	(heartbeat:apache):	Started node2
-     child_rsc2	(heartbeat:apache):	Started node2
-     child_rsc3	(heartbeat:apache):	Started node2
- rsc3	(heartbeat:apache):	Started node1
+     child_rsc1	(ocf::heartbeat:apache):	Started node2
+     child_rsc2	(ocf::heartbeat:apache):	Started node2
+     child_rsc3	(ocf::heartbeat:apache):	Started node2
+ rsc3	(ocf::heartbeat:apache):	Started node1
 

@@ -8,8 +8,8 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="lenny-a" uname="lenny-a" type="normal"/>
-      <node id="lenny-b" uname="lenny-b" type="normal"/>
+      <node id="lenny-a" uname="lenny-a" type="member"/>
+      <node id="lenny-b" uname="lenny-b" type="member"/>
     </nodes>
     <resources>
       <group id="grp_1">

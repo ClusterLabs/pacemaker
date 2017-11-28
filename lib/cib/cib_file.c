@@ -186,36 +186,29 @@ cib_file_read_and_verify(const char *filename, const char *sigfile, xmlNode **ro
  *
  * \param[in] filename Name of file to check
  *
- * \return TRUE if file exists and has one of the possible live CIB filenames
+ * \return TRUE if file exists and its real path is same as live CIB's
  */
 static gboolean
 cib_file_is_live(const char *filename)
 {
+    gboolean same = FALSE;
+
     if (filename != NULL) {
-        /* Canonicalize all file names for true comparison */
+        // Canonicalize file names for true comparison
         char *real_filename = crm_compat_realpath(filename);
 
         if (real_filename != NULL) {
-            const char *livenames[] = {
-                CRM_CONFIG_DIR "/" CIB_LIVE_NAME,
-                CRM_LEGACY_CONFIG_DIR "/" CIB_LIVE_NAME
-            };
             char *real_livename;
-            int i;
 
-            /* Compare against each possible live CIB name */
-            for (i = 0; i < DIMOF(livenames); ++i) {
-                real_livename = crm_compat_realpath(livenames[i]);
-                if (real_livename && !strcmp(real_filename, real_livename)) {
-                    free(real_livename);
-                    return TRUE;
-                }
-                free(real_livename);
+            real_livename = crm_compat_realpath(CRM_CONFIG_DIR "/" CIB_LIVE_NAME);
+            if (real_livename && !strcmp(real_filename, real_livename)) {
+                same = TRUE;
             }
+            free(real_livename);
             free(real_filename);
         }
     }
-    return FALSE;
+    return same;
 }
 
 /* cib_file_backup() and cib_file_write_with_digest() need to chown the

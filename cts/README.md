@@ -47,7 +47,7 @@ You can install CTS from source, although many distributions provide
 packages that include it (e.g. pacemaker-cts or pacemaker-dev).
 Typically, packages will install CTS as /usr/share/pacemaker/tests/cts.
 
-Configure cluster communications (Corosync, CMAN or Heartbeat) on the
+Configure cluster communications (Corosync) on the
 cluster machines and verify everything works.
 
 NOTE: Do not run the cluster on the test exerciser machine.
@@ -80,7 +80,7 @@ Unless you want to test your pre-existing cluster configuration, you also want:
 
 and configure some sort of fencing:
 
-    --stonith $TYPE  # e.g. "--stonith xvm" to use fence_xvm or "--stonith lha" to use external/ssh
+    --stonith $TYPE  # e.g. "--stonith xvm" to use fence_xvm or "--stonith ssh" to use external/ssh
 
 A complete command line might look like:
   

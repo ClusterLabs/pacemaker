@@ -127,8 +127,7 @@ create_node_entry(cib_t * cib_conn, const char *node)
     if (rc == -ENXIO) {
         xmlNode *cib_object = create_xml_node(NULL, XML_CIB_TAG_NODE);
 
-        /* Using node uname as uuid ala corosync/openais */
-        crm_xml_add(cib_object, XML_ATTR_ID, node);
+        crm_xml_add(cib_object, XML_ATTR_ID, node); // Use node name as ID
         crm_xml_add(cib_object, XML_ATTR_UNAME, node);
         cib_conn->cmds->create(cib_conn, XML_CIB_TAG_NODES, cib_object,
                                cib_sync_call | cib_scope_local);
@@ -292,7 +291,6 @@ inject_resource(xmlNode * cib_node, const char *resource, const char *rclass, co
 
     } else if (safe_str_neq(rclass, PCMK_RESOURCE_CLASS_OCF)
                && safe_str_neq(rclass, PCMK_RESOURCE_CLASS_STONITH)
-               && safe_str_neq(rclass, PCMK_RESOURCE_CLASS_HB)
                && safe_str_neq(rclass, PCMK_RESOURCE_CLASS_SERVICE)
                && safe_str_neq(rclass, PCMK_RESOURCE_CLASS_UPSTART)
                && safe_str_neq(rclass, PCMK_RESOURCE_CLASS_SYSTEMD)
@@ -624,7 +622,6 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
     GListPtr gIter = NULL;
     lrmd_event_data_t *op = NULL;
     int target_outcome = 0;
-    gboolean uname_is_uuid = FALSE;
 
     const char *rtype = NULL;
     const char *rclass = NULL;
@@ -682,15 +679,14 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
     CRM_ASSERT(fake_cib->cmds->query(fake_cib, NULL, NULL, cib_sync_call | cib_scope_local) ==
                pcmk_ok);
 
-    if (router_node) {
-        uname_is_uuid = TRUE;
-    }
-
-    cib_node = inject_node_state(fake_cib, node, uname_is_uuid ? node : uuid);
+    cib_node = inject_node_state(fake_cib, node, (router_node? node : uuid));
     CRM_ASSERT(cib_node != NULL);
 
     cib_resource = inject_resource(cib_node, resource, rclass, rtype, rprovider);
-    CRM_ASSERT(cib_resource != NULL);
+    if (cib_resource == NULL) {
+        crm_err("invalid resource in transition");
+        return FALSE;
+    }
 
     op = convert_graph_action(cib_resource, action, 0, target_outcome);
     if (op->interval) {

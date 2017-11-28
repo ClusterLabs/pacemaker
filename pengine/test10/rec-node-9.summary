@@ -3,8 +3,8 @@ Current cluster status:
 Online: [ node2 ]
 OFFLINE: [ node1 ]
 
- rsc1	(heartbeat:apache):	Stopped 
- rsc2	(heartbeat:apache):	Stopped 
+ rsc1	(ocf::heartbeat:apache):	Stopped
+ rsc2	(ocf::heartbeat:apache):	Stopped
 
 Transition Summary:
  * Start      rsc1    ( node2 )   due to no quorum (blocked)
@@ -18,6 +18,6 @@ Revised cluster status:
 Online: [ node2 ]
 OFFLINE: [ node1 ]
 
- rsc1	(heartbeat:apache):	Stopped 
- rsc2	(heartbeat:apache):	Stopped 
+ rsc1	(ocf::heartbeat:apache):	Stopped
+ rsc2	(ocf::heartbeat:apache):	Stopped
 

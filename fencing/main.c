@@ -193,28 +193,6 @@ stonith_peer_callback(xmlNode * msg, void *private_data)
     stonith_command(NULL, 0, 0, msg, remote_peer);
 }
 
-#if SUPPORT_HEARTBEAT
-static void
-stonith_peer_hb_callback(HA_Message * msg, void *private_data)
-{
-    xmlNode *xml = convert_ha_message(NULL, msg, __FUNCTION__);
-
-    stonith_peer_callback(xml, private_data);
-    free_xml(xml);
-}
-
-static void
-stonith_peer_hb_destroy(gpointer user_data)
-{
-    if (stonith_shutdown_flag) {
-        crm_info("Heartbeat disconnection complete... exiting");
-    } else {
-        crm_err("Heartbeat connection lost!  Exiting.");
-    }
-    stonith_shutdown(0);
-}
-#endif
-
 #if SUPPORT_COROSYNC
 static void
 stonith_peer_ais_callback(cpg_handle_t handle,
@@ -1462,13 +1440,8 @@ main(int argc, char **argv)
     known_peer_names = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, free);
 
     if (stand_alone == FALSE) {
-#if SUPPORT_HEARTBEAT
-        cluster.hb_conn = NULL;
-        cluster.hb_dispatch = stonith_peer_hb_callback;
-        cluster.destroy = stonith_peer_hb_destroy;
-#endif
 
-        if (is_openais_cluster()) {
+        if (is_corosync_cluster()) {
 #if SUPPORT_COROSYNC
             cluster.destroy = stonith_peer_cs_destroy;
             cluster.cpg.cpg_deliver_fn = stonith_peer_ais_callback;
@@ -1484,27 +1457,6 @@ main(int argc, char **argv)
         }
         stonith_our_uname = cluster.uname;
         stonith_our_uuid = cluster.uuid;
-
-#if SUPPORT_HEARTBEAT
-        if (is_heartbeat_cluster()) {
-            /* crm_cluster_connect() registered us for crm_system_name, which
-             * usually is the only F_TYPE used by the respective sub system.
-             * Stonith needs to register two additional F_TYPE callbacks,
-             * because it can :-/ */
-            if (HA_OK !=
-                cluster.hb_conn->llc_ops->set_msg_callback(cluster.hb_conn, T_STONITH_NOTIFY,
-                                                            cluster.hb_dispatch, cluster.hb_conn)) {
-                crm_crit("Cannot set msg callback %s: %s", T_STONITH_NOTIFY, cluster.hb_conn->llc_ops->errmsg(cluster.hb_conn));
-                crm_exit(DAEMON_RESPAWN_STOP);
-            }
-            if (HA_OK !=
-                cluster.hb_conn->llc_ops->set_msg_callback(cluster.hb_conn, T_STONITH_TIMEOUT_VALUE,
-                                                            cluster.hb_dispatch, cluster.hb_conn)) {
-                crm_crit("Cannot set msg callback %s: %s", T_STONITH_TIMEOUT_VALUE, cluster.hb_conn->llc_ops->errmsg(cluster.hb_conn));
-                crm_exit(DAEMON_RESPAWN_STOP);
-            }
-        }
-#endif
 
         if (no_cib_connect == FALSE) {
             setup_cib();
@@ -1543,17 +1495,9 @@ main(int argc, char **argv)
     /* Create the mainloop and run it... */
     mainloop = g_main_new(FALSE);
     crm_info("Starting %s mainloop", crm_system_name);
-
     g_main_run(mainloop);
+
     stonith_cleanup();
-
-#if SUPPORT_HEARTBEAT
-    if (cluster.hb_conn) {
-        cluster.hb_conn->llc_ops->delete(cluster.hb_conn);
-    }
-#endif
-
     crm_info("Done");
-
     return crm_exit(rc);
 }

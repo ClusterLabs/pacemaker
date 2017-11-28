@@ -5,8 +5,8 @@ This is a set of simple scripts to run and time Pacemaker CTS
 tests.
 
 The purpose is to investigate how the cluster stack behaves for
-different cluster sizes. Supported cluster stacks are openais
-(legacy), corosync, and heartbeat.
+different cluster sizes.
+
 
 Quick start
 -----------
@@ -34,8 +34,7 @@ is stored in ~/.cts.
 
 The stack configuration has to be done by other means.
 Typically, it consists of creating and distributing the basic
-configuration files (openais.conf, corosync.conf, or ha.cf) and
-the authentication keys.
+configuration files and the authentication keys.
 
 The benchmark tests configuration is held in the control file:
 
@@ -88,7 +87,7 @@ Output
 ------
 
 The output is stored in the directory given as argument to
-clubench. hb_report generated reports are in subdirectories
+clubench. crm_report-generated reports are in subdirectories
 named after the number of nodes of test clusters, e.g. the set
 from the SERIES variable.
 

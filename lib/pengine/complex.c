@@ -381,54 +381,6 @@ add_template_rsc(xmlNode * xml_obj, pe_working_set_t * data_set)
 }
 
 static void
-handle_rsc_isolation(resource_t *rsc)
-{
-    resource_t *top = uber_parent(rsc);
-    resource_t *iso = rsc;
-    const char *wrapper = NULL;
-    const char *value;
-
-    /* check for isolation wrapper mapping if the parent doesn't have one set
-     * isolation mapping is enabled by default. For safety, we are allowing isolation
-     * to be disabled by setting the meta attr, isolation=false. */
-    value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_ISOLATION);
-    if (top->isolation_wrapper == NULL && (value == NULL || crm_is_true(value))) {
-        if (g_hash_table_lookup(rsc->parameters, "pcmk_docker_image")) {
-            wrapper = "docker-wrapper";
-        }
-        /* add more isolation technologies here as we expand */
-    } else if (top->isolation_wrapper) {
-        goto set_rsc_opts;
-    }
-
-    if (wrapper == NULL) {
-        return;
-    }
-
-    /* if this is a cloned primitive/group, go head and set the isolation wrapper at
-     * at the clone level. this is really the only sane thing to do in this situation.
-     * This allows someone to clone an isolated resource without having to shuffle
-     * around the isolation attributes to the clone parent */
-    if (top == rsc->parent && pe_rsc_is_clone(top)) {
-        iso = top;
-    }
-
-    iso->isolation_wrapper = wrapper;
-    set_bit(top->flags, pe_rsc_unique);
-
-set_rsc_opts:
-    pe_warn_once(pe_wo_isolation, "Support for 'isolation' resource meta-attribute"
-                                  " is deprecated and will be removed in a future release"
-                                  " (use bundle syntax instead)");
-
-    clear_bit(rsc->flags, pe_rsc_allow_migrate);
-    set_bit(rsc->flags, pe_rsc_unique);
-    if (pe_rsc_is_clone(top)) {
-        add_hash_param(rsc->meta, XML_RSC_ATTR_UNIQUE, XML_BOOLEAN_TRUE);
-    }
-}
-
-static void
 check_deprecated_stonith(resource_t *rsc)
 {
     GHashTableIter iter;
@@ -634,8 +586,6 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     }
 
     pe_rsc_trace((*rsc), "Options for %s", (*rsc)->id);
-
-    handle_rsc_isolation(*rsc);
 
     top = uber_parent(*rsc);
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_UNIQUE);

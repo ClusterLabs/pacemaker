@@ -61,7 +61,7 @@ do_cl_join_query(long long action,
     xmlNode *req = create_request(CRM_OP_JOIN_ANNOUNCE, NULL, NULL,
                                   CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
 
-    sleep(1);                   /* give the CCM time to propogate to the DC */
+    sleep(1);                   // Give the cluster layer time to propagate to the DC
     update_dc(NULL);            /* Unset any existing value so that the result is not discarded */
     crm_debug("Querying for a DC");
     send_cluster_message(NULL, crm_msg_crmd, req, FALSE);
@@ -79,12 +79,6 @@ do_cl_join_announce(long long action,
                     enum crmd_fsa_state cur_state,
                     enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-    /* Once we hear from the DC, we can stop the timer
-     *
-     * This timer was started either on startup or when a node
-     * left the CCM list
-     */
-
     /* don't announce if we're in one of these states */
     if (cur_state != S_PENDING) {
         crm_warn("Not announcing cluster join because in state %s",

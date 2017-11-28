@@ -29,16 +29,7 @@ libcrmcluster_la_LIBADD  = $(top_builddir)/lib/common/libcrmcommon.la $(top_buil
 
 libcrmcluster_la_SOURCES = election.c cluster.c membership.c
 if BUILD_CS_SUPPORT
-libcrmcluster_la_SOURCES += cpg.c
-if BUILD_CS_PLUGIN
-libcrmcluster_la_SOURCES += legacy.c
-else
-libcrmcluster_la_SOURCES += corosync.c
-endif
-endif
-if BUILD_HEARTBEAT_SUPPORT
-libcrmcluster_la_SOURCES += heartbeat.c
-#libcrmcluster_la_LIBADD  += -ldl
+libcrmcluster_la_SOURCES += cpg.c corosync.c
 endif
 
 clean-generic:

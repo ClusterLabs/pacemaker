@@ -3,7 +3,7 @@
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.6-3.el6-a02c0f19a00c1eb2527ad38f146ebc0834814558"/>
-        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="cman"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
         <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1333120140"/>
         <nvpair id="cib-bootstrap-options-pe-error-series-max" name="pe-error-series-max" value="9"/>
@@ -14,12 +14,12 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="hypatia-corosync.nevis.columbia.edu" type="normal" uname="hypatia-corosync.nevis.columbia.edu">
+      <node id="hypatia-corosync.nevis.columbia.edu" type="member" uname="hypatia-corosync.nevis.columbia.edu">
         <instance_attributes id="nodes-hypatia-corosync.nevis.columbia.edu">
           <nvpair id="nodes-hypatia-corosync.nevis.columbia.edu-standby" name="standby" value="off"/>
         </instance_attributes>
       </node>
-      <node id="orestes-corosync.nevis.columbia.edu" type="normal" uname="orestes-corosync.nevis.columbia.edu">
+      <node id="orestes-corosync.nevis.columbia.edu" type="member" uname="orestes-corosync.nevis.columbia.edu">
         <instance_attributes id="nodes-orestes-corosync.nevis.columbia.edu">
           <nvpair id="nodes-orestes-corosync.nevis.columbia.edu-standby" name="standby" value="off"/>
         </instance_attributes>

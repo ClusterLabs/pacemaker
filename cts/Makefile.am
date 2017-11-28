@@ -1,6 +1,4 @@
 #
-# heartbeat: Linux-HA heartbeat code
-#
 # Copyright (C) 2001 Michael Moerz
 #
 # This program is free software; you can redistribute it and/or
@@ -19,7 +17,7 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-CLEANFILES      = LSBDummy HBDummy
+CLEANFILES      = LSBDummy
 
 EXTRA_DIST      = $(cts_SCRIPTS) $(cts_DATA)
 
@@ -28,8 +26,8 @@ ctslibdir	= $(pyexecdir)/cts
 
 ctslib_PYTHON	=	__init__.py		\
 			CTSvars.py		\
-			CM_lha.py		\
-			CM_ais.py		\
+			CM_common.py		\
+			CM_corosync.py		\
 			CTS.py			\
 			CTSaudits.py		\
 			CTStests.py		\
@@ -48,7 +46,6 @@ cts_SCRIPTS	=	cts		\
 			CTSlab.py		\
 			lxc_autogen.sh	\
 			LSBDummy		\
-			HBDummy		\
 			$(top_srcdir)/fencing/fence_dummy
 
 SUBDIRS	= benchmark

@@ -2,11 +2,11 @@
 Current cluster status:
 Online: [ node1 ]
 
- rsc1	(heartbeat:apache):	Started node1
+ rsc1	(ocf::heartbeat:apache):	Started node1
  Resource Group: foo
-     rsc2	(heartbeat:apache):	Started node1
+     rsc2	(ocf::heartbeat:apache):	Started node1
  Resource Group: bar
-     rsc3	(heartbeat:apache):	FAILED node1 
+     rsc3	(ocf::heartbeat:apache):	FAILED node1
 
 Transition Summary:
  * Restart    rsc1    ( node1 )   due to required bar running
@@ -33,9 +33,9 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ node1 ]
 
- rsc1	(heartbeat:apache):	Started node1
+ rsc1	(ocf::heartbeat:apache):	Started node1
  Resource Group: foo
-     rsc2	(heartbeat:apache):	Started node1
+     rsc2	(ocf::heartbeat:apache):	Started node1
  Resource Group: bar
-     rsc3	(heartbeat:apache):	Started node1
+     rsc3	(ocf::heartbeat:apache):	Started node1
 

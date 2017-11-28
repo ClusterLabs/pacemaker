@@ -19,11 +19,11 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="8c16c69e-f753-49cf-ba89-3ae421940042" uname="arc-dknightlx" type="normal">
+      <node id="8c16c69e-f753-49cf-ba89-3ae421940042" uname="arc-dknightlx" type="member">
         <instance_attributes id="instance_attributes.id21994"/>
         <instance_attributes id="instance_attributes.id22002"/>
       </node>
-      <node id="2ba293d2-2c30-4957-ad8d-59ad15bb7e26" uname="arc-tkincaidlx.wsicorp.com" type="normal">
+      <node id="2ba293d2-2c30-4957-ad8d-59ad15bb7e26" uname="arc-tkincaidlx.wsicorp.com" type="member">
         <instance_attributes id="instance_attributes.id22021"/>
         <instance_attributes id="instance_attributes.id22029"/>
       </node>

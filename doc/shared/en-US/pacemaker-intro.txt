@@ -10,9 +10,8 @@ prescribed rules.
 It achieves maximum availability for your cluster services
 (a.k.a. 'resources') by detecting and recovering from node- and
 resource-level failures by making use of the messaging and membership
-capabilities provided by your preferred cluster infrastructure (either
-http://www.corosync.org/[Corosync] or
-http://linux-ha.org/wiki/Heartbeat[Heartbeat]), and possibly by
+capabilities provided by an underlying cluster infrastructure layer
+(currently http://www.corosync.org/[Corosync]), and possibly by
 utilizing other parts of the overall cluster stack.
 
 .High Availability Clusters
@@ -65,24 +64,14 @@ At the highest level, the cluster is made up of three pieces:
    events. This may include moving resources, stopping nodes and even
    forcing them offline with remote power switches.
 
- * *Low-level infrastructure*. Projects like 'Corosync', 'CMAN' and
-   'Heartbeat' provide reliable messaging, membership and quorum
-   information about the cluster.
+ * *Cluster membership layer:* The Corosync project provides reliable
+   messaging, membership, and quorum information about the cluster.
 
-When combined with Corosync, Pacemaker also supports popular open
-source cluster filesystems.{empty}footnote:[
-  Even though Pacemaker also supports Heartbeat, the filesystems need to
-  use the stack for messaging and membership, and Corosync seems to be
-  what they're standardizing on.  Technically, it would be possible for
-  them to support Heartbeat as well, but there seems little interest
-  in this.
-]
-
-Due to past standardization within the cluster filesystem community,
-cluster filesystems make use of a common 'distributed lock manager',
-which makes use of Corosync for its messaging and membership
-capabilities (which nodes are up/down) and Pacemaker for fencing
-services.
+Most managed services are not, themselves, cluster-aware. However,
+many popular open-source cluster filesystems make use of a common 'distributed
+lock manager', which makes direct use of Corosync for its messaging and
+membership capabilities (knowing which nodes are up or down) and Pacemaker for
+the ability to fence nodes.
 
 .The Pacemaker Stack
 image::images/pcmk-stack.png["The Pacemaker stack",width="10cm",height="7.5cm",align="center"]

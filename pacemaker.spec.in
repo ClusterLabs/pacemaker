@@ -61,9 +61,6 @@
 %define py_site %{?python_sitearch}%{!?python_sitearch:%(
   python -c 'from distutils.sysconfig import get_python_lib as gpl; print(gpl(1))' 2>/dev/null)}
 
-## Whether this platform defaults to using CMAN
-%define cman_native (0%{?el6} || (0%{?fedora} > 0 && 0%{?fedora} < 17))
-
 ## Whether this platform defaults to using systemd as an init system
 ## (needs to be evaluated prior to BuildRequires being enumerated and
 ## installed as it's intended to conditionally select some of these, and
@@ -116,9 +113,6 @@
 
 ## Add option to ship Upstart job files
 %bcond_with upstart_job
-
-## Add option to turn off CMAN support on CMAN-native platforms
-%bcond_without cman
 
 ## Add option to turn off SNMP / ESMTP support
 %bcond_without snmp
@@ -210,13 +204,6 @@ BuildRequires: bison byacc flex help2man gnutls-devel pkgconfig(dbus-1)
 BuildRequires: pkgconfig(systemd)
 %endif
 
-%if %{with cman} && %{cman_native}
-BuildRequires: clusterlib-devel
-# pacemaker initscript: cman initscript, fence_tool (+ some soft-dependencies)
-# "post" scriptlet: ccs_update_schema
-Requires:      cman
-%endif
-
 Requires:      corosync
 BuildRequires: corosynclib-devel
 
@@ -233,7 +220,7 @@ BuildRequires: publican inkscape asciidoc
 
 %description
 Pacemaker is an advanced, scalable High-Availability cluster resource
-manager for Corosync, CMAN and/or Linux-HA.
+manager.
 
 It supports more than 16 node clusters with significant capabilities
 for managing resources and dependencies.
@@ -243,7 +230,7 @@ when related resources fail and can be configured to periodically check
 resource health.
 
 Available rpmbuild rebuild options:
-  --with(out) : cman coverage doc stonithd hardening pre_release profiling
+  --with(out) : coverage doc stonithd hardening pre_release profiling
                 upstart_job
 
 %package cli
@@ -255,7 +242,7 @@ Requires:      perl-TimeDate
 
 %description cli
 Pacemaker is an advanced, scalable High-Availability cluster resource
-manager for Corosync, CMAN and/or Linux-HA.
+manager.
 
 The %{name}-cli package contains command line tools that can be used
 to query and control the cluster from machines that may, or may not,
@@ -268,7 +255,7 @@ Group:         System Environment/Daemons
 
 %description -n %{name}-libs
 Pacemaker is an advanced, scalable High-Availability cluster resource
-manager for Corosync, CMAN and/or Linux-HA.
+manager.
 
 The %{name}-libs package contains shared libraries needed for cluster
 nodes and those just running the CLI tools.
@@ -281,7 +268,7 @@ Requires:      %{name}-libs = %{version}-%{release}
 
 %description -n %{name}-cluster-libs
 Pacemaker is an advanced, scalable High-Availability cluster resource
-manager for Corosync, CMAN and/or Linux-HA.
+manager.
 
 The %{name}-cluster-libs package contains cluster-aware shared
 libraries needed for nodes that will form part of the cluster nodes.
@@ -304,7 +291,7 @@ Requires:      resource-agents
 
 %description remote
 Pacemaker is an advanced, scalable High-Availability cluster resource
-manager for Corosync, CMAN and/or Linux-HA.
+manager.
 
 The %{name}-remote package contains the Pacemaker Remote daemon
 which is capable of extending pacemaker functionality to remote
@@ -324,7 +311,7 @@ Requires:      libqb-devel%{?_isa} corosynclib-devel%{?_isa}
 
 %description -n %{name}-libs-devel
 Pacemaker is an advanced, scalable High-Availability cluster resource
-manager for Corosync, CMAN and/or Linux-HA.
+manager.
 
 The %{name}-libs-devel package contains headers and shared libraries
 for developing tools for Pacemaker.
@@ -362,7 +349,7 @@ Group:         Documentation
 Documentation for Pacemaker.
 
 Pacemaker is an advanced, scalable High-Availability cluster resource
-manager for Corosync, CMAN and/or Linux-HA.
+manager.
 
 %prep
 %setup -q -n %{name}-%{commit}
@@ -399,10 +386,8 @@ export LDFLAGS_HARDENED_LIB="%{?_hardening_ldflags}"
 %{configure}                                       \
         %{?with_profiling:   --with-profiling}     \
         %{?with_coverage:    --with-coverage}      \
-        %{!?with_cman:       --without-cman}       \
         %{!?with_snmp:       --without-snmp}       \
         %{!?with_esmtp:      --without-esmtp}      \
-        --without-heartbeat                        \
         %{!?with_doc:        --with-brand=}        \
         %{!?with_hardening:  --disable-hardening}  \
         --with-initdir=%{_initrddir}               \
@@ -462,11 +447,6 @@ rm -f %{buildroot}/%{_initrddir}/pacemaker
 rm -f %{buildroot}/%{_initrddir}/pacemaker_remote
 %endif
 
-# Don't ship fence_pcmk where it has no use
-%if %{without cman}
-rm -f %{buildroot}/%{_sbindir}/fence_pcmk
-%endif
-
 %if %{with coverage}
 GCOV_BASE=%{buildroot}/%{_var}/lib/pacemaker/gcov
 mkdir -p $GCOV_BASE
@@ -485,12 +465,6 @@ rm -rf %{buildroot}
 %systemd_post pacemaker.service
 %else
 /sbin/chkconfig --add pacemaker || :
-%if %{with cman} && %{cman_native}
-# make fence_pcmk in cluster.conf valid instantly otherwise tools like ccs may
-# choke (until schema gets auto-regenerated on the next start of cluster),
-# per the protocol shared with other packages contributing to cluster.rng
-/usr/sbin/ccs_update_schema >/dev/null 2>&1 || :
-%endif
 %endif
 
 %preun
@@ -612,25 +586,17 @@ exit 0
 %{_sbindir}/crm_master
 %{_sbindir}/crm_node
 %{_sbindir}/fence_legacy
-%if %{with cman}
-%{_sbindir}/fence_pcmk
-%endif
 %{_sbindir}/stonith_admin
 
 %doc %{_mandir}/man7/crmd.*
 %doc %{_mandir}/man7/pengine.*
 %doc %{_mandir}/man7/stonithd.*
-%if %{without cman} || !%{cman_native}
 %doc %{_mandir}/man7/ocf_pacemaker_controld.*
-%endif
 %doc %{_mandir}/man7/ocf_pacemaker_o2cb.*
 %doc %{_mandir}/man7/ocf_pacemaker_remote.*
 %doc %{_mandir}/man8/crm_attribute.*
 %doc %{_mandir}/man8/crm_node.*
 %doc %{_mandir}/man8/crm_master.*
-%if %{with cman}
-%doc %{_mandir}/man8/fence_pcmk.*
-%endif
 %doc %{_mandir}/man8/fence_legacy.*
 %doc %{_mandir}/man8/pacemakerd.*
 %doc %{_mandir}/man8/stonith_admin.*
@@ -643,12 +609,9 @@ exit 0
 
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker/cib
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pacemaker/pengine
-%if %{without cman} || !%{cman_native}
 /usr/lib/ocf/resource.d/pacemaker/controld
-%endif
 /usr/lib/ocf/resource.d/pacemaker/o2cb
 /usr/lib/ocf/resource.d/pacemaker/remote
-/usr/lib/ocf/resource.d/.isolation
 
 %if "%{?cs_version}" != "UNKNOWN"
 %if 0%{?cs_version} < 2

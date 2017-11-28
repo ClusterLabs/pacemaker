@@ -67,9 +67,6 @@ typedef struct lrmd_cmd_s {
     char *output;
     char *userdata_str;
 
-    /* when set, this cmd should go through a container wrapper */
-    const char *isolation_wrapper;
-
 #ifdef HAVE_SYS_TIMEB_H
     /* recurring and systemd operations may involve more than one lrmd command
      * per operation, so they need info about original and most recent
@@ -162,7 +159,7 @@ build_rsc_from_xml(xmlNode * msg)
 }
 
 static lrmd_cmd_t *
-create_lrmd_cmd(xmlNode * msg, crm_client_t * client, lrmd_rsc_t *rsc)
+create_lrmd_cmd(xmlNode * msg, crm_client_t * client)
 {
     int call_options = 0;
     xmlNode *rsc_xml = get_xpath_object("//" F_LRMD_RSC, msg, LOG_ERR);
@@ -186,18 +183,6 @@ create_lrmd_cmd(xmlNode * msg, crm_client_t * client, lrmd_rsc_t *rsc)
     cmd->rsc_id = crm_element_value_copy(rsc_xml, F_LRMD_RSC_ID);
 
     cmd->params = xml2list(rsc_xml);
-    cmd->isolation_wrapper = g_hash_table_lookup(cmd->params, "CRM_meta_isolation_wrapper");
-
-    if (cmd->isolation_wrapper) {
-        if (g_hash_table_lookup(cmd->params, "CRM_meta_isolation_instance") == NULL) {
-            g_hash_table_insert(cmd->params, strdup("CRM_meta_isolation_instance"), strdup(rsc->rsc_id));
-        }
-        if (rsc->provider) {
-            g_hash_table_insert(cmd->params, strdup("CRM_meta_provider"), strdup(rsc->provider));
-        }
-        g_hash_table_insert(cmd->params, strdup("CRM_meta_class"), strdup(rsc->class));
-        g_hash_table_insert(cmd->params, strdup("CRM_meta_type"), strdup(rsc->type));
-    }
 
     if (safe_str_eq(g_hash_table_lookup(cmd->params, "CRM_meta_on_fail"), "block")) {
         crm_debug("Setting flag to leave pid group on timeout and only kill action pid for %s_%s_%d", cmd->rsc_id, cmd->action, cmd->interval);
@@ -628,60 +613,6 @@ cmd_finalize(lrmd_cmd_t * cmd, lrmd_rsc_t * rsc)
     }
 }
 
-#if SUPPORT_HEARTBEAT
-static int pattern_matched(const char *pat, const char *str)
-{
-    if (g_pattern_match_simple(pat, str)) {
-        crm_debug("RA output matched stopped pattern [%s]", pat);
-        return TRUE;
-    }
-    return FALSE;
-}
-
-static int
-hb2uniform_rc(const char *action, int rc, const char *stdout_data)
-{
-    const char *stop_pattern[] = { "*stopped*", "*not*running*" };
-    const char *running_pattern[] = { "*running*", "*OK*" };
-    char *lower_std_output = NULL;
-    int result;
-
-
-    if (rc < 0) {
-        return PCMK_OCF_UNKNOWN_ERROR;
-    }
-
-    /* Treat class heartbeat the same as class lsb. */
-    if (!safe_str_eq(action, "status") && !safe_str_eq(action, "monitor")) {
-        return services_get_ocf_exitcode(action, rc);
-    }
-
-    /* for status though, exit code is ignored,
-     * and the stdout is scanned for specific strings */
-    if (stdout_data == NULL) {
-        crm_warn("No status output from the (hb) resource agent, assuming stopped");
-        return PCMK_OCF_NOT_RUNNING;
-    }
-
-    lower_std_output = g_ascii_strdown(stdout_data, -1);
-
-    if (pattern_matched(stop_pattern[0], lower_std_output) ||
-        pattern_matched(stop_pattern[1], lower_std_output)) {
-        result = PCMK_OCF_NOT_RUNNING;
-    } else if (pattern_matched(running_pattern[0], lower_std_output) ||
-        pattern_matched(running_pattern[1], stdout_data)) {
-            /* "OK" is matched case sensitive */
-        result = PCMK_OCF_OK;
-    } else {
-        /* It didn't say it was running - must be stopped */
-        crm_debug("RA output did not match any pattern, assuming stopped");
-        result = PCMK_OCF_NOT_RUNNING;
-    }
-    free(lower_std_output);
-    return result;
-}
-#endif
-
 static int
 ocf2uniform_rc(int rc)
 {
@@ -760,11 +691,6 @@ static int
 action_get_uniform_rc(svc_action_t * action)
 {
     lrmd_cmd_t *cmd = action->cb_data;
-#if SUPPORT_HEARTBEAT
-    if (safe_str_eq(action->standard, PCMK_RESOURCE_CLASS_HB)) {
-        return hb2uniform_rc(cmd->action, action->rc, action->stdout_data);
-    }
-#endif
     return get_uniform_rc(action->standard, cmd->action, action->rc);
 }
 
@@ -1198,28 +1124,11 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 
     params_copy = crm_str_table_dup(cmd->params);
 
-    if (cmd->isolation_wrapper) {
-        g_hash_table_remove(params_copy, "CRM_meta_isolation_wrapper");
-        action = resources_action_create(rsc->rsc_id,
-                                         PCMK_RESOURCE_CLASS_OCF,
-                                         LRMD_ISOLATION_PROVIDER,
-                                         cmd->isolation_wrapper,
-                                         cmd->action, /*action will be normalized in wrapper*/
-                                         cmd->interval,
-                                         cmd->timeout,
-                                         params_copy,
-                                         cmd->service_flags);
-    } else {
-        action = resources_action_create(rsc->rsc_id,
-                                         rsc->class,
-                                         rsc->provider,
-                                         rsc->type,
-                                         normalize_action_name(rsc, cmd->action),
-                                         cmd->interval,
-                                         cmd->timeout,
-                                         params_copy,
-                                         cmd->service_flags);
-    }
+    action = resources_action_create(rsc->rsc_id, rsc->class, rsc->provider,
+                                     rsc->type,
+                                     normalize_action_name(rsc, cmd->action),
+                                     cmd->interval, cmd->timeout, params_copy,
+                                     cmd->service_flags);
 
     if (!action) {
         crm_err("Failed to create action, action:%s on resource %s", cmd->action, rsc->rsc_id);
@@ -1519,7 +1428,7 @@ process_lrmd_rsc_exec(crm_client_t * client, uint32_t id, xmlNode * request)
         return -ENODEV;
     }
 
-    cmd = create_lrmd_cmd(request, client, rsc);
+    cmd = create_lrmd_cmd(request, client);
     call_id = cmd->call_id;
 
     /* Don't reference cmd after handing it off to be scheduled.

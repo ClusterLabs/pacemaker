@@ -8,12 +8,12 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="fdacfc41-e43c-464b-a80e-b3fd1b22ca00" uname="vbox3" type="normal">
+      <node id="fdacfc41-e43c-464b-a80e-b3fd1b22ca00" uname="vbox3" type="member">
         <instance_attributes id="instance_attributes.id21892">
           <nvpair id="nvpair.id21899" name="standby" value="off"/>
         </instance_attributes>
       </node>
-      <node id="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6" uname="vbox4" type="normal">
+      <node id="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6" uname="vbox4" type="member">
         <instance_attributes id="instance_attributes.id21920">
           <nvpair name="standby" id="nvpair.id21927" value="off"/>
         </instance_attributes>

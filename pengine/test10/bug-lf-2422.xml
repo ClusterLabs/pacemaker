@@ -3,16 +3,16 @@
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.2-2e096a41a5f9e184a1c1537c82c6da1093698eb5"/>
-        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="openais"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="4"/>
         <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1274268501"/>
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="qa-suse-2" type="normal" uname="qa-suse-2"/>
-      <node id="qa-suse-3" type="normal" uname="qa-suse-3"/>
-      <node id="qa-suse-4" type="normal" uname="qa-suse-4"/>
-      <node id="qa-suse-1" type="normal" uname="qa-suse-1"/>
+      <node id="qa-suse-2" type="member" uname="qa-suse-2"/>
+      <node id="qa-suse-3" type="member" uname="qa-suse-3"/>
+      <node id="qa-suse-4" type="member" uname="qa-suse-4"/>
+      <node id="qa-suse-1" type="member" uname="qa-suse-1"/>
     </nodes>
     <resources>
       <primitive class="stonith" id="sbd_stonith" type="external/sbd">

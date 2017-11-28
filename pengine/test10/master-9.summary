@@ -7,7 +7,7 @@ Online: [ ibm1 va1 ]
  DcIPaddr	(ocf::heartbeat:IPaddr):	Stopped 
  Resource Group: group-1
      ocf_127.0.0.11	(ocf::heartbeat:IPaddr):	Stopped 
-     heartbeat_127.0.0.12	(heartbeat:IPaddr):	Stopped 
+     heartbeat_127.0.0.12	(ocf::heartbeat:IPaddr):	Stopped
      ocf_127.0.0.13	(ocf::heartbeat:IPaddr):	Stopped 
  lsb_dummy	(lsb:/usr/lib64/heartbeat/cts/LSBDummy):	Stopped 
  rsc_sgi2	(ocf::heartbeat:IPaddr):	Stopped 
@@ -76,7 +76,7 @@ Online: [ ibm1 va1 ]
  DcIPaddr	(ocf::heartbeat:IPaddr):	Stopped 
  Resource Group: group-1
      ocf_127.0.0.11	(ocf::heartbeat:IPaddr):	Stopped 
-     heartbeat_127.0.0.12	(heartbeat:IPaddr):	Stopped 
+     heartbeat_127.0.0.12	(ocf::heartbeat:IPaddr):	Stopped
      ocf_127.0.0.13	(ocf::heartbeat:IPaddr):	Stopped 
  lsb_dummy	(lsb:/usr/lib64/heartbeat/cts/LSBDummy):	Stopped 
  rsc_sgi2	(ocf::heartbeat:IPaddr):	Stopped 

@@ -4,11 +4,11 @@ Online: [ node1 ]
 OFFLINE: [ node2 ]
 
  Clone Set: rsc1 [child_rsc1] (unique)
-     child_rsc1:0	(heartbeat:apache):	Started node1
-     child_rsc1:1	(heartbeat:apache):	Stopped 
+     child_rsc1:0	(ocf::heartbeat:apache):	Started node1
+     child_rsc1:1	(ocf::heartbeat:apache):	Stopped
  Clone Set: rsc2 [child_rsc2] (unique)
-     child_rsc2:0	(heartbeat:apache):	Started node1
-     child_rsc2:1	(heartbeat:apache):	Stopped 
+     child_rsc2:0	(ocf::heartbeat:apache):	Started node1
+     child_rsc2:1	(ocf::heartbeat:apache):	Stopped
 
 Transition Summary:
  * Start   child_rsc1:1	(node1)
@@ -30,9 +30,9 @@ Online: [ node1 ]
 OFFLINE: [ node2 ]
 
  Clone Set: rsc1 [child_rsc1] (unique)
-     child_rsc1:0	(heartbeat:apache):	Started node1
-     child_rsc1:1	(heartbeat:apache):	Started node1
+     child_rsc1:0	(ocf::heartbeat:apache):	Started node1
+     child_rsc1:1	(ocf::heartbeat:apache):	Started node1
  Clone Set: rsc2 [child_rsc2] (unique)
-     child_rsc2:0	(heartbeat:apache):	Stopped 
-     child_rsc2:1	(heartbeat:apache):	Stopped 
+     child_rsc2:0	(ocf::heartbeat:apache):	Stopped
+     child_rsc2:1	(ocf::heartbeat:apache):	Stopped
 

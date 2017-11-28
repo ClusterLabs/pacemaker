@@ -86,20 +86,6 @@
    fun:g_main_loop_run
 }
 
-# Not verified as bogus
-{
-   Heartbeat-01
-   Memcheck:Param
-   unlink(pathname)
-   fun:unlink
-   obj:/usr/lib64/libplumb.so.2.1.0
-   fun:G_CH_destroy_int
-   obj:/lib64/libglib-2.0.so.0.2200.2
-   fun:g_main_context_dispatch
-   obj:/lib64/libglib-2.0.so.0.2200.2
-   fun:g_main_loop_run
-}
-
 {
   OpenAIS-01
   Memcheck:Param

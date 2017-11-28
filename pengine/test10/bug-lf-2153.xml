@@ -6,17 +6,17 @@
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
         <nvpair id="cib-bootstrap-options-default-resource-stickiness" name="default-resource-stickiness" value="200"/>
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.0.4-6dede86d6105786af3a5321ccf66b44b6914f0aa"/>
-        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="Heartbeat"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1247089055"/>
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node type="normal" uname="alice" id="3074cde6-2e91-4259-9868-7ac94007087e">
+      <node type="member" uname="alice" id="3074cde6-2e91-4259-9868-7ac94007087e">
         <instance_attributes id="nodes-3074cde6-2e91-4259-9868-7ac94007087e">
           <nvpair name="standby" id="nodes-3074cde6-2e91-4259-9868-7ac94007087e-standby" value="off"/>
         </instance_attributes>
       </node>
-      <node uname="bob" type="normal" id="9a4cafd3-fcfc-4de9-9440-10bc8822d9af">
+      <node uname="bob" type="member" id="9a4cafd3-fcfc-4de9-9440-10bc8822d9af">
         <instance_attributes id="nodes-9a4cafd3-fcfc-4de9-9440-10bc8822d9af">
           <nvpair name="standby" id="nodes-9a4cafd3-fcfc-4de9-9440-10bc8822d9af-standby" value="on"/>
         </instance_attributes>

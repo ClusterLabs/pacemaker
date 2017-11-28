@@ -3,7 +3,7 @@
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.10rc2-1.el6.ccni-7789030"/>
-        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="cman"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
         <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1368729129"/>
         <nvpair id="cib-bootstrap-options-placement-strategy" name="placement-strategy" value="balanced"/>

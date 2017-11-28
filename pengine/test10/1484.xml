@@ -8,17 +8,17 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="af77f4a5-5626-43b3-acbe-9299ae520262" uname="hb3" type="normal">
+      <node id="af77f4a5-5626-43b3-acbe-9299ae520262" uname="hb3" type="member">
         <instance_attributes id="instance_attributes.id21891">
           <nvpair id="nvpair.id21898" name="standby" value="off"/>
         </instance_attributes>
       </node>
-      <node id="86ad895f-1387-461e-a9b5-c52ed9537e13" uname="hb2" type="normal">
+      <node id="86ad895f-1387-461e-a9b5-c52ed9537e13" uname="hb2" type="member">
         <instance_attributes id="instance_attributes.id21919">
           <nvpair id="nvpair.id21926" name="standby" value="off"/>
         </instance_attributes>
       </node>
-      <node id="1ce670eb-d670-4f6d-811f-d415ffde76b7" uname="hb1" type="normal">
+      <node id="1ce670eb-d670-4f6d-811f-d415ffde76b7" uname="hb1" type="member">
         <instance_attributes id="instance_attributes.id21947">
           <nvpair id="nvpair.id21954" name="standby" value="off"/>
         </instance_attributes>

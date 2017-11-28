@@ -9,8 +9,8 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="1048225984" type="normal" uname="node2"/>
-      <node id="1031448768" type="normal" uname="node1"/>
+      <node id="1048225984" type="member" uname="node2"/>
+      <node id="1031448768" type="member" uname="node1"/>
     </nodes>
     <resources>
       <primitive class="ocf" id="A" provider="pacemaker" type="Dummy">

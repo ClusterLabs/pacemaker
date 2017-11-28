@@ -2,7 +2,7 @@
 Current cluster status:
 Online: [ node1 node2 ]
 
- rsc1	(heartbeat:apache):	FAILED node2 ( blocked ) 
+ rsc1	(ocf::heartbeat:apache):	FAILED node2 (blocked)
 
 Transition Summary:
 
@@ -12,5 +12,5 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ node1 node2 ]
 
- rsc1	(heartbeat:apache):	FAILED node2 ( blocked ) 
+ rsc1	(ocf::heartbeat:apache):	FAILED node2 (blocked)
 

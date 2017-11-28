@@ -29,8 +29,8 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="782b1222-d1b9-4993-8f0d-b8b67801a2c8" uname="rh44-1" type="normal"/>
-      <node id="86600d98-4564-433a-8ad7-aca0ca59382a" uname="rh44-2" type="normal"/>
+      <node id="782b1222-d1b9-4993-8f0d-b8b67801a2c8" uname="rh44-1" type="member"/>
+      <node id="86600d98-4564-433a-8ad7-aca0ca59382a" uname="rh44-2" type="member"/>
     </nodes>
     <resources>
       <group id="test">

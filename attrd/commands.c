@@ -31,8 +31,8 @@
 #include <internal.h>
 
 /*
- * Legacy attrd (all pre-1.1.11 Pacemaker versions, plus all versions when using
- * heartbeat, CMAN, or corosync-plugin stacks) is unversioned.
+ * Legacy attrd (all pre-1.1.11 Pacemaker versions, plus all versions when used
+ * with the no-longer-supported CMAN or corosync-plugin stacks) is unversioned.
  *
  * With atomic attrd, each attrd will send ATTRD_PROTOCOL_VERSION with every
  * peer request and reply. Currently, there is no way to know the minimum
@@ -63,7 +63,6 @@ static gboolean
 send_attrd_message(crm_node_t * node, xmlNode * data)
 {
     crm_xml_add(data, F_TYPE, T_ATTRD);
-    crm_xml_add(data, F_ATTRD_IGNORE_LOCALLY, "atomic-version"); /* Tell older versions to ignore our messages */
     crm_xml_add(data, F_ATTRD_VERSION, ATTRD_PROTOCOL_VERSION);
     crm_xml_add_int(data, F_ATTRD_WRITER, election_state(writer));
 
@@ -527,7 +526,6 @@ void
 attrd_peer_message(crm_node_t *peer, xmlNode *xml)
 {
     int peer_state = 0;
-    const char *v = crm_element_value(xml, F_ATTRD_VERSION);
     const char *op = crm_element_value(xml, F_ATTRD_TASK);
     const char *election_op = crm_element_value(xml, F_CRM_TASK);
     const char *host = crm_element_value(xml, F_ATTRD_HOST);
@@ -552,34 +550,6 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
                 break;
         }
         return;
-
-    } else if(v == NULL) {
-        /* From the non-atomic version */
-        if (safe_str_eq(op, ATTRD_OP_UPDATE)) {
-            const char *name = crm_element_value(xml, F_ATTRD_ATTRIBUTE);
-
-            crm_trace("Compatibility update of %s from %s", name, peer->uname);
-            attrd_peer_update(peer, xml, host, FALSE);
-
-        } else if (safe_str_eq(op, ATTRD_OP_FLUSH)) {
-            const char *name = crm_element_value(xml, F_ATTRD_ATTRIBUTE);
-            attribute_t *a = g_hash_table_lookup(attributes, name);
-
-            if(a) {
-                crm_trace("Compatibility write-out of %s for %s from %s", a->id, op, peer->uname);
-                write_or_elect_attribute(a);
-            }
-
-        } else if (safe_str_eq(op, ATTRD_OP_REFRESH)) {
-            GHashTableIter aIter;
-            attribute_t *a = NULL;
-
-            g_hash_table_iter_init(&aIter, attributes);
-            while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
-                crm_trace("Compatibility write-out of %s for %s from %s", a->id, op, peer->uname);
-                write_or_elect_attribute(a);
-            }
-        }
     }
 
     crm_element_value_int(xml, F_ATTRD_WRITER, &peer_state);

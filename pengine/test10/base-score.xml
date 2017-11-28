@@ -7,10 +7,10 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="puma1" uname="puma1" type="normal" score="100"/>
-      <node id="puma2" uname="puma2" type="normal"/>
-      <node id="puma3" uname="puma3" type="normal" score="-2000"/>
-      <node id="puma4" uname="puma4" type="normal"/>
+      <node id="puma1" uname="puma1" type="member" score="100"/>
+      <node id="puma2" uname="puma2" type="member"/>
+      <node id="puma3" uname="puma3" type="member" score="-2000"/>
+      <node id="puma4" uname="puma4" type="member"/>
     </nodes>
     <rsc_defaults>
       <meta_attributes id="foo">

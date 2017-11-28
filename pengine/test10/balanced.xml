@@ -8,13 +8,13 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="host1" type="normal" uname="host1">
+      <node id="host1" type="member" uname="host1">
         <utilization id="host1-utilization">
           <nvpair id="host1-utilization-cpu" name="cpu" value="1"/>
           <nvpair id="host1-utilization-memory" name="memory" value="512"/>
         </utilization>
       </node>
-      <node id="host2" type="normal" uname="host2">
+      <node id="host2" type="member" uname="host2">
         <utilization id="host2-utilization">
           <nvpair id="host2-utilization-cpu" name="cpu" value="2"/>
           <nvpair id="host2-utilization-memory" name="memory" value="1024"/>

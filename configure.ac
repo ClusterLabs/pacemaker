@@ -28,7 +28,6 @@ if test x"${PACKAGE_URL}" = x""; then
 fi
 
 PCMK_FEATURES=""
-HB_PKG=heartbeat
 
 AC_CONFIG_AUX_DIR(.)
 AC_CANONICAL_HOST
@@ -38,7 +37,7 @@ dnl
 dnl Internal header: include/config.h
 dnl   - Contains ALL defines
 dnl   - include/config.h.in is generated automatically by autoheader
-dnl   - NOT to be included in any header files except lha_internal.h
+dnl   - NOT to be included in any header files except crm_internal.h
 dnl     (which is also not to be included in any other header files)
 dnl
 dnl External header: include/crm_config.h
@@ -83,7 +82,6 @@ CC_IN_CONFIGURE=yes
 export CC_IN_CONFIGURE
 
 LDD=ldd
-BUILD_ATOMIC_ATTRD=1
 
 dnl ========================================================================
 dnl Compiler characteristics
@@ -207,40 +205,11 @@ AC_ARG_ENABLE(hardening,
     [ HARDENING=try ],
 )
 
-AC_ARG_WITH(ais,
-    [  --with-ais
-       Support the Corosync messaging and membership layer ],
-    [ SUPPORT_CS=$withval ],
-    [ SUPPORT_CS=try ],
-)
-
 AC_ARG_WITH(corosync,
     [  --with-corosync
        Support the Corosync messaging and membership layer ],
-    [ SUPPORT_CS=$withval ]
-dnl	initialized in AC_ARG_WITH(ais...) already,
-dnl	don't reset to try if it was given as --without-ais
-)
-
-AC_ARG_WITH(heartbeat,
-    [  --with-heartbeat
-       Support the Heartbeat messaging and membership layer ],
-    [ SUPPORT_HEARTBEAT=$withval ],
-    [ SUPPORT_HEARTBEAT=try ],
-)
-
-AC_ARG_WITH(cman,
-    [  --with-cman
-       Support the consumption of membership and quorum from cman ],
-    [ SUPPORT_CMAN=$withval ],
-    [ SUPPORT_CMAN=try ],
-)
-
-AC_ARG_WITH(cpg,
-    [  --with-cs-quorum
-       Support the consumption of membership and quorum from corosync ],
-    [ SUPPORT_CS_QUORUM=$withval ],
-    [ SUPPORT_CS_QUORUM=try ],
+    [ SUPPORT_CS=$withval ],
+    [ SUPPORT_CS=try ],
 )
 
 AC_ARG_WITH(nagios,
@@ -290,12 +259,6 @@ AC_ARG_WITH(cibsecrets,
     [ SUPPORT_CIBSECRETS=no ],
 )
 
-CSPREFIX=""
-AC_ARG_WITH(ais-prefix,
-    [  --with-ais-prefix=DIR  Prefix used when Corosync was installed [$prefix]],
-    [ CSPREFIX=$withval ],
-    [ CSPREFIX=$prefix ])
-
 INITDIR=""
 AC_ARG_WITH(initdir,
     [  --with-initdir=DIR      directory for init (rc) scripts [${INITDIR}]],
@@ -335,8 +298,6 @@ dnl ===============================================
 dnl General Processing
 dnl ===============================================
 
-AC_SUBST(HB_PKG)
-
 INIT_EXT=""
 echo Our Host OS: $host_os/$host
 
@@ -361,13 +322,6 @@ case $exec_prefix in
   dnl For consistency with Heartbeat, map NONE->$prefix
   NONE)	  exec_prefix=$prefix;;
   prefix) exec_prefix=$prefix;;
-esac
-
-AC_MSG_NOTICE(Sanitizing ais_prefix: ${CSPREFIX})
-case $CSPREFIX in
-  dnl For consistency with Heartbeat, map NONE->$prefix
-  NONE)	  CSPREFIX=$prefix;;
-  prefix) CSPREFIX=$prefix;;
 esac
 
 AC_MSG_NOTICE(Sanitizing INITDIR: ${INITDIR})
@@ -478,11 +432,6 @@ darwin*)
   		CFLAGS="$CFLAGS -I${prefix}/include"
 		;;
 esac
-
-dnl Eventually remove this
-if test "$cross_compiling" != "yes"; then
-   CPPFLAGS="$CPPFLAGS -I${prefix}/include/heartbeat"
-fi
 
 AC_SUBST(INIT_EXT)
 AC_MSG_NOTICE(Host CPU: $host_cpu)
@@ -1015,14 +964,10 @@ AC_MSG_NOTICE(New CFLAGS: $CFLAGS)
 AC_DEFINE_UNQUOTED(SUPPORT_PROFILING, $SUPPORT_PROFILING, Support for profiling)
 
 dnl ========================================================================
-dnl    Cluster infrastructure - Heartbeat / LibQB
+dnl    Cluster infrastructure - LibQB
 dnl ========================================================================
 
-dnl Compatibility checks
-AC_CHECK_MEMBERS([struct lrm_ops.fail_rsc],,,[[#include <lrm/lrm_api.h>]])
-
 if test x${enable_no_stack} = xyes; then
-    SUPPORT_HEARTBEAT=no
     SUPPORT_CS=no
 fi
 
@@ -1036,34 +981,17 @@ PCMK_FEATURES="$PCMK_FEATURES libqb-logging libqb-ipc"
 
 AC_CHECK_FUNCS(qb_ipcs_connection_get_buffer_size, AC_DEFINE(HAVE_IPCS_GET_BUFFER_SIZE,  1, [Have qb_ipcc_get_buffer_size function]))
 
-
-AC_CHECK_HEADERS(heartbeat/hb_config.h)
-AC_CHECK_HEADERS(heartbeat/glue_config.h)
+dnl Support Linux-HA fence agents if available
+if test "$cross_compiling" != "yes"; then
+   CPPFLAGS="$CPPFLAGS -I${prefix}/include/heartbeat"
+fi
 AC_CHECK_HEADERS(stonith/stonith.h)
-AC_CHECK_HEADERS(agent_config.h)
-
-GLUE_HEADER=none
-HAVE_GLUE=0
-if test "$ac_cv_header_heartbeat_glue_config_h" = "yes";  then
-   GLUE_HEADER=glue_config.h
-   HAVE_GLUE=1
-
-elif test "$ac_cv_header_heartbeat_hb_config_h" = "yes"; then
-   GLUE_HEADER=hb_config.h
-   HAVE_GLUE=1
-else
-   AC_MSG_WARN(cluster-glue development headers were not found)
-fi
-
 if test "$ac_cv_header_stonith_stonith_h" = "yes";  then
-   PCMK_FEATURES="$PCMK_FEATURES lha-fencing"
-fi
-
-if test $HAVE_GLUE = 1; then
    dnl On Debian, AC_CHECK_LIBS fail if a library has any unresolved symbols
    dnl So check for all the dependencies (so they're added to LIBS) before checking for -lplumb
    AC_CHECK_LIB(pils, PILLoadPlugin)
    AC_CHECK_LIB(plumb, G_main_add_IPC_Channel)
+   PCMK_FEATURES="$PCMK_FEATURES lha-fencing"
 fi
 
 dnl ===============================================
@@ -1073,15 +1001,15 @@ CRM_DTD_DIRECTORY="${datadir}/pacemaker"
 AC_DEFINE_UNQUOTED(CRM_DTD_DIRECTORY,"$CRM_DTD_DIRECTORY", Location for the Pacemaker Relax-NG Schema)
 AC_SUBST(CRM_DTD_DIRECTORY)
 
-CRM_CORE_DIR=`try_extract_header_define $GLUE_HEADER HA_COREDIR ${localstatedir}/lib/pacemaker/cores`
+CRM_CORE_DIR="${localstatedir}/lib/pacemaker/cores"
 AC_DEFINE_UNQUOTED(CRM_CORE_DIR,"$CRM_CORE_DIR", Location to store core files produced by Pacemaker daemons)
 AC_SUBST(CRM_CORE_DIR)
 
-CRM_DAEMON_USER=`try_extract_header_define $GLUE_HEADER HA_CCMUSER hacluster`
+CRM_DAEMON_USER="hacluster"
 AC_DEFINE_UNQUOTED(CRM_DAEMON_USER,"$CRM_DAEMON_USER", User to run Pacemaker daemons as)
 AC_SUBST(CRM_DAEMON_USER)
 
-CRM_DAEMON_GROUP=`try_extract_header_define $GLUE_HEADER HA_APIGROUP haclient`
+CRM_DAEMON_GROUP="haclient"
 AC_DEFINE_UNQUOTED(CRM_DAEMON_GROUP,"$CRM_DAEMON_GROUP", Group to run Pacemaker daemons as)
 AC_SUBST(CRM_DAEMON_GROUP)
 
@@ -1113,21 +1041,12 @@ CRM_CONFIG_CTS="${localstatedir}/lib/pacemaker/cts"
 AC_DEFINE_UNQUOTED(CRM_CONFIG_CTS,"$CRM_CONFIG_CTS", Where to keep cts stateful data)
 AC_SUBST(CRM_CONFIG_CTS)
 
-CRM_LEGACY_CONFIG_DIR="${localstatedir}/lib/heartbeat/crm"
-AC_DEFINE_UNQUOTED(CRM_LEGACY_CONFIG_DIR,"$CRM_LEGACY_CONFIG_DIR", Where Pacemaker used to keep configuration files)
-AC_SUBST(CRM_LEGACY_CONFIG_DIR)
-
 CRM_DAEMON_DIR="${libexecdir}/pacemaker"
 AC_DEFINE_UNQUOTED(CRM_DAEMON_DIR,"$CRM_DAEMON_DIR", Location for Pacemaker daemons)
 AC_SUBST(CRM_DAEMON_DIR)
 
-HB_DAEMON_DIR=`try_extract_header_define $GLUE_HEADER HA_LIBHBDIR $libdir/heartbeat`
-AC_DEFINE_UNQUOTED(HB_DAEMON_DIR,"$HB_DAEMON_DIR", Location Heartbeat expects Pacemaker daemons to be in)
-AC_SUBST(HB_DAEMON_DIR)
-
-dnl Needed so that the Corosync plugin can clear out the directory as Heartbeat does
-HA_STATE_DIR=`try_extract_header_define $GLUE_HEADER HA_VARRUNDIR ${localstatedir}/run`
-AC_DEFINE_UNQUOTED(HA_STATE_DIR,"$HA_STATE_DIR", Where Heartbeat keeps state files and sockets)
+HA_STATE_DIR="${localstatedir}/run"
+AC_DEFINE_UNQUOTED(HA_STATE_DIR,"$HA_STATE_DIR", Where sbd keeps its PID file)
 AC_SUBST(HA_STATE_DIR)
 
 CRM_RSCTMP_DIR=`try_extract_header_define agent_config.h HA_RSCTMPDIR $HA_STATE_DIR/resource-agents`
@@ -1136,19 +1055,13 @@ AC_MSG_RESULT($CRM_RSCTMP_DIR)
 AC_DEFINE_UNQUOTED(CRM_RSCTMP_DIR,"$CRM_RSCTMP_DIR", Where resource agents should keep state files)
 AC_SUBST(CRM_RSCTMP_DIR)
 
-dnl Needed for the location of hostcache in CTS.py
-HA_VARLIBHBDIR=`try_extract_header_define $GLUE_HEADER HA_VARLIBHBDIR ${localstatedir}/lib/heartbeat`
-AC_SUBST(HA_VARLIBHBDIR)
-
-AC_DEFINE_UNQUOTED(UUID_FILE,"$localstatedir/lib/heartbeat/hb_uuid", Location of Heartbeat's UUID file)
-
-OCF_ROOT_DIR=`try_extract_header_define $GLUE_HEADER OCF_ROOT_DIR /usr/lib/ocf`
+OCF_ROOT_DIR="/usr/lib/ocf"
 if test "X$OCF_ROOT_DIR" = X; then
   AC_MSG_ERROR(Could not locate OCF directory)
 fi
 AC_SUBST(OCF_ROOT_DIR)
 
-OCF_RA_DIR=`try_extract_header_define $GLUE_HEADER OCF_RA_DIR $OCF_ROOT_DIR/resource.d`
+OCF_RA_DIR="$OCF_ROOT_DIR/resource.d"
 AC_DEFINE_UNQUOTED(OCF_RA_DIR,"$OCF_RA_DIR", Location for OCF RAs)
 AC_SUBST(OCF_RA_DIR)
 
@@ -1321,35 +1234,6 @@ STACKS=""
 CLUSTERLIBS=""
 
 dnl ========================================================================
-dnl    Cluster stack - Heartbeat
-dnl ========================================================================
-
-case $SUPPORT_HEARTBEAT in
-1|yes|true|try)
-   AC_MSG_CHECKING(for heartbeat support)
-   AC_CHECK_LIB(hbclient, ll_cluster_new, [SUPPORT_HEARTBEAT=1],
-		[if test $SUPPORT_HEARTBEAT != try; then
-			AC_MSG_FAILURE(Unable to support Heartbeat: client libraries not found)
-		fi])
-
-   if test $SUPPORT_HEARTBEAT = 1 ; then
-	STACKS="$STACKS heartbeat"
-	dnl objdump -x ${libdir}/libccmclient.so | grep SONAME | awk '{print $2}'
-	AC_DEFINE_UNQUOTED(CCM_LIBRARY, "libccmclient.so.1", Library to load for ccm support)
-	AC_DEFINE_UNQUOTED(HEARTBEAT_LIBRARY, "libhbclient.so.1", Library to load for heartbeat support)
-	BUILD_ATOMIC_ATTRD=0
-   else
-	SUPPORT_HEARTBEAT=0
-   fi
-   ;;
-*) SUPPORT_HEARTBEAT=0;;
-esac
-
-AM_CONDITIONAL(BUILD_HEARTBEAT_SUPPORT, test $SUPPORT_HEARTBEAT = 1)
-AC_DEFINE_UNQUOTED(SUPPORT_HEARTBEAT, $SUPPORT_HEARTBEAT, Support the Heartbeat messaging and membership layer)
-AC_SUBST(SUPPORT_HEARTBEAT)
-
-dnl ========================================================================
 dnl    Cluster stack - Corosync
 dnl ========================================================================
 
@@ -1364,109 +1248,28 @@ esac
 
 AC_MSG_CHECKING(for native corosync)
 COROSYNC_LIBS=""
-CS_USES_LIBQB=0
-
-PCMK_SERVICE_ID=9
 
 if test $SUPPORT_CS = no; then
     AC_MSG_RESULT(no (disabled))
     SUPPORT_CS=0
 else
-    AC_MSG_RESULT($SUPPORT_CS, with '$CSPREFIX')
+    AC_MSG_RESULT($SUPPORT_CS)
     SUPPORT_CS=1
     PKG_CHECK_MODULES(cpg,    libcpg) dnl Fatal
     PKG_CHECK_MODULES(cfg,    libcfg) dnl Fatal
-    PKG_CHECK_MODULES(cmap,   libcmap,   HAVE_cmap=1,   HAVE_cmap=0)
-    PKG_CHECK_MODULES(cman,   libcman,   HAVE_cman=1,   HAVE_cman=0)
-    PKG_CHECK_MODULES(confdb, libconfdb, HAVE_confdb=1, HAVE_confdb=0)
-    PKG_CHECK_MODULES(fenced, libfenced, HAVE_fenced=1, HAVE_fenced=0)
-    PKG_CHECK_MODULES(quorum, libquorum, HAVE_quorum=1, HAVE_quorum=0)
-    PKG_CHECK_MODULES(oldipc, libcoroipcc, HAVE_oldipc=1, HAVE_oldipc=0)
+    PKG_CHECK_MODULES(cmap,   libcmap) dnl Fatal
+    PKG_CHECK_MODULES(quorum, libquorum) dnl Fatal
 
-    if test $HAVE_oldipc = 1; then
-	CFLAGS="$CFLAGS $oldipc_FLAGS $cpg_FLAGS $cfg_FLAGS"
-        COROSYNC_LIBS="$COROSYNC_LIBS $oldipc_LIBS $cpg_LIBS $cfg_LIBS"
-    else
-        CS_USES_LIBQB=1
-	CFLAGS="$CFLAGS $libqb_FLAGS $cpg_FLAGS $cfg_FLAGS"
-        COROSYNC_LIBS="$COROSYNC_LIBS $libqb_LIBS $cpg_LIBS $cfg_LIBS"
-        AC_CHECK_LIB(corosync_common, cs_strerror)
-    fi
-
-    AC_DEFINE_UNQUOTED(HAVE_CONFDB, $HAVE_confdb, Have the old herarchial Corosync config API)
-    AC_DEFINE_UNQUOTED(HAVE_CMAP, $HAVE_cmap, Have the new non-herarchial Corosync config API)
-fi
-
-
-if test $SUPPORT_CS = 1 -a x$HAVE_oldipc = x0 ; then
-    dnl Support for plugins was removed about the time the IPC was
-    dnl moved to libqb.
-    dnl The only option now is the built-in quorum API
-    CFLAGS="$CFLAGS $cmap_CFLAGS $quorum_CFLAGS"
-    COROSYNC_LIBS="$COROSYNC_LIBS $cmap_LIBS $quorum_LIBS"
-
-    STACKS="$STACKS corosync-native"
-    AC_DEFINE_UNQUOTED(SUPPORT_CS_QUORUM, 1, Support the consumption of membership and quorum from corosync)
-fi
-
-SUPPORT_PLUGIN=0
-if test $SUPPORT_CS = 1 -a x$HAVE_confdb = x1; then
-    dnl Need confdb to support cman and the plugins
-    SUPPORT_PLUGIN=1
-    BUILD_ATOMIC_ATTRD=0
-    AC_MSG_CHECKING([for corosync path for plugins])
-    PKG_CHECK_VAR([LCRSODIR], [corosync], [lcrsodir], [
-       AC_MSG_RESULT([$LCRSODIR])
-    ],[
-       AC_SUBST([LCRSODIR], [$libdir])
-       AC_MSG_RESULT([$LCRSODIR (fallback)])
-    ])
-    STACKS="$STACKS corosync-plugin"
-    COROSYNC_LIBS="$COROSYNC_LIBS $confdb_LIBS"
-
-    if test $SUPPORT_CMAN != no; then
-        if test $HAVE_cman = 1 -a $HAVE_fenced = 1; then
-            SUPPORT_CMAN=1
-	    STACKS="$STACKS cman"
-            CFLAGS="$CFLAGS $cman_FLAGS $fenced_FLAGS"
-            COROSYNC_LIBS="$COROSYNC_LIBS $cman_LIBS $fenced_LIBS"
-        fi
-    fi
-fi
-
-dnl Normalize SUPPORT_CS and SUPPORT_CMAN for use with #if directives
-if test $SUPPORT_CMAN != 1; then
-    SUPPORT_CMAN=0
-fi
-
-if test $SUPPORT_CS = 1; then
+    CFLAGS="$CFLAGS $libqb_FLAGS $cpg_FLAGS $cfg_FLAGS $cmap_CFLAGS $quorum_CFLAGS"
+    COROSYNC_LIBS="$COROSYNC_LIBS $libqb_LIBS $cpg_LIBS $cfg_LIBS $cmap_LIBS $quorum_LIBS"
     CLUSTERLIBS="$CLUSTERLIBS $COROSYNC_LIBS"
-
-elif test $SUPPORT_CS != 0; then
-    SUPPORT_CS=0
-    if test $missingisfatal = 0; then
-        AC_MSG_WARN(Unable to support Corosync: $aisreason)
-    else
-        AC_MSG_FAILURE(Unable to support Corosync: $aisreason)
-    fi
+    AC_CHECK_LIB(corosync_common, cs_strerror)
+    STACKS="$STACKS corosync-native"
 fi
 
 AC_DEFINE_UNQUOTED(SUPPORT_COROSYNC, $SUPPORT_CS,    Support the Corosync messaging and membership layer)
-AC_DEFINE_UNQUOTED(SUPPORT_CMAN,     $SUPPORT_CMAN,  Support the consumption of membership and quorum from cman)
-AC_DEFINE_UNQUOTED(CS_USES_LIBQB,    $CS_USES_LIBQB, Does corosync use libqb for its ipc)
-AC_DEFINE_UNQUOTED(PCMK_SERVICE_ID,  $PCMK_SERVICE_ID, Corosync service number)
-AC_DEFINE_UNQUOTED(SUPPORT_PLUGIN,   $SUPPORT_PLUGIN, Support the Pacemaker plugin for Corosync)
-
 AM_CONDITIONAL(BUILD_CS_SUPPORT, test $SUPPORT_CS = 1)
-AM_CONDITIONAL(BUILD_CS_PLUGIN, test $SUPPORT_PLUGIN = 1)
-AM_CONDITIONAL(BUILD_CMAN, test $SUPPORT_CMAN = 1)
-
-AM_CONDITIONAL(BUILD_ATOMIC_ATTRD, test $BUILD_ATOMIC_ATTRD = 1)
-AC_DEFINE_UNQUOTED(HAVE_ATOMIC_ATTRD, $BUILD_ATOMIC_ATTRD, Support the new atomic attrd)
-
-AC_SUBST(SUPPORT_CMAN)
-AC_SUBST(SUPPORT_CS)
-AC_SUBST(SUPPORT_PLUGIN)
+AC_SUBST(SUPPORT_COROSYNC)
 
 dnl
 dnl    Cluster stack - Sanity
@@ -1478,15 +1281,13 @@ if test x${enable_no_stack} = xyes; then
 else
     AC_MSG_CHECKING(for supported stacks)
     if test x"$STACKS" = x; then
-      AC_MSG_FAILURE(You must support at least one cluster stack (heartbeat or corosync) )
+      AC_MSG_FAILURE(You must support at least one cluster stack)
     fi
     AC_MSG_RESULT($STACKS)
     PCMK_FEATURES="$PCMK_FEATURES $STACKS"
 fi
 
-if test ${BUILD_ATOMIC_ATTRD} = 1; then
-    PCMK_FEATURES="$PCMK_FEATURES atomic-attrd"
-fi
+PCMK_FEATURES="$PCMK_FEATURES atomic-attrd"
 AC_SUBST(CLUSTERLIBS)
 
 dnl ========================================================================
@@ -1685,10 +1486,6 @@ if test $SUPPORT_CIBSECRETS = 1; then
     LRM_CIBSECRETS_DIR="${localstatedir}/lib/pacemaker/lrm/secrets"
     AC_DEFINE_UNQUOTED(LRM_CIBSECRETS_DIR,"$LRM_CIBSECRETS_DIR", Location for CIB secrets)
     AC_SUBST(LRM_CIBSECRETS_DIR)
-
-    LRM_LEGACY_CIBSECRETS_DIR="${localstatedir}/lib/heartbeat/lrm/secrets"
-    AC_DEFINE_UNQUOTED(LRM_LEGACY_CIBSECRETS_DIR,"$LRM_LEGACY_CIBSECRETS_DIR", Legacy location for CIB secrets)
-    AC_SUBST(LRM_LEGACY_CIBSECRETS_DIR)
 fi
 
 dnl ========================================================================
@@ -1854,11 +1651,6 @@ dnl otherwise none of both
 	    CC_EXTRAS="$CC_EXTRAS $j"
 	  fi
 	done
-
-dnl In lib/ais/Makefile.am there's a gcc option available as of v4.x
-
-	GCC_MAJOR=`gcc -v 2>&1 | awk 'END{print $3}' | sed 's/[.].*//'`
-	AM_CONDITIONAL(GCC_4, test "${GCC_MAJOR}" = 4)
 
 dnl System specific options
 
@@ -2062,7 +1854,6 @@ coverage.sh							\
 cts/Makefile					        	\
 	cts/CTSvars.py						\
 	cts/LSBDummy						\
-	cts/HBDummy						\
 	cts/benchmark/Makefile					\
 	cts/benchmark/clubench					\
 	cts/lxc_autogen.sh					\
@@ -2092,7 +1883,6 @@ lib/Makefile							\
 	lib/pacemaker-pengine.pc				\
 	lib/pacemaker-fencing.pc				\
 	lib/pacemaker-cluster.pc				\
-	lib/ais/Makefile					\
 	lib/common/Makefile					\
 	lib/cluster/Makefile					\
 	lib/cib/Makefile					\
@@ -2148,9 +1938,6 @@ AC_MSG_RESULT([  Header files             = ${includedir}])
 AC_MSG_RESULT([  Arch-independent files   = ${datadir}])
 AC_MSG_RESULT([  State information        = ${localstatedir}])
 AC_MSG_RESULT([  System configuration     = ${sysconfdir}])
-if test $SUPPORT_PLUGIN = 1; then
-AC_MSG_RESULT([  Corosync Plugins         = ${LCRSODIR}])
-fi
 AC_MSG_RESULT([])
 AC_MSG_RESULT([  HA group name            = ${CRM_DAEMON_GROUP}])
 AC_MSG_RESULT([  HA user name             = ${CRM_DAEMON_USER}])

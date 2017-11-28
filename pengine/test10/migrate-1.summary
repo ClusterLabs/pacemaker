@@ -3,7 +3,7 @@ Current cluster status:
 Node node1: standby
 Online: [ node2 ]
 
- rsc3	(heartbeat:apache):	Started node1
+ rsc3	(ocf::heartbeat:apache):	Started node1
 
 Transition Summary:
  * Migrate    rsc3    ( node1 -> node2 )  
@@ -20,5 +20,5 @@ Revised cluster status:
 Node node1: standby
 Online: [ node2 ]
 
- rsc3	(heartbeat:apache):	Started node2
+ rsc3	(ocf::heartbeat:apache):	Started node2
 

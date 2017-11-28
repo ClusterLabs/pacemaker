@@ -12,15 +12,15 @@
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="stop"/>
         <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="4"/>
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.6-0.65.892f17e3b2a2.hg.fc15-892f17e3b2a2ba680f2081d840809938ddf61113"/>
-        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="openais"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-is-managed-default" name="is-managed-default" value="false"/>
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="pcmk-1" uname="pcmk-1" type="normal"/>
-      <node id="pcmk-2" uname="pcmk-2" type="normal"/>
-      <node id="pcmk-3" uname="pcmk-3" type="normal"/>
-      <node id="pcmk-4" uname="pcmk-4" type="normal"/>
+      <node id="pcmk-1" uname="pcmk-1" type="member"/>
+      <node id="pcmk-2" uname="pcmk-2" type="member"/>
+      <node id="pcmk-3" uname="pcmk-3" type="member"/>
+      <node id="pcmk-4" uname="pcmk-4" type="member"/>
     </nodes>
     <resources>
       <clone id="Fencing">

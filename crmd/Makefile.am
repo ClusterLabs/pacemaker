@@ -47,9 +47,6 @@ crmd_SOURCES	= main.c crmd.c corosync.c crmd_metadata.c			\
 		election.c join_client.c join_dc.c subsystems.c throttle.c	\
 		cib.c pengine.c tengine.c lrm.c lrm_state.c remote_lrmd_ra.c	\
 		utils.c misc.c te_events.c te_actions.c te_utils.c te_callbacks.c
-if BUILD_HEARTBEAT_SUPPORT
-crmd_SOURCES += heartbeat.c
-endif
 
 if BUILD_XML_HELP
 man7_MANS 	= crmd.7

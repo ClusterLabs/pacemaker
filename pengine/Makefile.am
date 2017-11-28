@@ -75,7 +75,6 @@ pengine_CFLAGS	= $(CFLAGS_HARDENED_EXE)
 pengine_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
 pengine_LDADD	= $(top_builddir)/lib/cib/libcib.la $(COMMONLIBS)
 # libcib for get_object_root()
-#		$(top_builddir)/lib/hbclient/libhbclient.la
 pengine_SOURCES	= main.c
 
 install-exec-local:

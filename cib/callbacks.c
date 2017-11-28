@@ -51,11 +51,7 @@ typedef struct cib_local_notify_s {
 
 int next_client_id = 0;
 
-#if SUPPORT_PLUGIN
-gboolean legacy_mode = TRUE;
-#else
 gboolean legacy_mode = FALSE;
-#endif
 
 qb_ipcs_service_t *ipcs_ro = NULL;
 qb_ipcs_service_t *ipcs_rw = NULL;
@@ -74,7 +70,6 @@ int cib_process_command(xmlNode * request, xmlNode ** reply,
 gboolean cib_common_callback(qb_ipcs_connection_t * c, void *data, size_t size,
                              gboolean privileged);
 
-#if !SUPPORT_PLUGIN
 static gboolean cib_read_legacy_mode(void)
 {
     static gboolean init = TRUE;
@@ -90,18 +85,13 @@ static gboolean cib_read_legacy_mode(void)
 
     return legacy;
 }
-#endif
 
 gboolean cib_legacy_mode(void)
 {
-#if SUPPORT_PLUGIN
-    return TRUE;
-#else
     if(cib_read_legacy_mode()) {
         return TRUE;
     }
     return legacy_mode;
-#endif
 }
 
 
@@ -1426,17 +1416,6 @@ cib_GCompareFunc(gconstpointer a, gconstpointer b)
     return 1;
 }
 
-#if SUPPORT_HEARTBEAT
-void
-cib_ha_peer_callback(HA_Message * msg, void *private_data)
-{
-    xmlNode *xml = convert_ha_message(NULL, msg, __FUNCTION__);
-
-    cib_peer_callback(xml, private_data);
-    free_xml(xml);
-}
-#endif
-
 void
 cib_peer_callback(xmlNode * msg, void *private_data)
 {
@@ -1473,129 +1452,6 @@ cib_peer_callback(xmlNode * msg, void *private_data)
         crm_warn("Discarding %s message (%s) from %s: %s", op, seq, originator, reason);
     }
 }
-
-#if SUPPORT_HEARTBEAT
-extern oc_ev_t *cib_ev_token;
-static void *ccm_library = NULL;
-int (*ccm_api_callback_done) (void *cookie) = NULL;
-int (*ccm_api_handle_event) (const oc_ev_t * token) = NULL;
-
-void
-cib_client_status_callback(const char *node, const char *client, const char *status, void *private)
-{
-    /* Heartbeat only */
-    crm_node_t *peer = NULL;
-
-    if (safe_str_eq(client, CRM_SYSTEM_CIB)) {
-        peer = crm_get_peer(0, node);
-        if (safe_str_neq(peer->state, CRM_NODE_MEMBER)) {
-            crm_warn("This peer is not a ccm member (yet). "
-                "Status ignored: Client %s/%s announced status [%s]",
-                node, client, status);
-            return;
-        }
-
-        crm_info("Status update: Client %s/%s now has status [%s]", node, client, status);
-
-        if (safe_str_eq(status, JOINSTATUS)) {
-            status = ONLINESTATUS;
-
-        } else if (safe_str_eq(status, LEAVESTATUS)) {
-            status = OFFLINESTATUS;
-        }
-
-        crm_update_peer_proc(__FUNCTION__, peer, crm_proc_cib, status);
-    }
-    return;
-}
-
-int
-cib_ccm_dispatch(gpointer user_data)
-{
-    int rc = 0;
-    oc_ev_t *ccm_token = (oc_ev_t *) user_data;
-
-    crm_trace("received callback");
-
-    if (ccm_api_handle_event == NULL) {
-        ccm_api_handle_event =
-            find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_handle_event", 1);
-    }
-
-    rc = (*ccm_api_handle_event) (ccm_token);
-    if (0 == rc) {
-        return 0;
-    }
-
-    crm_err("CCM connection appears to have failed: rc=%d.", rc);
-
-    /* eventually it might be nice to recover and reconnect... but until then... */
-    crm_err("Exiting to recover from CCM connection failure");
-    return crm_exit(ENOTCONN);
-}
-
-int current_instance = 0;
-void
-cib_ccm_msg_callback(oc_ed_t event, void *cookie, size_t size, const void *data)
-{
-    gboolean update_id = FALSE;
-    const oc_ev_membership_t *membership = data;
-
-    CRM_ASSERT(membership != NULL);
-
-    crm_info("Processing CCM event=%s (id=%d)", ccm_event_name(event), membership->m_instance);
-
-    if (current_instance > membership->m_instance) {
-        crm_err("Membership instance ID went backwards! %d->%d",
-                current_instance, membership->m_instance);
-        CRM_ASSERT(current_instance <= membership->m_instance);
-    }
-
-    switch (event) {
-        case OC_EV_MS_NEW_MEMBERSHIP:
-        case OC_EV_MS_INVALID:
-            update_id = TRUE;
-            break;
-        case OC_EV_MS_PRIMARY_RESTORED:
-            update_id = TRUE;
-            break;
-        case OC_EV_MS_NOT_PRIMARY:
-            crm_trace("Ignoring transitional CCM event: %s", ccm_event_name(event));
-            break;
-        case OC_EV_MS_EVICTED:
-            crm_err("Evicted from CCM: %s", ccm_event_name(event));
-            break;
-        default:
-            crm_err("Unknown CCM event: %d", event);
-    }
-
-    if (update_id) {
-        unsigned int lpc = 0;
-
-        CRM_CHECK(membership != NULL, return);
-
-        current_instance = membership->m_instance;
-
-        for (lpc = 0; lpc < membership->m_n_out; lpc++) {
-            crm_update_ccm_node(membership, lpc + membership->m_out_idx, CRM_NODE_LOST,
-                                current_instance);
-        }
-
-        for (lpc = 0; lpc < membership->m_n_member; lpc++) {
-            crm_update_ccm_node(membership, lpc + membership->m_memb_idx, CRM_NODE_MEMBER,
-                                current_instance);
-        }
-        heartbeat_cluster->llc_ops->client_status(heartbeat_cluster, NULL, crm_system_name, 0);
-    }
-
-    if (ccm_api_callback_done == NULL) {
-        ccm_api_callback_done =
-            find_library_function(&ccm_library, CCM_LIBRARY, "oc_ev_callback_done", 1);
-    }
-    (*ccm_api_callback_done) (cookie);
-    return;
-}
-#endif
 
 gboolean
 can_write(int flags)

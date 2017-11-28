@@ -6,7 +6,7 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="cd13842c-3f58-4e7d-8126-685259527532" uname="jamesltc" type="normal"/>
+      <node id="cd13842c-3f58-4e7d-8126-685259527532" uname="jamesltc" type="member"/>
     </nodes>
     <resources>
       <group id="nfs">

@@ -16,8 +16,8 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="49e81295-8e2f-4aeb-98f3-a14de6f62298" uname="webcluster01" type="normal"/>
-      <node id="917954cd-0285-4fcd-9cd2-671736c4de66" uname="webcluster02" type="normal"/>
+      <node id="49e81295-8e2f-4aeb-98f3-a14de6f62298" uname="webcluster01" type="member"/>
+      <node id="917954cd-0285-4fcd-9cd2-671736c4de66" uname="webcluster02" type="member"/>
     </nodes>
     <resources>
       <primitive id="extip_1" class="ocf" type="IPaddr2" provider="heartbeat">

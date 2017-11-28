@@ -6,7 +6,7 @@ Online: [ c001n02 c001n03 c001n08 ]
  DcIPaddr	(ocf::heartbeat:IPaddr):	Started c001n01 (UNCLEAN)
  Resource Group: group-1
      ocf_192.168.100.181	(ocf::heartbeat:IPaddr):	Started c001n03
-     heartbeat_192.168.100.182	(heartbeat:IPaddr):	Started c001n03
+     heartbeat_192.168.100.182	(ocf::heartbeat:IPaddr):	Started c001n03
      ocf_192.168.100.183	(ocf::heartbeat:IPaddr):	Started c001n03
  lsb_dummy	(lsb:/usr/lib/heartbeat/cts/LSBDummy):	Started c001n02
  rsc_c001n01	(ocf::heartbeat:IPaddr):	Started c001n01 (UNCLEAN)
@@ -100,7 +100,7 @@ OFFLINE: [ c001n01 ]
  DcIPaddr	(ocf::heartbeat:IPaddr):	Started c001n03
  Resource Group: group-1
      ocf_192.168.100.181	(ocf::heartbeat:IPaddr):	Started c001n02
-     heartbeat_192.168.100.182	(heartbeat:IPaddr):	Started c001n02
+     heartbeat_192.168.100.182	(ocf::heartbeat:IPaddr):	Started c001n02
      ocf_192.168.100.183	(ocf::heartbeat:IPaddr):	Started c001n02
  lsb_dummy	(lsb:/usr/lib/heartbeat/cts/LSBDummy):	Started c001n08
  rsc_c001n01	(ocf::heartbeat:IPaddr):	Started c001n03

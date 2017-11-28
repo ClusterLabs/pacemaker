@@ -21,7 +21,8 @@ disadvantages.
 |Allows change of messaging layer
 indexterm:[Cluster,switching between stacks]
 indexterm:[Changing cluster stack]
-footnote:[For example, switching from Heartbeat to Corosync.]
+footnote:[Currently, Corosync 2 is the only supported cluster stack, but that
+is likely to change in the future.]
 
 |Complete cluster shutdown
 indexterm:[upgrade,shutdown]
@@ -70,7 +71,8 @@ then upgrades all the nodes before restarting the cluster.
 .. Check the configuration with the `crm_verify` tool.
 . On each node:
 .. Start the cluster software.
-   The messaging layer can be either Corosync or Heartbeat and does not need to
+   Currently, only Corosync version 2 is supported as the cluster layer,
+   but if another stack is supported in the future, the stack does not need to
    be the same one before the upgrade.
 
 One variation of this approach is to build a new cluster on new hosts.
@@ -148,12 +150,12 @@ To perform a rolling upgrade, on each node in turn:
 . If this is the first node to be upgraded, check the configuration
   with the `crm_verify` tool.
 . Start the messaging layer.
-  This must be the same messaging layer (Corosync or Heartbeat)
-  that the rest of the cluster is using.
+  This must be the same messaging layer (currently only Corosync 2 is
+  supported) that the rest of the cluster is using.
 
 [NOTE]
 ====
-Rolling upgrades were not always possible with older heartbeat and
+Rolling upgrades were not always possible with older
 pacemaker versions. Rolling upgrades that cross compatibility
 boundaries listed in the following table must be performed in multiple steps.
 
@@ -168,19 +170,7 @@ boundaries listed in the following table must be performed in multiple steps.
 |Pacemaker 1.0.0
 
 |Pacemaker 0.7.x
-|Pacemaker 0.6 or Heartbeat 2.1.3
-
-|Pacemaker 0.6.x
-|Heartbeat 2.0.8
-
-|Heartbeat 2.1.3 (or less)
-|Heartbeat 2.0.4
-
-|Heartbeat 2.0.4 (or less)
-|Heartbeat 2.0.0
-
-|Heartbeat 2.0.0
-|None. Use an alternate upgrade strategy.
+|Pacemaker 0.6.0
 
 |=========================================================
 ====
@@ -205,9 +195,10 @@ This method may not be used if the cluster contains any Pacemaker Remote nodes.
   at the same time, that will be more likely to cause outages in the detached
   services (certainly, if a reboot is required).
 . Check the configuration with the `crm_verify` tool.
-. On each node, start the cluster software. The messaging layer can be either
-  Corosync or Heartbeat and does not need to be the same one as before the
-  upgrade.
+. On each node, start the cluster software.
+  Currently, only Corosync version 2 is supported as the cluster layer,
+  but if another stack is supported in the future, the stack does not need to
+  be the same one before the upgrade.
 . Verify that the cluster re-detected all resources correctly.
 . Allow the cluster to resume managing resources again:
 +

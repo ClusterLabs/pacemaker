@@ -403,7 +403,7 @@ action_launch_child(svc_action_t *op)
      */
     setpgid(0, 0);
 
-    /* close all descriptors except stdin/out/err and channels to logd */
+    // Close all file descriptors except stdin/stdout/stderr
     for (lpc = getdtablesize() - 1; lpc > STDERR_FILENO; lpc--) {
         close(lpc);
     }

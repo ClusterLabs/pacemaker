@@ -11,32 +11,32 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="dc83915f-5936-4b66-865d-802ac91b5c18" uname="sles-1" type="normal">
+      <node id="dc83915f-5936-4b66-865d-802ac91b5c18" uname="sles-1" type="member">
         <instance_attributes id="instance_attributes.id21915">
           <nvpair name="standby" id="nvpair.id21922" value="off"/>
         </instance_attributes>
       </node>
-      <node id="de1d5b97-e25b-49ae-89a3-daff19671aa5" uname="sles-2" type="normal">
+      <node id="de1d5b97-e25b-49ae-89a3-daff19671aa5" uname="sles-2" type="member">
         <instance_attributes id="instance_attributes.id21943">
           <nvpair name="standby" id="nvpair.id21950" value="off"/>
         </instance_attributes>
       </node>
-      <node id="d38d7afa-de9e-4ef2-b4a0-fd58a7c67700" uname="sles-3" type="normal">
+      <node id="d38d7afa-de9e-4ef2-b4a0-fd58a7c67700" uname="sles-3" type="member">
         <instance_attributes id="instance_attributes.id21971">
           <nvpair name="standby" id="nvpair.id21978" value="off"/>
         </instance_attributes>
       </node>
-      <node id="6b218012-be71-4249-a8ad-332247f79065" uname="sles-4" type="normal">
+      <node id="6b218012-be71-4249-a8ad-332247f79065" uname="sles-4" type="member">
         <instance_attributes id="instance_attributes.id21999">
           <nvpair name="standby" id="nvpair.id22006" value="off"/>
         </instance_attributes>
       </node>
-      <node id="434915c6-7b40-4d30-95ff-dc0ff3dc005a" uname="sles-5" type="normal">
+      <node id="434915c6-7b40-4d30-95ff-dc0ff3dc005a" uname="sles-5" type="member">
         <instance_attributes id="instance_attributes.id22027">
           <nvpair name="standby" id="nvpair.id22034" value="off"/>
         </instance_attributes>
       </node>
-      <node id="e7840e57-67e1-44dc-9804-edd22d282394" uname="sles-6" type="normal">
+      <node id="e7840e57-67e1-44dc-9804-edd22d282394" uname="sles-6" type="member">
         <instance_attributes id="instance_attributes.id22055">
           <nvpair name="standby" id="nvpair.id22062" value="off"/>
         </instance_attributes>
@@ -53,7 +53,7 @@
           </instance_attributes>
           <meta_attributes id="primitive-r192.168.100.181.meta"/>
         </primitive>
-        <primitive id="r192.168.100.182" class="heartbeat" type="IPaddr">
+        <primitive id="r192.168.100.182" class="ocf" provider="heartbeat" type="IPaddr">
           <operations>
             <op name="monitor" interval="5s" id="r192.168.100.182-mon"/>
           </operations>
@@ -226,7 +226,7 @@
           <lrm_resource id="ocf_msdummy:2" type="Stateful" class="ocf" provider="heartbeat">
             <lrm_rsc_op id="ocf_msdummy-2_monitor_0" operation="monitor" transition-key="19:0:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition-magic="4:7;19:0:03cf0502-d7a2-4481-884b-6a6edf5813f0" call-id="16" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
-          <lrm_resource id="r192.168.100.182" type="IPaddr" class="heartbeat">
+          <lrm_resource id="r192.168.100.182" type="IPaddr" class="ocf" provider="heartbeat">
             <lrm_rsc_op id="r192.168.100.182_monitor_0" operation="monitor" transition-key="4:0:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition-magic="4:7;4:0:03cf0502-d7a2-4481-884b-6a6edf5813f0" call-id="3" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="228e5b6a6590df0e8af9a9964014ed59"/>
             <lrm_rsc_op id="r192.168.100.182_start_0" operation="start" transition-key="13:7:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition-magic="0:0;13:7:03cf0502-d7a2-4481-884b-6a6edf5813f0" call-id="35" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="228e5b6a6590df0e8af9a9964014ed59"/>
             <lrm_rsc_op id="r192.168.100.182_monitor_5000" operation="monitor" transition-key="14:7:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition-magic="0:0;14:7:03cf0502-d7a2-4481-884b-6a6edf5813f0" call-id="37" crm_feature_set="2.0" rc-code="0" op-status="0" interval="5000" op-digest="69ba9b280a0f25ada1ead264a34aa5ff"/>
@@ -323,7 +323,7 @@
           <lrm_resource id="ocf_msdummy:2" type="Stateful" class="ocf" provider="heartbeat">
             <lrm_rsc_op id="ocf_msdummy-2_monitor_0" operation="monitor" transition-key="21:2:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition-magic="4:7;21:2:03cf0502-d7a2-4481-884b-6a6edf5813f0" call-id="14" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
-          <lrm_resource id="r192.168.100.182" type="IPaddr" class="heartbeat">
+          <lrm_resource id="r192.168.100.182" type="IPaddr" class="ocf" provider="heartbeat">
             <lrm_rsc_op id="r192.168.100.182_monitor_0" operation="monitor" transition-key="6:2:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition-magic="4:7;6:2:03cf0502-d7a2-4481-884b-6a6edf5813f0" call-id="3" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="228e5b6a6590df0e8af9a9964014ed59"/>
           </lrm_resource>
           <lrm_resource id="lsb_dummy" type="/usr/share/heartbeat/cts/LSBDummy" class="lsb">
@@ -418,7 +418,7 @@
           <lrm_resource id="ocf_msdummy:2" type="Stateful" class="ocf" provider="heartbeat">
             <lrm_rsc_op id="ocf_msdummy-2_monitor_0" operation="monitor" transition-key="23:4:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition-magic="4:7;23:4:03cf0502-d7a2-4481-884b-6a6edf5813f0" call-id="24" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
           </lrm_resource>
-          <lrm_resource id="r192.168.100.182" type="IPaddr" class="heartbeat">
+          <lrm_resource id="r192.168.100.182" type="IPaddr" class="ocf" provider="heartbeat">
             <lrm_rsc_op id="r192.168.100.182_monitor_0" operation="monitor" transition-key="8:4:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition-magic="4:7;8:4:03cf0502-d7a2-4481-884b-6a6edf5813f0" call-id="3" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="228e5b6a6590df0e8af9a9964014ed59"/>
           </lrm_resource>
           <lrm_resource id="lsb_dummy" type="/usr/share/heartbeat/cts/LSBDummy" class="lsb">
@@ -517,7 +517,7 @@
             <lrm_rsc_op id="ocf_msdummy-2_start_0" operation="start" transition-key="57:7:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition-magic="0:0;57:7:03cf0502-d7a2-4481-884b-6a6edf5813f0" call-id="30" crm_feature_set="2.0" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
             <lrm_rsc_op id="ocf_msdummy-2_monitor_5000" operation="monitor" transition-key="81:8:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition-magic="0:0;81:8:03cf0502-d7a2-4481-884b-6a6edf5813f0" call-id="35" crm_feature_set="2.0" rc-code="0" op-status="0" interval="5000" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
           </lrm_resource>
-          <lrm_resource id="r192.168.100.182" type="IPaddr" class="heartbeat">
+          <lrm_resource id="r192.168.100.182" type="IPaddr" class="ocf" provider="heartbeat">
             <lrm_rsc_op id="r192.168.100.182_monitor_0" operation="monitor" transition-key="10:6:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition-magic="4:7;10:6:03cf0502-d7a2-4481-884b-6a6edf5813f0" call-id="3" crm_feature_set="2.0" rc-code="7" op-status="4" interval="0" op-digest="228e5b6a6590df0e8af9a9964014ed59"/>
           </lrm_resource>
           <lrm_resource id="lsb_dummy" type="/usr/share/heartbeat/cts/LSBDummy" class="lsb">
@@ -613,7 +613,7 @@
           <lrm_resource id="r192.168.100.183" type="IPaddr" class="ocf" provider="heartbeat">
             <lrm_rsc_op id="r192.168.100.183_monitor_0" operation="monitor" transition-key="36:12:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition-magic="0:7;36:12:03cf0502-d7a2-4481-884b-6a6edf5813f0" call-id="4" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="5e75cf1e843f889f89d5fcb2d7645ad6"/>
           </lrm_resource>
-          <lrm_resource id="r192.168.100.182" type="IPaddr" class="heartbeat">
+          <lrm_resource id="r192.168.100.182" type="IPaddr" class="ocf" provider="heartbeat">
             <lrm_rsc_op id="r192.168.100.182_monitor_0" operation="monitor" transition-key="35:12:03cf0502-d7a2-4481-884b-6a6edf5813f0" transition-magic="0:7;35:12:03cf0502-d7a2-4481-884b-6a6edf5813f0" call-id="3" crm_feature_set="2.0" rc-code="7" op-status="0" interval="0" op-digest="228e5b6a6590df0e8af9a9964014ed59"/>
           </lrm_resource>
           <lrm_resource id="rsc_sles-2" type="IPaddr" class="ocf" provider="heartbeat">

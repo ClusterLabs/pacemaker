@@ -375,9 +375,6 @@ The attribute name is customizable, in order to allow multiple ping groups to be
 
 [NOTE]
 ===========
-Older versions of Heartbeat required users to add ping nodes to +ha.cf+, but
-this is no longer required.
-
 Older versions of Pacemaker used a different agent *ocf:pacemaker:pingd* which
 is now deprecated in favor of *ping*. If your version of Pacemaker does not
 contain the *ping* resource agent, download the latest version from

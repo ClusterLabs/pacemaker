@@ -11,8 +11,8 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="3f368213-61d5-409a-a30e-1428efe70f63" uname="star" type="normal"/>
-      <node id="e4603bf6-d10f-4af2-b53b-ba72de6164d0" uname="world" type="normal"/>
+      <node id="3f368213-61d5-409a-a30e-1428efe70f63" uname="star" type="member"/>
+      <node id="e4603bf6-d10f-4af2-b53b-ba72de6164d0" uname="world" type="member"/>
     </nodes>
     <resources>
       <primitive id="p1" class="ocf" type="Xen" provider="heartbeat">

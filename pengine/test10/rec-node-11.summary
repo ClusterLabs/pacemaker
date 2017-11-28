@@ -5,9 +5,9 @@ Online: [ node2 ]
 
  stonith-1	(stonith:dummy):	Stopped 
  Resource Group: group1
-     rsc1	(heartbeat:apache):	Started node1
-     rsc2	(heartbeat:apache):	Started node1
- rsc3	(heartbeat:apache):	Started node2
+     rsc1	(ocf::heartbeat:apache):	Started node1
+     rsc2	(ocf::heartbeat:apache):	Started node1
+ rsc3	(ocf::heartbeat:apache):	Started node2
 
 Transition Summary:
  * Fence (reboot) node1 'peer process is no longer available'
@@ -41,7 +41,7 @@ OFFLINE: [ node1 ]
 
  stonith-1	(stonith:dummy):	Started node2
  Resource Group: group1
-     rsc1	(heartbeat:apache):	Started node2
-     rsc2	(heartbeat:apache):	Started node2
- rsc3	(heartbeat:apache):	Started node2
+     rsc1	(ocf::heartbeat:apache):	Started node2
+     rsc2	(ocf::heartbeat:apache):	Started node2
+ rsc3	(ocf::heartbeat:apache):	Started node2
 

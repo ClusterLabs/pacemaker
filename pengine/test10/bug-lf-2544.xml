@@ -3,15 +3,15 @@
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.4-cb21e16660c217c11a3d54dad1a7e763d688f3a5"/>
-        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="openais"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="2"/>
         <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="node-0" type="normal" uname="node-0"/>
-      <node id="node-1" type="normal" uname="node-1"/>
+      <node id="node-0" type="member" uname="node-0"/>
+      <node id="node-1" type="member" uname="node-1"/>
     </nodes>
     <resources>
       <master id="ms0">

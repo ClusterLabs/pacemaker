@@ -79,12 +79,6 @@ void terminate_cib(const char *caller, int fast);
 
 extern gboolean cib_legacy_mode(void);
 
-#if SUPPORT_HEARTBEAT
-extern void cib_ha_peer_callback(HA_Message * msg, void *private_data);
-extern int cib_ccm_dispatch(gpointer user_data);
-extern void cib_ccm_msg_callback(oc_ed_t event, void *cookie, size_t size, const void *data);
-#endif
-
 static inline const char *
 cib_config_lookup(const char *opt)
 {

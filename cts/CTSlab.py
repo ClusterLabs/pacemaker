@@ -30,8 +30,7 @@ sys.path.insert(0, pdir) # So that things work from the source directory
 
 try:
     from cts.CTSvars      import *
-    from cts.CM_ais       import *
-    from cts.CM_lha       import crm_lha
+    from cts.CM_corosync  import *
     from cts.CTSaudits    import AuditList
     from cts.CTStests     import TestList
     from cts.CTSscenarios import *
@@ -67,20 +66,9 @@ if __name__ == '__main__':
     signal.signal(10, sig_handler)
 
     # Create the Cluster Manager object
-    if Environment["Stack"] == "heartbeat":
-        cm = crm_lha(Environment)
-
-    elif Environment["Stack"] == "corosync 2.x":
-        cm = crm_mcp(Environment)
+    if Environment["Stack"] == "corosync 2.x":
+        cm = crm_corosync(Environment)
         
-    elif Environment["Stack"] == "corosync (cman)":
-        cm = crm_cman(Environment)
-        
-    elif Environment["Stack"] == "corosync (plugin v1)":
-        cm = crm_cs_v1(Environment)
-        
-    elif Environment["Stack"] == "corosync (plugin v0)":
-        cm = crm_cs_v0(Environment)
     else:
         LogFactory().log("Unknown stack: "+Environment["stack"])
         sys.exit(1)

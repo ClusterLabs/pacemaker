@@ -89,9 +89,6 @@ pe_ipc_destroy(gpointer user_data)
         fsa_register_cib_callback(rc, FALSE, uuid_str, save_cib_contents);
 
     } else {
-        if (is_heartbeat_cluster()) {
-            stop_subsystem(pe_subsystem, FALSE);
-        }
         crm_info("Connection to the Policy Engine released");
     }
 
@@ -156,10 +153,6 @@ do_pe_control(long long action,
                 register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
                 return;
             }
-
-            /* if (is_openais_cluster()) { */
-            /*     pe_subsystem->pid = pe_subsystem->ipc->farside_pid; */
-            /* } */
 
             set_bit(fsa_input_register, pe_subsystem->flag_connected);
 

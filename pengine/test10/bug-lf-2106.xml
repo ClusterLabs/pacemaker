@@ -11,8 +11,8 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="cl-virt-1" uname="cl-virt-1" type="normal"/>
-      <node id="cl-virt-2" uname="cl-virt-2" type="normal"/>
+      <node id="cl-virt-1" uname="cl-virt-1" type="member"/>
+      <node id="cl-virt-2" uname="cl-virt-2" type="member"/>
     </nodes>
     <resources>
       <primitive class="stonith" id="apcstonith" type="apcmastersnmp">

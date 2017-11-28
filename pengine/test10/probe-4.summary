@@ -5,7 +5,7 @@ Online: [ pcmk-1 pcmk-2 pcmk-3 ]
 
  Resource Group: group-1
      r192.168.101.181	(ocf::heartbeat:IPaddr):	Started pcmk-1
-     r192.168.101.182	(heartbeat:IPaddr):	Started pcmk-1
+     r192.168.101.182	(ocf::heartbeat:IPaddr):	Started pcmk-1
      r192.168.101.183	(ocf::heartbeat:IPaddr):	Started pcmk-1
  rsc_pcmk-1	(ocf::heartbeat:IPaddr):	Started pcmk-1
  rsc_pcmk-2	(ocf::heartbeat:IPaddr):	Started pcmk-2
@@ -35,7 +35,7 @@ Online: [ pcmk-1 pcmk-2 pcmk-3 ]
 
  Resource Group: group-1
      r192.168.101.181	(ocf::heartbeat:IPaddr):	Started pcmk-1
-     r192.168.101.182	(heartbeat:IPaddr):	Started pcmk-1
+     r192.168.101.182	(ocf::heartbeat:IPaddr):	Started pcmk-1
      r192.168.101.183	(ocf::heartbeat:IPaddr):	Started pcmk-1
  rsc_pcmk-1	(ocf::heartbeat:IPaddr):	Started pcmk-1
  rsc_pcmk-2	(ocf::heartbeat:IPaddr):	Started pcmk-2

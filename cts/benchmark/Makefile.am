@@ -1,6 +1,4 @@
 #
-# heartbeat: Linux-HA heartbeat code
-#
 # Copyright (C) 2001 Michael Moerz
 #
 # This program is free software; you can redistribute it and/or

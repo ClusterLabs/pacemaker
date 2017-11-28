@@ -131,14 +131,6 @@ The messaging stack on which Pacemaker is currently running.
 Determined automatically by the cluster.
 Used for informational and diagnostic purposes.
 
-| expected-quorum-votes | |
-indexterm:[expected-quorum-votes,Cluster Property]
-indexterm:[Cluster,Property,expected-quorum-votes]
-The number of nodes expected to be in the cluster.
-Determined automatically by the cluster.
-Used to calculate quorum in clusters that use Corosync 1.x without CMAN
-as the messaging layer.
-
 | no-quorum-policy | stop |
 indexterm:[no-quorum-policy,Cluster Option]
 indexterm:[Cluster,Option,no-quorum-policy]

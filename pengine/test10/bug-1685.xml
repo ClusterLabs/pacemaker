@@ -18,8 +18,8 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="1f7cf7cc-7d90-43fb-a7bd-f13fb5c203c1" uname="redun2" type="normal"/>
-      <node id="cd34ed93-fa5d-4092-a618-ac6349351d13" uname="redun1" type="normal"/>
+      <node id="1f7cf7cc-7d90-43fb-a7bd-f13fb5c203c1" uname="redun2" type="member"/>
+      <node id="cd34ed93-fa5d-4092-a618-ac6349351d13" uname="redun1" type="member"/>
     </nodes>
     <resources>
       <master id="shared_storage">

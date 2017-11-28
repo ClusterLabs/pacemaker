@@ -10,12 +10,12 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="06f7483d-273b-4c51-95a6-bccde94d7fdb" uname="mysql-02" type="normal">
+      <node id="06f7483d-273b-4c51-95a6-bccde94d7fdb" uname="mysql-02" type="member">
         <instance_attributes id="instance_attributes.id21882">
           <nvpair id="nvpair.id21889" name="standby" value="false"/>
         </instance_attributes>
       </node>
-      <node id="3f3eb909-e719-4bc4-a700-d7aa91a65098" uname="mysql-01" type="normal">
+      <node id="3f3eb909-e719-4bc4-a700-d7aa91a65098" uname="mysql-01" type="member">
         <instance_attributes id="instance_attributes.id21910">
           <nvpair id="nvpair.id21917" name="standby" value="false"/>
         </instance_attributes>

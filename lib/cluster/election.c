@@ -306,7 +306,6 @@ election_count_vote(election_t *e, xmlNode *vote, bool can_win)
     int age = 0;
     int election_id = -1;
     int log_level = LOG_INFO;
-    gboolean use_born_on = FALSE;
     gboolean done = FALSE;
     gboolean we_lose = FALSE;
     const char *op = NULL;
@@ -348,12 +347,6 @@ election_count_vote(election_t *e, xmlNode *vote, bool can_win)
     if (e->voted == NULL) {
         crm_debug("Created voted hash");
         e->voted = crm_str_table_new();
-    }
-
-    if (is_heartbeat_cluster()) {
-        use_born_on = TRUE;
-    } else if (is_classic_ais_cluster()) {
-        use_born_on = TRUE;
     }
 
     if(can_win == FALSE) {
@@ -424,14 +417,6 @@ election_count_vote(election_t *e, xmlNode *vote, bool can_win)
 
         } else if (age > 0) {
             reason = "Uptime";
-
-            /* TODO: Check for y(our) born < 0 */
-        } else if (use_born_on && your_node->born < our_node->born) {
-            reason = "Born";
-            we_lose = TRUE;
-
-        } else if (use_born_on && your_node->born > our_node->born) {
-            reason = "Born";
 
         } else if (e->uname == NULL) {
             reason = "Unknown host name";

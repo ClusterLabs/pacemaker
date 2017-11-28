@@ -3,7 +3,7 @@
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.2-dfc6b256137317985b4e3ca31373edb93bb1d076"/>
-        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="openais"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1282744516"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
         <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
@@ -11,7 +11,7 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="hex-14" type="normal" uname="hex-14"/>
+      <node id="hex-14" type="member" uname="hex-14"/>
     </nodes>
     <resources>
       <primitive class="ocf" id="dummy-10s-timeout" provider="pacemaker" type="Dummy">

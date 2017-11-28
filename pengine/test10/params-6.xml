@@ -3,7 +3,7 @@
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.7-0.4.fc13-b988976485d15cb702c9307df55512d323831a5e"/>
-        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="openais"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
         <nvpair id="cib-bootstrap-options-placement-strategy" name="placement-strategy" value="utilization"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="freeze"/>
@@ -21,7 +21,7 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="mgmt01" type="normal" uname="mgmt01">
+      <node id="mgmt01" type="member" uname="mgmt01">
         <utilization id="mgmt01-utilization">
           <nvpair id="mgmt01-utilization-cpu-decipct" name="cpu-decipct" value="0"/>
           <nvpair id="mgmt01-utilization-ram-hugepages-mb" name="ram-hugepages-mb" value="0"/>
@@ -30,7 +30,7 @@
           <nvpair id="nodes-mgmt01-standby" name="standby" value="off"/>
         </instance_attributes>
       </node>
-      <node id="v03-a" type="normal" uname="v03-a">
+      <node id="v03-a" type="member" uname="v03-a">
         <instance_attributes id="nodes-v03-a">
           <nvpair id="nodes-v03-a-standby" name="standby" value="off"/>
         </instance_attributes>
@@ -41,7 +41,7 @@
           <nvpair id="nodes-v03-a-utilization-vds-ok-pool-0-usage" name="vds-ok-pool-0-usage" value="99999999"/>
         </utilization>
       </node>
-      <node id="v03-b" type="normal" uname="v03-b">
+      <node id="v03-b" type="member" uname="v03-b">
         <instance_attributes id="nodes-v03-b">
           <nvpair id="nodes-v03-b-standby" name="standby" value="off"/>
         </instance_attributes>

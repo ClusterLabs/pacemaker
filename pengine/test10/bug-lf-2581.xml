@@ -3,14 +3,14 @@
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.5-5ce2879aa0d5f43d01629bc20edc6868a9352002"/>
-        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="openais"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="2"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="elvis" type="normal" uname="elvis"/>
-      <node id="queen" type="normal" uname="queen"/>
+      <node id="elvis" type="member" uname="elvis"/>
+      <node id="queen" type="member" uname="queen"/>
     </nodes>
     <resources>
       <clone id="AZ-clone">

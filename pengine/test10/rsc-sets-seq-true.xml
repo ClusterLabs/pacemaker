@@ -9,12 +9,12 @@
     <rsc_defaults/>
     <op_defaults/>
     <nodes>
-      <node id="node1" type="normal" uname="node1">
+      <node id="node1" type="member" uname="node1">
         <instance_attributes id="nodes-node1">
           <nvpair id="nodes-node1-standby" name="standby" value="on"/>
         </instance_attributes>
       </node>
-      <node id="node2" type="normal" uname="node2"/>
+      <node id="node2" type="member" uname="node2"/>
     </nodes>
     <resources>
       <primitive class="ocf" id="rsc1" provider="pacemaker" type="Dummy"/>

@@ -3,7 +3,7 @@
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.0.6-cebe2b6ff49b36b29a3bd7ada1c4701c7470febe"/>
-        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="Heartbeat"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair name="default-resource-stickiness" id="cib-bootstrap-options-default-resource-stickiness" value="1000"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
         <nvpair id="cib-bootstrap-options-stonith-action" name="stonith-action" value="poweroff"/>
@@ -11,12 +11,12 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node type="normal" uname="xen-b" id="9cb7f556-e0a7-4073-8845-2d7c1d54e331">
+      <node type="member" uname="xen-b" id="9cb7f556-e0a7-4073-8845-2d7c1d54e331">
         <instance_attributes id="nodes-9cb7f556-e0a7-4073-8845-2d7c1d54e331">
           <nvpair name="standby" id="nodes-9cb7f556-e0a7-4073-8845-2d7c1d54e331-standby" value="off"/>
         </instance_attributes>
       </node>
-      <node type="normal" uname="xen-a" id="445a93d5-655e-430b-b45d-47d79a2f78c7">
+      <node type="member" uname="xen-a" id="445a93d5-655e-430b-b45d-47d79a2f78c7">
         <instance_attributes id="nodes-445a93d5-655e-430b-b45d-47d79a2f78c7">
           <nvpair name="standby" id="nodes-445a93d5-655e-430b-b45d-47d79a2f78c7-standby" value="on"/>
         </instance_attributes>

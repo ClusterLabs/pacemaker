@@ -36,108 +36,13 @@
 
 CRM_TRACE_INIT_DATA(cluster);
 
-#if SUPPORT_HEARTBEAT
-void *hb_library = NULL;
-#endif
-
-static char *
-get_heartbeat_uuid(const char *uname)
-{
-    char *uuid_calc = NULL;
-
-#if SUPPORT_HEARTBEAT
-    cl_uuid_t uuid_raw;
-    const char *unknown = "00000000-0000-0000-0000-000000000000";
-
-    if (heartbeat_cluster == NULL) {
-        crm_warn("No connection to heartbeat, using uuid=uname");
-        return NULL;
-    } else if(uname == NULL) {
-        return NULL;
-    }
-
-    if (heartbeat_cluster->llc_ops->get_uuid_by_name(heartbeat_cluster, uname, &uuid_raw) ==
-        HA_FAIL) {
-        crm_err("get_uuid_by_name() call failed for host %s", uname);
-        free(uuid_calc);
-        return NULL;
-    }
-
-    uuid_calc = calloc(1, 50);
-    cl_uuid_unparse(&uuid_raw, uuid_calc);
-
-    if (safe_str_eq(uuid_calc, unknown)) {
-        crm_warn("Could not calculate UUID for %s", uname);
-        free(uuid_calc);
-        return NULL;
-    }
-#endif
-    return uuid_calc;
-}
-
-static gboolean
-uname_is_uuid(void)
-{
-    static const char *uuid_pref = NULL;
-
-    if (uuid_pref == NULL) {
-        uuid_pref = getenv("PCMK_uname_is_uuid");
-    }
-
-    if (uuid_pref == NULL) {
-        /* true is legacy mode */
-        uuid_pref = "false";
-    }
-
-    return crm_is_true(uuid_pref);
-}
-
-int
-get_corosync_id(int id, const char *uuid)
-{
-    if (id == 0 && !uname_is_uuid() && is_corosync_cluster()) {
-        id = crm_atoi(uuid, "0");
-    }
-
-    return id;
-}
-
-char *
-get_corosync_uuid(crm_node_t *node)
-{
-    if(node == NULL) {
-        return NULL;
-
-    } else if (!uname_is_uuid() && is_corosync_cluster()) {
-        if (node->id > 0) {
-            int len = 32;
-            char *buffer = NULL;
-
-            buffer = calloc(1, (len + 1));
-            if (buffer != NULL) {
-                snprintf(buffer, len, "%u", node->id);
-            }
-
-            return buffer;
-
-        } else {
-            crm_info("Node %s is not yet known by corosync", node->uname);
-        }
-
-    } else if (node->uname != NULL) {
-        return strdup(node->uname);
-    }
-
-    return NULL;
-}
-
 const char *
 crm_peer_uuid(crm_node_t *peer)
 {
     char *uuid = NULL;
     enum cluster_type_e type = get_cluster_type();
 
-    /* avoid blocking heartbeat calls where possible */
+    // Check simple cases first, to avoid any calls that might block
     if(peer == NULL) {
         return NULL;
 
@@ -147,18 +52,9 @@ crm_peer_uuid(crm_node_t *peer)
 
     switch (type) {
         case pcmk_cluster_corosync:
+#if SUPPORT_COROSYNC
             uuid = get_corosync_uuid(peer);
-            break;
-
-        case pcmk_cluster_cman:
-        case pcmk_cluster_classic_ais:
-            if (peer->uname) {
-                uuid = strdup(peer->uname);
-            }
-            break;
-
-        case pcmk_cluster_heartbeat:
-            uuid = get_heartbeat_uuid(peer->uname);
+#endif
             break;
 
         case pcmk_cluster_unknown:
@@ -176,57 +72,20 @@ crm_cluster_connect(crm_cluster_t * cluster)
 {
     enum cluster_type_e type = get_cluster_type();
 
-    crm_notice("Connecting to cluster infrastructure: %s", name_for_cluster_type(type));
+    crm_notice("Connecting to cluster infrastructure: %s",
+               name_for_cluster_type(type));
+    switch (type) {
+        case pcmk_cluster_corosync:
 #if SUPPORT_COROSYNC
-    if (is_openais_cluster()) {
-        crm_peer_init();
-        return init_cs_connection(cluster);
-    }
-#endif
-
-#if SUPPORT_HEARTBEAT
-    if (is_heartbeat_cluster()) {
-        int rv;
-
-        /* coverity[var_deref_op] False positive */
-        if (cluster->hb_conn == NULL) {
-            /* No object passed in, create a new one. */
-            ll_cluster_t *(*new_cluster) (const char *llctype) =
-                find_library_function(&hb_library, HEARTBEAT_LIBRARY, "ll_cluster_new", 1);
-
-            cluster->hb_conn = (*new_cluster) ("heartbeat");
-            /* dlclose(handle); */
-
-        } else {
-            /* Object passed in. Disconnect first, then reconnect below. */
-            cluster->hb_conn->llc_ops->signoff(cluster->hb_conn, FALSE);
-        }
-
-        /* make sure we are disconnected first with the old object, if any. */
-        if (heartbeat_cluster && heartbeat_cluster != cluster->hb_conn) {
-            heartbeat_cluster->llc_ops->signoff(heartbeat_cluster, FALSE);
-        }
-
-        CRM_ASSERT(cluster->hb_conn != NULL);
-        heartbeat_cluster = cluster->hb_conn;
-
-        rv = register_heartbeat_conn(cluster);
-        if (rv) {
-            /* we'll benefit from a bigger queue length on heartbeat side.
-             * Otherwise, if peers send messages faster than we can consume
-             * them right now, heartbeat messaging layer will kick us out once
-             * it's (small) default queue fills up :(
-             * If we fail to adjust the sendq length, that's not yet fatal, though.
-             */
-            if (HA_OK != heartbeat_cluster->llc_ops->set_sendq_len(heartbeat_cluster, 1024)) {
-                crm_warn("Cannot set sendq length: %s",
-                         heartbeat_cluster->llc_ops->errmsg(heartbeat_cluster));
+            if (is_corosync_cluster()) {
+                crm_peer_init();
+                return init_cs_connection(cluster);
             }
-        }
-        return rv;
-    }
 #endif
-    crm_info("Unsupported cluster stack: %s", getenv("HA_cluster_type"));
+            break;
+        default:
+            break;
+    }
     return FALSE;
 }
 
@@ -234,54 +93,36 @@ void
 crm_cluster_disconnect(crm_cluster_t * cluster)
 {
     enum cluster_type_e type = get_cluster_type();
-    const char *type_str = name_for_cluster_type(type);
 
-    crm_info("Disconnecting from cluster infrastructure: %s", type_str);
+    crm_info("Disconnecting from cluster infrastructure: %s",
+             name_for_cluster_type(type));
+    switch (type) {
+        case pcmk_cluster_corosync:
 #if SUPPORT_COROSYNC
-    if (is_openais_cluster()) {
-        crm_peer_destroy();
-        terminate_cs_connection(cluster);
-        crm_info("Disconnected from %s", type_str);
-        return;
-    }
+            if (is_corosync_cluster()) {
+                crm_peer_destroy();
+                terminate_cs_connection(cluster);
+            }
 #endif
-
-#if SUPPORT_HEARTBEAT
-    if (is_heartbeat_cluster()) {
-        if (cluster == NULL) {
-            crm_info("No cluster connection");
-            return;
-
-        } else if (cluster->hb_conn) {
-            cluster->hb_conn->llc_ops->signoff(cluster->hb_conn, TRUE);
-            cluster->hb_conn = NULL;
-            crm_info("Disconnected from %s", type_str);
-            return;
-
-        } else {
-            crm_info("No %s connection", type_str);
-            return;
-        }
+            break;
+        default:
+            break;
     }
-#endif
-    crm_info("Unsupported cluster stack: %s", getenv("HA_cluster_type"));
 }
 
 gboolean
 send_cluster_message(crm_node_t * node, enum crm_ais_msg_types service, xmlNode * data,
                      gboolean ordered)
 {
-
+    switch (get_cluster_type()) {
+        case pcmk_cluster_corosync:
 #if SUPPORT_COROSYNC
-    if (is_openais_cluster()) {
-        return send_cluster_message_cs(data, FALSE, node, service);
-    }
+            return send_cluster_message_cs(data, FALSE, node, service);
 #endif
-#if SUPPORT_HEARTBEAT
-    if (is_heartbeat_cluster()) {
-        return send_ha_message(heartbeat_cluster, data, node ? node->uname : NULL, ordered);
+            break;
+        default:
+            break;
     }
-#endif
     return FALSE;
 }
 
@@ -301,38 +142,15 @@ char *
 get_node_name(uint32_t nodeid)
 {
     char *name = NULL;
-    const char *isolation_host = NULL;
     enum cluster_type_e stack;
-
-    if (nodeid == 0) {
-        isolation_host = getenv("OCF_RESKEY_"CRM_META"_isolation_host");
-        if (isolation_host) {
-            return strdup(isolation_host);
-        }
-    }
 
     stack = get_cluster_type();
     switch (stack) {
-        case pcmk_cluster_heartbeat:
-            break;
-
-#if SUPPORT_PLUGIN
-        case pcmk_cluster_classic_ais:
-            name = classic_node_name(nodeid);
-            break;
-#else
 #  if SUPPORT_COROSYNC
         case pcmk_cluster_corosync:
             name = corosync_node_name(0, nodeid);
             break;
 #  endif
-#endif
-
-#if SUPPORT_CMAN
-        case pcmk_cluster_cman:
-            name = cman_node_name(nodeid);
-            break;
-#endif
 
         default:
             crm_err("Unknown cluster type: %s (%d)", name_for_cluster_type(stack), stack);
@@ -397,52 +215,17 @@ crm_peer_uname(const char *uuid)
     node = NULL;
 
 #if SUPPORT_COROSYNC
-    if (is_openais_cluster()) {
-        if (uname_is_uuid() == FALSE && is_corosync_cluster()) {
-            uint32_t id = crm_int_helper(uuid, NULL);
-            if(id != 0) {
-                node = crm_find_peer(id, NULL);
-            } else {
-                crm_err("Invalid node id: %s", uuid);
-            }
+    if (is_corosync_cluster()) {
+        uint32_t id = crm_int_helper(uuid, NULL);
 
+        if (id != 0) {
+            node = crm_find_peer(id, NULL);
         } else {
-            node = crm_find_peer(0, uuid);
+            crm_err("Invalid node id: %s", uuid);
         }
 
         if (node) {
             crm_info("Setting uuid for node %s[%u] to '%s'", node->uname, node->id, uuid);
-            node->uuid = strdup(uuid);
-            if(node->uname) {
-                return node->uname;
-            }
-        }
-        return NULL;
-    }
-#endif
-
-#if SUPPORT_HEARTBEAT
-    if (is_heartbeat_cluster()) {
-        if (heartbeat_cluster != NULL) {
-            cl_uuid_t uuid_raw;
-            char *uuid_copy = strdup(uuid);
-            char *uname = malloc(MAX_NAME);
-
-            cl_uuid_parse(uuid_copy, &uuid_raw);
-
-            if (heartbeat_cluster->llc_ops->get_name_by_uuid(heartbeat_cluster, &uuid_raw, uname,
-                                                             MAX_NAME) == HA_FAIL) {
-                crm_err("Could not calculate uname for %s", uuid);
-            } else {
-                node = crm_get_peer(0, uname);
-            }
-
-            free(uuid_copy);
-            free(uname);
-        }
-
-        if (node) {
-            crm_info("Setting uuid for node %s to '%s'", node->uname, uuid);
             node->uuid = strdup(uuid);
             if(node->uname) {
                 return node->uname;
@@ -468,14 +251,8 @@ const char *
 name_for_cluster_type(enum cluster_type_e type)
 {
     switch (type) {
-        case pcmk_cluster_classic_ais:
-            return "classic openais (with plugin)";
-        case pcmk_cluster_cman:
-            return "cman";
         case pcmk_cluster_corosync:
             return "corosync";
-        case pcmk_cluster_heartbeat:
-            return "heartbeat";
         case pcmk_cluster_unknown:
             return "unknown";
         case pcmk_cluster_invalid:
@@ -520,37 +297,7 @@ get_cluster_type(void)
         return cluster_type;
     }
 
-    cluster = getenv("HA_cluster_type");
-
-#if SUPPORT_HEARTBEAT
-    /* If nothing is defined in the environment, try heartbeat (if supported) */
-    if(cluster == NULL) {
-        ll_cluster_t *hb;
-        ll_cluster_t *(*new_cluster) (const char *llctype) = find_library_function(
-            &hb_library, HEARTBEAT_LIBRARY, "ll_cluster_new", 1);
-
-        hb = (*new_cluster) ("heartbeat");
-
-        crm_debug("Testing with Heartbeat");
-        /*
-         * Test as "casual" client (clientid == NULL; will be replaced by
-         * current pid).  We are trying to detect if we can communicate with
-         * heartbeat, not if we can register as some specific service.
-         * Otherwise all but one of several concurrent invocations will get
-         * HA_FAIL because of:
-         * WARN: duplicate client add request
-         * ERROR: api_process_registration_msg: cannot add client()
-         * and then likely fail :(
-         */
-        if (hb->llc_ops->signon(hb, NULL) == HA_OK) {
-            hb->llc_ops->signoff(hb, FALSE);
-
-            cluster_type = pcmk_cluster_heartbeat;
-            detected = TRUE;
-            goto done;
-        }
-    }
-#endif
+    cluster = daemon_option("cluster_type");
 
 #if SUPPORT_COROSYNC
     /* If nothing is defined in the environment, try corosync (if supported) */
@@ -568,23 +315,9 @@ get_cluster_type(void)
     crm_info("Verifying cluster type: '%s'", cluster?cluster:"-unspecified-");
     if (cluster == NULL) {
 
-#if SUPPORT_HEARTBEAT
-    } else if (safe_str_eq(cluster, "heartbeat")) {
-        cluster_type = pcmk_cluster_heartbeat;
-#endif
-
 #if SUPPORT_COROSYNC
-    } else if (safe_str_eq(cluster, "openais")
-               || safe_str_eq(cluster, "classic openais (with plugin)")) {
-        cluster_type = pcmk_cluster_classic_ais;
-
     } else if (safe_str_eq(cluster, "corosync")) {
         cluster_type = pcmk_cluster_corosync;
-#endif
-
-#if SUPPORT_CMAN
-    } else if (safe_str_eq(cluster, "cman")) {
-        cluster_type = pcmk_cluster_cman;
 #endif
 
     } else {
@@ -609,42 +342,9 @@ get_cluster_type(void)
 }
 
 gboolean
-is_cman_cluster(void)
-{
-    return get_cluster_type() == pcmk_cluster_cman;
-}
-
-gboolean
 is_corosync_cluster(void)
 {
     return get_cluster_type() == pcmk_cluster_corosync;
-}
-
-gboolean
-is_classic_ais_cluster(void)
-{
-    return get_cluster_type() == pcmk_cluster_classic_ais;
-}
-
-gboolean
-is_openais_cluster(void)
-{
-    enum cluster_type_e type = get_cluster_type();
-
-    if (type == pcmk_cluster_classic_ais) {
-        return TRUE;
-    } else if (type == pcmk_cluster_corosync) {
-        return TRUE;
-    } else if (type == pcmk_cluster_cman) {
-        return TRUE;
-    }
-    return FALSE;
-}
-
-gboolean
-is_heartbeat_cluster(void)
-{
-    return get_cluster_type() == pcmk_cluster_heartbeat;
 }
 
 gboolean

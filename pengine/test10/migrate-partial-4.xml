@@ -13,12 +13,12 @@
         <nvpair id="cib-bootstrap-options-is-managed-default" name="is-managed-default" value="true"/>
         <nvpair id="cib-bootstrap-options-stop-all-resources" name="stop-all-resources" value="false"/>
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.7-0.20.el6-1e8a96ae55d6022f7036434b537938a1fa75a700"/>
-        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="openais"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1331649645"/>
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="lustre02-left" type="normal" uname="lustre02-left">
+      <node id="lustre02-left" type="member" uname="lustre02-left">
         <instance_attributes id="lustre02-left-instance_attributes">
           <nvpair id="lustre02-left-instance_attributes-mgs-placement" name="mgs-placement" value="true"/>
           <nvpair id="lustre02-left-instance_attributes-testfs-mdt0000-placement" name="testfs-mdt0000-placement" value="true"/>
@@ -28,7 +28,7 @@
           <nvpair id="lustre02-left-instance_attributes-booth-placement" name="booth-placement" value="true"/>
         </instance_attributes>
       </node>
-      <node id="lustre01-left" type="normal" uname="lustre01-left">
+      <node id="lustre01-left" type="member" uname="lustre01-left">
         <instance_attributes id="lustre01-left-instance_attributes">
           <nvpair id="lustre01-left-instance_attributes-mgs-placement" name="mgs-placement" value="true"/>
           <nvpair id="lustre01-left-instance_attributes-mgs-primary" name="mgs-primary" value="true"/>
@@ -43,14 +43,14 @@
           <nvpair id="nodes-lustre01-left-standby" name="standby" value="off"/>
         </instance_attributes>
       </node>
-      <node id="lustre03-left" type="normal" uname="lustre03-left">
+      <node id="lustre03-left" type="member" uname="lustre03-left">
         <instance_attributes id="lustre03-left-instance_attributes">
           <nvpair id="lustre03-left-instance_attributes-testfs-ost0002-placement" name="testfs-ost0002-placement" value="true"/>
           <nvpair id="lustre03-left-instance_attributes-testfs-ost0002-primary" name="testfs-ost0002-primary" value="true"/>
           <nvpair id="lustre03-left-instance_attributes-testfs-ost0003-placement" name="testfs-ost0003-placement" value="true"/>
         </instance_attributes>
       </node>
-      <node id="lustre04-left" type="normal" uname="lustre04-left">
+      <node id="lustre04-left" type="member" uname="lustre04-left">
         <instance_attributes id="lustre04-left-instance_attributes">
           <nvpair id="lustre04-left-instance_attributes-testfs-ost0002-placement" name="testfs-ost0002-placement" value="true"/>
           <nvpair id="lustre04-left-instance_attributes-testfs-ost0003-placement" name="testfs-ost0003-placement" value="true"/>

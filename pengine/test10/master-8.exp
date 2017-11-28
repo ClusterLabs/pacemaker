@@ -153,7 +153,7 @@
   <synapse id="10">
     <action_set>
       <rsc_op id="40" operation="monitor" operation_key="heartbeat_192.168.100.182_monitor_5000" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
-        <primitive id="heartbeat_192.168.100.182" class="heartbeat" type="IPaddr"/>
+        <primitive id="heartbeat_192.168.100.182" class="ocf" provider="heartbeat" type="IPaddr"/>
         <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_on_node="c001n02" CRM_meta_on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" CRM_meta_timeout="20000" >
           <param name="1" value="192.168.100.182"/>
         </attributes>
@@ -168,7 +168,7 @@
   <synapse id="11">
     <action_set>
       <rsc_op id="39" operation="start" operation_key="heartbeat_192.168.100.182_start_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
-        <primitive id="heartbeat_192.168.100.182" class="heartbeat" type="IPaddr"/>
+        <primitive id="heartbeat_192.168.100.182" class="ocf" provider="heartbeat" type="IPaddr"/>
         <attributes CRM_meta_on_node="c001n02" CRM_meta_on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" CRM_meta_timeout="20000" >
           <param name="1" value="192.168.100.182"/>
         </attributes>
@@ -192,7 +192,7 @@
   <synapse id="12">
     <action_set>
       <rsc_op id="38" operation="stop" operation_key="heartbeat_192.168.100.182_stop_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
-        <primitive id="heartbeat_192.168.100.182" class="heartbeat" type="IPaddr"/>
+        <primitive id="heartbeat_192.168.100.182" class="ocf" provider="heartbeat" type="IPaddr"/>
         <attributes CRM_meta_on_node="c001n03" CRM_meta_on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193" CRM_meta_timeout="20000" >
           <param name="1" value="192.168.100.182"/>
         </attributes>

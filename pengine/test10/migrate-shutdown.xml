@@ -16,22 +16,22 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="101" uname="pcmk-1" type="normal">
+      <node id="101" uname="pcmk-1" type="member">
         <instance_attributes id="nodes-101">
           <nvpair id="nodes-101-standby" name="standby" value="off"/>
         </instance_attributes>
       </node>
-      <node id="102" uname="pcmk-2" type="normal">
+      <node id="102" uname="pcmk-2" type="member">
         <instance_attributes id="nodes-102">
           <nvpair id="nodes-102-standby" name="standby" value="off"/>
         </instance_attributes>
       </node>
-      <node id="103" uname="pcmk-3" type="normal">
+      <node id="103" uname="pcmk-3" type="member">
         <instance_attributes id="nodes-103">
           <nvpair id="nodes-103-standby" name="standby" value="off"/>
         </instance_attributes>
       </node>
-      <node id="104" uname="pcmk-4" type="normal">
+      <node id="104" uname="pcmk-4" type="member">
         <instance_attributes id="nodes-104">
           <nvpair id="nodes-104-standby" name="standby" value="off"/>
         </instance_attributes>

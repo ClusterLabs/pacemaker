@@ -24,8 +24,8 @@
       </meta_attributes>
     </rsc_defaults>
     <nodes>
-      <node id="6676c8d5-552e-4a86-a2ea-172e954f7342" uname="dktest2sles10" type="normal"/>
-      <node id="c563f60c-45a8-439e-85dc-645f4ecc150d" uname="dktest1sles10" type="normal"/>
+      <node id="6676c8d5-552e-4a86-a2ea-172e954f7342" uname="dktest2sles10" type="member"/>
+      <node id="c563f60c-45a8-439e-85dc-645f4ecc150d" uname="dktest1sles10" type="member"/>
     </nodes>
     <resources>
       <primitive id="stonith-1" class="stonith" type="dummy"/>

@@ -31,7 +31,7 @@
       </node>
     </nodes>
     <resources>
-      <primitive id="rsc1" class="heartbeat" type="apache">
+      <primitive id="rsc1" class="ocf" provider="heartbeat" type="apache">
         <instance_attributes id="instance_attributes.id21961">
           <nvpair id="nvpair.id21982" name="interface" value="eth1"/>
           <rule score="0" id="rule.auto-3">

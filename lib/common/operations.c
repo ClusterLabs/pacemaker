@@ -249,15 +249,6 @@ decode_transition_key(const char *key, char **uuid, int *transition_id, int *act
                 CRM_CHECK(res == 3, done = FALSE);
             }
             break;
-
-        case 1:
-            /* Prior to Heartbeat 2.0.8 */
-            done = TRUE;
-            *action_id = -1;
-            *target_rc = -1;
-            res = sscanf(key, "%d:%36s", transition_id, *uuid);
-            CRM_CHECK(res == 2, done = FALSE);
-            break;
         default:
             crm_crit("Unhandled sscanf result (%d) for %s", res, key);
     }

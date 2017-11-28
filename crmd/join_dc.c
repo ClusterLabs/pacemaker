@@ -192,7 +192,7 @@ do_dc_join_offer_all(long long action,
 {
     /* reset everyone's status back to down or in_ccm in the CIB
      *
-     * any nodes that are active in the CIB but not in the CCM list
+     * any nodes that are active in the CIB but not in the cluster membership
      *   will be seen as offline by the PE anyway
      */
     current_join_id++;

@@ -61,19 +61,16 @@ typedef struct pcmk_child_s {
 } pcmk_child_t;
 
 /* Index into the array below */
-#define pcmk_child_crmd  4
-#define pcmk_child_mgmtd 8
+#define pcmk_child_crmd  3
 /* *INDENT-OFF* */
 static pcmk_child_t pcmk_children[] = {
     { 0, crm_proc_none,       0, 0, FALSE, "none",       NULL,            NULL },
-    { 0, crm_proc_plugin,     0, 0, FALSE, "ais",        NULL,            NULL },
     { 0, crm_proc_lrmd,       3, 0, TRUE,  "lrmd",       NULL,            CRM_DAEMON_DIR"/lrmd" },
     { 0, crm_proc_cib,        1, 0, TRUE,  "cib",        CRM_DAEMON_USER, CRM_DAEMON_DIR"/cib" },
     { 0, crm_proc_crmd,       6, 0, TRUE,  "crmd",       CRM_DAEMON_USER, CRM_DAEMON_DIR"/crmd" },
     { 0, crm_proc_attrd,      4, 0, TRUE,  "attrd",      CRM_DAEMON_USER, CRM_DAEMON_DIR"/attrd" },
     { 0, crm_proc_stonithd,   0, 0, TRUE,  "stonithd",   NULL,            NULL },
     { 0, crm_proc_pe,         5, 0, TRUE,  "pengine",    CRM_DAEMON_USER, CRM_DAEMON_DIR"/pengine" },
-    { 0, crm_proc_mgmtd,      0, 0, TRUE,  "mgmtd",      NULL,            HB_DAEMON_DIR"/mgmtd" },
     { 0, crm_proc_stonith_ng, 2, 0, TRUE,  "stonith-ng", NULL,            CRM_DAEMON_DIR"/stonithd" },
 };
 /* *INDENT-ON* */
@@ -90,16 +87,6 @@ enable_crmd_as_root(gboolean enable)
         pcmk_children[pcmk_child_crmd].uid = NULL;
     } else {
         pcmk_children[pcmk_child_crmd].uid = CRM_DAEMON_USER;
-    }
-}
-
-void
-enable_mgmtd(gboolean enable)
-{
-    if (enable) {
-        pcmk_children[pcmk_child_mgmtd].start_seq = 7;
-    } else {
-        pcmk_children[pcmk_child_mgmtd].start_seq = 0;
     }
 }
 
@@ -240,7 +227,6 @@ start_child(pcmk_child_t * child)
     const char *devnull = "/dev/null";
     const char *env_valgrind = getenv("PCMK_valgrind_enabled");
     const char *env_callgrind = getenv("PCMK_callgrind_enabled");
-    enum cluster_type_e stack = get_cluster_type();
 
     child->active_before_startup = FALSE;
 
@@ -310,7 +296,7 @@ start_child(pcmk_child_t * child)
         opts_default[0] = strdup(child->command);
 
         if(gid) {
-            if(stack == pcmk_cluster_corosync) {
+            if (is_corosync_cluster()) {
                 /* Drop root privileges completely
                  *
                  * We can do this because we set uidgid.gid.${gid}=1
@@ -321,7 +307,7 @@ start_child(pcmk_child_t * child)
                     crm_perror(LOG_ERR, "Could not set group to %d", gid);
                 }
 
-                /* Keep the root group (so we can access corosync), but add the haclient group (so we can access ipc) */
+                // Keep root group, but add haclient group so we can access ipc
             } else if (initgroups(child->uid, gid) < 0) {
                 crm_err("Cannot initialize groups for %s: %s (%d)", child->uid, pcmk_strerror(errno), errno);
             }
@@ -887,21 +873,6 @@ mcp_quorum_destroy(gpointer user_data)
     crm_info("connection lost");
 }
 
-#if SUPPORT_CMAN
-static gboolean
-mcp_cman_dispatch(unsigned long long seq, gboolean quorate)
-{
-    pcmk_quorate = quorate;
-    return TRUE;
-}
-
-static void
-mcp_cman_destroy(gpointer user_data)
-{
-    crm_info("connection closed");
-}
-#endif
-
 int
 main(int argc, char **argv)
 {
@@ -973,10 +944,8 @@ main(int argc, char **argv)
 
 
     setenv("LC_ALL", "C", 1);
-    setenv("HA_LOGD", "no", 1);
 
     set_daemon_option("mcp", "true");
-    set_daemon_option("use_logd", "off");
 
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
 
@@ -1119,12 +1088,6 @@ main(int argc, char **argv)
             rc = -ENOTCONN;
         }
     }
-
-#if SUPPORT_CMAN
-    if (rc == pcmk_ok && is_cman_cluster()) {
-        init_cman_connection(mcp_cman_dispatch, mcp_cman_destroy);
-    }
-#endif
 
     if(rc == pcmk_ok) {
         local_name = get_local_node_name();

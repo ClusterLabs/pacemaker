@@ -42,7 +42,6 @@ gboolean cluster_disconnect_cfg(void);
 
 gboolean update_node_processes(uint32_t node, const char *uname, uint32_t procs);
 
-void enable_mgmtd(gboolean enable);
 void enable_crmd_as_root(gboolean enable);
 
 void pcmk_shutdown(int nsig);

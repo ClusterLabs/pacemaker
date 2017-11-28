@@ -297,7 +297,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
         crm_xml_add_int(root, name, 0);
     }
 
-    /* unset these and require the DC/CCM to update as needed */
+    // Unset (DC should set appropriate value)
     xml_remove_prop(root, XML_ATTR_DC_UUID);
 
     if (discard_status) {

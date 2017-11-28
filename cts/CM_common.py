@@ -1,4 +1,9 @@
-'''CTS: Cluster Testing System: LinuxHA v2 dependent modules...
+'''CTS: Cluster Testing System: Cluster Manager Common Class
+
+This was originally the cluster manager class for the Heartbeat stack.
+It is retained for use as a base class by other cluster manager classes.
+It could be merged into the ClusterManager class directly, but this is
+easier.
 '''
 
 __copyright__ = '''
@@ -32,37 +37,11 @@ from cts.CIB      import *
 from cts.CTStests import AuditResource
 from cts.watcher  import LogWatcher
 
-try:
-    from xml.dom.minidom import *
-except ImportError:
-    sys.__stdout__.write("Python module xml.dom.minidom not found\n")
-    sys.__stdout__.write("Please install python-xml or similar before continuing\n")
-    sys.__stdout__.flush()
-    sys.exit(1)
-
-#######################################################################
-#
-#  LinuxHA v2 dependent modules
-#
-#######################################################################
-
-
-class crm_lha(ClusterManager):
-    '''
-    The linux-ha version 2 cluster manager class.
-    It implements the things we need to talk to and manipulate
-    linux-ha version 2 clusters
-    '''
+class crm_common(ClusterManager):
     def __init__(self, Environment, randseed=None, name=None):
         ClusterManager.__init__(self, Environment, randseed=randseed)
-        #HeartbeatCM.__init__(self, Environment, randseed=randseed)
-
-        #if not name: name="crm-lha"
-        #self["Name"] = name
-        #self.name = name
 
         self.fastfail = 0
-        self.clear_cache = 0
         self.cib_installed = 0
         self.config = None
         self.cluster_monitor = 0
@@ -70,8 +49,6 @@ class crm_lha(ClusterManager):
 
         if self.Env["DoBSC"]:
             del self.templates["Pat:They_stopped"]
-            del self.templates["Pat:Logd_stopped"]
-            self.Env["use_logd"] = 0
 
         self._finalConditions()
 
@@ -468,15 +445,6 @@ class crm_lha(ClusterManager):
         complist.append(pengine)
 
         return complist
-
-    def NodeUUID(self, node):
-        lines = self.rsh(node, self.templates["UUIDQueryCmd"], 1)
-        for line in lines:
-            self.debug("UUIDLine:" + line)
-            m = re.search(r'%s.+\((.+)\)' % node, line)
-            if m:
-                return m.group(1)
-        return ""
 
     def StandbyStatus(self, node):
         out=self.rsh(node, self.templates["StandbyQueryCmd"] % node, 1)

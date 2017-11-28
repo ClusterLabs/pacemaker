@@ -2467,21 +2467,12 @@ print_cluster_counts(FILE *stream, pe_working_set_t *data_set, const char *stack
 {
     int nnodes = g_list_length(data_set->nodes);
     int nresources = count_resources(data_set, NULL);
-    xmlNode *quorum_node = get_xpath_object("//nvpair[@name='" XML_ATTR_EXPECTED_VOTES "']",
-                                            data_set->input, LOG_DEBUG);
-    const char *quorum_votes = quorum_node?
-                               crm_element_value(quorum_node, XML_NVPAIR_ATTR_VALUE)
-                               : "unknown";
 
     switch (output_format) {
         case mon_output_plain:
         case mon_output_console:
 
-            print_as("\n%d node%s configured", nnodes, s_if_plural(nnodes));
-            if (stack_s && strstr(stack_s, "classic openais") != NULL) {
-                print_as(" (%s expected votes)", quorum_votes);
-            }
-            print_as("\n");
+            print_as("\n%d node%s configured\n", nnodes, s_if_plural(nnodes));
 
             print_as("%d resource%s configured",
                      nresources, s_if_plural(nresources));
@@ -2506,11 +2497,8 @@ print_cluster_counts(FILE *stream, pe_working_set_t *data_set, const char *stack
         case mon_output_html:
         case mon_output_cgi:
 
-            fprintf(stream, " %d node%s configured", nnodes, s_if_plural(nnodes));
-            if (stack_s && strstr(stack_s, "classic openais") != NULL) {
-                fprintf(stream, " (%s expected votes)", quorum_votes);
-            }
-            fprintf(stream, "<br/>\n");
+            fprintf(stream, " %d node%s configured<br/>\n",
+                    nnodes, s_if_plural(nnodes));
 
             fprintf(stream, " %d resource%s configured",
                     nresources, s_if_plural(nresources));
@@ -2535,8 +2523,8 @@ print_cluster_counts(FILE *stream, pe_working_set_t *data_set, const char *stack
 
         case mon_output_xml:
             fprintf(stream,
-                    "        <nodes_configured number=\"%d\" expected_votes=\"%s\" />\n",
-                    g_list_length(data_set->nodes), quorum_votes);
+                    "        <nodes_configured number=\"%d\" />\n",
+                    g_list_length(data_set->nodes));
             fprintf(stream,
                     "        <resources_configured number=\"%d\" disabled=\"%d\" blocked=\"%d\" />\n",
                     count_resources(data_set, NULL),

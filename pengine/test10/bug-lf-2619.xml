@@ -3,7 +3,7 @@
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.5-22acba43e041"/>
-        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="openais"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="5"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
         <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
@@ -15,7 +15,7 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="act1" type="normal" uname="act1">
+      <node id="act1" type="member" uname="act1">
         <utilization id="act1-utilization">
           <nvpair id="act1-utilization-capacity" name="capacity" value="6"/>
         </utilization>
@@ -23,7 +23,7 @@
           <nvpair id="act1-instance_attributes-standby" name="standby" value="off"/>
         </instance_attributes>
       </node>
-      <node id="act2" type="normal" uname="act2">
+      <node id="act2" type="member" uname="act2">
         <utilization id="act2-utilization">
           <nvpair id="act2-utilization-capacity" name="capacity" value="6"/>
         </utilization>
@@ -31,7 +31,7 @@
           <nvpair id="act2-instance_attributes-standby" name="standby" value="off"/>
         </instance_attributes>
       </node>
-      <node id="act3" type="normal" uname="act3">
+      <node id="act3" type="member" uname="act3">
         <utilization id="act3-utilization">
           <nvpair id="act3-utilization-capacity" name="capacity" value="6"/>
         </utilization>
@@ -39,7 +39,7 @@
           <nvpair id="act3-instance_attributes-standby" name="standby" value="off"/>
         </instance_attributes>
       </node>
-      <node id="sby2" type="normal" uname="sby2">
+      <node id="sby2" type="member" uname="sby2">
         <utilization id="sby2-utilization">
           <nvpair id="sby2-utilization-capacity" name="capacity" value="6"/>
         </utilization>
@@ -47,7 +47,7 @@
           <nvpair id="sby2-instance_attributes-standby" name="standby" value="off"/>
         </instance_attributes>
       </node>
-      <node id="sby1" type="normal" uname="sby1">
+      <node id="sby1" type="member" uname="sby1">
         <utilization id="sby1-utilization">
           <nvpair id="sby1-utilization-capacity" name="capacity" value="6"/>
         </utilization>

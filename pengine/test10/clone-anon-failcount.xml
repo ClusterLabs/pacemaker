@@ -3,7 +3,7 @@
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.0.8-9881a7350d6182bae9e8e557cf20a3cc5dac3ee7"/>
-        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="openais"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="4"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="freeze"/>
         <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
@@ -13,10 +13,10 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="srv01" uname="srv01" type="normal"/>
-      <node id="srv02" uname="srv02" type="normal"/>
-      <node id="srv03" uname="srv03" type="normal"/>
-      <node id="srv04" uname="srv04" type="normal"/>
+      <node id="srv01" uname="srv01" type="member"/>
+      <node id="srv02" uname="srv02" type="member"/>
+      <node id="srv03" uname="srv03" type="member"/>
+      <node id="srv04" uname="srv04" type="member"/>
     </nodes>
     <resources>
       <group id="UMgroup01">

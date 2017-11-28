@@ -9,13 +9,13 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="af77f4a5-5626-43b3-acbe-9299ae520262" uname="hb3" type="normal">
+      <node id="af77f4a5-5626-43b3-acbe-9299ae520262" uname="hb3" type="member">
         <instance_attributes id="instance_attributes.id21900">
           <nvpair id="nvpair.id21907" name="standby" value="off"/>
         </instance_attributes>
         <instance_attributes id="instance_attributes.id21918"/>
       </node>
-      <node id="86ad895f-1387-461e-a9b5-c52ed9537e13" uname="hb2" type="normal">
+      <node id="86ad895f-1387-461e-a9b5-c52ed9537e13" uname="hb2" type="member">
         <instance_attributes id="instance_attributes.id21936">
           <nvpair id="nvpair.id21943" name="standby" value="off"/>
           <nvpair id="nvpair.id21952" name="inhibit_group0" value="1"/>
@@ -24,7 +24,7 @@
           <nvpair id="nvpair.id21970" name="master-resource_masterslave:0" value="1"/>
         </instance_attributes>
       </node>
-      <node id="1ce670eb-d670-4f6d-811f-d415ffde76b7" uname="hb1" type="normal">
+      <node id="1ce670eb-d670-4f6d-811f-d415ffde76b7" uname="hb1" type="member">
         <instance_attributes id="instance_attributes.id21992">
           <nvpair id="nvpair.id21999" name="standby" value="off"/>
           <nvpair id="nvpair.id22008" name="db_in_sync" value="1"/>

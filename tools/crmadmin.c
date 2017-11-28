@@ -497,8 +497,8 @@ admin_msg_callback(const char *buffer, ssize_t length, gpointer userdata)
     free_xml(xml);
 
     if (received_responses >= expected_responses) {
-        crm_trace("Received expected number (%d) of messages from Heartbeat."
-                  "  Exiting normally.", expected_responses);
+        crm_trace("Received expected number (%d) of replies, exiting normally",
+                   expected_responses);
         crm_exit(pcmk_ok);
     }
 

@@ -15,8 +15,8 @@
       </meta_attributes>
     </rsc_defaults>
     <nodes>
-      <node id="9be32c75-0490-4cf9-ae18-c039a94fd327" uname="ih01" type="normal"/>
-      <node id="57226bfc-310f-409b-8b3d-49d93498e4b5" uname="ih02" type="normal"/>
+      <node id="9be32c75-0490-4cf9-ae18-c039a94fd327" uname="ih01" type="member"/>
+      <node id="57226bfc-310f-409b-8b3d-49d93498e4b5" uname="ih02" type="member"/>
     </nodes>
     <resources>
       <group id="group_common">

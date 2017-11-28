@@ -3,13 +3,13 @@
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7"/>
-        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="Heartbeat"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-stonith" name="stonith-enabled" value="false"/>
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="bb56fda4-7d0d-405c-a6e4-c21b0e070303" uname="sles11-a" type="normal"/>
-      <node id="8165b1f7-da29-43db-8510-065ac1d33469" uname="sles11-b" type="normal"/>
+      <node id="bb56fda4-7d0d-405c-a6e4-c21b0e070303" uname="sles11-a" type="member"/>
+      <node id="8165b1f7-da29-43db-8510-065ac1d33469" uname="sles11-b" type="member"/>
     </nodes>
     <resources>
       <master id="ms_res_Stateful_1">

@@ -25,12 +25,12 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="d61fe2cb-98f0-4815-9b7e-2552f5330ad3" uname="puma3" type="normal">
+      <node id="d61fe2cb-98f0-4815-9b7e-2552f5330ad3" uname="puma3" type="member">
         <instance_attributes id="instance_attributes.id22049">
           <nvpair id="nvpair.id22056" name="ROLE_storage" value="true"/>
         </instance_attributes>
       </node>
-      <node id="c1b88737-8c7c-4824-81de-843fe7f2e88a" uname="puma1" type="normal">
+      <node id="c1b88737-8c7c-4824-81de-843fe7f2e88a" uname="puma1" type="member">
         <instance_attributes id="instance_attributes.id22077">
           <nvpair id="nvpair.id22084" name="ROLE_storage" value="true"/>
         </instance_attributes>

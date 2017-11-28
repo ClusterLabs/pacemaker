@@ -290,7 +290,6 @@ class ClusterManager(UserDict):
         self.templates = PatternSelector(self.Env["Name"])
         self.__InitialConditions()
         self.logger = LogFactory()
-        self.clear_cache = 0
         self.TestLoggingLevel=0
         self.data = {}
         self.name = self.Env["Name"]
@@ -375,15 +374,6 @@ class ClusterManager(UserDict):
     def install_config(self, node):
         return None
 
-    def clear_all_caches(self):
-        if self.clear_cache:
-            for node in self.Env["nodes"]:
-                if self.ShouldBeStatus[node] == "down":
-                    self.debug("Removing cache file on: "+node)
-                    self.rsh(node, "rm -f "+CTSvars.HA_VARLIBHBDIR+"/hostcache")
-                else:
-                    self.debug("NOT Removing cache file on: "+node)
-
     def prepare_fencing_watcher(self, name):
         # If we don't have quorum now but get it as a result of starting this node,
         # then a bunch of nodes might get fenced
@@ -404,12 +394,6 @@ class ClusterManager(UserDict):
         stonithPats = []
         for peer in self.Env["nodes"]:
             if self.ShouldBeStatus[peer] != "up":
-                stonithPats.append(self.templates["Pat:Fencing_ok"] % peer)
-                stonithPats.append(self.templates["Pat:Fencing_start"] % peer)
-            elif self.Env["Stack"] == "corosync (cman)":
-                # There is a delay between gaining quorum and CMAN starting fencing
-                # This can mean that even nodes that are fully up get fenced
-                # There is no use fighting it, just look for everyone so that CTS doesn't get confused
                 stonithPats.append(self.templates["Pat:Fencing_ok"] % peer)
                 stonithPats.append(self.templates["Pat:Fencing_start"] % peer)
 
@@ -530,11 +514,6 @@ class ClusterManager(UserDict):
             self.logger.log ("%s was already started" % (node))
             return 1
 
-        # Clear out the host cache so autojoin can be exercised
-        if self.clear_cache:
-            self.debug("Removing cache file on: "+node)
-            self.rsh(node, "rm -f "+CTSvars.HA_VARLIBHBDIR+"/hostcache")
-
         if not(self.Env["valgrind-tests"]):
             startCmd = self.templates["StartCmd"]
         else:
@@ -580,11 +559,6 @@ class ClusterManager(UserDict):
 
         if verbose: self.logger.log("Starting %s on node %s" % (self["Name"], node))
         else: self.debug("Starting %s on node %s" % (self["Name"], node))
-
-        # Clear out the host cache so autojoin can be exercised
-        if self.clear_cache:
-            self.debug("Removing cache file on: "+node)
-            self.rsh(node, "rm -f "+CTSvars.HA_VARLIBHBDIR+"/hostcache")
 
         self.install_config(node)
         if not(self.Env["valgrind-tests"]):
@@ -854,7 +828,7 @@ class ClusterManager(UserDict):
         elif node in self.Env["oprofile"]:
             self.rsh(node, "opcontrol --dump")
             self.rsh(node, "opcontrol --save=cts.%d" % test)
-            # Read back with: opreport -l session:cts.0 image:/usr/lib/heartbeat/c*
+            # Read back with: opreport -l session:cts.0 image:<directory>/c*
             if None:
                 self.rsh(node, "opcontrol --reset")
             else:
@@ -950,7 +924,7 @@ class Resource:
         '''
         This member function returns true if our resource is operating
         correctly on the given node in the cluster.
-        Heartbeat does not require this operation, but it might be called
+        OCF does not require this operation, but it might be called
         the Monitor operation, which is what FailSafe calls it.
         For remotely monitorable resources (like IP addresses), they *should*
         be monitored remotely for testing.

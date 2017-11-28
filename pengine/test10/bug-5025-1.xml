@@ -3,7 +3,7 @@
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.6-756f667"/>
-        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="cman"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
         <nvpair id="cib-bootstrap-options-no-cluster-recheck-interval" name="cluster-recheck-interval" value="20s"/>
@@ -11,9 +11,9 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="fc16-builder" type="normal" uname="fc16-builder"/>
-      <node id="fc16-builder2" type="normal" uname="fc16-builder2"/>
-      <node id="fc16-builder3" type="normal" uname="fc16-builder3"/>
+      <node id="fc16-builder" type="member" uname="fc16-builder"/>
+      <node id="fc16-builder2" type="member" uname="fc16-builder2"/>
+      <node id="fc16-builder3" type="member" uname="fc16-builder3"/>
     </nodes>
     <resources>
       <primitive class="stonith" id="virt-fencing" type="fence_xvm">

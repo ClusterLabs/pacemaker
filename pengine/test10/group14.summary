@@ -3,7 +3,7 @@ Current cluster status:
 Online: [ c001n06 c001n07 ]
 OFFLINE: [ c001n02 c001n03 c001n04 c001n05 ]
 
- DcIPaddr	(heartbeat:IPaddr):	Stopped 
+ DcIPaddr	(ocf::heartbeat:IPaddr):	Stopped
  Resource Group: group-1
      r192.168.100.181	(ocf::heartbeat:IPaddr):	Started c001n06
      r192.168.100.182	(ocf::heartbeat:IPaddr):	Stopped 
@@ -69,7 +69,7 @@ Revised cluster status:
 Online: [ c001n06 c001n07 ]
 OFFLINE: [ c001n02 c001n03 c001n04 c001n05 ]
 
- DcIPaddr	(heartbeat:IPaddr):	Stopped 
+ DcIPaddr	(ocf::heartbeat:IPaddr):	Stopped
  Resource Group: group-1
      r192.168.100.181	(ocf::heartbeat:IPaddr):	Stopped 
      r192.168.100.182	(ocf::heartbeat:IPaddr):	Stopped 

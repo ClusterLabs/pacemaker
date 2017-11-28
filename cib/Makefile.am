@@ -19,9 +19,7 @@ include $(top_srcdir)/Makefile.common
 
 EXTRA_DIST	= cib.pam
 
-hadir		= $(sysconfdir)/ha.d
 halibdir	= $(CRM_DAEMON_DIR)
-commmoddir	= $(halibdir)/modules/comm
 
 COMMONLIBS	= $(top_builddir)/lib/common/libcrmcommon.la \
 		$(top_builddir)/lib/cib/libcib.la
