@@ -47,6 +47,13 @@ This is not an exhaustive list:
 * hawk: https://github.com/ClusterLabs/hawk
 * Striker: https://github.com/ClusterLabs/striker
 
+### Can I convert some other cluster configuration to Pacemaker?
+
+[clufter](https://github.com/jnpkrn/clufter) is a general-purpose tool
+for converting one cluster representation format to another. Among other
+possibilities, it can convert from a CMAN+rgmanager-based cluster to
+a corosync+pacemaker-based one. See its documentation for details.
+
 ## How can I help?
 
 See [CONTRIBUTING.md](https://github.com/ClusterLabs/pacemaker/blob/master/CONTRIBUTING.md).
