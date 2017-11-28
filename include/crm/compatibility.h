@@ -54,5 +54,8 @@ static int ais_fd_sync = -1;
 
 // These have newer names
 #define is_openais_cluster() is_corosync_cluster()
+#if SUPPORT_COROSYNC
+#define SUPPORT_CS
+#endif
 
 #endif
