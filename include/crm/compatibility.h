@@ -67,4 +67,9 @@ static int ais_fd_sync = -1;
 #define XML_RSC_ATTR_ISOLATION_HOST "isolation-host"
 #define XML_RSC_ATTR_ISOLATION "isolation"
 
+/* Schema-related definitions */
+
+// This has been renamed
+#define CRM_DTD_DIRECTORY CRM_SCHEMA_DIRECTORY
+
 #endif

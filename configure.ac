@@ -997,9 +997,9 @@ fi
 dnl ===============================================
 dnl Variables needed for substitution
 dnl ===============================================
-CRM_DTD_DIRECTORY="${datadir}/pacemaker"
-AC_DEFINE_UNQUOTED(CRM_DTD_DIRECTORY,"$CRM_DTD_DIRECTORY", Location for the Pacemaker Relax-NG Schema)
-AC_SUBST(CRM_DTD_DIRECTORY)
+CRM_SCHEMA_DIRECTORY="${datadir}/pacemaker"
+AC_DEFINE_UNQUOTED(CRM_SCHEMA_DIRECTORY,"$CRM_SCHEMA_DIRECTORY", Location for the Pacemaker Relax-NG Schema)
+AC_SUBST(CRM_SCHEMA_DIRECTORY)
 
 CRM_CORE_DIR="${localstatedir}/lib/pacemaker/cores"
 AC_DEFINE_UNQUOTED(CRM_CORE_DIR,"$CRM_CORE_DIR", Location to store core files produced by Pacemaker daemons)

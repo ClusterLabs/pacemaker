@@ -505,7 +505,7 @@ static xmlNode *in_mem_cib = NULL;
 
 /*!
  * \internal
- * \brief Read CIB from disk and validate it against XML DTD
+ * \brief Read CIB from disk and validate it against XML schema
  *
  * \param[in] filename Name of file to read CIB from
  *
@@ -522,7 +522,6 @@ load_file_cib(const char *filename)
 {
     struct stat buf;
     xmlNode *root = NULL;
-    const char *ignore_dtd = NULL;
 
     /* Ensure file is readable */
     if (stat(filename, &buf) < 0) {
@@ -540,10 +539,11 @@ load_file_cib(const char *filename)
         create_xml_node(root, XML_CIB_TAG_STATUS);
     }
 
-    /* Validate XML against its specified DTD */
-    ignore_dtd = crm_element_value(root, XML_ATTR_VALIDATION);
+    /* Validate XML against its specified schema */
     if (validate_xml(root, NULL, TRUE) == FALSE) {
-        crm_err("CIB does not validate against %s", ignore_dtd);
+        const char *schema = crm_element_value(root, XML_ATTR_VALIDATION);
+
+        crm_err("CIB does not validate against %s", schema);
         free_xml(root);
         return -pcmk_err_schema_validation;
     }

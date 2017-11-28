@@ -91,8 +91,7 @@ main(int argc, char **argv)
 
     crm_log_cli_init("crm_verify");
     crm_set_options(NULL, "[modifiers] data_source", long_options,
-                    "Check a (complete) confiuration for syntax and common conceptual errors."
-                    "\n\nChecks the well-formedness of an XML configuration, its conformance to the configured DTD/schema and for the presence of common misconfigurations."
+                    "\n\nChecks the well-formedness of an XML configuration, its conformance to the configured schema and for the presence of common misconfigurations."
                     "\n\nIt reports two classes of problems, errors and warnings."
                     " Errors must be fixed before the cluster will work properly."
                     " However, it is left up to the administrator to decide if the warnings should also be fixed.");
@@ -225,7 +224,7 @@ main(int argc, char **argv)
     }
 
     if (validate_xml(cib_object, NULL, FALSE) == FALSE) {
-        crm_config_err("CIB did not pass DTD/schema validation");
+        crm_config_err("CIB did not pass schema validation");
         free_xml(cib_object);
         cib_object = NULL;
 

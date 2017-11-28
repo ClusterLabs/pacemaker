@@ -17,15 +17,12 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-dtddir			= $(CRM_DTD_DIRECTORY)
-dtd_DATA		= crm.dtd crm-transitional.dtd
+RNGdir			= $(CRM_SCHEMA_DIRECTORY)
 
-xsltdir			= $(dtddir)
-xslt_DATA		= $(top_srcdir)/xml/upgrade06.xsl $(top_srcdir)/xml/upgrade-*.xsl
+xsltdir			= $(RNGdir)
+xslt_DATA		= $(top_srcdir)/xml/upgrade-*.xsl
 
 noinst_DATA		= context-of.xsl
-
-RNGdir			= $(dtddir)
 
 # See Readme.md for details on updating schema files
 
