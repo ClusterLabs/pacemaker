@@ -14,7 +14,7 @@ Commands:
 Additional Options:
  -r, --resource=value   Name of the resource to use (required)
  -n, --operation=value  Name of operation to use (instead of all operations)
- -I, --interval=value   If operation is specified, its interval (MUST be in milliseconds)
+ -I, --interval=value   If operation is specified, its interval
  -N, --node=value       Use failcount on named node (instead of local node)"
 
 
