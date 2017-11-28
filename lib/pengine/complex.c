@@ -632,20 +632,6 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
          */
         const char *legacy = NULL;
 
-        legacy = g_hash_table_lookup((*rsc)->meta,
-                                     "resource-failure-stickiness");
-        if (legacy == NULL) {
-            legacy = g_hash_table_lookup((*rsc)->meta,
-                                         "resource_failure_stickiness");
-        }
-        if (legacy) {
-            value = legacy;
-            pe_warn_once(pe_wo_rsc_failstick,
-                         "Support for 'resource-failure-stickiness' resource meta-attribute"
-                         " is deprecated and will be removed in a future release"
-                         " (use 'migration-threshold' resource meta-attribute instead)");
-        }
-
         legacy = g_hash_table_lookup(data_set->config_hash,
                                      "default-resource-failure-stickiness");
         if (legacy == NULL) {
