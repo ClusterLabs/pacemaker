@@ -116,8 +116,6 @@ class CIB12(ConfigBase):
         # * The node is specified in /etc/corosync/corosync.conf
         #   with "ring0_addr:" equal to node_name and "nodeid:"
         #   explicitly specified.
-        # * Or, the node is specified in /etc/cluster/cluster.conf
-        #   with name="node_name" nodeid="X"
         # In all other cases, we return 0.
         node_id = 0
 
@@ -136,23 +134,6 @@ class CIB12(ConfigBase):
                 node_id = int(output[0])
             except ValueError:
                 node_id = 0
-
-        # another awkward command: use < or > as record separator
-        # so each cluster.conf XML tag is one record;
-        # match the clusternode record that has name="node_name";
-        # then print the substring of that record for nodeid="X"
-        if node_id == 0:
-            (rc, output) = self.Factory.rsh(self.Factory.target,
-                r"""awk -v RS="[<>]" """
-                r"""'/^clusternode\s+.*name="%s".*/"""
-                r"""{gsub(/.*nodeid="/,"");gsub(/".*/,"");print}'"""
-                r""" /etc/cluster/cluster.conf""" % node_name, None)
-
-            if rc == 0 and len(output) == 1:
-                try:
-                    node_id = int(output[0])
-                except ValueError:
-                    node_id = 0
 
         return node_id
 
