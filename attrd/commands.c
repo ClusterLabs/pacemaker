@@ -35,8 +35,9 @@
  * heartbeat, CMAN, or corosync-plugin stacks) is unversioned.
  *
  * With atomic attrd, each attrd will send ATTRD_PROTOCOL_VERSION with every
- * peer request and reply. Currently, there is no way to know the minimum
- * version supported by all peers, which limits its usefulness.
+ * peer request and reply. As of Pacemaker 2.0.0, at start-up each attrd will
+ * also set a private attribute for itself with its version, so any attrd can
+ * determine the minimum version supported by all peers.
  *
  * Protocol  Pacemaker  Significant changes
  * --------  ---------  -------------------
@@ -289,11 +290,10 @@ void
 attrd_client_clear_failure(xmlNode *xml)
 {
 #if 0
-    /* @TODO This would be most efficient, but there is currently no way to
-     * verify that all peers support the op. If that ever changes, we could
-     * enable this code.
+    /* @TODO Track the minimum supported protocol version across all nodes,
+     * then enable this more-efficient code.
      */
-    if (all_peers_support_clear_failure) {
+    if (compare_version("2", minimum_protocol_version) <= 0) {
         /* Propagate to all peers (including ourselves).
          * This ends up at attrd_peer_message().
          */
@@ -521,6 +521,24 @@ attrd_peer_clear_failure(crm_node_t *peer, xmlNode *xml)
         }
     }
     regfree(&regex);
+}
+
+/*!
+    \internal
+    \brief Broadcast private attribute for local node with protocol version
+*/
+void
+attrd_broadcast_protocol()
+{
+    xmlNode *attrd_op = create_xml_node(NULL, __FUNCTION__);
+
+    crm_xml_add(attrd_op, F_TYPE, T_ATTRD);
+    crm_xml_add(attrd_op, F_ORIG, crm_system_name);
+    crm_xml_add(attrd_op, F_ATTRD_TASK, ATTRD_OP_UPDATE);
+    crm_xml_add(attrd_op, F_ATTRD_ATTRIBUTE, CRM_ATTR_PROTOCOL);
+    crm_xml_add(attrd_op, F_ATTRD_VALUE, ATTRD_PROTOCOL_VERSION);
+    crm_xml_add_int(attrd_op, F_ATTRD_IS_PRIVATE, 1);
+    attrd_client_update(attrd_op);
 }
 
 void
