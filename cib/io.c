@@ -270,7 +270,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
         create_xml_node(root, XML_CIB_TAG_STATUS);
     }
 
-    /* Do this before DTD validation happens */
+    /* Do this before schema validation happens */
 
     /* fill in some defaults */
     name = XML_ATTR_GENERATION_ADMIN;
@@ -317,7 +317,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
             crm_notice("Enabling %s validation on"
                        " the existing (sane) configuration", get_schema_name(version));
         } else {
-            crm_err("CIB does not validate with any known DTD or schema");
+            crm_err("CIB does not validate with any known schema");
             cib_status = -pcmk_err_schema_validation;
         }
     }

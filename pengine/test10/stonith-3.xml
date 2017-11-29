@@ -5,7 +5,6 @@
         <nvpair id="nvpair.id2000001" name="cluster-delay" value="60s"/>
         <nvpair id="nvpair.id2000002" name="default-action-timeout" value="20s"/>
         <nvpair id="nvpair.id2000003" name="default-migration-threshold" value="1"/>
-        <nvpair id="nvpair.id2000004" name="default-resource-failure-stickiness" value="-INFINITY"/>
         <nvpair id="nvpair.id2000005" name="default-resource-stickiness" value="INFINITY"/>
         <nvpair id="nvpair.id2000006" name="no-quorum-policy" value="ignore"/>
         <nvpair id="nvpair.id2000007" name="startup-fencing" value="true"/>
@@ -58,6 +57,11 @@
         </rule>
       </rsc_location>
     </constraints>
+    <rsc_defaults>
+        <meta_attributes id="meta_attributes.X">
+          <nvpair id="nvpair.X" name="migation-threshold" value="1"/>
+        </meta_attributes>
+    </rsc_defaults>
   </configuration>
   <status>
     <node_state id="fb62f5f4-015c-466a-8778-7b5c1c5639d6" uname="rh5node2" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_state_transition" shutdown="0">

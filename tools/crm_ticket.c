@@ -280,128 +280,6 @@ dump_constraints(cib_t * the_cib, const char *ticket_id)
 }
 
 static int
-find_ticket_state_attr_legacy(cib_t * the_cib, const char *attr, const char *ticket_id,
-                              const char *set_type, const char *set_name, const char *attr_id,
-                              const char *attr_name, char **value)
-{
-    int offset = 0;
-    int rc = pcmk_ok;
-    xmlNode *xml_search = NULL;
-
-    char *xpath_string = NULL;
-
-    CRM_ASSERT(value != NULL);
-    *value = NULL;
-
-    xpath_string = calloc(1, XPATH_MAX);
-    offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "%s", "/cib/status/tickets");
-
-    if (set_type) {
-        offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "/%s", set_type);
-        if (set_name) {
-            offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "[@id=\"%s\"]", set_name);
-        }
-    }
-
-    offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "//nvpair[");
-    if (attr_id) {
-        offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "@id=\"%s\"", attr_id);
-    }
-
-    if (attr_name) {
-        const char *attr_prefix = NULL;
-        char *long_key = NULL;
-
-        if (crm_str_eq(attr_name, "granted", TRUE)) {
-            attr_prefix = "granted-ticket";
-        } else {
-            attr_prefix = attr_name;
-        }
-        long_key = crm_concat(attr_prefix, ticket_id, '-');
-
-        if (attr_id) {
-            offset += snprintf(xpath_string + offset, XPATH_MAX - offset, " and ");
-        }
-        offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "@name=\"%s\"", long_key);
-
-        free(long_key);
-    }
-    offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "]");
-    CRM_LOG_ASSERT(offset > 0);
-
-    rc = the_cib->cmds->query(the_cib, xpath_string, &xml_search,
-                              cib_sync_call | cib_scope_local | cib_xpath);
-
-    if (rc != pcmk_ok) {
-        goto bail;
-    }
-
-    crm_log_xml_debug(xml_search, "Match");
-    if (xml_has_children(xml_search)) {
-        xmlNode *child = NULL;
-
-        rc = -EINVAL;
-        fprintf(stdout, "Multiple attributes match name=%s\n", attr_name);
-
-        for (child = __xml_first_child(xml_search); child != NULL; child = __xml_next(child)) {
-            fprintf(stdout, "  Value: %s \t(id=%s)\n",
-                    crm_element_value(child, XML_NVPAIR_ATTR_VALUE), ID(child));
-        }
-
-    } else {
-        const char *tmp = crm_element_value(xml_search, attr);
-
-        if (tmp) {
-            *value = strdup(tmp);
-        }
-    }
-
-  bail:
-    free(xpath_string);
-    free_xml(xml_search);
-    return rc;
-}
-
-static int
-delete_ticket_state_attr_legacy(const char *ticket_id, const char *set_name, const char *attr_id,
-                                const char *attr_name, cib_t * cib)
-{
-    xmlNode *xml_obj = NULL;
-
-    int rc = pcmk_ok;
-    char *local_attr_id = NULL;
-
-    rc = find_ticket_state_attr_legacy(cib, XML_ATTR_ID, ticket_id, XML_TAG_ATTR_SETS, set_name,
-                                       attr_id, attr_name, &local_attr_id);
-
-    if (rc == -ENXIO) {
-        return pcmk_ok;
-
-    } else if (rc != pcmk_ok) {
-        return rc;
-    }
-
-    if (attr_id == NULL) {
-        attr_id = local_attr_id;
-    }
-
-    xml_obj = crm_create_nvpair_xml(NULL, attr_id, /*attr_name*/ NULL, NULL);
-    crm_log_xml_debug(xml_obj, "Delete");
-
-    rc = cib->cmds->delete(cib, XML_CIB_TAG_STATUS, xml_obj, cib_options);
-
-    if (rc == pcmk_ok) {
-        fprintf(stdout, "Deleted legacy %s state attribute: id=%s%s%s%s%s\n", ticket_id,
-                local_attr_id, set_name ? " set=" : "", set_name ? set_name : "",
-                attr_name ? " name=" : "", attr_name ? attr_name : "");
-    }
-
-    free_xml(xml_obj);
-    free(local_attr_id);
-    return rc;
-}
-
-static int
 get_ticket_state_attr(const char *ticket_id, const char *attr_name, const char **attr_value,
                       pe_working_set_t * data_set)
 {
@@ -519,12 +397,6 @@ modify_ticket_state(const char * ticket_id, GListPtr attr_delete, GHashTable * a
     char *value = NULL;
 
     ticket_t *ticket = NULL;
-    gboolean is_granting = FALSE;
-
-    for(list_iter = attr_delete; list_iter; list_iter = list_iter->next) {
-        const char *key = (const char *)list_iter->data;
-        delete_ticket_state_attr_legacy(ticket_id, set_name, attr_id, key, cib);
-    }
 
     rc = find_ticket_state(cib, ticket_id, &ticket_state_xml);
     if (rc == pcmk_ok) {
@@ -564,7 +436,6 @@ modify_ticket_state(const char * ticket_id, GListPtr attr_delete, GHashTable * a
 
             char *now = crm_itoa(time(NULL));
 
-            is_granting = TRUE;
             crm_xml_add(ticket_state_xml, "last-granted", now);
             free(now);
         }
@@ -580,20 +451,6 @@ modify_ticket_state(const char * ticket_id, GListPtr attr_delete, GHashTable * a
     }
 
     free_xml(xml_top);
-
-    if (rc != pcmk_ok) {
-        return rc;
-    }
-
-    g_hash_table_iter_init(&hash_iter, attr_set);
-    while (g_hash_table_iter_next(&hash_iter, (gpointer *) & key, (gpointer *) & value)) {
-        delete_ticket_state_attr_legacy(ticket_id, set_name, attr_id, key, cib);
-    }
-
-    if (is_granting == TRUE) {
-        delete_ticket_state_attr_legacy(ticket_id, set_name, attr_id, "last-granted", cib);
-    }
-
     return rc;
 }
 

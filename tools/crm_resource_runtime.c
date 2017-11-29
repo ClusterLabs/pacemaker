@@ -241,8 +241,6 @@ cli_resource_update_attribute(resource_t *rsc, const char *requested_name,
     xmlNode *xml_top = NULL;
     xmlNode *xml_obj = NULL;
 
-    bool use_attributes_tag = FALSE;
-
     if(attr_id == NULL
        && do_force == FALSE
        && pcmk_ok != find_resource_attr(
@@ -285,23 +283,7 @@ cli_resource_update_attribute(resource_t *rsc, const char *requested_name,
         return rc;
 
     } else {
-        const char *value = NULL;
-        xmlNode *cib_top = NULL;
         const char *tag = crm_element_name(rsc->xml);
-
-        cib->cmds->query(cib, "/cib", &cib_top,
-                              cib_sync_call | cib_scope_local | cib_xpath | cib_no_children);
-        value = crm_element_value(cib_top, "ignore_dtd");
-        if (value != NULL) {
-            use_attributes_tag = TRUE;
-
-        } else {
-            value = crm_element_value(cib_top, XML_ATTR_VALIDATION);
-            if (crm_ends_with_ext(value, "-0.6")) {
-                use_attributes_tag = TRUE;
-            }
-        }
-        free_xml(cib_top);
 
         if (attr_set == NULL) {
             local_attr_set = crm_concat(lookup_id, attr_set_type, '-');
@@ -312,19 +294,11 @@ cli_resource_update_attribute(resource_t *rsc, const char *requested_name,
             attr_id = local_attr_id;
         }
 
-        if (use_attributes_tag && safe_str_eq(tag, XML_CIB_TAG_MASTER)) {
-            tag = "master_slave";       /* use the old name */
-        }
-
         xml_top = create_xml_node(NULL, tag);
         crm_xml_add(xml_top, XML_ATTR_ID, lookup_id);
 
         xml_obj = create_xml_node(xml_top, attr_set_type);
         crm_xml_add(xml_obj, XML_ATTR_ID, attr_set);
-
-        if (use_attributes_tag) {
-            xml_obj = create_xml_node(xml_obj, XML_TAG_ATTRS);
-        }
     }
 
     xml_obj = crm_create_nvpair_xml(xml_obj, attr_id, attr_name, attr_value);

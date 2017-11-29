@@ -1,4 +1,4 @@
-<cib epoch="365" num_updates="6" admin_epoch="0" validate-with="pacemaker-1.1" crm_feature_set="3.0.6" update-origin="lustre01-left" update-client="cibadmin" cib-last-written="Fri Jul 13 13:51:09 2012" have-quorum="1" dc-uuid="lustre02-left">
+<cib epoch="365" num_updates="6" admin_epoch="0" validate-with="pacemaker-1.2" crm_feature_set="3.0.6" update-origin="lustre01-left" update-client="cibadmin" cib-last-written="Fri Jul 13 13:51:09 2012" have-quorum="1" dc-uuid="lustre02-left">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1170,19 +1170,13 @@
       </lrm>
     </node_state>
     <tickets>
-      <instance_attributes id="status-tickets">
-        <nvpair id="status-tickets-last-granted-lustre" name="last-granted-lustre" value="1331666075"/>
-        <nvpair id="status-tickets-last-granted-drbd-local" name="last-granted-drbd-local" value="1331709018"/>
-        <nvpair id="status-tickets-last-granted-drbd-stacked" name="last-granted-drbd-stacked" value="1331669736"/>
-        <nvpair id="status-tickets-last-granted-testfs-operational" name="last-granted-testfs-operational" value="1331670761"/>
-        <nvpair id="status-tickets-last-granted-drbd-testfs-local" name="last-granted-drbd-testfs-local" value="1331669736"/>
-        <nvpair id="status-tickets-last-granted-drbd-testfs-stacked" name="last-granted-drbd-testfs-stacked" value="1331669737"/>
-        <nvpair id="status-tickets-granted-ticket-testfs-allocated" name="granted-ticket-testfs-allocated" value="true"/>
-        <nvpair id="status-tickets-last-granted-testfs-allocated" name="last-granted-testfs-allocated" value="1331650620"/>
-        <nvpair id="status-tickets-granted-ticket-lustre" name="granted-ticket-lustre" value="true"/>
-        <nvpair id="status-tickets-granted-ticket-testfs-operational" name="granted-ticket-testfs-operational" value="true"/>
-        <nvpair id="status-tickets-granted-ticket-drbd-local" name="granted-ticket-drbd-local" value="true"/>
-      </instance_attributes>
+      <ticket_state id="lustre" granted="true" last-granted="1331666075" />
+      <ticket_state id="drbd-local" granted="true" last-granted="1331709018" />
+      <ticket_state id="drbd-stacked" last-granted="1331669736" />
+      <ticket_state id="testfs-operational" granted="true" last-granted="1331670761" />
+      <ticket_state id="drbd-testfs-local" last-granted="1331669736" />
+      <ticket_state id="drbd-testfs-stacked" last-granted="1331669737" />
+      <ticket_state id="testfs-allocated" granted="true" last-granted="1331650620" />
     </tickets>
   </status>
 </cib>

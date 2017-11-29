@@ -4,7 +4,6 @@
       <cluster_property_set id="cibbootstrap">
         <nvpair id="nvpair.id21846" name="cluster-delay" value="60"/>
         <nvpair id="nvpair.id21855" name="default-resource-stickiness" value="1000"/>
-        <nvpair id="nvpair.id21864" name="default_resource_failure_stickiness" value="-500"/>
         <nvpair id="nvpair.id21873" name="stonith-enabled" value="true"/>
         <nvpair id="nvpair.id21881" name="stonith-action" value="reboot"/>
         <nvpair id="nvpair.id21890" name="symmetric-cluster" value="true"/>

@@ -67,9 +67,9 @@ class ConfigBase:
         return ip.strip()
 
 
-class CIB11(ConfigBase):
+class CIB12(ConfigBase):
     feature_set = "3.0"
-    version = "pacemaker-1.1"
+    version = "pacemaker-1.2"
     counter = 1
 
     def _show(self, command=""):
@@ -450,11 +450,7 @@ ExecStop=/bin/sh -c 'sleep 10; [ -n "\$MAINPID" ] && kill -s KILL \$MAINPID'
         lsb.commit()
 
 
-class CIB12(CIB11):
-    feature_set = "3.0"
-    version = "pacemaker-1.2"
-
-class CIB20(CIB11):
+class CIB20(CIB12):
     feature_set = "3.0"
     version = "pacemaker-2.5"
 
@@ -475,7 +471,6 @@ class ConfigFactory:
     def __init__(self, CM):
         self.CM = CM
         self.rsh = self.CM.rsh
-        self.register("pacemaker11", CIB11, CM, self)
         self.register("pacemaker12", CIB12, CM, self)
         self.register("pacemaker20", CIB20, CM, self)
 #        self.register("hae", HASI, CM, self)
@@ -501,8 +496,6 @@ class ConfigFactory:
     def createConfig(self, name="pacemaker-1.0"):
         if name == "pacemaker-1.0":
             name = "pacemaker10";
-        elif name == "pacemaker-1.1":
-            name = "pacemaker11";
         elif name == "pacemaker-1.2":
             name = "pacemaker12";
         elif name == "pacemaker-2.0":
@@ -515,7 +508,7 @@ class ConfigFactory:
         else:
             self.CM.log("Configuration variant '%s' is unknown.  Defaulting to latest config" % name)
 
-        return self.pacemaker12()
+        return self.pacemaker20()
 
 
 class ConfigFactoryItem:
@@ -554,5 +547,5 @@ if __name__ == '__main__':
     env = CTS.CtsLab(args)
     cm = CM_corosync.crm_corosync(env)
     CibFactory = ConfigFactory(cm)
-    cib = CibFactory.createConfig("pacemaker-1.1")
+    cib = CibFactory.createConfig("pacemaker-2.0")
     print(cib.contents())

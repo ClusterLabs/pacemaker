@@ -918,87 +918,6 @@ unpack_tickets_state(xmlNode * xml_tickets, pe_working_set_t * data_set)
     return TRUE;
 }
 
-/* @COMPAT DC < 1.1.7: Compatibility with the deprecated ticket state section:
- * "/cib/status/tickets/instance_attributes" */
-static void
-get_ticket_state_legacy(gpointer key, gpointer value, gpointer user_data)
-{
-    const char *long_key = key;
-    char *state_key = NULL;
-
-    const char *granted_prefix = "granted-ticket-";
-    const char *last_granted_prefix = "last-granted-";
-    static int granted_prefix_strlen = 0;
-    static int last_granted_prefix_strlen = 0;
-
-    const char *ticket_id = NULL;
-    const char *is_granted = NULL;
-    const char *last_granted = NULL;
-    const char *sep = NULL;
-
-    ticket_t *ticket = NULL;
-    pe_working_set_t *data_set = user_data;
-
-    if (granted_prefix_strlen == 0) {
-        granted_prefix_strlen = strlen(granted_prefix);
-    }
-
-    if (last_granted_prefix_strlen == 0) {
-        last_granted_prefix_strlen = strlen(last_granted_prefix);
-    }
-
-    if (strstr(long_key, granted_prefix) == long_key) {
-        ticket_id = long_key + granted_prefix_strlen;
-        if (strlen(ticket_id)) {
-            state_key = strdup("granted");
-            is_granted = value;
-        }
-    } else if (strstr(long_key, last_granted_prefix) == long_key) {
-        ticket_id = long_key + last_granted_prefix_strlen;
-        if (strlen(ticket_id)) {
-            state_key = strdup("last-granted");
-            last_granted = value;
-        }
-    } else if ((sep = strrchr(long_key, '-'))) {
-        ticket_id = sep + 1;
-        state_key = strndup(long_key, strlen(long_key) - strlen(sep));
-    }
-
-    if (ticket_id == NULL || strlen(ticket_id) == 0) {
-        free(state_key);
-        return;
-    }
-
-    if (state_key == NULL || strlen(state_key) == 0) {
-        free(state_key);
-        return;
-    }
-
-    ticket = g_hash_table_lookup(data_set->tickets, ticket_id);
-    if (ticket == NULL) {
-        ticket = ticket_new(ticket_id, data_set);
-        if (ticket == NULL) {
-            free(state_key);
-            return;
-        }
-    }
-
-    g_hash_table_replace(ticket->state, state_key, strdup(value));
-
-    if (is_granted) {
-        if (crm_is_true(is_granted)) {
-            ticket->granted = TRUE;
-            crm_info("We have ticket '%s'", ticket->id);
-        } else {
-            ticket->granted = FALSE;
-            crm_info("We do not have ticket '%s'", ticket->id);
-        }
-
-    } else if (last_granted) {
-        ticket->last_granted = crm_parse_int(last_granted, 0);
-    }
-}
-
 static void
 unpack_handle_remote_attrs(node_t *this_node, xmlNode *state, pe_working_set_t * data_set) 
 {
@@ -1170,27 +1089,9 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
 
     for (state = __xml_first_child(status); state != NULL; state = __xml_next_element(state)) {
         if (crm_str_eq((const char *)state->name, XML_CIB_TAG_TICKETS, TRUE)) {
-            xmlNode *xml_tickets = state;
-            GHashTable *state_hash = NULL;
+            unpack_tickets_state((xmlNode *) state, data_set);
 
-            /* @COMPAT DC < 1.1.7: Compatibility with the deprecated ticket state section:
-             * Unpack the attributes in the deprecated "/cib/status/tickets/instance_attributes" if it exists. */
-            state_hash = crm_str_table_new();
-
-            unpack_instance_attributes(data_set->input, xml_tickets, XML_TAG_ATTR_SETS, NULL,
-                                       state_hash, NULL, TRUE, data_set->now);
-
-            g_hash_table_foreach(state_hash, get_ticket_state_legacy, data_set);
-
-            if (state_hash) {
-                g_hash_table_destroy(state_hash);
-            }
-
-            /* Unpack the new "/cib/status/tickets/ticket_state"s */
-            unpack_tickets_state(xml_tickets, data_set);
-        }
-
-        if (crm_str_eq((const char *)state->name, XML_CIB_TAG_STATE, TRUE)) {
+        } else if (crm_str_eq((const char *)state->name, XML_CIB_TAG_STATE, TRUE)) {
             xmlNode *attrs = NULL;
             const char *resource_discovery_enabled = NULL;
 

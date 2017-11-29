@@ -62,7 +62,7 @@
 #undef CRM_STATE_DIR
 
 /* Location for the Pacemaker Relax-NG Schema */
-#undef CRM_DTD_DIRECTORY
+#undef CRM_SCHEMA_DIRECTORY
 
 /****** Features ******/
 
