@@ -1150,7 +1150,6 @@ main(int argc, char **argv)
         }
 
     } else if (rsc_cmd == 'C') {
-#if HAVE_ATOMIC_ATTRD
         const char *router_node = host_uname;
         xmlNode *msg_data = NULL;
         xmlNode *cmd = NULL;
@@ -1198,18 +1197,6 @@ main(int argc, char **argv)
         }
 
         free_xml(cmd);
-#else
-        GListPtr rIter = NULL;
-
-        crmd_replies_needed = 0;
-        for (rIter = data_set.resources; rIter; rIter = rIter->next) {
-            rsc = rIter->data;
-            cli_resource_delete(crmd_channel, host_uname, rsc, NULL, NULL,
-                                &data_set);
-        }
-
-        start_mainloop();
-#endif
 
     } else if (rsc_cmd == 'D') {
         xmlNode *msg_data = NULL;
