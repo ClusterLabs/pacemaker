@@ -2550,6 +2550,39 @@ StopRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * d
     return TRUE;
 }
 
+static void
+order_after_unfencing(resource_t *rsc, pe_node_t *node, action_t *action,
+                      enum pe_ordering order, pe_working_set_t *data_set)
+{
+    /* When unfencing is in use, we order unfence actions before any probe or
+     * start of resources that require unfencing, and also of fence devices.
+     *
+     * This might seem to violate the principle that fence devices require
+     * only quorum. However, fence agents that unfence often don't have enough
+     * information to even probe or start unless the node is first unfenced.
+     */
+    if (is_unfence_device(rsc, data_set)
+        || is_set(rsc->flags, pe_rsc_needs_unfencing)) {
+
+        /* Start with an optional ordering. Requiring unfencing would result in
+         * the node being unfenced, and all its resources being stopped,
+         * whenever a new resource is added -- which would be highly suboptimal.
+         */
+        action_t *unfence = pe_fence_op(node, "on", TRUE, NULL, data_set);
+
+        order_actions(unfence, action, order);
+
+        if (!node_has_been_unfenced(node)) {
+            // But unfencing is required if it has never been done
+            char *reason = crm_strdup_printf("required by %s %s",
+                                             rsc->id, action->task);
+
+            trigger_unfencing(NULL, node, reason, NULL, data_set);
+            free(reason);
+        }
+    }
+}
+
 gboolean
 StartRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * data_set)
 {
@@ -2559,16 +2592,7 @@ StartRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * 
     pe_rsc_trace(rsc, "%s on %s %d %d", rsc->id, next ? next->details->uname : "N/A", optional, next ? next->weight : 0);
     start = start_action(rsc, next, TRUE);
 
-    if(is_set(rsc->flags, pe_rsc_needs_unfencing)) {
-        action_t *unfence = pe_fence_op(next, "on", TRUE, NULL, data_set);
-
-        order_actions(unfence, start, pe_order_implies_then);
-        if (!node_has_been_unfenced(next)) {
-            char *reason = crm_strdup_printf("Required by %s", rsc->id);
-            trigger_unfencing(NULL, next, reason, NULL, data_set);
-            free(reason);
-        }
-    }
+    order_after_unfencing(rsc, next, start, pe_order_implies_then, data_set);
 
     if (is_set(start->flags, pe_action_runnable) && optional == FALSE) {
         update_action_flags(start, pe_action_optional | pe_action_clear, __FUNCTION__, __LINE__);
@@ -2989,23 +3013,7 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
     probe = custom_action(rsc, key, RSC_STATUS, node, FALSE, TRUE, data_set);
     update_action_flags(probe, pe_action_optional | pe_action_clear, __FUNCTION__, __LINE__);
 
-    /* If enabled, require unfencing before probing any fence devices
-     * but ensure it happens after any resources that require
-     * unfencing have been probed.
-     *
-     * Doing it the other way (requiring unfencing after probing
-     * resources that need it) would result in the node being
-     * unfenced, and all its resources being stopped, whenever a new
-     * resource is added.  Which would be highly suboptimal.
-     *
-     * So essentially, at the point the fencing device(s) have been
-     * probed, we know the state of all resources that require
-     * unfencing and that unfencing occurred.
-     */
-    if(is_set(rsc->flags, pe_rsc_needs_unfencing)) {
-        action_t *unfence = pe_fence_op(node, "on", TRUE, NULL, data_set);
-        order_actions(unfence, probe, pe_order_optional);
-    }
+    order_after_unfencing(rsc, node, probe, pe_order_optional, data_set);
 
     /*
      * We need to know if it's running_on (not just known_on) this node
