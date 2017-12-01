@@ -437,6 +437,13 @@ node_has_been_unfenced(node_t *node)
     return unfenced && strcmp("0", unfenced);
 }
 
+static inline bool
+is_unfence_device(resource_t *rsc, pe_working_set_t *data_set)
+{
+    return is_set(rsc->flags, pe_rsc_fence_device)
+           && is_set(data_set->flags, pe_flag_enable_unfencing);
+}
+
 node_t *
 native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
 {
@@ -3015,12 +3022,8 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
     crm_debug("Probing %s on %s (%s) %d %p", rsc->id, node->details->uname, role2text(rsc->role),
               is_set(probe->flags, pe_action_runnable), rsc->running_on);
 
-    if(is_set(rsc->flags, pe_rsc_fence_device) && is_set(data_set->flags, pe_flag_enable_unfencing)) {
+    if (is_unfence_device(rsc, data_set) || !pe_rsc_is_clone(top)) {
         top = rsc;
-
-    } else if (pe_rsc_is_clone(top) == FALSE) {
-        top = rsc;
-
     } else {
         crm_trace("Probing %s on %s (%s) as %s", rsc->id, node->details->uname, role2text(rsc->role), top->id);
     }
@@ -3041,17 +3044,18 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
                         top, reload_key(rsc), NULL,
                         pe_order_optional, data_set);
 
-    if(is_set(rsc->flags, pe_rsc_fence_device) && is_set(data_set->flags, pe_flag_enable_unfencing)) {
+#if 0
+    // complete is always null currently
+    if (!is_unfence_device(rsc, data_set)) {
         /* Normally rsc.start depends on probe complete which depends
-         * on rsc.probe. But this can't be the case in this scenario as
-         * it would create graph loops.
+         * on rsc.probe. But this can't be the case for fence devices
+         * with unfencing, as it would create graph loops.
          *
          * So instead we explicitly order 'rsc.probe then rsc.start'
          */
-
-    } else {
         order_actions(probe, complete, pe_order_implies_then);
     }
+#endif
     return TRUE;
 }
 
