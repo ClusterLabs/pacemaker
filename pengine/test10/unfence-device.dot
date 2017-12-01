@@ -1,0 +1,18 @@
+digraph "g" {
+"fence_scsi_monitor_0 virt-008" -> "fence_scsi_start_0 virt-008" [ style = bold]
+"fence_scsi_monitor_0 virt-008" [ style=bold color="green" fontcolor="black"]
+"fence_scsi_monitor_0 virt-009" -> "fence_scsi_start_0 virt-008" [ style = bold]
+"fence_scsi_monitor_0 virt-009" [ style=bold color="green" fontcolor="black"]
+"fence_scsi_monitor_0 virt-013" -> "fence_scsi_start_0 virt-008" [ style = bold]
+"fence_scsi_monitor_0 virt-013" [ style=bold color="green" fontcolor="black"]
+"fence_scsi_monitor_60000 virt-008" [ style=bold color="green" fontcolor="black"]
+"fence_scsi_start_0 virt-008" -> "fence_scsi_monitor_60000 virt-008" [ style = bold]
+"fence_scsi_start_0 virt-008" [ style=bold color="green" fontcolor="black"]
+"stonith 'on' virt-008" -> "fence_scsi_monitor_0 virt-008" [ style = bold]
+"stonith 'on' virt-008" -> "fence_scsi_start_0 virt-008" [ style = bold]
+"stonith 'on' virt-008" [ style=bold color="green" fontcolor="black"]
+"stonith 'on' virt-009" -> "fence_scsi_monitor_0 virt-009" [ style = bold]
+"stonith 'on' virt-009" [ style=bold color="green" fontcolor="black"]
+"stonith 'on' virt-013" -> "fence_scsi_monitor_0 virt-013" [ style = bold]
+"stonith 'on' virt-013" [ style=bold color="green" fontcolor="black"]
+}
