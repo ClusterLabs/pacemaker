@@ -429,6 +429,14 @@ rsc_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, const c
     return work;
 }
 
+static inline bool
+node_has_been_unfenced(node_t *node)
+{
+    const char *unfenced = pe_node_attribute_raw(node, CRM_ATTR_UNFENCED);
+
+    return unfenced && strcmp("0", unfenced);
+}
+
 node_t *
 native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
 {
@@ -2524,10 +2532,9 @@ StopRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * d
 
         if(is_set(rsc->flags, pe_rsc_needs_unfencing)) {
             action_t *unfence = pe_fence_op(current, "on", TRUE, NULL, data_set);
-            const char *unfenced = pe_node_attribute_raw(current, CRM_ATTR_UNFENCED);
 
             order_actions(stop, unfence, pe_order_implies_first);
-            if (unfenced == NULL || safe_str_eq("0", unfenced)) {
+            if (!node_has_been_unfenced(current)) {
                 pe_proc_err("Stopping %s until %s can be unfenced", rsc->id, current->details->uname);
             }
         }
@@ -2547,11 +2554,9 @@ StartRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * 
 
     if(is_set(rsc->flags, pe_rsc_needs_unfencing)) {
         action_t *unfence = pe_fence_op(next, "on", TRUE, NULL, data_set);
-        const char *unfenced = pe_node_attribute_raw(next, CRM_ATTR_UNFENCED);
 
         order_actions(unfence, start, pe_order_implies_then);
-
-        if (unfenced == NULL || safe_str_eq("0", unfenced)) {
+        if (!node_has_been_unfenced(next)) {
             char *reason = crm_strdup_printf("Required by %s", rsc->id);
             trigger_unfencing(NULL, next, reason, NULL, data_set);
             free(reason);
