@@ -13,18 +13,18 @@ Online: [ virt-1 virt-2 virt-3 ]
 
 Transition Summary:
  * Fence (reboot) virt-4 'node is unclean'
- * Fence (on) virt-3 'Required by dlm:2'
+ * Fence (on) virt-3 'required by fencing monitor'
  * Start   dlm:2	(virt-3)
  * Start   clvmd:1	(virt-2)
  * Start   clvmd:2	(virt-3)
 
 Executing cluster transition:
- * Resource action: fencing         monitor on virt-3
  * Resource action: clvmd           monitor on virt-2
  * Fencing virt-4 (reboot)
  * Pseudo action:   stonith_complete
  * Fencing virt-3 (on)
  * Pseudo action:   all_stopped
+ * Resource action: fencing         monitor on virt-3
  * Resource action: dlm             monitor on virt-3
  * Pseudo action:   dlm-clone_start_0
  * Resource action: clvmd           monitor on virt-3
