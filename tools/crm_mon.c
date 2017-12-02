@@ -109,10 +109,6 @@ GMainLoop *mainloop = NULL;
 guint timer_id = 0;
 GList *attr_list = NULL;
 
-const char *crm_mail_host = NULL;
-const char *crm_mail_prefix = NULL;
-const char *crm_mail_from = NULL;
-const char *crm_mail_to = NULL;
 const char *external_agent = NULL;
 const char *external_recipient = NULL;
 
@@ -346,8 +342,6 @@ static struct crm_option long_options[] = {
     {"as-xml",         0, 0, 'X', "\t\tWrite cluster status as xml to stdout. This will enable one-shot mode."},
     {"web-cgi",        0, 0, 'w', "\t\tWeb mode with output suitable for CGI (preselected when run as *.cgi)"},
     {"simple-status",  0, 0, 's', "\tDisplay the cluster status once as a simple one line output (suitable for nagios)"},
-    {"mail-to",        1, 0, 'T', "\tSend Mail alerts to this user.  See also --mail-from, --mail-host, --mail-prefix", !ENABLE_ESMTP},
-
     {"-spacer-",	1, 0, '-', "\nDisplay Options:"},
     {"group-by-node",  0, 0, 'n', "\tGroup resources by node"     },
     {"inactive",       0, 0, 'r', "\t\tDisplay inactive resources"  },
@@ -355,7 +349,7 @@ static struct crm_option long_options[] = {
     {"operations",     0, 0, 'o', "\tDisplay resource operation history" },
     {"timing-details", 0, 0, 't', "\tDisplay resource operation history with timing details" },
     {"tickets",        0, 0, 'c', "\t\tDisplay cluster tickets"},
-    {"watch-fencing",  0, 0, 'W', "\tListen for fencing events. For use with --external-agent and/or --mail-to where supported"},
+    {"watch-fencing",  0, 0, 'W', "\tListen for fencing events. For use with --external-agent"},
     {"neg-locations",  2, 0, 'L', "Display negative location constraints [optionally filtered by id prefix]"},
     {"show-node-attributes", 0, 0, 'A', "Display node attributes" },
     {"hide-headers",   0, 0, 'D', "\tHide all headers" },
@@ -369,9 +363,6 @@ static struct crm_option long_options[] = {
     {"disable-ncurses",0, 0, 'N', "\tDisable the use of ncurses", !CURSES_ENABLED},
     {"daemonize",      0, 0, 'd', "\tRun in the background as a daemon"},
     {"pid-file",       1, 0, 'p', "\t(Advanced) Daemon pid file location"},
-    {"mail-from",      1, 0, 'F', "\tMail alerts should come from the named user", !ENABLE_ESMTP},
-    {"mail-host",      1, 0, 'H', "\tMail alerts should be sent via the named host", !ENABLE_ESMTP},
-    {"mail-prefix",    1, 0, 'P', "Subjects for mail alerts should start with this string", !ENABLE_ESMTP},
     {"external-agent",    1, 0, 'E', "A program to run when resource operations take place."},
     {"external-recipient",1, 0, 'e', "A recipient for your program (assuming you want the program to send something to someone)."},
 
@@ -389,8 +380,6 @@ static struct crm_option long_options[] = {
     {"-spacer-",	1, 0, '-', " crm_mon --daemonize --as-html /path/to/docroot/filename.html", pcmk_option_example},
     {"-spacer-",	1, 0, '-', "Start crm_mon and export the current cluster status as xml to stdout, then exit.:", pcmk_option_paragraph},
     {"-spacer-",	1, 0, '-', " crm_mon --as-xml", pcmk_option_example},
-    {"-spacer-",	1, 0, '-', "Start crm_mon as a background daemon and have it send email alerts:", pcmk_option_paragraph|!ENABLE_ESMTP},
-    {"-spacer-",	1, 0, '-', " crm_mon --daemonize --mail-to user@example.com --mail-host mail.example.com", pcmk_option_example|!ENABLE_ESMTP},
 
     {NULL, 0, 0, 0}
 };
@@ -637,18 +626,6 @@ main(int argc, char **argv)
                 output_format = mon_output_monitor;
                 one_shot = TRUE;
                 break;
-            case 'T':
-                crm_mail_to = optarg;
-                break;
-            case 'F':
-                crm_mail_from = optarg;
-                break;
-            case 'H':
-                crm_mail_host = optarg;
-                break;
-            case 'P':
-                crm_mail_prefix = optarg;
-                break;
             case 'E':
                 external_agent = optarg;
                 break;
@@ -679,7 +656,6 @@ main(int argc, char **argv)
         argerr += (optind < argc);
         argerr += (output_filename != NULL);
         argerr += (xml_file != NULL);
-        argerr += (crm_mail_to != NULL);
         argerr += (external_agent != NULL);
         argerr += (daemonize == TRUE);  /* paranoia */
 
@@ -717,9 +693,9 @@ main(int argc, char **argv)
         crm_enable_stderr(FALSE);
 
         if ((output_format != mon_output_html) && (output_format != mon_output_xml)
-            && !crm_mail_to && !external_agent) {
+            && !external_agent) {
             printf
-                ("Looks like you forgot to specify one or more of: --as-html, --as-xml, --mail-to, --external-agent\n");
+                ("Looks like you forgot to specify one or more of: --as-html, --as-xml, --external-agent\n");
             return crm_help('?', EX_USAGE);
         }
 
@@ -3283,114 +3259,6 @@ print_html_status(pe_working_set_t * data_set, const char *filename)
     return 0;
 }
 
-#if ENABLE_ESMTP
-#  include <auth-client.h>
-#  include <libesmtp.h>
-
-static void
-print_recipient_status(smtp_recipient_t recipient, const char *mailbox, void *arg)
-{
-    const smtp_status_t *status;
-
-    status = smtp_recipient_status(recipient);
-    printf("%s: %d %s", mailbox, status->code, status->text);
-}
-
-static void
-event_cb(smtp_session_t session, int event_no, void *arg, ...)
-{
-    int *ok;
-    va_list alist;
-
-    va_start(alist, arg);
-    switch (event_no) {
-        case SMTP_EV_CONNECT:
-        case SMTP_EV_MAILSTATUS:
-        case SMTP_EV_RCPTSTATUS:
-        case SMTP_EV_MESSAGEDATA:
-        case SMTP_EV_MESSAGESENT:
-        case SMTP_EV_DISCONNECT:
-            break;
-
-        case SMTP_EV_WEAK_CIPHER:{
-                int bits = va_arg(alist, long);
-                ok = va_arg(alist, int *);
-
-                crm_debug("SMTP_EV_WEAK_CIPHER, bits=%d - accepted.", bits);
-                *ok = 1;
-                break;
-            }
-        case SMTP_EV_STARTTLS_OK:
-            crm_debug("SMTP_EV_STARTTLS_OK - TLS started here.");
-            break;
-
-        case SMTP_EV_INVALID_PEER_CERTIFICATE:{
-                long vfy_result = va_arg(alist, long);
-                ok = va_arg(alist, int *);
-
-                /* There is a table in handle_invalid_peer_certificate() of mail-file.c */
-                crm_err("SMTP_EV_INVALID_PEER_CERTIFICATE: %ld", vfy_result);
-                *ok = 1;
-                break;
-            }
-        case SMTP_EV_NO_PEER_CERTIFICATE:
-            ok = va_arg(alist, int *);
-
-            crm_debug("SMTP_EV_NO_PEER_CERTIFICATE - accepted.");
-            *ok = 1;
-            break;
-        case SMTP_EV_WRONG_PEER_CERTIFICATE:
-            ok = va_arg(alist, int *);
-
-            crm_debug("SMTP_EV_WRONG_PEER_CERTIFICATE - accepted.");
-            *ok = 1;
-            break;
-        case SMTP_EV_NO_CLIENT_CERTIFICATE:
-            ok = va_arg(alist, int *);
-
-            crm_debug("SMTP_EV_NO_CLIENT_CERTIFICATE - accepted.");
-            *ok = 1;
-            break;
-        default:
-            crm_debug("Got event: %d - ignored.", event_no);
-    }
-    va_end(alist);
-}
-#endif
-
-#define BODY_MAX 2048
-
-#if ENABLE_ESMTP
-static void
-crm_smtp_debug(const char *buf, int buflen, int writing, void *arg)
-{
-    char type = 0;
-    int lpc = 0, last = 0, level = *(int *)arg;
-
-    if (writing == SMTP_CB_HEADERS) {
-        type = 'H';
-    } else if (writing) {
-        type = 'C';
-    } else {
-        type = 'S';
-    }
-
-    for (; lpc < buflen; lpc++) {
-        switch (buf[lpc]) {
-            case 0:
-            case '\n':
-                if (last > 0) {
-                    do_crm_log(level, "   %.*s", lpc - last, buf + last);
-                } else {
-                    do_crm_log(level, "%c: %.*s", type, lpc - last, buf + last);
-                }
-                last = lpc + 1;
-                break;
-        }
-    }
-}
-#endif
-
 static int
 send_custom_trap(const char *node, const char *rsc, const char *task, int target_rc, int rc,
                  int status, const char *desc)
@@ -3431,155 +3299,6 @@ send_custom_trap(const char *node, const char *rsc, const char *task, int target
     free(target_rc_s);
     free(status_s);
     free(rc_s);
-    return 0;
-}
-
-static int
-send_smtp_trap(const char *node, const char *rsc, const char *task, int target_rc, int rc,
-               int status, const char *desc)
-{
-#if ENABLE_ESMTP
-    smtp_session_t session;
-    smtp_message_t message;
-    auth_context_t authctx;
-    struct sigaction sa;
-
-    int len = 25; /* Note: Check extra padding on the Subject line below */
-    int noauth = 1;
-    int smtp_debug = LOG_DEBUG;
-    char crm_mail_body[BODY_MAX];
-    char *crm_mail_subject = NULL;
-
-    memset(&sa, 0, sizeof(struct sigaction));
-
-    if (node == NULL) {
-        node = "-";
-    }
-    if (rsc == NULL) {
-        rsc = "-";
-    }
-    if (desc == NULL) {
-        desc = "-";
-    }
-
-    if (crm_mail_to == NULL) {
-        return 1;
-    }
-
-    if (crm_mail_host == NULL) {
-        crm_mail_host = "localhost:25";
-    }
-
-    if (crm_mail_prefix == NULL) {
-        crm_mail_prefix = "Cluster notification";
-    }
-
-    crm_debug("Sending '%s' mail to %s via %s", crm_mail_prefix, crm_mail_to, crm_mail_host);
-
-    len += strlen(crm_mail_prefix);
-    len += strlen(task);
-    len += strlen(rsc);
-    len += strlen(node);
-    len += strlen(desc);
-    len++;
-
-    crm_mail_subject = calloc(1, len);
-    /* If you edit this line, ensure you allocate enough memory for it by altering 'len' above */
-    snprintf(crm_mail_subject, len, "%s - %s event for %s on %s: %s\r\n", crm_mail_prefix, task,
-             rsc, node, desc);
-
-    len = 0;
-    len += snprintf(crm_mail_body + len, BODY_MAX - len, "\r\n%s\r\n", crm_mail_prefix);
-    len += snprintf(crm_mail_body + len, BODY_MAX - len, "====\r\n\r\n");
-    if (rc == target_rc) {
-        len += snprintf(crm_mail_body + len, BODY_MAX - len,
-                        "Completed operation %s for resource %s on %s\r\n", task, rsc, node);
-    } else {
-        len += snprintf(crm_mail_body + len, BODY_MAX - len,
-                        "Operation %s for resource %s on %s failed: %s\r\n", task, rsc, node, desc);
-    }
-
-    len += snprintf(crm_mail_body + len, BODY_MAX - len, "\r\nDetails:\r\n");
-    len += snprintf(crm_mail_body + len, BODY_MAX - len,
-                    "\toperation status: (%d) %s\r\n", status, services_lrm_status_str(status));
-    if (status == PCMK_LRM_OP_DONE) {
-        len += snprintf(crm_mail_body + len, BODY_MAX - len,
-                        "\tscript returned: (%d) %s\r\n", rc, services_ocf_exitcode_str(rc));
-        len += snprintf(crm_mail_body + len, BODY_MAX - len,
-                        "\texpected return value: (%d) %s\r\n", target_rc,
-                        services_ocf_exitcode_str(target_rc));
-    }
-
-    auth_client_init();
-    session = smtp_create_session();
-    message = smtp_add_message(session);
-
-    smtp_starttls_enable(session, Starttls_ENABLED);
-
-    sa.sa_handler = SIG_IGN;
-    sigemptyset(&sa.sa_mask);
-    sa.sa_flags = 0;
-    sigaction(SIGPIPE, &sa, NULL);
-
-    smtp_set_server(session, crm_mail_host);
-
-    authctx = auth_create_context();
-    auth_set_mechanism_flags(authctx, AUTH_PLUGIN_PLAIN, 0);
-
-    smtp_set_eventcb(session, event_cb, NULL);
-
-    /* Now tell libESMTP it can use the SMTP AUTH extension.
-     */
-    if (!noauth) {
-        crm_debug("Adding authentication context");
-        smtp_auth_set_context(session, authctx);
-    }
-
-    if (crm_mail_from == NULL) {
-        struct utsname us;
-        char auto_from[BODY_MAX];
-
-        CRM_ASSERT(uname(&us) == 0);
-        snprintf(auto_from, BODY_MAX, "crm_mon@%s", us.nodename);
-        smtp_set_reverse_path(message, auto_from);
-
-    } else {
-        /* NULL is ok */
-        smtp_set_reverse_path(message, crm_mail_from);
-    }
-
-    smtp_set_header(message, "To", NULL /*phrase */ , NULL /*addr */ ); /* "Phrase" <addr> */
-    smtp_add_recipient(message, crm_mail_to);
-
-    /* Set the Subject: header and override any subject line in the message headers. */
-    smtp_set_header(message, "Subject", crm_mail_subject);
-    smtp_set_header_option(message, "Subject", Hdr_OVERRIDE, 1);
-
-    smtp_set_message_str(message, crm_mail_body);
-    smtp_set_monitorcb(session, crm_smtp_debug, &smtp_debug, 1);
-
-    if (smtp_start_session(session)) {
-        char buf[128];
-        int rc = smtp_errno();
-
-        crm_err("SMTP server problem: %s (%d)", smtp_strerror(rc, buf, sizeof buf), rc);
-
-    } else {
-        char buf[128];
-        int rc = smtp_errno();
-        const smtp_status_t *smtp_status = smtp_message_transfer_status(message);
-
-        if (rc != 0) {
-            crm_err("SMTP server problem: %s (%d)", smtp_strerror(rc, buf, sizeof buf), rc);
-        }
-        crm_info("Send status: %d %s", smtp_status->code, crm_str(smtp_status->text));
-        smtp_enumerate_recipients(message, print_recipient_status, NULL);
-    }
-
-    smtp_destroy_session(session);
-    auth_destroy_context(authctx);
-    auth_client_exit();
-#endif
     return 0;
 }
 
@@ -3678,9 +3397,6 @@ handle_rsc_op(xmlNode * xml, const char *node_id)
         crm_warn("%s of %s on %s failed: %s", task, rsc, node, desc);
     }
 
-    if (notify && crm_mail_to) {
-        send_smtp_trap(node, rsc, task, target_rc, rc, status, desc);
-    }
     if (notify && external_agent) {
         send_custom_trap(node, rsc, task, target_rc, rc, status, desc);
     }
@@ -3871,7 +3587,7 @@ crm_diff_update(const char *event, xmlNode * msg)
         cib->cmds->query(cib, NULL, &current_cib, cib_scope_local | cib_sync_call);
     }
 
-    if (crm_mail_to || external_agent) {
+    if (external_agent) {
         int format = 0;
         crm_element_value_int(diff, "format", &format);
         switch(format) {
@@ -3987,9 +3703,6 @@ mon_st_callback(stonith_t * st, stonith_event_t * e)
                                  e->operation, e->origin, e->target, pcmk_strerror(e->result),
                                  e->id);
 
-    if (crm_mail_to) {
-        send_smtp_trap(e->target, NULL, e->operation, pcmk_ok, e->result, 0, desc);
-    }
     if (external_agent) {
         send_custom_trap(e->target, NULL, e->operation, pcmk_ok, e->result, 0, desc);
     }

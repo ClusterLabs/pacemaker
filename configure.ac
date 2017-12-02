@@ -231,13 +231,6 @@ AC_ARG_WITH(nagios-metadata-dir,
     [ NAGIOS_METADATA_DIR="$withval" ]
 )
 
-AC_ARG_WITH(esmtp,
-    [  --with-esmtp
-       Support the sending mail notifications with the esmtp library ],
-    [ SUPPORT_ESMTP=$withval ],
-    [ SUPPORT_ESMTP=try ],
-)
-
 AC_ARG_WITH(acl,
     [  --with-acl
        Support CIB ACL ],
@@ -1282,62 +1275,6 @@ fi
 
 PCMK_FEATURES="$PCMK_FEATURES atomic-attrd"
 AC_SUBST(CLUSTERLIBS)
-
-dnl ========================================================================
-dnl    ESMTP
-dnl ========================================================================
-
-case $SUPPORT_ESMTP in
-     1|yes|true) missingisfatal=1;;
-     try)        missingisfatal=0;;
-     *)		 SUPPORT_ESMTP=no;;
-esac
-
-ESMTPLIB=""
-
-AC_MSG_CHECKING(for esmtp support)
-if test $SUPPORT_ESMTP = no; then
-   AC_MSG_RESULT(no (disabled))
-   SUPPORT_ESMTP=0
-else
-   ESMTPCONFIG=""
-   AC_MSG_RESULT($SUPPORT_ESMTP)
-   AC_CHECK_HEADERS(libesmtp.h)
-
-   if test "x${ac_cv_header_libesmtp_h}" != "xyes"; then
-	ENABLE_ESMTP="no"
-   fi
-
-   if test $SUPPORT_ESMTP != no; then
-	AC_PATH_PROGS(ESMTPCONFIG, libesmtp-config)
-	if test "X${ESMTPCONFIG}" = "X"; then
-		AC_MSG_RESULT(You need the libesmtp development package to continue.)
-		SUPPORT_ESMTP=no
-	fi
-   fi
-
-   if test $SUPPORT_ESMTP != no; then
-	AC_MSG_CHECKING(for special esmtp libraries)
-	ESMTPLIBS=`$ESMTPCONFIG --libs | tr '\n' ' '`
-	AC_MSG_RESULT($ESMTPLIBS)
-   fi
-
-   if test $SUPPORT_ESMTP = no; then
-   	SUPPORT_ESMTP=0
-     	if test $missingisfatal = 0; then
-	    AC_MSG_WARN(Unable to support ESMTP)
-        else
-	    AC_MSG_FAILURE(Unable to support ESMTP)
-        fi
-   else
-   	SUPPORT_ESMTP=1
-        PCMK_FEATURES="$PCMK_FEATURES libesmtp"
-   fi
-fi
-
-AC_SUBST(ESMTPLIBS)
-AM_CONDITIONAL(ENABLE_ESMTP, test "$SUPPORT_ESMTP" = "1")
-AC_DEFINE_UNQUOTED(ENABLE_ESMTP, $SUPPORT_ESMTP, Build in support for sending mail notifications with ESMTP)
 
 dnl ========================================================================
 dnl    ACL
