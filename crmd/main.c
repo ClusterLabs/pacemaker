@@ -124,12 +124,6 @@ main(int argc, char **argv)
 static void
 log_deprecation_warnings()
 {
-#if ENABLE_SNMP
-    crm_warn("Compile-time support for crm_mon SNMP options"
-             " is deprecated and will be removed in a future release"
-             " (configure alerts instead)",
-             name_for_cluster_type(get_cluster_type()));
-#endif
 #if ENABLE_ESMTP
     crm_warn("Compile-time support for crm_mon SMTP options"
              " is deprecated and will be removed in a future release"

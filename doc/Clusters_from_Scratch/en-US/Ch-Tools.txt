@@ -104,11 +104,3 @@ installation, run:
 Pacemaker 1.1.12 (Build: a14efad)
  Supporting v3.0.9:  generated-manpages agent-manpages ascii-docs publican-docs ncurses libqb-logging libqb-ipc upstart systemd nagios  corosync-native atomic-attrd acls
 ----
-
-[NOTE]
-======
-If the SNMP and/or email options are not listed, then Pacemaker was not
-built to support them. This may be by the choice of your distribution, or
-the required libraries may not have been available. Please contact
-whoever supplied you with the packages for more details.
-======

@@ -100,8 +100,6 @@ char *output_filename = NULL;   /* if sending output to a file, its name */
 /* other globals */
 char *xml_file = NULL;
 char *pid_file = NULL;
-char *snmp_target = NULL;
-char *snmp_community = NULL;
 
 gboolean group_by_node = FALSE;
 gboolean inactive_resources = FALSE;
@@ -140,22 +138,6 @@ const char *print_neg_location_prefix = "";
 
 long last_refresh = 0;
 crm_trigger_t *refresh_trigger = NULL;
-
-/*
- * 1.3.6.1.4.1.32723 has been assigned to the project by IANA
- * http://www.iana.org/assignments/enterprise-numbers
- */
-#define PACEMAKER_PREFIX "1.3.6.1.4.1.32723"
-#define PACEMAKER_TRAP_PREFIX PACEMAKER_PREFIX ".1"
-
-#define snmp_crm_trap_oid   PACEMAKER_TRAP_PREFIX
-#define snmp_crm_oid_node   PACEMAKER_TRAP_PREFIX ".1"
-#define snmp_crm_oid_rsc    PACEMAKER_TRAP_PREFIX ".2"
-#define snmp_crm_oid_task   PACEMAKER_TRAP_PREFIX ".3"
-#define snmp_crm_oid_desc   PACEMAKER_TRAP_PREFIX ".4"
-#define snmp_crm_oid_status PACEMAKER_TRAP_PREFIX ".5"
-#define snmp_crm_oid_rc     PACEMAKER_TRAP_PREFIX ".6"
-#define snmp_crm_oid_trc    PACEMAKER_TRAP_PREFIX ".7"
 
 /* Define exit codes for monitoring-compatible output */
 #define MON_STATUS_OK   (0)
@@ -364,8 +346,6 @@ static struct crm_option long_options[] = {
     {"as-xml",         0, 0, 'X', "\t\tWrite cluster status as xml to stdout. This will enable one-shot mode."},
     {"web-cgi",        0, 0, 'w', "\t\tWeb mode with output suitable for CGI (preselected when run as *.cgi)"},
     {"simple-status",  0, 0, 's', "\tDisplay the cluster status once as a simple one line output (suitable for nagios)"},
-    {"snmp-traps",     1, 0, 'S', "\tSend SNMP traps to this station", !ENABLE_SNMP},
-    {"snmp-community", 1, 0, 'C', "Specify community for SNMP traps(default is NULL)", !ENABLE_SNMP},
     {"mail-to",        1, 0, 'T', "\tSend Mail alerts to this user.  See also --mail-from, --mail-host, --mail-prefix", !ENABLE_ESMTP},
 
     {"-spacer-",	1, 0, '-', "\nDisplay Options:"},
@@ -375,7 +355,7 @@ static struct crm_option long_options[] = {
     {"operations",     0, 0, 'o', "\tDisplay resource operation history" },
     {"timing-details", 0, 0, 't', "\tDisplay resource operation history with timing details" },
     {"tickets",        0, 0, 'c', "\t\tDisplay cluster tickets"},
-    {"watch-fencing",  0, 0, 'W', "\tListen for fencing events. For use with --external-agent, --mail-to and/or --snmp-traps where supported"},
+    {"watch-fencing",  0, 0, 'W', "\tListen for fencing events. For use with --external-agent and/or --mail-to where supported"},
     {"neg-locations",  2, 0, 'L', "Display negative location constraints [optionally filtered by id prefix]"},
     {"show-node-attributes", 0, 0, 'A', "Display node attributes" },
     {"hide-headers",   0, 0, 'D', "\tHide all headers" },
@@ -411,8 +391,6 @@ static struct crm_option long_options[] = {
     {"-spacer-",	1, 0, '-', " crm_mon --as-xml", pcmk_option_example},
     {"-spacer-",	1, 0, '-', "Start crm_mon as a background daemon and have it send email alerts:", pcmk_option_paragraph|!ENABLE_ESMTP},
     {"-spacer-",	1, 0, '-', " crm_mon --daemonize --mail-to user@example.com --mail-host mail.example.com", pcmk_option_example|!ENABLE_ESMTP},
-    {"-spacer-",	1, 0, '-', "Start crm_mon as a background daemon and have it send SNMP alerts:", pcmk_option_paragraph|!ENABLE_SNMP},
-    {"-spacer-",	1, 0, '-', " crm_mon --daemonize --snmp-traps snmptrapd.example.com", pcmk_option_example|!ENABLE_SNMP},
 
     {NULL, 0, 0, 0}
 };
@@ -659,9 +637,6 @@ main(int argc, char **argv)
                 output_format = mon_output_monitor;
                 one_shot = TRUE;
                 break;
-            case 'S':
-                snmp_target = optarg;
-                break;
             case 'T':
                 crm_mail_to = optarg;
                 break;
@@ -688,9 +663,6 @@ main(int argc, char **argv)
                     output_format = mon_output_plain;
                 }
                 break;
-            case 'C':
-                snmp_community = optarg;
-                break;
             case '$':
             case '?':
                 return crm_help(flag, EX_OK);
@@ -707,7 +679,6 @@ main(int argc, char **argv)
         argerr += (optind < argc);
         argerr += (output_filename != NULL);
         argerr += (xml_file != NULL);
-        argerr += (snmp_target != NULL);
         argerr += (crm_mail_to != NULL);
         argerr += (external_agent != NULL);
         argerr += (daemonize == TRUE);  /* paranoia */
@@ -746,9 +717,9 @@ main(int argc, char **argv)
         crm_enable_stderr(FALSE);
 
         if ((output_format != mon_output_html) && (output_format != mon_output_xml)
-            && !snmp_target && !crm_mail_to && !external_agent) {
+            && !crm_mail_to && !external_agent) {
             printf
-                ("Looks like you forgot to specify one or more of: --as-html, --as-xml, --mail-to, --snmp-target, --external-agent\n");
+                ("Looks like you forgot to specify one or more of: --as-html, --as-xml, --mail-to, --external-agent\n");
             return crm_help('?', EX_USAGE);
         }
 
@@ -3312,169 +3283,6 @@ print_html_status(pe_working_set_t * data_set, const char *filename)
     return 0;
 }
 
-#if ENABLE_SNMP
-#  include <net-snmp/net-snmp-config.h>
-#  include <net-snmp/snmpv3_api.h>
-#  include <net-snmp/agent/agent_trap.h>
-#  include <net-snmp/library/snmp_client.h>
-#  include <net-snmp/library/mib.h>
-#  include <net-snmp/library/snmp_debug.h>
-
-#  define add_snmp_field(list, oid_string, value) do {			\
-	oid name[MAX_OID_LEN];						\
-        size_t name_length = MAX_OID_LEN;				\
-	if (snmp_parse_oid(oid_string, name, &name_length)) {		\
-	    int s_rc = snmp_add_var(list, name, name_length, 's', (value)); \
-	    if(s_rc != 0) {						\
-		crm_err("Could not add %s=%s rc=%d", oid_string, value, s_rc); \
-	    } else {							\
-		crm_trace("Added %s=%s", oid_string, value);		\
-	    }								\
-	} else {							\
-	    crm_err("Could not parse OID: %s", oid_string);		\
-	}								\
-    } while(0)								\
-
-#  define add_snmp_field_int(list, oid_string, value) do {		\
-	oid name[MAX_OID_LEN];						\
-        size_t name_length = MAX_OID_LEN;				\
-	if (snmp_parse_oid(oid_string, name, &name_length)) {		\
-	    if(NULL == snmp_pdu_add_variable(				\
-		   list, name, name_length, ASN_INTEGER,		\
-		   (u_char *) & value, sizeof(value))) {		\
-		crm_err("Could not add %s=%d", oid_string, value);	\
-	    } else {							\
-		crm_trace("Added %s=%d", oid_string, value);		\
-	    }								\
-	} else {							\
-	    crm_err("Could not parse OID: %s", oid_string);		\
-	}								\
-    } while(0)								\
-
-static int
-snmp_input(int operation, netsnmp_session * session, int reqid, netsnmp_pdu * pdu, void *magic)
-{
-    return 1;
-}
-
-static netsnmp_session *
-crm_snmp_init(const char *target, char *community)
-{
-    static netsnmp_session *session = NULL;
-
-#  ifdef NETSNMPV53
-    char target53[128];
-
-    snprintf(target53, sizeof(target53), "%s:162", target);
-#  endif
-
-    if (session) {
-        return session;
-    }
-
-    if (target == NULL) {
-        return NULL;
-    }
-
-    if (get_crm_log_level() > LOG_INFO) {
-        char *debug_tokens = strdup("run:shell,snmptrap,tdomain");
-
-        debug_register_tokens(debug_tokens);
-        snmp_set_do_debugging(1);
-    }
-
-    session = calloc(1, sizeof(netsnmp_session));
-    snmp_sess_init(session);
-    session->version = SNMP_VERSION_2c;
-    session->callback = snmp_input;
-    session->callback_magic = NULL;
-
-    if (community) {
-        session->community_len = strlen(community);
-        session->community = (unsigned char *)community;
-    }
-
-    session = snmp_add(session,
-#  ifdef NETSNMPV53
-                       netsnmp_tdomain_transport(target53, 0, "udp"),
-#  else
-                       netsnmp_transport_open_client("snmptrap", target),
-#  endif
-                       NULL, NULL);
-
-    if (session == NULL) {
-        snmp_sess_perror("Could not create snmp transport", session);
-    }
-    return session;
-}
-
-#endif
-
-static int
-send_snmp_trap(const char *node, const char *rsc, const char *task, int target_rc, int rc,
-               int status, const char *desc)
-{
-    int ret = 1;
-
-#if ENABLE_SNMP
-    static oid snmptrap_oid[] = { 1, 3, 6, 1, 6, 3, 1, 1, 4, 1, 0 };
-    static oid sysuptime_oid[] = { 1, 3, 6, 1, 2, 1, 1, 3, 0 };
-
-    netsnmp_pdu *trap_pdu;
-    netsnmp_session *session = crm_snmp_init(snmp_target, snmp_community);
-
-    trap_pdu = snmp_pdu_create(SNMP_MSG_TRAP2);
-    if (!trap_pdu) {
-        crm_err("Failed to create SNMP notification");
-        return SNMPERR_GENERR;
-    }
-
-    if (1) {
-        /* send uptime */
-        char csysuptime[20];
-        time_t now = time(NULL);
-
-        sprintf(csysuptime, "%lld", (long long) now);
-        snmp_add_var(trap_pdu, sysuptime_oid, sizeof(sysuptime_oid) / sizeof(oid), 't', csysuptime);
-    }
-
-    /* Indicate what the trap is by setting snmpTrapOid.0 */
-    ret =
-        snmp_add_var(trap_pdu, snmptrap_oid, sizeof(snmptrap_oid) / sizeof(oid), 'o',
-                     snmp_crm_trap_oid);
-    if (ret != 0) {
-        crm_err("Failed set snmpTrapOid.0=%s", snmp_crm_trap_oid);
-        return ret;
-    }
-
-    /* Add extries to the trap */
-    if (rsc) {
-        add_snmp_field(trap_pdu, snmp_crm_oid_rsc, rsc);
-    }
-    add_snmp_field(trap_pdu, snmp_crm_oid_node, node);
-    add_snmp_field(trap_pdu, snmp_crm_oid_task, task);
-    add_snmp_field(trap_pdu, snmp_crm_oid_desc, desc);
-
-    add_snmp_field_int(trap_pdu, snmp_crm_oid_rc, rc);
-    add_snmp_field_int(trap_pdu, snmp_crm_oid_trc, target_rc);
-    add_snmp_field_int(trap_pdu, snmp_crm_oid_status, status);
-
-    /* Send and cleanup */
-    ret = snmp_send(session, trap_pdu);
-    if (ret == 0) {
-        /* error */
-        snmp_sess_perror("Could not send SNMP trap", session);
-        snmp_free_pdu(trap_pdu);
-        ret = SNMPERR_GENERR;
-    } else {
-        ret = SNMPERR_SUCCESS;
-    }
-#else
-    crm_err("Sending SNMP traps is not supported by this installation");
-#endif
-    return ret;
-}
-
 #if ENABLE_ESMTP
 #  include <auth-client.h>
 #  include <libesmtp.h>
@@ -3870,9 +3678,6 @@ handle_rsc_op(xmlNode * xml, const char *node_id)
         crm_warn("%s of %s on %s failed: %s", task, rsc, node, desc);
     }
 
-    if (notify && snmp_target) {
-        send_snmp_trap(node, rsc, task, target_rc, rc, status, desc);
-    }
     if (notify && crm_mail_to) {
         send_smtp_trap(node, rsc, task, target_rc, rc, status, desc);
     }
@@ -4066,7 +3871,7 @@ crm_diff_update(const char *event, xmlNode * msg)
         cib->cmds->query(cib, NULL, &current_cib, cib_scope_local | cib_sync_call);
     }
 
-    if (crm_mail_to || snmp_target || external_agent) {
+    if (crm_mail_to || external_agent) {
         int format = 0;
         crm_element_value_int(diff, "format", &format);
         switch(format) {
@@ -4182,9 +3987,6 @@ mon_st_callback(stonith_t * st, stonith_event_t * e)
                                  e->operation, e->origin, e->target, pcmk_strerror(e->result),
                                  e->id);
 
-    if (snmp_target) {
-        send_snmp_trap(e->target, NULL, e->operation, pcmk_ok, e->result, 0, desc);
-    }
     if (crm_mail_to) {
         send_smtp_trap(e->target, NULL, e->operation, pcmk_ok, e->result, 0, desc);
     }
@@ -4200,15 +4002,6 @@ mon_st_callback(stonith_t * st, stonith_event_t * e)
 void
 clean_up(int rc)
 {
-#if ENABLE_SNMP
-    netsnmp_session *session = crm_snmp_init(NULL, NULL);
-
-    if (session) {
-        snmp_close(session);
-        snmp_shutdown("snmpapp");
-    }
-#endif
-
 #if CURSES_ENABLED
     if (output_format == mon_output_console) {
         output_format = mon_output_plain;

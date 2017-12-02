@@ -231,13 +231,6 @@ AC_ARG_WITH(nagios-metadata-dir,
     [ NAGIOS_METADATA_DIR="$withval" ]
 )
 
-AC_ARG_WITH(snmp,
-    [  --with-snmp
-       Support the SNMP protocol ],
-    [ SUPPORT_SNMP=$withval ],
-    [ SUPPORT_SNMP=try ],
-)
-
 AC_ARG_WITH(esmtp,
     [  --with-esmtp
        Support the sending mail notifications with the esmtp library ],
@@ -1289,87 +1282,6 @@ fi
 
 PCMK_FEATURES="$PCMK_FEATURES atomic-attrd"
 AC_SUBST(CLUSTERLIBS)
-
-dnl ========================================================================
-dnl    SNMP
-dnl ========================================================================
-
-case $SUPPORT_SNMP in
-     1|yes|true) missingisfatal=1;;
-     try)        missingisfatal=0;;
-     *)		 SUPPORT_SNMP=no;;
-esac
-
-SNMPLIBS=""
-
-AC_MSG_CHECKING(for snmp support)
-if test $SUPPORT_SNMP = no; then
-   AC_MSG_RESULT(no (disabled))
-   SUPPORT_SNMP=0
-else
-    SNMPCONFIG=""
-    AC_MSG_RESULT($SUPPORT_SNMP)
-    AC_CHECK_HEADERS(net-snmp/net-snmp-config.h)
-
-    if test "x${ac_cv_header_net_snmp_net_snmp_config_h}" != "xyes"; then
- 	SUPPORT_SNMP="no"
-    fi
-
-    if test $SUPPORT_SNMP != no; then
-	AC_PATH_PROGS(SNMPCONFIG, net-snmp-config)
-	if test "X${SNMPCONFIG}" = "X"; then
-		AC_MSG_RESULT(You need the net_snmp development package to continue.)
-		SUPPORT_SNMP=no
-	fi
-    fi
-
-    if test $SUPPORT_SNMP != no; then
-	AC_MSG_CHECKING(for special snmp libraries)
-	SNMPLIBS=`$SNMPCONFIG --agent-libs`
-	AC_MSG_RESULT($SNMPLIBS)
-    fi
-
-    if test $SUPPORT_SNMP != no; then
-        savedLibs=$LIBS
-        LIBS="$LIBS $SNMPLIBS"
-
-        dnl    On many systems libcrypto is needed when linking against libsnmp.
-        dnl    Check to see if it exists, and if so use it.
-	dnl AC_CHECK_LIB(crypto, CRYPTO_free, CRYPTOLIB="-lcrypto",)
-	dnl AC_SUBST(CRYPTOLIB)
-
-        AC_CHECK_FUNCS(netsnmp_transport_open_client)
-        if test $ac_cv_func_netsnmp_transport_open_client != yes; then
-            AC_CHECK_FUNCS(netsnmp_tdomain_transport)
-            if test $ac_cv_func_netsnmp_tdomain_transport != yes; then
-                SUPPORT_SNMP=no
-	    else
-                AC_DEFINE_UNQUOTED(NETSNMPV53, 1, [Use the older 5.3 version of the net-snmp API])
-            fi
-        fi
-        LIBS=$savedLibs
-    fi
-
-    if test $SUPPORT_SNMP = no; then
-   	SNMPLIBS=""
-   	SUPPORT_SNMP=0
-     	if test $missingisfatal = 0; then
-	    AC_MSG_WARN(Unable to support SNMP)
-        else
-	    AC_MSG_FAILURE(Unable to support SNMP)
-        fi
-    else
-   	SUPPORT_SNMP=1
-    fi
-fi
-
-if test $SUPPORT_SNMP = 1; then
-   PCMK_FEATURES="$PCMK_FEATURES snmp"
-fi
-
-AC_SUBST(SNMPLIBS)
-AM_CONDITIONAL(ENABLE_SNMP, test "$SUPPORT_SNMP" = "1")
-AC_DEFINE_UNQUOTED(ENABLE_SNMP, $SUPPORT_SNMP, Build in support for sending SNMP traps)
 
 dnl ========================================================================
 dnl    ESMTP
