@@ -20,7 +20,8 @@ required in these systems. This management includes detecting and
 recovering from the failure of various nodes, resources and services
 under its control.
 
-When more in depth information is required and for real world usage,
-please refer to the http://www.clusterlabs.org/doc/[Pacemaker Explained] manual.
+When more in-depth information is required, and for real-world usage,
+please refer to the
+https://www.clusterlabs.org/pacemaker/doc/[Pacemaker Explained] manual.
 
 include::../../shared/en-US/pacemaker-intro.txt[]

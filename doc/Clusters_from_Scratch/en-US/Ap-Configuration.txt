@@ -41,19 +41,19 @@ Colocation Constraints:
   WebFS-clone with WebDataClone (score:INFINITY) (with-rsc-role:Master)
   WebSite-clone with WebFS-clone (score:INFINITY)
   WebFS-clone with dlm-clone (score:INFINITY)
+Ticket Constraints:
 ----
 
 ----
 [root@pcmk-1 ~]# pcs status
 Cluster name: mycluster
-Last updated: Fri Aug 14 12:05:37 2015
-Last change: Fri Aug 14 11:49:29 2015
 Stack: corosync
-Current DC: pcmk-1 (1) - partition with quorum
-Version: 1.1.12-a14efad
-2 Nodes configured
-11 Resources configured
+Current DC: pcmk-1 (version 1.1.16-12.el7_4.5-94ff4df) - partition with quorum
+Last updated: Fri Jan 12 12:05:37 2018
+Last change: Fri Jan 12 11:49:29 2018
 
+2 nodes configured
+11 resources configured
 
 Online: [ pcmk-1 pcmk-2 ]
 
@@ -72,10 +72,6 @@ Full list of resources:
  Clone Set: WebSite-clone [WebSite]
      Started: [ pcmk-1 pcmk-2 ]
 
-PCSD Status:
-  pcmk-1: Online
-  pcmk-2: Online
-
 Daemon Status:
   corosync: active/disabled
   pacemaker: active/disabled
@@ -87,11 +83,11 @@ Daemon Status:
 ----
 [source,XML]
 ----
-<cib crm_feature_set="3.0.9" validate-with="pacemaker-2.3" epoch="51" num_updates="16" admin_epoch="0" cib-last-written="Fri Aug 14 11:49:29 2015" have-quorum="1" dc-uuid="1">
+<cib crm_feature_set="3.0.12" validate-with="pacemaker-2.8" epoch="51" num_updates="16" admin_epoch="0" cib-last-written="Fri Jan 12 11:49:29 2018" have-quorum="1" dc-uuid="1">
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
-        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.12-a14efad"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.16-12.el7_4.5-94ff4df"/>
         <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="mycluster"/>
         <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1419129162"/>
@@ -230,26 +226,26 @@ Daemon Status:
       <lrm id="1">
         <lrm_resources>
           <lrm_resource id="WebData" type="drbd" class="ocf" provider="linbit">
-            <lrm_rsc_op id="WebData_last_0" operation_key="WebData_promote_0" operation="promote" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="13:4:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;13:4:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="44" rc-code="0" op-status="0" interval="0" last-run="1419264508" last-rc-change="1419264508" exec-time="26" queue-time="0" op-digest="bc5c2e08730036ec602d79a958821da4" on_node="pcmk-1"/>
+            <lrm_rsc_op id="WebData_last_0" operation_key="WebData_promote_0" operation="promote" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="13:4:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;13:4:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="44" rc-code="0" op-status="0" interval="0" last-run="1419264508" last-rc-change="1419264508" exec-time="26" queue-time="0" op-digest="bc5c2e08730036ec602d79a958821da4" on_node="pcmk-1"/>
           </lrm_resource>
           <lrm_resource id="dlm" type="controld" class="ocf" provider="pacemaker">
-            <lrm_rsc_op id="dlm_last_0" operation_key="dlm_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="37:2:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;37:2:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="37" rc-code="0" op-status="0" interval="0" last-run="1419264506" last-rc-change="1419264506" exec-time="1041" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="pcmk-1"/>
-            <lrm_rsc_op id="dlm_monitor_60000" operation_key="dlm_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="39:3:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;39:3:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="38" rc-code="0" op-status="0" interval="60000" last-rc-change="1419264507" exec-time="11" queue-time="0" op-digest="968cc450c09e98fdac3043cb6a194d3d" on_node="pcmk-1"/>
+            <lrm_rsc_op id="dlm_last_0" operation_key="dlm_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="37:2:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;37:2:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="37" rc-code="0" op-status="0" interval="0" last-run="1419264506" last-rc-change="1419264506" exec-time="1041" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="pcmk-1"/>
+            <lrm_rsc_op id="dlm_monitor_60000" operation_key="dlm_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="39:3:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;39:3:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="38" rc-code="0" op-status="0" interval="60000" last-rc-change="1419264507" exec-time="11" queue-time="0" op-digest="968cc450c09e98fdac3043cb6a194d3d" on_node="pcmk-1"/>
           </lrm_resource>
           <lrm_resource id="ClusterIP:0" type="IPaddr2" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="ClusterIP:0_last_0" operation_key="ClusterIP:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="7:0:7:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:7;7:0:7:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="19" rc-code="7" op-status="0" interval="0" last-run="1419264506" last-rc-change="1419264506" exec-time="28" queue-time="0" op-digest="ac61ecc765070218997f6d876fa1d76c" on_node="pcmk-1"/>
+            <lrm_rsc_op id="ClusterIP:0_last_0" operation_key="ClusterIP:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="7:0:7:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:7;7:0:7:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="19" rc-code="7" op-status="0" interval="0" last-run="1419264506" last-rc-change="1419264506" exec-time="28" queue-time="0" op-digest="ac61ecc765070218997f6d876fa1d76c" on_node="pcmk-1"/>
           </lrm_resource>
           <lrm_resource id="ClusterIP:1" type="IPaddr2" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="ClusterIP:1_last_0" operation_key="ClusterIP:1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="49:3:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;49:3:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="40" rc-code="0" op-status="0" interval="0" last-run="1419264507" last-rc-change="1419264507" exec-time="190" queue-time="0" op-digest="ac61ecc765070218997f6d876fa1d76c" on_node="pcmk-1"/>
-            <lrm_rsc_op id="ClusterIP:1_monitor_30000" operation_key="ClusterIP:1_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="50:3:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;50:3:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="41" rc-code="0" op-status="0" interval="30000" last-rc-change="1419264507" exec-time="27" queue-time="0" op-digest="8ce33853c31576b708595f1d8a4a215c" on_node="pcmk-1"/>
+            <lrm_rsc_op id="ClusterIP:1_last_0" operation_key="ClusterIP:1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="49:3:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;49:3:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="40" rc-code="0" op-status="0" interval="0" last-run="1419264507" last-rc-change="1419264507" exec-time="190" queue-time="0" op-digest="ac61ecc765070218997f6d876fa1d76c" on_node="pcmk-1"/>
+            <lrm_rsc_op id="ClusterIP:1_monitor_30000" operation_key="ClusterIP:1_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="50:3:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;50:3:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="41" rc-code="0" op-status="0" interval="30000" last-rc-change="1419264507" exec-time="27" queue-time="0" op-digest="8ce33853c31576b708595f1d8a4a215c" on_node="pcmk-1"/>
           </lrm_resource>
           <lrm_resource id="WebFS" type="Filesystem" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="WebFS_last_0" operation_key="WebFS_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="62:5:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;62:5:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="46" rc-code="0" op-status="0" interval="0" last-run="1419264508" last-rc-change="1419264508" exec-time="585" queue-time="0" op-digest="9d797b0e3b7f9729195992c0dafb5a9e" on_node="pcmk-1"/>
-            <lrm_rsc_op id="WebFS_monitor_20000" operation_key="WebFS_monitor_20000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="62:6:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;62:6:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="47" rc-code="0" op-status="0" interval="20000" last-rc-change="1419264508" exec-time="21" queue-time="1" op-digest="099af723b175851f09e5391e0c13854e" on_node="pcmk-1"/>
+            <lrm_rsc_op id="WebFS_last_0" operation_key="WebFS_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="62:5:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;62:5:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="46" rc-code="0" op-status="0" interval="0" last-run="1419264508" last-rc-change="1419264508" exec-time="585" queue-time="0" op-digest="9d797b0e3b7f9729195992c0dafb5a9e" on_node="pcmk-1"/>
+            <lrm_rsc_op id="WebFS_monitor_20000" operation_key="WebFS_monitor_20000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="62:6:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;62:6:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="47" rc-code="0" op-status="0" interval="20000" last-rc-change="1419264508" exec-time="21" queue-time="1" op-digest="099af723b175851f09e5391e0c13854e" on_node="pcmk-1"/>
           </lrm_resource>
           <lrm_resource id="WebSite" type="apache" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="WebSite_last_0" operation_key="WebSite_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="72:6:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;72:6:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="48" rc-code="0" op-status="0" interval="0" last-run="1419264508" last-rc-change="1419264508" exec-time="65" queue-time="0" op-digest="49ba395a3f2c142631c2ef2c431a29d9" on_node="pcmk-1"/>
-            <lrm_rsc_op id="WebSite_monitor_60000" operation_key="WebSite_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="73:6:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;73:6:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="49" rc-code="0" op-status="0" interval="60000" last-rc-change="1419264508" exec-time="26" queue-time="0" op-digest="eddc33bef3f1592ad847638ee485316f" on_node="pcmk-1"/>
+            <lrm_rsc_op id="WebSite_last_0" operation_key="WebSite_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="72:6:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;72:6:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="48" rc-code="0" op-status="0" interval="0" last-run="1419264508" last-rc-change="1419264508" exec-time="65" queue-time="0" op-digest="49ba395a3f2c142631c2ef2c431a29d9" on_node="pcmk-1"/>
+            <lrm_rsc_op id="WebSite_monitor_60000" operation_key="WebSite_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="73:6:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;73:6:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="49" rc-code="0" op-status="0" interval="60000" last-rc-change="1419264508" exec-time="26" queue-time="0" op-digest="eddc33bef3f1592ad847638ee485316f" on_node="pcmk-1"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -272,26 +268,26 @@ Daemon Status:
       <lrm id="2">
         <lrm_resources>
           <lrm_resource id="WebData" type="drbd" class="ocf" provider="linbit">
-            <lrm_rsc_op id="WebData_last_0" operation_key="WebData_promote_0" operation="promote" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="16:4:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;16:4:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="41" rc-code="0" op-status="0" interval="0" last-run="1419264508" last-rc-change="1419264508" exec-time="26" queue-time="0" op-digest="bc5c2e08730036ec602d79a958821da4" on_node="pcmk-2"/>
+            <lrm_rsc_op id="WebData_last_0" operation_key="WebData_promote_0" operation="promote" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="16:4:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;16:4:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="41" rc-code="0" op-status="0" interval="0" last-run="1419264508" last-rc-change="1419264508" exec-time="26" queue-time="0" op-digest="bc5c2e08730036ec602d79a958821da4" on_node="pcmk-2"/>
           </lrm_resource>
           <lrm_resource id="dlm" type="controld" class="ocf" provider="pacemaker">
-            <lrm_rsc_op id="dlm_last_0" operation_key="dlm_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="35:2:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;35:2:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="34" rc-code="0" op-status="0" interval="0" last-run="1419264506" last-rc-change="1419264506" exec-time="1053" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="pcmk-2"/>
-            <lrm_rsc_op id="dlm_monitor_60000" operation_key="dlm_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="42:3:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;42:3:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="35" rc-code="0" op-status="0" interval="60000" last-rc-change="1419264507" exec-time="19" queue-time="0" op-digest="968cc450c09e98fdac3043cb6a194d3d" on_node="pcmk-2"/>
+            <lrm_rsc_op id="dlm_last_0" operation_key="dlm_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="35:2:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;35:2:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="34" rc-code="0" op-status="0" interval="0" last-run="1419264506" last-rc-change="1419264506" exec-time="1053" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" on_node="pcmk-2"/>
+            <lrm_rsc_op id="dlm_monitor_60000" operation_key="dlm_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="42:3:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;42:3:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="35" rc-code="0" op-status="0" interval="60000" last-rc-change="1419264507" exec-time="19" queue-time="0" op-digest="968cc450c09e98fdac3043cb6a194d3d" on_node="pcmk-2"/>
           </lrm_resource>
           <lrm_resource id="ClusterIP:0" type="IPaddr2" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="ClusterIP:0_last_0" operation_key="ClusterIP:0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="47:3:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;47:3:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="36" rc-code="0" op-status="0" interval="0" last-run="1419264507" last-rc-change="1419264507" exec-time="237" queue-time="0" op-digest="ac61ecc765070218997f6d876fa1d76c" on_node="pcmk-2"/>
-            <lrm_rsc_op id="ClusterIP:0_monitor_30000" operation_key="ClusterIP:0_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="51:4:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;51:4:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="39" rc-code="0" op-status="0" interval="30000" last-rc-change="1419264507" exec-time="34" queue-time="0" op-digest="8ce33853c31576b708595f1d8a4a215c" on_node="pcmk-2"/>
+            <lrm_rsc_op id="ClusterIP:0_last_0" operation_key="ClusterIP:0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="47:3:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;47:3:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="36" rc-code="0" op-status="0" interval="0" last-run="1419264507" last-rc-change="1419264507" exec-time="237" queue-time="0" op-digest="ac61ecc765070218997f6d876fa1d76c" on_node="pcmk-2"/>
+            <lrm_rsc_op id="ClusterIP:0_monitor_30000" operation_key="ClusterIP:0_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="51:4:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;51:4:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="39" rc-code="0" op-status="0" interval="30000" last-rc-change="1419264507" exec-time="34" queue-time="0" op-digest="8ce33853c31576b708595f1d8a4a215c" on_node="pcmk-2"/>
           </lrm_resource>
           <lrm_resource id="ClusterIP:1" type="IPaddr2" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="ClusterIP:1_last_0" operation_key="ClusterIP:1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="16:0:7:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:7;16:0:7:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="23" rc-code="7" op-status="0" interval="0" last-run="1419264506" last-rc-change="1419264506" exec-time="28" queue-time="0" op-digest="ac61ecc765070218997f6d876fa1d76c" on_node="pcmk-2"/>
+            <lrm_rsc_op id="ClusterIP:1_last_0" operation_key="ClusterIP:1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="16:0:7:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:7;16:0:7:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="23" rc-code="7" op-status="0" interval="0" last-run="1419264506" last-rc-change="1419264506" exec-time="28" queue-time="0" op-digest="ac61ecc765070218997f6d876fa1d76c" on_node="pcmk-2"/>
           </lrm_resource>
           <lrm_resource id="WebFS" type="Filesystem" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="WebFS_last_0" operation_key="WebFS_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="60:5:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;60:5:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="43" rc-code="0" op-status="0" interval="0" last-run="1419264508" last-rc-change="1419264508" exec-time="662" queue-time="0" op-digest="9d797b0e3b7f9729195992c0dafb5a9e" on_node="pcmk-2"/>
-            <lrm_rsc_op id="WebFS_monitor_20000" operation_key="WebFS_monitor_20000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="65:6:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;65:6:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="44" rc-code="0" op-status="0" interval="20000" last-rc-change="1419264508" exec-time="29" queue-time="0" op-digest="099af723b175851f09e5391e0c13854e" on_node="pcmk-2"/>
+            <lrm_rsc_op id="WebFS_last_0" operation_key="WebFS_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="60:5:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;60:5:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="43" rc-code="0" op-status="0" interval="0" last-run="1419264508" last-rc-change="1419264508" exec-time="662" queue-time="0" op-digest="9d797b0e3b7f9729195992c0dafb5a9e" on_node="pcmk-2"/>
+            <lrm_rsc_op id="WebFS_monitor_20000" operation_key="WebFS_monitor_20000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="65:6:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;65:6:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="44" rc-code="0" op-status="0" interval="20000" last-rc-change="1419264508" exec-time="29" queue-time="0" op-digest="099af723b175851f09e5391e0c13854e" on_node="pcmk-2"/>
           </lrm_resource>
           <lrm_resource id="WebSite" type="apache" class="ocf" provider="heartbeat">
-            <lrm_rsc_op id="WebSite_last_0" operation_key="WebSite_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="70:6:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;70:6:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="45" rc-code="0" op-status="0" interval="0" last-run="1419264508" last-rc-change="1419264508" exec-time="64" queue-time="0" op-digest="49ba395a3f2c142631c2ef2c431a29d9" on_node="pcmk-2"/>
-            <lrm_rsc_op id="WebSite_monitor_60000" operation_key="WebSite_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.9" transition-key="71:6:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;71:6:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="46" rc-code="0" op-status="0" interval="60000" last-rc-change="1419264508" exec-time="28" queue-time="0" op-digest="eddc33bef3f1592ad847638ee485316f" on_node="pcmk-2"/>
+            <lrm_rsc_op id="WebSite_last_0" operation_key="WebSite_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="70:6:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;70:6:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="45" rc-code="0" op-status="0" interval="0" last-run="1419264508" last-rc-change="1419264508" exec-time="64" queue-time="0" op-digest="49ba395a3f2c142631c2ef2c431a29d9" on_node="pcmk-2"/>
+            <lrm_rsc_op id="WebSite_monitor_60000" operation_key="WebSite_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="71:6:0:225c8bc5-8fb0-49b6-9f75-337085b080de" transition-magic="0:0;71:6:0:225c8bc5-8fb0-49b6-9f75-337085b080de" call-id="46" rc-code="0" op-status="0" interval="60000" last-rc-change="1419264508" exec-time="28" queue-time="0" op-digest="eddc33bef3f1592ad847638ee485316f" on_node="pcmk-2"/>
           </lrm_resource>
         </lrm_resources>
       </lrm>
@@ -317,7 +313,7 @@ Pacemaker Nodes:
 Cluster Properties:
  cluster-infrastructure: corosync
  cluster-name: mycluster
- dc-version: 1.1.12-a14efad
+ dc-version: 1.1.16-12.el7_4.5-94ff4df
  have-watchdog: false
  last-lrm-refresh: 1439569053
  stonith-enabled: true
