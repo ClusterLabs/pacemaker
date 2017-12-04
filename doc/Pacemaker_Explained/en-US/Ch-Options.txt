@@ -141,7 +141,7 @@ What to do when the cluster does not have quorum.  Allowed values:
 * +stop:+ stop all resources in the affected cluster partition
 * +suicide:+ fence all nodes in the affected cluster partition
 
-| batch-limit | 0 '(30 before version 1.1.11)' |
+| batch-limit | 0 |
 indexterm:[batch-limit,Cluster Option]
 indexterm:[Cluster,Option,batch-limit]
 The maximum number of actions that the cluster may execute in parallel across
@@ -225,7 +225,7 @@ How long to wait for STONITH actions (reboot, on, off) to complete
 indexterm:[stonith-max-attempts,Cluster Option]
 indexterm:[Cluster,Option,stonith-max-attempts]
 How many times fencing can fail for a target before the cluster will no longer
-immediately re-attempt it. '(since 1.1.17)'
+immediately re-attempt it.
 
 | stonith-watchdog-timeout | 0 |
 indexterm:[stonith-watchdog-timeout,Cluster Option]
@@ -238,7 +238,6 @@ SBD_WATCHDOG_TIMEOUT environment variable is set, use twice that value.
 indexterm:[concurrent-fencing,Cluster Option]
 indexterm:[Cluster,Option,concurrent-fencing]
 Is the cluster allowed to initiate multiple fence actions concurrently?
-'(since 1.1.15)'
 
 | cluster-delay | 60s |
 indexterm:[cluster-delay,Cluster Option]
@@ -300,7 +299,6 @@ indexterm:[placement-strategy,Cluster Option]
 indexterm:[Cluster,Option,placement-strategy]
  How the cluster should allocate resources to nodes (see <<s-utilization>>).
  Allowed values are +default+, +utilization+, +balanced+, and +minimal+.
- '(since 1.1.0)'
 
 | node-health-strategy | none |
 indexterm:[node-health-strategy,Cluster Option]
@@ -313,7 +311,7 @@ indexterm:[Cluster,Option,node-health-strategy]
 indexterm:[node-health-base,Cluster Option]
 indexterm:[Cluster,Option,node-health-base]
  The base health score assigned to a node. Only used when
- +node-health-strategy+ is +progressive+. '(since 1.1.16)'
+ +node-health-strategy+ is +progressive+.
 
 | node-health-green | 0 |
 indexterm:[node-health-green,Cluster Option]

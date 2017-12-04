@@ -38,23 +38,10 @@ What Messaging Layers are Supported?::
  indexterm:[Messaging Layers]
 
  * http://www.corosync.org/[Corosync] version 2
- * Historically, Pacemaker also supported Corosync version 1 (with either CMAN
-   or a pacemaker plugin) and Heartbeat. Support for these legacy stacks was
-   dropped with Pacemaker 2.0.
+ * Historically, Pacemaker 1 also supported Corosync version 1 (with either
+   CMAN or a pacemaker plugin) and Heartbeat. Support for these legacy stacks
+   was dropped with Pacemaker 2.0.
   
-
-Can I Choose Which Messaging Layer to Use at Run Time?::
-
- Yes. The CRM will automatically detect which started it and behave accordingly.
-
-[[q-messaging-layer]] Which Messaging Layer Should I Choose?::
- indexterm:[Cluster Stack,Corosync] indexterm:[Corosync]
- Corosync version 2 is the current state of the art due to its
- more advanced features and better support for Pacemaker,
- but often the best choice is to use whatever comes with
- your Linux distribution, and follow the distribution's
- setup instructions.
-
 Where Can I Get Pre-built Packages?::
 
  Most major Linux distributions have pacemaker packages in their standard

@@ -134,7 +134,7 @@ indexterm:[Python,formatting]
   flexible since breaking a line often impacts readability, but
   definitely keep it under 120 characters.
 * Where not conflicting with this style guide, it is recommended (but not
-  required) to follow https://www.python.org/dev/peps/pep-0008/:[PEP 8].
+  required) to follow https://www.python.org/dev/peps/pep-0008/[PEP 8].
 * It is recommended (but not required) to format Python code such that
   `pylint --disable=line-too-long,too-many-lines,too-many-instance-attributes,too-many-arguments,too-many-statements`
   produces minimal complaints (even better if you don't need to disable all

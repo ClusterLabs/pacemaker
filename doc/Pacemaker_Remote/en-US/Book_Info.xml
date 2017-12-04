@@ -13,7 +13,7 @@
 		simple textual changes (corrections, translations, etc.).
 	-->
 	<edition>7</edition>
-	<pubsnumber>0</pubsnumber>
+	<pubsnumber>1</pubsnumber>
 	<abstract>
 		<para>
 			The document exists as both a reference and deployment guide for the Pacemaker Remote service.
@@ -48,7 +48,11 @@
 				</listitem>
 				<listitem>
 					<para>
-						Pacemaker to perform resource management on cluster nodes
+						Pacemaker 1.1.16
+						<footnote><para>While this guide is part of the document set for
+						Pacemaker 2.0, it demonstrates the version available in
+						the standard &DISTRO; repositories</para></footnote>
+						to perform resource management on cluster nodes
 					</para>
 				</listitem>
 				<listitem>
@@ -72,4 +76,3 @@
 	<xi:include href="Common_Content/Legal_Notice.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 	<xi:include href="Author_Group.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 </bookinfo>
-

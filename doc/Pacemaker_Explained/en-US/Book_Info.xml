@@ -5,14 +5,14 @@
   <title>Configuration Explained</title>
   <subtitle>An A-Z guide to Pacemaker's Configuration Options</subtitle>
   <productname>Pacemaker</productname>
-  <productnumber>1.1</productnumber>
+  <productnumber>2.0</productnumber>
   <!--
 	EDITION-PUBSNUMBER should match REVNUMBER in Revision_History.xml.
 	Increment EDITION when the syntax of the documented software
 	changes (pacemaker), and PUBSNUMBER for
 	simple textual changes (corrections, translations, etc.).
   -->
-  <edition>10</edition>
+  <edition>11</edition>
   <pubsnumber>0</pubsnumber>
   <abstract>
     <para>

@@ -86,13 +86,13 @@ Guest nodes will show up in `crm_mon` output as normal:
 
 .Example `crm_mon` output after *guest1* is integrated into cluster
 ----
-Last updated: Wed Mar 13 13:52:39 2013
-Last change: Wed Mar 13 13:25:17 2013 via crmd on node1
 Stack: corosync
-Current DC: node1 (24815808) - partition with quorum
-Version: 1.1.10
-2 Nodes configured, unknown expected votes
-2 Resources configured.
+Current DC: node1 (version 1.1.16-12.el7_4.5-94ff4df) - partition with quorum
+Last updated: Fri Jan 12 13:52:39 2018
+Last change: Fri Jan 12 13:25:17 2018 via crmd on node1
+
+2 nodes configured
+2 resources configured
 
 Online: [ node1 guest1]
 
@@ -107,13 +107,13 @@ Now, you could place a resource, such as a webserver, on *guest1*:
 
 Now, the crm_mon output would show:
 ----
-Last updated: Wed Mar 13 13:52:39 2013
-Last change: Wed Mar 13 13:25:17 2013 via crmd on node1
 Stack: corosync
-Current DC: node1 (24815808) - partition with quorum
-Version: 1.1.10
-2 Nodes configured, unknown expected votes
-2 Resources configured.
+Current DC: node1 (version 1.1.16-12.el7_4.5-94ff4df) - partition with quorum
+Last updated: Fri Jan 12 13:52:39 2018
+Last change: Fri Jan 12 13:25:17 2018 via crmd on node1
+
+2 nodes configured
+2 resources configured
 
 Online: [ node1 guest1]
 

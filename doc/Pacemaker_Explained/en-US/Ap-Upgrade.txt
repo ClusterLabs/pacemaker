@@ -3,6 +3,53 @@
 == Upgrading ==
 
 [[ap-upgrade]]
+=== Pacemaker Versioning ===
+
+Pacemaker has an overall release version, plus separate version numbers for
+certain internal components.
+
+* *Pacemaker release version:* This version consists of three numbers
+  (_x.y.z_).
++
+The major version number (the _x_ in _x.y.z_) increases when at least some
+rolling upgrades are not possible from the previous major version. For example,
+a rolling upgrade from 1.0.8 to 1.1.15 should always be supported, but a
+rolling upgrade from 1.0.8 to 2.0.0 may not be possible.
++
+The minor version (the _y_ in _x.y.z_) increases when there are significant
+changes in cluster default behavior, tool behavior, and/or the API interface
+(for software that utilizes Pacemaker libraries). The main benefit is to alert
+you to pay closer attention to the release notes, to see if you might be
+affected.
++
+The release counter (the _z_ in _x.y.z_) is increased with all public releases
+of Pacemaker, which typically include both bug fixes and new features.
+
+* *CRM feature set:* This version number applies to the communication between
+  full cluster nodes.
++
+It increases when a cluster node running the older version would have
+problems if the cluster's Designated Controller (DC) has the newer version.
+To avoid these problems, Pacemaker ensures that the longest-running node is the
+DC, and that nodes with an older feature set cannot join the cluster.
+
+* *LRMD protocol version:* This version applies to communication between a
+  Pacemaker Remote node and the cluster. It increases when an older cluster
+  node would have problems hosting the connection to a newer Pacemaker Remote
+  node. To avoid these problems, Pacemaker Remote nodes will accept connections
+  only from cluster nodes with the same or newer LRMD protocol version.
++
+Unlike with CRM feature set differences between full cluster nodes,
+mixed LRMD protocol versions between Pacemaker Remote nodes and full cluster
+nodes are fine, as long as the Pacemaker Remote nodes have the older version.
+This can be useful, for example, to host a legacy application in an
+older operating system version used as a Pacemaker Remote node.
+
+* *XML schema version:* Pacemaker’s configuration syntax — what's allowed in
+  the Configuration Information Base (CIB) — has its own version. This allows
+  the configuration syntax to evolve over time while still allowing clusters
+  with older configurations to work without change.
+
 === Upgrading Cluster Software ===
 
 There are three approaches to upgrading a cluster, each with advantages and
@@ -21,8 +68,9 @@ disadvantages.
 |Allows change of messaging layer
 indexterm:[Cluster,switching between stacks]
 indexterm:[Changing cluster stack]
-footnote:[Currently, Corosync 2 is the only supported cluster stack, but that
-is likely to change in the future.]
+footnote:[Currently, Corosync 2 is the only supported cluster stack, but other
+stacks have been supported by past versions, and may be supported by future
+versions.]
 
 |Complete cluster shutdown
 indexterm:[upgrade,shutdown]
@@ -85,59 +133,28 @@ are shut down.
 In this scenario, each node is removed from the cluster, upgraded, and then
 brought back online, until all nodes are running the newest version.
 
-If you plan to upgrade other cluster software -- such as the messaging layer --
-at the same time, consult that software's documentation for its compatibility
-with a rolling upgrade.
+Special considerations when planning a rolling upgrade:
 
-Pacemaker has three version numbers that affect rolling upgrades:
+* If you plan to upgrade other cluster software -- such as the messaging layer --
+  at the same time, consult that software's documentation for its compatibility
+  with a rolling upgrade.
 
-* *Pacemaker release version:* Rolling upgrades are possible as long as the
-  major version number (the _x_ in _x.y.z_) stays the same. For example,
-  a rolling upgrade may be done from 1.0.8 to 1.1.15, but not from
-  0.6.7 to 1.0.0.
+* If the major version number is changing in the Pacemaker version you are
+  upgrading to, a rolling upgrade may not be possible. Read the new version's
+  release notes (as well the information here) for what limitations may exist.
 
-* *CRM feature set:* This version number applies to the communication between
-  full cluster nodes.
-+
-It increases when a cluster node running the older version would have
-problems if the cluster's Designated Controller (DC) has the newer version.
-To avoid these problems, Pacemaker ensures that the longest-running node is the
-DC, and that nodes with an older feature set cannot join the cluster.
-+
-Therefore, if the CRM feature set is changing in the Pacemaker version you
-are upgrading to, you should run a mixed-version cluster only during a small
-rolling upgrade window. If one of the older nodes drops out of the
-cluster for any reason, it will not be able to rejoin until it is upgraded.
+* If the CRM feature set is changing in the Pacemaker version you are upgrading
+  to, you should run a mixed-version cluster only during a small rolling
+  upgrade window. If one of the older nodes drops out of the cluster for any
+  reason, it will not be able to rejoin until it is upgraded.
 
-* *LRMD protocol version:* This version number applies to communication between a
-  Pacemaker Remote node and the cluster. It increases when an older cluster
-  node would have problems hosting the connection to a newer Pacemaker Remote
-  node. To avoid these problems, Pacemaker Remote nodes will accept connections
-  only from cluster nodes with the same or newer LRMD protocol version.
-+
-For rolling upgrades, this means that all cluster nodes should be upgraded
-before upgrading any Pacemaker Remote nodes.
-+
-Unlike with CRM feature set differences between full cluster nodes,
-mixed LRMD protocol versions between Pacemaker Remote nodes and full cluster
-nodes are fine, as long as the Pacemaker Remote nodes have the older version.
-This can be useful, for example, to host a legacy application in an
-older operating system version used as a Pacemaker Remote node.
+* If the LRMD protocol version is changing, all cluster nodes should be
+  upgraded before upgrading any Pacemaker Remote nodes.
 
 See the ClusterLabs wiki's
 http://clusterlabs.org/wiki/ReleaseCalendar[Release Calendar] to figure out
 whether the CRM feature set and/or LRMD protocol version changed between the
 the Pacemaker release versions in your rolling upgrade.
-
-[WARNING]
-====
-The interpretation of the LRMD protocol version changed in Pacemaker 1.1.15.
-If you are planning a rolling upgrade from an earlier Pacemaker version to
-Pacemaker 1.1.15 or later involving Pacemaker Remote nodes, you will need to
-take special precautions to avoid problems. See
-http://clusterlabs.org/wiki/Upgrading_to_Pacemaker_1.1.15_or_later_from_an_earlier_version[Upgrading
-to Pacemaker 1.1.15 or later from an earlier version] on the ClusterLabs wiki.
-====
 
 To perform a rolling upgrade, on each node in turn:
 
@@ -155,9 +172,9 @@ To perform a rolling upgrade, on each node in turn:
 
 [NOTE]
 ====
-Rolling upgrades were not always possible with older
-pacemaker versions. Rolling upgrades that cross compatibility
-boundaries listed in the following table must be performed in multiple steps.
+Even if a rolling upgrade from the current version of the cluster to the newest
+version is not directly possible, it may be possible to perform a rolling
+upgrade in multiple steps, by upgrading to an intermediate version first.
 
 .Version Compatibility Table
 [width="95%",cols="2*",options="header",align="center"]
@@ -166,11 +183,17 @@ boundaries listed in the following table must be performed in multiple steps.
 |Version being Installed
 |Oldest Compatible Version
 
-|Pacemaker 1.x.y
+|Pacemaker 2.y.z
+|Pacemaker 1.1.11
+footnote:[Rolling upgrades from Pacemaker 1.1.z to 2.y.z are possible only if
+the cluster uses corosync 2 as its messaging layer, and the Cluster Information
+Base (CIB) uses schema 1.0 or higher in its validate-with property.]
+
+|Pacemaker 1.y.z
 |Pacemaker 1.0.0
 
-|Pacemaker 0.7.x
-|Pacemaker 0.6.0
+|Pacemaker 0.7.z
+|Pacemaker 0.6.z
 
 |=========================================================
 ====
@@ -206,25 +229,20 @@ This method may not be used if the cluster contains any Pacemaker Remote nodes.
 # crm_attribute --name maintenance-mode --delete
 ----
 
-[NOTE]
-===========
-Support for maintenance mode was added in Pacemaker 1.0.0. If you are upgrading
-from an earlier version, you can detach by setting +is-managed+ to +false+ for
-all resources.
-===========
-
 === Upgrading the Configuration ===
 
 indexterm:[upgrade,Configuration]
 indexterm:[Configuration,upgrading]
 
-Pacemaker's configuration -- the Configuration Information Base (CIB) -- has
-its own XML schema version, independent of the Pacemaker software version.
+The CIB schema version can change from one Pacemaker version to another.
 
 After cluster software is upgraded, the cluster will continue to use
 the older schema version that it was previously using. This can be useful, for
 example, when administrators have written tools that modify the configuration,
 and are based on the older syntax.
+footnote:[As of Pacemaker 2.0.0, only schema versions pacemaker-1.0 and higher
+are supported (excluding pacemaker-1.1, which was an experimental schema
+now known as pacemaker-next).]
 
 However, when using an older syntax, new features may be unavailable, and there
 is a performance impact, since the cluster must do a non-persistent
@@ -336,6 +354,32 @@ It is also possible to perform the configuration upgrade steps manually:
 The advantage of this method is that it can be performed without the
 cluster running, and any validation errors are often more informative.
 ====
+
+=== What Changed in 2.0 ===
+
+The main goal of the 2.0 release was to remove support for deprecated syntax,
+along with some small changes in default configuration behavior and tool
+behavior. Highlights:
+
+* Only Corosync version 2 is now supported as the underlying cluster
+  layer. Support for Heartbeat and Corosync 1 (including CMAN) is removed.
+
+* The Pacemaker detail log file is now stored in
+  /var/log/pacemaker/pacemaker.log by default.
+
+* The record-pending cluster property now defaults to true, which
+  allows status tools such as crm_mon to show operations that are in
+  progress.
+
+* Support for a number of deprecated build options, environment variables,
+  and configuration settings has been removed.
+
+* The public API for Pacemaker libraries that software applications can use
+  has changed significantly.
+
+For a detailed list of changes, see the release notes and the
+https://wiki.clusterlabs.org/wiki/Pacemaker_2.0_Changes[Pacemaker 2.0 Changes]
+page on the ClusterLabs wiki.
 
 === What Changed in 1.0 ===
 

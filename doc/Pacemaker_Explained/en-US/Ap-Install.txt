@@ -8,9 +8,6 @@ Most major Linux distributions have pacemaker packages in their standard
 package repositories, or the software can be built from source code.
 See the http://clusterlabs.org/wiki/Install[Install wiki page] for details.
 
-See <<q-messaging-layer,Which Messaging Layer Should I Choose?>>
-for information about choosing a messaging layer.
-
 === Enabling Pacemaker ===
 
 ==== Enabling Pacemaker For Corosync 2._x_ ====

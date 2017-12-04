@@ -7,9 +7,8 @@ with that construct for chapter headings
 anchor:ch-alerts[Chapter 7, Alerts]
 indexterm:[Resource,Alerts]
 
-'Alerts' (available since Pacemaker 1.1.15) may be configured to take some
-external action when a cluster event occurs (node failure, resource starting or
-stopping, etc.).
+'Alerts' may be configured to take some external action when a cluster event
+occurs (node failure, resource starting or stopping, etc.).
 
 
 == Alert Agents ==
@@ -169,8 +168,7 @@ instance attributes are completely up to the particular agent.
 By default, an alert agent will be called for node events, fencing events, and
 resource events. An agent may choose to ignore certain types of events, but
 there is still the overhead of calling it for those events. To eliminate that
-overhead, you may select which types of events the agent should receive
-(since version 1.1.18).
+overhead, you may select which types of events the agent should receive.
 
 .Alert configuration to receive only node events and fencing events
 =====

@@ -115,18 +115,17 @@ Verify pacemaker status. At first, the output will look like this:
 # pcs status
 Cluster name: mycluster
 WARNING: no stonith devices and stonith-enabled is not false
-Last updated: Fri Oct  9 15:18:32 2015		Last change: Fri Oct  9 12:42:21 2015 by root via cibadmin on example-host
 Stack: corosync
 Current DC: NONE
-1 node and 0 resources configured
+Last updated: Fri Jan 12 15:18:32 2018
+Last change: Fri Jan 12 12:42:21 2018 by root via cibadmin on example-host
+
+1 node configured
+0 resources configured
 
 Node example-host: UNCLEAN (offline)
 
-Full list of resources:
-
-
-PCSD Status:
-  example-host: Online
+No active resources
 
 Daemon Status:
   corosync: active/disabled
@@ -140,18 +139,17 @@ cluster:
 # pcs status
 Cluster name: mycluster
 WARNING: no stonith devices and stonith-enabled is not false
-Last updated: Fri Oct  9 15:20:05 2015		Last change: Fri Oct  9 12:42:21 2015 by root via cibadmin on example-host
 Stack: corosync
-Current DC: example-host (version 1.1.13-a14efad) - partition WITHOUT quorum
-1 node and 0 resources configured
+Current DC: example-host (version 1.1.16-12.el7_4.5-94ff4df) - partition WITHOUT quorum
+Last updated: Fri Jan 12 15:20:05 2018
+Last change: Fri Jan 12 12:42:21 2018 by root via cibadmin on example-host
+
+1 node configured
+0 resources configured
 
 Online: [ example-host ]
 
-Full list of resources:
-
-
-PCSD Status:
-  example-host: Online
+No active resources
 
 Daemon Status:
   corosync: active/disabled
@@ -182,18 +180,17 @@ Now, the status output should look similar to this:
 ----
 # pcs status
 Cluster name: mycluster
-Last updated: Fri Oct  9 15:22:49 2015		Last change: Fri Oct  9 15:22:46 2015 by root via cibadmin on example-host
 Stack: corosync
-Current DC: example-host (version 1.1.13-a14efad) - partition with quorum
-1 node and 0 resources configured
+Current DC: example-host (version 1.1.16-12.el7_4.5-94ff4df) - partition with quorum
+Last updated: Fri Jan 12 15:22:49 2018
+Last change: Fri Jan 12 15:22:46 2018 by root via cibadmin on example-host
+
+1 node configured
+0 resources configured
 
 Online: [ example-host ]
 
-Full list of resources:
-
-
-PCSD Status:
-  example-host: Online
+No active resources
 
 Daemon Status:
   corosync: active/disabled
@@ -385,10 +382,13 @@ something like this.
 ----
 # pcs status
 Cluster name: mycluster
-Last updated: Fri Oct  9 18:00:45 2015		Last change: Fri Oct  9 17:53:44 2015 by root via crm_resource on example-host
 Stack: corosync
-Current DC: example-host (version 1.1.13-a14efad) - partition with quorum
-2 nodes and 2 resources configured
+Current DC: example-host (version 1.1.16-12.el7_4.5-94ff4df) - partition with quorum
+Last updated: Fri Jan 12 18:00:45 2018
+Last change: Fri Jan 12 17:53:44 2018 by root via crm_resource on example-host
+
+2 nodes configured
+2 resources configured
 
 Online: [ example-host ]
 GuestOnline: [ guest1@example-host ]
@@ -396,9 +396,6 @@ GuestOnline: [ guest1@example-host ]
 Full list of resources:
 
  vm-guest1	(ocf::heartbeat:VirtualDomain):	Started example-host
-
-PCSD Status:
-  example-host: Online
 
 Daemon Status:
   corosync: active/disabled
@@ -480,10 +477,13 @@ and the *guest1* node will not be shown while it is being recovered.
 ----
 # pcs status
 Cluster name: mycluster
-Last updated: Fri Oct  9 18:08:35 2015		Last change: Fri Oct  9 18:07:00 2015 by root via cibadmin on example-host
 Stack: corosync
-Current DC: example-host (version 1.1.13-a14efad) - partition with quorum
-2 nodes and 7 resources configured
+Current DC: example-host (version 1.1.16-12.el7_4.5-94ff4df) - partition with quorum
+Last updated: Fri Jan 12 18:08:35 2018
+Last change: Fri Jan 12 18:07:00 2018 by root via cibadmin on example-host
+
+2 nodes configured
+7 resources configured
 
 Online: [ example-host ]
 
@@ -498,11 +498,7 @@ Full list of resources:
 
 Failed Actions:
 * guest1_monitor_30000 on example-host 'unknown error' (1): call=8, status=Error, exitreason='none',
-    last-rc-change='Fri Oct  9 18:08:29 2015', queued=0ms, exec=0ms
-
-
-PCSD Status:
-  example-host: Online
+    last-rc-change='Fri Jan 12 18:08:29 2018', queued=0ms, exec=0ms
 
 Daemon Status:
   corosync: active/disabled
@@ -525,10 +521,13 @@ something like this.
 
 ----
 Cluster name: mycluster
-Last updated: Fri Oct  9 18:18:30 2015		Last change: Fri Oct  9 18:07:00 2015 by root via cibadmin on example-host
 Stack: corosync
-Current DC: example-host (version 1.1.13-a14efad) - partition with quorum
-2 nodes and 7 resources configured
+Current DC: example-host (version 1.1.16-12.el7_4.5-94ff4df) - partition with quorum
+Last updated: Fri Jan 12 18:18:30 2018
+Last change: Fri Jan 12 18:07:00 2018 by root via cibadmin on example-host
+
+2 nodes configured
+7 resources configured
 
 Online: [ example-host ]
 GuestOnline: [ guest1@example-host ]
@@ -544,11 +543,7 @@ Full list of resources:
 
 Failed Actions:
 * guest1_monitor_30000 on example-host 'unknown error' (1): call=8, status=Error, exitreason='none',
-    last-rc-change='Fri Oct  9 18:08:29 2015', queued=0ms, exec=0ms
-
-
-PCSD Status:
-  example-host: Online
+    last-rc-change='Fri Jan 12 18:08:29 2018', queued=0ms, exec=0ms
 
 Daemon Status:
   corosync: active/disabled

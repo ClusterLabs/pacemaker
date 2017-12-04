@@ -218,7 +218,7 @@ Options inherited from <<s-resource-options,primitive>> resources:
 |clone-min
 |1
 |Require at least this number of clone instances to be runnable before allowing
-resources depending on the clone to be runnable '(since 1.1.14)'
+resources depending on the clone to be runnable
  indexterm:[clone-min,Clone Option]
  indexterm:[Clone,Option,clone-min]
 
@@ -1040,9 +1040,8 @@ Pacemaker supports a special syntax for launching a
 https://en.wikipedia.org/wiki/Operating-system-level_virtualization[container]
 with any infrastructure it requires: the 'bundle'.
 
-Pacemaker bundles support https://www.docker.com/[Docker] (since version
-1.1.17) and https://coreos.com/rkt/[rkt] (since version 1.1.18) container
-technologies.
+Pacemaker bundles support https://www.docker.com/[Docker] and
+https://coreos.com/rkt/[rkt] container technologies.
 footnote:[Docker is a trademark of Docker, Inc. No endorsement by or
 association with Docker, Inc. is implied.]
 
