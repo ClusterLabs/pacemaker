@@ -10,7 +10,6 @@
         <nvpair id="cib-bootstrap-options-default-action-timeout" name="default-action-timeout" value="20"/>
         <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1344512443"/>
         <nvpair id="cib-bootstrap-options-start-failure-is-fatal" name="start-failure-is-fatal" value="false"/>
-        <nvpair id="cib-bootstrap-options-default-resource-stickiness" name="default-resource-stickiness" value="200"/>
         <nvpair id="cib-bootstrap-options-maintenance-mode" name="maintenance-mode" value="false"/>
         <nvpair id="cib-bootstrap-options-pe-error-series-max" name="pe-error-series-max" value="1000"/>
         <nvpair id="cib-bootstrap-options-pe-warn-series-max" name="pe-warn-series-max" value="1000"/>
@@ -25,6 +24,11 @@
       <node id="dresproddns01" type="member" uname="dresproddns01"/>
       <node id="dresproddns02" type="member" uname="dresproddns02"/>
     </nodes>
+    <rsc_defaults>
+      <meta_attributes id="rsc_defaults-meta_attributes">
+        <nvpair id="rsc_defaults-resource-stickiness" name="resource-stickiness" value="200"/>
+      </meta_attributes>
+    </rsc_defaults>
     <resources>
       <clone id="cl-openfire">
         <meta_attributes id="cl-openfire-meta_attributes">
@@ -479,7 +483,6 @@
       <rsc_order first="cl-ldirectord" id="or-haproxy" score="INFINITY" then="cl-haproxy"/>
     </constraints>
     <op_defaults/>
-    <rsc_defaults/>
   </configuration>
   <status>
     <node_state id="dresproddns01" uname="dresproddns01" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">

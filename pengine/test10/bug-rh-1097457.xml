@@ -5,7 +5,6 @@
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.10-29.el7-368c726"/>
         <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
-        <nvpair id="cib-bootstrap-options-default-resource-stickiness" name="default-resource-stickiness" value="5000"/>
         <nvpair id="cib-bootstrap-options-cluster-recheck-interval" name="cluster-recheck-interval" value="60"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
         <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1399903549"/>
@@ -19,6 +18,11 @@
         <instance_attributes id="nodes-2"/>
       </node>
     </nodes>
+    <rsc_defaults>
+      <meta_attributes id="rsc_defaults-meta_attributes">
+        <nvpair id="rsc_defaults-resource-stickiness" name="resource-stickiness" value="5000"/>
+      </meta_attributes>
+    </rsc_defaults>
     <resources>
       <primitive class="stonith" id="restofencelama2" type="fence_ipmilan">
         <instance_attributes id="restofencelama2-instance_attributes">

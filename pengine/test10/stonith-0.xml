@@ -9,7 +9,6 @@
         <nvpair id="nvpair.id21886" name="remove-after-stop" value="false"/>
         <nvpair id="nvpair.id21895" name="is-managed-default" value="true"/>
         <nvpair id="nvpair.id21905" name="no-quorum-policy" value="stop"/>
-        <nvpair id="nvpair.id21914" name="default-resource-stickiness" value="0"/>
         <nvpair id="nvpair.id21923" name="stonith-enabled" value="1"/>
         <nvpair id="nvpair.id21932" name="pe-error-series-max" value="-1"/>
         <nvpair id="nvpair.id21941" name="pe-warn-series-max" value="-1"/>

@@ -19,7 +19,6 @@
         <nvpair name="crmd-transition-delay" value="0s" id="cib-bootstrap-options-crmd-transition-delay"/>
         <nvpair name="dc-deadtime" value="20s" id="cib-bootstrap-options-dc-deadtime"/>
         <nvpair name="default-action-timeout" value="20s" id="cib-bootstrap-options-default-action-timeout"/>
-        <nvpair name="default-resource-stickiness" value="100" id="cib-bootstrap-options-default-resource-stickiness"/>
         <nvpair name="election-timeout" value="2m" id="cib-bootstrap-options-election-timeout"/>
         <nvpair name="enable-acl" value="false" id="cib-bootstrap-options-enable-acl"/>
         <nvpair name="enable-startup-probes" value="true" id="cib-bootstrap-options-enable-startup-probes"/>
@@ -298,6 +297,7 @@
         <nvpair name="migration-threshold" value="INFINITY" id="rsc_options-migration-threshold"/>
         <nvpair name="multiple-active" value="stop_start" id="rsc_options-multiple-active"/>
         <nvpair name="priority" value="0" id="rsc_options-priority"/>
+        <nvpair id="rsc_defaults-resource-stickiness" name="resource-stickiness" value="100"/>
       </meta_attributes>
     </rsc_defaults>
   </configuration>

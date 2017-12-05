@@ -517,7 +517,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     (*rsc)->next_role = RSC_ROLE_UNKNOWN;
 
     (*rsc)->recovery_type = recovery_stop_start;
-    (*rsc)->stickiness = data_set->default_resource_stickiness;
+    (*rsc)->stickiness = 0;
     (*rsc)->migration_threshold = INFINITY;
     (*rsc)->failure_timeout = 0;
 

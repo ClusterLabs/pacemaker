@@ -6,13 +6,17 @@
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.16-12.el7_4.2-94ff4df"/>
         <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="clus_mysqlc"/>
-        <nvpair id="cib-bootstrap-options-default-resource-stickiness" name="default-resource-stickiness" value="100"/>
       </cluster_property_set>
     </crm_config>
     <nodes>
       <node id="1" uname="407888-db1"/>
       <node id="2" uname="407892-db2"/>
     </nodes>
+    <rsc_defaults>
+      <meta_attributes id="rsc_defaults-meta_attributes">
+        <nvpair id="rsc_defaults-resource-stickiness" name="resource-stickiness" value="100"/>
+      </meta_attributes>
+    </rsc_defaults>
     <resources>
       <primitive class="stonith" id="fence_db1" type="fence_ipmilan">
         <instance_attributes id="fence_db1-instance_attributes">

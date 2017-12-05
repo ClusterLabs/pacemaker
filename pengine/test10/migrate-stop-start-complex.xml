@@ -7,7 +7,6 @@
         <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="2"/>
         <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
         <nvpair id="cib-bootstrap-options-start-failure-is-fatal" name="start-failure-is-fatal" value="false"/>
-        <nvpair id="cib-bootstrap-options-default-resource-stickiness" name="default-resource-stickiness" value="5000"/>
         <nvpair id="cib-bootstrap-options-symmetric-cluster" name="symmetric-cluster" value="true"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
       </cluster_property_set>
@@ -20,6 +19,11 @@
       </node>
       <node id="dom0-01" uname="dom0-01" type="member"/>
     </nodes>
+    <rsc_defaults>
+      <meta_attributes id="rsc_defaults-meta_attributes">
+        <nvpair id="rsc_defaults-resource-stickiness" name="resource-stickiness" value="5000"/>
+      </meta_attributes>
+    </rsc_defaults>
     <resources>
       <primitive class="ocf" id="top" provider="heartbeat" type="Dummy"/>
       <primitive class="ocf" id="domU-test01" provider="heartbeat" type="Xen">
@@ -65,7 +69,6 @@
       <rsc_colocation id="colocation-2" rsc="top" with-rsc="domU-test01" score="+INFINITY"/>
       <rsc_order id="order-2" first="domU-test01" then="top" score="INFINITY"/>
     </constraints>
-    <rsc_defaults/>
     <op_defaults/>
   </configuration>
   <status>

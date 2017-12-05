@@ -5,7 +5,6 @@
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.5-c5343b58d79f191aacc57cdbec17661d97cf7685"/>
         <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="4"/>
-        <nvpair id="cib-bootstrap-options-default-resource-stickiness" name="default-resource-stickiness" value="1"/>
         <nvpair id="cib-bootstrap-options-batch-limit" name="batch-limit" value="8"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="freeze"/>
         <nvpair id="cib-bootstrap-options-placement-strategy" name="placement-strategy" value="balanced"/>
@@ -47,6 +46,11 @@
         </utilization>
       </node>
     </nodes>
+    <rsc_defaults>
+      <meta_attributes id="rsc_defaults-meta_attributes">
+        <nvpair id="rsc_defaults-resource-stickiness" name="resource-stickiness" value="1"/>
+      </meta_attributes>
+    </rsc_defaults>
     <resources>
       <clone id="base-clone">
         <meta_attributes id="base-clone-meta_attributes">
@@ -1295,7 +1299,6 @@
         <nvpair id="op-options-record-pending" name="record-pending" value="false"/>
       </meta_attributes>
     </op_defaults>
-    <rsc_defaults/>
   </configuration>
   <status>
     <node_state id="hex-7" uname="hex-7" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="post_cache_update" shutdown="0">

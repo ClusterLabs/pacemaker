@@ -16,7 +16,6 @@
         <nvpair id="cib-bootstrap-options-pe-input-series-max" name="pe-input-series-max" value="100"/>
         <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1322576744"/>
         <nvpair id="cib-bootstrap-options-stop-all-resources" name="stop-all-resources" value="false"/>
-        <nvpair id="cib-bootstrap-options-default-resource-stickiness" name="default-resource-stickiness" value="0"/>
         <nvpair id="cib-bootstrap-options-cluster-recheck-interval" name="cluster-recheck-interval" value="10min"/>
       </cluster_property_set>
     </crm_config>

@@ -4,7 +4,6 @@
       <cluster_property_set id="default">
         <nvpair id="symmetric-cluster" name="symmetric-cluster" value="true"/>
         <nvpair id="transition-idle-timeout" name="transition-idle-timeout" value="60"/>
-        <nvpair id="default-resource-stickiness" name="default-resource-stickiness" value="0"/>
         <nvpair id="short-resource-names" name="short-resource-names" value="true"/>
         <nvpair id="no-quorum-policy" name="no-quorum-policy" value="stop"/>
         <nvpair id="stop-orphan-resources" name="stop-orphan-resources" value="false"/>

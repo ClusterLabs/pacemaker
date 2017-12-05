@@ -5,7 +5,6 @@
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.0.0-86e282fa7964+ tip"/>
         <nvpair name="symmetric-cluster" value="true" id="nvpair.id2245184"/>
         <nvpair name="stonith-enabled" value="false" id="nvpair.id2244260"/>
-        <nvpair name="default-resource-stickiness" value="100" id="nvpair.id2244215"/>
         <nvpair name="is-managed-default" id="nvpair.id2244133" value="false"/>
         <nvpair name="default-action-timeout" value="20s" id="nvpair.id2244557"/>
         <nvpair name="stop-orphan-resources" value="true" id="nvpair.id2245052"/>
@@ -19,6 +18,11 @@
       <node id="c738bee8-591f-4653-aaad-20a961923f25" uname="dktest1" type="member"/>
       <node id="f430bc66-3388-4b7d-9e99-24fb02855f54" uname="dktest2" type="member"/>
     </nodes>
+    <rsc_defaults>
+      <meta_attributes id="rsc_defaults-meta_attributes">
+        <nvpair id="rsc_defaults-resource-stickiness" name="resource-stickiness" value="100"/>
+      </meta_attributes>
+    </rsc_defaults>
     <resources>
       <master id="ms-drbd1">
         <meta_attributes id="ma-ms-drbd1">

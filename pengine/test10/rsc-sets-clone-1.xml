@@ -6,7 +6,6 @@
         <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="2"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
-        <nvpair id="cib-bootstrap-options-default-resource-stickiness" name="default-resource-stickiness" value="1000000"/>
         <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
         <nvpair id="cib-bootstrap-options-placement-strategy" name="placement-strategy" value="utilization"/>
         <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1268150032"/>
@@ -24,6 +23,11 @@
         </utilization>
       </node>
     </nodes>
+    <rsc_defaults>
+      <meta_attributes id="rsc_defaults-meta_attributes">
+        <nvpair id="rsc_defaults-resource-stickiness" name="resource-stickiness" value="INFINITY"/>
+      </meta_attributes>
+    </rsc_defaults>
     <resources>
       <primitive class="stonith" id="stonithsys2" type="external/ipmi">
         <instance_attributes id="stonithsys2-instance_attributes">
@@ -226,7 +230,6 @@
       </rsc_order>
     </constraints>
     <op_defaults/>
-    <rsc_defaults/>
   </configuration>
   <status>
     <node_state id="sys2" uname="sys2" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_state_transition" shutdown="0">

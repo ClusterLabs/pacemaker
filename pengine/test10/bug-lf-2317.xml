@@ -6,7 +6,6 @@
         <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
-        <nvpair name="default-resource-stickiness" id="cib-bootstrap-options-default-resource-stickiness" value="10"/>
         <nvpair name="last-lrm-refresh" id="cib-bootstrap-options-last-lrm-refresh" value="1263845352"/>
       </cluster_property_set>
     </crm_config>
@@ -14,6 +13,11 @@
       <node id="3d430f49-b915-4d52-a32b-b0799fa17ae7" uname="ibm2.isg.si" type="member"/>
       <node id="4b2047c8-f3a0-4935-84a2-967b548598c9" uname="ibm1.isg.si" type="member"/>
     </nodes>
+    <rsc_defaults>
+      <meta_attributes id="rsc_defaults-meta_attributes">
+        <nvpair id="rsc_defaults-resource-stickiness" name="resource-stickiness" value="10"/>
+      </meta_attributes>
+    </rsc_defaults>
     <resources>
       <primitive class="ocf" provider="heartbeat" type="Xen" id="HostingIsg">
         <instance_attributes id="HostingIsg-instance_attributes">
@@ -60,7 +64,6 @@
     <constraints>
       <rsc_order first="ms_drbd_r0" first-action="promote" id="drbd0predHostingIsg" score="INFINITY" then="HostingIsg" then-action="start"/>
     </constraints>
-    <rsc_defaults/>
     <op_defaults/>
   </configuration>
   <status>

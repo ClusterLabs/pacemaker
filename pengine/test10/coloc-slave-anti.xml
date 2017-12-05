@@ -4,7 +4,6 @@
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="nvpair.id21847" name="symmetric-cluster" value="true"/>
         <nvpair id="nvpair.id21856" name="no-quorum-policy" value="stop"/>
-        <nvpair id="nvpair.id21865" name="default-resource-stickiness" value="200"/>
         <nvpair id="nvpair.id21874" name="default-migration-threshold" value="-100"/>
         <nvpair id="nvpair.id21883" name="stonith-enabled" value="true"/>
         <nvpair id="nvpair.id21892" name="stonith-action" value="reboot"/>
@@ -27,6 +26,11 @@
       <node id="f10a448b-abcb-4743-a7b9-cbb966b46462" uname="sirius" type="member"/>
       <node id="26cfbecf-dc25-42e1-84de-325ca9e457b5" uname="pollux" type="member"/>
     </nodes>
+    <rsc_defaults>
+      <meta_attributes id="rsc_defaults-meta_attributes">
+        <nvpair id="rsc_defaults-resource-stickiness" name="resource-stickiness" value="200"/>
+      </meta_attributes>
+    </rsc_defaults>
     <resources>
       <clone id="pingd-clone">
         <meta_attributes id="meta_attributes.id22048">

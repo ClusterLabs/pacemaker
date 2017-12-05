@@ -3,7 +3,6 @@
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair name="last-lrm-refresh" id="nvpair.id21849" value="1171856040"/>
-        <nvpair id="nvpair.id21858" name="default-resource-stickiness" value="INFINITY"/>
         <nvpair name="stonith-enabled" id="nvpair.id21868" value="False"/>
         <nvpair id="nvpair.id21877" name="no-quorum-policy" value="ignore"/>
       </cluster_property_set>
@@ -32,6 +31,11 @@
         <instance_attributes id="instance_attributes.id22019"/>
       </node>
     </nodes>
+    <rsc_defaults>
+      <meta_attributes id="rsc_defaults-meta_attributes">
+        <nvpair id="rsc_defaults-resource-stickiness" name="resource-stickiness" value="INFINITY"/>
+      </meta_attributes>
+    </rsc_defaults>
     <resources>
       <clone id="ima_cloneid">
         <primitive id="ima_rscid" class="ocf" type="Dummy" provider="heartbeat">

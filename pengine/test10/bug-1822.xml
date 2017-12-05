@@ -2,7 +2,6 @@
   <configuration>
     <crm_config>
       <cluster_property_set id="set01">
-        <nvpair id="nvpair.id21849" name="default-resource-stickiness" value="INFINITY"/>
         <nvpair id="nvpair.id21858" name="default-migration-threshold" value="1"/>
         <nvpair id="nvpair.id21867" name="stonith-enabled" value="false"/>
         <nvpair id="nvpair.id21875" name="stonith-action" value="reboot"/>
@@ -34,6 +33,7 @@
     <rsc_defaults>
       <meta_attributes id="nvpair.id218777">
         <nvpair id="nvpair.id21877" name="migration-threshold" value="1"/>
+        <nvpair id="rsc_defaults-resource-stickiness" name="resource-stickiness" value="INFINITY"/>
       </meta_attributes>
     </rsc_defaults>
     <nodes>

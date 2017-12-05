@@ -3,7 +3,6 @@
     <crm_config>
       <cluster_property_set id="cibbootstrap">
         <nvpair id="nvpair.id21846" name="cluster-delay" value="60"/>
-        <nvpair id="nvpair.id21855" name="default-resource-stickiness" value="1000"/>
         <nvpair id="nvpair.id21873" name="stonith-enabled" value="true"/>
         <nvpair id="nvpair.id21881" name="stonith-action" value="reboot"/>
         <nvpair id="nvpair.id21890" name="symmetric-cluster" value="true"/>
@@ -17,6 +16,11 @@
       <node id="ca93fea5-67c9-473d-9ce0-7ed7fb823872" uname="x32c48" type="member"/>
       <node id="a1dbc8cc-4d33-41e7-a75a-cd4f93b26410" uname="x32c47" type="member"/>
     </nodes>
+    <rsc_defaults>
+      <meta_attributes id="rsc_defaults-meta_attributes">
+        <nvpair id="rsc_defaults-resource-stickiness" name="resource-stickiness" value="1000"/>
+      </meta_attributes>
+    </rsc_defaults>
     <resources>
       <clone id="stonithcloneset">
         <primitive id="stonithclone" class="stonith" type="null">

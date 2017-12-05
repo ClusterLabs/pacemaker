@@ -15,7 +15,6 @@
         <nvpair id="nvpair.id21941" name="pe-error-series-max" value="100"/>
         <nvpair id="nvpair.id21951" name="pe-warn-series-max" value="100"/>
         <nvpair id="nvpair.id21960" name="pe-input-series-max" value="100"/>
-        <nvpair id="nvpair.id21969" name="default-resource-stickiness" value="100"/>
         <nvpair id="nvpair.id21978" name="default-migration-threshold" value="0"/>
         <nvpair id="nvpair.id21988" name="shutdown-escalation" value="5min"/>
         <nvpair id="nvpair.id21997" name="startup-fencing" value="false"/>
@@ -26,6 +25,11 @@
       <node id="b292356d-d8af-4360-bcd3-423b3ec7f1be" uname="xen-2" type="member"/>
       <node id="00aaa02f-110f-44e6-9a9d-af93827bfdb9" uname="xen-1" type="member"/>
     </nodes>
+    <rsc_defaults>
+      <meta_attributes id="rsc_defaults-meta_attributes">
+        <nvpair id="rsc_defaults-resource-stickiness" name="resource-stickiness" value="100"/>
+      </meta_attributes>
+    </rsc_defaults>
     <resources>
       <primitive id="fs_1" class="ocf" provider="heartbeat" type="Filesystem">
         <instance_attributes id="instance_attributes.id22053">
