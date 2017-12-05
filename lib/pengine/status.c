@@ -241,7 +241,6 @@ set_working_set_defaults(pe_working_set_t * data_set)
     data_set->flags = 0x0ULL;
     set_bit(data_set->flags, pe_flag_stop_rsc_orphans);
     set_bit(data_set->flags, pe_flag_symmetric_cluster);
-    set_bit(data_set->flags, pe_flag_is_managed_default);
     set_bit(data_set->flags, pe_flag_stop_action_orphans);
 }
 

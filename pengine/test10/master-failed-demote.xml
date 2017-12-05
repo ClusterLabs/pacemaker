@@ -13,7 +13,6 @@
         <nvpair id="nvpair.id21920" name="no-quorum-policy" value="ignore"/>
         <nvpair id="nvpair.id21929" name="symmetric-cluster" value="true"/>
         <nvpair id="nvpair.id21938" name="short-resource-names" value="true"/>
-        <nvpair id="nvpair.id21948" name="is-managed-default" value="true"/>
         <nvpair id="nvpair.id21957" name="stop-orphan-resources" value="true"/>
         <nvpair id="nvpair.id21966" name="stop-orphan-actions" value="true"/>
         <nvpair id="nvpair.id21975" name="remove-after-stop" value="false"/>

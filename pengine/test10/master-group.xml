@@ -6,7 +6,6 @@
         <nvpair id="nvpair.id21858" name="no-quorum-policy" value="ignore"/>
         <nvpair id="nvpair.id21868" name="stonith-enabled" value="false"/>
         <nvpair id="nvpair.id21876" name="short-resource-names" value="true"/>
-        <nvpair id="nvpair.id21885" name="is-managed-default" value="true"/>
         <nvpair id="nvpair.id21903" name="stop-orphan-resources" value="true"/>
         <nvpair id="nvpair.id21912" name="stop-orphan-actions" value="true"/>
         <nvpair id="nvpair.id21921" name="remove-after-stop" value="false"/>

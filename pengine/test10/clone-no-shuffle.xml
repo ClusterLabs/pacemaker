@@ -8,7 +8,6 @@
         <nvpair name="stonith-enabled" value="true" id="nvpair.id21877"/>
         <nvpair name="stonith-action" value="reboot" id="nvpair.id21886"/>
         <nvpair name="default-migration-threshold" value="1" id="nvpair.id21903"/>
-        <nvpair name="is-managed-default" value="true" id="nvpair.id21912"/>
         <nvpair name="default-action-timeout" value="20s" id="nvpair.id21921"/>
         <nvpair name="stop-orphan-resources" value="true" id="nvpair.id21930"/>
         <nvpair name="stop-orphan-actions" value="true" id="nvpair.id21939"/>

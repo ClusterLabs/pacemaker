@@ -9,7 +9,6 @@
         <nvpair id="nvpair.id21894" name="stop-orphan-resources" value="false"/>
         <nvpair id="nvpair.id21903" name="stop-orphan-actions" value="true"/>
         <nvpair id="nvpair.id21912" name="remove-after-stop" value="false"/>
-        <nvpair id="nvpair.id21921" name="is-managed-default" value="true"/>
         <nvpair id="nvpair.id21930" name="stonith-enabled" value="false"/>
         <nvpair id="nvpair.id21939" name="stonith-action" value="reboot"/>
       </cluster_property_set>

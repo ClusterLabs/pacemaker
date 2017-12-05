@@ -9,7 +9,6 @@
         <nvpair id="nvpair.id21902" name="no-quorum-policy" value="ignore"/>
         <nvpair id="nvpair.id21911" name="stop-orphan-resources" value="true"/>
         <nvpair id="nvpair.id21920" name="stop-orphan-actions" value="true"/>
-        <nvpair id="nvpair.id21928" name="is-managed-default" value="true"/>
         <nvpair id="nvpair.id21937" name="last-lrm-refresh" value="1150896827"/>
       </cluster_property_set>
     </crm_config>

@@ -9,7 +9,6 @@
         <nvpair id="stop-orphan-resources" name="stop-orphan-resources" value="false"/>
         <nvpair id="stop-orphan-actions" name="stop-orphan-actions" value="true"/>
         <nvpair id="remove-after-stop" name="remove-after-stop" value="false"/>
-        <nvpair id="is-managed-default" name="is-managed-default" value="true"/>
         <nvpair id="stonith-enabled" name="stonith-enabled" value="true"/>
         <nvpair id="stonith-action" name="stonith-action" value="reboot"/>
         <!-- see /usr/lib/heartbeat/crmd metadata - set to defaults -->

@@ -13,7 +13,6 @@
         <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="4"/>
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.6-0.65.892f17e3b2a2.hg.fc15-892f17e3b2a2ba680f2081d840809938ddf61113"/>
         <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
-        <nvpair id="cib-bootstrap-options-is-managed-default" name="is-managed-default" value="false"/>
       </cluster_property_set>
     </crm_config>
     <nodes>
@@ -22,6 +21,11 @@
       <node id="pcmk-3" uname="pcmk-3" type="member"/>
       <node id="pcmk-4" uname="pcmk-4" type="member"/>
     </nodes>
+    <rsc_defaults>
+      <meta_attributes id="rsc_defaults-meta_attributes">
+            <nvpair id="rsc_defaults-is-managed" name="is-managed" value="false"/>
+      </meta_attributes>
+    </rsc_defaults>
     <resources>
       <clone id="Fencing">
         <meta_attributes id="Fencing-meta_attributes">

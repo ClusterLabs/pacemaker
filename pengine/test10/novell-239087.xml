@@ -8,7 +8,6 @@
         <nvpair id="nvpair.id21877" name="stop-orphan-resources" value="true"/>
         <nvpair id="nvpair.id21887" name="stop-orphan-actions" value="true"/>
         <nvpair id="nvpair.id21896" name="remove-after-stop" value="false"/>
-        <nvpair id="nvpair.id21905" name="is-managed-default" value="true"/>
         <nvpair id="nvpair.id21915" name="no-quorum-policy" value="ignore"/>
         <nvpair id="nvpair.id21924" name="stonith-action" value="reboot"/>
         <nvpair id="nvpair.id21933" name="stonith-enabled" value="0"/>

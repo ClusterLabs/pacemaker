@@ -285,18 +285,6 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
     crm_trace("Maintenance mode: %s",
               is_set(data_set->flags, pe_flag_maintenance_mode) ? "true" : "false");
 
-    if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
-        clear_bit(data_set->flags, pe_flag_is_managed_default);
-    } else if (pe_pref(data_set->config_hash, "is-managed-default")) {
-        set_config_flag(data_set, "is-managed-default", pe_flag_is_managed_default);
-        pe_warn_once(pe_wo_default_isman,
-                     "Support for 'is-managed-default' cluster property"
-                     " is deprecated and will be removed in a future release"
-                     " (use is-managed in rsc_defaults instead)");
-    }
-    crm_trace("By default resources are %smanaged",
-              is_set(data_set->flags, pe_flag_is_managed_default) ? "" : "not ");
-
     set_config_flag(data_set, "start-failure-is-fatal", pe_flag_start_failure_fatal);
     crm_trace("Start failures are %s",
               is_set(data_set->flags,

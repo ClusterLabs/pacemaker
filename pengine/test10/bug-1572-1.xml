@@ -13,7 +13,6 @@
         <nvpair id="nvpair.id21933" name="short-resource-names" value="true"/>
         <nvpair id="nvpair.id21942" name="transition-idle-timeout" value="5min"/>
         <nvpair name="default-action-timeout" id="nvpair.id21952" value="120s"/>
-        <nvpair id="nvpair.id21961" name="is-managed-default" value="true"/>
         <nvpair name="last-lrm-refresh" id="nvpair.id21970" value="1178199084"/>
       </cluster_property_set>
     </crm_config>

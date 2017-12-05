@@ -506,7 +506,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     set_bit((*rsc)->flags, pe_rsc_runnable);
     set_bit((*rsc)->flags, pe_rsc_provisional);
 
-    if (is_set(data_set->flags, pe_flag_is_managed_default)) {
+    if (is_not_set(data_set->flags, pe_flag_maintenance_mode)) {
         set_bit((*rsc)->flags, pe_rsc_managed);
     }
 

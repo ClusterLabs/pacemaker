@@ -9,7 +9,6 @@
         <nvpair id="nvpair.id21899" name="no-quorum-policy" value="stop"/>
         <nvpair id="nvpair.id21908" name="stop-orphan-resources" value="true"/>
         <nvpair id="nvpair.id21916" name="stop-orphan-actions" value="true"/>
-        <nvpair id="nvpair.id21925" name="is-managed-default" value="true"/>
       </cluster_property_set>
     </crm_config>
     <nodes>

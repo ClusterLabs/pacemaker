@@ -11,7 +11,6 @@
         <nvpair id="nvpair.id21922" name="remove-after-stop" value="false"/>
         <nvpair id="nvpair.id21931" name="short_resource_names" value="true"/>
         <nvpair id="nvpair.id21941" name="cluster-delay" value="5min"/>
-        <nvpair id="nvpair.id21950" name="is-managed-default" value="true"/>
       </cluster_property_set>
     </crm_config>
     <nodes>

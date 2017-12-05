@@ -14,7 +14,6 @@
         <nvpair id="nvpair.id21936" name="short-resource-names" value="true"/>
         <nvpair id="nvpair.id21945" name="transition-idle-timeout" value="5min"/>
         <nvpair id="nvpair.id21954" name="default-action-timeout" value="20s"/>
-        <nvpair id="nvpair.id21963" name="is-managed-default" value="true"/>
         <nvpair id="nvpair.id21972" name="cluster-delay" value="60s"/>
         <nvpair id="nvpair.id21980" name="pe-error-series-max" value="-1"/>
         <nvpair id="nvpair.id21989" name="pe-warn-series-max" value="-1"/>

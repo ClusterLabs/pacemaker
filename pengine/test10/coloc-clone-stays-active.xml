@@ -9,7 +9,6 @@
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
         <nvpair id="cib-bootstrap-options-stop-orphan-resources" name="stop-orphan-resources" value="true"/>
         <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1285930999"/>
-        <nvpair id="cib-bootstrap-options-is-managed-default" name="is-managed-default" value="true"/>
         <nvpair id="cib-bootstrap-options-pe-error-series-max" name="pe-error-series-max" value="10000"/>
         <nvpair id="cib-bootstrap-options-pe-warn-series-max" name="pe-warn-series-max" value="10000"/>
         <nvpair id="cib-bootstrap-options-pe-input-series-max" name="pe-input-series-max" value="10000"/>
