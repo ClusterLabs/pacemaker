@@ -124,11 +124,7 @@ main(int argc, char **argv)
 static void
 log_deprecation_warnings()
 {
-    if (getenv("LRMD_MAX_CHILDREN")) {
-        crm_warn("The LRMD_MAX_CHILDREN environment variable"
-                 " is deprecated and will be removed in a future release"
-                 " (use PCMK_node_action_limit instead)");
-    }
+    // Add deprecations here as needed
 }
 
 int
