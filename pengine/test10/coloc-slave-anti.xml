@@ -4,7 +4,6 @@
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="nvpair.id21847" name="symmetric-cluster" value="true"/>
         <nvpair id="nvpair.id21856" name="no-quorum-policy" value="stop"/>
-        <nvpair id="nvpair.id21874" name="default-migration-threshold" value="-100"/>
         <nvpair id="nvpair.id21883" name="stonith-enabled" value="true"/>
         <nvpair id="nvpair.id21892" name="stonith-action" value="reboot"/>
         <nvpair id="nvpair.id21900" name="startup-fencing" value="true"/>

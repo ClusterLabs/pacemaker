@@ -2,7 +2,6 @@
   <configuration>
     <crm_config>
       <cluster_property_set id="set01">
-        <nvpair id="nvpair.id21858" name="default-migration-threshold" value="1"/>
         <nvpair id="nvpair.id21867" name="stonith-enabled" value="false"/>
         <nvpair id="nvpair.id21875" name="stonith-action" value="reboot"/>
         <nvpair id="nvpair.id21884" name="cluster-delay" value="180s"/>

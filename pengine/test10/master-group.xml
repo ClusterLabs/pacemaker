@@ -9,7 +9,6 @@
         <nvpair id="nvpair.id21903" name="stop-orphan-resources" value="true"/>
         <nvpair id="nvpair.id21912" name="stop-orphan-actions" value="true"/>
         <nvpair id="nvpair.id21921" name="remove-after-stop" value="false"/>
-        <nvpair id="nvpair.id21930" name="default-migration-threshold" value="1"/>
         <nvpair id="nvpair.id21940" name="stonith-action" value="reboot"/>
         <nvpair id="nvpair.id21948" name="default-action-timeout" value="120s"/>
         <nvpair id="nvpair.id21957" name="dc-deadtime" value="10s"/>

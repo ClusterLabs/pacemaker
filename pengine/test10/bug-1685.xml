@@ -10,7 +10,6 @@
         <nvpair id="nvpair.id21894" name="stonith-action" value="reboot"/>
         <nvpair id="nvpair.id21913" name="stop-orphan-resources" value="true"/>
         <nvpair id="nvpair.id21922" name="no-quorum-policy" value="stop"/>
-        <nvpair id="nvpair.id21932" name="default-migration-threshold" value="-100"/>
         <nvpair id="nvpair.id21941" name="probe_complete" value="true"/>
         <nvpair id="nvpair.id21950" name="transition-idle-timeout" value="60s"/>
       </cluster_property_set>

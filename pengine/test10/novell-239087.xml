@@ -14,7 +14,6 @@
         <nvpair id="nvpair.id21942" name="pe-error-series-max" value="100"/>
         <nvpair id="nvpair.id21951" name="pe-warn-series-max" value="100"/>
         <nvpair id="nvpair.id21960" name="pe-input-series-max" value="100"/>
-        <nvpair id="nvpair.id21979" name="default-migration-threshold" value="0"/>
         <nvpair id="nvpair.id21988" name="shutdown-escalation" value="5min"/>
         <nvpair id="nvpair.id21997" name="startup-fencing" value="false"/>
         <nvpair id="nvpair.id22006" name="last-lrm-refresh" value="1169747681"/>

@@ -4,7 +4,6 @@
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="nvpair.id2000001" name="cluster-delay" value="60s"/>
         <nvpair id="nvpair.id2000002" name="default-action-timeout" value="20s"/>
-        <nvpair id="nvpair.id2000003" name="default-migration-threshold" value="1"/>
         <nvpair id="nvpair.id2000006" name="no-quorum-policy" value="ignore"/>
         <nvpair id="nvpair.id2000007" name="startup-fencing" value="true"/>
         <nvpair id="nvpair.id2000008" name="stonith-enabled" value="true"/>
