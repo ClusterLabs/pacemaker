@@ -372,11 +372,6 @@ sensitive to the order in which ping updates arrive.
 Enabling this option will slow down cluster recovery under
 all conditions.
 
-| default-action-timeout | 20s |
-indexterm:[default-action-timeout,Cluster Option]
-indexterm:[Cluster,Option,default-action-timeout]
-_Deprecated:_ See <<s-operation-defaults>> instead
-
 |=========================================================
 
 === Querying and Setting Cluster Options ===

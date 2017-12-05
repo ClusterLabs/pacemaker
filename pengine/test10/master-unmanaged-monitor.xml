@@ -5,7 +5,6 @@
         <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="1"/>
         <nvpair id="cib-bootstrap-options-start-failure-is-fatal" name="start-failure-is-fatal" value="false"/>
         <nvpair id="cib-bootstrap-options-pe-input-series-max" name="pe-input-series-max" value="5000"/>
-        <nvpair id="cib-bootstrap-options-default-action-timeout" name="default-action-timeout" value="60s"/>
         <nvpair id="cib-bootstrap-options-shutdown-escalation" name="shutdown-escalation" value="5min"/>
         <nvpair id="cib-bootstrap-options-batch-limit" name="batch-limit" value="10"/>
         <nvpair id="cib-bootstrap-options-dc-deadtime" name="dc-deadtime" value="5s"/>
@@ -26,6 +25,11 @@
             <nvpair id="rsc_defaults-is-managed" name="is-managed" value="false"/>
       </meta_attributes>
     </rsc_defaults>
+    <op_defaults>
+      <meta_attributes id="op_defaults-meta_attributes">
+        <nvpair id="op_defaults-timeout" name="timeout" value="60s"/>
+      </meta_attributes>
+    </op_defaults>
     <resources>
       <clone id="Fencing">
         <meta_attributes id="Fencing-meta_attributes">

@@ -11,7 +11,6 @@
         <nvpair id="nvpair.id21924" name="remove-after-stop" value="false"/>
         <nvpair id="nvpair.id21933" name="short-resource-names" value="true"/>
         <nvpair id="nvpair.id21942" name="transition-idle-timeout" value="5min"/>
-        <nvpair name="default-action-timeout" id="nvpair.id21952" value="120s"/>
         <nvpair name="last-lrm-refresh" id="nvpair.id21970" value="1178199084"/>
       </cluster_property_set>
     </crm_config>
@@ -31,6 +30,11 @@
         </instance_attributes>
       </node>
     </nodes>
+    <op_defaults>
+      <meta_attributes id="op_defaults-meta_attributes">
+        <nvpair id="op_defaults-timeout" name="timeout" value="120s"/>
+      </meta_attributes>
+    </op_defaults>
     <resources>
       <master id="ms_drbd_7788">
         <primitive id="rsc_drbd_7788" class="ocf" type="drbd" provider="heartbeat">

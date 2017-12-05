@@ -11,7 +11,6 @@
         <nvpair id="nvpair.id21915" name="stonith-action" value="reboot"/>
         <nvpair id="nvpair.id21943" name="cluster-delay" value="10"/>
         <nvpair id="nvpair.id21952" name="batch-limit" value="30"/>
-        <nvpair id="nvpair.id21961" name="default-action-timeout" value="40"/>
         <nvpair id="nvpair.id21970" name="remove-after-stop" value="false"/>
         <nvpair id="nvpair.id21979" name="pe-error-series-max" value="-1"/>
         <nvpair id="nvpair.id21988" name="pe-warn-series-max" value="-1"/>

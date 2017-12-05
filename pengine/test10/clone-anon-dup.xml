@@ -26,7 +26,6 @@
         <nvpair id="cluster-delay" name="cluster-delay" value="60s"/>
         <nvpair id="batch-limit" name="batch-limit" value="30"/>
         <nvpair id="stop-all-resources" name="stop-all-resources" value="false"/>
-        <nvpair id="default-action-timeout" name="default-action-timeout" value="20s"/>
         <nvpair id="pe-error-series-max" name="pe-error-series-max" value="-1"/>
         <nvpair id="pe-warn-series-max" name="pe-warn-series-max" value="-1"/>
         <nvpair id="pe-input-series-max" name="pe-input-series-max" value="-1"/>
@@ -61,6 +60,11 @@
         <nvpair id="rsc_defaults-resource-stickiness" name="resource-stickiness" value="1"/>
       </meta_attributes>
     </rsc_defaults>
+    <op_defaults>
+      <meta_attributes id="op_defaults-meta_attributes">
+        <nvpair id="op_defaults-timeout" name="timeout" value="20s"/>
+      </meta_attributes>
+    </op_defaults>
     <resources>
       <primitive id="stonith-1" class="stonith" type="dummy"/>
       <!-- webservices - START -->

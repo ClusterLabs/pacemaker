@@ -12,7 +12,6 @@
         <nvpair id="nvpair.id21927" name="remove-after-stop" value="false"/>
         <nvpair id="nvpair.id21936" name="short-resource-names" value="true"/>
         <nvpair id="nvpair.id21945" name="transition-idle-timeout" value="5min"/>
-        <nvpair id="nvpair.id21954" name="default-action-timeout" value="20s"/>
         <nvpair id="nvpair.id21972" name="cluster-delay" value="60s"/>
         <nvpair id="nvpair.id21980" name="pe-error-series-max" value="-1"/>
         <nvpair id="nvpair.id21989" name="pe-warn-series-max" value="-1"/>
@@ -29,6 +28,11 @@
         <nvpair id="rsc_defaults-resource-stickiness" name="resource-stickiness" value="200"/>
       </meta_attributes>
     </rsc_defaults>
+    <op_defaults>
+      <meta_attributes id="op_defaults-meta_attributes">
+        <nvpair id="op_defaults-timeout" name="timeout" value="20s"/>
+      </meta_attributes>
+    </op_defaults>
     <resources>
       <clone id="pingd-clone">
         <meta_attributes id="meta_attributes.id22048">

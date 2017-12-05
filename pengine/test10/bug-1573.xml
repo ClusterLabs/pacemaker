@@ -11,7 +11,6 @@
         <nvpair id="nvpair.id21923" name="remove-after-stop" value="false"/>
         <nvpair id="nvpair.id21932" name="short-resource-names" value="true"/>
         <nvpair id="nvpair.id21942" name="transition-idle-timeout" value="5min"/>
-        <nvpair id="nvpair.id21951" name="default-action-timeout" value="15s"/>
         <nvpair id="nvpair.id21969" name="last-lrm-refresh" value="1179263353"/>
       </cluster_property_set>
     </crm_config>
@@ -19,6 +18,11 @@
       <node id="50e1f0d4-391f-4d48-a087-98972f612b8b" uname="xen-c" type="member"/>
       <node id="6a0b1629-ab27-47c7-a6a4-461c94e477f2" uname="xen-b" type="member"/>
     </nodes>
+    <op_defaults>
+      <meta_attributes id="op_defaults-meta_attributes">
+        <nvpair id="op_defaults-timeout" name="timeout" value="15s"/>
+      </meta_attributes>
+    </op_defaults>
     <resources>
       <group id="group_1">
         <primitive id="IPaddr_192_168_1_101" class="ocf" provider="heartbeat" type="IPaddr">

@@ -5,7 +5,6 @@
         <nvpair id="nvpair.id21867" name="stonith-enabled" value="false"/>
         <nvpair id="nvpair.id21875" name="stonith-action" value="reboot"/>
         <nvpair id="nvpair.id21884" name="cluster-delay" value="180s"/>
-        <nvpair id="nvpair.id21892" name="default-action-timeout" value="120s"/>
         <nvpair id="nvpair.id21901" name="no-quorum-policy" value="ignore"/>
         <nvpair id="nvpair.id21910" name="symmetric-cluster" value="true"/>
         <nvpair id="nvpair.id21920" name="short-resource-names" value="true"/>
@@ -34,6 +33,11 @@
         <nvpair id="rsc_defaults-resource-stickiness" name="resource-stickiness" value="INFINITY"/>
       </meta_attributes>
     </rsc_defaults>
+    <op_defaults>
+      <meta_attributes id="op_defaults-meta_attributes">
+        <nvpair id="op_defaults-timeout" name="timeout" value="120s"/>
+      </meta_attributes>
+    </op_defaults>
     <nodes>
       <node id="4dbb8c56-330e-4835-a15e-c0aa632d4e89" uname="process1a" type="member"/>
       <node id="e38f935d-6059-4540-8679-bc32a8256839" uname="process2b" type="member"/>

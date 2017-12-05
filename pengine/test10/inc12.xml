@@ -2,7 +2,6 @@
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
-        <nvpair id="nvpair.id21849" name="default-action-timeout" value="10s"/>
         <nvpair id="nvpair.id21858" name="network-delay" value="60s"/>
         <nvpair id="nvpair.id21866" name="symmetric-cluster" value="true"/>
         <nvpair id="nvpair.id21876" name="stop-orphan-resources" value="true"/>
@@ -26,6 +25,11 @@
       <node id="169e4673-93fb-4c0a-8082-d3408bae9431" uname="c001n06" type="member"/>
       <node id="6637ebb5-ab11-4728-b69e-b61222af9a0c" uname="c001n07" type="member"/>
     </nodes>
+    <op_defaults>
+      <meta_attributes id="op_defaults-meta_attributes">
+        <nvpair id="op_defaults-timeout" name="timeout" value="10s"/>
+      </meta_attributes>
+    </op_defaults>
     <resources>
       <primitive id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat">
         <operations>

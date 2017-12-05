@@ -800,21 +800,9 @@ unpack_interval_origin(const char *value, GHashTable *meta, xmlNode *xml_obj,
 }
 
 static int
-unpack_timeout(const char *value, action_t *action, xmlNode *xml_obj,
-               unsigned long long interval, GHashTable *config_hash)
+unpack_timeout(const char *value)
 {
     int timeout = 0;
-
-    if (value == NULL && config_hash) {
-        value = pe_pref(config_hash, "default-action-timeout");
-        if (value) {
-            pe_warn_once(pe_wo_default_timeo,
-                         "Support for 'default-action-timeout' cluster property"
-                         " is deprecated and will be removed in a future release"
-                         " (use 'timeout' in op_defaults instead)");
-
-        }
-    }
 
     if (value == NULL) {
         value = CRM_DEFAULT_OP_TIMEOUT_S;
@@ -848,10 +836,6 @@ pe_get_configured_timeout(resource_t *rsc, const char *action, pe_working_set_t 
         unpack_instance_attributes(data_set->input, data_set->op_defaults, XML_TAG_META_SETS,
                                    NULL, action_meta, NULL, FALSE, data_set->now);
         timeout = g_hash_table_lookup(action_meta, XML_ATTR_TIMEOUT);
-    }
-
-    if (timeout == NULL && data_set->config_hash) {
-        timeout = pe_pref(data_set->config_hash, "default-action-timeout");
     }
 
     if (timeout == NULL) {
@@ -888,7 +872,7 @@ unpack_versioned_meta(xmlNode *versioned_meta, xmlNode *xml_obj, unsigned long l
                 crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, XML_OP_ATTR_START_DELAY);
                 crm_xml_add_int(attr, XML_NVPAIR_ATTR_VALUE, start_delay);
             } else if (safe_str_eq(name, XML_ATTR_TIMEOUT)) {
-                int timeout = unpack_timeout(value, NULL, NULL, 0, NULL);
+                int timeout = unpack_timeout(value);
 
                 crm_xml_add_int(attr, XML_NVPAIR_ATTR_VALUE, timeout);
             }
@@ -1173,7 +1157,7 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
 
     field = XML_ATTR_TIMEOUT;
     value = g_hash_table_lookup(action->meta, field);
-    timeout = unpack_timeout(value, action, xml_obj, interval, data_set->config_hash);
+    timeout = unpack_timeout(value);
     g_hash_table_replace(action->meta, strdup(XML_ATTR_TIMEOUT), crm_itoa(timeout));
 
 #if ENABLE_VERSIONED_ATTRS

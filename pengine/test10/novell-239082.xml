@@ -2,7 +2,6 @@
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
-        <nvpair id="nvpair.id21849" name="default-action-timeout" value="120s"/>
         <nvpair id="nvpair.id21859" name="cluster-delay" value="60s"/>
         <nvpair id="nvpair.id21868" name="symmetric-cluster" value="true"/>
         <nvpair id="nvpair.id21877" name="stop-orphan-resources" value="true"/>
@@ -28,6 +27,11 @@
         <nvpair id="rsc_defaults-resource-stickiness" name="resource-stickiness" value="100"/>
       </meta_attributes>
     </rsc_defaults>
+    <op_defaults>
+      <meta_attributes id="op_defaults-meta_attributes">
+        <nvpair id="op_defaults-timeout" name="timeout" value="120s"/>
+      </meta_attributes>
+    </op_defaults>
     <resources>
       <primitive id="fs_1" class="ocf" provider="heartbeat" type="Filesystem">
         <instance_attributes id="instance_attributes.id22053">

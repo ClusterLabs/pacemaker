@@ -17,7 +17,6 @@
         <nvpair name="cluster-recheck-interval" value="10m" id="cib-bootstrap-options-cluster-recheck-interval"/>
         <nvpair name="crmd-transition-delay" value="0s" id="cib-bootstrap-options-crmd-transition-delay"/>
         <nvpair name="dc-deadtime" value="20s" id="cib-bootstrap-options-dc-deadtime"/>
-        <nvpair name="default-action-timeout" value="20s" id="cib-bootstrap-options-default-action-timeout"/>
         <nvpair name="election-timeout" value="2m" id="cib-bootstrap-options-election-timeout"/>
         <nvpair name="enable-acl" value="false" id="cib-bootstrap-options-enable-acl"/>
         <nvpair name="enable-startup-probes" value="true" id="cib-bootstrap-options-enable-startup-probes"/>
@@ -52,6 +51,11 @@
         </instance_attributes>
       </node>
     </nodes>
+    <op_defaults>
+      <meta_attributes id="op_defaults-meta_attributes">
+        <nvpair id="op_defaults-timeout" name="timeout" value="20s"/>
+      </meta_attributes>
+    </op_defaults>
     <resources>
       <primitive id="stonith-xvm-sd01-0" class="stonith" type="fence_xvm">
         <instance_attributes id="stonith-xvm-sd01-0-instance_attributes">

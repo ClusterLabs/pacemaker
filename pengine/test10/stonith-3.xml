@@ -3,7 +3,6 @@
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="nvpair.id2000001" name="cluster-delay" value="60s"/>
-        <nvpair id="nvpair.id2000002" name="default-action-timeout" value="20s"/>
         <nvpair id="nvpair.id2000006" name="no-quorum-policy" value="ignore"/>
         <nvpair id="nvpair.id2000007" name="startup-fencing" value="true"/>
         <nvpair id="nvpair.id2000008" name="stonith-enabled" value="true"/>
@@ -15,6 +14,11 @@
       <node uname="rh5node1" type="member" id="286f4fcb-519e-4a23-b39f-9ab0017d0442"/>
       <node uname="rh5node2" type="member" id="fb62f5f4-015c-466a-8778-7b5c1c5639d6"/>
     </nodes>
+    <op_defaults>
+      <meta_attributes id="op_defaults-meta_attributes">
+        <nvpair id="op_defaults-timeout" name="timeout" value="20s"/>
+      </meta_attributes>
+    </op_defaults>
     <resources>
       <primitive id="prmIpPostgreSQLDB" class="ocf" provider="heartbeat" type="IPaddr">
         <instance_attributes id="instance_attributes.id2000100">
