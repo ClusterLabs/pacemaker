@@ -55,12 +55,12 @@ Transition Summary:
  * Move       stonith-fence_ipmilan-5254005bdbb5     ( controller-1 -> controller-2 )  
 
 Executing cluster transition:
+ * Pseudo action:   galera-0_stop_0
  * Pseudo action:   redis-master_pre_notify_stop_0
  * Resource action: stonith-fence_ipmilan-525400bbf613 stop on controller-0
  * Resource action: stonith-fence_ipmilan-525400b4f6bd stop on controller-0
  * Pseudo action:   stonith-fence_ipmilan-5254005bdbb5_stop_0
  * Fencing controller-1 (reboot)
- * Pseudo action:   galera-0_stop_0
  * Pseudo action:   galera-2_stop_0
  * Pseudo action:   redis_post_notify_stop_0
  * Resource action: redis           notify on controller-0
@@ -71,15 +71,12 @@ Executing cluster transition:
  * Fencing galera-2 (reboot)
  * Fencing messaging-1 (reboot)
  * Pseudo action:   stonith_complete
- * Resource action: galera-0        start on controller-2
  * Pseudo action:   rabbitmq_post_notify_stop_0
  * Pseudo action:   rabbitmq-clone_stop_0
- * Resource action: galera          monitor=10000 on galera-0
  * Pseudo action:   redis_stop_0
  * Pseudo action:   redis-master_stopped_0
  * Pseudo action:   haproxy_stop_0
  * Pseudo action:   haproxy-clone_stopped_0
- * Resource action: galera-0        monitor=20000 on controller-2
  * Resource action: rabbitmq        notify on messaging-2
  * Resource action: rabbitmq        notify on messaging-0
  * Pseudo action:   rabbitmq_notified_0
@@ -101,11 +98,14 @@ Executing cluster transition:
  * Resource action: ip-172.17.1.17  monitor=10000 on controller-2
  * Resource action: ip-172.17.4.11  monitor=10000 on controller-2
  * Pseudo action:   all_stopped
+ * Resource action: galera-0        start on controller-2
+ * Resource action: galera          monitor=10000 on galera-0
  * Resource action: stonith-fence_ipmilan-525400bbf613 start on controller-0
  * Resource action: stonith-fence_ipmilan-525400bbf613 monitor=60000 on controller-0
  * Resource action: stonith-fence_ipmilan-525400b4f6bd start on controller-0
  * Resource action: stonith-fence_ipmilan-525400b4f6bd monitor=60000 on controller-0
  * Resource action: stonith-fence_ipmilan-5254005bdbb5 start on controller-2
+ * Resource action: galera-0        monitor=20000 on controller-2
  * Resource action: stonith-fence_ipmilan-5254005bdbb5 monitor=60000 on controller-2
 Using the original execution date of: 2017-05-03 13:33:24Z
 
