@@ -396,12 +396,6 @@ check_deprecated_stonith(resource_t *rsc)
                              "Support for the 'pcmk_poweroff_action' stonith resource parameter"
                              " is deprecated and will be removed in a future version"
                              " (use 'pcmk_off_action' instead)");
-
-            } else if (!strcmp(cmp, "arg_map")) {
-                pe_warn_once(pe_wo_arg_map,
-                             "Support for the 'pcmk_arg_map' stonith resource parameter"
-                             " is deprecated and will be removed in a future version"
-                             " (use 'pcmk_host_argument' instead)");
             }
         }
     }

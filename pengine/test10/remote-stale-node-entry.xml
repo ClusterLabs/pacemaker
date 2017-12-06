@@ -34,7 +34,6 @@
         </meta_attributes>
         <instance_attributes id="Fencing-params">
           <nvpair id="Fencing-delay" name="delay" value="0"/>
-          <nvpair id="Fencing-pcmk_arg_map" name="pcmk_arg_map" value="domain:uname"/>
         </instance_attributes>
         <operations>
           <op id="Fencing-monitor-120s" interval="120s" name="monitor" timeout="120s"/>

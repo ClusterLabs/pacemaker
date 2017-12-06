@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="17" operation="stop" operation_key="Fencing_stop_0" on_node="pcmk-1" on_node_uuid="101">
         <primitive id="Fencing" class="stonith" type="fence_xvm"/>
-        <attributes CRM_meta_name="stop" CRM_meta_on_node="pcmk-1" CRM_meta_on_node_uuid="101" CRM_meta_timeout="180000"  pcmk_arg_map="domain:uname"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="pcmk-1" CRM_meta_on_node_uuid="101" CRM_meta_timeout="180000" />
       </rsc_op>
     </action_set>
     <inputs/>

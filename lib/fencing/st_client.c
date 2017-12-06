@@ -434,78 +434,6 @@ append_config_arg(gpointer key, gpointer value, gpointer user_data)
     }
 }
 
-static void
-append_host_specific_args(const char *victim, const char *map, GHashTable * params, char **arg_list)
-{
-    char *name = NULL;
-    int last = 0, lpc = 0, max = 0;
-
-    if (map == NULL) {
-        /* The best default there is for now... */
-        crm_debug("Using default arg map: port=uname");
-        append_arg("port", victim, arg_list);
-        return;
-    }
-
-    max = strlen(map);
-    crm_debug("Processing arg map: %s", map);
-    for (; lpc < max + 1; lpc++) {
-        if (isalpha(map[lpc])) {
-            /* keep going */
-
-        } else if (map[lpc] == '=' || map[lpc] == ':') {
-            free(name);
-            name = calloc(1, 1 + lpc - last);
-            memcpy(name, map + last, lpc - last);
-            crm_debug("Got name: %s", name);
-            last = lpc + 1;
-
-        } else if (map[lpc] == 0 || map[lpc] == ',' || isspace(map[lpc])) {
-            char *param = NULL;
-            const char *value = NULL;
-
-            param = calloc(1, 1 + lpc - last);
-            memcpy(param, map + last, lpc - last);
-            last = lpc + 1;
-
-            crm_debug("Got key: %s", param);
-            if (name == NULL) {
-                crm_err("Misparsed '%s', found '%s' without a name", map, param);
-                free(param);
-                continue;
-            }
-
-            if (safe_str_eq(param, "uname")) {
-                value = victim;
-            } else {
-                char *key = crm_meta_name(param);
-
-                value = g_hash_table_lookup(params, key);
-                free(key);
-            }
-
-            if (value) {
-                crm_debug("Setting '%s'='%s' (%s) for %s", name, value, param, victim);
-                append_arg(name, value, arg_list);
-
-            } else {
-                crm_err("No node attribute '%s' for '%s'", name, victim);
-            }
-
-            free(name);
-            name = NULL;
-            free(param);
-            if (map[lpc] == 0) {
-                break;
-            }
-
-        } else if (isspace(map[lpc])) {
-            last = lpc;
-        }
-    }
-    free(name);
-}
-
 static char *
 make_args(const char *agent, const char *action, const char *victim, uint32_t victim_nodeid, GHashTable * device_args,
           GHashTable * port_map)
@@ -558,18 +486,8 @@ make_args(const char *agent, const char *action, const char *victim, uint32_t vi
             value = agent;
 
         } else if (param == NULL) {
-            // @COMPAT config < 1.1.6
-            // pcmk_arg_map is deprecated in favor of pcmk_host_argument
-            const char *map = g_hash_table_lookup(device_args, STONITH_ATTR_ARGMAP);
-
-            if (map == NULL) {
-                param = "port";
-                value = g_hash_table_lookup(device_args, param);
-
-            } else {
-                append_host_specific_args(alias, map, device_args, &arg_list);
-                value = map;    /* Nothing more to do */
-            }
+            param = "port";
+            value = g_hash_table_lookup(device_args, param);
 
         } else if (safe_str_eq(param, "none")) {
             value = param;      /* Nothing more to do */

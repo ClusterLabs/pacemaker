@@ -45,9 +45,7 @@
           <nvpair id="Fencing-meta_attributes-migration-threshold" name="migration-threshold" value="5"/>
         </meta_attributes>
         <primitive class="stonith" id="FencingChild" type="fence_xvm">
-          <instance_attributes id="FencingChild-instance_attributes">
-            <nvpair id="FencingChild-instance_attributes-pcmk_arg_map" name="pcmk_arg_map" value="domain:uname"/>
-          </instance_attributes>
+          <instance_attributes id="FencingChild-instance_attributes"/>
           <operations>
             <op id="FencingChild-monitor-120s" interval="120s" name="monitor" timeout="300"/>
             <op id="FencingChild-start-0" interval="0" name="start" timeout="180s"/>

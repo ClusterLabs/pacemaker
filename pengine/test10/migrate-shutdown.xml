@@ -43,9 +43,7 @@
     </op_defaults>
     <resources>
       <primitive class="stonith" id="Fencing" type="fence_xvm">
-        <instance_attributes id="Fencing-instance_attributes">
-          <nvpair id="Fencing-instance_attributes-pcmk_arg_map" name="pcmk_arg_map" value="domain:uname"/>
-        </instance_attributes>
+        <instance_attributes id="Fencing-instance_attributes"/>
         <meta_attributes id="Fencing-meta_attributes">
           <nvpair id="Fencing-meta_attributes-migration-threshold" name="migration-threshold" value="5"/>
         </meta_attributes>

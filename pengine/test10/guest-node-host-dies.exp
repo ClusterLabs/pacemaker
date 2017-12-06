@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="11" operation="stop" operation_key="Fencing_stop_0" on_node="rhel7-4" on_node_uuid="5">
         <primitive id="Fencing" class="stonith" type="fence_xvm"/>
-        <attributes CRM_meta_name="stop" CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="5" CRM_meta_timeout="60000"  delay="0" multicast_address="239.255.100.100" pcmk_arg_map="domain:uname" pcmk_host_list="rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="5" CRM_meta_timeout="60000"  delay="0" multicast_address="239.255.100.100" pcmk_host_list="rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -12,7 +12,7 @@
     <action_set>
       <rsc_op id="4" operation="start" operation_key="Fencing_start_0" on_node="rhel7-4" on_node_uuid="5">
         <primitive id="Fencing" class="stonith" type="fence_xvm"/>
-        <attributes CRM_meta_name="start" CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="5" CRM_meta_timeout="60000"  delay="0" multicast_address="239.255.100.100" pcmk_arg_map="domain:uname" pcmk_host_list="rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="5" CRM_meta_timeout="60000"  delay="0" multicast_address="239.255.100.100" pcmk_host_list="rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -28,7 +28,7 @@
     <action_set>
       <rsc_op id="2" operation="monitor" operation_key="Fencing_monitor_120000" on_node="rhel7-4" on_node_uuid="5">
         <primitive id="Fencing" class="stonith" type="fence_xvm"/>
-        <attributes CRM_meta_interval="120000" CRM_meta_name="monitor" CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="5" CRM_meta_timeout="120000"  delay="0" multicast_address="239.255.100.100" pcmk_arg_map="domain:uname" pcmk_host_list="rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5"/>
+        <attributes CRM_meta_interval="120000" CRM_meta_name="monitor" CRM_meta_on_node="rhel7-4" CRM_meta_on_node_uuid="5" CRM_meta_timeout="120000"  delay="0" multicast_address="239.255.100.100" pcmk_host_list="rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5"/>
       </rsc_op>
     </action_set>
     <inputs>
