@@ -1470,7 +1470,9 @@ fence_guest(pe_node_t *node, pe_action_t *done, pe_working_set_t *data_set)
 
     /* Order/imply other actions relative to pseudo-fence as with real fence */
     stonith_constraints(node, stonith_op, data_set);
-    order_actions(stonith_op, done, pe_order_implies_then);
+    if(done) {
+        order_actions(stonith_op, done, pe_order_implies_then);
+    }
 }
 
 /*

@@ -3164,7 +3164,9 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_
                  */
                 flags |= pe_order_preserve;
             }
-            order_actions(stonith_op, action, flags);
+            if (pe_rsc_is_bundled(rsc) == FALSE) {
+                order_actions(stonith_op, action, flags);
+            }
             order_actions(stonith_op, parent_stop, flags);
         }
 
@@ -3252,7 +3254,10 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_
             update_action_flags(action, pe_action_pseudo, __FUNCTION__, __LINE__);
             update_action_flags(action, pe_action_runnable, __FUNCTION__, __LINE__);
 
-            if (start == NULL || start->needs > rsc_req_quorum) {
+            if (pe_rsc_is_bundled(rsc)) {
+                /* Do nothing, let the recovery be ordered after the parent's implied stop */
+
+            } else if (start == NULL || start->needs > rsc_req_quorum) {
                 order_actions(stonith_op, action, pe_order_preserve|pe_order_optional);
             }
         }

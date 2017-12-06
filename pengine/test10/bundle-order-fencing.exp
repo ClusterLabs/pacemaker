@@ -55,9 +55,6 @@
       <trigger>
         <pseudo_event id="71" operation="stop" operation_key="rabbitmq-bundle-clone_stop_0"/>
       </trigger>
-      <trigger>
-        <pseudo_event id="209" operation="stonith" operation_key="stonith-rabbitmq-bundle-0-off" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0"/>
-      </trigger>
     </inputs>
   </synapse>
   <synapse id="4">
@@ -440,9 +437,6 @@
       <trigger>
         <pseudo_event id="108" operation="stop" operation_key="galera-bundle-master_stop_0"/>
       </trigger>
-      <trigger>
-        <pseudo_event id="208" operation="stonith" operation_key="stonith-galera-bundle-0-off" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0"/>
-      </trigger>
     </inputs>
   </synapse>
   <synapse id="31">
@@ -454,9 +448,6 @@
     <inputs>
       <trigger>
         <pseudo_event id="112" operation="demote" operation_key="galera-bundle-master_demote_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="208" operation="stonith" operation_key="stonith-galera-bundle-0-off" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -701,9 +692,6 @@
       <trigger>
         <pseudo_event id="151" operation="stop" operation_key="redis-bundle-master_stop_0"/>
       </trigger>
-      <trigger>
-        <pseudo_event id="214" operation="stonith" operation_key="stonith-redis-bundle-0-off" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0"/>
-      </trigger>
     </inputs>
   </synapse>
   <synapse id="50">
@@ -715,9 +703,6 @@
     <inputs>
       <trigger>
         <pseudo_event id="163" operation="demote" operation_key="redis-bundle-master_demote_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="214" operation="stonith" operation_key="stonith-redis-bundle-0-off" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0"/>
       </trigger>
     </inputs>
   </synapse>
