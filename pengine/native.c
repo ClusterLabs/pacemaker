@@ -3088,6 +3088,7 @@ native_start_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set
             order_actions(stonith_done, action, pe_order_optional);
 
         } else if (safe_str_eq(action->task, RSC_START)
+                   && NULL != pe_hash_table_lookup(rsc->allowed_nodes, target->details->id)
                    && NULL == pe_hash_table_lookup(rsc->known_on, target->details->id)) {
             /* if known == NULL, then we don't know if
              *   the resource is active on the node
