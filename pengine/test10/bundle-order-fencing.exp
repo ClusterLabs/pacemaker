@@ -1624,9 +1624,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="29" operation="all_stopped" operation_key="all_stopped"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="201" operation="stop" operation_key="stonith-fence_ipmilan-5254003e8e97_stop_0"/>
       </trigger>
     </inputs>
@@ -1660,9 +1657,6 @@
       </rsc_op>
     </action_set>
     <inputs>
-      <trigger>
-        <pseudo_event id="29" operation="all_stopped" operation_key="all_stopped"/>
-      </trigger>
       <trigger>
         <pseudo_event id="204" operation="stop" operation_key="stonith-fence_ipmilan-5254000dcb3f_stop_0"/>
       </trigger>
