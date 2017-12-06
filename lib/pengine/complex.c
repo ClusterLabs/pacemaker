@@ -784,6 +784,12 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
         if(is_set((*rsc)->flags, pe_rsc_fence_device)) {
             value = "quorum";
 
+        } else if (safe_str_eq(crm_element_value((*rsc)->xml, XML_AGENT_ATTR_CLASS), "ocf")
+                   && safe_str_eq(crm_element_value((*rsc)->xml, XML_AGENT_ATTR_PROVIDER), "pacemaker")
+                   && safe_str_eq(crm_element_value((*rsc)->xml, XML_ATTR_TYPE), "remote")
+            ) {
+            value = "quorum";
+
         } else if (is_set(data_set->flags, pe_flag_enable_unfencing)) {
             value = "unfencing";
 

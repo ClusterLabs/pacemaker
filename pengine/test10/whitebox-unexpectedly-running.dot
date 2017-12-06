@@ -8,6 +8,8 @@
 "FAKE-crashed_stop_0 18builder" -> "stonith 'reboot' remote2" [ style = bold]
 "FAKE-crashed_stop_0 18builder" [ style=bold color="green" fontcolor="black"]
 "FAKE_monitor_60000 18builder" [ style=bold color="green" fontcolor="black"]
+"all_stopped" -> "remote1_start_0 18builder" [ style = bold]
+"all_stopped" -> "remote2_start_0 18builder" [ style = bold]
 "all_stopped" [ style=bold color="green" fontcolor="orange"]
 "remote1_monitor_0 18builder" -> "remote1_start_0 18builder" [ style = bold]
 "remote1_monitor_0 18builder" [ style=bold color="green" fontcolor="black"]

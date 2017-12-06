@@ -52,6 +52,9 @@ Transition Summary:
  * Move       stonith-fence_ipmilan-5254005bdbb5     ( controller-1 -> controller-2 )  
 
 Executing cluster transition:
+ * Pseudo action:   messaging-1_stop_0
+ * Pseudo action:   galera-0_stop_0
+ * Pseudo action:   galera-2_stop_0
  * Pseudo action:   redis-master_pre_notify_stop_0
  * Resource action: stonith-fence_ipmilan-525400bbf613 stop on controller-0
  * Resource action: stonith-fence_ipmilan-525400bbf613 start on controller-0
@@ -61,9 +64,12 @@ Executing cluster transition:
  * Resource action: stonith-fence_ipmilan-525400b4f6bd monitor=60000 on controller-0
  * Pseudo action:   stonith-fence_ipmilan-5254005bdbb5_stop_0
  * Fencing controller-1 (reboot)
- * Pseudo action:   messaging-1_stop_0
- * Pseudo action:   galera-0_stop_0
- * Pseudo action:   galera-2_stop_0
+ * Resource action: messaging-1     start on controller-2
+ * Resource action: galera-0        start on controller-2
+ * Resource action: galera-2        start on controller-2
+ * Resource action: rabbitmq        monitor=10000 on messaging-1
+ * Resource action: galera          monitor=10000 on galera-2
+ * Resource action: galera          monitor=10000 on galera-0
  * Pseudo action:   redis_post_notify_stop_0
  * Resource action: redis           notify on controller-0
  * Resource action: redis           notify on controller-2
@@ -72,20 +78,14 @@ Executing cluster transition:
  * Pseudo action:   haproxy-clone_stop_0
  * Resource action: stonith-fence_ipmilan-5254005bdbb5 start on controller-2
  * Pseudo action:   stonith_complete
- * Resource action: messaging-1     start on controller-2
- * Resource action: galera-0        start on controller-2
- * Resource action: galera-2        start on controller-2
- * Resource action: rabbitmq        monitor=10000 on messaging-1
- * Resource action: galera          monitor=10000 on galera-2
- * Resource action: galera          monitor=10000 on galera-0
+ * Resource action: messaging-1     monitor=20000 on controller-2
+ * Resource action: galera-0        monitor=20000 on controller-2
+ * Resource action: galera-2        monitor=20000 on controller-2
  * Pseudo action:   redis_stop_0
  * Pseudo action:   redis-master_stopped_0
  * Pseudo action:   haproxy_stop_0
  * Pseudo action:   haproxy-clone_stopped_0
  * Resource action: stonith-fence_ipmilan-5254005bdbb5 monitor=60000 on controller-2
- * Resource action: messaging-1     monitor=20000 on controller-2
- * Resource action: galera-0        monitor=20000 on controller-2
- * Resource action: galera-2        monitor=20000 on controller-2
  * Pseudo action:   redis-master_post_notify_stopped_0
  * Pseudo action:   ip-172.17.1.14_stop_0
  * Pseudo action:   ip-172.17.1.17_stop_0

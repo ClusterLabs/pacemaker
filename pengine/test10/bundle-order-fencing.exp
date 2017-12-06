@@ -379,11 +379,7 @@
         <attributes CRM_meta_container="rabbitmq-bundle-docker-0" CRM_meta_timeout="20000" addr="controller-0"  port="3122"/>
       </pseudo_event>
     </action_set>
-    <inputs>
-      <trigger>
-        <crm_event id="1" operation="stonith" operation_key="stonith-controller-0-reboot" on_node="controller-0" on_node_uuid="1"/>
-      </trigger>
-    </inputs>
+    <inputs/>
   </synapse>
   <synapse id="26">
     <action_set>
@@ -565,11 +561,7 @@
         <attributes CRM_meta_container="galera-bundle-docker-0" CRM_meta_timeout="20000" addr="controller-0"  port="3123"/>
       </pseudo_event>
     </action_set>
-    <inputs>
-      <trigger>
-        <crm_event id="1" operation="stonith" operation_key="stonith-controller-0-reboot" on_node="controller-0" on_node_uuid="1"/>
-      </trigger>
-    </inputs>
+    <inputs/>
   </synapse>
   <synapse id="40">
     <action_set>
@@ -1413,11 +1405,7 @@
         <attributes CRM_meta_container="redis-bundle-docker-0" CRM_meta_timeout="20000" addr="controller-0"  port="3124"/>
       </pseudo_event>
     </action_set>
-    <inputs>
-      <trigger>
-        <crm_event id="1" operation="stonith" operation_key="stonith-controller-0-reboot" on_node="controller-0" on_node_uuid="1"/>
-      </trigger>
-    </inputs>
+    <inputs/>
   </synapse>
   <synapse id="97">
     <action_set>
