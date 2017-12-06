@@ -925,9 +925,21 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
 
     CRM_CHECK(action->rsc != NULL, return);
 
+    // Cluster-wide <op_defaults> <meta_attributes>
     unpack_instance_attributes(data_set->input, data_set->op_defaults, XML_TAG_META_SETS, NULL,
                                action->meta, NULL, FALSE, data_set->now);
 
+    // <op> <meta_attributes> take precedence over defaults
+    unpack_instance_attributes(data_set->input, xml_obj, XML_TAG_META_SETS,
+                               NULL, action->meta, NULL, TRUE, data_set->now);
+
+    // <op> <instance_attributes> have lowest precedence (deprecated)
+    unpack_instance_attributes(data_set->input, xml_obj, XML_TAG_ATTR_SETS,
+                               NULL, action->meta, NULL, FALSE, data_set->now);
+
+    /* Anything set as an <op> XML property has highest precedence.
+     * This ensures we use the name and interval from the <op> tag.
+     */
     if (xml_obj) {
         xmlAttrPtr xIter = NULL;
 
@@ -938,12 +950,6 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
             g_hash_table_replace(action->meta, strdup(prop_name), strdup(prop_value));
         }
     }
-
-    unpack_instance_attributes(data_set->input, xml_obj, XML_TAG_META_SETS,
-                               NULL, action->meta, NULL, FALSE, data_set->now);
-
-    unpack_instance_attributes(data_set->input, xml_obj, XML_TAG_ATTR_SETS,
-                               NULL, action->meta, NULL, FALSE, data_set->now);
 
 #if ENABLE_VERSIONED_ATTRS
     rsc_details = pe_rsc_action_details(action);
