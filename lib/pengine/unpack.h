@@ -99,7 +99,6 @@ enum pe_warn_once_e {
     pe_wo_blind         = 0x0001,
     pe_wo_poweroff      = 0x0002,
     pe_wo_arg_map       = 0x0004,
-    pe_wo_stonith_cmd   = 0x0008,
     pe_wo_requires      = 0x0010,
     pe_wo_rsc_failstick = 0x0200,
     pe_wo_default_rscfs = 0x0400,

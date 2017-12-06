@@ -521,12 +521,6 @@ make_args(const char *agent, const char *action, const char *victim, uint32_t vi
         value = g_hash_table_lookup(device_args, buffer);
     }
 
-    if (value == NULL && device_args) {
-        /* @COMPAT deprecated since 1.1.6 */
-        snprintf(buffer, sizeof(buffer), "pcmk_%s_cmd", action);
-        value = g_hash_table_lookup(device_args, buffer);
-    }
-
     if (value == NULL && device_args && safe_str_eq(action, "off")) {
         /* @COMPAT deprecated since 1.1.8 */
         value = g_hash_table_lookup(device_args, "pcmk_poweroff_action");
