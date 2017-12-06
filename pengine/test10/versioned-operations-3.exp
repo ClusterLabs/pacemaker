@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="5" operation="monitor" operation_key="A:0_monitor_10000" on_node="node1" on_node_uuid="1">
         <primitive id="A" long-id="A:0" class="ocf" provider="pacemaker" type="Stateful"/>
-        <attributes CRM_meta_attr="0" CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="node1" CRM_meta_on_node_uuid="1" CRM_meta_role="Slave" CRM_meta_timeout="20000" attr="0" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="node1" CRM_meta_on_node_uuid="1" CRM_meta_role="Slave" CRM_meta_timeout="20000" attr="0" />
       </rsc_op>
     </action_set>
     <inputs>

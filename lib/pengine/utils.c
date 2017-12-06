@@ -933,10 +933,6 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
     unpack_instance_attributes(data_set->input, xml_obj, XML_TAG_META_SETS,
                                NULL, action->meta, NULL, TRUE, data_set->now);
 
-    // <op> <instance_attributes> have lowest precedence (deprecated)
-    unpack_instance_attributes(data_set->input, xml_obj, XML_TAG_ATTR_SETS,
-                               NULL, action->meta, NULL, FALSE, data_set->now);
-
     /* Anything set as an <op> XML property has highest precedence.
      * This ensures we use the name and interval from the <op> tag.
      */

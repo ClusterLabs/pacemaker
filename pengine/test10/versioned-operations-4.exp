@@ -37,7 +37,7 @@
             <nvpair id="A-start-params-gt-fake" name="fake" value="real"/>
           </instance_attributes>
         </op_versioned_attrs>
-        <attributes CRM_meta_fake="fake" CRM_meta_name="start" CRM_meta_on_node="node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000"  fake="fake"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_node="node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000"  fake="fake"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -82,7 +82,7 @@
             <nvpair id="B-stop-params-gt-fake" name="fake" value="real"/>
           </instance_attributes>
         </op_versioned_attrs>
-        <attributes CRM_meta_fake="fake" CRM_meta_name="start" CRM_meta_on_node="node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000"  fake="fake"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_node="node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000"  fake="fake"/>
       </rsc_op>
     </action_set>
     <inputs>

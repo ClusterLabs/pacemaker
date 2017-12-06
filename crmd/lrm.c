@@ -1872,9 +1872,6 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
             while (g_hash_table_iter_next(&iter, (gpointer *) &key, (gpointer *) &value)) {
                 g_hash_table_iter_steal(&iter);
                 g_hash_table_replace(params, key, value);
-                // providing meta-names for instance_attributes is only for backward compatibility,
-                // and will be removed in a future release
-                g_hash_table_replace(params, crm_meta_name(key), strdup(value));
             }
             g_hash_table_destroy(hash);
 
