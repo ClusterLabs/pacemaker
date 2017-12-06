@@ -805,19 +805,6 @@ unpack_timeout(const char *value, action_t *action, xmlNode *xml_obj,
 {
     int timeout = 0;
 
-    if (value == NULL && xml_obj == NULL && action &&
-        safe_str_eq(action->task, RSC_STATUS) && interval == 0) {
-
-        xmlNode *min_interval_mon = find_min_interval_mon(action->rsc, FALSE);
-
-        if (min_interval_mon) {
-            value = crm_element_value(min_interval_mon, XML_ATTR_TIMEOUT);
-            pe_rsc_trace(action->rsc,
-                         "\t%s uses the timeout value '%s' from the minimum interval monitor",
-                         action->uuid, value);
-        }
-    }
-
     if (value == NULL && config_hash) {
         value = pe_pref(config_hash, "default-action-timeout");
         if (value) {
@@ -910,6 +897,18 @@ unpack_versioned_meta(xmlNode *versioned_meta, xmlNode *xml_obj, unsigned long l
 }
 #endif
 
+/*!
+ * \brief Unpack operation XML into an action structure
+ *
+ * Unpack an operation's meta-attributes (normalizing the interval, timeout,
+ * and start delay values as integer milliseconds), requirements, and
+ * failure policy.
+ *
+ * \param[in,out] action     Action to unpack into
+ * \param[in]     xml_obj    Operation XML (or NULL if all defaults)
+ * \param[in]     container  Resource that contains affected resource, if any
+ * \param[in]     data_set   Cluster state
+ */
 void
 unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
                  pe_working_set_t * data_set)
@@ -924,6 +923,23 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
 #endif
 
     CRM_CHECK(action->rsc != NULL, return);
+
+    // Probe timeouts default to minimum-interval monitor's
+    if ((xml_obj == NULL) && action &&
+        safe_str_eq(action->task, RSC_STATUS) && (interval == 0)) {
+
+        xmlNode *min_interval_mon = find_min_interval_mon(action->rsc, FALSE);
+
+        if (min_interval_mon) {
+            value = crm_element_value(min_interval_mon, XML_ATTR_TIMEOUT);
+            if (value) {
+                crm_trace("\t%s defaults to minimum-interval monitor's timeout '%s'",
+                          action->uuid, value);
+                g_hash_table_insert(action->meta, strdup(XML_ATTR_TIMEOUT),
+                                    strdup(value));
+            }
+        }
+    }
 
     // Cluster-wide <op_defaults> <meta_attributes>
     unpack_instance_attributes(data_set->input, data_set->op_defaults, XML_TAG_META_SETS, NULL,
