@@ -123,7 +123,7 @@
       <clone id="pingd_clone">
         <primitive id="pingd_node" provider="heartbeat" class="ocf" type="pingd">
           <operations>
-            <op name="monitor" interval="20s" id="pingd_node_monitor" timeout="40s" requires="nothing"/>
+            <op name="monitor" interval="20s" id="pingd_node_monitor" timeout="40s"/>
           </operations>
           <instance_attributes id="instance_attributes.id22546">
             <nvpair id="nvpair.id22552" name="pidfile" value="/var/run/pingd.pid"/>

@@ -19,13 +19,15 @@
       <clone id="stonithcloneset">
         <primitive id="stonithclone" class="stonith" type="external/ssh">
           <operations>
-            <op name="monitor" interval="5s" id="stonithclone-op-01" timeout="20s" requires="nothing"/>
-            <op name="start" interval="0" id="stonithclone-op-02" timeout="20s" requires="nothing"/>
+            <op name="monitor" interval="5s" id="stonithclone-op-01" timeout="20s"/>
+            <op name="start" interval="0" id="stonithclone-op-02" timeout="20s"/>
           </operations>
           <instance_attributes id="instance_attributes.id22007">
             <nvpair id="nvpair.id22014" name="hostlist" value="node1,node2"/>
           </instance_attributes>
-          <meta_attributes id="primitive-stonithclone.meta"/>
+          <meta_attributes id="meta_attributes-requires">
+            <nvpair id="nvpair-requires" name="requires" value="nothing"/>
+          </meta_attributes>
         </primitive>
         <meta_attributes id="clone-stonithcloneset.meta">
           <nvpair id="globally_unique.meta.auto-39" name="globally-unique" value="false"/>
@@ -35,7 +37,7 @@
       <clone id="evmsdcloneset">
         <primitive id="evmsdclone" class="ocf" type="Evmsd" provider="heartbeat">
           <operations>
-            <op name="monitor" interval="5s" id="evmsdclone-op-01" timeout="20s" requires="nothing"/>
+            <op name="monitor" interval="5s" id="evmsdclone-op-01" timeout="20s"/>
           </operations>
           <meta_attributes id="primitive-evmsdclone.meta"/>
         </primitive>
@@ -58,7 +60,7 @@
       <clone id="imagestorecloneset">
         <primitive id="imagestoreclone" class="ocf" type="Filesystem" provider="heartbeat">
           <operations>
-            <op name="monitor" interval="20s" id="imagestoreclone-op-01" timeout="60s" requires="nothing"/>
+            <op name="monitor" interval="20s" id="imagestoreclone-op-01" timeout="60s"/>
           </operations>
           <instance_attributes id="instance_attributes.id22179">
             <nvpair id="nvpair.id22185" name="device" value="/dev/evms/vmsharedclustercontainer/imagestore"/>
@@ -77,7 +79,7 @@
       <clone id="configstorecloneset">
         <primitive id="configstoreclone" class="ocf" type="Filesystem" provider="heartbeat">
           <operations>
-            <op name="monitor" interval="20s" id="configstoreclone-op-01" timeout="60s" requires="nothing"/>
+            <op name="monitor" interval="20s" id="configstoreclone-op-01" timeout="60s"/>
           </operations>
           <instance_attributes id="instance_attributes.id22278">
             <nvpair id="nvpair.id22285" name="device" value="/dev/evms/vmsharedclustercontainer/configstore"/>
@@ -95,7 +97,7 @@
       </clone>
       <primitive id="sles10" class="ocf" type="Xen" provider="heartbeat">
         <operations>
-          <op name="monitor" interval="10s" id="xen-op-01" timeout="60s" requires="nothing"/>
+          <op name="monitor" interval="10s" id="xen-op-01" timeout="60s"/>
           <op name="stop" interval="0" id="xen-op-02" timeout="60s"/>
         </operations>
         <instance_attributes id="instance_attributes.id22350">

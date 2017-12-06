@@ -39,7 +39,7 @@
     <action_set>
       <rsc_op id="20" operation="start" operation_key="Dummy01_start_0" on_node="srv01" on_node_uuid="e2bc05d5-2a0f-4e2e-8566-bd1000f1cfeb">
         <primitive id="Dummy01" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_on_node="srv01" CRM_meta_on_node_uuid="e2bc05d5-2a0f-4e2e-8566-bd1000f1cfeb" CRM_meta_requires="fencing" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_on_node="srv01" CRM_meta_on_node_uuid="e2bc05d5-2a0f-4e2e-8566-bd1000f1cfeb" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -122,7 +122,7 @@
     <action_set>
       <rsc_op id="27" operation="start" operation_key="Dummy02_start_0" on_node="srv04" on_node_uuid="82d8b53b-a29d-40f5-9a1d-156bf3b7af62">
         <primitive id="Dummy02" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_on_node="srv04" CRM_meta_on_node_uuid="82d8b53b-a29d-40f5-9a1d-156bf3b7af62" CRM_meta_requires="fencing" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_on_node="srv04" CRM_meta_on_node_uuid="82d8b53b-a29d-40f5-9a1d-156bf3b7af62" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>

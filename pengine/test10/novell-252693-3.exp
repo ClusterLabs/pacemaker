@@ -3,7 +3,7 @@
      <action_set>
       <rsc_op id="17" operation="monitor" operation_key="stonithclone:1_monitor_5000" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
         <primitive id="stonithclone" long-id="stonithclone:1" class="stonith" type="external/ssh"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="node1" CRM_meta_on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a" CRM_meta_requires="nothing" CRM_meta_timeout="20000"  hostlist="node1,node2"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="node1" CRM_meta_on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a" CRM_meta_timeout="20000"  hostlist="node1,node2"/>
        </rsc_op>
      </action_set>
     <inputs>
@@ -16,7 +16,7 @@
      <action_set>
       <rsc_op id="16" operation="start" operation_key="stonithclone:1_start_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
         <primitive id="stonithclone" long-id="stonithclone:1" class="stonith" type="external/ssh"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="node1" CRM_meta_on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a" CRM_meta_requires="nothing" CRM_meta_timeout="20000"  hostlist="node1,node2"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="node1" CRM_meta_on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a" CRM_meta_timeout="20000"  hostlist="node1,node2"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -65,7 +65,7 @@
      <action_set>
       <rsc_op id="25" operation="monitor" operation_key="evmsdclone:1_monitor_5000" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
         <primitive id="evmsdclone" long-id="evmsdclone:1" class="ocf" provider="heartbeat" type="Evmsd"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="node1" CRM_meta_on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a" CRM_meta_requires="nothing" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="node1" CRM_meta_on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a" CRM_meta_timeout="20000" />
        </rsc_op>
      </action_set>
     <inputs>
@@ -303,7 +303,7 @@
      <action_set>
       <rsc_op id="46" operation="monitor" operation_key="imagestoreclone:0_monitor_20000" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
         <primitive id="imagestoreclone" long-id="imagestoreclone:0" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="20000" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="node1" CRM_meta_on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a" CRM_meta_requires="nothing" CRM_meta_timeout="60000"  device="/dev/evms/vmsharedclustercontainer/imagestore" directory="/var/lib/xen/images" fstype="ocfs2"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="20000" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="node1" CRM_meta_on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a" CRM_meta_timeout="60000"  device="/dev/evms/vmsharedclustercontainer/imagestore" directory="/var/lib/xen/images" fstype="ocfs2"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -370,7 +370,7 @@
      <action_set>
       <rsc_op id="48" operation="monitor" operation_key="imagestoreclone:1_monitor_20000" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117">
         <primitive id="imagestoreclone" long-id="imagestoreclone:1" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="20000" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="node2" CRM_meta_on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117" CRM_meta_requires="nothing" CRM_meta_timeout="60000"  device="/dev/evms/vmsharedclustercontainer/imagestore" directory="/var/lib/xen/images" fstype="ocfs2"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="20000" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="node2" CRM_meta_on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117" CRM_meta_timeout="60000"  device="/dev/evms/vmsharedclustercontainer/imagestore" directory="/var/lib/xen/images" fstype="ocfs2"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -611,7 +611,7 @@
      <action_set>
       <rsc_op id="64" operation="monitor" operation_key="configstoreclone:1_monitor_20000" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
         <primitive id="configstoreclone" long-id="configstoreclone:1" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="20000" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="node1" CRM_meta_on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a" CRM_meta_requires="nothing" CRM_meta_timeout="60000"  device="/dev/evms/vmsharedclustercontainer/configstore" directory="/etc/xen/vm" fstype="ocfs2"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="20000" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="node1" CRM_meta_on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a" CRM_meta_timeout="60000"  device="/dev/evms/vmsharedclustercontainer/configstore" directory="/etc/xen/vm" fstype="ocfs2"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -770,7 +770,7 @@
     <action_set>
       <rsc_op id="79" operation="monitor" operation_key="sles10_monitor_10000" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
         <primitive id="sles10" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="node1" CRM_meta_on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a" CRM_meta_requires="nothing" CRM_meta_timeout="60000"  xmfile="/etc/xen/vm/sles10"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="node1" CRM_meta_on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a" CRM_meta_timeout="60000"  xmfile="/etc/xen/vm/sles10"/>
       </rsc_op>
     </action_set>
     <inputs>

@@ -73,13 +73,15 @@
       <clone id="DoFencing">
         <primitive id="child_DoFencing" class="stonith" type="ssh">
           <operations>
-            <op name="monitor" interval="5s" id="op.auto-6" timeout="20s" requires="nothing"/>
-            <op name="start" interval="0" id="op.auto-7" timeout="20s" requires="nothing"/>
+            <op name="monitor" interval="5s" id="op.auto-6" timeout="20s"/>
+            <op name="start" interval="0" id="op.auto-7" timeout="20s"/>
           </operations>
           <instance_attributes id="instance_attributes.id22199">
             <nvpair id="nvpair.id22206" name="hostlist" value="posic041 posic042 posic043 posic044 "/>
           </instance_attributes>
-          <meta_attributes id="primitive-child_DoFencing.meta"/>
+          <meta_attributes id="meta_attributes-requires">
+            <nvpair id="nvpair-requires" name="requires" value="nothing"/>
+          </meta_attributes>
         </primitive>
         <meta_attributes id="clone-DoFencing.meta">
           <nvpair id="nvpair.meta.auto-117" name="clone-max" value="4"/>

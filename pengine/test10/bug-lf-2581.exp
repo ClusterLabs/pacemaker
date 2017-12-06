@@ -46,7 +46,7 @@
     <action_set>
       <rsc_op id="28" operation="start" operation_key="A:1_start_0" on_node="queen" on_node_uuid="queen">
         <primitive id="A" long-id="A:1" class="ocf" provider="rgk" type="typeA"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_fail="restart" CRM_meta_on_node="queen" CRM_meta_on_node_uuid="queen" CRM_meta_requires="fencing" CRM_meta_timeout="30000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_fail="restart" CRM_meta_on_node="queen" CRM_meta_on_node_uuid="queen" CRM_meta_timeout="30000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -81,7 +81,7 @@
     <action_set>
       <rsc_op id="30" operation="start" operation_key="Z:1_start_0" on_node="queen" on_node_uuid="queen">
         <primitive id="Z" long-id="Z:1" class="ocf" provider="rgk" type="typeZ"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_fail="restart" CRM_meta_on_node="queen" CRM_meta_on_node_uuid="queen" CRM_meta_requires="fencing" CRM_meta_timeout="30000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_fail="restart" CRM_meta_on_node="queen" CRM_meta_on_node_uuid="queen" CRM_meta_timeout="30000" />
       </rsc_op>
     </action_set>
     <inputs>

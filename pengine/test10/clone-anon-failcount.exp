@@ -119,7 +119,7 @@
     <action_set>
       <rsc_op id="36" operation="start" operation_key="UmIPaddr_start_0" on_node="srv04" on_node_uuid="srv04">
         <primitive id="UmIPaddr" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_on_node="srv04" CRM_meta_on_node_uuid="srv04" CRM_meta_requires="fencing" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_on_node="srv04" CRM_meta_on_node_uuid="srv04" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -167,7 +167,7 @@
     <action_set>
       <rsc_op id="39" operation="start" operation_key="UmDummy01_start_0" on_node="srv04" on_node_uuid="srv04">
         <primitive id="UmDummy01" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_on_node="srv04" CRM_meta_on_node_uuid="srv04" CRM_meta_requires="fencing" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_name="start" CRM_meta_on_fail="restart" CRM_meta_on_node="srv04" CRM_meta_on_node_uuid="srv04" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -215,7 +215,7 @@
     <action_set>
       <rsc_op id="42" operation="start" operation_key="UmDummy02_start_0" on_node="srv04" on_node_uuid="srv04">
         <primitive id="UmDummy02" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_name="start" CRM_meta_on_fail="standby" CRM_meta_on_node="srv04" CRM_meta_on_node_uuid="srv04" CRM_meta_requires="fencing" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_name="start" CRM_meta_on_fail="standby" CRM_meta_on_node="srv04" CRM_meta_on_node_uuid="srv04" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>

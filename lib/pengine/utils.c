@@ -970,39 +970,10 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
         }
     }
 
-    /* @COMPAT data sets < 1.1.10 ("requires" on start action not resource) */
-    value = g_hash_table_lookup(action->meta, "requires");
-    if (value) {
-        pe_warn_once(pe_wo_requires, "Support for 'requires' operation meta-attribute"
-                                     " is deprecated and will be removed in a future version"
-                                     " (use 'requires' resource meta-attribute instead)");
-    }
-
     if (safe_str_neq(action->task, RSC_START)
         && safe_str_neq(action->task, RSC_PROMOTE)) {
         action->needs = rsc_req_nothing;
         value = "nothing (not start/promote)";
-
-    } else if (safe_str_eq(value, "nothing")) {
-        action->needs = rsc_req_nothing;
-
-    } else if (safe_str_eq(value, "quorum")) {
-        action->needs = rsc_req_quorum;
-
-    } else if (safe_str_eq(value, "unfencing")) {
-        action->needs = rsc_req_stonith;
-        set_bit(action->rsc->flags, pe_rsc_needs_unfencing);
-        if (is_not_set(data_set->flags, pe_flag_stonith_enabled)) {
-            crm_notice("%s requires unfencing but fencing is disabled", action->rsc->id);
-        }
-
-    } else if (is_set(data_set->flags, pe_flag_stonith_enabled)
-               && safe_str_eq(value, "fencing")) {
-        action->needs = rsc_req_stonith;
-        if (is_not_set(data_set->flags, pe_flag_stonith_enabled)) {
-            crm_notice("%s requires fencing but fencing is disabled", action->rsc->id);
-        }
-        /* @COMPAT end compatibility code */
 
     } else if (is_set(action->rsc->flags, pe_rsc_needs_fencing)) {
         action->needs = rsc_req_stonith;

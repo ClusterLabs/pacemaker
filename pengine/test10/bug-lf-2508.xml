@@ -22,7 +22,7 @@
       <group id="Group01">
         <primitive class="ocf" type="Dummy" provider="heartbeat" id="Dummy01">
           <operations>
-            <op id="op-dummy01-start" interval="0" name="start" timeout="60s" on-fail="restart" requires="fencing"/>
+            <op id="op-dummy01-start" interval="0" name="start" timeout="60s" on-fail="restart"/>
             <op id="op-dummy01-monitor" interval="10" name="monitor" timeout="60s" on-fail="restart"/>
             <op id="op-dummy01-stop" interval="0" name="stop" timeout="60s" on-fail="fence"/>
           </operations>
@@ -31,7 +31,7 @@
       <group id="Group02">
         <primitive class="ocf" type="Dummy" provider="heartbeat" id="Dummy02">
           <operations>
-            <op id="op-dummy02-start" interval="0" name="start" timeout="60s" on-fail="restart" requires="fencing"/>
+            <op id="op-dummy02-start" interval="0" name="start" timeout="60s" on-fail="restart"/>
             <op id="op-dummy02-monitor" interval="10" name="monitor" timeout="60s" on-fail="restart"/>
             <op id="op-dummy02-stop" interval="0" name="stop" timeout="60s" on-fail="fence"/>
           </operations>
@@ -40,7 +40,7 @@
       <group id="Group03">
         <primitive class="ocf" type="Dummy" provider="heartbeat" id="Dummy03">
           <operations>
-            <op id="op-dummy03-start" interval="0" name="start" timeout="60s" on-fail="restart" requires="fencing"/>
+            <op id="op-dummy03-start" interval="0" name="start" timeout="60s" on-fail="restart"/>
             <op id="op-dummy03-monitor" interval="10" name="monitor" timeout="60s" on-fail="restart"/>
             <op id="op-dummy03-stop" interval="0" name="stop" timeout="60s" on-fail="fence"/>
           </operations>

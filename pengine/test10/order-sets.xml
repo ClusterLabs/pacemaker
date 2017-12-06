@@ -28,22 +28,22 @@
     <resources>
       <primitive id="world1" class="ocf" type="world1test" provider="bbnd">
         <operations>
-          <op id="world1check" name="monitor" interval="10s" requires="nothing" on-fail="restart"/>
+          <op id="world1check" name="monitor" interval="10s" on-fail="restart"/>
         </operations>
       </primitive>
       <primitive id="world2" class="ocf" type="world2test" provider="bbnd">
         <operations>
-          <op id="world2check" name="monitor" interval="10s" requires="nothing" on-fail="restart"/>
+          <op id="world2check" name="monitor" interval="10s" on-fail="restart"/>
         </operations>
       </primitive>
       <primitive id="world3" class="ocf" type="world3test" provider="bbnd">
         <operations>
-          <op id="world3check" name="monitor" interval="10s" requires="nothing" on-fail="restart"/>
+          <op id="world3check" name="monitor" interval="10s" on-fail="restart"/>
         </operations>
       </primitive>
       <primitive id="world4" class="ocf" type="world4test" provider="bbnd">
         <operations>
-          <op id="world4check" name="monitor" interval="10s" requires="nothing" on-fail="restart"/>
+          <op id="world4check" name="monitor" interval="10s" on-fail="restart"/>
         </operations>
       </primitive>
     </resources>

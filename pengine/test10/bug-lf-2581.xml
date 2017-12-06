@@ -24,7 +24,7 @@
             <operations id="A-operations">
               <op id="A-op-monitor-120s" interval="120s" name="monitor" on-fail="restart" timeout="30s"/>
               <op id="A-op-monitor-0" interval="0" name="monitor" timeout="30s"/>
-              <op id="A-op-start-0" interval="0" name="start" on-fail="restart" requires="fencing" timeout="30s"/>
+              <op id="A-op-start-0" interval="0" name="start" on-fail="restart" timeout="30s"/>
               <op id="A-op-stop-0" interval="0" name="stop" on-fail="fence" timeout="30s"/>
             </operations>
           </primitive>
@@ -32,7 +32,7 @@
             <operations id="Z-operations">
               <op id="Z-op-monitor-120s" interval="120s" name="monitor" on-fail="restart" timeout="30s"/>
               <op id="Z-op-monitor-0" interval="0" name="monitor" timeout="30s"/>
-              <op id="Z-op-start-0" interval="0" name="start" on-fail="restart" requires="fencing" timeout="30s"/>
+              <op id="Z-op-start-0" interval="0" name="start" on-fail="restart" timeout="30s"/>
               <op id="Z-op-stop-0" interval="0" name="stop" on-fail="fence" timeout="30s"/>
             </operations>
           </primitive>
@@ -50,7 +50,7 @@
           <operations id="B-1-operations">
             <op id="B-1-op-monitor-120s" interval="120s" name="monitor" on-fail="restart" timeout="30s"/>
             <op id="B-1-op-monitor-0" interval="30s" name="monitor" timeout="30s"/>
-            <op id="B-1-op-start-0" interval="0" name="start" on-fail="restart" requires="fencing" timeout="30s"/>
+            <op id="B-1-op-start-0" interval="0" name="start" on-fail="restart" timeout="30s"/>
             <op id="B-1-op-stop-0" interval="0" name="stop" on-fail="fence" timeout="30s"/>
           </operations>
           <instance_attributes id="B-1-instance_attributes">
@@ -65,7 +65,7 @@
           <operations id="C-1-operations">
             <op id="C-1-op-monitor-120s" interval="120s" name="monitor" on-fail="restart" timeout="30s"/>
             <op id="C-1-op-monitor-0" interval="30s" name="monitor" timeout="30s"/>
-            <op id="C-1-op-start-0" interval="0" name="start" on-fail="restart" requires="fencing" timeout="30s"/>
+            <op id="C-1-op-start-0" interval="0" name="start" on-fail="restart" timeout="30s"/>
             <op id="C-1-op-stop-0" interval="0" name="stop" on-fail="fence" timeout="30s"/>
           </operations>
           <instance_attributes id="C-1-instance_attributes">
@@ -85,7 +85,7 @@
           <operations id="B-2-operations">
             <op id="B-2-op-monitor-120s" interval="120s" name="monitor" on-fail="restart" timeout="30s"/>
             <op id="B-2-op-monitor-0" interval="30s" name="monitor" timeout="30s"/>
-            <op id="B-2-op-start-0" interval="0" name="start" on-fail="restart" requires="fencing" timeout="30s"/>
+            <op id="B-2-op-start-0" interval="0" name="start" on-fail="restart" timeout="30s"/>
             <op id="B-2-op-stop-0" interval="0" name="stop" on-fail="fence" timeout="30s"/>
           </operations>
           <instance_attributes id="B-2-instance_attributes">
@@ -100,7 +100,7 @@
           <operations id="C-2-operations">
             <op id="C-2-op-monitor-120s" interval="120s" name="monitor" on-fail="restart" timeout="30s"/>
             <op id="C-2-op-monitor-0" interval="30s" name="monitor" timeout="30s"/>
-            <op id="C-2-op-start-0" interval="0" name="start" on-fail="restart" requires="fencing" timeout="30s"/>
+            <op id="C-2-op-start-0" interval="0" name="start" on-fail="restart" timeout="30s"/>
             <op id="C-2-op-stop-0" interval="0" name="stop" on-fail="fence" timeout="30s"/>
           </operations>
           <instance_attributes id="C-2-instance_attributes">

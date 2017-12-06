@@ -27,21 +27,21 @@
         </primitive>
         <primitive class="ocf" type="Dummy" provider="pacemaker" id="UmIPaddr">
           <operations>
-            <op id="op-umIPaddr-start" interval="0" name="start" timeout="60s" on-fail="restart" requires="fencing"/>
+            <op id="op-umIPaddr-start" interval="0" name="start" timeout="60s" on-fail="restart"/>
             <op id="op-umIPaddr-monitor" interval="10" name="monitor" timeout="60s" on-fail="restart"/>
             <op id="op-umIPaddr-stop" interval="0" name="stop" timeout="60s" on-fail="block"/>
           </operations>
         </primitive>
         <primitive class="ocf" type="Dummy" provider="pacemaker" id="UmDummy01">
           <operations>
-            <op id="op-umdummy01-start" interval="0" name="start" timeout="60s" on-fail="restart" requires="fencing"/>
+            <op id="op-umdummy01-start" interval="0" name="start" timeout="60s" on-fail="restart"/>
             <op id="op-umdummy01-monitor" interval="10" name="monitor" timeout="60s" on-fail="ignore"/>
             <op id="op-umdummy01-stop" interval="0" name="stop" timeout="60s" on-fail="stop"/>
           </operations>
         </primitive>
         <primitive class="ocf" type="Dummy" provider="pacemaker" id="UmDummy02">
           <operations>
-            <op id="op-umdummy02-start" interval="0" name="start" timeout="60s" on-fail="standby" requires="fencing"/>
+            <op id="op-umdummy02-start" interval="0" name="start" timeout="60s" on-fail="standby"/>
             <op id="op-umdummy02-monitor" interval="10" name="monitor" timeout="60s" on-fail="standby"/>
             <op id="op-umdummy02-stop" interval="0" name="stop" timeout="60s" on-fail="block"/>
           </operations>
