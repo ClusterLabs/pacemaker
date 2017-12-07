@@ -85,9 +85,9 @@ check_placement_strategy(const char *value)
 /* *INDENT-OFF* */
 pe_cluster_option pe_opts[] = {
 	/* name, old-name, validate, default, description */
-	{ "no-quorum-policy", "no_quorum_policy", "enum", "stop, freeze, ignore, suicide", "stop", &check_quorum,
+	{ "no-quorum-policy", NULL, "enum", "stop, freeze, ignore, suicide", "stop", &check_quorum,
 	  "What to do when the cluster does not have quorum", NULL },
-	{ "symmetric-cluster", "symmetric_cluster", "boolean", NULL, "true", &check_boolean,
+	{ "symmetric-cluster", NULL, "boolean", NULL, "true", &check_boolean,
 	  "All resources can run anywhere by default", NULL },
 	{ "maintenance-mode", NULL, "boolean", NULL, "false", &check_boolean,
 	  "Should the cluster monitor resources and start/stop them as required", NULL },
@@ -97,9 +97,9 @@ pe_cluster_option pe_opts[] = {
 	  "Should the cluster check for active resources during startup", NULL },
 
 	/* Stonith Options */
-	{ "stonith-enabled", "stonith_enabled", "boolean", NULL, "true", &check_boolean,
+	{ "stonith-enabled", NULL, "boolean", NULL, "true", &check_boolean,
 	  "Failed nodes are STONITH'd", NULL },
-	{ "stonith-action", "stonith_action", "enum", "reboot, poweroff, off", "reboot", &check_stonith_action,
+	{ "stonith-action", NULL, "enum", "reboot, poweroff, off", "reboot", &check_stonith_action,
 	  "Action to send to STONITH device", NULL },
 	{ "stonith-timeout", NULL, "time", NULL, "60s", &check_timer,
 	  "How long to wait for the STONITH action (reboot,on,off) to complete", NULL },
@@ -107,11 +107,11 @@ pe_cluster_option pe_opts[] = {
 	  "Enable watchdog integration", "Set automatically by the cluster if SBD is detected.  User configured values are ignored." },
 	{ "concurrent-fencing", NULL, "boolean", NULL, "false", &check_boolean,
 	  "Allow performing fencing operations in parallel", NULL },
-	{ "startup-fencing", "startup_fencing", "boolean", NULL, "true", &check_boolean,
+	{ "startup-fencing", NULL, "boolean", NULL, "true", &check_boolean,
 	  "STONITH unseen nodes", "Advanced Use Only!  Not using the default is very unsafe!" },
 
 	/* Timeouts etc */
-	{ "cluster-delay", "transition_idle_timeout", "time", NULL, "60s", &check_time,
+	{ "cluster-delay", NULL, "time", NULL, "60s", &check_time,
 	  "Round trip delay over the network (excluding action execution)",
 	  "The \"correct\" value will depend on the speed and load of your network and cluster nodes." },
 	{ "batch-limit", NULL, "integer", NULL, "0", &check_number,
@@ -123,11 +123,11 @@ pe_cluster_option pe_opts[] = {
 	/* Orphans and stopping */
 	{ "stop-all-resources", NULL, "boolean", NULL, "false", &check_boolean,
 	  "Should the cluster stop all active resources (except those needed for fencing)", NULL },
-	{ "stop-orphan-resources", "stop_orphan_resources", "boolean", NULL, "true", &check_boolean,
+	{ "stop-orphan-resources", NULL, "boolean", NULL, "true", &check_boolean,
 	  "Should deleted resources be stopped", NULL },
-	{ "stop-orphan-actions", "stop_orphan_actions", "boolean", NULL, "true", &check_boolean,
+	{ "stop-orphan-actions", NULL, "boolean", NULL, "true", &check_boolean,
 	  "Should deleted actions be cancelled", NULL },
- 	{ "remove-after-stop", "remove_after_stop", "boolean", NULL, "false", &check_boolean,
+ 	{ "remove-after-stop", NULL, "boolean", NULL, "false", &check_boolean,
 	  "Remove resources from the LRM after they are stopped",
 	  "Always set this to false.  Other values are, at best, poorly tested and potentially dangerous." },
 /* 	{ "", "", , "0", "", NULL }, */

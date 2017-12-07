@@ -777,11 +777,11 @@ pe_cluster_option crmd_opts[] = {
 	{ "cluster-infrastructure", NULL, "string", NULL, "corosync", NULL,
           "The messaging stack on which Pacemaker is currently running.",
           "Used for informational and diagnostic purposes." },
-	{ XML_CONFIG_ATTR_DC_DEADTIME, "dc_deadtime", "time", NULL, "20s", &check_time,
+	{ XML_CONFIG_ATTR_DC_DEADTIME, NULL, "time", NULL, "20s", &check_time,
           "How long to wait for a response from other nodes during startup.",
           "The \"correct\" value will depend on the speed/load of your network and the type of switches used."
         },
-	{ XML_CONFIG_ATTR_RECHECK, "cluster_recheck_interval", "time",
+	{ XML_CONFIG_ATTR_RECHECK, NULL, "time",
 	  "Zero disables polling.  Positive values are an interval in seconds (unless other SI units are specified. eg. 5min)",
           "15min", &check_timer,
 	  "Polling interval for time based changes to options, resource parameters and constraints.",
@@ -812,10 +812,10 @@ pe_cluster_option crmd_opts[] = {
         },
 	{ "node-action-limit", NULL, "integer", NULL, "0", &check_number,
           "The maximum number of jobs that can be scheduled per node. Defaults to 2x cores"},
-	{ XML_CONFIG_ATTR_ELECTION_FAIL, "election_timeout", "time", NULL, "2min", &check_timer,
+	{ XML_CONFIG_ATTR_ELECTION_FAIL, NULL, "time", NULL, "2min", &check_timer,
           "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug."
         },
-	{ XML_CONFIG_ATTR_FORCE_QUIT, "shutdown_escalation", "time", NULL, "20min", &check_timer,
+	{ XML_CONFIG_ATTR_FORCE_QUIT, NULL, "time", NULL, "20min", &check_timer,
           "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug."
         },
 	{ "crmd-integration-timeout", NULL, "time", NULL, "3min", &check_timer,
@@ -836,7 +836,7 @@ pe_cluster_option crmd_opts[] = {
         { "stonith-max-attempts",NULL,"integer",NULL,"10",&check_positive_number,
           "How many times stonith can fail before it will no longer be attempted on a target"
         },   
-	{ "no-quorum-policy", "no_quorum_policy", "enum", "stop, freeze, ignore, suicide", "stop", &check_quorum, NULL, NULL },
+	{ "no-quorum-policy", NULL, "enum", "stop, freeze, ignore, suicide", "stop", &check_quorum, NULL, NULL },
 };
 /* *INDENT-ON* */
 
