@@ -448,12 +448,6 @@ make_args(const char *agent, const char *action, const char *victim, uint32_t vi
     if (device_args) {
         value = g_hash_table_lookup(device_args, buffer);
     }
-
-    if (value == NULL && device_args && safe_str_eq(action, "off")) {
-        /* @COMPAT deprecated since 1.1.8 */
-        value = g_hash_table_lookup(device_args, "pcmk_poweroff_action");
-    }
-
     if (value) {
         crm_info("Substituting action '%s' for requested operation '%s'", value, action);
         action = value;

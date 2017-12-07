@@ -380,27 +380,6 @@ add_template_rsc(xmlNode * xml_obj, pe_working_set_t * data_set)
     return TRUE;
 }
 
-static void
-check_deprecated_stonith(resource_t *rsc)
-{
-    GHashTableIter iter;
-    char *key;
-
-    g_hash_table_iter_init(&iter, rsc->parameters);
-    while (g_hash_table_iter_next(&iter, (gpointer *) &key, NULL)) {
-        if (crm_starts_with(key, "pcmk_")) {
-            char *cmp = key + 5; // the part after "pcmk_"
-
-            if (!strcmp(cmp, "poweroff_action")) {
-                pe_warn_once(pe_wo_poweroff,
-                             "Support for the 'pcmk_poweroff_action' stonith resource parameter"
-                             " is deprecated and will be removed in a future version"
-                             " (use 'pcmk_off_action' instead)");
-            }
-        }
-    }
-}
-
 gboolean
 common_unpack(xmlNode * xml_obj, resource_t ** rsc,
               resource_t * parent, pe_working_set_t * data_set)
@@ -618,7 +597,6 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     if (safe_str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH)) {
         set_bit(data_set->flags, pe_flag_have_stonith_resource);
         set_bit((*rsc)->flags, pe_rsc_fence_device);
-        check_deprecated_stonith(*rsc);
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_REQUIRES);
