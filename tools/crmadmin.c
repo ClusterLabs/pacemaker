@@ -55,7 +55,6 @@ char *pluralSection(const char *a_section);
 xmlNode *handleCibMod(void);
 int do_find_node_list(xmlNode * xml_node);
 gboolean admin_message_timeout(gpointer data);
-gboolean is_node_online(xmlNode * node_state);
 
 enum debug {
     debug_none,
@@ -514,28 +513,6 @@ admin_message_timeout(gpointer data)
     crm_err("No messages received in %d seconds", (int)message_timeout_ms / 1000);
     operation_status = -3;
     g_main_quit(mainloop);
-    return FALSE;
-}
-
-gboolean
-is_node_online(xmlNode * node_state)
-{
-    const char *uname = crm_element_value(node_state, XML_ATTR_UNAME);
-    const char *join_state = crm_element_value(node_state, XML_NODE_JOIN_STATE);
-    const char *exp_state = crm_element_value(node_state, XML_NODE_EXPECTED);
-    const char *crm_state = crm_element_value(node_state, XML_NODE_IS_PEER);
-    const char *ccm_state = crm_element_value(node_state, XML_NODE_IN_CLUSTER);
-
-    if (safe_str_neq(join_state, CRMD_JOINSTATE_DOWN)
-        && crm_is_true(ccm_state)
-        && safe_str_eq(crm_state, "online")) {
-        crm_trace("Node %s is online", uname);
-        return TRUE;
-    }
-    crm_trace("Node %s: ccm=%s join=%s exp=%s crm=%s",
-              uname, crm_str(ccm_state),
-              crm_str(join_state), crm_str(exp_state), crm_str(crm_state));
-    crm_trace("Node %s is offline", uname);
     return FALSE;
 }
 

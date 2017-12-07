@@ -1199,6 +1199,7 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
 {
     gboolean online = FALSE;
     gboolean do_terminate = FALSE;
+    bool crmd_online = FALSE;
     const char *join = crm_element_value(node_state, XML_NODE_JOIN_STATE);
     const char *is_peer = crm_element_value(node_state, XML_NODE_IS_PEER);
     const char *in_cluster = crm_element_value(node_state, XML_NODE_IN_CLUSTER);
@@ -1207,7 +1208,7 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
 
 /*
   - XML_NODE_IN_CLUSTER    ::= true|false
-  - XML_NODE_IS_PEER       ::= true|false|online|offline
+  - XML_NODE_IS_PEER       ::= online|offline
   - XML_NODE_JOIN_STATE    ::= member|down|pending|banned
   - XML_NODE_EXPECTED      ::= member|down
 */
@@ -1229,9 +1230,7 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
               crm_str(join), crm_str(exp_state), do_terminate);
 
     online = crm_is_true(in_cluster);
-    if (safe_str_eq(is_peer, ONLINESTATUS)) {
-        is_peer = XML_BOOLEAN_YES;
-    }
+    crmd_online = safe_str_eq(is_peer, ONLINESTATUS);
     if (exp_state == NULL) {
         exp_state = CRMD_JOINSTATE_DOWN;
     }
@@ -1240,7 +1239,7 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
         crm_debug("%s is shutting down", this_node->details->uname);
 
         /* Slightly different criteria since we can't shut down a dead peer */
-        online = crm_is_true(is_peer);
+        online = crmd_online;
 
     } else if (in_cluster == NULL) {
         pe_fence_node(data_set, this_node, "peer has not been seen by the cluster");
@@ -1250,7 +1249,7 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
 
     } else if (do_terminate == FALSE && safe_str_eq(exp_state, CRMD_JOINSTATE_DOWN)) {
 
-        if (crm_is_true(in_cluster) || crm_is_true(is_peer)) {
+        if (crm_is_true(in_cluster) || crmd_online) {
             crm_info("- Node %s is not ready to run resources", this_node->details->uname);
             this_node->details->standby = TRUE;
             this_node->details->pending = TRUE;
@@ -1260,14 +1259,14 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
         }
 
     } else if (do_terminate && safe_str_eq(join, CRMD_JOINSTATE_DOWN)
-               && crm_is_true(in_cluster) == FALSE && crm_is_true(is_peer) == FALSE) {
+               && crm_is_true(in_cluster) == FALSE && !crmd_online) {
         crm_info("Node %s was just shot", this_node->details->uname);
         online = FALSE;
 
     } else if (crm_is_true(in_cluster) == FALSE) {
         pe_fence_node(data_set, this_node, "peer is no longer part of the cluster");
 
-    } else if (crm_is_true(is_peer) == FALSE) {
+    } else if (!crmd_online) {
         pe_fence_node(data_set, this_node, "peer process is no longer available");
 
         /* Everything is running at this point, now check join state */
