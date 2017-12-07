@@ -852,26 +852,13 @@ xmlNode *
 do_lrm_query(gboolean is_replace, const char *node_name)
 {
     lrm_state_t *lrm_state = lrm_state_find(node_name);
-    xmlNode *xml_state;
 
     if (!lrm_state) {
         crm_err("Could not query lrm state for lrmd node %s", node_name);
         return NULL;
     }
-    xml_state = do_lrm_query_internal(lrm_state,
-                                      node_update_cluster|node_update_peer);
-
-    if (xml_state) {
-        /* @COMPAT DC <1.1.8
-         * In case this function is called to generate a join confirmation to
-         * send to the DC, force the current and expected join state to member.
-         * This isn't necessary for newer DCs but is backward compatible.
-         */
-        crm_xml_add(xml_state, XML_NODE_JOIN_STATE, CRMD_JOINSTATE_MEMBER);
-        crm_xml_add(xml_state, XML_NODE_EXPECTED, CRMD_JOINSTATE_MEMBER);
-    }
-
-    return xml_state;
+    return do_lrm_query_internal(lrm_state,
+                                 node_update_cluster|node_update_peer);
 }
 
 static void
