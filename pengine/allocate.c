@@ -1870,7 +1870,7 @@ apply_container_ordering(action_t *action, pe_working_set_t *data_set)
               container->id);
 
     if (safe_str_eq(action->task, CRMD_ACTION_MIGRATE)
-        || safe_str_eq(action->task, CRMD_ACTION_MIGRATE)) {
+        || safe_str_eq(action->task, CRMD_ACTION_MIGRATED)) {
         /* Migration ops map to "no_action", but we need to apply the same
          * ordering as for stop or demote (see get_router_node()).
          */
@@ -2036,7 +2036,7 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
               remote_rsc->id, state2text(state));
 
     if (safe_str_eq(action->task, CRMD_ACTION_MIGRATE)
-        || safe_str_eq(action->task, CRMD_ACTION_MIGRATE)) {
+        || safe_str_eq(action->task, CRMD_ACTION_MIGRATED)) {
         /* Migration ops map to "no_action", but we need to apply the same
          * ordering as for stop or demote (see get_router_node()).
          */
