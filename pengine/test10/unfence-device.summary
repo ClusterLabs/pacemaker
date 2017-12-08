@@ -1,0 +1,29 @@
+Using the original execution date of: 2017-11-30 10:44:29Z
+
+Current cluster status:
+Online: [ virt-008 virt-009 virt-013 ]
+
+ fence_scsi	(stonith:fence_scsi):	Stopped
+
+Transition Summary:
+ * Fence (on) virt-013 'required by fence_scsi monitor'
+ * Fence (on) virt-009 'required by fence_scsi monitor'
+ * Fence (on) virt-008 'required by fence_scsi monitor'
+ * Start      fence_scsi     ( virt-008 )  
+
+Executing cluster transition:
+ * Fencing virt-013 (on)
+ * Fencing virt-009 (on)
+ * Fencing virt-008 (on)
+ * Resource action: fence_scsi      monitor on virt-013
+ * Resource action: fence_scsi      monitor on virt-009
+ * Resource action: fence_scsi      monitor on virt-008
+ * Resource action: fence_scsi      start on virt-008
+ * Resource action: fence_scsi      monitor=60000 on virt-008
+Using the original execution date of: 2017-11-30 10:44:29Z
+
+Revised cluster status:
+Online: [ virt-008 virt-009 virt-013 ]
+
+ fence_scsi	(stonith:fence_scsi):	Started virt-008
+

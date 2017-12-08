@@ -6,7 +6,11 @@
         <attributes CRM_meta_on_node="virt-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <crm_event id="4" operation="stonith" operation_key="stonith-virt-3-on" on_node="virt-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="1">
     <action_set>

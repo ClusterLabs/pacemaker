@@ -393,6 +393,7 @@ echo ""
 do_test unfence-startup "Clean unfencing"
 do_test unfence-definition "Unfencing when the agent changes"
 do_test unfence-parameters "Unfencing when the agent parameters changes"
+do_test unfence-device "Unfencing when a cluster has only fence devices"
 
 echo ""
 do_test master-0 "Stopped -> Slave"

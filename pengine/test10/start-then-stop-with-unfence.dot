@@ -23,5 +23,8 @@ digraph "g" {
 "mpath-node2_monitor_0 rhel7-node1.example.com" [ style=bold color="green" fontcolor="black"]
 "stonith 'on' rhel7-node1.example.com" -> "ip1_start_0 rhel7-node1.example.com" [ style = bold]
 "stonith 'on' rhel7-node1.example.com" -> "jrummy_start_0 rhel7-node1.example.com" [ style = bold]
+"stonith 'on' rhel7-node1.example.com" -> "mpath-node1_monitor_0 rhel7-node1.example.com" [ style = bold]
+"stonith 'on' rhel7-node1.example.com" -> "mpath-node1_start_0 rhel7-node1.example.com" [ style = bold]
+"stonith 'on' rhel7-node1.example.com" -> "mpath-node2_monitor_0 rhel7-node1.example.com" [ style = bold]
 "stonith 'on' rhel7-node1.example.com" [ style=bold color="green" fontcolor="black"]
 }

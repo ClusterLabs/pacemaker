@@ -4,8 +4,8 @@
   page
 * `commands.c`, `internal.h`, `main.c`, `remote.c`, `stonithd.7`: stonithd and
   its man page
-* `fence_dummy`, `fence_legacy`, `fence_legacy.8`, `fence_pcmk`,
-  `fence_pcmk.8`: Pacemaker-supplied fence agents and their man pages
+* `fence_dummy`, `fence_legacy`, `fence_legacy.8`:
+  Pacemaker-supplied fence agents and their man pages
 * `regression.py(.in)`: regression tests for `stonithd`
 * `standalone_config.c`, `standalone_config.h`: abandoned project
 * `test.c`: `stonith-test` command-line tool
