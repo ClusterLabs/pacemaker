@@ -688,6 +688,24 @@ cli_resource_delete_failures(crm_ipc_t *crmd_channel, const char *host_uname,
 {
     int rc = pcmk_ok;
 
+    if (rsc == NULL) {
+        return -ENXIO;
+
+    } else if (rsc->children) {
+        GListPtr lpc = NULL;
+
+        for (lpc = rsc->children; lpc != NULL; lpc = lpc->next) {
+            resource_t *child = (resource_t *) lpc->data;
+
+            rc = cli_resource_delete_failures(crmd_channel, host_uname, child, operation,
+                                              interval, data_set);
+            if(rc != pcmk_ok) {
+                return rc;
+            }
+        }
+        return pcmk_ok;
+    }
+
     for (xmlNode *xml_op = __xml_first_child(data_set->failed); xml_op != NULL;
          xml_op = __xml_next(xml_op)) {
 
