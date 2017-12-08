@@ -48,6 +48,25 @@ enum remote_connection_state {
     remote_state_stopped = 4
 };
 
+static const char *
+state2text(enum remote_connection_state state)
+{
+    switch (state) {
+        case remote_state_unknown:
+            return "unknown";
+        case remote_state_alive:
+            return "alive";
+        case remote_state_resting:
+            return "resting";
+        case remote_state_failed:
+            return "failed";
+        case remote_state_stopped:
+            return "stopped";
+    }
+
+    return "impossible";
+}
+
 resource_alloc_functions_t resource_class_alloc_functions[] = {
     {
      native_merge_weights,
@@ -2011,10 +2030,10 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
         cluster_node = remote_rsc->running_on->data;
     }
 
-    crm_trace("Order %s action %s relative to %s%s (state %d)",
+    crm_trace("Order %s action %s relative to %s%s (state: %s)",
               action->task, action->uuid,
               is_set(remote_rsc->flags, pe_rsc_failed)? "failed " : "",
-              remote_rsc->id, state);
+              remote_rsc->id, state2text(state));
 
     if (safe_str_eq(action->task, CRMD_ACTION_MIGRATE)
         || safe_str_eq(action->task, CRMD_ACTION_MIGRATE)) {
@@ -2042,23 +2061,29 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
             /* Handle special case with remote node where stop actions need to be
              * ordered after the connection resource starts somewhere else.
              */
-            if(state == remote_state_resting) {
-                /* Wait for the connection resource to be up and assume everything is as we left it */
-                order_start_then_action(remote_rsc, action, pe_order_none,
-                                        data_set);
-
-            } else {
-                if(state == remote_state_failed) {
-                    /* We would only be here if the resource is
-                     * running on the remote node.  Since we have no
-                     * way to stop it, it is necessary to fence the
-                     * node.
-                     */
-                    pe_fence_node(data_set, action->node, "resources are active and the connection is unrecoverable");
-                }
-
+            if(state == remote_state_alive) {
                 order_action_then_stop(action, remote_rsc,
                                        pe_order_implies_first, data_set);
+
+            } else if(state == remote_state_failed) {
+                /* We would only be here if the resource is
+                 * running on the remote node.  Since we have no
+                 * way to stop it, it is necessary to fence the
+                 * node.
+                 */
+                pe_fence_node(data_set, action->node, "resources are active and the connection is unrecoverable");
+                order_action_then_stop(action, remote_rsc,
+                                       pe_order_implies_first, data_set);
+
+            } else if(remote_rsc->next_role == RSC_ROLE_STOPPED) {
+                /* If its not coming back up, better do what we need first */
+                order_action_then_stop(action, remote_rsc,
+                                       pe_order_implies_first, data_set);
+
+            } else {
+                /* Wait for the connection resource to be up and assume everything is as we left it */
+                order_start_then_action(remote_rsc, action, pe_order_none, data_set);
+
             }
             break;
 
