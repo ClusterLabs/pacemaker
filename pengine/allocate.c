@@ -2058,9 +2058,6 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
             break;
 
         case stop_rsc:
-            /* Handle special case with remote node where stop actions need to be
-             * ordered after the connection resource starts somewhere else.
-             */
             if(state == remote_state_alive) {
                 order_action_then_stop(action, remote_rsc,
                                        pe_order_implies_first, data_set);
@@ -2076,14 +2073,18 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
                                        pe_order_implies_first, data_set);
 
             } else if(remote_rsc->next_role == RSC_ROLE_STOPPED) {
-                /* If its not coming back up, better do what we need first */
+                /* State must be remote_state_unknown or remote_state_stopped.
+                 * Since the connection is not coming back up in this
+                 * transition, stop this resource first.
+                 */
                 order_action_then_stop(action, remote_rsc,
                                        pe_order_implies_first, data_set);
 
             } else {
-                /* Wait for the connection resource to be up and assume everything is as we left it */
+                /* The connection is going to be started somewhere else, so
+                 * stop this resource after that completes.
+                 */
                 order_start_then_action(remote_rsc, action, pe_order_none, data_set);
-
             }
             break;
 
