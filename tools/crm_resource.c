@@ -1094,31 +1094,9 @@ main(int argc, char **argv)
 
     } else if (rsc_cmd == 'C' && just_errors) {
         crmd_replies_needed = 0;
-        for (xmlNode *xml_op = __xml_first_child(data_set.failed); xml_op != NULL;
-             xml_op = __xml_next(xml_op)) {
 
-            const char *node = crm_element_value(xml_op, XML_ATTR_UNAME);
-            const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
-            const char *task_interval = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
-            const char *resource_name = crm_element_value(xml_op, XML_LRM_ATTR_RSCID);
-
-            if(resource_name == NULL) {
-                continue;
-            } else if(host_uname && safe_str_neq(host_uname, node)) {
-                continue;
-            } else if(rsc_id && safe_str_neq(rsc_id, resource_name)) {
-                continue;
-            } else if(operation && safe_str_neq(operation, task)) {
-                continue;
-            } else if(interval && safe_str_neq(interval, task_interval)) {
-                continue;
-            }
-
-            crm_debug("Erasing %s failure for %s (%s detected) on %s",
-                      task, rsc->id, resource_name, node);
-            rc = cli_resource_delete(crmd_channel, node, rsc, task,
-                                     task_interval, &data_set);
-        }
+        rc = cli_resource_delete_failures(crmd_channel, host_uname, rsc, operation,
+                                          interval, &data_set);
 
         if(rsc && (rc == pcmk_ok) && (BE_QUIET == FALSE)) {
             /* Now check XML_RSC_ATTR_TARGET_ROLE and XML_RSC_ATTR_MANAGED */
