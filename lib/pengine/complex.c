@@ -784,7 +784,9 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
         if(is_set((*rsc)->flags, pe_rsc_fence_device)) {
             value = "quorum";
 
-        } else if (safe_str_eq(crm_element_value((*rsc)->xml, XML_AGENT_ATTR_CLASS), "ocf")
+        } else if (((*rsc)->variant == pe_native)
+                   && safe_str_eq(crm_element_value((*rsc)->xml, XML_AGENT_ATTR_CLASS),
+                                  PCMK_RESOURCE_CLASS_OCF)
                    && safe_str_eq(crm_element_value((*rsc)->xml, XML_AGENT_ATTR_PROVIDER), "pacemaker")
                    && safe_str_eq(crm_element_value((*rsc)->xml, XML_ATTR_TYPE), "remote")
             ) {
