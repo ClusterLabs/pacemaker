@@ -1092,14 +1092,20 @@ main(int argc, char **argv)
         rc = cli_resource_delete_attribute(rsc, rsc_id, prop_set, prop_id,
                                            prop_name, cib_conn, &data_set);
 
-    } else if (rsc_cmd == 'C' && just_errors) {
+    } else if ((rsc_cmd == 'C') && rsc) {
+        if (do_force == FALSE) {
+            rsc = uber_parent(rsc);
+        }
         crmd_replies_needed = 0;
 
-        rc = cli_resource_delete_failures(crmd_channel, host_uname, rsc, operation,
-                                          interval, &data_set);
+        crm_debug("%s of %s (%s requested) on %s",
+                  (just_errors? "Clearing failures" : "Re-checking the state"),
+                  rsc->id, rsc_id, (host_uname? host_uname : "all hosts"));
+        rc = cli_resource_delete(crmd_channel, host_uname, rsc, operation,
+                                 interval, just_errors, &data_set);
 
-        if(rsc && (rc == pcmk_ok) && (BE_QUIET == FALSE)) {
-            /* Now check XML_RSC_ATTR_TARGET_ROLE and XML_RSC_ATTR_MANAGED */
+        if ((rc == pcmk_ok) && !BE_QUIET) {
+            // Show any reasons why resource might stay stopped
             cli_resource_check(cib_conn, rsc);
         }
 
@@ -1107,22 +1113,9 @@ main(int argc, char **argv)
             start_mainloop();
         }
 
-    } else if ((rsc_cmd == 'C') && rsc) {
-        if(do_force == FALSE) {
-            rsc = uber_parent(rsc);
-        }
-
-        crm_debug("Re-checking the state of %s (%s requested) on %s",
-                  rsc->id, rsc_id, host_uname);
-        crmd_replies_needed = 0;
-        rc = cli_resource_delete(crmd_channel, host_uname, rsc, operation,
-                                 interval, &data_set);
-
-        if(rc == pcmk_ok && BE_QUIET == FALSE) {
-            /* Now check XML_RSC_ATTR_TARGET_ROLE and XML_RSC_ATTR_MANAGED */
-            cli_resource_check(cib_conn, rsc);
-        }
-
+    } else if (rsc_cmd == 'C' && just_errors) {
+        rc = cli_cleanup_all(crmd_channel, host_uname, operation, interval,
+                             &data_set);
         if (rc == pcmk_ok) {
             start_mainloop();
         }
