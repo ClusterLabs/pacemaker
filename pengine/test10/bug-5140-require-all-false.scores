@@ -12,7 +12,7 @@ clone_color: basegrp:2 allocation score on hex-1: 0
 clone_color: basegrp:2 allocation score on hex-2: 0
 clone_color: basegrp:2 allocation score on hex-3: 0
 clone_color: clvmd:0 allocation score on hex-1: 0
-clone_color: clvmd:0 allocation score on hex-2: 1
+clone_color: clvmd:0 allocation score on hex-2: 1000
 clone_color: clvmd:0 allocation score on hex-3: 0
 clone_color: clvmd:1 allocation score on hex-1: 0
 clone_color: clvmd:1 allocation score on hex-2: 0
@@ -21,7 +21,7 @@ clone_color: clvmd:2 allocation score on hex-1: 0
 clone_color: clvmd:2 allocation score on hex-2: 0
 clone_color: clvmd:2 allocation score on hex-3: 0
 clone_color: dlm:0 allocation score on hex-1: 0
-clone_color: dlm:0 allocation score on hex-2: 1
+clone_color: dlm:0 allocation score on hex-2: 1000
 clone_color: dlm:0 allocation score on hex-3: 0
 clone_color: dlm:1 allocation score on hex-1: 0
 clone_color: dlm:1 allocation score on hex-2: 0
@@ -69,7 +69,7 @@ clone_color: ms-r1 allocation score on hex-1: -INFINITY
 clone_color: ms-r1 allocation score on hex-2: 0
 clone_color: ms-r1 allocation score on hex-3: 0
 clone_color: o2cb:0 allocation score on hex-1: 0
-clone_color: o2cb:0 allocation score on hex-2: 1
+clone_color: o2cb:0 allocation score on hex-2: 1000
 clone_color: o2cb:0 allocation score on hex-3: 0
 clone_color: o2cb:1 allocation score on hex-1: 0
 clone_color: o2cb:1 allocation score on hex-2: 0

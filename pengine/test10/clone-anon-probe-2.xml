@@ -6,7 +6,6 @@
       </cluster_property_set>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="nvpair.id21849" name="dc-version" value="0.6.0-node: c94b92d550cf57217fd0292a9aa913bcf977651c"/>
-        <nvpair name="default-resource-stickiness" value="INFINITY" id="nvpair.id21858"/>
       </cluster_property_set>
     </crm_config>
     <nodes>
@@ -21,6 +20,11 @@
         </instance_attributes>
       </node>
     </nodes>
+    <rsc_defaults>
+      <meta_attributes id="rsc_defaults-meta_attributes">
+        <nvpair id="rsc_defaults-resource-stickiness" name="resource-stickiness" value="INFINITY"/>
+      </meta_attributes>
+    </rsc_defaults>
     <resources>
       <clone id="ms-drbd0">
         <meta_attributes id="meta_attributes.id21937">

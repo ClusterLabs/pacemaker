@@ -90,7 +90,7 @@ crm_mon_SOURCES		= crm_mon.c
 crm_mon_LDADD		= $(top_builddir)/lib/pengine/libpe_status.la		\
 			  $(top_builddir)/lib/fencing/libstonithd.la		\
 			  $(top_builddir)/pengine/libpengine.la \
-			  $(COMMONLIBS) $(SNMPLIBS) $(ESMTPLIBS)
+			  $(COMMONLIBS)
 
 # Arguments could be made that this should live in crm/pengine
 crm_verify_SOURCES	= crm_verify.c

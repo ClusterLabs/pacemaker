@@ -4,8 +4,6 @@
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="nvpair.id21849" name="symmetric-cluster" value="true"/>
         <nvpair id="nvpair.id21859" name="no_quorum-policy" value="stop"/>
-        <nvpair id="nvpair.id21868" name="default-resource-stickiness" value="0"/>
-        <nvpair id="nvpair.id21877" name="default-migration-threshold" value="0"/>
         <nvpair id="nvpair.id21887" name="stonith-enabled" value="false"/>
         <nvpair id="nvpair.id21896" name="stonith-action" value="reboot"/>
         <nvpair id="nvpair.id21905" name="stop-orphan-resources" value="true"/>
@@ -13,8 +11,6 @@
         <nvpair id="nvpair.id21924" name="remove-after-stop" value="false"/>
         <nvpair id="nvpair.id21933" name="short-resource-names" value="true"/>
         <nvpair id="nvpair.id21942" name="transition-idle-timeout" value="5min"/>
-        <nvpair name="default-action-timeout" id="nvpair.id21952" value="120s"/>
-        <nvpair id="nvpair.id21961" name="is-managed-default" value="true"/>
         <nvpair name="last-lrm-refresh" id="nvpair.id21970" value="1178199084"/>
       </cluster_property_set>
     </crm_config>
@@ -28,6 +24,11 @@
         <instance_attributes id="instance_attributes.id22029"/>
       </node>
     </nodes>
+    <op_defaults>
+      <meta_attributes id="op_defaults-meta_attributes">
+        <nvpair id="op_defaults-timeout" name="timeout" value="120s"/>
+      </meta_attributes>
+    </op_defaults>
     <resources>
       <master id="ms_drbd_7788">
         <primitive id="rsc_drbd_7788" class="ocf" type="drbd" provider="heartbeat">

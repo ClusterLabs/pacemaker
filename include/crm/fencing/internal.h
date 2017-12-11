@@ -107,7 +107,6 @@ xmlNode *create_device_registration_xml(const char *id, const char *namespace, c
 #  define T_STONITH_TIMEOUT_VALUE "st-async-timeout-value"
 #  define T_STONITH_NOTIFY    "st_notify"
 
-#  define STONITH_ATTR_ARGMAP    "pcmk_arg_map"
 #  define STONITH_ATTR_HOSTARG   "pcmk_host_argument"
 #  define STONITH_ATTR_HOSTMAP   "pcmk_host_map"
 #  define STONITH_ATTR_HOSTLIST  "pcmk_host_list"

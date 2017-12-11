@@ -25,7 +25,7 @@
     <action_set>
       <rsc_op id="2" operation="monitor" operation_key="Dummy-test2_monitor_30000" on_node="dhcp180" on_node_uuid="dhcp180">
         <primitive id="Dummy-test2" class="ocf" provider="test" type="Dummy"/>
-        <attributes CRM_meta_OCF_CHECK_LEVEL="20" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="dhcp180" CRM_meta_on_node_uuid="dhcp180" CRM_meta_timeout="60000" OCF_CHECK_LEVEL="20"  state="/tmp/dummy-state" state2="/tmp/dummy-state-2"/>
+        <attributes CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="dhcp180" CRM_meta_on_node_uuid="dhcp180" CRM_meta_timeout="60000" OCF_CHECK_LEVEL="20"  state="/tmp/dummy-state" state2="/tmp/dummy-state-2"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -38,7 +38,7 @@
     <action_set>
       <rsc_op id="1" operation="monitor" operation_key="Dummy-test2_monitor_10000" on_node="dhcp180" on_node_uuid="dhcp180">
         <primitive id="Dummy-test2" class="ocf" provider="test" type="Dummy"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="dhcp180" CRM_meta_on_node_uuid="dhcp180" CRM_meta_timeout="20000" CRM_meta_trace_ra="1"  state="/tmp/dummy-state" state2="/tmp/dummy-state-2" trace_ra="1"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="dhcp180" CRM_meta_on_node_uuid="dhcp180" CRM_meta_timeout="20000"  state="/tmp/dummy-state" state2="/tmp/dummy-state-2" trace_ra="1"/>
       </rsc_op>
     </action_set>
     <inputs>

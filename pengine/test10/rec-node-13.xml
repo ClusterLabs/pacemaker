@@ -7,9 +7,7 @@
         <nvpair id="nvpair.id21869" name="stop-orphan-resources" value="true"/>
         <nvpair id="nvpair.id21878" name="stop-orphan-actions" value="true"/>
         <nvpair id="nvpair.id21887" name="remove-after-stop" value="false"/>
-        <nvpair id="nvpair.id21897" name="is-managed-default" value="true"/>
         <nvpair id="nvpair.id21906" name="no-quorum-policy" value="stop"/>
-        <nvpair id="nvpair.id21915" name="default-resource-stickiness" value="0"/>
         <nvpair id="nvpair.id21925" name="stonith-enabled" value="1"/>
         <nvpair id="nvpair.id21933" name="pe-error-series-max" value="-1"/>
         <nvpair id="nvpair.id21942" name="pe-warn-series-max" value="-1"/>

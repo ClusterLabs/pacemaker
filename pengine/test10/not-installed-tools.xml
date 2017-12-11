@@ -7,13 +7,17 @@
         <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="2"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
         <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1376009809"/>
-        <nvpair id="cib-bootstrap-options-default-resource-stickiness" name="default-resource-stickiness" value="1000"/>
       </cluster_property_set>
     </crm_config>
     <nodes>
       <node id="sles11-1" uname="sles11-1"/>
       <node id="sles11-2" uname="sles11-2"/>
     </nodes>
+    <rsc_defaults>
+      <meta_attributes id="rsc_defaults-meta_attributes">
+        <nvpair id="rsc_defaults-resource-stickiness" name="resource-stickiness" value="1000"/>
+      </meta_attributes>
+    </rsc_defaults>
     <resources>
       <primitive class="stonith" id="st_sbd" type="external/sbd">
         <operations>

@@ -5,7 +5,6 @@
         <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="1"/>
         <nvpair id="cib-bootstrap-options-start-failure-is-fatal" name="start-failure-is-fatal" value="false"/>
         <nvpair id="cib-bootstrap-options-pe-input-series-max" name="pe-input-series-max" value="5000"/>
-        <nvpair id="cib-bootstrap-options-default-action-timeout" name="default-action-timeout" value="60s"/>
         <nvpair id="cib-bootstrap-options-shutdown-escalation" name="shutdown-escalation" value="5min"/>
         <nvpair id="cib-bootstrap-options-startup-fencing" name="startup-fencing" value="false"/>
         <nvpair id="cib-bootstrap-options-batch-limit" name="batch-limit" value="10"/>
@@ -30,6 +29,11 @@
         </instance_attributes>
       </node>
     </nodes>
+    <op_defaults>
+      <meta_attributes id="op_defaults-meta_attributes">
+        <nvpair id="op_defaults-timeout" name="timeout" value="60s"/>
+      </meta_attributes>
+    </op_defaults>
     <resources>
       <clone id="Fencing">
         <meta_attributes id="Fencing-meta_attributes">
@@ -187,7 +191,6 @@
       <rsc_colocation id="group-with-master" rsc="group-1" score="INFINITY" with-rsc="master-1" with-rsc-role="Master"/>
       <rsc_order first="master-1" first-action="promote" id="group-after-master" score="INFINITY" symmetrical="true" then="group-1" then-action="start"/>
     </constraints>
-    <op_defaults/>
     <rsc_defaults/>
   </configuration>
   <status>

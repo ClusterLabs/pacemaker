@@ -8,9 +8,7 @@
         <nvpair id="nvpair.id21870" name="stop-orphan-resources" value="false"/>
         <nvpair id="nvpair.id21878" name="stop-orphan-actions" value="false"/>
         <nvpair id="nvpair.id21887" name="remove-after-stop" value="false"/>
-        <nvpair id="nvpair.id21896" name="is-managed-default" value="true"/>
         <nvpair id="nvpair.id21905" name="no-quorum-policy" value="stop"/>
-        <nvpair id="nvpair.id21914" name="default-resource-stickiness" value="0"/>
         <nvpair id="nvpair.id21922" name="stonith-enabled" value="true"/>
       </cluster_property_set>
     </crm_config>

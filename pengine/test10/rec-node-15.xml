@@ -4,7 +4,6 @@
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="nvpair.id21848" name="symmetric-cluster" value="true"/>
         <nvpair id="nvpair.id21857" name="no-quorum-policy" value="stop"/>
-        <nvpair id="nvpair.id21866" name="default-resource-stickiness" value="0"/>
         <nvpair id="nvpair.id21885" name="stonith-enabled" value="true"/>
         <nvpair id="nvpair.id21894" name="stonith-action" value="reboot"/>
         <nvpair id="nvpair.id21903" name="stop-orphan-resources" value="true"/>
@@ -12,7 +11,6 @@
         <nvpair id="nvpair.id21922" name="remove-after-stop" value="false"/>
         <nvpair id="nvpair.id21931" name="short_resource_names" value="true"/>
         <nvpair id="nvpair.id21941" name="cluster-delay" value="5min"/>
-        <nvpair id="nvpair.id21950" name="is-managed-default" value="true"/>
       </cluster_property_set>
     </crm_config>
     <nodes>

@@ -4,7 +4,6 @@
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.0.6-cebe2b6ff49b36b29a3bd7ada1c4701c7470febe"/>
         <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
-        <nvpair name="default-resource-stickiness" id="cib-bootstrap-options-default-resource-stickiness" value="1000"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
         <nvpair id="cib-bootstrap-options-stonith-action" name="stonith-action" value="poweroff"/>
         <nvpair name="last-lrm-refresh" id="cib-bootstrap-options-last-lrm-refresh" value="1260380417"/>
@@ -22,6 +21,11 @@
         </instance_attributes>
       </node>
     </nodes>
+    <rsc_defaults>
+      <meta_attributes id="rsc_defaults-meta_attributes">
+        <nvpair id="rsc_defaults-resource-stickiness" name="resource-stickiness" value="1000"/>
+      </meta_attributes>
+    </rsc_defaults>
     <resources>
       <primitive class="stonith" id="xen-a-fencing" type="external/ipmi">
         <operations id="xen-a-fencing-operations">
@@ -214,7 +218,6 @@
     <op_defaults>
       <meta_attributes id="op_defaults-options"/>
     </op_defaults>
-    <rsc_defaults/>
   </configuration>
   <status>
     <node_state uname="xen-a" ha="active" in_ccm="true" crmd="online" shutdown="0" id="445a93d5-655e-430b-b45d-47d79a2f78c7" join="member" expected="member" crm-debug-origin="do_update_resource">

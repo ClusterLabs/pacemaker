@@ -1,7 +1,9 @@
 #!/bin/bash
 #
 # Cluster Monitoring Script, for use with crm_mon and Pacemaker,
-# to emulate the oft-missing --snmp-traps and --mail options.
+# to emulate the no-longer-supported --snmp-traps and --mail options.
+# (However, alerts are the recommended means of doing this since
+# Pacemaker 1.1.15.)
 #
 # Copyright 2013 Rob Thomas <xrobau@gmail.com>
 #

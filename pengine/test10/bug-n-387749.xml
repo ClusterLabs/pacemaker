@@ -6,8 +6,6 @@
         <nvpair id="nvpair.id21859" name="no-quorum-policy" value="ignore"/>
         <nvpair name="last-lrm-refresh" id="nvpair.id21868" value="1210070991"/>
         <nvpair id="nvpair.id21878" name="stonith-enabled" value="false"/>
-        <nvpair id="nvpair.id21887" name="default-resource-stickiness" value="1000"/>
-        <nvpair id="nvpair.id21896" name="default-action-timeout" value="20s"/>
       </cluster_property_set>
     </crm_config>
     <nodes>
@@ -27,6 +25,16 @@
         </instance_attributes>
       </node>
     </nodes>
+    <rsc_defaults>
+      <meta_attributes id="rsc_defaults-meta_attributes">
+        <nvpair id="rsc_defaults-resource-stickiness" name="resource-stickiness" value="1000"/>
+      </meta_attributes>
+    </rsc_defaults>
+    <op_defaults>
+      <meta_attributes id="op_defaults-meta_attributes">
+        <nvpair id="op_defaults-timeout" name="timeout" value="20s"/>
+      </meta_attributes>
+    </op_defaults>
     <resources>
       <clone id="export_home_ocfs2_clone_set">
         <primitive id="export_home_ocfs2" class="ocf" type="Filesystem" provider="heartbeat">

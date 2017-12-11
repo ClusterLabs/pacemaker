@@ -5,7 +5,6 @@
         <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="1"/>
         <nvpair id="cib-bootstrap-options-start-failure-is-fatal" name="start-failure-is-fatal" value="false"/>
         <nvpair id="cib-bootstrap-options-pe-input-series-max" name="pe-input-series-max" value="5000"/>
-        <nvpair id="cib-bootstrap-options-default-action-timeout" name="default-action-timeout" value="60s"/>
         <nvpair id="cib-bootstrap-options-shutdown-escalation" name="shutdown-escalation" value="5min"/>
         <nvpair id="cib-bootstrap-options-batch-limit" name="batch-limit" value="10"/>
         <nvpair id="cib-bootstrap-options-dc-deadtime" name="dc-deadtime" value="5s"/>
@@ -13,7 +12,6 @@
         <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="4"/>
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.6-0.61.3faed8c7dd2b.hg.fc15-3faed8c7dd2bb4b25e56eb7b74bcab064267b228"/>
         <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
-        <nvpair id="cib-bootstrap-options-is-managed-default" name="is-managed-default" value="false"/>
       </cluster_property_set>
     </crm_config>
     <nodes>
@@ -30,6 +28,16 @@
       <node id="pcmk-3" uname="pcmk-3" type="member"/>
       <node id="pcmk-4" uname="pcmk-4" type="member"/>
     </nodes>
+    <rsc_defaults>
+      <meta_attributes id="rsc_defaults-meta_attributes">
+            <nvpair id="rsc_defaults-is-managed" name="is-managed" value="false"/>
+      </meta_attributes>
+    </rsc_defaults>
+    <op_defaults>
+      <meta_attributes id="op_defaults-meta_attributes">
+        <nvpair id="op_defaults-timeout" name="timeout" value="60s"/>
+      </meta_attributes>
+    </op_defaults>
     <resources>
       <clone id="Fencing">
         <meta_attributes id="Fencing-meta_attributes">
@@ -37,9 +45,7 @@
           <nvpair id="Fencing-meta_attributes-migration-threshold" name="migration-threshold" value="5"/>
         </meta_attributes>
         <primitive class="stonith" id="FencingChild" type="fence_xvm">
-          <instance_attributes id="FencingChild-instance_attributes">
-            <nvpair id="FencingChild-instance_attributes-pcmk_arg_map" name="pcmk_arg_map" value="domain:uname"/>
-          </instance_attributes>
+          <instance_attributes id="FencingChild-instance_attributes"/>
           <operations>
             <op id="FencingChild-monitor-120s" interval="120s" name="monitor" timeout="300"/>
             <op id="FencingChild-start-0" interval="0" name="start" timeout="180s"/>

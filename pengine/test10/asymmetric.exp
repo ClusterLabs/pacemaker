@@ -21,7 +21,7 @@
      <action_set>
       <rsc_op id="3" operation="monitor" operation_key="drbd_target_poolA_monitor_0" on_node="puma3" on_node_uuid="d61fe2cb-98f0-4815-9b7e-2552f5330ad3">
         <primitive id="drbd_target_poolA" class="ocf" provider="vpools" type="iscsi_target"/>
-        <attributes CRM_meta_on_node="puma3" CRM_meta_on_node_uuid="d61fe2cb-98f0-4815-9b7e-2552f5330ad3" CRM_meta_op_target_rc="7" CRM_meta_timeout="40000"  drbd_resource="poolA" drbdconf="/etc/drbd.poolA" ip="192.168.5.1" nexus_iqn="iqn.2008-05.fr.longphone:poolA" target_role="started"/>
+        <attributes CRM_meta_on_node="puma3" CRM_meta_on_node_uuid="d61fe2cb-98f0-4815-9b7e-2552f5330ad3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  drbd_resource="poolA" drbdconf="/etc/drbd.poolA" ip="192.168.5.1" nexus_iqn="iqn.2008-05.fr.longphone:poolA" target_role="started"/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -30,7 +30,7 @@
      <action_set>
       <rsc_op id="2" operation="monitor" operation_key="drbd_target_poolA_monitor_0" on_node="puma1" on_node_uuid="c1b88737-8c7c-4824-81de-843fe7f2e88a">
         <primitive id="drbd_target_poolA" class="ocf" provider="vpools" type="iscsi_target"/>
-        <attributes CRM_meta_on_node="puma1" CRM_meta_on_node_uuid="c1b88737-8c7c-4824-81de-843fe7f2e88a" CRM_meta_op_target_rc="7" CRM_meta_timeout="40000"  drbd_resource="poolA" drbdconf="/etc/drbd.poolA" ip="192.168.5.1" nexus_iqn="iqn.2008-05.fr.longphone:poolA" target_role="started"/>
+        <attributes CRM_meta_on_node="puma1" CRM_meta_on_node_uuid="c1b88737-8c7c-4824-81de-843fe7f2e88a" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  drbd_resource="poolA" drbdconf="/etc/drbd.poolA" ip="192.168.5.1" nexus_iqn="iqn.2008-05.fr.longphone:poolA" target_role="started"/>
        </rsc_op>
      </action_set>
      <inputs/>

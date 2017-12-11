@@ -26,7 +26,6 @@
         <instance_attributes id="Fencing-params">
           <nvpair id="Fencing-delay" name="delay" value="0"/>
           <nvpair id="Fencing-multicast_address" name="multicast_address" value="239.255.100.100"/>
-          <nvpair id="Fencing-pcmk_arg_map" name="pcmk_arg_map" value="domain:uname"/>
           <nvpair id="Fencing-pcmk_host_list" name="pcmk_host_list" value="rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5"/>
         </instance_attributes>
         <operations>

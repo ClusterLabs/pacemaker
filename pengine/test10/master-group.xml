@@ -6,14 +6,10 @@
         <nvpair id="nvpair.id21858" name="no-quorum-policy" value="ignore"/>
         <nvpair id="nvpair.id21868" name="stonith-enabled" value="false"/>
         <nvpair id="nvpair.id21876" name="short-resource-names" value="true"/>
-        <nvpair id="nvpair.id21885" name="is-managed-default" value="true"/>
-        <nvpair id="nvpair.id21894" name="default-resource-stickiness" value="INFINITY"/>
         <nvpair id="nvpair.id21903" name="stop-orphan-resources" value="true"/>
         <nvpair id="nvpair.id21912" name="stop-orphan-actions" value="true"/>
         <nvpair id="nvpair.id21921" name="remove-after-stop" value="false"/>
-        <nvpair id="nvpair.id21930" name="default-migration-threshold" value="1"/>
         <nvpair id="nvpair.id21940" name="stonith-action" value="reboot"/>
-        <nvpair id="nvpair.id21948" name="default-action-timeout" value="120s"/>
         <nvpair id="nvpair.id21957" name="dc-deadtime" value="10s"/>
         <nvpair id="nvpair.id21965" name="cluster-recheck-interval" value="0"/>
         <nvpair id="nvpair.id21974" name="election-timeout" value="2min"/>
@@ -32,6 +28,16 @@
       <node id="782b1222-d1b9-4993-8f0d-b8b67801a2c8" uname="rh44-1" type="member"/>
       <node id="86600d98-4564-433a-8ad7-aca0ca59382a" uname="rh44-2" type="member"/>
     </nodes>
+    <rsc_defaults>
+      <meta_attributes id="rsc_defaults-meta_attributes">
+        <nvpair id="rsc_defaults-resource-stickiness" name="resource-stickiness" value="INFINITY"/>
+      </meta_attributes>
+    </rsc_defaults>
+    <op_defaults>
+      <meta_attributes id="op_defaults-meta_attributes">
+        <nvpair id="op_defaults-timeout" name="timeout" value="120s"/>
+      </meta_attributes>
+    </op_defaults>
     <resources>
       <group id="test">
         <primitive id="resource_1" class="ocf" type="IPaddr" provider="heartbeat">

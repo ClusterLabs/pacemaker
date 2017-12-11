@@ -3,7 +3,6 @@
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="nvpair.id21849" name="last-lrm-refresh" value="1171618186"/>
-        <nvpair id="nvpair.id21858" name="default-resource-stickiness" value="100"/>
         <nvpair id="nvpair.id21868" name="stonith-enabled" value="False"/>
       </cluster_property_set>
     </crm_config>
@@ -24,6 +23,11 @@
         </instance_attributes>
       </node>
     </nodes>
+    <rsc_defaults>
+      <meta_attributes id="rsc_defaults-meta_attributes">
+        <nvpair id="rsc_defaults-resource-stickiness" name="resource-stickiness" value="100"/>
+      </meta_attributes>
+    </rsc_defaults>
     <resources>
       <primitive id="the-future-of-vaj" class="ocf" type="Dummy" provider="heartbeat">
         <instance_attributes id="instance_attributes.id21980">

@@ -114,10 +114,6 @@
 ## Add option to ship Upstart job files
 %bcond_with upstart_job
 
-## Add option to turn off SNMP / ESMTP support
-%bcond_without snmp
-%bcond_without esmtp
-
 ## Add option to turn off hardening of libraries and daemon executables
 %bcond_without hardening
 
@@ -386,8 +382,6 @@ export LDFLAGS_HARDENED_LIB="%{?_hardening_ldflags}"
 %{configure}                                       \
         %{?with_profiling:   --with-profiling}     \
         %{?with_coverage:    --with-coverage}      \
-        %{!?with_snmp:       --without-snmp}       \
-        %{!?with_esmtp:      --without-esmtp}      \
         %{!?with_doc:        --with-brand=}        \
         %{!?with_hardening:  --disable-hardening}  \
         --with-initdir=%{_initrddir}               \

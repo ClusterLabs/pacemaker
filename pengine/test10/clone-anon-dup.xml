@@ -4,13 +4,11 @@
       <cluster_property_set id="default">
         <nvpair id="symmetric-cluster" name="symmetric-cluster" value="true"/>
         <nvpair id="transition-idle-timeout" name="transition-idle-timeout" value="60"/>
-        <nvpair id="default-resource-stickiness" name="default-resource-stickiness" value="1"/>
         <nvpair id="short-resource-names" name="short-resource-names" value="true"/>
         <nvpair id="no-quorum-policy" name="no-quorum-policy" value="stop"/>
         <nvpair id="stop-orphan-resources" name="stop-orphan-resources" value="false"/>
         <nvpair id="stop-orphan-actions" name="stop-orphan-actions" value="true"/>
         <nvpair id="remove-after-stop" name="remove-after-stop" value="false"/>
-        <nvpair id="is-managed-default" name="is-managed-default" value="true"/>
         <nvpair id="stonith-enabled" name="stonith-enabled" value="true"/>
         <nvpair id="stonith-action" name="stonith-action" value="reboot"/>
         <!-- see /usr/lib/heartbeat/crmd metadata - set to defaults -->
@@ -28,7 +26,6 @@
         <nvpair id="cluster-delay" name="cluster-delay" value="60s"/>
         <nvpair id="batch-limit" name="batch-limit" value="30"/>
         <nvpair id="stop-all-resources" name="stop-all-resources" value="false"/>
-        <nvpair id="default-action-timeout" name="default-action-timeout" value="20s"/>
         <nvpair id="pe-error-series-max" name="pe-error-series-max" value="-1"/>
         <nvpair id="pe-warn-series-max" name="pe-warn-series-max" value="-1"/>
         <nvpair id="pe-input-series-max" name="pe-input-series-max" value="-1"/>
@@ -58,6 +55,16 @@
       </node>
       <node id="f61edb1d-6f49-4ffa-a46a-42ceef796f6e" uname="wc03" type="member"/>
     </nodes>
+    <rsc_defaults>
+      <meta_attributes id="rsc_defaults-meta_attributes">
+        <nvpair id="rsc_defaults-resource-stickiness" name="resource-stickiness" value="1"/>
+      </meta_attributes>
+    </rsc_defaults>
+    <op_defaults>
+      <meta_attributes id="op_defaults-meta_attributes">
+        <nvpair id="op_defaults-timeout" name="timeout" value="20s"/>
+      </meta_attributes>
+    </op_defaults>
     <resources>
       <primitive id="stonith-1" class="stonith" type="dummy"/>
       <!-- webservices - START -->

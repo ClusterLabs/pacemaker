@@ -520,8 +520,6 @@ static struct crm_option long_options[] = {
     {"port", 1, 0,       'p', "\tPort to listen on"},
 #endif
 
-    /* For compatibility with the original lrmd */
-    {"dummy",  0, 0, 'r', NULL, 1},
     {0, 0, 0, 0}
 };
 /* *INDENT-ON* */
@@ -554,10 +552,6 @@ main(int argc, char **argv, char **envp)
         }
 
         switch (flag) {
-            case 'r':
-                crm_warn("The -r option to lrmd is deprecated (and ignored) "
-                         "and will be removed in a future release");
-                break;
             case 'l':
                 crm_add_logfile(optarg);
                 break;

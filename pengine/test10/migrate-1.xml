@@ -7,7 +7,6 @@
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="nvpair.id21835" name="no-quorum-policy" value="ignore"/>
         <nvpair id="nvpair.id21844" name="symmetric-cluster" value="true"/>
-        <nvpair id="nvpair.id21853" name="default-resource-stickiness" value="100"/>
       </cluster_property_set>
     </crm_config>
     <nodes>
@@ -18,6 +17,11 @@
       </node>
       <node id="node2" uname="node2" type="member"/>
     </nodes>
+    <rsc_defaults>
+      <meta_attributes id="rsc_defaults-meta_attributes">
+        <nvpair id="rsc_defaults-resource-stickiness" name="resource-stickiness" value="100"/>
+      </meta_attributes>
+    </rsc_defaults>
     <resources>
       <primitive id="rsc3" class="ocf" provider="heartbeat" type="apache">
         <instance_attributes id="instance_attributes.id21913">

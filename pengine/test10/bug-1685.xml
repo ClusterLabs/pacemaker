@@ -8,19 +8,21 @@
         <nvpair id="nvpair.id21876" name="symmetric-cluster" value="true"/>
         <nvpair id="nvpair.id21885" name="stop-orphan-actions" value="true"/>
         <nvpair id="nvpair.id21894" name="stonith-action" value="reboot"/>
-        <nvpair id="nvpair.id21904" name="is-managed-default" value="true"/>
         <nvpair id="nvpair.id21913" name="stop-orphan-resources" value="true"/>
         <nvpair id="nvpair.id21922" name="no-quorum-policy" value="stop"/>
-        <nvpair id="nvpair.id21932" name="default-migration-threshold" value="-100"/>
         <nvpair id="nvpair.id21941" name="probe_complete" value="true"/>
         <nvpair id="nvpair.id21950" name="transition-idle-timeout" value="60s"/>
-        <nvpair id="nvpair.id21959" name="default-resource-stickiness" value="800"/>
       </cluster_property_set>
     </crm_config>
     <nodes>
       <node id="1f7cf7cc-7d90-43fb-a7bd-f13fb5c203c1" uname="redun2" type="member"/>
       <node id="cd34ed93-fa5d-4092-a618-ac6349351d13" uname="redun1" type="member"/>
     </nodes>
+    <rsc_defaults>
+      <meta_attributes id="rsc_defaults-meta_attributes">
+        <nvpair id="rsc_defaults-resource-stickiness" name="resource-stickiness" value="800"/>
+      </meta_attributes>
+    </rsc_defaults>
     <resources>
       <master id="shared_storage">
         <meta_attributes id="meta_attributes.id22000">

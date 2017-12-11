@@ -5,7 +5,6 @@
         <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="freeze"/>
         <nvpair id="cib-bootstrap-options-stop-orphan-resources" name="stop-orphan-resources" value="true"/>
-        <nvpair id="cib-bootstrap-options-is-managed-default" name="is-managed-default" value="true"/>
         <nvpair id="cib-bootstrap-options-maintenance-mode" name="maintenance-mode" value="false"/>
         <nvpair id="cib-bootstrap-options-pe-error-series-max" name="pe-error-series-max" value="100"/>
         <nvpair id="cib-bootstrap-options-pe-warn-series-max" name="pe-warn-series-max" value="100"/>
@@ -18,8 +17,6 @@
         <nvpair name="cluster-recheck-interval" value="10m" id="cib-bootstrap-options-cluster-recheck-interval"/>
         <nvpair name="crmd-transition-delay" value="0s" id="cib-bootstrap-options-crmd-transition-delay"/>
         <nvpair name="dc-deadtime" value="20s" id="cib-bootstrap-options-dc-deadtime"/>
-        <nvpair name="default-action-timeout" value="20s" id="cib-bootstrap-options-default-action-timeout"/>
-        <nvpair name="default-resource-stickiness" value="100" id="cib-bootstrap-options-default-resource-stickiness"/>
         <nvpair name="election-timeout" value="2m" id="cib-bootstrap-options-election-timeout"/>
         <nvpair name="enable-acl" value="false" id="cib-bootstrap-options-enable-acl"/>
         <nvpair name="enable-startup-probes" value="true" id="cib-bootstrap-options-enable-startup-probes"/>
@@ -54,6 +51,11 @@
         </instance_attributes>
       </node>
     </nodes>
+    <op_defaults>
+      <meta_attributes id="op_defaults-meta_attributes">
+        <nvpair id="op_defaults-timeout" name="timeout" value="20s"/>
+      </meta_attributes>
+    </op_defaults>
     <resources>
       <primitive id="stonith-xvm-sd01-0" class="stonith" type="fence_xvm">
         <instance_attributes id="stonith-xvm-sd01-0-instance_attributes">
@@ -298,6 +300,7 @@
         <nvpair name="migration-threshold" value="INFINITY" id="rsc_options-migration-threshold"/>
         <nvpair name="multiple-active" value="stop_start" id="rsc_options-multiple-active"/>
         <nvpair name="priority" value="0" id="rsc_options-priority"/>
+        <nvpair id="rsc_defaults-resource-stickiness" name="resource-stickiness" value="100"/>
       </meta_attributes>
     </rsc_defaults>
   </configuration>

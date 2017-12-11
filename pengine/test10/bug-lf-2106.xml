@@ -5,7 +5,6 @@
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.0.3-dadaf305c879 stable-1.0 tip"/>
         <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="2"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
-        <nvpair id="cib-bootstrap-options-default-resource-stickiness" name="default-resource-stickiness" value="100"/>
         <nvpair id="cib-bootstrap-options-cluster-recheck-interval" name="cluster-recheck-interval" value="300"/>
         <nvpair id="cib-bootstrap-options-maintenance-mode" name="maintenance-mode" value="false"/>
       </cluster_property_set>
@@ -302,6 +301,7 @@
       <meta_attributes id="rsc-options">
         <nvpair id="rsc-options-migration-threshold" name="migration-threshold" value="2"/>
         <nvpair id="rsc-options-failure-timeout" name="failure-timeout" value="600"/>
+        <nvpair id="rsc_defaults-resource-stickiness" name="resource-stickiness" value="100"/>
       </meta_attributes>
     </rsc_defaults>
     <op_defaults/>

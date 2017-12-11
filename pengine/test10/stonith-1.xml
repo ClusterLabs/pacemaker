@@ -2,21 +2,17 @@
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
-        <nvpair id="nvpair.id21849" name="default-action-timeout" value="10s"/>
         <nvpair id="nvpair.id21858" name="cluster-delay" value="60s"/>
         <nvpair id="nvpair.id21867" name="symmetric-cluster" value="true"/>
         <nvpair id="nvpair.id21877" name="stop-orphan-resources" value="true"/>
         <nvpair id="nvpair.id21886" name="stop-orphan-actions" value="true"/>
         <nvpair id="nvpair.id21895" name="remove-after-stop" value="false"/>
-        <nvpair id="nvpair.id21905" name="is-managed-default" value="true"/>
         <nvpair id="nvpair.id21914" name="no-quorum-policy" value="stop"/>
         <nvpair id="nvpair.id21923" name="stonith-action" value="reboot"/>
         <nvpair id="nvpair.id21932" name="stonith-enabled" value="1"/>
         <nvpair id="nvpair.id21941" name="pe-error-series-max" value="-1"/>
         <nvpair id="nvpair.id21950" name="pe-warn-series-max" value="-1"/>
         <nvpair id="nvpair.id21959" name="pe-input-series-max" value="30000"/>
-        <nvpair id="nvpair.id21969" name="default-resource-stickiness" value="0"/>
-        <nvpair id="nvpair.id21978" name="default-migration-threshold" value="0"/>
         <nvpair id="nvpair.id21987" name="shutdown-escalation" value="5min"/>
         <nvpair id="nvpair.id21997" name="startup-fencing" value="false"/>
       </cluster_property_set>
@@ -35,6 +31,11 @@
         </instance_attributes>
       </node>
     </nodes>
+    <op_defaults>
+      <meta_attributes id="op_defaults-meta_attributes">
+        <nvpair id="op_defaults-timeout" name="timeout" value="10s"/>
+      </meta_attributes>
+    </op_defaults>
     <resources>
       <group id="group-1">
         <primitive id="r192.168.100.181" class="ocf" type="IPaddr" provider="heartbeat">

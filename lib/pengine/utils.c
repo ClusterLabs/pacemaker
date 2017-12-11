@@ -800,34 +800,9 @@ unpack_interval_origin(const char *value, GHashTable *meta, xmlNode *xml_obj,
 }
 
 static int
-unpack_timeout(const char *value, action_t *action, xmlNode *xml_obj,
-               unsigned long long interval, GHashTable *config_hash)
+unpack_timeout(const char *value)
 {
     int timeout = 0;
-
-    if (value == NULL && xml_obj == NULL && action &&
-        safe_str_eq(action->task, RSC_STATUS) && interval == 0) {
-
-        xmlNode *min_interval_mon = find_min_interval_mon(action->rsc, FALSE);
-
-        if (min_interval_mon) {
-            value = crm_element_value(min_interval_mon, XML_ATTR_TIMEOUT);
-            pe_rsc_trace(action->rsc,
-                         "\t%s uses the timeout value '%s' from the minimum interval monitor",
-                         action->uuid, value);
-        }
-    }
-
-    if (value == NULL && config_hash) {
-        value = pe_pref(config_hash, "default-action-timeout");
-        if (value) {
-            pe_warn_once(pe_wo_default_timeo,
-                         "Support for 'default-action-timeout' cluster property"
-                         " is deprecated and will be removed in a future release"
-                         " (use 'timeout' in op_defaults instead)");
-
-        }
-    }
 
     if (value == NULL) {
         value = CRM_DEFAULT_OP_TIMEOUT_S;
@@ -861,10 +836,6 @@ pe_get_configured_timeout(resource_t *rsc, const char *action, pe_working_set_t 
         unpack_instance_attributes(data_set->input, data_set->op_defaults, XML_TAG_META_SETS,
                                    NULL, action_meta, NULL, FALSE, data_set->now);
         timeout = g_hash_table_lookup(action_meta, XML_ATTR_TIMEOUT);
-    }
-
-    if (timeout == NULL && data_set->config_hash) {
-        timeout = pe_pref(data_set->config_hash, "default-action-timeout");
     }
 
     if (timeout == NULL) {
@@ -901,7 +872,7 @@ unpack_versioned_meta(xmlNode *versioned_meta, xmlNode *xml_obj, unsigned long l
                 crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, XML_OP_ATTR_START_DELAY);
                 crm_xml_add_int(attr, XML_NVPAIR_ATTR_VALUE, start_delay);
             } else if (safe_str_eq(name, XML_ATTR_TIMEOUT)) {
-                int timeout = unpack_timeout(value, NULL, NULL, 0, NULL);
+                int timeout = unpack_timeout(value);
 
                 crm_xml_add_int(attr, XML_NVPAIR_ATTR_VALUE, timeout);
             }
@@ -910,6 +881,18 @@ unpack_versioned_meta(xmlNode *versioned_meta, xmlNode *xml_obj, unsigned long l
 }
 #endif
 
+/*!
+ * \brief Unpack operation XML into an action structure
+ *
+ * Unpack an operation's meta-attributes (normalizing the interval, timeout,
+ * and start delay values as integer milliseconds), requirements, and
+ * failure policy.
+ *
+ * \param[in,out] action     Action to unpack into
+ * \param[in]     xml_obj    Operation XML (or NULL if all defaults)
+ * \param[in]     container  Resource that contains affected resource, if any
+ * \param[in]     data_set   Cluster state
+ */
 void
 unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
                  pe_working_set_t * data_set)
@@ -925,9 +908,34 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
 
     CRM_CHECK(action->rsc != NULL, return);
 
+    // Probe timeouts default to minimum-interval monitor's
+    if ((xml_obj == NULL) && action &&
+        safe_str_eq(action->task, RSC_STATUS) && (interval == 0)) {
+
+        xmlNode *min_interval_mon = find_min_interval_mon(action->rsc, FALSE);
+
+        if (min_interval_mon) {
+            value = crm_element_value(min_interval_mon, XML_ATTR_TIMEOUT);
+            if (value) {
+                crm_trace("\t%s defaults to minimum-interval monitor's timeout '%s'",
+                          action->uuid, value);
+                g_hash_table_insert(action->meta, strdup(XML_ATTR_TIMEOUT),
+                                    strdup(value));
+            }
+        }
+    }
+
+    // Cluster-wide <op_defaults> <meta_attributes>
     unpack_instance_attributes(data_set->input, data_set->op_defaults, XML_TAG_META_SETS, NULL,
                                action->meta, NULL, FALSE, data_set->now);
 
+    // <op> <meta_attributes> take precedence over defaults
+    unpack_instance_attributes(data_set->input, xml_obj, XML_TAG_META_SETS,
+                               NULL, action->meta, NULL, TRUE, data_set->now);
+
+    /* Anything set as an <op> XML property has highest precedence.
+     * This ensures we use the name and interval from the <op> tag.
+     */
     if (xml_obj) {
         xmlAttrPtr xIter = NULL;
 
@@ -938,12 +946,6 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
             g_hash_table_replace(action->meta, strdup(prop_name), strdup(prop_value));
         }
     }
-
-    unpack_instance_attributes(data_set->input, xml_obj, XML_TAG_META_SETS,
-                               NULL, action->meta, NULL, FALSE, data_set->now);
-
-    unpack_instance_attributes(data_set->input, xml_obj, XML_TAG_ATTR_SETS,
-                               NULL, action->meta, NULL, FALSE, data_set->now);
 
 #if ENABLE_VERSIONED_ATTRS
     rsc_details = pe_rsc_action_details(action);
@@ -1155,7 +1157,7 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
 
     field = XML_ATTR_TIMEOUT;
     value = g_hash_table_lookup(action->meta, field);
-    timeout = unpack_timeout(value, action, xml_obj, interval, data_set->config_hash);
+    timeout = unpack_timeout(value);
     g_hash_table_replace(action->meta, strdup(XML_ATTR_TIMEOUT), crm_itoa(timeout));
 
 #if ENABLE_VERSIONED_ATTRS

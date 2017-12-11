@@ -7,10 +7,6 @@
         <nvpair name="symmetric-cluster" value="true" id="nvpair.id21868"/>
         <nvpair name="stonith-enabled" value="true" id="nvpair.id21877"/>
         <nvpair name="stonith-action" value="reboot" id="nvpair.id21886"/>
-        <nvpair name="default-resource-stickiness" value="0" id="nvpair.id21894"/>
-        <nvpair name="default-migration-threshold" value="1" id="nvpair.id21903"/>
-        <nvpair name="is-managed-default" value="true" id="nvpair.id21912"/>
-        <nvpair name="default-action-timeout" value="20s" id="nvpair.id21921"/>
         <nvpair name="stop-orphan-resources" value="true" id="nvpair.id21930"/>
         <nvpair name="stop-orphan-actions" value="true" id="nvpair.id21939"/>
         <nvpair name="remove-after-stop" value="false" id="nvpair.id21948"/>
@@ -23,6 +19,11 @@
         <nvpair id="nvpair.id218779" name="migration-threshold" value="1"/>
       </meta_attributes>
     </rsc_defaults>
+    <op_defaults>
+      <meta_attributes id="op_defaults-meta_attributes">
+        <nvpair id="op_defaults-timeout" name="timeout" value="20s"/>
+      </meta_attributes>
+    </op_defaults>
     <nodes>
       <node id="6676c8d5-552e-4a86-a2ea-172e954f7342" uname="dktest2sles10" type="member"/>
       <node id="c563f60c-45a8-439e-85dc-645f4ecc150d" uname="dktest1sles10" type="member"/>

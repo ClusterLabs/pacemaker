@@ -4,13 +4,11 @@
       <cluster_property_set id="default">
         <nvpair id="symmetric-cluster" name="symmetric-cluster" value="true"/>
         <nvpair id="transition-idle-timeout" name="transition-idle-timeout" value="60"/>
-        <nvpair id="default-resource-stickiness" name="default-resource-stickiness" value="0"/>
         <nvpair id="short-resource-names" name="short-resource-names" value="true"/>
         <nvpair id="no-quorum-policy" name="no-quorum-policy" value="stop"/>
         <nvpair id="stop-orphan-resources" name="stop-orphan-resources" value="false"/>
         <nvpair id="stop-orphan-actions" name="stop-orphan-actions" value="true"/>
         <nvpair id="remove-after-stop" name="remove-after-stop" value="false"/>
-        <nvpair id="is-managed-default" name="is-managed-default" value="true"/>
         <nvpair id="stonith-enabled" name="stonith-enabled" value="true"/>
         <nvpair id="stonith-action" name="stonith-action" value="reboot"/>
       </cluster_property_set>

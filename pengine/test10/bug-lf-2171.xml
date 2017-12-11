@@ -9,7 +9,6 @@
         <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-maintenance-mode" name="maintenance-mode" value="false"/>
         <nvpair id="cib-bootstrap-options-node-health-red" name="node-health-red" value="0"/>
-        <nvpair id="cib-bootstrap-options-is-managed-default" name="is-managed-default" value="true"/>
       </cluster_property_set>
     </crm_config>
     <rsc_defaults>

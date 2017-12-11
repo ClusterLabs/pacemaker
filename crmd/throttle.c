@@ -425,15 +425,6 @@ throttle_update_job_max(const char *preference)
         }
     }
 
-    preference = getenv("LRMD_MAX_CHILDREN");
-    if(preference) {
-        /* Legacy env variable */
-        max = crm_int_helper(preference, NULL);
-        if(max > 0) {
-            throttle_job_max = max;
-        }
-    }
-
     preference = getenv("PCMK_node_action_limit");
     if(preference) {
         /* Per-node override */

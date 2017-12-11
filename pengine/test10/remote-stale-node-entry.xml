@@ -5,7 +5,6 @@
         <nvpair id="cts-stonith-enabled" name="stonith-enabled" value="1"/>
         <nvpair id="cts-start-failure-is-fatal" name="start-failure-is-fatal" value="false"/>
         <nvpair id="cts-pe-input-series-max" name="pe-input-series-max" value="5000"/>
-        <nvpair id="cts-default-action-timeout" name="default-action-timeout" value="90s"/>
         <nvpair id="cts-shutdown-escalation" name="shutdown-escalation" value="5min"/>
         <nvpair id="cts-batch-limit" name="batch-limit" value="10"/>
         <nvpair id="cts-dc-deadtime" name="dc-deadtime" value="5s"/>
@@ -23,6 +22,11 @@
         <instance_attributes id="nodes-remote1"/>
       </node>
     </nodes>
+    <op_defaults>
+      <meta_attributes id="op_defaults-meta_attributes">
+        <nvpair id="op_defaults-timeout" name="timeout" value="90s"/>
+      </meta_attributes>
+    </op_defaults>
     <resources>
       <primitive id="Fencing" class="stonith" type="fence_xvm">
         <meta_attributes id="Fencing-meta">
@@ -30,7 +34,6 @@
         </meta_attributes>
         <instance_attributes id="Fencing-params">
           <nvpair id="Fencing-delay" name="delay" value="0"/>
-          <nvpair id="Fencing-pcmk_arg_map" name="pcmk_arg_map" value="domain:uname"/>
         </instance_attributes>
         <operations>
           <op id="Fencing-monitor-120s" interval="120s" name="monitor" timeout="120s"/>

@@ -9,14 +9,12 @@
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="freeze"/>
         <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="3"/>
         <nvpair id="cib-bootstrap-options-stop-orphan-resources" name="stop-orphan-resources" value="true"/>
-        <nvpair id="cib-bootstrap-options-is-managed-default" name="is-managed-default" value="true"/>
         <nvpair id="cib-bootstrap-options-maintenance-mode" name="maintenance-mode" value="false"/>
         <nvpair id="cib-bootstrap-options-pe-error-series-max" name="pe-error-series-max" value="100"/>
         <nvpair id="cib-bootstrap-options-pe-warn-series-max" name="pe-warn-series-max" value="100"/>
         <nvpair id="cib-bootstrap-options-pe-input-series-max" name="pe-input-series-max" value="100"/>
         <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1322576744"/>
         <nvpair id="cib-bootstrap-options-stop-all-resources" name="stop-all-resources" value="false"/>
-        <nvpair id="cib-bootstrap-options-default-resource-stickiness" name="default-resource-stickiness" value="0"/>
         <nvpair id="cib-bootstrap-options-cluster-recheck-interval" name="cluster-recheck-interval" value="10min"/>
       </cluster_property_set>
     </crm_config>

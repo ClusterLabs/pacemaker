@@ -3,7 +3,6 @@
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="2"/>
-        <nvpair id="cib-bootstrap-options-default-resource-stickiness" name="default-resource-stickiness" value="100000"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
         <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
         <nvpair id="cib-bootstrap-options-stonith-action" name="stonith-action" value="reboot"/>
@@ -36,6 +35,11 @@
         </instance_attributes>
       </node>
     </nodes>
+    <rsc_defaults>
+      <meta_attributes id="rsc_defaults-meta_attributes">
+        <nvpair id="rsc_defaults-resource-stickiness" name="resource-stickiness" value="100000"/>
+      </meta_attributes>
+    </rsc_defaults>
     <resources>
       <primitive class="ocf" id="degllx61-vm" provider="heartbeat" type="Xen">
         <meta_attributes id="degllx61-vm-meta_attributes">
