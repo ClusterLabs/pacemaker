@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="8" operation="monitor" operation_key="world1_monitor_10000" on_node="ubuntu_1" on_node_uuid="ubuntu_1">
         <primitive id="world1" class="ocf" provider="bbnd" type="world1test"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_on_node="ubuntu_1" CRM_meta_on_node_uuid="ubuntu_1" CRM_meta_requires="nothing" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_on_node="ubuntu_1" CRM_meta_on_node_uuid="ubuntu_1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -42,7 +42,7 @@
     <action_set>
       <rsc_op id="11" operation="monitor" operation_key="world2_monitor_10000" on_node="ubuntu_1" on_node_uuid="ubuntu_1">
         <primitive id="world2" class="ocf" provider="bbnd" type="world2test"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_on_node="ubuntu_1" CRM_meta_on_node_uuid="ubuntu_1" CRM_meta_requires="nothing" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_on_node="ubuntu_1" CRM_meta_on_node_uuid="ubuntu_1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -84,7 +84,7 @@
     <action_set>
       <rsc_op id="14" operation="monitor" operation_key="world3_monitor_10000" on_node="ubuntu_1" on_node_uuid="ubuntu_1">
         <primitive id="world3" class="ocf" provider="bbnd" type="world3test"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_on_node="ubuntu_1" CRM_meta_on_node_uuid="ubuntu_1" CRM_meta_requires="nothing" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_on_node="ubuntu_1" CRM_meta_on_node_uuid="ubuntu_1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -126,7 +126,7 @@
     <action_set>
       <rsc_op id="17" operation="monitor" operation_key="world4_monitor_10000" on_node="ubuntu_1" on_node_uuid="ubuntu_1">
         <primitive id="world4" class="ocf" provider="bbnd" type="world4test"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_on_node="ubuntu_1" CRM_meta_on_node_uuid="ubuntu_1" CRM_meta_requires="nothing" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_fail="restart" CRM_meta_on_node="ubuntu_1" CRM_meta_on_node_uuid="ubuntu_1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>

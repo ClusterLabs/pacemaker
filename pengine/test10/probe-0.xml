@@ -24,8 +24,8 @@
       <clone id="stonithcloneset">
         <primitive id="stonithclone" class="stonith" type="null">
           <operations>
-            <op name="monitor" interval="5s" id="stonithclone-op-01" timeout="20s" requires="nothing"/>
-            <op name="start" interval="0" id="stonithclone-op-02" timeout="20s" requires="nothing"/>
+            <op name="monitor" interval="5s" id="stonithclone-op-01" timeout="20s"/>
+            <op name="start" interval="0" id="stonithclone-op-02" timeout="20s"/>
           </operations>
           <instance_attributes id="instance_attributes.id22022">
             <nvpair id="nvpair.id22029" name="hostlist" value="32c47,32c48"/>
@@ -35,6 +35,7 @@
         <meta_attributes id="clone-stonithcloneset.meta">
           <nvpair id="globally_unique.meta.auto-43" name="globally-unique" value="false"/>
           <nvpair id="nvpair.meta.auto-49" name="clone-node-max" value="1"/>
+          <nvpair id="nvpair-requires" name="requires" value="nothing"/>
         </meta_attributes>
       </clone>
       <clone id="imagestorecloneset">

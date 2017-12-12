@@ -313,7 +313,7 @@
     <action_set>
       <rsc_op id="40" operation="monitor" operation_key="child_DoFencing:0_monitor_5000" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
         <primitive id="child_DoFencing:0" class="stonith" type="ssh"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="c001n03" CRM_meta_on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193" CRM_meta_requires="nothing" CRM_meta_timeout="20000"  hostlist="c001n08 c001n02 c001n03 c001n01 "/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="c001n03" CRM_meta_on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193" CRM_meta_timeout="20000"  hostlist="c001n08 c001n02 c001n03 c001n01 "/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -326,7 +326,7 @@
     <action_set>
       <rsc_op id="39" operation="start" operation_key="child_DoFencing:0_start_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
         <primitive id="child_DoFencing:0" class="stonith" type="ssh"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="c001n03" CRM_meta_on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193" CRM_meta_requires="nothing" CRM_meta_timeout="20000"  hostlist="c001n08 c001n02 c001n03 c001n01 "/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="c001n03" CRM_meta_on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193" CRM_meta_timeout="20000"  hostlist="c001n08 c001n02 c001n03 c001n01 "/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -366,7 +366,7 @@
     <action_set>
       <rsc_op id="42" operation="monitor" operation_key="child_DoFencing:1_monitor_5000" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3">
         <primitive id="child_DoFencing:1" class="stonith" type="ssh"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="c001n01" CRM_meta_on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3" CRM_meta_requires="nothing" CRM_meta_timeout="20000"  hostlist="c001n08 c001n02 c001n03 c001n01 "/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="c001n01" CRM_meta_on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3" CRM_meta_timeout="20000"  hostlist="c001n08 c001n02 c001n03 c001n01 "/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -379,7 +379,7 @@
     <action_set>
       <rsc_op id="41" operation="start" operation_key="child_DoFencing:1_start_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3">
         <primitive id="child_DoFencing:1" class="stonith" type="ssh"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="c001n01" CRM_meta_on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3" CRM_meta_requires="nothing" CRM_meta_timeout="20000"  hostlist="c001n08 c001n02 c001n03 c001n01 "/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="c001n01" CRM_meta_on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3" CRM_meta_timeout="20000"  hostlist="c001n08 c001n02 c001n03 c001n01 "/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -419,7 +419,7 @@
     <action_set>
       <rsc_op id="44" operation="monitor" operation_key="child_DoFencing:2_monitor_5000" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
         <primitive id="child_DoFencing:2" class="stonith" type="ssh"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="c001n08" CRM_meta_on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" CRM_meta_requires="nothing" CRM_meta_timeout="20000"  hostlist="c001n08 c001n02 c001n03 c001n01 "/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="c001n08" CRM_meta_on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" CRM_meta_timeout="20000"  hostlist="c001n08 c001n02 c001n03 c001n01 "/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -432,7 +432,7 @@
     <action_set>
       <rsc_op id="43" operation="start" operation_key="child_DoFencing:2_start_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
         <primitive id="child_DoFencing:2" class="stonith" type="ssh"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="c001n08" CRM_meta_on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" CRM_meta_requires="nothing" CRM_meta_timeout="20000"  hostlist="c001n08 c001n02 c001n03 c001n01 "/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="c001n08" CRM_meta_on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" CRM_meta_timeout="20000"  hostlist="c001n08 c001n02 c001n03 c001n01 "/>
       </rsc_op>
     </action_set>
     <inputs>

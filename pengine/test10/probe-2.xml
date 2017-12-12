@@ -249,9 +249,12 @@
         </meta_attributes>
         <primitive id="stonith_rackpdu" class="stonith" type="external/rackpdu">
           <operations>
-            <op id="stonith_rackpdu_monitor" name="monitor" interval="5s" timeout="20s" requires="nothing"/>
-            <op id="sontith_rackpdu_start" name="start" interval="20s" requires="nothing"/>
+            <op id="stonith_rackpdu_monitor" name="monitor" interval="5s" timeout="20s"/>
+            <op id="sontith_rackpdu_start" name="start" interval="20s"/>
           </operations>
+          <meta_attributes id="meta_attributes-requires">
+            <nvpair id="nvpair-requires" name="requires" value="nothing"/>
+          </meta_attributes>
           <instance_attributes id="stonith_rackpdu_ia">
             <nvpair id="stonith_rackpdu_ia_hostlist" name="hostlist" value="wc01 wc02"/>
             <nvpair id="stonith_rackpdu_ia_pduip" name="pduip" value="pdu02.r02.ipax.at"/>

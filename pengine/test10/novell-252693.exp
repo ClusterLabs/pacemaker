@@ -512,7 +512,7 @@
      <action_set>
       <rsc_op id="72" operation="monitor" operation_key="sles10_monitor_10000" on_node="node2" on_node_uuid="997c3f45-7e3f-4c70-8d9a-623ba1678a6e">
         <primitive id="sles10" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="node2" CRM_meta_on_node_uuid="997c3f45-7e3f-4c70-8d9a-623ba1678a6e" CRM_meta_requires="nothing" CRM_meta_timeout="60000"  xmfile="/etc/xen/vm/sles10"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="node2" CRM_meta_on_node_uuid="997c3f45-7e3f-4c70-8d9a-623ba1678a6e" CRM_meta_timeout="60000"  xmfile="/etc/xen/vm/sles10"/>
        </rsc_op>
      </action_set>
      <inputs>

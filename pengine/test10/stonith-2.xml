@@ -147,14 +147,16 @@
       <clone id="DoFencing">
         <primitive id="child_DoFencing" class="stonith" type="external/vmware">
           <operations>
-            <op name="monitor" interval="120s" id="DoFencing-1" requires="nothing" timeout="300s"/>
-            <op name="start" interval="0" id="DoFencing-2" requires="nothing" timeout="180s"/>
+            <op name="monitor" interval="120s" id="DoFencing-1" timeout="300s"/>
+            <op name="start" interval="0" id="DoFencing-2" timeout="180s"/>
             <op name="stop" interval="0" id="DoFencing-3" timeout="180s"/>
           </operations>
           <instance_attributes id="instance_attributes.id22574">
             <nvpair id="nvpair.id22581" name="device_host" value="vmhost"/>
           </instance_attributes>
-          <meta_attributes id="primitive-child_DoFencing.meta"/>
+          <meta_attributes id="meta_attributes-requires">
+            <nvpair id="nvpair-requires" name="requires" value="nothing"/>
+          </meta_attributes>
         </primitive>
         <meta_attributes id="clone-DoFencing.meta">
           <nvpair id="globally_unique.meta.auto-268" name="globally-unique" value="false"/>

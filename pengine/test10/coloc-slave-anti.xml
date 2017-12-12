@@ -46,10 +46,12 @@
             <nvpair id="nvpair.id22109" name="multiplier" value="100"/>
           </instance_attributes>
           <operations>
-            <op name="monitor" interval="10s" id="pingd-1-monitor" timeout="5s" requires="nothing"/>
-            <op name="start" interval="0" id="pingd-1-start" timeout="10s" requires="nothing"/>
+            <op name="monitor" interval="10s" id="pingd-1-monitor" timeout="5s"/>
+            <op name="start" interval="0" id="pingd-1-start" timeout="10s"/>
           </operations>
-          <meta_attributes id="primitive-pingd-1.meta"/>
+          <meta_attributes id="pingd-1-meta_attributes-requires">
+            <nvpair id="pingd-1-nvpair-requires" name="requires" value="nothing"/>
+          </meta_attributes>
         </primitive>
         <meta_attributes id="clone-pingd-clone.meta"/>
       </clone>
@@ -134,12 +136,13 @@
           <nvpair id="nvpair.id22637" name="passwd" value="qwe123"/>
         </instance_attributes>
         <operations>
-          <op name="monitor" interval="60s" id="pollux-fencing-monitor" timeout="10s" requires="nothing"/>
-          <op name="start" interval="0" id="pollux-fencing-start" timeout="10s" requires="nothing"/>
-          <op name="stop" interval="0" id="pollux-fencing-stop" timeout="10s" requires="nothing"/>
+          <op name="monitor" interval="60s" id="pollux-fencing-monitor" timeout="10s"/>
+          <op name="start" interval="0" id="pollux-fencing-start" timeout="10s"/>
+          <op name="stop" interval="0" id="pollux-fencing-stop" timeout="10s"/>
         </operations>
         <meta_attributes id="primitive-pollux-fencing.meta">
           <nvpair id="resource_stickiness.meta.auto-226" name="resource-stickiness" value="INFINITY"/>
+          <nvpair id="pollux-fencing-nvpair-requires" name="requires" value="nothing"/>
         </meta_attributes>
       </primitive>
       <primitive id="sirius-fencing" class="stonith" type="external/ipmi-soft">
@@ -150,12 +153,13 @@
           <nvpair id="nvpair.id22732" name="passwd" value="qwe123"/>
         </instance_attributes>
         <operations>
-          <op name="monitor" interval="60s" id="sirius-fencing-monitor" timeout="10s" requires="nothing"/>
-          <op name="start" interval="0" id="sirius-fencing-start" timeout="10s" requires="nothing"/>
-          <op name="stop" interval="0" id="sirius-fencing-stop" timeout="10s" requires="nothing"/>
+          <op name="monitor" interval="60s" id="sirius-fencing-monitor" timeout="10s"/>
+          <op name="start" interval="0" id="sirius-fencing-start" timeout="10s"/>
+          <op name="stop" interval="0" id="sirius-fencing-stop" timeout="10s"/>
         </operations>
         <meta_attributes id="primitive-sirius-fencing.meta">
           <nvpair id="resource_stickiness.meta.auto-252" name="resource-stickiness" value="INFINITY"/>
+          <nvpair id="sirius-fencing-nvpair-requires" name="requires" value="nothing"/>
         </meta_attributes>
       </primitive>
     </resources>

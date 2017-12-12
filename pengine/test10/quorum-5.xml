@@ -18,23 +18,27 @@
       <group id="group1">
         <primitive id="child_DoFencing_1" class="stonith" type="ssh">
           <operations>
-            <op name="start" interval="0" id="op.auto-1" requires="nothing"/>
+            <op name="start" interval="0" id="op.auto-1"/>
             <op name="monitor" interval="5s" id="op.auto-2" timeout="20s"/>
           </operations>
           <instance_attributes id="instance_attributes.id21958">
             <nvpair id="nvpair.id21965" name="hostlist" value="hadev1 hadev2 hadev3 "/>
           </instance_attributes>
-          <meta_attributes id="primitive-child_DoFencing_1.meta"/>
+          <meta_attributes id="meta_attributes-requires">
+            <nvpair id="nvpair-requires" name="requires" value="nothing"/>
+          </meta_attributes>
         </primitive>
         <primitive id="child_DoFencing_2" class="stonith" type="ssh">
           <operations>
-            <op name="start" interval="0" id="op.auto-4" requires="nothing"/>
+            <op name="start" interval="0" id="op.auto-4"/>
             <op name="monitor" interval="5s" id="op.auto-3" timeout="20s"/>
           </operations>
           <instance_attributes id="instance_attributes.id21997">
             <nvpair id="nvpair.id22003" name="hostlist" value="hadev1 hadev2 hadev3 "/>
           </instance_attributes>
-          <meta_attributes id="primitive-child_DoFencing_2.meta"/>
+          <meta_attributes id="meta_attributes2-requires">
+            <nvpair id="nvpair2-requires" name="requires" value="nothing"/>
+          </meta_attributes>
         </primitive>
         <meta_attributes id="group-group1.meta"/>
       </group>

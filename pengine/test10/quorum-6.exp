@@ -16,7 +16,7 @@
      <action_set>
       <rsc_op id="10" operation="start" operation_key="child_DoFencing:0_start_0" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3">
         <primitive id="child_DoFencing:0" class="stonith" type="ssh"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="hadev2" CRM_meta_on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3" CRM_meta_requires="nothing" CRM_meta_timeout="20000"  hostlist="hadev1 hadev2 hadev3 "/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="hadev2" CRM_meta_on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3" CRM_meta_timeout="20000"  hostlist="hadev1 hadev2 hadev3 "/>
        </rsc_op>
      </action_set>
      <inputs>

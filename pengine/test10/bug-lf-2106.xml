@@ -20,9 +20,12 @@
           <nvpair id="apcstonith-instance_attributes-port" name="port" value="161"/>
           <nvpair id="apcstonith-instance_attributes-ipaddr" name="ipaddr" value="10.2.50.154"/>
         </instance_attributes>
+        <meta_attributes id="meta_attributes-requires">
+          <nvpair id="nvpair-requires" name="requires" value="nothing"/>
+        </meta_attributes>
         <operations>
           <op id="apcstonith-monitor-60" interval="60" name="monitor" timeout="120"/>
-          <op id="apcstonith-start-0" interval="0" name="start" requires="nothing"/>
+          <op id="apcstonith-start-0" interval="0" name="start"/>
         </operations>
       </primitive>
       <clone id="pingdclone">
