@@ -595,6 +595,7 @@ clear_rsc_failures(crm_ipc_t *crmd_channel, const char *node_name,
 {
     int rc = pcmk_ok;
     const char *failed_value = NULL;
+    const char *failed_id = NULL;
     const char *interval_ms_str = NULL;
     GHashTable *rscs = NULL;
     GHashTableIter iter;
@@ -613,11 +614,14 @@ clear_rsc_failures(crm_ipc_t *crmd_channel, const char *node_name,
     for (xmlNode *xml_op = __xml_first_child(data_set->failed); xml_op != NULL;
          xml_op = __xml_next(xml_op)) {
 
+        failed_id = crm_element_value(xml_op, XML_LRM_ATTR_RSCID);
+        if (failed_id == NULL) {
+            // Malformed history entry, should never happen
+            continue;
+        }
+
         // No resource specified means all resources match
-        failed_value = crm_element_value(xml_op, XML_LRM_ATTR_RSCID);
-        if (rsc_id == NULL) {
-            rsc_id = failed_value;
-        } else if (safe_str_neq(rsc_id, failed_value)) {
+        if (rsc_id && safe_str_neq(rsc_id, failed_id)) {
             continue;
         }
 
@@ -641,13 +645,13 @@ clear_rsc_failures(crm_ipc_t *crmd_channel, const char *node_name,
             }
         }
 
-        g_hash_table_add(rscs, (gpointer) rsc_id);
+        g_hash_table_add(rscs, (gpointer) failed_id);
     }
 
     g_hash_table_iter_init(&iter, rscs);
-    while (g_hash_table_iter_next(&iter, (gpointer *) &rsc_id, NULL)) {
-        crm_debug("Erasing failures of %s on %s", rsc_id, node_name);
-        rc = clear_rsc_history(crmd_channel, node_name, rsc_id, data_set);
+    while (g_hash_table_iter_next(&iter, (gpointer *) &failed_id, NULL)) {
+        crm_debug("Erasing failures of %s on %s", failed_id, node_name);
+        rc = clear_rsc_history(crmd_channel, node_name, failed_id, data_set);
         if (rc != pcmk_ok) {
             return rc;
         }
