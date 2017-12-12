@@ -429,6 +429,21 @@ rsc_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, const c
     return work;
 }
 
+static inline bool
+node_has_been_unfenced(node_t *node)
+{
+    const char *unfenced = pe_node_attribute_raw(node, CRM_ATTR_UNFENCED);
+
+    return unfenced && strcmp("0", unfenced);
+}
+
+static inline bool
+is_unfence_device(resource_t *rsc, pe_working_set_t *data_set)
+{
+    return is_set(rsc->flags, pe_rsc_fence_device)
+           && is_set(data_set->flags, pe_flag_enable_unfencing);
+}
+
 node_t *
 native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
 {
@@ -2524,16 +2539,48 @@ StopRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * d
 
         if(is_set(rsc->flags, pe_rsc_needs_unfencing)) {
             action_t *unfence = pe_fence_op(current, "on", TRUE, NULL, data_set);
-            const char *unfenced = pe_node_attribute_raw(current, CRM_ATTR_UNFENCED);
 
             order_actions(stop, unfence, pe_order_implies_first);
-            if (unfenced == NULL || safe_str_eq("0", unfenced)) {
+            if (!node_has_been_unfenced(current)) {
                 pe_proc_err("Stopping %s until %s can be unfenced", rsc->id, current->details->uname);
             }
         }
     }
 
     return TRUE;
+}
+
+static void
+order_after_unfencing(resource_t *rsc, pe_node_t *node, action_t *action,
+                      enum pe_ordering order, pe_working_set_t *data_set)
+{
+    /* When unfencing is in use, we order unfence actions before any probe or
+     * start of resources that require unfencing, and also of fence devices.
+     *
+     * This might seem to violate the principle that fence devices require
+     * only quorum. However, fence agents that unfence often don't have enough
+     * information to even probe or start unless the node is first unfenced.
+     */
+    if (is_unfence_device(rsc, data_set)
+        || is_set(rsc->flags, pe_rsc_needs_unfencing)) {
+
+        /* Start with an optional ordering. Requiring unfencing would result in
+         * the node being unfenced, and all its resources being stopped,
+         * whenever a new resource is added -- which would be highly suboptimal.
+         */
+        action_t *unfence = pe_fence_op(node, "on", TRUE, NULL, data_set);
+
+        order_actions(unfence, action, order);
+
+        if (!node_has_been_unfenced(node)) {
+            // But unfencing is required if it has never been done
+            char *reason = crm_strdup_printf("required by %s %s",
+                                             rsc->id, action->task);
+
+            trigger_unfencing(NULL, node, reason, NULL, data_set);
+            free(reason);
+        }
+    }
 }
 
 gboolean
@@ -2545,18 +2592,7 @@ StartRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * 
     pe_rsc_trace(rsc, "%s on %s %d %d", rsc->id, next ? next->details->uname : "N/A", optional, next ? next->weight : 0);
     start = start_action(rsc, next, TRUE);
 
-    if(is_set(rsc->flags, pe_rsc_needs_unfencing)) {
-        action_t *unfence = pe_fence_op(next, "on", TRUE, NULL, data_set);
-        const char *unfenced = pe_node_attribute_raw(next, CRM_ATTR_UNFENCED);
-
-        order_actions(unfence, start, pe_order_implies_then);
-
-        if (unfenced == NULL || safe_str_eq("0", unfenced)) {
-            char *reason = crm_strdup_printf("Required by %s", rsc->id);
-            trigger_unfencing(NULL, next, reason, NULL, data_set);
-            free(reason);
-        }
-    }
+    order_after_unfencing(rsc, next, start, pe_order_implies_then, data_set);
 
     if (is_set(start->flags, pe_action_runnable) && optional == FALSE) {
         update_action_flags(start, pe_action_optional | pe_action_clear, __FUNCTION__, __LINE__);
@@ -2977,23 +3013,7 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
     probe = custom_action(rsc, key, RSC_STATUS, node, FALSE, TRUE, data_set);
     update_action_flags(probe, pe_action_optional | pe_action_clear, __FUNCTION__, __LINE__);
 
-    /* If enabled, require unfencing before probing any fence devices
-     * but ensure it happens after any resources that require
-     * unfencing have been probed.
-     *
-     * Doing it the other way (requiring unfencing after probing
-     * resources that need it) would result in the node being
-     * unfenced, and all its resources being stopped, whenever a new
-     * resource is added.  Which would be highly suboptimal.
-     *
-     * So essentially, at the point the fencing device(s) have been
-     * probed, we know the state of all resources that require
-     * unfencing and that unfencing occurred.
-     */
-    if(is_set(rsc->flags, pe_rsc_needs_unfencing)) {
-        action_t *unfence = pe_fence_op(node, "on", TRUE, NULL, data_set);
-        order_actions(unfence, probe, pe_order_optional);
-    }
+    order_after_unfencing(rsc, node, probe, pe_order_optional, data_set);
 
     /*
      * We need to know if it's running_on (not just known_on) this node
@@ -3010,12 +3030,8 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
     crm_debug("Probing %s on %s (%s) %d %p", rsc->id, node->details->uname, role2text(rsc->role),
               is_set(probe->flags, pe_action_runnable), rsc->running_on);
 
-    if(is_set(rsc->flags, pe_rsc_fence_device) && is_set(data_set->flags, pe_flag_enable_unfencing)) {
+    if (is_unfence_device(rsc, data_set) || !pe_rsc_is_clone(top)) {
         top = rsc;
-
-    } else if (pe_rsc_is_clone(top) == FALSE) {
-        top = rsc;
-
     } else {
         crm_trace("Probing %s on %s (%s) as %s", rsc->id, node->details->uname, role2text(rsc->role), top->id);
     }
@@ -3036,17 +3052,18 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
                         top, reload_key(rsc), NULL,
                         pe_order_optional, data_set);
 
-    if(is_set(rsc->flags, pe_rsc_fence_device) && is_set(data_set->flags, pe_flag_enable_unfencing)) {
+#if 0
+    // complete is always null currently
+    if (!is_unfence_device(rsc, data_set)) {
         /* Normally rsc.start depends on probe complete which depends
-         * on rsc.probe. But this can't be the case in this scenario as
-         * it would create graph loops.
+         * on rsc.probe. But this can't be the case for fence devices
+         * with unfencing, as it would create graph loops.
          *
          * So instead we explicitly order 'rsc.probe then rsc.start'
          */
-
-    } else {
         order_actions(probe, complete, pe_order_implies_then);
     }
+#endif
     return TRUE;
 }
 
@@ -3071,6 +3088,7 @@ native_start_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set
             order_actions(stonith_done, action, pe_order_optional);
 
         } else if (safe_str_eq(action->task, RSC_START)
+                   && NULL != pe_hash_table_lookup(rsc->allowed_nodes, target->details->id)
                    && NULL == pe_hash_table_lookup(rsc->known_on, target->details->id)) {
             /* if known == NULL, then we don't know if
              *   the resource is active on the node
@@ -3147,7 +3165,9 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_
                  */
                 flags |= pe_order_preserve;
             }
-            order_actions(stonith_op, action, flags);
+            if (pe_rsc_is_bundled(rsc) == FALSE) {
+                order_actions(stonith_op, action, flags);
+            }
             order_actions(stonith_op, parent_stop, flags);
         }
 
@@ -3235,7 +3255,10 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_
             update_action_flags(action, pe_action_pseudo, __FUNCTION__, __LINE__);
             update_action_flags(action, pe_action_runnable, __FUNCTION__, __LINE__);
 
-            if (start == NULL || start->needs > rsc_req_quorum) {
+            if (pe_rsc_is_bundled(rsc)) {
+                /* Do nothing, let the recovery be ordered after the parent's implied stop */
+
+            } else if (start == NULL || start->needs > rsc_req_quorum) {
                 order_actions(stonith_op, action, pe_order_preserve|pe_order_optional);
             }
         }

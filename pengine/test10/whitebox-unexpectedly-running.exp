@@ -65,6 +65,9 @@
     </action_set>
     <inputs>
       <trigger>
+        <pseudo_event id="2" operation="all_stopped" operation_key="all_stopped"/>
+      </trigger>
+      <trigger>
         <rsc_op id="3" operation="monitor" operation_key="remote1_monitor_0" on_node="18builder" on_node_uuid="5"/>
       </trigger>
     </inputs>
@@ -99,6 +102,9 @@
       </rsc_op>
     </action_set>
     <inputs>
+      <trigger>
+        <pseudo_event id="2" operation="all_stopped" operation_key="all_stopped"/>
+      </trigger>
       <trigger>
         <rsc_op id="4" operation="monitor" operation_key="remote2_monitor_0" on_node="18builder" on_node_uuid="5"/>
       </trigger>

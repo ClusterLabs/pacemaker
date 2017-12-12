@@ -36,10 +36,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="30" operation="stop" operation_key="galera-0_stop_0"/>
+        <pseudo_event id="22" operation="all_stopped" operation_key="all_stopped"/>
       </trigger>
       <trigger>
-        <pseudo_event id="125" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="30" operation="stop" operation_key="galera-0_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -49,11 +49,7 @@
         <attributes CRM_meta_name="stop" CRM_meta_timeout="60000"  reconnect_interval="60"/>
       </pseudo_event>
     </action_set>
-    <inputs>
-      <trigger>
-        <crm_event id="1" operation="stonith" operation_key="stonith-controller-1-reboot" on_node="controller-1" on_node_uuid="2"/>
-      </trigger>
-    </inputs>
+    <inputs/>
   </synapse>
   <synapse id="4">
     <action_set>

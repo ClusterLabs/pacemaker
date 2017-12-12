@@ -6,7 +6,11 @@
         <attributes CRM_meta_on_node="rhel7-node1.example.com" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  devices="/dev/mapper/clustPVa" key="1234" pcmk_host_list="rhel7-node2.example.com"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <crm_event id="6" operation="stonith" operation_key="stonith-rhel7-node1.example.com-on" on_node="rhel7-node1.example.com" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="1">
     <action_set>
@@ -30,6 +34,9 @@
     </action_set>
     <inputs>
       <trigger>
+        <crm_event id="6" operation="stonith" operation_key="stonith-rhel7-node1.example.com-on" on_node="rhel7-node1.example.com" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
         <rsc_op id="9" operation="monitor" operation_key="mpath-node1_monitor_0" on_node="rhel7-node1.example.com" on_node_uuid="1"/>
       </trigger>
     </inputs>
@@ -41,7 +48,11 @@
         <attributes CRM_meta_on_node="rhel7-node1.example.com" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000"  devices="/dev/mapper/clustPVa" key="1233" pcmk_host_list="rhel7-node1.example.com"/>
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <crm_event id="6" operation="stonith" operation_key="stonith-rhel7-node1.example.com-on" on_node="rhel7-node1.example.com" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="4">
     <action_set>

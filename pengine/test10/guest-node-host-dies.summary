@@ -26,16 +26,16 @@ Transition Summary:
 Executing cluster transition:
  * Resource action: Fencing         stop on rhel7-4
  * Pseudo action:   lxc-ms-master_demote_0
+ * Pseudo action:   lxc1_stop_0
  * Resource action: lxc1            monitor on rhel7-5
  * Resource action: lxc1            monitor on rhel7-4
  * Resource action: lxc1            monitor on rhel7-3
+ * Pseudo action:   lxc2_stop_0
  * Resource action: lxc2            monitor on rhel7-5
  * Resource action: lxc2            monitor on rhel7-4
  * Resource action: lxc2            monitor on rhel7-2
  * Fencing rhel7-1 (reboot)
  * Pseudo action:   rsc_rhel7-1_stop_0
- * Pseudo action:   lxc1_stop_0
- * Pseudo action:   lxc2_stop_0
  * Pseudo action:   container1_stop_0
  * Pseudo action:   container2_stop_0
  * Pseudo action:   stonith-lxc2-reboot on lxc2
@@ -47,21 +47,21 @@ Executing cluster transition:
  * Pseudo action:   lxc-ms_demote_0
  * Pseudo action:   lxc-ms-master_demoted_0
  * Pseudo action:   lxc-ms-master_stop_0
- * Resource action: lxc1            start on rhel7-2
- * Resource action: lxc2            start on rhel7-3
  * Resource action: rsc_rhel7-1     monitor=5000 on rhel7-5
  * Pseudo action:   lxc-ms_stop_0
  * Pseudo action:   lxc-ms_stop_0
  * Pseudo action:   lxc-ms-master_stopped_0
  * Pseudo action:   lxc-ms-master_start_0
- * Resource action: lxc1            monitor=30000 on rhel7-2
- * Resource action: lxc2            monitor=30000 on rhel7-3
  * Pseudo action:   all_stopped
  * Resource action: Fencing         start on rhel7-4
  * Resource action: Fencing         monitor=120000 on rhel7-4
+ * Resource action: lxc1            start on rhel7-2
+ * Resource action: lxc2            start on rhel7-3
  * Resource action: lxc-ms          start on lxc1
  * Resource action: lxc-ms          start on lxc2
  * Pseudo action:   lxc-ms-master_running_0
+ * Resource action: lxc1            monitor=30000 on rhel7-2
+ * Resource action: lxc2            monitor=30000 on rhel7-3
  * Resource action: lxc-ms          monitor=10000 on lxc2
  * Pseudo action:   lxc-ms-master_promote_0
  * Resource action: lxc-ms          promote on lxc1

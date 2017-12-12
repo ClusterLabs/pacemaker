@@ -220,6 +220,13 @@ attrd_cib_connect(int max_retry)
     // Always read the CIB at start-up
     mainloop_set_trigger(attrd_config_read);
 
+    /* Set a private attribute for ourselves with the protocol version we
+     * support. This lets all nodes determine the minimum supported version
+     * across all nodes. It also ensures that the writer learns our node name,
+     * so it can send our attributes to the CIB.
+     */
+    attrd_broadcast_protocol();
+
     return pcmk_ok;
 
   cleanup:

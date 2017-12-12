@@ -393,6 +393,7 @@ echo ""
 do_test unfence-startup "Clean unfencing"
 do_test unfence-definition "Unfencing when the agent changes"
 do_test unfence-parameters "Unfencing when the agent parameters changes"
+do_test unfence-device "Unfencing when a cluster has only fence devices"
 
 echo ""
 do_test master-0 "Stopped -> Slave"
@@ -818,6 +819,7 @@ do_test bundle-order-partial-start "Bundle startup ordering when some dependanci
 do_test bundle-order-partial-start-2 "Bundle startup ordering when some dependancies and the container are already running"
 do_test bundle-order-stop    "Bundle stop ordering"
 do_test bundle-order-partial-stop "Bundle startup ordering when some dependancies are already stopped"
+do_test bundle-order-stop-on-remote "Stop nested resource after bringing up the connection"
 
 do_test bundle-order-startup-clone "Prevent startup because bundle isn't promoted"
 do_test bundle-order-startup-clone-2 "Bundle startup with clones"

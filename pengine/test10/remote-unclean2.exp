@@ -11,7 +11,7 @@
         <rsc_op id="3" operation="stop" operation_key="rhel7-auto4_stop_0" on_node="rhel7-auto1" on_node_uuid="1"/>
       </trigger>
       <trigger>
-        <pseudo_event id="9" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="5" operation="all_stopped" operation_key="all_stopped"/>
       </trigger>
     </inputs>
   </synapse>

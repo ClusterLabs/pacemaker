@@ -89,6 +89,7 @@
 "FAKE9_stop_0 pcmk2" -> "FAKE9_start_0 pcmk_remote4" [ style = bold]
 "FAKE9_stop_0 pcmk2" -> "all_stopped" [ style = bold]
 "FAKE9_stop_0 pcmk2" [ style=bold color="green" fontcolor="black"]
+"all_stopped" -> "pcmk_remote5_start_0 pcmk2" [ style = bold]
 "all_stopped" [ style=bold color="green" fontcolor="orange"]
 "pcmk_remote2_migrate_from_0 pcmk1" -> "pcmk_remote2_start_0 pcmk1" [ style = bold]
 "pcmk_remote2_migrate_from_0 pcmk1" -> "pcmk_remote2_stop_0 pcmk3" [ style = bold]
@@ -150,10 +151,5 @@
 "stonith_complete" -> "FAKE5_start_0 pcmk_remote4" [ style = bold]
 "stonith_complete" -> "FAKE9_start_0 pcmk_remote4" [ style = bold]
 "stonith_complete" -> "all_stopped" [ style = bold]
-"stonith_complete" -> "pcmk_remote2_migrate_from_0 pcmk1" [ style = bold]
-"stonith_complete" -> "pcmk_remote2_start_0 pcmk1" [ style = bold]
-"stonith_complete" -> "pcmk_remote4_start_0 pcmk2" [ style = bold]
-"stonith_complete" -> "pcmk_remote5_migrate_to_0 pcmk1" [ style = bold]
-"stonith_complete" -> "pcmk_remote5_start_0 pcmk2" [ style = bold]
 "stonith_complete" [ style=bold color="green" fontcolor="orange"]
 }

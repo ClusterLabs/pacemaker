@@ -48,29 +48,23 @@ Executing cluster transition:
  * Resource action: shared0         monitor on lxc-01_kiff-02
  * Resource action: vm-fs           monitor on lxc-02_kiff-02
  * Resource action: vm-fs           monitor on lxc-01_kiff-02
- * Fencing kiff-01 (reboot)
  * Pseudo action:   lxc-01_kiff-01_stop_0
  * Pseudo action:   lxc-02_kiff-01_stop_0
+ * Fencing kiff-01 (reboot)
+ * Pseudo action:   R-lxc-01_kiff-01_stop_0
+ * Pseudo action:   R-lxc-02_kiff-01_stop_0
  * Pseudo action:   stonith-lxc-02_kiff-01-reboot on lxc-02_kiff-01
  * Pseudo action:   stonith-lxc-01_kiff-01-reboot on lxc-01_kiff-01
  * Pseudo action:   stonith_complete
- * Pseudo action:   R-lxc-01_kiff-01_stop_0
- * Pseudo action:   R-lxc-02_kiff-01_stop_0
- * Pseudo action:   vm-fs_stop_0
  * Pseudo action:   shared0-clone_stop_0
  * Resource action: R-lxc-01_kiff-01 start on kiff-02
  * Resource action: R-lxc-02_kiff-01 start on kiff-02
- * Resource action: lxc-01_kiff-01  start on kiff-02
- * Resource action: lxc-02_kiff-01  start on kiff-02
+ * Pseudo action:   vm-fs_stop_0
  * Pseudo action:   shared0_stop_0
  * Pseudo action:   shared0-clone_stopped_0
  * Resource action: R-lxc-01_kiff-01 monitor=10000 on kiff-02
  * Resource action: R-lxc-02_kiff-01 monitor=10000 on kiff-02
- * Resource action: vm-fs           start on lxc-01_kiff-01
- * Resource action: lxc-01_kiff-01  monitor=30000 on kiff-02
- * Resource action: lxc-02_kiff-01  monitor=30000 on kiff-02
  * Pseudo action:   clvmd-clone_stop_0
- * Resource action: vm-fs           monitor=20000 on lxc-01_kiff-01
  * Pseudo action:   clvmd_stop_0
  * Pseudo action:   clvmd-clone_stopped_0
  * Pseudo action:   dlm-clone_stop_0
@@ -78,7 +72,13 @@ Executing cluster transition:
  * Pseudo action:   dlm-clone_stopped_0
  * Pseudo action:   all_stopped
  * Resource action: fence-kiff-02   start on kiff-02
+ * Resource action: lxc-01_kiff-01  start on kiff-02
+ * Resource action: lxc-02_kiff-01  start on kiff-02
  * Resource action: fence-kiff-02   monitor=60000 on kiff-02
+ * Resource action: vm-fs           start on lxc-01_kiff-01
+ * Resource action: lxc-01_kiff-01  monitor=30000 on kiff-02
+ * Resource action: lxc-02_kiff-01  monitor=30000 on kiff-02
+ * Resource action: vm-fs           monitor=20000 on lxc-01_kiff-01
 
 Revised cluster status:
 Online: [ kiff-02 ]
