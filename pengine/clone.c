@@ -955,6 +955,7 @@ is_child_compatible(resource_t *child_rsc, node_t * local_node, enum rsc_role_e 
     node_t *node = NULL;
     enum rsc_role_e next_role = child_rsc->fns->state(child_rsc, current);
 
+    CRM_CHECK(child_rsc && local_node, return FALSE);
     if (is_set_recursive(child_rsc, pe_rsc_block, TRUE) == FALSE) {
         /* We only want instances that haven't failed */
         node = child_rsc->fns->location(child_rsc, NULL, current);
@@ -965,7 +966,7 @@ is_child_compatible(resource_t *child_rsc, node_t * local_node, enum rsc_role_e 
         return FALSE;
     }
 
-    if (node && local_node && node->details == local_node->details) {
+    if (node && (node->details == local_node->details)) {
         return TRUE;
 
     } else if (node) {
