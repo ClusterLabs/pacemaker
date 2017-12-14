@@ -166,7 +166,6 @@ class Environment:
 
         else:
             raise ValueError("Unknown stack: "+name)
-            sys.exit(1)
 
     def get_stack_short(self):
         # Create the Cluster Manager object

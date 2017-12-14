@@ -220,10 +220,7 @@ class RemoteExec:
 
         if not silent:
             for err in errors:
-                if stdout == 3:
-                    result.append("error: "+err)
-                else:
-                    self.debug("cmd: stderr: %s" % err)
+                self.debug("cmd: stderr: %s" % err)
 
         if stdout == 0:
             if not silent and result:
