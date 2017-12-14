@@ -2,8 +2,11 @@
 Description=Pacemaker Remote Service
 Documentation=man:pacemaker_remoted http://clusterlabs.org/doc/en-US/Pacemaker/1.1-pcs/html/Pacemaker_Remote/index.html
 
+# See main pacemaker unit file for descriptions of why these are needed
 After=network.target
 After=time-sync.target
+After=dbus.service
+Wants=dbus.service
 After=resource-agents-deps.target
 Wants=resource-agents-deps.target
 After=syslog.service
