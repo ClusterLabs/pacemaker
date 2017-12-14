@@ -341,6 +341,7 @@ process_utilization(resource_t * rsc, node_t ** prefer, pe_working_set_t * data_
 {
     int alloc_details = scores_log_level + 1;
 
+    CRM_CHECK(rsc && prefer && data_set, return);
     if (safe_str_neq(data_set->placement_strategy, "default")) {
         GHashTableIter iter;
         GListPtr colocated_rscs = NULL;
