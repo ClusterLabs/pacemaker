@@ -539,6 +539,7 @@ attrd_broadcast_protocol()
     crm_xml_add(attrd_op, F_ATTRD_VALUE, ATTRD_PROTOCOL_VERSION);
     crm_xml_add_int(attrd_op, F_ATTRD_IS_PRIVATE, 1);
     attrd_client_update(attrd_op);
+    free_xml(attrd_op);
 }
 
 void
