@@ -14,6 +14,10 @@ After=network.target
 # and failure timestamps, so wait until it's done.
 After=time-sync.target
 
+# Managing systemd resources requires DBus.
+After=dbus.service
+Wants=dbus.service
+
 # Some OCF resources may have dependencies that aren't managed by the cluster;
 # these must be started before Pacemaker and stopped after it. The
 # resource-agents package provides this target, which lets system adminstrators
