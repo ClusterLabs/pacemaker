@@ -23,6 +23,15 @@ struct db_getall_data {
     void (*callback)(const char *name, const char *value, void *userdata);
 };
 
+static void
+free_db_getall_data(struct db_getall_data *data)
+{
+    free(data->target);
+    free(data->object);
+    free(data->name);
+    free(data);
+}
+
 DBusConnection *
 pcmk_dbus_connect(void)
 {
@@ -196,6 +205,20 @@ pcmk_dbus_send_recv(DBusMessage *msg, DBusConnection *connection,
     return reply;
 }
 
+/*!
+ * \internal
+ * \brief Send a DBus message with a callback for the reply
+ *
+ * \param[in]     msg         DBus message to send
+ * \param[in,out] connection  DBus connection to send on
+ * \param[in]     done        Function to call when pending call completes
+ * \param[in]     user_data   Data to pass to done callback
+ *
+ * \return Handle for reply on success, NULL on error
+ * \note The caller can assume that the done callback is called always and
+ *       only when the return value is non-NULL. (This allows the caller to
+ *       know where it should free dynamically allocated user_data.)
+ */
 DBusPendingCall *
 pcmk_dbus_send(DBusMessage *msg, DBusConnection *connection,
                void(*done)(DBusPendingCall *pending, void *user_data),
@@ -359,11 +382,7 @@ pcmk_dbus_lookup_result(DBusMessage *reply, struct db_getall_data *data)
     }
 
   cleanup:
-    free(data->target);
-    free(data->object);
-    free(data->name);
-    free(data);
-
+    free_db_getall_data(data);
     return output;
 }
 
@@ -424,11 +443,19 @@ pcmk_dbus_get_property(DBusConnection *connection, const char *target,
         query_data->name = strdup(name);
     }
 
-    if(query_data->callback) {
-        DBusPendingCall* _pending;
-        _pending = pcmk_dbus_send(msg, connection, pcmk_dbus_lookup_cb, query_data, timeout);
-        if (pending != NULL) {
-            *pending = _pending;
+    if (query_data->callback) {
+        DBusPendingCall *local_pending;
+
+        local_pending = pcmk_dbus_send(msg, connection, pcmk_dbus_lookup_cb,
+                                       query_data, timeout);
+        if (local_pending == NULL) {
+            // pcmk_dbus_lookup_cb() was not called in this case
+            free_db_getall_data(query_data);
+            query_data = NULL;
+        }
+
+        if (pending) {
+            *pending = local_pending;
         }
 
     } else {
