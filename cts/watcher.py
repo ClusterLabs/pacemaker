@@ -337,19 +337,19 @@ class LogWatcher(RemoteExec):
             self.kind    = kind
         else:
             raise
-            self.kind    = self.Env["LogWatcher"]
+            #self.kind    = self.Env["LogWatcher"]
 
         if log:
             self.filename    = log
         else:
             raise
-            self.filename    = self.Env["LogFileName"]
+            #self.filename    = self.Env["LogFileName"]
 
         if hosts:
             self.hosts = hosts
         else:
             raise
-            self.hosts = self.Env["nodes"]
+            #self.hosts = self.Env["nodes"]
 
         if trace_lw:
             self.debug_level = 3
