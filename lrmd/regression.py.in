@@ -34,7 +34,7 @@ def update_path():
         print("Running tests from the install tree: @CRM_DAEMON_DIR@ (not %s)" % TEST_DIR)
         new_path = "@CRM_DAEMON_DIR@:%s" % (new_path) # For stonithd, lrmd, lrmd_test and pacemaker_remoted
 
-    print(new_path)
+    print('Using PATH="{}"'.format(new_path))
     os.environ['PATH'] = new_path
 
 
@@ -151,9 +151,9 @@ class Test(object):
 
             if self.verbose:
                 print("Daemon output")
-                logfile = io.open('/tmp/lrmd-regression.log', 'rt')
-                for line in logfile.readlines():
-                    print(line.strip())
+                logfile = io.open('/tmp/lrmd-regression.log', 'rt', errors='replace')
+                for line in logfile:
+                    print(line.strip().encode('utf-8', 'replace'))
             os.remove('/tmp/lrmd-regression.log')
 
         if self.stonith_process:
@@ -311,7 +311,7 @@ class Tests(object):
                       file=sys.stderr)
                 sys.exit(1)
 
-        print("Testing "+repr(self.rsc_classes))
+        print("Testing resource classes", repr(self.rsc_classes))
 
         self.common_cmds = {
             "ocf_reg_line"      : "-c register_rsc -r ocf_test_rsc "+self.action_timeout+" -C ocf -P pacemaker -T Dummy",
@@ -436,7 +436,7 @@ exec dd if=/dev/random of=/dev/null
 import sys
 import time
 def main():
-    for line in sys.stdin.readlines():
+    for line in sys.stdin:
         if line.count("monitor") > 0:
             time.sleep(30000)
             sys.exit(0)
@@ -491,7 +491,6 @@ done
         os.system("chmod 711 /usr/sbin/fence_dummy_monitor")
 
         if os.path.exists("%s/cts/LSBDummy" % BUILD_DIR):
-            print("Using %s/cts/LSBDummy" % BUILD_DIR)
             os.system("cp %s/cts/LSBDummy /etc/init.d/LSBDummy" % BUILD_DIR)
 
             if not os.path.exists("@OCF_RA_DIR@/pacemaker"):
@@ -504,11 +503,9 @@ done
 
         else:
             # Assume it's installed
-            print("Using @datadir@/@PACKAGE@/tests/cts/LSBDummy")
             os.system("cp @datadir@/@PACKAGE@/tests/cts/LSBDummy /etc/init.d/LSBDummy")
 
         os.system("chmod a+x /etc/init.d/LSBDummy")
-        os.system("ls -al /etc/init.d/LSBDummy")
         os.system("mkdir -p @CRM_CORE_DIR@/root")
 
         if os.path.exists("/bin/systemctl"):
