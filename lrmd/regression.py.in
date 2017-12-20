@@ -297,7 +297,7 @@ class Tests(object):
         self.rsc_classes = output_from_command("crm_resource --list-standards")
         self.rsc_classes = self.rsc_classes[:-1] # Strip trailing empty line
         self.need_authkey = 0
-        self.action_timeout = " -t 7000 "
+        self.action_timeout = " -t 9000 "
         if self.tls:
             self.rsc_classes.remove("stonith")
         if "systemd" in self.rsc_classes:
