@@ -19,6 +19,14 @@ Transition Summary:
  * Stop       sles10     ( node2 )   due to node availability
 
 Executing cluster transition:
+ * Resource action: stonithclone:0  monitor=5000 on node2
+ * Resource action: stonithclone:1  monitor=5000 on node1
+ * Resource action: evmsdclone:0    monitor=5000 on node2
+ * Resource action: evmsdclone:1    monitor=5000 on node1
+ * Resource action: imagestoreclone:0 monitor=20000 on node2
+ * Resource action: imagestoreclone:1 monitor=20000 on node1
+ * Resource action: configstoreclone:0 monitor=20000 on node2
+ * Resource action: configstoreclone:1 monitor=20000 on node1
  * Resource action: sles10          stop on node2
  * Pseudo action:   all_stopped
 

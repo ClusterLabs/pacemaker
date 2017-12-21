@@ -29,8 +29,10 @@ Transition Summary:
  * Migrate    sles10                ( node2 -> node1 )  
 
 Executing cluster transition:
+ * Resource action: stonithclone:0  monitor=5000 on node2
  * Resource action: stonithclone:1  monitor on node1
  * Pseudo action:   stonithcloneset_start_0
+ * Resource action: evmsdclone:0    monitor=5000 on node2
  * Resource action: evmsdclone:1    monitor on node1
  * Pseudo action:   evmsdcloneset_start_0
  * Resource action: evmsclone:1     monitor on node1
@@ -81,6 +83,7 @@ Executing cluster transition:
  * Resource action: imagestoreclone:0 notify on node1
  * Resource action: imagestoreclone:1 notify on node2
  * Pseudo action:   imagestorecloneset_confirmed-post_notify_running_0
+ * Resource action: configstoreclone:0 monitor=20000 on node2
  * Resource action: configstoreclone:1 monitor=20000 on node1
  * Resource action: sles10          migrate_to on node2
  * Resource action: imagestoreclone:0 monitor=20000 on node1
