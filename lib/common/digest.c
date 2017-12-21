@@ -193,6 +193,9 @@ calculate_xml_versioned_digest(xmlNode * input, gboolean sort, gboolean do_filte
                                const char *version)
 {
     /*
+     * @COMPAT digests (on-disk or in diffs/patchsets) created <1.1.4;
+     * removing this affects even full-restart upgrades from old versions
+     *
      * The sorting associated with v1 digest creation accounted for 23% of
      * the CIB's CPU usage on the server. v2 drops this.
      *
