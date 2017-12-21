@@ -132,7 +132,6 @@ get_meta_attributes(GHashTable * meta_hash, resource_t * rsc,
                     node_t * node, pe_working_set_t * data_set)
 {
     GHashTable *node_hash = NULL;
-    const char *version = crm_element_value(data_set->input, XML_ATTR_CRM_VERSION);
 
     if (node) {
         node_hash = node->details->attrs;
@@ -151,14 +150,6 @@ get_meta_attributes(GHashTable * meta_hash, resource_t * rsc,
 
     unpack_instance_attributes(data_set->input, rsc->xml, XML_TAG_META_SETS, node_hash,
                                meta_hash, NULL, FALSE, data_set->now);
-
-    if(version == NULL || compare_version(version, "3.0.9") < 0) {
-        /* populate from the regular attributes until the GUI can create
-         * meta attributes
-         */
-        unpack_instance_attributes(data_set->input, rsc->xml, XML_TAG_ATTR_SETS, node_hash,
-                                   meta_hash, NULL, FALSE, data_set->now);
-    }
 
     /* set anything else based on the parent */
     if (rsc->parent != NULL) {

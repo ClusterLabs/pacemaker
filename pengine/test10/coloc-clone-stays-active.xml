@@ -764,6 +764,9 @@
           <nvpair id="stonith-s01-0-instance_attributes-interface" name="interface" value="lanplus"/>
           <nvpair id="stonith-s01-0-instance_attributes-priority" name="priority" value="1"/>
         </instance_attributes>
+        <meta_attributes id="stonith-s01-0-meta_attributes">
+          <nvpair id="stonith-s01-0-meta_attributes-priority" name="priority" value="1"/>
+        </meta_attributes>
         <operations>
           <op id="stonith-s01-0-monitor-60" interval="60" name="monitor"/>
         </operations>
@@ -777,6 +780,9 @@
           <nvpair id="stonith-s01-1-instance_attributes-interface" name="interface" value="lanplus"/>
           <nvpair id="stonith-s01-1-instance_attributes-priority" name="priority" value="1"/>
         </instance_attributes>
+        <meta_attributes id="stonith-s01-1-meta_attributes">
+          <nvpair id="stonith-s01-1-meta_attributes-priority" name="priority" value="1"/>
+        </meta_attributes>
         <operations>
           <op id="stonith-s01-1-monitor-60" interval="60" name="monitor"/>
         </operations>
