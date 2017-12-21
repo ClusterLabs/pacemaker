@@ -426,7 +426,6 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char * c
 
     xmlNode *xml_op = NULL;
     const char *task = NULL;
-    gboolean dc_needs_unique_ops = (compare_version(caller_version, "3.0.6") < 0);
 
     CRM_CHECK(op != NULL, return NULL);
     do_crm_log(level, "%s: Updating resource %s after %s op %s (interval=%d)",
@@ -460,10 +459,7 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char * c
     }
 
     key = generate_op_key(op->rsc_id, task, op->interval);
-    if (dc_needs_unique_ops && op->interval > 0) {
-        op_id = strdup(key);
-
-    } else if (crm_str_eq(task, CRMD_ACTION_NOTIFY, TRUE)) {
+    if (crm_str_eq(task, CRMD_ACTION_NOTIFY, TRUE)) {
         const char *n_type = crm_meta_value(op->params, "notify_type");
         const char *n_task = crm_meta_value(op->params, "notify_operation");
 
