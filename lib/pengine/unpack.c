@@ -2494,7 +2494,6 @@ unpack_rsc_op_failure(resource_t * rsc, node_t * node, int rc, xmlNode * xml_op,
 
     const char *key = get_op_key(xml_op);
     const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
-    const char *op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
 
     CRM_ASSERT(rsc);
 
@@ -2556,10 +2555,6 @@ unpack_rsc_op_failure(resource_t * rsc, node_t * node, int rc, xmlNode * xml_op,
             rsc->role = RSC_ROLE_SLAVE;
             rsc->next_role = RSC_ROLE_STOPPED;
         }
-
-    } else if (compare_version("2.0", op_version) > 0 && safe_str_eq(task, CRMD_ACTION_START)) {
-        crm_warn("Compatibility handling for failed op %s on %s", key, node->details->uname);
-        resource_location(rsc, node, -INFINITY, "__legacy_start__", data_set);
     }
 
     if(is_probe && rc == PCMK_OCF_NOT_INSTALLED) {
