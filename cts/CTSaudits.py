@@ -25,7 +25,7 @@ Licensed under the GNU GPL.
 import time, re, uuid
 from cts.watcher import LogWatcher
 from cts.remote import input_wrapper
-
+from cts.CTSvars import *
 
 class ClusterAudit(object):
 
@@ -162,7 +162,8 @@ class DiskAudit(ClusterAudit):
 
     def __call__(self):
         result = 1
-        dfcmd = "df -BM /var/log | tail -1 | awk '{print $(NF-1)\" \"$(NF-2)}' | tr -d 'M%'"
+        # @TODO Use directory of PCMK_logfile if set on host
+        dfcmd = "df -BM " + CTSvars.CRM_LOG_DIR + " | tail -1 | awk '{print $(NF-1)\" \"$(NF-2)}' | tr -d 'M%'"
 
         self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"])
         for node in self.CM.Env["nodes"]:

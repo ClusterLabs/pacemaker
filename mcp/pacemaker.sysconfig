@@ -11,7 +11,7 @@
 # has been enabled, those as well). This log is of more use to developers and
 # advanced system administrators, and when reporting problems. By default,
 # Pacemaker will use the value of logfile in corosync.conf, if found.
-# PCMK_logfile=/var/log/pacemaker.log
+# PCMK_logfile=/var/log/pacemaker/pacemaker.log
 
 # Enable logging via syslog, using the specified syslog facility. Messages sent
 # here are of value to all Pacemaker users. This can be disabled using "none",

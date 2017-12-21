@@ -38,7 +38,7 @@ test -f $CTSCTRL ||  {
 
 : ${CTS_logfacility:=local7}
 : ${CTS_stack:=corosync}
-: ${CTS_logfile:="/var/log/ha-log-bench"}
+: ${CTS_logfile:="@CRM_LOG_DIR@/ha-log-bench"}
 : ${CTS_adv:="--schema pacemaker-1.2 --clobber-cib -r"}
 : ${RUNS:=3}
 : ${CTSTESTS:="--benchmark"}

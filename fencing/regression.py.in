@@ -1195,7 +1195,7 @@ logging {
         syslog_facility: daemon
         timestamp: on
         to_logfile: yes
-        logfile: /var/log/corosync.log
+        logfile: @CRM_LOG_DIR@/corosync.test.log
         logfile_priority: info
 }
 """)
@@ -1223,12 +1223,12 @@ logging {
         if use_corosync:
             killall("corosync")
 
-            if self.verbose and os.path.exists('/var/log/corosync.log'):
+            if self.verbose and os.path.exists('@CRM_LOG_DIR@/corosync.test.log'):
                 print("Corosync output")
-                logfile = io.open('/var/log/corosync.log', 'rt')
+                logfile = io.open('@CRM_LOG_DIR@/corosync.test.log', 'rt')
                 for line in logfile.readlines():
                     print(line.strip())
-                os.remove('/var/log/corosync.log')
+                os.remove('@CRM_LOG_DIR@/corosync.test.log')
 
         if self.autogen_corosync_cfg:
             os.system("rm -f /etc/corosync/corosync.conf")

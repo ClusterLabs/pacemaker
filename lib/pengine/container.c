@@ -1039,7 +1039,7 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         mount_add(container_data, DEFAULT_REMOTE_KEY_LOCATION,
                   DEFAULT_REMOTE_KEY_LOCATION, NULL, 0);
 
-        mount_add(container_data, CRM_LOG_DIR "/bundles", "/var/log", NULL, 1);
+        mount_add(container_data, CRM_BUNDLE_DIR, "/var/log", NULL, 1);
 
         port = calloc(1, sizeof(container_port_t));
         if(container_data->control_port) {

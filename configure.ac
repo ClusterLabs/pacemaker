@@ -280,6 +280,20 @@ AC_ARG_WITH(configdir,
     [ CONFIGDIR="$withval" ]
 )
 
+CRM_LOG_DIR=""
+AC_ARG_WITH(logdir,
+    [  --with-logdir=DIR
+       Directory for Pacemaker log file @<:@LOCALSTATEDIR/log/pacemaker@:>@],
+    [ CRM_LOG_DIR="$withval" ]
+)
+
+CRM_BUNDLE_DIR=""
+AC_ARG_WITH(bundledir,
+    [  --with-bundledir=DIR
+       Directory for Pacemaker bundle logs @<:@LOCALSTATEDIR/log/pacemaker/bundles@:>@],
+    [ CRM_BUNDLE_DIR="$withval" ]
+)
+
 dnl ===============================================
 dnl General Processing
 dnl ===============================================
@@ -381,6 +395,18 @@ if test x"${CONFIGDIR}" = x""; then
     CONFIGDIR="${sysconfdir}/sysconfig"
 fi
 AC_SUBST(CONFIGDIR)
+
+if test x"${CRM_LOG_DIR}" = x""; then
+    CRM_LOG_DIR="${localstatedir}/log/pacemaker"
+fi
+AC_DEFINE_UNQUOTED(CRM_LOG_DIR,"$CRM_LOG_DIR", Location for Pacemaker log file)
+AC_SUBST(CRM_LOG_DIR)
+
+if test x"${CRM_BUNDLE_DIR}" = x""; then
+    CRM_BUNDLE_DIR="${localstatedir}/log/pacemaker/bundles"
+fi
+AC_DEFINE_UNQUOTED(CRM_BUNDLE_DIR,"$CRM_BUNDLE_DIR", Location for Pacemaker bundle logs)
+AC_SUBST(CRM_BUNDLE_DIR)
 
 for j in prefix exec_prefix bindir sbindir libexecdir datadir sysconfdir \
     sharedstatedir localstatedir libdir includedir oldincludedir infodir \
@@ -1002,10 +1028,6 @@ AC_SUBST(CRM_DAEMON_GROUP)
 CRM_STATE_DIR=${localstatedir}/run/crm
 AC_DEFINE_UNQUOTED(CRM_STATE_DIR,"$CRM_STATE_DIR", Where to keep state files and sockets)
 AC_SUBST(CRM_STATE_DIR)
-
-CRM_LOG_DIR="${localstatedir}/log/pacemaker"
-AC_DEFINE_UNQUOTED(CRM_LOG_DIR,"$CRM_LOG_DIR", Where Pacemaker can store log files)
-AC_SUBST(CRM_LOG_DIR)
 
 CRM_PACEMAKER_DIR=${localstatedir}/lib/pacemaker
 AC_DEFINE_UNQUOTED(CRM_PACEMAKER_DIR,"$CRM_PACEMAKER_DIR", Location to store directory produced by Pacemaker daemons)
