@@ -426,7 +426,6 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char * c
 
     xmlNode *xml_op = NULL;
     const char *task = NULL;
-    gboolean dc_munges_migrate_ops = (compare_version(caller_version, "3.0.3") < 0);
     gboolean dc_needs_unique_ops = (compare_version(caller_version, "3.0.6") < 0);
 
     CRM_CHECK(op != NULL, return NULL);
@@ -447,7 +446,7 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char * c
             task = CRMD_ACTION_STATUS;
         }
 
-    } else if (dc_munges_migrate_ops && crm_str_eq(task, CRMD_ACTION_MIGRATE, TRUE)) {
+    } else if (crm_str_eq(task, CRMD_ACTION_MIGRATE, TRUE)) {
         /* if the migrate_from fails it will have enough info to do the right thing */
         if (op->op_status == PCMK_LRM_OP_DONE) {
             task = CRMD_ACTION_STOP;
@@ -455,8 +454,7 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char * c
             task = CRMD_ACTION_STATUS;
         }
 
-    } else if (dc_munges_migrate_ops
-               && op->op_status == PCMK_LRM_OP_DONE
+    } else if ((op->op_status == PCMK_LRM_OP_DONE)
                && crm_str_eq(task, CRMD_ACTION_MIGRATED, TRUE)) {
         task = CRMD_ACTION_START;
     }
