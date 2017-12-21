@@ -266,8 +266,6 @@ text2task(const char *task)
         return no_action;
     } else if (safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
         return no_action;
-    } else if (safe_str_eq(task, "fail")) {
-        return no_action;
     } else if (safe_str_eq(task, "stonith_up")) {
         return no_action;
     } else if (safe_str_eq(task, "stonith_complete")) {

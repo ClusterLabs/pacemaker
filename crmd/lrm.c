@@ -2146,7 +2146,6 @@ do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operat
     } else if (fsa_state != S_NOT_DC
                && fsa_state != S_POLICY_ENGINE /* Recalculating */
                && fsa_state != S_TRANSITION_ENGINE
-               && safe_str_neq(operation, "fail")
                && safe_str_neq(operation, CRMD_ACTION_STOP)) {
         send_nack = TRUE;
     }
