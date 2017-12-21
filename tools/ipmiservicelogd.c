@@ -156,7 +156,6 @@ getStringExecOutput(char *args[])
         if (sizeRead > 0) {
 
             char *end = serialNumber + strlen(serialNumber) - 1;
-            char *retSerialNumber = NULL;
 
             while (end > serialNumber
                    && (*end == '\n' || *end == '\r' || *end == '\t' || *end == ' ')
@@ -164,17 +163,7 @@ getStringExecOutput(char *args[])
                 *end = '\0';
                 end--;
             }
-
-            retSerialNumber = malloc(strlen(serialNumber) + 1);
-
-            if (retSerialNumber) {
-
-                strcpy(retSerialNumber, serialNumber);
-
-            }
-
-            return retSerialNumber;
-
+            return strdup(serialNumber);
         }
 
         return NULL;

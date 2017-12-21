@@ -1213,7 +1213,6 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
 #if !HAVE_STONITH_STONITH_H
         return -EINVAL;         /* Heartbeat agents not supported */
 #else
-        int bufferlen = 0;
         static const char *no_parameter_info = "<!-- no value -->";
 
         Stonith *stonith_obj = NULL;
@@ -1277,13 +1276,8 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
             xml_meta_shortdesc =
                 (char *)xmlEncodeEntitiesReentrant(NULL, (const unsigned char *)meta_shortdesc);
 
-            bufferlen = strlen(META_TEMPLATE) + strlen(agent)
-                + strlen(xml_meta_longdesc) + strlen(xml_meta_shortdesc)
-                + strlen(meta_param) + 1;
-
-            buffer = calloc(1, bufferlen);
-            snprintf(buffer, bufferlen - 1, META_TEMPLATE,
-                     agent, xml_meta_longdesc, xml_meta_shortdesc, meta_param);
+            buffer = crm_strdup_printf(META_TEMPLATE, agent, xml_meta_longdesc,
+                                       xml_meta_shortdesc, meta_param);
 
             xmlFree(xml_meta_longdesc);
             xmlFree(xml_meta_shortdesc);

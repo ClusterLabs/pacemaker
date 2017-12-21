@@ -67,16 +67,8 @@ save_cib_contents(xmlNode *msg, int call_id, int rc, xmlNode *output,
     CRM_CHECK(id != NULL, return);
 
     if (rc == pcmk_ok) {
-        int len = 15;
-        char *filename = NULL;
+        char *filename = crm_strdup_printf(PE_STATE_DIR "/pe-core-%s.bz2", id);
 
-        len += strlen(id);
-        len += strlen(PE_STATE_DIR);
-
-        filename = calloc(1, len);
-        CRM_CHECK(filename != NULL, return);
-
-        sprintf(filename, PE_STATE_DIR "/pe-core-%s.bz2", id);
         if (write_xml_file(output, filename, TRUE) < 0) {
             crm_err("Could not save Cluster Information Base to %s after Policy Engine crash",
                     filename);
@@ -84,7 +76,6 @@ save_cib_contents(xmlNode *msg, int call_id, int rc, xmlNode *output,
             crm_notice("Saved Cluster Information Base to %s after Policy Engine crash",
                        filename);
         }
-
         free(filename);
     }
 }
@@ -286,15 +277,12 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
 {
     int max = 0;
     int lpc = 0;
-    int xpath_max = 1024;
     char *xpath_string = NULL;
     xmlXPathObjectPtr xpathObj = NULL;
 
-    xpath_string = calloc(1, xpath_max);
-    lpc = snprintf(xpath_string, xpath_max, "%.128s//%s//nvpair[@name='%.128s']",
-                       get_object_path(XML_CIB_TAG_CRMCONFIG), XML_CIB_TAG_PROPSET, attr_name);
-    CRM_LOG_ASSERT(lpc > 0);
-
+    xpath_string = crm_strdup_printf("%.128s//%s//nvpair[@name='%.128s']",
+                                     get_object_path(XML_CIB_TAG_CRMCONFIG),
+                                     XML_CIB_TAG_PROPSET, attr_name);
     xpathObj = xpath_search(xml, xpath_string);
     max = numXpathResults(xpathObj);
     free(xpath_string);

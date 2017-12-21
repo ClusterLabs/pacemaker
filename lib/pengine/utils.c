@@ -307,12 +307,8 @@ static void
 append_dump_text(gpointer key, gpointer value, gpointer user_data)
 {
     char **dump_text = user_data;
-    int len = 0;
-    char *new_text = NULL;
-
-    len = strlen(*dump_text) + strlen(" ") + strlen(key) + strlen("=") + strlen(value) + 1;
-    new_text = calloc(1, len);
-    sprintf(new_text, "%s %s=%s", *dump_text, (char *)key, (char *)value);
+    char *new_text = crm_strdup_printf("%s %s=%s",
+                                       *dump_text, (char *)key, (char *)value);
 
     free(*dump_text);
     *dump_text = new_text;
@@ -321,12 +317,8 @@ append_dump_text(gpointer key, gpointer value, gpointer user_data)
 void
 dump_node_capacity(int level, const char *comment, node_t * node)
 {
-    int len = 0;
-    char *dump_text = NULL;
-
-    len = strlen(comment) + strlen(": ") + strlen(node->details->uname) + strlen(" capacity:") + 1;
-    dump_text = calloc(1, len);
-    sprintf(dump_text, "%s: %s capacity:", comment, node->details->uname);
+    char *dump_text = crm_strdup_printf("%s: %s capacity:",
+                                        comment, node->details->uname);
 
     g_hash_table_foreach(node->details->utilization, append_dump_text, &dump_text);
 
@@ -342,13 +334,8 @@ dump_node_capacity(int level, const char *comment, node_t * node)
 void
 dump_rsc_utilization(int level, const char *comment, resource_t * rsc, node_t * node)
 {
-    int len = 0;
-    char *dump_text = NULL;
-
-    len = strlen(comment) + strlen(": ") + strlen(rsc->id) + strlen(" utilization on ")
-        + strlen(node->details->uname) + strlen(":") + 1;
-    dump_text = calloc(1, len);
-    sprintf(dump_text, "%s: %s utilization on %s:", comment, rsc->id, node->details->uname);
+    char *dump_text = crm_strdup_printf("%s: %s utilization on %s:",
+                                        comment, rsc->id, node->details->uname);
 
     g_hash_table_foreach(rsc->utilization, append_dump_text, &dump_text);
 

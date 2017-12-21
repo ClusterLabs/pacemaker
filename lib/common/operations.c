@@ -117,57 +117,25 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, int *interval)
 char *
 generate_notify_key(const char *rsc_id, const char *notify_type, const char *op_type)
 {
-    int len = 12;
-    char *op_id = NULL;
-
     CRM_CHECK(rsc_id != NULL, return NULL);
     CRM_CHECK(op_type != NULL, return NULL);
     CRM_CHECK(notify_type != NULL, return NULL);
-
-    len += strlen(op_type);
-    len += strlen(rsc_id);
-    len += strlen(notify_type);
-    if(len > 0) {
-        op_id = malloc(len);
-    }
-    if (op_id != NULL) {
-        sprintf(op_id, "%s_%s_notify_%s_0", rsc_id, notify_type, op_type);
-    }
-    return op_id;
+    return crm_strdup_printf("%s_%s_notify_%s_0",
+                             rsc_id, notify_type, op_type);
 }
 
 char *
 generate_transition_magic_v202(const char *transition_key, int op_status)
 {
-    int len = 80;
-    char *fail_state = NULL;
-
     CRM_CHECK(transition_key != NULL, return NULL);
-
-    len += strlen(transition_key);
-
-    fail_state = malloc(len);
-    if (fail_state != NULL) {
-        snprintf(fail_state, len, "%d:%s", op_status, transition_key);
-    }
-    return fail_state;
+    return crm_strdup_printf("%d:%s", op_status, transition_key);
 }
 
 char *
 generate_transition_magic(const char *transition_key, int op_status, int op_rc)
 {
-    int len = 80;
-    char *fail_state = NULL;
-
     CRM_CHECK(transition_key != NULL, return NULL);
-
-    len += strlen(transition_key);
-
-    fail_state = malloc(len);
-    if (fail_state != NULL) {
-        snprintf(fail_state, len, "%d:%d;%s", op_status, op_rc, transition_key);
-    }
-    return fail_state;
+    return crm_strdup_printf("%d:%d;%s", op_status, op_rc, transition_key);
 }
 
 gboolean
@@ -199,18 +167,9 @@ decode_transition_magic(const char *magic, char **uuid, int *transition_id, int 
 char *
 generate_transition_key(int transition_id, int action_id, int target_rc, const char *node)
 {
-    int len = 40;
-    char *fail_state = NULL;
-
     CRM_CHECK(node != NULL, return NULL);
-
-    len += strlen(node);
-
-    fail_state = malloc(len);
-    if (fail_state != NULL) {
-        snprintf(fail_state, len, "%d:%d:%d:%-*s", action_id, transition_id, target_rc, 36, node);
-    }
-    return fail_state;
+    return crm_strdup_printf("%d:%d:%d:%-*s",
+                             action_id, transition_id, target_rc, 36, node);
 }
 
 gboolean

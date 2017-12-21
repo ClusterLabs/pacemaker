@@ -360,9 +360,10 @@ crm_control_blackbox(int nsig, bool enable)
     if (blackbox_file_prefix == NULL) {
         pid_t pid = getpid();
 
-        blackbox_file_prefix = malloc(NAME_MAX);
-        snprintf(blackbox_file_prefix, NAME_MAX, "%s/%s-%lu",
-                 CRM_BLACKBOX_DIR, crm_system_name, (unsigned long) pid);
+        blackbox_file_prefix = crm_strdup_printf("%s/%s-%lu",
+                                                 CRM_BLACKBOX_DIR,
+                                                 crm_system_name,
+                                                 (unsigned long) pid);
     }
 
     if (enable && qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED) {

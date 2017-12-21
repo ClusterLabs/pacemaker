@@ -600,21 +600,18 @@ update_process_peers(void)
 {
     /* Do nothing for corosync-2 based clusters */
 
-    char buffer[1024];
-    struct iovec *iov;
-    int rc = 0;
+    struct iovec *iov = calloc(1, sizeof(struct iovec));
 
+    CRM_ASSERT(iov);
     if (local_name) {
-        rc = snprintf(buffer, SIZEOF(buffer), "<node uname=\"%s\" proclist=\"%u\"/>",
-                      local_name, get_process_list());
+        iov->iov_base = crm_strdup_printf("<node uname=\"%s\" proclist=\"%u\"/>",
+                                          local_name, get_process_list());
     } else {
-        rc = snprintf(buffer, SIZEOF(buffer), "<node proclist=\"%u\"/>", get_process_list());
+        iov->iov_base = crm_strdup_printf("<node proclist=\"%u\"/>",
+                                          get_process_list());
     }
-
-    crm_trace("Sending %s", buffer);
-    iov = calloc(1, sizeof(struct iovec));
-    iov->iov_base = strdup(buffer);
-    iov->iov_len = rc + 1;
+    iov->iov_len = strlen(iov->iov_base) + 1;
+    crm_trace("Sending %s", (char*) iov->iov_base);
     send_cpg_iov(iov);
 }
 

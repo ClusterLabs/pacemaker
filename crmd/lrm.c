@@ -82,13 +82,7 @@ lrm_connection_destroy(void)
 static char *
 make_stop_id(const char *rsc, int call_id)
 {
-    char *op_id = NULL;
-
-    op_id = calloc(1, strlen(rsc) + 34);
-    if (op_id != NULL) {
-        snprintf(op_id, strlen(rsc) + 34, "%s:%d", rsc, call_id);
-    }
-    return op_id;
+    return crm_strdup_printf("%s:%d", rsc, call_id);
 }
 
 static void
@@ -939,14 +933,11 @@ delete_rsc_status(lrm_state_t * lrm_state, const char *rsc_id, int call_options,
                   const char *user_name)
 {
     char *rsc_xpath = NULL;
-    int max = 0;
     int rc = pcmk_ok;
 
     CRM_CHECK(rsc_id != NULL, return -ENXIO);
 
-    max = strlen(rsc_template) + strlen(lrm_state->node_name) + strlen(rsc_id) + 1;
-    rsc_xpath = calloc(1, max);
-    snprintf(rsc_xpath, max, rsc_template, lrm_state->node_name, rsc_id);
+    rsc_xpath = crm_strdup_printf(rsc_template, lrm_state->node_name, rsc_id);
 
     rc = cib_internal_op(fsa_cib_conn, CIB_OP_DELETE, NULL, rsc_xpath,
                          NULL, NULL, call_options | cib_xpath, user_name);

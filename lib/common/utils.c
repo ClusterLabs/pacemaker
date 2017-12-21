@@ -1503,8 +1503,7 @@ crm_parse_agent_spec(const char *spec, char **standard, char **provider,
         return -EINVAL;
     }
 
-    *standard = calloc(colon - spec + 1, sizeof(char));
-    strncpy(*standard, spec, colon - spec);
+    *standard = strndup(spec, colon - spec);
     spec = colon + 1;
 
     if (crm_provider_required(*standard)) {
@@ -1513,8 +1512,7 @@ crm_parse_agent_spec(const char *spec, char **standard, char **provider,
             free(*standard);
             return -EINVAL;
         }
-        *provider = calloc(colon - spec + 1, sizeof(char));
-        strncpy(*provider, spec, colon - spec);
+        *provider = strndup(spec, colon - spec);
         spec = colon + 1;
     }
 

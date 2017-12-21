@@ -197,7 +197,6 @@ crm_foreach_xpath_result(xmlNode *xml, const char *xpath,
 xmlNode *
 get_xpath_object_relative(const char *xpath, xmlNode * xml_obj, int error_level)
 {
-    int len = 0;
     xmlNode *result = NULL;
     char *xpath_full = NULL;
     char *xpath_prefix = NULL;
@@ -208,10 +207,7 @@ get_xpath_object_relative(const char *xpath, xmlNode * xml_obj, int error_level)
 
     xpath_prefix = (char *)xmlGetNodePath(xml_obj);
 
-    len = strlen(xpath_prefix) + strlen(xpath) + 1;
-    xpath_full = malloc(len);
-    strcpy(xpath_full, xpath_prefix);
-    strcat(xpath_full, xpath);
+    xpath_full = crm_strdup_printf("%s%s", xpath_prefix, xpath);
 
     result = get_xpath_object(xpath_full, xml_obj, error_level);
 
