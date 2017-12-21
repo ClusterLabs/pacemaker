@@ -690,7 +690,7 @@ do_recover(long long action,
 }
 
 /* *INDENT-OFF* */
-pe_cluster_option crmd_opts[] = {
+static pe_cluster_option crmd_opts[] = {
 	/* name, old-name, validate, values, default, short description, long description */
 	{ "dc-version", NULL, "string", NULL, "none", NULL,
           "Version of Pacemaker on the cluster's DC.",

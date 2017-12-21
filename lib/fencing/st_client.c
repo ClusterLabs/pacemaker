@@ -146,8 +146,6 @@ static const char META_TEMPLATE[] =
 #endif
 
 bool stonith_dispatch(stonith_t * st);
-int stonith_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata);
-void stonith_perform_callback(stonith_t * stonith, xmlNode * msg, int call_id, int rc);
 xmlNode *stonith_create_op(int call_id, const char *token, const char *op, xmlNode * data,
                            int call_options);
 int stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data,
@@ -1636,6 +1634,194 @@ stonith_api_signoff(stonith_t * stonith)
 }
 
 static int
+stonith_api_del_callback(stonith_t * stonith, int call_id, bool all_callbacks)
+{
+    stonith_private_t *private = stonith->private;
+
+    if (all_callbacks) {
+        private->op_callback = NULL;
+        g_hash_table_destroy(private->stonith_op_callback_table);
+        private->stonith_op_callback_table = g_hash_table_new_full(g_direct_hash, g_direct_equal,
+                                                                   NULL,
+                                                                   stonith_destroy_op_callback);
+
+    } else if (call_id == 0) {
+        private->op_callback = NULL;
+
+    } else {
+        g_hash_table_remove(private->stonith_op_callback_table, GINT_TO_POINTER(call_id));
+    }
+    return pcmk_ok;
+}
+
+static void
+invoke_callback(stonith_t * st, int call_id, int rc, void *userdata,
+                void (*callback) (stonith_t * st, stonith_callback_data_t * data))
+{
+    stonith_callback_data_t data = { 0, };
+
+    data.call_id = call_id;
+    data.rc = rc;
+    data.userdata = userdata;
+
+    callback(st, &data);
+}
+
+static void
+stonith_perform_callback(stonith_t * stonith, xmlNode * msg, int call_id, int rc)
+{
+    stonith_private_t *private = NULL;
+    stonith_callback_client_t *blob = NULL;
+    stonith_callback_client_t local_blob;
+
+    CRM_CHECK(stonith != NULL, return);
+    CRM_CHECK(stonith->private != NULL, return);
+
+    private = stonith->private;
+
+    local_blob.id = NULL;
+    local_blob.callback = NULL;
+    local_blob.user_data = NULL;
+    local_blob.only_success = FALSE;
+
+    if (msg != NULL) {
+        crm_element_value_int(msg, F_STONITH_RC, &rc);
+        crm_element_value_int(msg, F_STONITH_CALLID, &call_id);
+    }
+
+    CRM_CHECK(call_id > 0, crm_log_xml_err(msg, "Bad result"));
+
+    blob = g_hash_table_lookup(private->stonith_op_callback_table, GINT_TO_POINTER(call_id));
+
+    if (blob != NULL) {
+        local_blob = *blob;
+        blob = NULL;
+
+        stonith_api_del_callback(stonith, call_id, FALSE);
+
+    } else {
+        crm_trace("No callback found for call %d", call_id);
+        local_blob.callback = NULL;
+    }
+
+    if (local_blob.callback != NULL && (rc == pcmk_ok || local_blob.only_success == FALSE)) {
+        crm_trace("Invoking callback %s for call %d", crm_str(local_blob.id), call_id);
+        invoke_callback(stonith, call_id, rc, local_blob.user_data, local_blob.callback);
+
+    } else if (private->op_callback == NULL && rc != pcmk_ok) {
+        crm_warn("STONITH command failed: %s", pcmk_strerror(rc));
+        crm_log_xml_debug(msg, "Failed STONITH Update");
+    }
+
+    if (private->op_callback != NULL) {
+        crm_trace("Invoking global callback for call %d", call_id);
+        invoke_callback(stonith, call_id, rc, NULL, private->op_callback);
+    }
+    crm_trace("OP callback activated.");
+}
+
+static gboolean
+stonith_async_timeout_handler(gpointer data)
+{
+    struct timer_rec_s *timer = data;
+
+    crm_err("Async call %d timed out after %dms", timer->call_id, timer->timeout);
+    stonith_perform_callback(timer->stonith, NULL, timer->call_id, -ETIME);
+
+    /* Always return TRUE, never remove the handler
+     * We do that in stonith_del_callback()
+     */
+    return TRUE;
+}
+
+static void
+set_callback_timeout(stonith_callback_client_t * callback, stonith_t * stonith, int call_id,
+                     int timeout)
+{
+    struct timer_rec_s *async_timer = callback->timer;
+
+    if (timeout <= 0) {
+        return;
+    }
+
+    if (!async_timer) {
+        async_timer = calloc(1, sizeof(struct timer_rec_s));
+        callback->timer = async_timer;
+    }
+
+    async_timer->stonith = stonith;
+    async_timer->call_id = call_id;
+    /* Allow a fair bit of grace to allow the server to tell us of a timeout
+     * This is only a fallback
+     */
+    async_timer->timeout = (timeout + 60) * 1000;
+    if (async_timer->ref) {
+        g_source_remove(async_timer->ref);
+    }
+    async_timer->ref =
+        g_timeout_add(async_timer->timeout, stonith_async_timeout_handler, async_timer);
+}
+
+static void
+update_callback_timeout(int call_id, int timeout, stonith_t * st)
+{
+    stonith_callback_client_t *callback = NULL;
+    stonith_private_t *private = st->private;
+
+    callback = g_hash_table_lookup(private->stonith_op_callback_table, GINT_TO_POINTER(call_id));
+    if (!callback || !callback->allow_timeout_updates) {
+        return;
+    }
+
+    set_callback_timeout(callback, st, call_id, timeout);
+}
+
+static int
+stonith_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata)
+{
+    const char *type = NULL;
+    struct notify_blob_s blob;
+
+    stonith_t *st = userdata;
+    stonith_private_t *private = NULL;
+
+    CRM_ASSERT(st != NULL);
+    private = st->private;
+
+    blob.stonith = st;
+    blob.xml = string2xml(buffer);
+    if (blob.xml == NULL) {
+        crm_warn("Received a NULL msg from STONITH service: %s.", buffer);
+        return 0;
+    }
+
+    /* do callbacks */
+    type = crm_element_value(blob.xml, F_TYPE);
+    crm_trace("Activating %s callbacks...", type);
+
+    if (safe_str_eq(type, T_STONITH_NG)) {
+        stonith_perform_callback(st, blob.xml, 0, 0);
+
+    } else if (safe_str_eq(type, T_STONITH_NOTIFY)) {
+        g_list_foreach(private->notify_list, stonith_send_notification, &blob);
+    } else if (safe_str_eq(type, T_STONITH_TIMEOUT_VALUE)) {
+        int call_id = 0;
+        int timeout = 0;
+
+        crm_element_value_int(blob.xml, F_STONITH_TIMEOUT, &timeout);
+        crm_element_value_int(blob.xml, F_STONITH_CALLID, &call_id);
+
+        update_callback_timeout(call_id, timeout, st);
+    } else {
+        crm_err("Unknown message type: %s", type);
+        crm_log_xml_warn(blob.xml, "BadReply");
+    }
+
+    free_xml(blob.xml);
+    return 1;
+}
+
+static int
 stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
 {
     int rc = pcmk_ok;
@@ -1821,75 +2007,6 @@ stonith_api_del_notification(stonith_t * stonith, const char *event)
     return pcmk_ok;
 }
 
-static gboolean
-stonith_async_timeout_handler(gpointer data)
-{
-    struct timer_rec_s *timer = data;
-
-    crm_err("Async call %d timed out after %dms", timer->call_id, timer->timeout);
-    stonith_perform_callback(timer->stonith, NULL, timer->call_id, -ETIME);
-
-    /* Always return TRUE, never remove the handler
-     * We do that in stonith_del_callback()
-     */
-    return TRUE;
-}
-
-static void
-set_callback_timeout(stonith_callback_client_t * callback, stonith_t * stonith, int call_id,
-                     int timeout)
-{
-    struct timer_rec_s *async_timer = callback->timer;
-
-    if (timeout <= 0) {
-        return;
-    }
-
-    if (!async_timer) {
-        async_timer = calloc(1, sizeof(struct timer_rec_s));
-        callback->timer = async_timer;
-    }
-
-    async_timer->stonith = stonith;
-    async_timer->call_id = call_id;
-    /* Allow a fair bit of grace to allow the server to tell us of a timeout
-     * This is only a fallback
-     */
-    async_timer->timeout = (timeout + 60) * 1000;
-    if (async_timer->ref) {
-        g_source_remove(async_timer->ref);
-    }
-    async_timer->ref =
-        g_timeout_add(async_timer->timeout, stonith_async_timeout_handler, async_timer);
-}
-
-static void
-update_callback_timeout(int call_id, int timeout, stonith_t * st)
-{
-    stonith_callback_client_t *callback = NULL;
-    stonith_private_t *private = st->private;
-
-    callback = g_hash_table_lookup(private->stonith_op_callback_table, GINT_TO_POINTER(call_id));
-    if (!callback || !callback->allow_timeout_updates) {
-        return;
-    }
-
-    set_callback_timeout(callback, st, call_id, timeout);
-}
-
-static void
-invoke_callback(stonith_t * st, int call_id, int rc, void *userdata,
-                void (*callback) (stonith_t * st, stonith_callback_data_t * data))
-{
-    stonith_callback_data_t data = { 0, };
-
-    data.call_id = call_id;
-    data.rc = rc;
-    data.userdata = userdata;
-
-    callback(st, &data);
-}
-
 static int
 stonith_api_add_callback(stonith_t * stonith, int call_id, int timeout, int options,
                          void *user_data, const char *callback_name,
@@ -1932,27 +2049,6 @@ stonith_api_add_callback(stonith_t * stonith, int call_id, int timeout, int opti
     return TRUE;
 }
 
-static int
-stonith_api_del_callback(stonith_t * stonith, int call_id, bool all_callbacks)
-{
-    stonith_private_t *private = stonith->private;
-
-    if (all_callbacks) {
-        private->op_callback = NULL;
-        g_hash_table_destroy(private->stonith_op_callback_table);
-        private->stonith_op_callback_table = g_hash_table_new_full(g_direct_hash, g_direct_equal,
-                                                                   NULL,
-                                                                   stonith_destroy_op_callback);
-
-    } else if (call_id == 0) {
-        private->op_callback = NULL;
-
-    } else {
-        g_hash_table_remove(private->stonith_op_callback_table, GINT_TO_POINTER(call_id));
-    }
-    return pcmk_ok;
-}
-
 static void
 stonith_dump_pending_op(gpointer key, gpointer value, gpointer user_data)
 {
@@ -1971,59 +2067,6 @@ stonith_dump_pending_callbacks(stonith_t * stonith)
         return;
     }
     return g_hash_table_foreach(private->stonith_op_callback_table, stonith_dump_pending_op, NULL);
-}
-
-void
-stonith_perform_callback(stonith_t * stonith, xmlNode * msg, int call_id, int rc)
-{
-    stonith_private_t *private = NULL;
-    stonith_callback_client_t *blob = NULL;
-    stonith_callback_client_t local_blob;
-
-    CRM_CHECK(stonith != NULL, return);
-    CRM_CHECK(stonith->private != NULL, return);
-
-    private = stonith->private;
-
-    local_blob.id = NULL;
-    local_blob.callback = NULL;
-    local_blob.user_data = NULL;
-    local_blob.only_success = FALSE;
-
-    if (msg != NULL) {
-        crm_element_value_int(msg, F_STONITH_RC, &rc);
-        crm_element_value_int(msg, F_STONITH_CALLID, &call_id);
-    }
-
-    CRM_CHECK(call_id > 0, crm_log_xml_err(msg, "Bad result"));
-
-    blob = g_hash_table_lookup(private->stonith_op_callback_table, GINT_TO_POINTER(call_id));
-
-    if (blob != NULL) {
-        local_blob = *blob;
-        blob = NULL;
-
-        stonith_api_del_callback(stonith, call_id, FALSE);
-
-    } else {
-        crm_trace("No callback found for call %d", call_id);
-        local_blob.callback = NULL;
-    }
-
-    if (local_blob.callback != NULL && (rc == pcmk_ok || local_blob.only_success == FALSE)) {
-        crm_trace("Invoking callback %s for call %d", crm_str(local_blob.id), call_id);
-        invoke_callback(stonith, call_id, rc, local_blob.user_data, local_blob.callback);
-
-    } else if (private->op_callback == NULL && rc != pcmk_ok) {
-        crm_warn("STONITH command failed: %s", pcmk_strerror(rc));
-        crm_log_xml_debug(msg, "Failed STONITH Update");
-    }
-
-    if (private->op_callback != NULL) {
-        crm_trace("Invoking global callback for call %d", call_id);
-        invoke_callback(stonith, call_id, rc, NULL, private->op_callback);
-    }
-    crm_trace("OP callback activated.");
 }
 
 /*
@@ -2266,51 +2309,6 @@ stonith_dispatch(stonith_t * st)
     }
 
     return stay_connected;
-}
-
-int
-stonith_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata)
-{
-    const char *type = NULL;
-    struct notify_blob_s blob;
-
-    stonith_t *st = userdata;
-    stonith_private_t *private = NULL;
-
-    CRM_ASSERT(st != NULL);
-    private = st->private;
-
-    blob.stonith = st;
-    blob.xml = string2xml(buffer);
-    if (blob.xml == NULL) {
-        crm_warn("Received a NULL msg from STONITH service: %s.", buffer);
-        return 0;
-    }
-
-    /* do callbacks */
-    type = crm_element_value(blob.xml, F_TYPE);
-    crm_trace("Activating %s callbacks...", type);
-
-    if (safe_str_eq(type, T_STONITH_NG)) {
-        stonith_perform_callback(st, blob.xml, 0, 0);
-
-    } else if (safe_str_eq(type, T_STONITH_NOTIFY)) {
-        g_list_foreach(private->notify_list, stonith_send_notification, &blob);
-    } else if (safe_str_eq(type, T_STONITH_TIMEOUT_VALUE)) {
-        int call_id = 0;
-        int timeout = 0;
-
-        crm_element_value_int(blob.xml, F_STONITH_TIMEOUT, &timeout);
-        crm_element_value_int(blob.xml, F_STONITH_CALLID, &call_id);
-
-        update_callback_timeout(call_id, timeout, st);
-    } else {
-        crm_err("Unknown message type: %s", type);
-        crm_log_xml_warn(blob.xml, "BadReply");
-    }
-
-    free_xml(blob.xml);
-    return 1;
 }
 
 static int

@@ -83,7 +83,7 @@ check_placement_strategy(const char *value)
 }
 
 /* *INDENT-OFF* */
-pe_cluster_option pe_opts[] = {
+static pe_cluster_option pe_opts[] = {
 	/* name, old-name, validate, default, description */
 	{ "no-quorum-policy", NULL, "enum", "stop, freeze, ignore, suicide", "stop", &check_quorum,
 	  "What to do when the cluster does not have quorum", NULL },

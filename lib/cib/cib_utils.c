@@ -700,7 +700,7 @@ cib_native_notify(gpointer data, gpointer user_data)
     crm_trace("Callback invoked...");
 }
 
-pe_cluster_option cib_opts[] = {
+static pe_cluster_option cib_opts[] = {
     /*
      * name, legacy name,
      * type, allowed values, default, validator,
