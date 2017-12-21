@@ -619,7 +619,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="42" priority="1000">
+  <synapse id="42">
     <action_set>
       <rsc_op id="70" operation="monitor" operation_key="mysql-server_monitor_30000" on_node="wc01" on_node_uuid="31de4ab3-2d05-476e-8f9a-627ad6cd94ca">
         <primitive id="mysql-server" class="ocf" provider="heartbeat" type="mysql"/>
@@ -632,7 +632,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="43" priority="1000">
+  <synapse id="43">
     <action_set>
       <rsc_op id="69" operation="start" operation_key="mysql-server_start_0" on_node="wc01" on_node_uuid="31de4ab3-2d05-476e-8f9a-627ad6cd94ca">
         <primitive id="mysql-server" class="ocf" provider="heartbeat" type="mysql"/>
@@ -651,7 +651,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="44" priority="1000">
+  <synapse id="44">
     <action_set>
       <rsc_op id="68" operation="stop" operation_key="mysql-server_stop_0" on_node="wc02" on_node_uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396">
         <primitive id="mysql-server" class="ocf" provider="heartbeat" type="mysql"/>

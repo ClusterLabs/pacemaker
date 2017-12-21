@@ -1,6 +1,15 @@
  <transition_graph cluster-delay="60" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
    <synapse id="0">
      <action_set>
+      <rsc_op id="3" operation="monitor" operation_key="stonithclone:0_monitor_5000" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117">
+        <primitive id="stonithclone" long-id="stonithclone:0" class="stonith" type="external/ssh"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="node2" CRM_meta_on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117" CRM_meta_timeout="20000"  hostlist="node1,node2"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="1">
+    <action_set>
       <rsc_op id="17" operation="monitor" operation_key="stonithclone:1_monitor_5000" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
         <primitive id="stonithclone" long-id="stonithclone:1" class="stonith" type="external/ssh"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="node1" CRM_meta_on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a" CRM_meta_timeout="20000"  hostlist="node1,node2"/>
@@ -12,7 +21,7 @@
       </trigger>
     </inputs>
    </synapse>
-   <synapse id="1">
+  <synapse id="2">
      <action_set>
       <rsc_op id="16" operation="start" operation_key="stonithclone:1_start_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
         <primitive id="stonithclone" long-id="stonithclone:1" class="stonith" type="external/ssh"/>
@@ -25,7 +34,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="2">
+  <synapse id="3">
      <action_set>
       <rsc_op id="8" operation="monitor" operation_key="stonithclone:1_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
         <primitive id="stonithclone" long-id="stonithclone:1" class="stonith" type="external/ssh"/>
@@ -34,7 +43,7 @@
      </action_set>
     <inputs/>
    </synapse>
-  <synapse id="3" priority="1000000">
+  <synapse id="4" priority="1000000">
      <action_set>
       <pseudo_event id="19" operation="running" operation_key="stonithcloneset_running_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
@@ -49,7 +58,7 @@
        </trigger>
      </inputs>
    </synapse>
-  <synapse id="4">
+  <synapse id="5">
     <action_set>
       <pseudo_event id="18" operation="start" operation_key="stonithcloneset_start_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
@@ -61,7 +70,16 @@
       </trigger>
     </inputs>
   </synapse>
-   <synapse id="5">
+  <synapse id="6">
+    <action_set>
+      <rsc_op id="1" operation="monitor" operation_key="evmsdclone:0_monitor_5000" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117">
+        <primitive id="evmsdclone" long-id="evmsdclone:0" class="ocf" provider="heartbeat" type="Evmsd"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="node2" CRM_meta_on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="7">
      <action_set>
       <rsc_op id="25" operation="monitor" operation_key="evmsdclone:1_monitor_5000" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
         <primitive id="evmsdclone" long-id="evmsdclone:1" class="ocf" provider="heartbeat" type="Evmsd"/>
@@ -74,7 +92,7 @@
       </trigger>
     </inputs>
    </synapse>
-   <synapse id="6">
+  <synapse id="8">
      <action_set>
       <rsc_op id="24" operation="start" operation_key="evmsdclone:1_start_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
         <primitive id="evmsdclone" long-id="evmsdclone:1" class="ocf" provider="heartbeat" type="Evmsd"/>
@@ -87,7 +105,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="7">
+  <synapse id="9">
      <action_set>
       <rsc_op id="9" operation="monitor" operation_key="evmsdclone:1_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
         <primitive id="evmsdclone" long-id="evmsdclone:1" class="ocf" provider="heartbeat" type="Evmsd"/>
@@ -96,7 +114,7 @@
      </action_set>
     <inputs/>
   </synapse>
-  <synapse id="8" priority="1000000">
+  <synapse id="10" priority="1000000">
     <action_set>
       <pseudo_event id="27" operation="running" operation_key="evmsdcloneset_running_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
@@ -111,7 +129,7 @@
       </trigger>
      </inputs>
    </synapse>
-  <synapse id="9">
+  <synapse id="11">
      <action_set>
       <pseudo_event id="26" operation="start" operation_key="evmsdcloneset_start_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
@@ -123,7 +141,7 @@
       </trigger>
     </inputs>
    </synapse>
-  <synapse id="10" priority="1000000">
+  <synapse id="12" priority="1000000">
      <action_set>
       <rsc_op id="84" operation="notify" operation_key="evmsclone:0_post_notify_start_0" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117">
         <primitive id="evmsclone" long-id="evmsclone:0" class="ocf" provider="heartbeat" type="EvmsSCC"/>
@@ -136,7 +154,7 @@
        </trigger>
      </inputs>
    </synapse>
-  <synapse id="11">
+  <synapse id="13">
      <action_set>
       <rsc_op id="83" operation="notify" operation_key="evmsclone:0_pre_notify_start_0" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117">
         <primitive id="evmsclone" long-id="evmsclone:0" class="ocf" provider="heartbeat" type="EvmsSCC"/>
@@ -149,7 +167,7 @@
        </trigger>
      </inputs>
    </synapse>
-  <synapse id="12" priority="1000000">
+  <synapse id="14" priority="1000000">
      <action_set>
       <rsc_op id="85" operation="notify" operation_key="evmsclone:1_post_notify_start_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
         <primitive id="evmsclone" long-id="evmsclone:1" class="ocf" provider="heartbeat" type="EvmsSCC"/>
@@ -162,7 +180,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="13">
+  <synapse id="15">
      <action_set>
       <rsc_op id="32" operation="start" operation_key="evmsclone:1_start_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
         <primitive id="evmsclone" long-id="evmsclone:1" class="ocf" provider="heartbeat" type="EvmsSCC"/>
@@ -175,7 +193,7 @@
        </trigger>
      </inputs>
    </synapse>
-  <synapse id="14">
+  <synapse id="16">
      <action_set>
       <rsc_op id="10" operation="monitor" operation_key="evmsclone:1_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
         <primitive id="evmsclone" long-id="evmsclone:1" class="ocf" provider="heartbeat" type="EvmsSCC"/>
@@ -184,7 +202,7 @@
      </action_set>
     <inputs/>
    </synapse>
-  <synapse id="15" priority="1000000">
+  <synapse id="17" priority="1000000">
      <action_set>
       <pseudo_event id="38" operation="notified" operation_key="evmscloneset_confirmed-post_notify_running_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
@@ -202,7 +220,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="16" priority="1000000">
+  <synapse id="18" priority="1000000">
      <action_set>
       <pseudo_event id="37" operation="notify" operation_key="evmscloneset_post_notify_running_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
@@ -217,7 +235,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="17">
+  <synapse id="19">
      <action_set>
       <pseudo_event id="36" operation="notified" operation_key="evmscloneset_confirmed-pre_notify_start_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
@@ -232,7 +250,7 @@
        </trigger>
      </inputs>
    </synapse>
-  <synapse id="18">
+  <synapse id="20">
     <action_set>
       <pseudo_event id="35" operation="notify" operation_key="evmscloneset_pre_notify_start_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
@@ -240,7 +258,7 @@
     </action_set>
     <inputs/>
   </synapse>
-   <synapse id="19" priority="1000000">
+  <synapse id="21" priority="1000000">
      <action_set>
       <pseudo_event id="34" operation="running" operation_key="evmscloneset_running_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_timeout="20000" />
@@ -255,7 +273,7 @@
       </trigger>
      </inputs>
    </synapse>
-  <synapse id="20">
+  <synapse id="22">
      <action_set>
       <pseudo_event id="33" operation="start" operation_key="evmscloneset_start_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_timeout="20000" />
@@ -273,7 +291,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="21">
+  <synapse id="23">
      <action_set>
       <rsc_op id="90" operation="notify" operation_key="imagestoreclone:0_pre_notify_stop_0" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117">
         <primitive id="imagestoreclone" long-id="imagestoreclone:0" class="ocf" provider="heartbeat" type="Filesystem"/>
@@ -286,7 +304,7 @@
        </trigger>
      </inputs>
    </synapse>
-  <synapse id="22" priority="1000000">
+  <synapse id="24" priority="1000000">
     <action_set>
       <rsc_op id="88" operation="notify" operation_key="imagestoreclone:0_post_notify_start_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
         <primitive id="imagestoreclone" long-id="imagestoreclone:0" class="ocf" provider="heartbeat" type="Filesystem"/>
@@ -299,7 +317,7 @@
       </trigger>
     </inputs>
   </synapse>
-   <synapse id="23">
+  <synapse id="25">
      <action_set>
       <rsc_op id="46" operation="monitor" operation_key="imagestoreclone:0_monitor_20000" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
         <primitive id="imagestoreclone" long-id="imagestoreclone:0" class="ocf" provider="heartbeat" type="Filesystem"/>
@@ -315,7 +333,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="24">
+  <synapse id="26">
      <action_set>
       <rsc_op id="45" operation="start" operation_key="imagestoreclone:0_start_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
         <primitive id="imagestoreclone" long-id="imagestoreclone:0" class="ocf" provider="heartbeat" type="Filesystem"/>
@@ -331,7 +349,7 @@
        </trigger>
      </inputs>
    </synapse>
-  <synapse id="25">
+  <synapse id="27">
      <action_set>
       <rsc_op id="11" operation="monitor" operation_key="imagestoreclone:0_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
         <primitive id="imagestoreclone" long-id="imagestoreclone:0" class="ocf" provider="heartbeat" type="Filesystem"/>
@@ -340,7 +358,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="26">
+  <synapse id="28">
     <action_set>
       <rsc_op id="5" operation="stop" operation_key="imagestoreclone:0_stop_0" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117">
         <primitive id="imagestoreclone" long-id="imagestoreclone:0" class="ocf" provider="heartbeat" type="Filesystem"/>
@@ -353,7 +371,7 @@
        </trigger>
      </inputs>
    </synapse>
-  <synapse id="27" priority="1000000">
+  <synapse id="29" priority="1000000">
      <action_set>
       <rsc_op id="89" operation="notify" operation_key="imagestoreclone:1_post_notify_start_0" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117">
         <primitive id="imagestoreclone" long-id="imagestoreclone:1" class="ocf" provider="heartbeat" type="Filesystem"/>
@@ -366,7 +384,7 @@
        </trigger>
      </inputs>
    </synapse>
-  <synapse id="28">
+  <synapse id="30">
      <action_set>
       <rsc_op id="48" operation="monitor" operation_key="imagestoreclone:1_monitor_20000" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117">
         <primitive id="imagestoreclone" long-id="imagestoreclone:1" class="ocf" provider="heartbeat" type="Filesystem"/>
@@ -382,7 +400,7 @@
        </trigger>
      </inputs>
    </synapse>
-  <synapse id="29">
+  <synapse id="31">
      <action_set>
       <rsc_op id="47" operation="start" operation_key="imagestoreclone:1_start_0" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117">
         <primitive id="imagestoreclone" long-id="imagestoreclone:1" class="ocf" provider="heartbeat" type="Filesystem"/>
@@ -395,7 +413,7 @@
        </trigger>
      </inputs>
    </synapse>
-  <synapse id="30" priority="1000000">
+  <synapse id="32" priority="1000000">
      <action_set>
       <pseudo_event id="60" operation="notified" operation_key="imagestorecloneset_confirmed-post_notify_stopped_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="stopped" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
@@ -407,7 +425,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="31" priority="1000000">
+  <synapse id="33" priority="1000000">
      <action_set>
       <pseudo_event id="59" operation="notify" operation_key="imagestorecloneset_post_notify_stopped_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="stopped" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
@@ -422,7 +440,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="32">
+  <synapse id="34">
      <action_set>
       <pseudo_event id="58" operation="notified" operation_key="imagestorecloneset_confirmed-pre_notify_stop_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="stop" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="stop" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
@@ -437,7 +455,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="33">
+  <synapse id="35">
      <action_set>
       <pseudo_event id="57" operation="notify" operation_key="imagestorecloneset_pre_notify_stop_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="stop" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="stop" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
@@ -445,7 +463,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="34" priority="1000000">
+  <synapse id="36" priority="1000000">
     <action_set>
       <pseudo_event id="56" operation="stopped" operation_key="imagestorecloneset_stopped_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_timeout="20000" />
@@ -460,7 +478,7 @@
        </trigger>
      </inputs>
    </synapse>
-  <synapse id="35">
+  <synapse id="37">
      <action_set>
       <pseudo_event id="55" operation="stop" operation_key="imagestorecloneset_stop_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_timeout="20000" />
@@ -472,7 +490,7 @@
        </trigger>
      </inputs>
    </synapse>
-  <synapse id="36" priority="1000000">
+  <synapse id="38" priority="1000000">
      <action_set>
       <pseudo_event id="54" operation="notified" operation_key="imagestorecloneset_confirmed-post_notify_running_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
@@ -490,7 +508,7 @@
        </trigger>
      </inputs>
    </synapse>
-  <synapse id="37" priority="1000000">
+  <synapse id="39" priority="1000000">
      <action_set>
       <pseudo_event id="53" operation="notify" operation_key="imagestorecloneset_post_notify_running_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
@@ -505,7 +523,7 @@
        </trigger>
      </inputs>
    </synapse>
-  <synapse id="38">
+  <synapse id="40">
      <action_set>
       <pseudo_event id="52" operation="notified" operation_key="imagestorecloneset_confirmed-pre_notify_start_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
@@ -517,7 +535,7 @@
        </trigger>
      </inputs>
    </synapse>
-  <synapse id="39">
+  <synapse id="41">
      <action_set>
       <pseudo_event id="51" operation="notify" operation_key="imagestorecloneset_pre_notify_start_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
@@ -529,7 +547,7 @@
       </trigger>
     </inputs>
    </synapse>
-  <synapse id="40" priority="1000000">
+  <synapse id="42" priority="1000000">
      <action_set>
       <pseudo_event id="50" operation="running" operation_key="imagestorecloneset_running_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_timeout="20000" />
@@ -547,7 +565,7 @@
        </trigger>
      </inputs>
    </synapse>
-  <synapse id="41">
+  <synapse id="43">
      <action_set>
       <pseudo_event id="49" operation="start" operation_key="imagestorecloneset_start_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_timeout="20000" />
@@ -568,7 +586,7 @@
       </trigger>
      </inputs>
    </synapse>
-  <synapse id="42" priority="1000000">
+  <synapse id="44" priority="1000000">
      <action_set>
       <rsc_op id="92" operation="notify" operation_key="configstoreclone:0_post_notify_start_0" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117">
         <primitive id="configstoreclone" long-id="configstoreclone:0" class="ocf" provider="heartbeat" type="Filesystem"/>
@@ -581,7 +599,7 @@
        </trigger>
      </inputs>
    </synapse>
-  <synapse id="43">
+  <synapse id="45">
      <action_set>
       <rsc_op id="91" operation="notify" operation_key="configstoreclone:0_pre_notify_start_0" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117">
         <primitive id="configstoreclone" long-id="configstoreclone:0" class="ocf" provider="heartbeat" type="Filesystem"/>
@@ -594,7 +612,20 @@
        </trigger>
      </inputs>
    </synapse>
-  <synapse id="44" priority="1000000">
+  <synapse id="46">
+    <action_set>
+      <rsc_op id="6" operation="monitor" operation_key="configstoreclone:0_monitor_20000" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117">
+        <primitive id="configstoreclone" long-id="configstoreclone:0" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="20000" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="node2" CRM_meta_on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117" CRM_meta_timeout="60000"  device="/dev/evms/vmsharedclustercontainer/configstore" directory="/etc/xen/vm" fstype="ocfs2"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="70" operation="notified" operation_key="configstorecloneset_confirmed-post_notify_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="47" priority="1000000">
      <action_set>
       <rsc_op id="93" operation="notify" operation_key="configstoreclone:1_post_notify_start_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
         <primitive id="configstoreclone" long-id="configstoreclone:1" class="ocf" provider="heartbeat" type="Filesystem"/>
@@ -607,7 +638,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="45">
+  <synapse id="48">
      <action_set>
       <rsc_op id="64" operation="monitor" operation_key="configstoreclone:1_monitor_20000" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
         <primitive id="configstoreclone" long-id="configstoreclone:1" class="ocf" provider="heartbeat" type="Filesystem"/>
@@ -623,7 +654,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="46">
+  <synapse id="49">
      <action_set>
       <rsc_op id="63" operation="start" operation_key="configstoreclone:1_start_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
         <primitive id="configstoreclone" long-id="configstoreclone:1" class="ocf" provider="heartbeat" type="Filesystem"/>
@@ -636,7 +667,7 @@
        </trigger>
      </inputs>
    </synapse>
-  <synapse id="47">
+  <synapse id="50">
      <action_set>
       <rsc_op id="12" operation="monitor" operation_key="configstoreclone:1_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
         <primitive id="configstoreclone" long-id="configstoreclone:1" class="ocf" provider="heartbeat" type="Filesystem"/>
@@ -645,7 +676,7 @@
      </action_set>
     <inputs/>
    </synapse>
-  <synapse id="48" priority="1000000">
+  <synapse id="51" priority="1000000">
      <action_set>
       <pseudo_event id="70" operation="notified" operation_key="configstorecloneset_confirmed-post_notify_running_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
@@ -663,7 +694,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="49" priority="1000000">
+  <synapse id="52" priority="1000000">
      <action_set>
       <pseudo_event id="69" operation="notify" operation_key="configstorecloneset_post_notify_running_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
@@ -678,7 +709,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="50">
+  <synapse id="53">
      <action_set>
       <pseudo_event id="68" operation="notified" operation_key="configstorecloneset_confirmed-pre_notify_start_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
@@ -693,7 +724,7 @@
        </trigger>
      </inputs>
    </synapse>
-  <synapse id="51">
+  <synapse id="54">
     <action_set>
       <pseudo_event id="67" operation="notify" operation_key="configstorecloneset_pre_notify_start_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
@@ -701,7 +732,7 @@
     </action_set>
     <inputs/>
   </synapse>
-   <synapse id="52" priority="1000000">
+  <synapse id="55" priority="1000000">
      <action_set>
       <pseudo_event id="66" operation="running" operation_key="configstorecloneset_running_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_timeout="20000" />
@@ -716,7 +747,7 @@
       </trigger>
      </inputs>
    </synapse>
-  <synapse id="53">
+  <synapse id="56">
      <action_set>
       <pseudo_event id="65" operation="start" operation_key="configstorecloneset_start_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_timeout="20000" />
@@ -734,7 +765,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="54">
+  <synapse id="57">
      <action_set>
       <rsc_op id="81" operation="migrate_from" operation_key="sles10_migrate_from_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
         <primitive id="sles10" class="ocf" provider="heartbeat" type="Xen"/>
@@ -747,7 +778,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="55">
+  <synapse id="58">
     <action_set>
       <rsc_op id="80" operation="migrate_to" operation_key="sles10_migrate_to_0" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117">
         <primitive id="sles10" class="ocf" provider="heartbeat" type="Xen"/>
@@ -766,7 +797,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="56">
+  <synapse id="59">
     <action_set>
       <rsc_op id="79" operation="monitor" operation_key="sles10_monitor_10000" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
         <primitive id="sles10" class="ocf" provider="heartbeat" type="Xen"/>
@@ -779,7 +810,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="57">
+  <synapse id="60">
     <action_set>
       <pseudo_event id="78" operation="start" operation_key="sles10_start_0">
         <attributes CRM_meta_timeout="20000"  xmfile="/etc/xen/vm/sles10"/>
@@ -803,7 +834,7 @@
       </trigger>
      </inputs>
    </synapse>
-  <synapse id="58">
+  <synapse id="61">
      <action_set>
       <rsc_op id="77" operation="stop" operation_key="sles10_stop_0" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117">
         <primitive id="sles10" class="ocf" provider="heartbeat" type="Xen"/>
@@ -816,7 +847,7 @@
       </trigger>
      </inputs>
    </synapse>
-  <synapse id="59">
+  <synapse id="62">
      <action_set>
       <rsc_op id="13" operation="monitor" operation_key="sles10_monitor_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
         <primitive id="sles10" class="ocf" provider="heartbeat" type="Xen"/>
@@ -825,7 +856,7 @@
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="60">
+  <synapse id="63">
      <action_set>
       <pseudo_event id="7" operation="all_stopped" operation_key="all_stopped">
         <attributes />

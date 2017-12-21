@@ -15,7 +15,9 @@
     </nodes>
     <resources>
       <primitive id="rsc1" class="ocf" provider="heartbeat" type="apache">
-        <meta_attributes id="primitive-rsc1.meta"/>
+        <meta_attributes id="primitive-rsc1.meta">
+          <nvpair id="nvpair.id21849" name="migration-threshold" value="1"/>
+        </meta_attributes>
       </primitive>
     </resources>
     <constraints/>
@@ -29,6 +31,11 @@
           </lrm_resource>
         </lrm_resources>
       </lrm>
+      <transient_attributes id="uuid1">
+        <instance_attributes id="status-uuid1">
+          <nvpair id="status-uuid1-fc" name="fail-count-rsc1" value="1"/>
+        </instance_attributes>
+      </transient_attributes>
     </node_state>
     <node_state id="uuid2" ha="active" uname="node2" crmd="online" join="member" expected="member" in_ccm="true"/>
   </status>

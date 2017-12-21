@@ -376,23 +376,7 @@ throttle_send_command(enum throttle_state_e mode)
 static gboolean
 throttle_timer_cb(gpointer data)
 {
-    static bool send_updates = FALSE;
-    enum throttle_state_e now = throttle_none;
-
-    if(send_updates) {
-        now = throttle_mode();
-        throttle_send_command(now);
-
-    } else if(compare_version(fsa_our_dc_version, "3.0.8") < 0) {
-        /* Optimize for the true case */
-        crm_trace("DC version %s doesn't support throttling", fsa_our_dc_version);
-
-    } else {
-        send_updates = TRUE;
-        now = throttle_mode();
-        throttle_send_command(now);
-    }
-
+    throttle_send_command(throttle_mode());
     return TRUE;
 }
 

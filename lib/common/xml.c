@@ -1275,21 +1275,6 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
     return patchset;
 }
 
-static gboolean patch_legacy_mode(void)
-{
-    static gboolean init = TRUE;
-    static gboolean legacy = FALSE;
-
-    if(init) {
-        init = FALSE;
-        legacy = daemon_option_enabled("cib", "legacy");
-        if(legacy) {
-            crm_notice("Enabled legacy mode");
-        }
-    }
-    return legacy;
-}
-
 xmlNode *
 xml_create_patchset(int format, xmlNode *source, xmlNode *target, bool *config_changed, bool manage_version)
 {
@@ -1323,10 +1308,7 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target, bool *config_c
     }
 
     if(format == 0) {
-        if(patch_legacy_mode()) {
-            format = 1;
-
-        } else if(compare_version("3.0.8", version) < 0) {
+        if (compare_version("3.0.8", version) < 0) {
             format = 2;
 
         } else {

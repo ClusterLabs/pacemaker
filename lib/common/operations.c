@@ -217,57 +217,26 @@ gboolean
 decode_transition_key(const char *key, char **uuid, int *transition_id, int *action_id,
                       int *target_rc)
 {
-    int res = 0;
-    gboolean done = FALSE;
-
     CRM_CHECK(uuid != NULL, return FALSE);
     CRM_CHECK(target_rc != NULL, return FALSE);
     CRM_CHECK(action_id != NULL, return FALSE);
     CRM_CHECK(transition_id != NULL, return FALSE);
 
-    *uuid = calloc(1, 37);
-    res = sscanf(key, "%d:%d:%d:%36s", action_id, transition_id, target_rc, *uuid);
-    switch (res) {
-        case 4:
-            /* Post Pacemaker 0.6 */
-            done = TRUE;
-            break;
-        case 3:
-        case 2:
-            /* this can be tricky - the UUID might start with an integer */
-
-            /* Until Pacemaker 0.6 */
-            done = TRUE;
-            *target_rc = -1;
-            res = sscanf(key, "%d:%d:%36s", action_id, transition_id, *uuid);
-            if (res == 2) {
-                *action_id = -1;
-                res = sscanf(key, "%d:%36s", transition_id, *uuid);
-                CRM_CHECK(res == 2, done = FALSE);
-
-            } else if (res != 3) {
-                CRM_CHECK(res == 3, done = FALSE);
-            }
-            break;
-        default:
-            crm_crit("Unhandled sscanf result (%d) for %s", res, key);
-    }
-
-    if (strlen(*uuid) != 36) {
-        crm_warn("Bad UUID (%s) in sscanf result (%d) for %s", *uuid, res, key);
-    }
-
-    if (done == FALSE) {
-        crm_err("Cannot decode '%s' rc=%d", key, res);
-
+    *uuid = calloc(37, sizeof(char));
+    if (sscanf(key, "%d:%d:%d:%36s",
+               action_id, transition_id, target_rc, *uuid) != 4) {
+        crm_err("Invalid transition key '%s'", key);
         free(*uuid);
         *uuid = NULL;
         *target_rc = -1;
         *action_id = -1;
         *transition_id = -1;
+        return FALSE;
     }
-
-    return done;
+    if (strlen(*uuid) != 36) {
+        crm_warn("Invalid UUID '%s' in transition key '%s'", *uuid, key);
+    }
+    return TRUE;
 }
 
 void
@@ -327,7 +296,7 @@ filter_action_parameters(xmlNode * param_set, const char *version)
         }
     }
 
-    if (crm_get_msec(interval) > 0 && compare_version(version, "1.0.8") > 0) {
+    if (crm_get_msec(interval) > 0) {
         /* Re-instate the operation's timeout value */
         if (timeout != NULL) {
             crm_xml_add(param_set, key, timeout);
@@ -457,8 +426,6 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char * c
 
     xmlNode *xml_op = NULL;
     const char *task = NULL;
-    gboolean dc_munges_migrate_ops = (compare_version(caller_version, "3.0.3") < 0);
-    gboolean dc_needs_unique_ops = (compare_version(caller_version, "3.0.6") < 0);
 
     CRM_CHECK(op != NULL, return NULL);
     do_crm_log(level, "%s: Updating resource %s after %s op %s (interval=%d)",
@@ -478,7 +445,7 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char * c
             task = CRMD_ACTION_STATUS;
         }
 
-    } else if (dc_munges_migrate_ops && crm_str_eq(task, CRMD_ACTION_MIGRATE, TRUE)) {
+    } else if (crm_str_eq(task, CRMD_ACTION_MIGRATE, TRUE)) {
         /* if the migrate_from fails it will have enough info to do the right thing */
         if (op->op_status == PCMK_LRM_OP_DONE) {
             task = CRMD_ACTION_STOP;
@@ -486,17 +453,13 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char * c
             task = CRMD_ACTION_STATUS;
         }
 
-    } else if (dc_munges_migrate_ops
-               && op->op_status == PCMK_LRM_OP_DONE
+    } else if ((op->op_status == PCMK_LRM_OP_DONE)
                && crm_str_eq(task, CRMD_ACTION_MIGRATED, TRUE)) {
         task = CRMD_ACTION_START;
     }
 
     key = generate_op_key(op->rsc_id, task, op->interval);
-    if (dc_needs_unique_ops && op->interval > 0) {
-        op_id = strdup(key);
-
-    } else if (crm_str_eq(task, CRMD_ACTION_NOTIFY, TRUE)) {
+    if (crm_str_eq(task, CRMD_ACTION_NOTIFY, TRUE)) {
         const char *n_type = crm_meta_value(op->params, "notify_type");
         const char *n_task = crm_meta_value(op->params, "notify_operation");
 

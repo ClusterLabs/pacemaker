@@ -2494,7 +2494,6 @@ unpack_rsc_op_failure(resource_t * rsc, node_t * node, int rc, xmlNode * xml_op,
 
     const char *key = get_op_key(xml_op);
     const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
-    const char *op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
 
     CRM_ASSERT(rsc);
 
@@ -2556,10 +2555,6 @@ unpack_rsc_op_failure(resource_t * rsc, node_t * node, int rc, xmlNode * xml_op,
             rsc->role = RSC_ROLE_SLAVE;
             rsc->next_role = RSC_ROLE_STOPPED;
         }
-
-    } else if (compare_version("2.0", op_version) > 0 && safe_str_eq(task, CRMD_ACTION_START)) {
-        crm_warn("Compatibility handling for failed op %s on %s", key, node->details->uname);
-        resource_location(rsc, node, -INFINITY, "__legacy_start__", data_set);
     }
 
     if(is_probe && rc == PCMK_OCF_NOT_INSTALLED) {
@@ -2642,13 +2637,6 @@ determine_op_status(
                 result = PCMK_LRM_OP_DONE;
                 pe_rsc_info(rsc, "Operation %s found resource %s active on %s",
                             task, rsc->id, node->details->uname);
-
-                /* legacy code for pre-0.6.5 operations */
-            } else if (target_rc < 0 && interval > 0 && rsc->role == RSC_ROLE_MASTER) {
-                /* catch status ops that return 0 instead of 8 while they
-                 *   are supposed to be in master mode
-                 */
-                result = PCMK_LRM_OP_ERROR;
             }
             break;
 
@@ -2677,15 +2665,6 @@ determine_op_status(
 
             } else if (target_rc >= 0) {
                 result = PCMK_LRM_OP_ERROR;
-
-                /* legacy code for pre-0.6.5 operations */
-            } else if (safe_str_neq(task, CRMD_ACTION_STATUS)
-                       || rsc->role != RSC_ROLE_MASTER) {
-                result = PCMK_LRM_OP_ERROR;
-                if (rsc->role != RSC_ROLE_MASTER) {
-                    crm_err("%s reported %s in master mode on %s",
-                            key, rsc->id, node->details->uname);
-                }
             }
             rsc->role = RSC_ROLE_MASTER;
             break;

@@ -17,25 +17,33 @@
         <instance_attributes id="instance_attributes.id21877">
           <nvpair id="nvpair.id21883" name="priority" value="1.0"/>
         </instance_attributes>
-        <meta_attributes id="primitive-rsc1.meta"/>
+        <meta_attributes id="primitive-rsc1.meta">
+          <nvpair id="nvpair.id21884" name="priority" value="1.0"/>
+        </meta_attributes>
       </primitive>
       <primitive id="rsc2" class="ocf" provider="heartbeat" type="apache">
         <instance_attributes id="instance_attributes.id21903">
           <nvpair id="nvpair.id21909" name="priority" value="2.0"/>
         </instance_attributes>
-        <meta_attributes id="primitive-rsc2.meta"/>
+        <meta_attributes id="primitive-rsc2.meta">
+          <nvpair id="nvpair.id21910" name="priority" value="2.0"/>
+        </meta_attributes>
       </primitive>
       <primitive id="rsc3" class="ocf" provider="heartbeat" type="apache">
         <instance_attributes id="instance_attributes.id21929">
           <nvpair id="nvpair.id21935" name="priority" value="1.0"/>
         </instance_attributes>
-        <meta_attributes id="primitive-rsc3.meta"/>
+        <meta_attributes id="primitive-rsc3.meta">
+          <nvpair id="nvpair.id21936" name="priority" value="1.0"/>
+        </meta_attributes>
       </primitive>
       <primitive id="rsc4" class="ocf" provider="heartbeat" type="apache">
         <instance_attributes id="instance_attributes.id21955">
-          <nvpair id="nvpair.id21961" name="priority" value="2.0"/>
+          <nvpair id="nvpair.id21962" name="priority" value="2.0"/>
         </instance_attributes>
-        <meta_attributes id="primitive-rsc4.meta"/>
+        <meta_attributes id="primitive-rsc4.meta">
+          <nvpair id="nvpair.id21961" name="priority" value="2.0"/>
+        </meta_attributes>
       </primitive>
     </resources>
     <constraints>

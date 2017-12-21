@@ -16,13 +16,17 @@
         <instance_attributes id="instance_attributes.id21868">
           <nvpair id="nvpair.id21875" name="priority" value="1.0"/>
         </instance_attributes>
-        <meta_attributes id="primitive-rsc1.meta"/>
+        <meta_attributes id="primitive-rsc1.meta">
+          <nvpair id="nvpair.id21876" name="meta-priority" value="1.0"/>
+        </meta_attributes>
       </primitive>
       <primitive id="rsc2" class="ocf" provider="heartbeat" type="apache">
         <instance_attributes id="instance_attributes.id21895">
           <nvpair id="nvpair.id21901" name="priority" value="2.0"/>
         </instance_attributes>
-        <meta_attributes id="primitive-rsc2.meta"/>
+        <meta_attributes id="primitive-rsc2.meta">
+          <nvpair id="nvpair.id21902" name="priority" value="2.0"/>
+        </meta_attributes>
       </primitive>
     </resources>
     <constraints>

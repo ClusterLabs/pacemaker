@@ -23,7 +23,9 @@
             <nvpair id="nvpair.id21912" name="directory" value="/data"/>
             <nvpair id="nvpair.id21921" name="fstype" value="ext2"/>
           </instance_attributes>
-          <meta_attributes id="primitive-resource_fs.meta"/>
+          <meta_attributes id="primitive-resource_fs.meta">
+            <nvpair id="nvpair.id21922" name="migration-threshold" value="1"/>
+          </meta_attributes>
         </primitive>
         <meta_attributes id="group-fs.meta"/>
       </group>
@@ -49,6 +51,7 @@
       <transient_attributes id="cd13842c-3f58-4e7d-8126-685259527532">
         <instance_attributes id="instance_attributes.id22121">
           <nvpair id="nvpair.id22128" name="probe_complete" value="true"/>
+          <nvpair id="nvpair.id22129" name="fail-count-resource_fs" value="1"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>

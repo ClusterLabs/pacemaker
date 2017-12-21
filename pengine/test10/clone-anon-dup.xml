@@ -80,6 +80,10 @@
           <nvpair id="clone_webservice_max" name="clone-max" value="2"/>
           <nvpair id="clone_webservice_node_max" name="clone-node-max" value="1"/>
         </instance_attributes>
+        <meta_attributes id="clone_webservice_ma2">
+          <nvpair id="meta-clone_webservice_max" name="clone-max" value="2"/>
+          <nvpair id="meta-clone_webservice_node_max" name="clone-node-max" value="1"/>
+        </meta_attributes>
         <group id="group_webservice">
           <!-- fs www data - START -->
           <primitive class="ocf" id="fs_www" provider="heartbeat" type="Filesystem">
