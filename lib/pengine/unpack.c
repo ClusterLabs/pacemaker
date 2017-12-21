@@ -2637,13 +2637,6 @@ determine_op_status(
                 result = PCMK_LRM_OP_DONE;
                 pe_rsc_info(rsc, "Operation %s found resource %s active on %s",
                             task, rsc->id, node->details->uname);
-
-                /* legacy code for pre-0.6.5 operations */
-            } else if (target_rc < 0 && interval > 0 && rsc->role == RSC_ROLE_MASTER) {
-                /* catch status ops that return 0 instead of 8 while they
-                 *   are supposed to be in master mode
-                 */
-                result = PCMK_LRM_OP_ERROR;
             }
             break;
 
@@ -2672,15 +2665,6 @@ determine_op_status(
 
             } else if (target_rc >= 0) {
                 result = PCMK_LRM_OP_ERROR;
-
-                /* legacy code for pre-0.6.5 operations */
-            } else if (safe_str_neq(task, CRMD_ACTION_STATUS)
-                       || rsc->role != RSC_ROLE_MASTER) {
-                result = PCMK_LRM_OP_ERROR;
-                if (rsc->role != RSC_ROLE_MASTER) {
-                    crm_err("%s reported %s in master mode on %s",
-                            key, rsc->id, node->details->uname);
-                }
             }
             rsc->role = RSC_ROLE_MASTER;
             break;
