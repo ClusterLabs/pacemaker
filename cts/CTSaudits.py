@@ -1,5 +1,6 @@
 '''CTS: Cluster Testing System: Audit module
  '''
+from __future__ import absolute_import
 
 __copyright__ = '''
 Copyright (C) 2000, 2001,2005 Alan Robertson <alanr@unix.sh>
@@ -22,10 +23,11 @@ Licensed under the GNU GPL.
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA.
 
 import time, re, uuid
-from watcher import LogWatcher
+from cts.watcher import LogWatcher
+from cts.remote import input_wrapper
 
 
-class ClusterAudit:
+class ClusterAudit(object):
 
     def __init__(self, cm):
         self.CM = cm
@@ -184,12 +186,13 @@ class DiskAudit(ClusterAudit):
                             answer = "Y"
                         else:
                             try:
-                                answer = raw_input('Continue? [nY]')
+                                answer = input_wrapper('Continue? [nY]')
                             except EOFError as e:
                                 answer = "n"
 
                         if answer and answer == "n":
                             raise ValueError("Disk full on %s" % (node))
+                            ret = 0
 
                     elif remaining_mb < 100 or used_percent > 90:
                         self.CM.log("WARN: Low on log disk space (%dMB) on %s" % (remaining_mb, node))
@@ -256,7 +259,7 @@ class FileAudit(ClusterAudit):
         return 1
 
 
-class AuditResource:
+class AuditResource(object):
     def __init__(self, cm, line):
         fields = line.split()
         self.CM = cm
@@ -292,7 +295,7 @@ class AuditResource:
         return 0
             
 
-class AuditConstraint:
+class AuditConstraint(object):
     def __init__(self, cm, line):
         fields = line.split()
         self.CM = cm
@@ -728,7 +731,7 @@ class PartitionAudit(ClusterAudit):
         self.NodeQuorum = {}
 
     def has_key(self, key):
-        return self.Stats.has_key(key)
+        return key in self.Stats
 
     def __setitem__(self, key, value):
         self.Stats[key] = value

@@ -3,6 +3,8 @@
 There are a few things we want to do here:
 
  '''
+from __future__ import division
+from __future__ import print_function
 
 __copyright__ = '''
 Copyright (C) 2000, 2001 Alan Robertson <alanr@unix.sh>
@@ -45,14 +47,14 @@ from cts.CTSaudits import *
 from cts.CTSvars   import *
 from cts.patterns  import PatternSelector
 from cts.logging   import LogFactory
-from cts.remote    import RemoteFactory
+from cts.remote    import RemoteFactory, input_wrapper
 from cts.watcher   import LogWatcher
 from cts.environment import EnvFactory
 
 AllTestClasses = [ ]
 
 
-class CTSTest:
+class CTSTest(object):
     '''
     A Cluster test.
     We implement the basic set of properties and behaviors for a generic
@@ -536,7 +538,7 @@ class StonithdTest(CTSTest):
         if not self.is_applicable_common():
             return 0
 
-        if "DoFencing" in self.Env.keys():
+        if "DoFencing" in list(self.Env.keys()):
             return self.Env["DoFencing"]
 
         return 1
@@ -1028,7 +1030,7 @@ class BandwidthTest(CTSTest):
                 return None
             if re.search("udp",line) or re.search("UDP,", line):
                 count = count + 1
-                linesplit = string.split(line," ")
+                linesplit = str.split(line," ")
                 for j in range(len(linesplit)-1):
                     if linesplit[j] == "udp": break
                     if linesplit[j] == "length:": break
@@ -1039,8 +1041,8 @@ class BandwidthTest(CTSTest):
                     self.logger.log("Invalid tcpdump line: %s" % line)
                     return None
                 T1 = linesplit[0]
-                timesplit = string.split(T1,":")
-                time2split = string.split(timesplit[2],".")
+                timesplit = str.split(T1,":")
+                time2split = str.split(timesplit[2],".")
                 time1 = (int(timesplit[0])*60+int(timesplit[1]))*60+int(time2split[0])+int(time2split[1])*0.000001
                 break
 
@@ -1050,7 +1052,7 @@ class BandwidthTest(CTSTest):
                 return None
             if re.search("udp",line) or re.search("UDP,", line):
                 count = count+1
-                linessplit = string.split(line," ")
+                linessplit = str.split(line," ")
                 for j in range(len(linessplit)-1):
                     if linessplit[j] == "udp": break
                     if linesplit[j] == "length:": break
@@ -1061,13 +1063,13 @@ class BandwidthTest(CTSTest):
                     return None
 
         T2 = linessplit[0]
-        timesplit = string.split(T2,":")
-        time2split = string.split(timesplit[2],".")
+        timesplit = str.split(T2,":")
+        time2split = str.split(timesplit[2],".")
         time2 = (int(timesplit[0])*60+int(timesplit[1]))*60+int(time2split[0])+int(time2split[1])*0.000001
         time = time2-time1
         if (time <= 0):
             return 0
-        return (sum*8)/time
+        return int((sum*8)/time)
 
     def is_applicable(self):
         '''BandwidthTest never applicable'''
@@ -1548,7 +1550,7 @@ class SplitBrainTest(CTSTest):
                 if not p in partitions:
                     partitions[p] = []
                 partitions[p].append(node)
-            p_max = len(partitions.keys())
+            p_max = len(list(partitions.keys()))
             if p_max > 1:
                 break
             # else, try again
@@ -1622,7 +1624,7 @@ class SplitBrainTest(CTSTest):
                 answer = "Y"
             else:
                 try:
-                    answer = raw_input('Continue? [nY]')
+                    answer = input_wrapper('Continue? [nY]')
                 except EOFError as e:
                     answer = "n" 
             if answer and answer == "n":
@@ -2219,11 +2221,11 @@ class RollingUpgradeTest(CTSTest):
         if not self.is_applicable_common():
             return None
 
-        if not "rpm-dir" in self.Env.keys():
+        if not "rpm-dir" in list(self.Env.keys()):
             return None
-        if not "current-version" in self.Env.keys():
+        if not "current-version" in list(self.Env.keys()):
             return None
-        if not "previous-version" in self.Env.keys():
+        if not "previous-version" in list(self.Env.keys()):
             return None
 
         return 1
@@ -3048,7 +3050,7 @@ class RemoteStonithd(RemoteDriver):
         if not RemoteDriver.is_applicable(self):
             return False
 
-        if "DoFencing" in self.Env.keys():
+        if "DoFencing" in list(self.Env.keys()):
             return self.Env["DoFencing"]
 
         return True

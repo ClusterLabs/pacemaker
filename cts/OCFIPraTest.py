@@ -2,6 +2,8 @@
 
 '''OCF IPaddr/IPaddr2 Resource Agent Test'''
 
+from __future__ import print_function
+
 __copyright__ = '''
 Author: Huang Zhen <zhenhltc@cn.ibm.com>
 Copyright (C) 2004 International Business Machines

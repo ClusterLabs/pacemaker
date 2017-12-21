@@ -56,7 +56,7 @@ class InstanceAttributes(XmlBase):
         XmlBase.__init__(self, Factory, "instance_attributes", name)
 
         # Create an <nvpair> for each attribute
-        for (attr, value) in attrs.items():
+        for (attr, value) in list(attrs.items()):
             self.add_child(XmlBase(Factory, "nvpair", "%s-%s" % (name, attr),
                 name=attr, value=value))
 

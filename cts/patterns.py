@@ -1,9 +1,10 @@
+from __future__ import print_function
 import sys, os
 
 from cts.CTSvars import *
 
 patternvariants = {}
-class BasePatterns:
+class BasePatterns(object):
     def __init__(self, name):
         self.name = name
         patternvariants[name] = self
@@ -342,7 +343,7 @@ class crm_corosync_docker(crm_corosync):
         })
 
 
-class PatternSelector:
+class PatternSelector(object):
 
     def __init__(self, name=None):
         self.name = name

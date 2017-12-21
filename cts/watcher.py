@@ -110,7 +110,7 @@ print(prefix + 'Last read: %d, limit=%d, count=%d' % (logfile.tell(), limit, cou
 logfile.close()
 """
 
-class SearchObj:
+class SearchObj(object):
     def __init__(self, filename, host=None, name=None):
 
         self.limit = None
@@ -321,6 +321,10 @@ class LogWatcher(RemoteExec):
 
         self.name        = name
         self.regexes     = regexes
+
+        if debug_level is None:
+            debug_level = 1
+
         self.debug_level = debug_level
         self.whichmatch  = -1
         self.unmatched   = None

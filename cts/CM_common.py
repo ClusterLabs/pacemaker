@@ -111,7 +111,7 @@ class crm_common(ClusterManager):
         out = self.rsh(node, self.templates["StatusCmd"]%node, 1)
         self.debug("Node %s status: '%s'" %(node, out))            
 
-        if not out or string.find(out, 'ok') < 0:
+        if not out or str.find(out, 'ok') < 0:
             if self.ShouldBeStatus[node] == "up":
                 self.log(
                     "Node status for %s is %s but we think it should be %s"
@@ -127,10 +127,10 @@ class crm_common(ClusterManager):
         self.ShouldBeStatus[node] = "up"
 
         # check the output first - because syslog-ng loses messages
-        if string.find(out, 'S_NOT_DC') != -1:
+        if str.find(out, 'S_NOT_DC') != -1:
             # Up and stable
             return 2
-        if string.find(out, 'S_IDLE') != -1:
+        if str.find(out, 'S_IDLE') != -1:
             # Up and stable
             return 2
 
@@ -217,15 +217,15 @@ class crm_common(ClusterManager):
 
         if not status_line:
             rc = 0
-        elif string.find(status_line, 'S_IDLE') != -1:
+        elif str.find(status_line, 'S_IDLE') != -1:
             rc = 1
-        elif string.find(status_line, 'S_INTEGRATION') != -1: 
+        elif str.find(status_line, 'S_INTEGRATION') != -1:
             rc = 1
-        elif string.find(status_line, 'S_FINALIZE_JOIN') != -1: 
+        elif str.find(status_line, 'S_FINALIZE_JOIN') != -1:
             rc = 1
-        elif string.find(status_line, 'S_POLICY_ENGINE') != -1: 
+        elif str.find(status_line, 'S_POLICY_ENGINE') != -1:
             rc = 1
-        elif string.find(status_line, 'S_TRANSITION_ENGINE') != -1: 
+        elif str.find(status_line, 'S_TRANSITION_ENGINE') != -1:
             rc = 1
 
         return rc
@@ -272,7 +272,7 @@ class crm_common(ClusterManager):
                 elif len(partition) > 2:
                     nodes = partition.split()
                     nodes.sort()
-                    partition = string.join(nodes, ' ')
+                    partition = ' '.join(nodes)
 
                     found = 0
                     for a_partition in ccm_partitions:
@@ -303,9 +303,9 @@ class crm_common(ClusterManager):
         for node in node_list:
             if self.ShouldBeStatus[node] == "up":
                 quorum = self.rsh(node, self.templates["QuorumCmd"], 1)
-                if string.find(quorum, "1") != -1:
+                if str.find(quorum, "1") != -1:
                     return 1
-                elif string.find(quorum, "0") != -1:
+                elif str.find(quorum, "0") != -1:
                     return 0
                 else:
                     self.debug("WARN: Unexpected quorum test result from " + node + ":" + quorum)

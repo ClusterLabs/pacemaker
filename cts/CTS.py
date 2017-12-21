@@ -3,6 +3,8 @@
 Classes related to testing high-availability clusters...
  '''
 
+from __future__ import print_function
+
 __copyright__ = '''
 Copyright (C) 2000, 2001 Alan Robertson <alanr@unix.sh>
 Licensed under the GNU GPL.
@@ -25,12 +27,15 @@ Licensed under the GNU GPL.
 
 import string, sys, time, re, os, traceback
 
-from UserDict import UserDict
+if sys.version_info > (3,):
+    from collections import UserDict
+else:
+    from UserDict import UserDict
 
 from cts.CTSvars     import *
 from cts.logging     import LogFactory
 from cts.watcher     import LogWatcher
-from cts.remote      import RemoteFactory
+from cts.remote      import RemoteFactory, input_wrapper
 from cts.environment import EnvFactory
 from cts.patterns    import PatternSelector
 
@@ -111,7 +116,7 @@ case $action in
 esac
 """
 
-class CtsLab:
+class CtsLab(object):
     '''This class defines the Lab Environment for the Cluster Test System.
     It defines those things which are expected to change from test
     environment to test environment for the same cluster manager.
@@ -157,7 +162,7 @@ class CtsLab:
         self.Env.dump()
 
     def has_key(self, key):
-        return key in self.Env.keys()
+        return key in list(self.Env.keys())
 
     def __getitem__(self, key):
         return self.Env[key]
@@ -206,7 +211,7 @@ class CtsLab:
         if not self.IsValidNode(node):
             raise ValueError("Invalid node [%s] in CheckNode" % node)
 
-class NodeStatus:
+class NodeStatus(object):
     def __init__(self, env):
         self.Env = env
 
@@ -245,7 +250,7 @@ class NodeStatus:
             answer = "Y"
         else:
             try:
-                answer = raw_input('Continue? [nY]')
+                answer = input_wrapper('Continue? [nY]')
             except EOFError as e:
                 answer = "n"
         if answer and answer == "n":
@@ -297,7 +302,7 @@ class ClusterManager(UserDict):
         self.rsh = RemoteFactory().getInstance()
         self.ShouldBeStatus={}
         self.ns = NodeStatus(self.Env)
-        self.OurNode = string.lower(os.uname()[1])
+        self.OurNode = os.uname()[1].lower()
         self.__instance_errorstoignore = []
 
     def __getitem__(self, key):
@@ -633,7 +638,7 @@ class ClusterManager(UserDict):
         '''Report the status of the cluster manager on a given node'''
 
         out=self.rsh(node, self.templates["StatusCmd"] % node, 1)
-        ret= (string.find(out, 'stopped') == -1)
+        ret= (str.find(out, 'stopped') == -1)
 
         try:
             if ret:
@@ -892,7 +897,7 @@ class ClusterManager(UserDict):
             self.rsh(host, '''bash %s %s mark %s''' % (log_stats_bin, log_stats_file, testnum), synchronous=0)
 
 
-class Resource:
+class Resource(object):
     '''
     This is an HA resource (not a resource group).
     A resource group is just an ordered list of Resource objects.
@@ -953,7 +958,7 @@ class Resource:
                 return "{" + self.ResourceType + "}"
 
 
-class Component:
+class Component(object):
     def kill(self, node):
         None
 

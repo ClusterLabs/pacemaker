@@ -1,6 +1,7 @@
 '''
 Classes related to producing and searching logs
 '''
+from __future__ import print_function
 
 __copyright__='''
 Copyright (C) 2014 Andrew Beekhof <andrew@beekhof.net>
@@ -26,7 +27,7 @@ import sys, time, os, socket, random
 
 from cts.remote import *
 
-class Environment:
+class Environment(object):
 
     def __init__(self, args):
         self.data = {}
@@ -102,7 +103,7 @@ class Environment:
             self.logger.debug("Environment["+key+"]:\t"+str(self[key]))
 
     def keys(self):
-        return self.data.keys()
+        return list(self.data.keys())
 
     def has_key(self, key):
         if key == "nodes":
@@ -228,7 +229,7 @@ class Environment:
                 self.logger.log("Defaulting to '%s', use --test-ip-base to override" % self["IPBase"])
 
     def filter_nodes(self):
-        if self["node-limit"] > 0:
+        if self['node-limit'] is not None and self["node-limit"] > 0:
             if len(self["nodes"]) > self["node-limit"]:
                 self.logger.log("Limiting the number of nodes configured=%d (max=%d)"
                                 %(len(self["nodes"]), self["node-limit"]))
@@ -637,7 +638,7 @@ class Environment:
 
         sys.exit(status)
 
-class EnvFactory:
+class EnvFactory(object):
     instance = None
     def __init__(self):
         pass

@@ -51,7 +51,7 @@ class crm_corosync(crm_common):
 
     def Components(self):
         complist = []
-        if not len(self.fullcomplist.keys()):
+        if not len(list(self.fullcomplist.keys())):
             for c in ["cib", "lrmd", "crmd", "attrd" ]:
                 self.fullcomplist[c] = Process(
                     self, c, 
