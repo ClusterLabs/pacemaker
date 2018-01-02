@@ -19,8 +19,6 @@
 
 #include <crm_resource.h>
 
-bool print_pending = TRUE;
-
 #define cons_string(x) x?x:"NA"
 void
 cli_resource_print_cts_constraints(pe_working_set_t * data_set)
@@ -133,11 +131,7 @@ cli_resource_print_list(pe_working_set_t * data_set, bool raw)
     int found = 0;
 
     GListPtr lpc = NULL;
-    int opts = pe_print_printf | pe_print_rsconly;
-
-    if (print_pending) {
-        opts |= pe_print_pending;
-    }
+    int opts = pe_print_printf | pe_print_rsconly | pe_print_pending;
 
     for (lpc = data_set->resources; lpc != NULL; lpc = lpc->next) {
         resource_t *rsc = (resource_t *) lpc->data;
@@ -163,13 +157,9 @@ cli_resource_print_operations(const char *rsc_id, const char *host_uname, bool a
                          pe_working_set_t * data_set)
 {
     resource_t *rsc = NULL;
-    int opts = pe_print_printf | pe_print_rsconly | pe_print_suppres_nl;
+    int opts = pe_print_printf | pe_print_rsconly | pe_print_suppres_nl | pe_print_pending;
     GListPtr ops = find_operations(rsc_id, host_uname, active, data_set);
     GListPtr lpc = NULL;
-
-    if (print_pending) {
-        opts |= pe_print_pending;
-    }
 
     for (lpc = ops; lpc != NULL; lpc = lpc->next) {
         xmlNode *xml_op = (xmlNode *) lpc->data;
@@ -297,11 +287,8 @@ int
 cli_resource_print(resource_t *rsc, pe_working_set_t *data_set, bool expanded)
 {
     char *rsc_xml = NULL;
-    int opts = pe_print_printf;
+    int opts = pe_print_printf | pe_print_pending;
 
-    if (print_pending) {
-        opts |= pe_print_pending;
-    }
     rsc->fns->print(rsc, NULL, opts, stdout);
 
     rsc_xml = dump_xml_formatted((!expanded && rsc->orig_xml)?
