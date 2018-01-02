@@ -1,9 +1,12 @@
-from CTS import *
-from CTStests import CTSTest
-from CTSaudits import ClusterAudit
+from __future__ import print_function
+from __future__ import absolute_import
+from cts.CTS import *
+from cts.CTStests import CTSTest
+from cts.CTSaudits import ClusterAudit
 from cts.watcher  import LogWatcher
+from cts.remote import input_wrapper
 
-class ScenarioComponent:
+class ScenarioComponent(object):
 
     def __init__(self, Env):
         self.Env = Env
@@ -24,7 +27,7 @@ class ScenarioComponent:
         raise ValueError("Abstract Class member (Setup)")
 
 
-class Scenario:
+class Scenario(object):
     (
 '''The basic idea of a scenario is that of an ordered list of
 ScenarioComponent objects.  Each ScenarioComponent is SetUp() in turn,
@@ -170,7 +173,7 @@ A partially set up scenario is torn down if it fails during setup.
                 answer = "Y"
             else:
                 try:
-                    answer = raw_input('Continue? [nY]')
+                    answer = input_wrapper('Continue? [nY]')
                 except EOFError as e:
                     answer = "n"
             if answer and answer == "n":
@@ -265,7 +268,7 @@ A partially set up scenario is torn down if it fails during setup.
                 answer = "Y"
             else:
                 try:
-                    answer = raw_input('Big problems. Continue? [nY]')
+                    answer = input_wrapper('Big problems. Continue? [nY]')
                 except EOFError as e:
                     answer = "n"
             if answer and answer == "n":
@@ -399,7 +402,7 @@ According to the manual page for ping:
         '''Start the PingFest!'''
 
         self.PingSize = 1024
-        if "PingSize" in CM.Env.keys():
+        if "PingSize" in list(CM.Env.keys()):
                 self.PingSize = CM.Env["PingSize"]
 
         CM.log("Starting %d byte flood pings" % self.PingSize)

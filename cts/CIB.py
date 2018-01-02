@@ -1,16 +1,20 @@
 '''CTS: Cluster Testing System: CIB generator
 '''
+from __future__ import print_function
+from __future__ import absolute_import
+
 __copyright__ = '''
 Author: Andrew Beekhof <abeekhof@suse.de>
 Copyright (C) 2008 Andrew Beekhof
 '''
 
 import os, string, warnings
+import tempfile
 
 from cts.CTSvars import *
 
 
-class CibBase:
+class CibBase(object):
     def __init__(self, Factory, tag, _id, **kwargs):
         self.tag = tag
         self.name = _id
@@ -30,10 +34,10 @@ class CibBase:
         else:
             self.kwargs.pop(key, None)
 
-from cib_xml import *
+from cts.cib_xml import *
 
 
-class ConfigBase:
+class ConfigBase(object):
     cts_cib = None
     version = "unknown"
     feature_set = "unknown"
@@ -45,7 +49,9 @@ class ConfigBase:
 
         if not tmpfile:
             warnings.filterwarnings("ignore")
-            tmpfile = os.tmpnam()
+            f=tempfile.NamedTemporaryFile(delete=True)
+            f.close()
+            tmpfile = f.name
             warnings.resetwarnings()
 
         self.Factory.tmpfile = tmpfile
@@ -189,17 +195,17 @@ class CIB12(ConfigBase):
             all_node_names = [ prefix+n for n in self.CM.Env["nodes"] for prefix in ('', 'remote-') ]
 
             # Add all parameters specified by user
-            entries = string.split(self.CM.Env["stonith-params"], ',')
+            entries = str.split(self.CM.Env["stonith-params"], ',')
             for entry in entries:
                 try:
-                    (name, value) = string.split(entry, '=', 1)
+                    (name, value) = str.split(entry, '=', 1)
                 except ValueError:
                     print("Warning: skipping invalid fencing parameter: %s" % entry)
                     continue
 
                 # Allow user to specify "all" as the node list, and expand it here
                 if name in [ "hostlist", "pcmk_host_list" ] and value == "all":
-                    value = string.join(all_node_names, " ")
+                    value = ' '.join(all_node_names)
 
                 st[name] = value
 
@@ -256,7 +262,7 @@ class CIB12(ConfigBase):
                 # create the attributes and a level for the attribute.
                 if attr_nodes:
                     stn = Nodes(self.Factory)
-                    for (node_name, node_id) in attr_nodes.items():
+                    for (node_name, node_id) in list(attr_nodes.items()):
                         stn.add_node(node_name, node_id, { "cts-fencing" : "levels-and" })
                     stl.level(1, None, "FencingPass,Fencing", "cts-fencing", "levels-and")
 
@@ -264,7 +270,7 @@ class CIB12(ConfigBase):
                 if len(stt_nodes):
                     self.CM.install_helper("fence_dummy", destdir="/usr/sbin", sourcedir=CTSvars.Fencing_home)
                     stt = Resource(self.Factory, "FencingPass", "fence_dummy", "stonith")
-                    stt["pcmk_host_list"] = string.join(stt_nodes, " ")
+                    stt["pcmk_host_list"] = " ".join(stt_nodes)
                     # Wait this many seconds before doing anything, handy for letting disks get flushed too
                     stt["random_sleep_range"] = "30"
                     stt["mode"] = "pass"
@@ -274,7 +280,7 @@ class CIB12(ConfigBase):
                 if len(stf_nodes):
                     self.CM.install_helper("fence_dummy", destdir="/usr/sbin", sourcedir=CTSvars.Fencing_home)
                     stf = Resource(self.Factory, "FencingFail", "fence_dummy", "stonith")
-                    stf["pcmk_host_list"] = string.join(stf_nodes, " ")
+                    stf["pcmk_host_list"] = " ".join(stf_nodes)
                     # Wait this many seconds before doing anything, handy for letting disks get flushed too
                     stf["random_sleep_range"] = "30"
                     stf["mode"] = "fail"
@@ -448,7 +454,7 @@ class CIB20(CIB12):
 #        self._create('''order start-o2cb-after-dlm mandatory: dlm-clone o2cb-clone''')
 
 
-class ConfigFactory:
+class ConfigFactory(object):
     def __init__(self, CM):
         self.CM = CM
         self.rsh = self.CM.rsh
@@ -492,7 +498,7 @@ class ConfigFactory:
         return self.pacemaker20()
 
 
-class ConfigFactoryItem:
+class ConfigFactoryItem(object):
     def __init__(self, function, *args, **kargs):
         self._function = function
         self._args = args
@@ -509,8 +515,8 @@ class ConfigFactoryItem:
 if __name__ == '__main__':
     """ Unit test (pass cluster node names as command line arguments) """
 
-    import CTS
-    import CM_corosync
+    import cts.CTS
+    import cts.CM_corosync
     import sys
 
     if len(sys.argv) < 2:

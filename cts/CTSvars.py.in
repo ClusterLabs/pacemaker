@@ -1,4 +1,4 @@
-class CTSvars:
+class CTSvars(object):
     CTS_home="@datadir@/@PACKAGE@/tests/cts"
     Fencing_home="@datadir@/@PACKAGE@/tests/cts"
     CRM_CONFIG_DIR="@CRM_CONFIG_DIR@"
