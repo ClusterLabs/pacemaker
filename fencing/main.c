@@ -1076,6 +1076,9 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
         if(value) {
             timeout_ms = crm_get_msec(value);
         }
+        if (timeout_ms < 0) {
+            timeout_ms = crm_auto_watchdog_timeout();
+        }
 
         if(timeout_ms != stonith_watchdog_timeout_ms) {
             crm_notice("New watchdog timeout %lds (was %lds)", timeout_ms/1000, stonith_watchdog_timeout_ms/1000);

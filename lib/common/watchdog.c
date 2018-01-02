@@ -245,10 +245,20 @@ pcmk_locate_sbd(void)
 long
 crm_get_sbd_timeout(void)
 {
-    const char *env_value = getenv("SBD_WATCHDOG_TIMEOUT");
-    long sbd_timeout = crm_get_msec(env_value);
+    static long sbd_timeout = -2;
 
+    if (sbd_timeout == -2) {
+        sbd_timeout = crm_get_msec(getenv("SBD_WATCHDOG_TIMEOUT"));
+    }
     return sbd_timeout;
+}
+
+long
+crm_auto_watchdog_timeout()
+{
+    long sbd_timeout = crm_get_sbd_timeout();
+
+    return (sbd_timeout <= 0)? 0 : (2 * sbd_timeout);
 }
 
 gboolean
@@ -256,14 +266,20 @@ check_sbd_timeout(const char *value)
 {
     long st_timeout = value? crm_get_msec(value) : 0;
 
-    if (st_timeout <= 0) {
+    if (st_timeout < 0) {
+        st_timeout = crm_auto_watchdog_timeout();
+        crm_debug("Using calculated value %ld for stonith-watchdog-timeout (%s)",
+                  st_timeout, value);
+    }
+
+    if (st_timeout == 0) {
         crm_debug("Watchdog may be enabled but stonith-watchdog-timeout is disabled (%s)",
                   value? value : "default");
 
     } else if (pcmk_locate_sbd() == 0) {
         do_crm_log_always(LOG_EMERG,
                           "Shutting down: stonith-watchdog-timeout configured (%s) but SBD not active",
-                          value);
+                          (value? value : "auto"));
         crm_exit(DAEMON_RESPAWN_STOP);
         return FALSE;
 

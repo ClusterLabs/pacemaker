@@ -131,6 +131,7 @@ gboolean check_quorum(const char *value);
 gboolean check_script(const char *value);
 gboolean check_utilization(const char *value);
 long crm_get_sbd_timeout(void);
+long crm_auto_watchdog_timeout(void);
 gboolean check_sbd_timeout(const char *value);
 
 /* char2score */

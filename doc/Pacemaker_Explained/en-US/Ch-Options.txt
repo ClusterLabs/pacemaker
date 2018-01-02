@@ -227,6 +227,13 @@ indexterm:[Cluster,Option,stonith-max-attempts]
 How many times fencing can fail for a target before the cluster will no longer
 immediately re-attempt it. '(since 1.1.17)'
 
+| stonith-watchdog-timeout | 0 |
+indexterm:[stonith-watchdog-timeout,Cluster Option]
+indexterm:[Cluster,Option,stonith-watchdog-timeout]
+If nonzero, rely on hardware watchdog self-fencing. If positive, assume unseen
+nodes self-fence within this much time. If negative, and the
+SBD_WATCHDOG_TIMEOUT environment variable is set, use twice that value.
+
 | concurrent-fencing | FALSE |
 indexterm:[concurrent-fencing,Cluster Option]
 indexterm:[Cluster,Option,concurrent-fencing]
