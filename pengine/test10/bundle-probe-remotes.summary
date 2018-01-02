@@ -134,12 +134,12 @@ Executing cluster transition:
  * Resource action: dummy1:4        start on scale1-bundle-4
  * Resource action: dummy1:5        start on scale1-bundle-5
  * Pseudo action:   scale1-bundle-clone_running_0
- * Resource action: scale1-bundle-0 monitor=60000 on c09-h05-r630
- * Resource action: scale1-bundle-1 monitor=60000 on c09-h06-r630
- * Resource action: scale1-bundle-2 monitor=60000 on c09-h07-r630
- * Resource action: scale1-bundle-3 monitor=60000 on c09-h05-r630
- * Resource action: scale1-bundle-4 monitor=60000 on c09-h06-r630
- * Resource action: scale1-bundle-5 monitor=60000 on c09-h07-r630
+ * Resource action: scale1-bundle-0 monitor=30000 on c09-h05-r630
+ * Resource action: scale1-bundle-1 monitor=30000 on c09-h06-r630
+ * Resource action: scale1-bundle-2 monitor=30000 on c09-h07-r630
+ * Resource action: scale1-bundle-3 monitor=30000 on c09-h05-r630
+ * Resource action: scale1-bundle-4 monitor=30000 on c09-h06-r630
+ * Resource action: scale1-bundle-5 monitor=30000 on c09-h07-r630
  * Pseudo action:   scale1-bundle_running_0
  * Resource action: dummy1:0        monitor=10000 on scale1-bundle-0
  * Resource action: dummy1:1        monitor=10000 on scale1-bundle-1

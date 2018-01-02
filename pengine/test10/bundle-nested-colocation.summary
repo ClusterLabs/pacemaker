@@ -68,9 +68,9 @@ Executing cluster transition:
  * Resource action: rabbitmq:1      monitor on rabbitmq-bundle-1
  * Resource action: rabbitmq:2      monitor on rabbitmq-bundle-2
  * Pseudo action:   rabbitmq-bundle-clone_start_0
- * Resource action: rabbitmq-bundle-0 monitor=60000 on overcloud-controller-0
- * Resource action: rabbitmq-bundle-1 monitor=60000 on overcloud-controller-1
- * Resource action: rabbitmq-bundle-2 monitor=60000 on overcloud-controller-2
+ * Resource action: rabbitmq-bundle-0 monitor=30000 on overcloud-controller-0
+ * Resource action: rabbitmq-bundle-1 monitor=30000 on overcloud-controller-1
+ * Resource action: rabbitmq-bundle-2 monitor=30000 on overcloud-controller-2
  * Resource action: rabbitmq:0      start on rabbitmq-bundle-0
  * Resource action: rabbitmq:1      start on rabbitmq-bundle-1
  * Resource action: rabbitmq:2      start on rabbitmq-bundle-2

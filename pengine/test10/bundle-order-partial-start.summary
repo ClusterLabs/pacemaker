@@ -67,7 +67,7 @@ Executing cluster transition:
  * Resource action: galera-bundle-0 start on undercloud
  * Resource action: galera:0        start on galera-bundle-0
  * Pseudo action:   galera-bundle-master_running_0
- * Resource action: galera-bundle-0 monitor=60000 on undercloud
+ * Resource action: galera-bundle-0 monitor=30000 on undercloud
  * Pseudo action:   galera-bundle_running_0
  * Resource action: galera:0        monitor=30000 on galera-bundle-0
  * Resource action: galera:0        monitor=20000 on galera-bundle-0

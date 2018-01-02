@@ -678,9 +678,9 @@
   </synapse>
   <synapse id="37">
     <action_set>
-      <rsc_op id="74" operation="monitor" operation_key="scale1-bundle-0_monitor_60000" on_node="c09-h05-r630" on_node_uuid="1">
+      <rsc_op id="74" operation="monitor" operation_key="scale1-bundle-0_monitor_30000" on_node="c09-h05-r630" on_node_uuid="1">
         <primitive id="scale1-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="scale1-bundle-docker-0" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="c09-h05-r630" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" addr="c09-h05-r630"  port="3131"/>
+        <attributes CRM_meta_container="scale1-bundle-docker-0" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="c09-h05-r630" CRM_meta_on_node_uuid="1" CRM_meta_timeout="30000" addr="c09-h05-r630"  port="3131"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -715,7 +715,7 @@
     <action_set>
       <rsc_op id="36" operation="monitor" operation_key="scale1-bundle-0_monitor_0" on_node="c09-h07-r630" on_node_uuid="3">
         <primitive id="scale1-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="scale1-bundle-docker-0" CRM_meta_on_node="c09-h07-r630" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="c09-h05-r630"  port="3131"/>
+        <attributes CRM_meta_container="scale1-bundle-docker-0" CRM_meta_on_node="c09-h07-r630" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="c09-h05-r630"  port="3131"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -728,7 +728,7 @@
     <action_set>
       <rsc_op id="21" operation="monitor" operation_key="scale1-bundle-0_monitor_0" on_node="c09-h06-r630" on_node_uuid="2">
         <primitive id="scale1-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="scale1-bundle-docker-0" CRM_meta_on_node="c09-h06-r630" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="c09-h05-r630"  port="3131"/>
+        <attributes CRM_meta_container="scale1-bundle-docker-0" CRM_meta_on_node="c09-h06-r630" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="c09-h05-r630"  port="3131"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -741,7 +741,7 @@
     <action_set>
       <rsc_op id="6" operation="monitor" operation_key="scale1-bundle-0_monitor_0" on_node="c09-h05-r630" on_node_uuid="1">
         <primitive id="scale1-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="scale1-bundle-docker-0" CRM_meta_on_node="c09-h05-r630" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="c09-h05-r630"  port="3131"/>
+        <attributes CRM_meta_container="scale1-bundle-docker-0" CRM_meta_on_node="c09-h05-r630" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="c09-h05-r630"  port="3131"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -877,9 +877,9 @@
   </synapse>
   <synapse id="50">
     <action_set>
-      <rsc_op id="78" operation="monitor" operation_key="scale1-bundle-1_monitor_60000" on_node="c09-h06-r630" on_node_uuid="2">
+      <rsc_op id="78" operation="monitor" operation_key="scale1-bundle-1_monitor_30000" on_node="c09-h06-r630" on_node_uuid="2">
         <primitive id="scale1-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="scale1-bundle-docker-1" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="c09-h06-r630" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" addr="c09-h06-r630"  port="3131"/>
+        <attributes CRM_meta_container="scale1-bundle-docker-1" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="c09-h06-r630" CRM_meta_on_node_uuid="2" CRM_meta_timeout="30000" addr="c09-h06-r630"  port="3131"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -914,7 +914,7 @@
     <action_set>
       <rsc_op id="38" operation="monitor" operation_key="scale1-bundle-1_monitor_0" on_node="c09-h07-r630" on_node_uuid="3">
         <primitive id="scale1-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="scale1-bundle-docker-1" CRM_meta_on_node="c09-h07-r630" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="c09-h06-r630"  port="3131"/>
+        <attributes CRM_meta_container="scale1-bundle-docker-1" CRM_meta_on_node="c09-h07-r630" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="c09-h06-r630"  port="3131"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -927,7 +927,7 @@
     <action_set>
       <rsc_op id="23" operation="monitor" operation_key="scale1-bundle-1_monitor_0" on_node="c09-h06-r630" on_node_uuid="2">
         <primitive id="scale1-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="scale1-bundle-docker-1" CRM_meta_on_node="c09-h06-r630" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="c09-h06-r630"  port="3131"/>
+        <attributes CRM_meta_container="scale1-bundle-docker-1" CRM_meta_on_node="c09-h06-r630" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="c09-h06-r630"  port="3131"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -940,7 +940,7 @@
     <action_set>
       <rsc_op id="8" operation="monitor" operation_key="scale1-bundle-1_monitor_0" on_node="c09-h05-r630" on_node_uuid="1">
         <primitive id="scale1-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="scale1-bundle-docker-1" CRM_meta_on_node="c09-h05-r630" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="c09-h06-r630"  port="3131"/>
+        <attributes CRM_meta_container="scale1-bundle-docker-1" CRM_meta_on_node="c09-h05-r630" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="c09-h06-r630"  port="3131"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1076,9 +1076,9 @@
   </synapse>
   <synapse id="63">
     <action_set>
-      <rsc_op id="82" operation="monitor" operation_key="scale1-bundle-2_monitor_60000" on_node="c09-h07-r630" on_node_uuid="3">
+      <rsc_op id="82" operation="monitor" operation_key="scale1-bundle-2_monitor_30000" on_node="c09-h07-r630" on_node_uuid="3">
         <primitive id="scale1-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="scale1-bundle-docker-2" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="c09-h07-r630" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" addr="c09-h07-r630"  port="3131"/>
+        <attributes CRM_meta_container="scale1-bundle-docker-2" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="c09-h07-r630" CRM_meta_on_node_uuid="3" CRM_meta_timeout="30000" addr="c09-h07-r630"  port="3131"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1113,7 +1113,7 @@
     <action_set>
       <rsc_op id="40" operation="monitor" operation_key="scale1-bundle-2_monitor_0" on_node="c09-h07-r630" on_node_uuid="3">
         <primitive id="scale1-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="scale1-bundle-docker-2" CRM_meta_on_node="c09-h07-r630" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="c09-h07-r630"  port="3131"/>
+        <attributes CRM_meta_container="scale1-bundle-docker-2" CRM_meta_on_node="c09-h07-r630" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="c09-h07-r630"  port="3131"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1126,7 +1126,7 @@
     <action_set>
       <rsc_op id="25" operation="monitor" operation_key="scale1-bundle-2_monitor_0" on_node="c09-h06-r630" on_node_uuid="2">
         <primitive id="scale1-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="scale1-bundle-docker-2" CRM_meta_on_node="c09-h06-r630" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="c09-h07-r630"  port="3131"/>
+        <attributes CRM_meta_container="scale1-bundle-docker-2" CRM_meta_on_node="c09-h06-r630" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="c09-h07-r630"  port="3131"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1139,7 +1139,7 @@
     <action_set>
       <rsc_op id="10" operation="monitor" operation_key="scale1-bundle-2_monitor_0" on_node="c09-h05-r630" on_node_uuid="1">
         <primitive id="scale1-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="scale1-bundle-docker-2" CRM_meta_on_node="c09-h05-r630" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="c09-h07-r630"  port="3131"/>
+        <attributes CRM_meta_container="scale1-bundle-docker-2" CRM_meta_on_node="c09-h05-r630" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="c09-h07-r630"  port="3131"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1281,9 +1281,9 @@
   </synapse>
   <synapse id="76">
     <action_set>
-      <rsc_op id="86" operation="monitor" operation_key="scale1-bundle-3_monitor_60000" on_node="c09-h05-r630" on_node_uuid="1">
+      <rsc_op id="86" operation="monitor" operation_key="scale1-bundle-3_monitor_30000" on_node="c09-h05-r630" on_node_uuid="1">
         <primitive id="scale1-bundle-3" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="scale1-bundle-docker-3" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="c09-h05-r630" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" addr="c09-h08-r630"  port="3131"/>
+        <attributes CRM_meta_container="scale1-bundle-docker-3" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="c09-h05-r630" CRM_meta_on_node_uuid="1" CRM_meta_timeout="30000" addr="c09-h08-r630"  port="3131"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1318,7 +1318,7 @@
     <action_set>
       <rsc_op id="42" operation="monitor" operation_key="scale1-bundle-3_monitor_0" on_node="c09-h07-r630" on_node_uuid="3">
         <primitive id="scale1-bundle-3" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="scale1-bundle-docker-3" CRM_meta_on_node="c09-h07-r630" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="c09-h08-r630"  port="3131"/>
+        <attributes CRM_meta_container="scale1-bundle-docker-3" CRM_meta_on_node="c09-h07-r630" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="c09-h08-r630"  port="3131"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1331,7 +1331,7 @@
     <action_set>
       <rsc_op id="27" operation="monitor" operation_key="scale1-bundle-3_monitor_0" on_node="c09-h06-r630" on_node_uuid="2">
         <primitive id="scale1-bundle-3" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="scale1-bundle-docker-3" CRM_meta_on_node="c09-h06-r630" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="c09-h08-r630"  port="3131"/>
+        <attributes CRM_meta_container="scale1-bundle-docker-3" CRM_meta_on_node="c09-h06-r630" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="c09-h08-r630"  port="3131"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1344,7 +1344,7 @@
     <action_set>
       <rsc_op id="12" operation="monitor" operation_key="scale1-bundle-3_monitor_0" on_node="c09-h05-r630" on_node_uuid="1">
         <primitive id="scale1-bundle-3" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="scale1-bundle-docker-3" CRM_meta_on_node="c09-h05-r630" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="c09-h08-r630"  port="3131"/>
+        <attributes CRM_meta_container="scale1-bundle-docker-3" CRM_meta_on_node="c09-h05-r630" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="c09-h08-r630"  port="3131"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1486,9 +1486,9 @@
   </synapse>
   <synapse id="89">
     <action_set>
-      <rsc_op id="90" operation="monitor" operation_key="scale1-bundle-4_monitor_60000" on_node="c09-h06-r630" on_node_uuid="2">
+      <rsc_op id="90" operation="monitor" operation_key="scale1-bundle-4_monitor_30000" on_node="c09-h06-r630" on_node_uuid="2">
         <primitive id="scale1-bundle-4" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="scale1-bundle-docker-4" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="c09-h06-r630" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" addr="c09-h09-r630"  port="3131"/>
+        <attributes CRM_meta_container="scale1-bundle-docker-4" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="c09-h06-r630" CRM_meta_on_node_uuid="2" CRM_meta_timeout="30000" addr="c09-h09-r630"  port="3131"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1523,7 +1523,7 @@
     <action_set>
       <rsc_op id="44" operation="monitor" operation_key="scale1-bundle-4_monitor_0" on_node="c09-h07-r630" on_node_uuid="3">
         <primitive id="scale1-bundle-4" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="scale1-bundle-docker-4" CRM_meta_on_node="c09-h07-r630" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="c09-h09-r630"  port="3131"/>
+        <attributes CRM_meta_container="scale1-bundle-docker-4" CRM_meta_on_node="c09-h07-r630" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="c09-h09-r630"  port="3131"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1536,7 +1536,7 @@
     <action_set>
       <rsc_op id="29" operation="monitor" operation_key="scale1-bundle-4_monitor_0" on_node="c09-h06-r630" on_node_uuid="2">
         <primitive id="scale1-bundle-4" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="scale1-bundle-docker-4" CRM_meta_on_node="c09-h06-r630" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="c09-h09-r630"  port="3131"/>
+        <attributes CRM_meta_container="scale1-bundle-docker-4" CRM_meta_on_node="c09-h06-r630" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="c09-h09-r630"  port="3131"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1549,7 +1549,7 @@
     <action_set>
       <rsc_op id="14" operation="monitor" operation_key="scale1-bundle-4_monitor_0" on_node="c09-h05-r630" on_node_uuid="1">
         <primitive id="scale1-bundle-4" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="scale1-bundle-docker-4" CRM_meta_on_node="c09-h05-r630" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="c09-h09-r630"  port="3131"/>
+        <attributes CRM_meta_container="scale1-bundle-docker-4" CRM_meta_on_node="c09-h05-r630" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="c09-h09-r630"  port="3131"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1691,9 +1691,9 @@
   </synapse>
   <synapse id="102">
     <action_set>
-      <rsc_op id="94" operation="monitor" operation_key="scale1-bundle-5_monitor_60000" on_node="c09-h07-r630" on_node_uuid="3">
+      <rsc_op id="94" operation="monitor" operation_key="scale1-bundle-5_monitor_30000" on_node="c09-h07-r630" on_node_uuid="3">
         <primitive id="scale1-bundle-5" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="scale1-bundle-docker-5" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="c09-h07-r630" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" addr="c09-h10-r630"  port="3131"/>
+        <attributes CRM_meta_container="scale1-bundle-docker-5" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="c09-h07-r630" CRM_meta_on_node_uuid="3" CRM_meta_timeout="30000" addr="c09-h10-r630"  port="3131"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1728,7 +1728,7 @@
     <action_set>
       <rsc_op id="46" operation="monitor" operation_key="scale1-bundle-5_monitor_0" on_node="c09-h07-r630" on_node_uuid="3">
         <primitive id="scale1-bundle-5" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="scale1-bundle-docker-5" CRM_meta_on_node="c09-h07-r630" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="c09-h10-r630"  port="3131"/>
+        <attributes CRM_meta_container="scale1-bundle-docker-5" CRM_meta_on_node="c09-h07-r630" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="c09-h10-r630"  port="3131"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1741,7 +1741,7 @@
     <action_set>
       <rsc_op id="31" operation="monitor" operation_key="scale1-bundle-5_monitor_0" on_node="c09-h06-r630" on_node_uuid="2">
         <primitive id="scale1-bundle-5" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="scale1-bundle-docker-5" CRM_meta_on_node="c09-h06-r630" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="c09-h10-r630"  port="3131"/>
+        <attributes CRM_meta_container="scale1-bundle-docker-5" CRM_meta_on_node="c09-h06-r630" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="c09-h10-r630"  port="3131"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1754,7 +1754,7 @@
     <action_set>
       <rsc_op id="16" operation="monitor" operation_key="scale1-bundle-5_monitor_0" on_node="c09-h05-r630" on_node_uuid="1">
         <primitive id="scale1-bundle-5" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="scale1-bundle-docker-5" CRM_meta_on_node="c09-h05-r630" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="c09-h10-r630"  port="3131"/>
+        <attributes CRM_meta_container="scale1-bundle-docker-5" CRM_meta_on_node="c09-h05-r630" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="c09-h10-r630"  port="3131"/>
       </rsc_op>
     </action_set>
     <inputs>

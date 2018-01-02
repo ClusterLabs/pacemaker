@@ -468,7 +468,7 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pe_working_set_t *data
     }
 
     pe_create_remote_xml(parent, remote_name, container_id,
-                         remote_allow_migrate, container_managed, "30s", "30s",
+                         remote_allow_migrate, container_managed,
                          connect_timeout, remote_server, remote_port);
     return remote_name;
 }

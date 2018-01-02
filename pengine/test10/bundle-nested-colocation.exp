@@ -342,9 +342,9 @@
   </synapse>
   <synapse id="21">
     <action_set>
-      <rsc_op id="43" operation="monitor" operation_key="rabbitmq-bundle-0_monitor_60000" on_node="overcloud-controller-0" on_node_uuid="1">
+      <rsc_op id="43" operation="monitor" operation_key="rabbitmq-bundle-0_monitor_30000" on_node="overcloud-controller-0" on_node_uuid="1">
         <primitive id="rabbitmq-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="rabbitmq-bundle-docker-0" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="overcloud-controller-0" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" addr="overcloud-rabbit-0"  port="3121"/>
+        <attributes CRM_meta_container="rabbitmq-bundle-docker-0" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="overcloud-controller-0" CRM_meta_on_node_uuid="1" CRM_meta_timeout="30000" addr="overcloud-rabbit-0"  port="3121"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -388,7 +388,7 @@
     <action_set>
       <rsc_op id="29" operation="monitor" operation_key="rabbitmq-bundle-0_monitor_0" on_node="overcloud-galera-2" on_node_uuid="6">
         <primitive id="rabbitmq-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="rabbitmq-bundle-docker-0" CRM_meta_on_node="overcloud-galera-2" CRM_meta_on_node_uuid="6" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="overcloud-rabbit-0"  port="3121"/>
+        <attributes CRM_meta_container="rabbitmq-bundle-docker-0" CRM_meta_on_node="overcloud-galera-2" CRM_meta_on_node_uuid="6" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="overcloud-rabbit-0"  port="3121"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -401,7 +401,7 @@
     <action_set>
       <rsc_op id="26" operation="monitor" operation_key="rabbitmq-bundle-0_monitor_0" on_node="overcloud-galera-1" on_node_uuid="5">
         <primitive id="rabbitmq-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="rabbitmq-bundle-docker-0" CRM_meta_on_node="overcloud-galera-1" CRM_meta_on_node_uuid="5" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="overcloud-rabbit-0"  port="3121"/>
+        <attributes CRM_meta_container="rabbitmq-bundle-docker-0" CRM_meta_on_node="overcloud-galera-1" CRM_meta_on_node_uuid="5" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="overcloud-rabbit-0"  port="3121"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -414,7 +414,7 @@
     <action_set>
       <rsc_op id="23" operation="monitor" operation_key="rabbitmq-bundle-0_monitor_0" on_node="overcloud-galera-0" on_node_uuid="4">
         <primitive id="rabbitmq-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="rabbitmq-bundle-docker-0" CRM_meta_on_node="overcloud-galera-0" CRM_meta_on_node_uuid="4" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="overcloud-rabbit-0"  port="3121"/>
+        <attributes CRM_meta_container="rabbitmq-bundle-docker-0" CRM_meta_on_node="overcloud-galera-0" CRM_meta_on_node_uuid="4" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="overcloud-rabbit-0"  port="3121"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -427,7 +427,7 @@
     <action_set>
       <rsc_op id="20" operation="monitor" operation_key="rabbitmq-bundle-0_monitor_0" on_node="overcloud-controller-2" on_node_uuid="3">
         <primitive id="rabbitmq-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="rabbitmq-bundle-docker-0" CRM_meta_on_node="overcloud-controller-2" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="overcloud-rabbit-0"  port="3121"/>
+        <attributes CRM_meta_container="rabbitmq-bundle-docker-0" CRM_meta_on_node="overcloud-controller-2" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="overcloud-rabbit-0"  port="3121"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -440,7 +440,7 @@
     <action_set>
       <rsc_op id="17" operation="monitor" operation_key="rabbitmq-bundle-0_monitor_0" on_node="overcloud-controller-1" on_node_uuid="2">
         <primitive id="rabbitmq-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="rabbitmq-bundle-docker-0" CRM_meta_on_node="overcloud-controller-1" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="overcloud-rabbit-0"  port="3121"/>
+        <attributes CRM_meta_container="rabbitmq-bundle-docker-0" CRM_meta_on_node="overcloud-controller-1" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="overcloud-rabbit-0"  port="3121"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -453,7 +453,7 @@
     <action_set>
       <rsc_op id="14" operation="monitor" operation_key="rabbitmq-bundle-0_monitor_0" on_node="overcloud-controller-0" on_node_uuid="1">
         <primitive id="rabbitmq-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="rabbitmq-bundle-docker-0" CRM_meta_on_node="overcloud-controller-0" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="overcloud-rabbit-0"  port="3121"/>
+        <attributes CRM_meta_container="rabbitmq-bundle-docker-0" CRM_meta_on_node="overcloud-controller-0" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="overcloud-rabbit-0"  port="3121"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -506,9 +506,9 @@
   </synapse>
   <synapse id="32">
     <action_set>
-      <rsc_op id="46" operation="monitor" operation_key="rabbitmq-bundle-1_monitor_60000" on_node="overcloud-controller-1" on_node_uuid="2">
+      <rsc_op id="46" operation="monitor" operation_key="rabbitmq-bundle-1_monitor_30000" on_node="overcloud-controller-1" on_node_uuid="2">
         <primitive id="rabbitmq-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="rabbitmq-bundle-docker-1" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="overcloud-controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" addr="overcloud-rabbit-1"  port="3121"/>
+        <attributes CRM_meta_container="rabbitmq-bundle-docker-1" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="overcloud-controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="30000" addr="overcloud-rabbit-1"  port="3121"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -552,7 +552,7 @@
     <action_set>
       <rsc_op id="30" operation="monitor" operation_key="rabbitmq-bundle-1_monitor_0" on_node="overcloud-galera-2" on_node_uuid="6">
         <primitive id="rabbitmq-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="rabbitmq-bundle-docker-1" CRM_meta_on_node="overcloud-galera-2" CRM_meta_on_node_uuid="6" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="overcloud-rabbit-1"  port="3121"/>
+        <attributes CRM_meta_container="rabbitmq-bundle-docker-1" CRM_meta_on_node="overcloud-galera-2" CRM_meta_on_node_uuid="6" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="overcloud-rabbit-1"  port="3121"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -565,7 +565,7 @@
     <action_set>
       <rsc_op id="27" operation="monitor" operation_key="rabbitmq-bundle-1_monitor_0" on_node="overcloud-galera-1" on_node_uuid="5">
         <primitive id="rabbitmq-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="rabbitmq-bundle-docker-1" CRM_meta_on_node="overcloud-galera-1" CRM_meta_on_node_uuid="5" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="overcloud-rabbit-1"  port="3121"/>
+        <attributes CRM_meta_container="rabbitmq-bundle-docker-1" CRM_meta_on_node="overcloud-galera-1" CRM_meta_on_node_uuid="5" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="overcloud-rabbit-1"  port="3121"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -578,7 +578,7 @@
     <action_set>
       <rsc_op id="24" operation="monitor" operation_key="rabbitmq-bundle-1_monitor_0" on_node="overcloud-galera-0" on_node_uuid="4">
         <primitive id="rabbitmq-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="rabbitmq-bundle-docker-1" CRM_meta_on_node="overcloud-galera-0" CRM_meta_on_node_uuid="4" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="overcloud-rabbit-1"  port="3121"/>
+        <attributes CRM_meta_container="rabbitmq-bundle-docker-1" CRM_meta_on_node="overcloud-galera-0" CRM_meta_on_node_uuid="4" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="overcloud-rabbit-1"  port="3121"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -591,7 +591,7 @@
     <action_set>
       <rsc_op id="21" operation="monitor" operation_key="rabbitmq-bundle-1_monitor_0" on_node="overcloud-controller-2" on_node_uuid="3">
         <primitive id="rabbitmq-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="rabbitmq-bundle-docker-1" CRM_meta_on_node="overcloud-controller-2" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="overcloud-rabbit-1"  port="3121"/>
+        <attributes CRM_meta_container="rabbitmq-bundle-docker-1" CRM_meta_on_node="overcloud-controller-2" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="overcloud-rabbit-1"  port="3121"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -604,7 +604,7 @@
     <action_set>
       <rsc_op id="18" operation="monitor" operation_key="rabbitmq-bundle-1_monitor_0" on_node="overcloud-controller-1" on_node_uuid="2">
         <primitive id="rabbitmq-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="rabbitmq-bundle-docker-1" CRM_meta_on_node="overcloud-controller-1" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="overcloud-rabbit-1"  port="3121"/>
+        <attributes CRM_meta_container="rabbitmq-bundle-docker-1" CRM_meta_on_node="overcloud-controller-1" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="overcloud-rabbit-1"  port="3121"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -617,7 +617,7 @@
     <action_set>
       <rsc_op id="15" operation="monitor" operation_key="rabbitmq-bundle-1_monitor_0" on_node="overcloud-controller-0" on_node_uuid="1">
         <primitive id="rabbitmq-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="rabbitmq-bundle-docker-1" CRM_meta_on_node="overcloud-controller-0" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="overcloud-rabbit-1"  port="3121"/>
+        <attributes CRM_meta_container="rabbitmq-bundle-docker-1" CRM_meta_on_node="overcloud-controller-0" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="overcloud-rabbit-1"  port="3121"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -670,9 +670,9 @@
   </synapse>
   <synapse id="43">
     <action_set>
-      <rsc_op id="49" operation="monitor" operation_key="rabbitmq-bundle-2_monitor_60000" on_node="overcloud-controller-2" on_node_uuid="3">
+      <rsc_op id="49" operation="monitor" operation_key="rabbitmq-bundle-2_monitor_30000" on_node="overcloud-controller-2" on_node_uuid="3">
         <primitive id="rabbitmq-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="rabbitmq-bundle-docker-2" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="overcloud-controller-2" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" addr="overcloud-rabbit-2"  port="3121"/>
+        <attributes CRM_meta_container="rabbitmq-bundle-docker-2" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="overcloud-controller-2" CRM_meta_on_node_uuid="3" CRM_meta_timeout="30000" addr="overcloud-rabbit-2"  port="3121"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -716,7 +716,7 @@
     <action_set>
       <rsc_op id="31" operation="monitor" operation_key="rabbitmq-bundle-2_monitor_0" on_node="overcloud-galera-2" on_node_uuid="6">
         <primitive id="rabbitmq-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="rabbitmq-bundle-docker-2" CRM_meta_on_node="overcloud-galera-2" CRM_meta_on_node_uuid="6" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="overcloud-rabbit-2"  port="3121"/>
+        <attributes CRM_meta_container="rabbitmq-bundle-docker-2" CRM_meta_on_node="overcloud-galera-2" CRM_meta_on_node_uuid="6" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="overcloud-rabbit-2"  port="3121"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -729,7 +729,7 @@
     <action_set>
       <rsc_op id="28" operation="monitor" operation_key="rabbitmq-bundle-2_monitor_0" on_node="overcloud-galera-1" on_node_uuid="5">
         <primitive id="rabbitmq-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="rabbitmq-bundle-docker-2" CRM_meta_on_node="overcloud-galera-1" CRM_meta_on_node_uuid="5" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="overcloud-rabbit-2"  port="3121"/>
+        <attributes CRM_meta_container="rabbitmq-bundle-docker-2" CRM_meta_on_node="overcloud-galera-1" CRM_meta_on_node_uuid="5" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="overcloud-rabbit-2"  port="3121"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -742,7 +742,7 @@
     <action_set>
       <rsc_op id="25" operation="monitor" operation_key="rabbitmq-bundle-2_monitor_0" on_node="overcloud-galera-0" on_node_uuid="4">
         <primitive id="rabbitmq-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="rabbitmq-bundle-docker-2" CRM_meta_on_node="overcloud-galera-0" CRM_meta_on_node_uuid="4" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="overcloud-rabbit-2"  port="3121"/>
+        <attributes CRM_meta_container="rabbitmq-bundle-docker-2" CRM_meta_on_node="overcloud-galera-0" CRM_meta_on_node_uuid="4" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="overcloud-rabbit-2"  port="3121"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -755,7 +755,7 @@
     <action_set>
       <rsc_op id="22" operation="monitor" operation_key="rabbitmq-bundle-2_monitor_0" on_node="overcloud-controller-2" on_node_uuid="3">
         <primitive id="rabbitmq-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="rabbitmq-bundle-docker-2" CRM_meta_on_node="overcloud-controller-2" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="overcloud-rabbit-2"  port="3121"/>
+        <attributes CRM_meta_container="rabbitmq-bundle-docker-2" CRM_meta_on_node="overcloud-controller-2" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="overcloud-rabbit-2"  port="3121"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -768,7 +768,7 @@
     <action_set>
       <rsc_op id="19" operation="monitor" operation_key="rabbitmq-bundle-2_monitor_0" on_node="overcloud-controller-1" on_node_uuid="2">
         <primitive id="rabbitmq-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="rabbitmq-bundle-docker-2" CRM_meta_on_node="overcloud-controller-1" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="overcloud-rabbit-2"  port="3121"/>
+        <attributes CRM_meta_container="rabbitmq-bundle-docker-2" CRM_meta_on_node="overcloud-controller-1" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="overcloud-rabbit-2"  port="3121"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -781,7 +781,7 @@
     <action_set>
       <rsc_op id="16" operation="monitor" operation_key="rabbitmq-bundle-2_monitor_0" on_node="overcloud-controller-0" on_node_uuid="1">
         <primitive id="rabbitmq-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="rabbitmq-bundle-docker-2" CRM_meta_on_node="overcloud-controller-0" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="overcloud-rabbit-2"  port="3121"/>
+        <attributes CRM_meta_container="rabbitmq-bundle-docker-2" CRM_meta_on_node="overcloud-controller-0" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="overcloud-rabbit-2"  port="3121"/>
       </rsc_op>
     </action_set>
     <inputs>
