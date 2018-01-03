@@ -5,14 +5,52 @@
  SPDX-License-Identifier: GPL-2.0-or-later
  -->
 <grammar xmlns="http://relaxng.org/ns/structure/1.0"
-         xmlns:cibtr="http://clusterlabs.org/ns/pacemaker/cibtr-2">
+         xmlns:cibtr="http://clusterlabs.org/ns/pacemaker/cibtr-2"
+         datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
   <start>
     <ref name="cibtr-2"/>
   </start>
 
   <define name="cibtr-2">
     <element name="cibtr:map">
-      <empty/>
+      <zeroOrMore>
+        <ref name="cibtr-2.table"/>
+      </zeroOrMore>
+    </element>
+  </define>
+
+  <define name="cibtr-2.table">
+    <element name="cibtr:table">
+      <attribute name="for">
+        <data type="string"/>
+      </attribute>
+      <attribute name="msg-prefix">
+        <data type="string"/>
+      </attribute>
+      <zeroOrMore>
+        <ref name="cibtr-2.replace"/>
+      </zeroOrMore>
+    </element>
+  </define>
+
+  <define name="cibtr-2.replace">
+    <element name="cibtr:replace">
+      <attribute name="what">
+        <data type="NCName"/>
+      </attribute>
+      <attribute name="with">
+        <choice>
+          <data type="NCName"/>
+          <empty/>
+        </choice>
+      </attribute>
+      <optional>
+        <attribute name="msg-extra">
+          <data type="string">
+            <param name="minLength">1</param>
+          </data>
+        </attribute>
+      </optional>
     </element>
   </define>
 </grammar>
