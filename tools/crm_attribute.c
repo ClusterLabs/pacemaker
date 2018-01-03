@@ -88,7 +88,6 @@ static struct crm_option long_options[] = {
     /* legacy */
     {"quiet",       0, 0, 'Q', NULL, 1},
     {"node-uname",  1, 0, 'U', NULL, 1},
-    {"node-uuid",   1, 0, 'u', NULL, 1},
     {"get-value",   0, 0, 'G', NULL, 1},
     {"delete-attr", 0, 0, 'D', NULL, 1},
     {"attr-value",  1, 0, 'v', NULL, 1},
@@ -165,9 +164,6 @@ main(int argc, char **argv)
             case 'U':
             case 'N':
                 dest_uname = strdup(optarg);
-                break;
-            case 'u':
-                dest_node = strdup(optarg);
                 break;
             case 's':
                 set_name = strdup(optarg);
