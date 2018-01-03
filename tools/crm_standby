@@ -1,25 +1,39 @@
 #!/bin/bash
 
-HELPTEXT="crm_standby - convenience wrapper for crm_attribute
+USAGE_TEXT="Usage: crm_standby <command> [options]
 
-Check, enable or disable standby mode for a cluster node.
-Nodes in standby mode may not host cluster resources.
-
-Usage: crm_standby <command> [options]
+Common options:
+ --help                 Display this text, then exit
+ --version              Display version information, then exit
+ -V, --verbose          Specify multiple times to increase debug output
+ -q, --quiet            Print only the standby status (if querying)
 
 Commands:
- --help                 Display this text and exit
- --version              Display version information and exit
- -G, --query            Display the current value of standby mode (on/off)
- -v, --update=<value>   Update the value of standby mode (on/off)
+ -G, --query            Query the current value of standby mode (on/off)
+ -v, --update=VALUE     Update the value of standby mode (on/off)
  -D, --delete           Let standby mode use default value
 
-Options:
- -V, --verbose          Increase debug output (may be specified multiple times)
- -q, --quiet            Print nothing on stdout except the standby status
- -N, --node=<value>     Operate on the named node instead of the current one
- -l, --lifetime=<value> Until when the setting should take effect (reboot/forever)
- -i, --id=<value>       (Advanced) ID used to identify the XML attribute"
+Additional Options:
+ -N, --node=NODE        Operate on the named node instead of the current one
+ -l, --lifetime=VALUE   Until when should the setting take effect
+                        (valid values: reboot, forever)
+ -i, --id=VALUE         (Advanced) XML ID used to identify standby attribute"
+
+HELP_TEXT="crm_standby - Query, enable, or disable standby mode for a node
+
+Nodes in standby mode may not host cluster resources.
+
+$USAGE_TEXT
+"
+
+exit_usage() {
+    if [ $# -gt 0 ]; then
+        echo "error: $@" >&2
+    fi
+    echo
+    echo "$USAGE_TEXT"
+    exit 1
+}
 
 op=""
 options=""
@@ -32,9 +46,7 @@ TEMP=$(getopt -o qDGQVN:U:v:i:l: \
     -n 'crm_standby' -- "$@")
 
 if [ $? -ne 0 ]; then
-    echo
-    echo "$HELPTEXT"
-    exit 1
+    exit_usage
 fi
 
 # The quotes around $TEMP are essential!
@@ -49,10 +61,21 @@ while true ; do
         -l|--lifetime)              options="$options --lifetime $2"; lifetime=1; shift 2;;
         -i|--id|--attr-id)          options="$options --id $2"; shift 2;;
         -q|-Q|--quiet|-V|--verbose) options="$options $1"; shift;;
-        --version)                  crm_attribute --version; exit 0;;
-        --help)                     echo "$HELPTEXT"; exit 0;;
-        --)                         shift ; break ;;
-        *) echo "crm_standby: unrecognized option '$1'"; echo; echo "$HELPTEXT"; exit 1;;
+        --help)
+            echo "$HELP_TEXT"
+            exit 0
+            ;;
+        --version)
+            crm_attribute --version
+            exit 0
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            exit_usage "unknown option '$1'"
+            ;;
     esac
 done
 
