@@ -148,7 +148,7 @@ function test_tools() {
     test_assert 0
 
     desc="Create node attribute"
-    cmd="crm_attribute -n ram -v 1024M -U node1 -t nodes"
+    cmd="crm_attribute -n ram -v 1024M -N node1 -t nodes"
     test_assert 0
 
     desc="Query new node attribute"

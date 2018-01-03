@@ -1667,7 +1667,7 @@ class Reattach(CTSTest):
         self.is_unsafe = 0 # Handled by canrunnow()
 
     def _is_managed(self, node):
-        is_managed = self.rsh(node, "crm_attribute -t rsc_defaults -n is-managed -Q -G -d true", 1)
+        is_managed = self.rsh(node, "crm_attribute -t rsc_defaults -n is-managed -q -G -d true", 1)
         is_managed = is_managed[:-1] # Strip off the newline
         return is_managed == "true"
 
@@ -2886,7 +2886,7 @@ class RemoteDriver(CTSTest):
             self.fail("Failed to set remote-node attribute. rc:%s output:%s" % (rc, line))
             return
 
-        (rc, line) = self.CM.rsh(node, "crm_attribute -l forever -n testattr -Q -N %s" % (self.remote_node), None)
+        (rc, line) = self.CM.rsh(node, "crm_attribute -l forever -n testattr -q -N %s" % (self.remote_node), None)
         if rc != 0:
             self.fail("Failed to get remote-node attribute")
             return
