@@ -85,7 +85,6 @@ void fix_cib_diff(xmlNode * last, xmlNode * next, xmlNode * local_diff, gboolean
 gboolean cib_diff_version_details(xmlNode * diff, int *admin_epoch, int *epoch, int *updates,
                                   int *_admin_epoch, int *_epoch, int *_updates);
 
-gboolean startCib(const char *filename);
 int cib_compare_generation(xmlNode * left, xmlNode * right);
 gboolean cib_read_config(GHashTable * options, xmlNode * current_cib);
 void verify_cib_options(GHashTable * options);

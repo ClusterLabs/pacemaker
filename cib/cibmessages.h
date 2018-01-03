@@ -30,10 +30,6 @@ extern int cib_process_default(const char *op, int options, const char *section,
                                xmlNode * req, xmlNode * input, xmlNode * existing_cib,
                                xmlNode ** result_cib, xmlNode ** answer);
 
-extern int cib_process_quit(const char *op, int options, const char *section,
-                            xmlNode * req, xmlNode * input, xmlNode * existing_cib,
-                            xmlNode ** result_cib, xmlNode ** answer);
-
 extern int cib_process_ping(const char *op, int options, const char *section,
                             xmlNode * req, xmlNode * input, xmlNode * existing_cib,
                             xmlNode ** result_cib, xmlNode ** answer);
