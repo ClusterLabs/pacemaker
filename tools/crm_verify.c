@@ -65,7 +65,6 @@ static struct crm_option long_options[] = {
     {"-spacer-",    1, 0, '-', "Check the consistency of the configuration in a given file and produce verbose output:", pcmk_option_paragraph},
     {"-spacer-",    1, 0, '-', " crm_verify --xml-file file.xml --verbose", pcmk_option_example},
   
-    {F_CRM_DATA,    1, 0, 'X', NULL, 1}, /* legacy */
     {0, 0, 0, 0}
 };
 /* *INDENT-ON* */
