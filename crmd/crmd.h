@@ -18,11 +18,6 @@
 #ifndef CRMD__H
 #  define CRMD__H
 
-#  define SYS_NAME     CRM_SYSTEM_CRMD
-#  define PID_FILE     WORKING_DIR "/"SYS_NAME".pid"
-#  define DAEMON_LOG   DEVEL_DIR"/"SYS_NAME".log"
-#  define DAEMON_DEBUG DEVEL_DIR"/"SYS_NAME".debug"
-
 extern GMainLoop *crmd_mainloop;
 extern bool no_quorum_suicide_escalation;
 

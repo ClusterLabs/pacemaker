@@ -30,9 +30,6 @@
 #include <crmd_fsa.h>
 #include <crmd_messages.h>
 
-
-struct crm_subsystem_s *cib_subsystem = NULL;
-
 int cib_retries = 0;
 
 static void

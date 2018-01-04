@@ -78,8 +78,7 @@ gboolean is_timer_started(fsa_timer_t * timer);
 
 int crmd_exit(int rc);
 int crmd_fast_exit(int rc);
-gboolean stop_subsystem(struct crm_subsystem_s *centry, gboolean force_quit);
-gboolean start_subsystem(struct crm_subsystem_s *centry);
+void pe_subsystem_free(void);
 
 void fsa_dump_actions(long long action, const char *text);
 void fsa_dump_inputs(int log_level, const char *text, long long input_register);
