@@ -240,7 +240,8 @@ mcp_read_config(void)
         char *logfile_enabled = NULL;
 
         get_config_opt(config, local_handle, "logging.to_logfile", &logfile_enabled, "on");
-        get_config_opt(config, local_handle, "logging.logfile", &logfile, "/var/log/pacemaker.log");
+        get_config_opt(config, local_handle, "logging.logfile", &logfile,
+                       CRM_LOG_DIR "/pacemaker.log");
 
         if (crm_is_true(logfile_enabled) == FALSE) {
             crm_trace("File logging disabled in corosync");

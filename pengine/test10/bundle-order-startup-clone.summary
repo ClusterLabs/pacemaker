@@ -53,7 +53,7 @@ Executing cluster transition:
  * Resource action: redis-bundle-0  start on metal-2
  * Resource action: redis:0         start on redis-bundle-0
  * Pseudo action:   redis-bundle-master_running_0
- * Resource action: redis-bundle-0  monitor=60000 on metal-2
+ * Resource action: redis-bundle-0  monitor=30000 on metal-2
  * Pseudo action:   redis-bundle-master_post_notify_running_0
  * Resource action: redis:0         notify on redis-bundle-0
  * Pseudo action:   redis-bundle-master_confirmed-post_notify_running_0

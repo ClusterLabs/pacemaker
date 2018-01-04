@@ -671,7 +671,6 @@ exit 0
 %exclude %{_mandir}/man8/crm_attribute.*
 %exclude %{_mandir}/man8/crm_node.*
 %exclude %{_mandir}/man8/crm_master.*
-%exclude %{_mandir}/man8/fence_pcmk.*
 %exclude %{_mandir}/man8/fence_legacy.*
 %exclude %{_mandir}/man8/pacemakerd.*
 %exclude %{_mandir}/man8/pacemaker_remoted.*
@@ -700,6 +699,8 @@ exit 0
 %license licenses/LGPLv2.1
 %doc COPYING
 %doc ChangeLog
+%dir %attr (770, %{uname}, %{gname}) %{_var}/log/pacemaker
+%dir %attr (770, %{uname}, %{gname}) %{_var}/log/pacemaker/bundles
 
 %files -n %{name}-cluster-libs
 %defattr(-,root,root)

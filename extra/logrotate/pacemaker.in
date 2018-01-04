@@ -1,4 +1,4 @@
-@localstatedir@/log/pacemaker.log @CRM_LOG_DIR@/bundles/*/pacemaker.log {
+@CRM_LOG_DIR@/pacemaker.log @CRM_BUNDLE_DIR@/*/pacemaker.log {
     compress
     dateext
     weekly

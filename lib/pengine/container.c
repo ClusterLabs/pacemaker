@@ -557,9 +557,8 @@ create_remote_resource(
          * remote should be ordered relative to docker.
          */
         xml_remote = pe_create_remote_xml(NULL, id, tuple->docker->id,
-                                          XML_BOOLEAN_FALSE, NULL, "60s", NULL,
-                                          NULL, connect_name,
-                                          (data->control_port?
+                                          XML_BOOLEAN_FALSE, NULL, NULL,
+                                          connect_name, (data->control_port?
                                            data->control_port : port_s));
         free(port_s);
 
@@ -1039,7 +1038,7 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         mount_add(container_data, DEFAULT_REMOTE_KEY_LOCATION,
                   DEFAULT_REMOTE_KEY_LOCATION, NULL, 0);
 
-        mount_add(container_data, CRM_LOG_DIR "/bundles", "/var/log", NULL, 1);
+        mount_add(container_data, CRM_BUNDLE_DIR, "/var/log", NULL, 1);
 
         port = calloc(1, sizeof(container_port_t));
         if(container_data->control_port) {

@@ -75,7 +75,7 @@ int remote_tls_fd = 0;
 
 int cib_init(void);
 void cib_shutdown(int nsig);
-gboolean startCib(const char *filename);
+static bool startCib(const char *filename);
 extern int write_cib_contents(gpointer p);
 
 GHashTable *config_hash = NULL;
@@ -384,13 +384,11 @@ cib_init(void)
     return crm_exit(pcmk_ok);
 }
 
-gboolean
+static bool
 startCib(const char *filename)
 {
     gboolean active = FALSE;
     xmlNode *cib = readCibXmlFile(cib_root, filename, !preserve_status);
-
-    CRM_ASSERT(cib != NULL);
 
     if (activateCibXml(cib, TRUE, "start") == 0) {
         int port = 0;

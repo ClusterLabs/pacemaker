@@ -111,9 +111,9 @@ Executing cluster transition:
  * Resource action: redis:1         start on redis-bundle-1
  * Resource action: redis:2         start on redis-bundle-2
  * Pseudo action:   redis-bundle-master_running_0
- * Resource action: redis-bundle-0  monitor=60000 on metal-1
- * Resource action: redis-bundle-1  monitor=60000 on metal-2
- * Resource action: redis-bundle-2  monitor=60000 on metal-3
+ * Resource action: redis-bundle-0  monitor=30000 on metal-1
+ * Resource action: redis-bundle-1  monitor=30000 on metal-2
+ * Resource action: redis-bundle-2  monitor=30000 on metal-3
  * Pseudo action:   redis-bundle-master_post_notify_running_0
  * Resource action: redis:0         notify on redis-bundle-0
  * Resource action: redis:1         notify on redis-bundle-1
@@ -177,9 +177,9 @@ Executing cluster transition:
  * Resource action: galera:1        start on galera-bundle-1
  * Resource action: galera:2        start on galera-bundle-2
  * Pseudo action:   galera-bundle-master_running_0
- * Resource action: galera-bundle-0 monitor=60000 on metal-1
- * Resource action: galera-bundle-1 monitor=60000 on metal-2
- * Resource action: galera-bundle-2 monitor=60000 on metal-3
+ * Resource action: galera-bundle-0 monitor=30000 on metal-1
+ * Resource action: galera-bundle-1 monitor=30000 on metal-2
+ * Resource action: galera-bundle-2 monitor=30000 on metal-3
  * Pseudo action:   galera-bundle_running_0
  * Resource action: galera:0        monitor=30000 on galera-bundle-0
  * Resource action: galera:0        monitor=20000 on galera-bundle-0

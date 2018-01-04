@@ -169,7 +169,6 @@ static struct crm_option long_options[] = {
         "\t\t\t(with --fence, --unfence, --reboot)."
     },
 
-    {   "list-all", no_argument, NULL, 'L', NULL, pcmk_option_hidden },
     { 0, 0, 0, 0 }
 };
 /* *INDENT-ON* */

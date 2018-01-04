@@ -146,11 +146,6 @@ static struct crm_option long_options[] = {
         "List all resource operations, optionally filtered by --resource and/or --node"
     },
     {
-        "pending", no_argument, NULL, 'j',
-        "\t\tDisplay pending state if 'record-pending' is enabled",
-        pcmk_option_hidden
-    },
-    {
         "list-standards", no_argument, NULL, 0,
         "\tList supported standards"
     },
@@ -377,11 +372,6 @@ static struct crm_option long_options[] = {
 
     /* legacy options */
     {"host-uname", required_argument, NULL, 'H', NULL, pcmk_option_hidden},
-    {"migrate", no_argument, NULL, 'M', NULL, pcmk_option_hidden},
-    {"un-migrate", no_argument, NULL, 'U', NULL, pcmk_option_hidden},
-    {"un-move", no_argument, NULL, 'U', NULL, pcmk_option_hidden},
-
-    {"reprobe", no_argument, NULL, 'P', NULL, pcmk_option_hidden},
 
     {"-spacer-", 1, NULL, '-', "\nExamples:", pcmk_option_paragraph},
     {"-spacer-", 1, NULL, '-', "List the available OCF agents:", pcmk_option_paragraph},
@@ -624,7 +614,6 @@ main(int argc, char **argv)
                 break;
 
             case 'R':
-            case 'P':
                 crm_log_args(argc, argv);
                 require_resource = FALSE;
                 if (cib_file == NULL) {
@@ -703,10 +692,6 @@ main(int argc, char **argv)
                 find_flags = pe_find_renamed|pe_find_anon;
                 break;
 
-            case 'j':
-                print_pending = TRUE;
-                break;
-
             case 'S':
                 require_dataset = FALSE;
                 crm_log_args(argc, argv);
@@ -729,7 +714,7 @@ main(int argc, char **argv)
                 rsc_cmd = flag;
                 find_flags = pe_find_renamed|pe_find_any;
                 break;
-            case 'h':
+
             case 'H':
             case 'N':
                 crm_trace("Option %c => %s", flag, optarg);

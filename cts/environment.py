@@ -26,6 +26,7 @@ Licensed under the GNU GPL.
 import sys, time, os, socket, random
 
 from cts.remote import *
+from cts.CTSvars import *
 
 class Environment(object):
 

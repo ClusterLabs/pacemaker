@@ -82,7 +82,7 @@ query_single_attr() {
 	QSR_TARGET="$1"
 	QSR_ATTR="$2"
 
-	crm_attribute $VERBOSE -Q --query -t status -d 0 \
+	crm_attribute $VERBOSE --quiet --query -t status -d 0 \
 		-N "$QSR_TARGET" -n "$QSR_ATTR"
 }
 

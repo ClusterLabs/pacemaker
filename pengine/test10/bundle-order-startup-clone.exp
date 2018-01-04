@@ -338,9 +338,9 @@
   </synapse>
   <synapse id="26">
     <action_set>
-      <rsc_op id="70" operation="monitor" operation_key="redis-bundle-0_monitor_60000" on_node="metal-2" on_node_uuid="2">
+      <rsc_op id="70" operation="monitor" operation_key="redis-bundle-0_monitor_30000" on_node="metal-2" on_node_uuid="2">
         <primitive id="redis-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="redis-bundle-docker-0" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="metal-2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" addr="metal-2"  port="3124"/>
+        <attributes CRM_meta_container="redis-bundle-docker-0" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="metal-2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="30000" addr="metal-2"  port="3124"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -375,7 +375,7 @@
     <action_set>
       <rsc_op id="19" operation="monitor" operation_key="redis-bundle-0_monitor_0" on_node="metal-3" on_node_uuid="3">
         <primitive id="redis-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="redis-bundle-docker-0" CRM_meta_on_node="metal-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="metal-2"  port="3124"/>
+        <attributes CRM_meta_container="redis-bundle-docker-0" CRM_meta_on_node="metal-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="metal-2"  port="3124"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -388,7 +388,7 @@
     <action_set>
       <rsc_op id="13" operation="monitor" operation_key="redis-bundle-0_monitor_0" on_node="metal-2" on_node_uuid="2">
         <primitive id="redis-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="redis-bundle-docker-0" CRM_meta_on_node="metal-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="metal-2"  port="3124"/>
+        <attributes CRM_meta_container="redis-bundle-docker-0" CRM_meta_on_node="metal-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="metal-2"  port="3124"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -401,7 +401,7 @@
     <action_set>
       <rsc_op id="7" operation="monitor" operation_key="redis-bundle-0_monitor_0" on_node="metal-1" on_node_uuid="1">
         <primitive id="redis-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_container="redis-bundle-docker-0" CRM_meta_on_node="metal-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" addr="metal-2"  port="3124"/>
+        <attributes CRM_meta_container="redis-bundle-docker-0" CRM_meta_on_node="metal-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="metal-2"  port="3124"/>
       </rsc_op>
     </action_set>
     <inputs>

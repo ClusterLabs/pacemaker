@@ -237,10 +237,7 @@ crmd_exit(int rc)
         attrd_ipc = NULL;
     }
 
-    if (pe_subsystem && pe_subsystem->client && pe_subsystem->client->ipcs) {
-        crm_trace("Disconnecting Policy Engine");
-        qb_ipcs_disconnect(pe_subsystem->client->ipcs);
-    }
+    pe_subsystem_free();
 
     if(stonith_api) {
         crm_trace("Disconnecting fencing API");
@@ -280,10 +277,6 @@ crmd_exit(int rc)
 
     clear_bit(fsa_input_register, R_MEMBERSHIP);
     g_list_free(fsa_message_queue); fsa_message_queue = NULL;
-
-    free(pe_subsystem); pe_subsystem = NULL;
-    free(te_subsystem); te_subsystem = NULL;
-    free(cib_subsystem); cib_subsystem = NULL;
 
     metadata_cache_fini();
 
@@ -531,48 +524,9 @@ do_startup(long long action,
         was_error = TRUE;
     }
 
-    /* set up the sub systems */
-    cib_subsystem = calloc(1, sizeof(struct crm_subsystem_s));
-    te_subsystem = calloc(1, sizeof(struct crm_subsystem_s));
-    pe_subsystem = calloc(1, sizeof(struct crm_subsystem_s));
-
-    if (cib_subsystem != NULL) {
-        cib_subsystem->pid = -1;
-        cib_subsystem->name = CRM_SYSTEM_CIB;
-        cib_subsystem->flag_connected = R_CIB_CONNECTED;
-        cib_subsystem->flag_required = R_CIB_REQUIRED;
-
-    } else {
-        was_error = TRUE;
-    }
-
-    if (te_subsystem != NULL) {
-        te_subsystem->pid = -1;
-        te_subsystem->name = CRM_SYSTEM_TENGINE;
-        te_subsystem->flag_connected = R_TE_CONNECTED;
-        te_subsystem->flag_required = R_TE_REQUIRED;
-
-    } else {
-        was_error = TRUE;
-    }
-
-    if (pe_subsystem != NULL) {
-        pe_subsystem->pid = -1;
-        pe_subsystem->path = CRM_DAEMON_DIR;
-        pe_subsystem->name = CRM_SYSTEM_PENGINE;
-        pe_subsystem->command = CRM_DAEMON_DIR "/" CRM_SYSTEM_PENGINE;
-        pe_subsystem->args = NULL;
-        pe_subsystem->flag_connected = R_PE_CONNECTED;
-        pe_subsystem->flag_required = R_PE_REQUIRED;
-
-    } else {
-        was_error = TRUE;
-    }
-
     if (was_error) {
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
     }
-
 }
 
 static int32_t
@@ -629,42 +583,15 @@ static int32_t
 crmd_ipc_closed(qb_ipcs_connection_t * c)
 {
     crm_client_t *client = crm_client_get(c);
-    struct crm_subsystem_s *the_subsystem = NULL;
 
-    if (client == NULL) {
-        return 0;
+    if (client) {
+        crm_trace("Disconnecting %sregistered client %s (%p/%p)",
+                  (client->userdata? "" : "un"), crm_client_name(client),
+                  c, client);
+        free(client->userdata);
+        crm_client_destroy(client);
+        trigger_fsa(fsa_source);
     }
-
-    crm_trace("Connection %p", c);
-
-    if (client->userdata == NULL) {
-        crm_trace("Client hadn't registered with us yet");
-
-    } else if (strcasecmp(CRM_SYSTEM_PENGINE, client->userdata) == 0) {
-        the_subsystem = pe_subsystem;
-
-    } else if (strcasecmp(CRM_SYSTEM_TENGINE, client->userdata) == 0) {
-        the_subsystem = te_subsystem;
-
-    } else if (strcasecmp(CRM_SYSTEM_CIB, client->userdata) == 0) {
-        the_subsystem = cib_subsystem;
-    }
-
-    if (the_subsystem != NULL) {
-        the_subsystem->source = NULL;
-        the_subsystem->client = NULL;
-        crm_info("Received HUP from %s:[%d]", the_subsystem->name, the_subsystem->pid);
-
-    } else {
-        /* else that was a transient client */
-        crm_trace("Received HUP from transient client");
-    }
-
-    crm_trace("Disconnecting client %s (%p)", crm_client_name(client), client);
-    free(client->userdata);
-    crm_client_destroy(client);
-
-    trigger_fsa(fsa_source);
     return 0;
 }
 

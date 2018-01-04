@@ -44,7 +44,6 @@
 extern const char *cib_root;
 
 crm_trigger_t *cib_writer = NULL;
-gboolean initialized = FALSE;
 
 extern int cib_status;
 
@@ -344,7 +343,6 @@ uninitializeCib(void)
         return FALSE;
     }
 
-    initialized = FALSE;
     the_cib = NULL;
 
     crm_debug("Deallocating the CIB.");
@@ -357,57 +355,32 @@ uninitializeCib(void)
 }
 
 /*
- * This method will not free the old CIB pointer or the new one.
- * We rely on the caller to have saved a pointer to the old CIB
- *   and to free the old/bad one depending on what is appropriate.
- */
-gboolean
-initializeCib(xmlNode * new_cib)
-{
-    if (new_cib == NULL) {
-        return FALSE;
-    }
-
-    the_cib = new_cib;
-    initialized = TRUE;
-    return TRUE;
-}
-
-/*
  * This method will free the old CIB pointer on success and the new one
  * on failure.
  */
 int
 activateCibXml(xmlNode * new_cib, gboolean to_disk, const char *op)
 {
-    xmlNode *saved_cib = the_cib;
+    if (new_cib) {
+        xmlNode *saved_cib = the_cib;
 
-    CRM_ASSERT(new_cib != saved_cib);
-    if (initializeCib(new_cib) == FALSE) {
-        free_xml(new_cib);
-        crm_err("Ignoring invalid or NULL CIB");
-
-        if (saved_cib != NULL) {
-            crm_warn("Reverting to last known CIB");
-            if (initializeCib(saved_cib) == FALSE) {
-                /* oh we are so dead  */
-                crm_crit("Couldn't re-initialize the old CIB!");
-                exit(1);
-            }
-
-        } else {
-            crm_crit("Could not write out new CIB and no saved" " version to revert to");
+        CRM_ASSERT(new_cib != saved_cib);
+        the_cib = new_cib;
+        free_xml(saved_cib);
+        if (cib_writes_enabled && cib_status == pcmk_ok && to_disk) {
+            crm_debug("Triggering CIB write for %s op", op);
+            mainloop_set_trigger(cib_writer);
         }
-        return -ENODATA;
+        return pcmk_ok;
     }
 
-    free_xml(saved_cib);
-    if (cib_writes_enabled && cib_status == pcmk_ok && to_disk) {
-        crm_debug("Triggering CIB write for %s op", op);
-        mainloop_set_trigger(cib_writer);
+    crm_err("Ignoring invalid CIB");
+    if (the_cib) {
+        crm_warn("Reverting to last known CIB");
+    } else {
+        crm_crit("Could not write out new CIB and no saved version to revert to");
     }
-
-    return pcmk_ok;
+    return -ENODATA;
 }
 
 static void

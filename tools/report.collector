@@ -571,7 +571,8 @@ get_logfiles() {
     esac
 
     if [ -z "$logfile" ]; then
-        logfile="/var/log/pacemaker.log"
+        # @TODO Use PCMK_logfile if set
+        logfile="/var/log/pacemaker/pacemaker.log"
         debug "Log settings not found for cluster type $cf_type, assuming $logfile"
     fi
     if [ -f "$logfile" ]; then

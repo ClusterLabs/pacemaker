@@ -28,9 +28,7 @@ void pe_foreach_guest_node(const pe_working_set_t *data_set, const node_t *host,
                            void (*helper)(const node_t*, void*), void *user_data);
 xmlNode *pe_create_remote_xml(xmlNode *parent, const char *uname,
                               const char *container_id, const char *migrateable,
-                              const char *is_managed, const char *interval,
-                              const char *monitor_timeout,
-                              const char *start_timeout,
+                              const char *is_managed, const char *start_timeout,
                               const char *server, const char *port);
 
 #endif

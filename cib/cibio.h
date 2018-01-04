@@ -30,12 +30,10 @@
 #  include <crm/common/xml.h>
 #  include <crm/common/mainloop.h>
 
-extern gboolean initialized;
 extern xmlNode *the_cib;
 
 extern xmlNode *get_the_CIB(void);
 
-extern int initializeCib(xmlNode * cib);
 extern gboolean uninitializeCib(void);
 extern gboolean verifyCibXml(xmlNode * cib);
 extern xmlNode *readCibXml(char *buffer);

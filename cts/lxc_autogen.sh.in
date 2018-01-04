@@ -323,7 +323,7 @@ ip link set eth0 up
 ip route add default via $addr.1
 hostname lxc$c
 df > $working_dir/lxc$c-filesystem/disk_usage.txt
-export PCMK_debugfile=/var/log/pacemaker_remote_lxc$c.log
+export PCMK_debugfile=@CRM_LOG_DIR@/pacemaker_remote_lxc$c.log
 /usr/sbin/pacemaker_remoted
 END
 		chmod 711 lxc$c-filesystem/launch-helper
