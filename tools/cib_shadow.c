@@ -310,16 +310,11 @@ main(int argc, char **argv)
     shadow_file = get_shadow_file(shadow);
     if (command == 'D') {
         /* delete the file */
-        rc = stat(shadow_file, &buf);
-        if (rc == 0) {
-            rc = unlink(shadow_file);
-            if (rc != 0) {
-                fprintf(stderr, "Could not remove shadow instance '%s': %s\n", shadow,
-                        strerror(errno));
-                goto done;
-            }
+        rc = unlink(shadow_file);
+        if ((rc < 0) && (errno != ENOENT)) {
+            fprintf(stderr, "Could not remove shadow instance '%s': %s\n",
+                    shadow, strerror(errno));
         }
-
         shadow_teardown(shadow);
         goto done;
 
