@@ -382,7 +382,7 @@ main(int argc, char **argv)
         if (rc < 0) {
             fprintf(stderr, "Could not %s the shadow instance '%s': %s\n",
                     command == 'r' ? "reset" : "create",
-                    shadow, strerror(errno));
+                    shadow, pcmk_strerror(rc));
             goto done;
         }
         shadow_setup(shadow, FALSE);

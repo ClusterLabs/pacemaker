@@ -445,7 +445,8 @@ setup_input(const char *input, const char *output)
     cib_object = NULL;
 
     if (rc < 0) {
-        fprintf(stderr, "Could not create '%s': %s\n", output, strerror(errno));
+        fprintf(stderr, "Could not create '%s': %s\n",
+                output, pcmk_strerror(rc));
         crm_exit(rc);
     }
     setenv("CIB_file", output, 1);
@@ -857,7 +858,8 @@ main(int argc, char **argv)
     if (input_file != NULL) {
         rc = write_xml_file(input, input_file, FALSE);
         if (rc < 0) {
-            fprintf(stderr, "Could not create '%s': %s\n", input_file, strerror(errno));
+            fprintf(stderr, "Could not create '%s': %s\n",
+                    input_file, pcmk_strerror(rc));
             goto done;
         }
     }
