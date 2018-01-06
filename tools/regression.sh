@@ -8,6 +8,17 @@ GREP_OPTIONS=
 verbose=0
 tests="dates tools acls validity"
 
+# These constants must track crm_exit_t values
+CRM_EX_OK=0
+CRM_EX_INSUFFICIENT_PRIV=4
+CRM_EX_USAGE=64
+CRM_EX_CONFIG=78
+CRM_EX_OLD=103
+CRM_EX_NOSUCH=105
+CRM_EX_UNSAFE=107
+CRM_EX_EXISTS=108
+CRM_EX_MULTIPLE=109
+
 function test_assert() {
     target=$1; shift
     cib=$1; shift
@@ -23,7 +34,7 @@ function test_assert() {
 	CIB_user=root cibadmin -Q
     fi
 
-    printf "=#=#=#= End test: $desc - `crm_error $rc` ($rc) =#=#=#=\n"
+    printf "=#=#=#= End test: $desc - $(crm_error --exit $rc) ($rc) =#=#=#=\n"
 
     if [ $rc -ne $target ]; then
 	num_errors=`expr $num_errors + 1`
@@ -57,7 +68,7 @@ while test "$done" = "0"; do
 	-x) set -x; shift;;
 	-s) do_save=1; shift;;
 	-p) PATH="$2:$PATH"; export PATH; shift 1;;
-	-?) usage 0;;
+	-?) usage $CRM_EX_OK;;
 	-*) echo "unknown option: $1"; usage 1;;
 	*) done=1;;
     esac
@@ -77,296 +88,296 @@ function test_tools() {
 
     desc="Validate CIB"
     cmd="cibadmin -Q"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Configure something before erasing"
     cmd="crm_attribute -n cluster-delay -v 60s"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Require --force for CIB erasure"
     cmd="cibadmin -E"
-    test_assert 22
+    test_assert $CRM_EX_UNSAFE
 
     desc="Allow CIB erasure with --force"
     cmd="cibadmin -E --force"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Query CIB"
     cmd="cibadmin -Q > /tmp/$$.existing.xml"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Set cluster option"
     cmd="crm_attribute -n cluster-delay -v 60s"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Query new cluster option"
     cmd="cibadmin -Q -o crm_config | grep cib-bootstrap-options-cluster-delay"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Query cluster options"
     cmd="cibadmin -Q -o crm_config > /tmp/$$.opt.xml"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Set no-quorum policy"
     cmd="crm_attribute -n no-quorum-policy -v ignore"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Delete nvpair"
     cmd="cibadmin -D -o crm_config --xml-text '<nvpair id=\"cib-bootstrap-options-cluster-delay\"/>'"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
-    desc="Create operaton should fail"
+    desc="Create operation should fail"
     cmd="cibadmin -C -o crm_config --xml-file /tmp/$$.opt.xml"
-    test_assert 76
+    test_assert $CRM_EX_EXISTS
 
     desc="Modify cluster options section"
     cmd="cibadmin -M -o crm_config --xml-file /tmp/$$.opt.xml"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Query updated cluster option"
     cmd="cibadmin -Q -o crm_config | grep cib-bootstrap-options-cluster-delay"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Set duplicate cluster option"
     cmd="crm_attribute -n cluster-delay -v 40s -s duplicate"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Setting multiply defined cluster option should fail"
     cmd="crm_attribute -n cluster-delay -v 30s"
-    test_assert 76
+    test_assert $CRM_EX_MULTIPLE
 
     desc="Set cluster option with -s"
     cmd="crm_attribute -n cluster-delay -v 30s -s duplicate"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Delete cluster option with -i"
     cmd="crm_attribute -n cluster-delay -D -i cib-bootstrap-options-cluster-delay"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Create node1 and bring it online"
     cmd="crm_simulate --live-check --in-place --node-up=node1"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Create node attribute"
     cmd="crm_attribute -n ram -v 1024M -N node1 -t nodes"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Query new node attribute"
     cmd="cibadmin -Q -o nodes | grep node1-ram"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Set a transient (fail-count) node attribute"
     cmd="crm_attribute -n fail-count-foo -v 3 -N node1 -t status"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Query a fail count"
     cmd="crm_failcount --query -r foo -N node1"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Delete a transient (fail-count) node attribute"
     cmd="crm_attribute -n fail-count-foo -D -N node1 -t status"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Digest calculation"
     cmd="cibadmin -Q | cibadmin -5 -p 2>&1 > /dev/null"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     # This update will fail because it has version numbers
     desc="Replace operation should fail"
     cmd="cibadmin -R --xml-file /tmp/$$.existing.xml"
-    test_assert 205
+    test_assert $CRM_EX_OLD
 
     desc="Default standby value"
     cmd="crm_standby -N node1 -G"
-    test_assert 0
+    test_assert $CRM_EX_OK
  
     desc="Set standby status"
     cmd="crm_standby -N node1 -v true"
-    test_assert 0
+    test_assert $CRM_EX_OK
  
     desc="Query standby value"
     cmd="crm_standby -N node1 -G"
-    test_assert 0
+    test_assert $CRM_EX_OK
  
     desc="Delete standby value"
     cmd="crm_standby -N node1 -D"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Create a resource"
     cmd="cibadmin -C -o resources --xml-text '<primitive id=\"dummy\" class=\"ocf\" provider=\"pacemaker\" type=\"Dummy\"/>'"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Create a resource meta attribute"
     cmd="crm_resource -r dummy --meta -p is-managed -v false"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Query a resource meta attribute"
     cmd="crm_resource -r dummy --meta -g is-managed"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Remove a resource meta attribute"
     cmd="crm_resource -r dummy --meta -d is-managed"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Create a resource attribute"
     cmd="crm_resource -r dummy -p delay -v 10s"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="List the configured resources"
     cmd="crm_resource -L"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Require a destination when migrating a resource that is stopped"
     cmd="crm_resource -r dummy -M"
-    test_assert 22
+    test_assert $CRM_EX_USAGE
 
     desc="Don't support migration to non-existent locations"
     cmd="crm_resource -r dummy -M -N i.dont.exist"
-    test_assert 6
+    test_assert $CRM_EX_NOSUCH
 
     desc="Create a fencing resource"
     cmd="cibadmin -C -o resources --xml-text '<primitive id=\"Fence\" class=\"stonith\" type=\"fence_true\"/>'"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Bring resources online"
     cmd="crm_simulate --live-check --in-place -S"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Try to move a resource to its existing location"
     cmd="crm_resource -r dummy --move --host node1"
-    test_assert 22
+    test_assert $CRM_EX_EXISTS
 
     desc="Move a resource from its existing location"
     cmd="crm_resource -r dummy --move"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Clear out constraints generated by --move"
     cmd="crm_resource -r dummy --clear"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Default ticket granted state"
     cmd="crm_ticket -t ticketA -G granted -d false"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Set ticket granted state"
     cmd="crm_ticket -t ticketA -r --force"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Query ticket granted state"
     cmd="crm_ticket -t ticketA -G granted"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Delete ticket granted state"
     cmd="crm_ticket -t ticketA -D granted --force"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Make a ticket standby"
     cmd="crm_ticket -t ticketA -s"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Query ticket standby state"
     cmd="crm_ticket -t ticketA -G standby"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Activate a ticket"
     cmd="crm_ticket -t ticketA -a"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Delete ticket standby state"
     cmd="crm_ticket -t ticketA -D standby"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Ban a resource on unknown node"
     cmd="crm_resource -r dummy -B -N host1"
-    test_assert 6
+    test_assert $CRM_EX_NOSUCH
 
     desc="Create two more nodes and bring them online"
     cmd="crm_simulate --live-check --in-place --node-up=node2 --node-up=node3"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Ban dummy from node1"
     cmd="crm_resource -r dummy -B -N node1"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Ban dummy from node2"
     cmd="crm_resource -r dummy -B -N node2"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Relocate resources due to ban"
     cmd="crm_simulate --live-check --in-place -S"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Move dummy to node1"
     cmd="crm_resource -r dummy -M -N node1"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Clear implicit constraints for dummy on node2"
     cmd="crm_resource -r dummy -U -N node2"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Drop the status section"
     cmd="cibadmin -R -o status --xml-text '<status/>'"
-    test_assert 0 0
+    test_assert $CRM_EX_OK 0
     
     desc="Create a clone"
     cmd="cibadmin -C -o resources --xml-text '<clone id=\"test-clone\"><primitive id=\"test-primitive\" class=\"ocf\" provider=\"pacemaker\" type=\"Dummy\"/></clone>'"
-    test_assert 0 0
+    test_assert $CRM_EX_OK 0
 
     desc="Create a resource meta attribute"
     cmd="crm_resource -r test-primitive --meta -p is-managed -v false"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Create a resource meta attribute in the primitive"
     cmd="crm_resource -r test-primitive --meta -p is-managed -v false --force"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Update resource meta attribute with duplicates"
     cmd="crm_resource -r test-clone --meta -p is-managed -v true"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Update resource meta attribute with duplicates (force clone)"
     cmd="crm_resource -r test-clone --meta -p is-managed -v true --force"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Update child resource meta attribute with duplicates"
     cmd="crm_resource -r test-primitive --meta -p is-managed -v false"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Delete resource meta attribute with duplicates"
     cmd="crm_resource -r test-clone --meta -d is-managed"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Delete resource meta attribute in parent"
     cmd="crm_resource -r test-primitive --meta -d is-managed"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Create a resource meta attribute in the primitive"
     cmd="crm_resource -r test-primitive --meta -p is-managed -v false --force"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Update existing resource meta attribute"
     cmd="crm_resource -r test-clone --meta -p is-managed -v true"
-    test_assert 0
+    test_assert $CRM_EX_OK
     
     desc="Create a resource meta attribute in the parent"
     cmd="crm_resource -r test-clone --meta -p is-managed -v true --force"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Copy resources"
     cmd="cibadmin -Q -o resources > /tmp/$$.resources.xml"
-    test_assert 0 0
+    test_assert $CRM_EX_OK 0
 
     desc="Delete resource paremt meta attribute (force)"
     cmd="crm_resource -r test-clone --meta -d is-managed --force"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Restore duplicates"
     cmd="cibadmin -R -o resources --xml-file /tmp/$$.resources.xml"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Delete resource child meta attribute"
     cmd="crm_resource -r test-primitive --meta -d is-managed"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     rm -f /tmp/$$.existing.xml /tmp/$$.resources.xml
 }
@@ -374,45 +385,45 @@ function test_tools() {
 function test_dates() {
     desc="2014-01-01 00:30:00 - 1 Hour"
     cmd="iso8601 -d '2014-01-01 00:30:00Z' -D P-1H -E '2013-12-31 23:30:00Z'"
-    test_assert 0 0
+    test_assert $CRM_EX_OK 0
 
     for y in 06 07 08 09 10 11 12 13 14 15 16 17 18; do
 	desc="20$y-W01-7"
 	cmd="iso8601 -d '20$y-W01-7 00Z'"
-	test_assert 0 0
+	test_assert $CRM_EX_OK 0
 
 	desc="20$y-W01-7 - round-trip"
 	cmd="iso8601 -d '20$y-W01-7 00Z' -W -E '20$y-W01-7 00:00:00Z'"
-	test_assert 0 0
+	test_assert $CRM_EX_OK 0
 
 	desc="20$y-W01-1"
 	cmd="iso8601 -d '20$y-W01-1 00Z'"
-	test_assert 0 0
+	test_assert $CRM_EX_OK 0
 
 	desc="20$y-W01-1 - round-trip"
 	cmd="iso8601 -d '20$y-W01-1 00Z' -W -E '20$y-W01-1 00:00:00Z'"
-	test_assert 0 0
+	test_assert $CRM_EX_OK 0
     done
 
     desc="2009-W53-07"
     cmd="iso8601 -d '2009-W53-7 00:00:00Z' -W -E '2009-W53-7 00:00:00Z'"
-    test_assert 0 0
+    test_assert $CRM_EX_OK 0
 
     desc="2009-01-31 + 1 Month"
     cmd="iso8601 -d '2009-01-31 00:00:00Z' -D P1M -E '2009-02-28 00:00:00Z'"
-    test_assert 0 0
+    test_assert $CRM_EX_OK 0
 
     desc="2009-01-31 + 2 Months"
     cmd="iso8601 -d '2009-01-31 00:00:00Z' -D P2M -E '2009-03-31 00:00:00Z'"
-    test_assert 0 0
+    test_assert $CRM_EX_OK 0
 
     desc="2009-01-31 + 3 Months"
     cmd="iso8601 -d '2009-01-31 00:00:00Z' -D P3M -E '2009-04-30 00:00:00Z'"
-    test_assert 0 0
+    test_assert $CRM_EX_OK 0
 
     desc="2009-03-31 - 1 Month"
     cmd="iso8601 -d '2009-03-31 00:00:00Z' -D P-1M -E '2009-02-28 00:00:00Z'"
-    test_assert 0 0
+    test_assert $CRM_EX_OK 0
 }
 
 function get_epoch() {
@@ -437,108 +448,108 @@ function test_acl_loop() {
     export CIB_user=unknownguy
     desc="$CIB_user: Query configuration"
     cmd="cibadmin -Q"
-    test_assert 13 0
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
 
     desc="$CIB_user: Set enable-acl"
     cmd="crm_attribute -n enable-acl -v false"
-    test_assert 13 0
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
 
     desc="$CIB_user: Set stonith-enabled"
     cmd="crm_attribute -n stonith-enabled -v false"
-    test_assert 13 0
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
 
     desc="$CIB_user: Create a resource"
     cmd="cibadmin -C -o resources --xml-text '<primitive id=\"dummy\" class=\"ocf\" provider=\"pacemaker\" type=\"Dummy\"/>'"
-    test_assert 13 0
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
 
     export CIB_user=l33t-haxor
     desc="$CIB_user: Query configuration"
     cmd="cibadmin -Q"
-    test_assert 13 0
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
 
     desc="$CIB_user: Set enable-acl"
     cmd="crm_attribute -n enable-acl -v false"
-    test_assert 13 0
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
 
     desc="$CIB_user: Set stonith-enabled"
     cmd="crm_attribute -n stonith-enabled -v false"
-    test_assert 13 0
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
 
     desc="$CIB_user: Create a resource"
     cmd="cibadmin -C -o resources --xml-text '<primitive id=\"dummy\" class=\"ocf\" provider=\"pacemaker\" type=\"Dummy\"/>'"
-    test_assert 13 0
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
 
     export CIB_user=niceguy
     desc="$CIB_user: Query configuration"
     cmd="cibadmin -Q"
-    test_assert 0 0
+    test_assert $CRM_EX_OK 0
 
     desc="$CIB_user: Set enable-acl"
     cmd="crm_attribute -n enable-acl -v false"
-    test_assert 13 0
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
 
     desc="$CIB_user: Set stonith-enabled"
     cmd="crm_attribute -n stonith-enabled -v false"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="$CIB_user: Create a resource"
     cmd="cibadmin -C -o resources --xml-text '<primitive id=\"dummy\" class=\"ocf\" provider=\"pacemaker\" type=\"Dummy\"/>'"
-    test_assert 13 0
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
 
     export CIB_user=root
     desc="$CIB_user: Query configuration"
     cmd="cibadmin -Q"
-    test_assert 0 0
+    test_assert $CRM_EX_OK 0
 
     desc="$CIB_user: Set stonith-enabled"
     cmd="crm_attribute -n stonith-enabled -v true"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="$CIB_user: Create a resource"
     cmd="cibadmin -C -o resources --xml-text '<primitive id=\"dummy\" class=\"ocf\" provider=\"pacemaker\" type=\"Dummy\"/>'"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     export CIB_user=l33t-haxor
 
     desc="$CIB_user: Create a resource meta attribute"
     cmd="crm_resource -r dummy --meta -p target-role -v Stopped"
-    test_assert 13 0
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
 
     desc="$CIB_user: Query a resource meta attribute"
     cmd="crm_resource -r dummy --meta -g target-role"
-    test_assert 13 0
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
 
     desc="$CIB_user: Remove a resource meta attribute"
     cmd="crm_resource -r dummy --meta -d target-role"
-    test_assert 13 0
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
 
     export CIB_user=niceguy
 
     desc="$CIB_user: Create a resource meta attribute"
     cmd="crm_resource -r dummy --meta -p target-role -v Stopped"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="$CIB_user: Query a resource meta attribute"
     cmd="crm_resource -r dummy --meta -g target-role"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="$CIB_user: Remove a resource meta attribute"
     cmd="crm_resource -r dummy --meta -d target-role"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="$CIB_user: Create a resource meta attribute"
     cmd="crm_resource -r dummy --meta -p target-role -v Started"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     export CIB_user=badidea
     desc="$CIB_user: Query configuration - implied deny"
     cmd="cibadmin -Q"
-    test_assert 0 0
+    test_assert $CRM_EX_OK 0
 
     export CIB_user=betteridea
     desc="$CIB_user: Query configuration - explicit deny"
     cmd="cibadmin -Q"
-    test_assert 0 0
+    test_assert $CRM_EX_OK 0
 
     CIB_user=root cibadmin -Q > /tmp/$$.haxor.xml
     CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin --delete --xml-text '<acls/>'
@@ -547,7 +558,7 @@ function test_acl_loop() {
     export CIB_user=niceguy
     desc="$CIB_user: Replace - remove acls"
     cmd="cibadmin --replace --xml-file /tmp/$$.haxor.xml"
-    test_assert 13 0
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
 
     CIB_user=root cibadmin -Q > /tmp/$$.haxor.xml
     CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin -C -o resources --xml-text '<primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>'
@@ -555,7 +566,7 @@ function test_acl_loop() {
 
     desc="$CIB_user: Replace - create resource"
     cmd="cibadmin --replace --xml-file /tmp/$$.haxor.xml"
-    test_assert 13 0
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
 
     CIB_user=root cibadmin -Q > /tmp/$$.haxor.xml
     CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" crm_attribute -n enable-acl -v false
@@ -563,7 +574,7 @@ function test_acl_loop() {
 
     desc="$CIB_user: Replace - modify attribute (deny)"
     cmd="cibadmin --replace --xml-file /tmp/$$.haxor.xml"
-    test_assert 13 0
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
 
     CIB_user=root cibadmin -Q > /tmp/$$.haxor.xml
     CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin --replace --xml-text '<nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl"/>'
@@ -571,7 +582,7 @@ function test_acl_loop() {
 
     desc="$CIB_user: Replace - delete attribute (deny)"
     cmd="cibadmin --replace --xml-file /tmp/$$.haxor.xml"
-    test_assert 13 0
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
 
     CIB_user=root cibadmin -Q > /tmp/$$.haxor.xml
     CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin --modify --xml-text '<primitive id="dummy" description="nothing interesting"/>'
@@ -579,7 +590,7 @@ function test_acl_loop() {
 
     desc="$CIB_user: Replace - create attribute (deny)"
     cmd="cibadmin --replace --xml-file /tmp/$$.haxor.xml"
-    test_assert 13 0
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
     rm -rf /tmp/$$.haxor.xml
 
 
@@ -590,7 +601,7 @@ function test_acl_loop() {
 
     desc="$CIB_user: Replace - create attribute (allow)"
     cmd="cibadmin --replace -o resources --xml-file /tmp/$$.haxor.xml"
-    test_assert 0 0
+    test_assert $CRM_EX_OK 0
 
     CIB_user=root cibadmin -Q > /tmp/$$.haxor.xml
     CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin --modify --xml-text '<primitive id="dummy" description="something interesting"/>'
@@ -598,7 +609,7 @@ function test_acl_loop() {
 
     desc="$CIB_user: Replace - modify attribute (allow)"
     cmd="cibadmin --replace -o resources --xml-file /tmp/$$.haxor.xml"
-    test_assert 0 0
+    test_assert $CRM_EX_OK 0
 
     CIB_user=root cibadmin -Q > /tmp/$$.haxor.xml
     CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin --replace -o resources --xml-text '<primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>'
@@ -606,7 +617,7 @@ function test_acl_loop() {
 
     desc="$CIB_user: Replace - delete attribute (allow)"
     cmd="cibadmin --replace -o resources --xml-file /tmp/$$.haxor.xml"
-    test_assert 0 0
+    test_assert $CRM_EX_OK 0
 }
 
 function test_acls() {
@@ -639,27 +650,27 @@ EOF
 
     desc="Configure some ACLs"
     cmd="cibadmin -M -o acls --xml-file /tmp/$$.acls.xml"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Enable ACLs"
     cmd="crm_attribute -n enable-acl -v true"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Set cluster option"
     cmd="crm_attribute -n no-quorum-policy -v ignore"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="New ACL"
     cmd="cibadmin --create -o acls --xml-text '<acl_user id=\"badidea\"><read id=\"badidea-resources\" xpath=\"//meta_attributes\"/></acl_user>'"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Another ACL"
     cmd="cibadmin --create -o acls --xml-text '<acl_user id=\"betteridea\"><read id=\"betteridea-resources\" xpath=\"//meta_attributes\"/></acl_user>'"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Updated ACL"
     cmd="cibadmin --replace -o acls --xml-text '<acl_user id=\"betteridea\"><deny id=\"betteridea-nothing\" xpath=\"/cib\"/><read id=\"betteridea-resources\" xpath=\"//meta_attributes\"/></acl_user>'"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     test_acl_loop
 
@@ -669,7 +680,7 @@ EOF
     export CIB_user=root
     desc="$CIB_user: Upgrade to pacemaker-2.0"
     cmd="cibadmin --upgrade --force -V"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     sed -i 's/epoch=.2/epoch=\"6/g' $CIB_shadow_dir/shadow.$CIB_shadow
     sed -i 's/admin_epoch=.1/admin_epoch=\"0/g' $CIB_shadow_dir/shadow.$CIB_shadow
@@ -693,42 +704,42 @@ function test_validity() {
 
     desc="Try to make resulting CIB invalid (enum violation)"
     cmd="cibadmin -M -o constraints --xml-text '<rsc_order id=\"ord_1-2\" first=\"dummy1\" first-action=\"break\" then=\"dummy2\"/>'"
-    test_assert 203
+    test_assert $CRM_EX_CONFIG
 
     sed 's|"start"|"break"|' /tmp/$$.good-1.2.xml > /tmp/$$.bad-1.2.xml
     desc="Run crm_simulate with invalid CIB (enum violation)"
     cmd="crm_simulate -x /tmp/$$.bad-1.2.xml -S"
-    test_assert 126 0
+    test_assert $CRM_EX_CONFIG 0
 
 
     desc="Try to make resulting CIB invalid (unrecognized validate-with)"
     cmd="cibadmin -M --xml-text '<cib validate-with=\"pacemaker-9999.0\"/>'"
-    test_assert 203
+    test_assert $CRM_EX_CONFIG
 
     sed 's|"pacemaker-1.2"|"pacemaker-9999.0"|' /tmp/$$.good-1.2.xml > /tmp/$$.bad-1.2.xml
     desc="Run crm_simulate with invalid CIB (unrecognized validate-with)"
     cmd="crm_simulate -x /tmp/$$.bad-1.2.xml -S"
-    test_assert 126 0
+    test_assert $CRM_EX_CONFIG 0
 
 
     desc="Try to make resulting CIB invalid, but possibly recoverable (valid with X.Y+1)"
     cmd="cibadmin -C -o configuration --xml-text '<tags/>'"
-    test_assert 203
+    test_assert $CRM_EX_CONFIG
 
     sed 's|</configuration>|<tags/>\0|' /tmp/$$.good-1.2.xml > /tmp/$$.bad-1.2.xml
     desc="Run crm_simulate with invalid, but possibly recoverable CIB (valid with X.Y+1)"
     cmd="crm_simulate -x /tmp/$$.bad-1.2.xml -S"
-    test_assert 0 0
+    test_assert $CRM_EX_OK 0
 
 
     sed 's|\s\s*validate-with="[^"]*"||' /tmp/$$.good-1.2.xml > /tmp/$$.bad-1.2.xml
     desc="Make resulting CIB valid, although without validate-with attribute"
     cmd="cibadmin -R --xml-file /tmp/$$.bad-1.2.xml"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Run crm_simulate with valid CIB, but without validate-with attribute"
     cmd="crm_simulate -x /tmp/$$.bad-1.2.xml -S"
-    test_assert 0 0
+    test_assert $CRM_EX_OK 0
 
 
     # this will just disable validation and accept the config, outputting
@@ -738,11 +749,11 @@ function test_validity() {
         /tmp/$$.good-1.2.xml > /tmp/$$.bad-1.2.xml
     desc="Make resulting CIB invalid, and without validate-with attribute"
     cmd="cibadmin -R --xml-file /tmp/$$.bad-1.2.xml"
-    test_assert 0
+    test_assert $CRM_EX_OK
 
     desc="Run crm_simulate with invalid CIB, also without validate-with attribute"
     cmd="crm_simulate -x /tmp/$$.bad-1.2.xml -S"
-    test_assert 0 0
+    test_assert $CRM_EX_OK 0
 
 
     rm -f /tmp/$$.good-1.2.xml /tmp/$$.bad-1.2.xml
@@ -808,5 +819,5 @@ else
         rm -f "$test_home/regression.$t.out"
     done
     crm_shadow --force --delete $shadow >/dev/null 2>&1
-    exit 0
+    exit $CRM_EX_OK
 fi

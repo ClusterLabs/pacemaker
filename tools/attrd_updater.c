@@ -79,6 +79,7 @@ main(int argc, char **argv)
     int argerr = 0;
     int attr_options = attrd_opt_none;
     int flag;
+    crm_exit_t exit_code = CRM_EX_OK;
     const char *attr_node = NULL;
     const char *attr_name = NULL;
     const char *attr_value = NULL;
@@ -94,7 +95,7 @@ main(int argc, char **argv)
                     "Tool for updating cluster node attributes");
 
     if (argc < 2) {
-        crm_help('?', EX_USAGE);
+        crm_help('?', CRM_EX_USAGE);
     }
 
     while (1) {
@@ -108,7 +109,7 @@ main(int argc, char **argv)
                 break;
             case '?':
             case '$':
-                crm_help(flag, EX_OK);
+                crm_help(flag, CRM_EX_OK);
                 break;
             case 'n':
                 attr_name = strdup(optarg);
@@ -163,11 +164,11 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', EX_USAGE);
+        crm_help('?', CRM_EX_USAGE);
     }
 
     if (command == 'Q') {
-        crm_exit(do_query(attr_name, attr_node, query_all));
+        exit_code = crm_errno2exit(do_query(attr_name, attr_node, query_all));
     } else {
         /* @TODO We don't know whether the specified node is a Pacemaker Remote
          * node or not, so we can't set attrd_opt_remote when appropriate.
@@ -176,10 +177,11 @@ main(int argc, char **argv)
          */
 
         attr_node = attrd_get_target(attr_node);
-        crm_exit(do_update(command, attr_node, attr_name, attr_value,
-                           attr_section, attr_set, attr_dampen, attr_options));
+        exit_code = crm_errno2exit(do_update(command, attr_node, attr_name,
+                                   attr_value, attr_section, attr_set,
+                                   attr_dampen, attr_options));
     }
-    return crm_exit(pcmk_ok);
+    return crm_exit(exit_code);
 }
 
 /*!

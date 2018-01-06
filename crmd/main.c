@@ -77,7 +77,7 @@ main(int argc, char **argv)
                 crm_bump_log_level(argc, argv);
                 break;
             case 'h':          /* Help message */
-                crm_help(flag, EX_OK);
+                crm_help(flag, CRM_EX_OK);
                 break;
             default:
                 ++argerr;
@@ -87,10 +87,10 @@ main(int argc, char **argv)
 
     if (argc - optind == 1 && safe_str_eq("metadata", argv[optind])) {
         crmd_metadata();
-        return 0;
+        return CRM_EX_OK;
     } else if (argc - optind == 1 && safe_str_eq("version", argv[optind])) {
         fprintf(stdout, "CRM Version: %s (%s)\n", PACEMAKER_VERSION, BUILD_VERSION);
-        return 0;
+        return CRM_EX_OK;
     }
 
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
@@ -101,21 +101,21 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', EX_USAGE);
+        crm_help('?', CRM_EX_USAGE);
     }
 
     if (crm_is_writable(PE_STATE_DIR, NULL, CRM_DAEMON_USER, CRM_DAEMON_GROUP, FALSE) == FALSE) {
         crm_err("Bad permissions on " PE_STATE_DIR ". Terminating");
         fprintf(stderr, "ERROR: Bad permissions on " PE_STATE_DIR ". See logs for details\n");
         fflush(stderr);
-        return 100;
+        return CRM_EX_FATAL;
 
     } else if (crm_is_writable(CRM_CONFIG_DIR, NULL, CRM_DAEMON_USER, CRM_DAEMON_GROUP, FALSE) ==
                FALSE) {
         crm_err("Bad permissions on " CRM_CONFIG_DIR ". Terminating");
         fprintf(stderr, "ERROR: Bad permissions on " CRM_CONFIG_DIR ". See logs for details\n");
         fflush(stderr);
-        return 100;
+        return CRM_EX_FATAL;
     }
 
     return crmd_init();
@@ -130,7 +130,7 @@ log_deprecation_warnings()
 int
 crmd_init(void)
 {
-    int exit_code = 0;
+    crm_exit_t exit_code = CRM_EX_OK;
     enum crmd_fsa_state state;
 
     log_deprecation_warnings();
@@ -162,16 +162,16 @@ crmd_init(void)
         g_main_run(crmd_mainloop);
         if (is_set(fsa_input_register, R_STAYDOWN)) {
             crm_info("Inhibiting automated respawn");
-            exit_code = 100;
+            exit_code = CRM_EX_FATAL;
         }
 
     } else {
         crm_err("Startup of %s failed.  Current state: %s",
                 crm_system_name, fsa_state2string(state));
-        exit_code = 1;
+        exit_code = CRM_EX_ERROR;
     }
 
-    crm_info("%lu stopped: %s (%d)",
-             (unsigned long) getpid(), pcmk_strerror(exit_code), exit_code);
+    crm_info("crmd[%lu] exiting with status %d (%s)",
+             (unsigned long) getpid(), exit_code, crm_exit_str(exit_code));
     return crmd_fast_exit(exit_code);
 }

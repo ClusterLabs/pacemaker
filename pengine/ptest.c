@@ -235,7 +235,7 @@ main(int argc, char **argv)
                 break;
             case '$':
             case '?':
-                crm_help(flag, 0);
+                crm_help(flag, CRM_EX_OK);
                 break;
             default:
                 fprintf(stderr, "Option -%c is not yet supported\n", flag);
@@ -258,7 +258,7 @@ main(int argc, char **argv)
 
     if (argerr) {
         crm_err("%d errors in option parsing", argerr);
-        crm_help('?', 1);
+        crm_help('?', CRM_EX_USAGE);
     }
 
     if (USE_LIVE_CIB) {
@@ -299,7 +299,7 @@ main(int argc, char **argv)
 
     } else if (cib_object == NULL) {
         fprintf(stderr, "No configuration specified\n");
-        crm_help('?', 1);
+        crm_help('?', CRM_EX_USAGE);
     }
 
     if (get_object_root(XML_CIB_TAG_STATUS, cib_object) == NULL) {

@@ -131,7 +131,7 @@ main(int argc, char **argv)
                     "\n\nAllows node attributes and cluster options to be queried, modified and deleted.\n");
 
     if (argc < 2) {
-        crm_help('?', EX_USAGE);
+        crm_help('?', CRM_EX_USAGE);
     }
 
     while (1) {
@@ -145,7 +145,7 @@ main(int argc, char **argv)
                 break;
             case '$':
             case '?':
-                crm_help(flag, EX_OK);
+                crm_help(flag, CRM_EX_OK);
                 break;
             case 'G':
                 command = flag;
@@ -214,7 +214,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', EX_USAGE);
+        crm_help('?', CRM_EX_USAGE);
     }
 
     the_cib = cib_new();
@@ -222,7 +222,7 @@ main(int argc, char **argv)
 
     if (rc != pcmk_ok) {
         fprintf(stderr, "Error signing on to the CIB service: %s\n", pcmk_strerror(rc));
-        return crm_exit(rc);
+        return crm_exit(crm_errno2exit(rc));
     }
 
     if (type == NULL && dest_uname != NULL) {
@@ -256,13 +256,13 @@ main(int argc, char **argv)
             fprintf(stderr, "Could not map name=%s to a UUID\n", dest_uname);
             the_cib->cmds->signoff(the_cib);
             cib_delete(the_cib);
-            return crm_exit(rc);
+            return crm_exit(crm_errno2exit(rc));
         }
     }
 
     if ((command == 'D') && (attr_name == NULL) && (attr_pattern == NULL)) {
         fprintf(stderr, "Error: must specify attribute name or pattern to delete\n");
-        return crm_exit(1);
+        return crm_exit(CRM_EX_USAGE);
     }
 
     if (attr_pattern) {
@@ -270,7 +270,7 @@ main(int argc, char **argv)
             || safe_str_neq(type, XML_CIB_TAG_STATUS)) {
 
             fprintf(stderr, "Error: pattern can only be used with till-reboot update or delete\n");
-            return crm_exit(1);
+            return crm_exit(CRM_EX_USAGE);
         }
         command = 'u';
         free(attr_name);
@@ -344,5 +344,5 @@ main(int argc, char **argv)
 
     the_cib->cmds->signoff(the_cib);
     cib_delete(the_cib);
-    return crm_exit(rc);
+    return crm_exit(crm_errno2exit(rc));
 }

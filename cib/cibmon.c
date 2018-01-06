@@ -47,13 +47,12 @@
 #endif
 
 int max_failures = 30;
-int exit_code = pcmk_ok;
 
 gboolean log_diffs = FALSE;
 gboolean log_updates = FALSE;
 
 GMainLoop *mainloop = NULL;
-void usage(const char *cmd, int exit_status);
+void usage(const char *cmd, crm_exit_t exit_status);
 void cib_connection_destroy(gpointer user_data);
 
 void cibmon_shutdown(int nsig);
@@ -70,6 +69,7 @@ main(int argc, char **argv)
     int argerr = 0;
     int flag;
     int attempts = 0;
+    int rc = pcmk_ok;
 
 #ifdef HAVE_GETOPT_H
     int option_index = 0;
@@ -103,7 +103,7 @@ main(int argc, char **argv)
                 crm_bump_log_level(argc, argv);
                 break;
             case '?':
-                usage(crm_system_name, EX_OK);
+                usage(crm_system_name, CRM_EX_OK);
                 break;
             case 'd':
                 log_diffs = TRUE;
@@ -133,36 +133,34 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        usage(crm_system_name, EX_USAGE);
+        usage(crm_system_name, CRM_EX_USAGE);
     }
 
     cib = cib_new();
 
     do {
         sleep(1);
-        exit_code = cib->cmds->signon(cib, crm_system_name, cib_query);
+        rc = cib->cmds->signon(cib, crm_system_name, cib_query);
 
-    } while (exit_code == -ENOTCONN && attempts++ < max_failures);
+    } while (rc == -ENOTCONN && attempts++ < max_failures);
 
-    if (exit_code != pcmk_ok) {
-        crm_err("Signon to CIB failed: %s", pcmk_strerror(exit_code));
+    if (rc != pcmk_ok) {
+        crm_err("Signon to CIB failed: %s", pcmk_strerror(rc));
+        goto fail;
     }
 
-    if (exit_code == pcmk_ok) {
-        crm_debug("Setting dnotify");
-        exit_code = cib->cmds->set_connection_dnotify(cib, cib_connection_destroy);
+    crm_debug("Setting dnotify");
+    rc = cib->cmds->set_connection_dnotify(cib, cib_connection_destroy);
+    if (rc != pcmk_ok) {
+        crm_err("Failed to set dnotify callback: %s", pcmk_strerror(rc));
+        goto fail;
     }
 
     crm_debug("Setting diff callback");
-    exit_code = cib->cmds->add_notify_callback(cib, T_CIB_DIFF_NOTIFY, cibmon_diff);
-
-    if (exit_code != pcmk_ok) {
-        crm_err("Failed to set %s callback: %s", T_CIB_DIFF_NOTIFY, pcmk_strerror(exit_code));
-    }
-
-    if (exit_code != pcmk_ok) {
-        crm_err("Setup failed, could not monitor CIB actions");
-        return -exit_code;
+    rc = cib->cmds->add_notify_callback(cib, T_CIB_DIFF_NOTIFY, cibmon_diff);
+    if (rc != pcmk_ok) {
+        crm_err("Failed to set diff callback: %s", pcmk_strerror(rc));
+        goto fail;
     }
 
     mainloop = g_main_new(FALSE);
@@ -170,15 +168,19 @@ main(int argc, char **argv)
     g_main_run(mainloop);
     crm_trace("%s exiting normally", crm_system_name);
     fflush(stderr);
-    return -exit_code;
+    return CRM_EX_OK;
+
+fail:
+    crm_err("Setup failed, could not monitor CIB actions");
+    return CRM_EX_ERROR;
 }
 
 void
-usage(const char *cmd, int exit_status)
+usage(const char *cmd, crm_exit_t exit_status)
 {
     FILE *stream;
 
-    stream = exit_status != 0 ? stderr : stdout;
+    stream = (exit_status == CRM_EX_OK)? stdout : stderr;
     fflush(stream);
 
     crm_exit(exit_status);
@@ -246,7 +248,7 @@ cibmon_diff(const char *event, xmlNode * msg)
     }
 
     if(rc == -EACCES) {
-        crm_exit(rc);
+        crm_exit(CRM_EX_INSUFFICIENT_PRIV);
     }
 
     free_xml(cib_last);
@@ -255,5 +257,5 @@ cibmon_diff(const char *event, xmlNode * msg)
 void
 cibmon_shutdown(int nsig)
 {
-    crm_exit(pcmk_ok);
+    crm_exit(CRM_EX_OK);
 }

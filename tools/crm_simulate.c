@@ -403,11 +403,11 @@ setup_input(const char *input, const char *output)
 
         if (rc != pcmk_ok) {
             fprintf(stderr, "Live CIB query failed: %s (%d)\n", pcmk_strerror(rc), rc);
-            crm_exit(rc);
+            crm_exit(crm_errno2exit(rc));
 
         } else if (cib_object == NULL) {
             fprintf(stderr, "Live CIB query failed: empty result\n");
-            crm_exit(ENOTCONN);
+            crm_exit(CRM_EX_NOINPUT);
         }
 
     } else if (safe_str_eq(input, "-")) {
@@ -423,12 +423,12 @@ setup_input(const char *input, const char *output)
 
     if (cli_config_update(&cib_object, NULL, FALSE) == FALSE) {
         free_xml(cib_object);
-        crm_exit(ENOKEY);
+        crm_exit(CRM_EX_CONFIG);
     }
 
     if (validate_xml(cib_object, NULL, FALSE) != TRUE) {
         free_xml(cib_object);
-        crm_exit(pcmk_err_schema_validation);
+        crm_exit(CRM_EX_CONFIG);
     }
 
     if (output == NULL) {
@@ -447,7 +447,7 @@ setup_input(const char *input, const char *output)
     if (rc < 0) {
         fprintf(stderr, "Could not create '%s': %s\n",
                 output, pcmk_strerror(rc));
-        crm_exit(rc);
+        crm_exit(CRM_EX_CANTCREAT);
     }
     setenv("CIB_file", output, 1);
     free(local_output);
@@ -607,7 +607,7 @@ count_resources(pe_working_set_t * data_set, resource_t * rsc)
 int
 main(int argc, char **argv)
 {
-    int rc = 0;
+    int rc = pcmk_ok;
     guint modified = 0;
 
     gboolean store = FALSE;
@@ -647,7 +647,7 @@ main(int argc, char **argv)
                     long_options, "Tool for simulating the cluster's response to events");
 
     if (argc < 2) {
-        crm_help('?', EX_USAGE);
+        crm_help('?', CRM_EX_USAGE);
     }
 
     while (1) {
@@ -669,7 +669,7 @@ main(int argc, char **argv)
                 break;
             case '?':
             case '$':
-                crm_help(flag, EX_OK);
+                crm_help(flag, CRM_EX_OK);
                 break;
             case 'p':
                 xml_file = "-";
@@ -786,7 +786,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', EX_USAGE);
+        crm_help('?', CRM_EX_USAGE);
     }
 
     if (test_dir != NULL) {
@@ -795,10 +795,15 @@ main(int argc, char **argv)
 
     setup_input(xml_file, store ? xml_file : output_file);
 
-    global_cib = cib_new();
-    global_cib->cmds->signon(global_cib, crm_system_name, cib_command);
-
     set_working_set_defaults(&data_set);
+
+    global_cib = cib_new();
+    rc = global_cib->cmds->signon(global_cib, crm_system_name, cib_command);
+    if (rc != pcmk_ok) {
+        fprintf(stderr, "Could not connect to the CIB: %s\n",
+                pcmk_strerror(rc));
+        goto done;
+    }
 
     if (data_set.now != NULL) {
         quiet_log(" + Setting effective cluster time: %s", use_date);
@@ -807,7 +812,10 @@ main(int argc, char **argv)
     }
 
     rc = global_cib->cmds->query(global_cib, NULL, &input, cib_sync_call | cib_scope_local);
-    CRM_ASSERT(rc == pcmk_ok);
+    if (rc != pcmk_ok) {
+        fprintf(stderr, "Could not get local CIB: %s\n", pcmk_strerror(rc));
+        goto done;
+    }
 
     data_set.input = input;
     get_date(&data_set);
@@ -841,7 +849,7 @@ main(int argc, char **argv)
 
         rc = global_cib->cmds->query(global_cib, NULL, &input, cib_sync_call);
         if (rc != pcmk_ok) {
-            fprintf(stderr, "Could not connect to the CIB for input: %s\n", pcmk_strerror(rc));
+            fprintf(stderr, "Could not get modified CIB: %s\n", pcmk_strerror(rc));
             goto done;
         }
 
@@ -864,7 +872,6 @@ main(int argc, char **argv)
         }
     }
 
-    rc = 0;
     if (process || simulate) {
         crm_time_t *local_date = NULL;
 
@@ -903,8 +910,12 @@ main(int argc, char **argv)
         }
     }
 
+    rc = pcmk_ok;
+
     if (simulate) {
-        rc = run_simulation(&data_set, global_cib, op_fail, quiet);
+        if (run_simulation(&data_set, global_cib, op_fail, quiet) != pcmk_ok) {
+            rc = pcmk_err_generic;
+        }
         if(quiet == FALSE) {
             get_date(&data_set);
 
@@ -926,5 +937,5 @@ main(int argc, char **argv)
         unlink(temp_shadow);
         free(temp_shadow);
     }
-    return crm_exit(rc);
+    return crm_exit(crm_errno2exit(rc));
 }

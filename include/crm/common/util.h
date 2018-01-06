@@ -29,7 +29,6 @@
 #  include <stdbool.h>
 #  include <limits.h>
 #  include <signal.h>
-#  include <sysexits.h>
 #  include <glib.h>
 
 #  include <libxml/tree.h>
@@ -166,7 +165,7 @@ int crm_user_lookup(const char *name, uid_t * uid, gid_t * gid);
 void crm_gnutls_global_init(void);
 #endif
 
-int crm_exit(int rc);
+crm_exit_t crm_exit(crm_exit_t rc);
 bool pcmk_acl_required(const char *user);
 
 char *crm_generate_ra_key(const char *class, const char *provider, const char *type);

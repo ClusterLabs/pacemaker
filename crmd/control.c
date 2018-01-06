@@ -181,43 +181,44 @@ log_connected_client(gpointer key, gpointer value, gpointer user_data)
     crm_err("%s is still connected at exit", crm_client_name(client));
 }
 
-int
-crmd_fast_exit(int rc) 
+crm_exit_t
+crmd_fast_exit(crm_exit_t exit_code)
 {
     if (is_set(fsa_input_register, R_STAYDOWN)) {
         crm_warn("Inhibiting respawn "CRM_XS" remapping exit code %d to %d",
-                 rc, DAEMON_RESPAWN_STOP);
-        rc = DAEMON_RESPAWN_STOP;
-    }
+                 exit_code, CRM_EX_FATAL);
+        exit_code = CRM_EX_FATAL;
 
-    if (rc == pcmk_ok && is_set(fsa_input_register, R_IN_RECOVERY)) {
+    } else if ((exit_code == CRM_EX_OK)
+               && is_set(fsa_input_register, R_IN_RECOVERY)) {
         crm_err("Could not recover from internal error");
-        rc = pcmk_err_generic;
+        exit_code = CRM_EX_ERROR;
     }
-    return crm_exit(rc);
+    return crm_exit(exit_code);
 }
 
-int
-crmd_exit(int rc)
+crm_exit_t
+crmd_exit(crm_exit_t exit_code)
 {
     GListPtr gIter = NULL;
     GMainLoop *mloop = crmd_mainloop;
 
     static bool in_progress = FALSE;
 
-    if(in_progress && rc == 0) {
+    if (in_progress && (exit_code == CRM_EX_OK)) {
         crm_debug("Exit is already in progress");
-        return rc;
+        return exit_code;
 
     } else if(in_progress) {
-        crm_notice("Error during shutdown process, terminating now with status %d: %s",
-                   rc, pcmk_strerror(rc));
+        crm_notice("Error during shutdown process, exiting now with status %d (%s)",
+                   exit_code, crm_exit_str(exit_code));
         crm_write_blackbox(SIGTRAP, NULL);
-        crmd_fast_exit(rc);
+        crmd_fast_exit(exit_code);
     }
 
     in_progress = TRUE;
-    crm_trace("Preparing to exit: %d", rc);
+    crm_trace("Preparing to exit with status %d (%s)",
+              exit_code, crm_exit_str(exit_code));
 
     /* Suppress secondary errors resulting from us disconnecting everything */
     set_bit(fsa_input_register, R_HA_DISCONNECTED);
@@ -245,9 +246,9 @@ crmd_exit(int rc)
         stonith_api->cmds->free(stonith_api); stonith_api = NULL;
     }
 
-    if (rc == pcmk_ok && crmd_mainloop == NULL) {
+    if ((exit_code == CRM_EX_OK) && (crmd_mainloop == NULL)) {
         crm_debug("No mainloop detected");
-        rc = EPROTO;
+        exit_code = CRM_EX_ERROR;
     }
 
     /* On an error, just get out.
@@ -256,11 +257,11 @@ crmd_exit(int rc)
      * that it (mostly) cleans up after itself and valgrind has less
      * to report on - allowing real errors stand out
      */
-    if(rc != pcmk_ok) {
-        crm_notice("Forcing immediate exit with status %d: %s",
-                   rc, pcmk_strerror(rc));
+    if (exit_code != CRM_EX_OK) {
+        crm_notice("Forcing immediate exit with status %d (%s)",
+                   exit_code, crm_exit_str(exit_code));
         crm_write_blackbox(SIGTRAP, NULL);
-        return crmd_fast_exit(rc);
+        return crmd_fast_exit(exit_code);
     }
 
 /* Clean up as much memory as possible for valgrind */
@@ -368,8 +369,6 @@ crmd_exit(int rc)
 
         /* Won't do anything yet, since we're inside it now */
         g_main_loop_unref(mloop);
-
-        crm_trace("Done %d", rc);
     } else {
         mainloop_destroy_signal(SIGCHLD);
     }
@@ -380,7 +379,9 @@ crmd_exit(int rc)
     throttle_fini();
 
     /* Graceful */
-    return rc;
+    crm_trace("Done preparing for exit with status %d (%s)",
+              exit_code, crm_exit_str(exit_code));
+    return exit_code;
 }
 
 /*	 A_EXIT_0, A_EXIT_1	*/
@@ -389,15 +390,14 @@ do_exit(long long action,
         enum crmd_fsa_cause cause,
         enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-    int exit_code = pcmk_ok;
+    crm_exit_t exit_code = CRM_EX_OK;
     int log_level = LOG_INFO;
     const char *exit_type = "gracefully";
 
     if (action & A_EXIT_1) {
-        /* exit_code = pcmk_err_generic; */
         log_level = LOG_ERR;
         exit_type = "forcefully";
-        exit_code = pcmk_err_generic;
+        exit_code = CRM_EX_ERROR;
     }
 
     verify_stopped(cur_state, LOG_ERR);
@@ -952,6 +952,6 @@ crm_shutdown(int nsig)
 
     } else {
         crm_info("exit from shutdown");
-        crmd_exit(pcmk_ok);
+        crmd_exit(CRM_EX_OK);
     }
 }

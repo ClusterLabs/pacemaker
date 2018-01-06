@@ -1127,7 +1127,7 @@ stonith_shutdown(int nsig)
         g_main_quit(mainloop);
     } else {
         stonith_cleanup();
-        crm_exit(pcmk_ok);
+        crm_exit(CRM_EX_OK);
     }
 }
 
@@ -1266,7 +1266,6 @@ int
 main(int argc, char **argv)
 {
     int flag;
-    int rc = 0;
     int lpc = 0;
     int argerr = 0;
     int option_index = 0;
@@ -1300,7 +1299,7 @@ main(int argc, char **argv)
                 break;
             case '$':
             case '?':
-                crm_help(flag, EX_OK);
+                crm_help(flag, CRM_EX_OK);
                 break;
             default:
                 ++argerr;
@@ -1425,7 +1424,7 @@ main(int argc, char **argv)
 
         printf(" </parameters>\n");
         printf("</resource-agent>\n");
-        return 0;
+        return CRM_EX_OK;
     }
 
     if (optind != argc) {
@@ -1433,7 +1432,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', EX_USAGE);
+        crm_help('?', CRM_EX_USAGE);
     }
 
     crm_log_init("stonith-ng", LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
@@ -1456,7 +1455,7 @@ main(int argc, char **argv)
 
         if (crm_cluster_connect(&cluster) == FALSE) {
             crm_crit("Cannot sign in to the cluster... terminating");
-            crm_exit(DAEMON_RESPAWN_STOP);
+            crm_exit(CRM_EX_FATAL);
         }
         stonith_our_uname = cluster.uname;
         stonith_our_uuid = cluster.uuid;
@@ -1502,5 +1501,5 @@ main(int argc, char **argv)
 
     stonith_cleanup();
     crm_info("Done");
-    return crm_exit(rc);
+    return crm_exit(CRM_EX_OK);
 }

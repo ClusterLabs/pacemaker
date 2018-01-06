@@ -76,8 +76,8 @@ gboolean crm_timer_start(fsa_timer_t * timer);
 gboolean crm_timer_popped(gpointer data);
 gboolean is_timer_started(fsa_timer_t * timer);
 
-int crmd_exit(int rc);
-int crmd_fast_exit(int rc);
+crm_exit_t crmd_exit(crm_exit_t exit_code);
+crm_exit_t crmd_fast_exit(crm_exit_t exit_code);
 void pe_subsystem_free(void);
 
 void fsa_dump_actions(long long action, const char *text);

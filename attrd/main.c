@@ -47,7 +47,7 @@ lrmd_t *the_lrmd = NULL;
 crm_cluster_t *attrd_cluster = NULL;
 election_t *writer = NULL;
 crm_trigger_t *attrd_config_read = NULL;
-static int attrd_exit_status = pcmk_ok;
+static crm_exit_t attrd_exit_status = CRM_EX_OK;
 
 static void
 attrd_cpg_dispatch(cpg_handle_t handle,
@@ -87,7 +87,7 @@ attrd_cpg_destroy(gpointer unused)
 
     } else {
         crm_crit("Lost connection to Corosync service!");
-        attrd_exit_status = ECONNRESET;
+        attrd_exit_status = CRM_EX_DISCONNECT;
         attrd_shutdown(0);
     }
 }
@@ -114,7 +114,7 @@ attrd_cib_destroy_cb(gpointer user_data)
     } else {
         /* eventually this should trigger a reconnect, not a shutdown */
         crm_err("Lost connection to CIB service!");
-        attrd_exit_status = ECONNRESET;
+        attrd_exit_status = CRM_EX_DISCONNECT;
         attrd_shutdown(0);
     }
 
@@ -172,7 +172,7 @@ attrd_cib_connect(int max_retry)
 
     the_cib = cib_new();
     if (the_cib == NULL) {
-        return DAEMON_RESPAWN_STOP;
+        return -ENOTCONN;
     }
 
     do {
@@ -233,7 +233,7 @@ attrd_cib_connect(int max_retry)
     the_cib->cmds->signoff(the_cib);
     cib_delete(the_cib);
     the_cib = NULL;
-    return DAEMON_RESPAWN_STOP;
+    return -ENOTCONN;
 }
 
 static int32_t
@@ -314,7 +314,7 @@ attrd_cluster_connect()
 
     if (crm_cluster_connect(attrd_cluster) == FALSE) {
         crm_err("Cluster connection failed");
-        return DAEMON_RESPAWN_STOP;
+        return -ENOTCONN;
     }
     return pcmk_ok;
 }
@@ -354,7 +354,7 @@ main(int argc, char **argv)
                 crm_bump_log_level(argc, argv);
                 break;
             case 'h':          /* Help message */
-                crm_help(flag, EX_OK);
+                crm_help(flag, CRM_EX_OK);
                 break;
             default:
                 ++argerr;
@@ -367,21 +367,21 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', EX_USAGE);
+        crm_help('?', CRM_EX_USAGE);
     }
 
     crm_log_init(T_ATTRD, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     crm_info("Starting up");
     attributes = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free_attribute);
 
-    attrd_exit_status = attrd_cluster_connect();
-    if (attrd_exit_status != pcmk_ok) {
+    if (attrd_cluster_connect() != pcmk_ok) {
+        attrd_exit_status = CRM_EX_FATAL;
         goto done;
     }
     crm_info("Cluster connection active");
 
-    attrd_exit_status = attrd_cib_connect(10);
-    if (attrd_exit_status != pcmk_ok) {
+    if (attrd_cib_connect(10) != pcmk_ok) {
+        attrd_exit_status = CRM_EX_FATAL;
         goto done;
     }
     crm_info("CIB connection active");

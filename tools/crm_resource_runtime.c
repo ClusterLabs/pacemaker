@@ -1313,7 +1313,7 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
             g_list_free_full(restart_target_active, free);
         }
         free(rsc_id);
-        return crm_exit(rc);
+        return crm_exit(crm_errno2exit(rc));
     }
 
     rc = update_dataset(cib, &data_set, TRUE);
@@ -1389,7 +1389,7 @@ cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t *
     if(rc != pcmk_ok) {
         fprintf(stderr, "Could not unset target-role for %s: %s (%d)\n", rsc_id, pcmk_strerror(rc), rc);
         free(rsc_id);
-        return crm_exit(rc);
+        return crm_exit(crm_errno2exit(rc));
     }
 
     if (target_active) {
@@ -1629,7 +1629,7 @@ cli_resource_execute(resource_t *rsc, const char *requested_name,
                 CMD_ERR("It is not safe to %s %s here: the cluster claims it is already active",
                         action, rsc->id);
                 CMD_ERR("Try setting target-role=stopped first or specifying --force");
-                crm_exit(EPERM);
+                crm_exit(CRM_EX_UNSAFE);
             }
         }
     }
@@ -1641,7 +1641,7 @@ cli_resource_execute(resource_t *rsc, const char *requested_name,
 
     if(rsc->variant == pe_group) {
         CMD_ERR("Sorry, --%s doesn't support group resources", rsc_action);
-        crm_exit(EOPNOTSUPP);
+        crm_exit(CRM_EX_UNIMPLEMENT_FEATURE);
     }
 
     rclass = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
@@ -1650,7 +1650,7 @@ cli_resource_execute(resource_t *rsc, const char *requested_name,
 
     if (safe_str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH)) {
         CMD_ERR("Sorry, --%s doesn't support %s resources yet", rsc_action, rclass);
-        crm_exit(EOPNOTSUPP);
+        crm_exit(CRM_EX_UNIMPLEMENT_FEATURE);
     }
 
     params = generate_resource_params(rsc, data_set);
@@ -1678,7 +1678,7 @@ cli_resource_execute(resource_t *rsc, const char *requested_name,
         /* We know op will be NULL, but this makes static analysis happy */
         services_action_free(op);
 
-        return crm_exit(EINVAL);
+        return crm_exit(CRM_EX_DATAERR);
     }
 
 
@@ -1757,7 +1757,7 @@ int
 cli_resource_move(resource_t *rsc, const char *rsc_id, const char *host_name,
                   cib_t *cib, pe_working_set_t *data_set)
 {
-    int rc = -EINVAL;
+    int rc = pcmk_ok;
     int count = 0;
     node_t *current = NULL;
     node_t *dest = pe_find_node(data_set->nodes, host_name);
@@ -1799,7 +1799,7 @@ cli_resource_move(resource_t *rsc, const char *rsc_id, const char *host_name,
 
     } else if (g_list_length(rsc->running_on) > 1) {
         CMD_ERR("Resource '%s' not moved: active on multiple nodes", rsc_id);
-        return rc;
+        return -ENOTUNIQ;
     }
 
     if(dest == NULL) {
@@ -1824,7 +1824,7 @@ cli_resource_move(resource_t *rsc, const char *rsc_id, const char *host_name,
         } else {
             CMD_ERR("Error performing operation: %s is already %s on %s",
                     rsc_id, scope_master?"promoted":"active", dest->details->uname);
-            return rc;
+            return -EEXIST;
         }
     }
 

@@ -252,7 +252,7 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
          * So just stay dead, something is seriously messed up anyway.
          *
          */
-        exit(100); /* None of our wrappers since we already called qb_log_fini() */
+        exit(CRM_EX_FATAL); // None of our wrappers since we already called qb_log_fini()
         return;
     }
 

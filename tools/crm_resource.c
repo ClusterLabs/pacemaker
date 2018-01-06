@@ -47,14 +47,14 @@ resource_ipc_timeout(gpointer data)
     fprintf(stderr, "No messages received in %d seconds.. aborting\n",
             (int)message_timeout_ms / 1000);
     crm_err("No messages received in %d seconds", (int)message_timeout_ms / 1000);
-    return crm_exit(-1);
+    return crm_exit(CRM_EX_TIMEOUT);
 }
 
 static void
 resource_ipc_connection_destroy(gpointer user_data)
 {
     crm_info("Connection to CRMd was terminated");
-    crm_exit(1);
+    crm_exit(CRM_EX_DISCONNECT);
 }
 
 static void
@@ -86,7 +86,7 @@ resource_ipc_callback(const char *buffer, ssize_t length, gpointer userdata)
 
         fprintf(stderr, " OK\n");
         crm_debug("Got all the replies we expected");
-        return crm_exit(pcmk_ok);
+        return crm_exit(CRM_EX_OK);
     }
 
     free_xml(msg);
@@ -437,6 +437,7 @@ main(int argc, char **argv)
     int argerr = 0;
     int flag;
     int find_flags = 0;           // Flags to use when searching for resource
+    crm_exit_t exit_code = CRM_EX_OK;
 
     crm_log_cli_init("crm_resource");
     crm_set_options(NULL, "(query|command) [options]", long_options,
@@ -493,21 +494,22 @@ main(int argc, char **argv)
                     }
 
                     if (rc > 0) {
-                        rc = 0;
                         for (iter = list; iter != NULL; iter = iter->next) {
-                            rc++;
                             printf("%s\n", iter->val);
                         }
                         lrmd_list_freeall(list);
 
                     } else if (optarg) {
                         fprintf(stderr, "No %s found for %s\n", text, optarg);
+                        exit_code = CRM_EX_NOSUCH;
+
                     } else {
                         fprintf(stderr, "No %s found\n", text);
+                        exit_code = CRM_EX_NOSUCH;
                     }
 
                     lrmd_api_delete(lrmd_conn);
-                    return crm_exit(rc);
+                    crm_exit(exit_code);
 
                 } else if (safe_str_eq("show-metadata", longname)) {
                     char *standard = NULL;
@@ -525,6 +527,7 @@ main(int argc, char **argv)
                         fprintf(stderr,
                                 "'%s' is not a valid agent specification\n",
                                 optarg);
+                        rc = -ENXIO;
                     }
 
                     if (metadata) {
@@ -532,9 +535,10 @@ main(int argc, char **argv)
                     } else {
                         fprintf(stderr, "Metadata query for %s failed: %s\n",
                                 optarg, pcmk_strerror(rc));
+                        exit_code = crm_errno2exit(rc);
                     }
                     lrmd_api_delete(lrmd_conn);
-                    return crm_exit(rc);
+                    crm_exit(exit_code);
 
                 } else if (safe_str_eq("list-agents", longname)) {
                     lrmd_list_t *list = NULL;
@@ -548,20 +552,17 @@ main(int argc, char **argv)
                     rc = lrmd_conn->cmds->list_agents(lrmd_conn, &list, optarg, provider);
 
                     if (rc > 0) {
-                        rc = 0;
                         for (iter = list; iter != NULL; iter = iter->next) {
                             printf("%s\n", iter->val);
-                            rc++;
                         }
                         lrmd_list_freeall(list);
-                        rc = 0;
                     } else {
                         fprintf(stderr, "No agents found for standard=%s, provider=%s\n",
                                 optarg, (provider? provider : "*"));
-                        rc = -1;
+                        exit_code = CRM_EX_NOSUCH;
                     }
                     lrmd_api_delete(lrmd_conn);
-                    return crm_exit(rc);
+                    crm_exit(exit_code);
 
                 } else {
                     crm_err("Unhandled long option: %s", longname);
@@ -573,7 +574,7 @@ main(int argc, char **argv)
                 break;
             case '$':
             case '?':
-                crm_help(flag, EX_OK);
+                crm_help(flag, CRM_EX_OK);
                 break;
             case 'x':
                 xml_file = strdup(optarg);
@@ -771,7 +772,7 @@ main(int argc, char **argv)
 
     if (argerr) {
         CMD_ERR("Invalid option(s) supplied, use --help for valid usage");
-        return crm_exit(EX_USAGE);
+        crm_exit(CRM_EX_USAGE);
     }
 
     our_pid = crm_getpid_s();
@@ -996,7 +997,6 @@ main(int argc, char **argv)
         rc = cli_resource_ban(rsc_id, dest->details->uname, NULL, cib_conn);
 
     } else if (rsc_cmd == 'B' || rsc_cmd == 'M') {
-        rc = -EINVAL;
         if (g_list_length(rsc->running_on) == 1) {
             node_t *current = rsc->running_on->data;
             rc = cli_resource_ban(rsc_id, current->details->uname, NULL, cib_conn);
@@ -1020,6 +1020,8 @@ main(int argc, char **argv)
                 rc = cli_resource_ban(rsc_id, current->details->uname, NULL, cib_conn);
 
             } else {
+                rc = -EINVAL;
+                exit_code = CRM_EX_USAGE;
                 CMD_ERR("Resource '%s' not moved: active in %d locations (promoted in %d).", rsc_id, g_list_length(rsc->running_on), count);
                 CMD_ERR("You can prevent '%s' from running on a specific location with: --ban --node <name>", rsc_id);
                 CMD_ERR("You can prevent '%s' from being promoted at a specific location with:"
@@ -1027,6 +1029,8 @@ main(int argc, char **argv)
             }
 
         } else {
+            rc = -EINVAL;
+            exit_code = CRM_EX_USAGE;
             CMD_ERR("Resource '%s' not moved: active in %d locations.", rsc_id, g_list_length(rsc->running_on));
             CMD_ERR("You can prevent '%s' from running on a specific location with: --ban --node <name>", rsc_id);
         }
@@ -1185,13 +1189,18 @@ main(int argc, char **argv)
         cib_delete(cib_conn);
     }
 
-    if (rc == -pcmk_err_no_quorum) {
-        CMD_ERR("Error performing operation: %s", pcmk_strerror(rc));
-        CMD_ERR("Try using -f");
+    if (is_ocf_rc) {
+        exit_code = rc;
 
-    } else if (rc != pcmk_ok && !is_ocf_rc) {
+    } else if (rc != pcmk_ok) {
         CMD_ERR("Error performing operation: %s", pcmk_strerror(rc));
+        if (rc == -pcmk_err_no_quorum) {
+            CMD_ERR("To ignore quorum, use --force");
+        }
+        if (exit_code == CRM_EX_OK) {
+            exit_code = crm_errno2exit(rc);
+        }
     }
 
-    return crm_exit(rc);
+    return crm_exit(exit_code);
 }

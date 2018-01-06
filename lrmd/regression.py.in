@@ -20,6 +20,46 @@ import time
 BUILD_DIR = "@abs_top_builddir@"
 TEST_DIR = sys.path[0]
 
+# These values must be kept in sync with include/crm/crm.h
+class CrmExit:
+    OK                   =   0
+    ERROR                =   1
+    INVALID_PARAM        =   2
+    UNIMPLEMENT_FEATURE  =   3
+    INSUFFICIENT_PRIV    =   4
+    NOT_INSTALLED        =   5
+    NOT_CONFIGURED       =   6
+    NOT_RUNNING          =   7
+    USAGE                =  64
+    DATAERR              =  65
+    NOINPUT              =  66
+    NOUSER               =  67
+    NOHOST               =  68
+    UNAVAILABLE          =  69
+    SOFTWARE             =  70
+    OSERR                =  71
+    OSFILE               =  72
+    CANTCREAT            =  73
+    IOERR                =  74
+    TEMPFAIL             =  75
+    PROTOCOL             =  76
+    NOPERM               =  77
+    CONFIG               =  78
+    FATAL                = 100
+    PANIC                = 101
+    DISCONNECT           = 102
+    SOLO                 = 103
+    DIGEST               = 104
+    NOSUCH               = 105
+    QUORUM               = 106
+    UNSAFE               = 107
+    EXISTS               = 108
+    MULTIPLE             = 109
+    OLD                  = 110
+    TIMEOUT              = 124
+    MAX                  = 255
+
+
 def update_path():
     """ Set the PATH environment variable appropriately for the tests """
 
@@ -73,6 +113,41 @@ def output_from_command(command):
     return pipe_output(test).split("\n")
 
 
+class TestError(Exception):
+    """ Base class for exceptions in this module """
+    pass
+
+
+class ExitCodeError(TestError):
+    """ Exception raised when command exit status is unexpected """
+
+    def __init__(self, exit_code):
+        self.exit_code = exit_code
+
+    def __str__(self):
+        return repr(self.exit_code)
+
+
+class OutputNotFoundError(TestError):
+    """ Exception raised when command output does not contain wanted string """
+
+    def __init__(self, exit_code):
+        self.output = output
+
+    def __str__(self):
+        return repr(self.output)
+
+
+class OutputFoundError(TestError):
+    """ Exception raised when command output contains unwanted string """
+
+    def __init__(self, exit_code):
+        self.output = output
+
+    def __str__(self):
+        return repr(self.output)
+
+
 class Test(object):
     """ Executor for a single lrmd regression test """
 
@@ -92,7 +167,7 @@ class Test(object):
 
         self.result_txt = ""
         self.cmd_tool_output = ""
-        self.result_exitcode = 0
+        self.result_exitcode = CrmExit.OK
 
         self.lrmd_process = None
         self.stonith_process = None
@@ -166,37 +241,27 @@ class Test(object):
     def add_sys_cmd(self, cmd, args):
         """ Add a simple command to be executed as part of this test """
 
-        self.__new_cmd(cmd, args, 0, "")
-
-    def add_sys_cmd_no_wait(self, cmd, args):
-        """ Add a simple command to be executed (without waiting) as part of this test """
-
-        self.__new_cmd(cmd, args, 0, "", 1)
-
-    def add_expected_fail_sys_cmd(self, cmd, args, exitcode):
-        """ Add a command to be executed as part of this test and expected to fail """
-
-        self.__new_cmd(cmd, args, exitcode)
+        self.__new_cmd(cmd, args, CrmExit.OK, "")
 
     def add_cmd_check_stdout(self, args, match, no_match=""):
         """ Add a command with expected output to be executed as part of this test """
 
-        self.__new_cmd(self.test_tool_location, args, 0, match, 0, no_match)
+        self.__new_cmd(self.test_tool_location, args, CrmExit.OK, match, 0, no_match)
 
     def add_cmd(self, args):
         """ Add an lrmd_test command to be executed as part of this test """
 
-        self.__new_cmd(self.test_tool_location, args, 0, "")
+        self.__new_cmd(self.test_tool_location, args, CrmExit.OK, "")
 
     def add_cmd_and_kill(self, kill_proc, args):
         """ Add an lrmd_test command and system command to be executed as part of this test """
 
-        self.__new_cmd(self.test_tool_location, args, 0, "", kill=kill_proc)
+        self.__new_cmd(self.test_tool_location, args, CrmExit.OK, "", kill=kill_proc)
 
-    def add_expected_fail_cmd(self, args):
+    def add_expected_fail_cmd(self, args, exitcode=CrmExit.ERROR):
         """ Add an lrmd_test command to be executed as part of this test and expected to fail """
 
-        self.__new_cmd(self.test_tool_location, args, 1, "")
+        self.__new_cmd(self.test_tool_location, args, exitcode, "")
 
     def get_exitcode(self):
         """ Return the exit status of the last test execution """
@@ -230,21 +295,26 @@ class Test(object):
         if args['no_wait'] == 0:
             test.wait()
         else:
-            return 0
+            return CrmExit.OK
 
         output = pipe_output(test)
-
-        if args['stdout_match'] != "" and output.count(args['stdout_match']) == 0:
-            test.returncode = -2
-            print("STDOUT string '%s' was not found in cmd output" % (args['stdout_match']))
-
-        if args['stdout_negative_match'] != "" and output.count(args['stdout_negative_match']) != 0:
-            test.returncode = -2
-            print("STDOUT string '%s' was found in cmd output" % (args['stdout_negative_match']))
-
         args['cmd_output'] = output
 
-        return test.returncode
+        if test.returncode != args['expected_exitcode']:
+            raise ExitCodeError(test.returncode)
+
+        if args['stdout_match'] != "" and output.count(args['stdout_match']) == 0:
+            raise OutputNotFoundError(output)
+
+        if args['stdout_negative_match'] != "" and output.count(args['stdout_negative_match']) != 0:
+            raise OutputFoundError(output)
+
+    def set_error(self, step, cmd):
+        """ Record failure of this test """
+
+        msg = "FAILURE - '%s' failed at step %d. Command: %s %s"
+        self.result_txt = msg % (self.name, step, cmd['cmd'], cmd['args'])
+        self.result_exitcode = CrmExit.ERROR
 
     def run(self):
         """ Execute this test. """
@@ -263,20 +333,26 @@ class Test(object):
             print("\n--- START TEST - %s" % self.name)
 
         self.result_txt = "SUCCESS - '%s'" % (self.name)
-        self.result_exitcode = 0
+        self.result_exitcode = CrmExit.OK
         for cmd in self.cmds:
-            res = self.run_cmd(cmd)
-            if res != cmd['expected_exitcode']:
+            try:
+                self.run_cmd(cmd)
+            except ExitCodeError as e:
                 print(cmd['cmd_output'])
-                print("Step %d FAILED - command returned %d, expected %d" % (i, res, cmd['expected_exitcode']))
-                msg = "FAILURE - '%s' failed at step %d. Command: lrmd_test %s"
-                self.result_txt = msg % (self.name, i, cmd['args'])
-                self.result_exitcode = -1
+                print("Step %d FAILED - command returned %s, expected %d" % (i, e, cmd['expected_exitcode']))
+                self.set_error(i, cmd);
                 break
-            else:
-                if self.verbose:
-                    print(cmd['cmd_output'].strip())
-                    print("Step %d SUCCESS" % (i))
+            except OutputNotFoundError as e:
+                print("Step %d FAILED - '%s' was not found in command output: %s" % (i, cmd['stdout_match'], e))
+                self.set_error(i, cmd);
+                break
+            except OutputFoundError as e:
+                print("Step %d FAILED - '%s' was found in command output: %s" % (i, cmd['stdout_negative_match'], e))
+                self.set_error(i, cmd);
+                break
+            if self.verbose:
+                print(cmd['cmd_output'].strip())
+                print("Step %d SUCCESS" % (i))
             i = i + 1
         self.clean_environment()
 
@@ -309,7 +385,7 @@ class Tests(object):
             except ImportError:
                 print("Fatal error: python systemd bindings not found. Is package installed?",
                       file=sys.stderr)
-                sys.exit(1)
+                sys.exit(CrmExit.ERROR)
 
         print("Testing resource classes", repr(self.rsc_classes))
 
@@ -440,7 +516,7 @@ def main():
         if line.count("monitor") > 0:
             time.sleep(30000)
             sys.exit(0)
-    sys.exit(-1)
+    sys.exit(1)
 if __name__ == "__main__":
     main()
 """)
@@ -473,7 +549,7 @@ while read line; do
         echo '</resource-agent>'
         exit 0;;
     esac
-    exit -1
+    exit 1
 done
 """)
 
@@ -558,9 +634,9 @@ done
             test.add_cmd(common_cmds["%s_monitor_event" % (rsc)])
             test.add_cmd(common_cmds["%s_cancel_line" % (rsc)] + " " + common_cmds["%s_cancel_event" % (rsc)])
             ### If this happens the monitor did not actually cancel correctly. ###
-            test.add_expected_fail_cmd(common_cmds["%s_monitor_event" % (rsc)])
+            test.add_expected_fail_cmd(common_cmds["%s_monitor_event" % (rsc)], CrmExit.TIMEOUT)
             ### If this happens the monitor did not actually cancel correctly. ###
-            test.add_expected_fail_cmd(common_cmds["%s_monitor_event" % (rsc)])
+            test.add_expected_fail_cmd(common_cmds["%s_monitor_event" % (rsc)], CrmExit.TIMEOUT)
             test.add_cmd(common_cmds["%s_stop_line" % (rsc)]  + " " + common_cmds["%s_stop_event" % (rsc)])
             test.add_cmd(common_cmds["%s_unreg_line" % (rsc)] + " " + common_cmds["%s_unreg_event" % (rsc)])
 
@@ -588,9 +664,9 @@ done
             # cancel the monitor, if the duplicate merged with the original, we should no longer see monitor updates
             test.add_cmd(common_cmds["%s_cancel_line" % (rsc)] + " " + common_cmds["%s_cancel_event" % (rsc)])
             ### If this happens the monitor did not actually cancel correctly. ###
-            test.add_expected_fail_cmd(common_cmds["%s_monitor_event" % (rsc)])
+            test.add_expected_fail_cmd(common_cmds["%s_monitor_event" % (rsc)], CrmExit.TIMEOUT)
             ### If this happens the monitor did not actually cancel correctly. ###
-            test.add_expected_fail_cmd(common_cmds["%s_monitor_event" % (rsc)])
+            test.add_expected_fail_cmd(common_cmds["%s_monitor_event" % (rsc)], CrmExit.TIMEOUT)
             test.add_cmd(common_cmds["%s_stop_line" % (rsc)]  + " " + common_cmds["%s_stop_event" % (rsc)])
             test.add_cmd(common_cmds["%s_unreg_line" % (rsc)] + " " + common_cmds["%s_unreg_event" % (rsc)])
 
@@ -607,9 +683,9 @@ done
             test.add_cmd(common_cmds["%s_monitor_event" % (rsc)])
             test.add_cmd(common_cmds["%s_stop_line" % (rsc)]  + " " + common_cmds["%s_stop_event" % (rsc)])
             ### If this happens the monitor did not actually cancel correctly. ###
-            test.add_expected_fail_cmd(common_cmds["%s_monitor_event" % (rsc)])
+            test.add_expected_fail_cmd(common_cmds["%s_monitor_event" % (rsc)], CrmExit.TIMEOUT)
             ### If this happens the monitor did not actually cancel correctly. ###
-            test.add_expected_fail_cmd(common_cmds["%s_monitor_event" % (rsc)])
+            test.add_expected_fail_cmd(common_cmds["%s_monitor_event" % (rsc)], CrmExit.TIMEOUT)
             test.add_cmd(common_cmds["%s_unreg_line" % (rsc)] + " " + common_cmds["%s_unreg_event" % (rsc)])
 
 
@@ -703,9 +779,9 @@ done
         test.add_cmd("-c cancel -r \"test_rsc\" -a \"monitor\" -i \"100\" -t \"6000\" "
                      "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:Cancelled\" ")
         test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" "
-                                   + self.action_timeout)
+                                   + self.action_timeout, CrmExit.TIMEOUT)
         test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" "
-                                   + self.action_timeout)
+                                   + self.action_timeout, CrmExit.TIMEOUT)
         test.add_cmd("-c unregister_rsc -r \"test_rsc\" "
                      + self.action_timeout +
                      "-l \"NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
@@ -719,12 +795,12 @@ done
         test.add_cmd('-c exec -r "test_rsc" -a "monitor" -i "100" '
                      + self.action_timeout +
                      ' -o -l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete" ')
-        test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" "+self.action_timeout)
+        test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" "+self.action_timeout, CrmExit.TIMEOUT)
         test.add_cmd_and_kill("rm -f @localstatedir@/run/Dummy-test_rsc.state", "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" -t 6000")
         test.add_cmd("-c cancel -r \"test_rsc\" -a \"monitor\" -i \"100\" -t \"6000\" "
                      "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:Cancelled\" ")
-        test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" "+self.action_timeout)
-        test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" "+self.action_timeout)
+        test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" "+self.action_timeout, CrmExit.TIMEOUT)
+        test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" "+self.action_timeout, CrmExit.TIMEOUT)
         test.add_cmd('-c unregister_rsc -r "test_rsc" ' + self.action_timeout +
                      '-l "NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete"')
 
@@ -744,8 +820,8 @@ done
             test.add_cmd_and_kill("killall -9 -q lrmd_dummy_daemon", "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" -t 8000")
             test.add_cmd("-c cancel -r \"test_rsc\" -a \"monitor\" -i \"100\" -t \"6000\" "
                          "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:Cancelled\" ")
-            test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" "+self.action_timeout)
-            test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" "+self.action_timeout)
+            test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" "+self.action_timeout, CrmExit.TIMEOUT)
+            test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" "+self.action_timeout, CrmExit.TIMEOUT)
             test.add_cmd("-c unregister_rsc -r \"test_rsc\" "+self.action_timeout+
                          "-l \"NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
 
@@ -765,8 +841,8 @@ done
             test.add_cmd_and_kill("killall -9 -q dd", "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" -t 8000")
             test.add_cmd("-c cancel -r \"test_rsc\" -a \"monitor\" -i \"100\" -t \"6000\" "
                          "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:Cancelled\" ")
-            test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" "+self.action_timeout)
-            test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" "+self.action_timeout)
+            test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:not running op_status:complete\" "+self.action_timeout, CrmExit.TIMEOUT)
+            test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" "+self.action_timeout, CrmExit.TIMEOUT)
             test.add_cmd("-c unregister_rsc -r \"test_rsc\" "+self.action_timeout+
                          "-l \"NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
 
@@ -908,7 +984,7 @@ done
         test.add_cmd("-c register_rsc -r test_rsc -P pacemaker -C ocf -T Dummy "
                      "-l \"NEW_EVENT event_type:register rsc_id:test_rsc action:none rc:ok op_status:complete\" "+self.action_timeout)
         test.add_cmd("-c exec -r test_rsc -s 6000 -a start -w -t 6000")
-        test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:ok op_status:complete\" -t 2000")
+        test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:ok op_status:complete\" -t 2000", CrmExit.TIMEOUT)
         test.add_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:ok op_status:complete\" -t 6000")
         test.add_cmd("-c exec -r test_rsc -a stop " + self.action_timeout +
                      "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:stop rc:ok op_status:complete\" ")
@@ -922,7 +998,7 @@ done
         test.add_cmd("-c exec -r test_rsc -s 5000 -a start -w -t 4000")
         test.add_cmd("-c cancel -r test_rsc -a start " + self.action_timeout +
                      "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:ok op_status:Cancelled\" ")
-        test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:ok op_status:complete\" -t 5000")
+        test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:ok op_status:complete\" -t 5000", CrmExit.TIMEOUT)
         test.add_cmd("-c unregister_rsc -r test_rsc " + self.action_timeout +
                      "-l \"NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
 
@@ -965,7 +1041,7 @@ done
         test.add_cmd("-c exec -r \"test_rsc\" -a \"monitor\" -i \"100\" "+self.action_timeout+" -n "
                      "-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" ")
         # this will fail because the monitor notifications should only go to the original caller, which no longer exists.
-        test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" "+self.action_timeout)
+        test.add_expected_fail_cmd("-l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\" "+self.action_timeout, CrmExit.TIMEOUT)
         test.add_cmd("-c cancel -r \"test_rsc\" -a \"monitor\" -i \"100\" -t \"6000\" ")
         test.add_cmd("-c unregister_rsc -r \"test_rsc\" "+self.action_timeout+
                      "-l \"NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
@@ -1080,10 +1156,10 @@ done
             if test.executed == 0:
                 continue
 
-            if test.get_exitcode() != 0:
-                sys.exit(-1)
+            if test.get_exitcode() != CrmExit.OK:
+                sys.exit(CrmExit.ERROR)
 
-        sys.exit(0)
+        sys.exit(CrmExit.OK)
 
     def print_results(self):
         """ Print summary of results of executed tests """
@@ -1096,7 +1172,7 @@ done
             if test.executed == 0:
                 continue
 
-            if test.get_exitcode() != 0:
+            if test.get_exitcode() != CrmExit.OK:
                 failures = failures + 1
                 test.print_result("    ")
             else:

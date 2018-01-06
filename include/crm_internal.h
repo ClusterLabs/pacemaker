@@ -95,7 +95,7 @@ void crm_set_options(const char *short_options, const char *usage, struct crm_op
                      const char *app_desc);
 int crm_get_option(int argc, char **argv, int *index);
 int crm_get_option_long(int argc, char **argv, int *index, const char **longname);
-int crm_help(char cmd, int exit_code);
+crm_exit_t crm_help(char cmd, crm_exit_t exit_code);
 
 /* Cluster Option Processing */
 typedef struct pe_cluster_option_s {

@@ -51,7 +51,7 @@ attrd_shutdown(int nsig) {
     if ((mloop != NULL) && g_main_is_running(mloop)) {
         g_main_quit(mloop);
     } else {
-        crm_exit(pcmk_ok);
+        crm_exit(CRM_EX_OK);
     }
 }
 

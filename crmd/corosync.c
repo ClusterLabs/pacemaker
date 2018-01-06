@@ -95,11 +95,11 @@ static void
 crmd_cs_destroy(gpointer user_data)
 {
     if (is_not_set(fsa_input_register, R_HA_DISCONNECTED)) {
-        crm_err("connection terminated");
-        crmd_exit(ENOLINK);
+        crm_err("Corosync connection lost");
+        crmd_exit(CRM_EX_DISCONNECT);
 
     } else {
-        crm_info("connection closed");
+        crm_info("Corosync connection closed");
     }
 }
 

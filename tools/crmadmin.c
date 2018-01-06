@@ -45,7 +45,6 @@ GMainLoop *mainloop = NULL;
 crm_ipc_t *crmd_channel = NULL;
 char *admin_uuid = NULL;
 
-void usage(const char *cmd, int exit_status);
 gboolean do_init(void);
 int do_work(void);
 void crmadmin_ipc_connection_destroy(gpointer user_data);
@@ -87,7 +86,7 @@ char *dest_node = NULL;
 char *rsc_name = NULL;
 char *crm_option = NULL;
 
-int operation_status = 0;
+crm_exit_t exit_code = CRM_EX_OK;
 const char *sys_to = NULL;
 
 /* *INDENT-OFF* */
@@ -134,7 +133,7 @@ main(int argc, char **argv)
                     "Development tool for performing some crmd-specific commands."
                     "\n  Likely to be replaced by crm_node in the future");
     if (argc < 2) {
-        crm_help('?', EX_USAGE);
+        crm_help('?', CRM_EX_USAGE);
     }
 
     while (1) {
@@ -157,7 +156,7 @@ main(int argc, char **argv)
 
             case '$':
             case '?':
-                crm_help(flag, EX_OK);
+                crm_help(flag, CRM_EX_OK);
                 break;
             case 'D':
                 DO_WHOIS_DC = TRUE;
@@ -217,7 +216,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', EX_USAGE);
+        crm_help('?', CRM_EX_USAGE);
     }
 
     if (do_init()) {
@@ -237,15 +236,15 @@ main(int argc, char **argv)
 
         } else if (res < 0) {
             crm_err("No message to send");
-            operation_status = -1;
+            exit_code = CRM_EX_ERROR;
         }
     } else {
         crm_warn("Init failed, could not perform requested operations");
-        operation_status = -2;
+        exit_code = CRM_EX_UNAVAILABLE;
     }
 
     crm_trace("%s exiting normally", crm_system_name);
-    return operation_status;
+    return exit_code;
 }
 
 int
@@ -315,7 +314,7 @@ do_work(void)
             free_xml(output);
         }
         the_cib->cmds->signoff(the_cib);
-        crm_exit(rc);
+        crm_exit(crm_errno2exit(rc));
 
     } else if (DO_RESET) {
         /* tell dest_node to initiate the shutdown procedure
@@ -392,7 +391,7 @@ crmadmin_ipc_connection_destroy(gpointer user_data)
     if (mainloop) {
         g_main_quit(mainloop);
     } else {
-        crm_exit(ENOTCONN);
+        crm_exit(CRM_EX_DISCONNECT);
     }
 }
 
@@ -490,7 +489,7 @@ admin_msg_callback(const char *buffer, ssize_t length, gpointer userdata)
         if (BE_SILENT && dc != NULL) {
             fprintf(stderr, "%s\n", dc);
         }
-        crm_exit(pcmk_ok);
+        crm_exit(CRM_EX_OK);
     }
 
     free_xml(xml);
@@ -498,7 +497,7 @@ admin_msg_callback(const char *buffer, ssize_t length, gpointer userdata)
     if (received_responses >= expected_responses) {
         crm_trace("Received expected number (%d) of replies, exiting normally",
                    expected_responses);
-        crm_exit(pcmk_ok);
+        crm_exit(CRM_EX_OK);
     }
 
     message_timer_id = g_timeout_add(message_timeout_ms, admin_message_timeout, NULL);
@@ -511,7 +510,7 @@ admin_message_timeout(gpointer data)
     fprintf(stderr, "No messages received in %d seconds.. aborting\n",
             (int)message_timeout_ms / 1000);
     crm_err("No messages received in %d seconds", (int)message_timeout_ms / 1000);
-    operation_status = -3;
+    exit_code = CRM_EX_TIMEOUT;
     g_main_quit(mainloop);
     return FALSE;
 }

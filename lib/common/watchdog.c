@@ -105,7 +105,7 @@ pcmk_panic_local(void)
          * Of these, only crmd is likely to be initiating resets
          */
         do_crm_log_always(LOG_EMERG, "Signaling parent %d to panic", ppid);
-        crm_exit(pcmk_err_panic);
+        crm_exit(CRM_EX_PANIC);
         return;
 
     } else if (uid != 0) {
@@ -123,7 +123,7 @@ pcmk_panic_local(void)
             crm_perror(LOG_EMERG, "Cannot signal pacemakerd(%d) to panic", ppid);
         }
         /* The best we can do now is die */
-        crm_exit(pcmk_err_panic);
+        crm_exit(CRM_EX_PANIC);
         return;
     }
 
@@ -142,10 +142,10 @@ pcmk_panic_local(void)
 
     if(ppid > 1) {
         /* child daemon */
-        exit(pcmk_err_panic);
+        exit(CRM_EX_PANIC);
     } else {
         /* pacemakerd or orphan child */
-        exit(DAEMON_RESPAWN_STOP);
+        exit(CRM_EX_FATAL);
     }
 }
 
@@ -166,10 +166,10 @@ pcmk_panic_sbd(void)
 
     if(ppid > 1) {
         /* child daemon */
-        exit(pcmk_err_panic);
+        exit(CRM_EX_PANIC);
     } else {
         /* pacemakerd or orphan child */
-        exit(DAEMON_RESPAWN_STOP);
+        exit(CRM_EX_FATAL);
     }
 }
 
@@ -190,7 +190,7 @@ pcmk_panic(const char *origin)
         do_crm_log_always(LOG_EMERG,
                           "Shutting down instead of panicking the node: origin=%s, sbd=%d, parent=%d",
                           origin, sbd_pid, getppid());
-        crm_exit(DAEMON_RESPAWN_STOP);
+        crm_exit(CRM_EX_FATAL);
         return;
     }
 
@@ -280,7 +280,7 @@ check_sbd_timeout(const char *value)
         do_crm_log_always(LOG_EMERG,
                           "Shutting down: stonith-watchdog-timeout configured (%s) but SBD not active",
                           (value? value : "auto"));
-        crm_exit(DAEMON_RESPAWN_STOP);
+        crm_exit(CRM_EX_FATAL);
         return FALSE;
 
     } else {
@@ -290,7 +290,7 @@ check_sbd_timeout(const char *value)
             do_crm_log_always(LOG_EMERG,
                               "Shutting down: stonith-watchdog-timeout (%s) too short (must be >%ldms)",
                               value, sbd_timeout);
-            crm_exit(DAEMON_RESPAWN_STOP);
+            crm_exit(CRM_EX_FATAL);
             return FALSE;
         }
         crm_info("Watchdog configured with stonith-watchdog-timeout %s and SBD timeout %ldms",

@@ -197,7 +197,7 @@ inject_node_state(cib_t * cib_conn, const char *node, const char *uuid)
         crm_err("Detected multiple node_state entries for xpath=%s, bailing", xpath);
         crm_log_xml_warn(cib_object, "Duplicates");
         free(xpath);
-        crm_exit(ENOTUNIQ);
+        crm_exit(CRM_EX_SOFTWARE);
         return NULL; // not reached, but makes static analysis happy
     }
 

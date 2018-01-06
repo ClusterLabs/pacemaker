@@ -155,28 +155,28 @@ main(int argc, char **argv)
                 pwentry = getpwnam(CRM_DAEMON_USER);
                 CRM_CHECK(pwentry != NULL,
                           crm_perror(LOG_ERR, "Invalid uid (%s) specified", CRM_DAEMON_USER);
-                          return 100);
+                          return CRM_EX_FATAL);
 
                 rc = setgid(pwentry->pw_gid);
                 if (rc < 0) {
                     crm_perror(LOG_ERR, "Could not set group to %d", pwentry->pw_gid);
-                    return 100;
+                    return CRM_EX_FATAL;
                 }
 
                 rc = initgroups(CRM_DAEMON_GROUP, pwentry->pw_gid);
                 if (rc < 0) {
                     crm_perror(LOG_ERR, "Could not setup groups for user %d", pwentry->pw_uid);
-                    return 100;
+                    return CRM_EX_FATAL;
                 }
 
                 rc = setuid(pwentry->pw_uid);
                 if (rc < 0) {
                     crm_perror(LOG_ERR, "Could not set user to %d", pwentry->pw_uid);
-                    return 100;
+                    return CRM_EX_FATAL;
                 }
                 break;
             case '?':          /* Help message */
-                crm_help(flag, EX_OK);
+                crm_help(flag, CRM_EX_OK);
                 break;
             case 'w':
                 cib_writes_enabled = TRUE;
@@ -186,7 +186,7 @@ main(int argc, char **argv)
                 break;
             case 'm':
                 cib_metadata();
-                return 0;
+                return CRM_EX_OK;
             default:
                 ++argerr;
                 break;
@@ -194,7 +194,7 @@ main(int argc, char **argv)
     }
     if (argc - optind == 1 && safe_str_eq("metadata", argv[optind])) {
         cib_metadata();
-        return 0;
+        return CRM_EX_OK;
     }
 
     if (optind > argc) {
@@ -202,7 +202,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', EX_USAGE);
+        crm_help('?', CRM_EX_USAGE);
     }
 
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
@@ -217,19 +217,20 @@ main(int argc, char **argv)
         crm_err("Bad permissions on %s. Terminating", cib_root);
         fprintf(stderr, "ERROR: Bad permissions on %s. See logs for details\n", cib_root);
         fflush(stderr);
-        return 100;
+        return CRM_EX_FATAL;
     }
 
     /* read local config file */
-    rc = cib_init();
+    cib_init();
 
+    // This should not be reachable
     CRM_CHECK(crm_hash_table_size(client_connections) == 0,
               crm_warn("Not all clients gone at exit"));
     g_hash_table_foreach(client_connections, log_cib_client, NULL);
     cib_cleanup();
 
     crm_info("Done");
-    return rc;
+    return CRM_EX_OK;
 }
 
 void
@@ -291,7 +292,7 @@ cib_cs_destroy(gpointer user_data)
         crm_info("Corosync disconnection complete");
     } else {
         crm_err("Corosync connection lost!  Exiting.");
-        terminate_cib(__FUNCTION__, -1);
+        terminate_cib(__FUNCTION__, CRM_EX_DISCONNECT);
     }
 }
 #endif
@@ -321,7 +322,7 @@ cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const voi
                 && crm_hash_table_size(client_connections) == 0) {
 
                 crm_info("No more peers");
-                terminate_cib(__FUNCTION__, 1);
+                terminate_cib(__FUNCTION__, -1);
             }
             break;
     }
@@ -342,7 +343,7 @@ cib_init(void)
 
     if (startCib("cib.xml") == FALSE) {
         crm_crit("Cannot start CIB... terminating");
-        crm_exit(ENODATA);
+        crm_exit(CRM_EX_NOINPUT);
     }
 
     if (stand_alone == FALSE) {
@@ -352,7 +353,7 @@ cib_init(void)
 
         if (crm_cluster_connect(&crm_cluster) == FALSE) {
             crm_crit("Cannot sign in to the cluster... terminating");
-            crm_exit(DAEMON_RESPAWN_STOP);
+            crm_exit(CRM_EX_FATAL);
         }
         cib_our_uname = crm_cluster.uname;
 
@@ -376,12 +377,12 @@ cib_init(void)
     g_main_run(mainloop);
 
     /* If main loop returned, clean up and exit. We disconnect in case
-     * terminate_cib() was called with fast=1.
+     * terminate_cib() was called with fast=-1.
      */
     crm_cluster_disconnect(&crm_cluster);
     cib_ipc_servers_destroy(ipcs_ro, ipcs_rw, ipcs_shm);
 
-    return crm_exit(pcmk_ok);
+    return crm_exit(CRM_EX_OK);
 }
 
 static bool

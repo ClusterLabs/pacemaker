@@ -79,9 +79,11 @@ static const char *crm_app_description = NULL;
 static char *crm_short_options = NULL;
 static const char *crm_app_usage = NULL;
 
-int
-crm_exit(int rc)
+crm_exit_t
+crm_exit(crm_exit_t rc)
 {
+    CRM_CHECK((rc >= 0) && (rc <= 255), rc = CRM_EX_ERROR);
+
     mainloop_cleanup();
 
 #if HAVE_LIBXML2
@@ -95,12 +97,7 @@ crm_exit(int rc)
     free(crm_short_options);
     free(crm_system_name);
 
-    exit(ABS(rc)); /* Always exit with a positive value so that it can be passed to crm_error
-                    *
-                    * Otherwise the system wraps it around and people
-                    * have to jump through hoops figuring out what the
-                    * error was
-                    */
+    exit(rc);
     return rc;     /* Can never happen, but allows return crm_exit(rc)
                     * where "return rc" was used previously - which
                     * keeps compilers happy.
@@ -893,24 +890,24 @@ crm_make_daemon(const char *name, gboolean daemonize, const char *pidfile)
         pid = crm_read_pidfile(pidfile);
         crm_err("%s: already running [pid %ld in %s]", name, pid, pidfile);
         printf("%s: already running [pid %ld in %s]\n", name, pid, pidfile);
-        crm_exit(rc);
+        crm_exit(CRM_EX_ERROR);
     }
 
     pid = fork();
     if (pid < 0) {
         fprintf(stderr, "%s: could not start daemon\n", name);
         crm_perror(LOG_ERR, "fork");
-        crm_exit(EINVAL);
+        crm_exit(CRM_EX_OSERR);
 
     } else if (pid > 0) {
-        crm_exit(pcmk_ok);
+        crm_exit(CRM_EX_OK);
     }
 
     rc = crm_lock_pidfile(pidfile, name);
     if(rc < pcmk_ok) {
         crm_err("Could not lock '%s' for %s: %s (%d)", pidfile, name, pcmk_strerror(rc), rc);
         printf("Could not lock '%s' for %s: %s (%d)\n", pidfile, name, pcmk_strerror(rc), rc);
-        crm_exit(rc);
+        crm_exit(CRM_EX_ERROR);
     }
 
     umask(S_IWGRP | S_IWOTH | S_IROTH);
@@ -1083,10 +1080,10 @@ crm_get_option_long(int argc, char **argv, int *index, const char **longname)
                 break;
             case ':':
                 crm_trace("Missing argument");
-                crm_help('?', 1);
+                crm_help('?', CRM_EX_USAGE);
                 break;
             case '?':
-                crm_help('?', *index ? 0 : 1);
+                crm_help('?', (*index? CRM_EX_OK : CRM_EX_USAGE));
                 break;
         }
         return flag;
@@ -1100,8 +1097,8 @@ crm_get_option_long(int argc, char **argv, int *index, const char **longname)
     return -1;
 }
 
-int
-crm_help(char cmd, int exit_code)
+crm_exit_t
+crm_help(char cmd, crm_exit_t exit_code)
 {
     int i = 0;
     FILE *stream = (exit_code ? stderr : stdout);
@@ -1176,6 +1173,87 @@ crm_help(char cmd, int exit_code)
     return crm_exit(exit_code);
 }
 
+/*!
+ * \brief Map an errno to a similar exit status
+ *
+ * \param[in] errno  Error number to map
+ *
+ * \return Exit status corresponding to errno
+ */
+crm_exit_t
+crm_errno2exit(int rc)
+{
+    rc = abs(rc); // Convenience for functions that return -errno
+    if (rc == EOPNOTSUPP) {
+        rc = ENOTSUP; // Values are same on Linux, can't use both in case
+    }
+    switch (rc) {
+        case pcmk_ok:
+            return CRM_EX_OK;
+
+        case pcmk_err_no_quorum:
+            return CRM_EX_QUORUM;
+
+        case pcmk_err_old_data:
+            return CRM_EX_OLD;
+
+        case pcmk_err_schema_validation:
+        case pcmk_err_transform_failed:
+            return CRM_EX_CONFIG;
+
+        case EACCES:
+            return CRM_EX_INSUFFICIENT_PRIV;
+
+        case EBADF:
+        case EINVAL:
+        case EFAULT:
+        case ENOSYS:
+        case EOVERFLOW:
+            return CRM_EX_SOFTWARE;
+
+        case EBADMSG:
+        case EMSGSIZE:
+        case ENOMSG:
+        case ENOPROTOOPT:
+        case EPROTO:
+        case EPROTONOSUPPORT:
+        case EPROTOTYPE:
+            return CRM_EX_PROTOCOL;
+
+        case ECOMM:
+        case ENOMEM:
+            return CRM_EX_OSERR;
+
+        case ECONNABORTED:
+        case ECONNREFUSED:
+        case ECONNRESET:
+        case ENOTCONN:
+            return CRM_EX_DISCONNECT;
+
+        case EEXIST:
+            return CRM_EX_EXISTS;
+
+        case EIO:
+            return CRM_EX_IOERR;
+
+        case ENOTSUP:
+            return CRM_EX_UNIMPLEMENT_FEATURE;
+
+        case ENOTUNIQ:
+            return CRM_EX_MULTIPLE;
+
+        case ENXIO:
+            return CRM_EX_NOSUCH;
+
+        case ETIME:
+        case ETIMEDOUT:
+            return CRM_EX_TIMEOUT;
+
+        default:
+            return CRM_EX_ERROR;
+    }
+}
+
 void cib_ipc_servers_init(qb_ipcs_service_t **ipcs_ro,
         qb_ipcs_service_t **ipcs_rw,
         qb_ipcs_service_t **ipcs_shm,
@@ -1189,7 +1267,7 @@ void cib_ipc_servers_init(qb_ipcs_service_t **ipcs_ro,
     if (*ipcs_ro == NULL || *ipcs_rw == NULL || *ipcs_shm == NULL) {
         crm_err("Failed to create cib servers: exiting and inhibiting respawn.");
         crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
-        crm_exit(DAEMON_RESPAWN_STOP);
+        crm_exit(CRM_EX_FATAL);
     }
 }
 
@@ -1216,7 +1294,7 @@ attrd_ipc_server_init(qb_ipcs_service_t **ipcs, struct qb_ipcs_service_handlers 
     if (*ipcs == NULL) {
         crm_err("Failed to create attrd servers: exiting and inhibiting respawn.");
         crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
-        crm_exit(DAEMON_RESPAWN_STOP);
+        crm_exit(CRM_EX_FATAL);
     }
 }
 
@@ -1228,7 +1306,7 @@ stonith_ipc_server_init(qb_ipcs_service_t **ipcs, struct qb_ipcs_service_handler
     if (*ipcs == NULL) {
         crm_err("Failed to create stonith-ng servers: exiting and inhibiting respawn.");
         crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
-        crm_exit(DAEMON_RESPAWN_STOP);
+        crm_exit(CRM_EX_FATAL);
     }
 }
 
@@ -1358,7 +1436,7 @@ find_library_function(void **handle, const char *lib, const char *fn, gboolean f
     if (!(*handle)) {
         crm_err("%sCould not open %s: %s", fatal ? "Fatal: " : "", lib, dlerror());
         if (fatal) {
-            crm_exit(DAEMON_RESPAWN_STOP);
+            crm_exit(CRM_EX_FATAL);
         }
         return NULL;
     }
@@ -1368,7 +1446,7 @@ find_library_function(void **handle, const char *lib, const char *fn, gboolean f
         error = dlerror();
         crm_err("%sCould not find %s in %s: %s", fatal ? "Fatal: " : "", fn, lib, error);
         if (fatal) {
-            crm_exit(DAEMON_RESPAWN_STOP);
+            crm_exit(CRM_EX_FATAL);
         }
     }
 
