@@ -2,6 +2,7 @@
     compress
     dateext
     weekly
+    su hacluster haclient
     rotate 99
     maxage 365
     notifempty
