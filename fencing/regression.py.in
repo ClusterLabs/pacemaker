@@ -868,9 +868,9 @@ class Tests(object):
             test = self.new_test("%s_dynamic_list_query" % test_type["prefix"],
                                  "Verify dynamic list of fencing devices can be retrieved.",
                                  test_type["use_cpg"])
-            test.add_cmd("stonith_admin", "-R true1  -a fence_dummy -o mock_dynamic_hosts=fake_port_1")
-            test.add_cmd("stonith_admin", "-R true2  -a fence_dummy -o mock_dynamic_hosts=fake_port_1")
-            test.add_cmd("stonith_admin", "-R true3  -a fence_dummy -o mock_dynamic_hosts=fake_port_1")
+            test.add_cmd("stonith_admin", "-R true1 -a fence_dummy -o mode=pass -o mock_dynamic_hosts=fake_port_1")
+            test.add_cmd("stonith_admin", "-R true2 -a fence_dummy -o mode=pass -o mock_dynamic_hosts=fake_port_1")
+            test.add_cmd("stonith_admin", "-R true3 -a fence_dummy -o mode=pass -o mock_dynamic_hosts=fake_port_1")
 
             test.add_cmd_check_stdout("stonith_admin", "-l fake_port_1", "3 devices found")
 
@@ -880,9 +880,9 @@ class Tests(object):
             test = self.new_test("%s_fence_dynamic_list_query" % test_type["prefix"],
                                  "Verify dynamic list of fencing devices can be retrieved.",
                                  test_type["use_cpg"])
-            test.add_cmd("stonith_admin", "-R true1  -a fence_dummy -o mock_dynamic_hosts=fake_port_1")
-            test.add_cmd("stonith_admin", "-R true2  -a fence_dummy -o mock_dynamic_hosts=fake_port_1")
-            test.add_cmd("stonith_admin", "-R true3  -a fence_dummy -o mock_dynamic_hosts=fake_port_1")
+            test.add_cmd("stonith_admin", "-R true1 -a fence_dummy -o mode=pass -o mock_dynamic_hosts=fake_port_1")
+            test.add_cmd("stonith_admin", "-R true2 -a fence_dummy -o mode=pass -o mock_dynamic_hosts=fake_port_1")
+            test.add_cmd("stonith_admin", "-R true3 -a fence_dummy -o mode=pass -o mock_dynamic_hosts=fake_port_1")
 
             test.add_cmd("stonith_admin", "-F fake_port_1 -t 5 -V")
 
