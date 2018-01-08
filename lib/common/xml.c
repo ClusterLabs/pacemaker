@@ -2848,8 +2848,9 @@ decompress_file(const char *filename)
     }
 
     bz_file = BZ2_bzReadOpen(&rc, input, 0, 0, NULL, 0);
-
     if (rc != BZ_OK) {
+        crm_err("Could not prepare to read compressed %s: %s "
+                CRM_XS " bzerror=%d", filename, bz2_strerror(rc), rc);
         BZ2_bzReadClose(&rc, bz_file);
         return NULL;
     }
@@ -2869,7 +2870,8 @@ decompress_file(const char *filename)
     buffer[length] = '\0';
 
     if (rc != BZ_STREAM_END) {
-        crm_err("Couldn't read compressed xml from file");
+        crm_err("Could not read compressed %s: %s "
+                CRM_XS " bzerror=%d", filename, bz2_strerror(rc), rc);
         free(buffer);
         buffer = NULL;
     }
@@ -2878,7 +2880,8 @@ decompress_file(const char *filename)
     fclose(input);
 
 #else
-    crm_err("Cannot read compressed files:" " bzlib was not available at compile time");
+    crm_err("Could not read compressed %s: not built with bzlib support",
+            filename);
 #endif
     return buffer;
 }
@@ -2946,7 +2949,8 @@ filename2xml(const char *filename)
     } else {
         char *input = decompress_file(filename);
 
-        output = xmlCtxtReadDoc(ctxt, (const xmlChar *)input, NULL, NULL, xml_options);
+        output = xmlCtxtReadDoc(ctxt, (const xmlChar *)input, NULL, NULL,
+                                xml_options);
         free(input);
     }
 
@@ -3073,21 +3077,23 @@ write_xml_stream(xmlNode * xml_node, const char *filename, FILE * stream, gboole
 
         bz_file = BZ2_bzWriteOpen(&rc, stream, 5, 0, 30);
         if (rc != BZ_OK) {
-            crm_warn("Not compressing %s: could not prepare file stream "
-                     CRM_XS " bzerror=%d", filename, rc);
+            crm_warn("Not compressing %s: could not prepare file stream: %s "
+                     CRM_XS " bzerror=%d", filename, bz2_strerror(rc), rc);
         } else {
             BZ2_bzWrite(&rc, bz_file, buffer, strlen(buffer));
             if (rc != BZ_OK) {
-                crm_warn("Not compressing %s: could not compress data "
-                         CRM_XS " bzerror=%d errno=%d", filename, rc, errno);
+                crm_warn("Not compressing %s: could not compress data: %s "
+                         CRM_XS " bzerror=%d errno=%d",
+                         filename, bz2_strerror(rc), rc, errno);
             }
         }
 
         if (rc == BZ_OK) {
             BZ2_bzWriteClose(&rc, bz_file, 0, &in, &out);
             if (rc != BZ_OK) {
-                crm_warn("Not compressing %s: could not write compressed data "
-                         CRM_XS " bzerror=%d errno=%d", filename, rc, errno);
+                crm_warn("Not compressing %s: could not write compressed data: %s "
+                         CRM_XS " bzerror=%d errno=%d",
+                         filename, bz2_strerror(rc), rc, errno);
                 out = -1; // retry without compression
             } else {
                 res = (int) out;
