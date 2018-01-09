@@ -153,7 +153,6 @@ class crm_corosync(BasePatterns):
             r"input=I_FINALIZED cause=C_TIMER_POPPED",
             r"input=I_ERROR",
             r"(pacemakerd|lrmd|crmd):.*, exiting",
-            r"(WARN|warn).*Ignoring HA message.*vote.*not in our membership list",
             r"pengine.*Attempting recovery of resource",
             r"is taking more than 2x its timeout",
             r"Confirm not received from",
@@ -256,8 +255,7 @@ class crm_corosync(BasePatterns):
 
         self.components["cib"] = [
                     "State transition .* S_RECOVERY",
-                    "Respawning .* crmd",
-                    "Respawning .* attrd",
+                    r"Respawning failed child process: (attrd|crmd)",
                     "Connection to cib_.* failed",
                     "Connection to cib_.* closed",
                     r"crmd.*:.*Connection to the CIB terminated...",
@@ -272,7 +270,7 @@ class crm_corosync(BasePatterns):
         self.components["lrmd"] = [
                     "State transition .* S_RECOVERY",
                     "LRM Connection failed",
-                    "Respawning .* crmd",
+                    r"Respawning failed child process: crmd",
                     "Connection to lrmd failed",
                     "Connection to lrmd.* closed",
                     "crmd.*I_ERROR.*lrm_connection_destroy",
@@ -296,7 +294,7 @@ class crm_corosync(BasePatterns):
 
         self.components["pengine"] = [
                     "State transition .* S_RECOVERY",
-                    "Respawning .* crmd",
+                    r"Respawning failed child process: crmd",
                     r"crmd\[[0-9]+\] exited with status 1 \(",
                     "Connection to pengine failed",
                     "Connection to pengine.* closed",

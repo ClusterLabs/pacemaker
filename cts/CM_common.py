@@ -339,19 +339,12 @@ class crm_common(ClusterManager):
 
         stonith_ignore.extend(common_ignore)
 
-        ccm_ignore = [
-            "(ERROR|error): get_channel_token: No reply message - disconnected"
-            ]
-
-        ccm_ignore.extend(common_ignore)
-
         ccm = Process(self, "ccm", triggersreboot=self.fastfail, pats = [
                     "State transition .* S_RECOVERY",
-                    "CCM connection appears to have failed",
                     "crmd.*Action A_RECOVER .* not supported",
                     r"crmd.*: Input I_TERMINATE .*from do_recover",
                     r"crmd.*: Could not recover from internal error",
-                    "crmd.*I_ERROR.*(ccm_dispatch|crmd_cib_connection_destroy)",
+                    "crmd.*I_ERROR.*crmd_cib_connection_destroy",
                     # these status numbers are likely wrong now
                     r"crmd.*exited with status 2",
                     r"attrd.*exited with status 1",
@@ -367,7 +360,7 @@ class crm_common(ClusterManager):
 #                    "Processing I_NODE_JOIN:.* cause=C_HA_MESSAGE",
 #                    "State transition S_.* -> S_INTEGRATION.*input=I_NODE_JOIN",
                     "State transition S_STARTING -> S_PENDING",
-                    ], badnews_ignore = ccm_ignore)
+                    ], badnews_ignore = common_ignore)
 
         cib = Process(self, "cib", triggersreboot=self.fastfail, pats = [
                     "State transition .* S_RECOVERY",
@@ -421,26 +414,17 @@ class crm_common(ClusterManager):
             ccm.pats.extend([
                 # these status numbers are likely wrong now
                 r"attrd.*exited with status 1",
-                "(ERROR|error): Respawning client .*attrd",
                 r"cib.*exited with status 2",
-                "(ERROR|error): Respawning client .*cib",
                 r"crmd.*exited with status 2",
-                "(ERROR|error): Respawning client .*crmd" 
                 ])
             cib.pats.extend([
                 # these status numbers are likely wrong now
                 r"attrd.*exited with status 1",
-                "(ERROR|error): Respawning client .*attrd",
                 r"crmd.*exited with status 2",
-                "(ERROR|error): Respawning client .*crmd" 
                 ])
             lrmd.pats.extend([
                 # these status numbers are likely wrong now
                 r"crmd.*exited with status 2",
-                "(ERROR|error): Respawning client .*crmd" 
-                ])
-            pengine.pats.extend([
-                "(ERROR|error): Respawning client .*crmd" 
                 ])
 
         complist.append(ccm)
