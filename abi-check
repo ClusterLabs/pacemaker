@@ -1,6 +1,9 @@
 #!/bin/bash
-UPLOAD=0
 
+# toplevel rsync destination for www targets (without trailing slash)
+: ${RSYNC_DEST:=root@www.clusterlabs.org:/var/www/html}
+
+UPLOAD=0
 if [ $1 = "-u" ]; then
     UPLOAD=1; shift
 fi
@@ -92,6 +95,6 @@ if [ $# -eq 2 ]; then
         -d2 abi_dumps/${PACKAGE}/${PACKAGE}_${V2}.abi.tar.gz
 
     if [ $UPLOAD = 1 -a -d compat_reports/pacemaker/${V1}_to_${V2} ]; then
-        rsync -azxlSD --progress compat_reports/pacemaker/${V1}_to_${V2} root@www.clusterlabs.org:/var/www/html/abi/pacemaker/
+        rsync -azxlSD --progress compat_reports/pacemaker/${V1}_to_${V2} ${RSYNC_DEST}/${PACKAGE}/abi/
     fi
 fi

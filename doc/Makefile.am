@@ -29,7 +29,7 @@ docbook		= Clusters_from_Scratch \
 doc_DATA	= $(ascii) $(generated_docs)
 
 # toplevel rsync destination for www targets (without trailing slash)
-RSYNC_DEST      ?= root@www.clusterlabs.org:/var/www/html/
+RSYNC_DEST      ?= root@www.clusterlabs.org:/var/www/html
 
 # recursive, preserve symlinks/permissions/times, verbose, compress,
 # don't cross filesystems, sparse, show progress
@@ -259,7 +259,7 @@ pdf:
 
 www: clean-local $(generated_docs) $(ascii)
 	make www-cli
-	rsync $(RSYNC_OPTS) $(generated_docs) $(ascii) $(asciiman) "$(RSYNC_DEST)/doc/"
+	rsync $(RSYNC_OPTS) $(generated_docs) $(ascii) $(asciiman) "$(RSYNC_DEST)/$(PACKAGE)/doc/"
 
 www-pcs: www-cli
 
@@ -278,7 +278,7 @@ if BUILD_DOCBOOK
 			mv $$book/publish/$$lang/Pacemaker/$(PACKAGE_SERIES)-$(ASCIIDOC_CLI_TYPE)/epub/$$book/Pacemaker-1.1{-$(ASCIIDOC_CLI_TYPE),}-$$book-$$lang.epub;	\
 			mv $$book/publish/$$lang/Pacemaker/$(PACKAGE_SERIES)-$(ASCIIDOC_CLI_TYPE)/pdf/$$book/Pacemaker-1.1{-$(ASCIIDOC_CLI_TYPE),}-$$book-$$lang.pdf;	\
 		done;											\
-		rsync $(RSYNC_OPTS) $$book/publish/* "$(RSYNC_DEST)/doc/";				\
+		rsync $(RSYNC_OPTS) $$book/publish/* "$(RSYNC_DEST)/$(PACKAGE)/doc/";				\
 		sed -i.sed 's@version:.*@version: $(PACKAGE_SERIES)@' $$book/publican.cfg;		\
 	done
 endif
