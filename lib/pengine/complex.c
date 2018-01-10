@@ -555,6 +555,8 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     if (safe_str_eq(value, "restart")) {
         (*rsc)->restart_type = pe_restart_restart;
         pe_rsc_trace((*rsc), "\tDependency restart handling: restart");
+        pe_warn_once(pe_wo_restart_type,
+                     "Support for restart-type is deprecated and will be removed in a future release");
 
     } else {
         (*rsc)->restart_type = pe_restart_ignore;
