@@ -202,6 +202,9 @@
               <ref name="attribute-roles"/>
             </attribute>
           </optional>
+          <optional>
+            <attribute name="rsc-instance"><data type="integer"/></attribute>
+          </optional>
         </group>
       </choice>
       <attribute name="ticket"><text/></attribute>
