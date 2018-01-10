@@ -16,7 +16,9 @@ Additionally, this document is NOT a step-by-step how-to guide for
 configuring a specific clustering scenario.
 
 Although such guides exist,
-footnote:[For example, see the http://www.clusterlabs.org/doc/[Clusters from Scratch] guide.]
+footnote:[
+For example, see https://www.clusterlabs.org/pacemaker/doc/[Clusters from Scratch]
+]
 the purpose of this document is to provide an understanding of the building
 blocks that can be used to construct any type of Pacemaker cluster.
 
