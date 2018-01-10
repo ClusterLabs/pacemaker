@@ -513,7 +513,7 @@ add_cib_object(xmlNode * parent, xmlNode * new_obj)
         ;                       /* do nothing */
 
     } else if (equiv_node != NULL) {
-        result = -ENOTUNIQ;
+        result = -EEXIST;
 
     } else {
         result = update_cib_object(parent, new_obj);

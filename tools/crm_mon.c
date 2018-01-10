@@ -51,7 +51,7 @@
 
 extern void cleanup_alloc_calculations(pe_working_set_t * data_set);
 
-void clean_up(int rc);
+static void clean_up(crm_exit_t exit_code);
 void crm_diff_update(const char *event, xmlNode * msg);
 gboolean mon_refresh_display(gpointer user_data);
 int cib_connect(gboolean full);
@@ -136,8 +136,7 @@ long last_refresh = 0;
 crm_trigger_t *refresh_trigger = NULL;
 
 /* Define exit codes for monitoring-compatible output */
-#define MON_STATUS_OK   (0)
-#define MON_STATUS_WARN (1)
+#define MON_STATUS_WARN CRM_EX_ERROR
 
 /* Convenience macro for prettifying output (e.g. "node" vs "nodes") */
 #define s_if_plural(i) (((i) == 1)? "" : "s")
@@ -223,7 +222,7 @@ mon_cib_connection_destroy(gpointer user_data)
 static void
 mon_shutdown(int nsig)
 {
-    clean_up(EX_OK);
+    clean_up(CRM_EX_OK);
 }
 
 #if ON_DARWIN
@@ -322,7 +321,7 @@ cib_connect(gboolean full)
                 if (output_format == mon_output_console) {
                     sleep(2);
                 }
-                clean_up(-rc);
+                clean_up(crm_errno2exit(rc));
             }
         }
     }
@@ -509,7 +508,6 @@ main(int argc, char **argv)
 {
     int flag;
     int argerr = 0;
-    int exit_code = 0;
     int option_index = 0;
 
     pid_file = strdup("/tmp/ClusterMon.pid");
@@ -590,20 +588,20 @@ main(int argc, char **argv)
             case 'p':
                 free(pid_file);
                 if(optarg == NULL) {
-                    return crm_help(flag, EX_USAGE);
+                    crm_help(flag, CRM_EX_USAGE);
                 }
                 pid_file = strdup(optarg);
                 break;
             case 'x':
                 if(optarg == NULL) {
-                    return crm_help(flag, EX_USAGE);
+                    crm_help(flag, CRM_EX_USAGE);
                 }
                 xml_file = strdup(optarg);
                 one_shot = TRUE;
                 break;
             case 'h':
                 if(optarg == NULL) {
-                    return crm_help(flag, EX_USAGE);
+                    crm_help(flag, CRM_EX_USAGE);
                 }
                 argerr += (output_format != mon_output_console);
                 output_format = mon_output_html;
@@ -642,7 +640,7 @@ main(int argc, char **argv)
                 break;
             case '$':
             case '?':
-                return crm_help(flag, EX_OK);
+                crm_help(flag, CRM_EX_OK);
                 break;
             default:
                 printf("Argument code 0%o (%c) is not (?yet?) supported\n", flag, flag);
@@ -670,9 +668,9 @@ main(int argc, char **argv)
         if (output_format == mon_output_cgi) {
             fprintf(stdout, "Content-Type: text/plain\n"
                             "Status: 500\n\n");
-            return EX_USAGE;
+            return CRM_EX_USAGE;
         }
-        return crm_help('?', EX_USAGE);
+        crm_help('?', CRM_EX_USAGE);
     }
 
     /* XML output always prints everything */
@@ -696,7 +694,7 @@ main(int argc, char **argv)
             && !external_agent) {
             printf
                 ("Looks like you forgot to specify one or more of: --as-html, --as-xml, --external-agent\n");
-            return crm_help('?', EX_USAGE);
+            crm_help('?', CRM_EX_USAGE);
         }
 
         crm_make_daemon(crm_system_name, TRUE, pid_file);
@@ -719,22 +717,24 @@ main(int argc, char **argv)
     if (xml_file != NULL) {
         current_cib = filename2xml(xml_file);
         mon_refresh_display(NULL);
-        return exit_code;
+        return CRM_EX_OK;
     }
 
     if (current_cib == NULL) {
+        int rc = pcmk_ok;
+
         cib = cib_new();
 
         do {
             if (!one_shot) {
                 print_as("Attempting connection to the cluster...\n");
             }
-            exit_code = cib_connect(!one_shot);
+            rc = cib_connect(!one_shot);
 
             if (one_shot) {
                 break;
 
-            } else if (exit_code != pcmk_ok) {
+            } else if (rc != pcmk_ok) {
                 sleep(reconnect_msec / 1000);
 #if CURSES_ENABLED
                 if (output_format == mon_output_console) {
@@ -744,24 +744,24 @@ main(int argc, char **argv)
 #endif
             }
 
-        } while (exit_code == -ENOTCONN);
+        } while (rc == -ENOTCONN);
 
-        if (exit_code != pcmk_ok) {
+        if (rc != pcmk_ok) {
             if (output_format == mon_output_monitor) {
-                printf("CLUSTER WARN: Connection to cluster failed: %s\n", pcmk_strerror(exit_code));
+                printf("CLUSTER WARN: Connection to cluster failed: %s\n", pcmk_strerror(rc));
                 clean_up(MON_STATUS_WARN);
             } else {
-                print_as("\nConnection to cluster failed: %s\n", pcmk_strerror(exit_code));
+                print_as("\nConnection to cluster failed: %s\n", pcmk_strerror(rc));
             }
             if (output_format == mon_output_console) {
                 sleep(2);
             }
-            clean_up(-exit_code);
+            clean_up(crm_errno2exit(rc));
         }
     }
 
     if (one_shot) {
-        return exit_code;
+        return CRM_EX_OK;
     }
 
     mainloop = g_main_new(FALSE);
@@ -784,8 +784,8 @@ main(int argc, char **argv)
 
     crm_info("Exiting %s", crm_system_name);
 
-    clean_up(0);
-    return 0;                   /* never reached */
+    clean_up(CRM_EX_OK);
+    return CRM_EX_OK; // Should never be reached
 }
 
 #define mon_warn(fmt...) do {			\
@@ -3292,7 +3292,7 @@ send_custom_trap(const char *node, const char *rsc, const char *task, int target
     if (pid == 0) {
         /* crm_debug("notification: I am the child. Executing the nofitication program."); */
         execl(external_agent, external_agent, NULL);
-        exit(EXIT_FAILURE);
+        exit(CRM_EX_ERROR);
     }
 
     crm_trace("Finished running custom notification program '%s'.", external_agent);
@@ -3647,7 +3647,7 @@ mon_refresh_display(gpointer user_data)
         if (output_format == mon_output_console) {
             sleep(2);
         }
-        clean_up(EX_USAGE);
+        clean_up(CRM_EX_CONFIG);
         return FALSE;
     }
 
@@ -3668,7 +3668,7 @@ mon_refresh_display(gpointer user_data)
         case mon_output_cgi:
             if (print_html_status(&data_set, output_filename) != 0) {
                 fprintf(stderr, "Critical: Unable to output html file\n");
-                clean_up(EX_USAGE);
+                clean_up(CRM_EX_CANTCREAT);
             }
             break;
 
@@ -3712,8 +3712,8 @@ mon_st_callback(stonith_t * st, stonith_event_t * e)
 /*
  * De-init ncurses, signoff from the CIB and deallocate memory.
  */
-void
-clean_up(int rc)
+static void
+clean_up(crm_exit_t exit_code)
 {
 #if CURSES_ENABLED
     if (output_format == mon_output_console) {
@@ -3734,8 +3734,5 @@ clean_up(int rc)
     free(xml_file);
     free(pid_file);
 
-    if (rc >= 0) {
-        crm_exit(rc);
-    }
-    return;
+    crm_exit(exit_code);
 }

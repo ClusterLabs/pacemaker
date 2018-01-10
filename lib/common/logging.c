@@ -1191,6 +1191,95 @@ pcmk_strerror(int rc)
 }
 
 const char *
+crm_exit_name(crm_exit_t exit_code)
+{
+    switch (exit_code) {
+        case CRM_EX_OK: return "CRM_EX_OK";
+        case CRM_EX_ERROR: return "CRM_EX_ERROR";
+        case CRM_EX_INVALID_PARAM: return "CRM_EX_INVALID_PARAM";
+        case CRM_EX_UNIMPLEMENT_FEATURE: return "CRM_EX_UNIMPLEMENT_FEATURE";
+        case CRM_EX_INSUFFICIENT_PRIV: return "CRM_EX_INSUFFICIENT_PRIV";
+        case CRM_EX_NOT_INSTALLED: return "CRM_EX_NOT_INSTALLED";
+        case CRM_EX_NOT_CONFIGURED: return "CRM_EX_NOT_CONFIGURED";
+        case CRM_EX_NOT_RUNNING: return "CRM_EX_NOT_RUNNING";
+        case CRM_EX_USAGE: return "CRM_EX_USAGE";
+        case CRM_EX_DATAERR: return "CRM_EX_DATAERR";
+        case CRM_EX_NOINPUT: return "CRM_EX_NOINPUT";
+        case CRM_EX_NOUSER: return "CRM_EX_NOUSER";
+        case CRM_EX_NOHOST: return "CRM_EX_NOHOST";
+        case CRM_EX_UNAVAILABLE: return "CRM_EX_UNAVAILABLE";
+        case CRM_EX_SOFTWARE: return "CRM_EX_SOFTWARE";
+        case CRM_EX_OSERR: return "CRM_EX_OSERR";
+        case CRM_EX_OSFILE: return "CRM_EX_OSFILE";
+        case CRM_EX_CANTCREAT: return "CRM_EX_CANTCREAT";
+        case CRM_EX_IOERR: return "CRM_EX_IOERR";
+        case CRM_EX_TEMPFAIL: return "CRM_EX_TEMPFAIL";
+        case CRM_EX_PROTOCOL: return "CRM_EX_PROTOCOL";
+        case CRM_EX_NOPERM: return "CRM_EX_NOPERM";
+        case CRM_EX_CONFIG: return "CRM_EX_CONFIG";
+        case CRM_EX_FATAL: return "CRM_EX_FATAL";
+        case CRM_EX_PANIC: return "CRM_EX_PANIC";
+        case CRM_EX_DISCONNECT: return "CRM_EX_DISCONNECT";
+        case CRM_EX_DIGEST: return "CRM_EX_DIGEST";
+        case CRM_EX_NOSUCH: return "CRM_EX_NOSUCH";
+        case CRM_EX_QUORUM: return "CRM_EX_QUORUM";
+        case CRM_EX_UNSAFE: return "CRM_EX_UNSAFE";
+        case CRM_EX_EXISTS: return "CRM_EX_EXISTS";
+        case CRM_EX_MULTIPLE: return "CRM_EX_MULTIPLE";
+        case CRM_EX_OLD: return "CRM_EX_OLD";
+        case CRM_EX_TIMEOUT: return "CRM_EX_TIMEOUT";
+        case CRM_EX_MAX: return "CRM_EX_UNKNOWN";
+    }
+    return "CRM_EX_UNKNOWN";
+}
+
+const char *
+crm_exit_str(crm_exit_t exit_code)
+{
+    switch (exit_code) {
+        case CRM_EX_OK: return "OK";
+        case CRM_EX_ERROR: return "Error occurred";
+        case CRM_EX_INVALID_PARAM: return "Invalid parameter";
+        case CRM_EX_UNIMPLEMENT_FEATURE: return "Unimplemented";
+        case CRM_EX_INSUFFICIENT_PRIV: return "Insufficient privileges";
+        case CRM_EX_NOT_INSTALLED: return "Not installed";
+        case CRM_EX_NOT_CONFIGURED: return "Not configured";
+        case CRM_EX_NOT_RUNNING: return "Not running";
+        case CRM_EX_USAGE: return "Incorrect usage";
+        case CRM_EX_DATAERR: return "Invalid data given";
+        case CRM_EX_NOINPUT: return "Input file not available";
+        case CRM_EX_NOUSER: return "User does not exist";
+        case CRM_EX_NOHOST: return "Host does not exist";
+        case CRM_EX_UNAVAILABLE: return "Necessary service unavailable";
+        case CRM_EX_SOFTWARE: return "Internal software bug";
+        case CRM_EX_OSERR: return "Operating system error occurred";
+        case CRM_EX_OSFILE: return "System file not available";
+        case CRM_EX_CANTCREAT: return "Cannot create output file";
+        case CRM_EX_IOERR: return "I/O error occurred";
+        case CRM_EX_TEMPFAIL: return "Temporary failure, try again";
+        case CRM_EX_PROTOCOL: return "Protocol violated";
+        case CRM_EX_NOPERM: return "Insufficient privileges";
+        case CRM_EX_CONFIG: return "Invalid configuration";
+        case CRM_EX_FATAL: return "Fatal error occurred, will not respawn";
+        case CRM_EX_PANIC: return "System panic required";
+        case CRM_EX_DISCONNECT: return "Not connected";
+        case CRM_EX_DIGEST: return "Digest mismatch";
+        case CRM_EX_NOSUCH: return "No such object";
+        case CRM_EX_QUORUM: return "Quorum required";
+        case CRM_EX_UNSAFE: return "Operation not safe";
+        case CRM_EX_EXISTS: return "Requested item already exists";
+        case CRM_EX_MULTIPLE: return "Multiple items match request";
+        case CRM_EX_OLD: return "Update was older than existing configuration";
+        case CRM_EX_TIMEOUT: return "Timeout occurred";
+        case CRM_EX_MAX: return "Error occurred";
+    }
+    if (exit_code > 128) {
+        return "Interrupted by signal";
+    }
+    return "Unknown exit status";
+}
+
+const char *
 bz2_strerror(int rc)
 {
     /* http://www.bzip.org/1.0.3/html/err-handling.html */

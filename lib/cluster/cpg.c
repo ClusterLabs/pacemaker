@@ -291,7 +291,8 @@ pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void 
         rc = BZ2_bzBuffToBuffDecompress(uncompressed, &new_size, msg->data, msg->compressed_size, 1, 0);
 
         if (rc != BZ_OK) {
-            crm_err("Decompression failed: %d", rc);
+            crm_err("Decompression failed: %s " CRM_XS " bzerror=%d",
+                    bz2_strerror(rc), rc);
             free(uncompressed);
             goto badmsg;
         }

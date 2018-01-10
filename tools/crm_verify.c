@@ -38,7 +38,6 @@
 
 gboolean USE_LIVE_CIB = FALSE;
 char *cib_save = NULL;
-void usage(const char *cmd, int exit_status);
 extern gboolean stage0(pe_working_set_t * data_set);
 extern void cleanup_alloc_calculations(pe_working_set_t * data_set);
 extern xmlNode *do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, crm_time_t * now);
@@ -124,7 +123,7 @@ main(int argc, char **argv)
                 break;
             case '$':
             case '?':
-                crm_help(flag, EX_OK);
+                crm_help(flag, CRM_EX_OK);
                 break;
             default:
                 fprintf(stderr, "Option -%c is not yet supported\n", flag);
@@ -147,7 +146,7 @@ main(int argc, char **argv)
 
     if (argerr) {
         crm_err("%d errors in option parsing", argerr);
-        crm_help(flag, EX_USAGE);
+        crm_help(flag, CRM_EX_USAGE);
     }
 
     crm_info("=#=#=#=#= Getting XML =#=#=#=#=");

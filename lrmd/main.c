@@ -299,7 +299,7 @@ lrmd_exit(gpointer data)
         lrmd_drain_alerts(g_main_loop_get_context(mainloop));
     }
 
-    crm_exit(pcmk_ok);
+    crm_exit(CRM_EX_OK);
     return FALSE;
 }
 
@@ -400,7 +400,7 @@ static pid_t main_pid = 0;
 static void
 sigdone(void)
 {
-    exit(0);
+    exit(CRM_EX_OK);
 }
 
 static void
@@ -420,7 +420,7 @@ sigreap(void)
             if (WIFEXITED(status)) {
                 exit(WEXITSTATUS(status));
             }
-            exit(1);
+            exit(CRM_EX_ERROR);
         }
 
     } while (pid > 0);
@@ -563,10 +563,10 @@ main(int argc, char **argv, char **envp)
                 break;
             case '?':
             case '$':
-                crm_help(flag, EX_OK);
+                crm_help(flag, CRM_EX_OK);
                 break;
             default:
-                crm_help('?', EX_USAGE);
+                crm_help('?', CRM_EX_USAGE);
                 break;
         }
     }
@@ -605,13 +605,13 @@ main(int argc, char **argv, char **envp)
     ipcs = mainloop_add_ipc_server(CRM_SYSTEM_LRMD, QB_IPC_SHM, &lrmd_ipc_callbacks);
     if (ipcs == NULL) {
         crm_err("Failed to create IPC server: shutting down and inhibiting respawn");
-        crm_exit(DAEMON_RESPAWN_STOP);
+        crm_exit(CRM_EX_FATAL);
     }
 
 #ifdef ENABLE_PCMK_REMOTE
     if (lrmd_init_remote_tls_server() < 0) {
         crm_err("Failed to create TLS listener: shutting down and staying down");
-        crm_exit(DAEMON_RESPAWN_STOP);
+        crm_exit(CRM_EX_FATAL);
     }
     ipc_proxy_init();
 #endif
@@ -623,5 +623,5 @@ main(int argc, char **argv, char **envp)
 
     /* should never get here */
     lrmd_exit(NULL);
-    return pcmk_ok;
+    return CRM_EX_OK;
 }

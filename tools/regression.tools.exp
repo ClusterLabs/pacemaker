@@ -57,7 +57,7 @@ The supplied command is considered dangerous.  To prevent accidental destruction
   </configuration>
   <status/>
 </cib>
-=#=#=#= End test: Require --force for CIB erasure - Invalid argument (22) =#=#=#=
+=#=#=#= End test: Require --force for CIB erasure - Operation not safe (107) =#=#=#=
 * Passed: cibadmin       - Require --force for CIB erasure
 =#=#=#= Begin test: Allow CIB erasure with --force =#=#=#=
 =#=#=#= Current cib after: Allow CIB erasure with --force =#=#=#=
@@ -172,16 +172,16 @@ The supplied command is considered dangerous.  To prevent accidental destruction
 </cib>
 =#=#=#= End test: Delete nvpair - OK (0) =#=#=#=
 * Passed: cibadmin       - Delete nvpair
-=#=#=#= Begin test: Create operaton should fail =#=#=#=
-Call failed: Name not unique on network
+=#=#=#= Begin test: Create operation should fail =#=#=#=
+Call failed: File exists
 <failed>
-  <failed_update id="cib-bootstrap-options" object_type="cluster_property_set" operation="cib_create" reason="Name not unique on network">
+  <failed_update id="cib-bootstrap-options" object_type="cluster_property_set" operation="cib_create" reason="File exists">
     <cluster_property_set id="cib-bootstrap-options">
       <nvpair id="cib-bootstrap-options-cluster-delay" name="cluster-delay" value="60s"/>
     </cluster_property_set>
   </failed_update>
 </failed>
-=#=#=#= Current cib after: Create operaton should fail =#=#=#=
+=#=#=#= Current cib after: Create operation should fail =#=#=#=
 <cib epoch="5" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
@@ -195,8 +195,8 @@ Call failed: Name not unique on network
   </configuration>
   <status/>
 </cib>
-=#=#=#= End test: Create operaton should fail - Name not unique on network (76) =#=#=#=
-* Passed: cibadmin       - Create operaton should fail
+=#=#=#= End test: Create operation should fail - Requested item already exists (108) =#=#=#=
+* Passed: cibadmin       - Create operation should fail
 =#=#=#= Begin test: Modify cluster options section =#=#=#=
 =#=#=#= Current cib after: Modify cluster options section =#=#=#=
 <cib epoch="6" num_updates="0" admin_epoch="1">
@@ -278,7 +278,7 @@ Multiple attributes match name=cluster-delay
   </configuration>
   <status/>
 </cib>
-=#=#=#= End test: Setting multiply defined cluster option should fail - Name not unique on network (76) =#=#=#=
+=#=#=#= End test: Setting multiply defined cluster option should fail - Multiple items match request (109) =#=#=#=
 * Passed: crm_attribute  - Setting multiply defined cluster option should fail
 =#=#=#= Begin test: Set cluster option with -s =#=#=#=
 =#=#=#= Current cib after: Set cluster option with -s =#=#=#=
@@ -585,7 +585,7 @@ Call failed: Update was older than existing configuration
     </node_state>
   </status>
 </cib>
-=#=#=#= End test: Replace operation should fail - Update was older than existing configuration (205) =#=#=#=
+=#=#=#= End test: Replace operation should fail - Update was older than existing configuration (103) =#=#=#=
 * Passed: cibadmin       - Replace operation should fail
 =#=#=#= Begin test: Default standby value =#=#=#=
 Error performing operation: No such device or address
@@ -993,7 +993,7 @@ Error performing operation: Invalid argument
     </node_state>
   </status>
 </cib>
-=#=#=#= End test: Require a destination when migrating a resource that is stopped - Invalid argument (22) =#=#=#=
+=#=#=#= End test: Require a destination when migrating a resource that is stopped - Incorrect usage (64) =#=#=#=
 * Passed: crm_resource   - Require a destination when migrating a resource that is stopped
 =#=#=#= Begin test: Don't support migration to non-existent locations =#=#=#=
 Error performing operation: node 'i.dont.exist' is unknown
@@ -1034,7 +1034,7 @@ Error performing operation: No such device or address
     </node_state>
   </status>
 </cib>
-=#=#=#= End test: Don't support migration to non-existent locations - No such device or address (6) =#=#=#=
+=#=#=#= End test: Don't support migration to non-existent locations - No such object (105) =#=#=#=
 * Passed: crm_resource   - Don't support migration to non-existent locations
 =#=#=#= Begin test: Create a fencing resource =#=#=#=
 =#=#=#= Current cib after: Create a fencing resource =#=#=#=
@@ -1151,7 +1151,7 @@ Online: [ node1 ]
 * Passed: crm_simulate   - Bring resources online
 =#=#=#= Begin test: Try to move a resource to its existing location =#=#=#=
 Error performing operation: dummy is already active on node1
-Error performing operation: Invalid argument
+Error performing operation: File exists
 =#=#=#= Current cib after: Try to move a resource to its existing location =#=#=#=
 <cib epoch="18" num_updates="4" admin_epoch="1">
   <configuration>
@@ -1199,7 +1199,7 @@ Error performing operation: Invalid argument
     </node_state>
   </status>
 </cib>
-=#=#=#= End test: Try to move a resource to its existing location - Invalid argument (22) =#=#=#=
+=#=#=#= End test: Try to move a resource to its existing location - Requested item already exists (108) =#=#=#=
 * Passed: crm_resource   - Try to move a resource to its existing location
 =#=#=#= Begin test: Move a resource from its existing location =#=#=#=
 WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score of -INFINITY for resource dummy on node1.
@@ -1784,7 +1784,7 @@ Error performing operation: No such device or address
     </tickets>
   </status>
 </cib>
-=#=#=#= End test: Ban a resource on unknown node - No such device or address (6) =#=#=#=
+=#=#=#= End test: Ban a resource on unknown node - No such object (105) =#=#=#=
 * Passed: crm_resource   - Ban a resource on unknown node
 =#=#=#= Begin test: Create two more nodes and bring them online =#=#=#=
 

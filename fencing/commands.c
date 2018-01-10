@@ -2076,7 +2076,7 @@ unfence_cb(GPid pid, int rc, const char *output, gpointer user_data)
     }
 
     if(rc != 0) {
-        crm_exit(DAEMON_RESPAWN_STOP);
+        crm_exit(CRM_EX_FATAL);
     }
 }
 

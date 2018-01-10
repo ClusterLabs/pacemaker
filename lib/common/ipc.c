@@ -481,7 +481,8 @@ crm_ipcs_recv(crm_client_t * c, void *data, size_t size, uint32_t * id, uint32_t
         text = uncompressed;
 
         if (rc != BZ_OK) {
-            crm_err("Decompression failed: %s (%d)", bz2_strerror(rc), rc);
+            crm_err("Decompression failed: %s " CRM_XS " bzerror=%d",
+                    bz2_strerror(rc), rc);
             free(uncompressed);
             return NULL;
         }
@@ -1019,7 +1020,8 @@ crm_ipc_decompress(crm_ipc_t * client)
                                         client->buffer + hdr_offset, header->size_compressed, 1, 0);
 
         if (rc != BZ_OK) {
-            crm_err("Decompression failed: %s (%d)", bz2_strerror(rc), rc);
+            crm_err("Decompression failed: %s " CRM_XS " bzerror=%d",
+                    bz2_strerror(rc), rc);
             free(uncompressed);
             return -EILSEQ;
         }

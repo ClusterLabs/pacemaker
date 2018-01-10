@@ -17,6 +17,45 @@ import time
 
 FENCE_DUMMY = "@datadir@/@PACKAGE@/tests/cts/fence_dummy"
 
+# These values must be kept in sync with include/crm/crm.h
+class CrmExit:
+    OK                   =   0
+    ERROR                =   1
+    INVALID_PARAM        =   2
+    UNIMPLEMENT_FEATURE  =   3
+    INSUFFICIENT_PRIV    =   4
+    NOT_INSTALLED        =   5
+    NOT_CONFIGURED       =   6
+    NOT_RUNNING          =   7
+    USAGE                =  64
+    DATAERR              =  65
+    NOINPUT              =  66
+    NOUSER               =  67
+    NOHOST               =  68
+    UNAVAILABLE          =  69
+    SOFTWARE             =  70
+    OSERR                =  71
+    OSFILE               =  72
+    CANTCREAT            =  73
+    IOERR                =  74
+    TEMPFAIL             =  75
+    PROTOCOL             =  76
+    NOPERM               =  77
+    CONFIG               =  78
+    FATAL                = 100
+    PANIC                = 101
+    DISCONNECT           = 102
+    SOLO                 = 103
+    DIGEST               = 104
+    NOSUCH               = 105
+    QUORUM               = 106
+    UNSAFE               = 107
+    EXISTS               = 108
+    MULTIPLE             = 109
+    OLD                  = 110
+    TIMEOUT              = 124
+    MAX                  = 255
+
 
 def shlex_split(command):
     """ Wrapper for shlex.split() that works around Python 2.6 bug """
@@ -72,6 +111,41 @@ def killall(process):
     test.wait()
 
 
+class TestError(Exception):
+    """ Base class for exceptions in this module """
+    pass
+
+
+class ExitCodeError(TestError):
+    """ Exception raised when command exit status is unexpected """
+
+    def __init__(self, exit_code):
+        self.exit_code = exit_code
+
+    def __str__(self):
+        return repr(self.exit_code)
+
+
+class OutputNotFoundError(TestError):
+    """ Exception raised when command output does not contain wanted string """
+
+    def __init__(self, exit_code):
+        self.output = output
+
+    def __str__(self):
+        return repr(self.output)
+
+
+class OutputFoundError(TestError):
+    """ Exception raised when command output contains unwanted string """
+
+    def __init__(self, exit_code):
+        self.output = output
+
+    def __str__(self):
+        return repr(self.output)
+
+
 class Test(object):
     """ Executor for a single test """
 
@@ -83,7 +157,7 @@ class Test(object):
 
         self.result_txt = ""
         self.cmd_tool_output = ""
-        self.result_exitcode = 0
+        self.result_exitcode = CrmExit.OK
 
         if with_cpg:
             self.stonith_options = "-c"
@@ -166,19 +240,19 @@ class Test(object):
     def add_cmd(self, cmd, args):
         """ Add a simple command to be executed as part of this test """
 
-        self.__new_cmd(cmd, args, 0, "")
+        self.__new_cmd(cmd, args, CrmExit.OK, "")
 
     def add_cmd_no_wait(self, cmd, args):
         """ Add a simple command to be executed (without waiting) as part of this test """
 
-        self.__new_cmd(cmd, args, 0, "", 1)
+        self.__new_cmd(cmd, args, CrmExit.OK, "", 1)
 
     def add_cmd_check_stdout(self, cmd, args, match, no_match=""):
         """ Add a simple command with expected output to be executed as part of this test """
 
-        self.__new_cmd(cmd, args, 0, match, 0, no_match)
+        self.__new_cmd(cmd, args, CrmExit.OK, match, 0, no_match)
 
-    def add_expected_fail_cmd(self, cmd, args, exitcode=255):
+    def add_expected_fail_cmd(self, cmd, args, exitcode=CrmExit.ERROR):
         """ Add a command to be executed as part of this test and expected to fail """
 
         self.__new_cmd(cmd, args, exitcode, "")
@@ -211,21 +285,20 @@ class Test(object):
         if args['no_wait'] == 0:
             test.wait()
         else:
-            return 0
+            return CrmExit.OK
 
         output = pipe_output(test, stderr=True)
         if self.verbose:
             print(output)
 
+        if test.returncode != args['expected_exitcode']:
+            raise ExitCodeError(test.returncode)
+
         if args['stdout_match'] != "" and output.count(args['stdout_match']) == 0:
-            test.returncode = -2
-            print("STDOUT string '%s' was not found in cmd output: %s" % (args['stdout_match'], output))
+            raise OutputNotFoundError(output)
 
         if args['stdout_negative_match'] != "" and output.count(args['stdout_negative_match']) != 0:
-            test.returncode = -2
-            print("STDOUT string '%s' was found in cmd output: %s" % (args['stdout_negative_match'], output))
-
-        return test.returncode
+            raise OutputFoundError(output)
 
 
     def count_negative_matches(self, outline):
@@ -268,7 +341,14 @@ class Test(object):
 
             msg = "FAILURE - '%s' failed. %d patterns out of %d not matched. %d negative matches."
             self.result_txt = msg % (self.name, len(pats), total_patterns, negative_matches)
-            self.result_exitcode = -1
+            self.result_exitcode = CrmExit.ERROR
+
+    def set_error(self, step, cmd):
+        """ Record failure of this test """
+
+        msg = "FAILURE - '%s' failed at step %d. Command: %s %s"
+        self.result_txt = msg % (self.name, step, cmd['cmd'], cmd['args'])
+        self.result_exitcode = CrmExit.ERROR
 
     def run(self):
         """ Execute this test. """
@@ -281,22 +361,28 @@ class Test(object):
             print("\n--- START TEST - %s" % self.name)
 
         self.result_txt = "SUCCESS - '%s'" % (self.name)
-        self.result_exitcode = 0
+        self.result_exitcode = CrmExit.OK
         for cmd in self.cmds:
-            res = self.run_cmd(cmd)
-            if res != cmd['expected_exitcode']:
-                print("Step %d FAILED - command returned %d, expected %d" % (i, res, cmd['expected_exitcode']))
-                msg = "FAILURE - '%s' failed at step %d. Command: %s %s"
-                self.result_txt = msg % (self.name, i, cmd['cmd'], cmd['args'])
-                self.result_exitcode = -1
+            try:
+                self.run_cmd(cmd)
+            except ExitCodeError as e:
+                print("Step %d FAILED - command returned %s, expected %d" % (i, e, cmd['expected_exitcode']))
+                self.set_error(i, cmd);
                 break
-            else:
-                if self.verbose:
-                    print("Step %d SUCCESS" % (i))
+            except OutputNotFoundError as e:
+                print("Step %d FAILED - '%s' was not found in command output: %s" % (i, cmd['stdout_match'], e))
+                self.set_error(i, cmd);
+                break
+            except OutputFoundError as e:
+                print("Step %d FAILED - '%s' was found in command output: %s" % (i, cmd['stdout_negative_match'], e))
+                self.set_error(i, cmd);
+                break
+            if self.verbose:
+                print("Step %d SUCCESS" % (i))
             i = i + 1
         self.clean_environment()
 
-        if self.result_exitcode == 0:
+        if self.result_exitcode == CrmExit.OK:
             self.match_stonith_patterns()
 
         print(self.result_txt)
@@ -385,10 +471,10 @@ class Tests(object):
             if test.executed == 0:
                 continue
 
-            if test.get_exitcode() != 0:
-                sys.exit(-1)
+            if test.get_exitcode() != CrmExit.OK:
+                sys.exit(CrmExit.ERROR)
 
-        sys.exit(0)
+        sys.exit(CrmExit.OK)
 
     def print_results(self):
         """ Print summary of results of executed tests """
@@ -401,7 +487,7 @@ class Tests(object):
             if test.executed == 0:
                 continue
 
-            if test.get_exitcode() != 0:
+            if test.get_exitcode() != CrmExit.OK:
                 failures = failures + 1
                 test.print_result("    ")
             else:
@@ -566,12 +652,10 @@ class Tests(object):
             test.add_cmd("stonith_admin",
                          "-R false3 -a fence_dummy -o \"mode=fail\" -o \"pcmk_host_list=node1 node2 node3\"")
             if test_type["use_cpg"] == 1:
-                # 194 = (unsigned char)-62 (-ETIME)
-                test.add_expected_fail_cmd("stonith_admin", "-F node3 -t 2", 194)
+                test.add_expected_fail_cmd("stonith_admin", "-F node3 -t 2", CrmExit.TIMEOUT)
                 test.add_stonith_log_pattern("Total timeout set to 6")
             else:
-                # 55 = (unsigned char)-201 (-pcmk_err_generic)
-                test.add_expected_fail_cmd("stonith_admin", "-F node3 -t 2", 55)
+                test.add_expected_fail_cmd("stonith_admin", "-F node3 -t 2", CrmExit.ERROR)
 
             test.add_stonith_log_pattern("for host 'node3' with device 'false1' returned: ")
             test.add_stonith_log_pattern("for host 'node3' with device 'false2' returned: ")
@@ -800,7 +884,7 @@ class Tests(object):
 
             test.add_cmd("stonith_admin", "-Q true1")
             test.add_cmd("stonith_admin", "-Q false1")
-            test.add_expected_fail_cmd("stonith_admin", "-Q true2", 237)
+            test.add_expected_fail_cmd("stonith_admin", "-Q true2", CrmExit.ERROR)
 
         # Verify monitor occurs for duration of timeout period on failure
         for test_type in test_types:
@@ -809,8 +893,7 @@ class Tests(object):
                                  test_type["use_cpg"])
             test.add_cmd("stonith_admin",
                          '-R true1 -a fence_dummy -o "mode=fail" -o "monitor_mode=fail" -o "pcmk_host_list=node3"')
-            # 55 = (unsigned char)-201 (-pcmk_err_generic)
-            test.add_expected_fail_cmd("stonith_admin", "-Q true1 -t 5", 55)
+            test.add_expected_fail_cmd("stonith_admin", "-Q true1 -t 5", CrmExit.ERROR)
             test.add_stonith_log_pattern("Attempt 2 to execute")
 
         # Verify monitor occurs for duration of timeout period on failure, but stops at max retries
@@ -820,8 +903,7 @@ class Tests(object):
                                  test_type["use_cpg"])
             test.add_cmd("stonith_admin",
                          '-R true1  -a fence_dummy -o "mode=fail" -o "monitor_mode=fail" -o "pcmk_host_list=node3"')
-            # 55 = (unsigned char)-201 (-pcmk_err_generic)
-            test.add_expected_fail_cmd("stonith_admin", "-Q true1 -t 15", 55)
+            test.add_expected_fail_cmd("stonith_admin", "-Q true1 -t 15", CrmExit.ERROR)
             test.add_stonith_log_pattern("Attempted to execute agent fence_dummy (list) the maximum number of times")
 
         # simple register test
@@ -835,7 +917,7 @@ class Tests(object):
 
             test.add_cmd("stonith_admin", "-D true1")
 
-            test.add_expected_fail_cmd("stonith_admin", "-Q true1", 237)
+            test.add_expected_fail_cmd("stonith_admin", "-Q true1", CrmExit.ERROR)
 
         # simple reboot test
         for test_type in test_types:
@@ -848,7 +930,7 @@ class Tests(object):
 
             test.add_cmd("stonith_admin", "-D true1")
 
-            test.add_expected_fail_cmd("stonith_admin", "-Q true1", 237)
+            test.add_expected_fail_cmd("stonith_admin", "-Q true1", CrmExit.ERROR)
 
         # test fencing history.
         for test_type in test_types:
@@ -868,9 +950,9 @@ class Tests(object):
             test = self.new_test("%s_dynamic_list_query" % test_type["prefix"],
                                  "Verify dynamic list of fencing devices can be retrieved.",
                                  test_type["use_cpg"])
-            test.add_cmd("stonith_admin", "-R true1  -a fence_dummy -o mock_dynamic_hosts=fake_port_1")
-            test.add_cmd("stonith_admin", "-R true2  -a fence_dummy -o mock_dynamic_hosts=fake_port_1")
-            test.add_cmd("stonith_admin", "-R true3  -a fence_dummy -o mock_dynamic_hosts=fake_port_1")
+            test.add_cmd("stonith_admin", "-R true1 -a fence_dummy -o mode=pass -o mock_dynamic_hosts=fake_port_1")
+            test.add_cmd("stonith_admin", "-R true2 -a fence_dummy -o mode=pass -o mock_dynamic_hosts=fake_port_1")
+            test.add_cmd("stonith_admin", "-R true3 -a fence_dummy -o mode=pass -o mock_dynamic_hosts=fake_port_1")
 
             test.add_cmd_check_stdout("stonith_admin", "-l fake_port_1", "3 devices found")
 
@@ -880,9 +962,9 @@ class Tests(object):
             test = self.new_test("%s_fence_dynamic_list_query" % test_type["prefix"],
                                  "Verify dynamic list of fencing devices can be retrieved.",
                                  test_type["use_cpg"])
-            test.add_cmd("stonith_admin", "-R true1  -a fence_dummy -o mock_dynamic_hosts=fake_port_1")
-            test.add_cmd("stonith_admin", "-R true2  -a fence_dummy -o mock_dynamic_hosts=fake_port_1")
-            test.add_cmd("stonith_admin", "-R true3  -a fence_dummy -o mock_dynamic_hosts=fake_port_1")
+            test.add_cmd("stonith_admin", "-R true1 -a fence_dummy -o mode=pass -o mock_dynamic_hosts=fake_port_1")
+            test.add_cmd("stonith_admin", "-R true2 -a fence_dummy -o mode=pass -o mock_dynamic_hosts=fake_port_1")
+            test.add_cmd("stonith_admin", "-R true3 -a fence_dummy -o mode=pass -o mock_dynamic_hosts=fake_port_1")
 
             test.add_cmd("stonith_admin", "-F fake_port_1 -t 5 -V")
 
@@ -980,7 +1062,7 @@ class Tests(object):
                      '-R true1 -a fence_dummy_auto_unfence -o "mode=pass" -o "pcmk_host_list=%s"' % (our_uname))
         test.add_cmd('stonith_admin',
                      '-R true2 -a fence_dummy_auto_unfence -o "mode=fail" -o "pcmk_host_list=%s"' % (our_uname))
-        test.add_expected_fail_cmd("stonith_admin", "-U %s -t 6" % (our_uname), 143)
+        test.add_expected_fail_cmd("stonith_admin", "-U %s -t 6" % (our_uname), CrmExit.ERROR)
 
         ### verify unfencing using automatic devices with topology
         test = self.new_test("cpg_unfence_required_3",
@@ -1049,7 +1131,7 @@ class Tests(object):
                              1)
         test.add_cmd("stonith_admin",
                      "-R true1 -a fence_dummy -o \"mode=pass\" -o \"pcmk_host_list=%s node_fake_1234\"" % (our_uname))
-        test.add_expected_fail_cmd("stonith_admin", "-U node_fake_1234 -t 3", 237)
+        test.add_expected_fail_cmd("stonith_admin", "-U node_fake_1234 -t 3", CrmExit.ERROR)
         test.add_stonith_log_pattern("(on) to be executed on the target node")
 
         ### verify unfencing using on_target device with topology
@@ -1081,7 +1163,7 @@ class Tests(object):
         test.add_cmd("stonith_admin", "-r node_fake -i 1 -v true1")
         test.add_cmd("stonith_admin", "-r node_fake -i 2 -v true2")
 
-        test.add_expected_fail_cmd("stonith_admin", "-U node_fake -t 3", 237)
+        test.add_expected_fail_cmd("stonith_admin", "-U node_fake -t 3", CrmExit.ERROR)
         test.add_stonith_log_pattern("(on) to be executed on the target node")
 
     def build_remap_tests(self):
@@ -1318,10 +1400,10 @@ def main(argv):
 
     if opts.options['list-tests']:
         tests.print_list()
-        sys.exit(0)
+        sys.exit(CrmExit.OK)
     elif opts.options['show-usage']:
         opts.show_usage()
-        sys.exit(0)
+        sys.exit(CrmExit.OK)
 
     print("Starting ...")
 

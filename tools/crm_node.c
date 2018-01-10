@@ -228,10 +228,10 @@ node_mcp_dispatch(const char *buffer, ssize_t length, gpointer userdata)
         crm_log_xml_trace(msg, "message");
         if (command == 'q' && quorate != NULL) {
             fprintf(stdout, "%s\n", quorate);
-            crm_exit(pcmk_ok);
+            crm_exit(CRM_EX_OK);
 
         } else if(command == 'q') {
-            crm_exit(1);
+            crm_exit(CRM_EX_ERROR);
         }
 
         for (node = __xml_first_child(msg); node != NULL; node = __xml_next(node)) {
@@ -267,7 +267,7 @@ node_mcp_dispatch(const char *buffer, ssize_t length, gpointer userdata)
             fprintf(stdout, "\n");
         }
 
-        crm_exit(pcmk_ok);
+        crm_exit(CRM_EX_OK);
     }
 
     return 0;
@@ -276,7 +276,7 @@ node_mcp_dispatch(const char *buffer, ssize_t length, gpointer userdata)
 static void
 node_mcp_destroy(gpointer user_data)
 {
-    crm_exit(ENOTCONN);
+    crm_exit(CRM_EX_DISCONNECT);
 }
 
 static gboolean
@@ -301,10 +301,10 @@ try_pacemaker(int command, enum cluster_type_e stack)
                 for(lpc = 0; lpc < DIMOF(daemons); lpc++) {
                     if (tools_remove_node_cache(target_uname, daemons[lpc])) {
                         crm_err("Failed to connect to %s to remove node '%s'", daemons[lpc], target_uname);
-                        crm_exit(pcmk_err_generic);
+                        crm_exit(CRM_EX_ERROR);
                     }
                 }
-                crm_exit(pcmk_ok);
+                crm_exit(CRM_EX_OK);
             }
             break;
 
@@ -366,7 +366,7 @@ try_corosync(int command, enum cluster_type_e stack)
                 fprintf(stdout, "0\n");
             }
             quorum_finalize(q_handle);
-            crm_exit(pcmk_ok);
+            crm_exit(CRM_EX_OK);
 
         case 'i':
             /* Go direct to the CPG API */
@@ -384,7 +384,7 @@ try_corosync(int command, enum cluster_type_e stack)
 
             fprintf(stdout, "%u\n", nodeid);
             cpg_finalize(c_handle);
-            crm_exit(pcmk_ok);
+            crm_exit(CRM_EX_OK);
 
         default:
             try_pacemaker(command, stack);
@@ -423,7 +423,7 @@ main(int argc, char **argv)
                 break;
             case '$':
             case '?':
-                crm_help(flag, EX_OK);
+                crm_help(flag, CRM_EX_OK);
                 break;
             case 'Q':
                 do_quiet = TRUE;
@@ -461,7 +461,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', EX_USAGE);
+        crm_help('?', CRM_EX_USAGE);
     }
 
     if (command == 'n') {
@@ -470,11 +470,11 @@ main(int argc, char **argv)
             name = get_local_node_name();
         }
         fprintf(stdout, "%s\n", name);
-        crm_exit(pcmk_ok);
+        crm_exit(CRM_EX_OK);
 
     } else if (command == 'N') {
         fprintf(stdout, "%s\n", get_node_name(nodeid));
-        crm_exit(pcmk_ok);
+        crm_exit(CRM_EX_OK);
     }
 
     if (dangerous_cmd && force_flag == FALSE) {
@@ -482,7 +482,7 @@ main(int argc, char **argv)
                 "  To prevent accidental destruction of the cluster,"
                 " the --force flag is required in order to proceed.\n");
         fflush(stderr);
-        crm_exit(EINVAL);
+        crm_exit(CRM_EX_USAGE);
     }
 
     try_stack = get_cluster_type();
@@ -497,5 +497,5 @@ main(int argc, char **argv)
 
     try_pacemaker(command, try_stack);
 
-    return (1);
+    return CRM_EX_ERROR;
 }

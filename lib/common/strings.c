@@ -436,7 +436,8 @@ crm_compress_string(const char *data, int length, int max, char **result, unsign
     free(uncompressed);
 
     if (rc != BZ_OK) {
-        crm_err("Compression of %d bytes failed: %s (%d)", length, bz2_strerror(rc), rc);
+        crm_err("Compression of %d bytes failed: %s " CRM_XS " bzerror=%d",
+                length, bz2_strerror(rc), rc);
         free(compressed);
         return FALSE;
     }

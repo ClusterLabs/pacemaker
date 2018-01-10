@@ -107,7 +107,7 @@ main(int argc, char *argv[])
         switch (flag) {
             case '?':
             case '$':
-                crm_help(flag, 0);
+                crm_help(flag, CRM_EX_OK);
                 break;
             default:
                 ++argerr;
@@ -120,7 +120,7 @@ main(int argc, char *argv[])
     }
 
     if (argerr) {
-        crm_help('?', 1);
+        crm_help('?', CRM_EX_USAGE);
     }
 
     openlog("notifyServicelogEvent", LOG_NDELAY, LOG_USER);

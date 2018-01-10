@@ -19,7 +19,7 @@ Call failed: Update does not conform to the configured schema
   </configuration>
   <status/>
 </cib>
-=#=#=#= End test: Try to make resulting CIB invalid (enum violation) - Update does not conform to the configured schema (203) =#=#=#=
+=#=#=#= End test: Try to make resulting CIB invalid (enum violation) - Invalid configuration (78) =#=#=#=
 * Passed: cibadmin       - Try to make resulting CIB invalid (enum violation)
 =#=#=#= Begin test: Run crm_simulate with invalid CIB (enum violation) =#=#=#=
 (   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-1.2' validation (1 of X)
@@ -79,7 +79,7 @@ element rsc_order: Relax-NG validity error : Invalid attribute first-action for 
 element rsc_order: Relax-NG validity error : Element constraints has extra content: rsc_order
 (   schemas.c:NNN   )   trace: update_validation:	pacemaker-3.0 validation failed
 Your current configuration pacemaker-1.2 could not validate with any schema in range [pacemaker-1.2, pacemaker-3.0], cannot upgrade to pacemaker-3.0.
-=#=#=#= End test: Run crm_simulate with invalid CIB (enum violation) - Required key not available (126) =#=#=#=
+=#=#=#= End test: Run crm_simulate with invalid CIB (enum violation) - Invalid configuration (78) =#=#=#=
 * Passed: crm_simulate   - Run crm_simulate with invalid CIB (enum violation)
 =#=#=#= Begin test: Try to make resulting CIB invalid (unrecognized validate-with) =#=#=#=
 Call failed: Update does not conform to the configured schema
@@ -98,7 +98,7 @@ Call failed: Update does not conform to the configured schema
   </configuration>
   <status/>
 </cib>
-=#=#=#= End test: Try to make resulting CIB invalid (unrecognized validate-with) - Update does not conform to the configured schema (203) =#=#=#=
+=#=#=#= End test: Try to make resulting CIB invalid (unrecognized validate-with) - Invalid configuration (78) =#=#=#=
 * Passed: cibadmin       - Try to make resulting CIB invalid (unrecognized validate-with)
 =#=#=#= Begin test: Run crm_simulate with invalid CIB (unrecognized validate-with) =#=#=#=
 (   schemas.c:NNN   )   debug: update_validation:	Unknown validation schema
@@ -148,7 +148,7 @@ element cib: Relax-NG validity error : Invalid attribute validate-with for eleme
 element cib: Relax-NG validity error : Invalid attribute validate-with for element cib
 (   schemas.c:NNN   )   trace: update_validation:	pacemaker-3.0 validation failed
 Your current configuration pacemaker-9999.0 could not validate with any schema in range [unknown, pacemaker-3.0], cannot upgrade to pacemaker-3.0.
-=#=#=#= End test: Run crm_simulate with invalid CIB (unrecognized validate-with) - Required key not available (126) =#=#=#=
+=#=#=#= End test: Run crm_simulate with invalid CIB (unrecognized validate-with) - Invalid configuration (78) =#=#=#=
 * Passed: crm_simulate   - Run crm_simulate with invalid CIB (unrecognized validate-with)
 =#=#=#= Begin test: Try to make resulting CIB invalid, but possibly recoverable (valid with X.Y+1) =#=#=#=
 Call failed: Update does not conform to the configured schema
@@ -167,7 +167,7 @@ Call failed: Update does not conform to the configured schema
   </configuration>
   <status/>
 </cib>
-=#=#=#= End test: Try to make resulting CIB invalid, but possibly recoverable (valid with X.Y+1) - Update does not conform to the configured schema (203) =#=#=#=
+=#=#=#= End test: Try to make resulting CIB invalid, but possibly recoverable (valid with X.Y+1) - Invalid configuration (78) =#=#=#=
 * Passed: cibadmin       - Try to make resulting CIB invalid, but possibly recoverable (valid with X.Y+1)
 =#=#=#= Begin test: Run crm_simulate with invalid, but possibly recoverable CIB (valid with X.Y+1) =#=#=#=
 (   schemas.c:NNN   )   debug: update_validation:	Testing 'pacemaker-1.2' validation (1 of X)

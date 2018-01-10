@@ -1444,7 +1444,7 @@ static gboolean
 cib_force_exit(gpointer data)
 {
     crm_notice("Forcing exit!");
-    terminate_cib(__FUNCTION__, -1);
+    terminate_cib(__FUNCTION__, CRM_EX_ERROR);
     return FALSE;
 }
 
@@ -1554,13 +1554,13 @@ extern int remote_tls_fd;
  * \brief Close remote sockets, free the global CIB and quit
  *
  * \param[in] caller           Name of calling function (for log message)
- * \param[in] fast             If 1, skip disconnect; if -1, also exit error
+ * \param[in] fast             If -1, skip disconnect; if positive, exit that
  */
 void
 terminate_cib(const char *caller, int fast)
 {
     crm_info("%s: Exiting%s...", caller,
-             (fast < 0)? " fast" : mainloop ? " from mainloop" : "");
+             (fast > 0)? " fast" : mainloop ? " from mainloop" : "");
 
     if (remote_fd > 0) {
         close(remote_fd);
@@ -1573,13 +1573,13 @@ terminate_cib(const char *caller, int fast)
 
     uninitializeCib();
 
-    if (fast < 0) {
+    if (fast > 0) {
         /* Quit fast on error */
         cib_ipc_servers_destroy(ipcs_ro, ipcs_rw, ipcs_shm);
-        crm_exit(EINVAL);
+        crm_exit(fast);
 
     } else if ((mainloop != NULL) && g_main_is_running(mainloop)) {
-        /* Quit via returning from the main loop. If fast == 1, we skip the
+        /* Quit via returning from the main loop. If fast == -1, we skip the
          * disconnect here, and it will be done when the main loop returns
          * (this allows the peer status callback to avoid messing with the
          * peer caches).
@@ -1594,6 +1594,6 @@ terminate_cib(const char *caller, int fast)
          * here, because we're not returning control to the caller. */
         crm_cluster_disconnect(&crm_cluster);
         cib_ipc_servers_destroy(ipcs_ro, ipcs_rw, ipcs_shm);
-        crm_exit(pcmk_ok);
+        crm_exit(CRM_EX_OK);
     }
 }

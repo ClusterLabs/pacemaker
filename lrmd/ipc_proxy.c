@@ -438,7 +438,7 @@ ipc_proxy_init(void)
     if (crmd_ipcs == NULL) {
         crm_err("Failed to create crmd server: exiting and inhibiting respawn.");
         crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
-        crm_exit(DAEMON_RESPAWN_STOP);
+        crm_exit(CRM_EX_FATAL);
     }
 }
 

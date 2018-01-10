@@ -815,7 +815,7 @@ internal_stonith_action_execute(stonith_action_t * action)
             sleep(1);
         }
         execlp(action->agent, action->agent, NULL);
-        exit(EXIT_FAILURE);
+        exit(CRM_EX_ERROR);
     }
 
     /* parent */

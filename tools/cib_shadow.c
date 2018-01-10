@@ -37,17 +37,8 @@
 
 #include <crm/cib.h>
 
-int exit_code = pcmk_ok;
-GMainLoop *mainloop = NULL;
-
-const char *host = NULL;
-void usage(const char *cmd, int exit_status);
-
-int command_options = cib_sync_call;
-const char *cib_action = NULL;
-
-cib_t *real_cib = NULL;
-
+static int command_options = cib_sync_call;
+static cib_t *real_cib = NULL;
 static int force_flag = 0;
 static int batch_flag = 0;
 
@@ -158,9 +149,10 @@ static struct crm_option long_options[] = {
 int
 main(int argc, char **argv)
 {
-    int rc = 0;
+    int rc = pcmk_ok;
     int flag;
     int argerr = 0;
+    crm_exit_t exit_code = CRM_EX_OK;
     static int command = '?';
     const char *validation = NULL;
     char *shadow = NULL;
@@ -178,7 +170,7 @@ main(int argc, char **argv)
                     " for side-effects.\n");
 
     if (argc < 2) {
-        crm_help('?', EX_USAGE);
+        crm_help('?', CRM_EX_USAGE);
     }
 
     while (1) {
@@ -204,7 +196,7 @@ main(int argc, char **argv)
                         shadow = strdup(env);
                     } else {
                         fprintf(stderr, "No active shadow configuration defined\n");
-                        crm_exit(ENOENT);
+                        crm_exit(CRM_EX_NOSUCH);
                     }
                 }
                 break;
@@ -232,7 +224,7 @@ main(int argc, char **argv)
                 break;
             case '$':
             case '?':
-                crm_help(flag, EX_OK);
+                crm_help(flag, CRM_EX_OK);
                 break;
             case 'f':
                 command_options |= cib_quorum_override;
@@ -253,7 +245,7 @@ main(int argc, char **argv)
         while (optind < argc)
             printf("%s ", argv[optind++]);
         printf("\n");
-        crm_help('?', EX_USAGE);
+        crm_help('?', CRM_EX_USAGE);
     }
 
     if (optind > argc) {
@@ -261,7 +253,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', EX_USAGE);
+        crm_help('?', CRM_EX_USAGE);
     }
 
     if (command == 'w') {
@@ -270,18 +262,17 @@ main(int argc, char **argv)
 
         if (local == NULL) {
             fprintf(stderr, "No shadow instance provided\n");
-            rc = -ENXIO;
-            goto done;
+            exit_code = CRM_EX_NOSUCH;
+        } else {
+            fprintf(stdout, "%s\n", local);
         }
-        fprintf(stdout, "%s\n", local);
-        rc = 0;
         goto done;
     }
 
     if (shadow == NULL) {
         fprintf(stderr, "No shadow instance provided\n");
         fflush(stderr);
-        rc = -EINVAL;
+        exit_code = CRM_EX_NOSUCH;
         goto done;
 
     } else if (command != 's' && command != 'c') {
@@ -293,7 +284,7 @@ main(int argc, char **argv)
                     "  To prevent accidental destruction of the cluster,"
                     " the --force flag is required in order to proceed.\n", shadow, local);
             fflush(stderr);
-            rc = EX_USAGE;
+            exit_code = CRM_EX_USAGE;
             goto done;
         }
     }
@@ -303,29 +294,23 @@ main(int argc, char **argv)
                 "  To prevent accidental destruction of the cluster,"
                 " the --force flag is required in order to proceed.\n");
         fflush(stderr);
-        rc = EX_USAGE;
+        exit_code = CRM_EX_USAGE;
         goto done;
     }
 
     shadow_file = get_shadow_file(shadow);
     if (command == 'D') {
         /* delete the file */
-        rc = stat(shadow_file, &buf);
-        if (rc == 0) {
-            rc = unlink(shadow_file);
-            if (rc != 0) {
-                fprintf(stderr, "Could not remove shadow instance '%s': %s\n", shadow,
-                        strerror(errno));
-                goto done;
-            }
+        if ((unlink(shadow_file) < 0) && (errno != ENOENT)) {
+            exit_code = crm_errno2exit(errno);
+            fprintf(stderr, "Could not remove shadow instance '%s': %s\n",
+                    shadow, strerror(errno));
         }
-
         shadow_teardown(shadow);
         goto done;
 
     } else if (command == 'F') {
         printf("%s\n", shadow_file);
-        rc = 0;
         goto done;
     }
 
@@ -334,28 +319,27 @@ main(int argc, char **argv)
         rc = real_cib->cmds->signon(real_cib, crm_system_name, cib_command);
         if (rc != pcmk_ok) {
             fprintf(stderr, "Signon to CIB failed: %s\n", pcmk_strerror(rc));
+            exit_code = crm_errno2exit(rc);
             goto done;
         }
     }
 
+    // File existence check
     rc = stat(shadow_file, &buf);
-
     if (command == 'e' || command == 'c') {
         if (rc == 0 && force_flag == FALSE) {
             fprintf(stderr, "A shadow instance '%s' already exists.\n"
                     "  To prevent accidental destruction of the cluster,"
                     " the --force flag is required in order to proceed.\n", shadow);
-            rc = -ENOTUNIQ;
+            exit_code = CRM_EX_CANTCREAT;
             goto done;
         }
-
-    } else if (rc != 0) {
+    } else if (rc < 0) {
         fprintf(stderr, "Could not access shadow instance '%s': %s\n", shadow, strerror(errno));
-        rc = -ENXIO;
+        exit_code = CRM_EX_NOSUCH;
         goto done;
     }
 
-    rc = pcmk_ok;
     if (command == 'c' || command == 'e' || command == 'r') {
         xmlNode *output = NULL;
 
@@ -364,6 +348,7 @@ main(int argc, char **argv)
             rc = real_cib->cmds->query(real_cib, NULL, &output, command_options);
             if (rc != pcmk_ok) {
                 fprintf(stderr, "Could not connect to the CIB: %s\n", pcmk_strerror(rc));
+                exit_code = crm_errno2exit(rc);
                 goto done;
             }
 
@@ -382,31 +367,29 @@ main(int argc, char **argv)
         if (rc < 0) {
             fprintf(stderr, "Could not %s the shadow instance '%s': %s\n",
                     command == 'r' ? "reset" : "create",
-                    shadow, strerror(errno));
+                    shadow, pcmk_strerror(rc));
+            exit_code = crm_errno2exit(rc);
             goto done;
         }
         shadow_setup(shadow, FALSE);
-        rc = pcmk_ok;
 
     } else if (command == 'E') {
-        const char *err = NULL;
         char *editor = getenv("EDITOR");
 
         if (editor == NULL) {
-            fprintf(stderr, "No value for $EDITOR defined\n");
-            rc = -EINVAL;
+            fprintf(stderr, "No value for EDITOR defined\n");
+            exit_code = CRM_EX_NOT_CONFIGURED;
             goto done;
         }
 
         execlp(editor, "--", shadow_file, NULL);
-        err = strerror(errno);
-        fprintf(stderr, "Could not invoke $EDITOR (%s %s): %s\n", editor, shadow_file, err);
-        rc = -EINVAL;
+        fprintf(stderr, "Could not invoke EDITOR (%s %s): %s\n",
+                editor, shadow_file, strerror(errno));
+        exit_code = CRM_EX_OSFILE;
         goto done;
 
     } else if (command == 's') {
         shadow_setup(shadow, TRUE);
-        rc = 0;
         goto done;
 
     } else if (command == 'p') {
@@ -430,6 +413,7 @@ main(int argc, char **argv)
 
         if (rc != pcmk_ok) {
             fprintf(stderr, "Could not query the CIB: %s\n", pcmk_strerror(rc));
+            exit_code = crm_errno2exit(rc);
             goto done;
         }
 
@@ -443,29 +427,26 @@ main(int argc, char **argv)
 
         if (diff != NULL) {
             xml_log_patchset(0, "  ", diff);
-            rc = 1;
-            goto done;
+            exit_code = CRM_EX_ERROR;
         }
-        rc = 0;
         goto done;
 
     } else if (command == 'C') {
         /* commit to the cluster */
         xmlNode *input = filename2xml(shadow_file);
+        xmlNode *section_xml = input;
+        const char *section = NULL;
 
-        if (full_upload) {
-            rc = real_cib->cmds->replace(real_cib, NULL, input, command_options);
-        } else {
-            xmlNode *config = first_named_child(input, XML_CIB_TAG_CONFIGURATION);
-
-            rc = real_cib->cmds->replace(real_cib, XML_CIB_TAG_CONFIGURATION, config,
-                                         command_options);
+        if (!full_upload) {
+            section = XML_CIB_TAG_CONFIGURATION;
+            section_xml = first_named_child(input, section);
         }
-
+        rc = real_cib->cmds->replace(real_cib, section, section_xml,
+                                     command_options);
         if (rc != pcmk_ok) {
             fprintf(stderr, "Could not commit shadow instance '%s' to the CIB: %s\n",
                     shadow, pcmk_strerror(rc));
-            goto done;
+            exit_code = crm_errno2exit(rc);
         }
         shadow_teardown(shadow);
         free_xml(input);
@@ -473,5 +454,5 @@ main(int argc, char **argv)
   done:
     free(shadow_file);
     free(shadow);
-    return crm_exit(rc);
+    return crm_exit(exit_code);
 }

@@ -458,8 +458,26 @@ write_cib_contents(gpointer p)
     /* A nonzero exit code will cause further writes to be disabled */
     free_xml(cib_local);
     if (p == NULL) {
+        crm_exit_t exit_code = CRM_EX_OK;
+
+        switch (exit_rc) {
+            case pcmk_ok:
+                exit_code = CRM_EX_OK;
+                break;
+            case pcmk_err_cib_modified:
+                exit_code = CRM_EX_DIGEST; // Existing CIB doesn't match digest
+                break;
+            case pcmk_err_cib_backup: // Existing CIB couldn't be backed up
+            case pcmk_err_cib_save:   // New CIB couldn't be saved
+                exit_code = CRM_EX_CANTCREAT;
+                break;
+            default:
+                exit_code = CRM_EX_ERROR;
+                break;
+        }
+
         /* Use _exit() because exit() could affect the parent adversely */
-        _exit(exit_rc);
+        _exit(exit_code);
     }
     return exit_rc;
 }

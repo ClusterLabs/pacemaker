@@ -444,7 +444,7 @@ main(int argc, char **argv)
                 break;
             case '$':
             case '?':
-                crm_help(flag, EX_OK);
+                crm_help(flag, CRM_EX_OK);
                 break;
             case 'I':
                 no_connect = 1;
@@ -552,7 +552,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', EX_USAGE);
+        crm_help('?', CRM_EX_USAGE);
     }
 
     st = stonith_api_new();
@@ -572,7 +572,6 @@ main(int argc, char **argv)
             }
             if (rc == 0) {
                 fprintf(stderr, "No devices found\n");
-
             } else if (rc > 0) {
                 fprintf(stderr, "%d devices found\n", rc);
                 rc = 0;
@@ -642,7 +641,7 @@ main(int argc, char **argv)
         case 'M':
             if (agent == NULL) {
                 printf("Please specify an agent to query using -a,--agent [value]\n");
-                return -1;
+                return CRM_EX_USAGE;
             } else {
                 char *buffer = NULL;
 
@@ -695,5 +694,5 @@ main(int argc, char **argv)
     st->cmds->disconnect(st);
     stonith_api_delete(st);
 
-    return rc;
+    return crm_errno2exit(rc);
 }
