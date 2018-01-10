@@ -21,7 +21,6 @@ function version() {
 
 function extract() {
 
-    DUMP=1
     TAG=$1
     VERSION=$2
 
@@ -38,13 +37,12 @@ function extract() {
     rm -rf $BUILD_ROOT
     git archive --prefix $BUILD_ROOT/ $TAG | tar xv
 
-    BUILD_ROOT=`pwd`/$BUILD_ROOT
+    BUILD_ROOT=$(pwd)/$BUILD_ROOT
     DESC=$BUILD_ROOT/$VERSION.xml
 
     sed -i.sed 's: doc::' $BUILD_ROOT/Makefile.am
-    sed -i.sed 's: debian::' $BUILD_ROOT/Makefile.am
 
-    cat<<EOF>$DESC
+    cat <<EOF >$DESC
 <?xml version="1.0" encoding="utf-8"?>
 <descriptor>
 <version>
@@ -59,7 +57,7 @@ EOF
     ( cd $BUILD_ROOT && ./autogen.sh )
     ( cd $BUILD_ROOT && ./configure  --disable-fatal-warnings )
     make -C $BUILD_ROOT V=0 DESTDIR=${BUILD_ROOT}/root install
-    if [ $? != 0 ]; then
+    if [ $? -ne 0 ]; then
         echo "Build for $TAG failed. Repair, populate <libs/> and re-run: "
         echo "  abi-compliance-checker -l $PACKAGE -dump_abi $DESC"
         echo ""
@@ -70,28 +68,24 @@ EOF
         find $BUILD_ROOT/root -name "*.so" -print >> $DESC
     fi
 
-    cat<<EOF>>$DESC
+    cat <<EOF >>$DESC
 </libs>
 </descriptor>
 EOF
 
-    if [ $DUMP = 1 ]; then
-        abi-compliance-checker -l $PACKAGE -dump_abi $DESC
-        rm -rf $BUILD_ROOT
-    else
-        exit 1
-    fi
+    abi-compliance-checker -l $PACKAGE -dump_abi $DESC
+    rm -rf $BUILD_ROOT
 }
 
 for arg in $*; do
-    T=`tag $arg`
-    V=`version $T`
+    T=$(tag $arg)
+    V=$(version $T)
     extract $T $V
 done
 
-if [ $# = 2 ]; then
-    V1=`version $1`
-    V2=`version $2`
+if [ $# -eq 2 ]; then
+    V1=$(version $1)
+    V2=$(version $2)
 
     abi-compliance-checker -l ${PACKAGE} \
         -d1 abi_dumps/${PACKAGE}/${PACKAGE}_${V1}.abi.tar.gz \
