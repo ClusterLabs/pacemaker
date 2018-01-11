@@ -39,7 +39,6 @@ publican_docs   =
 generated_docs	=
 generated_mans	=
 
-ASCIIDOC_CLI_TYPE := pcs
 DOCBOOK_FORMATS := html-desktop
 DOCBOOK_LANGS   := en-US
 DOTs = $(wildcard */en-US/images/*.dot)
@@ -255,33 +254,22 @@ brand:  $(BRAND_PNGS) $(wildcard publican-clusterlabs/en-US/*.xml)
 #	find publican-clusterlabs -name "*.noarch.rpm" -exec sudo rpm -Uvh --force \{\} \;
 
 pdf:
-	make DOCBOOK_FORMATS="pdf" ASCIIDOC_CLI_TYPE=$(ASCIIDOC_CLI_TYPE) all-local
+	make DOCBOOK_FORMATS="pdf" all-local
 
 www: clean-local $(generated_docs) $(ascii)
-	make www-cli
-	rsync $(RSYNC_OPTS) $(generated_docs) $(ascii) $(asciiman) "$(RSYNC_DEST)/$(PACKAGE)/doc/"
-
-www-pcs: www-cli
-
-www-cli:
-	for book in $(docbook); do 										\
-		sed -i.sed 's@brand:.*@brand: clusterlabs@' $$book/publican.cfg;				\
-		sed -i.sed 's@version:.*@version: $(PACKAGE_SERIES)-$(ASCIIDOC_CLI_TYPE)@' $$book/publican.cfg;	\
+	for book in $(docbook); do 							\
+		sed -i.sed 's@^brand:.*@brand: clusterlabs@' $$book/publican.cfg;	\
 	done
-	make DOCBOOK_FORMATS="pdf,html,html-single,epub" DOCBOOK_LANGS="all" ASCIIDOC_CLI_TYPE=$(ASCIIDOC_CLI_TYPE) all-local
-	echo Uploading current $(PACKAGE_SERIES)-$(ASCIIDOC_CLI_TYPE) documentation set to clusterlabs.org
+	make DOCBOOK_FORMATS="pdf,html,html-single,epub" DOCBOOK_LANGS="all" all-local
+	echo Uploading current $(PACKAGE_SERIES) documentation set to clusterlabs.org
 if BUILD_DOCBOOK
 	for book in $(docbook); do 									\
 		echo Uploading $$book...;								\
-		echo "Generated on `date` from version: $(shell git log --pretty="format:%h %d" -n 1)" >> $$book/publish/build-$(PACKAGE_SERIES)-$(ASCIIDOC_CLI_TYPE).txt;	\
-		for lang in `ls -1 $$book/publish | grep [a-z][a-z]-[A-Z][A-Z]`; do							\
-			mv $$book/publish/$$lang/Pacemaker/$(PACKAGE_SERIES)-$(ASCIIDOC_CLI_TYPE)/epub/$$book/Pacemaker-1.1{-$(ASCIIDOC_CLI_TYPE),}-$$book-$$lang.epub;	\
-			mv $$book/publish/$$lang/Pacemaker/$(PACKAGE_SERIES)-$(ASCIIDOC_CLI_TYPE)/pdf/$$book/Pacemaker-1.1{-$(ASCIIDOC_CLI_TYPE),}-$$book-$$lang.pdf;	\
-		done;											\
-		rsync $(RSYNC_OPTS) $$book/publish/* "$(RSYNC_DEST)/$(PACKAGE)/doc/";				\
-		sed -i.sed 's@version:.*@version: $(PACKAGE_SERIES)@' $$book/publican.cfg;		\
+		echo "Generated on `date` from version: $(shell git log --pretty="format:%h %d" -n 1)" >> $$book/publish/build-$(PACKAGE_SERIES).txt;	\
+		rsync $(RSYNC_OPTS) $$book/publish/* "$(RSYNC_DEST)/$(PACKAGE)/doc/";			\
 	done
 endif
+	rsync $(RSYNC_OPTS) $(generated_docs) $(ascii) "$(RSYNC_DEST)/$(PACKAGE)/doc/"
 
 clean-local:
 	-rm -rf $(generated_docs) $(generated_mans) $(docbook_build) $(generated_PNGS)
