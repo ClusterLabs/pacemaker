@@ -23,13 +23,14 @@ A versioned schema offers transparent backward and forward compatibility.
 
 | Pacemaker | Latest Schema | Changed
 | --------- | ------------- | ----------------------------------------------
+| `2.0.0`   | `3.0`         | `constraints`, `resources`
 | `1.1.18`  | `2.10`        | `resources`, `alerts`
 | `1.1.17`  | `2.9`         | `resources`, `rule`
 | `1.1.16`  | `2.6`         | `constraints`
 | `1.1.15`  | `2.5`         | `alerts`
 | `1.1.14`  | `2.4`         | `fencing`
 | `1.1.13`  | `2.3`         | `constraints`
-| `1.1.12`  | `2.0`         | `nodes`, `nvset`, `resources`, `tags` + `acls`
+| `1.1.12`  | `2.0`         | `nodes`, `nvset`, `resources`, `tags`, `acls`
 | `1.1.8`+  | `1.2`         |
 
 ## Schema generation
