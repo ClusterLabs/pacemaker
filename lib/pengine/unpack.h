@@ -97,10 +97,8 @@ extern gboolean determine_online_status(xmlNode * node_state, node_t * this_node
 
 enum pe_warn_once_e {
     pe_wo_blind         = 0x0001,
-    pe_wo_requires      = 0x0010,
-    pe_wo_rsc_failstick = 0x0200,
-    pe_wo_default_rscfs = 0x0400,
-    pe_wo_legacy_notifs = 0x0800,
+    pe_wo_restart_type  = 0x0002,
+    pe_wo_role_after    = 0x0004,
 };
 
 extern uint32_t pe_wo;

@@ -1102,6 +1102,10 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
     value = NULL;
     if (xml_obj != NULL) {
         value = g_hash_table_lookup(action->meta, "role_after_failure");
+        if (value) {
+            pe_warn_once(pe_wo_role_after,
+                        "Support for role_after_failure is deprecated and will be removed in a future release");
+        }
     }
     if (value != NULL && action->fail_role == RSC_ROLE_UNKNOWN) {
         action->fail_role = text2role(value);
