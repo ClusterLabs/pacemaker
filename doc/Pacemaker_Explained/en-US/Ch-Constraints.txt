@@ -485,7 +485,7 @@ mandatory.
 [[s-coloc-attribute]]
 === Colocation by Node Attribute ===
 
-The +node+attribute+ property of a colocation constraints allows you to express
+The +node-attribute+ property of a colocation constraints allows you to express
 the requirement, "these resources must be on similar nodes".
 
 As an example, imagine that you have two Storage Area Networks (SANs) that are
