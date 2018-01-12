@@ -6,7 +6,7 @@ dnl License: GNU General Public License (GPL)
 dnl ===============================================
 dnl Bootstrap
 dnl ===============================================
-AC_PREREQ(2.59)
+AC_PREREQ(2.64)
 
 dnl Suggested structure:
 dnl     information on the package
@@ -22,10 +22,6 @@ dnl     checks for system services
 m4_include([version.m4])
 AC_INIT([pacemaker], VERSION_NUMBER, [users@clusterlabs.org],
         [pacemaker], PCMK_URL)
-dnl Workaround autoconf < 2.64
-if test x"${PACKAGE_URL}" = x""; then
-	AC_SUBST([PACKAGE_URL], PCMK_URL)
-fi
 
 PCMK_FEATURES=""
 
@@ -57,8 +53,15 @@ AC_ARG_WITH(pkg-name,
     [  --with-pkg-name=name     Override package name (if you're a packager needing to pretend) ],
     [ PACKAGE_NAME="$withval" ])
 
-dnl Older distros may need: AM_INIT_AUTOMAKE($PACKAGE_NAME, $PACKAGE_VERSION)
-AM_INIT_AUTOMAKE([foreign])
+dnl 1.11:         minimum automake version required
+dnl foreign:      don't require GNU-standard top-level files
+dnl silent-rules: allow "--enable-silent-rules" (no-op in 1.13+)
+AM_INIT_AUTOMAKE([1.11 foreign silent-rules])
+
+dnl Example 2.4. Silent Custom Rule to Generate a File
+dnl %-bar.pc: %.pc
+dnl	$(AM_V_GEN)$(LN_S) $(notdir $^) $@
+
 AC_DEFINE_UNQUOTED(PACEMAKER_VERSION, "$PACKAGE_VERSION", Current pacemaker version)
 
 dnl Versioned attributes implementation is not yet production-ready
@@ -67,16 +70,6 @@ AC_DEFINE_UNQUOTED(ENABLE_VERSIONED_ATTRS, 0, Enable versioned attributes)
 PACKAGE_SERIES=`echo $PACKAGE_VERSION | awk -F. '{ print $1"."$2 }'`
 AC_SUBST(PACKAGE_SERIES)
 AC_SUBST(PACKAGE_VERSION)
-
-dnl automake >= 1.11 offers --enable-silent-rules for suppressing the output from
-dnl normal compilation.  When a failure occurs, it will then display the full
-dnl command line
-dnl Wrap in m4_ifdef to avoid breaking on older platforms
-m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
-
-dnl Example 2.4. Silent Custom Rule to Generate a File
-dnl %-bar.pc: %.pc
-dnl	$(AM_V_GEN)$(LN_S) $(notdir $^) $@
 
 CC_IN_CONFIGURE=yes
 export CC_IN_CONFIGURE

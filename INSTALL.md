@@ -1,14 +1,14 @@
 # How to Install Pacemaker
 
 ## Build Dependencies
-* automake
-* autoconf
+* automake 1.11 or later
+* autoconf 2.64 or later
 * libtool
 * libtool-ltdl-devel
 * libuuid-devel
 * pkgconfig
 * python (or python-devel if that's preferred as a build dependency)
-* glib2-devel
+* glib2-devel 2.16.0 or later
 * libxml2-devel
 * libxslt-devel 
 * bzip2-devel
