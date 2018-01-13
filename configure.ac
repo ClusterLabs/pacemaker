@@ -111,43 +111,6 @@ cc_supports_flag() {
          return $RC
 }
 
-try_extract_header_define() {
-	  AC_MSG_CHECKING(if $2 in $1 exists)
-	  Cfile=$srcdir/extract_define.$2.${$}
-	  printf "#include <stdio.h>\n" > ${Cfile}.c
-	  printf "#include <%s>\n" $1 >> ${Cfile}.c
-	  printf "int main(int argc, char **argv) {\n" >> ${Cfile}.c
-	  printf "#ifdef %s\n" $2 >> ${Cfile}.c
-	  printf "printf(\"%%s\", %s);\n" $2 >> ${Cfile}.c
-	  printf "#endif \n return 0; }\n" >> ${Cfile}.c
-	  $CC $CFLAGS ${Cfile}.c -o ${Cfile} 2>/dev/null
-	  value=
-	  if test -x ${Cfile}; then
-	      value=`${Cfile} 2>/dev/null`
-	  fi
-	  if  test x"${value}" == x""; then
-	      value=$3
-	      AC_MSG_RESULT(default: $value)
-	  else
-	      AC_MSG_RESULT($value)
-	  fi
-	  printf $value
-	  rm -rf ${Cfile}.c ${Cfile} ${Cfile}.dSYM ${Cfile}.gcno
-	}
-
-extract_header_define() {
-	  AC_MSG_CHECKING(for $2 in $1)
-	  Cfile=$srcdir/extract_define.$2.${$}
-	  printf "#include <stdio.h>\n" > ${Cfile}.c
-	  printf "#include <%s>\n" $1 >> ${Cfile}.c
-	  printf "int main(int argc, char **argv) { printf(\"%%s\", %s); return 0; }\n" $2 >> ${Cfile}.c
-	  $CC $CFLAGS ${Cfile}.c -o ${Cfile}
-	  value=`${Cfile}`
-	  AC_MSG_RESULT($value)
-	  printf $value
-	  rm -rf ${Cfile}.c ${Cfile} ${Cfile}.dSYM ${Cfile}.gcno
-	}
-
 dnl ===============================================
 dnl Configure Options
 dnl ===============================================
@@ -1044,9 +1007,7 @@ HA_STATE_DIR="${localstatedir}/run"
 AC_DEFINE_UNQUOTED(HA_STATE_DIR,"$HA_STATE_DIR", Where sbd keeps its PID file)
 AC_SUBST(HA_STATE_DIR)
 
-CRM_RSCTMP_DIR=`try_extract_header_define agent_config.h HA_RSCTMPDIR $HA_STATE_DIR/resource-agents`
-AC_MSG_CHECKING(Scratch dir for resource agents)
-AC_MSG_RESULT($CRM_RSCTMP_DIR)
+CRM_RSCTMP_DIR="${localstatedir}/run/resource-agents"
 AC_DEFINE_UNQUOTED(CRM_RSCTMP_DIR,"$CRM_RSCTMP_DIR", Where resource agents should keep state files)
 AC_SUBST(CRM_RSCTMP_DIR)
 
