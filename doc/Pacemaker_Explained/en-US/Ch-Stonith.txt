@@ -47,14 +47,6 @@ does not require the STONITH resource to be in the 'started' state
 in order to be used, thus allowing reliable use of STONITH devices in such a
 case.
 
-[NOTE]
-====
-In pacemaker versions 1.1.9 and earlier, this feature either did not exist or
-did not work well. Only "running" STONITH resources could be used by Pacemaker
-for fencing, and if another component tried to fence a node while Pacemaker was
-moving STONITH resources, the fencing could fail.
-====
-
 All nodes have access to STONITH devices' definitions and instantiate them
 on-the-fly when needed, but preference is given to 'verified' instances, which
 are the ones that are 'started' according to the cluster's knowledge.
@@ -173,7 +165,6 @@ indexterm:[Fencing,Property,pcmk_delay_base]
 |1
 |The maximum number of actions that can be performed in parallel on this
  device, if the cluster option +concurrent-fencing+ is +true+. -1 is unlimited.
- '(since 1.1.15)'
 
 indexterm:[pcmk_action_limit,Fencing]
 indexterm:[Fencing,Property,pcmk_action_limit]
@@ -622,19 +613,18 @@ Some possible uses of topologies include:
 
 |target-pattern
 |A regular expression matching the names of nodes to which this level applies
- '(since 1.1.14)'
  indexterm:[target-pattern,fencing-level]
  indexterm:[Fencing,fencing-level,target-pattern]
 
 |target-attribute
 |The name of a node attribute that is set (to +target-value+) for nodes to
- which this level applies '(since 1.1.14)'
+ which this level applies
  indexterm:[target-attribute,fencing-level]
  indexterm:[Fencing,fencing-level,target-attribute]
 
 |target-value
 |The node attribute value (of +target-attribute+) that is set for nodes to
- which this level applies '(since 1.1.14)'
+ which this level applies
  indexterm:[target-attribute,fencing-level]
  indexterm:[Fencing,fencing-level,target-attribute]
 
@@ -944,10 +934,3 @@ be logged but ignored.
 When a reboot operation is remapped, any action-specific timeout for the
 remapped action will be used (for example, +pcmk_off_timeout+ will be used when
 executing the +off+ command, not +pcmk_reboot_timeout+).
-
-[NOTE]
-====
-In Pacemaker versions 1.1.13 and earlier, reboots will not be remapped in the
-second case. To achieve the same effect, separate fencing devices for off and
-on actions must be configured.
-====

@@ -823,7 +823,7 @@ mcp_cpg_deliver(cpg_handle_t handle,
 
     if (task == NULL) {
         if (nodeid == local_nodeid) {
-            crm_info("Ignoring process list sent by peer for local node");
+            crm_debug("Ignoring message with local node's process list");
         } else {
             uint32_t procs = 0;
             const char *uname = crm_element_value(xml, "uname");

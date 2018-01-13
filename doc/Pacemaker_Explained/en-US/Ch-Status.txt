@@ -18,9 +18,9 @@ up-to-date representation of each cluster node in the +status+ section.
 ======
 [source,XML]
 -----
-  <node_state id="cl-virt-1" uname="cl-virt-2" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource">
-   <transient_attributes id="cl-virt-1"/>
-   <lrm id="cl-virt-1"/>
+  <node_state id="1" uname="cl-virt-1" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+   <transient_attributes id="1"/>
+   <lrm id="1"/>
   </node_state>
 -----
 ======      
@@ -64,22 +64,25 @@ Unique identifier for the node. Corosync-based clusters use a numeric counter.
 | uname |
 indexterm:[uname,Node Status]
 indexterm:[Node,Status,uname]
-The node's machine name (output from `uname -n`).
-
-| ha | 
-indexterm:[ha,Node Status]
-indexterm:[Node,Status,ha]
-Is the cluster software active on this node? Allowed values: +active+, +dead+.
+The node's name as known by the cluster
 
 | in_ccm |            
 indexterm:[in_ccm,Node Status]
 indexterm:[Node,Status,in_ccm]
-Is the node a member of the cluster? Allowed values: +true+, +false+.
+Is the node a member at the cluster communication layer? Allowed values:
++true+, +false+.
 
 | crmd |
 indexterm:[crmd,Node Status]
 indexterm:[Node,Status,crmd]
-Is the crmd process active on the node? Allowed values: +online+, +offline+.
+Is the node a member at the pacemaker layer? Allowed values: +online+,
++offline+.
+
+| crm-debug-origin |
+indexterm:[crm-debug-origin,Node Status]
+indexterm:[Node,Status,crm-debug-origin]
+The name of the source function that made the most recent change (for debugging
+purposes).
 
 | join |
 indexterm:[join,Node Status]
@@ -91,11 +94,6 @@ Does the node participate in hosting resources? Allowed values: +down+,
 indexterm:[expected,Node Status]
 indexterm:[Node,Status,expected]
 Expected value for +join+.
-
-| crm-debug-origin |
-indexterm:[crm-debug-origin,Node Status]
-indexterm:[Node,Status,crm-debug-origin]
-The origin of the most recent change(s). For diagnostic purposes.
 
 |=========================================================
 

@@ -2329,11 +2329,12 @@ unpack_simple_colocation(xmlNode * xml_obj, pe_working_set_t * data_set)
     const char *id_rh = crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET);
     const char *state_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE);
     const char *state_rh = crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET_ROLE);
+    const char *attr = crm_element_value(xml_obj, XML_COLOC_ATTR_NODE_ATTR);
+    const char *symmetrical = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
+
+    // experimental syntax from pacemaker-next (unlikely to be adopted as-is)
     const char *instance_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_INSTANCE);
     const char *instance_rh = crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET_INSTANCE);
-    const char *attr = crm_element_value(xml_obj, XML_COLOC_ATTR_NODE_ATTR);
-
-    const char *symmetrical = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
 
     resource_t *rsc_lh = pe_find_constraint_resource(data_set->resources, id_lh);
     resource_t *rsc_rh = pe_find_constraint_resource(data_set->resources, id_rh);
@@ -2692,6 +2693,8 @@ unpack_simple_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
 
     const char *id_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE);
     const char *state_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE);
+
+    // experimental syntax from pacemaker-next (unlikely to be adopted as-is)
     const char *instance_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_INSTANCE);
 
     resource_t *rsc_lh = NULL;

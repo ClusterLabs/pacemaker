@@ -23,25 +23,13 @@ On both nodes, import the ELRepo package signing key, and enable the
 repository:
 ----
 # rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org
-# rpm -Uvh http://www.elrepo.org/elrepo-release-7.0-2.el7.elrepo.noarch.rpm
+# rpm -Uvh http://www.elrepo.org/elrepo-release-7.0-3.el7.elrepo.noarch.rpm
 ----
 
 Now, we can install the DRBD kernel module and utilities:
 ----
 # yum install -y kmod-drbd84 drbd84-utils
 ----
-
-[IMPORTANT]
-===========
-The version of drbd84-utils shipped with CentOS 7.1 has a bug in the
-Pacemaker integration script. Until a fix is packaged, download the
-affected script directly from the upstream, on both nodes:
-----
-# curl -o /usr/lib/ocf/resource.d/linbit/drbd 'http://git.linbit.com/gitweb.cgi?p=drbd-utils.git;a=blob_plain;f=scripts/drbd.ocf;h=cf6b966341377a993d1bf5f585a5b9fe72eaa5f2;hb=c11ba026bbbbc647b8112543df142f2185cb4b4b'
-----
-This is a temporary fix that will be overwritten if the package
-is upgraded.
-===========
 
 DRBD will not be able to run under the default SELinux security policies.
 If you are familiar with SELinux, you can modify the policies in a more
@@ -209,7 +197,7 @@ and run this command on it:
 
 [NOTE]
 ======
-If you are using an older version of DRBD, the required syntax may be different.
+If you are using a different version of DRBD, the required syntax may be different.
 See the documentation for your version for how to perform these commands.
 ======
 
@@ -321,23 +309,17 @@ them all at once by pushing the drbd_cfg file into the live CIB.
 CIB updated
 ----
 
-[NOTE]
-====
-Early versions of `pcs` required `push cib` in place of `cib-push` above.
-====
-
 Let's see what the cluster did with the new configuration:
 ----
 [root@pcmk-1 ~]# pcs status
 Cluster name: mycluster
-Last updated: Fri Aug 14 09:29:41 2015
-Last change: Fri Aug 14 09:29:25 2015
 Stack: corosync
-Current DC: pcmk-1 (1) - partition with quorum
-Version: 1.1.12-a14efad
-2 Nodes configured
-4 Resources configured
+Current DC: pcmk-1 (version 1.1.16-12.el7_4.5-94ff4df) - partition with quorum
+Last updated: Fri Jan 12 09:29:41 2018
+Last change: Fri Jan 12 09:29:25 2018
 
+2 nodes configured
+4 resources configured
 
 Online: [ pcmk-1 pcmk-2 ]
 
@@ -348,10 +330,6 @@ Full list of resources:
  Master/Slave Set: WebDataClone [WebData]
      Masters: [ pcmk-1 ]
      Slaves: [ pcmk-2 ]
-
-PCSD Status:
-  pcmk-1: Online
-  pcmk-2: Online
 
 Daemon Status:
   corosync: active/disabled
@@ -424,6 +402,7 @@ Colocation Constraints:
   WebSite with ClusterIP (score:INFINITY)
   WebFS with WebDataClone (score:INFINITY) (with-rsc-role:Master)
   WebSite with WebFS (score:INFINITY)
+Ticket Constraints:
 ----
 ----
 [root@pcmk-1 ~]# pcs -f fs_cfg resource show
@@ -441,14 +420,14 @@ cluster put it into effect.
 ----
 [root@pcmk-1 ~]# pcs cluster cib-push fs_cfg 
 [root@pcmk-1 ~]# pcs status
-Last updated: Fri Aug 14 09:34:11 2015
-Last change: Fri Aug 14 09:34:09 2015
+Cluster name: mycluster
 Stack: corosync
-Current DC: pcmk-1 (1) - partition with quorum
-Version: 1.1.12-a14efad
-2 Nodes configured
-5 Resources configured
+Current DC: pcmk-1 (version 1.1.16-12.el7_4.5-94ff4df) - partition with quorum
+Last updated: Fri Jan 12 09:34:11 2018
+Last change: Fri Jan 12 09:34:09 2018
 
+2 nodes configured
+5 resources configured
 
 Online: [ pcmk-1 pcmk-2 ]
 
@@ -460,10 +439,6 @@ Full list of resources:
      Masters: [ pcmk-1 ]
      Slaves: [ pcmk-2 ]
  WebFS	(ocf::heartbeat:Filesystem):	Started pcmk-1 
-
-PCSD Status:
-  pcmk-1: Online
-  pcmk-2: Online
 
 Daemon Status:
   corosync: active/disabled
@@ -491,14 +466,13 @@ change to indicate that it can no longer host resources.
 [root@pcmk-1 ~]# pcs cluster standby pcmk-1
 [root@pcmk-1 ~]# pcs status
 Cluster name: mycluster
-Last updated: Fri Aug 14 09:36:49 2015
-Last change: Fri Aug 14 09:36:43 2015
 Stack: corosync
-Current DC: pcmk-1 (1) - partition with quorum
-Version: 1.1.12-a14efad
-2 Nodes configured
-5 Resources configured
+Current DC: pcmk-1 (version 1.1.16-12.el7_4.5-94ff4df) - partition with quorum
+Last updated: Fri Jan 12 09:36:49 2018
+Last change: Fri Jan 12 09:36:43 2018
 
+2 nodes configured
+5 resources configured
 
 Node pcmk-1 (1): standby
 Online: [ pcmk-2 ]
@@ -511,10 +485,6 @@ Full list of resources:
      Masters: [ pcmk-2 ]
      Stopped: [ pcmk-1 ]
  WebFS	(ocf::heartbeat:Filesystem):	Started pcmk-2 
-
-PCSD Status:
-  pcmk-1: Online
-  pcmk-2: Online
 
 Daemon Status:
   corosync: active/disabled
@@ -530,14 +500,13 @@ full cluster member again.
 [root@pcmk-1 ~]# pcs cluster unstandby pcmk-1
 [root@pcmk-1 ~]# pcs status
 Cluster name: mycluster
-Last updated: Fri Aug 14 09:38:02 2015
-Last change: Fri Aug 14 09:37:56 2015
 Stack: corosync
-Current DC: pcmk-1 (1) - partition with quorum
-Version: 1.1.12-a14efad
-2 Nodes configured
-5 Resources configured
+Current DC: pcmk-1 (version 1.1.16-12.el7_4.5-94ff4df) - partition with quorum
+Last updated: Fri Jan 12 09:38:02 2018
+Last change: Fri Jan 12 09:37:56 2018
 
+2 nodes configured
+5 resources configured
 
 Online: [ pcmk-1 pcmk-2 ]
 
@@ -549,10 +518,6 @@ Full list of resources:
      Masters: [ pcmk-2 ]
      Slaves: [ pcmk-1 ]
  WebFS	(ocf::heartbeat:Filesystem):	Started pcmk-2 
-
-PCSD Status:
-  pcmk-1: Online
-  pcmk-2: Online
 
 Daemon Status:
   corosync: active/disabled

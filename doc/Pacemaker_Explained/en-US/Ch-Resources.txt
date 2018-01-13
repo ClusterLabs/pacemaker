@@ -342,7 +342,7 @@ indexterm:[Resource,Option,target-role]
 |+quorum+ for resources with a +class+ of +stonith+,
  otherwise +unfencing+ if unfencing is active in the cluster,
  otherwise +fencing+ if +stonith-enabled+ is true, otherwise +quorum+
-|Conditions under which the resource can be started '(since 1.1.8)'
+|Conditions under which the resource can be started
 Allowed values:
 
 * +nothing:+ can always be started
@@ -355,7 +355,7 @@ Allowed values:
   The cluster can only start this resource if a majority
   of the configured nodes are active _and_ any failed or unknown nodes
   have been fenced _and_ only on nodes that have been
-  <<s-unfencing,unfenced>> '(since 1.1.9)'
+  <<s-unfencing,unfenced>>
 
 indexterm:[requires,Resource Option]
 indexterm:[Resource,Option,requires]
@@ -411,24 +411,24 @@ to be moved (see <<s-migrating-resources>>)
  if any. If specified, this both enables the resource as a guest node and
  defines the unique name used to identify the guest node. The guest must be
  configured to run the Pacemaker Remote daemon when it is started. +WARNING:+
- This value cannot overlap with any resource or node IDs. '(since 1.1.9)'
+ This value cannot overlap with any resource or node IDs.
 
 |remote-port
 |3121
 |If +remote-node+ is specified, the port on the guest used for its
  Pacemaker Remote connection. The Pacemaker Remote daemon on the guest must be
- configured to listen on this port. '(since 1.1.9)'
+ configured to listen on this port.
 
 |remote-addr
 |value of +remote-node+
 |If +remote-node+ is specified, the IP address or hostname used to connect to
  the guest via Pacemaker Remote. The Pacemaker Remote daemon on the guest
- must be configured to accept connections on this address. '(since 1.1.9)'
+ must be configured to accept connections on this address.
 
 |remote-connect-timeout
 |60s
 |If +remote-node+ is specified, how long before a pending guest connection will
- time out. '(since 1.1.10)'
+ time out.
 
 |=========================================================
 

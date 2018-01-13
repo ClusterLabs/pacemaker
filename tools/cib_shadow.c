@@ -138,7 +138,7 @@ static struct crm_option long_options[] = {
     {"-spacer-",	1, 0, '-', "Display the current shadow configuration:", pcmk_option_paragraph},
     {"-spacer-",	1, 0, '-', " crm_shadow --display", pcmk_option_example},
     {"-spacer-",	1, 0, '-', "Discard the current shadow configuration (named myShadow):", pcmk_option_paragraph},
-    {"-spacer-",	1, 0, '-', " crm_shadow --delete myShadow", pcmk_option_example},
+    {"-spacer-",	1, 0, '-', " crm_shadow --delete myShadow --force", pcmk_option_example},
     {"-spacer-",	1, 0, '-', "Upload the current shadow configuration (named myShadow) to the running cluster:", pcmk_option_paragraph},
     {"-spacer-",	1, 0, '-', " crm_shadow --commit myShadow", pcmk_option_example},
 

@@ -8,7 +8,7 @@ containing its UUID, uname, and type.
 .Example Corosync cluster node entry
 ======
 [source,XML]
-<node id="101" uname="pcmk-1" type="normal"/>
+<node id="101" uname="pcmk-1"/>
 ======
 
 In normal circumstances, the admin should let the cluster populate
@@ -121,11 +121,6 @@ node (*pcmk-1* in the example below).
 ----
 # crm_node -R pcmk-1
 ----
-
-[NOTE]
-======
-This procedure only works for pacemaker 1.1.8 and later.
-======
 
 === Replacing a Corosync Node ===
 

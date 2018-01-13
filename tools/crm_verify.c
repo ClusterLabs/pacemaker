@@ -89,10 +89,12 @@ main(int argc, char **argv)
 
     crm_log_cli_init("crm_verify");
     crm_set_options(NULL, "[modifiers] data_source", long_options,
-                    "\n\nChecks the well-formedness of an XML configuration, its conformance to the configured schema and for the presence of common misconfigurations."
-                    "\n\nIt reports two classes of problems, errors and warnings."
-                    " Errors must be fixed before the cluster will work properly."
-                    " However, it is left up to the administrator to decide if the warnings should also be fixed.");
+                    "check a Pacemaker configuration for errors"
+                    "\n\nCheck the well-formedness of a complete Pacemaker XML configuration,"
+                    "\n\nits conformance to the configured schema, and the presence of common"
+                    "\n\nmisconfigurations. Problems reported as errors must be fixed before the"
+                    "\n\ncluster will work properly. It is left to the administrator to decide"
+                    "\n\nwhether to fix problems reported as warnings.");
 
     while (1) {
         flag = crm_get_option(argc, argv, &option_index);

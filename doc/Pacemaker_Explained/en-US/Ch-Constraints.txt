@@ -85,7 +85,7 @@ indexterm:[Constraints,Location,rsc]
  applies, if +rsc+ is not specified; if the regular expression contains
  submatches and the constraint is governed by a rule (see <<ch-rules>>), the
  submatches can be referenced as +%0+ through +%9+ in the rule's
- +score-attribute+ or a rule expression's +attribute+ '(since 1.1.16)'
+ +score-attribute+ or a rule expression's +attribute+
 indexterm:[rsc-pattern,Location Constraints]
 indexterm:[Constraints,Location,rsc-pattern]
 
@@ -115,7 +115,7 @@ indexterm:[Constraints,Location,score]
  (properly written OCF agents will not, so this is usually only seen with other
  agent types); and when Pacemaker Remote is used to scale a cluster to hundreds
  of nodes, limiting resource discovery to allowed nodes can significantly boost
- performance. '(since 1.1.13)'
+ performance.
 
 * +always:+ Always perform resource discovery for the specified resource on this node.
 * +never:+ Never perform resource discovery for the specified resource on this node.
@@ -485,7 +485,7 @@ mandatory.
 [[s-coloc-attribute]]
 === Colocation by Node Attribute ===
 
-The +node+attribute+ property of a colocation constraints allows you to express
+The +node-attribute+ property of a colocation constraints allows you to express
 the requirement, "these resources must be on similar nodes".
 
 As an example, imagine that you have two Storage Area Networks (SANs) that are
@@ -549,7 +549,7 @@ indexterm:[Constraints,Resource Sets,sequential]
  member of the set is started, but if more than one member of the set is
  starting at the same time, the cluster will still wait until all of those have
  started before continuing (this may change in future versions).
- Meaningful within +rsc_order+. '(since 1.1.7)'
+ Meaningful within +rsc_order+.
 indexterm:[require-all,Resource Sets]
 indexterm:[Constraints,Resource Sets,require-all]
 

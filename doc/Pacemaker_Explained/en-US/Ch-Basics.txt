@@ -226,7 +226,7 @@ To enable STONITH for example, one could run:
 Or, to check whether *somenode* is allowed to run resources, there is:
 
 ----
-# crm_standby --get-value --node somenode
+# crm_standby --query --node somenode
 ----
 
 Or, to find the current location of *my-test-rsc*, one can use:
@@ -237,13 +237,6 @@ Or, to find the current location of *my-test-rsc*, one can use:
 
 Examples of using these tools for specific cases will be given throughout this
 document where appropriate.
-
-[NOTE]
-====
-Old versions of pacemaker (1.0.3 and earlier) had different
-command-line tool syntax. If you are using an older version,
-check your installed manual pages for the proper syntax to use.
-====
 
 [[s-config-sandboxes]]
 == Making Configuration Changes in a Sandbox ==
@@ -298,15 +291,14 @@ commands, invoke it with the `--help` option.
 
  shadow[test] # cibadmin --erase --force
  shadow[test] # cibadmin --query
- <cib cib_feature_revision="1" validate-with="pacemaker-1.0" admin_epoch="0" crm_feature_set="3.0" have-quorum="1" epoch="112"
-      dc-uuid="c001n01" num_updates="1" cib-last-written="Fri Jun 27 12:17:10 2008">
-    <configuration>
-       <crm_config/>
-       <nodes/>
-       <resources/>
-       <constraints/>
-    </configuration>
-    <status/>
+ <cib crm_feature_set="3.0.14" validate-with="pacemaker-3.0" epoch="112" num_updates="2" admin_epoch="0" cib-last-written="Mon Jan  8 23:26:47 2018" update-origin="rhel7-1" update-client="crm_node" update-user="root" have-quorum="1" dc-uuid="1">
+   <configuration>
+     <crm_config/>
+     <nodes/>
+     <resources/>
+     <constraints/>
+   </configuration>
+   <status/>
  </cib>
   shadow[test] # crm_shadow --delete test --force
   Now type Ctrl-D to exit the crm_shadow shell
@@ -314,8 +306,7 @@ commands, invoke it with the `--help` option.
   # crm_shadow --which
   No active shadow configuration defined
   # cibadmin -Q
- <cib cib_feature_revision="1" validate-with="pacemaker-1.0" admin_epoch="0" crm_feature_set="3.0" have-quorum="1" epoch="110"
-       dc-uuid="c001n01" num_updates="551">
+ <cib crm_feature_set="3.0.14" validate-with="pacemaker-3.0" epoch="110" num_updates="2" admin_epoch="0" cib-last-written="Mon Jan  8 23:26:47 2018" update-origin="rhel7-1" update-client="crm_node" update-user="root" have-quorum="1">
     <configuration>
        <crm_config>
           <cluster_property_set id="cib-bootstrap-options">

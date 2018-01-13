@@ -601,12 +601,8 @@ that are starting, then the resource will be restarted.
 The Policy Engine is not yet able to model this
 situation correctly and so takes the safer (if less optimal) path.
 
-In pacemaker 1.1.11 and earlier, a migratable resource will be restarted
-when moving if it directly or indirectly depends on 'any' primitive or group
-resources.
-
-Even in newer versions, if a migratable resource depends on a non-migratable
-resource, and both need to be moved, the migratable resource will be restarted.
+Also, if a migratable resource depends on a non-migratable resource, and both
+need to be moved, the migratable resource will be restarted.
 
 [[s-node-health]]
 == Tracking Node Health ==
