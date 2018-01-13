@@ -2,10 +2,10 @@
 """ Regression tests for Pacemaker's lrmd
 """
 
-# Pacemaker targets compatibility with Python 2.6+ and 3.2+
+# Pacemaker targets compatibility with Python 2.7 and 3.2+
 from __future__ import print_function, unicode_literals, absolute_import, division
 
-__copyright__ = "Copyright (C) 2012-2016 Andrew Beekhof <andrew@beekhof.net>"
+__copyright__ = "Copyright (C) 2012-2018 Andrew Beekhof <andrew@beekhof.net>"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import io
@@ -78,15 +78,6 @@ def update_path():
     os.environ['PATH'] = new_path
 
 
-def shlex_split(command):
-    """ Wrapper for shlex.split() that works around Python 2.6 bug """
-
-    if sys.version_info < (2, 7,):
-        return shlex.split(command.encode('ascii'))
-    else:
-        return shlex.split(command)
-
-
 def pipe_output(pipes, stdout=True, stderr=False):
     """ Wrapper to get text output from pipes regardless of Python version """
 
@@ -108,7 +99,7 @@ def pipe_output(pipes, stdout=True, stderr=False):
 def output_from_command(command):
     """ Run a command, and return its standard output. """
 
-    test = subprocess.Popen(shlex_split(command), stdout=subprocess.PIPE)
+    test = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
     test.wait()
     return pipe_output(test).split("\n")
 
@@ -200,19 +191,19 @@ class Test(object):
         """ Prepare the host for running a test """
 
         ### make sure we are in full control here ###
-        cmd = shlex_split("killall -q -9 stonithd lt-stonithd lrmd lt-lrmd lrmd_test lt-lrmd_test pacemaker_remoted")
+        cmd = shlex.split("killall -q -9 stonithd lt-stonithd lrmd lt-lrmd lrmd_test lt-lrmd_test pacemaker_remoted")
         test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
         test.wait()
 
         additional_args = ""
 
         if self.tls == 0:
-            self.stonith_process = subprocess.Popen(shlex_split("stonithd -s"))
+            self.stonith_process = subprocess.Popen(shlex.split("stonithd -s"))
 
         if self.verbose:
             additional_args = additional_args + " -V"
 
-        self.lrmd_process = subprocess.Popen(shlex_split("%s %s -l /tmp/lrmd-regression.log"
+        self.lrmd_process = subprocess.Popen(shlex.split("%s %s -l /tmp/lrmd-regression.log"
                                                          % (self.daemon_location, additional_args)))
 
         time.sleep(1)
@@ -276,7 +267,7 @@ class Test(object):
     def run_cmd(self, args):
         """ Execute a command as part of this test """
 
-        cmd = shlex_split(args['args'])
+        cmd = shlex.split(args['args'])
         cmd.insert(0, args['cmd'])
         if self.verbose:
             print("\n\nRunning: "+" ".join(cmd))
@@ -290,7 +281,7 @@ class Test(object):
             ### launched earlier that is listening for the failure may not have
             ### time to connect to the lrmd.
             time.sleep(2)
-            subprocess.Popen(shlex_split(args['kill']))
+            subprocess.Popen(shlex.split(args['kill']))
 
         if args['no_wait'] == 0:
             test.wait()

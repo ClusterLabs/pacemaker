@@ -171,9 +171,9 @@ Requires:      %{name}-cli = %{version}-%{release}
 %systemd_requires
 %endif
 
-# Pacemaker targets compatibility with python 2.6+ and 3.2+
-Requires:      python >= 2.6
-BuildRequires: python-devel >= 2.6
+# Pacemaker targets compatibility with python 2.7 and 3.2+
+Requires:      python >= 2.7
+BuildRequires: python-devel >= 2.7
 
 # Pacemaker requires a minimum libqb functionality
 Requires:      libqb >= 0.13.0
@@ -316,7 +316,7 @@ for developing tools for Pacemaker.
 License:       GPLv2+ and LGPLv2+
 Summary:       Test framework for cluster-related technologies like Pacemaker
 Group:         System Environment/Daemons
-Requires:      python >= 2.6
+Requires:      python >= 2.7
 Requires:      %{name}-libs = %{version}-%{release}
 
 # systemd python bindings are separate package in some distros
