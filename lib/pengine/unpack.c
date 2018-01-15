@@ -2662,11 +2662,6 @@ unpack_rsc_op_failure(resource_t * rsc, node_t * node, int rc, xmlNode * xml_op,
         rsc->role = RSC_ROLE_MASTER;
 
     } else if (safe_str_eq(task, CRMD_ACTION_DEMOTE)) {
-        /*
-         * staying in role=master ends up putting the PE/TE into a loop
-         * setting role=slave is not dangerous because no master will be
-         * promoted until the failed resource has been fully stopped
-         */
         if (action->on_fail == action_fail_block) {
             rsc->role = RSC_ROLE_MASTER;
             rsc->next_role = RSC_ROLE_STOPPED;
@@ -2675,9 +2670,13 @@ unpack_rsc_op_failure(resource_t * rsc, node_t * node, int rc, xmlNode * xml_op,
             rsc->role = RSC_ROLE_STOPPED;
 
         } else {
-            crm_warn("Forcing %s to stop after a failed demote action", rsc->id);
+            /*
+             * Staying in master role would put the PE/TE into a loop. Setting
+             * slave role is not dangerous because the resource will be stopped
+             * as part of recovery, and any master promotion will be ordered
+             * after that stop.
+             */
             rsc->role = RSC_ROLE_SLAVE;
-            rsc->next_role = RSC_ROLE_STOPPED;
         }
 
     } else if (compare_version("2.0", op_version) > 0 && safe_str_eq(task, CRMD_ACTION_START)) {
