@@ -49,6 +49,7 @@ static int ais_fd_sync = -1;
 #define HAVE_CONFDB 0
 #define SUPPORT_CMAN 0
 #define SUPPORT_PLUGIN 0
+#define SUPPORT_STONITH_CONFIG 0
 #define is_classic_ais_cluster() 0
 #define is_cman_cluster() 0
 

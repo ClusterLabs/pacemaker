@@ -7,7 +7,6 @@
 * `fence_dummy`, `fence_legacy`, `fence_legacy.8`:
   Pacemaker-supplied fence agents and their man pages
 * `regression.py(.in)`: regression tests for `stonithd`
-* `standalone_config.c`, `standalone_config.h`: abandoned project
 * `test.c`: `stonith-test` command-line tool
 
 # How fencing requests are handled

@@ -504,16 +504,6 @@ if test x"${ASCIIDOC}" != x""; then
     PCMK_FEATURES="$PCMK_FEATURES ascii-docs"
 fi
 
-SUPPORT_STONITH_CONFIG=0
-if test x"${HAVE_YACC}" != x"" -a x"${FLEX}" != x"" -a x"${BISON}" != x""; then
-    SUPPORT_STONITH_CONFIG=1
-    PCMK_FEATURES="$PCMK_FEATURES st-conf"
-fi
-
-AM_CONDITIONAL(BUILD_STONITH_CONFIG, test $SUPPORT_STONITH_CONFIG = 1)
-AC_DEFINE_UNQUOTED(SUPPORT_STONITH_CONFIG, $SUPPORT_STONITH_CONFIG,
-                   Support a stand-alone stonith config file in addition to the CIB)
-
 publican_intree_brand=no
 if test x"${PUBLICAN_BRAND}" != x"" \
    && test x"${PUBLICAN}" != x"" \

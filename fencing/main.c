@@ -47,8 +47,6 @@
 
 #include <internal.h>
 
-#include <standalone_config.h>
-
 char *stonith_our_uname = NULL;
 char *stonith_our_uuid = NULL;
 long stonith_watchdog_timeout_ms = 0;
@@ -1487,12 +1485,6 @@ main(int argc, char **argv)
     }
 
     stonith_ipc_server_init(&ipcs, &ipc_callbacks);
-
-#if SUPPORT_STONITH_CONFIG
-    if (((stand_alone == TRUE)) && !(standalone_cfg_read_file(STONITH_NG_CONF_FILE))) {
-        standalone_cfg_commit();
-    }
-#endif
 
     /* Create the mainloop and run it... */
     mainloop = g_main_new(FALSE);
