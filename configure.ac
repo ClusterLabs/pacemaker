@@ -43,7 +43,6 @@ dnl     new defines
 dnl   - Should not include HAVE_* defines
 dnl   - Safe to include anywhere
 AM_CONFIG_HEADER(include/config.h include/crm_config.h)
-ALL_LINGUAS="en fr"
 
 AC_ARG_WITH(version,
     [  --with-version=version   Override package version (if you are a packager needing to pretend) ],
