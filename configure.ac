@@ -269,9 +269,7 @@ esac
 
 AC_MSG_NOTICE(Sanitizing exec_prefix: ${exec_prefix})
 case $exec_prefix in
-  dnl For consistency with Heartbeat, map NONE->$prefix
-  NONE)	  exec_prefix=$prefix;;
-  prefix) exec_prefix=$prefix;;
+  prefix|NONE) exec_prefix=$prefix;;
 esac
 
 AC_MSG_NOTICE(Sanitizing INITDIR: ${INITDIR})
@@ -295,7 +293,6 @@ AC_SUBST(INITDIR)
 
 AC_MSG_NOTICE(Sanitizing libdir: ${libdir})
 case $libdir in
-  dnl For consistency with Heartbeat, map NONE->$prefix
   prefix|NONE)
     AC_MSG_CHECKING(which lib directory to use)
     for aDir in lib64 lib
