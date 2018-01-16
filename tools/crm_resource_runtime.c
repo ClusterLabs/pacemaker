@@ -1343,10 +1343,19 @@ done:
     return rc;
 }
 
-#define action_is_pending(action) \
-    ((is_set((action)->flags, pe_action_optional) == FALSE) \
-    && (is_set((action)->flags, pe_action_runnable) == TRUE) \
-    && (is_set((action)->flags, pe_action_pseudo) == FALSE))
+static inline int action_is_pending(action_t *action) 
+{
+    if(is_set(action->flags, pe_action_optional)) {
+        return FALSE;
+    } else if(is_set(action->flags, pe_action_runnable) == FALSE) {
+        return FALSE;
+    } else if(is_set(action->flags, pe_action_pseudo)) {
+        return FALSE;
+    } else if(safe_str_eq("notify", action->task)) {
+        return FALSE;
+    }
+    return TRUE;
+}
 
 /*!
  * \internal
@@ -1362,7 +1371,9 @@ actions_are_pending(GListPtr actions)
     GListPtr action;
 
     for (action = actions; action != NULL; action = action->next) {
-        if (action_is_pending((action_t *) action->data)) {
+        action_t *a = (action_t *)action->data;
+        if (action_is_pending(a)) {
+            crm_notice("Waiting for %s (flags=0x%.8x)", a->uuid, a->flags);
             return TRUE;
         }
     }
