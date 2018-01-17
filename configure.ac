@@ -643,27 +643,19 @@ dnl ========================================================================
 
 AC_HEADER_STDC
 AC_CHECK_HEADERS(arpa/inet.h)
-AC_CHECK_HEADERS(asm/types.h)
-AC_CHECK_HEADERS(assert.h)
-AC_CHECK_HEADERS(auth-client.h)
 AC_CHECK_HEADERS(ctype.h)
 AC_CHECK_HEADERS(dirent.h)
 AC_CHECK_HEADERS(errno.h)
-AC_CHECK_HEADERS(fcntl.h)
 AC_CHECK_HEADERS(getopt.h)
 AC_CHECK_HEADERS(glib.h)
 AC_CHECK_HEADERS(grp.h)
 AC_CHECK_HEADERS(limits.h)
-AC_CHECK_HEADERS(linux/errqueue.h)
 AC_CHECK_HEADERS(linux/swab.h)
 AC_CHECK_HEADERS(malloc.h)
 AC_CHECK_HEADERS(netdb.h)
 AC_CHECK_HEADERS(netinet/in.h)
 AC_CHECK_HEADERS(netinet/ip.h)
-AC_CHECK_HEADERS(pam/pam_appl.h)
-AC_CHECK_HEADERS(pthread.h)
 AC_CHECK_HEADERS(pwd.h)
-AC_CHECK_HEADERS(security/pam_appl.h)
 AC_CHECK_HEADERS(sgtty.h)
 AC_CHECK_HEADERS(signal.h)
 AC_CHECK_HEADERS(stdarg.h)
@@ -675,10 +667,8 @@ AC_CHECK_HEADERS(strings.h)
 AC_CHECK_HEADERS(sys/dir.h)
 AC_CHECK_HEADERS(sys/ioctl.h)
 AC_CHECK_HEADERS(sys/param.h)
-AC_CHECK_HEADERS(sys/poll.h)
 AC_CHECK_HEADERS(sys/reboot.h)
 AC_CHECK_HEADERS(sys/resource.h)
-AC_CHECK_HEADERS(sys/select.h)
 AC_CHECK_HEADERS(sys/socket.h)
 AC_CHECK_HEADERS(sys/signalfd.h)
 AC_CHECK_HEADERS(sys/sockio.h)
@@ -686,19 +676,13 @@ AC_CHECK_HEADERS(sys/stat.h)
 AC_CHECK_HEADERS(sys/time.h)
 AC_CHECK_HEADERS(sys/timeb.h)
 AC_CHECK_HEADERS(sys/types.h)
-AC_CHECK_HEADERS(sys/uio.h)
-AC_CHECK_HEADERS(sys/un.h)
 AC_CHECK_HEADERS(sys/utsname.h)
 AC_CHECK_HEADERS(sys/wait.h)
 AC_CHECK_HEADERS(time.h)
 AC_CHECK_HEADERS(unistd.h)
-AC_CHECK_HEADERS(winsock.h)
 
-dnl These headers need prerequisits before the tests will pass
+dnl These headers need prerequisites before the tests will pass
 dnl AC_CHECK_HEADERS(net/if.h)
-dnl AC_CHECK_HEADERS(netinet/icmp6.h)
-dnl AC_CHECK_HEADERS(netinet/ip6.h)
-dnl AC_CHECK_HEADERS(netinet/ip_icmp.h)
 
 AC_MSG_CHECKING(for special libxml2 includes)
 if test "x$XML2CONFIG" = "x"; then
@@ -913,7 +897,6 @@ fi
 PKG_CHECK_MODULES(libqb, libqb >= 0.13)
 CPPFLAGS="$libqb_CFLAGS $CPPFLAGS"
 LIBS="$libqb_LIBS $LIBS"
-AC_CHECK_HEADERS(qb/qbipc_common.h)
 AC_CHECK_LIB(qb, qb_ipcs_connection_auth_set)
 
 PCMK_FEATURES="$PCMK_FEATURES libqb-logging libqb-ipc"
