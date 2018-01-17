@@ -897,10 +897,13 @@ fi
 PKG_CHECK_MODULES(libqb, libqb >= 0.13)
 CPPFLAGS="$libqb_CFLAGS $CPPFLAGS"
 LIBS="$libqb_LIBS $LIBS"
+
+dnl libqb 0.14.0+ (2012-06)
 AC_CHECK_LIB(qb, qb_ipcs_connection_auth_set)
 
 PCMK_FEATURES="$PCMK_FEATURES libqb-logging libqb-ipc"
 
+dnl libqb 0.17.0+ (2014-02)
 AC_CHECK_FUNCS(qb_ipcs_connection_get_buffer_size,
                AC_DEFINE(HAVE_IPCS_GET_BUFFER_SIZE, 1,
                          [Have qb_ipcc_get_buffer_size function]))
