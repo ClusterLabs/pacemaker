@@ -79,31 +79,6 @@ static const char *crm_app_description = NULL;
 static char *crm_short_options = NULL;
 static const char *crm_app_usage = NULL;
 
-crm_exit_t
-crm_exit(crm_exit_t rc)
-{
-    CRM_CHECK((rc >= 0) && (rc <= 255), rc = CRM_EX_ERROR);
-
-    mainloop_cleanup();
-
-#if HAVE_LIBXML2
-    crm_trace("cleaning up libxml");
-    crm_xml_cleanup();
-#endif
-
-    crm_trace("exit %d", rc);
-    qb_log_fini();
-
-    free(crm_short_options);
-    free(crm_system_name);
-
-    exit(rc);
-    return rc;     /* Can never happen, but allows return crm_exit(rc)
-                    * where "return rc" was used previously - which
-                    * keeps compilers happy.
-                    */
-}
-
 gboolean
 check_time(const char *value)
 {
@@ -221,6 +196,13 @@ check_utilization(const char *value)
     }
 
     return TRUE;
+}
+
+void
+crm_args_fini()
+{
+    free(crm_short_options);
+    crm_short_options = NULL;
 }
 
 int
@@ -1171,87 +1153,6 @@ crm_help(char cmd, crm_exit_t exit_code)
 
   out:
     return crm_exit(exit_code);
-}
-
-/*!
- * \brief Map an errno to a similar exit status
- *
- * \param[in] errno  Error number to map
- *
- * \return Exit status corresponding to errno
- */
-crm_exit_t
-crm_errno2exit(int rc)
-{
-    rc = abs(rc); // Convenience for functions that return -errno
-    if (rc == EOPNOTSUPP) {
-        rc = ENOTSUP; // Values are same on Linux, can't use both in case
-    }
-    switch (rc) {
-        case pcmk_ok:
-            return CRM_EX_OK;
-
-        case pcmk_err_no_quorum:
-            return CRM_EX_QUORUM;
-
-        case pcmk_err_old_data:
-            return CRM_EX_OLD;
-
-        case pcmk_err_schema_validation:
-        case pcmk_err_transform_failed:
-            return CRM_EX_CONFIG;
-
-        case EACCES:
-            return CRM_EX_INSUFFICIENT_PRIV;
-
-        case EBADF:
-        case EINVAL:
-        case EFAULT:
-        case ENOSYS:
-        case EOVERFLOW:
-            return CRM_EX_SOFTWARE;
-
-        case EBADMSG:
-        case EMSGSIZE:
-        case ENOMSG:
-        case ENOPROTOOPT:
-        case EPROTO:
-        case EPROTONOSUPPORT:
-        case EPROTOTYPE:
-            return CRM_EX_PROTOCOL;
-
-        case ECOMM:
-        case ENOMEM:
-            return CRM_EX_OSERR;
-
-        case ECONNABORTED:
-        case ECONNREFUSED:
-        case ECONNRESET:
-        case ENOTCONN:
-            return CRM_EX_DISCONNECT;
-
-        case EEXIST:
-            return CRM_EX_EXISTS;
-
-        case EIO:
-            return CRM_EX_IOERR;
-
-        case ENOTSUP:
-            return CRM_EX_UNIMPLEMENT_FEATURE;
-
-        case ENOTUNIQ:
-            return CRM_EX_MULTIPLE;
-
-        case ENXIO:
-            return CRM_EX_NOSUCH;
-
-        case ETIME:
-        case ETIMEDOUT:
-            return CRM_EX_TIMEOUT;
-
-        default:
-            return CRM_EX_ERROR;
-    }
 }
 
 void cib_ipc_servers_init(qb_ipcs_service_t **ipcs_ro,
