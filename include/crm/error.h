@@ -17,8 +17,6 @@
  */
 #ifndef CRM_ERROR__H
 #  define CRM_ERROR__H
-#  include <crm_config.h>
-#  include <assert.h>
 
 /**
  * \file
