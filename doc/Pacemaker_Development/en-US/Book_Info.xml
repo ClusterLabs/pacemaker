@@ -14,8 +14,8 @@
 		Changing the revision is only necessary when releasing a new
 		version of Pacemaker or publishing the documents to the Web.
 	-->
-	<edition>1</edition>
-	<pubsnumber>1</pubsnumber>
+	<edition>2</edition>
+	<pubsnumber>0</pubsnumber>
 	<abstract>
 		<para>
 			This document has guidelines and tips for developers

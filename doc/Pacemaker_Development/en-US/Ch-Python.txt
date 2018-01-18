@@ -21,7 +21,7 @@ Every Python file should start like this:
 """ <BRIEF-DESCRIPTION>
 """
 
-# Pacemaker targets compatibility with Python 2.6+ and 3.2+
+# Pacemaker targets compatibility with Python 2.7 and 3.2+
 from __future__ import print_function, unicode_literals, absolute_import, division
 
 __copyright__ = "Copyright (C) <YYYY[-YYYY]> Andrew Beekhof <andrew@beekhof.net>"
@@ -55,7 +55,7 @@ indexterm:[Python,2]
 indexterm:[Python,3]
 indexterm:[Python,versions]
 
-Pacemaker targets compatibility with Python 2.6 and later, and Python 3.2 and
+Pacemaker targets compatibility with Python 2.7, and Python 3.2 and
 later. These versions have added features to be more compatible with each
 other, allowing us to support both the 2 and 3 series with the same code. It is
 a good idea to test any changes with both Python 2 and 3.
@@ -94,7 +94,6 @@ The future imports used in <<s-python-boilerplate>> mean:
   return lists in Python 2 and views in Python 3. In many case, no special
   handling is required, but if the code needs to use list methods on the
   result, cast the result to list first.
-* Do not name variables +with+ or +as+.
 * Do not raise or catch strings as exceptions (e.g. +raise "Bad thing"+).
 * Do not use the +cmp+ parameter of sorting functions (use +key+ instead, if
   needed) or the +$$__cmp__()$$+ method of classes (implement rich comparison
@@ -102,12 +101,10 @@ The future imports used in <<s-python-boilerplate>> mean:
 * Do not use the +buffer+ type.
 * Do not use features not available in all targeted Python versions. Common
   examples include:
-** The +argparse+, +html+, +ipaddress+, +sysconfig+, and +UserDict+ modules
-** The +collections.OrderedDict+ class
+** The +html+, +ipaddress+, and +UserDict+ modules
 ** The +subprocess.run()+ function
 ** The +subprocess.DEVNULL+ constant
 ** +subprocess+ module-specific exceptions
-** Set literals (+{1, 2, 3}+)
 
 === Python Usages to Avoid ===
 

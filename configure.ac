@@ -6,7 +6,7 @@ dnl License: GNU General Public License (GPL)
 dnl ===============================================
 dnl Bootstrap
 dnl ===============================================
-AC_PREREQ(2.59)
+AC_PREREQ(2.64)
 
 dnl Suggested structure:
 dnl     information on the package
@@ -20,12 +20,8 @@ dnl     checks for library functions
 dnl     checks for system services
 
 m4_include([version.m4])
-AC_INIT([pacemaker], VERSION_NUMBER, [users@clusterlabs.org],
-        [pacemaker], PCMK_URL)
-dnl Workaround autoconf < 2.64
-if test x"${PACKAGE_URL}" = x""; then
-	AC_SUBST([PACKAGE_URL], PCMK_URL)
-fi
+AC_INIT([pacemaker], VERSION_NUMBER, [users@clusterlabs.org], [pacemaker],
+        PCMK_URL)
 
 PCMK_FEATURES=""
 
@@ -47,36 +43,33 @@ dnl     new defines
 dnl   - Should not include HAVE_* defines
 dnl   - Safe to include anywhere
 AM_CONFIG_HEADER(include/config.h include/crm_config.h)
-ALL_LINGUAS="en fr"
 
 AC_ARG_WITH(version,
-    [  --with-version=version   Override package version (if you're a packager needing to pretend) ],
+    [  --with-version=version   Override package version (if you are a packager needing to pretend) ],
     [ PACKAGE_VERSION="$withval" ])
 
 AC_ARG_WITH(pkg-name,
-    [  --with-pkg-name=name     Override package name (if you're a packager needing to pretend) ],
+    [  --with-pkg-name=name     Override package name (if you are a packager needing to pretend) ],
     [ PACKAGE_NAME="$withval" ])
 
-dnl Older distros may need: AM_INIT_AUTOMAKE($PACKAGE_NAME, $PACKAGE_VERSION)
-AM_INIT_AUTOMAKE([foreign])
-AC_DEFINE_UNQUOTED(PACEMAKER_VERSION, "$PACKAGE_VERSION", Current pacemaker version)
-
-dnl Versioned attributes implementation is not yet production-ready
-AC_DEFINE_UNQUOTED(ENABLE_VERSIONED_ATTRS, 0, Enable versioned attributes)
-
-PACKAGE_SERIES=`echo $PACKAGE_VERSION | awk -F. '{ print $1"."$2 }'`
-AC_SUBST(PACKAGE_SERIES)
-AC_SUBST(PACKAGE_VERSION)
-
-dnl automake >= 1.11 offers --enable-silent-rules for suppressing the output from
-dnl normal compilation.  When a failure occurs, it will then display the full
-dnl command line
-dnl Wrap in m4_ifdef to avoid breaking on older platforms
-m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
+dnl 1.11:         minimum automake version required
+dnl foreign:      don't require GNU-standard top-level files
+dnl silent-rules: allow "--enable-silent-rules" (no-op in 1.13+)
+AM_INIT_AUTOMAKE([1.11 foreign silent-rules])
 
 dnl Example 2.4. Silent Custom Rule to Generate a File
 dnl %-bar.pc: %.pc
 dnl	$(AM_V_GEN)$(LN_S) $(notdir $^) $@
+
+AC_DEFINE_UNQUOTED(PACEMAKER_VERSION, "$PACKAGE_VERSION",
+                   [Current pacemaker version])
+
+dnl Versioned attributes implementation is not yet production-ready
+AC_DEFINE_UNQUOTED(ENABLE_VERSIONED_ATTRS, 0, [Enable versioned attributes])
+
+PACKAGE_SERIES=`echo $PACKAGE_VERSION | awk -F. '{ print $1"."$2 }'`
+AC_SUBST(PACKAGE_SERIES)
+AC_SUBST(PACKAGE_VERSION)
 
 CC_IN_CONFIGURE=yes
 export CC_IN_CONFIGURE
@@ -112,48 +105,13 @@ dnl ===============================================
 dnl Helpers
 dnl ===============================================
 cc_supports_flag() {
-         local CFLAGS="-Werror $@"
-         AC_MSG_CHECKING(whether $CC supports "$@")
-         AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])], [RC=0; AC_MSG_RESULT(yes)],[RC=1; AC_MSG_RESULT(no)])
-         return $RC
+    local CFLAGS="-Werror $@"
+    AC_MSG_CHECKING(whether $CC supports "$@")
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+                      [RC=0; AC_MSG_RESULT(yes)],
+                      [RC=1; AC_MSG_RESULT(no)])
+    return $RC
 }
-
-try_extract_header_define() {
-	  AC_MSG_CHECKING(if $2 in $1 exists)
-	  Cfile=$srcdir/extract_define.$2.${$}
-	  printf "#include <stdio.h>\n" > ${Cfile}.c
-	  printf "#include <%s>\n" $1 >> ${Cfile}.c
-	  printf "int main(int argc, char **argv) {\n" >> ${Cfile}.c
-	  printf "#ifdef %s\n" $2 >> ${Cfile}.c
-	  printf "printf(\"%%s\", %s);\n" $2 >> ${Cfile}.c
-	  printf "#endif \n return 0; }\n" >> ${Cfile}.c
-	  $CC $CFLAGS ${Cfile}.c -o ${Cfile} 2>/dev/null
-	  value=
-	  if test -x ${Cfile}; then
-	      value=`${Cfile} 2>/dev/null`
-	  fi
-	  if  test x"${value}" == x""; then
-	      value=$3
-	      AC_MSG_RESULT(default: $value)
-	  else
-	      AC_MSG_RESULT($value)
-	  fi
-	  printf $value
-	  rm -rf ${Cfile}.c ${Cfile} ${Cfile}.dSYM ${Cfile}.gcno
-	}
-
-extract_header_define() {
-	  AC_MSG_CHECKING(for $2 in $1)
-	  Cfile=$srcdir/extract_define.$2.${$}
-	  printf "#include <stdio.h>\n" > ${Cfile}.c
-	  printf "#include <%s>\n" $1 >> ${Cfile}.c
-	  printf "int main(int argc, char **argv) { printf(\"%%s\", %s); return 0; }\n" $2 >> ${Cfile}.c
-	  $CC $CFLAGS ${Cfile}.c -o ${Cfile}
-	  value=`${Cfile}`
-	  AC_MSG_RESULT($value)
-	  printf $value
-	  rm -rf ${Cfile}.c ${Cfile} ${Cfile}.dSYM ${Cfile}.gcno
-	}
 
 dnl ===============================================
 dnl Configure Options
@@ -168,123 +126,104 @@ AC_ARG_WITH(pkgname,
 AC_SUBST(PKGNAME)
 
 AC_ARG_ENABLE([ansi],
-[  --enable-ansi force GCC to compile to ANSI/ANSI standard for older compilers.
-     [default=no]])
+    [  --enable-ansi  Force GCC to compile to ANSI standard for older compilers. [default=no] ])
 
 AC_ARG_ENABLE([fatal-warnings],
-[  --enable-fatal-warnings very pedantic and fatal warnings for gcc
-     [default=yes]])
+    [  --enable-fatal-warnings  Enable pedantic and fatal warnings for gcc [default=yes] ])
 
 AC_ARG_ENABLE([quiet],
-[  --enable-quiet
-     Supress make output unless there is an error
-     [default=no]])
+    [  --enable-quiet  Suppress make output unless there is an error [default=no] ])
 
 AC_ARG_ENABLE([no-stack],
-    [  --enable-no-stack
-       Only build the Policy Engine and pieces needed to support it [default=no]])
+    [  --enable-no-stack  Build only the Policy Engine and its requirements [default=no] ])
 
 AC_ARG_ENABLE([upstart],
-    [  --enable-upstart
-       Enable support for managing resources via Upstart [default=try]],
+    [  --enable-upstart  Enable support for managing resources via Upstart [default=try] ],
     [],
     [enable_upstart=try],
 )
 
 AC_ARG_ENABLE([systemd],
-    [  --enable-systemd
-       Enable support for managing resources via systemd [default=try]],
+    [  --enable-systemd  Enable support for managing resources via systemd [default=try]],
     [],
     [enable_systemd=try],
 )
 
 AC_ARG_ENABLE(hardening,
-    [  --with-hardening
-       Harden the resulting executables/libraries (best effort by default)],
+    [  --with-hardening  Harden the resulting executables/libraries (best effort by default) ],
     [ HARDENING="${enableval}" ],
     [ HARDENING=try ],
 )
 
 AC_ARG_WITH(corosync,
-    [  --with-corosync
-       Support the Corosync messaging and membership layer ],
+    [  --with-corosync  Support the Corosync messaging and membership layer ],
     [ SUPPORT_CS=$withval ],
     [ SUPPORT_CS=try ],
 )
 
 AC_ARG_WITH(nagios,
-    [  --with-nagios
-       Support nagios remote monitoring ],
+    [  --with-nagios  Support nagios remote monitoring ],
     [ SUPPORT_NAGIOS=$withval ],
     [ SUPPORT_NAGIOS=try ],
 )
 
 AC_ARG_WITH(nagios-plugin-dir,
-    [  --with-nagios-plugin-dir=DIR
-       Directory for nagios plugins [${NAGIOS_PLUGIN_DIR}]],
+    [  --with-nagios-plugin-dir=DIR  Directory for nagios plugins [${NAGIOS_PLUGIN_DIR}] ],
     [ NAGIOS_PLUGIN_DIR="$withval" ]
 )
 
 AC_ARG_WITH(nagios-metadata-dir,
-    [  --with-nagios-metadata-dir=DIR
-       Directory for nagios plugins metadata [${NAGIOS_METADATA_DIR}]],
+    [  --with-nagios-metadata-dir=DIR  Directory for nagios plugins metadata [${NAGIOS_METADATA_DIR}] ],
     [ NAGIOS_METADATA_DIR="$withval" ]
 )
 
 AC_ARG_WITH(acl,
-    [  --with-acl
-       Support CIB ACL ],
+    [  --with-acl  Support CIB ACL ],
     [ SUPPORT_ACL=$withval ],
     [ SUPPORT_ACL=yes ],
 )
 
 AC_ARG_WITH(cibsecrets,
-    [  --with-cibsecrets
-       Support CIB secrets ],
+    [  --with-cibsecrets  Support separate file for CIB secrets ],
     [ SUPPORT_CIBSECRETS=$withval ],
     [ SUPPORT_CIBSECRETS=no ],
 )
 
 INITDIR=""
 AC_ARG_WITH(initdir,
-    [  --with-initdir=DIR      directory for init (rc) scripts [${INITDIR}]],
+    [  --with-initdir=DIR  Directory for init (rc) scripts [${INITDIR}] ],
     [ INITDIR="$withval" ])
 
 SUPPORT_PROFILING=0
 AC_ARG_WITH(profiling,
-    [  --with-profiling
-       Disable optimizations for effective profiling ],
+    [  --with-profiling  Disable optimizations for effective profiling ],
     [ SUPPORT_PROFILING=$withval ])
 
 AC_ARG_WITH(coverage,
-    [  --with-coverage
-       Disable optimizations for effective profiling ],
+    [  --with-coverage   Disable optimizations for effective profiling ],
     [ SUPPORT_COVERAGE=$withval ])
 
 PUBLICAN_BRAND="common"
 AC_ARG_WITH(brand,
-    [  --with-brand=brand  Brand to use for generated documentation (set empty for no docs) [$PUBLICAN_BRAND]],
+    [  --with-brand=brand  Brand to use for generated documentation (set empty for no docs) [$PUBLICAN_BRAND] ],
     [ test x"$withval" = x"no" || PUBLICAN_BRAND="$withval" ])
 AC_SUBST(PUBLICAN_BRAND)
 
 CONFIGDIR=""
 AC_ARG_WITH(configdir,
-    [  --with-configdir=DIR
-       Directory for Pacemaker configuration file [${CONFIGDIR}]],
+    [  --with-configdir=DIR  Directory for Pacemaker configuration file [${CONFIGDIR}]],
     [ CONFIGDIR="$withval" ]
 )
 
 CRM_LOG_DIR=""
 AC_ARG_WITH(logdir,
-    [  --with-logdir=DIR
-       Directory for Pacemaker log file @<:@LOCALSTATEDIR/log/pacemaker@:>@],
+    [  --with-logdir=DIR  Directory for Pacemaker log file @<:@LOCALSTATEDIR/log/pacemaker@:>@ ],
     [ CRM_LOG_DIR="$withval" ]
 )
 
 CRM_BUNDLE_DIR=""
 AC_ARG_WITH(bundledir,
-    [  --with-bundledir=DIR
-       Directory for Pacemaker bundle logs @<:@LOCALSTATEDIR/log/pacemaker/bundles@:>@],
+    [  --with-bundledir=DIR  Directory for Pacemaker bundle logs @<:@LOCALSTATEDIR/log/pacemaker/bundles@:>@ ],
     [ CRM_BUNDLE_DIR="$withval" ]
 )
 
@@ -295,65 +234,63 @@ dnl ===============================================
 INIT_EXT=""
 echo Our Host OS: $host_os/$host
 
-
 AC_MSG_NOTICE(Sanitizing prefix: ${prefix})
 case $prefix in
-  NONE)
-	prefix=/usr
-	dnl Fix default variables - "prefix" variable if not specified
-	if test "$localstatedir" = "\${prefix}/var"; then
-		localstatedir="/var"
-	fi
-	if test "$sysconfdir" = "\${prefix}/etc"; then
-		sysconfdir="/etc"
-	fi
-	;;
+    NONE)
+        prefix=/usr
+        dnl Fix default variables - "prefix" variable if not specified
+        if test "$localstatedir" = "\${prefix}/var"; then
+            localstatedir="/var"
+        fi
+        if test "$sysconfdir" = "\${prefix}/etc"; then
+            sysconfdir="/etc"
+        fi
+        ;;
 esac
-
 
 AC_MSG_NOTICE(Sanitizing exec_prefix: ${exec_prefix})
 case $exec_prefix in
-  dnl For consistency with Heartbeat, map NONE->$prefix
-  NONE)	  exec_prefix=$prefix;;
-  prefix) exec_prefix=$prefix;;
+    prefix|NONE)
+        exec_prefix=$prefix
+        ;;
 esac
 
 AC_MSG_NOTICE(Sanitizing INITDIR: ${INITDIR})
 case $INITDIR in
-  prefix) INITDIR=$prefix;;
-  "")
-    AC_MSG_CHECKING(which init (rc) directory to use)
-      for initdir in /etc/init.d /etc/rc.d/init.d /sbin/init.d	\
-	   /usr/local/etc/rc.d /etc/rc.d
-      do
-        if
-          test -d $initdir
-        then
-          INITDIR=$initdir
-          break
-        fi
-      done
-      AC_MSG_RESULT($INITDIR);;
+    prefix) INITDIR=$prefix;;
+    "")
+        AC_MSG_CHECKING(which init (rc) directory to use)
+        for initdir in /etc/init.d /etc/rc.d/init.d /sbin/init.d \
+            /usr/local/etc/rc.d /etc/rc.d
+        do
+            if
+                test -d $initdir
+            then
+                INITDIR=$initdir
+                break
+            fi
+        done
+        AC_MSG_RESULT($INITDIR)
+        ;;
 esac
 AC_SUBST(INITDIR)
 
 AC_MSG_NOTICE(Sanitizing libdir: ${libdir})
 case $libdir in
-  dnl For consistency with Heartbeat, map NONE->$prefix
-  prefix|NONE)
-    AC_MSG_CHECKING(which lib directory to use)
-    for aDir in lib64 lib
-    do
-      trydir="${exec_prefix}/${aDir}"
-      if
-        test -d ${trydir}
-      then
-        libdir=${trydir}
-        break
-      fi
-    done
-    AC_MSG_RESULT($libdir);
-    ;;
+    prefix|NONE)
+        AC_MSG_CHECKING(which lib directory to use)
+        for aDir in lib64 lib
+        do
+            trydir="${exec_prefix}/${aDir}"
+            if
+                test -d ${trydir}
+            then
+                libdir=${trydir}
+                break
+            fi
+        done
+        AC_MSG_RESULT($libdir);
+        ;;
 esac
 
 dnl Expand autoconf variables so that we don't end up with '${prefix}'
@@ -381,8 +318,7 @@ dnl Home-grown variables
 eval INITDIR="${INITDIR}"
 eval docdir="`eval echo ${docdir}`"
 if test x"${docdir}" = x""; then
-   docdir=${datadir}/doc/${PACKAGE}-${VERSION}
-   #docdir=${datadir}/doc/packages/${PACKAGE}
+    docdir=${datadir}/doc/${PACKAGE}-${VERSION}
 fi
 AC_SUBST(docdir)
 if test x"${CONFIGDIR}" = x""; then
@@ -406,12 +342,12 @@ for j in prefix exec_prefix bindir sbindir libexecdir datadir sysconfdir \
     sharedstatedir localstatedir libdir includedir oldincludedir infodir \
     mandir INITDIR docdir CONFIGDIR
 do
-  dirname=`eval echo '${'${j}'}'`
-  if
-    test ! -d "$dirname"
-  then
-    AC_MSG_WARN([$j directory ($dirname) does not exist!])
-  fi
+    dirname=`eval echo '${'${j}'}'`
+    if
+        test ! -d "$dirname"
+    then
+        AC_MSG_WARN([$j directory ($dirname) does not exist!])
+    fi
 done
 
 dnl This OS-based decision-making is poor autotools practice;
@@ -420,36 +356,40 @@ dnl
 dnl So keep this section to a bare minimum; regard as a "necessary evil".
 
 case "$host_os" in
-*bsd*)
-		AC_DEFINE_UNQUOTED(ON_BSD, 1, Compiling for BSD platform)
-		LIBS="-L/usr/local/lib"
-		CPPFLAGS="$CPPFLAGS -I/usr/local/include"
-		INIT_EXT=".sh"
-		;;
-*solaris*)
-		AC_DEFINE_UNQUOTED(ON_SOLARIS, 1, Compiling for Solaris platform)
-		;;
-*linux*)
-		AC_DEFINE_UNQUOTED(ON_LINUX, 1, Compiling for Linux platform)
- 		;;
-darwin*)
-		AC_DEFINE_UNQUOTED(ON_DARWIN, 1, Compiling for Darwin platform)
-  		LIBS="$LIBS -L${prefix}/lib"
-  		CFLAGS="$CFLAGS -I${prefix}/include"
-		;;
+    *bsd*)
+        AC_DEFINE_UNQUOTED(ON_BSD, 1, Compiling for BSD platform)
+        LIBS="-L/usr/local/lib"
+        CPPFLAGS="$CPPFLAGS -I/usr/local/include"
+        INIT_EXT=".sh"
+        ;;
+    *solaris*)
+        AC_DEFINE_UNQUOTED(ON_SOLARIS, 1, Compiling for Solaris platform)
+        ;;
+    *linux*)
+        AC_DEFINE_UNQUOTED(ON_LINUX, 1, Compiling for Linux platform)
+        ;;
+    darwin*)
+        AC_DEFINE_UNQUOTED(ON_DARWIN, 1, Compiling for Darwin platform)
+        LIBS="$LIBS -L${prefix}/lib"
+        CFLAGS="$CFLAGS -I${prefix}/include"
+        ;;
 esac
 
 AC_SUBST(INIT_EXT)
 AC_MSG_NOTICE(Host CPU: $host_cpu)
 
 case "$host_cpu" in
-  ppc64|powerpc64)
-    case $CFLAGS in
-     *powerpc64*)			;;
-     *)	if test "$GCC" = yes; then
-	  CFLAGS="$CFLAGS -m64"
-	fi				;;
-    esac
+    ppc64|powerpc64)
+        case $CFLAGS in
+         *powerpc64*)
+             ;;
+         *)
+             if test "$GCC" = yes; then
+                 CFLAGS="$CFLAGS -m64"
+             fi
+             ;;
+        esac
+        ;;
 esac
 
 AC_MSG_CHECKING(which format is needed to print uint64_t)
@@ -459,19 +399,19 @@ CFLAGS="-Wall -Werror"
 
 AC_COMPILE_IFELSE(
     [AC_LANG_PROGRAM(
-      [
+        [
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
-      ],
-      [
+        ],
+        [
 int max = 512;
 uint64_t bignum = 42;
 char *buffer = malloc(max);
 const char *random = "random";
 snprintf(buffer, max-1, "<quorum id=%lu quorate=%s/>", bignum, random);
 fprintf(stderr, "Result: %s\n", buffer);
-      ]
+        ]
     )],
     [U64T="%lu"],
     [U64T="%llu"]
@@ -487,7 +427,6 @@ dnl ===============================================
 
 PATH="$PATH:/sbin:/usr/sbin:/usr/local/sbin:/usr/local/bin"
 export PATH
-
 
 dnl Replacing AC_PROG_LIBTOOL with AC_CHECK_PROG because LIBTOOL
 dnl was NOT being expanded all the time thus causing things to fail.
@@ -520,78 +459,70 @@ dnl AC_PATH_PROGS(FLEX, flex)
 dnl AC_PATH_PROGS(HAVE_YACC, $YACC)
 
 if test x"${LIBTOOL}" = x""; then
-   AC_MSG_ERROR(You need (g)libtool installed in order to build ${PACKAGE})
+    AC_MSG_ERROR(You need (g)libtool installed in order to build ${PACKAGE})
 fi
 if test x"${MAKE}" = x""; then
-   AC_MSG_ERROR(You need (g)make installed in order to build ${PACKAGE})
+    AC_MSG_ERROR(You need (g)make installed in order to build ${PACKAGE})
 fi
 
 AM_CONDITIONAL(BUILD_HELP, test x"${HELP2MAN}" != x"")
 if test x"${HELP2MAN}" != x""; then
-   PCMK_FEATURES="$PCMK_FEATURES generated-manpages"
+    PCMK_FEATURES="$PCMK_FEATURES generated-manpages"
 fi
 
 MANPAGE_XSLT=""
 if test x"${XSLTPROC}" != x""; then
-  AC_MSG_CHECKING(docbook to manpage transform)
-  # first try to figure out correct template using xmlcatalog query,
-  # resort to extensive (semi-deterministic) file search if that fails
-  DOCBOOK_XSL_URI='http://docbook.sourceforge.net/release/xsl/current'
-  DOCBOOK_XSL_PATH='manpages/docbook.xsl'
-  MANPAGE_XSLT=$(${XMLCATALOG} "" ${DOCBOOK_XSL_URI}/${DOCBOOK_XSL_PATH} \
-                 | sed -n 's|^file://||p;q')
-  if test x"${MANPAGE_XSLT}" = x""; then
-    DIRS=$(find "${datadir}" -name $(basename $(dirname ${DOCBOOK_XSL_PATH})) \
-           -type d | LC_ALL=C sort)
-    XSLT=$(basename ${DOCBOOK_XSL_PATH})
-    for d in ${DIRS}; do
-      if test -f "${d}/${XSLT}"; then
-         MANPAGE_XSLT="${d}/${XSLT}"
-         break
-      fi
-    done
-  fi
+    AC_MSG_CHECKING(docbook to manpage transform)
+    # first try to figure out correct template using xmlcatalog query,
+    # resort to extensive (semi-deterministic) file search if that fails
+    DOCBOOK_XSL_URI='http://docbook.sourceforge.net/release/xsl/current'
+    DOCBOOK_XSL_PATH='manpages/docbook.xsl'
+    MANPAGE_XSLT=$(${XMLCATALOG} "" ${DOCBOOK_XSL_URI}/${DOCBOOK_XSL_PATH} \
+                   | sed -n 's|^file://||p;q')
+    if test x"${MANPAGE_XSLT}" = x""; then
+        DIRS=$(find "${datadir}" -name $(basename $(dirname ${DOCBOOK_XSL_PATH})) \
+               -type d | LC_ALL=C sort)
+        XSLT=$(basename ${DOCBOOK_XSL_PATH})
+        for d in ${DIRS}; do
+            if test -f "${d}/${XSLT}"; then
+                 MANPAGE_XSLT="${d}/${XSLT}"
+                 break
+            fi
+        done
+    fi
 fi
 AC_MSG_RESULT($MANPAGE_XSLT)
 AC_SUBST(MANPAGE_XSLT)
 
 AM_CONDITIONAL(BUILD_XML_HELP, test x"${MANPAGE_XSLT}" != x"")
 if test x"${MANPAGE_XSLT}" != x""; then
-   PCMK_FEATURES="$PCMK_FEATURES agent-manpages"
+    PCMK_FEATURES="$PCMK_FEATURES agent-manpages"
 fi
 
 AM_CONDITIONAL(BUILD_ASCIIDOC, test x"${ASCIIDOC}" != x"")
 if test x"${ASCIIDOC}" != x""; then
-   PCMK_FEATURES="$PCMK_FEATURES ascii-docs"
+    PCMK_FEATURES="$PCMK_FEATURES ascii-docs"
 fi
-
-SUPPORT_STONITH_CONFIG=0
-if test x"${HAVE_YACC}" != x"" -a x"${FLEX}" != x"" -a x"${BISON}" != x""; then
-   SUPPORT_STONITH_CONFIG=1
-   PCMK_FEATURES="$PCMK_FEATURES st-conf"
-fi
-
-AM_CONDITIONAL(BUILD_STONITH_CONFIG, test $SUPPORT_STONITH_CONFIG = 1)
-AC_DEFINE_UNQUOTED(SUPPORT_STONITH_CONFIG, $SUPPORT_STONITH_CONFIG, Support a stand-alone stonith config file in addition to the CIB)
 
 publican_intree_brand=no
 if test x"${PUBLICAN_BRAND}" != x"" \
    && test x"${PUBLICAN}" != x"" \
    && test x"${INKSCAPE}" != x""; then
-   dnl special handling for clusterlabs brand (possibly in-tree version used)
-   test "${PUBLICAN_BRAND}" != "clusterlabs" \
-      || test -d /usr/share/publican/Common_Content/clusterlabs
-   if test $? -ne 0; then
-      dnl Unknown option: brand_dir vs. Option brand_dir requires an argument
-      if ${PUBLICAN} build --brand_dir 2>&1 | grep -Eq 'brand_dir$'; then
-         AC_MSG_WARN([Cannot use in-tree clusterlabs brand, resorting to common])
-         PUBLICAN_BRAND=common
-      else
-         publican_intree_brand=yes
-      fi
-   fi
-   AC_MSG_NOTICE([Enabling Publican-generated documentation using ${PUBLICAN_BRAND} brand])
-   PCMK_FEATURES="$PCMK_FEATURES publican-docs"
+
+    dnl special handling for clusterlabs brand (possibly in-tree version used)
+    test "${PUBLICAN_BRAND}" != "clusterlabs" \
+        || test -d /usr/share/publican/Common_Content/clusterlabs
+    if test $? -ne 0; then
+        dnl Unknown option: brand_dir vs. Option brand_dir requires an argument
+        if ${PUBLICAN} build --brand_dir 2>&1 | grep -Eq 'brand_dir$'; then
+            AC_MSG_WARN([Cannot use in-tree clusterlabs brand, resorting to common])
+            PUBLICAN_BRAND=common
+        else
+            publican_intree_brand=yes
+        fi
+    fi
+    AC_MSG_NOTICE([Enabling Publican-generated documentation using ${PUBLICAN_BRAND} brand])
+    PCMK_FEATURES="$PCMK_FEATURES publican-docs"
 fi
 AM_CONDITIONAL([BUILD_DOCBOOK],
                [test x"${PUBLICAN_BRAND}" != x"" \
@@ -621,76 +552,75 @@ dnl
 dnl     strerror: returns a string that corresponds to an errno.
 dnl             A replacement function is supplied for it.
 dnl
-dnl	strnlen: is a gnu function similar to strlen, but safer.
-dnl		We wrote a tolearably-fast replacement function for it.
+dnl     strnlen: is a gnu function similar to strlen, but safer.
+dnl            We wrote a tolearably-fast replacement function for it.
 dnl
-dnl	strndup: is a gnu function similar to strdup, but safer.
-dnl		We wrote a tolearably-fast replacement function for it.
+dnl     strndup: is a gnu function similar to strdup, but safer.
+dnl            We wrote a tolearably-fast replacement function for it.
 
 AC_REPLACE_FUNCS(alphasort NoSuchFunctionName scandir setenv strerror strchrnul unsetenv strnlen strndup)
 
 dnl ===============================================
 dnl Libraries
 dnl ===============================================
-AC_CHECK_LIB(socket, socket)			dnl -lsocket
-AC_CHECK_LIB(c, dlopen)				dnl if dlopen is in libc...
-AC_CHECK_LIB(dl, dlopen)			dnl -ldl (for Linux)
+AC_CHECK_LIB(socket, socket)                    dnl -lsocket
+AC_CHECK_LIB(c, dlopen)                         dnl if dlopen is in libc...
+AC_CHECK_LIB(dl, dlopen)                        dnl -ldl (for Linux)
 AC_CHECK_LIB(rt, sched_getscheduler)            dnl -lrt (for Tru64)
-AC_CHECK_LIB(gnugetopt, getopt_long)		dnl -lgnugetopt ( if available )
-AC_CHECK_LIB(pam, pam_start)			dnl -lpam (if available)
+AC_CHECK_LIB(gnugetopt, getopt_long)            dnl -lgnugetopt ( if available )
+AC_CHECK_LIB(pam, pam_start)                    dnl -lpam (if available)
 
 AC_CHECK_FUNCS([sched_setscheduler])
 
-AC_CHECK_LIB(uuid, uuid_parse)			dnl load the library if necessary
-AC_CHECK_FUNCS(uuid_unparse)			dnl OSX ships uuid_* as standard functions
+AC_CHECK_LIB(uuid, uuid_parse)                  dnl load the library if necessary
+AC_CHECK_FUNCS(uuid_unparse)                    dnl OSX ships uuid_* as standard functions
 
 AC_CHECK_HEADERS(uuid/uuid.h)
 
 if test "x$ac_cv_func_uuid_unparse" != xyes; then
-   AC_MSG_ERROR(You do not have the libuuid development package installed)
+    AC_MSG_ERROR(You do not have the libuuid development package installed)
 fi
 
 if test x"${PKG_CONFIG}" = x""; then
-   AC_MSG_ERROR(You need pkgconfig installed in order to build ${PACKAGE})
+    AC_MSG_ERROR(You need pkgconfig installed in order to build ${PACKAGE})
 fi
 
 if
-   $PKG_CONFIG --exists glib-2.0
+    $PKG_CONFIG --exists glib-2.0
 then
-	GLIBCONFIG="$PKG_CONFIG glib-2.0"
+    GLIBCONFIG="$PKG_CONFIG glib-2.0"
 else
-	set -x
-        echo PKG_CONFIG_PATH=$PKG_CONFIG_PATH
-	$PKG_CONFIG --exists glib-2.0; echo $?
-	$PKG_CONFIG --cflags glib-2.0; echo $?
-	$PKG_CONFIG glib-2.0; echo $?
-	set +x
-
-	AC_MSG_ERROR(You need glib2-devel installed in order to build ${PACKAGE})
+    set -x
+    echo PKG_CONFIG_PATH=$PKG_CONFIG_PATH
+    $PKG_CONFIG --exists glib-2.0; echo $?
+    $PKG_CONFIG --cflags glib-2.0; echo $?
+    $PKG_CONFIG glib-2.0; echo $?
+    set +x
+    AC_MSG_ERROR(You need glib2-devel installed in order to build ${PACKAGE})
 fi
 AC_MSG_RESULT(using $GLIBCONFIG)
 
 #
-#	Where is dlopen?
+# Where is dlopen?
 #
 if test "$ac_cv_lib_c_dlopen" = yes; then
-	LIBADD_DL=""
+    LIBADD_DL=""
 elif test "$ac_cv_lib_dl_dlopen" = yes; then
-	LIBADD_DL=-ldl
+    LIBADD_DL=-ldl
 else
-        LIBADD_DL=${lt_cv_dlopen_libs}
+    LIBADD_DL=${lt_cv_dlopen_libs}
 fi
 
 if test "X$GLIBCONFIG" != X; then
-	AC_MSG_CHECKING(for special glib includes: )
-	GLIBHEAD=`$GLIBCONFIG --cflags`
-	AC_MSG_RESULT($GLIBHEAD)
-	CPPFLAGS="$CPPFLAGS $GLIBHEAD"
+    AC_MSG_CHECKING(for special glib includes: )
+    GLIBHEAD=`$GLIBCONFIG --cflags`
+    AC_MSG_RESULT($GLIBHEAD)
+    CPPFLAGS="$CPPFLAGS $GLIBHEAD"
 
-	AC_MSG_CHECKING(for glib library flags)
-	GLIBLIB=`$GLIBCONFIG --libs`
-	AC_MSG_RESULT($GLIBLIB)
-	LIBS="$LIBS $GLIBLIB"
+    AC_MSG_CHECKING(for glib library flags)
+    GLIBLIB=`$GLIBCONFIG --libs`
+    AC_MSG_RESULT($GLIBLIB)
+    LIBS="$LIBS $GLIBLIB"
 fi
 
 dnl FreeBSD needs -lcompat for ftime() used by lrmd.c
@@ -703,27 +633,19 @@ dnl ========================================================================
 
 AC_HEADER_STDC
 AC_CHECK_HEADERS(arpa/inet.h)
-AC_CHECK_HEADERS(asm/types.h)
-AC_CHECK_HEADERS(assert.h)
-AC_CHECK_HEADERS(auth-client.h)
 AC_CHECK_HEADERS(ctype.h)
 AC_CHECK_HEADERS(dirent.h)
 AC_CHECK_HEADERS(errno.h)
-AC_CHECK_HEADERS(fcntl.h)
 AC_CHECK_HEADERS(getopt.h)
 AC_CHECK_HEADERS(glib.h)
 AC_CHECK_HEADERS(grp.h)
 AC_CHECK_HEADERS(limits.h)
-AC_CHECK_HEADERS(linux/errqueue.h)
 AC_CHECK_HEADERS(linux/swab.h)
 AC_CHECK_HEADERS(malloc.h)
 AC_CHECK_HEADERS(netdb.h)
 AC_CHECK_HEADERS(netinet/in.h)
 AC_CHECK_HEADERS(netinet/ip.h)
-AC_CHECK_HEADERS(pam/pam_appl.h)
-AC_CHECK_HEADERS(pthread.h)
 AC_CHECK_HEADERS(pwd.h)
-AC_CHECK_HEADERS(security/pam_appl.h)
 AC_CHECK_HEADERS(sgtty.h)
 AC_CHECK_HEADERS(signal.h)
 AC_CHECK_HEADERS(stdarg.h)
@@ -735,10 +657,8 @@ AC_CHECK_HEADERS(strings.h)
 AC_CHECK_HEADERS(sys/dir.h)
 AC_CHECK_HEADERS(sys/ioctl.h)
 AC_CHECK_HEADERS(sys/param.h)
-AC_CHECK_HEADERS(sys/poll.h)
 AC_CHECK_HEADERS(sys/reboot.h)
 AC_CHECK_HEADERS(sys/resource.h)
-AC_CHECK_HEADERS(sys/select.h)
 AC_CHECK_HEADERS(sys/socket.h)
 AC_CHECK_HEADERS(sys/signalfd.h)
 AC_CHECK_HEADERS(sys/sockio.h)
@@ -746,28 +666,22 @@ AC_CHECK_HEADERS(sys/stat.h)
 AC_CHECK_HEADERS(sys/time.h)
 AC_CHECK_HEADERS(sys/timeb.h)
 AC_CHECK_HEADERS(sys/types.h)
-AC_CHECK_HEADERS(sys/uio.h)
-AC_CHECK_HEADERS(sys/un.h)
 AC_CHECK_HEADERS(sys/utsname.h)
 AC_CHECK_HEADERS(sys/wait.h)
 AC_CHECK_HEADERS(time.h)
 AC_CHECK_HEADERS(unistd.h)
-AC_CHECK_HEADERS(winsock.h)
 
-dnl These headers need prerequisits before the tests will pass
+dnl These headers need prerequisites before the tests will pass
 dnl AC_CHECK_HEADERS(net/if.h)
-dnl AC_CHECK_HEADERS(netinet/icmp6.h)
-dnl AC_CHECK_HEADERS(netinet/ip6.h)
-dnl AC_CHECK_HEADERS(netinet/ip_icmp.h)
 
 AC_MSG_CHECKING(for special libxml2 includes)
 if test "x$XML2CONFIG" = "x"; then
-   AC_MSG_ERROR(libxml2 config not found)
+    AC_MSG_ERROR(libxml2 config not found)
 else
-   XML2HEAD="`$XML2CONFIG --cflags`"
-   AC_MSG_RESULT($XML2HEAD)
-   AC_CHECK_LIB(xml2, xmlReadMemory)
-   AC_CHECK_LIB(xslt, xsltApplyStylesheet)
+    XML2HEAD="`$XML2CONFIG --cflags`"
+    AC_MSG_RESULT($XML2HEAD)
+    AC_CHECK_LIB(xml2, xmlReadMemory)
+    AC_CHECK_LIB(xslt, xsltApplyStylesheet)
 fi
 
 CPPFLAGS="$CPPFLAGS $XML2HEAD"
@@ -775,17 +689,17 @@ CPPFLAGS="$CPPFLAGS $XML2HEAD"
 AC_CHECK_HEADERS(libxml/xpath.h)
 AC_CHECK_HEADERS(libxslt/xslt.h)
 if test "$ac_cv_header_libxml_xpath_h" != "yes"; then
-   AC_MSG_ERROR(The libxml developement headers were not found)
+    AC_MSG_ERROR(The libxml developement headers were not found)
 fi
 if test "$ac_cv_header_libxslt_xslt_h" != "yes"; then
-   AC_MSG_ERROR(The libxslt developement headers were not found)
+    AC_MSG_ERROR(The libxslt developement headers were not found)
 fi
 
 AC_CACHE_CHECK(whether __progname and __progname_full are available,
-                pf_cv_var_progname,
-                AC_TRY_LINK([extern char *__progname, *__progname_full;],
-                    [__progname = "foo"; __progname_full = "foo bar";],
-                    pf_cv_var_progname="yes", pf_cv_var_progname="no"))
+               pf_cv_var_progname,
+               AC_TRY_LINK([extern char *__progname, *__progname_full;],
+                           [__progname = "foo"; __progname_full = "foo bar";],
+                           pf_cv_var_progname="yes", pf_cv_var_progname="no"))
 
 if test "$pf_cv_var_progname" = "yes"; then
     AC_DEFINE(HAVE___PROGNAME,1,[ ])
@@ -816,11 +730,11 @@ AC_CHECK_HEADERS(bzlib.h)
 AC_CHECK_LIB(bz2, BZ2_bzBuffToBuffCompress)
 
 if test x$ac_cv_lib_bz2_BZ2_bzBuffToBuffCompress != xyes ; then
-   AC_MSG_ERROR(BZ2 libraries not found)
+    AC_MSG_ERROR(BZ2 libraries not found)
 fi
 
 if test x$ac_cv_header_bzlib_h != xyes; then
-   AC_MSG_ERROR(BZ2 Development headers not found)
+    AC_MSG_ERROR(BZ2 Development headers not found)
 fi
 
 dnl ========================================================================
@@ -855,35 +769,31 @@ AC_CHECK_HEADERS(ncurses/ncurses.h)
 dnl Although n-library is preferred, only look for it if the n-header was found.
 CURSESLIBS=''
 if test "$ac_cv_header_ncurses_h" = "yes"; then
-  AC_CHECK_LIB(ncurses, printw,
-    [AC_DEFINE(HAVE_LIBNCURSES,1, have ncurses library)]
-  )
-  CURSESLIBS=`$PKG_CONFIG --libs ncurses` || CURSESLIBS='-lncurses'
+    AC_CHECK_LIB(ncurses, printw,
+                 [AC_DEFINE(HAVE_LIBNCURSES,1, have ncurses library)])
+    CURSESLIBS=`$PKG_CONFIG --libs ncurses` || CURSESLIBS='-lncurses'
 fi
 
 if test "$ac_cv_header_ncurses_ncurses_h" = "yes"; then
-  AC_CHECK_LIB(ncurses, printw,
-    [AC_DEFINE(HAVE_LIBNCURSES,1, have ncurses library)]
-  )
-  CURSESLIBS=`$PKG_CONFIG --libs ncurses` || CURSESLIBS='-lncurses'
+    AC_CHECK_LIB(ncurses, printw,
+                 [AC_DEFINE(HAVE_LIBNCURSES,1, have ncurses library)])
+    CURSESLIBS=`$PKG_CONFIG --libs ncurses` || CURSESLIBS='-lncurses'
 fi
 
 dnl Only look for non-n-library if there was no n-library.
 if test X"$CURSESLIBS" = X"" -a "$ac_cv_header_curses_h" = "yes"; then
-  AC_CHECK_LIB(curses, printw,
-    [CURSESLIBS='-lcurses'; AC_DEFINE(HAVE_LIBCURSES,1, have curses library)]
-  )
+    AC_CHECK_LIB(curses, printw,
+                 [CURSESLIBS='-lcurses'; AC_DEFINE(HAVE_LIBCURSES,1, have curses library)])
 fi
 
 dnl Only look for non-n-library if there was no n-library.
 if test X"$CURSESLIBS" = X"" -a "$ac_cv_header_curses_curses_h" = "yes"; then
-  AC_CHECK_LIB(curses, printw,
-    [CURSESLIBS='-lcurses'; AC_DEFINE(HAVE_LIBCURSES,1, have curses library)]
-  )
+    AC_CHECK_LIB(curses, printw,
+                 [CURSESLIBS='-lcurses'; AC_DEFINE(HAVE_LIBCURSES,1, have curses library)])
 fi
 
 if test "x$CURSESLIBS" != "x"; then
-   PCMK_FEATURES="$PCMK_FEATURES ncurses"
+    PCMK_FEATURES="$PCMK_FEATURES ncurses"
 fi
 
 dnl Check for printw() prototype compatibility
@@ -901,8 +811,7 @@ if test X"$CURSESLIBS" != X"" && cc_supports_flag -Wcast-qual && cc_supports_fla
 
     AC_MSG_CHECKING(whether printw() requires argument of "const char *")
     AC_LINK_IFELSE(
-	    [AC_LANG_PROGRAM(
-	      [
+        [AC_LANG_PROGRAM([
 #if defined(HAVE_NCURSES_H)
 #  include <ncurses.h>
 #elif defined(HAVE_NCURSES_NCURSES_H)
@@ -910,11 +819,11 @@ if test X"$CURSESLIBS" != X"" && cc_supports_flag -Wcast-qual && cc_supports_fla
 #elif defined(HAVE_CURSES_H)
 #  include <curses.h>
 #endif
-	      ],
-	      [printw((const char *)"Test");]
-	    )],
-	    [ac_cv_compatible_printw=yes],
-	    [ac_cv_compatible_printw=no]
+                         ],
+                         [printw((const char *)"Test");]
+        )],
+        [ac_cv_compatible_printw=yes],
+        [ac_cv_compatible_printw=no]
     )
 
     LIBS=$ac_save_LIBS
@@ -923,9 +832,9 @@ if test X"$CURSESLIBS" != X"" && cc_supports_flag -Wcast-qual && cc_supports_fla
     AC_MSG_RESULT([$ac_cv_compatible_printw])
 
     if test "$ac_cv_compatible_printw" = no; then
-		AC_MSG_WARN([The printw() function of your ncurses or curses library is old, we will disable usage of the library. If you want to use this library anyway, please update to newer version of the library, ncurses 5.4 or later is recommended. You can get the library from http://www.gnu.org/software/ncurses/.])
-		AC_MSG_NOTICE([Disabling curses])
-		AC_DEFINE(HAVE_INCOMPATIBLE_PRINTW, 1, [Do we have incompatible printw() in curses library?])
+        AC_MSG_WARN([The printw() function of your ncurses or curses library is old, we will disable usage of the library. If you want to use this library anyway, please update to newer version of the library, ncurses 5.4 or later is recommended. You can get the library from http://www.gnu.org/software/ncurses/.])
+        AC_MSG_NOTICE([Disabling curses])
+        AC_DEFINE(HAVE_INCOMPATIBLE_PRINTW, 1, [Do we have incompatible printw() in curses library?])
     fi
 fi
 
@@ -937,34 +846,32 @@ dnl ========================================================================
 
 AC_MSG_NOTICE(Old CFLAGS: $CFLAGS)
 case $SUPPORT_COVERAGE in
-     1|yes|true)
-	SUPPORT_PROFILING=1
-	PCMK_FEATURES="$PCMK_FEATURES coverage"
-	CFLAGS="$CFLAGS -fprofile-arcs -ftest-coverage"
-	dnl During linking, make sure to specify -lgcov or -coverage
-
-        dnl Enable gprof
-	#LIBS="$LIBS -pg"
-	#CFLAGS="$CFLAGS -pg"
-	;;
+    1|yes|true)
+        SUPPORT_PROFILING=1
+        PCMK_FEATURES="$PCMK_FEATURES coverage"
+        CFLAGS="$CFLAGS -fprofile-arcs -ftest-coverage"
+        dnl During linking, make sure to specify -lgcov or -coverage
+        ;;
 esac
 
 case $SUPPORT_PROFILING in
-     1|yes|true)
-	SUPPORT_PROFILING=1
+    1|yes|true)
+        SUPPORT_PROFILING=1
 
-	dnl Disable various compiler optimizations
-	CFLAGS="$CFLAGS -fno-omit-frame-pointer -fno-inline -fno-builtin "
-	dnl CFLAGS="$CFLAGS -fno-inline-functions -fno-default-inline -fno-inline-functions-called-once -fno-optimize-sibling-calls"
+        dnl Disable various compiler optimizations
+        CFLAGS="$CFLAGS -fno-omit-frame-pointer -fno-inline -fno-builtin "
+        dnl CFLAGS="$CFLAGS -fno-inline-functions -fno-default-inline -fno-inline-functions-called-once -fno-optimize-sibling-calls"
 
-	dnl Turn off optimization so tools can get accurate line numbers
-	CFLAGS=`echo $CFLAGS | sed -e 's/-O.\ //g' -e 's/-Wp,-D_FORTIFY_SOURCE=.\ //g' -e 's/-D_FORTIFY_SOURCE=.\ //g'`
-	CFLAGS="$CFLAGS -O0 -g3 -gdwarf-2"
+        dnl Turn off optimization so tools can get accurate line numbers
+        CFLAGS=`echo $CFLAGS | sed -e 's/-O.\ //g' -e 's/-Wp,-D_FORTIFY_SOURCE=.\ //g' -e 's/-D_FORTIFY_SOURCE=.\ //g'`
+        CFLAGS="$CFLAGS -O0 -g3 -gdwarf-2"
 
-	dnl Update features
-	PCMK_FEATURES="$PCMK_FEATURES profile"
-	;;
-     *) SUPPORT_PROFILING=0;;
+        dnl Update features
+        PCMK_FEATURES="$PCMK_FEATURES profile"
+        ;;
+     *)
+        SUPPORT_PROFILING=0
+        ;;
 esac
 AC_MSG_NOTICE(New CFLAGS: $CFLAGS)
 AC_DEFINE_UNQUOTED(SUPPORT_PROFILING, $SUPPORT_PROFILING, Support for profiling)
@@ -980,24 +887,28 @@ fi
 PKG_CHECK_MODULES(libqb, libqb >= 0.13)
 CPPFLAGS="$libqb_CFLAGS $CPPFLAGS"
 LIBS="$libqb_LIBS $LIBS"
-AC_CHECK_HEADERS(qb/qbipc_common.h)
+
+dnl libqb 0.14.0+ (2012-06)
 AC_CHECK_LIB(qb, qb_ipcs_connection_auth_set)
 
 PCMK_FEATURES="$PCMK_FEATURES libqb-logging libqb-ipc"
 
-AC_CHECK_FUNCS(qb_ipcs_connection_get_buffer_size, AC_DEFINE(HAVE_IPCS_GET_BUFFER_SIZE,  1, [Have qb_ipcc_get_buffer_size function]))
+dnl libqb 0.17.0+ (2014-02)
+AC_CHECK_FUNCS(qb_ipcs_connection_get_buffer_size,
+               AC_DEFINE(HAVE_IPCS_GET_BUFFER_SIZE, 1,
+                         [Have qb_ipcc_get_buffer_size function]))
 
 dnl Support Linux-HA fence agents if available
 if test "$cross_compiling" != "yes"; then
-   CPPFLAGS="$CPPFLAGS -I${prefix}/include/heartbeat"
+    CPPFLAGS="$CPPFLAGS -I${prefix}/include/heartbeat"
 fi
 AC_CHECK_HEADERS(stonith/stonith.h)
 if test "$ac_cv_header_stonith_stonith_h" = "yes";  then
-   dnl On Debian, AC_CHECK_LIBS fail if a library has any unresolved symbols
-   dnl So check for all the dependencies (so they're added to LIBS) before checking for -lplumb
-   AC_CHECK_LIB(pils, PILLoadPlugin)
-   AC_CHECK_LIB(plumb, G_main_add_IPC_Channel)
-   PCMK_FEATURES="$PCMK_FEATURES lha-fencing"
+    dnl On Debian, AC_CHECK_LIBS fail if a library has any unresolved symbols
+    dnl So check for all the dependencies (so they're added to LIBS) before checking for -lplumb
+    AC_CHECK_LIB(pils, PILLoadPlugin)
+    AC_CHECK_LIB(plumb, G_main_add_IPC_Channel)
+    PCMK_FEATURES="$PCMK_FEATURES lha-fencing"
 fi
 
 dnl ===============================================
@@ -1051,15 +962,13 @@ HA_STATE_DIR="${localstatedir}/run"
 AC_DEFINE_UNQUOTED(HA_STATE_DIR,"$HA_STATE_DIR", Where sbd keeps its PID file)
 AC_SUBST(HA_STATE_DIR)
 
-CRM_RSCTMP_DIR=`try_extract_header_define agent_config.h HA_RSCTMPDIR $HA_STATE_DIR/resource-agents`
-AC_MSG_CHECKING(Scratch dir for resource agents)
-AC_MSG_RESULT($CRM_RSCTMP_DIR)
+CRM_RSCTMP_DIR="${localstatedir}/run/resource-agents"
 AC_DEFINE_UNQUOTED(CRM_RSCTMP_DIR,"$CRM_RSCTMP_DIR", Where resource agents should keep state files)
 AC_SUBST(CRM_RSCTMP_DIR)
 
 OCF_ROOT_DIR="/usr/lib/ocf"
 if test "X$OCF_ROOT_DIR" = X; then
-  AC_MSG_ERROR(Could not locate OCF directory)
+    AC_MSG_ERROR(Could not locate OCF directory)
 fi
 AC_SUBST(OCF_ROOT_DIR)
 
@@ -1079,23 +988,20 @@ AC_MSG_CHECKING(build version)
 
 BUILD_VERSION=$Format:%h$
 if test $BUILD_VERSION != ":%h$"; then
-   AC_MSG_RESULT(archive hash: $BUILD_VERSION)
-
+    AC_MSG_RESULT(archive hash: $BUILD_VERSION)
 elif test -x $GIT -a -d .git; then
-   BUILD_VERSION=`$GIT log --pretty="format:%h" -n 1`
-   AC_MSG_RESULT(git hash: $BUILD_VERSION)
-
+    BUILD_VERSION=`$GIT log --pretty="format:%h" -n 1`
+    AC_MSG_RESULT(git hash: $BUILD_VERSION)
 else
-   # The current directory name make a reasonable default
-   # Most generated archives will include the hash or tag
-   BASE=`basename $PWD`
-   BUILD_VERSION=`echo $BASE | sed s:.*[[Pp]]acemaker-::`
-   AC_MSG_RESULT(directory based hash: $BUILD_VERSION)
+    # The current directory name make a reasonable default
+    # Most generated archives will include the hash or tag
+    BASE=`basename $PWD`
+    BUILD_VERSION=`echo $BASE | sed s:.*[[Pp]]acemaker-::`
+    AC_MSG_RESULT(directory based hash: $BUILD_VERSION)
 fi
 
 AC_DEFINE_UNQUOTED(BUILD_VERSION, "$BUILD_VERSION", Build version)
 AC_SUBST(BUILD_VERSION)
-
 
 HAVE_dbus=1
 HAVE_upstart=0
@@ -1106,7 +1012,7 @@ AC_DEFINE_UNQUOTED(SUPPORT_DBUS, $HAVE_dbus, Support dbus)
 AM_CONDITIONAL(BUILD_DBUS, test $HAVE_dbus = 1)
 
 if test $HAVE_dbus = 1; then
-   CFLAGS="$CFLAGS `$PKG_CONFIG --cflags dbus-1`"
+    CFLAGS="$CFLAGS `$PKG_CONFIG --cflags dbus-1`"
 fi
 
 DBUS_LIBS="$CFLAGS `$PKG_CONFIG --libs dbus-1`"
@@ -1115,51 +1021,49 @@ AC_SUBST(DBUS_LIBS)
 AC_CHECK_TYPES([DBusBasicValue],,,[[#include <dbus/dbus.h>]])
 
 if test "x${enable_systemd}" != xno; then
-	if test $HAVE_dbus = 0; then
-		if test "x${enable_systemd}" = xyes; then
-			AC_MSG_FAILURE([cannot enable systemd without DBus])
-		else
-			enable_systemd=no
-		fi
-	fi
-	if test "x${enable_systemd}" = xtry; then
-		AC_MSG_CHECKING([for systemd version query result via dbus-send])
-		ret=$({ dbus-send --system --print-reply \
-		        --dest=org.freedesktop.systemd1 \
-		        /org/freedesktop/systemd1 \
-		        org.freedesktop.DBus.Properties.Get \
-		        string:org.freedesktop.systemd1.Manager \
-		        string:Version 2>/dev/null \
-		        || echo "this borked"; } | tail -n1)
-		# sanitize output a bit (interested just in value, not type),
-		# ret is intentionally unenquoted so as to normalize whitespace
-		ret=$(echo ${ret} | cut -d' ' -f2-)
-		AC_MSG_RESULT([${ret}])
-		if test "x${ret}" != xborked \
-		   || systemctl --version 2>/dev/null | grep -q systemd; then
-			enable_systemd=yes
-		else
-			enable_systemd=no
-		fi
-	fi
+    if test $HAVE_dbus = 0; then
+        if test "x${enable_systemd}" = xyes; then
+            AC_MSG_FAILURE([cannot enable systemd without DBus])
+        else
+            enable_systemd=no
+        fi
+    fi
+    if test "x${enable_systemd}" = xtry; then
+        AC_MSG_CHECKING([for systemd version query result via dbus-send])
+        ret=$({ dbus-send --system --print-reply \
+                    --dest=org.freedesktop.systemd1 \
+                    /org/freedesktop/systemd1 \
+                    org.freedesktop.DBus.Properties.Get \
+                    string:org.freedesktop.systemd1.Manager \
+                    string:Version 2>/dev/null \
+                || echo "this borked"; } | tail -n1)
+        # sanitize output a bit (interested just in value, not type),
+        # ret is intentionally unenquoted so as to normalize whitespace
+        ret=$(echo ${ret} | cut -d' ' -f2-)
+        AC_MSG_RESULT([${ret}])
+        if test "x${ret}" != xborked \
+           || systemctl --version 2>/dev/null | grep -q systemd; then
+            enable_systemd=yes
+        else
+            enable_systemd=no
+        fi
+    fi
 fi
 
 AC_MSG_CHECKING([whether to enable support for managing resources via systemd])
 AC_MSG_RESULT([${enable_systemd}])
 if test "x${enable_systemd}" = xyes; then
-	HAVE_systemd=1
-	PCMK_FEATURES="$PCMK_FEATURES systemd"
+    HAVE_systemd=1
+    PCMK_FEATURES="$PCMK_FEATURES systemd"
 
-	AC_MSG_CHECKING([for systemd path for system unit files])
-	systemdunitdir="${systemdunitdir-}"
-	PKG_CHECK_VAR([systemdunitdir], [systemd],
-		      [systemdsystemunitdir], [],[
-	   systemdunitdir=no
-	])
-	AC_MSG_RESULT([${systemdunitdir}])
-	if test "x${systemdunitdir}" = xno; then
-		AC_MSG_FAILURE([cannot enable systemd when systemdunitdir unresolved])
-	fi
+    AC_MSG_CHECKING([for systemd path for system unit files])
+    systemdunitdir="${systemdunitdir-}"
+    PKG_CHECK_VAR([systemdunitdir], [systemd],
+                  [systemdsystemunitdir], [], [systemdunitdir=no])
+    AC_MSG_RESULT([${systemdunitdir}])
+    if test "x${systemdunitdir}" = xno; then
+        AC_MSG_FAILURE([cannot enable systemd when systemdunitdir unresolved])
+    fi
 fi
 
 AC_DEFINE_UNQUOTED(SUPPORT_SYSTEMD, $HAVE_systemd, Support systemd based system services)
@@ -1167,48 +1071,49 @@ AM_CONDITIONAL(BUILD_SYSTEMD, test $HAVE_systemd = 1)
 AC_SUBST(SUPPORT_SYSTEMD)
 
 if test "x${enable_upstart}" != xno; then
-	if test $HAVE_dbus = 0; then
-		if test "x${enable_upstart}" = xyes; then
-			AC_MSG_FAILURE([cannot enable Upstart without DBus])
-		else
-			enable_upstart=no
-		fi
-	fi
-	if test "x${enable_upstart}" = xtry; then
-		AC_MSG_CHECKING([for Upstart version query result via dbus-send])
-		ret=$({ dbus-send --system --print-reply --dest=com.ubuntu.Upstart \
-		        /com/ubuntu/Upstart org.freedesktop.DBus.Properties.Get \
-		        string:com.ubuntu.Upstart0_6 string:version 2>/dev/null \
-		        || echo "this borked"; } | tail -n1)
-		# sanitize output a bit (interested just in value, not type),
-		# ret is intentionally unenquoted so as to normalize whitespace
-		ret=$(echo ${ret} | cut -d' ' -f2-)
-		AC_MSG_RESULT([${ret}])
-		if test "x${ret}" != xborked \
-		   || initctl --version 2>/dev/null | grep -q upstart; then
-			enable_upstart=yes
-		else
-			enable_upstart=no
-		fi
-	fi
+    if test $HAVE_dbus = 0; then
+        if test "x${enable_upstart}" = xyes; then
+            AC_MSG_FAILURE([cannot enable Upstart without DBus])
+        else
+            enable_upstart=no
+        fi
+    fi
+    if test "x${enable_upstart}" = xtry; then
+        AC_MSG_CHECKING([for Upstart version query result via dbus-send])
+        ret=$({ dbus-send --system --print-reply --dest=com.ubuntu.Upstart \
+                    /com/ubuntu/Upstart org.freedesktop.DBus.Properties.Get \
+                    string:com.ubuntu.Upstart0_6 string:version 2>/dev/null \
+                || echo "this borked"; } | tail -n1)
+        # sanitize output a bit (interested just in value, not type),
+        # ret is intentionally unenquoted so as to normalize whitespace
+        ret=$(echo ${ret} | cut -d' ' -f2-)
+        AC_MSG_RESULT([${ret}])
+        if test "x${ret}" != xborked \
+           || initctl --version 2>/dev/null | grep -q upstart; then
+            enable_upstart=yes
+        else
+            enable_upstart=no
+        fi
+    fi
 fi
 AC_MSG_CHECKING([whether to enable support for managing resources via Upstart])
 AC_MSG_RESULT([${enable_upstart}])
 if test "x${enable_upstart}" = xyes; then
-	HAVE_upstart=1
-	PCMK_FEATURES="$PCMK_FEATURES upstart"
+    HAVE_upstart=1
+    PCMK_FEATURES="$PCMK_FEATURES upstart"
 fi
 
 AC_DEFINE_UNQUOTED(SUPPORT_UPSTART, $HAVE_upstart, Support upstart based system services)
 AM_CONDITIONAL(BUILD_UPSTART, test $HAVE_upstart = 1)
 AC_SUBST(SUPPORT_UPSTART)
 
-
 case $SUPPORT_NAGIOS in
-     1|yes|true|try)
-        SUPPORT_NAGIOS=1;;
-     *)
-        SUPPORT_NAGIOS=0;;
+    1|yes|true|try)
+        SUPPORT_NAGIOS=1
+        ;;
+    *)
+        SUPPORT_NAGIOS=0
+        ;;
 esac
 
 if test $SUPPORT_NAGIOS = 1; then
@@ -1241,11 +1146,16 @@ dnl ========================================================================
 
 dnl Normalize the values
 case $SUPPORT_CS in
-     1|yes|true)
-		SUPPORT_CS=yes
-		missingisfatal=1;;
-     try)	missingisfatal=0;;
-     *) SUPPORT_CS=no;;
+    1|yes|true)
+        SUPPORT_CS=yes
+        missingisfatal=1
+        ;;
+    try)
+        missingisfatal=0
+        ;;
+    *)
+        SUPPORT_CS=no
+        ;;
 esac
 
 AC_MSG_CHECKING(for native corosync)
@@ -1283,7 +1193,7 @@ if test x${enable_no_stack} = xyes; then
 else
     AC_MSG_CHECKING(for supported stacks)
     if test x"$STACKS" = x; then
-      AC_MSG_FAILURE(You must support at least one cluster stack)
+        AC_MSG_FAILURE(You must support at least one cluster stack)
     fi
     AC_MSG_RESULT($STACKS)
     PCMK_FEATURES="$PCMK_FEATURES $STACKS"
@@ -1297,9 +1207,15 @@ dnl    ACL
 dnl ========================================================================
 
 case $SUPPORT_ACL in
-     1|yes|true) missingisfatal=1;;
-     try)        missingisfatal=0;;
-     *)		 SUPPORT_ACL=no;;
+    1|yes|true)
+        missingisfatal=1
+        ;;
+    try)
+        missingisfatal=0
+        ;;
+    *)
+        SUPPORT_ACL=no
+        ;;
 esac
 
 AC_MSG_CHECKING(for acl support)
@@ -1336,10 +1252,12 @@ dnl    CIB secrets
 dnl ========================================================================
 
 case $SUPPORT_CIBSECRETS in
-     1|yes|true|try)
-        SUPPORT_CIBSECRETS=1;;
-     *)
-        SUPPORT_CIBSECRETS=0;;
+    1|yes|true|try)
+        SUPPORT_CIBSECRETS=1
+        ;;
+    *)
+        SUPPORT_CIBSECRETS=0
+        ;;
 esac
 
 AC_DEFINE_UNQUOTED(SUPPORT_CIBSECRETS, $SUPPORT_CIBSECRETS, Support CIB secrets)
@@ -1365,12 +1283,12 @@ dnl If no 'libgnutls-config', try traditional autoconf means.
 AC_PATH_PROGS(LIBGNUTLS_CONFIG, libgnutls-config)
 
 if test -n "$LIBGNUTLS_CONFIG"; then
-	AC_MSG_CHECKING(for gnutls header flags)
-	GNUTLSHEAD="`$LIBGNUTLS_CONFIG --cflags`";
-	AC_MSG_RESULT($GNUTLSHEAD)
-	AC_MSG_CHECKING(for gnutls library flags)
-	GNUTLSLIBS="`$LIBGNUTLS_CONFIG --libs`";
-	AC_MSG_RESULT($GNUTLSLIBS)
+    AC_MSG_CHECKING(for gnutls header flags)
+    GNUTLSHEAD="`$LIBGNUTLS_CONFIG --cflags`";
+    AC_MSG_RESULT($GNUTLSHEAD)
+    AC_MSG_CHECKING(for gnutls library flags)
+    GNUTLSLIBS="`$LIBGNUTLS_CONFIG --libs`";
+    AC_MSG_RESULT($GNUTLSLIBS)
 fi
 AC_CHECK_LIB(gnutls, gnutls_init)
 AC_CHECK_FUNCS(gnutls_priority_set_direct)
@@ -1419,10 +1337,10 @@ dnl no effect. However if CFLAGS was exported from the user's
 dnl environment, then the new CFLAGS will also be exported
 dnl to sub processes.
 if export | fgrep " CFLAGS=" > /dev/null; then
-	SAVED_CFLAGS="$CFLAGS"
-	unset CFLAGS
-	CFLAGS="$SAVED_CFLAGS"
-	unset SAVED_CFLAGS
+    SAVED_CFLAGS="$CFLAGS"
+    unset CFLAGS
+    CFLAGS="$SAVED_CFLAGS"
+    unset SAVED_CFLAGS
 fi
 
 AC_ARG_VAR([CFLAGS_HARDENED_LIB], [extra C compiler flags for hardened libraries])
@@ -1434,10 +1352,10 @@ AC_ARG_VAR([LDFLAGS_HARDENED_EXE], [extra linker flags for hardened executables]
 CC_EXTRAS=""
 
 if test "$GCC" != yes; then
-        CFLAGS="$CFLAGS -g"
-	enable_fatal_warnings=no
+    CFLAGS="$CFLAGS -g"
+    enable_fatal_warnings=no
 else
-        CFLAGS="$CFLAGS -ggdb"
+    CFLAGS="$CFLAGS -ggdb"
 
 dnl When we don't have diagnostic push / pull, we can't explicitly disable
 dnl checking for nonliteral formats in the places where they occur on purpose
@@ -1450,95 +1368,95 @@ dnl so if we have push/pull we can enable -Wformat=2 -Wformat-nonliteral
 dnl if we don't have push/pull but -Wformat-nonliteral we can enable -Wformat=2
 dnl otherwise none of both
 
-        gcc_diagnostic_push_pull=no
-        SAVED_CFLAGS="$CFLAGS"
-        CFLAGS="$CFLAGS -Werror"
-        AC_MSG_CHECKING([for gcc diagnostic push / pull])
-        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+    gcc_diagnostic_push_pull=no
+    SAVED_CFLAGS="$CFLAGS"
+    CFLAGS="$CFLAGS -Werror"
+    AC_MSG_CHECKING([for gcc diagnostic push / pull])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #pragma GCC diagnostic push
 #pragma GCC diagnostic pop
-        ]])], [
-                AC_MSG_RESULT([yes])
-                gcc_diagnostic_push_pull=yes
-        ], AC_MSG_RESULT([no]))
-        CFLAGS="$SAVED_CFLAGS"
+                      ]])],
+                      [
+                          AC_MSG_RESULT([yes])
+                          gcc_diagnostic_push_pull=yes
+                      ], AC_MSG_RESULT([no]))
+    CFLAGS="$SAVED_CFLAGS"
 
-        if cc_supports_flag "-Wformat-nonliteral"; then
-                gcc_format_nonliteral=yes
-        else
-                gcc_format_nonliteral=no
-        fi
+    if cc_supports_flag "-Wformat-nonliteral"; then
+        gcc_format_nonliteral=yes
+    else
+        gcc_format_nonliteral=no
+    fi
         
-	# We had to eliminate -Wnested-externs because of libtool changes
-	# Make sure to order options so that the former stand for prerequisites
-	# of the latter (e.g., -Wformat-nonliteral requires -Wformat).
-        EXTRA_FLAGS="-fgnu89-inline
-		-Wall
-		-Waggregate-return
-		-Wbad-function-cast
-		-Wcast-align
-		-Wdeclaration-after-statement
-		-Wendif-labels
-		-Wfloat-equal
-		-Wformat-security
-		-Wmissing-prototypes
-		-Wmissing-declarations
-		-Wnested-externs
-		-Wno-long-long
-		-Wno-strict-aliasing
-		-Wpointer-arith
-		-Wstrict-prototypes
-		-Wwrite-strings
-		-Wunused-but-set-variable
-		-Wunsigned-char"
+    # We had to eliminate -Wnested-externs because of libtool changes
+    # Make sure to order options so that the former stand for prerequisites
+    # of the latter (e.g., -Wformat-nonliteral requires -Wformat).
+    EXTRA_FLAGS="-fgnu89-inline
+                -Wall
+                -Waggregate-return
+                -Wbad-function-cast
+                -Wcast-align
+                -Wdeclaration-after-statement
+                -Wendif-labels
+                -Wfloat-equal
+                -Wformat-security
+                -Wmissing-prototypes
+                -Wmissing-declarations
+                -Wnested-externs
+                -Wno-long-long
+                -Wno-strict-aliasing
+                -Wpointer-arith
+                -Wstrict-prototypes
+                -Wwrite-strings
+                -Wunused-but-set-variable
+                -Wunsigned-char"
 
-        if test "x$gcc_diagnostic_push_pull" = "xyes"; then
-                AC_DEFINE([GCC_FORMAT_NONLITERAL_CHECKING_ENABLED], [],
-			[gcc can complain about nonliterals in format])
-                EXTRA_FLAGS="$EXTRA_FLAGS
-                        -Wformat=2 
-                        -Wformat-nonliteral"
-        else
-                if test "x$gcc_format_nonliteral" = "xyes"; then
-                        EXTRA_FLAGS="$EXTRA_FLAGS
-                        -Wformat=2"
-                fi
+    if test "x$gcc_diagnostic_push_pull" = "xyes"; then
+        AC_DEFINE([GCC_FORMAT_NONLITERAL_CHECKING_ENABLED], [],
+                  [gcc can complain about nonliterals in format])
+        EXTRA_FLAGS="$EXTRA_FLAGS
+                    -Wformat=2 
+                    -Wformat-nonliteral"
+    else
+        if test "x$gcc_format_nonliteral" = "xyes"; then
+            EXTRA_FLAGS="$EXTRA_FLAGS -Wformat=2"
         fi
+    fi
 
 # Additional warnings it might be nice to enable one day
-#		-Wshadow
-#		-Wunreachable-code
-	for j in $EXTRA_FLAGS
-	do
-	  if
-	    cc_supports_flag $CC_EXTRAS $j
-	  then
-	    CC_EXTRAS="$CC_EXTRAS $j"
-	  fi
-	done
+#                -Wshadow
+#                -Wunreachable-code
+    for j in $EXTRA_FLAGS
+    do
+        if
+            cc_supports_flag $CC_EXTRAS $j
+        then
+            CC_EXTRAS="$CC_EXTRAS $j"
+        fi
+    done
 
 dnl System specific options
 
-	case "$host_os" in
-  	*linux*|*bsd*)
-		if test "${enable_fatal_warnings}" = "unknown"; then
-        		enable_fatal_warnings=yes
-        	fi
-          	;;
-	esac
+    case "$host_os" in
+        *linux*|*bsd*)
+            if test "${enable_fatal_warnings}" = "unknown"; then
+                enable_fatal_warnings=yes
+            fi
+            ;;
+    esac
 
-	if test "x${enable_fatal_warnings}" != xno && cc_supports_flag -Werror ; then
-	   enable_fatal_warnings=yes
-	else
-	   enable_fatal_warnings=no
-        fi
+    if test "x${enable_fatal_warnings}" != xno && cc_supports_flag -Werror ; then
+        enable_fatal_warnings=yes
+    else
+        enable_fatal_warnings=no
+    fi
 
-	if test "x${enable_ansi}" = xyes && cc_supports_flag -std=iso9899:199409 ; then
-	  AC_MSG_NOTICE(Enabling ANSI Compatibility)
-	  CC_EXTRAS="$CC_EXTRAS -ansi -D_GNU_SOURCE -DANSI_ONLY"
-	fi
+    if test "x${enable_ansi}" = xyes && cc_supports_flag -std=iso9899:199409 ; then
+        AC_MSG_NOTICE(Enabling ANSI Compatibility)
+        CC_EXTRAS="$CC_EXTRAS -ansi -D_GNU_SOURCE -DANSI_ONLY"
+    fi
 
-  	AC_MSG_NOTICE(Activated additional gcc flags: ${CC_EXTRAS})
+    AC_MSG_NOTICE(Activated additional gcc flags: ${CC_EXTRAS})
 fi
 
 dnl
@@ -1586,81 +1504,76 @@ dnl https://owasp.org/index.php/C-Based_Toolchain_Hardening#GCC.2FBinutils
 dnl
 
 if test "x${HARDENING}" != "xtry"; then
-	unset CFLAGS_HARDENED_EXE
-	unset CFLAGS_HARDENED_LIB
-	unset LDFLAGS_HARDENED_EXE
-	unset LDFLAGS_HARDENED_LIB
+    unset CFLAGS_HARDENED_EXE
+    unset CFLAGS_HARDENED_LIB
+    unset LDFLAGS_HARDENED_EXE
+    unset LDFLAGS_HARDENED_LIB
 fi
 if test "x${HARDENING}" = "xno"; then
-	AC_MSG_NOTICE([Hardening: explicitly disabled])
+    AC_MSG_NOTICE([Hardening: explicitly disabled])
 elif test "x${HARDENING}" = "xyes" \
-    || test "$(env | grep -Ec '^(C|LD)FLAGS_HARDENED_(EXE|LIB)=.')" = 0; then
-	dnl We'll figure out on our own...
-	CFLAGS_HARDENED_EXE=
-	CFLAGS_HARDENED_LIB=
-	LDFLAGS_HARDENED_EXE=
-	LDFLAGS_HARDENED_LIB=
-	relro=0
-	pie=0
-	bindnow=0
-	# daemons incl. libs: partial RELRO
-	flag="-Wl,-z,relro"
-	CC_CHECK_LDFLAGS(["${flag}"],
-		[LDFLAGS_HARDENED_EXE="${LDFLAGS_HARDENED_EXE} ${flag}";
-		 LDFLAGS_HARDENED_LIB="${LDFLAGS_HARDENED_LIB} ${flag}";
-		 relro=1]
-	)
-	# daemons: PIE for both CFLAGS and LDFLAGS
-	if cc_supports_flag -fPIE; then
-		flag="-pie"
-		CC_CHECK_LDFLAGS(["${flag}"],
-			[CFLAGS_HARDENED_EXE="${CFLAGS_HARDENED_EXE} -fPIE";
-			 LDFLAGS_HARDENED_EXE="${LDFLAGS_HARDENED_EXE} ${flag}";
-			 pie=1]
-		)
-	fi
-	# daemons incl. libs: full RELRO if sensible + as-needed linking
-	#                     so as to possibly mitigate startup performance
-	#                     hit caused by excessive linking with unneeded
-	#                     libraries
-	if test "${relro}" = 1 && test "${pie}" = 1; then
-		flag="-Wl,-z,now"
-		CC_CHECK_LDFLAGS(["${flag}"],
-			[LDFLAGS_HARDENED_EXE="${LDFLAGS_HARDENED_EXE} ${flag}";
-			 LDFLAGS_HARDENED_LIB="${LDFLAGS_HARDENED_LIB} ${flag}";
-			 bindnow=1]
-		)
-	fi
-	if test "${bindnow}" = 1; then
-		flag="-Wl,--as-needed"
-		CC_CHECK_LDFLAGS(["${flag}"],
-			[LDFLAGS_HARDENED_EXE="${LDFLAGS_HARDENED_EXE} ${flag}";
-			 LDFLAGS_HARDENED_LIB="${LDFLAGS_HARDENED_LIB} ${flag}"]
-		)
-	fi
-	# universal: prefer strong > all > default stack protector if possible
-	flag=
-	if cc_supports_flag -fstack-protector-strong; then
-		flag="-fstack-protector-strong"
-	elif cc_supports_flag -fstack-protector-all; then
-		flag="-fstack-protector-all"
-	elif cc_supports_flag -fstack-protector; then
-		flag="-fstack-protector"
-	fi
-	if test -n "${flag}"; then
-		CC_EXTRAS="${CC_EXTRAS} ${flag}"
-		stackprot=1
-	fi
-	if test "${relro}" = 1 \
-	|| test "${pie}" = 1 \
-	|| test "${stackprot}" = 1; then
-		AC_MSG_NOTICE(
-		[Hardening: relro=${relro} pie=${pie} bindnow=${bindnow} stackprot=${flag}])
-	else
-		AC_MSG_WARN([Hardening: no suitable features in the toolchain detected])
-	fi
+     || test "$(env | grep -Ec '^(C|LD)FLAGS_HARDENED_(EXE|LIB)=.')" = 0; then
+    dnl We'll figure out on our own...
+    CFLAGS_HARDENED_EXE=
+    CFLAGS_HARDENED_LIB=
+    LDFLAGS_HARDENED_EXE=
+    LDFLAGS_HARDENED_LIB=
+    relro=0
+    pie=0
+    bindnow=0
+    # daemons incl. libs: partial RELRO
+    flag="-Wl,-z,relro"
+    CC_CHECK_LDFLAGS(["${flag}"],
+                     [LDFLAGS_HARDENED_EXE="${LDFLAGS_HARDENED_EXE} ${flag}";
+                      LDFLAGS_HARDENED_LIB="${LDFLAGS_HARDENED_LIB} ${flag}";
+                      relro=1])
+    # daemons: PIE for both CFLAGS and LDFLAGS
+    if cc_supports_flag -fPIE; then
+        flag="-pie"
+        CC_CHECK_LDFLAGS(["${flag}"],
+                         [CFLAGS_HARDENED_EXE="${CFLAGS_HARDENED_EXE} -fPIE";
+                          LDFLAGS_HARDENED_EXE="${LDFLAGS_HARDENED_EXE} ${flag}";
+                          pie=1])
+    fi
+    # daemons incl. libs: full RELRO if sensible + as-needed linking
+    #                     so as to possibly mitigate startup performance
+    #                     hit caused by excessive linking with unneeded
+    #                     libraries
+    if test "${relro}" = 1 && test "${pie}" = 1; then
+        flag="-Wl,-z,now"
+        CC_CHECK_LDFLAGS(["${flag}"],
+                         [LDFLAGS_HARDENED_EXE="${LDFLAGS_HARDENED_EXE} ${flag}";
+                          LDFLAGS_HARDENED_LIB="${LDFLAGS_HARDENED_LIB} ${flag}";
+                          bindnow=1])
+    fi
+    if test "${bindnow}" = 1; then
+        flag="-Wl,--as-needed"
+        CC_CHECK_LDFLAGS(["${flag}"],
+                         [LDFLAGS_HARDENED_EXE="${LDFLAGS_HARDENED_EXE} ${flag}";
+                          LDFLAGS_HARDENED_LIB="${LDFLAGS_HARDENED_LIB} ${flag}"])
+    fi
+    # universal: prefer strong > all > default stack protector if possible
+    flag=
+    if cc_supports_flag -fstack-protector-strong; then
+        flag="-fstack-protector-strong"
+    elif cc_supports_flag -fstack-protector-all; then
+        flag="-fstack-protector-all"
+    elif cc_supports_flag -fstack-protector; then
+        flag="-fstack-protector"
+    fi
+    if test -n "${flag}"; then
+        CC_EXTRAS="${CC_EXTRAS} ${flag}"
+        stackprot=1
+    fi
+    if test "${relro}" = 1 \
+    || test "${pie}" = 1 \
+    || test "${stackprot}" = 1; then
+        AC_MSG_NOTICE([Hardening: relro=${relro} pie=${pie} bindnow=${bindnow} stackprot=${flag}])
+    else
+        AC_MSG_WARN([Hardening: no suitable features in the toolchain detected])
+    fi
 else
-	AC_MSG_NOTICE([Hardening: using custom flags])
+    AC_MSG_NOTICE([Hardening: using custom flags])
 fi
 
 CFLAGS="$CFLAGS $CC_EXTRAS"
@@ -1676,8 +1589,8 @@ dnl *always* cause us troubles if we set it before here.
 dnl
 dnl
 if test "x${enable_fatal_warnings}" = xyes ; then
-   AC_MSG_NOTICE(Enabling Fatal Warnings)
-   CFLAGS="$CFLAGS -Werror"
+    AC_MSG_NOTICE(Enabling Fatal Warnings)
+    CFLAGS="$CFLAGS -Werror"
 fi
 AC_SUBST(CFLAGS)
 
@@ -1685,8 +1598,8 @@ dnl This is useful for use in Makefiles that need to remove one specific flag
 CFLAGS_COPY="$CFLAGS"
 AC_SUBST(CFLAGS_COPY)
 
-AC_SUBST(LIBADD_DL)	dnl extra flags for dynamic linking libraries
-AC_SUBST(LIBADD_INTL)	dnl extra flags for GNU gettext stuff...
+AC_SUBST(LIBADD_DL)        dnl extra flags for dynamic linking libraries
+AC_SUBST(LIBADD_INTL)        dnl extra flags for GNU gettext stuff...
 
 AC_SUBST(LOCALE)
 
@@ -1694,8 +1607,8 @@ dnl Options for cleaning up the compiler output
 QUIET_LIBTOOL_OPTS=""
 QUIET_MAKE_OPTS=""
 if test "x${enable_quiet}" = "xyes"; then
-   QUIET_LIBTOOL_OPTS="--quiet"
-   QUIET_MAKE_OPTS="--quiet"
+    QUIET_LIBTOOL_OPTS="--quiet"
+    QUIET_MAKE_OPTS="--quiet"
 fi
 
 AC_MSG_RESULT(Supress make details: ${enable_quiet})
@@ -1713,74 +1626,74 @@ AC_DEFINE_UNQUOTED(CRM_FEATURES, "$PCMK_FEATURES", Set of enabled features)
 AC_SUBST(PCMK_FEATURES)
 
 dnl The Makefiles and shell scripts we output
-AC_CONFIG_FILES(Makefile				        \
-Doxyfile							\
-coverage.sh							\
-cts/Makefile					        	\
-	cts/CTSvars.py						\
-	cts/LSBDummy						\
-	cts/benchmark/Makefile					\
-	cts/benchmark/clubench					\
-	cts/lxc_autogen.sh					\
-cib/Makefile							\
-attrd/Makefile							\
-crmd/Makefile							\
-pengine/Makefile						\
-	pengine/regression.core.sh				\
-doc/Makefile							\
-	doc/Clusters_from_Scratch/publican.cfg			\
-	doc/Pacemaker_Development/publican.cfg			\
-	doc/Pacemaker_Explained/publican.cfg			\
-	doc/Pacemaker_Remote/publican.cfg			\
-include/Makefile						\
-	include/crm/Makefile					\
-		include/crm/cib/Makefile			\
-		include/crm/common/Makefile			\
-		include/crm/cluster/Makefile			\
-		include/crm/fencing/Makefile			\
-		include/crm/pengine/Makefile			\
-replace/Makefile						\
-lib/Makefile							\
-	lib/pacemaker.pc					\
-	lib/pacemaker-cib.pc					\
-	lib/pacemaker-lrmd.pc					\
-	lib/pacemaker-service.pc				\
-	lib/pacemaker-pengine.pc				\
-	lib/pacemaker-fencing.pc				\
-	lib/pacemaker-cluster.pc				\
-	lib/common/Makefile					\
-	lib/cluster/Makefile					\
-	lib/cib/Makefile					\
-	lib/pengine/Makefile					\
-	lib/transition/Makefile					\
-	lib/fencing/Makefile					\
-	lib/lrmd/Makefile					\
-	lib/services/Makefile					\
-mcp/Makefile							\
-	mcp/pacemaker						\
-	mcp/pacemaker.service					\
-	mcp/pacemaker.upstart					\
-	mcp/pacemaker.combined.upstart				\
-fencing/Makefile                                                \
-        fencing/regression.py                                   \
-lrmd/Makefile                                                   \
-        lrmd/regression.py                                      \
-        lrmd/pacemaker_remote.service				\
-        lrmd/pacemaker_remote					\
-extra/Makefile							\
-	extra/alerts/Makefile					\
-	extra/resources/Makefile				\
-	extra/logrotate/Makefile				\
-	extra/logrotate/pacemaker				\
-tools/Makefile							\
-	tools/crm_report					\
-        tools/report.common                                     \
-	tools/cibsecret						\
-	tools/crm_mon.service					\
-	tools/crm_mon.upstart					\
-xml/Makefile							\
-lib/gnu/Makefile						\
-		)
+AC_CONFIG_FILES(Makefile                                            \
+                Doxyfile                                            \
+                coverage.sh                                         \
+                cts/Makefile                                        \
+                cts/CTSvars.py                                      \
+                cts/LSBDummy                                        \
+                cts/benchmark/Makefile                              \
+                cts/benchmark/clubench                              \
+                cts/lxc_autogen.sh                                  \
+                cib/Makefile                                        \
+                attrd/Makefile                                      \
+                crmd/Makefile                                       \
+                pengine/Makefile                                    \
+                pengine/regression.core.sh                          \
+                doc/Makefile                                        \
+                doc/Clusters_from_Scratch/publican.cfg              \
+                doc/Pacemaker_Development/publican.cfg              \
+                doc/Pacemaker_Explained/publican.cfg                \
+                doc/Pacemaker_Remote/publican.cfg                   \
+                include/Makefile                                    \
+                include/crm/Makefile                                \
+                include/crm/cib/Makefile                            \
+                include/crm/common/Makefile                         \
+                include/crm/cluster/Makefile                        \
+                include/crm/fencing/Makefile                        \
+                include/crm/pengine/Makefile                        \
+                replace/Makefile                                    \
+                lib/Makefile                                        \
+                lib/pacemaker.pc                                    \
+                lib/pacemaker-cib.pc                                \
+                lib/pacemaker-lrmd.pc                               \
+                lib/pacemaker-service.pc                            \
+                lib/pacemaker-pengine.pc                            \
+                lib/pacemaker-fencing.pc                            \
+                lib/pacemaker-cluster.pc                            \
+                lib/common/Makefile                                 \
+                lib/cluster/Makefile                                \
+                lib/cib/Makefile                                    \
+                lib/pengine/Makefile                                \
+                lib/transition/Makefile                             \
+                lib/fencing/Makefile                                \
+                lib/lrmd/Makefile                                   \
+                lib/services/Makefile                               \
+                mcp/Makefile                                        \
+                mcp/pacemaker                                       \
+                mcp/pacemaker.service                               \
+                mcp/pacemaker.upstart                               \
+                mcp/pacemaker.combined.upstart                      \
+                fencing/Makefile                                    \
+                fencing/regression.py                               \
+                lrmd/Makefile                                       \
+                lrmd/regression.py                                  \
+                lrmd/pacemaker_remote.service                       \
+                lrmd/pacemaker_remote                               \
+                extra/Makefile                                      \
+                extra/alerts/Makefile                               \
+                extra/resources/Makefile                            \
+                extra/logrotate/Makefile                            \
+                extra/logrotate/pacemaker                           \
+                tools/Makefile                                      \
+                tools/crm_report                                    \
+                tools/report.common                                 \
+                tools/cibsecret                                     \
+                tools/crm_mon.service                               \
+                tools/crm_mon.upstart                               \
+                xml/Makefile                                        \
+                lib/gnu/Makefile                                    \
+)
 
 dnl Now process the entire list of files added by previous
 dnl  calls to AC_CONFIG_FILES()

@@ -10,7 +10,7 @@ See the http://clusterlabs.org/wiki/Install[Install wiki page] for details.
 
 === Enabling Pacemaker ===
 
-==== Enabling Pacemaker For Corosync 2._x_ ====
+==== Enabling Pacemaker For Corosync version 2 and greater ====
 
 High-level cluster management tools are available that can configure
 corosync for you. This document focuses on the lower-level details
@@ -19,7 +19,7 @@ if you want to configure corosync yourself.
 Corosync configuration is normally located in
 +/etc/corosync/corosync.conf+.
 
-.Corosync 2._x_ configuration file for two nodes *myhost1* and *myhost2*
+.Corosync configuration file for two nodes *myhost1* and *myhost2*
 ====
 ----
 totem {
@@ -51,7 +51,7 @@ to_syslog: yes
 ----
 ====
 
-.Corosync 2._x_ configuration file for three nodes *myhost1*, *myhost2* and *myhost3*
+.Corosync configuration file for three nodes *myhost1*, *myhost2* and *myhost3*
 ====
 ----
 totem {

@@ -68,9 +68,9 @@ disadvantages.
 |Allows change of messaging layer
 indexterm:[Cluster,switching between stacks]
 indexterm:[Changing cluster stack]
-footnote:[Currently, Corosync 2 is the only supported cluster stack, but other
-stacks have been supported by past versions, and may be supported by future
-versions.]
+footnote:[Currently, Corosync version 2 and greater is the only supported
+cluster stack, but other stacks have been supported by past versions, and may
+be supported by future versions.]
 
 |Complete cluster shutdown
 indexterm:[upgrade,shutdown]
@@ -119,9 +119,9 @@ then upgrades all the nodes before restarting the cluster.
 .. Check the configuration with the `crm_verify` tool.
 . On each node:
 .. Start the cluster software.
-   Currently, only Corosync version 2 is supported as the cluster layer,
-   but if another stack is supported in the future, the stack does not need to
-   be the same one before the upgrade.
+   Currently, only Corosync version 2 and greater is supported as the cluster
+   layer, but if another stack is supported in the future, the stack does not
+   need to be the same one before the upgrade.
 
 One variation of this approach is to build a new cluster on new hosts.
 This allows the new version to be tested beforehand, and minimizes downtime by
@@ -167,8 +167,8 @@ To perform a rolling upgrade, on each node in turn:
 . If this is the first node to be upgraded, check the configuration
   with the `crm_verify` tool.
 . Start the messaging layer.
-  This must be the same messaging layer (currently only Corosync 2 is
-  supported) that the rest of the cluster is using.
+  This must be the same messaging layer (currently only Corosync version 2 and
+  greater is supported) that the rest of the cluster is using.
 
 [NOTE]
 ====
@@ -186,8 +186,9 @@ upgrade in multiple steps, by upgrading to an intermediate version first.
 |Pacemaker 2.y.z
 |Pacemaker 1.1.11
 footnote:[Rolling upgrades from Pacemaker 1.1.z to 2.y.z are possible only if
-the cluster uses corosync 2 as its messaging layer, and the Cluster Information
-Base (CIB) uses schema 1.0 or higher in its validate-with property.]
+the cluster uses corosync version 2 or greater as its messaging layer, and the
+Cluster Information Base (CIB) uses schema 1.0 or higher in its validate-with
+property.]
 
 |Pacemaker 1.y.z
 |Pacemaker 1.0.0
@@ -219,9 +220,9 @@ This method may not be used if the cluster contains any Pacemaker Remote nodes.
   services (certainly, if a reboot is required).
 . Check the configuration with the `crm_verify` tool.
 . On each node, start the cluster software.
-  Currently, only Corosync version 2 is supported as the cluster layer,
-  but if another stack is supported in the future, the stack does not need to
-  be the same one before the upgrade.
+  Currently, only Corosync version 2 and greater is supported as the cluster
+  layer, but if another stack is supported in the future, the stack does not
+  need to be the same one before the upgrade.
 . Verify that the cluster re-detected all resources correctly.
 . Allow the cluster to resume managing resources again:
 +
@@ -361,8 +362,9 @@ The main goal of the 2.0 release was to remove support for deprecated syntax,
 along with some small changes in default configuration behavior and tool
 behavior. Highlights:
 
-* Only Corosync version 2 is now supported as the underlying cluster
-  layer. Support for Heartbeat and Corosync 1 (including CMAN) is removed.
+* Only Corosync version 2 and greater is now supported as the underlying
+  cluster layer. Support for Heartbeat and Corosync 1 (including CMAN) is
+  removed.
 
 * The Pacemaker detail log file is now stored in
   /var/log/pacemaker/pacemaker.log by default.

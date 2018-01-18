@@ -24,7 +24,9 @@
 
 #ifndef CRM_LOGGING__H
 #  define CRM_LOGGING__H
+
 #  include <qb/qblog.h>
+
 #  ifndef LOG_TRACE
 #    define LOG_TRACE    LOG_DEBUG+1
 #  endif
@@ -116,6 +118,7 @@ unsigned int get_crm_log_level(void);
 #if defined(__clang__)
 #    define CRM_TRACE_INIT_DATA(name)
 #  else
+#    include <assert.h> // required by QB_LOG_INIT_DATA() macro
 #    define CRM_TRACE_INIT_DATA(name) QB_LOG_INIT_DATA(name)
 #endif
 

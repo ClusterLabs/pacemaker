@@ -133,6 +133,7 @@ gboolean check_utilization(const char *value);
 long crm_get_sbd_timeout(void);
 long crm_auto_watchdog_timeout(void);
 gboolean check_sbd_timeout(const char *value);
+void crm_args_fini(void);
 
 /* char2score */
 extern int node_score_red;

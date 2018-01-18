@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2017 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright (C) 2012-2018 Andrew Beekhof <andrew@beekhof.net>
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -49,6 +49,7 @@ static int ais_fd_sync = -1;
 #define HAVE_CONFDB 0
 #define SUPPORT_CMAN 0
 #define SUPPORT_PLUGIN 0
+#define SUPPORT_STONITH_CONFIG 0
 #define is_classic_ais_cluster() 0
 #define is_cman_cluster() 0
 
@@ -71,5 +72,10 @@ static int ais_fd_sync = -1;
 
 // This has been renamed
 #define CRM_DTD_DIRECTORY CRM_SCHEMA_DIRECTORY
+
+/* Exit-code-related definitions */
+
+#define DAEMON_RESPAWN_STOP CRM_EX_FATAL
+#define pcmk_err_panic      CRM_EX_PANIC
 
 #endif
