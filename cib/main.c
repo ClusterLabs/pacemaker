@@ -163,7 +163,7 @@ main(int argc, char **argv)
                     return CRM_EX_FATAL;
                 }
 
-                rc = initgroups(CRM_DAEMON_GROUP, pwentry->pw_gid);
+                rc = initgroups(CRM_DAEMON_USER, pwentry->pw_gid);
                 if (rc < 0) {
                     crm_perror(LOG_ERR, "Could not setup groups for user %d", pwentry->pw_uid);
                     return CRM_EX_FATAL;
