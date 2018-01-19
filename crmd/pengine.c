@@ -123,7 +123,7 @@ pe_ipc_destroy(gpointer user_data)
     }
 
     clear_bit(fsa_input_register, R_PE_CONNECTED);
-    pe_subsystem_free();
+    pe_subsystem = NULL;
     mainloop_set_trigger(fsa_source);
     return;
 }
