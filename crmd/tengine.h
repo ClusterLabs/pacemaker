@@ -59,6 +59,8 @@ extern void notify_crmd(crm_graph_t * graph);
 #  include <te_callbacks.h>
 
 extern void trigger_graph_processing(const char *fn, int line);
+void abort_after_delay(int abort_priority, enum transition_action abort_action,
+                       const char *abort_text, guint delay_ms);
 extern void abort_transition_graph(int abort_priority, enum transition_action abort_action,
                                    const char *abort_text, xmlNode * reason, const char *fn,
                                    int line);

@@ -530,6 +530,46 @@ trigger_graph_processing(const char *fn, int line)
     mainloop_set_trigger(transition_trigger);
 }
 
+static struct abort_timer_s {
+    bool aborted;
+    guint id;
+    int priority;
+    enum transition_action action;
+    const char *text;
+} abort_timer = { 0, };
+
+static gboolean
+abort_timer_popped(gpointer data)
+{
+    if (abort_timer.aborted == FALSE) {
+        abort_transition(abort_timer.priority, abort_timer.action,
+                         abort_timer.text, NULL);
+    }
+    abort_timer.id = 0;
+    return FALSE; // do not immediately reschedule timer
+}
+
+/*!
+ * \internal
+ * \brief Abort transition after delay, if not already aborted in that time
+ *
+ * \param[in] abort_text  Must be literal string
+ */
+void
+abort_after_delay(int abort_priority, enum transition_action abort_action,
+                  const char *abort_text, guint delay_ms)
+{
+    if (abort_timer.id) {
+        // Timer already in progress, stop and reschedule
+        g_source_remove(abort_timer.id);
+    }
+    abort_timer.aborted = FALSE;
+    abort_timer.priority = abort_priority;
+    abort_timer.action = abort_action;
+    abort_timer.text = abort_text;
+    abort_timer.id = g_timeout_add(delay_ms, abort_timer_popped, NULL);
+}
+
 void
 abort_transition_graph(int abort_priority, enum transition_action abort_action,
                        const char *abort_text, xmlNode * reason, const char *fn, int line)
@@ -556,6 +596,8 @@ abort_transition_graph(int abort_priority, enum transition_action abort_action,
         default:
             break;
     }
+
+    abort_timer.aborted = TRUE;
 
     /* Make sure any queued calculations are discarded ASAP */
     free(fsa_pe_ref);
@@ -660,10 +702,12 @@ abort_transition_graph(int abort_priority, enum transition_action abort_action,
                        (transition_graph->complete? "true" : "false"));
 
         } else {
+            const char *id = ID(reason);
+
             do_crm_log(level, "Transition aborted by %s.%s '%s': %s "
                        CRM_XS " cib=%d.%d.%d source=%s:%d path=%s complete=%s",
-                       TYPE(reason), ID(reason), (op? op : "change"), abort_text,
-                       add[0], add[1], add[2], fn, line, path,
+                       TYPE(reason), (id? id : ""), (op? op : "change"),
+                       abort_text, add[0], add[1], add[2], fn, line, path,
                        (transition_graph->complete? "true" : "false"));
         }
     }
