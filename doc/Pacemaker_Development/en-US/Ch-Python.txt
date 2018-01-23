@@ -24,7 +24,7 @@ Every Python file should start like this:
 # Pacemaker targets compatibility with Python 2.7 and 3.2+
 from __future__ import print_function, unicode_literals, absolute_import, division
 
-__copyright__ = "Copyright (C) <YYYY[-YYYY]> Andrew Beekhof <andrew@beekhof.net>"
+__copyright__ = "Copyright <YYYY[-YYYY]> Andrew Beekhof <andrew@beekhof.net>"
 __license__ = "<LICENSE> WITHOUT ANY WARRANTY"
 ----
 ====
@@ -38,10 +38,16 @@ a Python file https://www.python.org/dev/peps/pep-0257/[docstring].
 
 The +import+ statement is discussed further in <<s-python-future-imports>>.
 
-+<YYYY>+ is the year the code was 'originally' created (it is the most
-important date for copyright purposes, as it establishes priority and
-the point from which expiration is calculated). If the code is modified
-in later years, add +-YYYY+ with the most recent year of modification.
++<YYYY>+ is the year the code was 'originally' created.
+footnote:[
+See the U.S. Copyright Office's https://www.copyright.gov/comp3/["Compendium
+of U.S. Copyright Office Practices"], particularly "Chapter 2200: Notice of
+Copyright", sections 2205.1(A) and 2205.1(F), or
+https://techwhirl.com/updating-copyright-notices/["Updating Copyright
+Notices"] for a more readable summary.
+]
+If the code is modified in later years, add +-YYYY+ with the most recent year
+of modification.
 
 +<LICENSE>+ should follow the policy set forth in the
 https://github.com/ClusterLabs/pacemaker/blob/master/COPYING[+COPYING+] file,
