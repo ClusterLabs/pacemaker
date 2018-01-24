@@ -1,0 +1,14 @@
+= Read-Me-First =
+
+== The Scope of this Document ==
+
+The purpose of this document is to help system administrators learn how to
+manage a Pacemaker cluster.
+      
+System administrators may be interested in other parts of the
+https://www.clusterlabs.org/pacemaker/doc/[Pacemaker documentation set],
+such as 'Clusters from Scratch', a step-by-step guide to setting up an
+example cluster, and 'Pacemaker Explained', an exhaustive reference for
+cluster configuration.
+
+include::../../shared/en-US/pacemaker-intro.txt[]

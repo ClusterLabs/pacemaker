@@ -1642,6 +1642,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 pengine/regression.core.sh                          \
                 doc/Makefile                                        \
                 doc/Clusters_from_Scratch/publican.cfg              \
+                doc/Pacemaker_Administration/publican.cfg           \
                 doc/Pacemaker_Development/publican.cfg              \
                 doc/Pacemaker_Explained/publican.cfg                \
                 doc/Pacemaker_Remote/publican.cfg                   \
