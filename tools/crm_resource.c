@@ -1101,16 +1101,24 @@ main(int argc, char **argv)
             const char *task_interval = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
             const char *resource_name = crm_element_value(xml_op, XML_LRM_ATTR_RSCID);
 
-            if(resource_name == NULL) {
+            if (resource_name == NULL) {
                 continue;
             } else if(host_uname && safe_str_neq(host_uname, node)) {
-                continue;
-            } else if(rsc_id && safe_str_neq(rsc_id, resource_name)) {
                 continue;
             } else if(operation && safe_str_neq(operation, task)) {
                 continue;
             } else if(interval && safe_str_neq(interval, task_interval)) {
                 continue;
+            }
+
+            if (rsc_id) {
+                resource_t *fail_rsc = pe_find_resource_with_flags(data_set.resources,
+                                                                   resource_name,
+                                                                   find_flags);
+
+                if (!fail_rsc || safe_str_neq(rsc->id, fail_rsc->id)) {
+                    continue;
+                }
             }
 
             crm_debug("Erasing %s failure for %s (%s detected) on %s",
