@@ -214,15 +214,17 @@ static struct crm_option long_options[] = {
         "cleanup", no_argument, NULL, 'C',
 #if 0
         // new behavior disabled until 2.0.0
-        "\t\tDelete failed operations from a resource's history allowing its current state to be rechecked.\n"
+        "\t\tIf resource has any past failures, clear its history and fail count.\n"
         "\t\t\t\tOptionally filtered by --resource, --node, --operation, and --interval (otherwise all).\n"
+        "\t\t\t\t--operation and --interval apply to fail counts, but entire history is always cleared,\n"
+        "\t\t\t\tto allow current state to be rechecked.\n"
     },
     {
         "refresh", no_argument, NULL, 'R',
 #endif
         "\t\tDelete resource's history (including failures) so its current state is rechecked.\n"
-        "\t\t\t\tOptionally filtered by --resource, --node, --operation, and --interval (otherwise all).\n"
-        "\t\t\t\tUnless --force is specified, resource's group or clone (if any) will also be cleaned"
+        "\t\t\t\tOptionally filtered by --resource and --node (otherwise all).\n"
+        "\t\t\t\tUnless --force is specified, resource's group or clone (if any) will also be refreshed."
     },
     {
         "set-parameter", required_argument, NULL, 'p',
@@ -442,7 +444,6 @@ main(int argc, char **argv)
     bool require_resource = TRUE; /* whether command requires that resource be specified */
     bool require_dataset = TRUE;  /* whether command requires populated dataset instance */
     bool require_crmd = FALSE;    /* whether command requires connection to CRMd */
-    bool just_errors = TRUE;      /* whether cleanup command deletes all history or just errors */
 
     int rc = pcmk_ok;
     int is_ocf_rc = 0;
@@ -634,8 +635,7 @@ main(int argc, char **argv)
                 if (cib_file == NULL) {
                     require_crmd = TRUE;
                 }
-                just_errors = FALSE;
-                rsc_cmd = 'C';
+                rsc_cmd = 'R';
                 find_flags = pe_find_renamed|pe_find_anon;
                 break;
 
@@ -645,7 +645,6 @@ main(int argc, char **argv)
                 if (cib_file == NULL) {
                     require_crmd = TRUE;
                 }
-                just_errors = FALSE; // disable until 2.0.0
                 rsc_cmd = 'C';
                 find_flags = pe_find_renamed|pe_find_anon;
                 break;
@@ -1101,7 +1100,7 @@ main(int argc, char **argv)
         rc = cli_resource_delete_attribute(rsc, rsc_id, prop_set, prop_id,
                                            prop_name, cib_conn, &data_set);
 
-    } else if ((rsc_cmd == 'C') && rsc) {
+    } else if ((rsc_cmd == 'R') && rsc) {
         if (do_force == FALSE) {
             rsc = uber_parent(rsc);
         }
@@ -1110,8 +1109,8 @@ main(int argc, char **argv)
         crm_debug("%s of %s (%s requested) on %s",
                   (just_errors? "Clearing failures" : "Re-checking the state"),
                   rsc->id, rsc_id, (host_uname? host_uname : "all hosts"));
-        rc = cli_resource_delete(crmd_channel, host_uname, rsc, operation,
-                                 interval, just_errors, &data_set);
+        rc = cli_resource_delete(crmd_channel, host_uname, rsc, NULL, 0,
+                                 &data_set);
 
         if ((rc == pcmk_ok) && !BE_QUIET) {
             // Show any reasons why resource might stay stopped
@@ -1122,14 +1121,14 @@ main(int argc, char **argv)
             start_mainloop();
         }
 
-    } else if (rsc_cmd == 'C' && just_errors) {
+    } else if (rsc_cmd == 'C') {
         rc = cli_cleanup_all(crmd_channel, host_uname, operation, interval,
                              &data_set);
         if (rc == pcmk_ok) {
             start_mainloop();
         }
 
-    } else if (rsc_cmd == 'C') {
+    } else if (rsc_cmd == 'R') {
 #if HAVE_ATOMIC_ATTRD
         const char *router_node = host_uname;
         xmlNode *msg_data = NULL;
