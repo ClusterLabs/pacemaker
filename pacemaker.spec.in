@@ -396,7 +396,7 @@ sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
 make %{_smp_mflags} V=1 all
 
 %check
-{ pengine/regression.sh --run one-or-more-unrunnnable-instances \
+{ pengine/regression.sh --run one-or-more-unrunnable-instances \
   && tools/regression.sh \
   && touch .CHECKED
 } 2>&1 | sed 's/[fF]ail/faiil/g'  # prevent false positives in rpmlint
