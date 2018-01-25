@@ -23,6 +23,9 @@
 ## (used to be constant of 7), so we need to convey it for non-tags, too.
 %global commit_abbrev 7
 
+## Path to Python interpreter (leave commented to auto-detect,
+## or uncomment and edit to use a specific version)
+#%%global python_path /usr/bin/python%{python3_pkgversion} 
 
 # Define globals for convenient use later
 
@@ -76,7 +79,6 @@
 %define systemd_native (%{?_unitdir:1}%{?!_unitdir:0}%{nil \
   } || %{?__transaction_systemd_inhibit:1}%{?!__transaction_systemd_inhibit:0}%{nil \
   } || %(test -f /usr/lib/os-release; test $? -ne 0; echo $?))
-
 
 # Definitions for backward compatibility with older RPM versions
 
@@ -383,6 +385,7 @@ export LDFLAGS_HARDENED_LIB="%{?_hardening_ldflags}"
         %{?with_coverage:    --with-coverage}      \
         %{!?with_doc:        --with-brand=}        \
         %{!?with_hardening:  --disable-hardening}  \
+        %{?python_path:      PYTHON=%{python_path}} \
         --with-initdir=%{_initrddir}               \
         --localstatedir=%{_var}                    \
         --with-version=%{version}-%{release}

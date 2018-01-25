@@ -434,7 +434,22 @@ dnl Replacing AC_PROG_LIBTOOL with AC_CHECK_PROG because LIBTOOL
 dnl was NOT being expanded all the time thus causing things to fail.
 AC_CHECK_PROGS(LIBTOOL, glibtool libtool libtool15 libtool13)
 
-AM_PATH_PYTHON
+dnl Pacemaker's executable python scripts will invoke the python specified by
+dnl configure's PYTHON variable. If not specified, AM_PATH_PYTHON will check a
+dnl built-in list with (unversioned) "python" having precedence. To configure
+dnl Pacemaker to use a specific python interpreter version, define PYTHON
+dnl when calling configure, for example: ./configure PYTHON=/usr/bin/python3.6
+case "x$PYTHON" in
+    x*python3*)
+        dnl When used with Python 3, Pacemaker requires a minimum of 3.2
+        AM_PATH_PYTHON([3.2])
+        ;;
+    *)
+        dnl Otherwise, Pacemaker requires a minimum of 2.7
+        AM_PATH_PYTHON([2.7])
+        ;;
+esac
+
 AC_CHECK_PROGS(MAKE, gmake make)
 AC_PATH_PROGS(HTML2TXT, lynx w3m)
 AC_PATH_PROGS(HELP2MAN, help2man)
