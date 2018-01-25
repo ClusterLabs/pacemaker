@@ -45,7 +45,7 @@ before_install:
 #   https://github.com/travis-ci/apt-package-whitelist/issues?utf8=%E2%9C%93&q=is%3Aissue+libdbus+-1-dev
 #   (a workaround is to install libdbus-glib-1-dev, which depends on it and is whitelisted)
 install:
- - sudo apt-get install -qq automake autoconf bison chrpath flex libtool perl python python-dev
+ - sudo apt-get install -qq automake autoconf chrpath libtool perl python python-dev
  - sudo apt-get install -qq libbz2-dev libdbus-1-dev libglib2.0-dev libgnutls-dev libltdl-dev
  - sudo apt-get install -qq libncurses5-dev libpam0g-dev libxml2-dev libxslt1-dev uuid-dev
  - sudo apt-get install -qq libqb-dev libcfg-dev libcmap-dev libcorosync-common-dev libcpg-dev

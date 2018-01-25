@@ -30,9 +30,6 @@
 * publican (documentation)
 * inkscape (documentation)
 * docbook-style-xsl (documentation)
-* bison (rpm)
-* byacc (rpm)
-* flex (rpm)
 
 ## Optional testing dependencies
 * valgrind (if running CTS valgrind tests)

@@ -453,11 +453,6 @@ AC_PATH_PROGS(XML2CONFIG, xml2-config)
 AC_PATH_PROGS(VALGRIND_BIN, valgrind, /usr/bin/valgrind)
 AC_DEFINE_UNQUOTED(VALGRIND_BIN, "$VALGRIND_BIN", Valgrind command)
 
-dnl Disable these until we decide if the stonith config file should be supported
-dnl AC_PATH_PROGS(BISON, bison)
-dnl AC_PATH_PROGS(FLEX, flex)
-dnl AC_PATH_PROGS(HAVE_YACC, $YACC)
-
 if test x"${LIBTOOL}" = x""; then
     AC_MSG_ERROR(You need (g)libtool installed in order to build ${PACKAGE})
 fi
