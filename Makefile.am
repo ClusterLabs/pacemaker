@@ -18,7 +18,7 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 
-EXTRA_DIST              = autogen.sh ConfigureMe README.in m4/gnulib-cache.m4
+EXTRA_DIST              = autogen.sh m4/gnulib-cache.m4
 
 MAINTAINERCLEANFILES    = Makefile.in aclocal.m4 configure DRF/config-h.in \
                         DRF/stamp-h.in libtool.m4 ltdl.m4
