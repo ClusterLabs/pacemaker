@@ -30,8 +30,6 @@ AM_CPPFLAGS		= -I$(top_srcdir)/include
 
 doc_DATA = README.markdown COPYING
 
-ACLOCAL_AMFLAGS  = -I m4
-
 licensedir              = $(docdir)/licenses/
 license_DATA            = $(wildcard licenses/*)
 

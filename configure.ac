@@ -8,6 +8,8 @@ dnl Bootstrap
 dnl ===============================================
 AC_PREREQ(2.64)
 
+AC_CONFIG_MACRO_DIR([m4])
+
 dnl Suggested structure:
 dnl     information on the package
 dnl     checks for programs
