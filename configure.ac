@@ -1627,10 +1627,13 @@ AC_CONFIG_FILES(Makefile                                            \
                 Doxyfile                                            \
                 coverage.sh                                         \
                 cts/Makefile                                        \
+                cts/CTSlab.py                                       \
                 cts/CTSvars.py                                      \
                 cts/LSBDummy                                        \
+		cts/OCFIPraTest.py                                  \
                 cts/benchmark/Makefile                              \
                 cts/benchmark/clubench                              \
+                cts/fence_dummy                                     \
                 cts/lxc_autogen.sh                                  \
                 cib/Makefile                                        \
                 attrd/Makefile                                      \
@@ -1643,6 +1646,8 @@ AC_CONFIG_FILES(Makefile                                            \
                 doc/Pacemaker_Development/publican.cfg              \
                 doc/Pacemaker_Explained/publican.cfg                \
                 doc/Pacemaker_Remote/publican.cfg                   \
+                fencing/Makefile                                    \
+                fencing/regression.py                               \
                 include/Makefile                                    \
                 include/crm/Makefile                                \
                 include/crm/cib/Makefile                            \
@@ -1672,8 +1677,6 @@ AC_CONFIG_FILES(Makefile                                            \
                 mcp/pacemaker.service                               \
                 mcp/pacemaker.upstart                               \
                 mcp/pacemaker.combined.upstart                      \
-                fencing/Makefile                                    \
-                fencing/regression.py                               \
                 lrmd/Makefile                                       \
                 lrmd/regression.py                                  \
                 lrmd/pacemaker_remote.service                       \

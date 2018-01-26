@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!@PYTHON@
 """ Regression tests for Pacemaker's stonithd
 """
 

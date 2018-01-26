@@ -64,4 +64,4 @@ stonithd_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la	\
 
 stonithd_SOURCES	= main.c commands.c remote.c
 
-CLEANFILES = $(man7_MANS) $(man8_MANS)
+CLEANFILES = regression.py $(man7_MANS) $(man8_MANS)

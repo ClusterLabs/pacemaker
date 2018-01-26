@@ -12,12 +12,21 @@ anchor:ch-python-coding[Chapter 3, Python Coding Guidelines]
 indexterm:[Python,boilerplate]
 indexterm:[licensing,Python boilerplate]
 
-Every Python file should start like this:
+If a Python file is meant to be executed (as opposed to imported), it should
+have a +.in+ extension, and its first line should be:
+====
+----
+#!@PYTHON@
+----
+====
+which will be replaced with the appropriate python executable when Pacemaker is
+built.
+
+After the above line if any, every Python file should start like this:
 
 ====
 [source,Python]
 ----
-[<SHEBANG>]
 """ <BRIEF-DESCRIPTION>
 """
 
