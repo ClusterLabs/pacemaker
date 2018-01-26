@@ -8,6 +8,10 @@ if [ $? != 0 ] ; then echo "crm_master - A convenience wrapper for crm_attribute
 # Note the quotes around `$TEMP': they are essential!
 eval set -- "$TEMP"
 
+# Explicitly set the (usual default) lifetime, so the attribute gets set as a
+# node attribute and not a cluster property.
+options="--lifetime forever"
+
 while true ; do
 	case "$1" in
 	    -N|--node|-U|--uname) options="$options $1 $2"; shift; shift;;
