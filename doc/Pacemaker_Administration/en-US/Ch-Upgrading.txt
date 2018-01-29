@@ -1,9 +1,6 @@
-[appendix]
+= Upgrading a Pacemaker Cluster =
 
-== Upgrading ==
-
-[[ap-upgrade]]
-=== Pacemaker Versioning ===
+== Pacemaker Versioning ==
 
 Pacemaker has an overall release version, plus separate version numbers for
 certain internal components.
@@ -50,7 +47,7 @@ older operating system version used as a Pacemaker Remote node.
   the configuration syntax to evolve over time while still allowing clusters
   with older configurations to work without change.
 
-=== Upgrading Cluster Software ===
+== Upgrading Cluster Software ==
 
 There are three approaches to upgrading a cluster, each with advantages and
 disadvantages.
@@ -107,7 +104,7 @@ indexterm:[reattach upgrade]
 
 |=========================================================
 
-==== Complete Cluster Shutdown ====
+=== Complete Cluster Shutdown ===
 
 In this scenario, one shuts down all cluster nodes and resources,
 then upgrades all the nodes before restarting the cluster.
@@ -128,7 +125,7 @@ This allows the new version to be tested beforehand, and minimizes downtime by
 having the new nodes ready to be placed in production as soon as the old nodes
 are shut down.
 
-==== Rolling (node by node) ====
+=== Rolling (node by node) ===
 
 In this scenario, each node is removed from the cluster, upgraded, and then
 brought back online, until all nodes are running the newest version.
@@ -199,7 +196,7 @@ property.]
 |=========================================================
 ====
 
-==== Detach and Reattach ====
+=== Detach and Reattach ===
 
 The reattach method is a variant of a complete cluster shutdown, where the
 resources are left active and get re-detected when the cluster is restarted.
@@ -230,7 +227,7 @@ This method may not be used if the cluster contains any Pacemaker Remote nodes.
 # crm_attribute --name maintenance-mode --delete
 ----
 
-=== Upgrading the Configuration ===
+== Upgrading the Configuration ==
 
 indexterm:[upgrade,Configuration]
 indexterm:[Configuration,upgrading]
@@ -356,7 +353,7 @@ The advantage of this method is that it can be performed without the
 cluster running, and any validation errors are often more informative.
 ====
 
-=== What Changed in 2.0 ===
+== What Changed in 2.0 ==
 
 The main goal of the 2.0 release was to remove support for deprecated syntax,
 along with some small changes in default configuration behavior and tool
@@ -383,21 +380,21 @@ For a detailed list of changes, see the release notes and the
 https://wiki.clusterlabs.org/wiki/Pacemaker_2.0_Changes[Pacemaker 2.0 Changes]
 page on the ClusterLabs wiki.
 
-=== What Changed in 1.0 ===
+== What Changed in 1.0 ==
 
-==== New ====
+=== New ===
 
-* Failure timeouts. See <<s-failure-handling>>
-* New section for resource and operation defaults. See <<s-resource-defaults>> and <<s-operation-defaults>>
-* Tool for making offline configuration changes. See <<s-config-sandboxes>>
-* +Rules, instance_attributes, meta_attributes+ and sets of operations can be defined once and referenced in multiple places. See <<s-reusing-config-elements>>
+* Failure timeouts.
+* New section for resource and operation defaults.
+* Tool for making offline configuration changes.
+* +Rules, instance_attributes, meta_attributes+ and sets of operations can be defined once and referenced in multiple places.
 * The CIB now accepts XPath-based create/modify/delete operations. See the pass:[<command>cibadmin</command>] help text.
-* Multi-dimensional colocation and ordering constraints. See <<s-resource-sets-ordering>> and <<s-resource-sets-colocation>>
-* The ability to connect to the CIB from non-cluster machines. See <<s-remote-connection>>
-* Allow recurring actions to be triggered at known times. See <<s-recurring-start>>
+* Multi-dimensional colocation and ordering constraints.
+* The ability to connect to the CIB from non-cluster machines.
+* Allow recurring actions to be triggered at known times.
 
 
-==== Changed ====
+=== Changed ===
 
 * Syntax
 ** All resource and cluster options now use dashes (-) instead of underscores (_)
@@ -407,8 +404,8 @@ page on the ClusterLabs wiki.
 ** All operations must have an +interval+, +start+/+stop+ must have it set to zero
 * The +stonith-enabled+ option now defaults to true.
 * The cluster will refuse to start resources if +stonith-enabled+ is true (or unset) and no STONITH resources have been defined
-* The attributes of colocation and ordering constraints were renamed for clarity. See <<s-resource-ordering>> and <<s-resource-colocation>>
-* +resource-failure-stickiness+ has been replaced by +migration-threshold+. See <<s-failure-handling>>
+* The attributes of colocation and ordering constraints were renamed for clarity.
+* +resource-failure-stickiness+ has been replaced by +migration-threshold+.
 * The parameters for command-line tools have been made consistent
 * Switched to 'RelaxNG' schema validation and 'libxml2' parser
 ** id fields are now XML IDs which have the following limitations:
@@ -434,12 +431,11 @@ absolutely necessary.
 Simply include the lists of hosts in your ping resource(s).
 
 
-==== Removed ====
+=== Removed ===
 
 
 * Syntax
 ** It is no longer possible to set resource meta options as top-level
    attributes.  Use meta attributes instead.
 ** Resource and operation defaults are no longer read from
-   +crm_config+.  See <<s-resource-defaults>> and
-   <<s-operation-defaults>> instead.
+   +crm_config+.

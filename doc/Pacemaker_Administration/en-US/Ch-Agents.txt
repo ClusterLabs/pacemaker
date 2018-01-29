@@ -1,7 +1,6 @@
-[appendix]
+= Resource Agents =
 
-[[ap-ocf]]
-== More About OCF Resource Agents ==
+== OCF Resource Agents ==
 
 === Location of Custom Scripts ===
 
@@ -73,8 +72,8 @@ NOTE: This is _not_ performed as root.
 |=========================================================
 
 Additional requirements (not part of the OCF specification) are placed on
-agents that will be used for advanced concepts such as
-<<s-resource-clone,clones>> and <<s-resource-multistate,multi-state>> resources.
+agents that will be used for advanced concepts such as clones
+and multi-state resources.
 
 .Optional Actions for OCF Resource Agents
 [width="95%",cols="2m,6,3",options="header",align="center"]
@@ -255,7 +254,85 @@ Exceptions to the recovery handling described above:
   (or in master mode) will not result in recovery action unless it is
   also found active elsewhere.
 * The recovery action taken when a resource is found active more than
-  once is determined by the resource's +multiple-active+ property
-  (see <<s-resource-options>>).
+  once is determined by the resource's +multiple-active+ property.
 * Recurring actions that return +OCF_ERR_UNIMPLEMENTED+
   do not cause any type of recovery.
+
+== Init Script LSB Compliance ==
+
+The relevant part of the
+http://refspecs.linuxfoundation.org/lsb.shtml[LSB specifications]
+includes a description of all the return codes listed here.
+    
+Assuming `some_service` is configured correctly and currently
+inactive, the following sequence will help you determine if it is
+LSB-compatible:
+
+. Start (stopped):
++
+----
+# /etc/init.d/some_service start ; echo "result: $?"
+----
++
+  .. Did the service start?
+  .. Did the command print *result: 0* (in addition to its usual output)?
++
+. Status (running):
++
+----
+# /etc/init.d/some_service status ; echo "result: $?"
+----
++
+  .. Did the script accept the command?
+  .. Did the script indicate the service was running?
+  .. Did the command print *result: 0* (in addition to its usual output)?
++
+. Start (running):
++
+----
+# /etc/init.d/some_service start ; echo "result: $?"
+----
++
+  .. Is the service still running?
+  .. Did the command print *result: 0* (in addition to its usual output)?
++
+. Stop (running):
++
+----
+# /etc/init.d/some_service stop ; echo "result: $?"
+----
++
+  .. Was the service stopped?
+  .. Did the command print *result: 0* (in addition to its usual output)?
++
+. Status (stopped):
++
+----
+# /etc/init.d/some_service status ; echo "result: $?"
+----
++
+  .. Did the script accept the command?
+  .. Did the script indicate the service was not running?
+  .. Did the command print *result: 3* (in addition to its usual output)?
++
+. Stop (stopped):
++
+----
+# /etc/init.d/some_service stop ; echo "result: $?"
+----
++
+  .. Is the service still stopped?
+  .. Did the command print *result: 0* (in addition to its usual output)?
++
+. Status (failed):
++
+.. This step is not readily testable and relies on manual inspection of the script.
++
+The script can use one of the error codes (other than 3) listed in the
+LSB spec to indicate that it is active but failed. This tells the
+cluster that before moving the resource to another node, it needs to
+stop it on the existing one first.
+
+If the answer to any of the above questions is no, then the script is
+not LSB-compliant. Your options are then to either fix the script or
+write an OCF agent based on the existing script.

@@ -83,7 +83,7 @@ non-positional manner) and self-describing.
 
 For more information, see the
 http://www.linux-ha.org/wiki/OCF_Resource_Agents[reference] and
-<<ap-ocf>>.
+the 'Resource Agents' chapter of 'Pacemaker Administration'.
 
 === Linux Standard Base ===
 indexterm:[Resource,LSB]
@@ -104,8 +104,8 @@ for the LSB Spec as it relates to init scripts.
 ====
 Many distributions claim LSB compliance but ship with broken init
 scripts.  For details on how to check whether your init script is
-LSB-compatible, see <<ap-lsb>>. Common problematic violations of
-the LSB standard include:
+LSB-compatible, see the 'Resource Agents' chapter of 'Pacemaker
+Administration'. Common problematic violations of the LSB standard include:
 
 * Not implementing the status operation at all
 * Not observing the correct exit status codes for `start/stop/status` actions

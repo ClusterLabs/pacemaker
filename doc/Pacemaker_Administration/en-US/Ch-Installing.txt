@@ -1,16 +1,14 @@
-[appendix]
+= Installing Cluster Software =
 
-== Installing == 
-
-=== Installing the Software ===
+== Installing the Software ==
 
 Most major Linux distributions have pacemaker packages in their standard
 package repositories, or the software can be built from source code.
 See the http://clusterlabs.org/wiki/Install[Install wiki page] for details.
 
-=== Enabling Pacemaker ===
+== Enabling Pacemaker ==
 
-==== Enabling Pacemaker For Corosync version 2 and greater ====
+=== Enabling Pacemaker For Corosync version 2 and greater ===
 
 High-level cluster management tools are available that can configure
 corosync for you. This document focuses on the lower-level details
@@ -96,8 +94,7 @@ the cluster.
 ]
 and gives the cluster a unique name (+mycluster+ in these examples).
 
-The +node+ section lists the nodes in this cluster. (See <<s-node-name>>
-for how this affects pacemaker.)
+The +node+ section lists the nodes in this cluster.
 
 The +quorum+ section defines how the cluster uses quorum.
 The important thing is that two-node clusters must be handled specially,
