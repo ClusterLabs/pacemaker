@@ -152,7 +152,7 @@ endif
 # With '%' the test for 'newness' fails
 Clusters_from_Scratch.build: $(PNGS) $(wildcard Clusters_from_Scratch/en-US/*.xml) $(CFS_XML) $(CFS_SHARED_XML) $(PUBLICAN_INTREE_DEPS)
 	$(PCMK_V) @echo Building $(@:%.build=%) because of $?
-	rm -rf $(@:%.build=%)/publish/*
+	rm -rf $(@:%.build=%)/publish/* $(@:%.build=%)/tmp
 if PUBLICAN_INTREE_BRAND
 	$(AM_V_PUB)cd $(@:%.build=%) \
 	&& RPM_BUILD_DIR="" XML_CATALOG_FILES="$(CURDIR)/publican-catalog" \
@@ -175,7 +175,7 @@ PD_XML=$(PD_TXT:%.txt=%.xml)
 # With '%' the test for 'newness' fails
 Pacemaker_Development.build: $(wildcard Pacemaker_Development/en-US/*.xml) $(PD_XML) $(PUBLICAN_INTREE_DEPS)
 	$(PCMK_V) @echo Building $(@:%.build=%) because of $?
-	rm -rf $(@:%.build=%)/publish/*
+	rm -rf $(@:%.build=%)/publish/* $(@:%.build=%)/tmp
 if PUBLICAN_INTREE_BRAND
 	$(AM_V_PUB)cd $(@:%.build=%) \
 	&& RPM_BUILD_DIR="" XML_CATALOG_FILES="$(CURDIR)/publican-catalog" \
@@ -202,7 +202,7 @@ $(PE_XML): $(PE_SHARED_XML)
 # With '%' the test for 'newness' fails
 Pacemaker_Explained.build: $(PNGS) $(wildcard Pacemaker_Explained/en-US/*.xml) $(PE_XML) $(PE_SHARED_XML) $(PUBLICAN_INTREE_DEPS)
 	$(PCMK_V) @echo Building $(@:%.build=%) because of $?
-	rm -rf $(@:%.build=%)/publish/*
+	rm -rf $(@:%.build=%)/publish/* $(@:%.build=%)/tmp
 if PUBLICAN_INTREE_BRAND
 	$(AM_V_PUB)cd $(@:%.build=%) \
 	&& RPM_BUILD_DIR="" XML_CATALOG_FILES="$(CURDIR)/publican-catalog" \
@@ -225,7 +225,7 @@ PR_XML=$(PR_TXT:%.txt=%.xml)
 # With '%' the test for 'newness' fails
 Pacemaker_Remote.build: $(PNGS) $(wildcard Pacemaker_Remote/en-US/*.xml) $(PR_XML) $(PUBLICAN_INTREE_DEPS)
 	$(PCMK_V) @echo Building $(@:%.build=%) because of $?
-	rm -rf $(@:%.build=%)/publish/*
+	rm -rf $(@:%.build=%)/publish/* $(@:%.build=%)/tmp
 if PUBLICAN_INTREE_BRAND
 	$(AM_V_PUB)cd $(@:%.build=%) \
 	&& RPM_BUILD_DIR="" XML_CATALOG_FILES="$(CURDIR)/publican-catalog" \
