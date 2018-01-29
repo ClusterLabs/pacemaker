@@ -300,19 +300,26 @@ start_child(pcmk_child_t * child)
         opts_default[0] = strdup(child->command);
 
         if(gid) {
-            if (is_corosync_cluster()) {
-                /* Drop root privileges completely
-                 *
-                 * We can do this because we set uidgid.gid.${gid}=1
-                 * via CMAP which allows these processes to connect to
-                 * corosync
-                 */
-                if (setgid(gid) < 0) {
-                    crm_perror(LOG_ERR, "Could not set group to %d", gid);
-                }
+            // Whether we need root group access to talk to cluster layer
+            bool need_root_group = TRUE;
 
-                // Keep root group, but add haclient group so we can access ipc
-            } else if (initgroups(child->uid, gid) < 0) {
+            if (is_corosync_cluster()) {
+                /* Corosync clusters can drop root group access, because we set
+                 * uidgid.gid.${gid}=1 via CMAP, which allows these processes to
+                 * connect to corosync.
+                 */
+                need_root_group = FALSE;
+            }
+
+            // Drop root group access if not needed
+            if (!need_root_group && (setgid(gid) < 0)) {
+                crm_perror(LOG_ERR, "Could not set group to %d", gid);
+            }
+
+            /* Initialize supplementary groups to only those always granted to
+             * the user, plus haclient (so we can access IPC).
+             */
+            if (initgroups(child->uid, gid) < 0) {
                 crm_err("Cannot initialize groups for %s: %s (%d)", child->uid, pcmk_strerror(errno), errno);
             }
         }

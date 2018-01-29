@@ -8,6 +8,8 @@ dnl Bootstrap
 dnl ===============================================
 AC_PREREQ(2.64)
 
+AC_CONFIG_MACRO_DIR([m4])
+
 dnl Suggested structure:
 dnl     information on the package
 dnl     checks for programs
@@ -432,7 +434,22 @@ dnl Replacing AC_PROG_LIBTOOL with AC_CHECK_PROG because LIBTOOL
 dnl was NOT being expanded all the time thus causing things to fail.
 AC_CHECK_PROGS(LIBTOOL, glibtool libtool libtool15 libtool13)
 
-AM_PATH_PYTHON
+dnl Pacemaker's executable python scripts will invoke the python specified by
+dnl configure's PYTHON variable. If not specified, AM_PATH_PYTHON will check a
+dnl built-in list with (unversioned) "python" having precedence. To configure
+dnl Pacemaker to use a specific python interpreter version, define PYTHON
+dnl when calling configure, for example: ./configure PYTHON=/usr/bin/python3.6
+case "x$PYTHON" in
+    x*python3*)
+        dnl When used with Python 3, Pacemaker requires a minimum of 3.2
+        AM_PATH_PYTHON([3.2])
+        ;;
+    *)
+        dnl Otherwise, Pacemaker requires a minimum of 2.7
+        AM_PATH_PYTHON([2.7])
+        ;;
+esac
+
 AC_CHECK_PROGS(MAKE, gmake make)
 AC_PATH_PROGS(HTML2TXT, lynx w3m)
 AC_PATH_PROGS(HELP2MAN, help2man)
@@ -452,11 +469,6 @@ PKG_PROG_PKG_CONFIG
 AC_PATH_PROGS(XML2CONFIG, xml2-config)
 AC_PATH_PROGS(VALGRIND_BIN, valgrind, /usr/bin/valgrind)
 AC_DEFINE_UNQUOTED(VALGRIND_BIN, "$VALGRIND_BIN", Valgrind command)
-
-dnl Disable these until we decide if the stonith config file should be supported
-dnl AC_PATH_PROGS(BISON, bison)
-dnl AC_PATH_PROGS(FLEX, flex)
-dnl AC_PATH_PROGS(HAVE_YACC, $YACC)
 
 if test x"${LIBTOOL}" = x""; then
     AC_MSG_ERROR(You need (g)libtool installed in order to build ${PACKAGE})
@@ -1630,10 +1642,13 @@ AC_CONFIG_FILES(Makefile                                            \
                 Doxyfile                                            \
                 coverage.sh                                         \
                 cts/Makefile                                        \
+                cts/CTSlab.py                                       \
                 cts/CTSvars.py                                      \
                 cts/LSBDummy                                        \
+		cts/OCFIPraTest.py                                  \
                 cts/benchmark/Makefile                              \
                 cts/benchmark/clubench                              \
+                cts/fence_dummy                                     \
                 cts/lxc_autogen.sh                                  \
                 cib/Makefile                                        \
                 attrd/Makefile                                      \
@@ -1642,9 +1657,12 @@ AC_CONFIG_FILES(Makefile                                            \
                 pengine/regression.core.sh                          \
                 doc/Makefile                                        \
                 doc/Clusters_from_Scratch/publican.cfg              \
+                doc/Pacemaker_Administration/publican.cfg           \
                 doc/Pacemaker_Development/publican.cfg              \
                 doc/Pacemaker_Explained/publican.cfg                \
                 doc/Pacemaker_Remote/publican.cfg                   \
+                fencing/Makefile                                    \
+                fencing/regression.py                               \
                 include/Makefile                                    \
                 include/crm/Makefile                                \
                 include/crm/cib/Makefile                            \
@@ -1674,8 +1692,6 @@ AC_CONFIG_FILES(Makefile                                            \
                 mcp/pacemaker.service                               \
                 mcp/pacemaker.upstart                               \
                 mcp/pacemaker.combined.upstart                      \
-                fencing/Makefile                                    \
-                fencing/regression.py                               \
                 lrmd/Makefile                                       \
                 lrmd/regression.py                                  \
                 lrmd/pacemaker_remote.service                       \

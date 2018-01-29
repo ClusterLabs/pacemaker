@@ -60,4 +60,4 @@ lrmd_test_SOURCES	= test.c
 
 noinst_HEADERS  = lrmd_private.h
 
-CLEANFILES = $(man8_MANS)
+CLEANFILES = regression.py $(man8_MANS)

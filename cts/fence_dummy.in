@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!@PYTHON@
 """Dummy fence agent for testing
 """
 

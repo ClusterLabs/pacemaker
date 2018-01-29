@@ -199,8 +199,9 @@ The job's status. Generally this will be either 0 (done) or -1
 indexterm:[rc-code,Action Status]
 indexterm:[Action,Status,rc-code]
 
-The job's result. Refer to <<s-ocf-return-codes>> for
-details on what the values here mean and how they are interpreted.
+The job's result. Refer to the 'Resource Agents' chapter of 'Pacemaker
+Administration' for details on what the values here mean and how they are
+interpreted.
 
 | last-run |
 indexterm:[last-run,Action Status]

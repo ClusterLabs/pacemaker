@@ -17,6 +17,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <grp.h>
 #include <string.h>
 #include <sys/time.h>
 #include <sys/resource.h>
@@ -427,15 +428,25 @@ action_launch_child(svc_action_t *op)
 
     /* Become the desired user */
     if (op->opaque->uid && (geteuid() == 0)) {
+
+        // If requested, set effective group
         if (op->opaque->gid && (setgid(op->opaque->gid) < 0)) {
-            crm_perror(LOG_ERR, "setting group to %d", op->opaque->gid);
+            crm_perror(LOG_ERR, "Could not set child group to %d", op->opaque->gid);
             _exit(PCMK_OCF_NOT_CONFIGURED);
         }
+
+        // Erase supplementary group list
+        // (We could do initgroups() if we kept a copy of the username)
+        if (setgroups(0, NULL) < 0) {
+            crm_perror(LOG_ERR, "Could not set child groups");
+            _exit(PCMK_OCF_NOT_CONFIGURED);
+        }
+
+        // Set effective user
         if (setuid(op->opaque->uid) < 0) {
             crm_perror(LOG_ERR, "setting user to %d", op->opaque->uid);
             _exit(PCMK_OCF_NOT_CONFIGURED);
         }
-        /* We could do initgroups() here if we kept a copy of the username */
     }
 
     /* execute the RA */

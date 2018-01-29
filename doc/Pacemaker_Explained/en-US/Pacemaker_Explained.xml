@@ -6,7 +6,6 @@
   <xi:include href="Preface.xml" xmlns:xi="http://www.w3.org/2001/XInclude"></xi:include>
 
   <xi:include href="Ch-Intro.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-  <xi:include href="Ch-Basics.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
   <xi:include href="Ch-Options.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
   <xi:include href="Ch-Nodes.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
   <xi:include href="Ch-Resources.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
@@ -22,10 +21,6 @@
   <xi:include href="Ch-Multi-site-Clusters.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
 
   <xi:include href="Ap-FAQ.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-  <xi:include href="Ap-OCF.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-  <xi:include href="Ap-Install.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-  <xi:include href="Ap-Upgrade.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
-  <xi:include href="Ap-LSB.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
   <xi:include href="Ap-Samples.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
   <appendix id="ap-further-reading">
     <title>Further Reading</title>

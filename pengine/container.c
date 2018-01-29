@@ -391,7 +391,7 @@ find_compatible_tuple(resource_t *rsc_lh, resource_t * rsc, enum rsc_role_e filt
         }
     }
 
-    pe_rsc_debug(rsc, "Can't pair %s with %s", rsc_lh->id, rsc->id);
+    pe_rsc_debug(rsc, "Can't pair %s with %s", rsc_lh->id, (rsc? rsc->id : "none"));
   done:
     g_list_free(scratch);
     return pair;

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!@PYTHON@
 """ Regression tests for Pacemaker's lrmd
 """
 
@@ -479,7 +479,7 @@ class Tests(object):
             os.system("dd if=/dev/urandom of=/etc/pacemaker/authkey bs=4096 count=1")
 
         ### Make fake systemd daemon and unit file ###
-        dummy_daemon = """#!/usr/bin/python
+        dummy_daemon = """#!@PYTHON@
 import time, systemd.daemon
 time.sleep(3)
 systemd.daemon.notify("READY=1")
@@ -499,7 +499,7 @@ description     "Dummy service for regression tests"
 exec dd if=/dev/random of=/dev/null
 """)
 
-        dummy_fence_sleep_agent = ("""#!/usr/bin/python
+        dummy_fence_sleep_agent = ("""#!@PYTHON@
 import sys
 import time
 def main():

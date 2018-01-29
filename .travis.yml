@@ -32,10 +32,25 @@ before_install:
  - sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu/ trusty main"
  - sudo apt-get update -qq
 
+# To switch to Travis-CI's containerized (non-sudo) architecture,
+# all our dependencies need to be on Travis's whitelist:
+#   https://github.com/travis-ci/apt-package-whitelist
+#
+# The only ones that aren't already are:
+# - cluster-glue-dev: see open issue:
+#   https://github.com/travis-ci/apt-package-whitelist/issues/2936
+# - resource-agents: see open issue:
+#   https://github.com/travis-ci/apt-package-whitelist/issues/4261
+# - libdbus-1-dev: see multiple open issues:
+#   https://github.com/travis-ci/apt-package-whitelist/issues?utf8=%E2%9C%93&q=is%3Aissue+libdbus+-1-dev
+#   (a workaround is to install libdbus-glib-1-dev, which depends on it and is whitelisted)
 install:
- - sudo apt-get install -qq automake autoconf chrpath libglib2.0-dev perl net-tools python libtool libxml2-dev bison flex uuid-dev libbz2-dev zlib1g-dev libltdl3-dev libgnutls-dev python-dev libpam0g-dev libncurses5-dev libcorosync-dev libxslt1-dev libdbus-1-dev
+ - sudo apt-get install -qq automake autoconf chrpath libtool perl python python-dev
+ - sudo apt-get install -qq libbz2-dev libdbus-1-dev libglib2.0-dev libgnutls-dev libltdl-dev
+ - sudo apt-get install -qq libncurses5-dev libpam0g-dev libxml2-dev libxslt1-dev uuid-dev
+ - sudo apt-get install -qq libqb-dev libcfg-dev libcmap-dev libcorosync-common-dev libcpg-dev
+ - sudo apt-get install -qq libquorum-dev libsam-dev libtotem-pg-dev libvotequorum-dev
  - sudo apt-get install -qq cluster-glue-dev resource-agents
- - sudo apt-get install -qq libqb-dev
 
 before_script:
 # Save and restore CC so that ./configure can pass

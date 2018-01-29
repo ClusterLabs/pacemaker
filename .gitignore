@@ -57,17 +57,22 @@ ylwrap
 # Configure targets
 Doxyfile
 coverage.sh
+cts/CTSlab.py
 cts/CTSvars.py
 cts/LSBDummy
+cts/OCFIPraTest.py
 cts/benchmark/clubench
+cts/fence_dummy
 cts/lxc_autogen.sh
 extra/logrotate/pacemaker
+fencing/regression.py
 include/config.h
 include/config.h.in
 include/crm_config.h
 lrmd/pacemaker_remote
 lrmd/pacemaker_remoted
 lrmd/pacemaker_remote.service
+lrmd/regression.py
 mcp/pacemaker
 mcp/pacemaker.combined.upstart
 mcp/pacemaker.service
@@ -81,8 +86,6 @@ tools/crm_mon.service
 tools/crm_mon.upstart
 tools/crm_report
 tools/report.common
-lrmd/regression.py
-fencing/regression.py
 
 # Build targets
 *.7
@@ -139,6 +142,8 @@ doc/shared/en-US/*.xml
 doc/Clusters_from_Scratch.build
 doc/Clusters_from_Scratch/en-US/Ap-*.xml
 doc/Clusters_from_Scratch/en-US/Ch-*.xml
+doc/Pacemaker_Administration.build
+doc/Pacemaker_Administration/en-US/Ch-*.xml
 doc/Pacemaker_Development.build
 doc/Pacemaker_Development/en-US/Ch-*.xml
 doc/Pacemaker_Explained.build

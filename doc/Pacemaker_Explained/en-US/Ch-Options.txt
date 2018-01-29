@@ -1,5 +1,58 @@
 = Cluster-Wide Configuration =
 
+== Configuration Layout ==
+
+The cluster is defined by the Cluster Information Base (CIB),
+which uses XML notation. The simplest CIB, an empty one, looks like this:
+
+.An empty configuration
+======
+[source,XML]
+-------
+<cib crm_feature_set="3.0.7" validate-with="pacemaker-1.2" admin_epoch="1" epoch="0" num_updates="0">
+  <configuration>
+    <crm_config/>
+    <nodes/>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+-------
+======
+
+The empty configuration above contains the major sections that make up a CIB:
+
+* +cib+: The entire CIB is enclosed with a +cib+ tag. Certain fundamental settings
+  are defined as attributes of this tag.
+
+  ** +configuration+: This section -- the primary focus of this document --
+     contains traditional configuration information such as what resources the
+     cluster serves and the relationships among them.
+
+    *** +crm_config+: cluster-wide configuration options
+    *** +nodes+: the machines that host the cluster
+    *** +resources+: the services run by the cluster
+    *** +constraints+: indications of how resources should be placed
+
+  ** +status+: This section contains the history of each resource on each node.
+    Based on this data, the cluster can construct the complete current
+    state of the cluster.  The authoritative source for this section
+    is the local resource manager (lrmd process) on each cluster node, and
+    the cluster will occasionally repopulate the entire section.  For this
+    reason, it is never written to disk, and administrators are advised
+    against modifying it in any way.
+
+In this document, configuration settings will be described as 'properties' or 'options'
+based on how they are defined in the CIB:
+
+* Properties are XML attributes of an XML element.
+* Options are name-value pairs expressed as +nvpair+ child elements of an XML element.
+
+Normally, you will use command-line tools that abstract the XML, so the
+distinction will be unimportant; both properties and options are
+cluster settings you can tweak.
+
 == CIB Properties ==
 
 Certain settings are defined by CIB properties (that is, attributes of the
@@ -70,31 +123,6 @@ cluster when placing resources and determining the order of some
 events. Maintained by the cluster.
 
 |=========================================================
-
-=== Working with CIB Properties ===
-
-Although these fields can be written to by the user, in
-most cases the cluster will overwrite any values specified by the
-user with the "correct" ones.
-
-To change the ones that can be specified by the user,
-for example +admin_epoch+, one should use:
-----
-# cibadmin --modify --xml-text '<cib admin_epoch="42"/>'
-----
-
-A complete set of CIB properties will look something like this:
-
-.Attributes set for a cib object
-======
-[source,XML]
--------
-<cib crm_feature_set="3.0.7" validate-with="pacemaker-1.2" 
-   admin_epoch="42" epoch="116" num_updates="1"
-   cib-last-written="Mon Jan 12 15:46:39 2015" update-origin="rhel7-1"
-   update-client="crm_attribute" have-quorum="1" dc-uuid="1">
--------
-======
 
 [[s-cluster-options]]
 == Cluster Options ==
@@ -378,71 +406,3 @@ Enabling this option will slow down cluster recovery under
 all conditions.
 
 |=========================================================
-
-=== Querying and Setting Cluster Options ===
-
-indexterm:[Querying,Cluster Option]
-indexterm:[Setting,Cluster Option]
-indexterm:[Cluster,Querying Options]
-indexterm:[Cluster,Setting Options]
-
-Cluster options can be queried and modified using the `crm_attribute` tool. To
-get the current value of +cluster-delay+, you can run:
-
-----
-# crm_attribute --query --name cluster-delay
-----
-
-which is more simply written as
-
-----
-# crm_attribute -G -n cluster-delay
-----
-
-If a value is found, you'll see a result like this:
-
-----
-# crm_attribute -G -n cluster-delay
-scope=crm_config name=cluster-delay value=60s
-----
-
-If no value is found, the tool will display an error:
-
-----
-# crm_attribute -G -n clusta-deway
-scope=crm_config name=clusta-deway value=(null)
-Error performing operation: No such device or address
-----
-
-To use a different value (for example, 30 seconds), simply run:
-
-----
-# crm_attribute --name cluster-delay --update 30s
-----
-
-To go back to the cluster's default value, you can delete the value, for example:
-
-----
-# crm_attribute --name cluster-delay --delete
-Deleted crm_config option: id=cib-bootstrap-options-cluster-delay name=cluster-delay
-----
-
-=== When Options are Listed More Than Once ===
-
-If you ever see something like the following, it means that the option you're modifying is present more than once.
-
-.Deleting an option that is listed twice
-=======
-------
-# crm_attribute --name batch-limit --delete
-
-Multiple attributes match name=batch-limit in crm_config:
-Value: 50          (set=cib-bootstrap-options, id=cib-bootstrap-options-batch-limit)
-Value: 100         (set=custom, id=custom-batch-limit)
-Please choose from one of the matches above and supply the 'id' with --id
--------
-=======
-
-In such cases, follow the on-screen instructions to perform the
-requested action.  To determine which value is currently being used by
-the cluster, refer to <<ch-rules>>.

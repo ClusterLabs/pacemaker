@@ -17,8 +17,8 @@
 * libqb-devel
 
 ## Cluster Stack Dependencies (Pick at least one)
-* clusterlib-devel (CMAN)
-* corosynclib-devel (Corosync)
+* Corosync: corosynclib-devel
+* (no other stacks are currently supported)
 
 ## Optional Build Dependencies
 * ncurses-devel (interactive crm_mon)
@@ -30,9 +30,6 @@
 * publican (documentation)
 * inkscape (documentation)
 * docbook-style-xsl (documentation)
-* bison (rpm)
-* byacc (rpm)
-* flex (rpm)
 
 ## Optional testing dependencies
 * valgrind (if running CTS valgrind tests)
