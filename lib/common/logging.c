@@ -48,7 +48,6 @@ static gboolean crm_tracing_enabled(void);
 unsigned int crm_trace_nonlog = 0;
 bool crm_is_daemon = 0;
 
-#ifdef HAVE_G_LOG_SET_DEFAULT_HANDLER
 GLogFunc glib_log_default;
 
 static void
@@ -97,7 +96,6 @@ crm_glib_handler(const gchar * log_domain, GLogLevelFlags flags, const gchar * m
 
     do_crm_log(log_level, "%s: %s", log_domain, message);
 }
-#endif
 
 #ifndef NAME_MAX
 #  define NAME_MAX 256
@@ -179,9 +177,7 @@ daemon_option_enabled(const char *daemon, const char *option)
 void
 crm_log_deinit(void)
 {
-#ifdef HAVE_G_LOG_SET_DEFAULT_HANDLER
     g_log_set_default_handler(glib_log_default, NULL);
-#endif
 }
 
 #define FMT_MAX 256
@@ -722,9 +718,7 @@ crm_log_preinit(const char *entity, int argc, char **argv)
         umask(S_IWGRP | S_IWOTH | S_IROTH);
 
         /* Redirect messages from glib functions to our handler */
-#ifdef HAVE_G_LOG_SET_DEFAULT_HANDLER
         glib_log_default = g_log_set_default_handler(crm_glib_handler, NULL);
-#endif
 
         /* and for good measure... - this enum is a bit field (!) */
         g_log_set_always_fatal((GLogLevelFlags) 0); /*value out of range */
