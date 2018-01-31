@@ -1127,7 +1127,5 @@ main(int argc, char **argv)
     cluster_disconnect_cpg(&cluster);
     cluster_disconnect_cfg();
 
-    crm_info("Exiting %s", crm_system_name);
-
     return crm_exit(crm_errno2exit(rc));
 }

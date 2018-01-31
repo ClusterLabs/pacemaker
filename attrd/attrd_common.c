@@ -43,11 +43,9 @@ attrd_shutting_down()
  * \param[in] nsig  Ignored
  */
 void
-attrd_shutdown(int nsig) {
-    crm_info("Shutting down");
-
+attrd_shutdown(int nsig)
+{
     shutting_down = TRUE;
-
     if ((mloop != NULL) && g_main_is_running(mloop)) {
         g_main_quit(mloop);
     } else {
