@@ -164,9 +164,6 @@ mcp_read_config(void)
 {
     int rc = CS_OK;
     int retries = 0;
-
-    const char *const_value = NULL;
-
     cmap_handle_t local_handle;
     uint64_t config = 0;
 
@@ -225,68 +222,6 @@ mcp_read_config(void)
         }
 
         free(debug_enabled);
-    }
-
-    /* If the user didn't explicitly configure a Pacemaker log file, check
-     * whether they configured a corosync log file, and use that.
-     *
-     * @TODO Maybe we should drop this, and just rely on the logging set up by
-     * crm_log_init(). That would be a significant user-visible change that
-     * would need to be publicized.
-     */
-    if (daemon_option("logfile") == NULL) {
-        /* Check corosync */
-        char *logfile = NULL;
-        char *logfile_enabled = NULL;
-
-        get_config_opt(config, local_handle, "logging.to_logfile", &logfile_enabled, "on");
-        get_config_opt(config, local_handle, "logging.logfile", &logfile,
-                       CRM_LOG_DIR "/pacemaker.log");
-
-        if (crm_is_true(logfile_enabled) == FALSE) {
-            crm_trace("File logging disabled in corosync");
-
-        } else if (crm_add_logfile(logfile)) {
-            set_daemon_option("logfile", logfile);
-
-        } else {
-            crm_err("Couldn't create logfile: %s", logfile);
-            set_daemon_option("logfile", "none");
-        }
-
-        free(logfile);
-        free(logfile_enabled);
-    }
-
-    if (daemon_option("logfacility")) {
-        /* Syslog logging is already setup by crm_log_init() */
-
-    } else {
-        /* Check corosync */
-        char *syslog_enabled = NULL;
-        char *syslog_facility = NULL;
-
-        get_config_opt(config, local_handle, "logging.to_syslog", &syslog_enabled, "on");
-        get_config_opt(config, local_handle, "logging.syslog_facility", &syslog_facility, "daemon");
-
-        if (crm_is_true(syslog_enabled) == FALSE) {
-            qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_ENABLED, QB_FALSE);
-            set_daemon_option("logfacility", "none");
-
-        } else {
-            qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_FACILITY, qb_log_facility2int(syslog_facility));
-            qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_ENABLED, QB_TRUE);
-            set_daemon_option("logfacility", syslog_facility);
-        }
-
-        free(syslog_enabled);
-        free(syslog_facility);
-    }
-
-    const_value = daemon_option("logfacility");
-    if (const_value) {
-        /* cluster-glue module needs HA_LOGFACILITY */
-        setenv("HA_LOGFACILITY", const_value, 1);
     }
 
     if(local_handle){
