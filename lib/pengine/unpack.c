@@ -667,7 +667,7 @@ link_rsc2remotenode(pe_working_set_t *data_set, resource_t *new_rsc)
         return;
     }
 
-    print_resource(LOG_DEBUG_3, "Linking remote-node connection resource, ", new_rsc, FALSE);
+    print_resource(LOG_TRACE, "Linking remote-node connection resource, ", new_rsc, FALSE);
 
     remote_node = pe_find_node(data_set->nodes, new_rsc->id);
     CRM_CHECK(remote_node != NULL, return;);
@@ -737,7 +737,7 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
         crm_trace("Beginning unpack... <%s id=%s... >", crm_element_name(xml_obj), ID(xml_obj));
         if (common_unpack(xml_obj, &new_rsc, NULL, data_set)) {
             data_set->resources = g_list_append(data_set->resources, new_rsc);
-            print_resource(LOG_DEBUG_3, "Added ", new_rsc, FALSE);
+            print_resource(LOG_TRACE, "Added ", new_rsc, FALSE);
 
         } else {
             crm_config_err("Failed unpacking %s %s",
@@ -1725,7 +1725,7 @@ process_orphan_resource(xmlNode * rsc_entry, node_t * node, pe_working_set_t * d
         clear_bit(rsc->flags, pe_rsc_managed);
 
     } else {
-        print_resource(LOG_DEBUG_3, "Added orphan", rsc, FALSE);
+        print_resource(LOG_TRACE, "Added orphan", rsc, FALSE);
 
         CRM_CHECK(rsc != NULL, return NULL);
         resource_location(rsc, NULL, -INFINITY, "__orphan_dont_run__", data_set);

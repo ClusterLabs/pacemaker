@@ -293,7 +293,7 @@ master_promotion_order(resource_t * rsc, pe_working_set_t * data_set)
 
         pe_rsc_trace(rsc, "Sort index: %s = %d", child->id, child->sort_index);
     }
-    dump_node_scores(LOG_DEBUG_3, rsc, "Before", rsc->allowed_nodes);
+    dump_node_scores(LOG_TRACE, rsc, "Before", rsc->allowed_nodes);
 
     gIter = rsc->children;
     for (; gIter != NULL; gIter = gIter->next) {
@@ -314,7 +314,7 @@ master_promotion_order(resource_t * rsc, pe_working_set_t * data_set)
         node->weight = merge_weights(child->sort_index, node->weight);
     }
 
-    dump_node_scores(LOG_DEBUG_3, rsc, "Middle", rsc->allowed_nodes);
+    dump_node_scores(LOG_TRACE, rsc, "Middle", rsc->allowed_nodes);
 
     gIter = rsc->rsc_cons;
     for (; gIter != NULL; gIter = gIter->next) {
@@ -366,7 +366,7 @@ master_promotion_order(resource_t * rsc, pe_working_set_t * data_set)
         }
     }
 
-    dump_node_scores(LOG_DEBUG_3, rsc, "After", rsc->allowed_nodes);
+    dump_node_scores(LOG_TRACE, rsc, "After", rsc->allowed_nodes);
 
     /* write them back and sort */
 
@@ -755,7 +755,7 @@ master_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
         }
     }
 
-    dump_node_scores(LOG_DEBUG_3, rsc, "Pre merge", rsc->allowed_nodes);
+    dump_node_scores(LOG_TRACE, rsc, "Pre merge", rsc->allowed_nodes);
     master_promotion_order(rsc, data_set);
 
     /* mark the first N as masters */

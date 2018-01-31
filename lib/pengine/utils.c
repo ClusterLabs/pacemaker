@@ -1241,7 +1241,7 @@ print_node(const char *pre_text, node_t * node, gboolean details)
         for (; gIter != NULL; gIter = gIter->next) {
             resource_t *rsc = (resource_t *) gIter->data;
 
-            print_resource(LOG_DEBUG_4, "\t\t", rsc, FALSE);
+            print_resource(LOG_TRACE, "\t\t", rsc, FALSE);
         }
     }
 }

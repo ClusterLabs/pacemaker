@@ -78,4 +78,10 @@ static int ais_fd_sync = -1;
 #define DAEMON_RESPAWN_STOP CRM_EX_FATAL
 #define pcmk_err_panic      CRM_EX_PANIC
 
+// Deprecated symbols that were removed
+#define LOG_DEBUG_2  LOG_TRACE
+#define LOG_DEBUG_3  LOG_TRACE
+#define LOG_DEBUG_4  LOG_TRACE
+#define LOG_DEBUG_5  LOG_TRACE
+#define LOG_DEBUG_6  LOG_TRACE
 #endif

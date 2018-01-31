@@ -37,9 +37,9 @@
 xmlNode *do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, crm_time_t * now);
 
 gboolean show_scores = FALSE;
-int scores_log_level = LOG_DEBUG_2;
+int scores_log_level = LOG_TRACE;
 gboolean show_utilization = FALSE;
-int utilization_log_level = LOG_DEBUG_2;
+int utilization_log_level = LOG_TRACE;
 extern int transition_id;
 
 #define get_series() 	was_processing_error?1:was_processing_warning?2:3

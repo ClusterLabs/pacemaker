@@ -508,7 +508,7 @@ native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
                                                     pe_weights_rollback);
     }
 
-    print_resource(LOG_DEBUG_2, "Allocating: ", rsc, FALSE);
+    print_resource(LOG_TRACE, "Allocating: ", rsc, FALSE);
     if (rsc->next_role == RSC_ROLE_STOPPED) {
         pe_rsc_trace(rsc, "Making sure %s doesn't get allocated", rsc->id);
         /* make sure it doesn't come up again */
@@ -572,7 +572,7 @@ native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
     }
 
     clear_bit(rsc->flags, pe_rsc_allocating);
-    print_resource(LOG_DEBUG_3, "Allocated ", rsc, TRUE);
+    print_resource(LOG_TRACE, "Allocated ", rsc, TRUE);
 
     if (rsc->is_remote_node) {
         node_t *remote_node = pe_find_node(data_set->nodes, rsc->id);
@@ -730,7 +730,7 @@ RecurringOp(resource_t * rsc, action_t * start, node_t * node,
 
     if ((rsc->next_role == RSC_ROLE_MASTER && value == NULL)
         || (value != NULL && text2role(value) != rsc->next_role)) {
-        int log_level = LOG_DEBUG_2;
+        int log_level = LOG_TRACE;
         const char *result = "Ignoring";
 
         if (is_optional) {

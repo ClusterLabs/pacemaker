@@ -244,7 +244,7 @@ cib_diff_notify(int options, const char *client, const char *call_id, const char
     int del_epoch = 0;
     int del_admin_epoch = 0;
 
-    int log_level = LOG_DEBUG_2;
+    int log_level = LOG_TRACE;
 
     if (diff == NULL) {
         return;
