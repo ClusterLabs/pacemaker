@@ -461,12 +461,12 @@ main(int argc, char **argv)
         the_cib->cmds->register_callback(the_cib, request_id, message_timeout_ms, FALSE, NULL,
                                          "cibadmin_op_callback", cibadmin_op_callback);
 
-        mainloop = g_main_new(FALSE);
+        mainloop = g_main_loop_new(NULL, FALSE);
 
         crm_trace("%s waiting for reply from the local CIB", crm_system_name);
 
         crm_info("Starting mainloop");
-        g_main_run(mainloop);
+        g_main_loop_run(mainloop);
 
     } else if (rc < 0) {
         crm_err("Call failed: %s", pcmk_strerror(rc));
@@ -549,7 +549,7 @@ void
 cib_connection_destroy(gpointer user_data)
 {
     crm_err("Connection to the CIB terminated... exiting");
-    g_main_quit(mainloop);
+    g_main_loop_quit(mainloop);
     return;
 }
 
@@ -576,7 +576,7 @@ cibadmin_op_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void 
     }
 
     if (call_id == request_id) {
-        g_main_quit(mainloop);
+        g_main_loop_quit(mainloop);
 
     } else {
         crm_info("Message was not the response we were looking for (%d vs. %d)",

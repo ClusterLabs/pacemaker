@@ -323,7 +323,7 @@ try_pacemaker(int command, enum cluster_type_e stack)
 
                     crm_ipc_send(mainloop_get_ipc_client(ipc), poke, 0, 0, NULL);
                     free_xml(poke);
-                    g_main_run(amainloop);
+                    g_main_loop_run(amainloop);
                 }
             }
             break;

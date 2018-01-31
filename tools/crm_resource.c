@@ -64,12 +64,12 @@ start_mainloop(void)
         return;
     }
 
-    mainloop = g_main_new(FALSE);
+    mainloop = g_main_loop_new(NULL, FALSE);
     fprintf(stderr, "Waiting for %d replies from the CRMd", crmd_replies_needed);
     crm_debug("Waiting for %d replies from the CRMd", crmd_replies_needed);
 
     g_timeout_add(message_timeout_ms, resource_ipc_timeout, NULL);
-    g_main_run(mainloop);
+    g_main_loop_run(mainloop);
 }
 
 static int

@@ -281,8 +281,8 @@ mainloop_fencing(stonith_t * st, const char *target, const char *action, int tim
     trig = mainloop_add_trigger(G_PRIORITY_HIGH, async_fence_helper, NULL);
     mainloop_set_trigger(trig);
 
-    mainloop = g_main_new(FALSE);
-    g_main_run(mainloop);
+    mainloop = g_main_loop_new(NULL, FALSE);
+    g_main_loop_run(mainloop);
 
     return async_fence_data.rc;
 }

@@ -372,9 +372,9 @@ cib_init(void)
     }
 
     /* Create the mainloop and run it... */
-    mainloop = g_main_new(FALSE);
+    mainloop = g_main_loop_new(NULL, FALSE);
     crm_info("Starting %s mainloop", crm_system_name);
-    g_main_run(mainloop);
+    g_main_loop_run(mainloop);
 
     /* If main loop returned, clean up and exit. We disconnect in case
      * terminate_cib() was called with fast=-1.

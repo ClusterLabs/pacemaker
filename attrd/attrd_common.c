@@ -47,7 +47,7 @@ attrd_shutdown(int nsig)
 {
     shutting_down = TRUE;
     if ((mloop != NULL) && g_main_is_running(mloop)) {
-        g_main_quit(mloop);
+        g_main_loop_quit(mloop);
     } else {
         crm_exit(CRM_EX_OK);
     }
@@ -60,7 +60,7 @@ attrd_shutdown(int nsig)
 void
 attrd_init_mainloop()
 {
-    mloop = g_main_new(FALSE);
+    mloop = g_main_loop_new(NULL, FALSE);
 }
 
 /*!
@@ -70,7 +70,7 @@ attrd_init_mainloop()
 void
 attrd_run_mainloop()
 {
-    g_main_run(mloop);
+    g_main_loop_run(mloop);
 }
 
 /*!
@@ -92,7 +92,7 @@ attrd_mainloop_running()
 void
 attrd_quit_mainloop()
 {
-    g_main_quit(mloop);
+    g_main_loop_quit(mloop);
 }
 
 /*!

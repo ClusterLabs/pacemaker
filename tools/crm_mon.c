@@ -764,7 +764,7 @@ main(int argc, char **argv)
         return CRM_EX_OK;
     }
 
-    mainloop = g_main_new(FALSE);
+    mainloop = g_main_loop_new(NULL, FALSE);
 
     mainloop_add_signal(SIGTERM, mon_shutdown);
     mainloop_add_signal(SIGINT, mon_shutdown);
@@ -779,7 +779,7 @@ main(int argc, char **argv)
 #endif
     refresh_trigger = mainloop_add_trigger(G_PRIORITY_LOW, mon_refresh_display, NULL);
 
-    g_main_run(mainloop);
+    g_main_loop_run(mainloop);
     g_main_destroy(mainloop);
 
     crm_info("Exiting %s", crm_system_name);

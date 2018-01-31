@@ -1005,7 +1005,7 @@ main(int argc, char **argv)
 
     crm_notice("Starting Pacemaker %s "CRM_XS" build=%s features:%s",
                PACEMAKER_VERSION, BUILD_VERSION, CRM_FEATURES);
-    mainloop = g_main_new(FALSE);
+    mainloop = g_main_loop_new(NULL, FALSE);
     sysrq_init();
 
     rc = getrlimit(RLIMIT_CORE, &cores);
@@ -1113,7 +1113,7 @@ main(int argc, char **argv)
 
         crm_info("Starting mainloop");
 
-        g_main_run(mainloop);
+        g_main_loop_run(mainloop);
     }
 
     if (ipcs) {
