@@ -262,13 +262,6 @@ sort_master_instance(gconstpointer a, gconstpointer b, gpointer data_set)
     return sort_clone_instance(a, b, data_set);
 }
 
-GHashTable *
-master_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, const char *attr,
-                     float factor, enum pe_weights flags)
-{
-    return rsc_merge_weights(rsc, rhs, nodes, attr, factor, flags);
-}
-
 static void
 master_promotion_order(resource_t * rsc, pe_working_set_t * data_set)
 {
@@ -549,8 +542,8 @@ master_score(resource_t * rsc, node_t * node, int not_set_value)
     return score;
 }
 
-static void
-apply_master_prefs(resource_t * rsc)
+void
+apply_master_prefs(resource_t *rsc)
 {
     int score, new_score;
     GListPtr gIter = rsc->children;
@@ -648,37 +641,20 @@ set_role_master(resource_t * rsc)
 }
 
 node_t *
-master_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
+color_promotable(resource_t *rsc, pe_working_set_t *data_set)
 {
     int promoted = 0;
     GListPtr gIter = NULL;
     GListPtr gIter2 = NULL;
-
     GHashTableIter iter;
     node_t *node = NULL;
     node_t *chosen = NULL;
     enum rsc_role_e next_role = RSC_ROLE_UNKNOWN;
-
     char score[33];
     size_t len = sizeof(score);
-
     clone_variant_data_t *clone_data = NULL;
 
     get_clone_variant_data(clone_data, rsc);
-
-    if (is_not_set(rsc->flags, pe_rsc_provisional)) {
-        return NULL;
-
-    } else if (is_set(rsc->flags, pe_rsc_allocating)) {
-        pe_rsc_debug(rsc, "Dependency loop detected involving %s", rsc->id);
-        return NULL;
-    }
-
-    apply_master_prefs(rsc);
-
-    clone_color(rsc, prefer, data_set);
-
-    set_bit(rsc->flags, pe_rsc_allocating);
 
     /* count now tracks the number of masters allocated */
     g_hash_table_iter_init(&iter, rsc->allowed_nodes);
@@ -814,14 +790,11 @@ master_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
     pe_rsc_info(rsc, "%s: Promoted %d instances of a possible %d to master",
                 rsc->id, promoted, clone_data->master_max);
 
-    clear_bit(rsc->flags, pe_rsc_provisional);
-    clear_bit(rsc->flags, pe_rsc_allocating);
-
     return NULL;
 }
 
 void
-master_create_actions(resource_t * rsc, pe_working_set_t * data_set)
+create_promotable_actions(resource_t * rsc, pe_working_set_t * data_set)
 {
     action_t *action = NULL;
     GListPtr gIter = rsc->children;
@@ -836,9 +809,6 @@ master_create_actions(resource_t * rsc, pe_working_set_t * data_set)
     get_clone_variant_data(clone_data, rsc);
 
     pe_rsc_debug(rsc, "Creating actions for %s", rsc->id);
-
-    /* create actions as normal */
-    clone_create_actions(rsc, data_set);
 
     for (; gIter != NULL; gIter = gIter->next) {
         gboolean child_promoting = FALSE;
@@ -907,7 +877,7 @@ master_create_actions(resource_t * rsc, pe_working_set_t * data_set)
 }
 
 void
-master_promotion_constraints(resource_t * rsc, pe_working_set_t * data_set)
+promote_demote_constraints(resource_t *rsc, pe_working_set_t *data_set)
 {
     /* global stopped before start */
     new_rsc_order(rsc, RSC_STOPPED, rsc, RSC_START, pe_order_optional, data_set);
@@ -933,7 +903,7 @@ master_promotion_constraints(resource_t * rsc, pe_working_set_t * data_set)
 
 
 void
-master_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
+promotable_constraints(resource_t * rsc, pe_working_set_t * data_set)
 {
     GListPtr gIter = rsc->children;
     resource_t *last_rsc = NULL;
@@ -941,8 +911,7 @@ master_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
 
     get_clone_variant_data(clone_data, rsc);
 
-    clone_internal_constraints(rsc, data_set);
-    master_promotion_constraints(rsc, data_set);
+    promote_demote_constraints(rsc, data_set);
 
     for (; gIter != NULL; gIter = gIter->next) {
         resource_t *child_rsc = (resource_t *) gIter->data;
@@ -987,34 +956,12 @@ node_hash_update_one(GHashTable * hash, node_t * other, const char *attr, int sc
 }
 
 void
-master_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * constraint)
+promotable_colocation_rh(resource_t *rsc_lh, resource_t *rsc_rh,
+                         rsc_colocation_t *constraint)
 {
     GListPtr gIter = NULL;
 
-    CRM_CHECK(rsc_rh != NULL, return);
-    if (is_set(rsc_rh->flags, pe_rsc_provisional)) {
-        return;
-
-    } else if (constraint->role_rh == RSC_ROLE_UNKNOWN) {
-        pe_rsc_trace(rsc_rh, "Handling %s as a clone colocation", constraint->id);
-        clone_rsc_colocation_rh(rsc_lh, rsc_rh, constraint);
-        return;
-    }
-
-    CRM_CHECK(rsc_lh != NULL, return);
-    CRM_CHECK(rsc_lh->variant == pe_native, return);
-    pe_rsc_trace(rsc_rh, "Processing constraint %s: %d", constraint->id, constraint->score);
-
-    if (constraint->role_rh == RSC_ROLE_UNKNOWN) {
-
-        gIter = rsc_rh->children;
-        for (; gIter != NULL; gIter = gIter->next) {
-            resource_t *child_rsc = (resource_t *) gIter->data;
-
-            child_rsc->cmds->rsc_colocation_rh(rsc_lh, child_rsc, constraint);
-        }
-
-    } else if (is_set(rsc_lh->flags, pe_rsc_provisional)) {
+    if (is_set(rsc_lh->flags, pe_rsc_provisional)) {
         GListPtr rhs = NULL;
 
         for (gIter = rsc_rh->children; gIter != NULL; gIter = gIter->next) {
@@ -1061,23 +1008,4 @@ master_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocatio
     }
 
     return;
-}
-
-void
-master_append_meta(resource_t * rsc, xmlNode * xml)
-{
-    char *name = NULL;
-    clone_variant_data_t *clone_data = NULL;
-
-    get_clone_variant_data(clone_data, rsc);
-
-    clone_append_meta(rsc, xml);
-
-    name = crm_meta_name(XML_RSC_ATTR_MASTER_MAX);
-    crm_xml_add_int(xml, name, clone_data->master_max);
-    free(name);
-
-    name = crm_meta_name(XML_RSC_ATTR_MASTER_NODEMAX);
-    crm_xml_add_int(xml, name, clone_data->master_node_max);
-    free(name);
 }

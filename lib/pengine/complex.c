@@ -58,16 +58,6 @@ resource_object_functions_t resource_class_functions[] = {
      clone_free
     },
     {
-     master_unpack,
-     native_find_rsc,
-     native_parameter,
-     clone_print,
-     clone_active,
-     clone_resource_state,
-     native_location,
-     clone_free
-    },
-    {
      container_unpack,
      native_find_rsc,
      native_parameter,
@@ -79,7 +69,7 @@ resource_object_functions_t resource_class_functions[] = {
     }
 };
 
-enum pe_obj_types
+static enum pe_obj_types
 get_resource_type(const char *name)
 {
     if (safe_str_eq(name, XML_CIB_TAG_RESOURCE)) {
@@ -92,33 +82,14 @@ get_resource_type(const char *name)
         return pe_clone;
 
     } else if (safe_str_eq(name, XML_CIB_TAG_MASTER)) {
-        return pe_master;
+        // @COMPAT deprecated since 2.0.0
+        return pe_clone;
 
     } else if (safe_str_eq(name, XML_CIB_TAG_CONTAINER)) {
         return pe_container;
     }
 
     return pe_unknown;
-}
-
-const char *
-get_resource_typename(enum pe_obj_types type)
-{
-    switch (type) {
-        case pe_native:
-            return XML_CIB_TAG_RESOURCE;
-        case pe_group:
-            return XML_CIB_TAG_GROUP;
-        case pe_clone:
-            return XML_CIB_TAG_INCARNATION;
-        case pe_master:
-            return XML_CIB_TAG_MASTER;
-        case pe_container:
-            return XML_CIB_TAG_CONTAINER;
-        case pe_unknown:
-            return "unknown";
-    }
-    return "<unknown>";
 }
 
 static void
@@ -371,6 +342,28 @@ add_template_rsc(xmlNode * xml_obj, pe_working_set_t * data_set)
     return TRUE;
 }
 
+static bool
+detect_promotable(resource_t *rsc)
+{
+    const char *promotable = g_hash_table_lookup(rsc->meta,
+                                                 XML_RSC_ATTR_PROMOTABLE);
+
+    if (crm_is_true(promotable)) {
+        return TRUE;
+    }
+
+    // @COMPAT deprecated since 2.0.0
+    if (safe_str_eq(crm_element_name(rsc->xml), XML_CIB_TAG_MASTER)) {
+        /* @TODO in some future version, pe_warn_once() here,
+         *       then drop support in even later version
+         */
+        g_hash_table_insert(rsc->meta, strdup(XML_RSC_ATTR_PROMOTABLE),
+                            strdup(XML_BOOLEAN_TRUE));
+        return TRUE;
+    }
+    return FALSE;
+}
+
 gboolean
 common_unpack(xmlNode * xml_obj, resource_t ** rsc,
               resource_t * parent, pe_working_set_t * data_set)
@@ -378,7 +371,6 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     bool isdefault = FALSE;
     xmlNode *expanded_xml = NULL;
     xmlNode *ops = NULL;
-    resource_t *top = NULL;
     const char *value = NULL;
     const char *rclass = NULL; /* Look for this after any templates have been expanded */
     const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
@@ -543,13 +535,19 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
         set_bit((*rsc)->flags, pe_rsc_maintenance);
     }
 
-    pe_rsc_trace((*rsc), "Options for %s", (*rsc)->id);
-
-    top = uber_parent(*rsc);
-    value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_UNIQUE);
-    if (crm_is_true(value) || pe_rsc_is_clone(top) == FALSE) {
+    if (pe_rsc_is_clone(uber_parent(*rsc))) {
+        value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_UNIQUE);
+        if (crm_is_true(value)) {
+            set_bit((*rsc)->flags, pe_rsc_unique);
+        }
+        if (detect_promotable(*rsc)) {
+            set_bit((*rsc)->flags, pe_rsc_promotable);
+        }
+    } else {
         set_bit((*rsc)->flags, pe_rsc_unique);
     }
+
+    pe_rsc_trace((*rsc), "Options for %s", (*rsc)->id);
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_RESTART);
     if (safe_str_eq(value, "restart")) {

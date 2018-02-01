@@ -55,9 +55,6 @@ extern GHashTable *clone_merge_weights(resource_t * rsc, const char *rhs, GHashT
 extern GHashTable *container_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes,
                                        const char *attr, float factor, enum pe_weights flags);
 
-extern GHashTable *master_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes,
-                                        const char *attr, float factor, enum pe_weights flags);
-
 extern GHashTable *native_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes,
                                         const char *attr, float factor, enum pe_weights flags);
 
@@ -125,13 +122,13 @@ extern gboolean clone_create_probe(resource_t * rsc, node_t * node, action_t * c
                                    gboolean force, pe_working_set_t * data_set);
 extern void clone_append_meta(resource_t * rsc, xmlNode * xml);
 
-extern gboolean master_unpack(resource_t * rsc, pe_working_set_t * data_set);
-extern node_t *master_color(resource_t * rsc, node_t * preferred, pe_working_set_t * data_set);
-extern void master_create_actions(resource_t * rsc, pe_working_set_t * data_set);
-extern void master_internal_constraints(resource_t * rsc, pe_working_set_t * data_set);
-extern void master_rsc_colocation_rh(resource_t * lh_rsc, resource_t * rh_rsc,
-                                     rsc_colocation_t * constraint);
-extern void master_append_meta(resource_t * rsc, xmlNode * xml);
+void apply_master_prefs(resource_t *rsc);
+node_t *color_promotable(resource_t *rsc, pe_working_set_t *data_set);
+void create_promotable_actions(resource_t *rsc, pe_working_set_t *data_set);
+void promote_demote_constraints(resource_t *rsc, pe_working_set_t *data_set);
+void promotable_constraints(resource_t *rsc, pe_working_set_t *data_set);
+void promotable_colocation_rh(resource_t *lh_rsc, resource_t *rh_rsc,
+                              rsc_colocation_t *constraint);
 
 /* extern resource_object_functions_t resource_variants[]; */
 extern resource_alloc_functions_t resource_class_alloc_functions[];
@@ -176,7 +173,6 @@ gboolean update_action_flags(action_t * action, enum pe_action_flags flags, cons
 gboolean update_action(action_t * action);
 void complex_set_cmds(resource_t * rsc);
 
-void master_promotion_constraints(resource_t * rsc, pe_working_set_t * data_set);
 void clone_create_pseudo_actions(
     resource_t * rsc, GListPtr children, notify_data_t **start_notify, notify_data_t **stop_notify,  pe_working_set_t * data_set);
 

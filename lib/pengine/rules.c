@@ -251,7 +251,7 @@ test_role_expression(xmlNode * expr, enum rsc_role_e role, crm_time_t * now)
         }
 
     } else if (safe_str_eq(op, "ne")) {
-        /* we will only test "ne" wtih master/slave roles style */
+        // Test "ne" only with promotable clone roles
         if (role < RSC_ROLE_SLAVE && role > RSC_ROLE_UNKNOWN) {
             accept = FALSE;
 

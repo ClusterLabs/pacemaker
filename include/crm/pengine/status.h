@@ -187,6 +187,7 @@ struct node_s {
 #  define pe_rsc_notify                     0x00000010ULL
 #  define pe_rsc_unique                     0x00000020ULL
 #  define pe_rsc_fence_device               0x00000040ULL
+#  define pe_rsc_promotable                 0x00000080ULL
 
 #  define pe_rsc_provisional                0x00000100ULL
 #  define pe_rsc_allocating                 0x00000200ULL
@@ -485,7 +486,7 @@ pe_rsc_action_details_t *pe_rsc_action_details(pe_action_t *action);
 static inline bool
 pe_rsc_is_clone(resource_t *rsc)
 {
-    return rsc && ((rsc->variant == pe_clone) || (rsc->variant == pe_master));
+    return rsc && (rsc->variant == pe_clone);
 }
 
 /*!

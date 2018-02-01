@@ -1046,7 +1046,7 @@ generate_location_rule(resource_t * rsc, xmlNode * rule_xml, const char *discove
         crm_trace("Setting role filter: %s", role);
         location_rule->role_filter = text2role(role);
         if (location_rule->role_filter == RSC_ROLE_SLAVE) {
-            /* Any master/slave cannot be promoted without being a slave first
+            /* Any promotable clone cannot be promoted without being a slave first
              * Ergo, any constraint for the slave role applies to every role
              */
             location_rule->role_filter = RSC_ROLE_UNKNOWN;
@@ -1150,6 +1150,19 @@ sort_cons_priority_lh(gconstpointer a, gconstpointer b)
         return 1;
     }
 
+    /* @COMPAT PE <2.0.0: Process promotable clones before nonpromotable clones
+     * (probably unnecessary, but avoids having to update regression tests)
+     */
+    if (rsc_constraint1->rsc_lh->variant == pe_clone) {
+        if (is_set(rsc_constraint1->rsc_lh->flags, pe_rsc_promotable)
+            && is_not_set(rsc_constraint2->rsc_lh->flags, pe_rsc_promotable)) {
+            return -1;
+        } else if (is_not_set(rsc_constraint1->rsc_lh->flags, pe_rsc_promotable)
+            && is_set(rsc_constraint2->rsc_lh->flags, pe_rsc_promotable)) {
+            return 1;
+        }
+    }
+
     return strcmp(rsc_constraint1->rsc_lh->id, rsc_constraint2->rsc_lh->id);
 }
 
@@ -1182,6 +1195,19 @@ sort_cons_priority_rh(gconstpointer a, gconstpointer b)
         return -1;
     } else if (rsc_constraint1->rsc_rh->variant < rsc_constraint2->rsc_rh->variant) {
         return 1;
+    }
+
+    /* @COMPAT PE <2.0.0: Process promotable clones before nonpromotable clones
+     * (probably unnecessary, but avoids having to update regression tests)
+     */
+    if (rsc_constraint1->rsc_rh->variant == pe_clone) {
+        if (is_set(rsc_constraint1->rsc_rh->flags, pe_rsc_promotable)
+            && is_not_set(rsc_constraint2->rsc_rh->flags, pe_rsc_promotable)) {
+            return -1;
+        } else if (is_not_set(rsc_constraint1->rsc_rh->flags, pe_rsc_promotable)
+            && is_set(rsc_constraint2->rsc_rh->flags, pe_rsc_promotable)) {
+            return 1;
+        }
     }
 
     return strcmp(rsc_constraint1->rsc_rh->id, rsc_constraint2->rsc_rh->id);

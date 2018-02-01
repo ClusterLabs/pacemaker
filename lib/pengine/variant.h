@@ -52,7 +52,7 @@ typedef struct clone_variant_data_s {
 
 #    define get_clone_variant_data(data, rsc)				\
 	CRM_ASSERT(rsc != NULL);					\
-	CRM_ASSERT(rsc->variant == pe_clone || rsc->variant == pe_master); \
+	CRM_ASSERT(rsc->variant == pe_clone); \
 	data = (clone_variant_data_t *)rsc->variant_opaque;
 
 #  elif VARIANT_CONTAINER

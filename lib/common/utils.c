@@ -1465,7 +1465,7 @@ crm_provider_required(const char *standard)
      * - this should probably be case-sensitive, but isn't,
      *   for backward compatibility
      * - it might be nice to keep standards' capabilities (supports provider,
-     *   master/slave, etc.) as structured data somewhere
+     *   can be promotable, etc.) as structured data somewhere
      */
     if (!strcasecmp(standard, PCMK_RESOURCE_CLASS_OCF)) {
         return TRUE;

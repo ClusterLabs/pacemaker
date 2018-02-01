@@ -74,7 +74,6 @@ node_t *rsc_known_on(resource_t * rsc, GListPtr * list);
 gboolean native_unpack(resource_t * rsc, pe_working_set_t * data_set);
 gboolean group_unpack(resource_t * rsc, pe_working_set_t * data_set);
 gboolean clone_unpack(resource_t * rsc, pe_working_set_t * data_set);
-gboolean master_unpack(resource_t * rsc, pe_working_set_t * data_set);
 gboolean container_unpack(resource_t * rsc, pe_working_set_t * data_set);
 
 resource_t *native_find_rsc(resource_t * rsc, const char *id, node_t * node, int flags);

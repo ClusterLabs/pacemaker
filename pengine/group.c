@@ -118,7 +118,7 @@ group_create_actions(resource_t * rsc, pe_working_set_t * data_set)
                        RSC_STOPPED, NULL, TRUE /* !group_data->child_stopping */ , TRUE, data_set);
     set_bit(op->flags, pe_action_pseudo | pe_action_runnable);
 
-    value = g_hash_table_lookup(rsc->meta, "stateful");
+    value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_PROMOTABLE);
     if (crm_is_true(value)) {
         op = custom_action(rsc, demote_key(rsc), RSC_DEMOTE, NULL, TRUE, TRUE, data_set);
         set_bit(op->flags, pe_action_pseudo);
@@ -207,7 +207,7 @@ group_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
                                child_rsc, last_rsc, NULL, NULL, data_set);
         }
 
-        if (top->variant == pe_master) {
+        if (is_set(top->flags, pe_rsc_promotable)) {
             new_rsc_order(rsc, RSC_DEMOTE, child_rsc, RSC_DEMOTE,
                           stop | pe_order_implies_first_printed, data_set);
 
@@ -229,7 +229,7 @@ group_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
 
         if (group_data->ordered == FALSE) {
             order_start_start(rsc, child_rsc, start | pe_order_implies_first_printed);
-            if (top->variant == pe_master) {
+            if (is_set(top->flags, pe_rsc_promotable)) {
                 new_rsc_order(rsc, RSC_PROMOTE, child_rsc, RSC_PROMOTE,
                               start | pe_order_implies_first_printed, data_set);
             }
@@ -240,7 +240,7 @@ group_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
             order_start_start(last_rsc, child_rsc, start);
             order_stop_stop(child_rsc, last_rsc, pe_order_optional | pe_order_restart);
 
-            if (top->variant == pe_master) {
+            if (is_set(top->flags, pe_rsc_promotable)) {
                 new_rsc_order(last_rsc, RSC_PROMOTE, child_rsc, RSC_PROMOTE, start, data_set);
                 new_rsc_order(child_rsc, RSC_DEMOTE, last_rsc, RSC_DEMOTE, pe_order_optional,
                               data_set);
@@ -256,7 +256,7 @@ group_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
             int flags = pe_order_none;
 
             order_start_start(rsc, child_rsc, flags);
-            if (top->variant == pe_master) {
+            if (is_set(top->flags, pe_rsc_promotable)) {
                 new_rsc_order(rsc, RSC_PROMOTE, child_rsc, RSC_PROMOTE, flags, data_set);
             }
 
@@ -284,7 +284,7 @@ group_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
         order_stop_stop(rsc, last_rsc, stop_stop_flags);
         new_rsc_order(last_rsc, RSC_STOP, rsc, RSC_STOPPED, stop_stopped_flags, data_set);
 
-        if (top->variant == pe_master) {
+        if (is_set(top->flags, pe_rsc_promotable)) {
             new_rsc_order(rsc, RSC_DEMOTE, last_rsc, RSC_DEMOTE, stop_stop_flags, data_set);
             new_rsc_order(last_rsc, RSC_DEMOTE, rsc, RSC_DEMOTED, stop_stopped_flags, data_set);
         }

@@ -2233,7 +2233,7 @@ set_active(resource_t * rsc)
 {
     resource_t *top = uber_parent(rsc);
 
-    if (top && top->variant == pe_master) {
+    if (top && is_set(top->flags, pe_rsc_promotable)) {
         rsc->role = RSC_ROLE_SLAVE;
     } else {
         rsc->role = RSC_ROLE_STARTED;

@@ -182,9 +182,8 @@ find_matching_attr_resource(resource_t * rsc, const char * rsc_id, const char * 
                     printf("Performing %s of '%s' for '%s' will not apply to its peers in '%s'\n", cmd, attr_name, rsc_id, rsc->parent->id);
                 }
                 break;
-            case pe_master:
-            case pe_clone:
 
+            case pe_clone:
                 rc = find_resource_attr(cib, XML_ATTR_ID, rsc_id, attr_set_type, attr_set, attr_id, attr_name, &local_attr_id);
                 free(local_attr_id);
 
@@ -844,7 +843,8 @@ cli_resource_check(cib_t * cib_conn, resource_t *rsc)
             printf("\n  * The configuration specifies that '%s' should remain stopped\n", parent->id);
             need_nl++;
 
-        } else if(parent->variant == pe_master && role == RSC_ROLE_SLAVE) {
+        } else if (is_set(parent->flags, pe_rsc_promotable)
+                   && (role == RSC_ROLE_SLAVE)) {
             printf("\n  * The configuration specifies that '%s' should not be promoted\n", parent->id);
             need_nl++;
         }
@@ -1763,21 +1763,22 @@ cli_resource_move(resource_t *rsc, const char *rsc_id, const char *host_name,
     node_t *dest = pe_find_node(data_set->nodes, host_name);
     bool cur_is_dest = FALSE;
 
-    if (scope_master && rsc->variant != pe_master) {
+    if (scope_master && is_set(rsc->flags, pe_rsc_promotable)) {
         resource_t *p = uber_parent(rsc);
-        if(p->variant == pe_master) {
+
+        if (is_set(p->flags, pe_rsc_promotable)) {
             CMD_ERR("Using parent '%s' for --move command instead of '%s'.", rsc->id, rsc_id);
             rsc_id = p->id;
             rsc = p;
 
         } else {
-            CMD_ERR("Ignoring '--master' option: not valid for %s resources.",
-                    get_resource_typename(rsc->variant));
+            CMD_ERR("Ignoring '--master' option: %s is not a promotable resource",
+                    rsc_id);
             scope_master = FALSE;
         }
     }
 
-    if(rsc->variant == pe_master) {
+    if (is_set(rsc->flags, pe_rsc_promotable)) {
         GListPtr iter = NULL;
 
         for(iter = rsc->children; iter; iter = iter->next) {

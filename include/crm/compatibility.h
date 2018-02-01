@@ -7,6 +7,8 @@
 #ifndef CRM_COMPATIBILITY__H
 #  define CRM_COMPATIBILITY__H
 
+#include <crm/msg_xml.h>
+
 /* Heartbeat-specific definitions. Support for heartbeat has been removed
  * entirely, so any code branches relying on these should be deleted.
  */
@@ -84,4 +86,48 @@ static int ais_fd_sync = -1;
 #define LOG_DEBUG_4  LOG_TRACE
 #define LOG_DEBUG_5  LOG_TRACE
 #define LOG_DEBUG_6  LOG_TRACE
+
+/* Clone terminology definitions */
+
+// These can no longer be used in a switch together
+#define pe_master pe_clone
+
+static inline enum pe_obj_types
+get_resource_type(const char *name)
+{
+    if (safe_str_eq(name, XML_CIB_TAG_RESOURCE)) {
+        return pe_native;
+
+    } else if (safe_str_eq(name, XML_CIB_TAG_GROUP)) {
+        return pe_group;
+
+    } else if (safe_str_eq(name, XML_CIB_TAG_INCARNATION)
+               || safe_str_eq(name, XML_CIB_TAG_MASTER)) {
+        return pe_clone;
+
+    } else if (safe_str_eq(name, XML_CIB_TAG_CONTAINER)) {
+        return pe_container;
+    }
+
+    return pe_unknown;
+}
+
+static inline const char *
+get_resource_typename(enum pe_obj_types type)
+{
+    switch (type) {
+        case pe_native:
+            return XML_CIB_TAG_RESOURCE;
+        case pe_group:
+            return XML_CIB_TAG_GROUP;
+        case pe_clone:
+            return XML_CIB_TAG_INCARNATION;
+        case pe_container:
+            return XML_CIB_TAG_CONTAINER;
+        case pe_unknown:
+            return "unknown";
+    }
+    return "<unknown>";
+}
+
 #endif
