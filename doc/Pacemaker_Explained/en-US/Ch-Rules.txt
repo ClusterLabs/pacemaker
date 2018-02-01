@@ -175,8 +175,8 @@ special, built-in node attributes for each node that can also be used.
  +#cluster-name+
 
 |#role
-|The role the relevant multistate resource has on this node. Valid only within
- a rule for a location constraint for a multistate resource.
+|The role the relevant promotable clone resource has on this node. Valid only within
+ a rule for a location constraint for a promotable clone resource.
 
 ////
 // if uncommenting, put a pipe in front of first two lines

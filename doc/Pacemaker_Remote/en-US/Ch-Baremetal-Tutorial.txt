@@ -298,8 +298,8 @@ nearly all the pacemaker tools (`crm_resource`, `crm_mon`, `crm_attribute`,
 
 Try it: Run `crm_mon` on the remote node after pacemaker has
 integrated it into the cluster. These tools just work. These means resource
-agents such as master/slave resources which need access to tools like
-`crm_master` work seamlessly on the remote nodes.
+agents such as promotable resources (which need access to tools like
+`crm_master`) work seamlessly on the remote nodes.
 
 Higher-level command shells such as `pcs` may have partial support
 on remote nodes, but it is recommended to run them from a cluster node.

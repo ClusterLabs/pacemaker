@@ -72,8 +72,7 @@ NOTE: This is _not_ performed as root.
 |=========================================================
 
 Additional requirements (not part of the OCF specification) are placed on
-agents that will be used for advanced concepts such as clones
-and multi-state resources.
+agents that will be used for advanced concepts such as clone resources.
 
 .Optional Actions for OCF Resource Agents
 [width="95%",cols="2m,6,3",options="header",align="center"]
@@ -84,13 +83,13 @@ and multi-state resources.
 |Instructions
 
 |promote
-|Promote the local instance of a multi-state resource to the master (primary) state.
+|Promote the local instance of a promotable clone resource to the master (primary) state.
 |Return 0 on success
  indexterm:[promote,OCF Action]
  indexterm:[OCF,Action,promote]
 
 |demote
-|Demote the local instance of a multi-state resource to the slave (secondary) state.
+|Demote the local instance of a promotable clone resource to the slave (secondary) state.
 |Return 0 on success
  indexterm:[demote,OCF Action]
  indexterm:[OCF,Action,demote]

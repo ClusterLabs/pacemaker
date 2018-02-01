@@ -571,8 +571,8 @@ nearly all the pacemaker tools (`crm_resource`, `crm_mon`, `crm_attribute`,
 
 Try it: Run `crm_mon` on the guest after pacemaker has
 integrated the guest node into the cluster. These tools just work. This
-means resource agents such as master/slave resources which need access to tools
-like `crm_master` work seamlessly on the guest nodes.
+means resource agents such as promotable resources (which need access to tools
+like `crm_master`) work seamlessly on the guest nodes.
 
 Higher-level command shells such as `pcs` may have partial support
 on guest nodes, but it is recommended to run them from a cluster node.

@@ -317,7 +317,7 @@ indexterm:[Ordering Constraints,symmetrical]
 |=========================================================
 
 +Promote+ and +demote+ apply to the master role of
-<<s-resource-multistate,multi-state>> resources.
+<<s-resource-promotable,promotable>> resources.
 
 === Optional and mandatory ordering ===
 
@@ -836,7 +836,7 @@ be active (and naturally on the same node); and if a set has +sequential="true"+
 then in order for one member of that set to be active, all members listed
 before it must also be active.
 
-If desired, you can restrict the dependency to instances of multistate
+If desired, you can restrict the dependency to instances of promotable clone
 resources that are in a specific role, using the set's +role+ property.
 
 .Colocation chain in which the members of the middle set have no interdependencies, and the last listed set (which the cluster places first) is restricted to instances in master status.
