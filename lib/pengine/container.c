@@ -986,7 +986,7 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
 
             value = crm_itoa(container_data->masters);
             crm_create_nvpair_xml(xml_set, NULL,
-                                  XML_RSC_ATTR_MASTER_MAX, value);
+                                  XML_RSC_ATTR_PROMOTED_MAX, value);
             free(value);
         }
 

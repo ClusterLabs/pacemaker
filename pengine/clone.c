@@ -1471,6 +1471,17 @@ clone_append_meta(resource_t * rsc, xmlNode * xml)
     free(name);
 
     if (is_set(rsc->flags, pe_rsc_promotable)) {
+        name = crm_meta_name(XML_RSC_ATTR_PROMOTED_MAX);
+        crm_xml_add_int(xml, name, clone_data->master_max);
+        free(name);
+
+        name = crm_meta_name(XML_RSC_ATTR_PROMOTED_NODEMAX);
+        crm_xml_add_int(xml, name, clone_data->master_node_max);
+        free(name);
+
+        /* @COMPAT Maintain backward compatibility with resource agents that
+         * expect the old names (deprecated since 2.0.0).
+         */
         name = crm_meta_name(XML_RSC_ATTR_MASTER_MAX);
         crm_xml_add_int(xml, name, clone_data->master_max);
         free(name);

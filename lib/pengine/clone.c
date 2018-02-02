@@ -150,11 +150,27 @@ clone_unpack(resource_t * rsc, pe_working_set_t * data_set)
     rsc->variant_opaque = clone_data;
 
     if (is_set(rsc->flags, pe_rsc_promotable)) {
-        const char *master_max = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_MASTER_MAX);
-        const char *master_node_max = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_MASTER_NODEMAX);
+        const char *promoted_max = NULL;
+        const char *promoted_node_max = NULL;
 
-        clone_data->master_max = crm_parse_int(master_max, "1");
-        clone_data->master_node_max = crm_parse_int(master_node_max, "1");
+        promoted_max = g_hash_table_lookup(rsc->meta,
+                                           XML_RSC_ATTR_PROMOTED_MAX);
+        if (promoted_max == NULL) {
+            // @COMPAT deprecated since 2.0.0
+            promoted_max = g_hash_table_lookup(rsc->meta,
+                                               XML_RSC_ATTR_MASTER_MAX);
+        }
+
+        promoted_node_max = g_hash_table_lookup(rsc->meta,
+                                                XML_RSC_ATTR_PROMOTED_NODEMAX);
+        if (promoted_node_max == NULL) {
+            // @COMPAT deprecated since 2.0.0
+            promoted_node_max = g_hash_table_lookup(rsc->meta,
+                                                    XML_RSC_ATTR_MASTER_NODEMAX);
+        }
+
+        clone_data->master_max = crm_parse_int(promoted_max, "1");
+        clone_data->master_node_max = crm_parse_int(promoted_node_max, "1");
     }
 
     clone_data->active_clones = 0;

@@ -249,7 +249,7 @@ static struct crm_option long_options[] = {
         "\t\t\t\tNOTE: This will prevent the resource from running on the affected node\n"
         "\t\t\t\tuntil the implicit constraint expires or is removed with --clear.\n"
         "\t\t\t\tIf --node is not specified, it defaults to the node currently running the resource\n"
-        "\t\t\t\tfor primitives and groups, or the master for promotable clones with master-max=1\n"
+        "\t\t\t\tfor primitives and groups, or the master for promotable clones with promoted-max=1\n"
         "\t\t\t\t(all other situations result in an error as there is no sane default).\n"
     },
     {
