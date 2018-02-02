@@ -24,15 +24,12 @@ typedef struct clone_variant_data_s {
     int clone_max;
     int clone_node_max;
 
-    int master_max;
-    int master_node_max;
+    int promoted_max;
+    int promoted_node_max;
 
     int total_clones;
     int active_clones;
     int max_nodes;
-
-    int masters_active;
-    int masters_allocated;
 
     gboolean interleave;
     gboolean ordered;

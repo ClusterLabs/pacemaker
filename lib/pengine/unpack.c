@@ -2018,7 +2018,7 @@ calculate_active_ops(GListPtr sorted_op_list, int *start_index, int *stop_index)
 {
     int counter = -1;
     int implied_monitor_start = -1;
-    int implied_master_start = -1;
+    int implied_clone_start = -1;
     const char *task = NULL;
     const char *status = NULL;
     GListPtr gIter = sorted_op_list;
@@ -2048,13 +2048,13 @@ calculate_active_ops(GListPtr sorted_op_list, int *start_index, int *stop_index)
                 implied_monitor_start = counter;
             }
         } else if (safe_str_eq(task, CRMD_ACTION_PROMOTE) || safe_str_eq(task, CRMD_ACTION_DEMOTE)) {
-            implied_master_start = counter;
+            implied_clone_start = counter;
         }
     }
 
     if (*start_index == -1) {
-        if (implied_master_start != -1) {
-            *start_index = implied_master_start;
+        if (implied_clone_start != -1) {
+            *start_index = implied_clone_start;
         } else if (implied_monitor_start != -1) {
             *start_index = implied_monitor_start;
         }
@@ -2586,7 +2586,7 @@ unpack_rsc_op_failure(resource_t * rsc, node_t * node, int rc, xmlNode * xml_op,
 
             if (pe_rsc_is_clone(parent)
                 && is_not_set(parent->flags, pe_rsc_unique)) {
-                /* for clone and master resources, if a child fails on an operation
+                /* For clone resources, if a child fails on an operation
                  * with on-fail = stop, all the resources fail.  Do this by preventing
                  * the parent from coming up again. */
                 fail_rsc = parent;

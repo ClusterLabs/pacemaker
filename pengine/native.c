@@ -1842,7 +1842,7 @@ rsc_ticket_constraint(resource_t * rsc_lh, rsc_ticket_t * rsc_ticket, pe_working
                 break;
 
             case loss_ticket_demote:
-                /*Promotion score will be set to -INFINITY in master_promotion_order() */
+                // Promotion score will be set to -INFINITY in promotion_order()
                 if (rsc_ticket->role_lh != RSC_ROLE_MASTER) {
                     resource_location(rsc_lh, NULL, -INFINITY, "__loss_of_ticket__", data_set);
                 }

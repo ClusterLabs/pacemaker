@@ -101,7 +101,8 @@ child_demoting_constraints(clone_variant_data_t * clone_data, enum pe_ordering t
 }
 
 static void
-master_update_pseudo_status(resource_t * rsc, gboolean * demoting, gboolean * promoting)
+check_promotable_actions(resource_t *rsc, gboolean *demoting,
+                         gboolean *promoting)
 {
     GListPtr gIter = NULL;
 
@@ -110,7 +111,7 @@ master_update_pseudo_status(resource_t * rsc, gboolean * demoting, gboolean * pr
         for (; gIter != NULL; gIter = gIter->next) {
             resource_t *child = (resource_t *) gIter->data;
 
-            master_update_pseudo_status(child, demoting, promoting);
+            check_promotable_actions(child, demoting, promoting);
         }
         return;
     }
@@ -217,7 +218,7 @@ can_be_master(resource_t * rsc)
         crm_err("%s cannot run on %s: node not allowed", rsc->id, node->details->uname);
         return NULL;
 
-    } else if (local_node->count < clone_data->master_node_max
+    } else if ((local_node->count < clone_data->promoted_node_max)
                || is_not_set(rsc->flags, pe_rsc_managed)) {
         return local_node;
 
@@ -229,7 +230,7 @@ can_be_master(resource_t * rsc)
 }
 
 static gint
-sort_master_instance(gconstpointer a, gconstpointer b, gpointer data_set)
+sort_promotable_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 {
     int rc;
     enum rsc_role_e role1 = RSC_ROLE_UNKNOWN;
@@ -263,7 +264,7 @@ sort_master_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 }
 
 static void
-master_promotion_order(resource_t * rsc, pe_working_set_t * data_set)
+promotion_order(resource_t *rsc, pe_working_set_t *data_set)
 {
     GListPtr gIter = NULL;
     node_t *node = NULL;
@@ -383,7 +384,8 @@ master_promotion_order(resource_t * rsc, pe_working_set_t * data_set)
         pe_rsc_trace(rsc, "Set sort index: %s = %d", child->id, child->sort_index);
     }
 
-    rsc->children = g_list_sort_with_data(rsc->children, sort_master_instance, data_set);
+    rsc->children = g_list_sort_with_data(rsc->children,
+                                          sort_promotable_instance, data_set);
     clear_bit(rsc->flags, pe_rsc_merging);
 }
 
@@ -732,7 +734,7 @@ color_promotable(resource_t *rsc, pe_working_set_t *data_set)
     }
 
     dump_node_scores(LOG_TRACE, rsc, "Pre merge", rsc->allowed_nodes);
-    master_promotion_order(rsc, data_set);
+    promotion_order(rsc, data_set);
 
     /* mark the first N as masters */
 
@@ -760,7 +762,8 @@ color_promotable(resource_t *rsc, pe_working_set_t *data_set)
         if (child_rsc->sort_index < 0) {
             pe_rsc_trace(rsc, "Not supposed to promote child: %s", child_rsc->id);
 
-        } else if (promoted < clone_data->master_max || is_not_set(rsc->flags, pe_rsc_managed)) {
+        } else if ((promoted < clone_data->promoted_max)
+                   || is_not_set(rsc->flags, pe_rsc_managed)) {
             chosen = can_be_master(child_rsc);
         }
 
@@ -786,9 +789,8 @@ color_promotable(resource_t *rsc, pe_working_set_t *data_set)
         promoted++;
     }
 
-    clone_data->masters_allocated = promoted;
     pe_rsc_info(rsc, "%s: Promoted %d instances of a possible %d to master",
-                rsc->id, promoted, clone_data->master_max);
+                rsc->id, promoted, clone_data->promoted_max);
 
     return NULL;
 }
@@ -817,7 +819,7 @@ create_promotable_actions(resource_t * rsc, pe_working_set_t * data_set)
 
         pe_rsc_trace(rsc, "Creating actions for %s", child_rsc->id);
         child_rsc->cmds->create_actions(child_rsc, data_set);
-        master_update_pseudo_status(child_rsc, &child_demoting, &child_promoting);
+        check_promotable_actions(child_rsc, &child_demoting, &child_promoting);
 
         any_demoting = any_demoting || child_demoting;
         any_promoting = any_promoting || child_promoting;

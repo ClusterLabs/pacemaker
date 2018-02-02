@@ -116,7 +116,7 @@ static struct crm_option long_options[] = {
 
     {"xpath",       1, 0, 'A', "A valid XPath to use instead of --scope,-o"},
     {"node-path",   0, 0, 'e',  "When performing XPath queries, return the address of any matches found."},
-    {"-spacer-",    0, 0, '-', " Eg: /cib/configuration/resources/master[@id='ms_RH1_SCS']/primitive[@id='prm_RH1_SCS']", pcmk_option_paragraph},
+    {"-spacer-",    0, 0, '-', " Eg: /cib/configuration/resources/clone[@id='ms_RH1_SCS']/primitive[@id='prm_RH1_SCS']", pcmk_option_paragraph},
     {"node",	    1, 0, 'N', "(Advanced) Send command to the specified host\n"},
     {"-space-",	    0, 0, '!', NULL, 1},
 

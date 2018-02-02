@@ -81,25 +81,21 @@ resource_t *native_find_rsc(resource_t * rsc, const char *id, node_t * node, int
 gboolean native_active(resource_t * rsc, gboolean all);
 gboolean group_active(resource_t * rsc, gboolean all);
 gboolean clone_active(resource_t * rsc, gboolean all);
-gboolean master_active(resource_t * rsc, gboolean all);
 gboolean container_active(resource_t * rsc, gboolean all);
 
 void native_print(resource_t * rsc, const char *pre_text, long options, void *print_data);
 void group_print(resource_t * rsc, const char *pre_text, long options, void *print_data);
 void clone_print(resource_t * rsc, const char *pre_text, long options, void *print_data);
-void master_print(resource_t * rsc, const char *pre_text, long options, void *print_data);
 void container_print(resource_t * rsc, const char *pre_text, long options, void *print_data);
 
 void native_free(resource_t * rsc);
 void group_free(resource_t * rsc);
 void clone_free(resource_t * rsc);
-void master_free(resource_t * rsc);
 void container_free(resource_t * rsc);
 
 enum rsc_role_e native_resource_state(const resource_t * rsc, gboolean current);
 enum rsc_role_e group_resource_state(const resource_t * rsc, gboolean current);
 enum rsc_role_e clone_resource_state(const resource_t * rsc, gboolean current);
-enum rsc_role_e master_resource_state(const resource_t * rsc, gboolean current);
 enum rsc_role_e container_resource_state(const resource_t * rsc, gboolean current);
 
 gboolean common_unpack(xmlNode * xml_obj, resource_t ** rsc, resource_t * parent,

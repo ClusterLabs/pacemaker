@@ -169,8 +169,8 @@ clone_unpack(resource_t * rsc, pe_working_set_t * data_set)
                                                     XML_RSC_ATTR_MASTER_NODEMAX);
         }
 
-        clone_data->master_max = crm_parse_int(promoted_max, "1");
-        clone_data->master_node_max = crm_parse_int(promoted_node_max, "1");
+        clone_data->promoted_max = crm_parse_int(promoted_max, "1");
+        clone_data->promoted_node_max = crm_parse_int(promoted_node_max, "1");
     }
 
     clone_data->active_clones = 0;
