@@ -96,7 +96,7 @@ enum container_type {
 #define PE_CONTAINER_TYPE_RKT_S     "rkt"
 
 typedef struct container_variant_data_s {
-        int masters;
+        int promoted_max;
         int replicas;
         int replicas_per_host;
         char *prefix;

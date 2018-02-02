@@ -851,17 +851,21 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         }
     }
 
-    value = crm_element_value(xml_obj, "masters");
-    container_data->masters = crm_parse_int(value, "0");
-    if (container_data->masters < 0) {
-        pe_err("'masters' for %s must be nonnegative integer, using 0",
-               rsc->id);
-        container_data->masters = 0;
+    value = crm_element_value(xml_obj, XML_RSC_ATTR_PROMOTED_MAX);
+    if (value == NULL) {
+        // @COMPAT deprecated since 2.0.0
+        value = crm_element_value(xml_obj, "masters");
+    }
+    container_data->promoted_max = crm_parse_int(value, "0");
+    if (container_data->promoted_max < 0) {
+        pe_err("%s for %s must be nonnegative integer, using 0",
+               XML_RSC_ATTR_PROMOTED_MAX, rsc->id);
+        container_data->promoted_max = 0;
     }
 
     value = crm_element_value(xml_obj, "replicas");
-    if ((value == NULL) && (container_data->masters > 0)) {
-        container_data->replicas = container_data->masters;
+    if ((value == NULL) && container_data->promoted_max) {
+        container_data->replicas = container_data->promoted_max;
     } else {
         container_data->replicas = crm_parse_int(value, "1");
     }
@@ -957,7 +961,7 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
          * upgrade. (It also avoids needing to change regression tests.)
          */
         crm_xml_set_id(xml_resource, "%s-%s", container_data->prefix,
-                      (container_data->masters? "master"
+                      (container_data->promoted_max? "master"
                       : (const char *)xml_resource->name));
 
         xml_set = create_xml_node(xml_resource, XML_TAG_META_SETS);
@@ -980,11 +984,11 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
                 (container_data->replicas_per_host > 1)?
                 XML_BOOLEAN_TRUE : XML_BOOLEAN_FALSE);
 
-        if (container_data->masters) {
+        if (container_data->promoted_max) {
             crm_create_nvpair_xml(xml_set, NULL,
                                   XML_RSC_ATTR_PROMOTABLE, XML_BOOLEAN_TRUE);
 
-            value = crm_itoa(container_data->masters);
+            value = crm_itoa(container_data->promoted_max);
             crm_create_nvpair_xml(xml_set, NULL,
                                   XML_RSC_ATTR_PROMOTED_MAX, value);
             free(value);
