@@ -68,8 +68,9 @@ libpengine_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
 libpengine_la_LIBADD	= $(top_builddir)/lib/pengine/libpe_status.la \
 			$(top_builddir)/lib/cib/libcib.la
 # -L$(top_builddir)/lib/pils -lpils -export-dynamic -module -avoid-version
-libpengine_la_SOURCES	= pengine.c allocate.c notif.c utils.c constraints.c
-libpengine_la_SOURCES	+= native.c group.c clone.c master.c graph.c utilization.c container.c
+libpengine_la_SOURCES	= pengine.c allocate.c notif.c utils.c constraints.c \
+			native.c group.c clone.c pe_promotable.c graph.c \
+			utilization.c container.c
 
 pengine_CFLAGS	= $(CFLAGS_HARDENED_EXE)
 pengine_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
