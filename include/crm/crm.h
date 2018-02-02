@@ -33,7 +33,7 @@
 
 #  include <libxml/tree.h>
 
-#  define CRM_FEATURE_SET		"3.0.14"
+#  define CRM_FEATURE_SET		"3.1.0"
 
 #  define EOS		'\0'
 #  define DIMOF(a)	((int) (sizeof(a)/sizeof(a[0])) )
