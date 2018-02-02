@@ -157,6 +157,8 @@ lib/gnu/stdalign.h
 # Test detritus
 cts/.regression.failed.diff
 cts/pengine/shadow.*
+/xml/test-2/*.up
+/xml/test-2/*.up.err
 
 # Formerly built files (helps when jumping back and forth in checkout)
 /coverage.sh
