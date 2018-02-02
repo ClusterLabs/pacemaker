@@ -15,9 +15,12 @@
       <node id="node2" type="member" uname="node2"/>
     </nodes>
     <resources>
-      <master id="ms-rsc">
+      <clone id="ms-rsc">
+        <meta_attributes id="ms-rsc-meta">
+          <nvpair id="ms-rsc-promotable" name="promotable" value="true"/>
+        </meta_attributes>
         <primitive class="ocf" id="rsc" provider="pacemaker" type="Stateful"/>
-      </master>
+      </clone>
       <primitive class="ocf" id="rsc1" provider="pacemaker" type="Dummy"/>
       <primitive class="ocf" id="rsc2" provider="pacemaker" type="Dummy"/>
       <primitive class="ocf" id="rsc3" provider="pacemaker" type="Dummy"/>

@@ -35,7 +35,7 @@
           <op id="rsc1-monitor-interval-10" interval="10" name="monitor" timeout="20"/>
         </operations>
       </primitive>
-      <master id="rsc2-master">
+      <clone id="rsc2-master">
         <primitive id="rsc2" class="ocf" provider="pacemaker" type="Stateful">
           <instance_attributes id="rsc2-instance_attributes"/>
           <operations>
@@ -44,9 +44,10 @@
           </operations>
         </primitive>
         <meta_attributes id="rsc2-master-meta_attributes">
-          <nvpair id="rsc2-master-meta_attributes-master-max" name="master-max" value="2"/>
+          <nvpair id="rsc2-master-meta_attributes-promotable"  name="promotable" value="true"/>
+          <nvpair id="rsc2-master-meta_attributes-promoted-max" name="promoted-max" value="2"/>
         </meta_attributes>
-      </master>
+      </clone>
     </resources>
     <constraints>
       <rsc_location id="location-rsc2-master" resource-discovery="exclusive" rsc="rsc2-master">

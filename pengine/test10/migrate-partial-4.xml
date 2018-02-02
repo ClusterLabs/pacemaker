@@ -299,10 +299,11 @@
           </operations>
         </primitive>
       </group>
-      <master id="ms-drbd-mgs">
+      <clone id="ms-drbd-mgs">
         <meta_attributes id="ms-drbd-mgs-meta_attributes">
-          <nvpair id="ms-drbd-mgs-meta_attributes-master-max" name="master-max" value="1"/>
-          <nvpair id="ms-drbd-mgs-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms-drbd-mgs-meta_attributes-promotable" name="promotable" value="true"/>
+          <nvpair id="ms-drbd-mgs-meta_attributes-promoted-max" name="promoted-max" value="1"/>
+          <nvpair id="ms-drbd-mgs-meta_attributes-promoted-node-max" name="promoted-node-max" value="1"/>
           <nvpair id="ms-drbd-mgs-meta_attributes-clone-max" name="clone-max" value="2"/>
           <nvpair id="ms-drbd-mgs-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
           <nvpair id="ms-drbd-mgs-meta_attributes-notify" name="notify" value="true"/>
@@ -319,11 +320,12 @@
             <op id="drbd-mgs-monitor-30" interval="30" name="monitor" role="Slave" timeout="20"/>
           </operations>
         </primitive>
-      </master>
-      <master id="ms-drbd-testfs-mdt0000">
+      </clone>
+      <clone id="ms-drbd-testfs-mdt0000">
         <meta_attributes id="ms-drbd-testfs-mdt0000-meta_attributes">
-          <nvpair id="ms-drbd-testfs-mdt0000-meta_attributes-master-max" name="master-max" value="1"/>
-          <nvpair id="ms-drbd-testfs-mdt0000-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-mdt0000-meta_attributes-promotable" name="promotable" value="true"/>
+          <nvpair id="ms-drbd-testfs-mdt0000-meta_attributes-promoted-max" name="promoted-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-mdt0000-meta_attributes-promoted-node-max" name="promoted-node-max" value="1"/>
           <nvpair id="ms-drbd-testfs-mdt0000-meta_attributes-clone-max" name="clone-max" value="1"/>
           <nvpair id="ms-drbd-testfs-mdt0000-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
           <nvpair id="ms-drbd-testfs-mdt0000-meta_attributes-notify" name="notify" value="true"/>
@@ -340,11 +342,12 @@
             <op id="drbd-testfs-mdt0000-monitor-30" interval="30" name="monitor" role="Slave" timeout="20"/>
           </operations>
         </primitive>
-      </master>
-      <master id="ms-drbd-testfs-mdt0000-left">
+      </clone>
+      <clone id="ms-drbd-testfs-mdt0000-left">
         <meta_attributes id="ms-drbd-testfs-mdt0000-left-meta_attributes">
-          <nvpair id="ms-drbd-testfs-mdt0000-left-meta_attributes-master-max" name="master-max" value="1"/>
-          <nvpair id="ms-drbd-testfs-mdt0000-left-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-mdt0000-left-meta_attributes-promotable" name="promotable" value="true"/>
+          <nvpair id="ms-drbd-testfs-mdt0000-left-meta_attributes-promoted-max" name="promoted-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-mdt0000-left-meta_attributes-promoted-node-max" name="promoted-node-max" value="1"/>
           <nvpair id="ms-drbd-testfs-mdt0000-left-meta_attributes-clone-max" name="clone-max" value="2"/>
           <nvpair id="ms-drbd-testfs-mdt0000-left-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
           <nvpair id="ms-drbd-testfs-mdt0000-left-meta_attributes-notify" name="notify" value="true"/>
@@ -361,11 +364,12 @@
             <op id="drbd-testfs-mdt0000-left-monitor-30" interval="30" name="monitor" role="Slave" timeout="20"/>
           </operations>
         </primitive>
-      </master>
-      <master id="ms-drbd-testfs-ost0000">
+      </clone>
+      <clone id="ms-drbd-testfs-ost0000">
         <meta_attributes id="ms-drbd-testfs-ost0000-meta_attributes">
-          <nvpair id="ms-drbd-testfs-ost0000-meta_attributes-master-max" name="master-max" value="1"/>
-          <nvpair id="ms-drbd-testfs-ost0000-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0000-meta_attributes-promotable" name="promotable" value="true"/>
+          <nvpair id="ms-drbd-testfs-ost0000-meta_attributes-promoted-max" name="promoted-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0000-meta_attributes-promoted-node-max" name="promoted-node-max" value="1"/>
           <nvpair id="ms-drbd-testfs-ost0000-meta_attributes-clone-max" name="clone-max" value="1"/>
           <nvpair id="ms-drbd-testfs-ost0000-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
           <nvpair id="ms-drbd-testfs-ost0000-meta_attributes-notify" name="notify" value="true"/>
@@ -382,11 +386,12 @@
             <op id="drbd-testfs-ost0000-monitor-30" interval="30" name="monitor" role="Slave" timeout="20"/>
           </operations>
         </primitive>
-      </master>
-      <master id="ms-drbd-testfs-ost0000-left">
+      </clone>
+      <clone id="ms-drbd-testfs-ost0000-left">
         <meta_attributes id="ms-drbd-testfs-ost0000-left-meta_attributes">
-          <nvpair id="ms-drbd-testfs-ost0000-left-meta_attributes-master-max" name="master-max" value="1"/>
-          <nvpair id="ms-drbd-testfs-ost0000-left-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0000-left-meta_attributes-promotable" name="promotable" value="true"/>
+          <nvpair id="ms-drbd-testfs-ost0000-left-meta_attributes-promoted-max" name="promoted-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0000-left-meta_attributes-promoted-node-max" name="promoted-node-max" value="1"/>
           <nvpair id="ms-drbd-testfs-ost0000-left-meta_attributes-clone-max" name="clone-max" value="2"/>
           <nvpair id="ms-drbd-testfs-ost0000-left-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
           <nvpair id="ms-drbd-testfs-ost0000-left-meta_attributes-notify" name="notify" value="true"/>
@@ -403,13 +408,14 @@
             <op id="drbd-testfs-ost0000-left-monitor-30" interval="30" name="monitor" role="Slave" timeout="20"/>
           </operations>
         </primitive>
-      </master>
-      <master id="ms-drbd-testfs-ost0001">
+      </clone>
+      <clone id="ms-drbd-testfs-ost0001">
         <meta_attributes id="ms-drbd-testfs-ost0001-meta_attributes">
-          <nvpair id="ms-drbd-testfs-ost0001-meta_attributes-master-max" name="master-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0001-meta_attributes-promotable" name="promotable" value="true"/>
+          <nvpair id="ms-drbd-testfs-ost0001-meta_attributes-promoted-max" name="promoted-max" value="1"/>
           <nvpair id="ms-drbd-testfs-ost0001-meta_attributes-clone-max" name="clone-max" value="1"/>
           <nvpair id="ms-drbd-testfs-ost0001-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
-          <nvpair id="ms-drbd-testfs-ost0001-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0001-meta_attributes-promoted-node-max" name="promoted-node-max" value="1"/>
           <nvpair id="ms-drbd-testfs-ost0001-meta_attributes-notify" name="notify" value="true"/>
           <nvpair id="ms-drbd-testfs-ost0001-meta_attributes-target-role" name="target-role" value="Started"/>
         </meta_attributes>
@@ -424,11 +430,12 @@
             <op id="drbd-testfs-ost0001-monitor-30" interval="30" name="monitor" role="Slave" timeout="20"/>
           </operations>
         </primitive>
-      </master>
-      <master id="ms-drbd-testfs-ost0001-left">
+      </clone>
+      <clone id="ms-drbd-testfs-ost0001-left">
         <meta_attributes id="ms-drbd-testfs-ost0001-left-meta_attributes">
-          <nvpair id="ms-drbd-testfs-ost0001-left-meta_attributes-master-max" name="master-max" value="1"/>
-          <nvpair id="ms-drbd-testfs-ost0001-left-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0001-left-meta_attributes-promotable" name="promotable" value="true"/>
+          <nvpair id="ms-drbd-testfs-ost0001-left-meta_attributes-promoted-max" name="promoted-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0001-left-meta_attributes-promoted-node-max" name="promoted-node-max" value="1"/>
           <nvpair id="ms-drbd-testfs-ost0001-left-meta_attributes-clone-max" name="clone-max" value="2"/>
           <nvpair id="ms-drbd-testfs-ost0001-left-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
           <nvpair id="ms-drbd-testfs-ost0001-left-meta_attributes-notify" name="notify" value="true"/>
@@ -445,11 +452,12 @@
             <op id="drbd-testfs-ost0001-left-monitor-30" interval="30" name="monitor" role="Slave" timeout="20"/>
           </operations>
         </primitive>
-      </master>
-      <master id="ms-drbd-testfs-ost0002">
+      </clone>
+      <clone id="ms-drbd-testfs-ost0002">
         <meta_attributes id="ms-drbd-testfs-ost0002-meta_attributes">
-          <nvpair id="ms-drbd-testfs-ost0002-meta_attributes-master-max" name="master-max" value="1"/>
-          <nvpair id="ms-drbd-testfs-ost0002-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0002-meta_attributes-promotable" name="promotable" value="true"/>
+          <nvpair id="ms-drbd-testfs-ost0002-meta_attributes-promoted-max" name="promoted-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0002-meta_attributes-promoted-node-max" name="promoted-node-max" value="1"/>
           <nvpair id="ms-drbd-testfs-ost0002-meta_attributes-clone-max" name="clone-max" value="1"/>
           <nvpair id="ms-drbd-testfs-ost0002-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
           <nvpair id="ms-drbd-testfs-ost0002-meta_attributes-notify" name="notify" value="true"/>
@@ -466,11 +474,12 @@
             <op id="drbd-testfs-ost0002-monitor-30" interval="30" name="monitor" role="Slave" timeout="20"/>
           </operations>
         </primitive>
-      </master>
-      <master id="ms-drbd-testfs-ost0002-left">
+      </clone>
+      <clone id="ms-drbd-testfs-ost0002-left">
         <meta_attributes id="ms-drbd-testfs-ost0002-left-meta_attributes">
-          <nvpair id="ms-drbd-testfs-ost0002-left-meta_attributes-master-max" name="master-max" value="1"/>
-          <nvpair id="ms-drbd-testfs-ost0002-left-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0002-left-meta_attributes-promotable" name="promotable" value="true"/>
+          <nvpair id="ms-drbd-testfs-ost0002-left-meta_attributes-promoted-max" name="promoted-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0002-left-meta_attributes-promoted-node-max" name="promoted-node-max" value="1"/>
           <nvpair id="ms-drbd-testfs-ost0002-left-meta_attributes-clone-max" name="clone-max" value="2"/>
           <nvpair id="ms-drbd-testfs-ost0002-left-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
           <nvpair id="ms-drbd-testfs-ost0002-left-meta_attributes-notify" name="notify" value="true"/>
@@ -487,13 +496,14 @@
             <op id="drbd-testfs-ost0002-left-monitor-30" interval="30" name="monitor" role="Slave" timeout="20"/>
           </operations>
         </primitive>
-      </master>
-      <master id="ms-drbd-testfs-ost0003">
+      </clone>
+      <clone id="ms-drbd-testfs-ost0003">
         <meta_attributes id="ms-drbd-testfs-ost0003-meta_attributes">
-          <nvpair id="ms-drbd-testfs-ost0003-meta_attributes-master-max" name="master-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0003-meta_attributes-promotable" name="promotable" value="true"/>
+          <nvpair id="ms-drbd-testfs-ost0003-meta_attributes-promoted-max" name="promoted-max" value="1"/>
           <nvpair id="ms-drbd-testfs-ost0003-meta_attributes-clone-max" name="clone-max" value="1"/>
           <nvpair id="ms-drbd-testfs-ost0003-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
-          <nvpair id="ms-drbd-testfs-ost0003-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0003-meta_attributes-promoted-node-max" name="promoted-node-max" value="1"/>
           <nvpair id="ms-drbd-testfs-ost0003-meta_attributes-notify" name="notify" value="true"/>
           <nvpair id="ms-drbd-testfs-ost0003-meta_attributes-target-role" name="target-role" value="Started"/>
         </meta_attributes>
@@ -508,11 +518,12 @@
             <op id="drbd-testfs-ost0003-monitor-30" interval="30" name="monitor" role="Slave" timeout="20"/>
           </operations>
         </primitive>
-      </master>
-      <master id="ms-drbd-testfs-ost0003-left">
+      </clone>
+      <clone id="ms-drbd-testfs-ost0003-left">
         <meta_attributes id="ms-drbd-testfs-ost0003-left-meta_attributes">
-          <nvpair id="ms-drbd-testfs-ost0003-left-meta_attributes-master-max" name="master-max" value="1"/>
-          <nvpair id="ms-drbd-testfs-ost0003-left-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0003-left-meta_attributes-promotable" name="promotable" value="true"/>
+          <nvpair id="ms-drbd-testfs-ost0003-left-meta_attributes-promoted-max" name="promoted-max" value="1"/>
+          <nvpair id="ms-drbd-testfs-ost0003-left-meta_attributes-promoted-node-max" name="promoted-node-max" value="1"/>
           <nvpair id="ms-drbd-testfs-ost0003-left-meta_attributes-clone-max" name="clone-max" value="2"/>
           <nvpair id="ms-drbd-testfs-ost0003-left-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
           <nvpair id="ms-drbd-testfs-ost0003-left-meta_attributes-notify" name="notify" value="true"/>
@@ -529,7 +540,7 @@
             <op id="drbd-testfs-ost0003-left-monitor-30" interval="30" name="monitor" role="Slave" timeout="20"/>
           </operations>
         </primitive>
-      </master>
+      </clone>
     </resources>
     <constraints>
       <rsc_location id="booth-placement" rsc="booth">

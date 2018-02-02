@@ -50,7 +50,7 @@
           <nvpair id="container2-meta_attributes-remote-node" name="remote-node" value="lxc2"/>
         </meta_attributes>
       </primitive>
-      <master id="lxc-ms-master">
+      <clone id="lxc-ms-master">
         <primitive class="ocf" id="lxc-ms" provider="pacemaker" type="Stateful">
           <instance_attributes id="lxc-ms-instance_attributes"/>
           <operations>
@@ -58,10 +58,11 @@
           </operations>
         </primitive>
         <meta_attributes id="lxc-ms-meta_attributes">
-          <nvpair id="lxc-ms-meta_attributes-master-max" name="master-max" value="1"/>
+          <nvpair id="lxs-ms-meta_attributes-promotable" name="promotable" value="true"/>
+          <nvpair id="lxc-ms-meta_attributes-promoted-max" name="promoted-max" value="1"/>
           <nvpair id="lxc-ms-meta_attributes-clone-max" name="clone-max" value="2"/>
         </meta_attributes>
-      </master>
+      </clone>
     </resources>
     <constraints>
       <rsc_location id="cli-prefer-container1" rsc="container1" node="18node1" score="INFINITY"/>

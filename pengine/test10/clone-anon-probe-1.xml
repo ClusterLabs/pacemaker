@@ -30,8 +30,8 @@
         <meta_attributes id="meta_attributes.id21937">
           <nvpair id="nvpair.id21944" name="clone-max" value="2"/>
           <nvpair id="nvpair.id21952" name="clone-node-max" value="1"/>
-          <nvpair id="nvpair.id21960" name="master-max" value="1"/>
-          <nvpair id="nvpair.id21969" name="master-node-max" value="1"/>
+          <nvpair id="nvpair.id21960" name="promoted-max" value="1"/>
+          <nvpair id="nvpair.id21969" name="promoted-node-max" value="1"/>
           <nvpair id="nvpair.id21977" name="globally-unique" value="false"/>
           <nvpair id="nvpair.id21985" name="target-role" value="#default"/>
         </meta_attributes>

@@ -153,10 +153,11 @@
           </operations>
         </primitive>
       </group>
-      <master id="ms-drbd-pool-0">
+      <clone id="ms-drbd-pool-0">
         <meta_attributes id="ms-drbd-pool-0-meta_attributes">
-          <nvpair id="ms-drbd-pool-0-meta_attributes-master-max" name="master-max" value="1"/>
-          <nvpair id="ms-drbd-pool-0-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms-drbd-pool-0-meta_attributes-promotable" name="promotable" value="true"/>
+          <nvpair id="ms-drbd-pool-0-meta_attributes-promoted-max" name="promoted-max" value="1"/>
+          <nvpair id="ms-drbd-pool-0-meta_attributes-promoted-node-max" name="promoted-node-max" value="1"/>
           <nvpair id="ms-drbd-pool-0-meta_attributes-clone-max" name="clone-max" value="2"/>
           <nvpair id="ms-drbd-pool-0-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
           <nvpair id="ms-drbd-pool-0-meta_attributes-notify" name="notify" value="true"/>
@@ -174,11 +175,12 @@
             <op id="drbd-pool-0-monitor-30" interval="30" name="monitor" role="Slave" timeout="20"/>
           </operations>
         </primitive>
-      </master>
-      <master id="ms-drbd-pool-1">
+      </clone>
+      <clone id="ms-drbd-pool-1">
         <meta_attributes id="ms-drbd-pool-1-meta_attributes">
-          <nvpair id="ms-drbd-pool-1-meta_attributes-master-max" name="master-max" value="1"/>
-          <nvpair id="ms-drbd-pool-1-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms-drbd-pool-1-meta_attributes-promotable" name="promotable" value="true"/>
+          <nvpair id="ms-drbd-pool-1-meta_attributes-promoted-max" name="promoted-max" value="1"/>
+          <nvpair id="ms-drbd-pool-1-meta_attributes-promoted-node-max" name="promoted-node-max" value="1"/>
           <nvpair id="ms-drbd-pool-1-meta_attributes-clone-max" name="clone-max" value="2"/>
           <nvpair id="ms-drbd-pool-1-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
           <nvpair id="ms-drbd-pool-1-meta_attributes-notify" name="notify" value="true"/>
@@ -196,11 +198,12 @@
             <op id="drbd-pool-1-monitor-30" interval="30" name="monitor" role="Slave" timeout="20"/>
           </operations>
         </primitive>
-      </master>
-      <master id="ms-iscsi-pool-0-vips-fw">
+      </clone>
+      <clone id="ms-iscsi-pool-0-vips-fw">
         <meta_attributes id="ms-iscsi-pool-0-vips-fw-meta_attributes">
-          <nvpair id="ms-iscsi-pool-0-vips-fw-meta_attributes-master-max" name="master-max" value="1"/>
-          <nvpair id="ms-iscsi-pool-0-vips-fw-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms-iscsi-pool-0-vips-fw-meta_attributes-promotable" name="promotable" value="true"/>
+          <nvpair id="ms-iscsi-pool-0-vips-fw-meta_attributes-promoted-max" name="promoted-max" value="1"/>
+          <nvpair id="ms-iscsi-pool-0-vips-fw-meta_attributes-promoted-node-max" name="promoted-node-max" value="1"/>
           <nvpair id="ms-iscsi-pool-0-vips-fw-meta_attributes-clone-max" name="clone-max" value="2"/>
           <nvpair id="ms-iscsi-pool-0-vips-fw-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
           <nvpair id="ms-iscsi-pool-0-vips-fw-meta_attributes-notify" name="notify" value="false"/>
@@ -232,11 +235,12 @@
             </operations>
           </primitive>
         </group>
-      </master>
-      <master id="ms-iscsi-pool-1-vips-fw">
+      </clone>
+      <clone id="ms-iscsi-pool-1-vips-fw">
         <meta_attributes id="ms-iscsi-pool-1-vips-fw-meta_attributes">
-          <nvpair id="ms-iscsi-pool-1-vips-fw-meta_attributes-master-max" name="master-max" value="1"/>
-          <nvpair id="ms-iscsi-pool-1-vips-fw-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms-iscsi-pool-1-vips-fw-meta_attributes-promotable" name="promotable" value="true"/>
+          <nvpair id="ms-iscsi-pool-1-vips-fw-meta_attributes-promoted-max" name="promoted-max" value="1"/>
+          <nvpair id="ms-iscsi-pool-1-vips-fw-meta_attributes-promoted-node-max" name="promoted-node-max" value="1"/>
           <nvpair id="ms-iscsi-pool-1-vips-fw-meta_attributes-clone-max" name="clone-max" value="2"/>
           <nvpair id="ms-iscsi-pool-1-vips-fw-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
           <nvpair id="ms-iscsi-pool-1-vips-fw-meta_attributes-notify" name="notify" value="false"/>
@@ -268,7 +272,7 @@
             </operations>
           </primitive>
         </group>
-      </master>
+      </clone>
       <clone id="cl-o2cb">
         <meta_attributes id="cl-o2cb-meta_attributes">
           <nvpair id="cl-o2cb-meta_attributes-interleave" name="interleave" value="true"/>
@@ -285,10 +289,11 @@
           </operations>
         </primitive>
       </clone>
-      <master id="ms-drbd-s01-service">
+      <clone id="ms-drbd-s01-service">
         <meta_attributes id="ms-drbd-s01-service-meta_attributes">
-          <nvpair id="ms-drbd-s01-service-meta_attributes-master-max" name="master-max" value="2"/>
-          <nvpair id="ms-drbd-s01-service-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms-drbd-s01-service-meta_attributes-promotable" name="promotable" value="true"/>
+          <nvpair id="ms-drbd-s01-service-meta_attributes-promoted-max" name="promoted-max" value="2"/>
+          <nvpair id="ms-drbd-s01-service-meta_attributes-promoted-node-max" name="promoted-node-max" value="1"/>
           <nvpair id="ms-drbd-s01-service-meta_attributes-clone-max" name="clone-max" value="2"/>
           <nvpair id="ms-drbd-s01-service-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
           <nvpair id="ms-drbd-s01-service-meta_attributes-notify" name="notify" value="true"/>
@@ -307,7 +312,7 @@
             <op id="drbd-s01-service-monitor-30" interval="30" name="monitor" role="Slave" timeout="20"/>
           </operations>
         </primitive>
-      </master>
+      </clone>
       <clone id="cl-s01-service-fs">
         <meta_attributes id="cl-s01-service-fs-meta_attributes">
           <nvpair id="cl-s01-service-fs-meta_attributes-interleave" name="interleave" value="true"/>
@@ -377,10 +382,11 @@
           </meta_attributes>
         </primitive>
       </group>
-      <master id="ms-drbd-s01-logs">
+      <clone id="ms-drbd-s01-logs">
         <meta_attributes id="ms-drbd-s01-logs-meta_attributes">
-          <nvpair id="ms-drbd-s01-logs-meta_attributes-master-max" name="master-max" value="2"/>
-          <nvpair id="ms-drbd-s01-logs-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms-drbd-s01-logs-meta_attributes-promotable" name="promotable" value="true"/>
+          <nvpair id="ms-drbd-s01-logs-meta_attributes-promoted-max" name="promoted-max" value="2"/>
+          <nvpair id="ms-drbd-s01-logs-meta_attributes-promoted-node-max" name="promoted-node-max" value="1"/>
           <nvpair id="ms-drbd-s01-logs-meta_attributes-clone-max" name="clone-max" value="2"/>
           <nvpair id="ms-drbd-s01-logs-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
           <nvpair id="ms-drbd-s01-logs-meta_attributes-notify" name="notify" value="true"/>
@@ -399,7 +405,7 @@
             <op id="drbd-s01-logs-monitor-30" interval="30" name="monitor" role="Slave" timeout="20"/>
           </operations>
         </primitive>
-      </master>
+      </clone>
       <clone id="cl-s01-logs-fs">
         <meta_attributes id="cl-s01-logs-fs-meta_attributes">
           <nvpair id="cl-s01-logs-fs-meta_attributes-interleave" name="interleave" value="true"/>
@@ -585,10 +591,11 @@
           </operations>
         </primitive>
       </group>
-      <master id="ms-drbd-vds-dom0-stateless-0">
+      <clone id="ms-drbd-vds-dom0-stateless-0">
         <meta_attributes id="ms-drbd-vds-dom0-stateless-0-meta_attributes">
-          <nvpair id="ms-drbd-vds-dom0-stateless-0-meta_attributes-master-max" name="master-max" value="1"/>
-          <nvpair id="ms-drbd-vds-dom0-stateless-0-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms-drbd-vds-dom0-stateless-0-meta_attributes-promotable" name="promotable" value="true"/>
+          <nvpair id="ms-drbd-vds-dom0-stateless-0-meta_attributes-promoted-max" name="promoted-max" value="1"/>
+          <nvpair id="ms-drbd-vds-dom0-stateless-0-meta_attributes-promoted-node-max" name="promoted-node-max" value="1"/>
           <nvpair id="ms-drbd-vds-dom0-stateless-0-meta_attributes-clone-max" name="clone-max" value="2"/>
           <nvpair id="ms-drbd-vds-dom0-stateless-0-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
           <nvpair id="ms-drbd-vds-dom0-stateless-0-meta_attributes-notify" name="notify" value="true"/>
@@ -606,11 +613,12 @@
             <op id="drbd-vds-dom0-stateless-0-monitor-30" interval="30" name="monitor" role="Slave" timeout="20"/>
           </operations>
         </primitive>
-      </master>
-      <master id="ms-iscsi-vds-dom0-stateless-0-vips-fw">
+      </clone>
+      <clone id="ms-iscsi-vds-dom0-stateless-0-vips-fw">
         <meta_attributes id="ms-iscsi-vds-dom0-stateless-0-vips-fw-meta_attributes">
-          <nvpair id="ms-iscsi-vds-dom0-stateless-0-vips-fw-meta_attributes-master-max" name="master-max" value="1"/>
-          <nvpair id="ms-iscsi-vds-dom0-stateless-0-vips-fw-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms-iscsi-vds-dom0-stateless-0-vips-fw-meta_attributes-promotable" name="promotable" value="true"/>
+          <nvpair id="ms-iscsi-vds-dom0-stateless-0-vips-fw-meta_attributes-promoted-max" name="promoted-max" value="1"/>
+          <nvpair id="ms-iscsi-vds-dom0-stateless-0-vips-fw-meta_attributes-promoted-node-max" name="promoted-node-max" value="1"/>
           <nvpair id="ms-iscsi-vds-dom0-stateless-0-vips-fw-meta_attributes-clone-max" name="clone-max" value="2"/>
           <nvpair id="ms-iscsi-vds-dom0-stateless-0-vips-fw-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
           <nvpair id="ms-iscsi-vds-dom0-stateless-0-vips-fw-meta_attributes-notify" name="notify" value="false"/>
@@ -642,7 +650,7 @@
             </operations>
           </primitive>
         </group>
-      </master>
+      </clone>
       <clone id="cl-dlm">
         <meta_attributes id="cl-dlm-meta_attributes">
           <nvpair id="cl-dlm-meta_attributes-interleave" name="interleave" value="true"/>
@@ -656,10 +664,11 @@
           </operations>
         </primitive>
       </clone>
-      <master id="ms-drbd-vds-tftpboot">
+      <clone id="ms-drbd-vds-tftpboot">
         <meta_attributes id="ms-drbd-vds-tftpboot-meta_attributes">
-          <nvpair id="ms-drbd-vds-tftpboot-meta_attributes-master-max" name="master-max" value="2"/>
-          <nvpair id="ms-drbd-vds-tftpboot-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms-drbd-vds-tftpboot-meta_attributes-promotable" name="promotable" value="true"/>
+          <nvpair id="ms-drbd-vds-tftpboot-meta_attributes-promoted-max" name="promoted-max" value="2"/>
+          <nvpair id="ms-drbd-vds-tftpboot-meta_attributes-promoted-node-max" name="promoted-node-max" value="1"/>
           <nvpair id="ms-drbd-vds-tftpboot-meta_attributes-clone-max" name="clone-max" value="2"/>
           <nvpair id="ms-drbd-vds-tftpboot-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
           <nvpair id="ms-drbd-vds-tftpboot-meta_attributes-notify" name="notify" value="true"/>
@@ -678,7 +687,7 @@
             <op id="drbd-vds-tftpboot-monitor-30" interval="30" name="monitor" role="Slave" timeout="20"/>
           </operations>
         </primitive>
-      </master>
+      </clone>
       <clone id="cl-vds-tftpboot-fs">
         <meta_attributes id="cl-vds-tftpboot-fs-meta_attributes">
           <nvpair id="cl-vds-tftpboot-fs-meta_attributes-interleave" name="interleave" value="true"/>
@@ -714,10 +723,11 @@
           </operations>
         </primitive>
       </clone>
-      <master id="ms-drbd-vds-http">
+      <clone id="ms-drbd-vds-http">
         <meta_attributes id="ms-drbd-vds-http-meta_attributes">
-          <nvpair id="ms-drbd-vds-http-meta_attributes-master-max" name="master-max" value="2"/>
-          <nvpair id="ms-drbd-vds-http-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms-drbd-vds-http-meta_attributes-promotable" name="promotable" value="true"/>
+          <nvpair id="ms-drbd-vds-http-meta_attributes-promoted-max" name="promoted-max" value="2"/>
+          <nvpair id="ms-drbd-vds-http-meta_attributes-promoted-node-max" name="promoted-node-max" value="1"/>
           <nvpair id="ms-drbd-vds-http-meta_attributes-clone-max" name="clone-max" value="2"/>
           <nvpair id="ms-drbd-vds-http-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
           <nvpair id="ms-drbd-vds-http-meta_attributes-notify" name="notify" value="true"/>
@@ -736,7 +746,7 @@
             <op id="drbd-vds-http-monitor-30" interval="30" name="monitor" role="Slave" timeout="20"/>
           </operations>
         </primitive>
-      </master>
+      </clone>
       <clone id="cl-vds-http-fs">
         <meta_attributes id="cl-vds-http-fs-meta_attributes">
           <nvpair id="cl-vds-http-fs-meta_attributes-interleave" name="interleave" value="true"/>
@@ -800,10 +810,11 @@
           </operations>
         </primitive>
       </clone>
-      <master id="ms-drbd-s01-vm-data">
+      <clone id="ms-drbd-s01-vm-data">
         <meta_attributes id="ms-drbd-s01-vm-data-meta_attributes">
-          <nvpair id="ms-drbd-s01-vm-data-meta_attributes-master-max" name="master-max" value="2"/>
-          <nvpair id="ms-drbd-s01-vm-data-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms-drbd-s01-vm-data-meta_attributes-promotable" name="promotable" value="true"/>
+          <nvpair id="ms-drbd-s01-vm-data-meta_attributes-promoted-max" name="promoted-max" value="2"/>
+          <nvpair id="ms-drbd-s01-vm-data-meta_attributes-promoted-node-max" name="promoted-node-max" value="1"/>
           <nvpair id="ms-drbd-s01-vm-data-meta_attributes-clone-max" name="clone-max" value="2"/>
           <nvpair id="ms-drbd-s01-vm-data-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
           <nvpair id="ms-drbd-s01-vm-data-meta_attributes-notify" name="notify" value="true"/>
@@ -821,7 +832,7 @@
             <op id="drbd-s01-vm-data-monitor-30" interval="30" name="monitor" role="Slave" timeout="20"/>
           </operations>
         </primitive>
-      </master>
+      </clone>
       <clone id="cl-s01-vm-data-metadata-fs">
         <meta_attributes id="cl-s01-vm-data-metadata-fs-meta_attributes">
           <nvpair id="cl-s01-vm-data-metadata-fs-meta_attributes-interleave" name="interleave" value="true"/>

@@ -91,10 +91,11 @@
           <nvpair id="nvpair.meta.auto-153" name="target-role" value="started"/>
         </meta_attributes>
       </primitive>
-      <master id="ms_drbd_www">
+      <clone id="ms_drbd_www">
         <meta_attributes id="meta_attributes.id22319">
-          <nvpair id="nvpair.id22325" name="master-max" value="2"/>
-          <nvpair id="nvpair.id22334" name="master-node-max" value="1"/>
+          <nvpair id="nvpair.id22324"  name="promotable" value="true"/>
+          <nvpair id="nvpair.id22325" name="promoted-max" value="2"/>
+          <nvpair id="nvpair.id22334" name="promoted-node-max" value="1"/>
           <nvpair id="nvpair.id22342" name="clone-max" value="2"/>
           <nvpair id="nvpair.id22351" name="clone-node-max" value="1"/>
           <nvpair id="nvpair.id22360" name="target-role" value="started"/>
@@ -114,8 +115,8 @@
             <nvpair id="nvpair.meta.auto-195" name="target-role" value="started"/>
           </meta_attributes>
         </primitive>
-        <meta_attributes id="master_slave-ms_drbd_www.meta"/>
-      </master>
+        <meta_attributes id="clone-ms_drbd_www.meta"/>
+      </clone>
       <clone id="clone_ocfs2_www">
         <primitive id="ocfs2_www" class="ocf" provider="heartbeat" type="Filesystem">
           <operations>
@@ -171,10 +172,11 @@
           <nvpair id="unique-2" name="globally-unique" value="true"/>
         </meta_attributes>
       </clone>
-      <master id="ms_drbd_mysql">
+      <clone id="ms_drbd_mysql">
         <meta_attributes id="meta_attributes.id22714">
-          <nvpair id="nvpair.id22720" name="master-max" value="1"/>
-          <nvpair id="nvpair.id22729" name="master-node-max" value="1"/>
+          <nvpair id="nvpair.id22719"  name="promotable" value="true"/>
+          <nvpair id="nvpair.id22720" name="promoted-max" value="1"/>
+          <nvpair id="nvpair.id22729" name="promoted-node-max" value="1"/>
           <nvpair id="nvpair.id22737" name="clone-max" value="2"/>
           <nvpair id="nvpair.id22746" name="clone-node-max" value="1"/>
           <nvpair id="nvpair.id22754" name="target-role" value="started"/>
@@ -195,8 +197,8 @@
             <nvpair id="nvpair.meta.auto-329" name="target-role" value="started"/>
           </meta_attributes>
         </primitive>
-        <meta_attributes id="master_slave-ms_drbd_mysql.meta"/>
-      </master>
+        <meta_attributes id="clone-ms_drbd_mysql.meta"/>
+      </clone>
       <primitive id="fs_mysql" class="ocf" provider="heartbeat" type="Filesystem">
         <operations>
           <op name="monitor" interval="30s" id="fs_mysql_mon" timeout="30s"/>

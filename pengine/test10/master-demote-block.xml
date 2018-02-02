@@ -19,7 +19,10 @@
       <node id="3f6ec88d-ee47-4f63-bfeb-652b8dd96027" type="member" uname="dl380g5d"/>
     </nodes>
     <resources>
-      <master id="stateful">
+      <clone id="stateful">
+        <meta_attributes id="stateful-meta">
+          <nvpair id="stateful-meta-promotable" name="promotable" value="true"/>
+        </meta_attributes>
         <primitive class="ocf" id="dummy" provider="pacemaker" type="Stateful">
           <operations>
             <op id="dummy-start-0s" interval="0s" name="start" on-fail="restart" timeout="100s"/>
@@ -30,7 +33,7 @@
             <op id="dummy-stop-0s" interval="0s" name="stop" on-fail="block" timeout="100s"/>
           </operations>
         </primitive>
-      </master>
+      </clone>
     </resources>
     <constraints/>
     <rsc_defaults>

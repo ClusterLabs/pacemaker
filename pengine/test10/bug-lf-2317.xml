@@ -37,10 +37,11 @@
           <op id="HostingIsg-start-0s" interval="0s" name="start" timeout="202s"/>
         </operations>
       </primitive>
-      <master id="ms_drbd_r0">
+      <clone id="ms_drbd_r0">
         <meta_attributes id="ms_drbd_r0-meta_attributes">
+          <nvpair id="ms_drbd_r0-meta_attributes-promotable" name="promotable" value="true"/>
           <nvpair id="ms_drbd_r0-meta_attributes-notify" name="notify" value="true"/>
-          <nvpair id="ms_drbd_r0-meta_attributes-master-max" name="master-max" value="2"/>
+          <nvpair id="ms_drbd_r0-meta_attributes-promoted-max" name="promoted-max" value="2"/>
           <nvpair id="ms_drbd_r0-meta_attributes-inteleave" name="inteleave" value="true"/>
           <nvpair id="ms_drbd_r0-meta_attributes-is-managed" name="is-managed" value="true"/>
           <nvpair id="ms_drbd_r0-meta_attributes-target-role" name="target-role" value="Started"/>
@@ -59,7 +60,7 @@
             <op id="drbd_r0-start-0s" interval="0s" name="start" timeout="255s"/>
           </operations>
         </primitive>
-      </master>
+      </clone>
     </resources>
     <constraints>
       <rsc_order first="ms_drbd_r0" first-action="promote" id="drbd0predHostingIsg" score="INFINITY" then="HostingIsg" then-action="start"/>

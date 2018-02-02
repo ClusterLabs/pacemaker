@@ -116,7 +116,10 @@
           <meta_attributes id="vtest5-meta_attributes"/>
         </primitive>
       </clone>
-      <master id="vtest7-master">
+      <clone id="vtest7-master">
+        <meta_attributes id="vtest7-master">
+          <nvpair id="vtest7-master-promotable" name="promotable" value="true"/>
+        </meta_attributes>
         <primitive class="ocf" id="vtest7" provider="kgaillot" type="vstateful">
           <instance_attributes id="vtest7-instance_attributes-gt-eq" score="3">
             <rule id="vtest7-gt-eq-rule" score="INFINITY" boolean-op="and">
@@ -142,7 +145,7 @@
             <op id="vtest7-monitor-interval-11" interval="11" name="monitor" role="Slave" timeout="20"/>
           </operations>
         </primitive>
-      </master>
+      </clone>
       <group id="grouptest2">
         <instance_attributes id="grouptest2-instance_attributes-gt" score="3">
           <rule id="grouptest2-gt-rule" score="INFINITY">

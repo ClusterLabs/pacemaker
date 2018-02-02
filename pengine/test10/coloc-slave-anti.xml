@@ -55,12 +55,13 @@
         </primitive>
         <meta_attributes id="clone-pingd-clone.meta"/>
       </clone>
-      <master id="drbd-msr">
+      <clone id="drbd-msr">
         <meta_attributes id="meta_attributes.id22156">
+          <nvpair id="nvpair.id22161" name="promotable" value="true"/>
           <nvpair id="nvpair.id22162" name="clone-max" value="2"/>
           <nvpair id="nvpair.id22170" name="clone-node-max" value="1"/>
-          <nvpair id="nvpair.id22178" name="master-max" value="1"/>
-          <nvpair id="nvpair.id22187" name="master-node-max" value="1"/>
+          <nvpair id="nvpair.id22178" name="promoted-max" value="1"/>
+          <nvpair id="nvpair.id22187" name="promoted-node-max" value="1"/>
           <nvpair id="nvpair.id22195" name="notify" value="yes"/>
           <nvpair id="nvpair.id22204" name="globally-unique" value="false"/>
         </meta_attributes>
@@ -78,10 +79,10 @@
           </operations>
           <meta_attributes id="primitive-drbd-r0.meta"/>
         </primitive>
-        <meta_attributes id="master_slave-drbd-msr.meta">
+        <meta_attributes id="clone-drbd-msr.meta">
           <nvpair id="ordered.meta.auto-96" name="ordered" value="false"/>
         </meta_attributes>
-      </master>
+      </clone>
       <group id="group-1">
         <primitive id="fs-1" class="ocf" provider="heartbeat" type="Filesystem">
           <instance_attributes id="instance_attributes.id22332">

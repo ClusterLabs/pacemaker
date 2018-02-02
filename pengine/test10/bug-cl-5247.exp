@@ -392,7 +392,7 @@
   <synapse id="27" priority="1000000">
     <action_set>
       <pseudo_event id="74" operation="notified" operation_key="pgsql_notified_0" internal_operation_key="pgsql:0_confirmed-post_notify_stonith_0">
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_key_operation="stonith" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_key_operation="stonith" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="60000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -407,7 +407,7 @@
   <synapse id="28" priority="1000000">
     <action_set>
       <pseudo_event id="73" operation="notify" operation_key="pgsql_post_notify_stop_0" internal_operation_key="pgsql:0_post_notify_stonith_0">
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_key_operation="stonith" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_key_operation="stonith" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="60000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -419,7 +419,7 @@
   <synapse id="29">
     <action_set>
       <pseudo_event id="38" operation="stop" operation_key="pgsql_stop_0" internal_operation_key="pgsql:0_stop_0">
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="stop" CRM_meta_notify="true" CRM_meta_notify_active_resource="pgsql:0 pgsql:1" CRM_meta_notify_active_uname="pgsr02 pgsr01" CRM_meta_notify_all_uname="bl460g8n3 bl460g8n4 pgsr01 pgsr02" CRM_meta_notify_available_uname="bl460g8n4 bl460g8n3 pgsr01 pgsr02" CRM_meta_notify_demote_resource="pgsql:0" CRM_meta_notify_demote_uname="pgsr02" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_master_resource="pgsql:0 pgsql:1" CRM_meta_notify_master_uname="pgsr02 pgsr01" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="pgsql:0" CRM_meta_notify_stop_uname="pgsr02" CRM_meta_on_fail="fence" CRM_meta_physical_host="bl460g8n4" CRM_meta_timeout="300000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="stop" CRM_meta_notify="true" CRM_meta_notify_active_resource="pgsql:0 pgsql:1" CRM_meta_notify_active_uname="pgsr02 pgsr01" CRM_meta_notify_all_uname="bl460g8n3 bl460g8n4 pgsr01 pgsr02" CRM_meta_notify_available_uname="bl460g8n4 bl460g8n3 pgsr01 pgsr02" CRM_meta_notify_demote_resource="pgsql:0" CRM_meta_notify_demote_uname="pgsr02" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_master_resource="pgsql:0 pgsql:1" CRM_meta_notify_master_uname="pgsr02 pgsr01" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="pgsql:0" CRM_meta_notify_stop_uname="pgsr02" CRM_meta_on_fail="fence" CRM_meta_physical_host="bl460g8n4" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="300000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -437,7 +437,7 @@
   <synapse id="30">
     <action_set>
       <pseudo_event id="37" operation="demote" operation_key="pgsql_demote_0" internal_operation_key="pgsql:0_demote_0">
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="demote" CRM_meta_notify="true" CRM_meta_notify_active_resource="pgsql:0 pgsql:1" CRM_meta_notify_active_uname="pgsr02 pgsr01" CRM_meta_notify_all_uname="bl460g8n3 bl460g8n4 pgsr01 pgsr02" CRM_meta_notify_available_uname="bl460g8n4 bl460g8n3 pgsr01 pgsr02" CRM_meta_notify_demote_resource="pgsql:0" CRM_meta_notify_demote_uname="pgsr02" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_master_resource="pgsql:0 pgsql:1" CRM_meta_notify_master_uname="pgsr02 pgsr01" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="pgsql:0" CRM_meta_notify_stop_uname="pgsr02" CRM_meta_on_fail="fence" CRM_meta_physical_host="bl460g8n4" CRM_meta_timeout="300000" />
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="demote" CRM_meta_notify="true" CRM_meta_notify_active_resource="pgsql:0 pgsql:1" CRM_meta_notify_active_uname="pgsr02 pgsr01" CRM_meta_notify_all_uname="bl460g8n3 bl460g8n4 pgsr01 pgsr02" CRM_meta_notify_available_uname="bl460g8n4 bl460g8n3 pgsr01 pgsr02" CRM_meta_notify_demote_resource="pgsql:0" CRM_meta_notify_demote_uname="pgsr02" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_master_resource="pgsql:0 pgsql:1" CRM_meta_notify_master_uname="pgsr02 pgsr01" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="pgsql:0" CRM_meta_notify_stop_uname="pgsr02" CRM_meta_on_fail="fence" CRM_meta_physical_host="bl460g8n4" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="300000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -453,7 +453,7 @@
     <action_set>
       <rsc_op id="85" operation="notify" operation_key="pgsql_post_notify_demote_0" internal_operation_key="pgsql:1_post_notify_demote_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3">
         <primitive id="pgsql" long-id="pgsql:1" class="ocf" provider="heartbeat" type="Stateful"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_active_resource="pgsql:0 pgsql:1" CRM_meta_notify_active_uname="pgsr02 pgsr01" CRM_meta_notify_all_uname="bl460g8n3 bl460g8n4 pgsr01 pgsr02" CRM_meta_notify_available_uname="bl460g8n4 bl460g8n3 pgsr01 pgsr02" CRM_meta_notify_demote_resource="pgsql:0" CRM_meta_notify_demote_uname="pgsr02" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="demoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="pgsql:0 pgsql:1" CRM_meta_notify_master_uname="pgsr02 pgsr01" CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="pgsql:0" CRM_meta_notify_stop_uname="pgsr02" CRM_meta_notify_type="post" CRM_meta_on_node="pgsr01" CRM_meta_on_node_uuid="pgsr01" CRM_meta_physical_host="bl460g8n3" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_active_resource="pgsql:0 pgsql:1" CRM_meta_notify_active_uname="pgsr02 pgsr01" CRM_meta_notify_all_uname="bl460g8n3 bl460g8n4 pgsr01 pgsr02" CRM_meta_notify_available_uname="bl460g8n4 bl460g8n3 pgsr01 pgsr02" CRM_meta_notify_demote_resource="pgsql:0" CRM_meta_notify_demote_uname="pgsr02" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="demoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="pgsql:0 pgsql:1" CRM_meta_notify_master_uname="pgsr02 pgsr01" CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="pgsql:0" CRM_meta_notify_stop_uname="pgsr02" CRM_meta_notify_type="post" CRM_meta_on_node="pgsr01" CRM_meta_on_node_uuid="pgsr01" CRM_meta_physical_host="bl460g8n3" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -466,7 +466,7 @@
     <action_set>
       <rsc_op id="84" operation="notify" operation_key="pgsql_pre_notify_demote_0" internal_operation_key="pgsql:1_pre_notify_demote_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3">
         <primitive id="pgsql" long-id="pgsql:1" class="ocf" provider="heartbeat" type="Stateful"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_active_resource="pgsql:0 pgsql:1" CRM_meta_notify_active_uname="pgsr02 pgsr01" CRM_meta_notify_all_uname="bl460g8n3 bl460g8n4 pgsr01 pgsr02" CRM_meta_notify_available_uname="bl460g8n4 bl460g8n3 pgsr01 pgsr02" CRM_meta_notify_demote_resource="pgsql:0" CRM_meta_notify_demote_uname="pgsr02" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="demote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="pgsql:0 pgsql:1" CRM_meta_notify_master_uname="pgsr02 pgsr01" CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="pgsql:0" CRM_meta_notify_stop_uname="pgsr02" CRM_meta_notify_type="pre" CRM_meta_on_node="pgsr01" CRM_meta_on_node_uuid="pgsr01" CRM_meta_physical_host="bl460g8n3" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_active_resource="pgsql:0 pgsql:1" CRM_meta_notify_active_uname="pgsr02 pgsr01" CRM_meta_notify_all_uname="bl460g8n3 bl460g8n4 pgsr01 pgsr02" CRM_meta_notify_available_uname="bl460g8n4 bl460g8n3 pgsr01 pgsr02" CRM_meta_notify_demote_resource="pgsql:0" CRM_meta_notify_demote_uname="pgsr02" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="demote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="pgsql:0 pgsql:1" CRM_meta_notify_master_uname="pgsr02 pgsr01" CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="pgsql:0" CRM_meta_notify_stop_uname="pgsr02" CRM_meta_notify_type="pre" CRM_meta_on_node="pgsr01" CRM_meta_on_node_uuid="pgsr01" CRM_meta_physical_host="bl460g8n3" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -479,7 +479,7 @@
     <action_set>
       <rsc_op id="81" operation="notify" operation_key="pgsql_pre_notify_stop_0" internal_operation_key="pgsql:1_pre_notify_stop_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3">
         <primitive id="pgsql" long-id="pgsql:1" class="ocf" provider="heartbeat" type="Stateful"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_active_resource="pgsql:0 pgsql:1" CRM_meta_notify_active_uname="pgsr02 pgsr01" CRM_meta_notify_all_uname="bl460g8n3 bl460g8n4 pgsr01 pgsr02" CRM_meta_notify_available_uname="bl460g8n4 bl460g8n3 pgsr01 pgsr02" CRM_meta_notify_demote_resource="pgsql:0" CRM_meta_notify_demote_uname="pgsr02" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="stop" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="pgsql:0 pgsql:1" CRM_meta_notify_master_uname="pgsr02 pgsr01" CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="pgsql:0" CRM_meta_notify_stop_uname="pgsr02" CRM_meta_notify_type="pre" CRM_meta_on_node="pgsr01" CRM_meta_on_node_uuid="pgsr01" CRM_meta_physical_host="bl460g8n3" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_active_resource="pgsql:0 pgsql:1" CRM_meta_notify_active_uname="pgsr02 pgsr01" CRM_meta_notify_all_uname="bl460g8n3 bl460g8n4 pgsr01 pgsr02" CRM_meta_notify_available_uname="bl460g8n4 bl460g8n3 pgsr01 pgsr02" CRM_meta_notify_demote_resource="pgsql:0" CRM_meta_notify_demote_uname="pgsr02" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="stop" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="pgsql:0 pgsql:1" CRM_meta_notify_master_uname="pgsr02 pgsr01" CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="pgsql:0" CRM_meta_notify_stop_uname="pgsr02" CRM_meta_notify_type="pre" CRM_meta_on_node="pgsr01" CRM_meta_on_node_uuid="pgsr01" CRM_meta_physical_host="bl460g8n3" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -492,7 +492,7 @@
     <action_set>
       <rsc_op id="75" operation="notify" operation_key="pgsql_post_notify_stop_0" internal_operation_key="pgsql:1_post_notify_stop_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3">
         <primitive id="pgsql" long-id="pgsql:1" class="ocf" provider="heartbeat" type="Stateful"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_active_resource="pgsql:0 pgsql:1" CRM_meta_notify_active_uname="pgsr02 pgsr01" CRM_meta_notify_all_uname="bl460g8n3 bl460g8n4 pgsr01 pgsr02" CRM_meta_notify_available_uname="bl460g8n4 bl460g8n3 pgsr01 pgsr02" CRM_meta_notify_demote_resource="pgsql:0" CRM_meta_notify_demote_uname="pgsr02" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="stonith" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="pgsql:0 pgsql:1" CRM_meta_notify_master_uname="pgsr02 pgsr01" CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="pgsql:0" CRM_meta_notify_stop_uname="pgsr02" CRM_meta_notify_type="post" CRM_meta_on_node="pgsr01" CRM_meta_on_node_uuid="pgsr01" CRM_meta_physical_host="bl460g8n3" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_active_resource="pgsql:0 pgsql:1" CRM_meta_notify_active_uname="pgsr02 pgsr01" CRM_meta_notify_all_uname="bl460g8n3 bl460g8n4 pgsr01 pgsr02" CRM_meta_notify_available_uname="bl460g8n4 bl460g8n3 pgsr01 pgsr02" CRM_meta_notify_demote_resource="pgsql:0" CRM_meta_notify_demote_uname="pgsr02" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="stonith" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="pgsql:0 pgsql:1" CRM_meta_notify_master_uname="pgsr02 pgsr01" CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="pgsql:0" CRM_meta_notify_stop_uname="pgsr02" CRM_meta_notify_type="post" CRM_meta_on_node="pgsr01" CRM_meta_on_node_uuid="pgsr01" CRM_meta_physical_host="bl460g8n3" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -508,7 +508,7 @@
     <action_set>
       <rsc_op id="43" operation="monitor" operation_key="pgsql_monitor_9000" internal_operation_key="pgsql:1_monitor_9000" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3">
         <primitive id="pgsql" long-id="pgsql:1" class="ocf" provider="heartbeat" type="Stateful"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="9000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_fail="restart" CRM_meta_on_node="pgsr01" CRM_meta_on_node_uuid="pgsr01" CRM_meta_op_target_rc="8" CRM_meta_physical_host="bl460g8n3" CRM_meta_role="Master" CRM_meta_timeout="60000" />
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="9000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_fail="restart" CRM_meta_on_node="pgsr01" CRM_meta_on_node_uuid="pgsr01" CRM_meta_op_target_rc="8" CRM_meta_physical_host="bl460g8n3" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Master" CRM_meta_timeout="60000" />
       </rsc_op>
     </action_set>
     <inputs>
@@ -526,7 +526,7 @@
   <synapse id="36" priority="1000000">
     <action_set>
       <pseudo_event id="67" operation="notified" operation_key="msPostgresql_confirmed-post_notify_demoted_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="demoted" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="demote" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="demoted" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="demote" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -541,7 +541,7 @@
   <synapse id="37" priority="1000000">
     <action_set>
       <pseudo_event id="66" operation="notify" operation_key="msPostgresql_post_notify_demoted_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="demoted" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="demote" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="demoted" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="demote" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -556,7 +556,7 @@
   <synapse id="38">
     <action_set>
       <pseudo_event id="65" operation="notified" operation_key="msPostgresql_confirmed-pre_notify_demote_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="demote" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="demote" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="demote" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="demote" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -571,7 +571,7 @@
   <synapse id="39">
     <action_set>
       <pseudo_event id="64" operation="notify" operation_key="msPostgresql_pre_notify_demote_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="demote" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="demote" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="demote" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="demote" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs/>
@@ -579,7 +579,7 @@
   <synapse id="40" priority="1000000">
     <action_set>
       <pseudo_event id="63" operation="demoted" operation_key="msPostgresql_demoted_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -594,7 +594,7 @@
   <synapse id="41">
     <action_set>
       <pseudo_event id="62" operation="demote" operation_key="msPostgresql_demote_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -606,7 +606,7 @@
   <synapse id="42" priority="1000000">
     <action_set>
       <pseudo_event id="55" operation="notified" operation_key="msPostgresql_confirmed-post_notify_stopped_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="stopped" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="stopped" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -621,7 +621,7 @@
   <synapse id="43" priority="1000000">
     <action_set>
       <pseudo_event id="54" operation="notify" operation_key="msPostgresql_post_notify_stopped_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="stopped" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="stopped" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -636,7 +636,7 @@
   <synapse id="44">
     <action_set>
       <pseudo_event id="53" operation="notified" operation_key="msPostgresql_confirmed-pre_notify_stop_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="stop" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="stop" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="stop" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="stop" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -651,7 +651,7 @@
   <synapse id="45">
     <action_set>
       <pseudo_event id="52" operation="notify" operation_key="msPostgresql_pre_notify_stop_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="stop" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="stop" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="stop" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="stop" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -663,7 +663,7 @@
   <synapse id="46" priority="1000000">
     <action_set>
       <pseudo_event id="51" operation="stopped" operation_key="msPostgresql_stopped_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -678,7 +678,7 @@
   <synapse id="47">
     <action_set>
       <pseudo_event id="50" operation="stop" operation_key="msPostgresql_stop_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>

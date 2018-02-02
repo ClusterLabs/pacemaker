@@ -36,7 +36,7 @@
       </meta_attributes>
     </op_defaults>
     <resources>
-      <master id="ms_drbd_7788">
+      <clone id="ms_drbd_7788">
         <primitive id="rsc_drbd_7788" class="ocf" type="drbd" provider="heartbeat">
           <instance_attributes id="instance_attributes.id22141">
             <nvpair id="nvpair.id22148" name="drbd_resource" value="pgsql"/>
@@ -47,14 +47,15 @@
           </operations>
           <meta_attributes id="primitive-rsc_drbd_7788.meta"/>
         </primitive>
-        <meta_attributes id="master_slave-ms_drbd_7788.meta">
+        <meta_attributes id="clone-ms_drbd_7788.meta">
+          <nvpair id="notify.meta.auto-82" name="promotable" value="true"/>
           <nvpair id="notify.meta.auto-83" name="notify" value="true"/>
           <nvpair id="nvpair.meta.auto-89" name="clone-max" value="2"/>
           <nvpair id="nvpair.meta.auto-91" name="clone-node-max" value="1"/>
-          <nvpair id="nvpair.meta.auto-93" name="master-max" value="1"/>
-          <nvpair id="nvpair.meta.auto-95" name="master-node-max" value="1"/>
+          <nvpair id="nvpair.meta.auto-93" name="promoted-max" value="1"/>
+          <nvpair id="nvpair.meta.auto-95" name="promoted-node-max" value="1"/>
         </meta_attributes>
-      </master>
+      </clone>
       <group id="grp_pgsql_mirror">
         <meta_attributes id="meta_attributes.id22200">
           <nvpair id="nvpair.id22206" name="restart-type" value="restart"/>

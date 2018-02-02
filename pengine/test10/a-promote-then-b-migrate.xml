@@ -11,9 +11,10 @@
       <node id="node2" type="member" uname="node2"/>
     </nodes>
     <resources>
-      <master id="ms1">
+      <clone id="ms1">
         <meta_attributes id="ms1-meta_attributes">
-          <nvpair id="ms1-meta_attributes-master-max" name="master-max" value="2"/>
+          <nvpair id="ms1-meta_attributes-promotable" name="promotable" value="true"/>
+          <nvpair id="ms1-meta_attributes-promoted-max" name="promoted-max" value="2"/>
           <nvpair id="ms1-notify" name="notify" value="true"/>
           <nvpair id="ms1-interleave" name="interleave" value="true"/>
         </meta_attributes>
@@ -23,7 +24,7 @@
             <op id="rsc1-monitor-slave-10" name="monitor" interval="10" role="Slave"/>
           </operations>
         </primitive>
-      </master>
+      </clone>
       <primitive id="rsc2" class="ocf" provider="pacemaker" type="Dummy">
         <meta_attributes id="rsc2-meta_attributes">
           <nvpair id="rsc2-meta_attributes-allow-migrate" name="allow-migrate" value="true"/>

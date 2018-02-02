@@ -43,7 +43,7 @@
       <node id="e38f935d-6059-4540-8679-bc32a8256839" uname="process2b" type="member"/>
     </nodes>
     <resources>
-      <master id="ms-sf">
+      <clone id="ms-sf">
         <group id="ms-sf_group">
           <primitive id="master_slave_Stateful" class="ocf" type="Dummy-statful" provider="heartbeat">
             <operations>
@@ -69,17 +69,18 @@
           </primitive>
           <meta_attributes id="group-ms-sf_group.meta"/>
         </group>
-        <meta_attributes id="master_slave-ms-sf.meta">
+        <meta_attributes id="clone-ms-sf.meta">
+          <nvpair id="promotable.meta.auto-79" name="promotable" value="true"/>
           <nvpair id="ordered.meta.auto-79" name="ordered" value="false"/>
           <nvpair id="interleave.meta.auto-79" name="interleave" value="false"/>
           <nvpair id="notify.meta.auto-79" name="notify" value="false"/>
           <nvpair id="nvpair.meta.auto-85" name="clone-max" value="2"/>
           <nvpair id="nvpair.meta.auto-87" name="clone-node-max" value="1"/>
-          <nvpair id="nvpair.meta.auto-89" name="master-max" value="1"/>
-          <nvpair id="nvpair.meta.auto-91" name="master-node-max" value="1"/>
+          <nvpair id="nvpair.meta.auto-89" name="promoted-max" value="1"/>
+          <nvpair id="nvpair.meta.auto-91" name="promoted-node-max" value="1"/>
           <nvpair id="unique-1" name="globally-unique" value="true"/>
         </meta_attributes>
-      </master>
+      </clone>
     </resources>
     <constraints>
       <rsc_location id="loc-ms-sf" rsc="ms-sf">

@@ -1,4 +1,4 @@
-<cib crm_feature_set="3.0.12" validate-with="pacemaker-2.8" epoch="295" num_updates="9" admin_epoch="0" cib-last-written="Thu Oct 12 09:31:55 2017" update-origin="centos1" update-client="crmd" update-user="hacluster" have-quorum="1" dc-uuid="1" execution-date="1507793517">
+<cib crm_feature_set="3.0.12" validate-with="pacemaker-3.0" epoch="295" num_updates="9" admin_epoch="0" cib-last-written="Thu Oct 12 09:31:55 2017" update-origin="centos1" update-client="crmd" update-user="hacluster" have-quorum="1" dc-uuid="1" execution-date="1507793517">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -20,7 +20,7 @@
         <meta_attributes id="galera-bundle-meta_attributes">
           <nvpair id="galera-bundle-meta_attributes-is-managed" name="is-managed" value="false"/>
         </meta_attributes>
-        <docker masters="3" network="host" replicas="3" image="docker.io/tripleoupstream/centos-binary-mariadb:latest" run-command="/usr/sbin/pacemaker_remoted" options="--user=root --log-driver=journald"/>
+        <docker promoted-max="3" network="host" replicas="3" image="docker.io/tripleoupstream/centos-binary-mariadb:latest" run-command="/usr/sbin/pacemaker_remoted" options="--user=root --log-driver=journald"/>
         <network control-port="3123"/>
         <storage>
           <storage-mapping target-dir="/etc/libqb/force-filesystem-sockets" options="ro" id="map1" source-dir="/foo"/>

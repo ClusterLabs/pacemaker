@@ -57,8 +57,9 @@
           <nvpair id="nvpair.meta.auto-80" name="target-role" value="Slave"/>
         </meta_attributes>
       </primitive>
-      <master id="promoteme">
+      <clone id="promoteme">
         <meta_attributes id="meta">
+          <nvpair id="promotable" name="promotable" value="true"/>
           <nvpair id="anon" name="globally-unique" value="false"/>
           <nvpair id="max" name="clone-max" value="1"/>
         </meta_attributes>
@@ -75,7 +76,7 @@
             <nvpair id="nvpair.meta.auto-98" name="target-role" value="Master"/>
           </meta_attributes>
         </primitive>
-      </master>
+      </clone>
       <primitive id="rsc_c001n01" class="ocf" type="IPaddr" provider="heartbeat">
         <operations>
           <op name="monitor" interval="5s" id="rsc_c001n01-1" timeout="20s"/>

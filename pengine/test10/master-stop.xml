@@ -12,12 +12,13 @@
       <node id="3" uname="node3" type="member"/>
     </nodes>
     <resources>
-      <master id="m">
+      <clone id="m">
         <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>
-        <meta_attributes id="master_slave-rsc1.meta">
-          <nvpair id="nvpair.meta.auto-31" name="master-max" value="1"/>
+        <meta_attributes id="clone-rsc1.meta">
+          <nvpair id="nvpair.meta.auto-30"  name="promotable" value="true"/>
+          <nvpair id="nvpair.meta.auto-31" name="promoted-max" value="1"/>
         </meta_attributes>
-      </master>
+      </clone>
     </resources>
     <constraints>
       <rsc_location id="beekhof-prefer-m1" rsc="m" role="Master" node="node1" score="1"/>

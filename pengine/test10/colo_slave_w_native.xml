@@ -18,10 +18,11 @@
           <op id="A-monitor-10s" interval="10s" name="monitor"/>
         </operations>
       </primitive>
-      <master id="MS_RSC">
+      <clone id="MS_RSC">
         <meta_attributes id="ms_drbd_pgdrive-meta_attributes">
-          <nvpair id="ms_drbd_pgdrive-meta_attributes-master-max" name="master-max" value="1"/>
-          <nvpair id="ms_drbd_pgdrive-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms_drbd_pgdrive-meta_attributes-promotable" name="promotable" value="true"/>
+          <nvpair id="ms_drbd_pgdrive-meta_attributes-promoted-max" name="promoted-max" value="1"/>
+          <nvpair id="ms_drbd_pgdrive-meta_attributes-promoted-node-max" name="promoted-node-max" value="1"/>
           <nvpair id="ms_drbd_pgdrive-meta_attributes-clone-max" name="clone-max" value="2"/>
           <nvpair id="ms_drbd_pgdrive-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
           <nvpair id="ms_drbd_pgdrive-meta_attributes-notify" name="notify" value="true"/>
@@ -33,7 +34,7 @@
             <op id="drbd_pgdrive-monitor-15" interval="15" name="monitor"/>
           </operations>
         </primitive>
-      </master>
+      </clone>
     </resources>
     <constraints>
       <rsc_location id="loc1" rsc="A" node="node2" score="5000" />

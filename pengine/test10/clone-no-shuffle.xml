@@ -30,12 +30,13 @@
     </nodes>
     <resources>
       <primitive id="stonith-1" class="stonith" type="dummy"/>
-      <master id="ms-drbd1">
+      <clone id="ms-drbd1">
         <meta_attributes id="meta_attributes.id22006">
+          <nvpair id="nvpair.id22011" name="promotable" value="true"/>
           <nvpair id="nvpair.id22012" name="clone-max" value="2"/>
           <nvpair id="nvpair.id22021" name="clone-node-max" value="1"/>
-          <nvpair id="nvpair.id22029" name="master-max" value="1"/>
-          <nvpair id="nvpair.id22037" name="master-node-max" value="1"/>
+          <nvpair id="nvpair.id22029" name="promoted-max" value="1"/>
+          <nvpair id="nvpair.id22037" name="promoted-node-max" value="1"/>
           <nvpair id="nvpair.id22045" name="notify" value="yes"/>
           <nvpair id="nvpair.id22054" name="globally-unique" value="false"/>
           <nvpair id="nvpair.id22062" name="target-role" value="started"/>
@@ -50,8 +51,8 @@
           </operations>
           <meta_attributes id="primitive-drbd1.meta"/>
         </primitive>
-        <meta_attributes id="master_slave-ms-drbd1.meta"/>
-      </master>
+        <meta_attributes id="clone-ms-drbd1.meta"/>
+      </clone>
       <primitive id="testip" class="ocf" type="IPaddr2" provider="heartbeat">
         <instance_attributes id="instance_attributes.id22146">
           <nvpair id="nvpair.id22153" name="ip" value="10.200.200.222"/>

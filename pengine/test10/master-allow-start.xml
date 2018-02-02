@@ -15,13 +15,14 @@
       <node id="7a1be228-afbe-426b-9459-5c6e9d377508" uname="sles11-b" type="member"/>
     </nodes>
     <resources>
-      <master id="ms_res_Stateful_1">
+      <clone id="ms_res_Stateful_1">
         <meta_attributes id="ms_res_Stateful_1-meta_attributes">
+          <nvpair id="ms_res_Stateful_1-meta_attributes-promotable" name="promotable" value="true"/>
           <nvpair id="ms_res_Stateful_1-meta_attributes-clone-max" name="clone-max" value="2"/>
           <nvpair id="ms_res_Stateful_1-meta_attributes-notify" name="notify" value="true"/>
         </meta_attributes>
         <primitive class="ocf" id="res_Stateful_1" provider="heartbeat" type="Stateful"/>
-      </master>
+      </clone>
     </resources>
     <constraints/>
   </configuration>

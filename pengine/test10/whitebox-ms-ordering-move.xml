@@ -141,11 +141,12 @@
         </primitive>
         <meta_attributes id="Connectivity-meta_attributes"/>
       </clone>
-      <master id="master-1">
+      <clone id="master-1">
         <meta_attributes id="master-1-meta">
-          <nvpair id="master-1-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="master-1-promotable" name="promotable" value="true"/>
+          <nvpair id="master-1-promoted-node-max" name="promoted-node-max" value="1"/>
           <nvpair id="master-1-clone-max" name="clone-max" value="5"/>
-          <nvpair id="master-1-master-max" name="master-max" value="1"/>
+          <nvpair id="master-1-promoted-max" name="promoted-max" value="1"/>
           <nvpair id="master-1-clone-node-max" name="clone-node-max" value="1"/>
         </meta_attributes>
         <primitive class="ocf" id="stateful-1" provider="pacemaker" type="Stateful">
@@ -154,7 +155,7 @@
             <op id="stateful-1-monitor-16s" interval="16s" name="monitor" role="Master" timeout="60s"/>
           </operations>
         </primitive>
-      </master>
+      </clone>
       <group id="group-1">
         <primitive class="ocf" id="r192.168.122.207" provider="heartbeat" type="IPaddr2">
           <instance_attributes id="r192.168.122.207-params">
@@ -213,7 +214,7 @@
           <nvpair id="container2-meta_attributes-remote-node" name="remote-node" value="lxc2"/>
         </meta_attributes>
       </primitive>
-      <master id="lxc-ms-master">
+      <clone id="lxc-ms-master">
         <primitive class="ocf" id="lxc-ms" provider="pacemaker" type="Stateful">
           <instance_attributes id="lxc-ms-instance_attributes"/>
           <operations>
@@ -221,10 +222,11 @@
           </operations>
         </primitive>
         <meta_attributes id="lxc-ms-meta_attributes">
-          <nvpair id="lxc-ms-meta_attributes-master-max" name="master-max" value="1"/>
+          <nvpair id="lxs-ms-meta_attributes-promotable" name="promotable" value="true"/>
+          <nvpair id="lxc-ms-meta_attributes-promoted-max" name="promoted-max" value="1"/>
           <nvpair id="lxc-ms-meta_attributes-clone-max" name="clone-max" value="2"/>
         </meta_attributes>
-      </master>
+      </clone>
     </resources>
     <constraints>
       <rsc_location id="prefer-rhel7-1" rsc="rsc_rhel7-1">

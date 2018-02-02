@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="104" operation="monitor" operation_key="galera_monitor_10000" internal_operation_key="galera:1_monitor_10000" on_node="rdo7-node2" on_node_uuid="2">
         <primitive id="galera" long-id="galera:1" class="ocf" provider="heartbeat" type="galera"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="rdo7-node2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="8" CRM_meta_role="Master" CRM_meta_timeout="30000" additional_parameters="--open-files-limit=16384"  enable_creation="true" wsrep_cluster_address="gcomm://rdo7-node1,rdo7-node2,rdo7-node3"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="6" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="rdo7-node2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="8" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_role="Master" CRM_meta_timeout="30000" additional_parameters="--open-files-limit=16384"  enable_creation="true" wsrep_cluster_address="gcomm://rdo7-node1,rdo7-node2,rdo7-node3"/>
       </rsc_op>
     </action_set>
     <inputs/>

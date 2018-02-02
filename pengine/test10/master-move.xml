@@ -37,10 +37,11 @@
           </operations>
         </primitive>
       </group>
-      <master id="msDRBD">
+      <clone id="msDRBD">
         <meta_attributes id="msDRBD-meta_attributes">
-          <nvpair id="msDRBD-meta_attributes-master-max" name="master-max" value="1"/>
-          <nvpair id="msDRBD-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="msDRBD-meta_attributes-promotable"  name="promotable" value="true"/>
+          <nvpair id="msDRBD-meta_attributes-promoted-max" name="promoted-max" value="1"/>
+          <nvpair id="msDRBD-meta_attributes-promoted-node-max" name="promoted-node-max" value="1"/>
           <nvpair id="msDRBD-meta_attributes-clone-max" name="clone-max" value="2"/>
           <nvpair id="msDRBD-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
           <nvpair id="msDRBD-meta_attributes-notify" name="notify" value="true"/>
@@ -58,7 +59,7 @@
             <op id="prmDRBD-stop-0s" interval="0s" name="stop" on-fail="block" timeout="100s"/>
           </operations>
         </primitive>
-      </master>
+      </clone>
     </resources>
     <constraints>
       <rsc_location id="rsc_location-1" rsc="msDRBD">

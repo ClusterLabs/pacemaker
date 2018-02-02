@@ -44,14 +44,17 @@
           </operations>
         </primitive>
       </clone>
-      <master id="ms5">
+      <clone id="ms5">
+        <meta_attributes id="ms1-meta">
+          <nvpair id="ms1-meta-promotable" name="promotable" value="true"/>
+        </meta_attributes>
         <primitive class="ocf" id="rsc5" provider="pacemaker" type="Stateful">
           <operations id="rsc5-operations">
             <op id="rsc5-monitor-master-5" interval="5" name="monitor" role="Master"/>
             <op id="rsc5-monitor-slave-5" interval="5" name="monitor" role="Slave"/>
           </operations>
         </primitive>
-      </master>
+      </clone>
     </resources>
     <constraints>
       <rsc_location id="loc-ms5" rsc="ms5">

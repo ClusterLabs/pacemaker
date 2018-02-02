@@ -1,4 +1,4 @@
-<cib crm_feature_set="3.0.12" validate-with="pacemaker-2.8" epoch="24" num_updates="0" admin_epoch="0" cib-last-written="Fri Jul 14 08:50:25 2017" update-origin="overcloud-controller-0" update-client="cibadmin" update-user="overcloud-rabbit-0" have-quorum="1" dc-uuid="2" execution-date="1500022225">
+<cib crm_feature_set="3.0.12" validate-with="pacemaker-3.0" epoch="24" num_updates="0" admin_epoch="0" cib-last-written="Fri Jul 14 08:50:25 2017" update-origin="overcloud-controller-0" update-client="cibadmin" update-user="overcloud-rabbit-0" have-quorum="1" dc-uuid="2" execution-date="1500022225">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -106,7 +106,7 @@
         </primitive>
       </bundle>
       <bundle id="galera-bundle">
-        <docker image="192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest" masters="3" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="3" run-command="/bin/bash /usr/local/bin/kolla_start"/>
+        <docker image="192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest" promoted-max="3" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="3" run-command="/bin/bash /usr/local/bin/kolla_start"/>
         <network control-port="3123"/>
         <storage>
           <storage-mapping id="mysql-cfg-files" options="ro" source-dir="/var/lib/kolla/config_files/mysql.json" target-dir="/var/lib/kolla/config_files/config.json"/>

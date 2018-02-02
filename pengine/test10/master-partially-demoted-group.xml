@@ -133,10 +133,11 @@
           </meta_attributes>
         </primitive>
       </group>
-      <master id="ms-cdev-pool-0-drbd">
+      <clone id="ms-cdev-pool-0-drbd">
         <meta_attributes id="ms-cdev-pool-0-drbd-meta_attributes">
-          <nvpair name="master-max" value="1" id="ms-cdev-pool-0-drbd-meta_attributes-master-max"/>
-          <nvpair name="master-node-max" value="1" id="ms-cdev-pool-0-drbd-meta_attributes-master-node-max"/>
+          <nvpair name="promotable" value="true" id="ms-cdev-pool-0-drbd-meta_attributes-promotable"/>
+          <nvpair name="promoted-max" value="1" id="ms-cdev-pool-0-drbd-meta_attributes-promoted-max"/>
+          <nvpair name="promoted-node-max" value="1" id="ms-cdev-pool-0-drbd-meta_attributes-promoted-node-max"/>
           <nvpair name="clone-max" value="2" id="ms-cdev-pool-0-drbd-meta_attributes-clone-max"/>
           <nvpair name="clone-node-max" value="1" id="ms-cdev-pool-0-drbd-meta_attributes-clone-node-max"/>
           <nvpair name="notify" value="true" id="ms-cdev-pool-0-drbd-meta_attributes-notify"/>
@@ -160,7 +161,7 @@
             <op name="monitor" interval="10" role="Master" timeout="20" id="cdev-pool-0-drbd-monitor-10"/>
           </operations>
         </primitive>
-      </master>
+      </clone>
       <clone id="cl-ietd">
         <meta_attributes id="cl-ietd-meta_attributes">
           <nvpair name="interleave" value="true" id="cl-ietd-meta_attributes-interleave"/>
@@ -233,10 +234,11 @@
           </operations>
         </primitive>
       </group>
-      <master id="ms-cdev-pool-0-iscsi-vips-fw">
+      <clone id="ms-cdev-pool-0-iscsi-vips-fw">
         <meta_attributes id="ms-cdev-pool-0-iscsi-vips-fw-meta_attributes">
-          <nvpair name="master-max" value="1" id="ms-cdev-pool-0-iscsi-vips-fw-meta_attributes-master-max"/>
-          <nvpair name="master-node-max" value="1" id="ms-cdev-pool-0-iscsi-vips-fw-meta_attributes-master-node-max"/>
+          <nvpair name="promotable" value="true" id="ms-cdev-pool-0-iscsi-vips-fw-meta_attributes-promotable"/>
+          <nvpair name="promoted-max" value="1" id="ms-cdev-pool-0-iscsi-vips-fw-meta_attributes-promoted-max"/>
+          <nvpair name="promoted-node-max" value="1" id="ms-cdev-pool-0-iscsi-vips-fw-meta_attributes-promoted-node-max"/>
           <nvpair name="clone-max" value="2" id="ms-cdev-pool-0-iscsi-vips-fw-meta_attributes-clone-max"/>
           <nvpair name="clone-node-max" value="1" id="ms-cdev-pool-0-iscsi-vips-fw-meta_attributes-clone-node-max"/>
           <nvpair name="notify" value="false" id="ms-cdev-pool-0-iscsi-vips-fw-meta_attributes-notify"/>
@@ -267,7 +269,7 @@
             </operations>
           </primitive>
         </group>
-      </master>
+      </clone>
     </resources>
     <constraints>
       <rsc_location id="loc-ietd-requires-storage" rsc="cl-ietd">

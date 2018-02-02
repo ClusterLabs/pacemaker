@@ -14,13 +14,14 @@
       <node id="fc16-builder2" type="member" uname="fc16-builder2"/>
     </nodes>
     <resources>
-      <master id="MS_DUMMY">
+      <clone id="MS_DUMMY">
         <meta_attributes id="MS_DUMMY-meta_attributes">
+          <nvpair id="MS_DUMMY-meta_attributes-promotable" name="promotable" value="true"/>
           <nvpair id="MS_DUMMY-meta_attributes-target-role" name="target-role" value="Master"/>
           <nvpair id="MS_DUMMY-meta_attributes-clone-max" name="clone-max" value="2"/>
           <nvpair id="MS_DUMMY-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
-          <nvpair id="MS_DUMMY-meta_attributes-master-max" name="master-max" value="1"/>
-          <nvpair id="MS_DUMMY-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="MS_DUMMY-meta_attributes-promoted-max" name="promoted-max" value="1"/>
+          <nvpair id="MS_DUMMY-meta_attributes-promoted-node-max" name="promoted-node-max" value="1"/>
           <nvpair id="MS_DUMMY-meta_attributes-notify" name="notify" value="true"/>
         </meta_attributes>
         <primitive class="ocf" id="DUMMY" provider="pacemaker" type="Stateful">
@@ -29,7 +30,7 @@
             <op id="DUNNY-monitor-30s" interval="30" name="monitor" role="Master" timeout="60s"/>
           </operations>
         </primitive>
-      </master>
+      </clone>
       <primitive class="ocf" id="SLAVE_IP" provider="pacemaker" type="Dummy"/>
       <primitive class="ocf" id="MASTER_IP" provider="pacemaker" type="Dummy"/>
     </resources>

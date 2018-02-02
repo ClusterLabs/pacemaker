@@ -20,7 +20,7 @@
           <op id="shooter-monitor-interval-60s" interval="60s" name="monitor"/>
         </operations>
       </primitive>
-      <master id="fake-master">
+      <clone id="fake-master">
         <primitive class="ocf" id="fake" provider="pacemaker" type="Stateful">
           <instance_attributes id="fake-instance_attributes"/>
           <operations>
@@ -31,9 +31,10 @@
           </operations>
         </primitive>
         <meta_attributes id="fake-master-meta_attributes">
+          <nvpair id="fake-master-meta_attributes-promotable"  name="promotable" value="true"/>
           <nvpair id="fake-master-meta_attributes-notify" name="notify" value="true"/>
         </meta_attributes>
-      </master>
+      </clone>
     </resources>
     <constraints/>
   </configuration>

@@ -173,7 +173,7 @@
     <action_set>
       <rsc_op id="74" operation="stop" operation_key="galera:0_stop_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="metal-1">
         <primitive id="galera" long-id="galera:0" class="ocf" provider="heartbeat" type="galera"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="galera-bundle-0" CRM_meta_on_node_uuid="galera-bundle-0" CRM_meta_physical_host="metal-1" CRM_meta_timeout="120000" additional_parameters="--open-files-limit=16384" cluster_host_map="galera-bundle-0:metal"  enable_creation="true" wsrep_cluster_address="gcomm://metal"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_on_node="galera-bundle-0" CRM_meta_on_node_uuid="galera-bundle-0" CRM_meta_physical_host="metal-1" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" additional_parameters="--open-files-limit=16384" cluster_host_map="galera-bundle-0:metal"  enable_creation="true" wsrep_cluster_address="gcomm://metal"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -188,7 +188,7 @@
   <synapse id="13" priority="1000000">
     <action_set>
       <pseudo_event id="82" operation="stopped" operation_key="galera-bundle-master_stopped_0">
-        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -203,7 +203,7 @@
   <synapse id="14">
     <action_set>
       <pseudo_event id="81" operation="stop" operation_key="galera-bundle-master_stop_0">
-        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -215,7 +215,7 @@
   <synapse id="15" priority="1000000">
     <action_set>
       <pseudo_event id="80" operation="running" operation_key="galera-bundle-master_running_0">
-        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -227,7 +227,7 @@
   <synapse id="16">
     <action_set>
       <pseudo_event id="79" operation="start" operation_key="galera-bundle-master_start_0">
-        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
