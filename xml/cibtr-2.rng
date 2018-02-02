@@ -27,30 +27,106 @@
       <attribute name="msg-prefix">
         <data type="string"/>
       </attribute>
-      <zeroOrMore>
-        <ref name="cibtr-2.replace"/>
-      </zeroOrMore>
+      <choice>
+        <zeroOrMore>
+          <ref name="cibtr-2.replace.nonwhereaware"/>
+        </zeroOrMore>
+        <group>
+          <attribute name="where-cases">
+            <!-- pipe-delimited enumeration-->
+            <data type="string">
+              <param name="minLength">1</param>
+            </data>
+          </attribute>
+          <!-- cannot arrange this as an interleave of
+               cibtr-2.replace.whereaware+ and
+               cibtr-2.replace.nonwhereaware* because of
+               http://relaxng.org/spec-20011203.html#attribute-restrictions -->
+          <zeroOrMore>
+            <ref name="cibtr-2.replace.whereaware"/>
+          </zeroOrMore>
+        </group>
+      </choice>
     </element>
   </define>
 
-  <define name="cibtr-2.replace">
-    <element name="cibtr:replace">
-      <attribute name="what">
+  <!-- leaf attributes -->
+
+  <define name="cibtr-2.replace.attr-in-case-of">
+    <attribute name="in-case-of">
+      <!-- pipe-delimited enumeration-->
+      <data type="string"/>
+    </attribute>
+  </define>
+
+  <define name="cibtr-2.replace.attr-msg-extra">
+    <attribute name="msg-extra">
+      <data type="string">
+        <param name="minLength">1</param>
+      </data>
+    </attribute>
+  </define>
+
+  <define name="cibtr-2.replace.attr-what">
+    <attribute name="what">
+      <data type="NCName"/>
+    </attribute>
+  </define>
+
+  <define name="cibtr-2.replace.attr-where">
+    <attribute name="where">
+      <data type="NCName"/>
+    </attribute>
+  </define>
+
+  <define name="cibtr-2.replace.attr-with-possibly">
+    <attribute name="with">
+      <choice>
         <data type="NCName"/>
-      </attribute>
-      <attribute name="with">
-        <choice>
-          <data type="NCName"/>
-          <empty/>
-        </choice>
-      </attribute>
-      <optional>
-        <attribute name="msg-extra">
-          <data type="string">
-            <param name="minLength">1</param>
-          </data>
-        </attribute>
-      </optional>
+        <empty/>
+      </choice>
+    </attribute>
+  </define>
+
+  <define name="cibtr-2.replace.attr-with-surely">
+    <attribute name="with">
+      <choice>
+        <data type="NCName"/>
+      </choice>
+    </attribute>
+  </define>
+
+  <define name="cibtr-2.replace.attrs-common">
+    <ref name="cibtr-2.replace.attr-what"/>
+    <optional>
+      <ref name="cibtr-2.replace.attr-in-case-of"/>
+    </optional>
+    <optional>
+      <ref name="cibtr-2.replace.attr-msg-extra"/>
+    </optional>
+  </define>
+
+  <!-- leaf production using the above attribute definitions -->
+
+  <define name="cibtr-2.replace.nonwhereaware">
+    <element name="cibtr:replace">
+      <ref name="cibtr-2.replace.attrs-common"/>
+      <ref name="cibtr-2.replace.attr-with-possibly"/>
     </element>
   </define>
+
+  <define name="cibtr-2.replace.whereaware">
+    <element name="cibtr:replace">
+      <ref name="cibtr-2.replace.attrs-common"/>
+      <!-- cf. comment at cibtr-2.table -->
+      <choice>
+        <group>
+          <ref name="cibtr-2.replace.attr-with-surely"/>
+          <ref name="cibtr-2.replace.attr-where"/>
+        </group>
+        <ref name="cibtr-2.replace.attr-with-possibly"/>
+      </choice>
+    </element>
+  </define>
+
 </grammar>
