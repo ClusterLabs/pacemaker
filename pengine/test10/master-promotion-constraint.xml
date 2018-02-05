@@ -43,14 +43,17 @@
           <nvpair id="g0-meta_attributes-target-role" name="target-role" value="Stopped"/>
         </meta_attributes>
       </group>
-      <master id="ms0">
+      <clone id="ms0">
+        <meta_attributes id="ms0-meta_attributes">
+          <nvpair id="ms0-meta_attributes-promotable" name="promotable" value="true"/>
+        </meta_attributes>
         <primitive class="ocf" id="s0" provider="pacemaker" type="Stateful">
           <operations>
             <op id="s0-monitor-20s" interval="20s" name="monitor" role="Master"/>
             <op id="s0-monitor-21s" interval="21s" name="monitor" role="Slave"/>
           </operations>
         </primitive>
-      </master>
+      </clone>
     </resources>
     <constraints>
       <rsc_order first="g0" id="promote-after-g0" score="INFINITY" then="ms0" then-action="promote"/>

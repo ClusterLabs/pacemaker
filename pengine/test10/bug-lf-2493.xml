@@ -17,9 +17,12 @@
       <primitive class="ocf" id="p_dummy2" provider="pacemaker" type="Dummy"/>
       <primitive class="ocf" id="p_dummy4" provider="pacemaker" type="Dummy"/>
       <primitive class="ocf" id="p_dummy3" provider="pacemaker" type="Dummy"/>
-      <master id="ms_stateful1">
+      <clone id="ms_stateful1">
+        <meta_attributes id="ms_stateful1-meta">
+          <nvpair id="ms_stateful1-meta_attributes-promotable" name="promotable" value="true"/>
+        </meta_attributes>
         <primitive class="ocf" id="p_stateful1" provider="pacemaker" type="Stateful"/>
-      </master>
+      </clone>
     </resources>
     <constraints>
       <rsc_order id="o_dummy" score="INFINITY">

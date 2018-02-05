@@ -1241,7 +1241,7 @@ print_node(const char *pre_text, node_t * node, gboolean details)
         for (; gIter != NULL; gIter = gIter->next) {
             resource_t *rsc = (resource_t *) gIter->data;
 
-            print_resource(LOG_DEBUG_4, "\t\t", rsc, FALSE);
+            print_resource(LOG_TRACE, "\t\t", rsc, FALSE);
         }
     }
 }
@@ -1682,14 +1682,14 @@ get_target_role(resource_t * rsc, enum rsc_role_e * role)
         return FALSE;
 
     } else if (local_role > RSC_ROLE_STARTED) {
-        if (uber_parent(rsc)->variant == pe_master) {
+        if (is_set(uber_parent(rsc)->flags, pe_rsc_promotable)) {
             if (local_role > RSC_ROLE_SLAVE) {
                 /* This is what we'd do anyway, just leave the default to avoid messing up the placement algorithm */
                 return FALSE;
             }
 
         } else {
-            crm_config_err("%s is not part of a master/slave resource, a %s of '%s' makes no sense",
+            crm_config_err("%s is not part of a promotable clone resource, a %s of '%s' makes no sense",
                            rsc->id, XML_RSC_ATTR_TARGET_ROLE, value);
             return FALSE;
         }

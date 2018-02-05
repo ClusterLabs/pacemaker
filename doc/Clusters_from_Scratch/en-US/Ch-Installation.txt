@@ -485,5 +485,5 @@ https://www.cisco.com/c/dam/en/us/support/docs/ip/ip-multicast/ipmlt_wp.pdf[Cisc
 Guidelines for Enterprise IP Multicast Address Allocation].]
 ======
 
-The final /etc/corosync.conf configuration on each node should look
+The final corosync.conf configuration on each node should look
 something like the sample in <<ap-corosync-conf>>.

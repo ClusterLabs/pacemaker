@@ -373,6 +373,11 @@ behavior. Highlights:
 * Support for a number of deprecated build options, environment variables,
   and configuration settings has been removed.
 
+* The +master+ tag has been deprecated in favor of using a +clone+ tag with the
+  new +promotable+ meta-attribute set to +true+. "Master/slave" clone resources
+  are now referred to as "promotable" clone resources, though it will take
+  longer for the full terminology change to be completed.
+
 * The public API for Pacemaker libraries that software applications can use
   has changed significantly.
 

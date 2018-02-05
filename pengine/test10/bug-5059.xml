@@ -27,8 +27,9 @@
       <node id="gluster01.h" type="member" uname="gluster01.h"/>
     </nodes>
     <resources>
-      <master id="ms_stateful">
+      <clone id="ms_stateful">
         <meta_attributes id="ms_stateful-meta_attributes">
+          <nvpair id="ms_stateful-meta_attributes-promotable" name="promotable" value="true"/>
           <nvpair id="ms_stateful-meta_attributes-notify" name="notify" value="true"/>
           <nvpair id="ms_stateful-meta_attributes-clone-max" name="clone-max" value="2"/>
           <nvpair id="ms_stateful-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
@@ -47,7 +48,7 @@
             </operations>
           </primitive>
         </group>
-      </master>
+      </clone>
       <clone id="c_dummy">
         <meta_attributes id="c_dummy-meta_attributes">
           <nvpair id="c_dummy-meta_attributes-interleave" name="interleave" value="true"/>

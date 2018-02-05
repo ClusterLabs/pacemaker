@@ -45,12 +45,13 @@
         </instance_attributes>
         <meta_attributes id="primitive-cyrus_volgroup.meta"/>
       </primitive>
-      <master id="cyrus_drbd">
+      <clone id="cyrus_drbd">
         <meta_attributes id="meta_attributes.id22080">
+          <nvpair id="nvpair.id22085" name="promotable" value="true"/>
           <nvpair id="nvpair.id22086" name="clone-max" value="2"/>
           <nvpair id="nvpair.id22095" name="clone-node-max" value="1"/>
-          <nvpair id="nvpair.id22104" name="master-max" value="1"/>
-          <nvpair id="nvpair.id22112" name="master-node-max" value="1"/>
+          <nvpair id="nvpair.id22104" name="promoted-max" value="1"/>
+          <nvpair id="nvpair.id22112" name="promoted-node-max" value="1"/>
           <nvpair id="nvpair.id22121" name="notify" value="yes"/>
           <nvpair id="nvpair.id22129" name="globally-unique" value="false"/>
         </meta_attributes>
@@ -63,8 +64,8 @@
           </operations>
           <meta_attributes id="primitive-cyrus_drbd_node.meta"/>
         </primitive>
-        <meta_attributes id="master_slave-cyrus_drbd.meta"/>
-      </master>
+        <meta_attributes id="clone-cyrus_drbd.meta"/>
+      </clone>
       <primitive id="named_address" class="ocf" type="IPaddr2" provider="heartbeat">
         <instance_attributes id="instance_attributes.id22198">
           <nvpair name="ip" value="192.168.1.188" id="nvpair.id22205"/>
@@ -100,12 +101,13 @@
         </instance_attributes>
         <meta_attributes id="primitive-named_syslogd.meta"/>
       </primitive>
-      <master id="named_drbd">
+      <clone id="named_drbd">
         <meta_attributes id="meta_attributes.id22383">
+          <nvpair id="nvpair.id22388" name="promotable" value="true"/>
           <nvpair id="nvpair.id22389" name="clone-max" value="2"/>
           <nvpair id="nvpair.id22398" name="clone-node-max" value="1"/>
-          <nvpair id="nvpair.id22406" name="master-max" value="1"/>
-          <nvpair id="nvpair.id22415" name="master-node-max" value="1"/>
+          <nvpair id="nvpair.id22406" name="promoted-max" value="1"/>
+          <nvpair id="nvpair.id22415" name="promoted-node-max" value="1"/>
           <nvpair id="nvpair.id22424" name="notify" value="yes"/>
           <nvpair id="nvpair.id22432" name="globally-unique" value="false"/>
         </meta_attributes>
@@ -118,8 +120,8 @@
           </operations>
           <meta_attributes id="primitive-named_drbd_node.meta"/>
         </primitive>
-        <meta_attributes id="master_slave-named_drbd.meta"/>
-      </master>
+        <meta_attributes id="clone-named_drbd.meta"/>
+      </clone>
       <clone id="pingd_clone">
         <primitive id="pingd_node" provider="heartbeat" class="ocf" type="pingd">
           <operations>

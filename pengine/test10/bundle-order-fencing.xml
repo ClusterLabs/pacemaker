@@ -1,4 +1,4 @@
-<cib crm_feature_set="3.0.12" validate-with="pacemaker-2.8" epoch="126" num_updates="91" admin_epoch="0" cib-last-written="Tue Sep 12 10:20:22 2017" update-origin="controller-0" update-client="crm_attribute" update-user="redis-bundle-0" have-quorum="1" dc-uuid="3" execution-date="1505213519">
+<cib crm_feature_set="3.0.12" validate-with="pacemaker-3.0" epoch="126" num_updates="91" admin_epoch="0" cib-last-written="Tue Sep 12 10:20:22 2017" update-origin="controller-0" update-client="crm_attribute" update-user="redis-bundle-0" have-quorum="1" dc-uuid="3" execution-date="1505213519">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -93,7 +93,7 @@
         </primitive>
       </bundle>
       <bundle id="galera-bundle">
-        <docker image="192.168.24.1:8787/rhosp12/openstack-mariadb-docker:pcmklatest" masters="3" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="3" run-command="/bin/bash /usr/local/bin/kolla_start"/>
+        <docker image="192.168.24.1:8787/rhosp12/openstack-mariadb-docker:pcmklatest" promoted-max="3" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="3" run-command="/bin/bash /usr/local/bin/kolla_start"/>
         <network control-port="3123"/>
         <storage>
           <storage-mapping id="mysql-cfg-files" options="ro" source-dir="/var/lib/kolla/config_files/mysql.json" target-dir="/var/lib/kolla/config_files/config.json"/>
@@ -112,7 +112,7 @@
             <nvpair id="galera-instance_attributes-wsrep_cluster_address" name="wsrep_cluster_address" value="gcomm://controller-0.internalapi.localdomain,controller-1.internalapi.localdomain,controller-2.internalapi.localdomain"/>
           </instance_attributes>
           <meta_attributes id="galera-meta_attributes">
-            <nvpair id="galera-meta_attributes-master-max" name="master-max" value="3"/>
+            <nvpair id="galera-meta_attributes-promoted-max" name="promoted-max" value="3"/>
             <nvpair id="galera-meta_attributes-ordered" name="ordered" value="true"/>
             <nvpair id="galera-meta_attributes-container-attribute-target" name="container-attribute-target" value="host"/>
           </meta_attributes>
@@ -128,7 +128,7 @@
         </primitive>
       </bundle>
       <bundle id="redis-bundle">
-        <docker image="192.168.24.1:8787/rhosp12/openstack-redis-docker:pcmklatest" masters="1" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="3" run-command="/bin/bash /usr/local/bin/kolla_start"/>
+        <docker image="192.168.24.1:8787/rhosp12/openstack-redis-docker:pcmklatest" promoted-max="1" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="3" run-command="/bin/bash /usr/local/bin/kolla_start"/>
         <network control-port="3124"/>
         <storage>
           <storage-mapping id="redis-cfg-files" options="ro" source-dir="/var/lib/kolla/config_files/redis.json" target-dir="/var/lib/kolla/config_files/config.json"/>

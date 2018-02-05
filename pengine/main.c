@@ -180,8 +180,8 @@ main(int argc, char **argv)
     /* Create the mainloop and run it... */
     crm_info("Starting %s", crm_system_name);
 
-    mainloop = g_main_new(FALSE);
-    g_main_run(mainloop);
+    mainloop = g_main_loop_new(NULL, FALSE);
+    g_main_loop_run(mainloop);
 
     crm_info("Exiting %s", crm_system_name);
     return crm_exit(CRM_EX_OK);

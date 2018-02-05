@@ -667,7 +667,7 @@ link_rsc2remotenode(pe_working_set_t *data_set, resource_t *new_rsc)
         return;
     }
 
-    print_resource(LOG_DEBUG_3, "Linking remote-node connection resource, ", new_rsc, FALSE);
+    print_resource(LOG_TRACE, "Linking remote-node connection resource, ", new_rsc, FALSE);
 
     remote_node = pe_find_node(data_set->nodes, new_rsc->id);
     CRM_CHECK(remote_node != NULL, return;);
@@ -737,7 +737,7 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
         crm_trace("Beginning unpack... <%s id=%s... >", crm_element_name(xml_obj), ID(xml_obj));
         if (common_unpack(xml_obj, &new_rsc, NULL, data_set)) {
             data_set->resources = g_list_append(data_set->resources, new_rsc);
-            print_resource(LOG_DEBUG_3, "Added ", new_rsc, FALSE);
+            print_resource(LOG_TRACE, "Added ", new_rsc, FALSE);
 
         } else {
             crm_config_err("Failed unpacking %s %s",
@@ -1725,7 +1725,7 @@ process_orphan_resource(xmlNode * rsc_entry, node_t * node, pe_working_set_t * d
         clear_bit(rsc->flags, pe_rsc_managed);
 
     } else {
-        print_resource(LOG_DEBUG_3, "Added orphan", rsc, FALSE);
+        print_resource(LOG_TRACE, "Added orphan", rsc, FALSE);
 
         CRM_CHECK(rsc != NULL, return NULL);
         resource_location(rsc, NULL, -INFINITY, "__orphan_dont_run__", data_set);
@@ -2018,7 +2018,7 @@ calculate_active_ops(GListPtr sorted_op_list, int *start_index, int *stop_index)
 {
     int counter = -1;
     int implied_monitor_start = -1;
-    int implied_master_start = -1;
+    int implied_clone_start = -1;
     const char *task = NULL;
     const char *status = NULL;
     GListPtr gIter = sorted_op_list;
@@ -2048,13 +2048,13 @@ calculate_active_ops(GListPtr sorted_op_list, int *start_index, int *stop_index)
                 implied_monitor_start = counter;
             }
         } else if (safe_str_eq(task, CRMD_ACTION_PROMOTE) || safe_str_eq(task, CRMD_ACTION_DEMOTE)) {
-            implied_master_start = counter;
+            implied_clone_start = counter;
         }
     }
 
     if (*start_index == -1) {
-        if (implied_master_start != -1) {
-            *start_index = implied_master_start;
+        if (implied_clone_start != -1) {
+            *start_index = implied_clone_start;
         } else if (implied_monitor_start != -1) {
             *start_index = implied_monitor_start;
         }
@@ -2233,7 +2233,7 @@ set_active(resource_t * rsc)
 {
     resource_t *top = uber_parent(rsc);
 
-    if (top && top->variant == pe_master) {
+    if (top && is_set(top->flags, pe_rsc_promotable)) {
         rsc->role = RSC_ROLE_SLAVE;
     } else {
         rsc->role = RSC_ROLE_STARTED;
@@ -2586,7 +2586,7 @@ unpack_rsc_op_failure(resource_t * rsc, node_t * node, int rc, xmlNode * xml_op,
 
             if (pe_rsc_is_clone(parent)
                 && is_not_set(parent->flags, pe_rsc_unique)) {
-                /* for clone and master resources, if a child fails on an operation
+                /* For clone resources, if a child fails on an operation
                  * with on-fail = stop, all the resources fail.  Do this by preventing
                  * the parent from coming up again. */
                 fail_rsc = parent;

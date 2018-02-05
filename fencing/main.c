@@ -1122,7 +1122,7 @@ stonith_shutdown(int nsig)
     crm_info("Terminating with %d clients",
              crm_hash_table_size(client_connections));
     if (mainloop != NULL && g_main_is_running(mainloop)) {
-        g_main_quit(mainloop);
+        g_main_loop_quit(mainloop);
     } else {
         stonith_cleanup();
         crm_exit(CRM_EX_OK);
@@ -1487,9 +1487,9 @@ main(int argc, char **argv)
     stonith_ipc_server_init(&ipcs, &ipc_callbacks);
 
     /* Create the mainloop and run it... */
-    mainloop = g_main_new(FALSE);
+    mainloop = g_main_loop_new(NULL, FALSE);
     crm_info("Starting %s mainloop", crm_system_name);
-    g_main_run(mainloop);
+    g_main_loop_run(mainloop);
 
     stonith_cleanup();
     crm_info("Done");

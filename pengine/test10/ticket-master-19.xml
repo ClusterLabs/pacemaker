@@ -12,14 +12,17 @@
     </nodes>
     <resources>
       <primitive class="stonith" id="rsc_stonith" type="null"/>
-      <master id="ms1">
+      <clone id="ms1">
+        <meta_attributes id="ms1-meta">
+          <nvpair id="ms1-meta-promotable" name="promotable" value="true"/>
+        </meta_attributes>
         <primitive class="ocf" id="rsc1" provider="pacemaker" type="Stateful">
           <operations id="rsc1-operations">
             <op id="rsc1-monitor-master-5" interval="5" name="monitor" role="Master"/>
             <op id="rsc1-monitor-slave-5" interval="5" name="monitor" role="Slave"/>
           </operations>
         </primitive>
-      </master>
+      </clone>
     </resources>
     <constraints>
       <rsc_location id="loc-ms1" rsc="ms1">

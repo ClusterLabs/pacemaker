@@ -38,12 +38,13 @@
       </meta_attributes>
     </rsc_defaults>
     <resources>
-      <master id="ms_drbd_poolA">
+      <clone id="ms_drbd_poolA">
         <meta_attributes id="meta_attributes.id22105">
+          <nvpair id="nvpair.id22111" name="promotable" value="true"/>
           <nvpair id="nvpair.id22112" name="clone-max" value="2"/>
           <nvpair id="nvpair.id22120" name="clone-node-max" value="1"/>
-          <nvpair id="nvpair.id22129" name="master-max" value="1"/>
-          <nvpair id="nvpair.id22138" name="master-node-max" value="1"/>
+          <nvpair id="nvpair.id22129" name="promoted-max" value="1"/>
+          <nvpair id="nvpair.id22138" name="promoted-node-max" value="1"/>
           <nvpair id="nvpair.id22147" name="notify" value="yes"/>
           <nvpair id="nvpair.id22156" name="globally-unique" value="false"/>
           <nvpair id="nvpair.id22165" name="target-role" value="started"/>
@@ -59,8 +60,8 @@
           </operations>
           <meta_attributes id="primitive-ebe3fb6e-7778-426e-be58-190ab1ff3dd3.meta"/>
         </primitive>
-        <meta_attributes id="master_slave-ms_drbd_poolA.meta"/>
-      </master>
+        <meta_attributes id="clone-ms_drbd_poolA.meta"/>
+      </clone>
       <primitive id="vpool_ip_poolA" class="ocf" provider="heartbeat" type="IPaddr2">
         <instance_attributes id="instance_attributes.id22257">
           <nvpair name="ip" value="192.168.5.1" id="nvpair.id22264"/>

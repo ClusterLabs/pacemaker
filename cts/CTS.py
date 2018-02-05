@@ -505,9 +505,9 @@ class ClusterManager(UserDict):
         # Technically we should always be able to notice ourselves starting
         patterns.append(self.templates["Pat:Local_started"] % node)
         if self.upcount() == 0:
-            patterns.append(self.templates["Pat:Master_started"] % node)
+            patterns.append(self.templates["Pat:DC_started"] % node)
         else:
-            patterns.append(self.templates["Pat:Slave_started"] % node)
+            patterns.append(self.templates["Pat:NonDC_started"] % node)
 
         watch = LogWatcher(
             self.Env["LogFileName"], patterns, "StartaCM", self.Env["StartTime"]+10, hosts=self.Env["nodes"], kind=self.Env["LogWatcher"])

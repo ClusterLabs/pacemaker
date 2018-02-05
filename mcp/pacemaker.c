@@ -899,7 +899,6 @@ main(int argc, char **argv)
     struct rlimit cores;
     crm_ipc_t *old_instance = NULL;
     qb_ipcs_service_t *ipcs = NULL;
-    const char *facility = daemon_option("logfacility");
     static crm_cluster_t cluster;
 
     crm_log_preinit(NULL, argc, argv);
@@ -960,9 +959,6 @@ main(int argc, char **argv)
 
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
 
-    /* Restore the original facility so that mcp_read_config() does the right thing */
-    set_daemon_option("logfacility", facility);
-
     crm_debug("Checking for old instances of %s", CRM_SYSTEM_MCP);
     old_instance = crm_ipc_new(CRM_SYSTEM_MCP, 0);
     crm_ipc_connect(old_instance);
@@ -998,9 +994,18 @@ main(int argc, char **argv)
         crm_exit(CRM_EX_UNAVAILABLE);
     }
 
+    // OCF shell functions and cluster-glue need facility under different name
+    {
+        const char *facility = daemon_option("logfacility");
+
+        if (facility && safe_str_neq(facility, "none")) {
+            setenv("HA_LOGFACILITY", facility, 1);
+        }
+    }
+
     crm_notice("Starting Pacemaker %s "CRM_XS" build=%s features:%s",
                PACEMAKER_VERSION, BUILD_VERSION, CRM_FEATURES);
-    mainloop = g_main_new(FALSE);
+    mainloop = g_main_loop_new(NULL, FALSE);
     sysrq_init();
 
     rc = getrlimit(RLIMIT_CORE, &cores);
@@ -1108,7 +1113,7 @@ main(int argc, char **argv)
 
         crm_info("Starting mainloop");
 
-        g_main_run(mainloop);
+        g_main_loop_run(mainloop);
     }
 
     if (ipcs) {
@@ -1121,8 +1126,6 @@ main(int argc, char **argv)
 
     cluster_disconnect_cpg(&cluster);
     cluster_disconnect_cfg();
-
-    crm_info("Exiting %s", crm_system_name);
 
     return crm_exit(crm_errno2exit(rc));
 }

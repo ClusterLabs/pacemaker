@@ -22,8 +22,9 @@
       </node>
     </nodes>
     <resources>
-      <master id="ms_drbd_nfsexport">
+      <clone id="ms_drbd_nfsexport">
         <meta_attributes id="ms_drbd_nfsexport-meta_attributes">
+          <nvpair id="ms_drbd_nfsexport-meta_attributes-promotable" name="promotable" value="true"/>
           <nvpair id="ms_drbd_nfsexport-meta_attributes-notify" name="notify" value="true"/>
           <nvpair id="ms_drbd_nfsexport-meta_attributes-target-role" name="target-role" value="Stopped"/>
         </meta_attributes>
@@ -32,7 +33,7 @@
             <nvpair id="res_drbd_nfsexport-instance_attributes-drbd_resource" name="drbd_resource" value="nfsexport"/>
           </instance_attributes>
         </primitive>
-      </master>
+      </clone>
       <group id="rg_nfs">
         <primitive class="ocf" id="res_fs_nfsexport" provider="heartbeat" type="Filesystem">
           <instance_attributes id="res_fs_nfsexport-instance_attributes">
@@ -98,8 +99,9 @@
           </meta_attributes>
         </primitive>
       </group>
-      <master id="ms_drbd_mysql1">
+      <clone id="ms_drbd_mysql1">
         <meta_attributes id="ms_drbd_mysql1-meta_attributes">
+          <nvpair id="ms_drbd_mysql1-meta_attributes-promotable" name="promotable" value="true"/>
           <nvpair id="ms_drbd_mysql1-meta_attributes-notify" name="notify" value="true"/>
         </meta_attributes>
         <primitive class="ocf" id="res_drbd_mysql1" provider="linbit" type="drbd">
@@ -107,9 +109,10 @@
             <nvpair id="res_drbd_mysql1-instance_attributes-drbd_resource" name="drbd_resource" value="mysql1"/>
           </instance_attributes>
         </primitive>
-      </master>
-      <master id="ms_drbd_mysql2">
+      </clone>
+      <clone id="ms_drbd_mysql2">
         <meta_attributes id="ms_drbd_mysql2-meta_attributes">
+          <nvpair id="ms_drbd_mysql2-meta_attributes-promotable" name="promotable" value="true"/>
           <nvpair id="ms_drbd_mysql2-meta_attributes-notify" name="notify" value="true"/>
         </meta_attributes>
         <primitive class="ocf" id="res_drbd_mysql2" provider="linbit" type="drbd">
@@ -117,7 +120,7 @@
             <nvpair id="res_drbd_mysql2-instance_attributes-drbd_resource" name="drbd_resource" value="mysql2"/>
           </instance_attributes>
         </primitive>
-      </master>
+      </clone>
       <group id="rg_mysql2">
         <primitive class="ocf" id="res_fs_mysql2" provider="heartbeat" type="Filesystem">
           <instance_attributes id="res_fs_mysql2-instance_attributes">

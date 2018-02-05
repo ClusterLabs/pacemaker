@@ -50,8 +50,9 @@
           <nvpair id="fs_drbd-meta_attributes-target-role" name="target-role" value="Started"/>
         </meta_attributes>
       </primitive>
-      <master id="ms_drbd">
+      <clone id="ms_drbd">
         <meta_attributes id="ms_drbd-meta_attributes">
+          <nvpair id="ms_drbd-meta_attributes-promotable" name="promotable" value="true"/>
           <nvpair id="ms_drbd-meta_attributes-clone-max" name="clone-max" value="2"/>
           <nvpair id="ms_drbd-meta_attributes-notify" name="notify" value="true"/>
           <nvpair id="ms_drbd-meta_attributes-target-role" name="target-role" value="master"/>
@@ -70,7 +71,7 @@
             <nvpair id="drbd-meta_attributes-allow-migrate" name="allow-migrate" value="false"/>
           </meta_attributes>
         </primitive>
-      </master>
+      </clone>
       <group id="ip_voip_addresses_p">
         <meta_attributes id="ip_voip_addresses_p-meta_attributes">
           <nvpair id="ip_voip_addresses_p-meta_attributes-ordered" name="ordered" value="false"/>

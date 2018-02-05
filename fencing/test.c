@@ -592,8 +592,8 @@ mainloop_tests(void)
     mainloop_add_signal(SIGTERM, test_shutdown);
 
     crm_info("Starting");
-    mainloop = g_main_new(FALSE);
-    g_main_run(mainloop);
+    mainloop = g_main_loop_new(NULL, FALSE);
+    g_main_loop_run(mainloop);
 }
 
 int

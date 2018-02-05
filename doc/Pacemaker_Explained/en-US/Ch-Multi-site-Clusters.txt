@@ -146,7 +146,7 @@ The example above creates a constraint with the ID +rsc1-req-ticketA+. It
 defines that the resource +rsc1+ depends on +ticketA+ and that the node running
 the resource should be fenced if +ticketA+ is revoked.
 
-If resource +rsc1+ were a multi-state resource (i.e. it could run in master or
+If resource +rsc1+ were a promotable resource (i.e. it could run in master or
 slave mode), you might want to configure that only master mode
 depends on +ticketA+. With the following configuration, +rsc1+ will be
 demoted to slave mode if +ticketA+ is revoked:

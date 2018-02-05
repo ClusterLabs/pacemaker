@@ -45,22 +45,28 @@
           <nvpair id="FAKE-meta_attributes-target-role" name="target-role" value="Started"/>
         </meta_attributes>
       </primitive>
-      <master id="W-master">
+      <clone id="W-master">
+        <meta_attributes id="W-master-meta">
+          <nvpair id="W-master-meta-promotable" name="promotable" value="true"/>
+        </meta_attributes>
         <primitive class="ocf" id="W" provider="pacemaker" type="Stateful">
           <instance_attributes id="W-instance_attributes"/>
           <operations>
             <op id="W-monitor-interval-10s" interval="10s" name="monitor"/>
           </operations>
         </primitive>
-      </master>
-      <master id="X-master">
+      </clone>
+      <clone id="X-master">
+        <meta_attributes id="X-master-meta">
+          <nvpair id="X-master-meta-promotable" name="promotable" value="true"/>
+        </meta_attributes>
         <primitive class="ocf" id="X" provider="pacemaker" type="Stateful">
           <instance_attributes id="X-instance_attributes"/>
           <operations>
             <op id="X-monitor-interval-10s" interval="10s" name="monitor"/>
           </operations>
         </primitive>
-      </master>
+      </clone>
     </resources>
     <constraints/>
   </configuration>

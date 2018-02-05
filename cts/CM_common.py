@@ -103,8 +103,8 @@ class crm_common(ClusterManager):
 
         watchpats = [ ]
         watchpats.append("Current ping state: (S_IDLE|S_NOT_DC)")
-        watchpats.append(self.templates["Pat:Slave_started"]%node)
-        watchpats.append(self.templates["Pat:Master_started"]%node)
+        watchpats.append(self.templates["Pat:NonDC_started"] % node)
+        watchpats.append(self.templates["Pat:DC_started"] % node)
         idle_watch = LogWatcher(self.Env["LogFileName"], watchpats, "ClusterIdle", hosts=[node], kind=self.Env["LogWatcher"])
         idle_watch.setwatch()
 

@@ -445,17 +445,17 @@ crm_exit(crm_exit_t rc)
     CRM_CHECK((rc >= 0) && (rc <= 255), rc = CRM_EX_ERROR);
 
     mainloop_cleanup();
-
-#if HAVE_LIBXML2
-    crm_trace("cleaning up libxml");
     crm_xml_cleanup();
-#endif
 
-    crm_trace("exit %d", rc);
     qb_log_fini();
     crm_args_fini();
 
-    free(crm_system_name);
+    if (crm_system_name) {
+        crm_info("Exiting %s " CRM_XS " with status %d", crm_system_name, rc);
+        free(crm_system_name);
+    } else {
+        crm_trace("Exiting with status %d", rc);
+    }
 
     exit(rc);
     return rc;     /* Can never happen, but allows return crm_exit(rc)

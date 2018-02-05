@@ -163,9 +163,9 @@ main(int argc, char **argv)
         goto fail;
     }
 
-    mainloop = g_main_new(FALSE);
+    mainloop = g_main_loop_new(NULL, FALSE);
     crm_info("Starting mainloop");
-    g_main_run(mainloop);
+    g_main_loop_run(mainloop);
     crm_trace("%s exiting normally", crm_system_name);
     fflush(stderr);
     return CRM_EX_OK;
@@ -193,7 +193,7 @@ cib_connection_destroy(gpointer user_data)
 
     crm_err("Connection to the CIB terminated... exiting");
     conn->cmds->signoff(conn);  /* Ensure IPC is cleaned up */
-    g_main_quit(mainloop);
+    g_main_loop_quit(mainloop);
     return;
 }
 

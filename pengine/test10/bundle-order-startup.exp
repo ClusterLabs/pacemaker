@@ -217,7 +217,7 @@
     <action_set>
       <rsc_op id="48" operation="monitor" operation_key="galera:0_monitor_30000" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="undercloud">
         <primitive id="galera" long-id="galera:0" class="ocf" provider="heartbeat" type="galera"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="galera-bundle-0" CRM_meta_on_node_uuid="galera-bundle-0" CRM_meta_physical_host="undercloud" CRM_meta_role="Slave" CRM_meta_timeout="30000" additional_parameters="--open-files-limit=16384" cluster_host_map="galera-bundle-0:undercloud"  enable_creation="true" wsrep_cluster_address="gcomm://undercloud"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="galera-bundle-0" CRM_meta_on_node_uuid="galera-bundle-0" CRM_meta_physical_host="undercloud" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Slave" CRM_meta_timeout="30000" additional_parameters="--open-files-limit=16384" cluster_host_map="galera-bundle-0:undercloud"  enable_creation="true" wsrep_cluster_address="gcomm://undercloud"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -233,7 +233,7 @@
     <action_set>
       <rsc_op id="47" operation="monitor" operation_key="galera:0_monitor_20000" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="undercloud">
         <primitive id="galera" long-id="galera:0" class="ocf" provider="heartbeat" type="galera"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="20000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="galera-bundle-0" CRM_meta_on_node_uuid="galera-bundle-0" CRM_meta_physical_host="undercloud" CRM_meta_timeout="30000" additional_parameters="--open-files-limit=16384" cluster_host_map="galera-bundle-0:undercloud"  enable_creation="true" wsrep_cluster_address="gcomm://undercloud"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="20000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="galera-bundle-0" CRM_meta_on_node_uuid="galera-bundle-0" CRM_meta_physical_host="undercloud" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="30000" additional_parameters="--open-files-limit=16384" cluster_host_map="galera-bundle-0:undercloud"  enable_creation="true" wsrep_cluster_address="gcomm://undercloud"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -249,7 +249,7 @@
     <action_set>
       <rsc_op id="46" operation="start" operation_key="galera:0_start_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="undercloud">
         <primitive id="galera" long-id="galera:0" class="ocf" provider="heartbeat" type="galera"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="galera-bundle-0" CRM_meta_on_node_uuid="galera-bundle-0" CRM_meta_physical_host="undercloud" CRM_meta_timeout="120000" additional_parameters="--open-files-limit=16384" cluster_host_map="galera-bundle-0:undercloud"  enable_creation="true" wsrep_cluster_address="gcomm://undercloud"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="galera-bundle-0" CRM_meta_on_node_uuid="galera-bundle-0" CRM_meta_physical_host="undercloud" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" additional_parameters="--open-files-limit=16384" cluster_host_map="galera-bundle-0:undercloud"  enable_creation="true" wsrep_cluster_address="gcomm://undercloud"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -267,7 +267,7 @@
   <synapse id="18" priority="1000000">
     <action_set>
       <pseudo_event id="50" operation="running" operation_key="galera-bundle-master_running_0">
-        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -282,7 +282,7 @@
   <synapse id="19">
     <action_set>
       <pseudo_event id="49" operation="start" operation_key="galera-bundle-master_start_0">
-        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -378,7 +378,7 @@
     <action_set>
       <rsc_op id="130" operation="notify" operation_key="redis:0_post_notify_start_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="undercloud">
         <primitive id="redis" long-id="redis:0" class="ocf" provider="heartbeat" type="redis"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="galera-bundle-0 rabbitmq-bundle-0 redis-bundle-0 undercloud" CRM_meta_notify_available_uname="redis-bundle-0 undercloud" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="redis:0" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="redis:0" CRM_meta_notify_start_uname="redis-bundle-0" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_on_node="redis-bundle-0" CRM_meta_on_node_uuid="redis-bundle-0" CRM_meta_physical_host="undercloud" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="galera-bundle-0 rabbitmq-bundle-0 redis-bundle-0 undercloud" CRM_meta_notify_available_uname="redis-bundle-0 undercloud" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="redis:0" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="redis:0" CRM_meta_notify_start_uname="redis-bundle-0" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_on_node="redis-bundle-0" CRM_meta_on_node_uuid="redis-bundle-0" CRM_meta_physical_host="undercloud" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -391,7 +391,7 @@
     <action_set>
       <rsc_op id="71" operation="monitor" operation_key="redis:0_monitor_60000" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="undercloud">
         <primitive id="redis" long-id="redis:0" class="ocf" provider="heartbeat" type="redis"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="redis-bundle-0" CRM_meta_on_node_uuid="redis-bundle-0" CRM_meta_physical_host="undercloud" CRM_meta_role="Slave" CRM_meta_timeout="60000"  wait_last_known_master="true"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="60000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="redis-bundle-0" CRM_meta_on_node_uuid="redis-bundle-0" CRM_meta_physical_host="undercloud" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Slave" CRM_meta_timeout="60000"  wait_last_known_master="true"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -410,7 +410,7 @@
     <action_set>
       <rsc_op id="70" operation="monitor" operation_key="redis:0_monitor_45000" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="undercloud">
         <primitive id="redis" long-id="redis:0" class="ocf" provider="heartbeat" type="redis"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="45000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="redis-bundle-0" CRM_meta_on_node_uuid="redis-bundle-0" CRM_meta_physical_host="undercloud" CRM_meta_timeout="60000"  wait_last_known_master="true"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="45000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="redis-bundle-0" CRM_meta_on_node_uuid="redis-bundle-0" CRM_meta_physical_host="undercloud" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="60000"  wait_last_known_master="true"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -429,7 +429,7 @@
     <action_set>
       <rsc_op id="69" operation="start" operation_key="redis:0_start_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="undercloud">
         <primitive id="redis" long-id="redis:0" class="ocf" provider="heartbeat" type="redis"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="galera-bundle-0 rabbitmq-bundle-0 redis-bundle-0 undercloud" CRM_meta_notify_available_uname="redis-bundle-0 undercloud" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="redis:0" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="redis:0" CRM_meta_notify_start_uname="redis-bundle-0" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_on_node="redis-bundle-0" CRM_meta_on_node_uuid="redis-bundle-0" CRM_meta_physical_host="undercloud" CRM_meta_timeout="200000"  wait_last_known_master="true"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="galera-bundle-0 rabbitmq-bundle-0 redis-bundle-0 undercloud" CRM_meta_notify_available_uname="redis-bundle-0 undercloud" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="redis:0" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="redis:0" CRM_meta_notify_start_uname="redis-bundle-0" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_on_node="redis-bundle-0" CRM_meta_on_node_uuid="redis-bundle-0" CRM_meta_physical_host="undercloud" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="200000"  wait_last_known_master="true"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -447,7 +447,7 @@
   <synapse id="30" priority="1000000">
     <action_set>
       <pseudo_event id="77" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_running_0">
-        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -462,7 +462,7 @@
   <synapse id="31" priority="1000000">
     <action_set>
       <pseudo_event id="76" operation="notify" operation_key="redis-bundle-master_post_notify_running_0">
-        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -477,7 +477,7 @@
   <synapse id="32">
     <action_set>
       <pseudo_event id="75" operation="notified" operation_key="redis-bundle-master_confirmed-pre_notify_start_0">
-        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -489,7 +489,7 @@
   <synapse id="33">
     <action_set>
       <pseudo_event id="74" operation="notify" operation_key="redis-bundle-master_pre_notify_start_0">
-        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs/>
@@ -497,7 +497,7 @@
   <synapse id="34" priority="1000000">
     <action_set>
       <pseudo_event id="73" operation="running" operation_key="redis-bundle-master_running_0">
-        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -512,7 +512,7 @@
   <synapse id="35">
     <action_set>
       <pseudo_event id="72" operation="start" operation_key="redis-bundle-master_start_0">
-        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>

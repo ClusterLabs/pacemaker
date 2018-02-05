@@ -498,9 +498,9 @@ main(int argc, char **argv)
 
     /* required for MallocDebug.app */
     if (inhibit_exit) {
-        GMainLoop *mainloop = g_main_new(FALSE);
+        GMainLoop *mainloop = g_main_loop_new(NULL, FALSE);
 
-        g_main_run(mainloop);
+        g_main_loop_run(mainloop);
     }
 
     if (all_good) {

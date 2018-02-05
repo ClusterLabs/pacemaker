@@ -21,11 +21,12 @@
           <op name="stop" interval="0s" timeout="60s" on-fail="block" id="A-master-stop-0s"/>
         </operations>
       </primitive>
-      <master id="msPostgresql">
-        <!--### Master/Slave Configuration ###-->
+      <clone id="msPostgresql">
+        <!--### Promotion Configuration ###-->
         <meta_attributes id="msPostgresql-meta_attributes">
-          <nvpair name="master-max" value="1" id="msPostgresql-meta_attributes-master-max"/>
-          <nvpair name="master-node-max" value="1" id="msPostgresql-meta_attributes-master-node-max"/>
+          <nvpair name="promotable" value="true" id="msPostgresql-meta_attributes-promotable"/>
+          <nvpair name="promoted-max" value="1" id="msPostgresql-meta_attributes-promoted-max"/>
+          <nvpair name="promoted-node-max" value="1" id="msPostgresql-meta_attributes-promoted-node-max"/>
           <nvpair name="clone-max" value="2" id="msPostgresql-meta_attributes-clone-max"/>
           <nvpair name="clone-node-max" value="1" id="msPostgresql-meta_attributes-clone-node-max"/>
           <nvpair name="notify" value="true" id="msPostgresql-meta_attributes-notify"/>
@@ -41,7 +42,7 @@
             <op name="stop" interval="0s" timeout="300s" on-fail="block" id="pgsql-stop-0s"/>
           </operations>
         </primitive>
-      </master>
+      </clone>
     </resources>
     <constraints>
       <rsc_location id="rsc_location-msStateful-1" rsc="msPostgresql">

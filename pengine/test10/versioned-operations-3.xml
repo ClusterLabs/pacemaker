@@ -15,7 +15,10 @@
       <node id="2" uname="node2"/>
     </nodes>
     <resources>
-      <master id="A-master">
+      <clone id="A-master">
+        <meta_attributes id="A-master-meta">
+          <nvpair id="A-master-meta-promotable" name="promotable" value="true"/>
+        </meta_attributes>
         <primitive id="A" class="ocf" provider="pacemaker" type="Stateful">
           <operations>
             <op id="A-monitor-10" interval="10" name="monitor" role="Slave" timeout="20">
@@ -41,7 +44,7 @@
             </op>
           </operations>
         </primitive>
-      </master>
+      </clone>
     </resources>
     <constraints>
       <rsc_location id="master-location" rsc="A-master">

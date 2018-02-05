@@ -227,12 +227,12 @@ main(int argc, char **argv)
             /* wait for the reply by creating a mainloop and running it until
              * the callbacks are invoked...
              */
-            mainloop = g_main_new(FALSE);
+            mainloop = g_main_loop_new(NULL, FALSE);
             crm_trace("Waiting for %d replies from the local CRM", expected_responses);
 
             message_timer_id = g_timeout_add(message_timeout_ms, admin_message_timeout, NULL);
 
-            g_main_run(mainloop);
+            g_main_loop_run(mainloop);
 
         } else if (res < 0) {
             crm_err("No message to send");
@@ -389,7 +389,7 @@ crmadmin_ipc_connection_destroy(gpointer user_data)
 {
     crm_err("Connection to CRMd was terminated");
     if (mainloop) {
-        g_main_quit(mainloop);
+        g_main_loop_quit(mainloop);
     } else {
         crm_exit(CRM_EX_DISCONNECT);
     }
@@ -511,7 +511,7 @@ admin_message_timeout(gpointer data)
             (int)message_timeout_ms / 1000);
     crm_err("No messages received in %d seconds", (int)message_timeout_ms / 1000);
     exit_code = CRM_EX_TIMEOUT;
-    g_main_quit(mainloop);
+    g_main_loop_quit(mainloop);
     return FALSE;
 }
 

@@ -508,7 +508,7 @@ native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
                                                     pe_weights_rollback);
     }
 
-    print_resource(LOG_DEBUG_2, "Allocating: ", rsc, FALSE);
+    print_resource(LOG_TRACE, "Allocating: ", rsc, FALSE);
     if (rsc->next_role == RSC_ROLE_STOPPED) {
         pe_rsc_trace(rsc, "Making sure %s doesn't get allocated", rsc->id);
         /* make sure it doesn't come up again */
@@ -572,7 +572,7 @@ native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
     }
 
     clear_bit(rsc->flags, pe_rsc_allocating);
-    print_resource(LOG_DEBUG_3, "Allocated ", rsc, TRUE);
+    print_resource(LOG_TRACE, "Allocated ", rsc, TRUE);
 
     if (rsc->is_remote_node) {
         node_t *remote_node = pe_find_node(data_set->nodes, rsc->id);
@@ -730,7 +730,7 @@ RecurringOp(resource_t * rsc, action_t * start, node_t * node,
 
     if ((rsc->next_role == RSC_ROLE_MASTER && value == NULL)
         || (value != NULL && text2role(value) != rsc->next_role)) {
-        int log_level = LOG_DEBUG_2;
+        int log_level = LOG_TRACE;
         const char *result = "Ignoring";
 
         if (is_optional) {
@@ -1376,7 +1376,7 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
     custom_action_order(rsc, generate_op_key(rsc->id, RSC_STOP, 0), NULL,
                         rsc, generate_op_key(rsc->id, RSC_START, 0), NULL, type, data_set);
 
-    if (top->variant == pe_master || rsc->role > RSC_ROLE_SLAVE) {
+    if (is_set(top->flags, pe_rsc_promotable) || (rsc->role > RSC_ROLE_SLAVE)) {
         custom_action_order(rsc, generate_op_key(rsc->id, RSC_DEMOTE, 0), NULL,
                             rsc, generate_op_key(rsc->id, RSC_STOP, 0), NULL,
                             pe_order_implies_first_master, data_set);
@@ -1589,11 +1589,11 @@ filter_colocation_constraint(resource_t * rsc_lh, resource_t * rsc_rh,
     }
 
     if ((constraint->role_lh >= RSC_ROLE_SLAVE) &&
-        rsc_lh->parent &&
-        rsc_lh->parent->variant == pe_master && is_not_set(rsc_lh->flags, pe_rsc_provisional)) {
+        rsc_lh->parent && is_set(rsc_lh->parent->flags, pe_rsc_promotable)
+        && is_not_set(rsc_lh->flags, pe_rsc_provisional)) {
 
         /* LH and RH resources have already been allocated, place the correct
-         * priority oh LH rsc for the given multistate resource role */
+         * priority on LH rsc for the given promotable clone resource role */
         return influence_rsc_priority;
     }
 
@@ -1842,7 +1842,7 @@ rsc_ticket_constraint(resource_t * rsc_lh, rsc_ticket_t * rsc_ticket, pe_working
                 break;
 
             case loss_ticket_demote:
-                /*Promotion score will be set to -INFINITY in master_promotion_order() */
+                // Promotion score will be set to -INFINITY in promotion_order()
                 if (rsc_ticket->role_lh != RSC_ROLE_MASTER) {
                     resource_location(rsc_lh, NULL, -INFINITY, "__loss_of_ticket__", data_set);
                 }
@@ -2244,7 +2244,7 @@ LogAction(const char *change, resource_t *rsc, pe_node_t *origin, pe_node_t *des
         details = crm_strdup_printf("%s", origin?origin->details->uname:destination->details->uname);
 
     } else if(need_role && same_role && same_host) {
-        /* Recovering or Restarting a Master/Slave resource */
+        /* Recovering or restarting a promotable clone resource */
         details = crm_strdup_printf("%s %s", role2text(rsc->role), origin->details->uname);
 
     } else if(same_role && same_host) {
@@ -2252,7 +2252,7 @@ LogAction(const char *change, resource_t *rsc, pe_node_t *origin, pe_node_t *des
         details = crm_strdup_printf("%s", origin->details->uname);
 
     } else if(same_role && need_role) {
-        /* Moving a Master/Slave resource */
+        /* Moving a promotable clone resource */
         details = crm_strdup_printf("%s -> %s %s", origin->details->uname, destination->details->uname, role2text(rsc->role));
 
     } else if(same_role) {
@@ -2260,7 +2260,7 @@ LogAction(const char *change, resource_t *rsc, pe_node_t *origin, pe_node_t *des
         details = crm_strdup_printf("%s -> %s", origin->details->uname, destination->details->uname);
 
     } else if(same_host) {
-        /* Promoting or Demoting a Master/Slave resource */
+        /* Promoting or demoting a promotable clone resource */
         details = crm_strdup_printf("%s -> %s %s", role2text(rsc->role), role2text(rsc->next_role), origin->details->uname);
 
     } else {

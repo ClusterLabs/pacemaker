@@ -30,11 +30,6 @@
 #  ifndef LOG_TRACE
 #    define LOG_TRACE    LOG_DEBUG+1
 #  endif
-#  define LOG_DEBUG_2  LOG_TRACE
-#  define LOG_DEBUG_3  LOG_TRACE
-#  define LOG_DEBUG_4  LOG_TRACE
-#  define LOG_DEBUG_5  LOG_TRACE
-#  define LOG_DEBUG_6  LOG_TRACE
 
 /* "Extended information" logging support */
 #ifdef QB_XS

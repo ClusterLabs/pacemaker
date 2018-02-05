@@ -171,7 +171,7 @@
   <synapse id="12">
     <action_set>
       <pseudo_event id="50" operation="stop" operation_key="galera_stop_0" internal_operation_key="galera:1_stop_0">
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="120000" additional_parameters="--open-files-limit=16384"  enable_creation="true" wsrep_cluster_address="gcomm://galera-0,galera-1,galera-2"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" additional_parameters="--open-files-limit=16384"  enable_creation="true" wsrep_cluster_address="gcomm://galera-0,galera-1,galera-2"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -189,7 +189,7 @@
   <synapse id="13">
     <action_set>
       <pseudo_event id="49" operation="demote" operation_key="galera_demote_0" internal_operation_key="galera:1_demote_0">
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="demote" CRM_meta_notify="false" CRM_meta_timeout="120000" additional_parameters="--open-files-limit=16384"  enable_creation="true" wsrep_cluster_address="gcomm://galera-0,galera-1,galera-2"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="demote" CRM_meta_notify="false" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" additional_parameters="--open-files-limit=16384"  enable_creation="true" wsrep_cluster_address="gcomm://galera-0,galera-1,galera-2"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -205,7 +205,7 @@
     <action_set>
       <rsc_op id="15" operation="monitor" operation_key="galera_monitor_10000" internal_operation_key="galera:2_monitor_10000" on_node="galera-0" on_node_uuid="galera-0" router_node="controller-2">
         <primitive id="galera" long-id="galera:2" class="ocf" provider="heartbeat" type="galera"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="galera-0" CRM_meta_on_node_uuid="galera-0" CRM_meta_op_target_rc="8" CRM_meta_role="Master" CRM_meta_timeout="30000" additional_parameters="--open-files-limit=16384"  enable_creation="true" wsrep_cluster_address="gcomm://galera-0,galera-1,galera-2"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="galera-0" CRM_meta_on_node_uuid="galera-0" CRM_meta_op_target_rc="8" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_role="Master" CRM_meta_timeout="30000" additional_parameters="--open-files-limit=16384"  enable_creation="true" wsrep_cluster_address="gcomm://galera-0,galera-1,galera-2"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -217,7 +217,7 @@
   <synapse id="15" priority="1000000">
     <action_set>
       <pseudo_event id="62" operation="demoted" operation_key="galera-master_demoted_0">
-        <attributes CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -232,7 +232,7 @@
   <synapse id="16">
     <action_set>
       <pseudo_event id="61" operation="demote" operation_key="galera-master_demote_0">
-        <attributes CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs/>
@@ -240,7 +240,7 @@
   <synapse id="17" priority="1000000">
     <action_set>
       <pseudo_event id="58" operation="stopped" operation_key="galera-master_stopped_0">
-        <attributes CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -255,7 +255,7 @@
   <synapse id="18">
     <action_set>
       <pseudo_event id="57" operation="stop" operation_key="galera-master_stop_0">
-        <attributes CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -270,7 +270,7 @@
   <synapse id="19" priority="1000000">
     <action_set>
       <pseudo_event id="129" operation="notified" operation_key="redis_notified_0" internal_operation_key="redis:0_confirmed-post_notify_stonith_0">
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="stonith" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="stonith" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -288,7 +288,7 @@
   <synapse id="20" priority="1000000">
     <action_set>
       <pseudo_event id="128" operation="notify" operation_key="redis_post_notify_stop_0" internal_operation_key="redis:0_post_notify_stonith_0">
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="stonith" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="stonith" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -300,7 +300,7 @@
   <synapse id="21">
     <action_set>
       <pseudo_event id="63" operation="stop" operation_key="redis_stop_0" internal_operation_key="redis:0_stop_0">
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="stop" CRM_meta_notify="true" CRM_meta_notify_active_resource="redis:0 redis:1 redis:2" CRM_meta_notify_active_uname="controller-1 controller-0 controller-2" CRM_meta_notify_all_uname="controller-0 controller-1 controller-2 galera-0 galera-1 galera-2 messaging-0 messaging-1 messaging-2" CRM_meta_notify_available_uname="controller-2 controller-1 controller-0" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="redis:3 redis:4 redis:5 redis:6 redis:7 redis:8" CRM_meta_notify_master_resource="redis:1" CRM_meta_notify_master_uname="controller-0" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource="redis:0 redis:2" CRM_meta_notify_slave_uname="controller-1 controller-2" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="redis:0" CRM_meta_notify_stop_uname="controller-1" CRM_meta_timeout="200000"  wait_last_known_master="true"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="stop" CRM_meta_notify="true" CRM_meta_notify_active_resource="redis:0 redis:1 redis:2" CRM_meta_notify_active_uname="controller-1 controller-0 controller-2" CRM_meta_notify_all_uname="controller-0 controller-1 controller-2 galera-0 galera-1 galera-2 messaging-0 messaging-1 messaging-2" CRM_meta_notify_available_uname="controller-2 controller-1 controller-0" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="redis:3 redis:4 redis:5 redis:6 redis:7 redis:8" CRM_meta_notify_master_resource="redis:1" CRM_meta_notify_master_uname="controller-0" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource="redis:0 redis:2" CRM_meta_notify_slave_uname="controller-1 controller-2" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="redis:0" CRM_meta_notify_stop_uname="controller-1" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="200000"  wait_last_known_master="true"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -316,7 +316,7 @@
     <action_set>
       <rsc_op id="197" operation="notify" operation_key="redis_pre_notify_stop_0" internal_operation_key="redis:1_pre_notify_stop_0" on_node="controller-0" on_node_uuid="1">
         <primitive id="redis" long-id="redis:1" class="ocf" provider="heartbeat" type="redis"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="redis:0 redis:1 redis:2" CRM_meta_notify_active_uname="controller-1 controller-0 controller-2" CRM_meta_notify_all_uname="controller-0 controller-1 controller-2 galera-0 galera-1 galera-2 messaging-0 messaging-1 messaging-2" CRM_meta_notify_available_uname="controller-2 controller-1 controller-0" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="redis:3 redis:4 redis:5 redis:6 redis:7 redis:8" CRM_meta_notify_key_operation="stop" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="redis:1" CRM_meta_notify_master_uname="controller-0" CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource="redis:0 redis:2" CRM_meta_notify_slave_uname="controller-1 controller-2" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="redis:0" CRM_meta_notify_stop_uname="controller-1" CRM_meta_notify_type="pre" CRM_meta_on_node="controller-0" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="redis:0 redis:1 redis:2" CRM_meta_notify_active_uname="controller-1 controller-0 controller-2" CRM_meta_notify_all_uname="controller-0 controller-1 controller-2 galera-0 galera-1 galera-2 messaging-0 messaging-1 messaging-2" CRM_meta_notify_available_uname="controller-2 controller-1 controller-0" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="redis:3 redis:4 redis:5 redis:6 redis:7 redis:8" CRM_meta_notify_key_operation="stop" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="redis:1" CRM_meta_notify_master_uname="controller-0" CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource="redis:0 redis:2" CRM_meta_notify_slave_uname="controller-1 controller-2" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="redis:0" CRM_meta_notify_stop_uname="controller-1" CRM_meta_notify_type="pre" CRM_meta_on_node="controller-0" CRM_meta_on_node_uuid="1" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -329,7 +329,7 @@
     <action_set>
       <rsc_op id="130" operation="notify" operation_key="redis_post_notify_stop_0" internal_operation_key="redis:1_post_notify_stop_0" on_node="controller-0" on_node_uuid="1">
         <primitive id="redis" long-id="redis:1" class="ocf" provider="heartbeat" type="redis"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="redis:0 redis:1 redis:2" CRM_meta_notify_active_uname="controller-1 controller-0 controller-2" CRM_meta_notify_all_uname="controller-0 controller-1 controller-2 galera-0 galera-1 galera-2 messaging-0 messaging-1 messaging-2" CRM_meta_notify_available_uname="controller-2 controller-1 controller-0" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="redis:3 redis:4 redis:5 redis:6 redis:7 redis:8" CRM_meta_notify_key_operation="stonith" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="redis:1" CRM_meta_notify_master_uname="controller-0" CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource="redis:0 redis:2" CRM_meta_notify_slave_uname="controller-1 controller-2" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="redis:0" CRM_meta_notify_stop_uname="controller-1" CRM_meta_notify_type="post" CRM_meta_on_node="controller-0" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="redis:0 redis:1 redis:2" CRM_meta_notify_active_uname="controller-1 controller-0 controller-2" CRM_meta_notify_all_uname="controller-0 controller-1 controller-2 galera-0 galera-1 galera-2 messaging-0 messaging-1 messaging-2" CRM_meta_notify_available_uname="controller-2 controller-1 controller-0" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="redis:3 redis:4 redis:5 redis:6 redis:7 redis:8" CRM_meta_notify_key_operation="stonith" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="redis:1" CRM_meta_notify_master_uname="controller-0" CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource="redis:0 redis:2" CRM_meta_notify_slave_uname="controller-1 controller-2" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="redis:0" CRM_meta_notify_stop_uname="controller-1" CRM_meta_notify_type="post" CRM_meta_on_node="controller-0" CRM_meta_on_node_uuid="1" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -345,7 +345,7 @@
     <action_set>
       <rsc_op id="198" operation="notify" operation_key="redis_pre_notify_stop_0" internal_operation_key="redis:2_pre_notify_stop_0" on_node="controller-2" on_node_uuid="3">
         <primitive id="redis" long-id="redis:2" class="ocf" provider="heartbeat" type="redis"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="redis:0 redis:1 redis:2" CRM_meta_notify_active_uname="controller-1 controller-0 controller-2" CRM_meta_notify_all_uname="controller-0 controller-1 controller-2 galera-0 galera-1 galera-2 messaging-0 messaging-1 messaging-2" CRM_meta_notify_available_uname="controller-2 controller-1 controller-0" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="redis:3 redis:4 redis:5 redis:6 redis:7 redis:8" CRM_meta_notify_key_operation="stop" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="redis:1" CRM_meta_notify_master_uname="controller-0" CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource="redis:0 redis:2" CRM_meta_notify_slave_uname="controller-1 controller-2" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="redis:0" CRM_meta_notify_stop_uname="controller-1" CRM_meta_notify_type="pre" CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="redis:0 redis:1 redis:2" CRM_meta_notify_active_uname="controller-1 controller-0 controller-2" CRM_meta_notify_all_uname="controller-0 controller-1 controller-2 galera-0 galera-1 galera-2 messaging-0 messaging-1 messaging-2" CRM_meta_notify_available_uname="controller-2 controller-1 controller-0" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="redis:3 redis:4 redis:5 redis:6 redis:7 redis:8" CRM_meta_notify_key_operation="stop" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="redis:1" CRM_meta_notify_master_uname="controller-0" CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource="redis:0 redis:2" CRM_meta_notify_slave_uname="controller-1 controller-2" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="redis:0" CRM_meta_notify_stop_uname="controller-1" CRM_meta_notify_type="pre" CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -358,7 +358,7 @@
     <action_set>
       <rsc_op id="131" operation="notify" operation_key="redis_post_notify_stop_0" internal_operation_key="redis:2_post_notify_stop_0" on_node="controller-2" on_node_uuid="3">
         <primitive id="redis" long-id="redis:2" class="ocf" provider="heartbeat" type="redis"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="redis:0 redis:1 redis:2" CRM_meta_notify_active_uname="controller-1 controller-0 controller-2" CRM_meta_notify_all_uname="controller-0 controller-1 controller-2 galera-0 galera-1 galera-2 messaging-0 messaging-1 messaging-2" CRM_meta_notify_available_uname="controller-2 controller-1 controller-0" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="redis:3 redis:4 redis:5 redis:6 redis:7 redis:8" CRM_meta_notify_key_operation="stonith" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="redis:1" CRM_meta_notify_master_uname="controller-0" CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource="redis:0 redis:2" CRM_meta_notify_slave_uname="controller-1 controller-2" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="redis:0" CRM_meta_notify_stop_uname="controller-1" CRM_meta_notify_type="post" CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="redis:0 redis:1 redis:2" CRM_meta_notify_active_uname="controller-1 controller-0 controller-2" CRM_meta_notify_all_uname="controller-0 controller-1 controller-2 galera-0 galera-1 galera-2 messaging-0 messaging-1 messaging-2" CRM_meta_notify_available_uname="controller-2 controller-1 controller-0" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="redis:3 redis:4 redis:5 redis:6 redis:7 redis:8" CRM_meta_notify_key_operation="stonith" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="redis:1" CRM_meta_notify_master_uname="controller-0" CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource="redis:0 redis:2" CRM_meta_notify_slave_uname="controller-1 controller-2" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="redis:0" CRM_meta_notify_stop_uname="controller-1" CRM_meta_notify_type="post" CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -373,7 +373,7 @@
   <synapse id="26" priority="1000000">
     <action_set>
       <pseudo_event id="81" operation="notified" operation_key="redis-master_confirmed-post_notify_stopped_0">
-        <attributes CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="stopped" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="stopped" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -391,7 +391,7 @@
   <synapse id="27" priority="1000000">
     <action_set>
       <pseudo_event id="80" operation="notify" operation_key="redis-master_post_notify_stopped_0">
-        <attributes CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="stopped" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="stopped" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -406,7 +406,7 @@
   <synapse id="28">
     <action_set>
       <pseudo_event id="79" operation="notified" operation_key="redis-master_confirmed-pre_notify_stop_0">
-        <attributes CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="stop" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="stop" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="stop" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="stop" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -424,7 +424,7 @@
   <synapse id="29">
     <action_set>
       <pseudo_event id="78" operation="notify" operation_key="redis-master_pre_notify_stop_0">
-        <attributes CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="stop" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="stop" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="stop" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="stop" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs/>
@@ -432,7 +432,7 @@
   <synapse id="30" priority="1000000">
     <action_set>
       <pseudo_event id="77" operation="stopped" operation_key="redis-master_stopped_0">
-        <attributes CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -447,7 +447,7 @@
   <synapse id="31">
     <action_set>
       <pseudo_event id="76" operation="stop" operation_key="redis-master_stop_0">
-        <attributes CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="9" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>

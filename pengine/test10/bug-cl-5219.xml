@@ -24,15 +24,24 @@
       </primitive>
       <primitive id="child2-service" class="ocf" provider="pacemaker" type="Dummy"/>
       <primitive id="parent-service" class="ocf" provider="pacemaker" type="Dummy"/>
-      <master id="child1">
+      <clone id="child1">
+        <meta_attributes id="child1-meta">
+          <nvpair id="child1-meta-promotable" name="promotable" value="true"/>
+        </meta_attributes>
         <primitive id="stateful-child1" class="ocf" provider="pacemaker" type="Stateful"/>
-      </master>
-      <master id="child2">
+      </clone>
+      <clone id="child2">
+        <meta_attributes id="child2-meta">
+          <nvpair id="child2-meta-promotable" name="promotable" value="true"/>
+        </meta_attributes>
         <primitive id="stateful-child2" class="ocf" provider="pacemaker" type="Stateful"/>
-      </master>
-      <master id="parent">
+      </clone>
+      <clone id="parent">
+        <meta_attributes id="parent-meta">
+          <nvpair id="parent-meta-promotable" name="promotable" value="true"/>
+        </meta_attributes>
         <primitive id="stateful-parent" class="ocf" provider="pacemaker" type="Stateful"/>
-      </master>
+      </clone>
     </resources>
     <constraints>
       <rsc_colocation id="child1-master-with-parent-master" score="INFINITY" rsc="child1" rsc-role="Master" with-rsc="parent" with-rsc-role="Master"/>

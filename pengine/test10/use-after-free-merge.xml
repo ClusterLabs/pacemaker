@@ -38,12 +38,13 @@
           <nvpair id="g0-meta_attributes-target-role" name="target-role" value="Stopped"/>
         </meta_attributes>
       </group>
-      <master id="ms0">
+      <clone id="ms0">
         <primitive class="ocf" id="s0" provider="heartbeat" type="Stateful"/>
         <meta_attributes id="ms0-meta_attributes">
+          <nvpair id="ms0-meta_attributes-promotable" name="promotable" value="true"/>
           <nvpair id="ms0-meta_attributes-target-role" name="target-role" value="Started"/>
         </meta_attributes>
-      </master>
+      </clone>
     </resources>
     <constraints>
       <rsc_location id="cli-standby-fencing-sbd" rsc="fencing-sbd">

@@ -20,12 +20,13 @@
       </node>
     </nodes>
     <resources>
-      <master id="drbd">
+      <clone id="drbd">
         <meta_attributes id="meta_attributes.id21946">
+          <nvpair id="nvpair.id21952" name="promotable" value="true"/>
           <nvpair id="nvpair.id21953" name="clone-max" value="2"/>
           <nvpair id="nvpair.id21961" name="clone-node-max" value="1"/>
-          <nvpair id="nvpair.id21969" name="master-max" value="2"/>
-          <nvpair id="nvpair.id21978" name="master-node-max" value="2"/>
+          <nvpair id="nvpair.id21969" name="promoted-max" value="2"/>
+          <nvpair id="nvpair.id21978" name="promoted-node-max" value="2"/>
           <nvpair id="nvpair.id21986" name="notify" value="yes"/>
           <nvpair id="nvpair.id21995" name="globally-unique" value="false"/>
           <nvpair id="nvpair.id22004" name="target-role" value="started"/>
@@ -41,8 +42,8 @@
           </operations>
           <meta_attributes id="primitive-drbd0.meta"/>
         </primitive>
-        <meta_attributes id="master_slave-drbd.meta"/>
-      </master>
+        <meta_attributes id="clone-drbd.meta"/>
+      </clone>
       <clone id="cman_clone">
         <meta_attributes id="meta_attributes.id22094">
           <nvpair id="nvpair.id22101" name="globally-unique" value="false"/>

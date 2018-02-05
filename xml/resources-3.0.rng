@@ -83,7 +83,10 @@
               <attribute name="replicas-per-host"><data type="integer"/></attribute>
             </optional>
             <optional>
-              <attribute name="masters"><data type="integer"/></attribute>
+              <choice>
+                <attribute name="masters"><data type="integer"/></attribute>
+                <attribute name="promoted-max"><data type="integer"/></attribute>
+              </choice>
             </optional>
             <optional>
               <attribute name="run-command"> <text/></attribute>
@@ -104,7 +107,10 @@
               <attribute name="replicas-per-host"><data type="integer"/></attribute>
             </optional>
             <optional>
-              <attribute name="masters"><data type="integer"/></attribute>
+              <choice>
+                <attribute name="masters"><data type="integer"/></attribute>
+                <attribute name="promoted-max"><data type="integer"/></attribute>
+              </choice>
             </optional>
             <optional>
               <attribute name="run-command"> <text/></attribute>

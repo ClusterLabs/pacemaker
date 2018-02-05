@@ -28,12 +28,13 @@
       </meta_attributes>
     </op_defaults>
     <resources>
-      <master id="ms-drbd1">
+      <clone id="ms-drbd1">
         <meta_attributes id="ma-ms-drbd1">
+          <nvpair id="ma-ms-drbd1-0"  name="promotable" value="true"/>
           <nvpair id="ma-ms-drbd1-1" name="clone-max" value="2"/>
           <nvpair id="ma-ms-drbd1-2" name="clone-node-max" value="1"/>
-          <nvpair id="ma-ms-drbd1-3" name="master-max" value="1"/>
-          <nvpair id="ma-ms-drbd1-4" name="master-node-max" value="1"/>
+          <nvpair id="ma-ms-drbd1-3" name="promoted-max" value="1"/>
+          <nvpair id="ma-ms-drbd1-4" name="promoted-node-max" value="1"/>
           <nvpair id="ma-ms-drbd1-5" name="notify" value="yes"/>
           <nvpair id="ma-ms-drbd1-6" name="globally-unique" value="false"/>
           <nvpair id="ma-ms-drbd1-7" name="target-role" value="started"/>
@@ -47,7 +48,7 @@
             <op name="monitor" interval="11s" id="op-drbd1-2" timeout="15s" role="Slave"/>
           </operations>
         </primitive>
-      </master>
+      </clone>
       <group id="apache">
         <meta_attributes id="ma-apache">
           <nvpair id="ma-apache-1" name="target-role" value="started"/>

@@ -13,12 +13,13 @@
     </nodes>
     <resources>
       <primitive id="st_sbd" class="stonith" type="external/sbd"/>
-      <master id="ms1">
+      <clone id="ms1">
         <meta_attributes id="ms1-meta_attributes">
+          <nvpair name="promotable" value="true" id="ms1-meta_attributes-promotable"/>
           <nvpair name="interleave" value="true" id="ms1-meta_attributes-interleave"/>
         </meta_attributes>
         <primitive id="state1" class="ocf" provider="pacemaker" type="Stateful"/>
-      </master>
+      </clone>
       <primitive id="dummy1" class="ocf" provider="pacemaker" type="Dummy"/>
     </resources>
     <constraints>

@@ -11,7 +11,7 @@
       <node id="node2" type="member" uname="node2"/>
     </nodes>
     <resources>
-      <master id="ms1">
+      <clone id="ms1">
         <primitive id="rsc1" class="ocf" provider="pacemaker" type="Stateful">
           <operations id="rsc1-operations">
             <op id="rsc1-monitor-master-5" interval="5" name="monitor" role="Master"/>
@@ -19,17 +19,21 @@
           </operations>
         </primitive>
         <meta_attributes id="ms1-meta_attributes">
+          <nvpair id="ms1-meta_attributes-promotable" name="promotable" value="true"/>
           <nvpair id="ms1-meta_attributes-target-role" name="target-role" value="Stopped"/>
         </meta_attributes>
-      </master>
-      <master id="ms2">
+      </clone>
+      <clone id="ms2">
+        <meta_attributes id="ms2-meta_attributes">
+          <nvpair id="ms2-meta_attributes-promotable" name="promotable" value="true"/>
+        </meta_attributes>
         <primitive id="rsc2" class="ocf" provider="pacemaker" type="Stateful">
           <operations id="rsc2-operations">
             <op id="rsc2-monitor-master-5" interval="5" name="monitor" role="Master"/>
             <op id="rsc2-monitor-slave-5" interval="5" name="monitor" role="Slave"/>
           </operations>
         </primitive>
-      </master>
+      </clone>
     </resources>
     <constraints>
       <rsc_location id="ms1-master-location" rsc="ms1" role="Master" node="node1" score="100"/>

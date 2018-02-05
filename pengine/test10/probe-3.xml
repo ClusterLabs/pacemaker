@@ -112,12 +112,13 @@
           </operations>
         </primitive>
       </clone>
-      <master id="master-1">
+      <clone id="master-1">
         <meta_attributes id="master-1-meta_attributes">
+          <nvpair id="master-1-meta_attributes-promotable" name="promotable" value="true"/>
           <nvpair id="master-1-meta_attributes-clone-max" name="clone-max" value="4"/>
           <nvpair id="master-1-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
-          <nvpair id="master-1-meta_attributes-master-max" name="master-max" value="1"/>
-          <nvpair id="master-1-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="master-1-meta_attributes-promoted-max" name="promoted-max" value="1"/>
+          <nvpair id="master-1-meta_attributes-promoted-node-max" name="promoted-node-max" value="1"/>
         </meta_attributes>
         <primitive class="ocf" id="stateful-1" provider="pacemaker" type="Stateful">
           <operations>
@@ -125,7 +126,7 @@
             <op id="stateful-1-monitor-16s" interval="16s" name="monitor" role="Master"/>
           </operations>
         </primitive>
-      </master>
+      </clone>
       <clone id="Fencing">
         <meta_attributes id="Fencing-meta_attributes">
           <nvpair id="Fencing-meta_attributes-globally-unique" name="globally-unique" value="false"/>

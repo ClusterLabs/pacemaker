@@ -135,24 +135,21 @@ native_unpack(resource_t * rsc, pe_working_set_t * data_set)
     native_data = calloc(1, sizeof(native_variant_data_t));
     rsc->variant_opaque = native_data;
 
-    if (is_set(rsc->flags, pe_rsc_unique) && rsc->parent) {
+    // Cloned LSB primitives must be anonymous
+    if (is_set(rsc->flags, pe_rsc_unique) && rsc->parent
+        && safe_str_eq(class, PCMK_RESOURCE_CLASS_LSB)) {
 
-        if (safe_str_eq(class, PCMK_RESOURCE_CLASS_LSB)) {
-            resource_t *top = uber_parent(rsc);
-
-            force_non_unique_clone(top, rsc->id, data_set);
-        }
+        force_non_unique_clone(parent, rsc->id, data_set);
     }
 
-    if (safe_str_eq(class, PCMK_RESOURCE_CLASS_OCF) == FALSE) {
-        const char *stateful = g_hash_table_lookup(parent->meta, "stateful");
+    // Only OCF primitives can be promotable clones
+    if (is_set(parent->flags, pe_rsc_promotable)
+        && safe_str_neq(class, PCMK_RESOURCE_CLASS_OCF)) {
 
-        if (safe_str_eq(stateful, XML_BOOLEAN_TRUE)) {
-            pe_err
-                ("Resource %s is of type %s and therefore cannot be used as a master/slave resource",
-                 rsc->id, class);
-            return FALSE;
-        }
+        pe_err("Resource %s is of type %s and therefore "
+               "cannot be used as a promotable clone resource",
+               rsc->id, class);
+        return FALSE;
     }
 
     return TRUE;
@@ -377,7 +374,7 @@ native_displayable_role(resource_t *rsc)
     enum rsc_role_e role = rsc->role;
 
     if ((role == RSC_ROLE_STARTED)
-        && (uber_parent(rsc)->variant == pe_master)) {
+        && is_set(uber_parent(rsc)->flags, pe_rsc_promotable)) {
 
         role = RSC_ROLE_SLAVE;
     }
@@ -587,7 +584,7 @@ common_print(resource_t * rsc, const char *pre_text, const char *name, node_t *n
                                    "%sdisabled", comma_if(flagOffset));
             rsc->cluster->disabled_resources++;
 
-        } else if (uber_parent(rsc)->variant == pe_master
+        } else if (is_set(uber_parent(rsc)->flags, pe_rsc_promotable)
                    && target_role_e == RSC_ROLE_SLAVE) {
             flagOffset += snprintf(flagBuffer + flagOffset, LINE_MAX - flagOffset,
                                    "%starget-role:%s", comma_if(flagOffset), target_role);

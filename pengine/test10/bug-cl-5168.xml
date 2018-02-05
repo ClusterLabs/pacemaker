@@ -80,10 +80,11 @@
           </instance_attributes>
         </primitive>
       </clone>
-      <master id="ms-r0">
+      <clone id="ms-r0">
         <meta_attributes id="ms-r0-meta_attributes">
-          <nvpair id="ms-r0-meta_attributes-master-max" name="master-max" value="1"/>
-          <nvpair id="ms-r0-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms_r0-meta_attributes-promotable" name="promotable" value="true"/>
+          <nvpair id="ms-r0-meta_attributes-promoted-max" name="promoted-max" value="1"/>
+          <nvpair id="ms-r0-meta_attributes-promoted-node-max" name="promoted-node-max" value="1"/>
           <nvpair id="ms-r0-meta_attributes-clone-max" name="clone-max" value="2"/>
           <nvpair id="ms-r0-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
           <nvpair id="ms-r0-meta_attributes-notify" name="notify" value="true"/>
@@ -99,7 +100,7 @@
             <op id="drbd-r0-monitor-31" interval="31" name="monitor" role="Master"/>
           </operations>
         </primitive>
-      </master>
+      </clone>
       <group id="md0-group">
         <primitive class="ocf" id="md0" provider="heartbeat" type="Raid1">
           <instance_attributes id="md0-instance_attributes">
@@ -149,10 +150,11 @@
         </primitive>
         <primitive id="dummy2" template="t_dummy"/>
       </group>
-      <master id="ms-r1">
+      <clone id="ms-r1">
         <meta_attributes id="ms-r1-meta_attributes">
-          <nvpair id="ms-r1-meta_attributes-master-max" name="master-max" value="1"/>
-          <nvpair id="ms-r1-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms_r1-meta_attributes-promotable" name="promotable" value="true"/>
+          <nvpair id="ms-r1-meta_attributes-promoted-max" name="promoted-max" value="1"/>
+          <nvpair id="ms-r1-meta_attributes-promoted-node-max" name="promoted-node-max" value="1"/>
           <nvpair id="ms-r1-meta_attributes-clone-max" name="clone-max" value="2"/>
           <nvpair id="ms-r1-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
           <nvpair id="ms-r1-meta_attributes-notify" name="notify" value="true"/>
@@ -171,7 +173,7 @@
             <nvpair id="drbd-r1-meta_attributes-target-role" name="target-role" value="Started"/>
           </meta_attributes>
         </primitive>
-      </master>
+      </clone>
       <template id="t_dummy" class="ocf" provider="heartbeat" type="Delay">
         <instance_attributes id="t_dummy-instance_attributes">
           <nvpair name="startdelay" value="0" id="t_dummy-instance_attributes-startdelay"/>

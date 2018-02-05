@@ -125,6 +125,6 @@ It is worth noting that after *guest1* is integrated into the cluster, nearly al
 Pacemaker command-line tools immediately become available to the guest node.
 This means things like `crm_mon`, `crm_resource`, and `crm_attribute` will work
 natively on the guest node, as long as the connection between the guest node
-and a cluster node exists. This is particularly important for any master/slave
-resources executing on the guest node that need access to `crm_master` to set
-transient attributes.
+and a cluster node exists. This is particularly important for any promotable
+clone resources executing on the guest node that need access to `crm_master` to
+set transient attributes.

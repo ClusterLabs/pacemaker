@@ -123,11 +123,12 @@
           </operations>
         </primitive>
       </clone>
-      <master id="master-1">
+      <clone id="master-1">
         <meta_attributes id="master-1-meta">
-          <nvpair id="master-1-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="master-1-promotable" name="promotable" value="true"/>
+          <nvpair id="master-1-promoted-node-max" name="promoted-node-max" value="1"/>
           <nvpair id="master-1-clone-max" name="clone-max" value="5"/>
-          <nvpair id="master-1-master-max" name="master-max" value="1"/>
+          <nvpair id="master-1-promoted-max" name="promoted-max" value="1"/>
           <nvpair id="master-1-clone-node-max" name="clone-node-max" value="1"/>
         </meta_attributes>
         <primitive id="stateful-1" class="ocf" type="Stateful" provider="pacemaker">
@@ -136,7 +137,7 @@
             <op id="stateful-1-monitor-16s" interval="16s" role="Master" name="monitor" timeout="60s"/>
           </operations>
         </primitive>
-      </master>
+      </clone>
       <group id="group-1">
         <primitive id="r192.168.122.207" class="ocf" type="IPaddr2" provider="heartbeat">
           <instance_attributes id="r192.168.122.207-params">

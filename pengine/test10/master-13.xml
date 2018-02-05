@@ -30,12 +30,13 @@
       <node id="96a11b50-845a-4866-b091-a2d5ec548717" uname="odin" type="member"/>
     </nodes>
     <resources>
-      <master id="ms_drbd">
+      <clone id="ms_drbd">
         <meta_attributes id="meta_attributes.id22010">
+          <nvpair id="nvpair.id22016" name="promotable" value="true"/>
           <nvpair id="nvpair.id22017" name="clone-max" value="2"/>
           <nvpair id="nvpair.id22025" name="clone-node-max" value="1"/>
-          <nvpair id="nvpair.id22033" name="master-max" value="1"/>
-          <nvpair id="nvpair.id22041" name="master-node-max" value="1"/>
+          <nvpair id="nvpair.id22033" name="promoted-max" value="1"/>
+          <nvpair id="nvpair.id22041" name="promoted-node-max" value="1"/>
           <nvpair id="nvpair.id22050" name="notify" value="yes"/>
           <nvpair id="nvpair.id22058" name="globally-unique" value="false"/>
           <nvpair id="nvpair.id22067" name="target-role" value="Started"/>
@@ -50,8 +51,8 @@
           </operations>
           <meta_attributes id="primitive-drbd0.meta"/>
         </primitive>
-        <meta_attributes id="master_slave-ms_drbd.meta"/>
-      </master>
+        <meta_attributes id="clone-ms_drbd.meta"/>
+      </clone>
       <group id="group">
         <primitive id="IPaddr0" class="ocf" provider="heartbeat" type="IPaddr">
           <instance_attributes id="instance_attributes.id22149">

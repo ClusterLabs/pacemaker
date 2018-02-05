@@ -212,7 +212,7 @@ do_te_invoke(long long action,
         }
 
         trigger_graph();
-        print_graph(LOG_DEBUG_2, transition_graph);
+        print_graph(LOG_TRACE, transition_graph);
 
         if (graph_data != input->xml) {
             free_xml(graph_data);

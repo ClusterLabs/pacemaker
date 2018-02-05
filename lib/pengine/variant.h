@@ -24,15 +24,12 @@ typedef struct clone_variant_data_s {
     int clone_max;
     int clone_node_max;
 
-    int master_max;
-    int master_node_max;
+    int promoted_max;
+    int promoted_node_max;
 
     int total_clones;
     int active_clones;
     int max_nodes;
-
-    int masters_active;
-    int masters_allocated;
 
     gboolean interleave;
     gboolean ordered;
@@ -52,7 +49,7 @@ typedef struct clone_variant_data_s {
 
 #    define get_clone_variant_data(data, rsc)				\
 	CRM_ASSERT(rsc != NULL);					\
-	CRM_ASSERT(rsc->variant == pe_clone || rsc->variant == pe_master); \
+	CRM_ASSERT(rsc->variant == pe_clone); \
 	data = (clone_variant_data_t *)rsc->variant_opaque;
 
 #  elif VARIANT_CONTAINER
@@ -96,7 +93,7 @@ enum container_type {
 #define PE_CONTAINER_TYPE_RKT_S     "rkt"
 
 typedef struct container_variant_data_s {
-        int masters;
+        int promoted_max;
         int replicas;
         int replicas_per_host;
         char *prefix;

@@ -26,10 +26,11 @@
       </node>
     </nodes>
     <resources>
-      <master id="AdminClone">
+      <clone id="AdminClone">
         <meta_attributes id="AdminClone-meta_attributes">
-          <nvpair id="AdminClone-meta_attributes-master-max" name="master-max" value="2"/>
-          <nvpair id="AdminClone-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="AdminClone-meta_attributes-promotable" name="promotable" value="true"/>
+          <nvpair id="AdminClone-meta_attributes-promoted-max" name="promoted-max" value="2"/>
+          <nvpair id="AdminClone-meta_attributes-promoted-node-max" name="promoted-node-max" value="1"/>
           <nvpair id="AdminClone-meta_attributes-clone-max" name="clone-max" value="2"/>
           <nvpair id="AdminClone-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
           <nvpair id="AdminClone-meta_attributes-notify" name="notify" value="true"/>
@@ -49,7 +50,7 @@
             <nvpair id="AdminDrbd-meta_attributes-target-role" name="target-role" value="Master"/>
           </meta_attributes>
         </primitive>
-      </master>
+      </clone>
       <primitive class="ocf" description="Shutdown cluster if A/C stops" id="CronAmbientTemperature" provider="heartbeat" type="symlink">
         <operations>
           <op id="CronAmbientTemperature-monitor-60" interval="60" name="monitor" timeout="15"/>

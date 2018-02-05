@@ -32,12 +32,8 @@ enum pe_obj_types {
     pe_native = 0,
     pe_group = 1,
     pe_clone = 2,
-    pe_master = 3,
-    pe_container = 4,
+    pe_container = 3,
 };
-
-enum pe_obj_types get_resource_type(const char *name);
-const char *get_resource_typename(enum pe_obj_types type);
 
 typedef struct resource_object_functions_s {
     gboolean(*unpack) (resource_t *, pe_working_set_t *);

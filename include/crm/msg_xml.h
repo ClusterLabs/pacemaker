@@ -194,7 +194,7 @@
 #  define XML_CIB_TAG_RESOURCE	  	"primitive"
 #  define XML_CIB_TAG_GROUP	  	"group"
 #  define XML_CIB_TAG_INCARNATION	"clone"
-#  define XML_CIB_TAG_MASTER		"master"
+#  define XML_CIB_TAG_MASTER        "master" // deprecated since 2.0.0
 #  define XML_CIB_TAG_CONTAINER		"bundle"
 
 #  define XML_CIB_TAG_RSC_TEMPLATE	"template"
@@ -207,8 +207,11 @@
 #  define XML_RSC_ATTR_INCARNATION_MAX	"clone-max"
 #  define XML_RSC_ATTR_INCARNATION_MIN	"clone-min"
 #  define XML_RSC_ATTR_INCARNATION_NODEMAX	"clone-node-max"
-#  define XML_RSC_ATTR_MASTER_MAX	"master-max"
-#  define XML_RSC_ATTR_MASTER_NODEMAX	"master-node-max"
+#  define XML_RSC_ATTR_PROMOTABLE       "promotable"
+#  define XML_RSC_ATTR_PROMOTED_MAX     "promoted-max"
+#  define XML_RSC_ATTR_PROMOTED_NODEMAX "promoted-node-max"
+#  define XML_RSC_ATTR_MASTER_MAX       "master-max"      // deprecated since 2.0.0
+#  define XML_RSC_ATTR_MASTER_NODEMAX   "master-node-max" // deprecated since 2.0.0
 #  define XML_RSC_ATTR_STATE		"clone-state"
 #  define XML_RSC_ATTR_MANAGED		"is-managed"
 #  define XML_RSC_ATTR_TARGET_ROLE	"target-role"

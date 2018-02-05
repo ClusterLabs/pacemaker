@@ -28,14 +28,17 @@
           <op id="rsc2-monitor-10" interval="10" name="monitor"/>
         </operations>
       </primitive>
-      <master id="ms3">
+      <clone id="ms3">
+        <meta_attributes id="ms3-meta">
+          <nvpair id="ms3-meta_attributes-promotable" name="promotable" value="true"/>
+        </meta_attributes>
         <primitive class="ocf" id="rsc3" provider="pacemaker" type="Stateful">
           <operations id="rsc3-operations">
             <op id="rsc3-monitor-master-5" interval="5" name="monitor" role="Master"/>
             <op id="rsc3-monitor-slave-5" interval="5" name="monitor" role="Slave"/>
           </operations>
         </primitive>
-      </master>
+      </clone>
     </resources>
     <constraints>
       <rsc_location id="loc-rsc1" rsc="rsc1" node="node2" score="10"/>

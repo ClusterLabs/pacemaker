@@ -1,4 +1,4 @@
-<cib crm_feature_set="3.0.12" validate-with="pacemaker-2.8" epoch="58" num_updates="129" admin_epoch="0" cib-last-written="Thu Jun  1 03:59:09 2017" update-origin="undercloud" update-client="cibadmin" update-user="root" have-quorum="1" dc-uuid="1">
+<cib crm_feature_set="3.0.12" validate-with="pacemaker-3.0" epoch="58" num_updates="129" admin_epoch="0" cib-last-written="Thu Jun  1 03:59:09 2017" update-origin="undercloud" update-client="cibadmin" update-user="root" have-quorum="1" dc-uuid="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -64,7 +64,7 @@
         </primitive>
       </clone>
       <bundle id="galera-bundle">
-        <docker image="192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest" masters="1" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="1" run-command="/bin/bash /usr/local/bin/kolla_start"/>
+        <docker image="192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest" promoted-max="1" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="1" run-command="/bin/bash /usr/local/bin/kolla_start"/>
         <network control-port="3123"/>
         <storage>
           <storage-mapping id="mysql-cfg-files" options="ro" source-dir="/var/lib/kolla/config_files/mysql.json" target-dir="/var/lib/kolla/config_files/config.json"/>
@@ -87,7 +87,7 @@
             <nvpair id="galera-instance_attributes-wsrep_cluster_address" name="wsrep_cluster_address" value="gcomm://metal"/>
           </instance_attributes>
           <meta_attributes id="galera-meta_attributes">
-            <nvpair id="galera-meta_attributes-master-max" name="master-max" value="1"/>
+            <nvpair id="galera-meta_attributes-promoted-max" name="promoted-max" value="1"/>
             <nvpair id="galera-meta_attributes-ordered" name="ordered" value="true"/>
           </meta_attributes>
           <operations>
@@ -116,7 +116,7 @@
         </storage>
       </bundle>
       <bundle id="redis-bundle">
-        <docker image="192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest" masters="1" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="1" run-command="/bin/bash /usr/local/bin/kolla_start"/>
+        <docker image="192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest" promoted-max="1" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="1" run-command="/bin/bash /usr/local/bin/kolla_start"/>
         <network control-port="3124"/>
         <storage>
           <storage-mapping id="redis-cfg-files" options="ro" source-dir="/var/lib/kolla/config_files/redis.json" target-dir="/var/lib/kolla/config_files/config.json"/>

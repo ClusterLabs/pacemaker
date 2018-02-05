@@ -62,7 +62,7 @@ main(int argc, char **argv)
     int index = 0;
     int argerr = 0;
 
-    crmd_mainloop = g_main_new(FALSE);
+    crmd_mainloop = g_main_loop_new(NULL, FALSE);
     crm_log_preinit(NULL, argc, argv);
     crm_set_options(NULL, "[options]", long_options,
                     "Daemon for aggregating resource and node failures as well as co-ordinating the cluster's response");
@@ -159,7 +159,7 @@ crmd_init(void)
         }
         cl_make_realtime(SCHED_RR, 5, 64, 64);
 #endif
-        g_main_run(crmd_mainloop);
+        g_main_loop_run(crmd_mainloop);
         if (is_set(fsa_input_register, R_STAYDOWN)) {
             crm_info("Inhibiting automated respawn");
             exit_code = CRM_EX_FATAL;

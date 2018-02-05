@@ -27,8 +27,9 @@
       </meta_attributes>
     </rsc_defaults>
     <resources>
-      <master id="ms_drbd_iscsivg01">
+      <clone id="ms_drbd_iscsivg01">
         <meta_attributes id="ms_drbd_iscsivg01-meta_attributes">
+          <nvpair id="ms_drbd_iscsivg01-meta_attributes-promotable" name="promotable" value="true"/>
           <nvpair id="ms_drbd_iscsivg01-meta_attributes-clone-max" name="clone-max" value="2"/>
           <nvpair id="ms_drbd_iscsivg01-meta_attributes-notify" name="notify" value="true"/>
         </meta_attributes>
@@ -40,7 +41,7 @@
             <op id="res_drbd_iscsivg01-monitor-10" interval="10" name="monitor"/>
           </operations>
         </primitive>
-      </master>
+      </clone>
       <clone id="cl_tgtd">
         <primitive class="lsb" id="res_tgtd" type="tgtd">
           <operations>

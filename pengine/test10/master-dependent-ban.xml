@@ -27,10 +27,11 @@
       </node>
     </nodes>
     <resources>
-      <master id="ms_drbd-dtest1">
+      <clone id="ms_drbd-dtest1">
         <meta_attributes id="ms_drbd-dtest1-meta_attributes">
+          <nvpair id="ms_drbd-dtest1-meta_attributes-promotable" name="promotable" value="true"/>
           <nvpair id="ms_drbd-dtest1-meta_attributes-clone-max" name="clone-max" value="2"/>
-          <nvpair id="ms_drbd-dtest1-meta_attributes-master-max" name="master-max" value="1"/>
+          <nvpair id="ms_drbd-dtest1-meta_attributes-promoted-max" name="promoted-max" value="1"/>
           <nvpair id="ms_drbd-dtest1-meta_attributes-interleave" name="interleave" value="true"/>
           <nvpair id="ms_drbd-dtest1-meta_attributes-notify" name="notify" value="true"/>
           <nvpair id="ms_drbd-dtest1-meta_attributes-is-managed" name="is-managed" value="true"/>
@@ -49,7 +50,7 @@
             <op id="p_drbd-dtest1-monitor-10" interval="10" name="monitor" role="Master" timeout="20"/>
           </operations>
         </primitive>
-      </master>
+      </clone>
       <primitive class="ocf" id="p_dtest1" provider="heartbeat" type="Dummy"/>
     </resources>
     <constraints>

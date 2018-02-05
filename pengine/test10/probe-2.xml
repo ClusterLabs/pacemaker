@@ -56,10 +56,11 @@
           </instance_attributes>
         </primitive>
       </group>
-      <master id="ms_drbd_mysql">
+      <clone id="ms_drbd_mysql">
         <meta_attributes id="ms_drbd_mysql_ma">
-          <nvpair id="ms_drbd_mysql_master-max" name="master-max" value="1"/>
-          <nvpair id="ms_drbd_mysql_master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms_drbd_mysql_promotable" name="promotable" value="true"/>
+          <nvpair id="ms_drbd_mysql_promoted-max" name="promoted-max" value="1"/>
+          <nvpair id="ms_drbd_mysql_promoted-node-max" name="promoted-node-max" value="1"/>
           <nvpair id="ms_drbd_mysql_clone-max" name="clone-max" value="2"/>
           <nvpair id="ms_drbd_mysql_clone-node-max" name="clone-node-max" value="1"/>
           <nvpair id="ms_drbd_mysql_clone_role" name="target-role" value="Started"/>
@@ -79,7 +80,7 @@
             <nvpair id="drbd_mysql_clone_overrides_hostname" name="clone-overrides-hostname" value="no"/>
           </instance_attributes>
         </primitive>
-      </master>
+      </clone>
       <group id="group_mysql">
         <primitive class="ocf" id="fs_mysql" provider="heartbeat" type="Filesystem">
           <operations>
@@ -118,10 +119,11 @@
           </instance_attributes>
         </primitive>
       </group>
-      <master id="ms_drbd_www">
+      <clone id="ms_drbd_www">
         <meta_attributes id="ms_drbd_www_ma">
-          <nvpair id="ms_drbd_www_master-max" name="master-max" value="1"/>
-          <nvpair id="ms_drbd_www_master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms_drbd_www_promotable" name="promotable" value="true"/>
+          <nvpair id="ms_drbd_www_promoted-max" name="promoted-max" value="1"/>
+          <nvpair id="ms_drbd_www_promoted-node-max" name="promoted-node-max" value="1"/>
           <nvpair id="ms_drbd_www_clone-max" name="clone-max" value="2"/>
           <nvpair id="ms_drbd_www_clone-node-max" name="clone-node-max" value="1"/>
           <nvpair id="ms_drbd_www_clone_role" name="target-role" value="Started"/>
@@ -141,7 +143,7 @@
             <nvpair id="drbd_www_clone_overrides_hostname" name="clone-overrides-hostname" value="no"/>
           </instance_attributes>
         </primitive>
-      </master>
+      </clone>
       <clone id="clone_nfs-common">
         <meta_attributes id="clone_nfs-common_meta">
           <nvpair id="clone_nfs-common_meta_interleave" name="interleave" value="true"/>

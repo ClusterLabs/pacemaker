@@ -23,7 +23,7 @@
       </node>
     </nodes>
     <resources>
-      <master id="pgsql-ha">
+      <clone id="pgsql-ha">
         <primitive class="ocf" id="pgsqld" provider="heartbeat" type="pgsqlms">
           <instance_attributes id="pgsqld-instance_attributes">
             <nvpair id="pgsqld-instance_attributes-bindir" name="bindir" value="/usr/pgsql-10/bin"/>
@@ -40,12 +40,13 @@
           </operations>
         </primitive>
         <meta_attributes id="pgsql-ha-meta_attributes">
-          <nvpair id="pgsql-ha-meta_attributes-master-max" name="master-max" value="1"/>
-          <nvpair id="pgsql-ha-meta_attributes-master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="pgsql-ha-meta_attributes-promotable"  name="promotable" value="true"/>
+          <nvpair id="pgsql-ha-meta_attributes-promoted-max" name="promoted-max" value="1"/>
+          <nvpair id="pgsql-ha-meta_attributes-promoted-node-max" name="promoted-node-max" value="1"/>
           <nvpair id="pgsql-ha-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
           <nvpair id="pgsql-ha-meta_attributes-notify" name="notify" value="true"/>
         </meta_attributes>
-      </master>
+      </clone>
       <primitive class="ocf" id="pgsql-master-ip" provider="heartbeat" type="IPaddr2">
         <instance_attributes id="pgsql-master-ip-instance_attributes">
           <nvpair id="pgsql-master-ip-instance_attributes-ip" name="ip" value="192.168.122.50"/>

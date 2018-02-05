@@ -1943,7 +1943,7 @@ stonith_query(xmlNode * msg, const char *remote_peer, const char *client_id, int
     const char *action = NULL;
     const char *target = NULL;
     int timeout = 0;
-    xmlNode *dev = get_xpath_object("//@" F_STONITH_ACTION, msg, LOG_DEBUG_3);
+    xmlNode *dev = get_xpath_object("//@" F_STONITH_ACTION, msg, LOG_TRACE);
 
     crm_element_value_int(msg, F_STONITH_TIMEOUT, &timeout);
     if (dev) {
@@ -2710,7 +2710,7 @@ stonith_command(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * re
      */
     char *op = crm_element_value_copy(request, F_STONITH_OPERATION);
 
-    if (get_xpath_object("//" T_STONITH_REPLY, request, LOG_DEBUG_3)) {
+    if (get_xpath_object("//" T_STONITH_REPLY, request, LOG_TRACE)) {
         is_reply = TRUE;
     }
 

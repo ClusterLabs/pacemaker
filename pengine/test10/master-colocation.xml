@@ -15,8 +15,9 @@
       <node id="box2" uname="box2" type="member"/>
     </nodes>
     <resources>
-      <master id="ms-conntrackd">
+      <clone id="ms-conntrackd">
         <meta_attributes id="ms-conntrackd-meta_attributes">
+          <nvpair id="ms-conntrackd-meta_attributes-promotable" name="promotable" value="true"/>
           <nvpair id="ms-conntrackd-meta_attributes-target-role" name="target-role" value="Started"/>
         </meta_attributes>
         <primitive class="ocf" id="conntrackd-stateful" provider="dk" type="conn">
@@ -25,7 +26,7 @@
             <op id="conntrackd-stateful-monitor-29" interval="29" name="monitor" role="Slave"/>
           </operations>
         </primitive>
-      </master>
+      </clone>
       <group id="virtualips">
         <meta_attributes id="virtualips-meta_attributes">
           <nvpair id="virtualips-meta_attributes-target-role" name="target-role" value="Started"/>

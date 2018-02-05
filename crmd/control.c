@@ -43,11 +43,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#ifdef RHEL7_COMPAT
-// for pe_enable_legacy_alerts()
-#include <crm/pengine/rules_internal.h>
-#endif
-
 qb_ipcs_service_t *ipcs = NULL;
 
 #if SUPPORT_COROSYNC
@@ -716,22 +711,6 @@ pe_cluster_option crmd_opts[] = {
 	  "  To ensure these changes take effect, we can optionally poll the cluster's status for changes."
         },
 
-#ifdef RHEL7_COMPAT
-    /* These options were superseded by the alerts feature and now are just an
-     * alternate interface to it. It was never released upstream, but was
-     * released in RHEL 7, so we allow it to be enabled at compile-time by
-     * defining RHEL7_COMPAT.
-     */
-	{ "notification-agent", NULL, "string", NULL, "/dev/null", &check_script,
-          "Deprecated",
-          "Use alert path in alerts section instead"
-        },
-	{ "notification-recipient", NULL, "string", NULL, "", NULL,
-          "Deprecated",
-          "Use recipient value in alerts section instead"
-        },
-#endif
-
 	{ "load-threshold", NULL, "percentage", NULL, "80%", &check_utilization,
 	  "The maximum amount of system resources that should be used by nodes in the cluster",
 	  "The cluster will slow down its recovery process when the amount of system resources used"
@@ -830,15 +809,6 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
                                CIB_OPTIONS_FIRST, FALSE, now);
 
     verify_crmd_options(config_hash);
-
-#ifdef RHEL7_COMPAT
-    {
-        const char *script = crmd_pref(config_hash, "notification-agent");
-        const char *recip  = crmd_pref(config_hash, "notification-recipient");
-
-        pe_enable_legacy_alerts(script, recip);
-    }
-#endif
 
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
     election_trigger->period_ms = crm_get_msec(value);

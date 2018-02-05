@@ -175,8 +175,8 @@ create_op(xmlNode * cib_resource, const char *task, int interval, int outcome)
 static xmlNode *
 inject_op(xmlNode * cib_resource, lrmd_event_data_t * op, int target_rc)
 {
-    return create_operation_update(cib_resource, op, CRM_FEATURE_SET, target_rc, NULL, crm_system_name,
-                                   LOG_DEBUG_2);
+    return create_operation_update(cib_resource, op, CRM_FEATURE_SET, target_rc,
+                                   NULL, crm_system_name, LOG_TRACE);
 }
 
 static xmlNode *
@@ -261,7 +261,7 @@ find_resource_xml(xmlNode * cib_node, const char *resource)
     xpath = calloc(1, max);
 
     snprintf(xpath, max, rsc_template, node, resource);
-    match = get_xpath_object(xpath, cib_node, LOG_DEBUG_2);
+    match = get_xpath_object(xpath, cib_node, LOG_TRACE);
 
     free(xpath);
     return match;

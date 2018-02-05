@@ -617,9 +617,9 @@ main(int argc, char **argv, char **envp)
 #endif
 
     mainloop_add_signal(SIGTERM, lrmd_shutdown);
-    mainloop = g_main_new(FALSE);
+    mainloop = g_main_loop_new(NULL, FALSE);
     crm_info("Starting");
-    g_main_run(mainloop);
+    g_main_loop_run(mainloop);
 
     /* should never get here */
     lrmd_exit(NULL);

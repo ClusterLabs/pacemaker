@@ -22,12 +22,13 @@
       </node>
     </nodes>
     <resources>
-      <master id="ms-drbd0">
+      <clone id="ms-drbd0">
         <meta_attributes id="meta_attributes.id21934">
+          <nvpair id="nvpair.id21940" name="promotable" value="true"/>
           <nvpair id="nvpair.id21941" name="clone-max" value="2"/>
           <nvpair id="nvpair.id21949" name="clone-node-max" value="1"/>
-          <nvpair id="nvpair.id21957" name="master-max" value="1"/>
-          <nvpair id="nvpair.id21966" name="master-node-max" value="1"/>
+          <nvpair id="nvpair.id21957" name="promoted-max" value="1"/>
+          <nvpair id="nvpair.id21966" name="promoted-node-max" value="1"/>
           <nvpair id="nvpair.id21974" name="notify" value="yes"/>
           <nvpair id="nvpair.id21982" name="globally-unique" value="false"/>
           <nvpair id="nvpair.id21991" name="interleave" value="true"/>
@@ -46,14 +47,15 @@
           </meta_attributes>
           <meta_attributes id="primitive-drbd0.meta"/>
         </primitive>
-        <meta_attributes id="master_slave-ms-drbd0.meta"/>
-      </master>
-      <master id="ms-drbd1">
+        <meta_attributes id="clone-ms-drbd0.meta"/>
+      </clone>
+      <clone id="ms-drbd1">
         <meta_attributes id="meta_attributes.id22099">
+          <nvpair id="nvpair.id22104" name="promotable" value="true"/>
           <nvpair id="nvpair.id22105" name="clone-max" value="2"/>
           <nvpair id="nvpair.id22114" name="clone-node-max" value="1"/>
-          <nvpair id="nvpair.id22122" name="master-max" value="1"/>
-          <nvpair id="nvpair.id22130" name="master-node-max" value="1"/>
+          <nvpair id="nvpair.id22122" name="promoted-max" value="1"/>
+          <nvpair id="nvpair.id22130" name="promoted-node-max" value="1"/>
           <nvpair id="nvpair.id22138" name="notify" value="yes"/>
           <nvpair id="nvpair.id22147" name="globally-unique" value="false"/>
           <nvpair id="nvpair.id22155" name="target-role" value="started"/>
@@ -72,8 +74,8 @@
           </meta_attributes>
           <meta_attributes id="primitive-drbd1.meta"/>
         </primitive>
-        <meta_attributes id="master_slave-ms-drbd1.meta"/>
-      </master>
+        <meta_attributes id="clone-ms-drbd1.meta"/>
+      </clone>
     </resources>
     <constraints>
       <rsc_colocation id="drbd0_drbd1_master" rsc="ms-drbd0" with-rsc="ms-drbd1" rsc-role="Master" with-rsc-role="Master" score="INFINITY"/>

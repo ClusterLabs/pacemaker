@@ -1587,7 +1587,7 @@ terminate_cib(const char *caller, int fast)
         if (fast == 0) {
             crm_cluster_disconnect(&crm_cluster);
         }
-        g_main_quit(mainloop);
+        g_main_loop_quit(mainloop);
 
     } else {
         /* Quit via clean exit. Even the peer status callback can disconnect
