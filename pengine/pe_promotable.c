@@ -397,13 +397,12 @@ filter_anonymous_instance(resource_t * rsc, node_t * node)
     resource_t *parent = uber_parent(rsc);
 
     for (rIter = parent->children; rIter; rIter = rIter->next) {
+        /* If there is an active instance on the node, only it receives the
+         * promotion score. Use ->find_rsc() in case this is a cloned group.
+         */
         resource_t *child = rIter->data;
         resource_t *active = parent->fns->find_rsc(child, key, node, pe_find_clone|pe_find_current);
 
-        /*
-         * Look for an active instance on $node, if there is one, only it receives the master score
-         * Use ->find_rsc() because we might be a cloned group
-         */
         if(rsc == active) {
             pe_rsc_trace(rsc, "Found %s for %s active on %s: done", active->id, key, node->details->uname);
             free(key);
@@ -443,7 +442,7 @@ filter_anonymous_instance(resource_t * rsc, node_t * node)
 }
 
 static const char *
-lookup_master_score(resource_t * rsc, node_t *node, const char *name)
+lookup_promotion_score(resource_t * rsc, node_t *node, const char *name)
 {
     const char *attr_value = NULL;
 
@@ -457,7 +456,7 @@ lookup_master_score(resource_t * rsc, node_t *node, const char *name)
 }
 
 static int
-master_score(resource_t * rsc, node_t * node, int not_set_value)
+promotion_score(resource_t * rsc, node_t * node, int not_set_value)
 {
     char *name = rsc->id;
     const char *attr_value = NULL;
@@ -471,7 +470,7 @@ master_score(resource_t * rsc, node_t * node, int not_set_value)
 
         for (; gIter != NULL; gIter = gIter->next) {
             resource_t *child = (resource_t *) gIter->data;
-            int c_score = master_score(child, node, not_set_value);
+            int c_score = promotion_score(child, node, not_set_value);
 
             if (score == not_set_value) {
                 score = c_score;
@@ -487,16 +486,16 @@ master_score(resource_t * rsc, node_t * node, int not_set_value)
 
     } else if (rsc->running_on || g_hash_table_size(rsc->known_on)) {
         /* If we've probed and/or started the resource anywhere, consider
-         * master scores only from nodes where we know the status. However,
+         * promotion scores only from nodes where we know the status. However,
          * if the status of all nodes is unknown (e.g. cluster startup),
          * skip this code, to make sure we take into account any permanent
-         * master scores set previously.
+         * promotion scores set previously.
          */
         node_t *known = pe_hash_table_lookup(rsc->known_on, node->details->id);
 
         match = pe_find_node_id(rsc->running_on, node->details->id);
         if ((match == NULL) && (known == NULL)) {
-            pe_rsc_trace(rsc, "skipping %s (aka. %s) master score on %s because inactive",
+            pe_rsc_trace(rsc, "skipping %s (aka. %s) promotion score on %s because inactive",
                          rsc->id, rsc->clone_name, node->details->uname);
             return score;
         }
@@ -519,8 +518,8 @@ master_score(resource_t * rsc, node_t * node, int not_set_value)
         name = rsc->clone_name;
     }
 
-    attr_value = lookup_master_score(rsc, node, name);
-    pe_rsc_trace(rsc, "master score for %s on %s = %s",
+    attr_value = lookup_promotion_score(rsc, node, name);
+    pe_rsc_trace(rsc, "promotion score for %s on %s = %s",
                  name, node->details->uname, crm_str(attr_value));
 
     if ((attr_value == NULL) && is_not_set(rsc->flags, pe_rsc_unique)) {
@@ -530,8 +529,8 @@ master_score(resource_t * rsc, node_t * node, int not_set_value)
          */
         name = clone_strip(rsc->id);
         if (strcmp(rsc->id, name)) {
-            attr_value = lookup_master_score(rsc, node, name);
-            pe_rsc_trace(rsc, "stripped master score for %s on %s = %s",
+            attr_value = lookup_promotion_score(rsc, node, name);
+            pe_rsc_trace(rsc, "stripped promotion score for %s on %s = %s",
                          name, node->details->uname, crm_str(attr_value));
         }
         free(name);
@@ -569,13 +568,13 @@ apply_master_prefs(resource_t *rsc)
         while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
             if (can_run_resources(node) == FALSE) {
                 /* This node will never be promoted to master,
-                 *  so don't apply the master score as that may
+                 *  so don't apply the promotion score as that may
                  *  lead to clone shuffling
                  */
                 continue;
             }
 
-            score = master_score(child_rsc, node, 0);
+            score = promotion_score(child_rsc, node, 0);
             if (score > 0) {
                 new_score = merge_weights(node->weight, score);
                 if (new_score != node->weight) {
@@ -698,9 +697,9 @@ color_promotable(resource_t *rsc, pe_working_set_t *data_set)
                  * This allows master locations to be specified
                  * based solely on rsc_location constraints,
                  * but prevents anyone from being promoted if
-                 * neither a constraint nor a master-score is present
+                 * neither a constraint nor a promotion score is present
                  */
-                child_rsc->priority = master_score(child_rsc, chosen, -1);
+                child_rsc->priority = promotion_score(child_rsc, chosen, -1);
                 break;
 
             case RSC_ROLE_SLAVE:
@@ -767,7 +766,7 @@ color_promotable(resource_t *rsc, pe_working_set_t *data_set)
             chosen = can_be_master(child_rsc);
         }
 
-        pe_rsc_debug(rsc, "%s master score: %d", child_rsc->id, child_rsc->priority);
+        pe_rsc_debug(rsc, "%s promotion score: %d", child_rsc->id, child_rsc->priority);
 
         if (chosen == NULL) {
             set_role_slave(child_rsc, FALSE);

@@ -8,15 +8,15 @@ Common options:
  -q, --quiet 		Print only the value (if querying)
 
 Commands:
- -G, --query 		Query the current value of the master score
- -v, --update=VALUE	Update the value of the master score
- -D, --delete 		Delete the master score
+ -G, --query 		Query the current value of the promotion score
+ -v, --update=VALUE	Update the value of the promotion score
+ -D, --delete 		Delete the promotion score
 
 Additional Options:
- -N, --node=NODE	Use master score on named node (instead of local node)
+ -N, --node=NODE	Use promotion score on named node (instead of local node)
  -l, --lifetime=VALUE	Until when should the setting take effect
                      	(valid values: reboot, forever)
- -i, --id=VALUE		(Advanced) XML ID used to identify master score attribute"
+ -i, --id=VALUE		(Advanced) XML ID used to identify promotion score attribute"
 
 HELP_TEXT="crm_master - Query, update, or delete a resource's promotion score
 

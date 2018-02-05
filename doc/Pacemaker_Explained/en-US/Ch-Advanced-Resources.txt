@@ -915,13 +915,13 @@ role when checking the status -- which would cause unexpected return
 codes, and therefore unnecessary complications.
 ===========
 
-[[s-master-scores]]
+[[s-promotion-scores]]
 === Determining Which Instance is Promoted ===
 
 Pacemaker can choose a promotable clone instance to be promoted in one of two
 ways:
 
-* Master scores: These are node attributes set via the `crm_master` utility,
+* Promotion scores: These are node attributes set via the `crm_master` utility,
   which generally would be called by the resource agent's start action if it
   supports promotable clones. This tool automatically detects both the resource
   and host, and should be used to set a preference for being promoted. Based on
@@ -1388,15 +1388,15 @@ specified for each bundle. Any firewall must allow access to the
 === Bundle Node Attributes ===
 
 If the bundle has a +primitive+, the primitive's resource agent may want to set
-node attributes such as <<s-master-scores,master scores>>. However, with
+node attributes such as <<s-promotion-scores,promotion scores>>. However, with
 containers, it is not apparent which node should get the attribute.
 
 If the container uses shared storage that is the same no matter which node the
-container is hosted on, then it is appropriate to use the master score on the
+container is hosted on, then it is appropriate to use the promotion score on the
 bundle node itself.
 
 On the other hand, if the container uses storage exported from the underlying host,
-then it may be more appropriate to use the master score on the underlying host.
+then it may be more appropriate to use the promotion score on the underlying host.
 
 Since this depends on the particular situation, the
 +container-attribute-target+ resource meta-attribute allows the user to specify
