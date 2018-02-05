@@ -47,8 +47,8 @@ class BasePatterns(object):
             
             # This won't work if we have multiple partitions
             "Pat:Local_started" : "%s\W.*The local CRM is operational",
-            "Pat:Slave_started" : "%s\W.*State transition.*-> S_NOT_DC",
-            "Pat:Master_started": "%s\W.*State transition.*-> S_IDLE",
+            "Pat:NonDC_started" : r"%s\W.*State transition.*-> S_NOT_DC",
+            "Pat:DC_started"    : r"%s\W.*State transition.*-> S_IDLE",
             "Pat:We_stopped"    : "%s\W.*OVERRIDE THIS PATTERN",
             "Pat:They_stopped"  : "%s\W.*LOST:.* %s ",
             "Pat:They_dead"     : "node %s.*: is dead",

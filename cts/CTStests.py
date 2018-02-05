@@ -2071,7 +2071,7 @@ class NearQuorumPointTest(CTSTest):
 
         for node in startset:
             if self.CM.ShouldBeStatus[node] == "down":
-                #watchpats.append(self.templates["Pat:Slave_started"] % node)
+                #watchpats.append(self.templates["Pat:NonDC_started"] % node)
                 watchpats.append(self.templates["Pat:Local_started"] % node)
             else:
                 for stopping in stopset:
@@ -2406,7 +2406,7 @@ class SimulStartLite(CTSTest):
             # Repeat until all nodes come up
             watchpats = [ ]
 
-            uppat = self.templates["Pat:Slave_started"]
+            uppat = self.templates["Pat:NonDC_started"]
             if self.CM.upcount() == 0:
                 uppat = self.templates["Pat:Local_started"]
 

@@ -370,17 +370,18 @@ class CIB12(ConfigBase):
         c["globally-unique"] = "false"
         c.commit()
 
-        #master slave resource
+        # promotable clone resource
         s = Resource(self.Factory, "stateful-1", "Stateful", "ocf", "pacemaker")
         s.add_op("monitor", "15s", timeout="60s")
         s.add_op("monitor", "16s", timeout="60s", role="Master")
-        ms = Master(self.Factory, "master-1", s)
+        ms = Clone(self.Factory, "promotable-1", s)
+        ms["promotable"] = "true"
         ms["clone-max"] = self.num_nodes
-        ms["master-max"] = 1
         ms["clone-node-max"] = 1
-        ms["master-node-max"] = 1
+        ms["promoted-max"] = 1
+        ms["promoted-node-max"] = 1
 
-        # Require conectivity to run the master
+        # Require connectivity to run the promotable clone
         r = Rule(self.Factory, "connected", "-INFINITY", op="or")
         r.add_child(Expression(self.Factory, "m1-connected-1", "connected", "lt", "1"))
         r.add_child(Expression(self.Factory, "m1-connected-2", "connected", "not_defined", None))
@@ -418,9 +419,9 @@ ExecStop=/bin/sh -c 'sleep 10; [ -n "\$MAINPID" ] && kill -s KILL \$MAINPID'
 
         g.add_child(self.NewIP())
 
-        # Group with the master
-        g.after("master-1", first="promote", then="start")
-        g.colocate("master-1", "INFINITY", withrole="Master")
+        # Make group depend on the promotable clone
+        g.after("promotable-1", first="promote", then="start")
+        g.colocate("promotable-1", "INFINITY", withrole="Master")
 
         g.commit()
 

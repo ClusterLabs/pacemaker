@@ -320,9 +320,3 @@ class Clone(Group):
             self.children.append(resource)
         else:
             self.Factory.log("Clones can only have a single child. Ignoring %s" % resource.name)
-
-
-class Master(Clone):
-    def __init__(self, Factory, name, child=None):
-        Clone.__init__(self, Factory, name, child)
-        self.tag = "master"
