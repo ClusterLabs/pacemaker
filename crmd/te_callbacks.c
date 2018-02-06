@@ -890,15 +890,6 @@ action_timer_callback(gpointer data)
     if (transition_graph->complete) {
         crm_warn("Ignoring timeout while not in transition");
 
-    } else if (timer->reason == timeout_action_warn) {
-        print_action(LOG_WARNING, "Action missed its timeout: ", timer->action);
-
-        /* Don't check the FSA state
-         *
-         * We might also be in S_INTEGRATION or some other state waiting for this
-         * action so we can close the transition and continue
-         */
-
     } else {
         /* fail the action */
         gboolean send_update = TRUE;
