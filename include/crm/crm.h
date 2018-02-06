@@ -56,16 +56,8 @@ extern char *crm_system_name;
 
 /* *INDENT-OFF* */
 
-/* Clean these up at some point, some probably should be runtime options */
-#  define SOCKET_LEN	1024
-#  define APPNAME_LEN	256
-#  define MAX_IPC_FAIL	5
+// Used for some internal IPC timeouts (maybe should be configurable option)
 #  define MAX_IPC_DELAY   120
-
-#  define MSG_LOG			1
-#  define DOT_FSA_ACTIONS		1
-#  define DOT_ALL_FSA_INPUTS	1
-/* #define FSA_TRACE		1 */
 
 /* This header defines INFINITY, but it might be defined elsewhere as well
  * (e.g. math.h), so undefine it first. This, of course, complicates any attempt
@@ -140,23 +132,8 @@ extern char *crm_system_name;
 #  define CRM_OP_RM_NODE_CACHE "rm_node_cache"
 #  define CRM_OP_MAINTENANCE_NODES "maintenance_nodes"
 
-/* @COMPAT: These symbols are deprecated and not used by Pacemaker,
- * but they are kept for public API backward compatibility.
- */
-#  define CRM_OP_DIE		    "die_no_respawn"
-#  define CRM_OP_RETRIVE_CIB	"retrieve_cib"
-#  define CRM_OP_HBEAT		    "dc_beat"
-#  define CRM_OP_ABORT		    "abort"
-#  define CRM_OP_EVENTCC		"event_cc"
-#  define CRM_OP_TEABORT		"te_abort"
-#  define CRM_OP_TEABORTED	    "te_abort_confirmed"
-#  define CRM_OP_TE_HALT		"te_halt"
-#  define CRM_OP_TECOMPLETE	    "te_complete"
-#  define CRM_OP_TETIMEOUT	    "te_timeout"
-#  define CRM_OP_TRANSITION	    "transition"
 #  define CRM_OP_DEBUG_UP		"debug_inc" /* unused since 1.1.8 */
 #  define CRM_OP_DEBUG_DOWN     "debug_dec" /* unused since 1.1.8 */
-#  define CRM_OP_NODES_PROBED	"probe_nodes_complete"
 
 /* Possible cluster membership states */
 #  define CRMD_JOINSTATE_DOWN           "down"

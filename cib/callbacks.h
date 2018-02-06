@@ -68,8 +68,6 @@ extern qb_ipcs_service_t *ipcs_rw;
 extern qb_ipcs_service_t *ipcs_shm;
 
 extern void cib_peer_callback(xmlNode * msg, void *private_data);
-extern void cib_client_status_callback(const char *node, const char *client,
-                                       const char *status, void *private);
 extern void cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
                                        crm_client_t * cib_client, gboolean privileged);
 

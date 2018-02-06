@@ -362,7 +362,6 @@ enum crmd_fsa_input {
 #  define	A_NODE_BLOCK		0x0010000000000000ULL
         /* Update our information in the local CIB */
 #  define A_UPDATE_NODESTATUS	0x0020000000000000ULL
-#  define	A_CIB_BUMPGEN		0x0040000000000000ULL
 #  define	A_READCONFIG		0x0080000000000000ULL
 
 /* -- LRM Actions -- */

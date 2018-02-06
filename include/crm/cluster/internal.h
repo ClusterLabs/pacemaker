@@ -362,8 +362,6 @@ void crm_reap_unseen_nodes(uint64_t ring_id);
 gboolean cluster_connect_quorum(gboolean(*dispatch) (unsigned long long, gboolean),
                                 void (*destroy) (gpointer));
 
-void set_node_uuid(const char *uname, const char *uuid);
-
 gboolean node_name_is_valid(const char *key, const char *name);
 
 crm_node_t * crm_find_peer_full(unsigned int id, const char *uname, int flags);

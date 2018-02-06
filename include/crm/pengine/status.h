@@ -192,31 +192,25 @@ struct node_s {
 #  define pe_rsc_provisional                0x00000100ULL
 #  define pe_rsc_allocating                 0x00000200ULL
 #  define pe_rsc_merging                    0x00000400ULL
-#  define pe_rsc_munging                    0x00000800ULL
 
-#  define pe_rsc_try_reload                 0x00001000ULL
 #  define pe_rsc_reload                     0x00002000ULL
 #  define pe_rsc_allow_remote_remotes       0x00004000ULL
 
 #  define pe_rsc_failed                     0x00010000ULL
-#  define pe_rsc_shutdown                   0x00020000ULL
 #  define pe_rsc_runnable                   0x00040000ULL
 #  define pe_rsc_start_pending              0x00080000ULL
 
 #  define pe_rsc_starting                   0x00100000ULL
 #  define pe_rsc_stopping                   0x00200000ULL
-#  define pe_rsc_migrating                  0x00400000ULL
 #  define pe_rsc_allow_migrate              0x00800000ULL
 
 #  define pe_rsc_failure_ignored            0x01000000ULL
-#  define pe_rsc_unexpectedly_running       0x02000000ULL
 #  define pe_rsc_maintenance                0x04000000ULL
 #  define pe_rsc_is_container               0x08000000ULL
 
 #  define pe_rsc_needs_quorum               0x10000000ULL
 #  define pe_rsc_needs_fencing              0x20000000ULL
 #  define pe_rsc_needs_unfencing            0x40000000ULL
-#  define pe_rsc_have_unfencing             0x80000000ULL // obsolete (not set or used by cluster)
 
 enum pe_graph_flags {
     pe_graph_none = 0x00000,

@@ -243,8 +243,6 @@ void *crm_create_anon_tls_session(int sock, int type, void *credentials);
 void *create_psk_tls_session(int csock, int type, void *credentials);
 #  endif
 
-#  define REMOTE_MSG_TERMINATOR "\r\n\r\n"
-
 const char *daemon_option(const char *option);
 void set_daemon_option(const char *option, const char *value);
 gboolean daemon_option_enabled(const char *daemon, const char *option);
@@ -258,7 +256,6 @@ long crm_read_pidfile(const char *filename);
 #  define crm_config_err(fmt...) { crm_config_error = TRUE; crm_err(fmt); }
 #  define crm_config_warn(fmt...) { crm_config_warning = TRUE; crm_warn(fmt); }
 
-#  define attrd_channel		T_ATTRD
 #  define F_ATTRD_KEY		"attr_key"
 #  define F_ATTRD_ATTRIBUTE	"attr_name"
 #  define F_ATTRD_REGEX 	"attr_regex"

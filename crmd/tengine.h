@@ -42,7 +42,6 @@ extern gboolean process_graph_event(xmlNode * event, const char *event_node);
 
 /* utils */
 extern crm_action_t *get_action(int id, gboolean confirmed);
-extern gboolean start_global_timer(crm_action_timer_t * timer, int timeout);
 extern gboolean stop_te_timer(crm_action_timer_t * timer);
 extern const char *get_rsc_state(const char *task, enum op_status status);
 

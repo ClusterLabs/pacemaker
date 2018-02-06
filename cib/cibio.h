@@ -38,7 +38,6 @@ extern gboolean uninitializeCib(void);
 extern gboolean verifyCibXml(xmlNode * cib);
 extern xmlNode *readCibXml(char *buffer);
 extern xmlNode *readCibXmlFile(const char *dir, const char *file, gboolean discard_status);
-extern int activateCibBuffer(char *buffer, const char *filename);
 extern int activateCibXml(xmlNode * doc, gboolean to_disk, const char *op);
 extern crm_trigger_t *cib_writer;
 extern volatile gboolean cib_writes_enabled;

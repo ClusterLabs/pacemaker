@@ -20,13 +20,6 @@
 
 extern void crmd_ha_msg_filter(xmlNode * msg);
 
-/*
- * Apparently returning TRUE means "stay connected, keep doing stuff".
- * Returning FALSE means "we're all done, close the connection"
- */
-
-extern void crmd_ipc_connection_destroy(gpointer user_data);
-
 extern void crmd_cib_connection_destroy(gpointer user_data);
 
 extern gboolean crm_fsa_trigger(gpointer user_data);

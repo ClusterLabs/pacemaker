@@ -107,12 +107,9 @@ void crm_time_add_seconds(crm_time_t * dt, int value);
 void crm_time_add_minutes(crm_time_t * dt, int value);
 void crm_time_add_hours(crm_time_t * dt, int value);
 void crm_time_add_days(crm_time_t * dt, int value);
-void crm_time_add_weekdays(crm_time_t * dt, int value);
 void crm_time_add_weeks(crm_time_t * dt, int value);
 void crm_time_add_months(crm_time_t * dt, int value);
 void crm_time_add_years(crm_time_t * dt, int value);
-void crm_time_add_ordinalyears(crm_time_t * dt, int value);
-void crm_time_add_weekyears(crm_time_t * dt, int value);
 
 /* Useful helper functions */
 int crm_time_january1_weekday(int year);

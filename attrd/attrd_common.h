@@ -61,7 +61,6 @@ extern crm_trigger_t *attrd_config_read;
 void attrd_lrmd_disconnect(void);
 gboolean attrd_read_options(gpointer user_data);
 void attrd_cib_updated_cb(const char *event, xmlNode *msg);
-void attrd_enable_alerts(const char *script, const char *target);
 int attrd_send_attribute_alert(const char *node, int nodeid,
                                const char *attr, const char *value);
 #endif /* PCMK_ATTRD_COMMON__H */

@@ -29,16 +29,13 @@
 #  define CIB_OP_BUMP	"cib_bump"
 #  define CIB_OP_QUERY	"cib_query"
 #  define CIB_OP_CREATE	"cib_create"
-#  define CIB_OP_UPDATE	"cib_update"
 #  define CIB_OP_MODIFY	"cib_modify"
 #  define CIB_OP_DELETE	"cib_delete"
 #  define CIB_OP_ERASE	"cib_erase"
 #  define CIB_OP_REPLACE	"cib_replace"
 #  define CIB_OP_APPLY_DIFF "cib_apply_diff"
 #  define CIB_OP_UPGRADE    "cib_upgrade"
-#  define CIB_OP_UPGRADE_OK "cib_upgrade_ok"
 #  define CIB_OP_DELETE_ALT	"cib_delete_alt"
-#  define CIB_OP_NOTIFY	      "cib_notify"
 
 #  define F_CIB_CLIENTID  "cib_clientid"
 #  define F_CIB_CALLOPTS  "cib_callopt"
@@ -80,8 +77,6 @@
 #  define cib_channel_rw		"cib_rw"
 #  define cib_channel_shm		"cib_shm"
 
-void cib_add_digest(xmlNode * source, xmlNode * target);
-void fix_cib_diff(xmlNode * last, xmlNode * next, xmlNode * local_diff, gboolean changed);
 gboolean cib_diff_version_details(xmlNode * diff, int *admin_epoch, int *epoch, int *updates,
                                   int *_admin_epoch, int *_epoch, int *_updates);
 
