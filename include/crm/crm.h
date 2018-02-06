@@ -132,9 +132,6 @@ extern char *crm_system_name;
 #  define CRM_OP_RM_NODE_CACHE "rm_node_cache"
 #  define CRM_OP_MAINTENANCE_NODES "maintenance_nodes"
 
-#  define CRM_OP_DEBUG_UP		"debug_inc" /* unused since 1.1.8 */
-#  define CRM_OP_DEBUG_DOWN     "debug_dec" /* unused since 1.1.8 */
-
 /* Possible cluster membership states */
 #  define CRMD_JOINSTATE_DOWN           "down"
 #  define CRMD_JOINSTATE_PENDING        "pending"

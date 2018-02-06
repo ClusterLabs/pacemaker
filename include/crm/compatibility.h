@@ -87,6 +87,8 @@ static int ais_fd_sync = -1;
 #define CRM_OP_RETRIVE_CIB  "retrieve_cib"
 #define CRM_OP_HBEAT        "dc_beat"
 #define CRM_OP_ABORT        "abort"
+#define CRM_OP_DEBUG_UP     "debug_inc"
+#define CRM_OP_DEBUG_DOWN   "debug_dec"
 #define CRM_OP_EVENTCC      "event_cc"
 #define CRM_OP_TEABORT      "te_abort"
 #define CRM_OP_TEABORTED    "te_abort_confirmed"
