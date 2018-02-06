@@ -1,15 +1,36 @@
 #!/bin/bash
 
+USAGE_TEXT="Usage: regression.sh [<options>]
+Options:
+ --help          Display this text, then exit
+ -V, --verbose   Display any differences from expected output
+ -t 'TEST [...]' Run only specified tests (default: 'dates tools acls validity')
+ -p DIR          Look for executables in DIR (may be specified multiple times)
+ -v, --valgrind  Run all commands under valgrind
+ -s              Save actual output as expected output"
+
 : ${shadow=tools-regression}
-test_home=`dirname $0`
+test_home="$(dirname $0)"
 num_errors=0
 num_passed=0
 GREP_OPTIONS=
 verbose=0
 tests="dates tools acls validity"
+do_save=0
+VALGRIND_CMD=
+VALGRIND_OPTS="
+    -q
+    --gen-suppressions=all
+    --show-reachable=no
+    --leak-check=full
+    --trace-children=no
+    --time-stamp=yes
+    --num-callers=20
+"
 
 # These constants must track crm_exit_t values
 CRM_EX_OK=0
+CRM_EX_ERROR=1
 CRM_EX_INSUFFICIENT_PRIV=4
 CRM_EX_USAGE=64
 CRM_EX_CONFIG=78
@@ -30,56 +51,23 @@ function test_assert() {
     rc=$?
 
     if [ x$cib != x0 ]; then
-	printf "=#=#=#= Current cib after: $desc =#=#=#=\n"
-	CIB_user=root cibadmin -Q
+        printf "=#=#=#= Current cib after: $desc =#=#=#=\n"
+        CIB_user=root cibadmin -Q
     fi
 
     printf "=#=#=#= End test: $desc - $(crm_error --exit $rc) ($rc) =#=#=#=\n"
 
     if [ $rc -ne $target ]; then
-	num_errors=`expr $num_errors + 1`
-	printf "* Failed (rc=%.3d): %-14s - %s\n" $rc $app "$desc"
-	printf "* Failed (rc=%.3d): %-14s - %s\n" $rc $app "$desc (`which $app`)" 1>&2
-	return
-	exit 1
+        num_errors=$(( $num_errors + 1 ))
+        printf "* Failed (rc=%.3d): %-14s - %s\n" $rc $app "$desc"
+        printf "* Failed (rc=%.3d): %-14s - %s\n" $rc $app "$desc (`which $app`)" 1>&2
+        return
+        exit $CRM_EX_ERROR
     else
-	printf "* Passed: %-14s - %s\n" $app "$desc"
-
-	num_passed=`expr $num_passed + 1`
+        printf "* Passed: %-14s - %s\n" $app "$desc"
+        num_passed=$(( $num_passed + 1 ))
     fi
 }
-
-function usage() {
-    echo "Usage: ./regression.sh [-s(ave)] [-x] [-v(erbose)]"
-    exit $1
-}
-
-done=0
-do_save=0
-VALGRIND_CMD=
-while test "$done" = "0"; do
-    case "$1" in
-	-t) tests=$2; shift; shift;;
-	-V|--verbose) verbose=1; shift;;
-	-v|--valgrind)
-	    export G_SLICE=always-malloc
-	    VALGRIND_CMD="valgrind -q --gen-suppressions=all --show-reachable=no --leak-check=full --trace-children=no --time-stamp=yes --num-callers=20 --suppressions=/usr/share/pacemaker/tests/valgrind-pcmk.suppressions"
-	    shift;;
-	-x) set -x; shift;;
-	-s) do_save=1; shift;;
-	-p) PATH="$2:$PATH"; export PATH; shift 1;;
-	-?) usage $CRM_EX_OK;;
-	-*) echo "unknown option: $1"; usage 1;;
-	*) done=1;;
-    esac
-done
-
-if [ "x$VALGRIND_CMD" = "x" -a -x $test_home/crm_simulate ]; then
-    xml_home=`dirname ${test_home}`
-    echo "Using local binaries from: $test_home, schemas from $xml_home"
-    export PATH="$test_home:$PATH"
-    export PCMK_schema_directory=${xml_home}/xml
-fi
 
 function test_tools() {
     export CIB_shadow_dir=$test_home
@@ -388,21 +376,21 @@ function test_dates() {
     test_assert $CRM_EX_OK 0
 
     for y in 06 07 08 09 10 11 12 13 14 15 16 17 18; do
-	desc="20$y-W01-7"
-	cmd="iso8601 -d '20$y-W01-7 00Z'"
-	test_assert $CRM_EX_OK 0
+        desc="20$y-W01-7"
+        cmd="iso8601 -d '20$y-W01-7 00Z'"
+        test_assert $CRM_EX_OK 0
 
-	desc="20$y-W01-7 - round-trip"
-	cmd="iso8601 -d '20$y-W01-7 00Z' -W -E '20$y-W01-7 00:00:00Z'"
-	test_assert $CRM_EX_OK 0
+        desc="20$y-W01-7 - round-trip"
+        cmd="iso8601 -d '20$y-W01-7 00Z' -W -E '20$y-W01-7 00:00:00Z'"
+        test_assert $CRM_EX_OK 0
 
-	desc="20$y-W01-1"
-	cmd="iso8601 -d '20$y-W01-1 00Z'"
-	test_assert $CRM_EX_OK 0
+        desc="20$y-W01-1"
+        cmd="iso8601 -d '20$y-W01-1 00Z'"
+        test_assert $CRM_EX_OK 0
 
-	desc="20$y-W01-1 - round-trip"
-	cmd="iso8601 -d '20$y-W01-1 00Z' -W -E '20$y-W01-1 00:00:00Z'"
-	test_assert $CRM_EX_OK 0
+        desc="20$y-W01-1 - round-trip"
+        cmd="iso8601 -d '20$y-W01-1 00Z' -W -E '20$y-W01-1 00:00:00Z'"
+        test_assert $CRM_EX_OK 0
     done
 
     desc="2009-W53-07"
@@ -759,6 +747,81 @@ function test_validity() {
     rm -f /tmp/$$.good-1.2.xml /tmp/$$.bad-1.2.xml
 }
 
+# Process command-line arguments
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -t)
+            tests="$2"
+            shift 2
+            ;;
+        -V|--verbose)
+            verbose=1
+            shift
+            ;;
+        -v|--valgrind)
+            export G_SLICE=always-malloc
+            VALGRIND_CMD="valgrind"
+            shift
+            ;;
+        -s)
+            do_save=1
+            shift
+            ;;
+        -p)
+            export PATH="$2:$PATH"
+            shift
+            ;;
+        --help)
+            echo "$USAGE_TEXT"
+            exit $CRM_EX_OK
+            ;;
+        *)
+            echo "error: unknown option $1"
+            echo
+            echo "$USAGE_TEXT"
+            exit $CRM_EX_USAGE
+            ;;
+    esac
+done
+
+for t in $tests; do
+    case "$t" in
+        dates) ;;
+        tools) ;;
+        acls) ;;
+        validity) ;;
+        *)
+            echo "error: unknown test $t"
+            echo
+            echo "$USAGE_TEXT"
+            exit $CRM_EX_USAGE
+            ;;
+    esac
+done
+
+# Check whether we're running from source directory
+SRCDIR=$(dirname $test_home)
+if [ -x "$SRCDIR/tools/crm_simulate" ]; then
+    export PATH="$SRCDIR/tools:$PATH"
+    echo "Using local binaries from: $SRCDIR/tools"
+
+    if [ -x "$SRCDIR/xml" ]; then
+        export PCMK_schema_directory="$SRCDIR/xml"
+        echo "Using local schemas from: $PCMK_schema_directory"
+    fi
+
+    if [ -r "$SRCDIR/valgrind-pcmk.suppressions" ]; then
+        VALGRIND_OPTS="$VALGRIND_OPTS --suppressions=valgrind-pcmk.suppressions"
+    fi
+else
+    VALGRIND_OPTS="$VALGRIND_OPTS
+        --suppressions=/usr/share/pacemaker/tests/valgrind-pcmk.suppressions"
+fi
+
+if [ "$VALGRIND_CMD" != "" ]; then
+    VALGRIND_CMD="$VALGRIND_CMD $VALGRIND_OPTS"
+fi
+
 for t in $tests; do
     echo "Testing $t"
     test_$t > $test_home/regression.$t.out
@@ -777,42 +840,42 @@ for t in $tests; do
         -e 's/schemas\.c:\([0-9][0-9]*\)/schemas.c:NNN/' \
         -e 's/constraints\.:\([0-9][0-9]*\)/constraints.:NNN/' \
         -e 's/\(validation ([0-9][0-9]* of \)[0-9][0-9]*\().*\)/\1X\2/' \
-	$test_home/regression.$t.out
+        $test_home/regression.$t.out
 
-    if [ $do_save = 1 ]; then
-	cp $test_home/regression.$t.out $test_home/regression.$t.exp
+    if [ $do_save -eq 1 ]; then
+        cp $test_home/regression.$t.out $test_home/regression.$t.exp
     fi
 done
     
 failed=0
 
-echo -e "\n\nResults"
+if [ $verbose -eq 1 ]; then
+    echo -e "\n\nResults"
+fi
 for t in $tests; do
-    if [ $do_save = 1 ]; then
-	cp $test_home/regression.$t.out $test_home/regression.$t.exp
-    fi
-    if [ $verbose = 1 ]; then
-	diff -wu $test_home/regression.$t.exp $test_home/regression.$t.out
+    if [ $verbose -eq 1 ]; then
+        diff -wu $test_home/regression.$t.exp $test_home/regression.$t.out
     else
-	diff -wu $test_home/regression.$t.exp $test_home/regression.$t.out
+        diff -w $test_home/regression.$t.exp $test_home/regression.$t.out >/dev/null 2>&1
     fi
-    if [ $? != 0 ]; then
-	failed=1
+    if [ $? -ne 0 ]; then
+        failed=1
     fi
 done
-
 
 echo -e "\n\nSummary"
 for t in $tests; do
     grep -e "^*" $test_home/regression.$t.out
 done
 
-if [ $num_errors != 0 ]; then
+if [ $num_errors -ne 0 ]; then
     echo $num_errors tests failed
-    exit 1
-elif [ $failed = 1 ]; then
+    exit $CRM_EX_ERROR
+
+elif [ $failed -eq 1 ]; then
     echo $num_passed tests passed but diff failed
-    exit 2
+    exit $CRM_EX_DIGEST
+
 else
     echo $num_passed tests passed
     for t in $tests; do
