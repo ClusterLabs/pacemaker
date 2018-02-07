@@ -19,7 +19,7 @@ Tests (default tests are 'pengine cli lrmd'):
  fencing           Fencing daemon
  all               Synonym for 'pengine cli lrmd fencing'"
 
-test_home="$(dirname $0)"
+test_home="$(dirname $(readlink -e $0))"
 valgrind=""
 verbose=""
 tests=""
@@ -29,10 +29,6 @@ CRM_EX_OK=0
 CRM_EX_ERROR=1
 CRM_EX_NOT_INSTALLED=5
 CRM_EX_USAGE=64
-
-if [ "$test_home" = "." ]; then
-    test_home="$PWD"
-fi
 
 function info() {
     printf "$*\n"
@@ -167,8 +163,6 @@ run_tests() {
     fi
     return $CRM_EX_OK
 }
-
-info "Test home is:\t$test_home"
 
 while [ $# -gt 0 ] ; do
     case "$1" in
