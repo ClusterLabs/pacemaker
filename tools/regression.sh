@@ -9,7 +9,7 @@ Options:
  -v, --valgrind  Run all commands under valgrind
  -s              Save actual output as expected output"
 
-: ${shadow=tools-regression}
+: ${shadow=cts-cli}
 test_home="$(dirname $0)"
 num_errors=0
 num_passed=0
@@ -70,7 +70,6 @@ function test_assert() {
 }
 
 function test_tools() {
-    export CIB_shadow_dir=$test_home
     $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow  2>&1
     export CIB_shadow=$shadow
 
@@ -609,7 +608,8 @@ function test_acl_loop() {
 }
 
 function test_acls() {
-    export CIB_shadow_dir=$test_home
+    local SHADOWPATH
+
     $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow --validate-with pacemaker-1.3 2>&1
     export CIB_shadow=$shadow
 
@@ -670,15 +670,15 @@ EOF
     cmd="cibadmin --upgrade --force -V"
     test_assert $CRM_EX_OK
 
-    sed -i 's/epoch=.2/epoch=\"6/g' $CIB_shadow_dir/shadow.$CIB_shadow
-    sed -i 's/admin_epoch=.1/admin_epoch=\"0/g' $CIB_shadow_dir/shadow.$CIB_shadow
+    SHADOWPATH="$(crm_shadow --file)"
+    sed -i 's/epoch=.2/epoch=\"6/g' "$SHADOWPATH"
+    sed -i 's/admin_epoch=.1/admin_epoch=\"0/g' "$SHADOWPATH"
 
     test_acl_loop
 }
 
 function test_validity() {
 
-    export CIB_shadow_dir=$test_home
     $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow --validate-with pacemaker-1.2 2>&1
     export CIB_shadow=$shadow
     export PCMK_trace_functions=update_validation,cli_config_update
@@ -824,7 +824,9 @@ fi
 
 for t in $tests; do
     echo "Testing $t"
-    test_$t > $test_home/regression.$t.out
+    TMPFILE=$(mktemp --tmpdir cts-cli.$t.XXXXXXXXXX)
+    eval TMPFILE_$t="$TMPFILE"
+    test_$t > "$TMPFILE"
 
     sed -i -e 's/cib-last-written.*>/>/'\
         -e 's/ last-run=\"[0-9]*\"//'\
@@ -840,10 +842,10 @@ for t in $tests; do
         -e 's/schemas\.c:\([0-9][0-9]*\)/schemas.c:NNN/' \
         -e 's/constraints\.:\([0-9][0-9]*\)/constraints.:NNN/' \
         -e 's/\(validation ([0-9][0-9]* of \)[0-9][0-9]*\().*\)/\1X\2/' \
-        $test_home/regression.$t.out
+        "$TMPFILE"
 
     if [ $do_save -eq 1 ]; then
-        cp $test_home/regression.$t.out $test_home/regression.$t.exp
+        cp "$TMPFILE" $test_home/regression.$t.exp
     fi
 done
     
@@ -853,10 +855,11 @@ if [ $verbose -eq 1 ]; then
     echo -e "\n\nResults"
 fi
 for t in $tests; do
+    eval TMPFILE="\$TMPFILE_$t"
     if [ $verbose -eq 1 ]; then
-        diff -wu $test_home/regression.$t.exp $test_home/regression.$t.out
+        diff -wu $test_home/regression.$t.exp "$TMPFILE"
     else
-        diff -w $test_home/regression.$t.exp $test_home/regression.$t.out >/dev/null 2>&1
+        diff -w $test_home/regression.$t.exp "$TMPFILE" >/dev/null 2>&1
     fi
     if [ $? -ne 0 ]; then
         failed=1
@@ -865,21 +868,31 @@ done
 
 echo -e "\n\nSummary"
 for t in $tests; do
-    grep -e "^*" $test_home/regression.$t.out
+    eval TMPFILE="\$TMPFILE_$t"
+    grep -e "^*" "$TMPFILE"
 done
 
 if [ $num_errors -ne 0 ]; then
-    echo $num_errors tests failed
+    echo "$num_errors tests failed; see output in:"
+    for t in $tests; do
+        eval TMPFILE="\$TMPFILE_$t"
+        echo "    $TMPFILE"
+    done
     exit $CRM_EX_ERROR
 
 elif [ $failed -eq 1 ]; then
-    echo $num_passed tests passed but diff failed
+    echo "$num_passed tests passed but output was unexpected; see output in:"
+    for t in $tests; do
+        eval TMPFILE="\$TMPFILE_$t"
+        echo "    $TMPFILE"
+    done
     exit $CRM_EX_DIGEST
 
 else
     echo $num_passed tests passed
     for t in $tests; do
-        rm -f "$test_home/regression.$t.out"
+        eval TMPFILE="\$TMPFILE_$t"
+        rm -f "$TMPFILE"
     done
     crm_shadow --force --delete $shadow >/dev/null 2>&1
     exit $CRM_EX_OK
