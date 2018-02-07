@@ -23,9 +23,9 @@
 ## (used to be constant of 7), so we need to convey it for non-tags, too.
 %global commit_abbrev 7
 
-## Path to Python interpreter (leave commented to auto-detect,
-## or uncomment and edit to use a specific version)
-#%%global python_path /usr/bin/python%{python3_pkgversion} 
+## Python major version to use (2, 3, or 0 for auto-detect)
+%global python_major 0
+
 
 # Define globals for convenient use later
 
@@ -46,23 +46,12 @@
                       case "%{shortcommit}" in *-rc[[:digit:]]*%{rparen} false;;
                       esac; }; echo $?)
 
-## Turn off auto-compilation of python files outside site-packages directory,
-## so that the -libs-devel package is multilib-compliant (no *.py[co] files)
-%global __os_install_post %(echo '%{__os_install_post}' | {
-                            sed -e 's!/usr/lib[^[:space:]]*/brp-python-bytecompile[[:space:]].*$!!g'; })
-
 ## Heuristic used to infer bleeding-edge deployments that are
 ## less likely to have working versions of the documentation tools
 %define bleeding %(test ! -e /etc/yum.repos.d/fedora-rawhide.repo; echo $?)
 
 ## Corosync version
 %define cs_version %(pkg-config corosync --modversion 2>/dev/null | awk -F . '{print $1}')
-
-## Where to install python site libraries (currently, this uses the unversioned
-## python_sitearch macro to get the default system python, but at some point,
-## we should explicitly choose python2_sitearch or python3_sitearch -- or both)
-%define py_site %{?python_sitearch}%{!?python_sitearch:%(
-  python -c 'from distutils.sysconfig import get_python_lib as gpl; print(gpl(1))' 2>/dev/null)}
 
 ## Whether this platform defaults to using systemd as an init system
 ## (needs to be evaluated prior to BuildRequires being enumerated and
@@ -79,6 +68,44 @@
 %define systemd_native (%{?_unitdir:1}%{?!_unitdir:0}%{nil \
   } || %{?__transaction_systemd_inhibit:1}%{?!__transaction_systemd_inhibit:0}%{nil \
   } || %(test -f /usr/lib/os-release; test $? -ne 0; echo $?))
+
+
+# Python-related definitions
+
+## Use Python 3 on certain platforms if major version not specified
+%if %{?python_major} == 0
+%if 0%{?fedora} > 26 || 0%{?rhel} > 7
+%global python_major 3
+%endif
+%endif
+
+## Turn off auto-compilation of Python files outside site-packages directory,
+## so that the -libs-devel package is multilib-compliant (no *.py[co] files)
+%global __os_install_post %(echo '%{__os_install_post}' | {
+                            sed -e 's!/usr/lib[^[:space:]]*/brp-python-bytecompile[[:space:]].*$!!g'; })
+
+## Values that differ by Python major version
+%if 0%{?python_major} > 2
+%global python_path /usr/bin/python%{?python3_pkgversion}%{!?python3_pkgversion:3}
+%global python_pkg python3
+%global python_min 3.2
+%define py_site %{?python3_sitelib}%{!?python3_sitelib:%(
+  python3 -c 'from distutils.sysconfig import get_python_lib as gpl; print(gpl(1))' 2>/dev/null)}
+%else
+%if 0%{?python_major} > 1
+%global python_path /usr/bin/python%{?python2_pkgversion}%{!?python2_pkgversion:2}
+%global python_pkg python2
+%global python_min 2.7
+%define py_site %{?python2_sitelib}%{!?python2_sitelib:%(
+  python2 -c 'from distutils.sysconfig import get_python_lib as gpl; print(gpl(1))' 2>/dev/null)}
+%else
+%global python_min 2.7
+%global python_pkg python
+%define py_site %{?python_sitelib}%{!?python_sitelib:%(
+  python -c 'from distutils.sysconfig import get_python_lib as gpl; print(gpl(1))' 2>/dev/null)}
+%endif
+%endif
+
 
 # Definitions for backward compatibility with older RPM versions
 
@@ -173,9 +200,9 @@ Requires:      %{name}-cli = %{version}-%{release}
 %systemd_requires
 %endif
 
-# Pacemaker targets compatibility with python 2.7 and 3.2+
-Requires:      python >= 2.7
-BuildRequires: python-devel >= 2.7
+# Pacemaker requires a minimum Python functionality
+Requires:      %{python_pkg} >= %{python_min}
+BuildRequires: %{python_pkg}-devel >= %{python_min}
 
 # Pacemaker requires a minimum libqb functionality
 Requires:      libqb >= 0.13.0
@@ -318,14 +345,14 @@ for developing tools for Pacemaker.
 License:       GPLv2+ and LGPLv2+
 Summary:       Test framework for cluster-related technologies like Pacemaker
 Group:         System Environment/Daemons
-Requires:      python >= 2.7
+Requires:      %{python_pkg} >= %{python_min}
 Requires:      %{name}-libs = %{version}-%{release}
 
 # systemd python bindings are separate package in some distros
 %if %{defined systemd_requires}
 
-%if 0%{?fedora} > 22
-Requires:      python2-systemd
+%if 0%{?fedora} > 22 || 0%{?rhel} > 7
+Requires:      %{python_pkg}-systemd
 %else
 %if 0%{?fedora} > 20 || 0%{?rhel} > 6
 Requires:      systemd-python

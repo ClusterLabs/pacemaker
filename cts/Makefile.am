@@ -30,7 +30,7 @@ test_SCRIPTS	= cts-coverage cts-regression cts-cli cts-lrmd cts-pengine \
 		  cts-stonithd
 test_DATA	= valgrind-pcmk.suppressions
 
-ctslibdir	= $(pyexecdir)/cts
+ctslibdir	= $(pythondir)/cts
 ctslib_PYTHON	=	__init__.py		\
 			CTSvars.py		\
 			CM_common.py		\
