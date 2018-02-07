@@ -1636,10 +1636,12 @@ AC_SUBST(QUIET_LIBTOOL_OPTS)
 AC_DEFINE_UNQUOTED(CRM_FEATURES, "$PCMK_FEATURES", Set of enabled features)
 AC_SUBST(PCMK_FEATURES)
 
-dnl The Makefiles and shell scripts we output
+dnl Files we output that need to be executable
+AC_CONFIG_FILES([cts/cts-coverage], [chmod +x cts/cts-coverage])
+
+dnl Other files we output
 AC_CONFIG_FILES(Makefile                                            \
                 Doxyfile                                            \
-                coverage.sh                                         \
                 cts/Makefile                                        \
                 cts/CTSlab.py                                       \
                 cts/CTSvars.py                                      \

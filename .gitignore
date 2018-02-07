@@ -56,12 +56,12 @@ ylwrap
 
 # Configure targets
 Doxyfile
-coverage.sh
 cts/CTSlab.py
 cts/CTSvars.py
 cts/LSBDummy
 cts/OCFIPraTest.py
 cts/benchmark/clubench
+cts/cts-coverage
 cts/fence_dummy
 cts/lxc_autogen.sh
 extra/logrotate/pacemaker
@@ -80,7 +80,6 @@ mcp/pacemaker.upstart
 pengine/regression.core.sh
 publican.cfg
 tools/cibsecret
-tools/coverage.sh
 tools/crm_error
 tools/crm_mon.service
 tools/crm_mon.upstart
@@ -154,6 +153,9 @@ doc/Pacemaker_Remote/en-US/Ch-*.xml
 lib/gnu/libgnu.a
 lib/gnu/stdalign.h
 *.coverity
+
+# Formerly built files (helps when jumping back and forth in checkout)
+/coverage.sh
 
 #Other 
 mock

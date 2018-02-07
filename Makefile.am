@@ -36,10 +36,6 @@ license_DATA            = $(wildcard licenses/*)
 # Test components
 SUBDIRS	+= cts
 
-testdir			= $(datadir)/$(PACKAGE)/tests/
-test_SCRIPTS		= coverage.sh BasicSanity.sh
-test_DATA		= valgrind-pcmk.suppressions
-
 # Scratch file for ad-hoc testing
 noinst_PROGRAMS = scratch
 nodist_scratch_SOURCES	= scratch.c

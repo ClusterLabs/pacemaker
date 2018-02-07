@@ -21,9 +21,15 @@ CLEANFILES      = CTSlab.py LSBDummy OCFIPraTest.py fence_dummy
 
 EXTRA_DIST      = $(cts_SCRIPTS) $(cts_DATA)
 
-ctsdir		= $(datadir)/$(PACKAGE)/tests/cts
-ctslibdir	= $(pyexecdir)/cts
+#
+# Test commands and globally applicable test files should be in $(testdir),
+# and command-specific test data should be in a command-specific subdirectory.
+#
+testdir		= $(datadir)/$(PACKAGE)/tests
+test_SCRIPTS	= cts-coverage cts-regression
+test_DATA	= valgrind-pcmk.suppressions
 
+ctslibdir	= $(pyexecdir)/cts
 ctslib_PYTHON	=	__init__.py		\
 			CTSvars.py		\
 			CM_common.py		\
@@ -40,8 +46,8 @@ ctslib_PYTHON	=	__init__.py		\
 			remote.py		\
 			watcher.py
 
+ctsdir		= 	$(testdir)/cts
 cts_DATA	=	README.md cts.supp
-
 cts_SCRIPTS	=	cts		\
 			CTSlab.py		\
 			lxc_autogen.sh	\
