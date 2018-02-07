@@ -1,6 +1,6 @@
 #!/bin/bash
 
-USAGE_TEXT="Usage: regression.sh [<options>]
+USAGE_TEXT="Usage: cts-cli [<options>]
 Options:
  --help          Display this text, then exit
  -V, --verbose   Display any differences from expected output
@@ -10,7 +10,7 @@ Options:
  -s              Save actual output as expected output"
 
 : ${shadow=cts-cli}
-test_home="$(dirname $0)"
+test_home="$(dirname $(readlink -e $0))"
 num_errors=0
 num_passed=0
 GREP_OPTIONS=
@@ -26,6 +26,7 @@ VALGRIND_OPTS="
     --trace-children=no
     --time-stamp=yes
     --num-callers=20
+    --suppressions=$test_home/valgrind-pcmk.suppressions
 "
 
 # These constants must track crm_exit_t values
@@ -760,7 +761,7 @@ while [ $# -gt 0 ]; do
             ;;
         -v|--valgrind)
             export G_SLICE=always-malloc
-            VALGRIND_CMD="valgrind"
+            VALGRIND_CMD="valgrind $VALGRIND_OPTS"
             shift
             ;;
         -s)
@@ -809,17 +810,6 @@ if [ -x "$SRCDIR/tools/crm_simulate" ]; then
         export PCMK_schema_directory="$SRCDIR/xml"
         echo "Using local schemas from: $PCMK_schema_directory"
     fi
-
-    if [ -r "$SRCDIR/valgrind-pcmk.suppressions" ]; then
-        VALGRIND_OPTS="$VALGRIND_OPTS --suppressions=valgrind-pcmk.suppressions"
-    fi
-else
-    VALGRIND_OPTS="$VALGRIND_OPTS
-        --suppressions=/usr/share/pacemaker/tests/valgrind-pcmk.suppressions"
-fi
-
-if [ "$VALGRIND_CMD" != "" ]; then
-    VALGRIND_CMD="$VALGRIND_CMD $VALGRIND_OPTS"
 fi
 
 for t in $tests; do
@@ -845,7 +835,7 @@ for t in $tests; do
         "$TMPFILE"
 
     if [ $do_save -eq 1 ]; then
-        cp "$TMPFILE" $test_home/regression.$t.exp
+        cp "$TMPFILE" $test_home/cli/regression.$t.exp
     fi
 done
     
@@ -857,9 +847,9 @@ fi
 for t in $tests; do
     eval TMPFILE="\$TMPFILE_$t"
     if [ $verbose -eq 1 ]; then
-        diff -wu $test_home/regression.$t.exp "$TMPFILE"
+        diff -wu $test_home/cli/regression.$t.exp "$TMPFILE"
     else
-        diff -w $test_home/regression.$t.exp "$TMPFILE" >/dev/null 2>&1
+        diff -w $test_home/cli/regression.$t.exp "$TMPFILE" >/dev/null 2>&1
     fi
     if [ $? -ne 0 ]; then
         failed=1
