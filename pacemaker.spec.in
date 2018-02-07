@@ -340,7 +340,6 @@ manager.
 The %{name}-libs-devel package contains headers and shared libraries
 for developing tools for Pacemaker.
 
-# NOTE: can be noarch if lrmd_test is moved to another subpackage
 %package       cts
 License:       GPLv2+ and LGPLv2+
 Summary:       Test framework for cluster-related technologies like Pacemaker
@@ -680,6 +679,7 @@ exit 0
 %exclude %{_datadir}/pacemaker/tests
 %{_datadir}/pacemaker
 %{_datadir}/snmp/mibs/PCMK-MIB.txt
+%{_libexecdir}/pacemaker/lrmd_test
 
 %exclude /usr/lib/ocf/resource.d/pacemaker/controld
 %exclude /usr/lib/ocf/resource.d/pacemaker/o2cb
@@ -767,7 +767,6 @@ exit 0
 %defattr(-,root,root)
 %{py_site}/cts
 %{_datadir}/pacemaker/tests
-%{_libexecdir}/pacemaker/lrmd_test
 %license licenses/GPLv2
 %doc COPYING
 %doc ChangeLog
