@@ -22,9 +22,6 @@ lrmdlib_PROGRAMS	= lrmd
 # Test components
 lrmdlib_PROGRAMS	+= lrmd_test
 
-testdir			= $(datadir)/$(PACKAGE)/tests/lrmd
-test_SCRIPTS		= regression.py
-
 initdir			= $(INITDIR)
 init_SCRIPTS		= pacemaker_remote
 sbin_PROGRAMS		= pacemaker_remoted
@@ -60,4 +57,4 @@ lrmd_test_SOURCES	= test.c
 
 noinst_HEADERS  = lrmd_private.h
 
-CLEANFILES = regression.py $(man8_MANS)
+CLEANFILES = $(man8_MANS)

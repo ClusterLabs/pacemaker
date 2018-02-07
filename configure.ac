@@ -1638,6 +1638,7 @@ AC_SUBST(PCMK_FEATURES)
 
 dnl Files we output that need to be executable
 AC_CONFIG_FILES([cts/cts-coverage], [chmod +x cts/cts-coverage])
+AC_CONFIG_FILES([cts/cts-lrmd], [chmod +x cts/cts-lrmd])
 AC_CONFIG_FILES([cts/cts-stonithd], [chmod +x cts/cts-stonithd])
 
 dnl Other files we output
@@ -1694,7 +1695,6 @@ AC_CONFIG_FILES(Makefile                                            \
                 mcp/pacemaker.upstart                               \
                 mcp/pacemaker.combined.upstart                      \
                 lrmd/Makefile                                       \
-                lrmd/regression.py                                  \
                 lrmd/pacemaker_remote.service                       \
                 lrmd/pacemaker_remote                               \
                 extra/Makefile                                      \

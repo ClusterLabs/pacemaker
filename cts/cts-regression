@@ -96,8 +96,8 @@ run_test() {
             fi
             ;;
         lrmd)
-            if [ -x $test_home/lrmd/regression.py ]; then
-                run_as_root $test_home/lrmd/regression.py
+            if [ -x $test_home/cts-lrmd ]; then
+                run_as_root $test_home/cts-lrmd
                 rc=$?
             else
                 error "lrmd regression test not found"
@@ -105,8 +105,8 @@ run_test() {
             fi
             ;;
         pacemaker_remote)
-            if [ -x $test_home/lrmd/regression.py ]; then
-                run_as_root $test_home/lrmd/regression.py -R
+            if [ -x $test_home/cts-lrmd ]; then
+                run_as_root $test_home/cts-lrmd -R
                 rc=$?
             else
                 error "pacemaker_remote regression test not found"
