@@ -1639,6 +1639,7 @@ AC_SUBST(PCMK_FEATURES)
 dnl Files we output that need to be executable
 AC_CONFIG_FILES([cts/cts-coverage], [chmod +x cts/cts-coverage])
 AC_CONFIG_FILES([cts/cts-lrmd], [chmod +x cts/cts-lrmd])
+AC_CONFIG_FILES([cts/cts-pengine], [chmod +x cts/cts-pengine])
 AC_CONFIG_FILES([cts/cts-stonithd], [chmod +x cts/cts-stonithd])
 
 dnl Other files we output
@@ -1657,7 +1658,6 @@ AC_CONFIG_FILES(Makefile                                            \
                 attrd/Makefile                                      \
                 crmd/Makefile                                       \
                 pengine/Makefile                                    \
-                pengine/regression.core.sh                          \
                 doc/Makefile                                        \
                 doc/Clusters_from_Scratch/publican.cfg              \
                 doc/Pacemaker_Administration/publican.cfg           \

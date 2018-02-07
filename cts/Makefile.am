@@ -26,7 +26,8 @@ EXTRA_DIST      = $(cts_SCRIPTS) $(cts_DATA)
 # and command-specific test data should be in a command-specific subdirectory.
 #
 testdir		= $(datadir)/$(PACKAGE)/tests
-test_SCRIPTS	= cts-coverage cts-regression cts-cli cts-lrmd cts-stonithd
+test_SCRIPTS	= cts-coverage cts-regression cts-cli cts-lrmd cts-pengine \
+		  cts-stonithd
 test_DATA	= valgrind-pcmk.suppressions
 
 ctslibdir	= $(pyexecdir)/cts
@@ -70,6 +71,8 @@ pe_DATA		= $(PE_TESTS) \
 # For "make test", run a single pengine test
 TESTS = pengine/bug-rh-1097457.xml
 TEST_EXTENSIONS = .xml
+XML_LOG_COMPILER = ./cts-pengine
+AM_XML_LOG_FLAGS = -V --run
 
 pe-list:
 	echo $(shell ls -1 pengine/*.xml)

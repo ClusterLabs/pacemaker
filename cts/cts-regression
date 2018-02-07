@@ -87,8 +87,8 @@ run_test() {
     info "============================================================"
     case $t in
         pengine)
-            if [ -x $test_home/pengine/regression.sh ]; then
-                $test_home/pengine/regression.sh $verbose $valgrind
+            if [ -x $test_home/cts-pengine ]; then
+                $test_home/cts-pengine $verbose $valgrind
                 rc=$?
             else
                 error "pengine regression test not found"

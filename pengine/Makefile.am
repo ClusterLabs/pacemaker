@@ -21,17 +21,9 @@ AM_CPPFLAGS	+= -I$(top_builddir) -I$(top_srcdir)
 
 halibdir	= $(CRM_DAEMON_DIR)
 
-testdir			= $(datadir)/$(PACKAGE)/tests/pengine
-test_SCRIPTS		= regression.sh
-test_DATA		= regression.core.sh
-
-XML_LOG_COMPILER = ./regression.sh
-AM_XML_LOG_FLAGS = -V --run 
-
 COMMONLIBS	= $(top_builddir)/lib/common/libcrmcommon.la	\
 		$(top_builddir)/lib/pengine/libpe_status.la	\
 		libpengine.la
-
 
 ## libraries
 lib_LTLIBRARIES	= libpengine.la
