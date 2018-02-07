@@ -17,20 +17,13 @@
  # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  #
 
-core=`dirname $0`
+test_home=$(dirname $(readlink -e $0))
 verbose=0
 num_failed=0
 num_tests=0
 force_local=0
 VALGRIND_CMD=""
 diff_opts="--ignore-all-space --ignore-blank-lines -u -N"
-
-if [ "x$0" = "x-bash" ]; then 
-    test_home=@abs_top_builddir@/pengine
-else
-    test_home=`dirname $0`
-    test_name=`basename $0`
-fi
 
 function info() {
     printf "$*\n"
@@ -50,7 +43,7 @@ function show_test() {
 }
 
 info "Test home is:\t$test_home"
-io_dir=$test_home/test10
+io_dir="$test_home/pengine"
 test_binary=@abs_top_builddir@/tools/crm_simulate
 PCMK_schema_directory=@abs_top_builddir@/xml
 
