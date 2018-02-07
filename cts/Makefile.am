@@ -26,7 +26,7 @@ EXTRA_DIST      = $(cts_SCRIPTS) $(cts_DATA)
 # and command-specific test data should be in a command-specific subdirectory.
 #
 testdir		= $(datadir)/$(PACKAGE)/tests
-test_SCRIPTS	= cts-coverage cts-regression cts-cli
+test_SCRIPTS	= cts-coverage cts-regression cts-cli cts-stonithd
 test_DATA	= valgrind-pcmk.suppressions
 
 ctslibdir	= $(pyexecdir)/cts

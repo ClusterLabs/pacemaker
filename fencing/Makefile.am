@@ -18,9 +18,6 @@
 include $(top_srcdir)/Makefile.common
 
 ## binary progs
-testdir			= $(datadir)/$(PACKAGE)/tests/fencing
-test_SCRIPTS		= regression.py
-
 halibdir	= $(CRM_DAEMON_DIR)
 halib_PROGRAMS	= stonithd stonith-test
 
@@ -64,4 +61,4 @@ stonithd_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la	\
 
 stonithd_SOURCES	= main.c commands.c remote.c
 
-CLEANFILES = regression.py $(man7_MANS) $(man8_MANS)
+CLEANFILES = $(man7_MANS) $(man8_MANS)

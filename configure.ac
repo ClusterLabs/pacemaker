@@ -1638,6 +1638,7 @@ AC_SUBST(PCMK_FEATURES)
 
 dnl Files we output that need to be executable
 AC_CONFIG_FILES([cts/cts-coverage], [chmod +x cts/cts-coverage])
+AC_CONFIG_FILES([cts/cts-stonithd], [chmod +x cts/cts-stonithd])
 
 dnl Other files we output
 AC_CONFIG_FILES(Makefile                                            \
@@ -1663,7 +1664,6 @@ AC_CONFIG_FILES(Makefile                                            \
                 doc/Pacemaker_Explained/publican.cfg                \
                 doc/Pacemaker_Remote/publican.cfg                   \
                 fencing/Makefile                                    \
-                fencing/regression.py                               \
                 include/Makefile                                    \
                 include/crm/Makefile                                \
                 include/crm/cib/Makefile                            \

@@ -62,10 +62,10 @@ cts/LSBDummy
 cts/OCFIPraTest.py
 cts/benchmark/clubench
 cts/cts-coverage
+cts/cts-stonithd
 cts/fence_dummy
 cts/lxc_autogen.sh
 extra/logrotate/pacemaker
-fencing/regression.py
 include/config.h
 include/config.h.in
 include/crm_config.h
@@ -156,6 +156,7 @@ lib/gnu/stdalign.h
 
 # Formerly built files (helps when jumping back and forth in checkout)
 /coverage.sh
+/fencing/regression.py
 
 #Other 
 mock

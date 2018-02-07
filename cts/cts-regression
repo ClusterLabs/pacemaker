@@ -114,8 +114,8 @@ run_test() {
             fi
             ;;
         fencing)
-            if [ -x $test_home/fencing/regression.py ]; then
-                run_as_root $test_home/fencing/regression.py
+            if [ -x $test_home/cts-stonithd ]; then
+                run_as_root $test_home/cts-stonithd
                 rc=$?
             else
                 error "fencing regression test not found"
