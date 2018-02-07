@@ -2,12 +2,12 @@
 
 start=$PWD
 test_home=`dirname $0`
-sanitydir=@datadir@/@PACKAGE@/tests
+test_dir="@datadir@/@PACKAGE@/tests"
 
-if [ $test_home != $sanitydir ]; then
+if [ "$test_home" != "$test_dir" ]; then
     # Running against the source tree
     GCOV_BASE=@abs_top_srcdir@
-    sanitydir=@abs_top_srcdir@
+    test_dir="@abs_top_srcdir@/cts"
     cd @abs_top_srcdir@
     
     grep with-gcov config.log
@@ -52,7 +52,7 @@ cd $start
 lcov -d $GCOV_BASE -z
 
 # Run all active regression tests
-$sanitydir/BasicSanity.sh
+$test_dir/cts-regression
 
 lcov -d $GCOV_BASE -c -o pacemaker.info
 
