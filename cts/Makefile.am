@@ -26,7 +26,7 @@ EXTRA_DIST      = $(cts_SCRIPTS) $(cts_DATA)
 # and command-specific test data should be in a command-specific subdirectory.
 #
 testdir		= $(datadir)/$(PACKAGE)/tests
-test_SCRIPTS	= cts-coverage cts-regression
+test_SCRIPTS	= cts-coverage cts-regression cts-cli
 test_DATA	= valgrind-pcmk.suppressions
 
 ctslibdir	= $(pyexecdir)/cts
@@ -53,5 +53,9 @@ cts_SCRIPTS	=	cts		\
 			lxc_autogen.sh	\
 			LSBDummy		\
 			fence_dummy
+
+clidir		= $(testdir)/cli
+cli_DATA	= cli/regression.dates.exp cli/regression.tools.exp \
+		  cli/regression.acls.exp cli/regression.validity.exp
 
 SUBDIRS	= benchmark

@@ -123,11 +123,8 @@ run_test() {
             fi
             ;;
         cli)
-            if [ -x $test_home/cli/regression.sh ]; then
-                $test_home/cli/regression.sh $verbose $valgrind
-                rc=$?
-            elif [ -x $test_home/tools/regression.sh ]; then
-                $test_home/tools/regression.sh $verbose $valgrind
+            if [ -x $test_home/cts-cli ]; then
+                $test_home/cts-cli $verbose $valgrind
                 rc=$?
             else
                 error "cli regression test not found"
