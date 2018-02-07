@@ -1,9 +1,34 @@
 #!/bin/bash
+#
+# cts-regression
+#
+# Convenience wrapper for running any of the Pacemaker regression tests
+#
 
-test_home=`dirname $0`
+USAGE_TEXT="Usage: cts-regression [<options>] [<test> ...]
+Options:
+ --help          Display this text, then exit
+ -V, --verbose   Increase test verbosity
+ -v, --valgrind  Run test commands under valgrind
+
+Tests (default tests are 'pengine cli lrmd'):
+ pengine           Policy engine
+ cli               Command-line tools
+ lrmd              Local resource manager
+ pacemaker_remote  Local resource manager in remote mode
+ fencing           Fencing daemon
+ all               Synonym for 'pengine cli lrmd fencing'"
+
+test_home="$(dirname $0)"
 valgrind=""
 verbose=""
 tests=""
+
+# These constants must track crm_exit_t values
+CRM_EX_OK=0
+CRM_EX_ERROR=1
+CRM_EX_NOT_INSTALLED=5
+CRM_EX_USAGE=64
 
 if [ "$test_home" = "." ]; then
     test_home="$PWD"
@@ -41,67 +66,148 @@ function run_as_root() {
     fi
 }
 
+add_test() {
+    local TEST="$1"
+
+    case "$TEST" in
+        pengine|lrmd|pacemaker_remote|fencing|cli)
+            if [[ ! $tests =~ $TEST ]]; then
+                tests="$tests $TEST"
+            fi
+            ;;
+        *)
+            error "unknown test: $TEST"
+            echo
+            echo "$USAGE_TEXT"
+            exit $CRM_EX_USAGE
+            ;;
+    esac
+}
+
+run_test() {
+    local t="$1"
+
+    info "Executing the $t regression tests"
+    info "============================================================"
+    case $t in
+        pengine)
+            if [ -x $test_home/pengine/regression.sh ]; then
+                $test_home/pengine/regression.sh $verbose $valgrind
+                rc=$?
+            else
+                error "pengine regression test not found"
+                rc=$CRM_EX_NOT_INSTALLED
+            fi
+            ;;
+        lrmd)
+            if [ -x $test_home/lrmd/regression.py ]; then
+                run_as_root $test_home/lrmd/regression.py
+                rc=$?
+            else
+                error "lrmd regression test not found"
+                rc=$CRM_EX_NOT_INSTALLED
+            fi
+            ;;
+        pacemaker_remote)
+            if [ -x $test_home/lrmd/regression.py ]; then
+                run_as_root $test_home/lrmd/regression.py -R
+                rc=$?
+            else
+                error "pacemaker_remote regression test not found"
+                rc=$CRM_EX_NOT_INSTALLED
+            fi
+            ;;
+        fencing)
+            if [ -x $test_home/fencing/regression.py ]; then
+                run_as_root $test_home/fencing/regression.py
+                rc=$?
+            else
+                error "fencing regression test not found"
+                rc=$CRM_EX_NOT_INSTALLED
+            fi
+            ;;
+        cli)
+            if [ -x $test_home/cli/regression.sh ]; then
+                $test_home/cli/regression.sh $verbose $valgrind
+                rc=$?
+            elif [ -x $test_home/tools/regression.sh ]; then
+                $test_home/tools/regression.sh $verbose $valgrind
+                rc=$?
+            else
+                error "cli regression test not found"
+                rc=$CRM_EX_NOT_INSTALLED
+            fi
+            ;;
+    esac
+
+    info "============================================================"
+    info ""
+    info ""
+    return $rc
+}
+
+run_tests() {
+    TESTS="$1"
+    local TEST
+    local TEST_RC
+    local FAILED
+
+    FAILED=""
+    for TEST in $TESTS; do
+        run_test $TEST
+	TEST_RC=$?
+        if [ $TEST_RC -ne 0 ]; then
+            info "$TEST regression tests failed ($TEST_RC)"
+            FAILED="$FAILED $TEST"
+        fi
+    done
+    if [ -n "$FAILED" ]; then
+        error "failed regression tests: $FAILED"
+        return $CRM_EX_ERROR
+    fi
+    return $CRM_EX_OK
+}
+
 info "Test home is:\t$test_home"
 
-while true ; do
+while [ $# -gt 0 ] ; do
     case "$1" in
-        all) tests="$tests pengine cli lrmd fencing"; shift;;
-        pengine|lrmd|pacemaker_remote|fencing|cli) tests="$tests $1"; shift;;
-        -V|--verbose) verbose="-V"; shift;;
-        -v|--valgrind) valgrind="-v"; shift;;
-        --) shift ; break ;;
-        "") break;;
-        *) echo "unknown option: $1"; exit 1;;
+        --help)
+            echo "$USAGE_TEXT"
+            exit $CRM_EX_OK
+            ;;
+        -V|--verbose)
+            verbose="-V"
+            shift
+            ;;
+        -v|--valgrind)
+            valgrind="-v"
+            shift
+            ;;
+        pengine|lrmd|pacemaker_remote|fencing|cli)
+            add_test $1
+            shift
+            ;;
+        all)
+            add_test pengine
+            add_test cli
+            add_test lrmd
+            add_test fencing
+            shift
+            ;;
+        *)
+            error "unknown option: $1"
+            echo
+            echo "$USAGE_TEXT"
+            exit $CRM_EX_USAGE
+            ;;
     esac
 done
 
 if [ -z "$tests" ]; then
-    tests="pengine cli lrmd"
+    add_test pengine
+    add_test cli
+    add_test lrmd
 fi
 
-failed=""
-for t in $tests; do
-    info "Executing the $t regression tests"
-    info "============================================================"
-    if [ -e $test_home/$t/regression.py ]; then
-        # fencing, lrmd need root access
-        run_as_root $test_home/$t/regression.py
-        rc=$?
-
-    elif [ $t == "pacemaker_remote" ] && [ -e $test_home/lrmd/regression.py ]; then
-        # pacemaker_remote
-        run_as_root $test_home/lrmd/regression.py -R
-        rc=$?
-
-    elif [ -e $test_home/$t/regression.sh ]; then
-        # pengine, cli
-	$test_home/$t/regression.sh $verbose $valgrind
-        rc=$?
-
-    elif [ $t = cli -a -e $test_home/tools ]; then
-        # cli when run from the source tree
-	t=tools
-	$test_home/$t/regression.sh $verbose $valgrind
-        rc=$?
-
-    else
-        error "Cannot find $t test in $test_home"
-        rc=1
-    fi
-
-    if [ $rc != 0 ]; then
-        info "$t regression tests failed: $rc"
-        failed="$failed $t"
-    fi
-
-    info "============================================================"
-    info ""
-    info ""
-done
-
-if [ -z "$failed" ]; then
-    exit 0
-fi
-
-error "regression tests for $failed failed"
-exit 1
+run_tests $tests
