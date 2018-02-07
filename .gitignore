@@ -154,10 +154,14 @@ lib/gnu/libgnu.a
 lib/gnu/stdalign.h
 *.coverity
 
+# Test detritus
+cts/pengine/shadow.*
+
 # Formerly built files (helps when jumping back and forth in checkout)
 /coverage.sh
 /fencing/regression.py
 /lrmd/regression.py
+/pengine/test10/shadow.*
 
 #Other 
 mock
@@ -177,4 +181,3 @@ logs
 *.orig
 *.rej
 *.swp
-pengine/test10/shadow.*

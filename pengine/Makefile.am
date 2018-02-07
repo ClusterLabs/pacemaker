@@ -21,25 +21,12 @@ AM_CPPFLAGS	+= -I$(top_builddir) -I$(top_srcdir)
 
 halibdir	= $(CRM_DAEMON_DIR)
 
-PE_TESTS	= $(wildcard test10/*.scores)
-
 testdir			= $(datadir)/$(PACKAGE)/tests/pengine
 test_SCRIPTS		= regression.sh
 test_DATA		= regression.core.sh
 
-test10dir		= $(datadir)/$(PACKAGE)/tests/pengine/test10
-test10_DATA		= $(PE_TESTS) $(PE_TESTS:%.scores=%.xml) $(PE_TESTS:%.scores=%.exp) $(PE_TESTS:%.scores=%.dot) $(PE_TESTS:%.scores=%.summary) $(wildcard test10/*.stderr)
-
-beekhof:
-	echo $(shell ls -1 test10/*.xml)
-
-#TESTS = test10/*.xml
-TESTS = test10/bug-rh-1097457.xml
-TEST_EXTENSIONS = .xml
 XML_LOG_COMPILER = ./regression.sh
 AM_XML_LOG_FLAGS = -V --run 
-#LOG_COMPILER = 
-#AM_LOG_FLAGS = -V
 
 COMMONLIBS	= $(top_builddir)/lib/common/libcrmcommon.la	\
 		$(top_builddir)/lib/pengine/libpe_status.la	\
@@ -86,5 +73,4 @@ install-exec-local:
 
 uninstall-local:
 
-clean-local:
-	rm -f test10/*.pe.* $(man7_MANS)
+CLEANFILES = $(man7_MANS)

@@ -58,4 +58,23 @@ clidir		= $(testdir)/cli
 cli_DATA	= cli/regression.dates.exp cli/regression.tools.exp \
 		  cli/regression.acls.exp cli/regression.validity.exp
 
+PE_TESTS	= $(wildcard pengine/*.scores)
+pedir		= $(testdir)/pengine
+pe_DATA		= $(PE_TESTS) \
+		  $(PE_TESTS:%.scores=%.xml) \
+		  $(PE_TESTS:%.scores=%.exp) \
+		  $(PE_TESTS:%.scores=%.dot) \
+		  $(PE_TESTS:%.scores=%.summary) \
+		  $(wildcard pengine/*.stderr)
+
+# For "make test", run a single pengine test
+TESTS = pengine/bug-rh-1097457.xml
+TEST_EXTENSIONS = .xml
+
+pe-list:
+	echo $(shell ls -1 pengine/*.xml)
+
+clean-local:
+	rm -f pengine/*.pe.*
+
 SUBDIRS	= benchmark
