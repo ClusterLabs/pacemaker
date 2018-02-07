@@ -64,7 +64,7 @@ def update_path():
     """ Set the PATH environment variable appropriately for the tests """
 
     new_path = os.environ['PATH']
-    if os.path.exists("%s/regression.py.in" % TEST_DIR):
+    if os.path.exists("%s/cts-lrmd.in" % TEST_DIR):
         print("Running tests from the source tree: %s (%s)" % (BUILD_DIR, TEST_DIR))
         new_path = "%s/lrmd:%s" % (BUILD_DIR, new_path)    # For lrmd, lrmd_test and pacemaker_remoted
         new_path = "%s/tools:%s" % (BUILD_DIR, new_path)   # For crm_resource
@@ -1226,9 +1226,9 @@ class TestOptions(object):
         print("\t [--pacemaker-remote | -R             Test pacemaker-remote binary instead of lrmd.")
         print("\t [--run-only-pattern | -p 'string']   Run only tests containing the string value")
         print("\n\tExample: Run only the test 'start_top'")
-        print("\t\t python ./regression.py --run-only start_stop")
+        print("\t\t " + sys.argv[0] + " --run-only start_stop")
         print("\n\tExample: Run only the tests with the string 'systemd' present in them")
-        print("\t\t python ./regression.py --run-only-pattern systemd")
+        print("\t\t " + sys.argv[0] + " --run-only-pattern systemd")
 
 
 def main(argv):
