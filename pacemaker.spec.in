@@ -766,7 +766,7 @@ exit 0
 %files cts
 %defattr(-,root,root)
 %{py_site}/cts
-%{_datadir}/pacemaker/tests/cts
+%{_datadir}/pacemaker/tests
 %{_libexecdir}/pacemaker/lrmd_test
 %license licenses/GPLv2
 %doc COPYING
@@ -774,8 +774,6 @@ exit 0
 
 %files -n %{name}-libs-devel
 %defattr(-,root,root)
-%exclude %{_datadir}/pacemaker/tests/cts
-%{_datadir}/pacemaker/tests
 %{_includedir}/pacemaker
 %{_libdir}/*.so
 %if %{with coverage}
