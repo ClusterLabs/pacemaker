@@ -450,9 +450,6 @@ install -m 644 tools/crm_mon.upstart ${RPM_BUILD_ROOT}%{_sysconfdir}/init/crm_mo
 mkdir -p ${RPM_BUILD_ROOT}%{_localstatedir}/lib/rpm-state/%{name}
 %endif
 
-# Scripts that should be executable
-chmod a+x %{buildroot}/%{_datadir}/pacemaker/tests/cts/CTSlab.py
-
 # These are not actually scripts
 find %{buildroot} -name '*.xml' -type f -print0 | xargs -0 chmod a-x
 

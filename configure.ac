@@ -1637,23 +1637,25 @@ AC_DEFINE_UNQUOTED(CRM_FEATURES, "$PCMK_FEATURES", Set of enabled features)
 AC_SUBST(PCMK_FEATURES)
 
 dnl Files we output that need to be executable
+AC_CONFIG_FILES([cts/CTSlab.py], [chmod +x cts/CTSlab.py])
+AC_CONFIG_FILES([cts/LSBDummy], [chmod +x cts/LSBDummy])
+AC_CONFIG_FILES([cts/OCFIPraTest.py], [chmod +x cts/OCFIPraTest.py])
 AC_CONFIG_FILES([cts/cts-coverage], [chmod +x cts/cts-coverage])
 AC_CONFIG_FILES([cts/cts-lrmd], [chmod +x cts/cts-lrmd])
 AC_CONFIG_FILES([cts/cts-pengine], [chmod +x cts/cts-pengine])
 AC_CONFIG_FILES([cts/cts-stonithd], [chmod +x cts/cts-stonithd])
+AC_CONFIG_FILES([cts/lxc_autogen.sh], [chmod +x cts/lxc_autogen.sh])
+AC_CONFIG_FILES([cts/benchmark/clubench], [chmod +x cts/benchmark/clubench])
+AC_CONFIG_FILES([cts/fence_dummy], [chmod +x cts/fence_dummy])
+AC_CONFIG_FILES([tools/crm_report], [chmod +x tools/crm_report])
+AC_CONFIG_FILES([tools/cibsecret], [chmod +x tools/cibsecret])
 
 dnl Other files we output
 AC_CONFIG_FILES(Makefile                                            \
                 Doxyfile                                            \
                 cts/Makefile                                        \
-                cts/CTSlab.py                                       \
                 cts/CTSvars.py                                      \
-                cts/LSBDummy                                        \
-		cts/OCFIPraTest.py                                  \
                 cts/benchmark/Makefile                              \
-                cts/benchmark/clubench                              \
-                cts/fence_dummy                                     \
-                cts/lxc_autogen.sh                                  \
                 cib/Makefile                                        \
                 attrd/Makefile                                      \
                 crmd/Makefile                                       \
@@ -1703,9 +1705,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 extra/logrotate/Makefile                            \
                 extra/logrotate/pacemaker                           \
                 tools/Makefile                                      \
-                tools/crm_report                                    \
                 tools/report.common                                 \
-                tools/cibsecret                                     \
                 tools/crm_mon.service                               \
                 tools/crm_mon.upstart                               \
                 xml/Makefile                                        \
