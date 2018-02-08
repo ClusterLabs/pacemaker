@@ -23,12 +23,20 @@ The release counter (the _z_ in _x.y.z_) is increased with all public releases
 of Pacemaker, which typically include both bug fixes and new features.
 
 * *CRM feature set:* This version number applies to the communication between
-  full cluster nodes.
+  full cluster nodes, and is used to avoid problems in mixed-version clusters.
 +
-It increases when a cluster node running the older version would have
-problems if the cluster's Designated Controller (DC) has the newer version.
-To avoid these problems, Pacemaker ensures that the longest-running node is the
-DC, and that nodes with an older feature set cannot join the cluster.
+The major version number increases when nodes with different versions would not
+work (rolling upgrades are not allowed). The minor version number increases
+when mixed-version clusters are allowed only during rolling upgrades. The
+minor-minor version number is ignored, but allows resource agents to detect
+cluster support for various features. footnote:[
+Before CRM feature set 3.1.0 (Pacemaker 2.0.0), the minor-minor
+version number was treated the same as the minor version.
+]
++
+Pacemaker ensures that the longest-running node is the cluster's DC. This
+ensures new features are not enabled until all nodes are upgraded to support
+them.
 
 * *LRMD protocol version:* This version applies to communication between a
   Pacemaker Remote node and the cluster. It increases when an older cluster
