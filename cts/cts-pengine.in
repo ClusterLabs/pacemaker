@@ -28,11 +28,35 @@ Options:
  --valgrind-dhat        Run all commands under valgrind with heap analyzer
  --valgrind-skip-output If running under valgrind, don't display output"
 
+SBINDIR="@sbindir@"
+BUILDDIR="@abs_top_builddir@"
+CRM_SCHEMA_DIRECTORY="@CRM_SCHEMA_DIRECTORY@"
+
 test_home=$(dirname $(readlink -e $0))
+io_dir="$test_home/pengine"
+failed="$test_home/.regression.failed.diff"
+test_binary=
+
+single_test=
 verbose=0
 num_failed=0
 num_tests=0
 VALGRIND_CMD=""
+VALGRIND_OPTS="-q
+    --gen-suppressions=all
+    --log-file=%q{valgrind_output}
+    --time-stamp=yes
+    --trace-children=no
+    --show-reachable=no
+    --leak-check=full
+    --num-callers=20
+    --suppressions=$test_home/valgrind-pcmk.suppressions"
+VALGRIND_DHAT_OPTS="--tool=exp-dhat
+    --log-file=%q{valgrind_output}
+    --time-stamp=yes
+    --trace-children=no
+    --show-top-n=100
+    --num-callers=4"
 diff_opts="--ignore-all-space --ignore-blank-lines -u -N"
 
 # These constants must track crm_exit_t values
@@ -62,12 +86,6 @@ function show_test() {
 }
 
 info "Test home is:\t$test_home"
-io_dir="$test_home/pengine"
-test_binary=@abs_top_builddir@/tools/crm_simulate
-PCMK_schema_directory=@abs_top_builddir@/xml
-
-failed=$test_home/.regression.failed.diff
-single_test=
 
 while [ $# -gt 0 ] ; do
     case "$1" in
@@ -77,13 +95,11 @@ while [ $# -gt 0 ] ; do
             ;;
         -v|--valgrind)
             export G_SLICE=always-malloc
-            VALGRIND_CMD="valgrind -q --gen-suppressions=all --log-file=%q{valgrind_output} --show-reachable=no --leak-check=full --trace-children=no --time-stamp=yes --num-callers=20 --suppressions=@datadir@/@PACKAGE@/tests/valgrind-pcmk.suppressions"
-            test_binary=
+            VALGRIND_CMD="valgrind $VALGRIND_OPTS"
             shift
             ;;
         --valgrind-dhat)
-            VALGRIND_CMD="valgrind --log-file=%q{valgrind_output} --show-top-n=100 --num-callers=4 --time-stamp=yes --trace-children=no --tool=exp-dhat"
-            test_binary=
+            VALGRIND_CMD="valgrind $VALGRIND_DHAT_OPTS"
             shift
             ;;
         --valgrind-skip-output)
@@ -95,12 +111,11 @@ while [ $# -gt 0 ] ; do
             shift 2
             ;;
         -b|--binary)
-            test_binary=$2
-            PCMK_schema_directory=""
+            test_binary="$2"
             shift 2
             ;;
         -i|--io-dir)
-            io_dir=$2
+            io_dir="$2"
             shift 2
             ;;
         --help)
@@ -114,23 +129,30 @@ while [ $# -gt 0 ] ; do
     esac
 done
 
-if [ "x$test_binary" = "x" ]; then
-    test_binary=@sbindir@/crm_simulate
-    PCMK_schema_directory=@CRM_SCHEMA_DIRECTORY@
-elif [ ! -x $test_binary ]; then
-    test_binary=@sbindir@/crm_simulate
-    PCMK_schema_directory=@CRM_SCHEMA_DIRECTORY@
+if [ -z "$PCMK_schema_directory" ]; then
+    if [ -d "$BUILDDIR/xml" ]; then
+        export PCMK_schema_directory="$BUILDDIR/xml"
+    elif [ -d "$CRM_SCHEMA_DIRECTORY" ]; then
+        export PCMK_schema_directory="$CRM_SCHEMA_DIRECTORY"
+    fi
 fi
 
-export PCMK_schema_directory
-
+if [ -z "$test_binary" ]; then
+    if [ -x "$BUILDDIR/tools/crm_simulate" ]; then
+        test_binary="$BUILDDIR/tools/crm_simulate"
+    elif [ -x "$SBINDIR/crm_simulate" ]; then
+        test_binary="$SBINDIR/crm_simulate"
+    fi
+fi
 if [ ! -x "$test_binary" ]; then
-    error "$test_binary not found"
+    error "Test binary $test_binary not found"
     exit $CRM_EX_NOT_INSTALLED
 fi
 
 info "Test binary is:\t$test_binary"
-info "Schema home is:\t$PCMK_schema_directory"
+if [ -n "$PCMK_schema_directory" ]; then
+    info "Schema home is:\t$PCMK_schema_directory"
+fi
 if [ "x$VALGRIND_CMD" != "x" ]; then
     info "Activating memory testing with valgrind";
 fi
