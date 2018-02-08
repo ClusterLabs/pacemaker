@@ -33,9 +33,7 @@ endif
 stonith_test_SOURCES	= test.c
 
 stonith_test_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la	\
-			$(top_builddir)/lib/cluster/libcrmcluster.la	\
-			$(top_builddir)/lib/fencing/libstonithd.la	\
-			$(CLUSTERLIBS)
+			$(top_builddir)/lib/fencing/libstonithd.la
 
 stonith_admin_SOURCES	= admin.c
 
