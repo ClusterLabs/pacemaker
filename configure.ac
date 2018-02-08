@@ -1076,6 +1076,7 @@ if test "x${enable_systemd}" = xyes; then
         AC_MSG_FAILURE([cannot enable systemd when systemdunitdir unresolved])
     fi
 fi
+AC_SUBST(systemdunitdir)
 
 AC_DEFINE_UNQUOTED(SUPPORT_SYSTEMD, $HAVE_systemd, Support systemd based system services)
 AM_CONDITIONAL(BUILD_SYSTEMD, test $HAVE_systemd = 1)
