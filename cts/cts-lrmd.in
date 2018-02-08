@@ -10,6 +10,7 @@ __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT AN
 
 import io
 import os
+import stat
 import sys
 import subprocess
 import shlex
@@ -19,6 +20,12 @@ import time
 # Prefer the source tree if available
 BUILD_DIR = "@abs_top_builddir@"
 TEST_DIR = sys.path[0]
+
+SBIN_DIR = "@sbindir@"
+SYSTEMD_UNIT_DIR = "@systemdunitdir@"
+
+# File permissions for executable scripts we create
+EXECMODE = stat.S_IRUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH
 
 # These values must be kept in sync with include/crm/crm.h
 class CrmExit:
@@ -102,6 +109,16 @@ def output_from_command(command):
     test = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
     test.wait()
     return pipe_output(test).split("\n")
+
+
+def write_file(filename, contents, executable=False):
+    """ Create a file. """
+
+    f = io.open(filename, "w+")
+    f.write(contents)
+    f.close()
+    if executable:
+        os.chmod(filename, EXECMODE)
 
 
 class TestError(Exception):
@@ -491,7 +508,7 @@ Description=Dummy resource that takes a while to start
 
 [Service]
 Type=notify
-ExecStart=/usr/sbin/lrmd_dummy_daemon
+ExecStart=""" + SBIN_DIR + """/lrmd_dummy_daemon
 """
 
         dummy_upstart_job = ("""
@@ -544,18 +561,13 @@ while read line; do
 done
 """)
 
-        os.system("cat <<-END >>/etc/init/lrmd_dummy_daemon.conf\n%s\nEND" % (dummy_upstart_job))
-        os.system("cat <<-END >>/usr/sbin/lrmd_dummy_daemon\n%s\nEND" % (dummy_daemon))
-        os.system("cat <<-END >>/lib/systemd/system/lrmd_dummy_daemon.service\n%s\nEND" % (dummy_service_file))
-        os.system("chmod a+x /usr/sbin/lrmd_dummy_daemon")
-
-        os.system("cat <<-END >>/usr/sbin/fence_dummy_sleep\n%s\nEND" % (dummy_fence_sleep_agent))
-        os.system("chmod 711 /usr/sbin/fence_dummy_sleep")
-
-        f = io.open("/usr/sbin/fence_dummy_monitor", 'w')
-        f.write(dummy_fence_agent)
-        f.close()
-        os.system("chmod 711 /usr/sbin/fence_dummy_monitor")
+        if os.path.isdir("/etc/init"):
+            write_file("/etc/init/lrmd_dummy_daemon.conf", dummy_upstart_job);
+        write_file(SBIN_DIR + "/lrmd_dummy_daemon", dummy_daemon, executable=True);
+        if os.path.isdir(SYSTEMD_UNIT_DIR):
+            write_file(SYSTEMD_UNIT_DIR + "/lrmd_dummy_daemon.service", dummy_service_file);
+        write_file(SBIN_DIR + "/fence_dummy_sleep", dummy_fence_sleep_agent, executable=True);
+        write_file(SBIN_DIR + "/fence_dummy_monitor", dummy_fence_agent, executable=True);
 
         if os.path.exists("%s/cts/LSBDummy" % BUILD_DIR):
             os.system("cp %s/cts/LSBDummy /etc/init.d/LSBDummy" % BUILD_DIR)
@@ -585,10 +597,10 @@ done
             os.system("rm -f /etc/pacemaker/authkey")
 
         os.system("rm -f /etc/init.d/LSBDummy")
-        os.system("rm -f /lib/systemd/system/lrmd_dummy_daemon.service")
-        os.system("rm -f /usr/sbin/lrmd_dummy_daemon")
-        os.system("rm -f /usr/sbin/fence_dummy_monitor")
-        os.system("rm -f /usr/sbin/fence_dummy_sleep")
+        os.system("rm -f " + SYSTEMD_UNIT_DIR + "/lrmd_dummy_daemon.service")
+        os.system("rm -f " + SBIN_DIR + "/lrmd_dummy_daemon")
+        os.system("rm -f " + SBIN_DIR + "/fence_dummy_monitor")
+        os.system("rm -f " + SBIN_DIR + "/fence_dummy_sleep")
         if os.path.exists("/bin/systemctl"):
             os.system("systemctl daemon-reload")
 
@@ -950,7 +962,6 @@ done
         test.add_cmd("-c exec -r test_rsc -a start %s -k op_sleep -v 1 -l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:ok op_status:complete\"" % (timeout))
         for i in range(iterations):
             test.add_cmd("-c exec -r test_rsc -a monitor %s -i 100%d -k op_sleep -v 2 -l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:monitor rc:ok op_status:complete\"" % (timeout, i))
-#           test.add_sys_cmd("sleep", "-al @CRM_RSCTMP_DIR@")
 
         test.add_cmd("-c exec -r test_rsc -a stop %s -l \"NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:stop rc:ok op_status:complete\"" % (timeout))
         test.add_cmd("-c unregister_rsc -r test_rsc %s -l \"NEW_EVENT event_type:unregister rsc_id:test_rsc action:none rc:ok op_status:complete\"" % (timeout))
