@@ -6,7 +6,7 @@ includedir=@includedir@/@PACKAGE_TARNAME@
 build=@BUILD_VERSION@
 
 configdir=@CRM_CONFIG_DIR@
-schemadir=@CRM_DTD_DIRECTORY@
+schemadir=@CRM_SCHEMA_DIRECTORY@
 
 Name:         @PACKAGE_NAME@-${sub}
 URL:	      @PACKAGE_URL@

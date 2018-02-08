@@ -57,7 +57,7 @@ use it.
 ## Stable features ##
 
 The current stable version is determined at runtime when
-crm_schema_init() scans the CRM_DTD_DIRECTORY.
+crm_schema_init() scans the CRM_SCHEMA_DIRECTORY.
 
 It will have the form `pacemaker-${X}.${Y}` and the highest
 `${X}.${Y}` wins.
