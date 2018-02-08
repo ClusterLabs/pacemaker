@@ -368,12 +368,10 @@ function test_results {
     fi
 }
 
-if [ -z "$single_test" ]; then
 # zero out the error log
-    > $failed
-else
-    failed=.single
-    > $failed
+> $failed
+
+if [ -n "$single_test" ]; then
     do_test $single_test "Single shot" $*
     TEST_RC=$?
     cat $failed
