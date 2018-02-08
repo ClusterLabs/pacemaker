@@ -35,7 +35,7 @@ stonith_test_SOURCES	= test.c
 stonith_test_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la	\
 			$(top_builddir)/lib/cluster/libcrmcluster.la	\
 			$(top_builddir)/lib/fencing/libstonithd.la	\
-			$(CRYPTOLIB) $(CLUSTERLIBS)
+			$(CLUSTERLIBS)
 
 stonith_admin_SOURCES	= admin.c
 
@@ -44,7 +44,7 @@ stonith_admin_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la	\
 			$(top_builddir)/lib/pengine/libpe_status.la	\
 			$(top_builddir)/lib/cluster/libcrmcluster.la	\
 			$(top_builddir)/lib/fencing/libstonithd.la	\
-			$(CRYPTOLIB) $(CLUSTERLIBS)
+			$(CLUSTERLIBS)
 
 stonithd_CPPFLAGS	= -I$(top_srcdir)/pengine $(AM_CPPFLAGS)
 stonithd_YFLAGS		= -d
@@ -57,7 +57,7 @@ stonithd_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la	\
 			$(top_builddir)/lib/fencing/libstonithd.la	\
 			$(top_builddir)/lib/pengine/libpe_status.la	\
 			$(top_builddir)/pengine/libpengine.la		\
-			$(CRYPTOLIB) $(CLUSTERLIBS)
+			$(CLUSTERLIBS)
 
 stonithd_SOURCES	= main.c commands.c remote.c
 

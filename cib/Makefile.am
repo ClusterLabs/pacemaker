@@ -34,7 +34,7 @@ cib_CFLAGS	= $(CFLAGS_HARDENED_EXE)
 cib_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
 
 cib_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la \
-		$(COMMONLIBS) $(CRYPTOLIB) $(CLUSTERLIBS)
+		  $(COMMONLIBS) $(CLUSTERLIBS)
 
 cib_SOURCES	= io.c messages.c notify.c \
 		callbacks.c main.c remote.c common.c
