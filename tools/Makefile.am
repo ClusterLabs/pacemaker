@@ -40,11 +40,6 @@ EXTRA_DIST		= $(sbin_SCRIPTS)
 sbin_PROGRAMS		= crm_simulate crmadmin cibadmin crm_node crm_attribute crm_resource crm_verify \
 			 crm_shadow attrd_updater crm_diff crm_mon iso8601 crm_ticket crm_error
 
-testdir			= $(datadir)/$(PACKAGE)/tests/cli
-test_SCRIPTS		= regression.sh
-test_DATA               = regression.dates.exp regression.tools.exp regression.acls.exp \
-			  regression.validity.exp
-
 if BUILD_SERVICELOG
 sbin_PROGRAMS		+= notifyServicelogEvent
 endif

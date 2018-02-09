@@ -18,15 +18,6 @@
 #ifndef PENGINE_COMPLEX__H
 #  define PENGINE_COMPLEX__H
 
-#  define n_object_classes 3
-
-/*#define PE_OBJ_F_	""*/
-
-#  define PE_OBJ_T_NATIVE	"native"
-#  define PE_OBJ_T_GROUP	"group"
-#  define PE_OBJ_T_INCARNATION	"clone"
-#  define PE_OBJ_T_MASTER	"master"
-
 enum pe_obj_types {
     pe_unknown = -1,
     pe_native = 0,

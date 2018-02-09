@@ -33,7 +33,6 @@ extern unsigned long long crm_peer_seq;
 /* *INDENT-OFF* */
 #define CRM_NODE_LOST      "lost"
 #define CRM_NODE_MEMBER    "member"
-#define CRM_NODE_ACTIVE    CRM_NODE_MEMBER
 
 enum crm_join_phase
 {

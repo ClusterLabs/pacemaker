@@ -79,26 +79,14 @@ extern void route_message(enum crmd_fsa_cause cause, xmlNode * input);
 
 void delete_fsa_input(fsa_data_t * fsa_data);
 
-GListPtr put_message(fsa_data_t * new_message);
 fsa_data_t *get_message(void);
 gboolean is_message(void);
-gboolean have_wait_message(void);
 
 extern gboolean relay_message(xmlNode * relay_message, gboolean originated_locally);
 
 extern void process_message(xmlNode * msg, gboolean originated_locally, const char *src_node_name);
 
-extern gboolean crm_dc_process_message(xmlNode * whole_message,
-                                       xmlNode * action,
-                                       const char *host_from,
-                                       const char *sys_from,
-                                       const char *sys_to, const char *op, gboolean dc_mode);
-
 extern gboolean send_msg_via_ipc(xmlNode * msg, const char *sys);
-
-extern gboolean add_pending_outgoing_reply(const char *originating_node_name,
-                                           const char *crm_msg_reference,
-                                           const char *sys_to, const char *sys_from);
 
 gboolean crmd_is_proxy_session(const char *session);
 void crmd_proxy_send(const char *session, xmlNode *msg);

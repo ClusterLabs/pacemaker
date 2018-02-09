@@ -1,4 +1,4 @@
-addFilter("E: non-standard-dir-perm .* 0750")
+addFilter("E: non-standard-dir-perm .* 07.0")
 addFilter("W: shared-lib-calls-exit")
 
 # Really, really do not care

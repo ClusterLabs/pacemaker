@@ -14,7 +14,7 @@ configdir=@CRM_CONFIG_DIR@
 penginedir=@PE_STATE_DIR@
 coredir=@CRM_CORE_DIR@
 statedir=@CRM_STATE_DIR@
-schemadir=@CRM_DTD_DIRECTORY@
+schemadir=@CRM_SCHEMA_DIRECTORY@
 ocfdir=@OCF_RA_DIR@
 
 features=@PCMK_FEATURES@

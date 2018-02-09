@@ -29,8 +29,6 @@
 #include <crm/common/xml.h>
 
 #define SIZEOF(a)   (sizeof(a) / sizeof(a[0]))
-#define crm_flag_none		0x00000000
-#define crm_flag_members	0x00000001
 #define MAX_RESPAWN		100
 
 extern uint32_t local_nodeid;
@@ -46,16 +44,4 @@ void enable_crmd_as_root(gboolean enable);
 
 void pcmk_shutdown(int nsig);
 
-void mcp_make_realtime(int priority, int stackgrowK, int heapgrowK);
 void sysrq_init(void);
-
-int watchdog_init(int interval, int mode);
-int watchdog_tickle(void);
-void watchdog_close(bool disarm);
-
-void do_crashdump(void);
-void do_reset(void);
-void do_off(void);
-
-
-

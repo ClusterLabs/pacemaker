@@ -1280,15 +1280,15 @@ logging {
             killall("corosync")
             self.start_corosync()
 
-        os.system("cp %s /usr/sbin/fence_dummy" % FENCE_DUMMY)
+        os.system("cp %s @sbindir@/fence_dummy" % FENCE_DUMMY)
 
         # modifies dummy agent to do require unfencing
-        os.system("sed 's/on_target=/automatic=/g' %s > /usr/sbin/fence_dummy_auto_unfence" % FENCE_DUMMY)
-        os.system("chmod 711 /usr/sbin/fence_dummy_auto_unfence")
+        os.system("sed 's/on_target=/automatic=/g' %s > @sbindir@/fence_dummy_auto_unfence" % FENCE_DUMMY)
+        os.system("chmod 711 @sbindir@/fence_dummy_auto_unfence")
 
         # modifies dummy agent to not advertise reboot
-        os.system("sed 's/^.*<action.*name.*reboot.*>.*//g' %s > /usr/sbin/fence_dummy_no_reboot" % FENCE_DUMMY)
-        os.system("chmod 711 /usr/sbin/fence_dummy_no_reboot")
+        os.system("sed 's/^.*<action.*name.*reboot.*>.*//g' %s > @sbindir@/fence_dummy_no_reboot" % FENCE_DUMMY)
+        os.system("chmod 711 @sbindir@/fence_dummy_no_reboot")
 
     def cleanup_environment(self, use_corosync):
         """ Clean up the host after executing desired tests """
@@ -1306,9 +1306,9 @@ logging {
         if self.autogen_corosync_cfg:
             os.system("rm -f /etc/corosync/corosync.conf")
 
-        os.system("rm -f /usr/sbin/fence_dummy")
-        os.system("rm -f /usr/sbin/fence_dummy_auto_unfence")
-        os.system("rm -f /usr/sbin/fence_dummy_no_reboot")
+        os.system("rm -f @sbindir@/fence_dummy")
+        os.system("rm -f @sbindir@/fence_dummy_auto_unfence")
+        os.system("rm -f @sbindir@/fence_dummy_no_reboot")
 
 class TestOptions(object):
     """ Option handler """
@@ -1365,9 +1365,9 @@ class TestOptions(object):
         print("\t [--verbose | -V]                     Verbose output")
         print("\t [--run-only-pattern | -p 'string']   Run only tests containing the string value")
         print("\n\tExample: Run only the test 'start_top'")
-        print("\t\t python ./regression.py --run-only start_stop")
+        print("\t\t " + sys.argv[0] + " --run-only start_stop")
         print("\n\tExample: Run only the tests with the string 'systemd' present in them")
-        print("\t\t python ./regression.py --run-only-pattern systemd")
+        print("\t\t " + sys.argv[0] + " --run-only-pattern systemd")
 
 
 def main(argv):

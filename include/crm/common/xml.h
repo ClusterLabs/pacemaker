@@ -123,12 +123,6 @@ crm_xml_add_boolean(xmlNode *node, const char *name, gboolean value)
 }
 
 /*
- * Unlink the node and set its doc pointer to NULL so free_xml()
- * will act appropriately
- */
-void unlink_xml_node(xmlNode * node);
-
-/*
  *
  */
 void purge_diff_markers(xmlNode * a_node);
@@ -175,8 +169,6 @@ xmlNode *subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
                              gboolean full, gboolean * changed, const char *marker);
 
 gboolean can_prune_leaf(xmlNode * xml_node);
-
-void print_xml_diff(FILE * where, xmlNode * diff);
 
 gboolean apply_xml_diff(xmlNode * old, xmlNode * diff, xmlNode ** new);
 
@@ -230,8 +222,6 @@ crm_copy_xml_element(xmlNode *obj1, xmlNode *obj2, const char *element)
     crm_xml_add(obj2, element, value);
     return value;
 }
-
-void xml_validate(const xmlNode * root);
 
 gboolean xml_has_children(const xmlNode * root);
 

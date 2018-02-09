@@ -81,7 +81,6 @@ xmlNode *create_device_registration_xml(const char *id, const char *namespace, c
 #  define F_STONITH_CALLBACK_TOKEN    "st_async_id"
 #  define F_STONITH_CLIENTNAME        "st_clientname"
 #  define F_STONITH_CLIENTNODE        "st_clientnode"
-#  define F_STONITH_NOTIFY_TYPE       "st_notify_type"
 #  define F_STONITH_NOTIFY_ACTIVATE   "st_notify_activate"
 #  define F_STONITH_NOTIFY_DEACTIVATE "st_notify_deactivate"
 #  define F_STONITH_DELEGATE      "st_delegate"
@@ -125,13 +124,9 @@ xmlNode *create_device_registration_xml(const char *id, const char *namespace, c
 #  define STONITH_OP_CONFIRM     "st_confirm"
 #  define STONITH_OP_DEVICE_ADD      "st_device_register"
 #  define STONITH_OP_DEVICE_DEL      "st_device_remove"
-#  define STONITH_OP_DEVICE_METADATA "st_device_metadata"
 #  define STONITH_OP_FENCE_HISTORY   "st_fence_history"
 #  define STONITH_OP_LEVEL_ADD       "st_level_add"
 #  define STONITH_OP_LEVEL_DEL       "st_level_remove"
-
-#  define stonith_channel            "st_command"
-#  define stonith_channel_callback   "st_callback"
 
 #  define STONITH_WATCHDOG_AGENT  "#watchdog"
 

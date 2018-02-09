@@ -30,8 +30,6 @@ extern gboolean unpack_tags(xmlNode * xml_tags, pe_working_set_t * data_set);
 
 extern gboolean unpack_status(xmlNode * status, pe_working_set_t * data_set);
 
-extern gboolean unpack_remote_status(xmlNode * status, pe_working_set_t * data_set);
-
 extern gint sort_op_by_callid(gconstpointer a, gconstpointer b);
 
 extern gboolean unpack_lrm_resources(node_t * node, xmlNode * lrm_state,

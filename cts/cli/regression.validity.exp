@@ -1,7 +1,7 @@
 Created new pacemaker configuration
 Setting up shadow instance
 A new shadow instance was created.  To begin using it paste the following into your shell:
-  CIB_shadow=tools-regression ; export CIB_shadow
+  CIB_shadow=cts-cli ; export CIB_shadow
 =#=#=#= Begin test: Try to make resulting CIB invalid (enum violation) =#=#=#=
 Call failed: Update does not conform to the configured schema
 =#=#=#= Current cib after: Try to make resulting CIB invalid (enum violation) =#=#=#=

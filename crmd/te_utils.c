@@ -394,26 +394,17 @@ te_connect_stonith(gpointer user_data)
 gboolean
 stop_te_timer(crm_action_timer_t * timer)
 {
-    const char *timer_desc = "action timer";
-
     if (timer == NULL) {
         return FALSE;
     }
-    if (timer->reason == timeout_abort) {
-        timer_desc = "global timer";
-        crm_trace("Stopping %s", timer_desc);
-    }
-
     if (timer->source_id != 0) {
-        crm_trace("Stopping %s", timer_desc);
+        crm_trace("Stopping action timer");
         g_source_remove(timer->source_id);
         timer->source_id = 0;
-
     } else {
-        crm_trace("%s was already stopped", timer_desc);
+        crm_trace("Action timer was already stopped");
         return FALSE;
     }
-
     return TRUE;
 }
 

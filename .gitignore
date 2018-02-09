@@ -56,31 +56,30 @@ ylwrap
 
 # Configure targets
 Doxyfile
-coverage.sh
 cts/CTSlab.py
 cts/CTSvars.py
 cts/LSBDummy
 cts/OCFIPraTest.py
 cts/benchmark/clubench
+cts/cts-coverage
+cts/cts-lrmd
+cts/cts-pengine
+cts/cts-stonithd
 cts/fence_dummy
 cts/lxc_autogen.sh
 extra/logrotate/pacemaker
-fencing/regression.py
 include/config.h
 include/config.h.in
 include/crm_config.h
 lrmd/pacemaker_remote
 lrmd/pacemaker_remoted
 lrmd/pacemaker_remote.service
-lrmd/regression.py
 mcp/pacemaker
 mcp/pacemaker.combined.upstart
 mcp/pacemaker.service
 mcp/pacemaker.upstart
-pengine/regression.core.sh
 publican.cfg
 tools/cibsecret
-tools/coverage.sh
 tools/crm_error
 tools/crm_mon.service
 tools/crm_mon.upstart
@@ -155,11 +154,22 @@ lib/gnu/libgnu.a
 lib/gnu/stdalign.h
 *.coverity
 
+# Test detritus
+cts/.regression.failed.diff
+cts/pengine/shadow.*
+
+# Formerly built files (helps when jumping back and forth in checkout)
+/coverage.sh
+/fencing/regression.py
+/lrmd/regression.py
+/pengine/.regression.failed.diff
+/pengine/regression.core.sh
+/pengine/test10/shadow.*
+
 #Other 
 mock
 HTML
 pacemaker*.spec
-pengine/.regression.failed.diff
 coverity-*
 
 compat_reports
@@ -173,4 +183,3 @@ logs
 *.orig
 *.rej
 *.swp
-pengine/test10/shadow.*

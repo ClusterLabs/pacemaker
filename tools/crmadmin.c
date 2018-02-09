@@ -1,4 +1,3 @@
-
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -48,22 +47,12 @@ char *admin_uuid = NULL;
 gboolean do_init(void);
 int do_work(void);
 void crmadmin_ipc_connection_destroy(gpointer user_data);
-
 int admin_msg_callback(const char *buffer, ssize_t length, gpointer userdata);
-char *pluralSection(const char *a_section);
-xmlNode *handleCibMod(void);
 int do_find_node_list(xmlNode * xml_node);
 gboolean admin_message_timeout(gpointer data);
 
-enum debug {
-    debug_none,
-    debug_dec,
-    debug_inc
-};
-
 gboolean BE_VERBOSE = FALSE;
 int expected_responses = 1;
-
 gboolean BASH_EXPORT = FALSE;
 gboolean DO_HEALTH = FALSE;
 gboolean DO_RESET = FALSE;
@@ -73,19 +62,8 @@ gboolean DO_WHOIS_DC = FALSE;
 gboolean DO_NODE_LIST = FALSE;
 gboolean BE_SILENT = FALSE;
 gboolean DO_RESOURCE_LIST = FALSE;
-enum debug DO_DEBUG = debug_none;
 const char *crmd_operation = NULL;
-
-xmlNode *msg_options = NULL;
-
-const char *standby_on_off = "on";
-const char *admin_verbose = XML_BOOLEAN_FALSE;
-char *id = NULL;
-char *disconnect = NULL;
 char *dest_node = NULL;
-char *rsc_name = NULL;
-char *crm_option = NULL;
-
 crm_exit_t exit_code = CRM_EX_OK;
 const char *sys_to = NULL;
 
@@ -99,8 +77,6 @@ static struct crm_option long_options[] = {
     
     {"-spacer-",	1, 0, '-', "\nCommands:"},
     /* daemon options */
-    {"debug_inc", 1, 0, 'i', "Increase the crmd's debug level on the specified host"},
-    {"debug_dec", 1, 0, 'd', "Decrease the crmd's debug level on the specified host"},
     {"status",    1, 0, 'S', "Display the status of the specified node." },
     {"-spacer-",  1, 0, '-', "\n\tResult is the node's internal FSM state which can be useful for debugging\n"},
     {"dc_lookup", 0, 0, 'D', "Display the uname of the node co-ordinating the cluster."},
@@ -115,7 +91,7 @@ static struct crm_option long_options[] = {
     {"bash-export", 0, 0, 'B', "Create Bash export entries of the form 'export uname=uuid'\n"},
 
     {"-spacer-",  1, 0, '-', "Notes:"},
-    {"-spacer-",  1, 0, '-', " The -i,-d,-K and -E commands are rarely used and may be removed in future versions."},
+    {"-spacer-",  1, 0, '-', " The -K and -E commands are rarely used and may be removed in future versions."},
 
     {0, 0, 0, 0}
 };
@@ -144,7 +120,6 @@ main(int argc, char **argv)
         switch (flag) {
             case 'V':
                 BE_VERBOSE = TRUE;
-                admin_verbose = XML_BOOLEAN_TRUE;
                 crm_bump_log_level(argc, argv);
                 break;
             case 't':
@@ -172,16 +147,6 @@ main(int argc, char **argv)
                 break;
             case 'q':
                 BE_SILENT = TRUE;
-                break;
-            case 'i':
-                DO_DEBUG = debug_inc;
-                crm_trace("Option %c => %s", flag, optarg);
-                dest_node = strdup(optarg);
-                break;
-            case 'd':
-                DO_DEBUG = debug_dec;
-                crm_trace("Option %c => %s", flag, optarg);
-                dest_node = strdup(optarg);
                 break;
             case 'S':
                 DO_HEALTH = TRUE;
@@ -256,10 +221,6 @@ do_work(void)
     xmlNode *msg_data = NULL;
     gboolean all_is_good = TRUE;
 
-    msg_options = create_xml_node(NULL, XML_TAG_OPTIONS);
-    crm_xml_add(msg_options, XML_ATTR_VERBOSE, admin_verbose);
-    crm_xml_add(msg_options, XML_ATTR_TIMEOUT, "0");
-
     if (DO_HEALTH == TRUE) {
         crm_trace("Querying the system");
 
@@ -273,8 +234,6 @@ do_work(void)
                 expected_responses = 1;
             }
 
-            crm_xml_add(msg_options, XML_ATTR_TIMEOUT, "0");
-
         } else {
             crm_info("Cluster-wide health not available yet");
             all_is_good = FALSE;
@@ -286,15 +245,12 @@ do_work(void)
         dest_node = NULL;
         sys_to = CRM_SYSTEM_CRMD;
         crmd_operation = CRM_OP_VOTE;
-
-        crm_xml_add(msg_options, XML_ATTR_TIMEOUT, "0");
         ret = 0;                /* no return message */
 
     } else if (DO_WHOIS_DC) {
         dest_node = NULL;
         sys_to = CRM_SYSTEM_DC;
         crmd_operation = CRM_OP_PING;
-        crm_xml_add(msg_options, XML_ATTR_TIMEOUT, "0");
 
     } else if (DO_NODE_LIST) {
 
@@ -323,30 +279,6 @@ do_work(void)
          *   local node
          */
         sys_to = CRM_SYSTEM_CRMD;
-        crm_xml_add(msg_options, XML_ATTR_TIMEOUT, "0");
-
-        ret = 0;                /* no return message */
-
-    } else if (DO_DEBUG == debug_inc) {
-        /* tell dest_node to increase its debug level
-         *
-         * if dest_node is NULL, the request will be sent to the
-         *   local node
-         */
-        sys_to = CRM_SYSTEM_CRMD;
-        crmd_operation = CRM_OP_DEBUG_UP;
-
-        ret = 0;                /* no return message */
-
-    } else if (DO_DEBUG == debug_dec) {
-        /* tell dest_node to increase its debug level
-         *
-         * if dest_node is NULL, the request will be sent to the
-         *   local node
-         */
-        sys_to = CRM_SYSTEM_CRMD;
-        crmd_operation = CRM_OP_DEBUG_DOWN;
-
         ret = 0;                /* no return message */
 
     } else {

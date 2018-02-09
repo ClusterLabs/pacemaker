@@ -81,11 +81,82 @@ static int ais_fd_sync = -1;
 #define pcmk_err_panic      CRM_EX_PANIC
 
 // Deprecated symbols that were removed
+#define APPNAME_LEN         256
+#define CRM_NODE_ACTIVE             CRM_NODE_MEMBER
+#define CRM_OP_DIE          "die_no_respawn"
+#define CRM_OP_RETRIVE_CIB  "retrieve_cib"
+#define CRM_OP_HBEAT        "dc_beat"
+#define CRM_OP_ABORT        "abort"
+#define CRM_OP_DEBUG_UP     "debug_inc"
+#define CRM_OP_DEBUG_DOWN   "debug_dec"
+#define CRM_OP_EVENTCC      "event_cc"
+#define CRM_OP_TEABORT      "te_abort"
+#define CRM_OP_TEABORTED    "te_abort_confirmed"
+#define CRM_OP_TE_HALT      "te_halt"
+#define CRM_OP_TECOMPLETE   "te_complete"
+#define CRM_OP_TETIMEOUT    "te_timeout"
+#define CRM_OP_TRANSITION   "transition"
+#define CRM_OP_NODES_PROBED "probe_nodes_complete"
+#define DOT_ALL_FSA_INPUTS  1
+#define DOT_FSA_ACTIONS     1
+#define F_LRMD_CANCEL_CALLID        "lrmd_cancel_callid"
+#define F_LRMD_RSC_METADATA         "lrmd_rsc_metadata_res"
+#define F_LRMD_IPC_PROXY_NODE       "lrmd_ipc_proxy_node"
 #define LOG_DEBUG_2  LOG_TRACE
 #define LOG_DEBUG_3  LOG_TRACE
 #define LOG_DEBUG_4  LOG_TRACE
 #define LOG_DEBUG_5  LOG_TRACE
 #define LOG_DEBUG_6  LOG_TRACE
+#define LRMD_OP_RSC_CHK_REG         "lrmd_rsc_check_register"
+#define MAX_IPC_FAIL                5
+#define MSG_LOG                     1
+#define PE_OBJ_T_NATIVE             "native"
+#define PE_OBJ_T_GROUP              "group"
+#define PE_OBJ_T_INCARNATION        "clone"
+#define PE_OBJ_T_MASTER             "master"
+#define SOCKET_LEN                  1024
+#define XML_ATTR_TAGNAME            F_XML_TAGNAME
+#define XML_ATTR_FILTER_TYPE        "type-filter"
+#define XML_ATTR_FILTER_ID          "id-filter"
+#define XML_ATTR_FILTER_PRIORITY    "priority-filter"
+#define XML_ATTR_DC                 "is_dc"
+#define XML_MSG_TAG                 "crm_message"
+#define XML_MSG_TAG_DATA            "msg_data"
+#define XML_FAIL_TAG_RESOURCE       "failed_resource"
+#define XML_FAILRES_ATTR_RESID      "resource_id"
+#define XML_FAILRES_ATTR_REASON     "reason"
+#define XML_FAILRES_ATTR_RESSTATUS  "resource_status"
+#define XML_ATTR_RESULT             "result"
+#define XML_ATTR_SECTION            "section"
+#define XML_CIB_TAG_DOMAIN          "domain"
+#define XML_CIB_TAG_CONSTRAINT      "constraint"
+#define XML_RSC_ATTR_STATE          "clone-state"
+#define XML_RSC_ATTR_PRIORITY       "priority"
+#define XML_OP_ATTR_DEPENDENT       "dependent-on"
+#define XML_LRM_TAG_AGENTS          "lrm_agents"
+#define XML_LRM_TAG_AGENT           "lrm_agent"
+#define XML_LRM_TAG_ATTRIBUTES      "attributes"
+#define XML_CIB_ATTR_HEALTH         "health"
+#define XML_CIB_ATTR_WEIGHT         "weight"
+#define XML_CIB_ATTR_CLEAR          "clear_on"
+#define XML_CIB_ATTR_STONITH        "stonith"
+#define XML_CIB_ATTR_STANDBY        "standby"
+#define XML_RULE_ATTR_SCORE_MANGLED "score-attribute-mangled"
+#define XML_RULE_ATTR_RESULT        "result"
+#define XML_NODE_ATTR_STATE         "state"
+#define XML_ATTR_LRM_PROBE          "lrm-is-probe"
+#define XML_ATTR_TE_ALLOWFAIL       "op_allow_fail"
+#define add_cib_op_callback(cib, id, flag, data, fn) do {                \
+        cib->cmds->register_callback(cib, id, 120, flag, data, #fn, fn); \
+    } while(0)
+#define cib_default_options = cib_none
+#define n_object_classes 3
+#define pe_rsc_munging                    0x00000800ULL
+#define pe_rsc_try_reload                 0x00001000ULL
+#define pe_rsc_shutdown                   0x00020000ULL
+#define pe_rsc_migrating                  0x00400000ULL
+#define pe_rsc_unexpectedly_running       0x02000000ULL
+#define pe_rsc_have_unfencing             0x80000000ULL
 
 /* Clone terminology definitions */
 

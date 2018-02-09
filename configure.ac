@@ -9,6 +9,7 @@ dnl ===============================================
 AC_PREREQ(2.64)
 
 AC_CONFIG_MACRO_DIR([m4])
+AC_DEFUN([AC_DATAROOTDIR_CHECKED])
 
 dnl Suggested structure:
 dnl     information on the package
@@ -1076,6 +1077,7 @@ if test "x${enable_systemd}" = xyes; then
         AC_MSG_FAILURE([cannot enable systemd when systemdunitdir unresolved])
     fi
 fi
+AC_SUBST(systemdunitdir)
 
 AC_DEFINE_UNQUOTED(SUPPORT_SYSTEMD, $HAVE_systemd, Support systemd based system services)
 AM_CONDITIONAL(BUILD_SYSTEMD, test $HAVE_systemd = 1)
@@ -1636,24 +1638,30 @@ AC_SUBST(QUIET_LIBTOOL_OPTS)
 AC_DEFINE_UNQUOTED(CRM_FEATURES, "$PCMK_FEATURES", Set of enabled features)
 AC_SUBST(PCMK_FEATURES)
 
-dnl The Makefiles and shell scripts we output
+dnl Files we output that need to be executable
+AC_CONFIG_FILES([cts/CTSlab.py], [chmod +x cts/CTSlab.py])
+AC_CONFIG_FILES([cts/LSBDummy], [chmod +x cts/LSBDummy])
+AC_CONFIG_FILES([cts/OCFIPraTest.py], [chmod +x cts/OCFIPraTest.py])
+AC_CONFIG_FILES([cts/cts-coverage], [chmod +x cts/cts-coverage])
+AC_CONFIG_FILES([cts/cts-lrmd], [chmod +x cts/cts-lrmd])
+AC_CONFIG_FILES([cts/cts-pengine], [chmod +x cts/cts-pengine])
+AC_CONFIG_FILES([cts/cts-stonithd], [chmod +x cts/cts-stonithd])
+AC_CONFIG_FILES([cts/lxc_autogen.sh], [chmod +x cts/lxc_autogen.sh])
+AC_CONFIG_FILES([cts/benchmark/clubench], [chmod +x cts/benchmark/clubench])
+AC_CONFIG_FILES([cts/fence_dummy], [chmod +x cts/fence_dummy])
+AC_CONFIG_FILES([tools/crm_report], [chmod +x tools/crm_report])
+AC_CONFIG_FILES([tools/cibsecret], [chmod +x tools/cibsecret])
+
+dnl Other files we output
 AC_CONFIG_FILES(Makefile                                            \
                 Doxyfile                                            \
-                coverage.sh                                         \
                 cts/Makefile                                        \
-                cts/CTSlab.py                                       \
                 cts/CTSvars.py                                      \
-                cts/LSBDummy                                        \
-		cts/OCFIPraTest.py                                  \
                 cts/benchmark/Makefile                              \
-                cts/benchmark/clubench                              \
-                cts/fence_dummy                                     \
-                cts/lxc_autogen.sh                                  \
                 cib/Makefile                                        \
                 attrd/Makefile                                      \
                 crmd/Makefile                                       \
                 pengine/Makefile                                    \
-                pengine/regression.core.sh                          \
                 doc/Makefile                                        \
                 doc/Clusters_from_Scratch/publican.cfg              \
                 doc/Pacemaker_Administration/publican.cfg           \
@@ -1661,7 +1669,6 @@ AC_CONFIG_FILES(Makefile                                            \
                 doc/Pacemaker_Explained/publican.cfg                \
                 doc/Pacemaker_Remote/publican.cfg                   \
                 fencing/Makefile                                    \
-                fencing/regression.py                               \
                 include/Makefile                                    \
                 include/crm/Makefile                                \
                 include/crm/cib/Makefile                            \
@@ -1692,7 +1699,6 @@ AC_CONFIG_FILES(Makefile                                            \
                 mcp/pacemaker.upstart                               \
                 mcp/pacemaker.combined.upstart                      \
                 lrmd/Makefile                                       \
-                lrmd/regression.py                                  \
                 lrmd/pacemaker_remote.service                       \
                 lrmd/pacemaker_remote                               \
                 extra/Makefile                                      \
@@ -1701,9 +1707,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 extra/logrotate/Makefile                            \
                 extra/logrotate/pacemaker                           \
                 tools/Makefile                                      \
-                tools/crm_report                                    \
                 tools/report.common                                 \
-                tools/cibsecret                                     \
                 tools/crm_mon.service                               \
                 tools/crm_mon.upstart                               \
                 xml/Makefile                                        \
