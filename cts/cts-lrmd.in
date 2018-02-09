@@ -420,7 +420,8 @@ class Tests(object):
             "systemd_stop_line"     : "-c exec -r \"systemd_test_rsc\" -a \"stop\" "+self.action_timeout,
             "systemd_stop_event"    : "-l \"NEW_EVENT event_type:exec_complete rsc_id:systemd_test_rsc action:stop rc:ok op_status:complete\" ",
             "systemd_monitor_line"  : "-c exec -r \"systemd_test_rsc\" -a \"monitor\" -i \"2000\" "+self.action_timeout,
-            "systemd_monitor_event" : "-l \"NEW_EVENT event_type:exec_complete rsc_id:systemd_test_rsc action:monitor rc:ok op_status:complete\" "+self.action_timeout,
+            # not sure why this one takes so much longer
+            "systemd_monitor_event" : "-l \"NEW_EVENT event_type:exec_complete rsc_id:systemd_test_rsc action:monitor rc:ok op_status:complete\" -t 12000 ",
             "systemd_cancel_line"   : "-c cancel -r \"systemd_test_rsc\" -a \"monitor\" -i \"2000\" -t \"6000\" ",
             "systemd_cancel_event"  : "-l \"NEW_EVENT event_type:exec_complete rsc_id:systemd_test_rsc action:monitor rc:ok op_status:Cancelled\" ",
 
