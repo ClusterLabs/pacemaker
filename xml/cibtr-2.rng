@@ -67,6 +67,14 @@
     </attribute>
   </define>
 
+  <define name="cibtr-2.replace.attr-redefined-as">
+    <attribute name="redefined-as">
+      <data type="string">
+        <param name="minLength">1</param>
+      </data>
+    </attribute>
+  </define>
+
   <define name="cibtr-2.replace.attr-what">
     <attribute name="what">
       <data type="NCName"/>
@@ -99,10 +107,16 @@
   <define name="cibtr-2.replace.attrs-common">
     <ref name="cibtr-2.replace.attr-what"/>
     <optional>
-      <ref name="cibtr-2.replace.attr-in-case-of"/>
-    </optional>
-    <optional>
       <ref name="cibtr-2.replace.attr-msg-extra"/>
+    </optional>
+  </define>
+
+  <define name="cibtr-2.replace.attrs-redefined-as-in-case-of">
+   <ref name="cibtr-2.replace.attr-redefined-as"/>
+    <!-- can be combined with in-case-of, but cannot be combined
+         with in-case-of-droppable-prefix -->
+    <optional>
+      <ref name="cibtr-2.replace.attr-in-case-of"/>
     </optional>
   </define>
 
@@ -112,6 +126,12 @@
     <element name="cibtr:replace">
       <ref name="cibtr-2.replace.attrs-common"/>
       <ref name="cibtr-2.replace.attr-with-possibly"/>
+      <optional>
+        <choice>
+          <ref name="cibtr-2.replace.attrs-redefined-as-in-case-of"/>
+          <ref name="cibtr-2.replace.attr-in-case-of"/>
+        </choice>
+      </optional>
     </element>
   </define>
 
@@ -123,8 +143,29 @@
         <group>
           <ref name="cibtr-2.replace.attr-with-surely"/>
           <ref name="cibtr-2.replace.attr-where"/>
+          <optional>
+            <choice>
+              <ref name="cibtr-2.replace.attrs-redefined-as-in-case-of"/>
+              <ref name="cibtr-2.replace.attr-in-case-of"/>
+            </choice>
+          </optional>
         </group>
-        <ref name="cibtr-2.replace.attr-with-possibly"/>
+        <group>
+          <ref name="cibtr-2.replace.attr-with-surely"/>
+          <optional>
+            <ref name="cibtr-2.replace.attr-where"/>
+          </optional>
+          <choice>
+            <ref name="cibtr-2.replace.attrs-redefined-as-in-case-of"/>
+            <ref name="cibtr-2.replace.attr-in-case-of"/>
+          </choice>
+        </group>
+        <group>
+          <ref name="cibtr-2.replace.attr-with-possibly"/>
+          <optional>
+            <ref name="cibtr-2.replace.attr-in-case-of"/>
+          </optional>
+        </group>
       </choice>
     </element>
   </define>

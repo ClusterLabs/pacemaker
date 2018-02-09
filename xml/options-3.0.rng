@@ -41,6 +41,8 @@
                 <value>default_action_timeout</value>
                 <value>default-migration-threshold</value>
                 <value>default_migration_threshold</value>
+                <value>default-resource-failure-stickiness</value>
+                <value>default_resource_failure_stickiness</value>
                 <value>default-resource-stickiness</value>
                 <value>default_resource_stickiness</value>
                 <value>election_timeout</value>

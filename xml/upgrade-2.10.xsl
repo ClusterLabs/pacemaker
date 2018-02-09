@@ -58,6 +58,23 @@
                    with="resource-stickiness"
                    where="rsc_defaults"/>
 
+    <cibtr:replace what="default-resource-failure-stickiness"
+                   with="migration-threshold"
+                   where="rsc_defaults"
+                   in-case-of="-INFINITY"
+                   redefined-as="1"/>
+    <cibtr:replace what="default-resource-failure-stickiness"
+                   with=""
+                   msg-extra="migration-threshold in rsc_defaults can be configured instead"/>
+    <cibtr:replace what="default_resource_failure_stickiness"
+                   with="migration-threshold"
+                   where="rsc_defaults"
+                   in-case-of="-INFINITY"
+                   redefined-as="1"/>
+    <cibtr:replace what="default_resource_failure_stickiness"
+                   with=""
+                   msg-extra="migration-threshold in rsc_defaults can be configured instead"/>
+
     <cibtr:replace what="election_timeout"
                    with="election-timeout"/>
     <cibtr:replace what="expected-quorum-votes"
@@ -242,6 +259,13 @@
             <xsl:value-of select="concat('dropping ', $Replacement/@what)"/>
           </xsl:otherwise>
         </xsl:choose>
+        <xsl:if test="string($Replacement/@redefined-as)">
+          <xsl:value-of select="concat(', redefined as ',
+                                       $Replacement/@redefined-as)"/>
+          <xsl:if test="$Replacement/@in-case-of">
+            <xsl:value-of select="','"/>
+          </xsl:if>
+        </xsl:if>
 	<xsl:choose>
           <xsl:when test="string($Replacement/@in-case-of)">
             <xsl:value-of select="concat(' for matching ',
@@ -482,6 +506,13 @@
                         <xsl:value-of select="$Replacement/@with"/>
                       </xsl:attribute>
                     </xsl:when>
+                    <xsl:when test="string($Replacement/@redefined-as)
+                                    and
+                                    name() = 'value'">
+                      <xsl:attribute name="{name()}">
+                        <xsl:value-of select="$Replacement/@redefined-as"/>
+                      </xsl:attribute>
+                    </xsl:when>
                     <xsl:otherwise>
                       <xsl:copy/>
                     </xsl:otherwise>
@@ -501,6 +532,13 @@
                   <xsl:when test="name() = 'name'">
                     <xsl:attribute name="{name()}">
                       <xsl:value-of select="$Replacement/@with"/>
+                    </xsl:attribute>
+                  </xsl:when>
+                  <xsl:when test="string($Replacement/@redefined-as)
+                                  and
+                                  name() = 'value'">
+                    <xsl:attribute name="{name()}">
+                      <xsl:value-of select="$Replacement/@redefined-as"/>
                     </xsl:attribute>
                   </xsl:when>
                   <xsl:otherwise>

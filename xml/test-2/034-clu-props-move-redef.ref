@@ -1,0 +1,14 @@
+<cib validate-with="pacemaker-3.0" admin_epoch="0" epoch="0" num_updates="0">
+  <configuration>
+    <crm_config>
+      
+    </crm_config>
+    <nodes/>
+    <resources/>
+    <constraints/>
+  <rsc_defaults><meta_attributes id="_2TO3_-rsc-defaults">
+        <nvpair id="cluster-opts-default-resource-failure-stickiness" name="migration-threshold" value="1"/>
+      </meta_attributes>
+  </rsc_defaults></configuration>
+  <status/>
+</cib>

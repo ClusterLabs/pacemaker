@@ -64,6 +64,13 @@
             <xsl:value-of select="concat('dropping ', $Replacement/@what)"/>
           </xsl:otherwise>
         </xsl:choose>
+        <xsl:if test="string($Replacement/@redefined-as)">
+          <xsl:value-of select="concat(', redefined as ',
+                                       $Replacement/@redefined-as)"/>
+          <xsl:if test="$Replacement/@in-case-of">
+            <xsl:value-of select="','"/>
+          </xsl:if>
+        </xsl:if>
 	<xsl:choose>
           <xsl:when test="string($Replacement/@in-case-of)">
             <xsl:value-of select="concat(' for matching ',
