@@ -481,3 +481,17 @@ crm_alpha_sort(gconstpointer a, gconstpointer b)
     }
     return strcasecmp(a, b);
 }
+
+char *
+crm_strdup_printf(char const *format, ...)
+{
+    va_list ap;
+    int len = 0;
+    char *string = NULL;
+
+    va_start(ap, format);
+    len = vasprintf (&string, format, ap);
+    CRM_ASSERT(len > 0);
+    va_end(ap);
+    return string;
+}
