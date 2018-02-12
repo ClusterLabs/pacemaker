@@ -572,7 +572,7 @@ get_logfiles() {
 
     if [ -z "$logfile" ]; then
         # @TODO Use PCMK_logfile if set
-        logfile="/var/log/pacemaker/pacemaker.log"
+        logfile="@CRM_LOG_DIR@/pacemaker.log"
         debug "Log settings not found for cluster type $cf_type, assuming $logfile"
     fi
     if [ -f "$logfile" ]; then
