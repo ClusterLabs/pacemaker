@@ -18,6 +18,7 @@
 "FAKE4_stop_0 18node1" -> "FAKE4_start_0 18node2" [ style = bold]
 "FAKE4_stop_0 18node1" -> "all_stopped" [ style = bold]
 "FAKE4_stop_0 18node1" [ style=bold color="green" fontcolor="black"]
+"all_stopped" -> "remote1_start_0 18node1" [ style = bold]
 "all_stopped" [ style=bold color="green" fontcolor="orange"]
 "remote1_monitor_60000 18node1" [ style=bold color="green" fontcolor="black"]
 "remote1_start_0 18node1" -> "remote1_monitor_60000 18node1" [ style = bold]
@@ -32,6 +33,5 @@
 "stonith_complete" -> "FAKE3_start_0 18node1" [ style = bold]
 "stonith_complete" -> "FAKE4_start_0 18node2" [ style = bold]
 "stonith_complete" -> "all_stopped" [ style = bold]
-"stonith_complete" -> "remote1_start_0 18node1" [ style = bold]
 "stonith_complete" [ style=bold color="green" fontcolor="orange"]
 }

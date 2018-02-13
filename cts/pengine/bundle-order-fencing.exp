@@ -55,9 +55,6 @@
       <trigger>
         <pseudo_event id="71" operation="stop" operation_key="rabbitmq-bundle-clone_stop_0"/>
       </trigger>
-      <trigger>
-        <pseudo_event id="209" operation="stonith" operation_key="stonith-rabbitmq-bundle-0-off" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0"/>
-      </trigger>
     </inputs>
   </synapse>
   <synapse id="4">
@@ -382,11 +379,7 @@
         <attributes CRM_meta_container="rabbitmq-bundle-docker-0" CRM_meta_timeout="20000" addr="controller-0"  port="3122"/>
       </pseudo_event>
     </action_set>
-    <inputs>
-      <trigger>
-        <crm_event id="1" operation="stonith" operation_key="stonith-controller-0-reboot" on_node="controller-0" on_node_uuid="1"/>
-      </trigger>
-    </inputs>
+    <inputs/>
   </synapse>
   <synapse id="26">
     <action_set>
@@ -440,9 +433,6 @@
       <trigger>
         <pseudo_event id="108" operation="stop" operation_key="galera-bundle-master_stop_0"/>
       </trigger>
-      <trigger>
-        <pseudo_event id="208" operation="stonith" operation_key="stonith-galera-bundle-0-off" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0"/>
-      </trigger>
     </inputs>
   </synapse>
   <synapse id="31">
@@ -454,9 +444,6 @@
     <inputs>
       <trigger>
         <pseudo_event id="112" operation="demote" operation_key="galera-bundle-master_demote_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="208" operation="stonith" operation_key="stonith-galera-bundle-0-off" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -574,11 +561,7 @@
         <attributes CRM_meta_container="galera-bundle-docker-0" CRM_meta_timeout="20000" addr="controller-0"  port="3123"/>
       </pseudo_event>
     </action_set>
-    <inputs>
-      <trigger>
-        <crm_event id="1" operation="stonith" operation_key="stonith-controller-0-reboot" on_node="controller-0" on_node_uuid="1"/>
-      </trigger>
-    </inputs>
+    <inputs/>
   </synapse>
   <synapse id="40">
     <action_set>
@@ -701,9 +684,6 @@
       <trigger>
         <pseudo_event id="151" operation="stop" operation_key="redis-bundle-master_stop_0"/>
       </trigger>
-      <trigger>
-        <pseudo_event id="214" operation="stonith" operation_key="stonith-redis-bundle-0-off" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0"/>
-      </trigger>
     </inputs>
   </synapse>
   <synapse id="50">
@@ -715,9 +695,6 @@
     <inputs>
       <trigger>
         <pseudo_event id="163" operation="demote" operation_key="redis-bundle-master_demote_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="214" operation="stonith" operation_key="stonith-redis-bundle-0-off" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -1428,11 +1405,7 @@
         <attributes CRM_meta_container="redis-bundle-docker-0" CRM_meta_timeout="20000" addr="controller-0"  port="3124"/>
       </pseudo_event>
     </action_set>
-    <inputs>
-      <trigger>
-        <crm_event id="1" operation="stonith" operation_key="stonith-controller-0-reboot" on_node="controller-0" on_node_uuid="1"/>
-      </trigger>
-    </inputs>
+    <inputs/>
   </synapse>
   <synapse id="97">
     <action_set>
@@ -1639,9 +1612,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="29" operation="all_stopped" operation_key="all_stopped"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="201" operation="stop" operation_key="stonith-fence_ipmilan-5254003e8e97_stop_0"/>
       </trigger>
     </inputs>
@@ -1675,9 +1645,6 @@
       </rsc_op>
     </action_set>
     <inputs>
-      <trigger>
-        <pseudo_event id="29" operation="all_stopped" operation_key="all_stopped"/>
-      </trigger>
       <trigger>
         <pseudo_event id="204" operation="stop" operation_key="stonith-fence_ipmilan-5254000dcb3f_stop_0"/>
       </trigger>

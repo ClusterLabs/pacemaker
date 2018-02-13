@@ -80,6 +80,7 @@ digraph "g" {
 "VM2_stop_0 lama3" -> "all_stopped" [ style = bold]
 "VM2_stop_0 lama3" -> "stonith 'reboot' lamaVM2" [ style = bold]
 "VM2_stop_0 lama3" [ style=bold color="green" fontcolor="black"]
+"all_stopped" -> "lamaVM2_start_0 lama3" [ style = bold]
 "all_stopped" [ style=bold color="green" fontcolor="orange"]
 "lamaVM2-G4_running_0" [ style=bold color="green" fontcolor="orange"]
 "lamaVM2-G4_start_0" -> "FAKE4-IP_start_0 lamaVM2" [ style = bold]
@@ -121,6 +122,5 @@ digraph "g" {
 "stonith_complete" -> "FSlun3_start_0 lama2" [ style = bold]
 "stonith_complete" -> "VM2_start_0 lama3" [ style = bold]
 "stonith_complete" -> "all_stopped" [ style = bold]
-"stonith_complete" -> "lamaVM2_start_0 lama3" [ style = bold]
 "stonith_complete" [ style=bold color="green" fontcolor="orange"]
 }

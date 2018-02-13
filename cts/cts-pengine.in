@@ -806,6 +806,8 @@ do_test bug-cl-5219 "Allow unrelated resources with a common colocation target t
 do_test master-asymmetrical-order "Fix the behaviors of multi-state resources with asymmetrical ordering"
 do_test master-notify "Master promotion with notifies"
 do_test master-score-startup "Use permanent master scores without LRM history"
+do_test failed-demote-recovery "Recover resource in slave role after demote fails"
+do_test failed-demote-recovery-master "Recover resource in master role after demote fails"
 
 echo ""
 do_test history-1 "Correctly parse stateful-1 resource state"
@@ -1177,6 +1179,7 @@ do_test bundle-order-partial-start "Bundle startup ordering when some dependanci
 do_test bundle-order-partial-start-2 "Bundle startup ordering when some dependancies and the container are already running"
 do_test bundle-order-stop    "Bundle stop ordering"
 do_test bundle-order-partial-stop "Bundle startup ordering when some dependancies are already stopped"
+do_test bundle-order-stop-on-remote "Stop nested resource after bringing up the connection"
 
 do_test bundle-order-startup-clone "Prevent startup because bundle isn't promoted"
 do_test bundle-order-startup-clone-2 "Bundle startup with clones"

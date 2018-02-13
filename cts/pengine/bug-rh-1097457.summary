@@ -70,26 +70,26 @@ Executing cluster transition:
  * Pseudo action:   lamaVM2-G4_stop_0
  * Pseudo action:   FAKE4-IP_stop_0
  * Pseudo action:   FAKE6-clone_stop_0
- * Resource action: lamaVM2         start on lama3
- * Resource action: lamaVM2         monitor=30000 on lama3
- * Resource action: FSlun3          monitor=10000 on lamaVM2
  * Pseudo action:   FAKE4_stop_0
  * Pseudo action:   FAKE6_stop_0
  * Pseudo action:   FAKE6-clone_stopped_0
  * Pseudo action:   FAKE6-clone_start_0
  * Pseudo action:   lamaVM2-G4_stopped_0
- * Resource action: FAKE6           start on lamaVM2
- * Resource action: FAKE6           monitor=30000 on lamaVM2
- * Pseudo action:   FAKE6-clone_running_0
  * Pseudo action:   FSlun3_stop_0
  * Pseudo action:   all_stopped
  * Resource action: FSlun3          start on lama2
  * Pseudo action:   lamaVM2-G4_start_0
+ * Resource action: lamaVM2         start on lama3
+ * Resource action: lamaVM2         monitor=30000 on lama3
+ * Resource action: FSlun3          monitor=10000 on lama2
+ * Resource action: FSlun3          monitor=10000 on lamaVM2
  * Resource action: FAKE4           start on lamaVM2
  * Resource action: FAKE4           monitor=30000 on lamaVM2
  * Resource action: FAKE4-IP        start on lamaVM2
  * Resource action: FAKE4-IP        monitor=30000 on lamaVM2
- * Resource action: FSlun3          monitor=10000 on lama2
+ * Resource action: FAKE6           start on lamaVM2
+ * Resource action: FAKE6           monitor=30000 on lamaVM2
+ * Pseudo action:   FAKE6-clone_running_0
  * Pseudo action:   lamaVM2-G4_running_0
 
 Revised cluster status:

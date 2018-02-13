@@ -1,4 +1,5 @@
 digraph "g" {
+"all_stopped" -> "galera-0_start_0 controller-2" [ style = bold]
 "all_stopped" -> "stonith-fence_ipmilan-5254005bdbb5_start_0 controller-2" [ style = bold]
 "all_stopped" -> "stonith-fence_ipmilan-525400b4f6bd_start_0 controller-0" [ style = bold]
 "all_stopped" -> "stonith-fence_ipmilan-525400bbf613_start_0 controller-0" [ style = bold]
@@ -99,7 +100,6 @@ digraph "g" {
 "redis_stop_0 controller-1" -> "all_stopped" [ style = bold]
 "redis_stop_0 controller-1" -> "redis-master_stopped_0" [ style = bold]
 "redis_stop_0 controller-1" [ style=bold color="green" fontcolor="orange"]
-"stonith 'reboot' controller-1" -> "galera-0_stop_0 controller-1" [ style = bold]
 "stonith 'reboot' controller-1" -> "galera-2_stop_0 controller-1" [ style = bold]
 "stonith 'reboot' controller-1" -> "haproxy-clone_stop_0" [ style = bold]
 "stonith 'reboot' controller-1" -> "haproxy_stop_0 controller-1" [ style = bold]
@@ -138,7 +138,6 @@ digraph "g" {
 "stonith-fence_ipmilan-525400bbf613_stop_0 controller-0" -> "stonith-fence_ipmilan-525400bbf613_start_0 controller-0" [ style = bold]
 "stonith-fence_ipmilan-525400bbf613_stop_0 controller-0" [ style=bold color="green" fontcolor="black"]
 "stonith_complete" -> "all_stopped" [ style = bold]
-"stonith_complete" -> "galera-0_start_0 controller-2" [ style = bold]
 "stonith_complete" -> "ip-172.17.1.14_start_0 controller-2" [ style = bold]
 "stonith_complete" -> "ip-172.17.1.17_start_0 controller-2" [ style = bold]
 "stonith_complete" -> "ip-172.17.4.11_start_0 controller-2" [ style = bold]

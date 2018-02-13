@@ -48,6 +48,25 @@ enum remote_connection_state {
     remote_state_stopped = 4
 };
 
+static const char *
+state2text(enum remote_connection_state state)
+{
+    switch (state) {
+        case remote_state_unknown:
+            return "unknown";
+        case remote_state_alive:
+            return "alive";
+        case remote_state_resting:
+            return "resting";
+        case remote_state_failed:
+            return "failed";
+        case remote_state_stopped:
+            return "stopped";
+    }
+
+    return "impossible";
+}
+
 resource_alloc_functions_t resource_class_alloc_functions[] = {
     {
      native_merge_weights,
@@ -1456,7 +1475,9 @@ fence_guest(pe_node_t *node, pe_action_t *done, pe_working_set_t *data_set)
 
     /* Order/imply other actions relative to pseudo-fence as with real fence */
     stonith_constraints(node, stonith_op, data_set);
-    order_actions(stonith_op, done, pe_order_implies_then);
+    if(done) {
+        order_actions(stonith_op, done, pe_order_implies_then);
+    }
 }
 
 /*
@@ -1835,7 +1856,7 @@ apply_container_ordering(action_t *action, pe_working_set_t *data_set)
               container->id);
 
     if (safe_str_eq(action->task, CRMD_ACTION_MIGRATE)
-        || safe_str_eq(action->task, CRMD_ACTION_MIGRATE)) {
+        || safe_str_eq(action->task, CRMD_ACTION_MIGRATED)) {
         /* Migration ops map to "no_action", but we need to apply the same
          * ordering as for stop or demote (see get_router_node()).
          */
@@ -1995,13 +2016,13 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
         cluster_node = remote_rsc->running_on->data;
     }
 
-    crm_trace("Order %s action %s relative to %s%s (state %d)",
+    crm_trace("Order %s action %s relative to %s%s (state: %s)",
               action->task, action->uuid,
               is_set(remote_rsc->flags, pe_rsc_failed)? "failed " : "",
-              remote_rsc->id, state);
+              remote_rsc->id, state2text(state));
 
     if (safe_str_eq(action->task, CRMD_ACTION_MIGRATE)
-        || safe_str_eq(action->task, CRMD_ACTION_MIGRATE)) {
+        || safe_str_eq(action->task, CRMD_ACTION_MIGRATED)) {
         /* Migration ops map to "no_action", but we need to apply the same
          * ordering as for stop or demote (see get_router_node()).
          */
@@ -2023,26 +2044,33 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
             break;
 
         case stop_rsc:
-            /* Handle special case with remote node where stop actions need to be
-             * ordered after the connection resource starts somewhere else.
-             */
-            if(state == remote_state_resting) {
-                /* Wait for the connection resource to be up and assume everything is as we left it */
-                order_start_then_action(remote_rsc, action, pe_order_none,
-                                        data_set);
-
-            } else {
-                if(state == remote_state_failed) {
-                    /* We would only be here if the resource is
-                     * running on the remote node.  Since we have no
-                     * way to stop it, it is necessary to fence the
-                     * node.
-                     */
-                    pe_fence_node(data_set, action->node, "resources are active and the connection is unrecoverable");
-                }
-
+            if(state == remote_state_alive) {
                 order_action_then_stop(action, remote_rsc,
                                        pe_order_implies_first, data_set);
+
+            } else if(state == remote_state_failed) {
+                /* We would only be here if the resource is
+                 * running on the remote node.  Since we have no
+                 * way to stop it, it is necessary to fence the
+                 * node.
+                 */
+                pe_fence_node(data_set, action->node, "resources are active and the connection is unrecoverable");
+                order_action_then_stop(action, remote_rsc,
+                                       pe_order_implies_first, data_set);
+
+            } else if(remote_rsc->next_role == RSC_ROLE_STOPPED) {
+                /* State must be remote_state_unknown or remote_state_stopped.
+                 * Since the connection is not coming back up in this
+                 * transition, stop this resource first.
+                 */
+                order_action_then_stop(action, remote_rsc,
+                                       pe_order_implies_first, data_set);
+
+            } else {
+                /* The connection is going to be started somewhere else, so
+                 * stop this resource after that completes.
+                 */
+                order_start_then_action(remote_rsc, action, pe_order_none, data_set);
             }
             break;
 

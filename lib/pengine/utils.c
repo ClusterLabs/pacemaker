@@ -988,7 +988,7 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
         value = "nothing (resource)";
     }
 
-    pe_rsc_trace(action->rsc, "\tAction %s requires: %s", action->task, value);
+    pe_rsc_trace(action->rsc, "\tAction %s requires: %s", action->uuid, value);
 
     value = unpack_operation_on_fail(action);
 

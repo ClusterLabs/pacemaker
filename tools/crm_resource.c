@@ -207,14 +207,16 @@ static struct crm_option long_options[] = {
     },
     {
         "cleanup", no_argument, NULL, 'C',
-        "\t\tDelete failed operations from a resource's history allowing its current state to be rechecked.\n"
+        "\t\tIf resource has any past failures, clear its history and fail count.\n"
         "\t\t\t\tOptionally filtered by --resource, --node, --operation, and --interval (otherwise all).\n"
+        "\t\t\t\t--operation and --interval apply to fail counts, but entire history is always cleared,\n"
+        "\t\t\t\tto allow current state to be rechecked.\n"
     },
     {
         "refresh", no_argument, NULL, 'R',
         "\t\tDelete resource's history (including failures) so its current state is rechecked.\n"
-        "\t\t\t\tOptionally filtered by --resource, --node, --operation, and --interval (otherwise all).\n"
-        "\t\t\t\tUnless --force is specified, resource's group or clone (if any) will also be cleaned"
+        "\t\t\t\tOptionally filtered by --resource and --node (otherwise all).\n"
+        "\t\t\t\tUnless --force is specified, resource's group or clone (if any) will also be refreshed."
     },
     {
         "set-parameter", required_argument, NULL, 'p',
@@ -428,7 +430,6 @@ main(int argc, char **argv)
     bool require_resource = TRUE; /* whether command requires that resource be specified */
     bool require_dataset = TRUE;  /* whether command requires populated dataset instance */
     bool require_crmd = FALSE;    /* whether command requires connection to CRMd */
-    bool just_errors = TRUE;      /* whether cleanup command deletes all history or just errors */
 
     int rc = pcmk_ok;
     int is_ocf_rc = 0;
@@ -620,8 +621,7 @@ main(int argc, char **argv)
                 if (cib_file == NULL) {
                     require_crmd = TRUE;
                 }
-                just_errors = FALSE;
-                rsc_cmd = 'C';
+                rsc_cmd = 'R';
                 find_flags = pe_find_renamed|pe_find_anon;
                 break;
 
@@ -631,7 +631,6 @@ main(int argc, char **argv)
                 if (cib_file == NULL) {
                     require_crmd = TRUE;
                 }
-                just_errors = TRUE;
                 rsc_cmd = 'C';
                 find_flags = pe_find_renamed|pe_find_anon;
                 break;
@@ -1081,17 +1080,41 @@ main(int argc, char **argv)
         rc = cli_resource_delete_attribute(rsc, rsc_id, prop_set, prop_id,
                                            prop_name, cib_conn, &data_set);
 
-    } else if ((rsc_cmd == 'C') && rsc) {
-        if (do_force == FALSE) {
-            rsc = uber_parent(rsc);
-        }
+    } else if (rsc_cmd == 'C') {
         crmd_replies_needed = 0;
+        for (xmlNode *xml_op = __xml_first_child(data_set.failed); xml_op != NULL;
+             xml_op = __xml_next(xml_op)) {
 
-        crm_debug("%s of %s (%s requested) on %s",
-                  (just_errors? "Clearing failures" : "Re-checking the state"),
-                  rsc->id, rsc_id, (host_uname? host_uname : "all hosts"));
-        rc = cli_resource_delete(crmd_channel, host_uname, rsc, operation,
-                                 interval, just_errors, &data_set);
+            const char *node = crm_element_value(xml_op, XML_ATTR_UNAME);
+            const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
+            const char *task_interval = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
+            const char *resource_name = crm_element_value(xml_op, XML_LRM_ATTR_RSCID);
+
+            if (resource_name == NULL) {
+                continue;
+            } else if(host_uname && safe_str_neq(host_uname, node)) {
+                continue;
+            } else if(operation && safe_str_neq(operation, task)) {
+                continue;
+            } else if(interval && safe_str_neq(interval, task_interval)) {
+                continue;
+            }
+
+            if (rsc_id) {
+                resource_t *fail_rsc = pe_find_resource_with_flags(data_set.resources,
+                                                                   resource_name,
+                                                                   find_flags);
+
+                if (!fail_rsc || safe_str_neq(rsc->id, fail_rsc->id)) {
+                    continue;
+                }
+            }
+
+            crm_debug("Erasing %s failure for %s (%s detected) on %s",
+                      task, rsc->id, resource_name, node);
+            rc = cli_resource_delete(crmd_channel, node, rsc, task,
+                                     task_interval, &data_set);
+        }
 
         if ((rc == pcmk_ok) && !BE_QUIET) {
             // Show any reasons why resource might stay stopped
@@ -1102,14 +1125,27 @@ main(int argc, char **argv)
             start_mainloop();
         }
 
-    } else if (rsc_cmd == 'C' && just_errors) {
-        rc = cli_cleanup_all(crmd_channel, host_uname, operation, interval,
-                             &data_set);
+    } else if ((rsc_cmd == 'R') && rsc) {
+        if(do_force == FALSE) {
+            rsc = uber_parent(rsc);
+        }
+
+        crm_debug("Re-checking the state of %s (%s requested) on %s",
+                  rsc->id, rsc_id, host_uname);
+        crmd_replies_needed = 0;
+        rc = cli_resource_delete(crmd_channel, host_uname, rsc, NULL, 0,
+                                 &data_set);
+
+        if(rc == pcmk_ok && BE_QUIET == FALSE) {
+            /* Now check XML_RSC_ATTR_TARGET_ROLE and XML_RSC_ATTR_MANAGED */
+            cli_resource_check(cib_conn, rsc);
+        }
+
         if (rc == pcmk_ok) {
             start_mainloop();
         }
 
-    } else if (rsc_cmd == 'C') {
+    } else if (rsc_cmd == 'R') {
         const char *router_node = host_uname;
         xmlNode *msg_data = NULL;
         xmlNode *cmd = NULL;

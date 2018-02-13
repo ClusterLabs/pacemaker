@@ -6,11 +6,7 @@
         <attributes CRM_meta_migrate_source="pcmk3" CRM_meta_migrate_target="pcmk1" CRM_meta_on_node="pcmk1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000"  server="172.17.201.2"/>
       </rsc_op>
     </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="189" operation="stonith_complete" operation_key="stonith_complete"/>
-      </trigger>
-    </inputs>
+    <inputs/>
   </synapse>
   <synapse id="1">
     <action_set>
@@ -37,9 +33,6 @@
       </trigger>
       <trigger>
         <rsc_op id="64" operation="migrate_from" operation_key="pcmk_remote2_migrate_from_0" on_node="pcmk1" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="189" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -76,11 +69,7 @@
         <attributes CRM_meta_name="start" CRM_meta_on_node="pcmk2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="10000"  server="172.17.201.4"/>
       </rsc_op>
     </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="189" operation="stonith_complete" operation_key="stonith_complete"/>
-      </trigger>
-    </inputs>
+    <inputs/>
   </synapse>
   <synapse id="6">
     <action_set>
@@ -102,11 +91,7 @@
         <attributes CRM_meta_migrate_source="pcmk1" CRM_meta_migrate_target="pcmk2" CRM_meta_on_node="pcmk1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000"  server="172.17.201.5"/>
       </rsc_op>
     </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="189" operation="stonith_complete" operation_key="stonith_complete"/>
-      </trigger>
-    </inputs>
+    <inputs/>
   </synapse>
   <synapse id="8">
     <action_set>
@@ -129,13 +114,13 @@
     </action_set>
     <inputs>
       <trigger>
+        <pseudo_event id="56" operation="all_stopped" operation_key="all_stopped"/>
+      </trigger>
+      <trigger>
         <rsc_op id="69" operation="stop" operation_key="pcmk_remote5_stop_0" on_node="pcmk1" on_node_uuid="1"/>
       </trigger>
       <trigger>
         <rsc_op id="73" operation="migrate_from" operation_key="pcmk_remote5_migrate_from_0" on_node="pcmk2" on_node_uuid="2"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="189" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>

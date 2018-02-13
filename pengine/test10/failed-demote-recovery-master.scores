@@ -1,0 +1,18 @@
+Allocation scores:
+DB2_HADR:0 promotion score on fastvm-rhel-7-4-95: -1
+DB2_HADR:1 promotion score on fastvm-rhel-7-4-96: 10000
+Using the original execution date of: 2017-11-30 12:37:50Z
+clone_color: DB2_HADR-master allocation score on fastvm-rhel-7-4-95: 0
+clone_color: DB2_HADR-master allocation score on fastvm-rhel-7-4-96: 0
+clone_color: DB2_HADR:0 allocation score on fastvm-rhel-7-4-95: 1
+clone_color: DB2_HADR:0 allocation score on fastvm-rhel-7-4-96: 0
+clone_color: DB2_HADR:1 allocation score on fastvm-rhel-7-4-95: 0
+clone_color: DB2_HADR:1 allocation score on fastvm-rhel-7-4-96: 10001
+native_color: DB2_HADR:0 allocation score on fastvm-rhel-7-4-95: 1
+native_color: DB2_HADR:0 allocation score on fastvm-rhel-7-4-96: 0
+native_color: DB2_HADR:1 allocation score on fastvm-rhel-7-4-95: -INFINITY
+native_color: DB2_HADR:1 allocation score on fastvm-rhel-7-4-96: 10001
+native_color: fence-fastvm-rhel-7-4-95 allocation score on fastvm-rhel-7-4-95: -INFINITY
+native_color: fence-fastvm-rhel-7-4-95 allocation score on fastvm-rhel-7-4-96: 0
+native_color: fence-fastvm-rhel-7-4-96 allocation score on fastvm-rhel-7-4-95: 0
+native_color: fence-fastvm-rhel-7-4-96 allocation score on fastvm-rhel-7-4-96: -INFINITY
