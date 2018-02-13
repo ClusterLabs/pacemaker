@@ -615,23 +615,14 @@ main(int argc, char **argv)
                 timeout_ms = crm_get_msec(optarg);
                 break;
 
+            case 'C':
             case 'R':
                 crm_log_args(argc, argv);
                 require_resource = FALSE;
                 if (cib_file == NULL) {
                     require_crmd = TRUE;
                 }
-                rsc_cmd = 'R';
-                find_flags = pe_find_renamed|pe_find_anon;
-                break;
-
-            case 'C':
-                crm_log_args(argc, argv);
-                require_resource = FALSE;
-                if (cib_file == NULL) {
-                    require_crmd = TRUE;
-                }
-                rsc_cmd = 'C';
+                rsc_cmd = flag;
                 find_flags = pe_find_renamed|pe_find_anon;
                 break;
 
@@ -1080,41 +1071,16 @@ main(int argc, char **argv)
         rc = cli_resource_delete_attribute(rsc, rsc_id, prop_set, prop_id,
                                            prop_name, cib_conn, &data_set);
 
-    } else if (rsc_cmd == 'C') {
-        crmd_replies_needed = 0;
-        for (xmlNode *xml_op = __xml_first_child(data_set.failed); xml_op != NULL;
-             xml_op = __xml_next(xml_op)) {
-
-            const char *node = crm_element_value(xml_op, XML_ATTR_UNAME);
-            const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
-            const char *task_interval = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
-            const char *resource_name = crm_element_value(xml_op, XML_LRM_ATTR_RSCID);
-
-            if (resource_name == NULL) {
-                continue;
-            } else if(host_uname && safe_str_neq(host_uname, node)) {
-                continue;
-            } else if(operation && safe_str_neq(operation, task)) {
-                continue;
-            } else if(interval && safe_str_neq(interval, task_interval)) {
-                continue;
-            }
-
-            if (rsc_id) {
-                resource_t *fail_rsc = pe_find_resource_with_flags(data_set.resources,
-                                                                   resource_name,
-                                                                   find_flags);
-
-                if (!fail_rsc || safe_str_neq(rsc->id, fail_rsc->id)) {
-                    continue;
-                }
-            }
-
-            crm_debug("Erasing %s failure for %s (%s detected) on %s",
-                      task, rsc->id, resource_name, node);
-            rc = cli_resource_delete(crmd_channel, node, rsc, task,
-                                     task_interval, &data_set);
+    } else if ((rsc_cmd == 'C') && rsc) {
+        if (do_force == FALSE) {
+            rsc = uber_parent(rsc);
         }
+        crmd_replies_needed = 0;
+
+        crm_debug("Erasing failures of %s (%s requested) on %s",
+                  rsc->id, rsc_id, (host_uname? host_uname: "all nodes"));
+        rc = cli_resource_delete(crmd_channel, host_uname, rsc,
+                                 operation, interval, TRUE, &data_set);
 
         if ((rc == pcmk_ok) && !BE_QUIET) {
             // Show any reasons why resource might stay stopped
@@ -1125,19 +1091,23 @@ main(int argc, char **argv)
             start_mainloop();
         }
 
+    } else if (rsc_cmd == 'C') {
+        rc = cli_cleanup_all(crmd_channel, host_uname, operation, interval,
+                             &data_set);
+
     } else if ((rsc_cmd == 'R') && rsc) {
-        if(do_force == FALSE) {
+        if (do_force == FALSE) {
             rsc = uber_parent(rsc);
         }
+        crmd_replies_needed = 0;
 
         crm_debug("Re-checking the state of %s (%s requested) on %s",
-                  rsc->id, rsc_id, host_uname);
-        crmd_replies_needed = 0;
-        rc = cli_resource_delete(crmd_channel, host_uname, rsc, NULL, 0,
-                                 &data_set);
+                  rsc->id, rsc_id, (host_uname? host_uname: "all nodes"));
+        rc = cli_resource_delete(crmd_channel, host_uname, rsc,
+                                 NULL, 0, FALSE, &data_set);
 
-        if(rc == pcmk_ok && BE_QUIET == FALSE) {
-            /* Now check XML_RSC_ATTR_TARGET_ROLE and XML_RSC_ATTR_MANAGED */
+        if ((rc == pcmk_ok) && !BE_QUIET) {
+            // Show any reasons why resource might stay stopped
             cli_resource_check(cib_conn, rsc);
         }
 
