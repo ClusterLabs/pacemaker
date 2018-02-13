@@ -118,6 +118,19 @@
   </cibtr:table>
 
   <!--
+   Target tag:     node
+   Object:         ./@*
+   Selector ctxt:  ./@*
+   Move ctxt:      N/A
+   -->
+  <cibtr:table for="cluster-node" msg-prefix="Cluster node">
+    <cibtr:replace what="type"
+                   with="type"
+                   in-case-of="normal"
+                   redefined-as="member"/>
+  </cibtr:table>
+
+  <!--
    Target tag:     primitive
                    template
    Object:         ./operations/op/@*
@@ -157,6 +170,12 @@
               select="document('')/xsl:stylesheet
                         /cibtr:map/cibtr:table[
                           @for = 'cluster-properties'
+                        ]"/>
+
+<xsl:variable name="MapClusterNode"
+              select="document('')/xsl:stylesheet
+                        /cibtr:map/cibtr:table[
+                          @for = 'cluster-node'
                         ]"/>
 
 <xsl:variable name="MapResourcesOperation"
@@ -1036,6 +1055,69 @@
           <!-- rename -->
           <xsl:attribute name="{name()}">
             <xsl:value-of select="$Replacement/@with"/>
+          </xsl:attribute>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:copy/>
+        </xsl:otherwise>
+      </xsl:choose>
+    </xsl:for-each>
+    <xsl:apply-templates select="node()"/>
+  </xsl:copy>
+</xsl:template>
+
+<xsl:template match="node">
+  <xsl:copy>
+    <xsl:for-each select="@*">
+      <xsl:variable name="Replacement"
+                    select="$MapClusterNode/cibtr:replace[
+                              @what = name(current())
+                              and
+                              (
+                                (
+                                  @in-case-of
+                                  and
+                                  contains(concat('|', @in-case-of, '|'),
+                                           concat('|', current(), '|'))
+                                )
+                                or
+                                (
+                                  not(@in-case-of)
+                                  and
+                                  not(
+                                    $MapClusterProperties/cibtr:replace[
+                                      @what = current()/@name
+                                      and
+                                      @in-case-of
+                                      and
+                                      contains(concat('|', @in-case-of, '|'),
+                                               concat('|', current(), '|'))
+                                    ]
+                                  )
+                                )
+                              )
+                            ]"/>
+      <xsl:call-template name="MapMsg">
+        <xsl:with-param name="Context" select="concat(../@uname, ' (id=', ../@id, ')')"/>
+        <xsl:with-param name="Replacement" select="$Replacement"/>
+      </xsl:call-template>
+      <xsl:choose>
+        <xsl:when test="$Replacement
+                        and
+                        not(string($Replacement/@with))">
+          <!-- drop -->
+        </xsl:when>
+        <xsl:when test="$Replacement">
+          <!-- rename -->
+          <xsl:attribute name="{$Replacement/@with}">
+            <xsl:choose>
+              <xsl:when test="$Replacement/@redefined-as">
+                <xsl:value-of select="$Replacement/@redefined-as"/>
+              </xsl:when>
+              <xsl:otherwise>
+                <xsl:value-of select="."/>
+              </xsl:otherwise>
+            </xsl:choose>
           </xsl:attribute>
         </xsl:when>
         <xsl:otherwise>

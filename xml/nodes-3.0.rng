@@ -14,7 +14,6 @@
           <optional>
             <attribute name="type">
               <choice>
-                <value>normal</value>
                 <value>member</value>
                 <value>ping</value>
                 <value>remote</value>
@@ -30,10 +29,10 @@
           <zeroOrMore>
             <choice>
               <element name="instance_attributes">
-                <externalRef href="nvset-2.9.rng"/>
+                <externalRef href="nvset-3.0.rng"/>
               </element>
               <element name="utilization">
-                <externalRef href="nvset-2.9.rng"/>
+                <externalRef href="nvset-3.0.rng"/>
               </element>
             </choice>
           </zeroOrMore>
