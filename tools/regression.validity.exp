@@ -3,6 +3,21 @@ Setting up shadow instance
 A new shadow instance was created.  To begin using it paste the following into your shell:
   CIB_shadow=tools-regression ; export CIB_shadow
 =#=#=#= Begin test: Try to make resulting CIB invalid (enum violation) =#=#=#=
+   1 <cib epoch="4" num_updates="0" admin_epoch="0">
+   2   <configuration>
+   3     <crm_config/>
+   4     <nodes/>
+   5     <resources>
+   6       <primitive id="dummy1" class="ocf" provider="pacemaker" type="Dummy"/>
+   7       <primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>
+   8     </resources>
+   9     <constraints>
+  10       <rsc_order id="ord_1-2" first="dummy1" first-action="break" then="dummy2"/>
+  11     </constraints>
+  12   </configuration>
+  13   <status/>
+  14 </cib>
+  15 
 Call failed: Update does not conform to the configured schema
 =#=#=#= Current cib after: Try to make resulting CIB invalid (enum violation) =#=#=#=
 <cib epoch="3" num_updates="0" admin_epoch="0">
@@ -78,6 +93,21 @@ Your current configuration pacemaker-1.2 could not validate with any schema in r
 =#=#=#= End test: Run crm_simulate with invalid CIB (enum violation) - Required key not available (126) =#=#=#=
 * Passed: crm_simulate   - Run crm_simulate with invalid CIB (enum violation)
 =#=#=#= Begin test: Try to make resulting CIB invalid (unrecognized validate-with) =#=#=#=
+   1 <cib epoch="3" num_updates="1" admin_epoch="0">
+   2   <configuration>
+   3     <crm_config/>
+   4     <nodes/>
+   5     <resources>
+   6       <primitive id="dummy1" class="ocf" provider="pacemaker" type="Dummy"/>
+   7       <primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>
+   8     </resources>
+   9     <constraints>
+  10       <rsc_order id="ord_1-2" first="dummy1" first-action="start" then="dummy2"/>
+  11     </constraints>
+  12   </configuration>
+  13   <status/>
+  14 </cib>
+  15 
 Call failed: Update does not conform to the configured schema
 =#=#=#= Current cib after: Try to make resulting CIB invalid (unrecognized validate-with) =#=#=#=
 <cib epoch="3" num_updates="0" admin_epoch="0">
@@ -161,6 +191,22 @@ Your current configuration pacemaker-9999.0 could not validate with any schema i
 =#=#=#= End test: Run crm_simulate with invalid CIB (unrecognized validate-with) - Required key not available (126) =#=#=#=
 * Passed: crm_simulate   - Run crm_simulate with invalid CIB (unrecognized validate-with)
 =#=#=#= Begin test: Try to make resulting CIB invalid, but possibly recoverable (valid with X.Y+1) =#=#=#=
+   1 <cib epoch="3" num_updates="0" admin_epoch="0">
+   2   <configuration>
+   3     <crm_config/>
+   4     <nodes/>
+   5     <resources>
+   6       <primitive id="dummy1" class="ocf" provider="pacemaker" type="Dummy"/>
+   7       <primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>
+   8     </resources>
+   9     <constraints>
+  10       <rsc_order id="ord_1-2" first="dummy1" first-action="start" then="dummy2"/>
+  11     </constraints>
+  12     <tags/>
+  13   </configuration>
+  14   <status/>
+  15 </cib>
+  16 
 Call failed: Update does not conform to the configured schema
 =#=#=#= Current cib after: Try to make resulting CIB invalid, but possibly recoverable (valid with X.Y+1) =#=#=#=
 <cib epoch="3" num_updates="0" admin_epoch="0">
