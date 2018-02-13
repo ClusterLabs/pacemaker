@@ -485,10 +485,18 @@ container_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc, rsc_colocatio
         } else {
             node_t *chosen = tuple->docker->fns->location(tuple->docker, NULL, FALSE);
 
-            if (chosen != NULL && is_set_recursive(tuple->docker, pe_rsc_block, TRUE) == FALSE) {
-                pe_rsc_trace(rsc, "Allowing %s: %s %d", constraint->id, chosen->details->uname, chosen->weight);
-                allocated_rhs = g_list_prepend(allocated_rhs, chosen);
+            if (chosen == NULL || is_set_recursive(tuple->docker, pe_rsc_block, TRUE)) {
+                continue;
             }
+            if(constraint->role_rh >= RSC_ROLE_MASTER && tuple->child == NULL) {
+                continue;
+            }
+            if(constraint->role_rh >= RSC_ROLE_MASTER && tuple->child->next_role < RSC_ROLE_MASTER) {
+                continue;
+            }
+
+            pe_rsc_trace(rsc, "Allowing %s: %s %d", constraint->id, chosen->details->uname, chosen->weight);
+            allocated_rhs = g_list_prepend(allocated_rhs, chosen);
         }
     }
 

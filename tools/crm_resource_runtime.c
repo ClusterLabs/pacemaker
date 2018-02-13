@@ -594,8 +594,14 @@ clear_rsc_failures(crm_ipc_t *crmd_channel, const char *node_name,
         }
 
         // No resource specified means all resources match
-        if (rsc_id && safe_str_neq(rsc_id, failed_id)) {
-            continue;
+        if (rsc_id) {
+            resource_t *fail_rsc = pe_find_resource_with_flags(data_set->resources,
+                                                               failed_id,
+                                                               pe_find_renamed|pe_find_anon);
+
+            if (!fail_rsc || safe_str_neq(rsc_id, fail_rsc->id)) {
+                continue;
+            }
         }
 
         // Host name should always have been provided by this point
@@ -763,8 +769,8 @@ cli_cleanup_all(crm_ipc_t *crmd_channel, const char *node_name,
                 const char *operation, const char *interval,
                 pe_working_set_t *data_set)
 {
-    int attr_options = attrd_opt_none;
     int rc = pcmk_ok;
+    int attr_options = attrd_opt_none;
     const char *display_name = node_name? node_name : "all nodes";
 
     if (crmd_channel == NULL) {
@@ -809,8 +815,8 @@ cli_cleanup_all(crm_ipc_t *crmd_channel, const char *node_name,
             rc = clear_rsc_failures(crmd_channel, node->details->uname, NULL,
                                     operation, interval, data_set);
             if (rc != pcmk_ok) {
-                printf("Cleaned all resource failures on all nodes, but unable to clean history on %s: %s\n",
-                       node->details->uname, pcmk_strerror(rc));
+                printf("Cleaned all resource failures on all nodes, but unable to clean history: %s\n",
+                       pcmk_strerror(rc));
                 return rc;
             }
         }
@@ -1483,10 +1489,19 @@ done:
     return rc;
 }
 
-#define action_is_pending(action) \
-    ((is_set((action)->flags, pe_action_optional) == FALSE) \
-    && (is_set((action)->flags, pe_action_runnable) == TRUE) \
-    && (is_set((action)->flags, pe_action_pseudo) == FALSE))
+static inline int action_is_pending(action_t *action) 
+{
+    if(is_set(action->flags, pe_action_optional)) {
+        return FALSE;
+    } else if(is_set(action->flags, pe_action_runnable) == FALSE) {
+        return FALSE;
+    } else if(is_set(action->flags, pe_action_pseudo)) {
+        return FALSE;
+    } else if(safe_str_eq("notify", action->task)) {
+        return FALSE;
+    }
+    return TRUE;
+}
 
 /*!
  * \internal
@@ -1502,7 +1517,9 @@ actions_are_pending(GListPtr actions)
     GListPtr action;
 
     for (action = actions; action != NULL; action = action->next) {
-        if (action_is_pending((action_t *) action->data)) {
+        action_t *a = (action_t *)action->data;
+        if (action_is_pending(a)) {
+            crm_notice("Waiting for %s (flags=0x%.8x)", a->uuid, a->flags);
             return TRUE;
         }
     }

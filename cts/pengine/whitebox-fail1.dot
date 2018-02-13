@@ -26,6 +26,7 @@ digraph "g" {
 "M_stop_0 lxc1" -> "M_start_0 lxc1" [ style = bold]
 "M_stop_0 lxc1" -> "all_stopped" [ style = bold]
 "M_stop_0 lxc1" [ style=bold color="green" fontcolor="orange"]
+"all_stopped" -> "lxc1_start_0 18node2" [ style = bold]
 "all_stopped" [ style=bold color="green" fontcolor="orange"]
 "container1_start_0 18node2" -> "B_start_0 lxc1" [ style = bold]
 "container1_start_0 18node2" -> "M_start_0 lxc1" [ style = bold]
@@ -55,6 +56,5 @@ digraph "g" {
 "stonith_complete" -> "M_start_0 lxc1" [ style = bold]
 "stonith_complete" -> "all_stopped" [ style = bold]
 "stonith_complete" -> "container1_start_0 18node2" [ style = bold]
-"stonith_complete" -> "lxc1_start_0 18node2" [ style = bold]
 "stonith_complete" [ style=bold color="green" fontcolor="orange"]
 }

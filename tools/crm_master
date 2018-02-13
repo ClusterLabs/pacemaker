@@ -47,6 +47,10 @@ fi
 
 eval set -- "$TEMP" # Quotes around $TEMP are essential
 
+# Explicitly set the (usual default) lifetime, so the attribute gets set as a
+# node attribute and not a cluster property.
+options="--lifetime forever"
+
 while true ; do
 	case "$1" in
 		--help) 

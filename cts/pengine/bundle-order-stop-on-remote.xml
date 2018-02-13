@@ -1,0 +1,1165 @@
+<cib crm_feature_set="3.0.12" validate-with="pacemaker-2.8" epoch="121" num_updates="82" admin_epoch="0" cib-last-written="Sun Dec  3 22:42:32 2017" update-origin="controller-0" update-client="crmd" update-user="hacluster" have-quorum="1" dc-uuid="3">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.16-12.el7_4.5-94ff4df"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="tripleo_cluster"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-cluster-recheck-interval" name="cluster-recheck-interval" value="60s"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1512340952"/>
+      </cluster_property_set>
+      <cluster_property_set id="redis_replication">
+        <nvpair id="redis_replication-redis_REPL_INFO" name="redis_REPL_INFO" value="controller-1"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="controller-0">
+        <instance_attributes id="nodes-1">
+          <nvpair id="nodes-1-cinder-volume-role" name="cinder-volume-role" value="true"/>
+          <nvpair id="nodes-1-redis-role" name="redis-role" value="true"/>
+          <nvpair id="nodes-1-haproxy-role" name="haproxy-role" value="true"/>
+        </instance_attributes>
+      </node>
+      <node id="2" uname="controller-1">
+        <instance_attributes id="nodes-2">
+          <nvpair id="nodes-2-cinder-volume-role" name="cinder-volume-role" value="true"/>
+          <nvpair id="nodes-2-redis-role" name="redis-role" value="true"/>
+          <nvpair id="nodes-2-haproxy-role" name="haproxy-role" value="true"/>
+        </instance_attributes>
+      </node>
+      <node id="3" uname="controller-2">
+        <instance_attributes id="nodes-3">
+          <nvpair id="nodes-3-cinder-volume-role" name="cinder-volume-role" value="true"/>
+          <nvpair id="nodes-3-redis-role" name="redis-role" value="true"/>
+          <nvpair id="nodes-3-haproxy-role" name="haproxy-role" value="true"/>
+        </instance_attributes>
+      </node>
+      <node id="messaging-0" type="remote" uname="messaging-0">
+        <instance_attributes id="nodes-messaging-0">
+          <nvpair id="nodes-messaging-0-rabbitmq-role" name="rabbitmq-role" value="true"/>
+          <nvpair id="nodes-messaging-0-rmq-node-attr-last-known-rabbitmq" name="rmq-node-attr-last-known-rabbitmq" value="rabbit@messaging-0"/>
+        </instance_attributes>
+      </node>
+      <node id="database-0" type="remote" uname="database-0">
+        <instance_attributes id="nodes-database-0">
+          <nvpair id="nodes-database-0-galera-role" name="galera-role" value="true"/>
+        </instance_attributes>
+      </node>
+      <node id="messaging-1" type="remote" uname="messaging-1">
+        <instance_attributes id="nodes-messaging-1">
+          <nvpair id="nodes-messaging-1-rabbitmq-role" name="rabbitmq-role" value="true"/>
+          <nvpair id="nodes-messaging-1-rmq-node-attr-last-known-rabbitmq" name="rmq-node-attr-last-known-rabbitmq" value="rabbit@messaging-1"/>
+        </instance_attributes>
+      </node>
+      <node id="messaging-2" type="remote" uname="messaging-2">
+        <instance_attributes id="nodes-messaging-2">
+          <nvpair id="nodes-messaging-2-rabbitmq-role" name="rabbitmq-role" value="true"/>
+          <nvpair id="nodes-messaging-2-rmq-node-attr-last-known-rabbitmq" name="rmq-node-attr-last-known-rabbitmq" value="rabbit@messaging-2"/>
+        </instance_attributes>
+      </node>
+      <node id="database-1" type="remote" uname="database-1">
+        <instance_attributes id="nodes-database-1">
+          <nvpair id="nodes-database-1-galera-role" name="galera-role" value="true"/>
+        </instance_attributes>
+      </node>
+      <node id="database-2" type="remote" uname="database-2">
+        <instance_attributes id="nodes-database-2">
+          <nvpair id="nodes-database-2-galera-role" name="galera-role" value="true"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <primitive class="ocf" id="database-0" provider="pacemaker" type="remote">
+        <instance_attributes id="database-0-instance_attributes">
+          <nvpair id="database-0-instance_attributes-reconnect_interval" name="reconnect_interval" value="60"/>
+        </instance_attributes>
+        <operations>
+          <op id="database-0-monitor-interval-20" interval="20" name="monitor"/>
+          <op id="database-0-start-interval-0s" interval="0s" name="start" timeout="60"/>
+          <op id="database-0-stop-interval-0s" interval="0s" name="stop" timeout="60"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="database-1" provider="pacemaker" type="remote">
+        <instance_attributes id="database-1-instance_attributes">
+          <nvpair id="database-1-instance_attributes-reconnect_interval" name="reconnect_interval" value="60"/>
+        </instance_attributes>
+        <operations>
+          <op id="database-1-monitor-interval-20" interval="20" name="monitor"/>
+          <op id="database-1-start-interval-0s" interval="0s" name="start" timeout="60"/>
+          <op id="database-1-stop-interval-0s" interval="0s" name="stop" timeout="60"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="database-2" provider="pacemaker" type="remote">
+        <instance_attributes id="database-2-instance_attributes">
+          <nvpair id="database-2-instance_attributes-reconnect_interval" name="reconnect_interval" value="60"/>
+        </instance_attributes>
+        <operations>
+          <op id="database-2-monitor-interval-20" interval="20" name="monitor"/>
+          <op id="database-2-start-interval-0s" interval="0s" name="start" timeout="60"/>
+          <op id="database-2-stop-interval-0s" interval="0s" name="stop" timeout="60"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="messaging-0" provider="pacemaker" type="remote">
+        <instance_attributes id="messaging-0-instance_attributes">
+          <nvpair id="messaging-0-instance_attributes-reconnect_interval" name="reconnect_interval" value="60"/>
+        </instance_attributes>
+        <operations>
+          <op id="messaging-0-monitor-interval-20" interval="20" name="monitor"/>
+          <op id="messaging-0-start-interval-0s" interval="0s" name="start" timeout="60"/>
+          <op id="messaging-0-stop-interval-0s" interval="0s" name="stop" timeout="60"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="messaging-1" provider="pacemaker" type="remote">
+        <instance_attributes id="messaging-1-instance_attributes">
+          <nvpair id="messaging-1-instance_attributes-reconnect_interval" name="reconnect_interval" value="60"/>
+        </instance_attributes>
+        <operations>
+          <op id="messaging-1-monitor-interval-20" interval="20" name="monitor"/>
+          <op id="messaging-1-start-interval-0s" interval="0s" name="start" timeout="60"/>
+          <op id="messaging-1-stop-interval-0s" interval="0s" name="stop" timeout="60"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="messaging-2" provider="pacemaker" type="remote">
+        <instance_attributes id="messaging-2-instance_attributes">
+          <nvpair id="messaging-2-instance_attributes-reconnect_interval" name="reconnect_interval" value="60"/>
+        </instance_attributes>
+        <operations>
+          <op id="messaging-2-monitor-interval-20" interval="20" name="monitor"/>
+          <op id="messaging-2-start-interval-0s" interval="0s" name="start" timeout="60"/>
+          <op id="messaging-2-stop-interval-0s" interval="0s" name="stop" timeout="60"/>
+        </operations>
+      </primitive>
+      <bundle id="rabbitmq-bundle">
+        <docker image="192.168.24.1:8787/rhosp12/openstack-rabbitmq-docker:pcmklatest" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="3" run-command="/bin/bash /usr/local/bin/kolla_start"/>
+        <network control-port="3122"/>
+        <storage>
+          <storage-mapping id="rabbitmq-cfg-files" options="ro" source-dir="/var/lib/kolla/config_files/rabbitmq.json" target-dir="/var/lib/kolla/config_files/config.json"/>
+          <storage-mapping id="rabbitmq-cfg-data" options="ro" source-dir="/var/lib/config-data/puppet-generated/rabbitmq/" target-dir="/var/lib/kolla/config_files/src"/>
+          <storage-mapping id="rabbitmq-hosts" options="ro" source-dir="/etc/hosts" target-dir="/etc/hosts"/>
+          <storage-mapping id="rabbitmq-localtime" options="ro" source-dir="/etc/localtime" target-dir="/etc/localtime"/>
+          <storage-mapping id="rabbitmq-lib" options="rw" source-dir="/var/lib/rabbitmq" target-dir="/var/lib/rabbitmq"/>
+          <storage-mapping id="rabbitmq-pki-extracted" options="ro" source-dir="/etc/pki/ca-trust/extracted" target-dir="/etc/pki/ca-trust/extracted"/>
+          <storage-mapping id="rabbitmq-pki-ca-bundle-crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.crt" target-dir="/etc/pki/tls/certs/ca-bundle.crt"/>
+          <storage-mapping id="rabbitmq-pki-ca-bundle-trust-crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.trust.crt" target-dir="/etc/pki/tls/certs/ca-bundle.trust.crt"/>
+          <storage-mapping id="rabbitmq-pki-cert" options="ro" source-dir="/etc/pki/tls/cert.pem" target-dir="/etc/pki/tls/cert.pem"/>
+          <storage-mapping id="rabbitmq-dev-log" options="rw" source-dir="/dev/log" target-dir="/dev/log"/>
+        </storage>
+        <primitive class="ocf" id="rabbitmq" provider="heartbeat" type="rabbitmq-cluster">
+          <instance_attributes id="rabbitmq-instance_attributes">
+            <nvpair id="rabbitmq-instance_attributes-set_policy" name="set_policy" value="ha-all ^(?!amq\.).* {&quot;ha-mode&quot;:&quot;all&quot;}"/>
+          </instance_attributes>
+          <meta_attributes id="rabbitmq-meta_attributes">
+            <nvpair id="rabbitmq-meta_attributes-container-attribute-target" name="container-attribute-target" value="host"/>
+            <nvpair id="rabbitmq-meta_attributes-notify" name="notify" value="true"/>
+          </meta_attributes>
+          <operations>
+            <op id="rabbitmq-monitor-interval-10" interval="10" name="monitor" timeout="40"/>
+            <op id="rabbitmq-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="rabbitmq-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+          </operations>
+        </primitive>
+      </bundle>
+      <bundle id="galera-bundle">
+        <docker image="192.168.24.1:8787/rhosp12/openstack-mariadb-docker:pcmklatest" masters="3" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="3" run-command="/bin/bash /usr/local/bin/kolla_start"/>
+        <network control-port="3123"/>
+        <storage>
+          <storage-mapping id="mysql-cfg-files" options="ro" source-dir="/var/lib/kolla/config_files/mysql.json" target-dir="/var/lib/kolla/config_files/config.json"/>
+          <storage-mapping id="mysql-cfg-data" options="ro" source-dir="/var/lib/config-data/puppet-generated/mysql/" target-dir="/var/lib/kolla/config_files/src"/>
+          <storage-mapping id="mysql-hosts" options="ro" source-dir="/etc/hosts" target-dir="/etc/hosts"/>
+          <storage-mapping id="mysql-localtime" options="ro" source-dir="/etc/localtime" target-dir="/etc/localtime"/>
+          <storage-mapping id="mysql-lib" options="rw" source-dir="/var/lib/mysql" target-dir="/var/lib/mysql"/>
+          <storage-mapping id="mysql-log-mariadb" options="rw" source-dir="/var/log/mariadb" target-dir="/var/log/mariadb"/>
+          <storage-mapping id="mysql-dev-log" options="rw" source-dir="/dev/log" target-dir="/dev/log"/>
+        </storage>
+        <primitive class="ocf" id="galera" provider="heartbeat" type="galera">
+          <instance_attributes id="galera-instance_attributes">
+            <nvpair id="galera-instance_attributes-additional_parameters" name="additional_parameters" value="--open-files-limit=16384"/>
+            <nvpair id="galera-instance_attributes-cluster_host_map" name="cluster_host_map" value="database-0:database-0.internalapi.localdomain;database-1:database-1.internalapi.localdomain;database-2:database-2.internalapi.localdomain"/>
+            <nvpair id="galera-instance_attributes-enable_creation" name="enable_creation" value="true"/>
+            <nvpair id="galera-instance_attributes-wsrep_cluster_address" name="wsrep_cluster_address" value="gcomm://database-0.internalapi.localdomain,database-1.internalapi.localdomain,database-2.internalapi.localdomain"/>
+          </instance_attributes>
+          <meta_attributes id="galera-meta_attributes">
+            <nvpair id="galera-meta_attributes-container-attribute-target" name="container-attribute-target" value="host"/>
+            <nvpair id="galera-meta_attributes-master-max" name="master-max" value="3"/>
+            <nvpair id="galera-meta_attributes-ordered" name="ordered" value="true"/>
+          </meta_attributes>
+          <operations>
+            <op id="galera-demote-interval-0s" interval="0s" name="demote" timeout="120"/>
+            <op id="galera-monitor-interval-20" interval="20" name="monitor" timeout="30"/>
+            <op id="galera-monitor-interval-10" interval="10" name="monitor" role="Master" timeout="30"/>
+            <op id="galera-monitor-interval-30" interval="30" name="monitor" role="Slave" timeout="30"/>
+            <op id="galera-promote-interval-0s" interval="0s" name="promote" on-fail="block" timeout="300s"/>
+            <op id="galera-start-interval-0s" interval="0s" name="start" timeout="120"/>
+            <op id="galera-stop-interval-0s" interval="0s" name="stop" timeout="120"/>
+          </operations>
+        </primitive>
+      </bundle>
+      <bundle id="redis-bundle">
+        <docker image="192.168.24.1:8787/rhosp12/openstack-redis-docker:pcmklatest" masters="1" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="3" run-command="/bin/bash /usr/local/bin/kolla_start"/>
+        <network control-port="3124"/>
+        <storage>
+          <storage-mapping id="redis-cfg-files" options="ro" source-dir="/var/lib/kolla/config_files/redis.json" target-dir="/var/lib/kolla/config_files/config.json"/>
+          <storage-mapping id="redis-cfg-data-redis" options="ro" source-dir="/var/lib/config-data/puppet-generated/redis/" target-dir="/var/lib/kolla/config_files/src"/>
+          <storage-mapping id="redis-hosts" options="ro" source-dir="/etc/hosts" target-dir="/etc/hosts"/>
+          <storage-mapping id="redis-localtime" options="ro" source-dir="/etc/localtime" target-dir="/etc/localtime"/>
+          <storage-mapping id="redis-lib" options="rw" source-dir="/var/lib/redis" target-dir="/var/lib/redis"/>
+          <storage-mapping id="redis-log" options="rw" source-dir="/var/log/redis" target-dir="/var/log/redis"/>
+          <storage-mapping id="redis-run" options="rw" source-dir="/var/run/redis" target-dir="/var/run/redis"/>
+          <storage-mapping id="redis-pki-extracted" options="ro" source-dir="/etc/pki/ca-trust/extracted" target-dir="/etc/pki/ca-trust/extracted"/>
+          <storage-mapping id="redis-pki-ca-bundle-crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.crt" target-dir="/etc/pki/tls/certs/ca-bundle.crt"/>
+          <storage-mapping id="redis-pki-ca-bundle-trust-crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.trust.crt" target-dir="/etc/pki/tls/certs/ca-bundle.trust.crt"/>
+          <storage-mapping id="redis-pki-cert" options="ro" source-dir="/etc/pki/tls/cert.pem" target-dir="/etc/pki/tls/cert.pem"/>
+          <storage-mapping id="redis-dev-log" options="rw" source-dir="/dev/log" target-dir="/dev/log"/>
+        </storage>
+        <primitive class="ocf" id="redis" provider="heartbeat" type="redis">
+          <instance_attributes id="redis-instance_attributes">
+            <nvpair id="redis-instance_attributes-wait_last_known_master" name="wait_last_known_master" value="true"/>
+          </instance_attributes>
+          <meta_attributes id="redis-meta_attributes">
+            <nvpair id="redis-meta_attributes-container-attribute-target" name="container-attribute-target" value="host"/>
+            <nvpair id="redis-meta_attributes-interleave" name="interleave" value="true"/>
+            <nvpair id="redis-meta_attributes-notify" name="notify" value="true"/>
+            <nvpair id="redis-meta_attributes-ordered" name="ordered" value="true"/>
+          </meta_attributes>
+          <operations>
+            <op id="redis-demote-interval-0s" interval="0s" name="demote" timeout="120"/>
+            <op id="redis-monitor-interval-45" interval="45" name="monitor" timeout="60"/>
+            <op id="redis-monitor-interval-20" interval="20" name="monitor" role="Master" timeout="60"/>
+            <op id="redis-monitor-interval-60" interval="60" name="monitor" role="Slave" timeout="60"/>
+            <op id="redis-promote-interval-0s" interval="0s" name="promote" timeout="120"/>
+            <op id="redis-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="redis-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+          </operations>
+        </primitive>
+      </bundle>
+      <primitive class="ocf" id="ip-192.168.24.11" provider="heartbeat" type="IPaddr2">
+        <instance_attributes id="ip-192.168.24.11-instance_attributes">
+          <nvpair id="ip-192.168.24.11-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
+          <nvpair id="ip-192.168.24.11-instance_attributes-ip" name="ip" value="192.168.24.11"/>
+        </instance_attributes>
+        <operations>
+          <op id="ip-192.168.24.11-monitor-interval-10s" interval="10s" name="monitor" timeout="20s"/>
+          <op id="ip-192.168.24.11-start-interval-0s" interval="0s" name="start" timeout="20s"/>
+          <op id="ip-192.168.24.11-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="ip-10.0.0.104" provider="heartbeat" type="IPaddr2">
+        <instance_attributes id="ip-10.0.0.104-instance_attributes">
+          <nvpair id="ip-10.0.0.104-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
+          <nvpair id="ip-10.0.0.104-instance_attributes-ip" name="ip" value="10.0.0.104"/>
+        </instance_attributes>
+        <operations>
+          <op id="ip-10.0.0.104-monitor-interval-10s" interval="10s" name="monitor" timeout="20s"/>
+          <op id="ip-10.0.0.104-start-interval-0s" interval="0s" name="start" timeout="20s"/>
+          <op id="ip-10.0.0.104-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="ip-172.17.1.19" provider="heartbeat" type="IPaddr2">
+        <instance_attributes id="ip-172.17.1.19-instance_attributes">
+          <nvpair id="ip-172.17.1.19-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
+          <nvpair id="ip-172.17.1.19-instance_attributes-ip" name="ip" value="172.17.1.19"/>
+        </instance_attributes>
+        <operations>
+          <op id="ip-172.17.1.19-monitor-interval-10s" interval="10s" name="monitor" timeout="20s"/>
+          <op id="ip-172.17.1.19-start-interval-0s" interval="0s" name="start" timeout="20s"/>
+          <op id="ip-172.17.1.19-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="ip-172.17.1.11" provider="heartbeat" type="IPaddr2">
+        <instance_attributes id="ip-172.17.1.11-instance_attributes">
+          <nvpair id="ip-172.17.1.11-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
+          <nvpair id="ip-172.17.1.11-instance_attributes-ip" name="ip" value="172.17.1.11"/>
+        </instance_attributes>
+        <operations>
+          <op id="ip-172.17.1.11-monitor-interval-10s" interval="10s" name="monitor" timeout="20s"/>
+          <op id="ip-172.17.1.11-start-interval-0s" interval="0s" name="start" timeout="20s"/>
+          <op id="ip-172.17.1.11-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="ip-172.17.3.13" provider="heartbeat" type="IPaddr2">
+        <instance_attributes id="ip-172.17.3.13-instance_attributes">
+          <nvpair id="ip-172.17.3.13-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
+          <nvpair id="ip-172.17.3.13-instance_attributes-ip" name="ip" value="172.17.3.13"/>
+        </instance_attributes>
+        <operations>
+          <op id="ip-172.17.3.13-monitor-interval-10s" interval="10s" name="monitor" timeout="20s"/>
+          <op id="ip-172.17.3.13-start-interval-0s" interval="0s" name="start" timeout="20s"/>
+          <op id="ip-172.17.3.13-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="ip-172.17.4.19" provider="heartbeat" type="IPaddr2">
+        <instance_attributes id="ip-172.17.4.19-instance_attributes">
+          <nvpair id="ip-172.17.4.19-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
+          <nvpair id="ip-172.17.4.19-instance_attributes-ip" name="ip" value="172.17.4.19"/>
+        </instance_attributes>
+        <operations>
+          <op id="ip-172.17.4.19-monitor-interval-10s" interval="10s" name="monitor" timeout="20s"/>
+          <op id="ip-172.17.4.19-start-interval-0s" interval="0s" name="start" timeout="20s"/>
+          <op id="ip-172.17.4.19-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
+        </operations>
+      </primitive>
+      <bundle id="haproxy-bundle">
+        <docker image="192.168.24.1:8787/rhosp12/openstack-haproxy-docker:pcmklatest" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="3" run-command="/bin/bash /usr/local/bin/kolla_start"/>
+        <storage>
+          <storage-mapping id="haproxy-cfg-files" options="ro" source-dir="/var/lib/kolla/config_files/haproxy.json" target-dir="/var/lib/kolla/config_files/config.json"/>
+          <storage-mapping id="haproxy-cfg-data" options="ro" source-dir="/var/lib/config-data/puppet-generated/haproxy/" target-dir="/var/lib/kolla/config_files/src"/>
+          <storage-mapping id="haproxy-hosts" options="ro" source-dir="/etc/hosts" target-dir="/etc/hosts"/>
+          <storage-mapping id="haproxy-localtime" options="ro" source-dir="/etc/localtime" target-dir="/etc/localtime"/>
+          <storage-mapping id="haproxy-pki-extracted" options="ro" source-dir="/etc/pki/ca-trust/extracted" target-dir="/etc/pki/ca-trust/extracted"/>
+          <storage-mapping id="haproxy-pki-ca-bundle-crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.crt" target-dir="/etc/pki/tls/certs/ca-bundle.crt"/>
+          <storage-mapping id="haproxy-pki-ca-bundle-trust-crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.trust.crt" target-dir="/etc/pki/tls/certs/ca-bundle.trust.crt"/>
+          <storage-mapping id="haproxy-pki-cert" options="ro" source-dir="/etc/pki/tls/cert.pem" target-dir="/etc/pki/tls/cert.pem"/>
+          <storage-mapping id="haproxy-dev-log" options="rw" source-dir="/dev/log" target-dir="/dev/log"/>
+        </storage>
+      </bundle>
+      <primitive class="systemd" id="openstack-cinder-volume" type="openstack-cinder-volume">
+        <operations>
+          <op id="openstack-cinder-volume-monitor-interval-60" interval="60" name="monitor" timeout="100"/>
+          <op id="openstack-cinder-volume-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+          <op id="openstack-cinder-volume-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+        </operations>
+      </primitive>
+      <primitive class="stonith" id="stonith-fence_ipmilan-525400244e09" type="fence_ipmilan">
+        <instance_attributes id="stonith-fence_ipmilan-525400244e09-instance_attributes">
+          <nvpair id="stonith-fence_ipmilan-525400244e09-instance_attributes-ipaddr" name="ipaddr" value="172.16.0.8"/>
+          <nvpair id="stonith-fence_ipmilan-525400244e09-instance_attributes-ipport" name="ipport" value="6230"/>
+          <nvpair id="stonith-fence_ipmilan-525400244e09-instance_attributes-lanplus" name="lanplus" value="true"/>
+          <nvpair id="stonith-fence_ipmilan-525400244e09-instance_attributes-login" name="login" value="admin"/>
+          <nvpair id="stonith-fence_ipmilan-525400244e09-instance_attributes-passwd" name="passwd" value="password"/>
+          <nvpair id="stonith-fence_ipmilan-525400244e09-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="messaging-1"/>
+          <nvpair id="stonith-fence_ipmilan-525400244e09-instance_attributes-privlvl" name="privlvl" value="administrator"/>
+        </instance_attributes>
+        <operations>
+          <op id="stonith-fence_ipmilan-525400244e09-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+      <primitive class="stonith" id="stonith-fence_ipmilan-525400cdec10" type="fence_ipmilan">
+        <instance_attributes id="stonith-fence_ipmilan-525400cdec10-instance_attributes">
+          <nvpair id="stonith-fence_ipmilan-525400cdec10-instance_attributes-ipaddr" name="ipaddr" value="172.16.0.8"/>
+          <nvpair id="stonith-fence_ipmilan-525400cdec10-instance_attributes-ipport" name="ipport" value="6239"/>
+          <nvpair id="stonith-fence_ipmilan-525400cdec10-instance_attributes-lanplus" name="lanplus" value="true"/>
+          <nvpair id="stonith-fence_ipmilan-525400cdec10-instance_attributes-login" name="login" value="admin"/>
+          <nvpair id="stonith-fence_ipmilan-525400cdec10-instance_attributes-passwd" name="passwd" value="password"/>
+          <nvpair id="stonith-fence_ipmilan-525400cdec10-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="messaging-2"/>
+          <nvpair id="stonith-fence_ipmilan-525400cdec10-instance_attributes-privlvl" name="privlvl" value="administrator"/>
+        </instance_attributes>
+        <operations>
+          <op id="stonith-fence_ipmilan-525400cdec10-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+      <primitive class="stonith" id="stonith-fence_ipmilan-525400c709f7" type="fence_ipmilan">
+        <instance_attributes id="stonith-fence_ipmilan-525400c709f7-instance_attributes">
+          <nvpair id="stonith-fence_ipmilan-525400c709f7-instance_attributes-ipaddr" name="ipaddr" value="172.16.0.8"/>
+          <nvpair id="stonith-fence_ipmilan-525400c709f7-instance_attributes-ipport" name="ipport" value="6240"/>
+          <nvpair id="stonith-fence_ipmilan-525400c709f7-instance_attributes-lanplus" name="lanplus" value="true"/>
+          <nvpair id="stonith-fence_ipmilan-525400c709f7-instance_attributes-login" name="login" value="admin"/>
+          <nvpair id="stonith-fence_ipmilan-525400c709f7-instance_attributes-passwd" name="passwd" value="password"/>
+          <nvpair id="stonith-fence_ipmilan-525400c709f7-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="messaging-0"/>
+          <nvpair id="stonith-fence_ipmilan-525400c709f7-instance_attributes-privlvl" name="privlvl" value="administrator"/>
+        </instance_attributes>
+        <operations>
+          <op id="stonith-fence_ipmilan-525400c709f7-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+      <primitive class="stonith" id="stonith-fence_ipmilan-525400a7f9e0" type="fence_ipmilan">
+        <instance_attributes id="stonith-fence_ipmilan-525400a7f9e0-instance_attributes">
+          <nvpair id="stonith-fence_ipmilan-525400a7f9e0-instance_attributes-ipaddr" name="ipaddr" value="172.16.0.8"/>
+          <nvpair id="stonith-fence_ipmilan-525400a7f9e0-instance_attributes-ipport" name="ipport" value="6233"/>
+          <nvpair id="stonith-fence_ipmilan-525400a7f9e0-instance_attributes-lanplus" name="lanplus" value="true"/>
+          <nvpair id="stonith-fence_ipmilan-525400a7f9e0-instance_attributes-login" name="login" value="admin"/>
+          <nvpair id="stonith-fence_ipmilan-525400a7f9e0-instance_attributes-passwd" name="passwd" value="password"/>
+          <nvpair id="stonith-fence_ipmilan-525400a7f9e0-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="database-1"/>
+          <nvpair id="stonith-fence_ipmilan-525400a7f9e0-instance_attributes-privlvl" name="privlvl" value="administrator"/>
+        </instance_attributes>
+        <operations>
+          <op id="stonith-fence_ipmilan-525400a7f9e0-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+      <primitive class="stonith" id="stonith-fence_ipmilan-525400a25787" type="fence_ipmilan">
+        <instance_attributes id="stonith-fence_ipmilan-525400a25787-instance_attributes">
+          <nvpair id="stonith-fence_ipmilan-525400a25787-instance_attributes-ipaddr" name="ipaddr" value="172.16.0.8"/>
+          <nvpair id="stonith-fence_ipmilan-525400a25787-instance_attributes-ipport" name="ipport" value="6234"/>
+          <nvpair id="stonith-fence_ipmilan-525400a25787-instance_attributes-lanplus" name="lanplus" value="true"/>
+          <nvpair id="stonith-fence_ipmilan-525400a25787-instance_attributes-login" name="login" value="admin"/>
+          <nvpair id="stonith-fence_ipmilan-525400a25787-instance_attributes-passwd" name="passwd" value="password"/>
+          <nvpair id="stonith-fence_ipmilan-525400a25787-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="database-2"/>
+          <nvpair id="stonith-fence_ipmilan-525400a25787-instance_attributes-privlvl" name="privlvl" value="administrator"/>
+        </instance_attributes>
+        <operations>
+          <op id="stonith-fence_ipmilan-525400a25787-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+      <primitive class="stonith" id="stonith-fence_ipmilan-5254005ea387" type="fence_ipmilan">
+        <instance_attributes id="stonith-fence_ipmilan-5254005ea387-instance_attributes">
+          <nvpair id="stonith-fence_ipmilan-5254005ea387-instance_attributes-ipaddr" name="ipaddr" value="172.16.0.8"/>
+          <nvpair id="stonith-fence_ipmilan-5254005ea387-instance_attributes-ipport" name="ipport" value="6235"/>
+          <nvpair id="stonith-fence_ipmilan-5254005ea387-instance_attributes-lanplus" name="lanplus" value="true"/>
+          <nvpair id="stonith-fence_ipmilan-5254005ea387-instance_attributes-login" name="login" value="admin"/>
+          <nvpair id="stonith-fence_ipmilan-5254005ea387-instance_attributes-passwd" name="passwd" value="password"/>
+          <nvpair id="stonith-fence_ipmilan-5254005ea387-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="database-0"/>
+          <nvpair id="stonith-fence_ipmilan-5254005ea387-instance_attributes-privlvl" name="privlvl" value="administrator"/>
+        </instance_attributes>
+        <operations>
+          <op id="stonith-fence_ipmilan-5254005ea387-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+      <primitive class="stonith" id="stonith-fence_ipmilan-525400542c06" type="fence_ipmilan">
+        <instance_attributes id="stonith-fence_ipmilan-525400542c06-instance_attributes">
+          <nvpair id="stonith-fence_ipmilan-525400542c06-instance_attributes-ipaddr" name="ipaddr" value="172.16.0.8"/>
+          <nvpair id="stonith-fence_ipmilan-525400542c06-instance_attributes-ipport" name="ipport" value="6236"/>
+          <nvpair id="stonith-fence_ipmilan-525400542c06-instance_attributes-lanplus" name="lanplus" value="true"/>
+          <nvpair id="stonith-fence_ipmilan-525400542c06-instance_attributes-login" name="login" value="admin"/>
+          <nvpair id="stonith-fence_ipmilan-525400542c06-instance_attributes-passwd" name="passwd" value="password"/>
+          <nvpair id="stonith-fence_ipmilan-525400542c06-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="controller-2"/>
+          <nvpair id="stonith-fence_ipmilan-525400542c06-instance_attributes-privlvl" name="privlvl" value="administrator"/>
+        </instance_attributes>
+        <operations>
+          <op id="stonith-fence_ipmilan-525400542c06-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+      <primitive class="stonith" id="stonith-fence_ipmilan-525400aac413" type="fence_ipmilan">
+        <instance_attributes id="stonith-fence_ipmilan-525400aac413-instance_attributes">
+          <nvpair id="stonith-fence_ipmilan-525400aac413-instance_attributes-ipaddr" name="ipaddr" value="172.16.0.8"/>
+          <nvpair id="stonith-fence_ipmilan-525400aac413-instance_attributes-ipport" name="ipport" value="6232"/>
+          <nvpair id="stonith-fence_ipmilan-525400aac413-instance_attributes-lanplus" name="lanplus" value="true"/>
+          <nvpair id="stonith-fence_ipmilan-525400aac413-instance_attributes-login" name="login" value="admin"/>
+          <nvpair id="stonith-fence_ipmilan-525400aac413-instance_attributes-passwd" name="passwd" value="password"/>
+          <nvpair id="stonith-fence_ipmilan-525400aac413-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="controller-1"/>
+          <nvpair id="stonith-fence_ipmilan-525400aac413-instance_attributes-privlvl" name="privlvl" value="administrator"/>
+        </instance_attributes>
+        <operations>
+          <op id="stonith-fence_ipmilan-525400aac413-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+      <primitive class="stonith" id="stonith-fence_ipmilan-525400498d34" type="fence_ipmilan">
+        <instance_attributes id="stonith-fence_ipmilan-525400498d34-instance_attributes">
+          <nvpair id="stonith-fence_ipmilan-525400498d34-instance_attributes-ipaddr" name="ipaddr" value="172.16.0.8"/>
+          <nvpair id="stonith-fence_ipmilan-525400498d34-instance_attributes-ipport" name="ipport" value="6231"/>
+          <nvpair id="stonith-fence_ipmilan-525400498d34-instance_attributes-lanplus" name="lanplus" value="true"/>
+          <nvpair id="stonith-fence_ipmilan-525400498d34-instance_attributes-login" name="login" value="admin"/>
+          <nvpair id="stonith-fence_ipmilan-525400498d34-instance_attributes-passwd" name="passwd" value="password"/>
+          <nvpair id="stonith-fence_ipmilan-525400498d34-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="controller-0"/>
+          <nvpair id="stonith-fence_ipmilan-525400498d34-instance_attributes-privlvl" name="privlvl" value="administrator"/>
+        </instance_attributes>
+        <operations>
+          <op id="stonith-fence_ipmilan-525400498d34-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+    </resources>
+    <constraints>
+      <rsc_location id="location-rabbitmq-bundle" resource-discovery="exclusive" rsc="rabbitmq-bundle">
+        <rule id="location-rabbitmq-bundle-rule" score="0">
+          <expression attribute="rabbitmq-role" id="location-rabbitmq-bundle-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-galera-bundle" resource-discovery="exclusive" rsc="galera-bundle">
+        <rule id="location-galera-bundle-rule" score="0">
+          <expression attribute="galera-role" id="location-galera-bundle-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-redis-bundle" resource-discovery="exclusive" rsc="redis-bundle">
+        <rule id="location-redis-bundle-rule" score="0">
+          <expression attribute="redis-role" id="location-redis-bundle-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-ip-192.168.24.11" resource-discovery="exclusive" rsc="ip-192.168.24.11">
+        <rule id="location-ip-192.168.24.11-rule" score="0">
+          <expression attribute="haproxy-role" id="location-ip-192.168.24.11-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-ip-10.0.0.104" resource-discovery="exclusive" rsc="ip-10.0.0.104">
+        <rule id="location-ip-10.0.0.104-rule" score="0">
+          <expression attribute="haproxy-role" id="location-ip-10.0.0.104-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-ip-172.17.1.19" resource-discovery="exclusive" rsc="ip-172.17.1.19">
+        <rule id="location-ip-172.17.1.19-rule" score="0">
+          <expression attribute="haproxy-role" id="location-ip-172.17.1.19-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-ip-172.17.1.11" resource-discovery="exclusive" rsc="ip-172.17.1.11">
+        <rule id="location-ip-172.17.1.11-rule" score="0">
+          <expression attribute="haproxy-role" id="location-ip-172.17.1.11-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-ip-172.17.3.13" resource-discovery="exclusive" rsc="ip-172.17.3.13">
+        <rule id="location-ip-172.17.3.13-rule" score="0">
+          <expression attribute="haproxy-role" id="location-ip-172.17.3.13-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-ip-172.17.4.19" resource-discovery="exclusive" rsc="ip-172.17.4.19">
+        <rule id="location-ip-172.17.4.19-rule" score="0">
+          <expression attribute="haproxy-role" id="location-ip-172.17.4.19-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-haproxy-bundle" resource-discovery="exclusive" rsc="haproxy-bundle">
+        <rule id="location-haproxy-bundle-rule" score="0">
+          <expression attribute="haproxy-role" id="location-haproxy-bundle-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_order first="ip-192.168.24.11" first-action="start" id="order-ip-192.168.24.11-haproxy-bundle-Optional" kind="Optional" then="haproxy-bundle" then-action="start"/>
+      <rsc_colocation id="colocation-ip-192.168.24.11-haproxy-bundle-INFINITY" rsc="ip-192.168.24.11" score="INFINITY" with-rsc="haproxy-bundle"/>
+      <rsc_order first="ip-10.0.0.104" first-action="start" id="order-ip-10.0.0.104-haproxy-bundle-Optional" kind="Optional" then="haproxy-bundle" then-action="start"/>
+      <rsc_colocation id="colocation-ip-10.0.0.104-haproxy-bundle-INFINITY" rsc="ip-10.0.0.104" score="INFINITY" with-rsc="haproxy-bundle"/>
+      <rsc_order first="ip-172.17.1.19" first-action="start" id="order-ip-172.17.1.19-haproxy-bundle-Optional" kind="Optional" then="haproxy-bundle" then-action="start"/>
+      <rsc_colocation id="colocation-ip-172.17.1.19-haproxy-bundle-INFINITY" rsc="ip-172.17.1.19" score="INFINITY" with-rsc="haproxy-bundle"/>
+      <rsc_order first="ip-172.17.1.11" first-action="start" id="order-ip-172.17.1.11-haproxy-bundle-Optional" kind="Optional" then="haproxy-bundle" then-action="start"/>
+      <rsc_colocation id="colocation-ip-172.17.1.11-haproxy-bundle-INFINITY" rsc="ip-172.17.1.11" score="INFINITY" with-rsc="haproxy-bundle"/>
+      <rsc_order first="ip-172.17.3.13" first-action="start" id="order-ip-172.17.3.13-haproxy-bundle-Optional" kind="Optional" then="haproxy-bundle" then-action="start"/>
+      <rsc_colocation id="colocation-ip-172.17.3.13-haproxy-bundle-INFINITY" rsc="ip-172.17.3.13" score="INFINITY" with-rsc="haproxy-bundle"/>
+      <rsc_order first="ip-172.17.4.19" first-action="start" id="order-ip-172.17.4.19-haproxy-bundle-Optional" kind="Optional" then="haproxy-bundle" then-action="start"/>
+      <rsc_colocation id="colocation-ip-172.17.4.19-haproxy-bundle-INFINITY" rsc="ip-172.17.4.19" score="INFINITY" with-rsc="haproxy-bundle"/>
+      <rsc_location id="location-openstack-cinder-volume" resource-discovery="exclusive" rsc="openstack-cinder-volume">
+        <rule id="location-openstack-cinder-volume-rule" score="0">
+          <expression attribute="cinder-volume-role" id="location-openstack-cinder-volume-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-stonith-fence_ipmilan-525400244e09-messaging-1--INFINITY" node="messaging-1" rsc="stonith-fence_ipmilan-525400244e09" score="-INFINITY"/>
+      <rsc_location id="location-stonith-fence_ipmilan-525400cdec10-messaging-2--INFINITY" node="messaging-2" rsc="stonith-fence_ipmilan-525400cdec10" score="-INFINITY"/>
+      <rsc_location id="location-stonith-fence_ipmilan-5254005ea387-database-0--INFINITY" node="database-0" rsc="stonith-fence_ipmilan-5254005ea387" score="-INFINITY"/>
+      <rsc_location id="location-stonith-fence_ipmilan-525400a7f9e0-database-1--INFINITY" node="database-1" rsc="stonith-fence_ipmilan-525400a7f9e0" score="-INFINITY"/>
+      <rsc_location id="location-stonith-fence_ipmilan-525400a25787-database-2--INFINITY" node="database-2" rsc="stonith-fence_ipmilan-525400a25787" score="-INFINITY"/>
+      <rsc_location id="location-stonith-fence_ipmilan-525400c709f7-messaging-0--INFINITY" node="messaging-0" rsc="stonith-fence_ipmilan-525400c709f7" score="-INFINITY"/>
+      <rsc_location id="location-stonith-fence_ipmilan-525400542c06-controller-2--INFINITY" node="controller-2" rsc="stonith-fence_ipmilan-525400542c06" score="-INFINITY"/>
+      <rsc_location id="location-stonith-fence_ipmilan-525400aac413-controller-1--INFINITY" node="controller-1" rsc="stonith-fence_ipmilan-525400aac413" score="-INFINITY"/>
+      <rsc_location id="location-stonith-fence_ipmilan-525400498d34-controller-0--INFINITY" node="controller-0" rsc="stonith-fence_ipmilan-525400498d34" score="-INFINITY"/>
+    </constraints>
+    <rsc_defaults>
+      <meta_attributes id="rsc_defaults-options">
+        <nvpair id="rsc_defaults-options-resource-stickiness" name="resource-stickiness" value="INFINITY"/>
+      </meta_attributes>
+    </rsc_defaults>
+  </configuration>
+  <status>
+    <node_state id="2" uname="controller-1" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="database-0" type="remote" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="database-0_last_0" operation_key="database-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="36:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;36:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-1" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1512341372" last-rc-change="1512341372" exec-time="0" queue-time="0" op-digest="a48beba1b11f09d6b1c15da8db5bb0a2" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="database-1" type="remote" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="database-1_last_0" operation_key="database-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="37:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;37:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-1" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1512341374" last-rc-change="1512341374" exec-time="0" queue-time="0" op-digest="a48beba1b11f09d6b1c15da8db5bb0a2" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="database-2" type="remote" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="database-2_last_0" operation_key="database-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="38:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;38:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-1" call-id="3" rc-code="7" op-status="0" interval="0" last-run="1512341374" last-rc-change="1512341374" exec-time="0" queue-time="0" op-digest="a48beba1b11f09d6b1c15da8db5bb0a2" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="messaging-0" type="remote" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="messaging-0_last_0" operation_key="messaging-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="39:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;39:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-1" call-id="4" rc-code="7" op-status="0" interval="0" last-run="1512341374" last-rc-change="1512341374" exec-time="0" queue-time="0" op-digest="a48beba1b11f09d6b1c15da8db5bb0a2" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="messaging-1" type="remote" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="messaging-1_last_0" operation_key="messaging-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="40:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;40:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-1" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1512341374" last-rc-change="1512341374" exec-time="0" queue-time="0" op-digest="a48beba1b11f09d6b1c15da8db5bb0a2" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="messaging-2" type="remote" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="messaging-2_last_0" operation_key="messaging-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="41:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;41:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-1" call-id="6" rc-code="7" op-status="0" interval="0" last-run="1512341374" last-rc-change="1512341374" exec-time="0" queue-time="0" op-digest="a48beba1b11f09d6b1c15da8db5bb0a2" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-0" type="remote" class="ocf" provider="pacemaker" container="rabbitmq-bundle-docker-0">
+            <lrm_rsc_op id="rabbitmq-bundle-0_last_0" operation_key="rabbitmq-bundle-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="42:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;42:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-1" call-id="7" rc-code="7" op-status="0" interval="0" last-run="1512341374" last-rc-change="1512341374" exec-time="0" queue-time="0" op-digest="a41ad5f9625676395b163a06987de2d6" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-1" type="remote" class="ocf" provider="pacemaker" container="rabbitmq-bundle-docker-1">
+            <lrm_rsc_op id="rabbitmq-bundle-1_last_0" operation_key="rabbitmq-bundle-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="43:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;43:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-1" call-id="8" rc-code="7" op-status="0" interval="0" last-run="1512341374" last-rc-change="1512341374" exec-time="0" queue-time="0" op-digest="e25f0ff041ed91bee8ee197d0ce2aebd" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-2" type="remote" class="ocf" provider="pacemaker" container="rabbitmq-bundle-docker-2">
+            <lrm_rsc_op id="rabbitmq-bundle-2_last_0" operation_key="rabbitmq-bundle-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="44:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;44:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-1" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1512341374" last-rc-change="1512341374" exec-time="0" queue-time="0" op-digest="593e15353c64e73e2efe61415c7dd44b" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-1" type="remote" class="ocf" provider="pacemaker" container="galera-bundle-docker-1">
+            <lrm_rsc_op id="galera-bundle-1_last_0" operation_key="galera-bundle-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="46:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;46:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-1" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1512341374" last-rc-change="1512341374" exec-time="0" queue-time="0" op-digest="f6e3b46e18b24f6e1cca9639ec9b7c41" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-0" type="remote" class="ocf" provider="pacemaker" container="redis-bundle-docker-0">
+            <lrm_rsc_op id="redis-bundle-0_last_0" operation_key="redis-bundle-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="49:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;49:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-1" call-id="11" rc-code="7" op-status="0" interval="0" last-run="1512341374" last-rc-change="1512341374" exec-time="0" queue-time="0" op-digest="dd323696d6c8ed14cb71914c411664c9" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-2" type="remote" class="ocf" provider="pacemaker" container="redis-bundle-docker-2">
+            <lrm_rsc_op id="redis-bundle-2_last_0" operation_key="redis-bundle-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="53:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;53:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-1" call-id="12" rc-code="7" op-status="0" interval="0" last-run="1512341374" last-rc-change="1512341374" exec-time="0" queue-time="0" op-digest="f325849fbffe2e62970eb201a50da9f3" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-525400244e09" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-525400244e09_last_0" operation_key="stonith-fence_ipmilan-525400244e09_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="64:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;64:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-1" call-id="69" rc-code="7" op-status="0" interval="0" last-run="1512341374" last-rc-change="1512341374" exec-time="118" queue-time="0" op-digest="4d90b1c5011f28a7f26ea6940c3d6047" op-secure-params=" passwd  password " op-secure-digest="121bce21cad5e00c48a5c51be26c7522"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-525400cdec10" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-525400cdec10_last_0" operation_key="stonith-fence_ipmilan-525400cdec10_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="65:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;65:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-1" call-id="73" rc-code="7" op-status="0" interval="0" last-run="1512341374" last-rc-change="1512341374" exec-time="1" queue-time="0" op-digest="1bbfe3c1bf06a468db7656dd7552c4d6" op-secure-params=" passwd  password " op-secure-digest="8d9cf5beca60b2da8b0f7c9a7342a4aa"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-cinder-volume" type="openstack-cinder-volume" class="systemd">
+            <lrm_rsc_op id="openstack-cinder-volume_last_0" operation_key="openstack-cinder-volume_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="63:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;63:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-1" call-id="65" rc-code="7" op-status="0" interval="0" last-run="1512341374" last-rc-change="1512341374" exec-time="155" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis-bundle-docker-0_last_0" operation_key="redis-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="48:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;48:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-1" call-id="15" rc-code="7" op-status="0" interval="0" last-run="1512341374" last-rc-change="1512341374" exec-time="418" queue-time="0" op-digest="b6bd1e4fa13216f010a5f4ba18d081a3"/>
+          </lrm_resource>
+          <lrm_resource id="ip-172.17.1.19" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-172.17.1.19_last_0" operation_key="ip-172.17.1.19_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="56:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;56:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-1" call-id="37" rc-code="7" op-status="0" interval="0" last-run="1512341374" last-rc-change="1512341374" exec-time="408" queue-time="0" op-digest="2c46df7582fe8b55e9dcdeaceb4c84c7"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-docker-2" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis-bundle-docker-2_last_0" operation_key="redis-bundle-docker-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="52:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;52:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-1" call-id="24" rc-code="7" op-status="0" interval="0" last-run="1512341374" last-rc-change="1512341374" exec-time="432" queue-time="0" op-digest="cdf5d52dbfd265e497dd1dfb06f2faf1"/>
+          </lrm_resource>
+          <lrm_resource id="haproxy-bundle-docker-2" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="haproxy-bundle-docker-2_last_0" operation_key="haproxy-bundle-docker-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="62:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;62:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-1" call-id="61" rc-code="7" op-status="0" interval="0" last-run="1512341374" last-rc-change="1512341374" exec-time="417" queue-time="0" op-digest="083d0ea9c147277510859fd504bf65e4"/>
+          </lrm_resource>
+          <lrm_resource id="haproxy-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="haproxy-bundle-docker-0_last_0" operation_key="haproxy-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="60:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;60:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-1" call-id="53" rc-code="7" op-status="0" interval="0" last-run="1512341374" last-rc-change="1512341374" exec-time="443" queue-time="0" op-digest="083d0ea9c147277510859fd504bf65e4"/>
+          </lrm_resource>
+          <lrm_resource id="ip-192.168.24.11" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-192.168.24.11_last_0" operation_key="ip-192.168.24.11_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="54:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;54:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-1" call-id="29" rc-code="7" op-status="0" interval="0" last-run="1512341374" last-rc-change="1512341374" exec-time="481" queue-time="0" op-digest="d16224b1cc961154d457d259d944b5f9"/>
+          </lrm_resource>
+          <lrm_resource id="ip-172.17.3.13" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-172.17.3.13_last_0" operation_key="ip-172.17.3.13_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="58:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;58:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-1" call-id="45" rc-code="7" op-status="0" interval="0" last-run="1512341374" last-rc-change="1512341374" exec-time="486" queue-time="0" op-digest="aabfc88ecfd0ef79b36f8958512b0190"/>
+          </lrm_resource>
+          <lrm_resource id="ip-172.17.1.11" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-172.17.1.11_last_0" operation_key="ip-172.17.1.11_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="57:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;57:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-1" call-id="41" rc-code="7" op-status="0" interval="0" last-run="1512341374" last-rc-change="1512341374" exec-time="491" queue-time="0" op-digest="7c6ed186ff8cdf7693b51ee42b4fc6e1"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-docker-1" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis-bundle-docker-1_last_0" operation_key="redis-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="50:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;50:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-1" call-id="20" rc-code="7" op-status="0" interval="0" last-run="1512341374" last-rc-change="1512341374" exec-time="509" queue-time="1" op-digest="d12a03fcf5794843261e2916fbd6c63b"/>
+          </lrm_resource>
+          <lrm_resource id="ip-10.0.0.104" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-10.0.0.104_last_0" operation_key="ip-10.0.0.104_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="55:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;55:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-1" call-id="33" rc-code="7" op-status="0" interval="0" last-run="1512341374" last-rc-change="1512341374" exec-time="507" queue-time="0" op-digest="f1d53d03e6223a0e53558dbf6f3bcbea"/>
+          </lrm_resource>
+          <lrm_resource id="ip-172.17.4.19" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-172.17.4.19_last_0" operation_key="ip-172.17.4.19_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="59:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;59:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-1" call-id="49" rc-code="7" op-status="0" interval="0" last-run="1512341374" last-rc-change="1512341374" exec-time="528" queue-time="0" op-digest="aa7c6b227cb7ab3004b79cce131be1b3"/>
+          </lrm_resource>
+          <lrm_resource id="haproxy-bundle-docker-1" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="haproxy-bundle-docker-1_last_0" operation_key="haproxy-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="61:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;61:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-1" call-id="57" rc-code="7" op-status="0" interval="0" last-run="1512341374" last-rc-change="1512341374" exec-time="536" queue-time="0" op-digest="083d0ea9c147277510859fd504bf65e4"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-525400c709f7" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-525400c709f7_last_0" operation_key="stonith-fence_ipmilan-525400c709f7_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="66:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;66:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-1" call-id="77" rc-code="7" op-status="0" interval="0" last-run="1512341375" last-rc-change="1512341375" exec-time="0" queue-time="0" op-digest="1a536a915526af43ef48909329afb3b2" op-secure-params=" passwd  password " op-secure-digest="79c818a20ab9bdc97f7834f1e78face1"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-525400a7f9e0" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-525400a7f9e0_last_0" operation_key="stonith-fence_ipmilan-525400a7f9e0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="67:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;67:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-1" call-id="81" rc-code="7" op-status="0" interval="0" last-run="1512341375" last-rc-change="1512341375" exec-time="0" queue-time="0" op-digest="79027109189cf76473206a064a7297db" op-secure-params=" passwd  password " op-secure-digest="324791a6565e672135bd6e0325f2d7ca"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-525400a25787" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-525400a25787_last_0" operation_key="stonith-fence_ipmilan-525400a25787_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="68:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;68:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-1" call-id="85" rc-code="7" op-status="0" interval="0" last-run="1512341375" last-rc-change="1512341375" exec-time="0" queue-time="0" op-digest="3b08cb766486ae213950205853288336" op-secure-params=" passwd  password " op-secure-digest="b0cbf3a6399393106803cb99269abe06"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-5254005ea387" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-5254005ea387_last_0" operation_key="stonith-fence_ipmilan-5254005ea387_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="69:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;69:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-1" call-id="89" rc-code="7" op-status="0" interval="0" last-run="1512341375" last-rc-change="1512341375" exec-time="0" queue-time="0" op-digest="9c0b8d3466b167eec30455c361939f0e" op-secure-params=" passwd  password " op-secure-digest="14900e2150667678c44f24d73286301c"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-525400542c06" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-525400542c06_last_0" operation_key="stonith-fence_ipmilan-525400542c06_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="70:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;70:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-1" call-id="93" rc-code="7" op-status="0" interval="0" last-run="1512341375" last-rc-change="1512341375" exec-time="0" queue-time="0" op-digest="c29ea7ff58baa575edf9b083d96c8d97" op-secure-params=" passwd  password " op-secure-digest="982bf2fb6d049bf379a72647cb6eab0a"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-525400aac413" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-525400aac413_last_0" operation_key="stonith-fence_ipmilan-525400aac413_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="71:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;71:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-1" call-id="97" rc-code="7" op-status="0" interval="0" last-run="1512341375" last-rc-change="1512341375" exec-time="0" queue-time="0" op-digest="b45737bb0d27199c17d938d131074ee5" op-secure-params=" passwd  password " op-secure-digest="b47e5b47ba419433c479357326c16b79"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-525400498d34" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-525400498d34_last_0" operation_key="stonith-fence_ipmilan-525400498d34_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="72:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;72:14:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-1" call-id="101" rc-code="7" op-status="0" interval="0" last-run="1512341375" last-rc-change="1512341375" exec-time="0" queue-time="0" op-digest="91b8661ac13de0e2114690e4149f3bcd" op-secure-params=" passwd  password " op-secure-digest="c9eae91b90ce97ecfdfa17bdee292722"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="2">
+        <instance_attributes id="status-2">
+          <nvpair id="status-2-shutdown" name="shutdown" value="0"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="1" uname="controller-0" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="database-0" type="remote" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="database-0_last_0" operation_key="database-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="50:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;50:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1512340828" last-rc-change="1512340828" exec-time="0" queue-time="0" op-digest="a48beba1b11f09d6b1c15da8db5bb0a2" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="database-1" type="remote" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="database-1_last_0" operation_key="database-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="51:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;51:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1512340828" last-rc-change="1512340828" exec-time="0" queue-time="0" op-digest="a48beba1b11f09d6b1c15da8db5bb0a2" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="database-2" type="remote" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="database-2_last_0" operation_key="database-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="52:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;52:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="3" rc-code="7" op-status="0" interval="0" last-run="1512340828" last-rc-change="1512340828" exec-time="0" queue-time="0" op-digest="a48beba1b11f09d6b1c15da8db5bb0a2" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="messaging-0" type="remote" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="messaging-0_last_0" operation_key="messaging-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="53:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;53:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="4" rc-code="7" op-status="0" interval="0" last-run="1512340828" last-rc-change="1512340828" exec-time="0" queue-time="0" op-digest="a48beba1b11f09d6b1c15da8db5bb0a2" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="messaging-1" type="remote" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="messaging-1_last_0" operation_key="messaging-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="54:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;54:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1512340828" last-rc-change="1512340828" exec-time="0" queue-time="0" op-digest="a48beba1b11f09d6b1c15da8db5bb0a2" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="messaging-2" type="remote" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="messaging-2_last_0" operation_key="messaging-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="55:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;55:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="6" rc-code="7" op-status="0" interval="0" last-run="1512340828" last-rc-change="1512340828" exec-time="0" queue-time="0" op-digest="a48beba1b11f09d6b1c15da8db5bb0a2" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-0" type="remote" class="ocf" provider="pacemaker" container="rabbitmq-bundle-docker-0">
+            <lrm_rsc_op id="rabbitmq-bundle-0_last_0" operation_key="rabbitmq-bundle-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="56:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;56:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="7" rc-code="7" op-status="0" interval="0" last-run="1512340828" last-rc-change="1512340828" exec-time="0" queue-time="0" op-digest="a41ad5f9625676395b163a06987de2d6" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-1" type="remote" class="ocf" provider="pacemaker" container="rabbitmq-bundle-docker-1">
+            <lrm_rsc_op id="rabbitmq-bundle-1_last_0" operation_key="rabbitmq-bundle-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="57:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;57:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="8" rc-code="7" op-status="0" interval="0" last-run="1512340828" last-rc-change="1512340828" exec-time="0" queue-time="0" op-digest="e25f0ff041ed91bee8ee197d0ce2aebd" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-2" type="remote" class="ocf" provider="pacemaker" container="rabbitmq-bundle-docker-2">
+            <lrm_rsc_op id="rabbitmq-bundle-2_last_0" operation_key="rabbitmq-bundle-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="58:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;58:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1512340828" last-rc-change="1512340828" exec-time="0" queue-time="0" op-digest="593e15353c64e73e2efe61415c7dd44b" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-0" type="remote" class="ocf" provider="pacemaker" container="galera-bundle-docker-0">
+            <lrm_rsc_op id="galera-bundle-0_last_0" operation_key="galera-bundle-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="59:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;59:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1512340828" last-rc-change="1512340828" exec-time="0" queue-time="0" op-digest="dbc6b52d45a75a0b041af92265b22f9e" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-1" type="remote" class="ocf" provider="pacemaker" container="galera-bundle-docker-1">
+            <lrm_rsc_op id="galera-bundle-1_last_0" operation_key="galera-bundle-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="60:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;60:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="11" rc-code="7" op-status="0" interval="0" last-run="1512340828" last-rc-change="1512340828" exec-time="0" queue-time="0" op-digest="f6e3b46e18b24f6e1cca9639ec9b7c41" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-2" type="remote" class="ocf" provider="pacemaker" container="galera-bundle-docker-2">
+            <lrm_rsc_op id="galera-bundle-2_last_0" operation_key="galera-bundle-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="61:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;61:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="12" rc-code="7" op-status="0" interval="0" last-run="1512340828" last-rc-change="1512340828" exec-time="0" queue-time="0" op-digest="bf7cf9acd053cee24dc3401862009e40" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-1" type="remote" class="ocf" provider="pacemaker" container="redis-bundle-docker-1">
+            <lrm_rsc_op id="redis-bundle-1_last_0" operation_key="redis-bundle-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="65:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;65:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="13" rc-code="7" op-status="0" interval="0" last-run="1512340828" last-rc-change="1512340828" exec-time="0" queue-time="0" op-digest="cd98602d6f977947327050913302f861" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-2" type="remote" class="ocf" provider="pacemaker" container="redis-bundle-docker-2">
+            <lrm_rsc_op id="redis-bundle-2_last_0" operation_key="redis-bundle-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="67:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;67:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="14" rc-code="7" op-status="0" interval="0" last-run="1512340828" last-rc-change="1512340828" exec-time="0" queue-time="0" op-digest="f325849fbffe2e62970eb201a50da9f3" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-docker-2" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis-bundle-docker-2_last_0" operation_key="redis-bundle-docker-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="66:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;66:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="26" rc-code="7" op-status="0" interval="0" last-run="1512340828" last-rc-change="1512340828" exec-time="39" queue-time="0" op-digest="cdf5d52dbfd265e497dd1dfb06f2faf1"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-docker-1" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis-bundle-docker-1_last_0" operation_key="redis-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="64:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;64:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="21" rc-code="7" op-status="0" interval="0" last-run="1512340828" last-rc-change="1512340828" exec-time="42" queue-time="0" op-digest="d12a03fcf5794843261e2916fbd6c63b"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis-bundle-docker-0_last_0" operation_key="redis-bundle-docker-0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="173:1:0:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:0;173:1:0:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="48" rc-code="0" op-status="0" interval="0" last-run="1512340828" last-rc-change="1512340828" exec-time="422" queue-time="0" op-digest="b6bd1e4fa13216f010a5f4ba18d081a3"/>
+            <lrm_rsc_op id="redis-bundle-docker-0_monitor_60000" operation_key="redis-bundle-docker-0_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="174:1:0:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:0;174:1:0:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="98" rc-code="0" op-status="0" interval="60000" last-rc-change="1512340829" exec-time="93" queue-time="0" op-digest="20a4fe5eb550f2b6c20875a81803817e"/>
+          </lrm_resource>
+          <lrm_resource id="ip-172.17.1.19" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-172.17.1.19_last_0" operation_key="ip-172.17.1.19_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="70:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;70:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="39" rc-code="7" op-status="0" interval="0" last-run="1512340828" last-rc-change="1512340828" exec-time="47" queue-time="0" op-digest="2c46df7582fe8b55e9dcdeaceb4c84c7"/>
+          </lrm_resource>
+          <lrm_resource id="ip-172.17.1.11" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-172.17.1.11_last_0" operation_key="ip-172.17.1.11_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="71:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;71:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="43" rc-code="7" op-status="0" interval="0" last-run="1512340828" last-rc-change="1512340828" exec-time="48" queue-time="0" op-digest="7c6ed186ff8cdf7693b51ee42b4fc6e1"/>
+          </lrm_resource>
+          <lrm_resource id="ip-192.168.24.11" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-192.168.24.11_last_0" operation_key="ip-192.168.24.11_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="68:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;68:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="31" rc-code="7" op-status="0" interval="0" last-run="1512340828" last-rc-change="1512340828" exec-time="56" queue-time="0" op-digest="d16224b1cc961154d457d259d944b5f9"/>
+          </lrm_resource>
+          <lrm_resource id="ip-10.0.0.104" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-10.0.0.104_last_0" operation_key="ip-10.0.0.104_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="69:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;69:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="35" rc-code="7" op-status="0" interval="0" last-run="1512340828" last-rc-change="1512340828" exec-time="58" queue-time="0" op-digest="f1d53d03e6223a0e53558dbf6f3bcbea"/>
+          </lrm_resource>
+          <lrm_resource id="ip-172.17.3.13" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-172.17.3.13_last_0" operation_key="ip-172.17.3.13_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="72:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;72:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="47" rc-code="7" op-status="0" interval="0" last-run="1512340828" last-rc-change="1512340828" exec-time="56" queue-time="0" op-digest="aabfc88ecfd0ef79b36f8958512b0190"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-525400244e09" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-525400244e09_last_0" operation_key="stonith-fence_ipmilan-525400244e09_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="78:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;78:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="72" rc-code="7" op-status="0" interval="0" last-run="1512340828" last-rc-change="1512340828" exec-time="25" queue-time="0" op-digest="4d90b1c5011f28a7f26ea6940c3d6047" op-secure-params=" passwd  password " op-secure-digest="121bce21cad5e00c48a5c51be26c7522"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-cinder-volume" type="openstack-cinder-volume" class="systemd">
+            <lrm_rsc_op id="openstack-cinder-volume_last_0" operation_key="openstack-cinder-volume_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="77:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;77:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="68" rc-code="7" op-status="0" interval="0" last-run="1512340828" last-rc-change="1512340828" exec-time="31" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="ip-172.17.4.19" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-172.17.4.19_last_0" operation_key="ip-172.17.4.19_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="73:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;73:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="52" rc-code="7" op-status="0" interval="0" last-run="1512340828" last-rc-change="1512340828" exec-time="43" queue-time="0" op-digest="aa7c6b227cb7ab3004b79cce131be1b3"/>
+          </lrm_resource>
+          <lrm_resource id="haproxy-bundle-docker-1" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="haproxy-bundle-docker-1_last_0" operation_key="haproxy-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="75:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;75:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="60" rc-code="7" op-status="0" interval="0" last-run="1512340828" last-rc-change="1512340828" exec-time="41" queue-time="1" op-digest="083d0ea9c147277510859fd504bf65e4"/>
+          </lrm_resource>
+          <lrm_resource id="haproxy-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="haproxy-bundle-docker-0_last_0" operation_key="haproxy-bundle-docker-0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="239:1:0:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:0;239:1:0:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="97" rc-code="0" op-status="0" interval="0" last-run="1512340829" last-rc-change="1512340829" exec-time="393" queue-time="0" op-digest="083d0ea9c147277510859fd504bf65e4"/>
+            <lrm_rsc_op id="haproxy-bundle-docker-0_monitor_60000" operation_key="haproxy-bundle-docker-0_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="240:1:0:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:0;240:1:0:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="108" rc-code="0" op-status="0" interval="60000" last-rc-change="1512340829" exec-time="77" queue-time="0" op-digest="02bacde98cfd7c1daceaf2a3bb4f851c"/>
+          </lrm_resource>
+          <lrm_resource id="haproxy-bundle-docker-2" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="haproxy-bundle-docker-2_last_0" operation_key="haproxy-bundle-docker-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="76:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;76:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="64" rc-code="7" op-status="0" interval="0" last-run="1512340828" last-rc-change="1512340828" exec-time="42" queue-time="0" op-digest="083d0ea9c147277510859fd504bf65e4"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-525400cdec10" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-525400cdec10_last_0" operation_key="stonith-fence_ipmilan-525400cdec10_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="79:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;79:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="76" rc-code="7" op-status="0" interval="0" last-run="1512340829" last-rc-change="1512340829" exec-time="0" queue-time="0" op-digest="1bbfe3c1bf06a468db7656dd7552c4d6" op-secure-params=" passwd  password " op-secure-digest="8d9cf5beca60b2da8b0f7c9a7342a4aa"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-525400c709f7" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-525400c709f7_last_0" operation_key="stonith-fence_ipmilan-525400c709f7_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="80:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;80:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="80" rc-code="7" op-status="0" interval="0" last-run="1512340829" last-rc-change="1512340829" exec-time="0" queue-time="0" op-digest="1a536a915526af43ef48909329afb3b2" op-secure-params=" passwd  password " op-secure-digest="79c818a20ab9bdc97f7834f1e78face1"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-525400a25787" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-525400a25787_last_0" operation_key="stonith-fence_ipmilan-525400a25787_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="82:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;82:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="88" rc-code="7" op-status="0" interval="0" last-run="1512340829" last-rc-change="1512340829" exec-time="0" queue-time="0" op-digest="3b08cb766486ae213950205853288336" op-secure-params=" passwd  password " op-secure-digest="b0cbf3a6399393106803cb99269abe06"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-5254005ea387" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-5254005ea387_last_0" operation_key="stonith-fence_ipmilan-5254005ea387_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="83:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;83:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="92" rc-code="7" op-status="0" interval="0" last-run="1512340829" last-rc-change="1512340829" exec-time="0" queue-time="0" op-digest="9c0b8d3466b167eec30455c361939f0e" op-secure-params=" passwd  password " op-secure-digest="14900e2150667678c44f24d73286301c"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-525400542c06" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-525400542c06_last_0" operation_key="stonith-fence_ipmilan-525400542c06_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="84:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;84:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="96" rc-code="7" op-status="0" interval="0" last-run="1512340829" last-rc-change="1512340829" exec-time="0" queue-time="0" op-digest="c29ea7ff58baa575edf9b083d96c8d97" op-secure-params=" passwd  password " op-secure-digest="982bf2fb6d049bf379a72647cb6eab0a"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-0" type="remote" class="ocf" provider="pacemaker" container="redis-bundle-docker-0">
+            <lrm_rsc_op id="redis-bundle-0_last_0" operation_key="redis-bundle-0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="175:1:0:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:0;175:1:0:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="16" rc-code="0" op-status="0" interval="0" last-run="1512340829" last-rc-change="1512340829" exec-time="0" queue-time="0" op-digest="dd323696d6c8ed14cb71914c411664c9" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="redis-bundle-0_monitor_30000" operation_key="redis-bundle-0_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="143:2:0:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:0;143:2:0:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="17" rc-code="0" op-status="0" interval="30000" last-rc-change="1512340830" exec-time="0" queue-time="0" op-digest="e3ae7972e4989b9b928f3ff082c5ac23"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-525400aac413" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-525400aac413_last_0" operation_key="stonith-fence_ipmilan-525400aac413_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="85:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;85:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="103" rc-code="7" op-status="0" interval="0" last-run="1512340829" last-rc-change="1512340829" exec-time="0" queue-time="0" op-digest="b45737bb0d27199c17d938d131074ee5" op-secure-params=" passwd  password " op-secure-digest="b47e5b47ba419433c479357326c16b79"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-525400498d34" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-525400498d34_last_0" operation_key="stonith-fence_ipmilan-525400498d34_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="86:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;86:1:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="107" rc-code="7" op-status="0" interval="0" last-run="1512340829" last-rc-change="1512340829" exec-time="0" queue-time="0" op-digest="91b8661ac13de0e2114690e4149f3bcd" op-secure-params=" passwd  password " op-secure-digest="c9eae91b90ce97ecfdfa17bdee292722"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-525400a7f9e0" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-525400a7f9e0_last_0" operation_key="stonith-fence_ipmilan-525400a7f9e0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="226:6:0:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:0;226:6:0:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="114" rc-code="0" op-status="0" interval="0" last-run="1512340954" last-rc-change="1512340954" exec-time="2204" queue-time="0" op-digest="79027109189cf76473206a064a7297db" op-secure-params=" passwd  password " op-secure-digest="324791a6565e672135bd6e0325f2d7ca"/>
+            <lrm_rsc_op id="stonith-fence_ipmilan-525400a7f9e0_monitor_60000" operation_key="stonith-fence_ipmilan-525400a7f9e0_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="227:6:0:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:0;227:6:0:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="115" rc-code="0" op-status="0" interval="60000" last-rc-change="1512340957" exec-time="2187" queue-time="0" op-digest="8c611b4348c55f057229c740e92e759c" op-secure-params=" passwd  password " op-secure-digest="324791a6565e672135bd6e0325f2d7ca"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="1">
+        <instance_attributes id="status-1">
+          <nvpair id="status-1-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-1-master-redis" name="master-redis" value="1"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="3" uname="controller-2" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="3">
+        <instance_attributes id="status-3">
+          <nvpair id="status-3-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-3-last-failure-stonith-fence_ipmilan-525400a7f9e0" name="last-failure-stonith-fence_ipmilan-525400a7f9e0" value="1512340455"/>
+          <nvpair id="status-3-master-redis" name="master-redis" value="1"/>
+          <nvpair id="status-3-fail-count-stonith-fence_ipmilan-525400498d34" name="fail-count-stonith-fence_ipmilan-525400498d34" value="1"/>
+          <nvpair id="status-3-last-failure-stonith-fence_ipmilan-525400498d34" name="last-failure-stonith-fence_ipmilan-525400498d34" value="1512409184"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="3">
+        <lrm_resources>
+          <lrm_resource id="stonith-fence_ipmilan-525400244e09" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-525400244e09_last_0" operation_key="stonith-fence_ipmilan-525400244e09_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="231:16359:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;231:16359:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="111" rc-code="0" op-status="0" interval="0" last-run="1512340629" last-rc-change="1512340629" exec-time="2160" queue-time="0" op-digest="4d90b1c5011f28a7f26ea6940c3d6047" op-secure-params=" passwd  password " op-secure-digest="121bce21cad5e00c48a5c51be26c7522"/>
+            <lrm_rsc_op id="stonith-fence_ipmilan-525400244e09_monitor_60000" operation_key="stonith-fence_ipmilan-525400244e09_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="208:16360:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;208:16360:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="119" rc-code="0" op-status="0" interval="60000" last-rc-change="1512340635" exec-time="1095" queue-time="0" op-digest="b6c8a4e65b9d2660ce533a17530ab254" op-secure-params=" passwd  password " op-secure-digest="121bce21cad5e00c48a5c51be26c7522"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-5254005ea387" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-5254005ea387_last_0" operation_key="stonith-fence_ipmilan-5254005ea387_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="82:16353:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:7;82:16353:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="91" rc-code="7" op-status="0" interval="0" last-run="1512340434" last-rc-change="1512340434" exec-time="0" queue-time="0" op-digest="9c0b8d3466b167eec30455c361939f0e" op-secure-params=" passwd  password " op-secure-digest="14900e2150667678c44f24d73286301c"/>
+          </lrm_resource>
+          <lrm_resource id="ip-172.17.4.19" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-172.17.4.19_last_0" operation_key="ip-172.17.4.19_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="217:16359:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;217:16359:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="116" rc-code="0" op-status="0" interval="0" last-run="1512340629" last-rc-change="1512340629" exec-time="4070" queue-time="0" op-digest="aa7c6b227cb7ab3004b79cce131be1b3"/>
+            <lrm_rsc_op id="ip-172.17.4.19_monitor_10000" operation_key="ip-172.17.4.19_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="195:16360:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;195:16360:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="118" rc-code="0" op-status="0" interval="10000" last-rc-change="1512340635" exec-time="63" queue-time="0" op-digest="16f17a7b0b49bf2b2abee9fb1c2c1be2"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-2" type="remote" class="ocf" provider="pacemaker" container="redis-bundle-docker-2">
+            <lrm_rsc_op id="redis-bundle-2_last_0" operation_key="redis-bundle-2_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="182:16353:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;182:16353:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="16" rc-code="0" op-status="0" interval="0" last-run="1512340435" last-rc-change="1512340435" exec-time="0" queue-time="0" op-digest="f325849fbffe2e62970eb201a50da9f3" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="redis-bundle-2_monitor_30000" operation_key="redis-bundle-2_monitor_30000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="151:16355:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;151:16355:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="17" rc-code="0" op-status="0" interval="30000" last-rc-change="1512340456" exec-time="0" queue-time="0" op-digest="1c97595acf862a2449ada08e9770bdf5"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-525400cdec10" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-525400cdec10_last_0" operation_key="stonith-fence_ipmilan-525400cdec10_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="234:16359:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;234:16359:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="112" rc-code="0" op-status="0" interval="0" last-run="1512340629" last-rc-change="1512340629" exec-time="1095" queue-time="0" op-digest="1bbfe3c1bf06a468db7656dd7552c4d6" op-secure-params=" passwd  password " op-secure-digest="8d9cf5beca60b2da8b0f7c9a7342a4aa"/>
+            <lrm_rsc_op id="stonith-fence_ipmilan-525400cdec10_monitor_60000" operation_key="stonith-fence_ipmilan-525400cdec10_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="211:16360:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;211:16360:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="120" rc-code="0" op-status="0" interval="60000" last-rc-change="1512340635" exec-time="1080" queue-time="0" op-digest="7402ab63140561169c7e6bd9e3de52d7" op-secure-params=" passwd  password " op-secure-digest="8d9cf5beca60b2da8b0f7c9a7342a4aa"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-525400498d34" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-525400498d34_last_0" operation_key="stonith-fence_ipmilan-525400498d34_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="10:1130:0:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:0;10:1130:0:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-2" call-id="131" rc-code="0" op-status="0" interval="0" last-run="1512409184" last-rc-change="1512409184" exec-time="0" queue-time="0" op-digest="91b8661ac13de0e2114690e4149f3bcd" op-secure-params=" passwd  password " op-secure-digest="c9eae91b90ce97ecfdfa17bdee292722"/>
+            <lrm_rsc_op id="stonith-fence_ipmilan-525400498d34_monitor_60000" operation_key="stonith-fence_ipmilan-525400498d34_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="227:16360:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;227:16360:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="122" rc-code="0" op-status="0" interval="60000" last-rc-change="1512340635" exec-time="1102" queue-time="0" op-digest="7c2d201fd7b35d63223b518e4ec37f5a" op-secure-params=" passwd  password " op-secure-digest="c9eae91b90ce97ecfdfa17bdee292722"/>
+            <lrm_rsc_op id="stonith-fence_ipmilan-525400498d34_last_failure_0" operation_key="stonith-fence_ipmilan-525400498d34_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="227:16360:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="4:1;227:16360:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="122" rc-code="1" op-status="4" interval="60000" last-rc-change="1512409168" exec-time="15218" queue-time="0" op-digest="7c2d201fd7b35d63223b518e4ec37f5a" op-secure-params=" passwd  password " op-secure-digest="c9eae91b90ce97ecfdfa17bdee292722"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-525400aac413" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-525400aac413_last_0" operation_key="stonith-fence_ipmilan-525400aac413_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="252:16366:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;252:16366:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="123" rc-code="0" op-status="0" interval="0" last-run="1512340746" last-rc-change="1512340746" exec-time="2135" queue-time="0" op-digest="b45737bb0d27199c17d938d131074ee5" op-secure-params=" passwd  password " op-secure-digest="b47e5b47ba419433c479357326c16b79"/>
+            <lrm_rsc_op id="stonith-fence_ipmilan-525400aac413_monitor_60000" operation_key="stonith-fence_ipmilan-525400aac413_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="233:16367:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;233:16367:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="124" rc-code="0" op-status="0" interval="60000" last-rc-change="1512340778" exec-time="2135" queue-time="1" op-digest="519d5717cf4b9586e958e89620a86288" op-secure-params=" passwd  password " op-secure-digest="b47e5b47ba419433c479357326c16b79"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-0" type="remote" class="ocf" provider="pacemaker" container="redis-bundle-docker-0">
+            <lrm_rsc_op id="redis-bundle-0_last_0" operation_key="redis-bundle-0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="62:16353:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:7;62:16353:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="13" rc-code="7" op-status="0" interval="0" last-run="1512340433" last-rc-change="1512340433" exec-time="0" queue-time="0" op-digest="dd323696d6c8ed14cb71914c411664c9" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-1" type="remote" class="ocf" provider="pacemaker" container="redis-bundle-docker-1">
+            <lrm_rsc_op id="redis-bundle-1_last_0" operation_key="redis-bundle-1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="64:16353:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:7;64:16353:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="14" rc-code="7" op-status="0" interval="0" last-run="1512340433" last-rc-change="1512340433" exec-time="0" queue-time="0" op-digest="cd98602d6f977947327050913302f861" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-0" type="remote" class="ocf" provider="pacemaker" container="rabbitmq-bundle-docker-0">
+            <lrm_rsc_op id="rabbitmq-bundle-0_last_0" operation_key="rabbitmq-bundle-0_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="80:16366:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;80:16366:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="31" rc-code="0" op-status="0" interval="0" last-run="1512340746" last-rc-change="1512340746" exec-time="0" queue-time="0" op-digest="a41ad5f9625676395b163a06987de2d6" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="rabbitmq-bundle-0_monitor_30000" operation_key="rabbitmq-bundle-0_monitor_30000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="65:16367:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;65:16367:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="33" rc-code="0" op-status="0" interval="30000" last-rc-change="1512340778" exec-time="0" queue-time="0" op-digest="f09b3fbf8a04a3ab4bdb3fed5870adae"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-1" type="remote" class="ocf" provider="pacemaker" container="rabbitmq-bundle-docker-1">
+            <lrm_rsc_op id="rabbitmq-bundle-1_last_0" operation_key="rabbitmq-bundle-1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="83:16359:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;83:16359:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="21" rc-code="0" op-status="0" interval="0" last-run="1512340629" last-rc-change="1512340629" exec-time="0" queue-time="0" op-digest="e25f0ff041ed91bee8ee197d0ce2aebd" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="rabbitmq-bundle-1_monitor_30000" operation_key="rabbitmq-bundle-1_monitor_30000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="61:16360:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;61:16360:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="27" rc-code="0" op-status="0" interval="30000" last-rc-change="1512340635" exec-time="0" queue-time="0" op-digest="006c72e63b78b05f1a9175b74f27325a"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-2" type="remote" class="ocf" provider="pacemaker" container="rabbitmq-bundle-docker-2">
+            <lrm_rsc_op id="rabbitmq-bundle-2_last_0" operation_key="rabbitmq-bundle-2_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="88:16359:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;88:16359:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="22" rc-code="0" op-status="0" interval="0" last-run="1512340629" last-rc-change="1512340629" exec-time="0" queue-time="0" op-digest="593e15353c64e73e2efe61415c7dd44b" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="rabbitmq-bundle-2_monitor_30000" operation_key="rabbitmq-bundle-2_monitor_30000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="66:16360:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;66:16360:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="28" rc-code="0" op-status="0" interval="30000" last-rc-change="1512340635" exec-time="0" queue-time="0" op-digest="79276e73b8cca5be7d8bcb4332451faf"/>
+          </lrm_resource>
+          <lrm_resource id="messaging-0" type="remote" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="messaging-0_last_0" operation_key="messaging-0_migrate_from_0" operation="migrate_from" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="72:16366:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;72:16366:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="30" rc-code="0" op-status="0" interval="0" last-run="1512340746" last-rc-change="1512340746" exec-time="0" queue-time="0" migrate_source="controller-0" migrate_target="controller-2" op-digest="a48beba1b11f09d6b1c15da8db5bb0a2" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="messaging-0_monitor_20000" operation_key="messaging-0_monitor_20000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="56:16367:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;56:16367:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="32" rc-code="0" op-status="0" interval="20000" last-rc-change="1512340778" exec-time="0" queue-time="0" op-digest="6e5bb737f46c381d8a46fb4162afd9e0"/>
+          </lrm_resource>
+          <lrm_resource id="messaging-1" type="remote" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="messaging-1_last_0" operation_key="messaging-1_migrate_from_0" operation="migrate_from" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="70:16359:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;70:16359:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="19" rc-code="0" op-status="0" interval="0" last-run="1512340629" last-rc-change="1512340629" exec-time="0" queue-time="0" migrate_source="controller-1" migrate_target="controller-2" op-digest="a48beba1b11f09d6b1c15da8db5bb0a2" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="messaging-1_monitor_20000" operation_key="messaging-1_monitor_20000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="68:16359:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;68:16359:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="25" rc-code="0" op-status="0" interval="20000" last-rc-change="1512340630" exec-time="0" queue-time="0" op-digest="6e5bb737f46c381d8a46fb4162afd9e0"/>
+          </lrm_resource>
+          <lrm_resource id="messaging-2" type="remote" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="messaging-2_last_0" operation_key="messaging-2_migrate_from_0" operation="migrate_from" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="75:16359:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;75:16359:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="20" rc-code="0" op-status="0" interval="0" last-run="1512340629" last-rc-change="1512340629" exec-time="0" queue-time="0" migrate_source="controller-1" migrate_target="controller-2" op-digest="a48beba1b11f09d6b1c15da8db5bb0a2" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="messaging-2_monitor_20000" operation_key="messaging-2_monitor_20000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="73:16359:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;73:16359:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="26" rc-code="0" op-status="0" interval="20000" last-rc-change="1512340630" exec-time="0" queue-time="0" op-digest="6e5bb737f46c381d8a46fb4162afd9e0"/>
+          </lrm_resource>
+          <lrm_resource id="haproxy-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="haproxy-bundle-docker-0_last_0" operation_key="haproxy-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="73:16353:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:7;73:16353:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="55" rc-code="7" op-status="0" interval="0" last-run="1512340433" last-rc-change="1512340433" exec-time="59" queue-time="0" op-digest="083d0ea9c147277510859fd504bf65e4"/>
+          </lrm_resource>
+          <lrm_resource id="haproxy-bundle-docker-1" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="haproxy-bundle-docker-1_last_0" operation_key="haproxy-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="74:16353:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:7;74:16353:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="59" rc-code="7" op-status="0" interval="0" last-run="1512340433" last-rc-change="1512340433" exec-time="59" queue-time="0" op-digest="083d0ea9c147277510859fd504bf65e4"/>
+          </lrm_resource>
+          <lrm_resource id="haproxy-bundle-docker-2" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="haproxy-bundle-docker-2_last_0" operation_key="haproxy-bundle-docker-2_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="242:16353:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;242:16353:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="105" rc-code="0" op-status="0" interval="0" last-run="1512340434" last-rc-change="1512340434" exec-time="467" queue-time="0" op-digest="083d0ea9c147277510859fd504bf65e4"/>
+            <lrm_rsc_op id="haproxy-bundle-docker-2_monitor_60000" operation_key="haproxy-bundle-docker-2_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="243:16353:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;243:16353:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="107" rc-code="0" op-status="0" interval="60000" last-rc-change="1512340435" exec-time="88" queue-time="0" op-digest="02bacde98cfd7c1daceaf2a3bb4f851c"/>
+          </lrm_resource>
+          <lrm_resource id="ip-10.0.0.104" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-10.0.0.104_last_0" operation_key="ip-10.0.0.104_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="68:16353:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:7;68:16353:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="35" rc-code="7" op-status="0" interval="0" last-run="1512340433" last-rc-change="1512340433" exec-time="89" queue-time="0" op-digest="f1d53d03e6223a0e53558dbf6f3bcbea"/>
+          </lrm_resource>
+          <lrm_resource id="ip-172.17.3.13" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-172.17.3.13_last_0" operation_key="ip-172.17.3.13_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="71:16353:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:7;71:16353:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="47" rc-code="7" op-status="0" interval="0" last-run="1512340433" last-rc-change="1512340433" exec-time="83" queue-time="1" op-digest="aabfc88ecfd0ef79b36f8958512b0190"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-525400c709f7" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-525400c709f7_last_0" operation_key="stonith-fence_ipmilan-525400c709f7_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="79:16353:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:7;79:16353:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="79" rc-code="7" op-status="0" interval="0" last-run="1512340434" last-rc-change="1512340434" exec-time="0" queue-time="0" op-digest="1a536a915526af43ef48909329afb3b2" op-secure-params=" passwd  password " op-secure-digest="79c818a20ab9bdc97f7834f1e78face1"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-525400a25787" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-525400a25787_last_0" operation_key="stonith-fence_ipmilan-525400a25787_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="240:16359:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;240:16359:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="113" rc-code="0" op-status="0" interval="0" last-run="1512340629" last-rc-change="1512340629" exec-time="1095" queue-time="0" op-digest="3b08cb766486ae213950205853288336" op-secure-params=" passwd  password " op-secure-digest="b0cbf3a6399393106803cb99269abe06"/>
+            <lrm_rsc_op id="stonith-fence_ipmilan-525400a25787_monitor_60000" operation_key="stonith-fence_ipmilan-525400a25787_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="217:16360:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;217:16360:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="121" rc-code="0" op-status="0" interval="60000" last-rc-change="1512340635" exec-time="1103" queue-time="0" op-digest="1cadaa04d411d74a4e55ea3f387d0a3b" op-secure-params=" passwd  password " op-secure-digest="b0cbf3a6399393106803cb99269abe06"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-525400a7f9e0" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-525400a7f9e0_last_0" operation_key="stonith-fence_ipmilan-525400a7f9e0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="57:6:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:7;57:6:7:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-2" call-id="129" rc-code="7" op-status="0" interval="0" last-run="1512340954" last-rc-change="1512340954" exec-time="0" queue-time="0" op-digest="79027109189cf76473206a064a7297db" op-secure-params=" passwd  password " op-secure-digest="324791a6565e672135bd6e0325f2d7ca"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-0" type="remote" class="ocf" provider="pacemaker" container="galera-bundle-docker-0">
+            <lrm_rsc_op id="galera-bundle-0_last_0" operation_key="galera-bundle-0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="58:16353:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:7;58:16353:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1512340433" last-rc-change="1512340433" exec-time="0" queue-time="0" op-digest="dbc6b52d45a75a0b041af92265b22f9e" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-1" type="remote" class="ocf" provider="pacemaker" container="galera-bundle-docker-1">
+            <lrm_rsc_op id="galera-bundle-1_last_0" operation_key="galera-bundle-1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="119:16359:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;119:16359:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="23" rc-code="0" op-status="0" interval="0" last-run="1512340629" last-rc-change="1512340629" exec-time="0" queue-time="0" op-digest="f6e3b46e18b24f6e1cca9639ec9b7c41" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="galera-bundle-1_monitor_30000" operation_key="galera-bundle-1_monitor_30000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="97:16360:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;97:16360:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="29" rc-code="0" op-status="0" interval="30000" last-rc-change="1512340635" exec-time="0" queue-time="0" op-digest="ae45df88a5aa8e68160cbb0faee9cc78"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-2" type="remote" class="ocf" provider="pacemaker" container="galera-bundle-docker-2">
+            <lrm_rsc_op id="galera-bundle-2_last_0" operation_key="galera-bundle-2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="60:16353:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:7;60:16353:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="12" rc-code="7" op-status="0" interval="0" last-run="1512340433" last-rc-change="1512340433" exec-time="0" queue-time="0" op-digest="bf7cf9acd053cee24dc3401862009e40" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="stonith-fence_ipmilan-525400542c06" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="stonith-fence_ipmilan-525400542c06_last_0" operation_key="stonith-fence_ipmilan-525400542c06_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="83:16353:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:7;83:16353:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="96" rc-code="7" op-status="0" interval="0" last-run="1512340434" last-rc-change="1512340434" exec-time="0" queue-time="0" op-digest="c29ea7ff58baa575edf9b083d96c8d97" op-secure-params=" passwd  password " op-secure-digest="982bf2fb6d049bf379a72647cb6eab0a"/>
+          </lrm_resource>
+          <lrm_resource id="ip-192.168.24.11" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-192.168.24.11_last_0" operation_key="ip-192.168.24.11_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="67:16353:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:7;67:16353:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="31" rc-code="7" op-status="0" interval="0" last-run="1512340433" last-rc-change="1512340433" exec-time="90" queue-time="0" op-digest="d16224b1cc961154d457d259d944b5f9"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis-bundle-docker-0_last_0" operation_key="redis-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="61:16353:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:7;61:16353:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="17" rc-code="7" op-status="0" interval="0" last-run="1512340433" last-rc-change="1512340433" exec-time="35" queue-time="0" op-digest="b6bd1e4fa13216f010a5f4ba18d081a3"/>
+          </lrm_resource>
+          <lrm_resource id="ip-172.17.1.11" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-172.17.1.11_last_0" operation_key="ip-172.17.1.11_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="70:16353:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:7;70:16353:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="43" rc-code="7" op-status="0" interval="0" last-run="1512340433" last-rc-change="1512340433" exec-time="86" queue-time="0" op-digest="7c6ed186ff8cdf7693b51ee42b4fc6e1"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-docker-2" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis-bundle-docker-2_last_0" operation_key="redis-bundle-docker-2_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="180:16353:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;180:16353:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="92" rc-code="0" op-status="0" interval="0" last-run="1512340434" last-rc-change="1512340434" exec-time="486" queue-time="0" op-digest="cdf5d52dbfd265e497dd1dfb06f2faf1"/>
+            <lrm_rsc_op id="redis-bundle-docker-2_monitor_60000" operation_key="redis-bundle-docker-2_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="181:16353:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;181:16353:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="108" rc-code="0" op-status="0" interval="60000" last-rc-change="1512340435" exec-time="85" queue-time="0" op-digest="4482b2a3082df72156f22666721ee018"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-docker-1" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis-bundle-docker-1_last_0" operation_key="redis-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="63:16353:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:7;63:16353:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="22" rc-code="7" op-status="0" interval="0" last-run="1512340433" last-rc-change="1512340433" exec-time="44" queue-time="0" op-digest="d12a03fcf5794843261e2916fbd6c63b"/>
+          </lrm_resource>
+          <lrm_resource id="database-0" type="remote" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="database-0_last_0" operation_key="database-0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="49:16353:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:7;49:16353:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1512340433" last-rc-change="1512340433" exec-time="0" queue-time="0" op-digest="a48beba1b11f09d6b1c15da8db5bb0a2" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="database-1" type="remote" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="database-1_last_0" operation_key="database-1_migrate_from_0" operation="migrate_from" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="61:16359:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;61:16359:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="18" rc-code="0" op-status="0" interval="0" last-run="1512340629" last-rc-change="1512340629" exec-time="0" queue-time="0" migrate_source="controller-1" migrate_target="controller-2" op-digest="a48beba1b11f09d6b1c15da8db5bb0a2" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="database-1_monitor_20000" operation_key="database-1_monitor_20000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="59:16359:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;59:16359:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="24" rc-code="0" op-status="0" interval="20000" last-rc-change="1512340630" exec-time="0" queue-time="0" op-digest="6e5bb737f46c381d8a46fb4162afd9e0"/>
+          </lrm_resource>
+          <lrm_resource id="database-2" type="remote" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="database-2_last_0" operation_key="database-2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="51:16353:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:7;51:16353:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="3" rc-code="7" op-status="0" interval="0" last-run="1512340433" last-rc-change="1512340433" exec-time="0" queue-time="0" op-digest="a48beba1b11f09d6b1c15da8db5bb0a2" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-cinder-volume" type="openstack-cinder-volume" class="systemd">
+            <lrm_rsc_op id="openstack-cinder-volume_last_0" operation_key="openstack-cinder-volume_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="76:16353:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:7;76:16353:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="67" rc-code="7" op-status="0" interval="0" last-run="1512340433" last-rc-change="1512340433" exec-time="60" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="ip-172.17.1.19" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-172.17.1.19_last_0" operation_key="ip-172.17.1.19_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="210:16359:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;210:16359:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="115" rc-code="0" op-status="0" interval="0" last-run="1512340629" last-rc-change="1512340629" exec-time="4074" queue-time="0" op-digest="2c46df7582fe8b55e9dcdeaceb4c84c7"/>
+            <lrm_rsc_op id="ip-172.17.1.19_monitor_10000" operation_key="ip-172.17.1.19_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.12" transition-key="188:16360:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;188:16360:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="117" rc-code="0" op-status="0" interval="10000" last-rc-change="1512340635" exec-time="42" queue-time="0" op-digest="1aa0805e76d86953238cd18a51b57487"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state remote_node="true" id="database-0" uname="database-0" in_ccm="true" crm-debug-origin="do_state_transition" node_fenced="0">
+      <transient_attributes id="database-0">
+        <instance_attributes id="status-database-0">
+          <nvpair id="status-database-0-master-galera" name="master-galera" value="100"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="database-0">
+        <lrm_resources>
+          <lrm_resource id="galera-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera-bundle-docker-0_last_failure_0" operation_key="galera-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="50:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;50:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-0" call-id="13110" rc-code="0" op-status="0" interval="0" last-run="1512340229" last-rc-change="1512340229" exec-time="80" queue-time="0" op-digest="ed7e84d41c6aedf055e8c2d9ca23355d"/>
+            <lrm_rsc_op id="galera-bundle-docker-0_last_0" operation_key="galera-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="50:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;50:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-0" call-id="13110" rc-code="0" op-status="0" interval="0" last-run="1512340229" last-rc-change="1512340229" exec-time="80" queue-time="0" op-digest="ed7e84d41c6aedf055e8c2d9ca23355d"/>
+            <lrm_rsc_op id="galera-bundle-docker-0_monitor_30000" operation_key="galera-bundle-docker-0_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="117:16342:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;117:16342:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-0" call-id="13120" rc-code="0" op-status="0" interval="30000" last-rc-change="1512340233" exec-time="84" queue-time="1" op-digest="47d23461e235e733db55f81b8b33a5c5"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-docker-1" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera-bundle-docker-1_last_0" operation_key="galera-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="51:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:7;51:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-0" call-id="13114" rc-code="7" op-status="0" interval="0" last-run="1512340229" last-rc-change="1512340229" exec-time="31" queue-time="0" op-digest="14385e7ff7b4fcd7e4d11755b3ad0c94"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-docker-2" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera-bundle-docker-2_last_0" operation_key="galera-bundle-docker-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="52:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:7;52:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-0" call-id="13118" rc-code="7" op-status="0" interval="0" last-run="1512340229" last-rc-change="1512340229" exec-time="29" queue-time="0" op-digest="b338eb1889737523521461347b98b88a"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state remote_node="true" id="messaging-0" uname="messaging-0" in_ccm="true" crm-debug-origin="do_state_transition" node_fenced="0">
+      <transient_attributes id="messaging-0">
+        <instance_attributes id="status-messaging-0">
+          <nvpair id="status-messaging-0-rmq-node-attr-rabbitmq" name="rmq-node-attr-rabbitmq" value="rabbit@messaging-0"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="messaging-0">
+        <lrm_resources>
+          <lrm_resource id="rabbitmq-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-docker-0_last_failure_0" operation_key="rabbitmq-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="59:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;59:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-0" call-id="13141" rc-code="0" op-status="0" interval="0" last-run="1512340228" last-rc-change="1512340228" exec-time="92" queue-time="1" op-digest="91337b9335bcb7351857d25c1cf3d392"/>
+            <lrm_rsc_op id="rabbitmq-bundle-docker-0_last_0" operation_key="rabbitmq-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="59:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;59:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-0" call-id="13141" rc-code="0" op-status="0" interval="0" last-run="1512340228" last-rc-change="1512340228" exec-time="92" queue-time="1" op-digest="91337b9335bcb7351857d25c1cf3d392"/>
+            <lrm_rsc_op id="rabbitmq-bundle-docker-0_monitor_60000" operation_key="rabbitmq-bundle-docker-0_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="80:16342:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;80:16342:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-0" call-id="13151" rc-code="0" op-status="0" interval="60000" last-rc-change="1512340233" exec-time="83" queue-time="0" op-digest="761356432321d7bc8da634ff67896f4a"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-docker-1" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-docker-1_last_0" operation_key="rabbitmq-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="60:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:7;60:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-0" call-id="13145" rc-code="7" op-status="0" interval="0" last-run="1512340228" last-rc-change="1512340228" exec-time="35" queue-time="0" op-digest="b59f3520d7d5f770ece284f4ab68291b"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-docker-2" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-docker-2_last_0" operation_key="rabbitmq-bundle-docker-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="61:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:7;61:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-0" call-id="13149" rc-code="7" op-status="0" interval="0" last-run="1512340228" last-rc-change="1512340228" exec-time="34" queue-time="0" op-digest="7f41de83a371741e06e17d6c96a008a7"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state remote_node="true" id="database-1" uname="database-1" in_ccm="true" crm-debug-origin="do_state_transition" node_fenced="0">
+      <transient_attributes id="database-1">
+        <instance_attributes id="status-database-1">
+          <nvpair id="status-database-1-master-galera" name="master-galera" value="100"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="database-1">
+        <lrm_resources>
+          <lrm_resource id="galera-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera-bundle-docker-0_last_0" operation_key="galera-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="53:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:7;53:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-1" call-id="13942" rc-code="7" op-status="0" interval="0" last-run="1512340229" last-rc-change="1512340229" exec-time="39" queue-time="0" op-digest="ed7e84d41c6aedf055e8c2d9ca23355d"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-docker-1" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera-bundle-docker-1_last_failure_0" operation_key="galera-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="54:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;54:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-1" call-id="13946" rc-code="0" op-status="0" interval="0" last-run="1512340229" last-rc-change="1512340229" exec-time="82" queue-time="0" op-digest="14385e7ff7b4fcd7e4d11755b3ad0c94"/>
+            <lrm_rsc_op id="galera-bundle-docker-1_last_0" operation_key="galera-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="54:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;54:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-1" call-id="13946" rc-code="0" op-status="0" interval="0" last-run="1512340229" last-rc-change="1512340229" exec-time="82" queue-time="0" op-digest="14385e7ff7b4fcd7e4d11755b3ad0c94"/>
+            <lrm_rsc_op id="galera-bundle-docker-1_monitor_60000" operation_key="galera-bundle-docker-1_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="122:16342:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;122:16342:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-1" call-id="13951" rc-code="0" op-status="0" interval="60000" last-rc-change="1512340233" exec-time="86" queue-time="0" op-digest="59fb532a17dc4de0d7c6984a4a9fbce7"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-docker-2" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera-bundle-docker-2_last_0" operation_key="galera-bundle-docker-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="55:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:7;55:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-1" call-id="13950" rc-code="7" op-status="0" interval="0" last-run="1512340229" last-rc-change="1512340229" exec-time="29" queue-time="0" op-digest="b338eb1889737523521461347b98b88a"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state remote_node="true" id="database-2" uname="database-2" in_ccm="true" crm-debug-origin="do_state_transition" node_fenced="0">
+      <transient_attributes id="database-2">
+        <instance_attributes id="status-database-2">
+          <nvpair id="status-database-2-master-galera" name="master-galera" value="100"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="database-2">
+        <lrm_resources>
+          <lrm_resource id="galera-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera-bundle-docker-0_last_0" operation_key="galera-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="56:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:7;56:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="9925" rc-code="7" op-status="0" interval="0" last-run="1512340229" last-rc-change="1512340229" exec-time="32" queue-time="1" op-digest="ed7e84d41c6aedf055e8c2d9ca23355d"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-docker-1" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera-bundle-docker-1_last_0" operation_key="galera-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="57:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:7;57:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="9929" rc-code="7" op-status="0" interval="0" last-run="1512340229" last-rc-change="1512340229" exec-time="29" queue-time="0" op-digest="14385e7ff7b4fcd7e4d11755b3ad0c94"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-docker-2" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera-bundle-docker-2_last_failure_0" operation_key="galera-bundle-docker-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="58:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;58:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="9933" rc-code="0" op-status="0" interval="0" last-run="1512340229" last-rc-change="1512340229" exec-time="91" queue-time="0" op-digest="b338eb1889737523521461347b98b88a"/>
+            <lrm_rsc_op id="galera-bundle-docker-2_last_0" operation_key="galera-bundle-docker-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="58:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;58:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="9933" rc-code="0" op-status="0" interval="0" last-run="1512340229" last-rc-change="1512340229" exec-time="91" queue-time="0" op-digest="b338eb1889737523521461347b98b88a"/>
+            <lrm_rsc_op id="galera-bundle-docker-2_monitor_60000" operation_key="galera-bundle-docker-2_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="127:16342:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;127:16342:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="9934" rc-code="0" op-status="0" interval="60000" last-rc-change="1512340233" exec-time="82" queue-time="0" op-digest="d69e833791e20b938e2c63f2e2e57ed2"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state remote_node="true" id="messaging-2" uname="messaging-2" in_ccm="true" crm-debug-origin="do_state_transition" node_fenced="0">
+      <transient_attributes id="messaging-2">
+        <instance_attributes id="status-messaging-2">
+          <nvpair id="status-messaging-2-rmq-node-attr-rabbitmq" name="rmq-node-attr-rabbitmq" value="rabbit@messaging-2"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="messaging-2">
+        <lrm_resources>
+          <lrm_resource id="rabbitmq-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-docker-0_last_0" operation_key="rabbitmq-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="65:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:7;65:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="13666" rc-code="7" op-status="0" interval="0" last-run="1512340228" last-rc-change="1512340228" exec-time="33" queue-time="0" op-digest="91337b9335bcb7351857d25c1cf3d392"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-docker-1" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-docker-1_last_0" operation_key="rabbitmq-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="66:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:7;66:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="13670" rc-code="7" op-status="0" interval="0" last-run="1512340228" last-rc-change="1512340228" exec-time="31" queue-time="0" op-digest="b59f3520d7d5f770ece284f4ab68291b"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-docker-2" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-docker-2_last_failure_0" operation_key="rabbitmq-bundle-docker-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="67:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;67:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="13674" rc-code="0" op-status="0" interval="0" last-run="1512340228" last-rc-change="1512340228" exec-time="78" queue-time="0" op-digest="7f41de83a371741e06e17d6c96a008a7"/>
+            <lrm_rsc_op id="rabbitmq-bundle-docker-2_last_0" operation_key="rabbitmq-bundle-docker-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="67:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;67:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="13674" rc-code="0" op-status="0" interval="0" last-run="1512340228" last-rc-change="1512340228" exec-time="78" queue-time="0" op-digest="7f41de83a371741e06e17d6c96a008a7"/>
+            <lrm_rsc_op id="rabbitmq-bundle-docker-2_monitor_60000" operation_key="rabbitmq-bundle-docker-2_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="90:16342:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;90:16342:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="13675" rc-code="0" op-status="0" interval="60000" last-rc-change="1512340233" exec-time="91" queue-time="0" op-digest="5319266a2fe53465b1122352efb6aa5c"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state remote_node="true" id="messaging-1" uname="messaging-1" in_ccm="true" crm-debug-origin="do_state_transition" node_fenced="0">
+      <transient_attributes id="messaging-1">
+        <instance_attributes id="status-messaging-1">
+          <nvpair id="status-messaging-1-rmq-node-attr-rabbitmq" name="rmq-node-attr-rabbitmq" value="rabbit@messaging-1"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="messaging-1">
+        <lrm_resources>
+          <lrm_resource id="rabbitmq-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-docker-0_last_0" operation_key="rabbitmq-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="62:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:7;62:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-1" call-id="13935" rc-code="7" op-status="0" interval="0" last-run="1512340228" last-rc-change="1512340228" exec-time="36" queue-time="0" op-digest="91337b9335bcb7351857d25c1cf3d392"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-docker-1" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-docker-1_last_failure_0" operation_key="rabbitmq-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="63:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;63:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-1" call-id="13939" rc-code="0" op-status="0" interval="0" last-run="1512340228" last-rc-change="1512340228" exec-time="82" queue-time="0" op-digest="b59f3520d7d5f770ece284f4ab68291b"/>
+            <lrm_rsc_op id="rabbitmq-bundle-docker-1_last_0" operation_key="rabbitmq-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="63:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;63:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-1" call-id="13939" rc-code="0" op-status="0" interval="0" last-run="1512340228" last-rc-change="1512340228" exec-time="82" queue-time="0" op-digest="b59f3520d7d5f770ece284f4ab68291b"/>
+            <lrm_rsc_op id="rabbitmq-bundle-docker-1_monitor_60000" operation_key="rabbitmq-bundle-docker-1_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="85:16342:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;85:16342:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-1" call-id="13944" rc-code="0" op-status="0" interval="60000" last-rc-change="1512340233" exec-time="88" queue-time="0" op-digest="f8c3faf3117dbe6901f69d517a8a7f78"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-docker-2" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-docker-2_last_0" operation_key="rabbitmq-bundle-docker-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="64:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:7;64:16341:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-1" call-id="13943" rc-code="7" op-status="0" interval="0" last-run="1512340228" last-rc-change="1512340228" exec-time="32" queue-time="0" op-digest="7f41de83a371741e06e17d6c96a008a7"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state remote_node="true" id="redis-bundle-0" uname="redis-bundle-0" in_ccm="true" crm-debug-origin="do_state_transition" node_fenced="0">
+      <lrm id="redis-bundle-0">
+        <lrm_resources>
+          <lrm_resource id="redis" type="redis" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis_last_0" operation_key="redis_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="163:2:0:eb31bf05-9ee9-4a86-a2a2-c9729b835413" transition-magic="0:0;163:2:0:eb31bf05-9ee9-4a86-a2a2-c9729b835413" on_node="controller-0" call-id="8" rc-code="0" op-status="0" interval="0" last-run="1512340830" last-rc-change="1512340830" exec-time="4400" queue-time="0" op-digest="a5b2a4f5c557278af14d6cbffc5a229d" op-secure-params=" user " op-secure-digest="a5b2a4f5c557278af14d6cbffc5a229d"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="redis-bundle-0">
+        <instance_attributes id="status-redis-bundle-0"/>
+      </transient_attributes>
+    </node_state>
+    <node_state remote_node="true" id="redis-bundle-2" uname="redis-bundle-2" in_ccm="true" crm-debug-origin="do_state_transition" node_fenced="0">
+      <lrm id="redis-bundle-2">
+        <lrm_resources>
+          <lrm_resource id="redis" type="redis" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis_last_0" operation_key="redis_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="163:16355:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;163:16355:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="8" rc-code="0" op-status="0" interval="0" last-run="1512340456" last-rc-change="1512340456" exec-time="4408" queue-time="0" op-digest="a5b2a4f5c557278af14d6cbffc5a229d" op-secure-params=" user " op-secure-digest="a5b2a4f5c557278af14d6cbffc5a229d"/>
+            <lrm_rsc_op id="redis_monitor_60000" operation_key="redis_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="164:16356:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;164:16356:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="52" rc-code="0" op-status="0" interval="60000" last-rc-change="1512340461" exec-time="573" queue-time="0" op-digest="992feffd37882eb5ce9bfc847b2fa75e" op-secure-params=" user " op-secure-digest="a5b2a4f5c557278af14d6cbffc5a229d"/>
+            <lrm_rsc_op id="redis_monitor_45000" operation_key="redis_monitor_45000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="163:16356:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;163:16356:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="53" rc-code="0" op-status="0" interval="45000" last-rc-change="1512340462" exec-time="931" queue-time="533" op-digest="992feffd37882eb5ce9bfc847b2fa75e" op-secure-params=" user " op-secure-digest="a5b2a4f5c557278af14d6cbffc5a229d"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="redis-bundle-2">
+        <instance_attributes id="status-redis-bundle-2"/>
+      </transient_attributes>
+    </node_state>
+    <node_state remote_node="true" id="redis-bundle-1" uname="redis-bundle-1" in_ccm="false" crm-debug-origin="do_state_transition" node_fenced="0"/>
+    <node_state remote_node="true" id="rabbitmq-bundle-0" uname="rabbitmq-bundle-0" in_ccm="true" crm-debug-origin="do_state_transition" node_fenced="0">
+      <lrm id="rabbitmq-bundle-0">
+        <lrm_resources>
+          <lrm_resource id="rabbitmq" type="rabbitmq-cluster" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq_last_failure_0" operation_key="rabbitmq_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="42:16367:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;42:16367:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="248695" rc-code="0" op-status="0" interval="0" last-run="1512340778" last-rc-change="1512340778" exec-time="3589" queue-time="0" op-digest="780d433233eb4f94c1a151623d002e84"/>
+            <lrm_rsc_op id="rabbitmq_last_0" operation_key="rabbitmq_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="42:16367:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;42:16367:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="248695" rc-code="0" op-status="0" interval="0" last-run="1512340778" last-rc-change="1512340778" exec-time="3589" queue-time="0" op-digest="780d433233eb4f94c1a151623d002e84"/>
+            <lrm_rsc_op id="rabbitmq_monitor_10000" operation_key="rabbitmq_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="80:16368:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;80:16368:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="248714" rc-code="0" op-status="0" interval="10000" last-rc-change="1512340787" exec-time="3644" queue-time="0" op-digest="6b46cdf9111345cbd0460b2540d3b2c7"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="rabbitmq-bundle-0">
+        <instance_attributes id="status-rabbitmq-bundle-0"/>
+      </transient_attributes>
+    </node_state>
+    <node_state remote_node="true" id="rabbitmq-bundle-1" uname="rabbitmq-bundle-1" in_ccm="true" crm-debug-origin="do_state_transition" node_fenced="0">
+      <lrm id="rabbitmq-bundle-1">
+        <lrm_resources>
+          <lrm_resource id="rabbitmq" type="rabbitmq-cluster" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq_last_failure_0" operation_key="rabbitmq_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="39:16360:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;39:16360:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="328610" rc-code="0" op-status="0" interval="0" last-run="1512340634" last-rc-change="1512340634" exec-time="3669" queue-time="0" op-digest="780d433233eb4f94c1a151623d002e84"/>
+            <lrm_rsc_op id="rabbitmq_last_0" operation_key="rabbitmq_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="39:16360:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;39:16360:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="328610" rc-code="0" op-status="0" interval="0" last-run="1512340634" last-rc-change="1512340634" exec-time="3669" queue-time="0" op-digest="780d433233eb4f94c1a151623d002e84"/>
+            <lrm_rsc_op id="rabbitmq_monitor_10000" operation_key="rabbitmq_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="79:16361:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;79:16361:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="328629" rc-code="0" op-status="0" interval="10000" last-rc-change="1512340645" exec-time="3890" queue-time="0" op-digest="6b46cdf9111345cbd0460b2540d3b2c7"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="rabbitmq-bundle-1">
+        <instance_attributes id="status-rabbitmq-bundle-1"/>
+      </transient_attributes>
+    </node_state>
+    <node_state remote_node="true" id="rabbitmq-bundle-2" uname="rabbitmq-bundle-2" in_ccm="true" crm-debug-origin="do_state_transition" node_fenced="0">
+      <lrm id="rabbitmq-bundle-2">
+        <lrm_resources>
+          <lrm_resource id="rabbitmq" type="rabbitmq-cluster" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq_last_failure_0" operation_key="rabbitmq_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="40:16360:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;40:16360:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="260210" rc-code="0" op-status="0" interval="0" last-run="1512340635" last-rc-change="1512340635" exec-time="3732" queue-time="0" op-digest="780d433233eb4f94c1a151623d002e84"/>
+            <lrm_rsc_op id="rabbitmq_last_0" operation_key="rabbitmq_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="40:16360:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;40:16360:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="260210" rc-code="0" op-status="0" interval="0" last-run="1512340635" last-rc-change="1512340635" exec-time="3732" queue-time="0" op-digest="780d433233eb4f94c1a151623d002e84"/>
+            <lrm_rsc_op id="rabbitmq_monitor_10000" operation_key="rabbitmq_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="82:16361:0:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:0;82:16361:0:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="260229" rc-code="0" op-status="0" interval="10000" last-rc-change="1512340645" exec-time="3859" queue-time="0" op-digest="6b46cdf9111345cbd0460b2540d3b2c7"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="rabbitmq-bundle-2">
+        <instance_attributes id="status-rabbitmq-bundle-2"/>
+      </transient_attributes>
+    </node_state>
+    <node_state remote_node="true" id="galera-bundle-0" uname="galera-bundle-0" in_ccm="true" crm-debug-origin="do_state_transition" node_fenced="0">
+      <lrm id="galera-bundle-0">
+        <lrm_resources>
+          <lrm_resource id="galera" type="galera" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera_last_failure_0" operation_key="galera_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="40:16367:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:8;40:16367:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-1" call-id="4040" rc-code="8" op-status="0" interval="0" last-run="1512340778" last-rc-change="1512340778" exec-time="667" queue-time="0" op-digest="54ae66ac8c91c3dc2b73e1ea256393e1"/>
+            <lrm_rsc_op id="galera_last_0" operation_key="galera_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="40:16367:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:8;40:16367:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-1" call-id="4040" rc-code="8" op-status="0" interval="0" last-run="1512340778" last-rc-change="1512340778" exec-time="667" queue-time="0" op-digest="54ae66ac8c91c3dc2b73e1ea256393e1" op-secure-params=" user " op-secure-digest="54ae66ac8c91c3dc2b73e1ea256393e1"/>
+            <lrm_rsc_op id="galera_monitor_10000" operation_key="galera_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="117:16368:8:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:8;117:16368:8:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-1" call-id="4051" rc-code="8" op-status="0" interval="10000" last-rc-change="1512340787" exec-time="338" queue-time="0" op-digest="1698dd48f1fe54ed898160a0139cf835" op-secure-params=" user " op-secure-digest="54ae66ac8c91c3dc2b73e1ea256393e1"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="galera-bundle-0">
+        <instance_attributes id="status-galera-bundle-0"/>
+      </transient_attributes>
+    </node_state>
+    <node_state remote_node="true" id="galera-bundle-1" uname="galera-bundle-1" in_ccm="true" crm-debug-origin="do_state_transition" node_fenced="0">
+      <lrm id="galera-bundle-1">
+        <lrm_resources>
+          <lrm_resource id="galera" type="galera" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera_last_failure_0" operation_key="galera_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="38:16360:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:8;38:16360:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="3858" rc-code="8" op-status="0" interval="0" last-run="1512340635" last-rc-change="1512340635" exec-time="1231" queue-time="0" op-digest="54ae66ac8c91c3dc2b73e1ea256393e1"/>
+            <lrm_rsc_op id="galera_last_0" operation_key="galera_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="38:16360:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:8;38:16360:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="3858" rc-code="8" op-status="0" interval="0" last-run="1512340635" last-rc-change="1512340635" exec-time="1231" queue-time="0" op-digest="54ae66ac8c91c3dc2b73e1ea256393e1" op-secure-params=" user " op-secure-digest="54ae66ac8c91c3dc2b73e1ea256393e1"/>
+            <lrm_rsc_op id="galera_monitor_10000" operation_key="galera_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="119:16361:8:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:8;119:16361:8:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-2" call-id="3869" rc-code="8" op-status="0" interval="10000" last-rc-change="1512340646" exec-time="343" queue-time="0" op-digest="1698dd48f1fe54ed898160a0139cf835" op-secure-params=" user " op-secure-digest="54ae66ac8c91c3dc2b73e1ea256393e1"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="galera-bundle-1">
+        <instance_attributes id="status-galera-bundle-1"/>
+      </transient_attributes>
+    </node_state>
+    <node_state remote_node="true" id="galera-bundle-2" uname="galera-bundle-2" in_ccm="true" crm-debug-origin="do_state_transition" node_fenced="0">
+      <lrm id="galera-bundle-2">
+        <lrm_resources>
+          <lrm_resource id="galera" type="galera" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera_last_failure_0" operation_key="galera_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="41:16367:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:8;41:16367:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-1" call-id="3480" rc-code="8" op-status="0" interval="0" last-run="1512340778" last-rc-change="1512340778" exec-time="1060" queue-time="0" op-digest="54ae66ac8c91c3dc2b73e1ea256393e1"/>
+            <lrm_rsc_op id="galera_last_0" operation_key="galera_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="41:16367:7:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:8;41:16367:7:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-1" call-id="3480" rc-code="8" op-status="0" interval="0" last-run="1512340778" last-rc-change="1512340778" exec-time="1060" queue-time="0" op-digest="54ae66ac8c91c3dc2b73e1ea256393e1" op-secure-params=" user " op-secure-digest="54ae66ac8c91c3dc2b73e1ea256393e1"/>
+            <lrm_rsc_op id="galera_monitor_10000" operation_key="galera_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="126:16368:8:e146b395-5d9c-4cf5-9590-12e56c48a012" transition-magic="0:8;126:16368:8:e146b395-5d9c-4cf5-9590-12e56c48a012" on_node="controller-1" call-id="3491" rc-code="8" op-status="0" interval="10000" last-rc-change="1512340787" exec-time="329" queue-time="1" op-digest="1698dd48f1fe54ed898160a0139cf835" op-secure-params=" user " op-secure-digest="54ae66ac8c91c3dc2b73e1ea256393e1"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="galera-bundle-2">
+        <instance_attributes id="status-galera-bundle-2"/>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>

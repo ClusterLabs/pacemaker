@@ -42,7 +42,7 @@ static qb_ipcs_service_t *crmd_ipcs = NULL;
 static qb_ipcs_service_t *stonith_ipcs = NULL;
 
 /* ipc providers == crmd clients connecting from cluster nodes */
-static GHashTable *ipc_providers = NULL;
+static GList *ipc_providers = NULL;
 /* ipc clients == things like cibadmin, crm_resource, connecting locally */
 static GHashTable *ipc_clients = NULL;
 
@@ -52,24 +52,14 @@ static GHashTable *ipc_clients = NULL;
  *
  * \return Pointer to a provider if one exists, NULL otherwise
  *
- * \note Grab the first provider available; any provider will work, and usually
- *       there will be only one. These are client connections originating from a
- *       cluster node's crmd.
+ * \note Grab the first provider, which is the most recent connection. That way,
+ *       if we haven't yet timed out an old, failed connection, we don't try to
+ *       use it.
  */
 crm_client_t *
 ipc_proxy_get_provider()
 {
-    if (ipc_providers) {
-        GHashTableIter iter;
-        gpointer key = NULL;
-        gpointer value = NULL;
-
-        g_hash_table_iter_init(&iter, ipc_providers);
-        if (g_hash_table_iter_next(&iter, &key, &value)) {
-            return (crm_client_t*)value;
-        }
-    }
-    return NULL;
+    return ipc_providers? (crm_client_t*) (ipc_providers->data) : NULL;
 }
 
 static int32_t
@@ -378,10 +368,8 @@ static struct qb_ipcs_service_handlers cib_proxy_callbacks_rw = {
 void
 ipc_proxy_add_provider(crm_client_t *ipc_proxy)
 {
-    if (ipc_providers == NULL) {
-        return;
-    }
-    g_hash_table_insert(ipc_providers, ipc_proxy->id, ipc_proxy);
+    // Prepending ensures the most recent connection is always first
+    ipc_providers = g_list_prepend(ipc_providers, ipc_proxy);
 }
 
 void
@@ -393,11 +381,7 @@ ipc_proxy_remove_provider(crm_client_t *ipc_proxy)
     GList *remove_these = NULL;
     GListPtr gIter = NULL;
 
-    if (ipc_providers == NULL) {
-        return;
-    }
-
-    g_hash_table_remove(ipc_providers, ipc_proxy->id);
+    ipc_providers = g_list_remove(ipc_providers, ipc_proxy);
 
     g_hash_table_iter_init(&iter, ipc_clients);
     while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & ipc_client)) {
@@ -413,6 +397,8 @@ ipc_proxy_remove_provider(crm_client_t *ipc_proxy)
 
     for (gIter = remove_these; gIter != NULL; gIter = gIter->next) {
         ipc_client = gIter->data;
+
+        // Disconnection callback will free the client here
         qb_ipcs_disconnect(ipc_client->ipcs);
     }
 
@@ -424,7 +410,6 @@ void
 ipc_proxy_init(void)
 {
     ipc_clients = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, NULL);
-    ipc_providers = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, NULL);
 
     cib_ipc_servers_init(&cib_ro,
                          &cib_rw,
@@ -446,10 +431,12 @@ void
 ipc_proxy_cleanup(void)
 {
     if (ipc_providers) {
-        g_hash_table_destroy(ipc_providers);
+        g_list_free(ipc_providers);
+        ipc_providers = NULL;
     }
     if (ipc_clients) {
         g_hash_table_destroy(ipc_clients);
+        ipc_clients = NULL;
     }
     cib_ipc_servers_destroy(cib_ro, cib_rw, cib_shm);
     qb_ipcs_destroy(attrd_ipcs);
@@ -458,6 +445,4 @@ ipc_proxy_cleanup(void)
     cib_ro = NULL;
     cib_rw = NULL;
     cib_shm = NULL;
-    ipc_providers = NULL;
-    ipc_clients = NULL;
 }

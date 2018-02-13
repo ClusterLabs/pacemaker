@@ -509,4 +509,10 @@ pe_rsc_is_anon_clone(resource_t *rsc)
     return pe_rsc_is_clone(rsc) && is_not_set(rsc->flags, pe_rsc_unique);
 }
 
+static inline bool
+pe_rsc_is_bundled(resource_t *rsc)
+{
+    return uber_parent(rsc)->parent != NULL;
+}
+
 #endif

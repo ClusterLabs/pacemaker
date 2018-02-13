@@ -557,9 +557,9 @@ create_remote_resource(
          * remote should be ordered relative to docker.
          */
         xml_remote = pe_create_remote_xml(NULL, id, tuple->docker->id,
-                                          XML_BOOLEAN_FALSE, NULL, NULL,
+                                          NULL, NULL, NULL,
                                           connect_name, (data->control_port?
-                                           data->control_port : port_s));
+                                          data->control_port : port_s));
         free(port_s);
 
         /* Abandon our created ID, and pull the copy from the XML, because we

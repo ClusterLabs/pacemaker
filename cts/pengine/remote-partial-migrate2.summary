@@ -84,6 +84,10 @@ Transition Summary:
  * Move       FAKE49           ( pcmk_remote3 -> pcmk_remote4 )  
 
 Executing cluster transition:
+ * Resource action: pcmk_remote2    migrate_from on pcmk1
+ * Resource action: pcmk_remote2    stop on pcmk3
+ * Resource action: pcmk_remote4    start on pcmk2
+ * Resource action: pcmk_remote5    migrate_to on pcmk1
  * Resource action: FAKE5           stop on pcmk1
  * Resource action: FAKE9           stop on pcmk2
  * Resource action: FAKE12          stop on pcmk1
@@ -99,11 +103,15 @@ Executing cluster transition:
  * Resource action: FAKE48          stop on pcmk1
  * Resource action: FAKE49          stop on pcmk_remote3
  * Fencing pcmk4 (reboot)
+ * Pseudo action:   pcmk_remote2_start_0
+ * Resource action: pcmk_remote4    monitor=60000 on pcmk2
+ * Resource action: pcmk_remote5    migrate_from on pcmk2
+ * Resource action: pcmk_remote5    stop on pcmk1
+ * Resource action: FAKE41          stop on pcmk_remote2
  * Pseudo action:   stonith_complete
- * Resource action: pcmk_remote2    migrate_from on pcmk1
- * Resource action: pcmk_remote2    stop on pcmk3
- * Resource action: pcmk_remote4    start on pcmk2
- * Resource action: pcmk_remote5    migrate_to on pcmk1
+ * Pseudo action:   all_stopped
+ * Resource action: pcmk_remote2    monitor=60000 on pcmk1
+ * Pseudo action:   pcmk_remote5_start_0
  * Resource action: FAKE5           start on pcmk_remote4
  * Resource action: FAKE9           start on pcmk_remote4
  * Resource action: FAKE12          start on pcmk2
@@ -114,12 +122,12 @@ Executing cluster transition:
  * Resource action: FAKE30          start on pcmk_remote1
  * Resource action: FAKE33          start on pcmk_remote4
  * Resource action: FAKE38          start on pcmk_remote1
+ * Resource action: FAKE39          start on pcmk_remote2
+ * Resource action: FAKE41          start on pcmk_remote4
+ * Resource action: FAKE47          start on pcmk_remote2
  * Resource action: FAKE48          start on pcmk_remote3
  * Resource action: FAKE49          start on pcmk_remote4
- * Pseudo action:   pcmk_remote2_start_0
- * Resource action: pcmk_remote4    monitor=60000 on pcmk2
- * Resource action: pcmk_remote5    migrate_from on pcmk2
- * Resource action: pcmk_remote5    stop on pcmk1
+ * Resource action: pcmk_remote5    monitor=60000 on pcmk2
  * Resource action: FAKE5           monitor=10000 on pcmk_remote4
  * Resource action: FAKE9           monitor=10000 on pcmk_remote4
  * Resource action: FAKE12          monitor=10000 on pcmk2
@@ -130,19 +138,11 @@ Executing cluster transition:
  * Resource action: FAKE30          monitor=10000 on pcmk_remote1
  * Resource action: FAKE33          monitor=10000 on pcmk_remote4
  * Resource action: FAKE38          monitor=10000 on pcmk_remote1
- * Resource action: FAKE39          start on pcmk_remote2
- * Resource action: FAKE41          stop on pcmk_remote2
- * Resource action: FAKE47          start on pcmk_remote2
+ * Resource action: FAKE39          monitor=10000 on pcmk_remote2
+ * Resource action: FAKE41          monitor=10000 on pcmk_remote4
+ * Resource action: FAKE47          monitor=10000 on pcmk_remote2
  * Resource action: FAKE48          monitor=10000 on pcmk_remote3
  * Resource action: FAKE49          monitor=10000 on pcmk_remote4
- * Pseudo action:   all_stopped
- * Resource action: pcmk_remote2    monitor=60000 on pcmk1
- * Pseudo action:   pcmk_remote5_start_0
- * Resource action: FAKE39          monitor=10000 on pcmk_remote2
- * Resource action: FAKE41          start on pcmk_remote4
- * Resource action: FAKE47          monitor=10000 on pcmk_remote2
- * Resource action: pcmk_remote5    monitor=60000 on pcmk2
- * Resource action: FAKE41          monitor=10000 on pcmk_remote4
 
 Revised cluster status:
 Online: [ pcmk1 pcmk2 pcmk3 ]
