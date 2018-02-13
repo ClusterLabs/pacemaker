@@ -628,6 +628,7 @@ main(int argc, char **argv)
                 timeout_ms = crm_get_msec(optarg);
                 break;
 
+            case 'C':
             case 'R':
             case 'P':
                 crm_log_args(argc, argv);
@@ -635,17 +636,7 @@ main(int argc, char **argv)
                 if (cib_file == NULL) {
                     require_crmd = TRUE;
                 }
-                rsc_cmd = 'R';
-                find_flags = pe_find_renamed|pe_find_anon;
-                break;
-
-            case 'C':
-                crm_log_args(argc, argv);
-                require_resource = FALSE;
-                if (cib_file == NULL) {
-                    require_crmd = TRUE;
-                }
-                rsc_cmd = 'C';
+                rsc_cmd = 'R'; // disable new behavior until 2.0
                 find_flags = pe_find_renamed|pe_find_anon;
                 break;
 
