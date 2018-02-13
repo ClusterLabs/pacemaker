@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="48" operation="notify" operation_key="DB2_HADR_post_notify_promote_0" internal_operation_key="DB2_HADR:0_post_notify_promote_0" on_node="fastvm-rhel-7-4-95" on_node_uuid="1">
         <primitive id="DB2_HADR" long-id="DB2_HADR:0" class="ocf" provider="heartbeat" type="db2"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_active_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_all_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_available_uname="fastvm-rhel-7-4-96 fastvm-rhel-7-4-95" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="DB2_HADR:1" CRM_meta_notify_promote_uname="fastvm-rhel-7-4-96" CRM_meta_notify_slave_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_slave_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_start_resource="DB2_HADR:1" CRM_meta_notify_start_uname="fastvm-rhel-7-4-96" CRM_meta_notify_stop_resource="DB2_HADR:1" CRM_meta_notify_stop_uname="fastvm-rhel-7-4-96" CRM_meta_notify_type="post" CRM_meta_on_node="fastvm-rhel-7-4-95" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000"  dblist="sample" instance="db2inst1"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_active_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_all_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_available_uname="fastvm-rhel-7-4-96 fastvm-rhel-7-4-95" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="DB2_HADR:1" CRM_meta_notify_promote_uname="fastvm-rhel-7-4-96" CRM_meta_notify_slave_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_slave_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_start_resource="DB2_HADR:1" CRM_meta_notify_start_uname="fastvm-rhel-7-4-96" CRM_meta_notify_stop_resource="DB2_HADR:1" CRM_meta_notify_stop_uname="fastvm-rhel-7-4-96" CRM_meta_notify_type="post" CRM_meta_on_node="fastvm-rhel-7-4-95" CRM_meta_on_node_uuid="1" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  dblist="sample" instance="db2inst1"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -16,7 +16,7 @@
     <action_set>
       <rsc_op id="47" operation="notify" operation_key="DB2_HADR_pre_notify_promote_0" internal_operation_key="DB2_HADR:0_pre_notify_promote_0" on_node="fastvm-rhel-7-4-95" on_node_uuid="1">
         <primitive id="DB2_HADR" long-id="DB2_HADR:0" class="ocf" provider="heartbeat" type="db2"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_active_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_all_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_available_uname="fastvm-rhel-7-4-96 fastvm-rhel-7-4-95" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="DB2_HADR:1" CRM_meta_notify_promote_uname="fastvm-rhel-7-4-96" CRM_meta_notify_slave_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_slave_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_start_resource="DB2_HADR:1" CRM_meta_notify_start_uname="fastvm-rhel-7-4-96" CRM_meta_notify_stop_resource="DB2_HADR:1" CRM_meta_notify_stop_uname="fastvm-rhel-7-4-96" CRM_meta_notify_type="pre" CRM_meta_on_node="fastvm-rhel-7-4-95" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000"  dblist="sample" instance="db2inst1"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_active_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_all_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_available_uname="fastvm-rhel-7-4-96 fastvm-rhel-7-4-95" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="DB2_HADR:1" CRM_meta_notify_promote_uname="fastvm-rhel-7-4-96" CRM_meta_notify_slave_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_slave_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_start_resource="DB2_HADR:1" CRM_meta_notify_start_uname="fastvm-rhel-7-4-96" CRM_meta_notify_stop_resource="DB2_HADR:1" CRM_meta_notify_stop_uname="fastvm-rhel-7-4-96" CRM_meta_notify_type="pre" CRM_meta_on_node="fastvm-rhel-7-4-95" CRM_meta_on_node_uuid="1" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  dblist="sample" instance="db2inst1"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -29,7 +29,7 @@
     <action_set>
       <rsc_op id="45" operation="notify" operation_key="DB2_HADR_post_notify_stop_0" internal_operation_key="DB2_HADR:0_post_notify_stop_0" on_node="fastvm-rhel-7-4-95" on_node_uuid="1">
         <primitive id="DB2_HADR" long-id="DB2_HADR:0" class="ocf" provider="heartbeat" type="db2"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_active_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_all_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_available_uname="fastvm-rhel-7-4-96 fastvm-rhel-7-4-95" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="stopped" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource="DB2_HADR:1" CRM_meta_notify_promote_uname="fastvm-rhel-7-4-96" CRM_meta_notify_slave_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_slave_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_start_resource="DB2_HADR:1" CRM_meta_notify_start_uname="fastvm-rhel-7-4-96" CRM_meta_notify_stop_resource="DB2_HADR:1" CRM_meta_notify_stop_uname="fastvm-rhel-7-4-96" CRM_meta_notify_type="post" CRM_meta_on_node="fastvm-rhel-7-4-95" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000"  dblist="sample" instance="db2inst1"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_active_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_all_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_available_uname="fastvm-rhel-7-4-96 fastvm-rhel-7-4-95" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="stopped" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource="DB2_HADR:1" CRM_meta_notify_promote_uname="fastvm-rhel-7-4-96" CRM_meta_notify_slave_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_slave_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_start_resource="DB2_HADR:1" CRM_meta_notify_start_uname="fastvm-rhel-7-4-96" CRM_meta_notify_stop_resource="DB2_HADR:1" CRM_meta_notify_stop_uname="fastvm-rhel-7-4-96" CRM_meta_notify_type="post" CRM_meta_on_node="fastvm-rhel-7-4-95" CRM_meta_on_node_uuid="1" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  dblist="sample" instance="db2inst1"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -42,7 +42,7 @@
     <action_set>
       <rsc_op id="44" operation="notify" operation_key="DB2_HADR_pre_notify_stop_0" internal_operation_key="DB2_HADR:0_pre_notify_stop_0" on_node="fastvm-rhel-7-4-95" on_node_uuid="1">
         <primitive id="DB2_HADR" long-id="DB2_HADR:0" class="ocf" provider="heartbeat" type="db2"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_active_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_all_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_available_uname="fastvm-rhel-7-4-96 fastvm-rhel-7-4-95" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="stop" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource="DB2_HADR:1" CRM_meta_notify_promote_uname="fastvm-rhel-7-4-96" CRM_meta_notify_slave_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_slave_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_start_resource="DB2_HADR:1" CRM_meta_notify_start_uname="fastvm-rhel-7-4-96" CRM_meta_notify_stop_resource="DB2_HADR:1" CRM_meta_notify_stop_uname="fastvm-rhel-7-4-96" CRM_meta_notify_type="pre" CRM_meta_on_node="fastvm-rhel-7-4-95" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000"  dblist="sample" instance="db2inst1"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_active_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_all_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_available_uname="fastvm-rhel-7-4-96 fastvm-rhel-7-4-95" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="stop" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource="DB2_HADR:1" CRM_meta_notify_promote_uname="fastvm-rhel-7-4-96" CRM_meta_notify_slave_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_slave_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_start_resource="DB2_HADR:1" CRM_meta_notify_start_uname="fastvm-rhel-7-4-96" CRM_meta_notify_stop_resource="DB2_HADR:1" CRM_meta_notify_stop_uname="fastvm-rhel-7-4-96" CRM_meta_notify_type="pre" CRM_meta_on_node="fastvm-rhel-7-4-95" CRM_meta_on_node_uuid="1" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  dblist="sample" instance="db2inst1"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -55,7 +55,7 @@
     <action_set>
       <rsc_op id="42" operation="notify" operation_key="DB2_HADR_post_notify_start_0" internal_operation_key="DB2_HADR:0_post_notify_start_0" on_node="fastvm-rhel-7-4-95" on_node_uuid="1">
         <primitive id="DB2_HADR" long-id="DB2_HADR:0" class="ocf" provider="heartbeat" type="db2"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_active_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_all_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_available_uname="fastvm-rhel-7-4-96 fastvm-rhel-7-4-95" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource="DB2_HADR:1" CRM_meta_notify_promote_uname="fastvm-rhel-7-4-96" CRM_meta_notify_slave_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_slave_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_start_resource="DB2_HADR:1" CRM_meta_notify_start_uname="fastvm-rhel-7-4-96" CRM_meta_notify_stop_resource="DB2_HADR:1" CRM_meta_notify_stop_uname="fastvm-rhel-7-4-96" CRM_meta_notify_type="post" CRM_meta_on_node="fastvm-rhel-7-4-95" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000"  dblist="sample" instance="db2inst1"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_active_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_all_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_available_uname="fastvm-rhel-7-4-96 fastvm-rhel-7-4-95" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource="DB2_HADR:1" CRM_meta_notify_promote_uname="fastvm-rhel-7-4-96" CRM_meta_notify_slave_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_slave_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_start_resource="DB2_HADR:1" CRM_meta_notify_start_uname="fastvm-rhel-7-4-96" CRM_meta_notify_stop_resource="DB2_HADR:1" CRM_meta_notify_stop_uname="fastvm-rhel-7-4-96" CRM_meta_notify_type="post" CRM_meta_on_node="fastvm-rhel-7-4-95" CRM_meta_on_node_uuid="1" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  dblist="sample" instance="db2inst1"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -68,7 +68,7 @@
     <action_set>
       <rsc_op id="41" operation="notify" operation_key="DB2_HADR_pre_notify_start_0" internal_operation_key="DB2_HADR:0_pre_notify_start_0" on_node="fastvm-rhel-7-4-95" on_node_uuid="1">
         <primitive id="DB2_HADR" long-id="DB2_HADR:0" class="ocf" provider="heartbeat" type="db2"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_active_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_all_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_available_uname="fastvm-rhel-7-4-96 fastvm-rhel-7-4-95" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource="DB2_HADR:1" CRM_meta_notify_promote_uname="fastvm-rhel-7-4-96" CRM_meta_notify_slave_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_slave_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_start_resource="DB2_HADR:1" CRM_meta_notify_start_uname="fastvm-rhel-7-4-96" CRM_meta_notify_stop_resource="DB2_HADR:1" CRM_meta_notify_stop_uname="fastvm-rhel-7-4-96" CRM_meta_notify_type="pre" CRM_meta_on_node="fastvm-rhel-7-4-95" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000"  dblist="sample" instance="db2inst1"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_active_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_all_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_available_uname="fastvm-rhel-7-4-96 fastvm-rhel-7-4-95" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource="DB2_HADR:1" CRM_meta_notify_promote_uname="fastvm-rhel-7-4-96" CRM_meta_notify_slave_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_slave_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_start_resource="DB2_HADR:1" CRM_meta_notify_start_uname="fastvm-rhel-7-4-96" CRM_meta_notify_stop_resource="DB2_HADR:1" CRM_meta_notify_stop_uname="fastvm-rhel-7-4-96" CRM_meta_notify_type="pre" CRM_meta_on_node="fastvm-rhel-7-4-95" CRM_meta_on_node_uuid="1" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  dblist="sample" instance="db2inst1"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -81,7 +81,7 @@
     <action_set>
       <rsc_op id="50" operation="notify" operation_key="DB2_HADR_post_notify_promote_0" internal_operation_key="DB2_HADR:1_post_notify_promote_0" on_node="fastvm-rhel-7-4-96" on_node_uuid="2">
         <primitive id="DB2_HADR" long-id="DB2_HADR:1" class="ocf" provider="heartbeat" type="db2"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_active_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_all_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_available_uname="fastvm-rhel-7-4-96 fastvm-rhel-7-4-95" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="DB2_HADR:1" CRM_meta_notify_promote_uname="fastvm-rhel-7-4-96" CRM_meta_notify_slave_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_slave_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_start_resource="DB2_HADR:1" CRM_meta_notify_start_uname="fastvm-rhel-7-4-96" CRM_meta_notify_stop_resource="DB2_HADR:1" CRM_meta_notify_stop_uname="fastvm-rhel-7-4-96" CRM_meta_notify_type="post" CRM_meta_on_node="fastvm-rhel-7-4-96" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000"  dblist="sample" instance="db2inst1"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_active_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_all_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_available_uname="fastvm-rhel-7-4-96 fastvm-rhel-7-4-95" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="DB2_HADR:1" CRM_meta_notify_promote_uname="fastvm-rhel-7-4-96" CRM_meta_notify_slave_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_slave_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_start_resource="DB2_HADR:1" CRM_meta_notify_start_uname="fastvm-rhel-7-4-96" CRM_meta_notify_stop_resource="DB2_HADR:1" CRM_meta_notify_stop_uname="fastvm-rhel-7-4-96" CRM_meta_notify_type="post" CRM_meta_on_node="fastvm-rhel-7-4-96" CRM_meta_on_node_uuid="2" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  dblist="sample" instance="db2inst1"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -94,7 +94,7 @@
     <action_set>
       <rsc_op id="49" operation="notify" operation_key="DB2_HADR_pre_notify_promote_0" internal_operation_key="DB2_HADR:1_pre_notify_promote_0" on_node="fastvm-rhel-7-4-96" on_node_uuid="2">
         <primitive id="DB2_HADR" long-id="DB2_HADR:1" class="ocf" provider="heartbeat" type="db2"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_active_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_all_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_available_uname="fastvm-rhel-7-4-96 fastvm-rhel-7-4-95" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="DB2_HADR:1" CRM_meta_notify_promote_uname="fastvm-rhel-7-4-96" CRM_meta_notify_slave_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_slave_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_start_resource="DB2_HADR:1" CRM_meta_notify_start_uname="fastvm-rhel-7-4-96" CRM_meta_notify_stop_resource="DB2_HADR:1" CRM_meta_notify_stop_uname="fastvm-rhel-7-4-96" CRM_meta_notify_type="pre" CRM_meta_on_node="fastvm-rhel-7-4-96" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000"  dblist="sample" instance="db2inst1"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_active_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_all_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_available_uname="fastvm-rhel-7-4-96 fastvm-rhel-7-4-95" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="DB2_HADR:1" CRM_meta_notify_promote_uname="fastvm-rhel-7-4-96" CRM_meta_notify_slave_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_slave_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_start_resource="DB2_HADR:1" CRM_meta_notify_start_uname="fastvm-rhel-7-4-96" CRM_meta_notify_stop_resource="DB2_HADR:1" CRM_meta_notify_stop_uname="fastvm-rhel-7-4-96" CRM_meta_notify_type="pre" CRM_meta_on_node="fastvm-rhel-7-4-96" CRM_meta_on_node_uuid="2" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  dblist="sample" instance="db2inst1"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -107,7 +107,7 @@
     <action_set>
       <rsc_op id="46" operation="notify" operation_key="DB2_HADR_pre_notify_stop_0" internal_operation_key="DB2_HADR:1_pre_notify_stop_0" on_node="fastvm-rhel-7-4-96" on_node_uuid="2">
         <primitive id="DB2_HADR" long-id="DB2_HADR:1" class="ocf" provider="heartbeat" type="db2"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_active_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_all_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_available_uname="fastvm-rhel-7-4-96 fastvm-rhel-7-4-95" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="stop" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource="DB2_HADR:1" CRM_meta_notify_promote_uname="fastvm-rhel-7-4-96" CRM_meta_notify_slave_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_slave_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_start_resource="DB2_HADR:1" CRM_meta_notify_start_uname="fastvm-rhel-7-4-96" CRM_meta_notify_stop_resource="DB2_HADR:1" CRM_meta_notify_stop_uname="fastvm-rhel-7-4-96" CRM_meta_notify_type="pre" CRM_meta_on_node="fastvm-rhel-7-4-96" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000"  dblist="sample" instance="db2inst1"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_active_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_all_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_available_uname="fastvm-rhel-7-4-96 fastvm-rhel-7-4-95" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="stop" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource="DB2_HADR:1" CRM_meta_notify_promote_uname="fastvm-rhel-7-4-96" CRM_meta_notify_slave_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_slave_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_start_resource="DB2_HADR:1" CRM_meta_notify_start_uname="fastvm-rhel-7-4-96" CRM_meta_notify_stop_resource="DB2_HADR:1" CRM_meta_notify_stop_uname="fastvm-rhel-7-4-96" CRM_meta_notify_type="pre" CRM_meta_on_node="fastvm-rhel-7-4-96" CRM_meta_on_node_uuid="2" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  dblist="sample" instance="db2inst1"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -120,7 +120,7 @@
     <action_set>
       <rsc_op id="43" operation="notify" operation_key="DB2_HADR_post_notify_start_0" internal_operation_key="DB2_HADR:1_post_notify_start_0" on_node="fastvm-rhel-7-4-96" on_node_uuid="2">
         <primitive id="DB2_HADR" long-id="DB2_HADR:1" class="ocf" provider="heartbeat" type="db2"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_active_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_all_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_available_uname="fastvm-rhel-7-4-96 fastvm-rhel-7-4-95" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource="DB2_HADR:1" CRM_meta_notify_promote_uname="fastvm-rhel-7-4-96" CRM_meta_notify_slave_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_slave_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_start_resource="DB2_HADR:1" CRM_meta_notify_start_uname="fastvm-rhel-7-4-96" CRM_meta_notify_stop_resource="DB2_HADR:1" CRM_meta_notify_stop_uname="fastvm-rhel-7-4-96" CRM_meta_notify_type="post" CRM_meta_on_node="fastvm-rhel-7-4-96" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000"  dblist="sample" instance="db2inst1"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_active_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_all_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_available_uname="fastvm-rhel-7-4-96 fastvm-rhel-7-4-95" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource="DB2_HADR:1" CRM_meta_notify_promote_uname="fastvm-rhel-7-4-96" CRM_meta_notify_slave_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_slave_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_start_resource="DB2_HADR:1" CRM_meta_notify_start_uname="fastvm-rhel-7-4-96" CRM_meta_notify_stop_resource="DB2_HADR:1" CRM_meta_notify_stop_uname="fastvm-rhel-7-4-96" CRM_meta_notify_type="post" CRM_meta_on_node="fastvm-rhel-7-4-96" CRM_meta_on_node_uuid="2" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  dblist="sample" instance="db2inst1"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -133,7 +133,7 @@
     <action_set>
       <rsc_op id="14" operation="monitor" operation_key="DB2_HADR_monitor_22000" internal_operation_key="DB2_HADR:1_monitor_22000" on_node="fastvm-rhel-7-4-96" on_node_uuid="2">
         <primitive id="DB2_HADR" long-id="DB2_HADR:1" class="ocf" provider="heartbeat" type="db2"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="22000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="fastvm-rhel-7-4-96" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="8" CRM_meta_role="Master" CRM_meta_timeout="60000"  dblist="sample" instance="db2inst1"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="22000" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="fastvm-rhel-7-4-96" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="8" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_role="Master" CRM_meta_timeout="60000"  dblist="sample" instance="db2inst1"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -155,7 +155,7 @@
     <action_set>
       <rsc_op id="13" operation="promote" operation_key="DB2_HADR_promote_0" internal_operation_key="DB2_HADR:1_promote_0" on_node="fastvm-rhel-7-4-96" on_node_uuid="2">
         <primitive id="DB2_HADR" long-id="DB2_HADR:1" class="ocf" provider="heartbeat" type="db2"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="promote" CRM_meta_notify="true" CRM_meta_notify_active_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_active_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_all_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_available_uname="fastvm-rhel-7-4-96 fastvm-rhel-7-4-95" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource="DB2_HADR:1" CRM_meta_notify_promote_uname="fastvm-rhel-7-4-96" CRM_meta_notify_slave_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_slave_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_start_resource="DB2_HADR:1" CRM_meta_notify_start_uname="fastvm-rhel-7-4-96" CRM_meta_notify_stop_resource="DB2_HADR:1" CRM_meta_notify_stop_uname="fastvm-rhel-7-4-96" CRM_meta_on_node="fastvm-rhel-7-4-96" CRM_meta_on_node_uuid="2" CRM_meta_timeout="120000"  dblist="sample" instance="db2inst1"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="promote" CRM_meta_notify="true" CRM_meta_notify_active_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_active_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_all_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_available_uname="fastvm-rhel-7-4-96 fastvm-rhel-7-4-95" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource="DB2_HADR:1" CRM_meta_notify_promote_uname="fastvm-rhel-7-4-96" CRM_meta_notify_slave_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_slave_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_start_resource="DB2_HADR:1" CRM_meta_notify_start_uname="fastvm-rhel-7-4-96" CRM_meta_notify_stop_resource="DB2_HADR:1" CRM_meta_notify_stop_uname="fastvm-rhel-7-4-96" CRM_meta_on_node="fastvm-rhel-7-4-96" CRM_meta_on_node_uuid="2" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000"  dblist="sample" instance="db2inst1"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -171,7 +171,7 @@
     <action_set>
       <rsc_op id="12" operation="start" operation_key="DB2_HADR_start_0" internal_operation_key="DB2_HADR:1_start_0" on_node="fastvm-rhel-7-4-96" on_node_uuid="2">
         <primitive id="DB2_HADR" long-id="DB2_HADR:1" class="ocf" provider="heartbeat" type="db2"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="true" CRM_meta_notify_active_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_active_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_all_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_available_uname="fastvm-rhel-7-4-96 fastvm-rhel-7-4-95" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource="DB2_HADR:1" CRM_meta_notify_promote_uname="fastvm-rhel-7-4-96" CRM_meta_notify_slave_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_slave_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_start_resource="DB2_HADR:1" CRM_meta_notify_start_uname="fastvm-rhel-7-4-96" CRM_meta_notify_stop_resource="DB2_HADR:1" CRM_meta_notify_stop_uname="fastvm-rhel-7-4-96" CRM_meta_on_node="fastvm-rhel-7-4-96" CRM_meta_on_node_uuid="2" CRM_meta_timeout="120000"  dblist="sample" instance="db2inst1"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="true" CRM_meta_notify_active_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_active_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_all_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_available_uname="fastvm-rhel-7-4-96 fastvm-rhel-7-4-95" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource="DB2_HADR:1" CRM_meta_notify_promote_uname="fastvm-rhel-7-4-96" CRM_meta_notify_slave_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_slave_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_start_resource="DB2_HADR:1" CRM_meta_notify_start_uname="fastvm-rhel-7-4-96" CRM_meta_notify_stop_resource="DB2_HADR:1" CRM_meta_notify_stop_uname="fastvm-rhel-7-4-96" CRM_meta_on_node="fastvm-rhel-7-4-96" CRM_meta_on_node_uuid="2" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000"  dblist="sample" instance="db2inst1"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -187,7 +187,7 @@
     <action_set>
       <rsc_op id="4" operation="stop" operation_key="DB2_HADR_stop_0" internal_operation_key="DB2_HADR:1_stop_0" on_node="fastvm-rhel-7-4-96" on_node_uuid="2">
         <primitive id="DB2_HADR" long-id="DB2_HADR:1" class="ocf" provider="heartbeat" type="db2"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="stop" CRM_meta_notify="true" CRM_meta_notify_active_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_active_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_all_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_available_uname="fastvm-rhel-7-4-96 fastvm-rhel-7-4-95" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource="DB2_HADR:1" CRM_meta_notify_promote_uname="fastvm-rhel-7-4-96" CRM_meta_notify_slave_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_slave_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_start_resource="DB2_HADR:1" CRM_meta_notify_start_uname="fastvm-rhel-7-4-96" CRM_meta_notify_stop_resource="DB2_HADR:1" CRM_meta_notify_stop_uname="fastvm-rhel-7-4-96" CRM_meta_on_node="fastvm-rhel-7-4-96" CRM_meta_on_node_uuid="2" CRM_meta_timeout="120000"  dblist="sample" instance="db2inst1"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="stop" CRM_meta_notify="true" CRM_meta_notify_active_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_active_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_all_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_available_uname="fastvm-rhel-7-4-96 fastvm-rhel-7-4-95" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource="DB2_HADR:1" CRM_meta_notify_promote_uname="fastvm-rhel-7-4-96" CRM_meta_notify_slave_resource="DB2_HADR:0 DB2_HADR:1" CRM_meta_notify_slave_uname="fastvm-rhel-7-4-95 fastvm-rhel-7-4-96" CRM_meta_notify_start_resource="DB2_HADR:1" CRM_meta_notify_start_uname="fastvm-rhel-7-4-96" CRM_meta_notify_stop_resource="DB2_HADR:1" CRM_meta_notify_stop_uname="fastvm-rhel-7-4-96" CRM_meta_on_node="fastvm-rhel-7-4-96" CRM_meta_on_node_uuid="2" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000"  dblist="sample" instance="db2inst1"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -199,7 +199,7 @@
   <synapse id="14" priority="1000000">
     <action_set>
       <pseudo_event id="32" operation="notified" operation_key="DB2_HADR-master_confirmed-post_notify_promoted_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="promote" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="promote" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -217,7 +217,7 @@
   <synapse id="15" priority="1000000">
     <action_set>
       <pseudo_event id="31" operation="notify" operation_key="DB2_HADR-master_post_notify_promoted_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="promote" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="promote" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -232,7 +232,7 @@
   <synapse id="16">
     <action_set>
       <pseudo_event id="30" operation="notified" operation_key="DB2_HADR-master_confirmed-pre_notify_promote_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="promote" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="promote" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -250,7 +250,7 @@
   <synapse id="17">
     <action_set>
       <pseudo_event id="29" operation="notify" operation_key="DB2_HADR-master_pre_notify_promote_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="promote" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="promote" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -265,7 +265,7 @@
   <synapse id="18" priority="1000000">
     <action_set>
       <pseudo_event id="28" operation="promoted" operation_key="DB2_HADR-master_promoted_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -277,7 +277,7 @@
   <synapse id="19">
     <action_set>
       <pseudo_event id="27" operation="promote" operation_key="DB2_HADR-master_promote_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -295,7 +295,7 @@
   <synapse id="20" priority="1000000">
     <action_set>
       <pseudo_event id="26" operation="notified" operation_key="DB2_HADR-master_confirmed-post_notify_stopped_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="stopped" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="stopped" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -310,7 +310,7 @@
   <synapse id="21" priority="1000000">
     <action_set>
       <pseudo_event id="25" operation="notify" operation_key="DB2_HADR-master_post_notify_stopped_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="stopped" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="stopped" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -325,7 +325,7 @@
   <synapse id="22">
     <action_set>
       <pseudo_event id="24" operation="notified" operation_key="DB2_HADR-master_confirmed-pre_notify_stop_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="stop" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="stop" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="stop" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="stop" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -343,7 +343,7 @@
   <synapse id="23">
     <action_set>
       <pseudo_event id="23" operation="notify" operation_key="DB2_HADR-master_pre_notify_stop_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="stop" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="stop" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="stop" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="stop" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs/>
@@ -351,7 +351,7 @@
   <synapse id="24" priority="1000000">
     <action_set>
       <pseudo_event id="22" operation="stopped" operation_key="DB2_HADR-master_stopped_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -366,7 +366,7 @@
   <synapse id="25">
     <action_set>
       <pseudo_event id="21" operation="stop" operation_key="DB2_HADR-master_stop_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -378,7 +378,7 @@
   <synapse id="26" priority="1000000">
     <action_set>
       <pseudo_event id="20" operation="notified" operation_key="DB2_HADR-master_confirmed-post_notify_running_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -396,7 +396,7 @@
   <synapse id="27" priority="1000000">
     <action_set>
       <pseudo_event id="19" operation="notify" operation_key="DB2_HADR-master_post_notify_running_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -411,7 +411,7 @@
   <synapse id="28">
     <action_set>
       <pseudo_event id="18" operation="notified" operation_key="DB2_HADR-master_confirmed-pre_notify_start_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -426,7 +426,7 @@
   <synapse id="29">
     <action_set>
       <pseudo_event id="17" operation="notify" operation_key="DB2_HADR-master_pre_notify_start_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -438,7 +438,7 @@
   <synapse id="30" priority="1000000">
     <action_set>
       <pseudo_event id="16" operation="running" operation_key="DB2_HADR-master_running_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
@@ -453,7 +453,7 @@
   <synapse id="31">
     <action_set>
       <pseudo_event id="15" operation="start" operation_key="DB2_HADR-master_start_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
