@@ -20,6 +20,46 @@
     </element>
   </define>
 
+  <!--
+   see upgrade-2.10.xsl
+   - cibtr:table for="resource-instance-attributes"
+   -->
+  <define name="primitive-template.instance_attributes.nvpair.name-unsupported">
+    <attribute name="name">
+      <data type="string">
+        <except>
+          <choice>
+            <value>pcmk_list_cmd</value>
+            <value>pcmk_monitor_cmd</value>
+            <value>pcmk_off_cmd</value>
+            <value>pcmk_on_cmd</value>
+            <value>pcmk_reboot_cmd</value>
+            <value>pcmk_status_cmd</value>
+          </choice>
+        </except>
+      </data>
+    </attribute>
+  </define>
+
+  <define name="element-resource-extra.primitive-template">
+    <zeroOrMore>
+      <choice>
+        <element name="meta_attributes">
+          <externalRef href="nvset-3.0.rng"/>
+        </element>
+        <element name="instance_attributes">
+          <grammar>
+            <include href="nvset-3.0.rng">
+              <define name="element-nvset.name">
+                <parentRef name="primitive-template.instance_attributes.nvpair.name-unsupported"/>
+              </define>
+            </include>
+          </grammar>
+        </element>
+      </choice>
+    </zeroOrMore>
+  </define>
+
   <define name="element-primitive">
     <element name="primitive">
       <interleave>
@@ -34,7 +74,7 @@
         <optional>
           <attribute name="description"><text/></attribute>
         </optional>
-        <ref name="element-resource-extra"/>
+        <ref name="element-resource-extra.primitive-template"/>
         <ref name="element-operations"/>
         <zeroOrMore>
           <element name="utilization">
@@ -54,7 +94,7 @@
         <optional>
           <attribute name="description"><text/></attribute>
         </optional>
-        <ref name="element-resource-extra"/>
+        <ref name="element-resource-extra.primitive-template"/>
         <ref name="element-operations"/>
         <zeroOrMore>
           <element name="utilization">

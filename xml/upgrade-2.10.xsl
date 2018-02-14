@@ -133,6 +133,28 @@
   <!--
    Target tag:     primitive
                    template
+   Object:         ./instance_attributes/nvpair/@name
+   Selector ctxt:  N/A
+   Move ctxt:      N/A
+   -->
+  <cibtr:table for="resource-instance-attributes" msg-prefix="Resource instance_attributes">
+    <cibtr:replace what="pcmk_list_cmd"
+                   with="pcmk_list_action"/>
+    <cibtr:replace what="pcmk_monitor_cmd"
+                   with="pcmk_monitor_action"/>
+    <cibtr:replace what="pcmk_off_cmd"
+                   with="pcmk_off_action"/>
+    <cibtr:replace what="pcmk_on_cmd"
+                   with="pcmk_on_action"/>
+    <cibtr:replace what="pcmk_reboot_cmd"
+                   with="pcmk_reboot_action"/>
+    <cibtr:replace what="pcmk_status_cmd"
+                   with="pcmk_status_action"/>
+  </cibtr:table>
+
+  <!--
+   Target tag:     primitive
+                   template
    Object:         ./operations/op/@*
                    ./operations/op/meta_attributes/nvpair/@name
    Selector ctxt:  ./operations/op/@name
@@ -177,6 +199,11 @@
                         /cibtr:map/cibtr:table[
                           @for = 'cluster-node'
                         ]"/>
+
+<xsl:variable name="MapResourceInstanceAttributes"
+              select="document('')/xsl:stylesheet
+                        /cibtr:map/cibtr:table[@for = 'resource-instance-attributes'
+                      ]"/>
 
 <xsl:variable name="MapResourcesOperation"
               select="document('')/xsl:stylesheet
@@ -585,6 +612,155 @@
       </xsl:otherwise>
     </xsl:choose>
   </xsl:for-each>
+</xsl:template>
+
+<!--
+ Source ctxt:    (primitive|template)/instance_attributes
+ Target ctxt:    (primitive|template)/instance_attributes
+ Target-inv ctxt:N/A
+ Dependencies:   N/A
+ -->
+<xsl:template name="ProcessRscInstanceAttributes">
+  <xsl:param name="Source"/>
+  <xsl:param name="InverseMode" select="false()"/>
+  <xsl:param name="InnerSimulation" select="false()"/>
+
+  <xsl:variable name="InnerPass">
+    <xsl:choose>
+      <xsl:when test="$InverseMode
+                      or
+                      $InnerSimulation">
+        <xsl:value-of select="''"/>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:call-template name="ProcessRscInstanceAttributes">
+          <xsl:with-param name="Source" select="$Source"/>
+          <xsl:with-param name="InnerSimulation" select="true()"/>
+        </xsl:call-template>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:variable>
+
+  <!-- B: special-casing nvpair -->
+  <xsl:for-each select="$Source/node()">
+    <xsl:choose>
+      <xsl:when test="self::text()
+                      and
+                      not($InverseMode)">
+        <!-- cf. trick A. (consideration 1.) -->
+        <xsl:choose>
+          <xsl:when test="normalize-space($InnerPass)
+                          != $InnerPass
+                          and
+                          (
+                            not(following-sibling::nvpair)
+                            or
+                            generate-id(following-sibling::nvpair[1])
+                            != generate-id(following-sibling::*[1])
+                          )">
+            <xsl:value-of select="."/>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:value-of select="normalize-space(.)"/>
+          </xsl:otherwise>
+        </xsl:choose>
+      </xsl:when>
+      <xsl:when test="self::nvpair">
+        <xsl:variable name="Replacement"
+                      select="$MapResourceInstanceAttributes/cibtr:replace[
+                                @what = current()/@name
+                                and
+                                (
+                                  (
+                                    @in-case-of
+                                    and
+                                    contains(concat('|', @in-case-of, '|'),
+                                             concat('|', current()/@value, '|'))
+                                  )
+                                  or
+                                  (
+                                    not(@in-case-of)
+                                    and
+                                    not(
+                                      $MapResourceInstanceAttributes/cibtr:replace[
+                                        @what = current()/@name
+                                        and
+                                        @in-case-of
+                                        and
+                                        contains(concat('|', @in-case-of, '|'),
+                                                 concat('|', current()/@value, '|'))
+                                      ]
+                                    )
+                                  )
+                                )
+                              ]"/>
+        <xsl:if test="not($InverseMode or $InnerSimulation)">
+          <xsl:call-template name="MapMsg">
+            <xsl:with-param name="Context" select="@id"/>
+            <xsl:with-param name="Replacement" select="$Replacement"/>
+          </xsl:call-template>
+        </xsl:if>
+        <xsl:choose>
+          <xsl:when test="$Replacement
+                          and
+                          (
+                            not(string($Replacement/@with))
+                            or
+                            $Replacement/@where
+                          )">
+            <!-- drop (move-over code missing) -->
+          </xsl:when>
+          <xsl:when test="$InverseMode"/>
+          <xsl:when test="$Replacement">
+            <!-- plain rename (space helper?) -->
+            <xsl:call-template name="HelperDenormalizedSpace">
+              <xsl:with-param name="Source" select="."/>
+            </xsl:call-template>
+            <xsl:copy>
+              <xsl:for-each select="@*">
+                <xsl:choose>
+                  <xsl:when test="name() = 'name'">
+                    <xsl:attribute name="{name()}">
+                      <xsl:value-of select="$Replacement/@with"/>
+                    </xsl:attribute>
+                  </xsl:when>
+                  <xsl:when test="string($Replacement/@redefined-as)
+                                  and
+                                  name() = 'value'">
+                    <xsl:attribute name="{name()}">
+                      <xsl:value-of select="$Replacement/@redefined-as"/>
+                    </xsl:attribute>
+                  </xsl:when>
+                  <xsl:otherwise>
+                    <xsl:copy/>
+                  </xsl:otherwise>
+                </xsl:choose>
+              </xsl:for-each>
+            </xsl:copy>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:call-template name="HelperDenormalizedSpace">
+              <xsl:with-param name="Source" select="."/>
+            </xsl:call-template>
+            <xsl:copy>
+              <xsl:apply-templates select="@*|node()"/>
+            </xsl:copy>
+          </xsl:otherwise>
+        </xsl:choose>
+      </xsl:when>
+      <xsl:when test="$InverseMode
+                      or
+                      self::comment()">
+        <!-- drop -->
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:copy>
+          <xsl:apply-templates select="@*|node()"/>
+        </xsl:copy>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:for-each>
+  <!-- E: special-casing nvpair -->
 </xsl:template>
 
 <!--
@@ -1153,7 +1329,7 @@
 <xsl:template match="primitive|template">
   <xsl:copy>
     <xsl:apply-templates select="@*"/>
-    <!-- B: special-casing operations -->
+    <!-- B: special-casing operations|instance_attributes -->
     <xsl:for-each select="node()">
       <xsl:choose>
         <xsl:when test="self::operations">
@@ -1179,6 +1355,21 @@
             </xsl:for-each>
             <!-- E: special-casing op -->
           </xsl:copy>
+        </xsl:when>
+        <xsl:when test="self::instance_attributes">
+          <xsl:variable name="ProcessedRscInstanceAttributes">
+            <xsl:call-template name="ProcessRscInstanceAttributes">
+              <xsl:with-param name="Source" select="."/>
+            </xsl:call-template>
+          </xsl:variable>
+          <!-- cf. trick A. -->
+          <xsl:if test="normalize-space($ProcessedRscInstanceAttributes)
+                        != $ProcessedRscInstanceAttributes">
+            <xsl:copy>
+              <xsl:apply-templates select="@*"/>
+              <xsl:copy-of select="$ProcessedRscInstanceAttributes"/>
+            </xsl:copy>
+          </xsl:if>
         </xsl:when>
         <xsl:otherwise>
           <xsl:call-template name="HelperIdentity"/>
