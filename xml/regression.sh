@@ -77,16 +77,19 @@ test_cleaner() {
 
 test_selfcheck() {
 	_tsc_template=
+	_tsc_validator=
 
 	while test $# -gt 0; do
 		case "$1" in
-		-o=*) _tsc_template="upgrade-${1#-o=}.xsl";;
+		-o=*) _tsc_template="${1#-o=}";;
 		esac
 		shift
 	done
+	_tsc_validator="${_tsc_template:?}"
+	_tsc_validator="xslt_cibtr-${_tsc_validator%%.*}.rng"
+	_tsc_template="upgrade-${_tsc_template}.xsl"
 
-	xmllint --noout --relaxng 'http://www.thaiopensource.com/relaxng/xslt.rng' \
-	  "${_tsc_template:?}"
+	xmllint --noout --relaxng "${_tsc_validator}" "${_tsc_template}"
 }
 
 # stdout: filename of the transformed file

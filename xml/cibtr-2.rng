@@ -1,0 +1,18 @@
+<!--
+ Copyright 2018 Red Hat, Inc.
+ Author: Jan Pokorny <jpokorny@redhat.com>
+ Part of pacemaker project
+ SPDX-License-Identifier: GPL-2.0-or-later
+ -->
+<grammar xmlns="http://relaxng.org/ns/structure/1.0"
+         xmlns:cibtr="http://clusterlabs.org/ns/pacemaker/cibtr-2">
+  <start>
+    <ref name="cibtr-2"/>
+  </start>
+
+  <define name="cibtr-2">
+    <element name="cibtr:map">
+      <empty/>
+    </element>
+  </define>
+</grammar>

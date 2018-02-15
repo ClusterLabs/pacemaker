@@ -4,10 +4,21 @@
  Part of pacemaker project
  SPDX-License-Identifier: GPL-2.0-or-later
  -->
-<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+                xmlns:cibtr="http://clusterlabs.org/ns/pacemaker/cibtr-2">
 <xsl:output method="xml" encoding="UTF-8" indent="yes" omit-xml-declaration="yes"/>
 
 <xsl:param name="cib-min-ver" select="'3.0'"/>
+
+<!--
+ helper definitions
+ -->
+
+<cibtr:map/>
+
+<!--
+ actual transformation
+ -->
 
 <xsl:template match="cib">
   <xsl:copy>
