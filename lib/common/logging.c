@@ -360,9 +360,10 @@ crm_control_blackbox(int nsig, bool enable)
     if (blackbox_file_prefix == NULL) {
         pid_t pid = getpid();
 
-        blackbox_file_prefix = malloc(NAME_MAX);
-        snprintf(blackbox_file_prefix, NAME_MAX, "%s/%s-%lu",
-                 CRM_BLACKBOX_DIR, crm_system_name, (unsigned long) pid);
+        blackbox_file_prefix = crm_strdup_printf("%s/%s-%lu",
+                                                 CRM_BLACKBOX_DIR,
+                                                 crm_system_name,
+                                                 (unsigned long) pid);
     }
 
     if (enable && qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED) {
@@ -990,20 +991,4 @@ crm_log_output_fn(const char *file, const char *function, int line, int level, c
         }
 
     } while (next != NULL && next[0] != 0);
-}
-
-char *
-crm_strdup_printf (char const *format, ...)
-{
-    va_list ap;
-    int len = 0;
-    char *string = NULL;
-
-    va_start(ap, format);
-
-    len = vasprintf (&string, format, ap);
-    CRM_ASSERT(len > 0);
-
-    va_end(ap);
-    return string;
 }

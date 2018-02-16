@@ -31,21 +31,14 @@ setenv(const char *name, const char *value, int why)
     int rc = -1;
 
     if (name && value) {
-        char *envp = NULL;
+        char *envp = crm_strdup_printf("%s=%s", name, value);
 
-        envp = malloc(strlen(name) + strlen(value) + 2);
-        if (envp) {
-            /*
-             * Unfortunately, the putenv API guarantees memory leaks when
-             * changing environment variables repeatedly...   :-(
-             */
-
-            sprintf(envp, "%s=%s", name, value);
-
-            /* Cannot free envp (!) */
-            rc = putenv(envp);
-        }
-
+        /*
+         * Cannot free envp (!)
+         * Unfortunately, the putenv API guarantees memory leaks when
+         * changing environment variables repeatedly...   :-(
+         */
+        rc = putenv(envp);
     }
     return (rc);
 }

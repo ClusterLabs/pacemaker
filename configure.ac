@@ -1707,6 +1707,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 extra/logrotate/Makefile                            \
                 extra/logrotate/pacemaker                           \
                 tools/Makefile                                      \
+                tools/report.collector                              \
                 tools/report.common                                 \
                 tools/crm_mon.service                               \
                 tools/crm_mon.upstart                               \

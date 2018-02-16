@@ -156,9 +156,8 @@ cib_update_counter(xmlNode * xml_obj, const char *field, gboolean reset)
         old_value = crm_element_value_copy(xml_obj, field);
     }
     if (old_value != NULL) {
-        new_value = calloc(1, 128);
         int_value = atoi(old_value);
-        sprintf(new_value, "%d", ++int_value);
+        new_value = crm_itoa(++int_value);
     } else {
         new_value = strdup("1");
     }
@@ -434,9 +433,7 @@ update_cib_object(xmlNode * parent, xmlNode * update)
                     goto incr;
                 }
 
-                replace_item = calloc(1, lpc - last + 1);
-                memcpy(replace_item, replace + last, lpc - last);
-
+                replace_item = strndup(replace + last, lpc - last);
                 remove = find_xml_node(target, replace_item, FALSE);
                 if (remove != NULL) {
                     crm_trace("Replacing node <%s> in <%s>",
@@ -763,32 +760,20 @@ cib_process_xpath(const char *op, int options, const char *section, xmlNode * re
                 }
 
             } else if (options & cib_xpath_address) {
-
-                int path_len = 0;
                 char *path = NULL;
                 xmlNode *parent = match;
 
                 while (parent && parent->type == XML_ELEMENT_NODE) {
-                    int extra = 1;
-                    char *new_path = NULL;
                     const char *id = crm_element_value(parent, XML_ATTR_ID);
+                    char *new_path = NULL;
 
-                    extra += strlen((const char *)parent->name);
                     if (id) {
-                        extra += 8;     /* [@id=""] */
-                        extra += strlen(id);
-                    }
-
-                    path_len += extra;
-                    new_path = malloc(path_len + 1);
-                    if(new_path == NULL) {
-                        break;
-
-                    } else if (id) {
-                        snprintf(new_path, path_len + 1, "/%s[@id='%s']%s", parent->name, id,
-                                 path ? path : "");
+                        new_path = crm_strdup_printf("/%s[@id='%s']%s",
+                                                     parent->name, id,
+                                                     (path? path : ""));
                     } else {
-                        snprintf(new_path, path_len + 1, "/%s%s", parent->name, path ? path : "");
+                        new_path = crm_strdup_printf("/%s%s", parent->name,
+                                                     (path? path : ""));
                     }
                     free(path);
                     path = new_path;

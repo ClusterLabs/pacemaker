@@ -723,9 +723,9 @@ parse_exit_reason(const char *output)
 {
     const char *cur = NULL;
     const char *last = NULL;
-    char *reason = NULL;
     static int cookie_len = 0;
     char *eol = NULL;
+    size_t reason_len = EXIT_REASON_MAX_LEN;
 
     if (output == NULL) {
         return NULL;
@@ -745,20 +745,12 @@ parse_exit_reason(const char *output)
         return NULL;
     }
 
-    /* make our own copy */
-    reason = calloc(1, (EXIT_REASON_MAX_LEN+1));
-    CRM_ASSERT(reason);
-
-    /* limit reason string size */
-    strncpy(reason, last, EXIT_REASON_MAX_LEN);
-
-    /* truncate everything after a new line */
-    eol = strchr(reason, '\n');
-    if (eol != NULL) {
-        *eol = '\0';
+    // Truncate everything after a new line, and limit reason string size
+    eol = strchr(last, '\n');
+    if (eol) {
+        reason_len = QB_MIN(reason_len, eol - last);
     }
-
-    return reason;
+    return strndup(last, reason_len);
 }
 
 void

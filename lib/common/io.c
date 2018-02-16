@@ -85,8 +85,6 @@ crm_build_path(const char *path_c, mode_t mode)
 char *
 generate_series_filename(const char *directory, const char *series, int sequence, gboolean bzip)
 {
-    int len = 40;
-    char *filename = NULL;
     const char *ext = "raw";
 
     CRM_CHECK(directory != NULL, return NULL);
@@ -96,17 +94,10 @@ generate_series_filename(const char *directory, const char *series, int sequence
     bzip = FALSE;
 #endif
 
-    len += strlen(directory);
-    len += strlen(series);
-    filename = malloc(len);
-    CRM_CHECK(filename != NULL, return NULL);
-
     if (bzip) {
         ext = "bz2";
     }
-    sprintf(filename, "%s/%s-%d.%s", directory, series, sequence, ext);
-
-    return filename;
+    return crm_strdup_printf("%s/%s-%d.%s", directory, series, sequence, ext);
 }
 
 /*!
@@ -126,17 +117,11 @@ get_last_sequence(const char *directory, const char *series)
     char *series_file = NULL;
     char *buffer = NULL;
     int seq = 0;
-    int len = 36;
 
     CRM_CHECK(directory != NULL, return 0);
     CRM_CHECK(series != NULL, return 0);
 
-    len += strlen(directory);
-    len += strlen(series);
-    series_file = malloc(len);
-    CRM_CHECK(series_file != NULL, return 0);
-    sprintf(series_file, "%s/%s.last", directory, series);
-
+    series_file = crm_strdup_printf("%s/%s.last", directory, series);
     file_strm = fopen(series_file, "r");
     if (file_strm == NULL) {
         crm_debug("Series file %s does not exist", series_file);
@@ -194,7 +179,6 @@ void
 write_last_sequence(const char *directory, const char *series, int sequence, int max)
 {
     int rc = 0;
-    int len = 36;
     FILE *file_strm = NULL;
     char *series_file = NULL;
 
@@ -208,15 +192,8 @@ write_last_sequence(const char *directory, const char *series, int sequence, int
         sequence = 0;
     }
 
-    len += strlen(directory);
-    len += strlen(series);
-    series_file = malloc(len);
-
-    if (series_file) {
-        sprintf(series_file, "%s/%s.last", directory, series);
-        file_strm = fopen(series_file, "w");
-    }
-
+    series_file = crm_strdup_printf("%s/%s.last", directory, series);
+    file_strm = fopen(series_file, "w");
     if (file_strm != NULL) {
         rc = fprintf(file_strm, "%d", sequence);
         if (rc < 0) {

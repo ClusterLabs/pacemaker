@@ -116,12 +116,8 @@ static void
 create_node_entry(cib_t * cib_conn, const char *node)
 {
     int rc = pcmk_ok;
-    int max = strlen(new_node_template) + strlen(node) + 1;
-    char *xpath = NULL;
+    char *xpath = crm_strdup_printf(new_node_template, node);
 
-    xpath = calloc(1, max);
-
-    snprintf(xpath, max, new_node_template, node);
     rc = cib_conn->cmds->query(cib_conn, xpath, NULL, cib_xpath | cib_sync_call | cib_scope_local);
 
     if (rc == -ENXIO) {
@@ -253,16 +249,11 @@ modify_node(cib_t * cib_conn, char *node, gboolean up)
 static xmlNode *
 find_resource_xml(xmlNode * cib_node, const char *resource)
 {
-    char *xpath = NULL;
     xmlNode *match = NULL;
     const char *node = crm_element_value(cib_node, XML_ATTR_UNAME);
-    int max = strlen(rsc_template) + strlen(node) + strlen(resource) + 1;
+    char *xpath = crm_strdup_printf(rsc_template, node, resource);
 
-    xpath = calloc(1, max);
-
-    snprintf(xpath, max, rsc_template, node, resource);
     match = get_xpath_object(xpath, cib_node, LOG_TRACE);
-
     free(xpath);
     return match;
 }
@@ -698,10 +689,8 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
 
     for (gIter = fake_op_fail_list; gIter != NULL; gIter = gIter->next) {
         char *spec = (char *)gIter->data;
-        char *key = NULL;
-
-        key = calloc(1, 1 + strlen(spec));
-        snprintf(key, strlen(spec), "%s_%s_%d@%s=", resource, op->op_type, op->interval, node);
+        char *key = crm_strdup_printf("%s_%s_%d@%s=", resource, op->op_type,
+                                      op->interval, node);
 
         if (strncasecmp(key, spec, strlen(key)) == 0) {
             rc = sscanf(spec, "%*[^=]=%d", (int *) &op->rc);

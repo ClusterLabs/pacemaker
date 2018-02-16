@@ -5150,7 +5150,6 @@ expand_idref(xmlNode * input, xmlNode * top)
     const char *tag = NULL;
     const char *ref = NULL;
     xmlNode *result = input;
-    char *xpath_string = NULL;
 
     if (result == NULL) {
         return NULL;
@@ -5163,12 +5162,7 @@ expand_idref(xmlNode * input, xmlNode * top)
     ref = crm_element_value(result, XML_ATTR_IDREF);
 
     if (ref != NULL) {
-        int offset = 0;
-
-        xpath_string = calloc(1, XPATH_MAX);
-
-        offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "//%s[@id='%s']", tag, ref);
-        CRM_LOG_ASSERT(offset > 0);
+        char *xpath_string = crm_strdup_printf("//%s[@id='%s']", tag, ref);
 
         result = get_xpath_object(xpath_string, top, LOG_ERR);
         if (result == NULL) {
@@ -5178,9 +5172,8 @@ expand_idref(xmlNode * input, xmlNode * top)
                     crm_str(nodePath));
             free(nodePath);
         }
+        free(xpath_string);
     }
-
-    free(xpath_string);
     return result;
 }
 

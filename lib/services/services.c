@@ -74,13 +74,12 @@ resources_find_service_class(const char *agent)
      * - systemd
      * - upstart
      */
-    int rc = 0;
     struct stat st;
     char *path = NULL;
 
 #ifdef LSB_ROOT_DIR
-    rc = asprintf(&path, "%s/%s", LSB_ROOT_DIR, agent);
-    if (rc > 0 && stat(path, &st) == 0) {
+    path = crm_strdup_printf("%s/%s", LSB_ROOT_DIR, agent);
+    if (stat(path, &st) == 0) {
         free(path);
         return PCMK_RESOURCE_CLASS_LSB;
     }
@@ -161,6 +160,21 @@ expand_resource_class(const char *rsc, const char *standard, const char *agent)
     return expanded_class;
 }
 
+/*!
+ * \brief Duplicate a file path, inserting a prefix if not absolute
+ *
+ * \param[in] filename  File path to duplicate
+ * \param[in] dirname   If filename is not absolute, prefix to add
+ *
+ * \return Newly allocated memory with full path
+ */
+static char *
+dup_file_path(const char *filename, const char *dirname)
+{
+    return (*filename == '/')? strdup(filename)
+           : crm_strdup_printf("%s/%s", dirname, filename);
+}
+
 svc_action_t *
 resources_action_create(const char *name, const char *standard, const char *provider,
                         const char *agent, const char *action, int interval, int timeout,
@@ -224,22 +238,13 @@ resources_action_create(const char *name, const char *standard, const char *prov
         op->params = params;
         params = NULL;
 
-        if (asprintf(&op->opaque->exec, "%s/resource.d/%s/%s", OCF_ROOT_DIR, provider, agent) == -1) {
-            crm_err("Internal error: cannot create agent path");
-            goto return_error;
-        }
+        op->opaque->exec = crm_strdup_printf("%s/resource.d/%s/%s",
+                                             OCF_ROOT_DIR, provider, agent);
         op->opaque->args[0] = strdup(op->opaque->exec);
         op->opaque->args[1] = strdup(action);
 
     } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_LSB) == 0) {
-        if (op->agent[0] == '/') {
-            /* if given an absolute path, use that instead
-             * of tacking on the LSB_ROOT_DIR path to the front */
-            op->opaque->exec = strdup(op->agent);
-        } else if (asprintf(&op->opaque->exec, "%s/%s", LSB_ROOT_DIR, op->agent) == -1) {
-            crm_err("Internal error: cannot create agent path");
-            goto return_error;
-        }
+        op->opaque->exec = dup_file_path(op->agent, LSB_ROOT_DIR);
         op->opaque->args[0] = strdup(op->opaque->exec);
         op->opaque->args[1] = strdup(op->action);
         op->opaque->args[2] = NULL;
@@ -255,16 +260,7 @@ resources_action_create(const char *name, const char *standard, const char *prov
     } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_NAGIOS) == 0) {
         int index = 0;
 
-        if (op->agent[0] == '/') {
-            /* if given an absolute path, use that instead
-             * of tacking on the NAGIOS_PLUGIN_DIR path to the front */
-            op->opaque->exec = strdup(op->agent);
-
-        } else if (asprintf(&op->opaque->exec, "%s/%s", NAGIOS_PLUGIN_DIR, op->agent) == -1) {
-            crm_err("Internal error: cannot create agent path");
-            goto return_error;
-        }
-
+        op->opaque->exec = dup_file_path(op->agent, NAGIOS_PLUGIN_DIR);
         op->opaque->args[0] = strdup(op->opaque->exec);
         index = 1;
 
@@ -283,21 +279,12 @@ resources_action_create(const char *name, const char *standard, const char *prov
 
             while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value) &&
                    index <= args_size - 3) {
-                int len = 3;
-                char *long_opt = NULL;
 
                 if (safe_str_eq(key, XML_ATTR_CRM_VERSION) || strstr(key, CRM_META "_")) {
                     continue;
                 }
-
-                len += strlen(key);
-                long_opt = calloc(1, len);
-                sprintf(long_opt, "--%s", key);
-                long_opt[len - 1] = 0;
-
-                op->opaque->args[index] = long_opt;
-                op->opaque->args[index + 1] = strdup(value);
-                index += 2;
+                op->opaque->args[index++] = crm_strdup_printf("--%s", key);
+                op->opaque->args[index++] = strdup(value);
             }
         }
         op->opaque->args[index] = NULL;

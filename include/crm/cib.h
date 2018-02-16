@@ -180,6 +180,6 @@ void remove_cib_op_callback(int call_id, gboolean all_callbacks);
 
 #  include <crm/cib/util.h>
 
-#  define CIB_LIBRARY "libcib.so.4"
+#  define CIB_LIBRARY "libcib.so.6"
 
 #endif

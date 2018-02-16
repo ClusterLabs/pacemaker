@@ -661,15 +661,11 @@ parse_host_list(const char *hosts)
     max = strlen(hosts);
     for (lpc = 0; lpc <= max; lpc++) {
         if (hosts[lpc] == '\n' || hosts[lpc] == 0) {
-            char *line = NULL;
             int len = lpc - last;
 
             if(len > 1) {
-                line = malloc(1 + len);
-            }
+                char *line = strndup(hosts + last, len);
 
-            if(line) {
-                snprintf(line, 1 + len, "%s", hosts + last);
                 line[len] = 0; /* Because it might be '\n' */
                 parse_host_line(line, len, &output);
                 free(line);
@@ -1327,10 +1323,8 @@ parse_device_list(const char *devices)
     max = strlen(devices);
     for (lpc = 0; lpc <= max; lpc++) {
         if (devices[lpc] == ',' || devices[lpc] == 0) {
-            char *line = NULL;
+            char *line = strndup(devices + last, lpc - last);
 
-            line = calloc(1, 2 + lpc - last);
-            snprintf(line, 1 + lpc - last, "%s", devices + last);
             output = stonith_key_value_add(output, NULL, line);
             free(line);
 

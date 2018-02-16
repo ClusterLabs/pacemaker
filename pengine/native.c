@@ -2724,10 +2724,7 @@ increment_clone(char *last_rsc_id)
     gboolean complete = FALSE;
 
     CRM_CHECK(last_rsc_id != NULL, return NULL);
-    if (last_rsc_id != NULL) {
-        len = strlen(last_rsc_id);
-    }
-
+    len = strlen(last_rsc_id);
     lpc = len - 1;
     while (complete == FALSE && lpc > 0) {
         switch (last_rsc_id[lpc]) {
@@ -2767,11 +2764,7 @@ increment_clone(char *last_rsc_id)
                 break;
             case ':':
                 tmp = last_rsc_id;
-                last_rsc_id = calloc(1, len + 2);
-                memcpy(last_rsc_id, tmp, len);
-                last_rsc_id[++lpc] = '1';
-                last_rsc_id[len] = '0';
-                last_rsc_id[len + 1] = 0;
+                last_rsc_id = crm_strdup_printf("%s:10", tmp);
                 complete = TRUE;
                 free(tmp);
                 break;

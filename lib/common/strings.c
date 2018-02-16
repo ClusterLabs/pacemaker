@@ -31,19 +31,9 @@
 char *
 crm_concat(const char *prefix, const char *suffix, char join)
 {
-    int len = 0;
-    char *new_str = NULL;
-
     CRM_ASSERT(prefix != NULL);
     CRM_ASSERT(suffix != NULL);
-    len = strlen(prefix) + strlen(suffix) + 2;
-
-    new_str = malloc(len);
-    if(new_str) {
-        sprintf(new_str, "%s%c%s", prefix, join, suffix);
-        new_str[len - 1] = 0;
-    }
-    return new_str;
+    return crm_strdup_printf("%s%c%s", prefix, join, suffix);
 }
 
 char *
@@ -59,15 +49,7 @@ crm_itoa_stack(int an_int, char *buffer, size_t len)
 char *
 crm_itoa(int an_int)
 {
-    int len = 32;
-    char *buffer = NULL;
-
-    buffer = malloc(len + 1);
-    if (buffer != NULL) {
-        snprintf(buffer, len, "%d", an_int);
-    }
-
-    return buffer;
+    return crm_strdup_printf("%d", an_int);
 }
 
 void
@@ -426,8 +408,8 @@ crm_compress_string(const char *data, int length, int max, char **result, unsign
     clock_gettime(CLOCK_MONOTONIC, &before_t);
 #endif
 
-    /* coverity[returned_null] Ignore */
-    compressed = malloc(max);
+    compressed = calloc(max, sizeof(char));
+    CRM_ASSERT(compressed);
 
     *result_len = max;
     rc = BZ2_bzBuffToBuffCompress(compressed, result_len, uncompressed, length, CRM_BZ2_BLOCKS, 0,
@@ -480,4 +462,18 @@ crm_alpha_sort(gconstpointer a, gconstpointer b)
         return 1;
     }
     return strcasecmp(a, b);
+}
+
+char *
+crm_strdup_printf(char const *format, ...)
+{
+    va_list ap;
+    int len = 0;
+    char *string = NULL;
+
+    va_start(ap, format);
+    len = vasprintf (&string, format, ap);
+    CRM_ASSERT(len > 0);
+    va_end(ap);
+    return string;
 }

@@ -1,3 +1,81 @@
+* Fri Feb 16 2018 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.0-rc1
+- Update source tarball to revision: 8eec81f
+- Changesets: 267
+- Diff:       233 files changed, 6622 insertions(+), 28517 deletions(-)
+
+
+- Deprecated features removed since Pacemaker-1.1.18
+  + All of these have newer forms, and the cluster will automatically convert
+    many older syntax usages in configurations to newer syntax as needed
+  + Drop support for heartbeat and corosync 1 (whether using CMAN or plugin)
+  + Drop support for rolling upgrades from Pacemaker versions older than 1.1.11
+  + Drop support for PCMK_legacy and LRMD_MAX_CHILDREN environment variables
+  + Drop support for legacy option aliases including default-action-timeout,
+    default-resource-stickiness, resource-failure-stickiness,
+    default-resource-failure-stickiness, is-managed-default,
+    and all names using underbar instead of dash
+  + Drop support for undocumented resource isolation feature
+  + Drop support for "requires" operation meta-attribute
+  + Drop support for operation meta-attributes in instance_attributes
+  + Drop support for the pcmk_*_cmd, pcmk_arg_map, and pcmk_poweroff_action
+    fence resource parameters
+  + Drop support for processing very old saved CIB files (including
+    pre-0.6.0 start failure entries, pre-0.6.5 operation history entries,
+    pre-0.7 transition keys, pre-1.1.4 migration history entries,
+    pre-1.0 XML configuration schemas, pre-1.1.6 ticket state entries, and
+    pre-1.1.7 failed recurring operation history entries)
+  + tools: drop support for deprecated command-line options to crmadmin,
+    crm_attribute, crm_resource, crm_verify, crm_mon, and stonith_admin
+  + tools: drop support for built-in SMTP and SNMP in crm_mon
+
+- Features added since Pacemaker-1.1.18
+  + The default location of the Pacemaker detail log is now
+    /var/log/pacemaker/pacemaker.log (instead of being directly in /var/log),
+    and Pacemaker will no longer use Corosync's logging preferences;
+    configure script options are available to change default log locations
+  + The master XML tag is deprecated in favor of a new "promotable"
+    meta-attribute set to true with a standard clone tag, and the "master-max"
+    and "master-node-max" master meta-attributes are deprecated in favor of
+    new "promoted-max" and "promoted-node-max" clone meta-attributes;
+    documentation now refers to these as promotable clones rather than
+    master/slave, stateful or multistate clones, and to promotion scores
+    instead of master scores
+  + record-pending now defaults to TRUE (pending actions are shown in status)
+  + A negative stonith-watchdog-timeout now tells the cluster to automatically
+    calculate the value based on SBD_WATCHDOG_TIMEOUT (which was the behavior
+    of 0 before 1.1.15; 0 retains its post-1.1.15 behavior of disabling use of
+    the watchdog as a fencing device)
+  + The undocumented restart-type and role_after_failure resource
+    meta-attributes are now deprecated
+  + systemd unit file removes limit on spawned processes
+  + tools: all tools now return consistent, well-defined exit codes;
+    crm_error has a --exit option to list these
+  + tools: crm_resource --cleanup now cleans only failed operation history;
+    crm_resource --reprobe retains the previous behavior of cleaning all
+    operation history
+  + All Python code in Pacemaker now supports both Python 2.7 and Python 3
+  + Regression testing code has been consolidated and overhauled; most obvious
+    change is new command names
+  + Administration-related documentation has been moved from the
+    Pacemaker Explained document to a new Pacemaker Administration document
+
+- Changes since Pacemaker-1.1.18
+  + Numerous changes to public API of libraries
+  + Restore systemd unit dependency on DBus (regression in 1.1.17)
+  + attrd: ensure node name is broadcast at start-up (CLBZ#5330, regression in 1.1.18)
+  + crmd: quorum gain without a node join should cause new transition
+  + pengine: ensure stop operations occur after stopped remote connections have been brought up
+  + pengine: only allowed nodes need to be considered when ordering resource startup after _all_ recovery
+  + pengine: ordering bundle child stops/demotes after container fencing causes graph loops
+  + pengine: remote connection resources are safe to to require only quorum
+  + pengine: unfence before probing or starting fence devices (regression in 1.1.18)
+  + pengine: correctly observe colocation constraints with bundles in the Master role
+  + pengine: restart resource after failed demote when appropriate
+  + Pacemaker Remote: always use most recent remote proxy
+  + tools: prevent notify actions from causing crm_resource --wait to hang
+  + tools: crm_master did not work without explicit --lifetime (regression in 1.1.18)
+
+
 * Tue Nov 14 2017 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.18-1
 - Update source tarball to revision: a9fbd15
 - Changesets: 644

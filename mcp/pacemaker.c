@@ -77,8 +77,9 @@ static pcmk_child_t pcmk_children[] = {
 
 static gboolean start_child(pcmk_child_t * child);
 static gboolean check_active_before_startup_processes(gpointer user_data);
+static gboolean update_node_processes(uint32_t id, const char *uname,
+                                      uint32_t procs);
 void update_process_clients(crm_client_t *client);
-void update_process_peers(void);
 
 void
 enable_crmd_as_root(gboolean enable)
@@ -594,26 +595,23 @@ update_process_clients(crm_client_t *client)
  * \internal
  * \brief Send a CPG message with local node's process list to all peers
  */
-void
+static void
 update_process_peers(void)
 {
     /* Do nothing for corosync-2 based clusters */
 
-    char buffer[1024];
-    struct iovec *iov;
-    int rc = 0;
+    struct iovec *iov = calloc(1, sizeof(struct iovec));
 
+    CRM_ASSERT(iov);
     if (local_name) {
-        rc = snprintf(buffer, SIZEOF(buffer), "<node uname=\"%s\" proclist=\"%u\"/>",
-                      local_name, get_process_list());
+        iov->iov_base = crm_strdup_printf("<node uname=\"%s\" proclist=\"%u\"/>",
+                                          local_name, get_process_list());
     } else {
-        rc = snprintf(buffer, SIZEOF(buffer), "<node proclist=\"%u\"/>", get_process_list());
+        iov->iov_base = crm_strdup_printf("<node proclist=\"%u\"/>",
+                                          get_process_list());
     }
-
-    crm_trace("Sending %s", buffer);
-    iov = calloc(1, sizeof(struct iovec));
-    iov->iov_base = strdup(buffer);
-    iov->iov_len = rc + 1;
+    iov->iov_len = strlen(iov->iov_base) + 1;
+    crm_trace("Sending %s", (char*) iov->iov_base);
     send_cpg_iov(iov);
 }
 
@@ -627,7 +625,7 @@ update_process_peers(void)
  *
  * \return TRUE if the process list changed, FALSE otherwise
  */
-gboolean
+static gboolean
 update_node_processes(uint32_t id, const char *uname, uint32_t procs)
 {
     gboolean changed = FALSE;
