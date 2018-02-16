@@ -55,9 +55,6 @@ extern GHashTable *clone_merge_weights(resource_t * rsc, const char *rhs, GHashT
 extern GHashTable *container_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes,
                                        const char *attr, float factor, enum pe_weights flags);
 
-extern GHashTable *master_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes,
-                                        const char *attr, float factor, enum pe_weights flags);
-
 extern GHashTable *native_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes,
                                         const char *attr, float factor, enum pe_weights flags);
 
@@ -77,12 +74,10 @@ extern enum pe_action_flags native_action_flags(action_t * action, node_t * node
 
 extern void native_rsc_location(resource_t * rsc, rsc_to_node_t * constraint);
 extern void native_expand(resource_t * rsc, pe_working_set_t * data_set);
-extern void native_dump(resource_t * rsc, const char *pre_text, gboolean details);
 extern gboolean native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
                                     gboolean force, pe_working_set_t * data_set);
 extern void native_append_meta(resource_t * rsc, xmlNode * xml);
 
-extern int group_num_allowed_nodes(resource_t * rsc);
 extern node_t *group_color(resource_t * rsc, node_t * preferred, pe_working_set_t * data_set);
 extern void group_create_actions(resource_t * rsc, pe_working_set_t * data_set);
 extern void group_internal_constraints(resource_t * rsc, pe_working_set_t * data_set);
@@ -95,7 +90,6 @@ extern void group_rsc_location(resource_t * rsc, rsc_to_node_t * constraint);
 extern void group_expand(resource_t * rsc, pe_working_set_t * data_set);
 extern void group_append_meta(resource_t * rsc, xmlNode * xml);
 
-extern int container_num_allowed_nodes(resource_t * rsc);
 extern node_t *container_color(resource_t * rsc, node_t * preferred, pe_working_set_t * data_set);
 extern void container_create_actions(resource_t * rsc, pe_working_set_t * data_set);
 extern void container_internal_constraints(resource_t * rsc, pe_working_set_t * data_set);
@@ -110,7 +104,6 @@ extern gboolean container_create_probe(resource_t * rsc, node_t * node, action_t
                                    gboolean force, pe_working_set_t * data_set);
 extern void container_append_meta(resource_t * rsc, xmlNode * xml);
 
-extern int clone_num_allowed_nodes(resource_t * rsc);
 extern node_t *clone_color(resource_t * rsc, node_t * preferred, pe_working_set_t * data_set);
 extern void clone_create_actions(resource_t * rsc, pe_working_set_t * data_set);
 extern void clone_internal_constraints(resource_t * rsc, pe_working_set_t * data_set);
@@ -125,24 +118,17 @@ extern gboolean clone_create_probe(resource_t * rsc, node_t * node, action_t * c
                                    gboolean force, pe_working_set_t * data_set);
 extern void clone_append_meta(resource_t * rsc, xmlNode * xml);
 
-extern gboolean master_unpack(resource_t * rsc, pe_working_set_t * data_set);
-extern node_t *master_color(resource_t * rsc, node_t * preferred, pe_working_set_t * data_set);
-extern void master_create_actions(resource_t * rsc, pe_working_set_t * data_set);
-extern void master_internal_constraints(resource_t * rsc, pe_working_set_t * data_set);
-extern void master_rsc_colocation_rh(resource_t * lh_rsc, resource_t * rh_rsc,
-                                     rsc_colocation_t * constraint);
-extern void master_append_meta(resource_t * rsc, xmlNode * xml);
+void apply_master_prefs(resource_t *rsc);
+node_t *color_promotable(resource_t *rsc, pe_working_set_t *data_set);
+void create_promotable_actions(resource_t *rsc, pe_working_set_t *data_set);
+void promote_demote_constraints(resource_t *rsc, pe_working_set_t *data_set);
+void promotable_constraints(resource_t *rsc, pe_working_set_t *data_set);
+void promotable_colocation_rh(resource_t *lh_rsc, resource_t *rh_rsc,
+                              rsc_colocation_t *constraint);
 
 /* extern resource_object_functions_t resource_variants[]; */
 extern resource_alloc_functions_t resource_class_alloc_functions[];
 extern gboolean is_active(rsc_to_node_t * cons);
-
-extern gboolean native_constraint_violated(resource_t * rsc_lh, resource_t * rsc_rh,
-                                           rsc_colocation_t * constraint);
-
-extern gboolean unpack_rsc_to_attr(xmlNode * xml_obj, pe_working_set_t * data_set);
-
-extern gboolean unpack_rsc_to_node(xmlNode * xml_obj, pe_working_set_t * data_set);
 
 extern gboolean unpack_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set);
 
@@ -176,7 +162,6 @@ gboolean update_action_flags(action_t * action, enum pe_action_flags flags, cons
 gboolean update_action(action_t * action);
 void complex_set_cmds(resource_t * rsc);
 
-void master_promotion_constraints(resource_t * rsc, pe_working_set_t * data_set);
 void clone_create_pseudo_actions(
     resource_t * rsc, GListPtr children, notify_data_t **start_notify, notify_data_t **stop_notify,  pe_working_set_t * data_set);
 

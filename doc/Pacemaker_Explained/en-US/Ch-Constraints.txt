@@ -85,7 +85,7 @@ indexterm:[Constraints,Location,rsc]
  applies, if +rsc+ is not specified; if the regular expression contains
  submatches and the constraint is governed by a rule (see <<ch-rules>>), the
  submatches can be referenced as +%0+ through +%9+ in the rule's
- +score-attribute+ or a rule expression's +attribute+ '(since 1.1.16)'
+ +score-attribute+ or a rule expression's +attribute+
 indexterm:[rsc-pattern,Location Constraints]
 indexterm:[Constraints,Location,rsc-pattern]
 
@@ -115,7 +115,7 @@ indexterm:[Constraints,Location,score]
  (properly written OCF agents will not, so this is usually only seen with other
  agent types); and when Pacemaker Remote is used to scale a cluster to hundreds
  of nodes, limiting resource discovery to allowed nodes can significantly boost
- performance. '(since 1.1.13)'
+ performance.
 
 * +always:+ Always perform resource discovery for the specified resource on this node.
 * +never:+ Never perform resource discovery for the specified resource on this node.
@@ -317,7 +317,7 @@ indexterm:[Ordering Constraints,symmetrical]
 |=========================================================
 
 +Promote+ and +demote+ apply to the master role of
-<<s-resource-multistate,multi-state>> resources.
+<<s-resource-promotable,promotable>> resources.
 
 === Optional and mandatory ordering ===
 
@@ -485,7 +485,7 @@ mandatory.
 [[s-coloc-attribute]]
 === Colocation by Node Attribute ===
 
-The +node+attribute+ property of a colocation constraints allows you to express
+The +node-attribute+ property of a colocation constraints allows you to express
 the requirement, "these resources must be on similar nodes".
 
 As an example, imagine that you have two Storage Area Networks (SANs) that are
@@ -549,7 +549,7 @@ indexterm:[Constraints,Resource Sets,sequential]
  member of the set is started, but if more than one member of the set is
  starting at the same time, the cluster will still wait until all of those have
  started before continuing (this may change in future versions).
- Meaningful within +rsc_order+. '(since 1.1.7)'
+ Meaningful within +rsc_order+.
 indexterm:[require-all,Resource Sets]
 indexterm:[Constraints,Resource Sets,require-all]
 
@@ -836,7 +836,7 @@ be active (and naturally on the same node); and if a set has +sequential="true"+
 then in order for one member of that set to be active, all members listed
 before it must also be active.
 
-If desired, you can restrict the dependency to instances of multistate
+If desired, you can restrict the dependency to instances of promotable clone
 resources that are in a specific role, using the set's +role+ property.
 
 .Colocation chain in which the members of the middle set have no interdependencies, and the last listed set (which the cluster places first) is restricted to instances in master status.

@@ -1,0 +1,60 @@
+= Monitoring a Pacemaker Cluster =
+
+== Using crm_mon ==
+
+The `crm_mon` utility displays the current state of an active cluster. It can
+show the cluster status organized by node or by resource, and can be used in
+either single-shot or dynamically updating mode. It can also display operations
+performed and information about failures.
+
+Using this tool, you can examine the state of the cluster for irregularities,
+and see how it responds when you cause or simulate failures.
+
+See the manual page or the output of `crm_mon --help` for a full description of
+its many options.
+      
+.Sample output from crm_mon -1
+======
+-------
+Stack: corosync
+Current DC: node2 (version 2.0.0-1) - partition with quorum
+Last updated: Mon Jan 29 12:18:42 2018
+Last change: Mon Jan 29 12:18:40 2018 by root via crm_attribute	on node3
+
+5 nodes configured
+2 resources configured
+
+Online: [ node1 node2 node3 node4 node5 ]
+
+Active resources:
+
+Fencing (stonith:fence_xvm):    Started node1
+IP	(ocf:heartbeat:IPaddr2):	Started node2
+-------
+======
+      
+.Sample output from crm_mon -n -1
+======
+-------
+Stack: corosync
+Current DC: node2 (version 2.0.0-1) - partition with quorum
+Last updated: Mon Jan 29 12:21:48 2018
+Last change: Mon Jan 29 12:18:40 2018 by root via crm_attribute	on node3
+
+5 nodes configured
+2 resources configured
+
+Node node1: online
+        Fencing (stonith:fence_xvm):    Started
+Node node2: online
+	IP	(ocf:heartbeat:IPaddr2):	Started
+Node node3: online
+Node node4: online
+Node node5: online
+-------
+======
+
+As mentioned in an earlier chapter, the DC is the node is where decisions are
+made. The cluster elects a node to be DC as needed. The only significance of
+the choice of DC to an administrator is the fact that its logs will have the
+most information about why decisions were made.

@@ -1,5 +1,6 @@
 '''CTS: Cluster Testing System: Audit module
  '''
+from __future__ import absolute_import
 
 __copyright__ = '''
 Copyright (C) 2000, 2001,2005 Alan Robertson <alanr@unix.sh>
@@ -22,10 +23,11 @@ Licensed under the GNU GPL.
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA.
 
 import time, re, uuid
-from watcher import LogWatcher
+from cts.watcher import LogWatcher
+from cts.remote import input_wrapper
+from cts.CTSvars import *
 
-
-class ClusterAudit:
+class ClusterAudit(object):
 
     def __init__(self, cm):
         self.CM = cm
@@ -160,7 +162,8 @@ class DiskAudit(ClusterAudit):
 
     def __call__(self):
         result = 1
-        dfcmd = "df -BM /var/log | tail -1 | awk '{print $(NF-1)\" \"$(NF-2)}' | tr -d 'M%'"
+        # @TODO Use directory of PCMK_logfile if set on host
+        dfcmd = "df -BM " + CTSvars.CRM_LOG_DIR + " | tail -1 | awk '{print $(NF-1)\" \"$(NF-2)}' | tr -d 'M%'"
 
         self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"])
         for node in self.CM.Env["nodes"]:
@@ -184,7 +187,7 @@ class DiskAudit(ClusterAudit):
                             answer = "Y"
                         else:
                             try:
-                                answer = raw_input('Continue? [nY]')
+                                answer = input_wrapper('Continue? [nY]')
                             except EOFError as e:
                                 answer = "n"
 
@@ -217,7 +220,7 @@ class FileAudit(ClusterAudit):
         self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"])
         for node in self.CM.Env["nodes"]:
 
-            (rc, lsout) = self.CM.rsh(node, "ls -al /var/lib/heartbeat/cores/* | grep core.[0-9]", None)
+            (rc, lsout) = self.CM.rsh(node, "ls -al /var/lib/pacemaker/cores/* | grep core.[0-9]", None)
             for line in lsout:
                 line = line.strip()
                 if line not in self.known:
@@ -257,7 +260,7 @@ class FileAudit(ClusterAudit):
         return 1
 
 
-class AuditResource:
+class AuditResource(object):
     def __init__(self, cm, line):
         fields = line.split()
         self.CM = cm
@@ -293,7 +296,7 @@ class AuditResource:
         return 0
             
 
-class AuditConstraint:
+class AuditConstraint(object):
     def __init__(self, cm, line):
         fields = line.split()
         self.CM = cm
@@ -419,10 +422,12 @@ class PrimitiveAudit(ClusterAudit):
         return rc
 
     def is_applicable(self):
-        if self.CM["Name"] == "crm-lha":
-            return 1
-        if self.CM["Name"] == "crm-ais":
-            return 1
+        # @TODO Due to long-ago refactoring, this name test would never match,
+        # so this audit (and those derived from it) would never run.
+        # Uncommenting the next lines fixes the name test, but that then
+        # exposes pre-existing bugs that need to be fixed.
+        #if self.CM["Name"] == "crm-corosync":
+        #    return 1
         return 0
 
 
@@ -591,10 +596,12 @@ class CrmdStateAudit(ClusterAudit):
         return "CrmdStateAudit"
     
     def is_applicable(self):
-        if self.CM["Name"] == "crm-lha":
-            return 1
-        if self.CM["Name"] == "crm-ais":
-            return 1
+        # @TODO Due to long-ago refactoring, this name test would never match,
+        # so this audit (and those derived from it) would never run.
+        # Uncommenting the next lines fixes the name test, but that then
+        # exposes pre-existing bugs that need to be fixed.
+        #if self.CM["Name"] == "crm-corosync":
+        #    return 1
         return 0
 
 
@@ -703,10 +710,12 @@ class CIBAudit(ClusterAudit):
         return "CibAudit"
     
     def is_applicable(self):
-        if self.CM["Name"] == "crm-lha":
-            return 1
-        if self.CM["Name"] == "crm-ais":
-            return 1
+        # @TODO Due to long-ago refactoring, this name test would never match,
+        # so this audit (and those derived from it) would never run.
+        # Uncommenting the next lines fixes the name test, but that then
+        # exposes pre-existing bugs that need to be fixed.
+        #if self.CM["Name"] == "crm-corosync":
+        #    return 1
         return 0
 
 
@@ -723,7 +732,7 @@ class PartitionAudit(ClusterAudit):
         self.NodeQuorum = {}
 
     def has_key(self, key):
-        return self.Stats.has_key(key)
+        return key in self.Stats
 
     def __setitem__(self, key, value):
         self.Stats[key] = value
@@ -843,10 +852,12 @@ class PartitionAudit(ClusterAudit):
         return "PartitionAudit"
     
     def is_applicable(self):
-        if self.CM["Name"] == "crm-lha":
-            return 1
-        if self.CM["Name"] == "crm-ais":
-            return 1
+        # @TODO Due to long-ago refactoring, this name test would never match,
+        # so this audit (and those derived from it) would never run.
+        # Uncommenting the next lines fixes the name test, but that then
+        # exposes pre-existing bugs that need to be fixed.
+        #if self.CM["Name"] == "crm-corosync":
+        #    return 1
         return 0
 
 AllAuditClasses.append(DiskAudit)

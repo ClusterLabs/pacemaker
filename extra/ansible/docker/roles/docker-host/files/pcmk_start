@@ -1,7 +1,7 @@
 #!/bin/bash
 
 /usr/sbin/ip_start
-sed -i 's@to_syslog:.*yes@to_logfile: yes\nlogfile: /var/log/pacemaker.log@g' /etc/corosync/corosync.conf
+sed -i 's@to_syslog:.*yes@to_logfile: yes\nlogfile: /var/log/pacemaker/pacemaker.log@g' /etc/corosync/corosync.conf
 
 /usr/share/corosync/corosync start > /dev/null 2>&1
 

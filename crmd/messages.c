@@ -146,19 +146,17 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
                 fsa_data->data_type = fsa_dt_lrm;
                 break;
 
-            case C_CCM_CALLBACK:
             case C_SUBSYSTEM_CONNECT:
             case C_LRM_MONITOR_CALLBACK:
             case C_TIMER_POPPED:
             case C_SHUTDOWN:
             case C_HEARTBEAT_FAILED:
-            case C_HA_DISCONNECT:
             case C_ILLEGAL:
             case C_UNKNOWN:
             case C_STARTUP:
                 crm_err("Copying %s data (from %s)"
                         " not yet implemented", fsa_cause2string(cause), raised_from);
-                crmd_exit(pcmk_err_generic);
+                crmd_exit(CRM_EX_SOFTWARE);
                 break;
         }
         crm_trace("%s data copied", fsa_cause2string(fsa_data->fsa_cause));
@@ -174,7 +172,7 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
 
     crm_trace("Queue len: %d", g_list_length(fsa_message_queue));
 
-    /* fsa_dump_queue(LOG_DEBUG_2); */
+    /* fsa_dump_queue(LOG_TRACE); */
 
     if (old_len == g_list_length(fsa_message_queue)) {
         crm_err("Couldn't add message to the queue");
@@ -255,7 +253,7 @@ delete_fsa_input(fsa_data_t * fsa_data)
                 if (fsa_data->data != NULL) {
                     crm_err("Don't know how to free %s data from %s",
                             fsa_cause2string(fsa_data->fsa_cause), fsa_data->origin);
-                    crmd_exit(pcmk_err_generic);
+                    crmd_exit(CRM_EX_SOFTWARE);
                 }
                 break;
         }
@@ -441,7 +439,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
              */
 
 #if SUPPORT_COROSYNC
-            if (is_openais_cluster()) {
+            if (is_corosync_cluster()) {
                 dest = text2msg_type(sys_to);
             }
 #endif
@@ -465,7 +463,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
         crm_node_t *node_to = NULL;
 
 #if SUPPORT_COROSYNC
-        if (is_openais_cluster()) {
+        if (is_corosync_cluster()) {
             dest = text2msg_type(sys_to);
 
             if (dest == crm_msg_none || dest > crm_msg_stonith_ng) {
@@ -684,6 +682,31 @@ handle_remote_state(xmlNode *msg)
     return I_NULL;
 }
 
+static void
+verify_feature_set(xmlNode *msg)
+{
+    const char *dc_version = crm_element_value(msg, XML_ATTR_CRM_VERSION);
+
+    if (dc_version == NULL) {
+        /* All we really know is that the DC feature set is older than 3.1.0,
+         * but that's also all that really matters.
+         */
+        dc_version = "3.0.14";
+    }
+
+    if (feature_set_compatible(dc_version, CRM_FEATURE_SET)) {
+        crm_trace("Local feature set (%s) is compatible with DC's (%s)",
+                  CRM_FEATURE_SET, dc_version);
+    } else {
+        crm_err("Local feature set (%s) is incompatible with DC's (%s)",
+                CRM_FEATURE_SET, dc_version);
+
+        // Nothing is likely to improve without administrator involvement
+        set_bit(fsa_input_register, R_STAYDOWN);
+        crmd_exit(CRM_EX_FATAL);
+    }
+}
+
 enum crmd_fsa_input
 handle_request(xmlNode * stored_msg, enum crmd_fsa_cause cause)
 {
@@ -788,6 +811,7 @@ handle_request(xmlNode * stored_msg, enum crmd_fsa_cause cause)
         }
 
     } else if (strcmp(op, CRM_OP_JOIN_OFFER) == 0) {
+        verify_feature_set(stored_msg);
         crm_debug("Raising I_JOIN_OFFER: join-%s", crm_element_value(stored_msg, F_CRM_JOIN_ID));
         return I_JOIN_OFFER;
 

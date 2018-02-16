@@ -235,7 +235,7 @@ get_object_root(const char *object_type, xmlNode * the_root)
         return the_root;        /* or return NULL? */
     }
 
-    return get_xpath_object(xpath, the_root, LOG_DEBUG_4);
+    return get_xpath_object(xpath, the_root, LOG_TRACE);
 }
 
 /*
@@ -294,7 +294,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
                xmlNode * current_cib, xmlNode ** result_cib, xmlNode ** diff, xmlNode ** output)
 {
     int rc = pcmk_ok;
-    gboolean check_dtd = TRUE;
+    gboolean check_schema = TRUE;
     xmlNode *top = NULL;
     xmlNode *scratch = NULL;
     xmlNode *local_diff = NULL;
@@ -504,7 +504,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
          * a) we don't really care whats in the status section
          * b) we don't validate any of its contents at the moment anyway
          */
-        check_dtd = FALSE;
+        check_schema = FALSE;
     }
 
     /* === scratch must not be modified after this point ===
@@ -551,11 +551,13 @@ cib_perform_op(const char *op, int call_options, cib_op_t * fn, gboolean is_quer
         }
     }
 
-    crm_trace("Perform validation: %s", check_dtd ? "true" : "false");
-    if (rc == pcmk_ok && check_dtd && validate_xml(scratch, NULL, TRUE) == FALSE) {
-        const char *current_dtd = crm_element_value(scratch, XML_ATTR_VALIDATION);
+    crm_trace("Perform validation: %s", (check_schema? "true" : "false"));
+    if ((rc == pcmk_ok) && check_schema && !validate_xml(scratch, NULL, TRUE)) {
+        const char *current_schema = crm_element_value(scratch,
+                                                       XML_ATTR_VALIDATION);
 
-        crm_warn("Updated CIB does not validate against %s schema/dtd", crm_str(current_dtd));
+        crm_warn("Updated CIB does not validate against %s schema",
+                 crm_str(current_schema));
         rc = -pcmk_err_schema_validation;
     }
 
@@ -698,7 +700,7 @@ cib_native_notify(gpointer data, gpointer user_data)
     crm_trace("Callback invoked...");
 }
 
-pe_cluster_option cib_opts[] = {
+static pe_cluster_option cib_opts[] = {
     /*
      * name, legacy name,
      * type, allowed values, default, validator,

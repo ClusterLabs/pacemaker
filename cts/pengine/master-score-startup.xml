@@ -1,0 +1,80 @@
+<cib crm_feature_set="3.0.10" validate-with="pacemaker-2.5" epoch="28" num_updates="21" admin_epoch="0" cib-last-written="Tue Aug 29 12:51:46 2017" update-origin="srv1" update-client="crm_attribute" update-user="root" have-quorum="1" dc-uuid="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.15-11.el7_3.4-e174ec8"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="cluster_pgsql"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1504000703"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="srv1">
+        <instance_attributes id="nodes-1">
+          <nvpair id="nodes-1-master-pgsqld" name="master-pgsqld" value="1001"/>
+        </instance_attributes>
+      </node>
+      <node id="2" uname="srv2">
+        <instance_attributes id="nodes-2">
+          <nvpair id="nodes-2-master-pgsqld" name="master-pgsqld" value="1000"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <clone id="pgsql-ha">
+        <primitive class="ocf" id="pgsqld" provider="heartbeat" type="pgsqlms">
+          <instance_attributes id="pgsqld-instance_attributes">
+            <nvpair id="pgsqld-instance_attributes-bindir" name="bindir" value="/usr/pgsql-10/bin"/>
+            <nvpair id="pgsqld-instance_attributes-pgdata" name="pgdata" value="/var/lib/pgsql/10/data"/>
+          </instance_attributes>
+          <operations>
+            <op id="pgsqld-start-interval-0s" interval="0s" name="start" timeout="60s"/>
+            <op id="pgsqld-stop-interval-0s" interval="0s" name="stop" timeout="60s"/>
+            <op id="pgsqld-promote-interval-0s" interval="0s" name="promote" timeout="30s"/>
+            <op id="pgsqld-demote-interval-0s" interval="0s" name="demote" timeout="120s"/>
+            <op id="pgsqld-monitor-interval-15s" interval="15s" name="monitor" role="Master" timeout="10s"/>
+            <op id="pgsqld-monitor-interval-16s" interval="16s" name="monitor" role="Slave" timeout="10s"/>
+            <op id="pgsqld-notify-interval-0s" interval="0s" name="notify" timeout="60s"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="pgsql-ha-meta_attributes">
+          <nvpair id="pgsql-ha-meta_attributes-promotable"  name="promotable" value="true"/>
+          <nvpair id="pgsql-ha-meta_attributes-promoted-max" name="promoted-max" value="1"/>
+          <nvpair id="pgsql-ha-meta_attributes-promoted-node-max" name="promoted-node-max" value="1"/>
+          <nvpair id="pgsql-ha-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
+          <nvpair id="pgsql-ha-meta_attributes-notify" name="notify" value="true"/>
+        </meta_attributes>
+      </clone>
+      <primitive class="ocf" id="pgsql-master-ip" provider="heartbeat" type="IPaddr2">
+        <instance_attributes id="pgsql-master-ip-instance_attributes">
+          <nvpair id="pgsql-master-ip-instance_attributes-ip" name="ip" value="192.168.122.50"/>
+          <nvpair id="pgsql-master-ip-instance_attributes-cidr_netmask" name="cidr_netmask" value="24"/>
+        </instance_attributes>
+        <operations>
+          <op id="pgsql-master-ip-start-interval-0s" interval="0s" name="start" timeout="20s"/>
+          <op id="pgsql-master-ip-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
+          <op id="pgsql-master-ip-monitor-interval-10s" interval="10s" name="monitor"/>
+        </operations>
+      </primitive>
+    </resources>
+    <constraints>
+      <rsc_colocation id="colocation-pgsql-master-ip-pgsql-ha-INFINITY" rsc="pgsql-master-ip" rsc-role="Started" score="INFINITY" with-rsc="pgsql-ha" with-rsc-role="Master"/>
+      <rsc_order first="pgsql-ha" first-action="promote" id="order-pgsql-ha-pgsql-master-ip-Mandatory" kind="Mandatory" symmetrical="false" then="pgsql-master-ip" then-action="start"/>
+      <rsc_order first="pgsql-ha" first-action="demote" id="order-pgsql-ha-pgsql-master-ip-Mandatory-1" kind="Mandatory" symmetrical="false" then="pgsql-master-ip" then-action="stop"/>
+    </constraints>
+    <rsc_defaults>
+      <meta_attributes id="rsc_defaults-options">
+        <nvpair id="rsc_defaults-options-migration-threshold" name="migration-threshold" value="5"/>
+        <nvpair id="rsc_defaults-options-resource-stickiness" name="resource-stickiness" value="10"/>
+      </meta_attributes>
+    </rsc_defaults>
+  </configuration>
+  <status>
+    <node_state id="1" uname="srv1" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+    </node_state>
+    <node_state id="2" uname="srv2" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+    </node_state>
+  </status>
+</cib>

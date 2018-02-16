@@ -30,12 +30,36 @@
 #include <crmd_fsa.h>
 #include <crmd_messages.h>  /* register_fsa_error_adv */
 
+static mainloop_io_t *pe_subsystem = NULL;
 
-struct crm_subsystem_s *pe_subsystem = NULL;
-void do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data);
+/*!
+ * \internal
+ * \brief Close any PE connection and free associated memory
+ */
+void
+pe_subsystem_free(void)
+{
+    if (pe_subsystem) {
+        mainloop_del_ipc_client(pe_subsystem);
+        pe_subsystem = NULL;
+    }
+}
 
+/*!
+ * \internal
+ * \brief Save CIB query result to file, raising FSA error
+ *
+ * \param[in] msg        Ignored
+ * \param[in] call_id    Call ID of CIB query
+ * \param[in] rc         Return code of CIB query
+ * \param[in] output     Result of CIB query
+ * \param[in] user_data  Unique identifier for filename (will be freed)
+ *
+ * \note This is intended to be called after a PE connection fails.
+ */
 static void
-save_cib_contents(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
+save_cib_contents(xmlNode *msg, int call_id, int rc, xmlNode *output,
+                  void *user_data)
 {
     char *id = user_data;
 
@@ -43,16 +67,8 @@ save_cib_contents(xmlNode * msg, int call_id, int rc, xmlNode * output, void *us
     CRM_CHECK(id != NULL, return);
 
     if (rc == pcmk_ok) {
-        int len = 15;
-        char *filename = NULL;
+        char *filename = crm_strdup_printf(PE_STATE_DIR "/pe-core-%s.bz2", id);
 
-        len += strlen(id);
-        len += strlen(PE_STATE_DIR);
-
-        filename = calloc(1, len);
-        CRM_CHECK(filename != NULL, return);
-
-        sprintf(filename, PE_STATE_DIR "/pe-core-%s.bz2", id);
         if (write_xml_file(output, filename, TRUE) < 0) {
             crm_err("Could not save Cluster Information Base to %s after Policy Engine crash",
                     filename);
@@ -60,20 +76,25 @@ save_cib_contents(xmlNode * msg, int call_id, int rc, xmlNode * output, void *us
             crm_notice("Saved Cluster Information Base to %s after Policy Engine crash",
                        filename);
         }
-
         free(filename);
     }
 }
 
+/*!
+ * \internal
+ * \brief Respond to PE connection failure
+ *
+ * \param[in] user_data  Ignored
+ */
 static void
 pe_ipc_destroy(gpointer user_data)
 {
-    if (is_set(fsa_input_register, pe_subsystem->flag_required)) {
+    if (is_set(fsa_input_register, R_PE_REQUIRED)) {
         int rc = pcmk_ok;
         char *uuid_str = crm_generate_uuid();
 
         crm_crit("Connection to the Policy Engine failed "
-                 CRM_XS " pid=%d uuid=%s", pe_subsystem->pid, uuid_str);
+                 CRM_XS " uuid=%s", uuid_str);
 
         /*
          * The PE died...
@@ -89,21 +110,25 @@ pe_ipc_destroy(gpointer user_data)
         fsa_register_cib_callback(rc, FALSE, uuid_str, save_cib_contents);
 
     } else {
-        if (is_heartbeat_cluster()) {
-            stop_subsystem(pe_subsystem, FALSE);
-        }
         crm_info("Connection to the Policy Engine released");
     }
 
-    clear_bit(fsa_input_register, pe_subsystem->flag_connected);
-    pe_subsystem->pid = -1;
-    pe_subsystem->source = NULL;
-    pe_subsystem->client = NULL;
-
+    clear_bit(fsa_input_register, R_PE_CONNECTED);
+    pe_subsystem = NULL;
     mainloop_set_trigger(fsa_source);
     return;
 }
 
+/*!
+ * \internal
+ * \brief Handle message from PE connection
+ *
+ * \param[in] buffer    XML message (will be freed)
+ * \param[in] length    Ignored
+ * \param[in] userdata  Ignored
+ *
+ * \return 0
+ */
 static int
 pe_ipc_dispatch(const char *buffer, ssize_t length, gpointer userdata)
 {
@@ -112,59 +137,83 @@ pe_ipc_dispatch(const char *buffer, ssize_t length, gpointer userdata)
     if (msg) {
         route_message(C_IPC_MESSAGE, msg);
     }
-
     free_xml(msg);
     return 0;
 }
 
-/*	 A_PE_START, A_PE_STOP, A_TE_RESTART	*/
+/*!
+ * \internal
+ * \brief Make new connection to PE
+ *
+ * \return TRUE on success, FALSE otherwise
+ */
+static bool
+pe_subsystem_new()
+{
+    static struct ipc_client_callbacks pe_callbacks = {
+        .dispatch = pe_ipc_dispatch,
+        .destroy = pe_ipc_destroy
+    };
+
+    pe_subsystem = mainloop_add_ipc_client(CRM_SYSTEM_PENGINE,
+                                           G_PRIORITY_DEFAULT,
+                                           5 * 1024 * 1024 /* 5MB */,
+                                           NULL, &pe_callbacks);
+    return (pe_subsystem != NULL);
+}
+
+/*!
+ * \internal
+ * \brief Send an XML message to the PE
+ *
+ * \param[in] cmd  XML message to send
+ *
+ * \return pcmk_ok on success, -errno otherwise
+ */
+static int
+pe_subsystem_send(xmlNode *cmd)
+{
+    if (pe_subsystem) {
+        int sent = crm_ipc_send(mainloop_get_ipc_client(pe_subsystem), cmd,
+                                0, 0, NULL);
+
+        if (sent == 0) {
+            sent = -ENODATA;
+        } else if (sent > 0) {
+            sent = pcmk_ok;
+        }
+        return sent;
+    }
+    return -ENOTCONN;
+}
+
+static void do_pe_invoke_callback(xmlNode *msg, int call_id, int rc,
+                                  xmlNode *output, void *user_data);
+
+/*	 A_PE_START, A_PE_STOP, O_PE_RESTART	*/
 void
 do_pe_control(long long action,
               enum crmd_fsa_cause cause,
               enum crmd_fsa_state cur_state,
               enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-    struct crm_subsystem_s *this_subsys = pe_subsystem;
-
-    long long stop_actions = A_PE_STOP;
-    long long start_actions = A_PE_START;
-
-    static struct ipc_client_callbacks pe_callbacks = {
-        .dispatch = pe_ipc_dispatch,
-        .destroy = pe_ipc_destroy
-    };
-
-    if (action & stop_actions) {
-        clear_bit(fsa_input_register, pe_subsystem->flag_required);
-
-        mainloop_del_ipc_client(pe_subsystem->source);
-        pe_subsystem->source = NULL;
-
-        clear_bit(fsa_input_register, pe_subsystem->flag_connected);
+    if (action & A_PE_STOP) {
+        clear_bit(fsa_input_register, R_PE_REQUIRED);
+        pe_subsystem_free();
+        clear_bit(fsa_input_register, R_PE_CONNECTED);
     }
 
-    if ((action & start_actions) && (is_set(fsa_input_register, R_PE_CONNECTED) == FALSE)) {
+    if ((action & A_PE_START) && (is_set(fsa_input_register, R_PE_CONNECTED) == FALSE)) {
         if (cur_state != S_STOPPING) {
-            set_bit(fsa_input_register, pe_subsystem->flag_required);
-
-            pe_subsystem->source =
-                mainloop_add_ipc_client(CRM_SYSTEM_PENGINE, G_PRIORITY_DEFAULT,
-                                        5 * 1024 * 1024 /* 5MB */ , NULL, &pe_callbacks);
-
-            if (pe_subsystem->source == NULL) {
-                crm_warn("Setup of client connection failed, not adding channel to mainloop");
+            set_bit(fsa_input_register, R_PE_REQUIRED);
+            if (pe_subsystem_new()) {
+                set_bit(fsa_input_register, R_PE_CONNECTED);
+            } else {
+                crm_warn("Could not connect to Policy Engine");
                 register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
-                return;
             }
-
-            /* if (is_openais_cluster()) { */
-            /*     pe_subsystem->pid = pe_subsystem->ipc->farside_pid; */
-            /* } */
-
-            set_bit(fsa_input_register, pe_subsystem->flag_connected);
-
         } else {
-            crm_info("Ignoring request to start %s while shutting down", this_subsys->name);
+            crm_info("Ignoring request to connect to PE while shutting down");
         }
     }
 }
@@ -228,15 +277,12 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
 {
     int max = 0;
     int lpc = 0;
-    int xpath_max = 1024;
     char *xpath_string = NULL;
     xmlXPathObjectPtr xpathObj = NULL;
 
-    xpath_string = calloc(1, xpath_max);
-    lpc = snprintf(xpath_string, xpath_max, "%.128s//%s//nvpair[@name='%.128s']",
-                       get_object_path(XML_CIB_TAG_CRMCONFIG), XML_CIB_TAG_PROPSET, attr_name);
-    CRM_LOG_ASSERT(lpc > 0);
-
+    xpath_string = crm_strdup_printf("%.128s//%s//nvpair[@name='%.128s']",
+                                     get_object_path(XML_CIB_TAG_CRMCONFIG),
+                                     XML_CIB_TAG_PROPSET, attr_name);
     xpathObj = xpath_search(xml, xpath_string);
     max = numXpathResults(xpathObj);
     free(xpath_string);
@@ -280,10 +326,9 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
     freeXpathObject(xpathObj);
 }
 
-void
+static void
 do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
-    int sent;
     xmlNode *cmd = NULL;
     pid_t watchdog = pcmk_locate_sbd();
 
@@ -337,12 +382,12 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     free(fsa_pe_ref);
     fsa_pe_ref = crm_element_value_copy(cmd, XML_ATTR_REFERENCE);
 
-    sent = crm_ipc_send(mainloop_get_ipc_client(pe_subsystem->source), cmd, 0, 0, NULL);
-    if (sent <= 0) {
-        crm_err("Could not contact the pengine: %d", sent);
+    rc = pe_subsystem_send(cmd);
+    if (rc < 0) {
+        crm_err("Could not contact the Policy Engine: %s " CRM_XS " rc=%d",
+                pcmk_strerror(rc), rc);
         register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
     }
-
     crm_debug("Invoking the PE: query=%d, ref=%s, seq=%llu, quorate=%d",
               fsa_pe_query, fsa_pe_ref, crm_peer_seq, fsa_has_quorum);
     free_xml(cmd);

@@ -68,8 +68,6 @@ extern qb_ipcs_service_t *ipcs_rw;
 extern qb_ipcs_service_t *ipcs_shm;
 
 extern void cib_peer_callback(xmlNode * msg, void *private_data);
-extern void cib_client_status_callback(const char *node, const char *client,
-                                       const char *status, void *private);
 extern void cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
                                        crm_client_t * cib_client, gboolean privileged);
 
@@ -78,12 +76,6 @@ void initiate_exit(void);
 void terminate_cib(const char *caller, int fast);
 
 extern gboolean cib_legacy_mode(void);
-
-#if SUPPORT_HEARTBEAT
-extern void cib_ha_peer_callback(HA_Message * msg, void *private_data);
-extern int cib_ccm_dispatch(gpointer user_data);
-extern void cib_ccm_msg_callback(oc_ed_t event, void *cookie, size_t size, const void *data);
-#endif
 
 static inline const char *
 cib_config_lookup(const char *opt)

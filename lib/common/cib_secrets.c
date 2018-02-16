@@ -23,7 +23,6 @@
 #include <crm/common/util.h>
 #include <crm/common/cib_secrets.h>
 
-static int do_replace_secret_params(char *rsc_id, GHashTable *params, gboolean from_legacy_dir);
 static int is_magic_value(char *p);
 static int check_md5_hash(char *hash, char *value);
 static void add_secret_params(gpointer key, gpointer value, gpointer user_data);
@@ -88,33 +87,14 @@ read_local_file(char *local_file)
 int
 replace_secret_params(char *rsc_id, GHashTable *params)
 {
-    if (do_replace_secret_params(rsc_id, params, FALSE) < 0
-        && do_replace_secret_params(rsc_id, params, TRUE) < 0) {
-        return -1;
-    }
-
-    return 0;
-}
-
-static int
-do_replace_secret_params(char *rsc_id, GHashTable *params, gboolean from_legacy_dir)
-{
     char local_file[FILENAME_MAX+1], *start_pname;
     char hash_file[FILENAME_MAX+1], *hash;
     GList *secret_params = NULL, *l;
     char *key, *pvalue, *secret_value;
     int rc = 0;
-    const char *dir_prefix = NULL;
 
     if (params == NULL) {
         return 0;
-    }
-
-    if (from_legacy_dir) {
-        dir_prefix = LRM_LEGACY_CIBSECRETS_DIR;
-
-    } else {
-        dir_prefix = LRM_CIBSECRETS_DIR;
     }
 
     /* secret_params could be cached with the resource;
@@ -128,10 +108,10 @@ do_replace_secret_params(char *rsc_id, GHashTable *params, gboolean from_legacy_
 
     crm_debug("replace secret parameters for resource %s", rsc_id);
 
-    if (snprintf(local_file, FILENAME_MAX,
-        "%s/%s/", dir_prefix, rsc_id) > FILENAME_MAX) {
+    if (snprintf(local_file, FILENAME_MAX, LRM_CIBSECRETS_DIR "/%s/", rsc_id)
+            > FILENAME_MAX) {
         crm_err("filename size exceeded for resource %s", rsc_id);
-	return -1;
+        return -1;
     }
     start_pname = local_file + strlen(local_file);
 
@@ -152,14 +132,8 @@ do_replace_secret_params(char *rsc_id, GHashTable *params, gboolean from_legacy_
         strcpy(start_pname, key);
         secret_value = read_local_file(local_file);
         if (!secret_value) {
-            if (from_legacy_dir == FALSE) {
-                crm_debug("secret for rsc %s parameter %s not found in %s. "
-                          "will try "LRM_LEGACY_CIBSECRETS_DIR, rsc_id, key, dir_prefix);
-
-            } else {
-                crm_err("secret for rsc %s parameter %s not found in %s",
-                        rsc_id, key, dir_prefix);
-            }
+            crm_err("secret for rsc %s parameter %s not found in %s",
+                    rsc_id, key, LRM_CIBSECRETS_DIR);
             rc = -1;
             continue;
         }

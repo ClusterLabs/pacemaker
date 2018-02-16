@@ -30,8 +30,6 @@ extern gboolean unpack_tags(xmlNode * xml_tags, pe_working_set_t * data_set);
 
 extern gboolean unpack_status(xmlNode * status, pe_working_set_t * data_set);
 
-extern gboolean unpack_remote_status(xmlNode * status, pe_working_set_t * data_set);
-
 extern gint sort_op_by_callid(gconstpointer a, gconstpointer b);
 
 extern gboolean unpack_lrm_resources(node_t * node, xmlNode * lrm_state,
@@ -97,17 +95,8 @@ extern gboolean determine_online_status(xmlNode * node_state, node_t * this_node
 
 enum pe_warn_once_e {
     pe_wo_blind         = 0x0001,
-    pe_wo_poweroff      = 0x0002,
-    pe_wo_arg_map       = 0x0004,
-    pe_wo_stonith_cmd   = 0x0008,
-    pe_wo_requires      = 0x0010,
-    pe_wo_isolation     = 0x0020,
-    pe_wo_default_stick = 0x0040,
-    pe_wo_default_isman = 0x0080,
-    pe_wo_default_timeo = 0x0100,
-    pe_wo_rsc_failstick = 0x0200,
-    pe_wo_default_rscfs = 0x0400,
-    pe_wo_legacy_notifs = 0x0800,
+    pe_wo_restart_type  = 0x0002,
+    pe_wo_role_after    = 0x0004,
 };
 
 extern uint32_t pe_wo;

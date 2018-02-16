@@ -34,7 +34,7 @@
 #define check_and_exit(stage) 	cleanup_calculations(data_set);		\
 	crm_mem_stats(NULL);						\
 	crm_err("Exiting: stage %d", stage);				\
-	crm_exit(pcmk_err_generic);
+	crm_exit(CRM_EX_ERROR);
 
 /*
  * Unpack everything
@@ -241,7 +241,6 @@ set_working_set_defaults(pe_working_set_t * data_set)
     data_set->flags = 0x0ULL;
     set_bit(data_set->flags, pe_flag_stop_rsc_orphans);
     set_bit(data_set->flags, pe_flag_symmetric_cluster);
-    set_bit(data_set->flags, pe_flag_is_managed_default);
     set_bit(data_set->flags, pe_flag_stop_action_orphans);
 }
 

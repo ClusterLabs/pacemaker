@@ -63,7 +63,6 @@ typedef struct lrmd_key_value_s {
 #define F_LRMD_REMOTE_MSG_ID    "lrmd_remote_msg_id"
 #define F_LRMD_CALLBACK_TOKEN   "lrmd_async_id"
 #define F_LRMD_CALLID           "lrmd_callid"
-#define F_LRMD_CANCEL_CALLID    "lrmd_cancel_callid"
 #define F_LRMD_CALLOPTS         "lrmd_callopt"
 #define F_LRMD_CALLDATA         "lrmd_calldata"
 #define F_LRMD_RC               "lrmd_rc"
@@ -88,7 +87,6 @@ typedef struct lrmd_key_value_s {
 #define F_LRMD_RSC_EXIT_REASON  "lrmd_rsc_exit_reason"
 #define F_LRMD_RSC_START_DELAY  "lrmd_rsc_start_delay"
 #define F_LRMD_RSC_INTERVAL     "lrmd_rsc_interval"
-#define F_LRMD_RSC_METADATA     "lrmd_rsc_metadata_res"
 #define F_LRMD_RSC_DELETED      "lrmd_rsc_deleted"
 #define F_LRMD_RSC              "lrmd_rsc"
 
@@ -96,7 +94,6 @@ typedef struct lrmd_key_value_s {
 #define F_LRMD_ALERT_PATH         "lrmd_alert_path"
 #define F_LRMD_ALERT              "lrmd_alert"
 
-#define LRMD_OP_RSC_CHK_REG       "lrmd_rsc_check_register"
 #define LRMD_OP_RSC_REG           "lrmd_rsc_register"
 #define LRMD_OP_RSC_EXEC          "lrmd_rsc_exec"
 #define LRMD_OP_RSC_CANCEL        "lrmd_rsc_cancel"
@@ -121,7 +118,6 @@ typedef struct lrmd_key_value_s {
 #define F_LRMD_IPC_IPC_SERVER   "lrmd_ipc_server"
 #define F_LRMD_IPC_SESSION      "lrmd_ipc_session"
 #define F_LRMD_IPC_CLIENT       "lrmd_ipc_client"
-#define F_LRMD_IPC_PROXY_NODE   "lrmd_ipc_proxy_node"
 #define F_LRMD_IPC_USER         "lrmd_ipc_user"
 #define F_LRMD_IPC_MSG          "lrmd_ipc_msg"
 #define F_LRMD_IPC_MSG_ID       "lrmd_ipc_msg_id"

@@ -1275,21 +1275,6 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
     return patchset;
 }
 
-static gboolean patch_legacy_mode(void)
-{
-    static gboolean init = TRUE;
-    static gboolean legacy = FALSE;
-
-    if(init) {
-        init = FALSE;
-        legacy = daemon_option_enabled("cib", "legacy");
-        if(legacy) {
-            crm_notice("Enabled legacy mode");
-        }
-    }
-    return legacy;
-}
-
 xmlNode *
 xml_create_patchset(int format, xmlNode *source, xmlNode *target, bool *config_changed, bool manage_version)
 {
@@ -1323,10 +1308,7 @@ xml_create_patchset(int format, xmlNode *source, xmlNode *target, bool *config_c
     }
 
     if(format == 0) {
-        if(patch_legacy_mode()) {
-            format = 1;
-
-        } else if(compare_version("3.0.8", version) < 0) {
+        if (compare_version("3.0.8", version) < 0) {
             format = 2;
 
         } else {
@@ -2866,8 +2848,9 @@ decompress_file(const char *filename)
     }
 
     bz_file = BZ2_bzReadOpen(&rc, input, 0, 0, NULL, 0);
-
     if (rc != BZ_OK) {
+        crm_err("Could not prepare to read compressed %s: %s "
+                CRM_XS " bzerror=%d", filename, bz2_strerror(rc), rc);
         BZ2_bzReadClose(&rc, bz_file);
         return NULL;
     }
@@ -2887,7 +2870,8 @@ decompress_file(const char *filename)
     buffer[length] = '\0';
 
     if (rc != BZ_STREAM_END) {
-        crm_err("Couldn't read compressed xml from file");
+        crm_err("Could not read compressed %s: %s "
+                CRM_XS " bzerror=%d", filename, bz2_strerror(rc), rc);
         free(buffer);
         buffer = NULL;
     }
@@ -2896,7 +2880,8 @@ decompress_file(const char *filename)
     fclose(input);
 
 #else
-    crm_err("Cannot read compressed files:" " bzlib was not available at compile time");
+    crm_err("Could not read compressed %s: not built with bzlib support",
+            filename);
 #endif
     return buffer;
 }
@@ -2964,7 +2949,8 @@ filename2xml(const char *filename)
     } else {
         char *input = decompress_file(filename);
 
-        output = xmlCtxtReadDoc(ctxt, (const xmlChar *)input, NULL, NULL, xml_options);
+        output = xmlCtxtReadDoc(ctxt, (const xmlChar *)input, NULL, NULL,
+                                xml_options);
         free(input);
     }
 
@@ -3057,6 +3043,17 @@ crm_xml_set_id(xmlNode *xml, const char *format, ...)
     free(id);
 }
 
+/*!
+ * \internal
+ * \brief Write XML to a file stream
+ *
+ * \param[in] xml_node  XML to write
+ * \param[in] filename  Name of file being written (for logging only)
+ * \param[in] stream    Open file stream corresponding to filename
+ * \param[in] compress  Whether to compress XML before writing
+ *
+ * \return Number of bytes written on success, -errno otherwise
+ */
 static int
 write_xml_stream(xmlNode * xml_node, const char *filename, FILE * stream, gboolean compress)
 {
@@ -3064,20 +3061,12 @@ write_xml_stream(xmlNode * xml_node, const char *filename, FILE * stream, gboole
     char *buffer = NULL;
     unsigned int out = 0;
 
-    CRM_CHECK(stream != NULL, return -1);
-
-    crm_trace("Writing XML out to %s", filename);
-    if (xml_node == NULL) {
-        crm_err("Cannot write NULL to %s", filename);
-        fclose(stream);
-        return -1;
-    }
-
-
-    crm_log_xml_trace(xml_node, "Writing out");
+    crm_log_xml_trace(xml_node, "writing");
 
     buffer = dump_xml_formatted(xml_node);
-    CRM_CHECK(buffer != NULL && strlen(buffer) > 0, crm_log_xml_warn(xml_node, "dump:failed");
+    CRM_CHECK(buffer && strlen(buffer),
+              crm_log_xml_warn(xml_node, "formatting failed");
+              res = -pcmk_err_generic;
               goto bail);
 
     if (compress) {
@@ -3088,32 +3077,40 @@ write_xml_stream(xmlNode * xml_node, const char *filename, FILE * stream, gboole
 
         bz_file = BZ2_bzWriteOpen(&rc, stream, 5, 0, 30);
         if (rc != BZ_OK) {
-            crm_err("bzWriteOpen failed: %d", rc);
+            crm_warn("Not compressing %s: could not prepare file stream: %s "
+                     CRM_XS " bzerror=%d", filename, bz2_strerror(rc), rc);
         } else {
             BZ2_bzWrite(&rc, bz_file, buffer, strlen(buffer));
             if (rc != BZ_OK) {
-                crm_err("bzWrite() failed: %d", rc);
+                crm_warn("Not compressing %s: could not compress data: %s "
+                         CRM_XS " bzerror=%d errno=%d",
+                         filename, bz2_strerror(rc), rc, errno);
             }
         }
 
         if (rc == BZ_OK) {
             BZ2_bzWriteClose(&rc, bz_file, 0, &in, &out);
             if (rc != BZ_OK) {
-                crm_err("bzWriteClose() failed: %d", rc);
-                out = -1;
+                crm_warn("Not compressing %s: could not write compressed data: %s "
+                         CRM_XS " bzerror=%d errno=%d",
+                         filename, bz2_strerror(rc), rc, errno);
+                out = -1; // retry without compression
             } else {
-                crm_trace("%s: In: %d, out: %d", filename, in, out);
+                res = (int) out;
+                crm_trace("Compressed XML for %s from %d bytes to %d",
+                          filename, in, out);
             }
         }
 #else
-        crm_err("Cannot write compressed files:" " bzlib was not available at compile time");
+        crm_warn("Not compressing %s: not built with bzlib support", filename);
 #endif
     }
 
     if (out <= 0) {
         res = fprintf(stream, "%s", buffer);
         if (res < 0) {
-            crm_perror(LOG_ERR, "Cannot write output to %s", filename);
+            res = -errno;
+            crm_perror(LOG_ERR, "writing %s", filename);
             goto bail;
         }
     }
@@ -3121,41 +3118,67 @@ write_xml_stream(xmlNode * xml_node, const char *filename, FILE * stream, gboole
   bail:
 
     if (fflush(stream) != 0) {
-        crm_perror(LOG_ERR, "fflush for %s failed", filename);
-        res = -1;
+        res = -errno;
+        crm_perror(LOG_ERR, "flushing %s", filename);
     }
 
     /* Don't report error if the file does not support synchronization */
     if (fsync(fileno(stream)) < 0 && errno != EROFS  && errno != EINVAL) {
-        crm_perror(LOG_ERR, "fsync for %s failed", filename);
-        res = -1;
+        res = -errno;
+        crm_perror(LOG_ERR, "synchronizing %s", filename);
     }
 
     fclose(stream);
 
-    crm_trace("Saved %d bytes to the Cib as XML", res);
+    crm_trace("Saved %d bytes%s to %s as XML",
+              res, ((out > 0)? " (compressed)" : ""), filename);
     free(buffer);
 
     return res;
 }
 
+/*!
+ * \brief Write XML to a file descriptor
+ *
+ * \param[in] xml_node  XML to write
+ * \param[in] filename  Name of file being written (for logging only)
+ * \param[in] fd        Open file descriptor corresponding to filename
+ * \param[in] compress  Whether to compress XML before writing
+ *
+ * \return Number of bytes written on success, -errno otherwise
+ */
 int
 write_xml_fd(xmlNode * xml_node, const char *filename, int fd, gboolean compress)
 {
     FILE *stream = NULL;
 
-    CRM_CHECK(fd > 0, return -1);
+    CRM_CHECK(xml_node && (fd > 0), return -EINVAL);
     stream = fdopen(fd, "w");
+    if (stream == NULL) {
+        return -errno;
+    }
     return write_xml_stream(xml_node, filename, stream, compress);
 }
 
+/*!
+ * \brief Write XML to a file
+ *
+ * \param[in] xml_node  XML to write
+ * \param[in] filename  Name of file to write
+ * \param[in] compress  Whether to compress XML before writing
+ *
+ * \return Number of bytes written on success, -errno otherwise
+ */
 int
 write_xml_file(xmlNode * xml_node, const char *filename, gboolean compress)
 {
     FILE *stream = NULL;
 
+    CRM_CHECK(xml_node && filename, return -EINVAL);
     stream = fopen(filename, "w");
-
+    if (stream == NULL) {
+        return -errno;
+    }
     return write_xml_stream(xml_node, filename, stream, compress);
 }
 
@@ -5127,7 +5150,6 @@ expand_idref(xmlNode * input, xmlNode * top)
     const char *tag = NULL;
     const char *ref = NULL;
     xmlNode *result = input;
-    char *xpath_string = NULL;
 
     if (result == NULL) {
         return NULL;
@@ -5140,12 +5162,7 @@ expand_idref(xmlNode * input, xmlNode * top)
     ref = crm_element_value(result, XML_ATTR_IDREF);
 
     if (ref != NULL) {
-        int offset = 0;
-
-        xpath_string = calloc(1, XPATH_MAX);
-
-        offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "//%s[@id='%s']", tag, ref);
-        CRM_LOG_ASSERT(offset > 0);
+        char *xpath_string = crm_strdup_printf("//%s[@id='%s']", tag, ref);
 
         result = get_xpath_object(xpath_string, top, LOG_ERR);
         if (result == NULL) {
@@ -5155,9 +5172,8 @@ expand_idref(xmlNode * input, xmlNode * top)
                     crm_str(nodePath));
             free(nodePath);
         }
+        free(xpath_string);
     }
-
-    free(xpath_string);
     return result;
 }
 

@@ -59,7 +59,6 @@ typedef struct {
 
 enum schema_validator_e {
     schema_validator_none,
-    schema_validator_dtd,
     schema_validator_rng
 };
 
@@ -94,7 +93,7 @@ xml_log(int priority, const char *fmt, ...)
 static int
 xml_latest_schema_index(void)
 {
-    return xml_schema_max - 4;
+    return xml_schema_max - 3; // index from 0, ignore "pacemaker-next"/"none"
 }
 
 static int
@@ -133,7 +132,7 @@ get_schema_root(void)
         base = getenv("PCMK_schema_directory");
     }
     if (base == NULL || strlen(base) == 0) {
-        base = CRM_DTD_DIRECTORY;
+        base = CRM_SCHEMA_DIRECTORY;
     }
     return base;
 }
@@ -171,10 +170,6 @@ schema_filter(const struct dirent *a)
 
     } else if (!version_from_filename(a->d_name, &version)) {
         /* crm_trace("%s - wrong format", a->d_name); */
-
-    } else if (strcmp(a->d_name, "pacemaker-1.1.rng") == 0) {
-        /* "-1.1" was used for what later became "-next" */
-        /* crm_trace("%s - hack", a->d_name); */
 
     } else {
         /* crm_debug("%s - candidate", a->d_name); */
@@ -278,16 +273,6 @@ crm_schema_init(void)
     const schema_version_t zero = SCHEMA_ZERO;
 
     max = scandir(base, &namelist, schema_filter, schema_sort);
-
-    add_schema(schema_validator_dtd, &zero, "pacemaker-0.6",
-               "crm.dtd", "upgrade06.xsl", 3);
-
-    add_schema(schema_validator_dtd, &zero, "transitional-0.6",
-               "crm-transitional.dtd", "upgrade06.xsl", 3);
-
-    add_schema(schema_validator_rng, &zero, "pacemaker-0.7",
-               "pacemaker-1.0.rng", NULL, 0);
-
     if (max < 0) {
         crm_notice("scandir(%s) failed: %s (%d)", base, strerror(errno), errno);
 
@@ -336,58 +321,12 @@ crm_schema_init(void)
         }
     }
 
-    /* 1.1 was the old name for -next */
-    add_schema(schema_validator_rng, &zero, "pacemaker-1.1",
-               "pacemaker-next.rng", NULL, 0);
-
     add_schema(schema_validator_rng, &zero, "pacemaker-next",
                "pacemaker-next.rng", NULL, -1);
 
     add_schema(schema_validator_none, &zero, "none",
                "N/A", NULL, -1);
     free(namelist);
-}
-
-static gboolean
-validate_with_dtd(xmlDocPtr doc, gboolean to_logs, const char *dtd_file)
-{
-    gboolean valid = TRUE;
-
-    xmlDtdPtr dtd = NULL;
-    xmlValidCtxtPtr cvp = NULL;
-
-    CRM_CHECK(doc != NULL, return FALSE);
-    CRM_CHECK(dtd_file != NULL, return FALSE);
-
-    dtd = xmlParseDTD(NULL, (const xmlChar *)dtd_file);
-    if (dtd == NULL) {
-        crm_err("Could not locate/parse DTD: %s", dtd_file);
-        return TRUE;
-    }
-
-    cvp = xmlNewValidCtxt();
-    if (cvp) {
-        if (to_logs) {
-            cvp->userData = (void *)LOG_ERR;
-            cvp->error = (xmlValidityErrorFunc) xml_log;
-            cvp->warning = (xmlValidityWarningFunc) xml_log;
-        } else {
-            cvp->userData = (void *)stderr;
-            cvp->error = (xmlValidityErrorFunc) fprintf;
-            cvp->warning = (xmlValidityWarningFunc) fprintf;
-        }
-
-        if (!xmlValidateDtd(cvp, doc, dtd)) {
-            valid = FALSE;
-        }
-        xmlFreeValidCtxt(cvp);
-
-    } else {
-        crm_err("Internal error: No valid context");
-    }
-
-    xmlFreeDtd(dtd);
-    return valid;
 }
 
 #if 0
@@ -517,8 +456,7 @@ crm_schema_cleanup(void)
     for (lpc = 0; lpc < xml_schema_max; lpc++) {
 
         switch (known_schemas[lpc].validator) {
-            case schema_validator_none:
-            case schema_validator_dtd: // not cached
+            case schema_validator_none: // not cached
                 break;
             case schema_validator_rng: // cached
                 ctx = (relaxng_ctx_cache_t *) known_schemas[lpc].cache;
@@ -569,9 +507,6 @@ validate_with(xmlNode *xml, int method, gboolean to_logs)
     crm_trace("Validating with: %s (type=%d)",
               crm_str(file), known_schemas[method].validator);
     switch (known_schemas[method].validator) {
-        case schema_validator_dtd:
-            valid = validate_with_dtd(doc, to_logs, file);
-            break;
         case schema_validator_rng:
             valid =
                 validate_with_relaxng(doc, to_logs, file,
@@ -625,9 +560,13 @@ validate_xml_verbose(xmlNode *xml_blob)
     xmlDoc *doc = NULL;
     xmlNode *xml = NULL;
     gboolean rc = FALSE;
-    char *filename = strdup(CRM_STATE_DIR "/cib-invalid.XXXXXX");
+    const char *tmpdir = getenv("TMPDIR");
+    char *filename = NULL;
 
-    CRM_CHECK(filename != NULL, return FALSE);
+    if ((tmpdir == NULL) || (*tmpdir != '/')) {
+        tmpdir = "/tmp";
+    }
+    filename = crm_strdup_printf("%s/cib-invalid.XXXXXX", tmpdir);
 
     umask(S_IWGRP | S_IWOTH | S_IROTH);
     fd = mkstemp(filename);
@@ -659,14 +598,6 @@ validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_logs)
         int lpc = 0;
         bool valid = FALSE;
 
-        /* @COMPAT pre-1.0 configs */
-        validation = crm_element_value(xml_blob, "ignore_dtd");
-        if (crm_is_true(validation)) {
-            crm_xml_add(xml_blob, XML_ATTR_VALIDATION, "none");
-            return TRUE;
-        }
-
-        /* Work it out */
         for (lpc = 0; lpc < xml_schema_max; lpc++) {
             if (validate_with(xml_blob, lpc, FALSE)) {
                 valid = TRUE;

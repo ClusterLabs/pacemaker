@@ -1,0 +1,36 @@
+
+Current cluster status:
+Node node2 (uuid2): UNCLEAN (online)
+Online: [ node1 ]
+
+ stonith-1	(stonith:dummy):	Stopped 
+ rsc1	(ocf::heartbeat:apache):	FAILED node2
+ rsc2	(ocf::heartbeat:apache):	Started node2
+
+Transition Summary:
+ * Fence (reboot) node2 'rsc1 failed there'
+ * Start   stonith-1	(node1)
+ * Recover    rsc1          ( node2 -> node1 )  
+ * Move       rsc2          ( node2 -> node1 )  
+
+Executing cluster transition:
+ * Resource action: stonith-1       monitor on node1
+ * Resource action: rsc1            monitor on node1
+ * Resource action: rsc2            monitor on node1
+ * Fencing node2 (reboot)
+ * Pseudo action:   rsc1_stop_0
+ * Pseudo action:   rsc2_stop_0
+ * Pseudo action:   stonith_complete
+ * Pseudo action:   all_stopped
+ * Resource action: stonith-1       start on node1
+ * Resource action: rsc1            start on node1
+ * Resource action: rsc2            start on node1
+
+Revised cluster status:
+Online: [ node1 ]
+OFFLINE: [ node2 ]
+
+ stonith-1	(stonith:dummy):	Started node1
+ rsc1	(ocf::heartbeat:apache):	Started node1
+ rsc2	(ocf::heartbeat:apache):	Started node1
+

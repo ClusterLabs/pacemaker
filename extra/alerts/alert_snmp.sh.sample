@@ -1,7 +1,7 @@
 #!/bin/sh
 #
-# Description:  Manages a SNMP trap, provided by NTT OSSC as an
-#               script under Heartbeat/LinuxHA control
+# Description:  Manages a SNMP trap, provided by NTT OSSC as a
+#               script under Pacemaker control
 #
 # Copyright (c) 2016 NIPPON TELEGRAPH AND TELEPHONE CORPORATION
 #
@@ -41,6 +41,22 @@
 #   </alerts>
 # </configuration>
 # ================================
+#
+# This uses the official Pacemaker MIB.
+# 1.3.6.1.4.1.32723 has been assigned to the project by IANA:
+# http://www.iana.org/assignments/enterprise-numbers
+#
+# The original usage (by crm_mon) was:
+# define PACEMAKER_PREFIX "1.3.6.1.4.1.32723"
+# define PACEMAKER_TRAP_PREFIX PACEMAKER_PREFIX ".1"
+# define snmp_crm_trap_oid   PACEMAKER_TRAP_PREFIX
+# define snmp_crm_oid_node   PACEMAKER_TRAP_PREFIX ".1"
+# define snmp_crm_oid_rsc    PACEMAKER_TRAP_PREFIX ".2"
+# define snmp_crm_oid_task   PACEMAKER_TRAP_PREFIX ".3"
+# define snmp_crm_oid_desc   PACEMAKER_TRAP_PREFIX ".4"
+# define snmp_crm_oid_status PACEMAKER_TRAP_PREFIX ".5"
+# define snmp_crm_oid_rc     PACEMAKER_TRAP_PREFIX ".6"
+# define snmp_crm_oid_trc    PACEMAKER_TRAP_PREFIX ".7"
 
 if [ -z "$CRM_alert_version" ]; then
     echo "$0 must be run by Pacemaker version 1.1.15 or later"

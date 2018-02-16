@@ -429,6 +429,21 @@ rsc_merge_weights(resource_t * rsc, const char *rhs, GHashTable * nodes, const c
     return work;
 }
 
+static inline bool
+node_has_been_unfenced(node_t *node)
+{
+    const char *unfenced = pe_node_attribute_raw(node, CRM_ATTR_UNFENCED);
+
+    return unfenced && strcmp("0", unfenced);
+}
+
+static inline bool
+is_unfence_device(resource_t *rsc, pe_working_set_t *data_set)
+{
+    return is_set(rsc->flags, pe_rsc_fence_device)
+           && is_set(data_set->flags, pe_flag_enable_unfencing);
+}
+
 node_t *
 native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
 {
@@ -493,7 +508,7 @@ native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
                                                     pe_weights_rollback);
     }
 
-    print_resource(LOG_DEBUG_2, "Allocating: ", rsc, FALSE);
+    print_resource(LOG_TRACE, "Allocating: ", rsc, FALSE);
     if (rsc->next_role == RSC_ROLE_STOPPED) {
         pe_rsc_trace(rsc, "Making sure %s doesn't get allocated", rsc->id);
         /* make sure it doesn't come up again */
@@ -557,7 +572,7 @@ native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
     }
 
     clear_bit(rsc->flags, pe_rsc_allocating);
-    print_resource(LOG_DEBUG_3, "Allocated ", rsc, TRUE);
+    print_resource(LOG_TRACE, "Allocated ", rsc, TRUE);
 
     if (rsc->is_remote_node) {
         node_t *remote_node = pe_find_node(data_set->nodes, rsc->id);
@@ -715,7 +730,7 @@ RecurringOp(resource_t * rsc, action_t * start, node_t * node,
 
     if ((rsc->next_role == RSC_ROLE_MASTER && value == NULL)
         || (value != NULL && text2role(value) != rsc->next_role)) {
-        int log_level = LOG_DEBUG_2;
+        int log_level = LOG_TRACE;
         const char *result = "Ignoring";
 
         if (is_optional) {
@@ -1361,7 +1376,7 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
     custom_action_order(rsc, generate_op_key(rsc->id, RSC_STOP, 0), NULL,
                         rsc, generate_op_key(rsc->id, RSC_START, 0), NULL, type, data_set);
 
-    if (top->variant == pe_master || rsc->role > RSC_ROLE_SLAVE) {
+    if (is_set(top->flags, pe_rsc_promotable) || (rsc->role > RSC_ROLE_SLAVE)) {
         custom_action_order(rsc, generate_op_key(rsc->id, RSC_DEMOTE, 0), NULL,
                             rsc, generate_op_key(rsc->id, RSC_STOP, 0), NULL,
                             pe_order_implies_first_master, data_set);
@@ -1574,11 +1589,11 @@ filter_colocation_constraint(resource_t * rsc_lh, resource_t * rsc_rh,
     }
 
     if ((constraint->role_lh >= RSC_ROLE_SLAVE) &&
-        rsc_lh->parent &&
-        rsc_lh->parent->variant == pe_master && is_not_set(rsc_lh->flags, pe_rsc_provisional)) {
+        rsc_lh->parent && is_set(rsc_lh->parent->flags, pe_rsc_promotable)
+        && is_not_set(rsc_lh->flags, pe_rsc_provisional)) {
 
         /* LH and RH resources have already been allocated, place the correct
-         * priority oh LH rsc for the given multistate resource role */
+         * priority on LH rsc for the given promotable clone resource role */
         return influence_rsc_priority;
     }
 
@@ -1827,7 +1842,7 @@ rsc_ticket_constraint(resource_t * rsc_lh, rsc_ticket_t * rsc_ticket, pe_working
                 break;
 
             case loss_ticket_demote:
-                /*Promotion score will be set to -INFINITY in master_promotion_order() */
+                // Promotion score will be set to -INFINITY in promotion_order()
                 if (rsc_ticket->role_lh != RSC_ROLE_MASTER) {
                     resource_location(rsc_lh, NULL, -INFINITY, "__loss_of_ticket__", data_set);
                 }
@@ -2229,7 +2244,7 @@ LogAction(const char *change, resource_t *rsc, pe_node_t *origin, pe_node_t *des
         details = crm_strdup_printf("%s", origin?origin->details->uname:destination->details->uname);
 
     } else if(need_role && same_role && same_host) {
-        /* Recovering or Restarting a Master/Slave resource */
+        /* Recovering or restarting a promotable clone resource */
         details = crm_strdup_printf("%s %s", role2text(rsc->role), origin->details->uname);
 
     } else if(same_role && same_host) {
@@ -2237,7 +2252,7 @@ LogAction(const char *change, resource_t *rsc, pe_node_t *origin, pe_node_t *des
         details = crm_strdup_printf("%s", origin->details->uname);
 
     } else if(same_role && need_role) {
-        /* Moving a Master/Slave resource */
+        /* Moving a promotable clone resource */
         details = crm_strdup_printf("%s -> %s %s", origin->details->uname, destination->details->uname, role2text(rsc->role));
 
     } else if(same_role) {
@@ -2245,7 +2260,7 @@ LogAction(const char *change, resource_t *rsc, pe_node_t *origin, pe_node_t *des
         details = crm_strdup_printf("%s -> %s", origin->details->uname, destination->details->uname);
 
     } else if(same_host) {
-        /* Promoting or Demoting a Master/Slave resource */
+        /* Promoting or demoting a promotable clone resource */
         details = crm_strdup_printf("%s -> %s %s", role2text(rsc->role), role2text(rsc->next_role), origin->details->uname);
 
     } else {
@@ -2524,16 +2539,48 @@ StopRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * d
 
         if(is_set(rsc->flags, pe_rsc_needs_unfencing)) {
             action_t *unfence = pe_fence_op(current, "on", TRUE, NULL, data_set);
-            const char *unfenced = pe_node_attribute_raw(current, CRM_ATTR_UNFENCED);
 
             order_actions(stop, unfence, pe_order_implies_first);
-            if (unfenced == NULL || safe_str_eq("0", unfenced)) {
+            if (!node_has_been_unfenced(current)) {
                 pe_proc_err("Stopping %s until %s can be unfenced", rsc->id, current->details->uname);
             }
         }
     }
 
     return TRUE;
+}
+
+static void
+order_after_unfencing(resource_t *rsc, pe_node_t *node, action_t *action,
+                      enum pe_ordering order, pe_working_set_t *data_set)
+{
+    /* When unfencing is in use, we order unfence actions before any probe or
+     * start of resources that require unfencing, and also of fence devices.
+     *
+     * This might seem to violate the principle that fence devices require
+     * only quorum. However, fence agents that unfence often don't have enough
+     * information to even probe or start unless the node is first unfenced.
+     */
+    if (is_unfence_device(rsc, data_set)
+        || is_set(rsc->flags, pe_rsc_needs_unfencing)) {
+
+        /* Start with an optional ordering. Requiring unfencing would result in
+         * the node being unfenced, and all its resources being stopped,
+         * whenever a new resource is added -- which would be highly suboptimal.
+         */
+        action_t *unfence = pe_fence_op(node, "on", TRUE, NULL, data_set);
+
+        order_actions(unfence, action, order);
+
+        if (!node_has_been_unfenced(node)) {
+            // But unfencing is required if it has never been done
+            char *reason = crm_strdup_printf("required by %s %s",
+                                             rsc->id, action->task);
+
+            trigger_unfencing(NULL, node, reason, NULL, data_set);
+            free(reason);
+        }
+    }
 }
 
 gboolean
@@ -2545,18 +2592,7 @@ StartRsc(resource_t * rsc, node_t * next, gboolean optional, pe_working_set_t * 
     pe_rsc_trace(rsc, "%s on %s %d %d", rsc->id, next ? next->details->uname : "N/A", optional, next ? next->weight : 0);
     start = start_action(rsc, next, TRUE);
 
-    if(is_set(rsc->flags, pe_rsc_needs_unfencing)) {
-        action_t *unfence = pe_fence_op(next, "on", TRUE, NULL, data_set);
-        const char *unfenced = pe_node_attribute_raw(next, CRM_ATTR_UNFENCED);
-
-        order_actions(unfence, start, pe_order_implies_then);
-
-        if (unfenced == NULL || safe_str_eq("0", unfenced)) {
-            char *reason = crm_strdup_printf("Required by %s", rsc->id);
-            trigger_unfencing(NULL, next, reason, NULL, data_set);
-            free(reason);
-        }
-    }
+    order_after_unfencing(rsc, next, start, pe_order_implies_then, data_set);
 
     if (is_set(start->flags, pe_action_runnable) && optional == FALSE) {
         update_action_flags(start, pe_action_optional | pe_action_clear, __FUNCTION__, __LINE__);
@@ -2688,10 +2724,7 @@ increment_clone(char *last_rsc_id)
     gboolean complete = FALSE;
 
     CRM_CHECK(last_rsc_id != NULL, return NULL);
-    if (last_rsc_id != NULL) {
-        len = strlen(last_rsc_id);
-    }
-
+    len = strlen(last_rsc_id);
     lpc = len - 1;
     while (complete == FALSE && lpc > 0) {
         switch (last_rsc_id[lpc]) {
@@ -2731,11 +2764,7 @@ increment_clone(char *last_rsc_id)
                 break;
             case ':':
                 tmp = last_rsc_id;
-                last_rsc_id = calloc(1, len + 2);
-                memcpy(last_rsc_id, tmp, len);
-                last_rsc_id[++lpc] = '1';
-                last_rsc_id[len] = '0';
-                last_rsc_id[len + 1] = 0;
+                last_rsc_id = crm_strdup_printf("%s:10", tmp);
                 complete = TRUE;
                 free(tmp);
                 break;
@@ -2977,23 +3006,7 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
     probe = custom_action(rsc, key, RSC_STATUS, node, FALSE, TRUE, data_set);
     update_action_flags(probe, pe_action_optional | pe_action_clear, __FUNCTION__, __LINE__);
 
-    /* If enabled, require unfencing before probing any fence devices
-     * but ensure it happens after any resources that require
-     * unfencing have been probed.
-     *
-     * Doing it the other way (requiring unfencing after probing
-     * resources that need it) would result in the node being
-     * unfenced, and all its resources being stopped, whenever a new
-     * resource is added.  Which would be highly suboptimal.
-     *
-     * So essentially, at the point the fencing device(s) have been
-     * probed, we know the state of all resources that require
-     * unfencing and that unfencing occurred.
-     */
-    if(is_set(rsc->flags, pe_rsc_needs_unfencing)) {
-        action_t *unfence = pe_fence_op(node, "on", TRUE, NULL, data_set);
-        order_actions(unfence, probe, pe_order_optional);
-    }
+    order_after_unfencing(rsc, node, probe, pe_order_optional, data_set);
 
     /*
      * We need to know if it's running_on (not just known_on) this node
@@ -3010,12 +3023,8 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
     crm_debug("Probing %s on %s (%s) %d %p", rsc->id, node->details->uname, role2text(rsc->role),
               is_set(probe->flags, pe_action_runnable), rsc->running_on);
 
-    if(is_set(rsc->flags, pe_rsc_fence_device) && is_set(data_set->flags, pe_flag_enable_unfencing)) {
+    if (is_unfence_device(rsc, data_set) || !pe_rsc_is_clone(top)) {
         top = rsc;
-
-    } else if (pe_rsc_is_clone(top) == FALSE) {
-        top = rsc;
-
     } else {
         crm_trace("Probing %s on %s (%s) as %s", rsc->id, node->details->uname, role2text(rsc->role), top->id);
     }
@@ -3036,17 +3045,18 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
                         top, reload_key(rsc), NULL,
                         pe_order_optional, data_set);
 
-    if(is_set(rsc->flags, pe_rsc_fence_device) && is_set(data_set->flags, pe_flag_enable_unfencing)) {
+#if 0
+    // complete is always null currently
+    if (!is_unfence_device(rsc, data_set)) {
         /* Normally rsc.start depends on probe complete which depends
-         * on rsc.probe. But this can't be the case in this scenario as
-         * it would create graph loops.
+         * on rsc.probe. But this can't be the case for fence devices
+         * with unfencing, as it would create graph loops.
          *
          * So instead we explicitly order 'rsc.probe then rsc.start'
          */
-
-    } else {
         order_actions(probe, complete, pe_order_implies_then);
     }
+#endif
     return TRUE;
 }
 
@@ -3329,7 +3339,7 @@ void
 native_append_meta(resource_t * rsc, xmlNode * xml)
 {
     char *value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INCARNATION);
-    resource_t *iso_parent, *last_parent, *parent;
+    resource_t *parent;
 
     if (value) {
         char *name = NULL;
@@ -3352,83 +3362,5 @@ native_append_meta(resource_t * rsc, xmlNode * xml)
         if (parent->container) {
             crm_xml_add(xml, CRM_META"_"XML_RSC_ATTR_CONTAINER, parent->container->id);
         }
-    }
-
-    last_parent = iso_parent = rsc;
-    while (iso_parent != NULL) {
-        char *name = NULL;
-        char *iso = NULL;
-
-        if (iso_parent->isolation_wrapper == NULL) {
-            last_parent = iso_parent;
-            iso_parent = iso_parent->parent;
-            continue;
-        }
-
-        /* name of wrapper script this resource is routed through. */
-        name = crm_meta_name(XML_RSC_ATTR_ISOLATION_WRAPPER);
-        crm_xml_add(xml, name, iso_parent->isolation_wrapper);
-        free(name);
-
-        /* instance name for isolated environment */
-        name = crm_meta_name(XML_RSC_ATTR_ISOLATION_INSTANCE);
-        if (pe_rsc_is_clone(iso_parent)) { 
-            /* if isolation is set at the clone/master level, we have to 
-             * give this resource the unique isolation instance associated
-             * with the clone child (last_parent)*/
-
-            /* Example: cloned group. group is container
-             * clone myclone - iso_parent
-             *    group mygroup - last_parent (this is the iso environment)
-             *       rsc myrsc1 - rsc
-             *       rsc myrsc2
-             * The group is what is isolated in example1. We have to make
-             * sure myrsc1 and myrsc2 launch in the same isolated environment.
-             *
-             * Example: cloned primitives. rsc primitive is container
-             * clone myclone iso_parent
-             *     rsc myrsc1 - last_parent == rsc (this is the iso environment)
-             * The individual cloned primitive instances are isolated
-             */
-            value = g_hash_table_lookup(last_parent->meta, XML_RSC_ATTR_INCARNATION);
-            CRM_ASSERT(value != NULL);
-
-            iso = crm_concat(crm_element_value(last_parent->xml, XML_ATTR_ID), value, '_');
-            crm_xml_add(xml, name, iso);
-            free(iso);
-        } else { 
-            /*
-             * Example: cloned group of containers
-             * clone myclone
-             *    group mygroup
-             *       rsc myrsc1 - iso_parent (this is the iso environment)
-             *       rsc myrsc2
-             *
-             * Example: group of containers
-             * group mygroup
-             *   rsc myrsc1 - iso_parent (this is the iso environment)
-             *   rsc myrsc2
-             * 
-             * Example: group is container
-             * group mygroup - iso_parent ( this is iso environment)
-             *   rsc myrsc1 
-             *   rsc myrsc2
-             *
-             * Example: single primitive
-             * rsc myrsc1 - iso_parent (this is the iso environment)
-             */
-            value = g_hash_table_lookup(iso_parent->meta, XML_RSC_ATTR_INCARNATION);
-            if (value) {
-                crm_xml_add(xml, name, iso_parent->id);
-                iso = crm_concat(crm_element_value(iso_parent->xml, XML_ATTR_ID), value, '_');
-                crm_xml_add(xml, name, iso);
-                free(iso);
-            } else {
-                crm_xml_add(xml, name, iso_parent->id);
-            }
-        }
-        free(name);
-
-        break;
     }
 }

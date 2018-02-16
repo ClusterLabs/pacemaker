@@ -142,23 +142,14 @@ pe_foreach_guest_node(const pe_working_set_t *data_set, const node_t *host,
  * \param[in] container        If not NULL, use this as connection container
  * \param[in] migrateable      If not NULL, use as allow-migrate value
  * \param[in] is_managed       If not NULL, use as is-managed value
- * \param[in] interval         If not NULL, create recurring monitor with this interval
- * \param[in] monitor_timeout  If not NULL, use as remote connect timeout
  * \param[in] start_timeout    If not NULL, use as remote connect timeout
  * \param[in] server           If not NULL, use as remote server value
  * \param[in] port             If not NULL, use as remote port value
- *
- * \note We should standardize on a single interval and monitor_timeout, but
- *       that would cause LRM history entries in active mixed-version clusters
- *       (and regression tests) to require a new monitor operation due to
- *       changed parameters. It might be worthwhile to do at a significant
- *       version bump.
  */
 xmlNode *
 pe_create_remote_xml(xmlNode *parent, const char *uname,
                      const char *container_id, const char *migrateable,
-                     const char *is_managed, const char *interval,
-                     const char *monitor_timeout, const char *start_timeout,
+                     const char *is_managed, const char *start_timeout,
                      const char *server, const char *port)
 {
     xmlNode *remote;
@@ -202,15 +193,10 @@ pe_create_remote_xml(xmlNode *parent, const char *uname,
     }
 
     // Add operations
-    if (interval || start_timeout) {
-        xml_sub = create_xml_node(remote, "operations");
-        if (interval) {
-            crm_create_op_xml(xml_sub, uname, "monitor", interval,
-                              monitor_timeout);
-        }
-        if (start_timeout) {
-            crm_create_op_xml(xml_sub, uname, "start", "0", start_timeout);
-        }
+    xml_sub = create_xml_node(remote, "operations");
+    crm_create_op_xml(xml_sub, uname, "monitor", "30s", "30s");
+    if (start_timeout) {
+        crm_create_op_xml(xml_sub, uname, "start", "0", start_timeout);
     }
     return remote;
 }

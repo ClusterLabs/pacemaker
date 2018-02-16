@@ -299,7 +299,7 @@ lrmd_exit(gpointer data)
         lrmd_drain_alerts(g_main_loop_get_context(mainloop));
     }
 
-    crm_exit(pcmk_ok);
+    crm_exit(CRM_EX_OK);
     return FALSE;
 }
 
@@ -400,7 +400,7 @@ static pid_t main_pid = 0;
 static void
 sigdone(void)
 {
-    exit(0);
+    exit(CRM_EX_OK);
 }
 
 static void
@@ -420,7 +420,7 @@ sigreap(void)
             if (WIFEXITED(status)) {
                 exit(WEXITSTATUS(status));
             }
-            exit(1);
+            exit(CRM_EX_ERROR);
         }
 
     } while (pid > 0);
@@ -520,8 +520,6 @@ static struct crm_option long_options[] = {
     {"port", 1, 0,       'p', "\tPort to listen on"},
 #endif
 
-    /* For compatibility with the original lrmd */
-    {"dummy",  0, 0, 'r', NULL, 1},
     {0, 0, 0, 0}
 };
 /* *INDENT-ON* */
@@ -554,10 +552,6 @@ main(int argc, char **argv, char **envp)
         }
 
         switch (flag) {
-            case 'r':
-                crm_warn("The -r option to lrmd is deprecated (and ignored) "
-                         "and will be removed in a future release");
-                break;
             case 'l':
                 crm_add_logfile(optarg);
                 break;
@@ -569,10 +563,10 @@ main(int argc, char **argv, char **envp)
                 break;
             case '?':
             case '$':
-                crm_help(flag, EX_OK);
+                crm_help(flag, CRM_EX_OK);
                 break;
             default:
-                crm_help('?', EX_USAGE);
+                crm_help('?', CRM_EX_USAGE);
                 break;
         }
     }
@@ -607,30 +601,27 @@ main(int argc, char **argv, char **envp)
     /* Used by RAs - Leave owned by root */
     crm_build_path(CRM_RSCTMP_DIR, 0755);
 
-    /* Legacy: Used by RAs - Leave owned by root */
-    crm_build_path(HA_STATE_DIR"/heartbeat/rsctmp", 0755);
-
     rsc_list = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free_rsc);
     ipcs = mainloop_add_ipc_server(CRM_SYSTEM_LRMD, QB_IPC_SHM, &lrmd_ipc_callbacks);
     if (ipcs == NULL) {
         crm_err("Failed to create IPC server: shutting down and inhibiting respawn");
-        crm_exit(DAEMON_RESPAWN_STOP);
+        crm_exit(CRM_EX_FATAL);
     }
 
 #ifdef ENABLE_PCMK_REMOTE
     if (lrmd_init_remote_tls_server() < 0) {
         crm_err("Failed to create TLS listener: shutting down and staying down");
-        crm_exit(DAEMON_RESPAWN_STOP);
+        crm_exit(CRM_EX_FATAL);
     }
     ipc_proxy_init();
 #endif
 
     mainloop_add_signal(SIGTERM, lrmd_shutdown);
-    mainloop = g_main_new(FALSE);
+    mainloop = g_main_loop_new(NULL, FALSE);
     crm_info("Starting");
-    g_main_run(mainloop);
+    g_main_loop_run(mainloop);
 
     /* should never get here */
     lrmd_exit(NULL);
-    return pcmk_ok;
+    return CRM_EX_OK;
 }

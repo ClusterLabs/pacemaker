@@ -38,7 +38,6 @@
 
 gboolean USE_LIVE_CIB = FALSE;
 char *cib_save = NULL;
-void usage(const char *cmd, int exit_status);
 extern gboolean stage0(pe_working_set_t * data_set);
 extern void cleanup_alloc_calculations(pe_working_set_t * data_set);
 extern xmlNode *do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, crm_time_t * now);
@@ -65,7 +64,6 @@ static struct crm_option long_options[] = {
     {"-spacer-",    1, 0, '-', "Check the consistency of the configuration in a given file and produce verbose output:", pcmk_option_paragraph},
     {"-spacer-",    1, 0, '-', " crm_verify --xml-file file.xml --verbose", pcmk_option_example},
   
-    {F_CRM_DATA,    1, 0, 'X', NULL, 1}, /* legacy */
     {0, 0, 0, 0}
 };
 /* *INDENT-ON* */
@@ -91,11 +89,12 @@ main(int argc, char **argv)
 
     crm_log_cli_init("crm_verify");
     crm_set_options(NULL, "[modifiers] data_source", long_options,
-                    "Check a (complete) confiuration for syntax and common conceptual errors."
-                    "\n\nChecks the well-formedness of an XML configuration, its conformance to the configured DTD/schema and for the presence of common misconfigurations."
-                    "\n\nIt reports two classes of problems, errors and warnings."
-                    " Errors must be fixed before the cluster will work properly."
-                    " However, it is left up to the administrator to decide if the warnings should also be fixed.");
+                    "check a Pacemaker configuration for errors"
+                    "\n\nCheck the well-formedness of a complete Pacemaker XML configuration,"
+                    "\n\nits conformance to the configured schema, and the presence of common"
+                    "\n\nmisconfigurations. Problems reported as errors must be fixed before the"
+                    "\n\ncluster will work properly. It is left to the administrator to decide"
+                    "\n\nwhether to fix problems reported as warnings.");
 
     while (1) {
         flag = crm_get_option(argc, argv, &option_index);
@@ -126,7 +125,7 @@ main(int argc, char **argv)
                 break;
             case '$':
             case '?':
-                crm_help(flag, EX_OK);
+                crm_help(flag, CRM_EX_OK);
                 break;
             default:
                 fprintf(stderr, "Option -%c is not yet supported\n", flag);
@@ -149,7 +148,7 @@ main(int argc, char **argv)
 
     if (argerr) {
         crm_err("%d errors in option parsing", argerr);
-        crm_help(flag, EX_USAGE);
+        crm_help(flag, CRM_EX_USAGE);
     }
 
     crm_info("=#=#=#=#= Getting XML =#=#=#=#=");
@@ -225,7 +224,7 @@ main(int argc, char **argv)
     }
 
     if (validate_xml(cib_object, NULL, FALSE) == FALSE) {
-        crm_config_err("CIB did not pass DTD/schema validation");
+        crm_config_err("CIB did not pass schema validation");
         free_xml(cib_object);
         cib_object = NULL;
 

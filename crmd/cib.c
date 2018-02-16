@@ -30,9 +30,6 @@
 #include <crmd_fsa.h>
 #include <crmd_messages.h>
 
-
-struct crm_subsystem_s *cib_subsystem = NULL;
-
 int cib_retries = 0;
 
 static void
@@ -40,39 +37,6 @@ do_cib_updated(const char *event, xmlNode * msg)
 {
     if (crm_patchset_contains_alert(msg, TRUE)) {
         mainloop_set_trigger(config_read);
-    }
-}
-
-static void
-revision_check_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
-{
-    int cmp = -1;
-    xmlNode *generation = NULL;
-    const char *revision = NULL;
-
-    if (rc != pcmk_ok) {
-        fsa_data_t *msg_data = NULL;
-
-        register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
-        return;
-    }
-
-    generation = output;
-    CRM_CHECK(safe_str_eq(crm_element_name(generation), XML_TAG_CIB),
-              crm_log_xml_err(output, __FUNCTION__); return);
-
-    crm_trace("Checking our feature revision %s is allowed", CRM_FEATURE_SET);
-
-    revision = crm_element_value(generation, XML_ATTR_CRM_VERSION);
-    cmp = compare_version(revision, CRM_FEATURE_SET);
-
-    if (cmp > 0) {
-        crm_err("Shutting down because the current configuration is not supported by this version "
-                CRM_XS " build=%s supported=%s current=%s",
-                PACEMAKER_VERSION, CRM_FEATURE_SET, revision);
-        /* go into a stall state */
-        register_fsa_error_adv(C_FSA_INTERNAL, I_SHUTDOWN, NULL, NULL, __FUNCTION__);
-        return;
     }
 }
 
@@ -158,9 +122,10 @@ do_cib_control(long long action,
 
         } else {
             set_bit(fsa_input_register, R_CIB_CONNECTED);
+            cib_retries = 0;
         }
 
-        if (is_set(fsa_input_register, R_CIB_CONNECTED) == FALSE) {
+        if (is_not_set(fsa_input_register, R_CIB_CONNECTED)) {
 
             cib_retries++;
             crm_warn("Couldn't complete CIB registration %d"
@@ -175,15 +140,6 @@ do_cib_control(long long action,
                         " registration  %d times..." " hard error", cib_retries);
                 register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
             }
-        } else {
-            int call_id = 0;
-
-            crm_info("CIB connection established");
-
-            call_id = fsa_cib_conn->cmds->query(fsa_cib_conn, NULL, NULL, cib_scope_local);
-
-            fsa_register_cib_callback(call_id, FALSE, NULL, revision_check_callback);
-            cib_retries = 0;
         }
     }
 }

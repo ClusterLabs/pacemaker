@@ -95,7 +95,7 @@ void crm_set_options(const char *short_options, const char *usage, struct crm_op
                      const char *app_desc);
 int crm_get_option(int argc, char **argv, int *index);
 int crm_get_option_long(int argc, char **argv, int *index, const char **longname);
-int crm_help(char cmd, int exit_code);
+crm_exit_t crm_help(char cmd, crm_exit_t exit_code);
 
 /* Cluster Option Processing */
 typedef struct pe_cluster_option_s {
@@ -131,7 +131,9 @@ gboolean check_quorum(const char *value);
 gboolean check_script(const char *value);
 gboolean check_utilization(const char *value);
 long crm_get_sbd_timeout(void);
+long crm_auto_watchdog_timeout(void);
 gboolean check_sbd_timeout(const char *value);
+void crm_args_fini(void);
 
 /* char2score */
 extern int node_score_red;
@@ -241,8 +243,6 @@ void *crm_create_anon_tls_session(int sock, int type, void *credentials);
 void *create_psk_tls_session(int csock, int type, void *credentials);
 #  endif
 
-#  define REMOTE_MSG_TERMINATOR "\r\n\r\n"
-
 const char *daemon_option(const char *option);
 void set_daemon_option(const char *option, const char *value);
 gboolean daemon_option_enabled(const char *daemon, const char *option);
@@ -256,7 +256,6 @@ long crm_read_pidfile(const char *filename);
 #  define crm_config_err(fmt...) { crm_config_error = TRUE; crm_err(fmt); }
 #  define crm_config_warn(fmt...) { crm_config_warning = TRUE; crm_warn(fmt); }
 
-#  define attrd_channel		T_ATTRD
 #  define F_ATTRD_KEY		"attr_key"
 #  define F_ATTRD_ATTRIBUTE	"attr_name"
 #  define F_ATTRD_REGEX 	"attr_regex"
@@ -267,7 +266,6 @@ long crm_read_pidfile(const char *filename);
 #  define F_ATTRD_IS_PRIVATE     "attr_is_private"
 #  define F_ATTRD_SECTION	"attr_section"
 #  define F_ATTRD_DAMPEN	"attr_dampening"
-#  define F_ATTRD_IGNORE_LOCALLY "attr_ignore_locally"
 #  define F_ATTRD_HOST		"attr_host"
 #  define F_ATTRD_HOST_ID	"attr_host_id"
 #  define F_ATTRD_USER		"attr_user"
@@ -293,18 +291,10 @@ long crm_read_pidfile(const char *filename);
 
 
 #  if SUPPORT_COROSYNC
-#    if CS_USES_LIBQB
-#      include <qb/qbipc_common.h>
-#      include <corosync/corotypes.h>
+#    include <qb/qbipc_common.h>
+#    include <corosync/corotypes.h>
 typedef struct qb_ipc_request_header cs_ipc_header_request_t;
 typedef struct qb_ipc_response_header cs_ipc_header_response_t;
-#    else
-#      include <corosync/corodefs.h>
-#      include <corosync/coroipcc.h>
-#      include <corosync/coroipc_types.h>
-typedef coroipc_request_header_t cs_ipc_header_request_t;
-typedef coroipc_response_header_t cs_ipc_header_response_t;
-#    endif
 #  else
 typedef struct {
     int size __attribute__ ((aligned(8)));

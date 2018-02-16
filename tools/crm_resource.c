@@ -47,14 +47,14 @@ resource_ipc_timeout(gpointer data)
     fprintf(stderr, "No messages received in %d seconds.. aborting\n",
             (int)message_timeout_ms / 1000);
     crm_err("No messages received in %d seconds", (int)message_timeout_ms / 1000);
-    return crm_exit(-1);
+    return crm_exit(CRM_EX_TIMEOUT);
 }
 
 static void
 resource_ipc_connection_destroy(gpointer user_data)
 {
     crm_info("Connection to CRMd was terminated");
-    crm_exit(1);
+    crm_exit(CRM_EX_DISCONNECT);
 }
 
 static void
@@ -64,12 +64,12 @@ start_mainloop(void)
         return;
     }
 
-    mainloop = g_main_new(FALSE);
+    mainloop = g_main_loop_new(NULL, FALSE);
     fprintf(stderr, "Waiting for %d replies from the CRMd", crmd_replies_needed);
     crm_debug("Waiting for %d replies from the CRMd", crmd_replies_needed);
 
     g_timeout_add(message_timeout_ms, resource_ipc_timeout, NULL);
-    g_main_run(mainloop);
+    g_main_loop_run(mainloop);
 }
 
 static int
@@ -86,7 +86,7 @@ resource_ipc_callback(const char *buffer, ssize_t length, gpointer userdata)
 
         fprintf(stderr, " OK\n");
         crm_debug("Got all the replies we expected");
-        return crm_exit(pcmk_ok);
+        return crm_exit(CRM_EX_OK);
     }
 
     free_xml(msg);
@@ -144,11 +144,6 @@ static struct crm_option long_options[] = {
     {
         "list-all-operations", no_argument, NULL, 'o',
         "List all resource operations, optionally filtered by --resource and/or --node"
-    },
-    {
-        "pending", no_argument, NULL, 'j',
-        "\t\tDisplay pending state if 'record-pending' is enabled",
-        pcmk_option_hidden
     },
     {
         "list-standards", no_argument, NULL, 0,
@@ -256,7 +251,7 @@ static struct crm_option long_options[] = {
         "\t\t\t\tNOTE: This will prevent the resource from running on the affected node\n"
         "\t\t\t\tuntil the implicit constraint expires or is removed with --clear.\n"
         "\t\t\t\tIf --node is not specified, it defaults to the node currently running the resource\n"
-        "\t\t\t\tfor primitives and groups, or the master for master/slave clones with master-max=1\n"
+        "\t\t\t\tfor primitives and groups, or the master for promotable clones with promoted-max=1\n"
         "\t\t\t\t(all other situations result in an error as there is no sane default).\n"
     },
     {
@@ -379,11 +374,6 @@ static struct crm_option long_options[] = {
 
     /* legacy options */
     {"host-uname", required_argument, NULL, 'H', NULL, pcmk_option_hidden},
-    {"migrate", no_argument, NULL, 'M', NULL, pcmk_option_hidden},
-    {"un-migrate", no_argument, NULL, 'U', NULL, pcmk_option_hidden},
-    {"un-move", no_argument, NULL, 'U', NULL, pcmk_option_hidden},
-
-    {"reprobe", no_argument, NULL, 'P', NULL, pcmk_option_hidden},
 
     {"-spacer-", 1, NULL, '-', "\nExamples:", pcmk_option_paragraph},
     {"-spacer-", 1, NULL, '-', "List the available OCF agents:", pcmk_option_paragraph},
@@ -448,6 +438,7 @@ main(int argc, char **argv)
     int argerr = 0;
     int flag;
     int find_flags = 0;           // Flags to use when searching for resource
+    crm_exit_t exit_code = CRM_EX_OK;
 
     crm_log_cli_init("crm_resource");
     crm_set_options(NULL, "(query|command) [options]", long_options,
@@ -504,21 +495,22 @@ main(int argc, char **argv)
                     }
 
                     if (rc > 0) {
-                        rc = 0;
                         for (iter = list; iter != NULL; iter = iter->next) {
-                            rc++;
                             printf("%s\n", iter->val);
                         }
                         lrmd_list_freeall(list);
 
                     } else if (optarg) {
                         fprintf(stderr, "No %s found for %s\n", text, optarg);
+                        exit_code = CRM_EX_NOSUCH;
+
                     } else {
                         fprintf(stderr, "No %s found\n", text);
+                        exit_code = CRM_EX_NOSUCH;
                     }
 
                     lrmd_api_delete(lrmd_conn);
-                    return crm_exit(rc);
+                    crm_exit(exit_code);
 
                 } else if (safe_str_eq("show-metadata", longname)) {
                     char *standard = NULL;
@@ -536,6 +528,7 @@ main(int argc, char **argv)
                         fprintf(stderr,
                                 "'%s' is not a valid agent specification\n",
                                 optarg);
+                        rc = -ENXIO;
                     }
 
                     if (metadata) {
@@ -543,9 +536,10 @@ main(int argc, char **argv)
                     } else {
                         fprintf(stderr, "Metadata query for %s failed: %s\n",
                                 optarg, pcmk_strerror(rc));
+                        exit_code = crm_errno2exit(rc);
                     }
                     lrmd_api_delete(lrmd_conn);
-                    return crm_exit(rc);
+                    crm_exit(exit_code);
 
                 } else if (safe_str_eq("list-agents", longname)) {
                     lrmd_list_t *list = NULL;
@@ -559,20 +553,17 @@ main(int argc, char **argv)
                     rc = lrmd_conn->cmds->list_agents(lrmd_conn, &list, optarg, provider);
 
                     if (rc > 0) {
-                        rc = 0;
                         for (iter = list; iter != NULL; iter = iter->next) {
                             printf("%s\n", iter->val);
-                            rc++;
                         }
                         lrmd_list_freeall(list);
-                        rc = 0;
                     } else {
                         fprintf(stderr, "No agents found for standard=%s, provider=%s\n",
                                 optarg, (provider? provider : "*"));
-                        rc = -1;
+                        exit_code = CRM_EX_NOSUCH;
                     }
                     lrmd_api_delete(lrmd_conn);
-                    return crm_exit(rc);
+                    crm_exit(exit_code);
 
                 } else {
                     crm_err("Unhandled long option: %s", longname);
@@ -584,7 +575,7 @@ main(int argc, char **argv)
                 break;
             case '$':
             case '?':
-                crm_help(flag, EX_OK);
+                crm_help(flag, CRM_EX_OK);
                 break;
             case 'x':
                 xml_file = strdup(optarg);
@@ -624,24 +615,14 @@ main(int argc, char **argv)
                 timeout_ms = crm_get_msec(optarg);
                 break;
 
-            case 'R':
-            case 'P':
-                crm_log_args(argc, argv);
-                require_resource = FALSE;
-                if (cib_file == NULL) {
-                    require_crmd = TRUE;
-                }
-                rsc_cmd = 'R';
-                find_flags = pe_find_renamed|pe_find_anon;
-                break;
-
             case 'C':
+            case 'R':
                 crm_log_args(argc, argv);
                 require_resource = FALSE;
                 if (cib_file == NULL) {
                     require_crmd = TRUE;
                 }
-                rsc_cmd = 'C';
+                rsc_cmd = flag;
                 find_flags = pe_find_renamed|pe_find_anon;
                 break;
 
@@ -702,10 +683,6 @@ main(int argc, char **argv)
                 find_flags = pe_find_renamed|pe_find_anon;
                 break;
 
-            case 'j':
-                print_pending = TRUE;
-                break;
-
             case 'S':
                 require_dataset = FALSE;
                 crm_log_args(argc, argv);
@@ -728,7 +705,7 @@ main(int argc, char **argv)
                 rsc_cmd = flag;
                 find_flags = pe_find_renamed|pe_find_any;
                 break;
-            case 'h':
+
             case 'H':
             case 'N':
                 crm_trace("Option %c => %s", flag, optarg);
@@ -785,7 +762,7 @@ main(int argc, char **argv)
 
     if (argerr) {
         CMD_ERR("Invalid option(s) supplied, use --help for valid usage");
-        return crm_exit(EX_USAGE);
+        crm_exit(CRM_EX_USAGE);
     }
 
     our_pid = crm_getpid_s();
@@ -1010,12 +987,11 @@ main(int argc, char **argv)
         rc = cli_resource_ban(rsc_id, dest->details->uname, NULL, cib_conn);
 
     } else if (rsc_cmd == 'B' || rsc_cmd == 'M') {
-        rc = -EINVAL;
         if (g_list_length(rsc->running_on) == 1) {
             node_t *current = rsc->running_on->data;
             rc = cli_resource_ban(rsc_id, current->details->uname, NULL, cib_conn);
 
-        } else if(rsc->variant == pe_master) {
+        } else if (is_set(rsc->flags, pe_rsc_promotable)) {
             int count = 0;
             GListPtr iter = NULL;
             node_t *current = NULL;
@@ -1034,6 +1010,8 @@ main(int argc, char **argv)
                 rc = cli_resource_ban(rsc_id, current->details->uname, NULL, cib_conn);
 
             } else {
+                rc = -EINVAL;
+                exit_code = CRM_EX_USAGE;
                 CMD_ERR("Resource '%s' not moved: active in %d locations (promoted in %d).", rsc_id, g_list_length(rsc->running_on), count);
                 CMD_ERR("You can prevent '%s' from running on a specific location with: --ban --node <name>", rsc_id);
                 CMD_ERR("You can prevent '%s' from being promoted at a specific location with:"
@@ -1041,6 +1019,8 @@ main(int argc, char **argv)
             }
 
         } else {
+            rc = -EINVAL;
+            exit_code = CRM_EX_USAGE;
             CMD_ERR("Resource '%s' not moved: active in %d locations.", rsc_id, g_list_length(rsc->running_on));
             CMD_ERR("You can prevent '%s' from running on a specific location with: --ban --node <name>", rsc_id);
         }
@@ -1091,44 +1071,19 @@ main(int argc, char **argv)
         rc = cli_resource_delete_attribute(rsc, rsc_id, prop_set, prop_id,
                                            prop_name, cib_conn, &data_set);
 
-    } else if (rsc_cmd == 'C') {
-        crmd_replies_needed = 0;
-        for (xmlNode *xml_op = __xml_first_child(data_set.failed); xml_op != NULL;
-             xml_op = __xml_next(xml_op)) {
-
-            const char *node = crm_element_value(xml_op, XML_ATTR_UNAME);
-            const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
-            const char *task_interval = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
-            const char *resource_name = crm_element_value(xml_op, XML_LRM_ATTR_RSCID);
-
-            if (resource_name == NULL) {
-                continue;
-            } else if(host_uname && safe_str_neq(host_uname, node)) {
-                continue;
-            } else if(operation && safe_str_neq(operation, task)) {
-                continue;
-            } else if(interval && safe_str_neq(interval, task_interval)) {
-                continue;
-            }
-
-            if (rsc_id) {
-                resource_t *fail_rsc = pe_find_resource_with_flags(data_set.resources,
-                                                                   resource_name,
-                                                                   find_flags);
-
-                if (!fail_rsc || safe_str_neq(rsc->id, fail_rsc->id)) {
-                    continue;
-                }
-            }
-
-            crm_debug("Erasing %s failure for %s (%s detected) on %s",
-                      task, rsc->id, resource_name, node);
-            rc = cli_resource_delete(crmd_channel, node, rsc, task,
-                                     task_interval, &data_set);
+    } else if ((rsc_cmd == 'C') && rsc) {
+        if (do_force == FALSE) {
+            rsc = uber_parent(rsc);
         }
+        crmd_replies_needed = 0;
 
-        if(rsc && (rc == pcmk_ok) && (BE_QUIET == FALSE)) {
-            /* Now check XML_RSC_ATTR_TARGET_ROLE and XML_RSC_ATTR_MANAGED */
+        crm_debug("Erasing failures of %s (%s requested) on %s",
+                  rsc->id, rsc_id, (host_uname? host_uname: "all nodes"));
+        rc = cli_resource_delete(crmd_channel, host_uname, rsc,
+                                 operation, interval, TRUE, &data_set);
+
+        if ((rc == pcmk_ok) && !BE_QUIET) {
+            // Show any reasons why resource might stay stopped
             cli_resource_check(cib_conn, rsc);
         }
 
@@ -1136,19 +1091,23 @@ main(int argc, char **argv)
             start_mainloop();
         }
 
+    } else if (rsc_cmd == 'C') {
+        rc = cli_cleanup_all(crmd_channel, host_uname, operation, interval,
+                             &data_set);
+
     } else if ((rsc_cmd == 'R') && rsc) {
-        if(do_force == FALSE) {
+        if (do_force == FALSE) {
             rsc = uber_parent(rsc);
         }
+        crmd_replies_needed = 0;
 
         crm_debug("Re-checking the state of %s (%s requested) on %s",
-                  rsc->id, rsc_id, host_uname);
-        crmd_replies_needed = 0;
-        rc = cli_resource_delete(crmd_channel, host_uname, rsc, NULL, 0,
-                                 &data_set);
+                  rsc->id, rsc_id, (host_uname? host_uname: "all nodes"));
+        rc = cli_resource_delete(crmd_channel, host_uname, rsc,
+                                 NULL, 0, FALSE, &data_set);
 
-        if(rc == pcmk_ok && BE_QUIET == FALSE) {
-            /* Now check XML_RSC_ATTR_TARGET_ROLE and XML_RSC_ATTR_MANAGED */
+        if ((rc == pcmk_ok) && !BE_QUIET) {
+            // Show any reasons why resource might stay stopped
             cli_resource_check(cib_conn, rsc);
         }
 
@@ -1157,7 +1116,6 @@ main(int argc, char **argv)
         }
 
     } else if (rsc_cmd == 'R') {
-#if HAVE_ATOMIC_ATTRD
         const char *router_node = host_uname;
         xmlNode *msg_data = NULL;
         xmlNode *cmd = NULL;
@@ -1205,18 +1163,6 @@ main(int argc, char **argv)
         }
 
         free_xml(cmd);
-#else
-        GListPtr rIter = NULL;
-
-        crmd_replies_needed = 0;
-        for (rIter = data_set.resources; rIter; rIter = rIter->next) {
-            rsc = rIter->data;
-            cli_resource_delete(crmd_channel, host_uname, rsc, NULL, NULL,
-                                &data_set);
-        }
-
-        start_mainloop();
-#endif
 
     } else if (rsc_cmd == 'D') {
         xmlNode *msg_data = NULL;
@@ -1249,13 +1195,18 @@ main(int argc, char **argv)
         cib_delete(cib_conn);
     }
 
-    if (rc == -pcmk_err_no_quorum) {
-        CMD_ERR("Error performing operation: %s", pcmk_strerror(rc));
-        CMD_ERR("Try using -f");
+    if (is_ocf_rc) {
+        exit_code = rc;
 
-    } else if (rc != pcmk_ok && !is_ocf_rc) {
+    } else if (rc != pcmk_ok) {
         CMD_ERR("Error performing operation: %s", pcmk_strerror(rc));
+        if (rc == -pcmk_err_no_quorum) {
+            CMD_ERR("To ignore quorum, use --force");
+        }
+        if (exit_code == CRM_EX_OK) {
+            exit_code = crm_errno2exit(rc);
+        }
     }
 
-    return crm_exit(rc);
+    return crm_exit(exit_code);
 }

@@ -131,7 +131,7 @@ attributes defined by a node or nodes.
 
 |value-source
 |+literal+
-|How the +value+ is derived '(since 1.1.17)'. Allowed values:
+|How the +value+ is derived. Allowed values:
 
 * +literal+: +value+ is a literal string to compare against
 * +param+: +value+ is the name of a resource parameter to compare against (only
@@ -163,7 +163,6 @@ special, built-in node attributes for each node that can also be used.
 |Node type. Possible values are +cluster+, +remote+, and +container+. Kind is
  +remote+ for Pacemaker Remote nodes created with the +ocf:pacemaker:remote+
  resource, and +container+ for Pacemaker Remote guest nodes and bundle nodes
- '(since 1.1.13)'
 
 |#is_dc
 |"true" if this node is a Designated Controller (DC), "false" otherwise
@@ -176,8 +175,8 @@ special, built-in node attributes for each node that can also be used.
  +#cluster-name+
 
 |#role
-|The role the relevant multistate resource has on this node. Valid only within
- a rule for a location constraint for a multistate resource.
+|The role the relevant promotable clone resource has on this node. Valid only within
+ a rule for a location constraint for a promotable clone resource.
 
 ////
 // if uncommenting, put a pipe in front of first two lines

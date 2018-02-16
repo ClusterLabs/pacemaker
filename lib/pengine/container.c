@@ -557,10 +557,9 @@ create_remote_resource(
          * remote should be ordered relative to docker.
          */
         xml_remote = pe_create_remote_xml(NULL, id, tuple->docker->id,
-                                          NULL, NULL, "60s", NULL,
-                                          NULL, connect_name,
-                                          (data->control_port?
-                                           data->control_port : port_s));
+                                          NULL, NULL, NULL,
+                                          connect_name, (data->control_port?
+                                          data->control_port : port_s));
         free(port_s);
 
         /* Abandon our created ID, and pull the copy from the XML, because we
@@ -852,17 +851,21 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         }
     }
 
-    value = crm_element_value(xml_obj, "masters");
-    container_data->masters = crm_parse_int(value, "0");
-    if (container_data->masters < 0) {
-        pe_err("'masters' for %s must be nonnegative integer, using 0",
-               rsc->id);
-        container_data->masters = 0;
+    value = crm_element_value(xml_obj, XML_RSC_ATTR_PROMOTED_MAX);
+    if (value == NULL) {
+        // @COMPAT deprecated since 2.0.0
+        value = crm_element_value(xml_obj, "masters");
+    }
+    container_data->promoted_max = crm_parse_int(value, "0");
+    if (container_data->promoted_max < 0) {
+        pe_err("%s for %s must be nonnegative integer, using 0",
+               XML_RSC_ATTR_PROMOTED_MAX, rsc->id);
+        container_data->promoted_max = 0;
     }
 
     value = crm_element_value(xml_obj, "replicas");
-    if ((value == NULL) && (container_data->masters > 0)) {
-        container_data->replicas = container_data->masters;
+    if ((value == NULL) && container_data->promoted_max) {
+        container_data->replicas = container_data->promoted_max;
     } else {
         container_data->replicas = crm_parse_int(value, "1");
     }
@@ -951,14 +954,15 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         char *value = NULL;
         xmlNode *xml_set = NULL;
 
-        if(container_data->masters > 0) {
-            xml_resource = create_xml_node(NULL, XML_CIB_TAG_MASTER);
+        xml_resource = create_xml_node(NULL, XML_CIB_TAG_INCARNATION);
 
-        } else {
-            xml_resource = create_xml_node(NULL, XML_CIB_TAG_INCARNATION);
-        }
-
-        crm_xml_set_id(xml_resource, "%s-%s", container_data->prefix, xml_resource->name);
+        /* @COMPAT We no longer use the <master> tag, but we need to keep it as
+         * part of the resource name, so that bundles don't restart in a rolling
+         * upgrade. (It also avoids needing to change regression tests.)
+         */
+        crm_xml_set_id(xml_resource, "%s-%s", container_data->prefix,
+                      (container_data->promoted_max? "master"
+                      : (const char *)xml_resource->name));
 
         xml_set = create_xml_node(xml_resource, XML_TAG_META_SETS);
         crm_xml_set_id(xml_set, "%s-%s-meta", container_data->prefix, xml_resource->name);
@@ -980,10 +984,13 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
                 (container_data->replicas_per_host > 1)?
                 XML_BOOLEAN_TRUE : XML_BOOLEAN_FALSE);
 
-        if(container_data->masters) {
-            value = crm_itoa(container_data->masters);
+        if (container_data->promoted_max) {
             crm_create_nvpair_xml(xml_set, NULL,
-                                  XML_RSC_ATTR_MASTER_MAX, value);
+                                  XML_RSC_ATTR_PROMOTABLE, XML_BOOLEAN_TRUE);
+
+            value = crm_itoa(container_data->promoted_max);
+            crm_create_nvpair_xml(xml_set, NULL,
+                                  XML_RSC_ATTR_PROMOTED_MAX, value);
             free(value);
         }
 
@@ -1039,7 +1046,7 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         mount_add(container_data, DEFAULT_REMOTE_KEY_LOCATION,
                   DEFAULT_REMOTE_KEY_LOCATION, NULL, 0);
 
-        mount_add(container_data, CRM_LOG_DIR "/bundles", "/var/log", NULL, 1);
+        mount_add(container_data, CRM_BUNDLE_DIR, "/var/log", NULL, 1);
 
         port = calloc(1, sizeof(container_port_t));
         if(container_data->control_port) {

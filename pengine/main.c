@@ -141,7 +141,7 @@ main(int argc, char **argv)
                 crm_bump_log_level(argc, argv);
                 break;
             case 'h':          /* Help message */
-                crm_help('?', EX_OK);
+                crm_help('?', CRM_EX_OK);
                 break;
             default:
                 ++argerr;
@@ -151,7 +151,7 @@ main(int argc, char **argv)
 
     if (argc - optind == 1 && safe_str_eq("metadata", argv[optind])) {
         pe_metadata();
-        return 0;
+        return CRM_EX_OK;
     }
 
     if (optind > argc) {
@@ -159,7 +159,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', EX_USAGE);
+        crm_help('?', CRM_EX_USAGE);
     }
 
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
@@ -167,29 +167,29 @@ main(int argc, char **argv)
         crm_err("Bad permissions on " PE_STATE_DIR ". Terminating");
         fprintf(stderr, "ERROR: Bad permissions on " PE_STATE_DIR ". See logs for details\n");
         fflush(stderr);
-        return 100;
+        return CRM_EX_FATAL;
     }
 
     crm_debug("Init server comms");
     ipcs = mainloop_add_ipc_server(CRM_SYSTEM_PENGINE, QB_IPC_SHM, &ipc_callbacks);
     if (ipcs == NULL) {
         crm_err("Failed to create IPC server: shutting down and inhibiting respawn");
-        crm_exit(DAEMON_RESPAWN_STOP);
+        crm_exit(CRM_EX_FATAL);
     }
 
     /* Create the mainloop and run it... */
     crm_info("Starting %s", crm_system_name);
 
-    mainloop = g_main_new(FALSE);
-    g_main_run(mainloop);
+    mainloop = g_main_loop_new(NULL, FALSE);
+    g_main_loop_run(mainloop);
 
     crm_info("Exiting %s", crm_system_name);
-    return crm_exit(pcmk_ok);
+    return crm_exit(CRM_EX_OK);
 }
 
 void
 pengine_shutdown(int nsig)
 {
     mainloop_del_ipc_server(ipcs);
-    crm_exit(pcmk_ok);
+    crm_exit(CRM_EX_OK);
 }

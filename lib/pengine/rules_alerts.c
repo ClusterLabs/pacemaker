@@ -12,36 +12,6 @@
 #include <crm/common/alerts_internal.h>
 #include <crm/pengine/rules_internal.h>
 
-#ifdef RHEL7_COMPAT
-/* @COMPAT An early implementation of alerts was backported to RHEL 7,
- * even though it was never in an upstream release.
- */
-static char *notify_script = NULL;
-static char *notify_target = NULL;
-
-void
-pe_enable_legacy_alerts(const char *script, const char *target)
-{
-    static bool need_warning = TRUE;
-
-    free(notify_script);
-    notify_script = (script && strcmp(script, "/dev/null"))?
-                    strdup(script) : NULL;
-
-    free(notify_target);
-    notify_target = target? strdup(target): NULL;
-
-    if (notify_script || notify_target) {
-        if (need_warning) {
-            crm_warn("Support for 'notification-agent' and 'notification-target' cluster options"
-                     " is deprecated and will be removed in a future release"
-                     " (use alerts feature instead)");
-            need_warning = FALSE;
-        }
-    }
-}
-#endif
-
 static void
 get_meta_attrs_from_cib(xmlNode *basenode, crm_alert_entry_t *entry,
                         guint *max_timeout)
@@ -209,22 +179,7 @@ pe_unpack_alerts(xmlNode *alerts)
     guint max_timeout = 0;
     GListPtr alert_list = NULL;
 
-    if (alerts) {
-#ifdef RHEL7_COMPAT
-        if (notify_script) {
-            crm_warn("Ignoring deprecated notification configuration because alerts available");
-        }
-#endif
-    } else {
-#ifdef RHEL7_COMPAT
-        if (notify_script) {
-            entry = crm_alert_entry_new("legacy_notification", notify_script);
-            entry->recipient = strdup(notify_target);
-            entry->tstamp_format = strdup(CRM_ALERT_DEFAULT_TSTAMP_FORMAT);
-            alert_list = g_list_prepend(alert_list, entry);
-            crm_warn("Deprecated notification syntax in use (alerts syntax is preferable)");
-        }
-#endif
+    if (alerts == NULL) {
         return alert_list;
     }
 

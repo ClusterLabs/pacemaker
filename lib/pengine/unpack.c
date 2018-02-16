@@ -225,16 +225,6 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
         crm_debug("Cluster is symmetric" " - resources can run anywhere by default");
     }
 
-    value = pe_pref(data_set->config_hash, "default-resource-stickiness");
-    if (value) {
-        pe_warn_once(pe_wo_default_stick,
-                     "Support for 'default-resource-stickiness' cluster property"
-                     " is deprecated and will be removed in a future release"
-                     " (use resource-stickiness in rsc_defaults instead)");
-    }
-    data_set->default_resource_stickiness = char2score(value);
-    crm_debug("Default stickiness: %d", data_set->default_resource_stickiness);
-
     value = pe_pref(data_set->config_hash, "no-quorum-policy");
 
     if (safe_str_eq(value, "ignore")) {
@@ -266,16 +256,16 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
 
     switch (data_set->no_quorum_policy) {
         case no_quorum_freeze:
-            crm_debug("On loss of CCM Quorum: Freeze resources");
+            crm_debug("On loss of quorum: Freeze resources");
             break;
         case no_quorum_stop:
-            crm_debug("On loss of CCM Quorum: Stop ALL resources");
+            crm_debug("On loss of quorum: Stop ALL resources");
             break;
         case no_quorum_suicide:
-            crm_notice("On loss of CCM Quorum: Fence all remaining nodes");
+            crm_notice("On loss of quorum: Fence all remaining nodes");
             break;
         case no_quorum_ignore:
-            crm_notice("On loss of CCM Quorum: Ignore");
+            crm_notice("On loss of quorum: Ignore");
             break;
     }
 
@@ -294,18 +284,6 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
     set_config_flag(data_set, "maintenance-mode", pe_flag_maintenance_mode);
     crm_trace("Maintenance mode: %s",
               is_set(data_set->flags, pe_flag_maintenance_mode) ? "true" : "false");
-
-    if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
-        clear_bit(data_set->flags, pe_flag_is_managed_default);
-    } else if (pe_pref(data_set->config_hash, "is-managed-default")) {
-        set_config_flag(data_set, "is-managed-default", pe_flag_is_managed_default);
-        pe_warn_once(pe_wo_default_isman,
-                     "Support for 'is-managed-default' cluster property"
-                     " is deprecated and will be removed in a future release"
-                     " (use is-managed in rsc_defaults instead)");
-    }
-    crm_trace("By default resources are %smanaged",
-              is_set(data_set->flags, pe_flag_is_managed_default) ? "" : "not ");
 
     set_config_flag(data_set, "start-failure-is-fatal", pe_flag_start_failure_fatal);
     crm_trace("Start failures are %s",
@@ -389,8 +367,7 @@ pe_create_node(const char *id, const char *uname, const char *type,
     if (safe_str_eq(type, "remote")) {
         new_node->details->type = node_remote;
         set_bit(data_set->flags, pe_flag_have_remote_nodes);
-    } else if (type == NULL || safe_str_eq(type, "member")
-        || safe_str_eq(type, NORMALNODE)) {
+    } else if ((type == NULL) || safe_str_eq(type, "member")) {
         new_node->details->type = node_member;
     }
 
@@ -491,7 +468,7 @@ expand_remote_rsc_meta(xmlNode *xml_obj, xmlNode *parent, pe_working_set_t *data
     }
 
     pe_create_remote_xml(parent, remote_name, container_id,
-                         remote_allow_migrate, container_managed, "30s", "30s",
+                         remote_allow_migrate, container_managed,
                          connect_timeout, remote_server, remote_port);
     return remote_name;
 }
@@ -690,7 +667,7 @@ link_rsc2remotenode(pe_working_set_t *data_set, resource_t *new_rsc)
         return;
     }
 
-    print_resource(LOG_DEBUG_3, "Linking remote-node connection resource, ", new_rsc, FALSE);
+    print_resource(LOG_TRACE, "Linking remote-node connection resource, ", new_rsc, FALSE);
 
     remote_node = pe_find_node(data_set->nodes, new_rsc->id);
     CRM_CHECK(remote_node != NULL, return;);
@@ -760,7 +737,7 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
         crm_trace("Beginning unpack... <%s id=%s... >", crm_element_name(xml_obj), ID(xml_obj));
         if (common_unpack(xml_obj, &new_rsc, NULL, data_set)) {
             data_set->resources = g_list_append(data_set->resources, new_rsc);
-            print_resource(LOG_DEBUG_3, "Added ", new_rsc, FALSE);
+            print_resource(LOG_TRACE, "Added ", new_rsc, FALSE);
 
         } else {
             crm_config_err("Failed unpacking %s %s",
@@ -917,87 +894,6 @@ unpack_tickets_state(xmlNode * xml_tickets, pe_working_set_t * data_set)
     }
 
     return TRUE;
-}
-
-/* @COMPAT DC < 1.1.7: Compatibility with the deprecated ticket state section:
- * "/cib/status/tickets/instance_attributes" */
-static void
-get_ticket_state_legacy(gpointer key, gpointer value, gpointer user_data)
-{
-    const char *long_key = key;
-    char *state_key = NULL;
-
-    const char *granted_prefix = "granted-ticket-";
-    const char *last_granted_prefix = "last-granted-";
-    static int granted_prefix_strlen = 0;
-    static int last_granted_prefix_strlen = 0;
-
-    const char *ticket_id = NULL;
-    const char *is_granted = NULL;
-    const char *last_granted = NULL;
-    const char *sep = NULL;
-
-    ticket_t *ticket = NULL;
-    pe_working_set_t *data_set = user_data;
-
-    if (granted_prefix_strlen == 0) {
-        granted_prefix_strlen = strlen(granted_prefix);
-    }
-
-    if (last_granted_prefix_strlen == 0) {
-        last_granted_prefix_strlen = strlen(last_granted_prefix);
-    }
-
-    if (strstr(long_key, granted_prefix) == long_key) {
-        ticket_id = long_key + granted_prefix_strlen;
-        if (strlen(ticket_id)) {
-            state_key = strdup("granted");
-            is_granted = value;
-        }
-    } else if (strstr(long_key, last_granted_prefix) == long_key) {
-        ticket_id = long_key + last_granted_prefix_strlen;
-        if (strlen(ticket_id)) {
-            state_key = strdup("last-granted");
-            last_granted = value;
-        }
-    } else if ((sep = strrchr(long_key, '-'))) {
-        ticket_id = sep + 1;
-        state_key = strndup(long_key, strlen(long_key) - strlen(sep));
-    }
-
-    if (ticket_id == NULL || strlen(ticket_id) == 0) {
-        free(state_key);
-        return;
-    }
-
-    if (state_key == NULL || strlen(state_key) == 0) {
-        free(state_key);
-        return;
-    }
-
-    ticket = g_hash_table_lookup(data_set->tickets, ticket_id);
-    if (ticket == NULL) {
-        ticket = ticket_new(ticket_id, data_set);
-        if (ticket == NULL) {
-            free(state_key);
-            return;
-        }
-    }
-
-    g_hash_table_replace(ticket->state, state_key, strdup(value));
-
-    if (is_granted) {
-        if (crm_is_true(is_granted)) {
-            ticket->granted = TRUE;
-            crm_info("We have ticket '%s'", ticket->id);
-        } else {
-            ticket->granted = FALSE;
-            crm_info("We do not have ticket '%s'", ticket->id);
-        }
-
-    } else if (last_granted) {
-        ticket->last_granted = crm_parse_int(last_granted, 0);
-    }
 }
 
 static void
@@ -1171,27 +1067,9 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
 
     for (state = __xml_first_child(status); state != NULL; state = __xml_next_element(state)) {
         if (crm_str_eq((const char *)state->name, XML_CIB_TAG_TICKETS, TRUE)) {
-            xmlNode *xml_tickets = state;
-            GHashTable *state_hash = NULL;
+            unpack_tickets_state((xmlNode *) state, data_set);
 
-            /* @COMPAT DC < 1.1.7: Compatibility with the deprecated ticket state section:
-             * Unpack the attributes in the deprecated "/cib/status/tickets/instance_attributes" if it exists. */
-            state_hash = crm_str_table_new();
-
-            unpack_instance_attributes(data_set->input, xml_tickets, XML_TAG_ATTR_SETS, NULL,
-                                       state_hash, NULL, TRUE, data_set->now);
-
-            g_hash_table_foreach(state_hash, get_ticket_state_legacy, data_set);
-
-            if (state_hash) {
-                g_hash_table_destroy(state_hash);
-            }
-
-            /* Unpack the new "/cib/status/tickets/ticket_state"s */
-            unpack_tickets_state(xml_tickets, data_set);
-        }
-
-        if (crm_str_eq((const char *)state->name, XML_CIB_TAG_STATE, TRUE)) {
+        } else if (crm_str_eq((const char *)state->name, XML_CIB_TAG_STATE, TRUE)) {
             xmlNode *attrs = NULL;
             const char *resource_discovery_enabled = NULL;
 
@@ -1321,6 +1199,7 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
 {
     gboolean online = FALSE;
     gboolean do_terminate = FALSE;
+    bool crmd_online = FALSE;
     const char *join = crm_element_value(node_state, XML_NODE_JOIN_STATE);
     const char *is_peer = crm_element_value(node_state, XML_NODE_IS_PEER);
     const char *in_cluster = crm_element_value(node_state, XML_NODE_IN_CLUSTER);
@@ -1329,7 +1208,7 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
 
 /*
   - XML_NODE_IN_CLUSTER    ::= true|false
-  - XML_NODE_IS_PEER       ::= true|false|online|offline
+  - XML_NODE_IS_PEER       ::= online|offline
   - XML_NODE_JOIN_STATE    ::= member|down|pending|banned
   - XML_NODE_EXPECTED      ::= member|down
 */
@@ -1351,9 +1230,7 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
               crm_str(join), crm_str(exp_state), do_terminate);
 
     online = crm_is_true(in_cluster);
-    if (safe_str_eq(is_peer, ONLINESTATUS)) {
-        is_peer = XML_BOOLEAN_YES;
-    }
+    crmd_online = safe_str_eq(is_peer, ONLINESTATUS);
     if (exp_state == NULL) {
         exp_state = CRMD_JOINSTATE_DOWN;
     }
@@ -1362,7 +1239,7 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
         crm_debug("%s is shutting down", this_node->details->uname);
 
         /* Slightly different criteria since we can't shut down a dead peer */
-        online = crm_is_true(is_peer);
+        online = crmd_online;
 
     } else if (in_cluster == NULL) {
         pe_fence_node(data_set, this_node, "peer has not been seen by the cluster");
@@ -1372,7 +1249,7 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
 
     } else if (do_terminate == FALSE && safe_str_eq(exp_state, CRMD_JOINSTATE_DOWN)) {
 
-        if (crm_is_true(in_cluster) || crm_is_true(is_peer)) {
+        if (crm_is_true(in_cluster) || crmd_online) {
             crm_info("- Node %s is not ready to run resources", this_node->details->uname);
             this_node->details->standby = TRUE;
             this_node->details->pending = TRUE;
@@ -1382,14 +1259,14 @@ determine_online_status_fencing(pe_working_set_t * data_set, xmlNode * node_stat
         }
 
     } else if (do_terminate && safe_str_eq(join, CRMD_JOINSTATE_DOWN)
-               && crm_is_true(in_cluster) == FALSE && crm_is_true(is_peer) == FALSE) {
+               && crm_is_true(in_cluster) == FALSE && !crmd_online) {
         crm_info("Node %s was just shot", this_node->details->uname);
         online = FALSE;
 
     } else if (crm_is_true(in_cluster) == FALSE) {
         pe_fence_node(data_set, this_node, "peer is no longer part of the cluster");
 
-    } else if (crm_is_true(is_peer) == FALSE) {
+    } else if (!crmd_online) {
         pe_fence_node(data_set, this_node, "peer process is no longer available");
 
         /* Everything is running at this point, now check join state */
@@ -1848,7 +1725,7 @@ process_orphan_resource(xmlNode * rsc_entry, node_t * node, pe_working_set_t * d
         clear_bit(rsc->flags, pe_rsc_managed);
 
     } else {
-        print_resource(LOG_DEBUG_3, "Added orphan", rsc, FALSE);
+        print_resource(LOG_TRACE, "Added orphan", rsc, FALSE);
 
         CRM_CHECK(rsc != NULL, return NULL);
         resource_location(rsc, NULL, -INFINITY, "__orphan_dont_run__", data_set);
@@ -2141,7 +2018,7 @@ calculate_active_ops(GListPtr sorted_op_list, int *start_index, int *stop_index)
 {
     int counter = -1;
     int implied_monitor_start = -1;
-    int implied_master_start = -1;
+    int implied_clone_start = -1;
     const char *task = NULL;
     const char *status = NULL;
     GListPtr gIter = sorted_op_list;
@@ -2171,13 +2048,13 @@ calculate_active_ops(GListPtr sorted_op_list, int *start_index, int *stop_index)
                 implied_monitor_start = counter;
             }
         } else if (safe_str_eq(task, CRMD_ACTION_PROMOTE) || safe_str_eq(task, CRMD_ACTION_DEMOTE)) {
-            implied_master_start = counter;
+            implied_clone_start = counter;
         }
     }
 
     if (*start_index == -1) {
-        if (implied_master_start != -1) {
-            *start_index = implied_master_start;
+        if (implied_clone_start != -1) {
+            *start_index = implied_clone_start;
         } else if (implied_monitor_start != -1) {
             *start_index = implied_monitor_start;
         }
@@ -2356,7 +2233,7 @@ set_active(resource_t * rsc)
 {
     resource_t *top = uber_parent(rsc);
 
-    if (top && top->variant == pe_master) {
+    if (top && is_set(top->flags, pe_rsc_promotable)) {
         rsc->role = RSC_ROLE_SLAVE;
     } else {
         rsc->role = RSC_ROLE_STARTED;
@@ -2617,7 +2494,6 @@ unpack_rsc_op_failure(resource_t * rsc, node_t * node, int rc, xmlNode * xml_op,
 
     const char *key = get_op_key(xml_op);
     const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
-    const char *op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
 
     CRM_ASSERT(rsc);
 
@@ -2678,10 +2554,6 @@ unpack_rsc_op_failure(resource_t * rsc, node_t * node, int rc, xmlNode * xml_op,
              */
             rsc->role = RSC_ROLE_SLAVE;
         }
-
-    } else if (compare_version("2.0", op_version) > 0 && safe_str_eq(task, CRMD_ACTION_START)) {
-        crm_warn("Compatibility handling for failed op %s on %s", key, node->details->uname);
-        resource_location(rsc, node, -INFINITY, "__legacy_start__", data_set);
     }
 
     if(is_probe && rc == PCMK_OCF_NOT_INSTALLED) {
@@ -2713,7 +2585,7 @@ unpack_rsc_op_failure(resource_t * rsc, node_t * node, int rc, xmlNode * xml_op,
 
             if (pe_rsc_is_clone(parent)
                 && is_not_set(parent->flags, pe_rsc_unique)) {
-                /* for clone and master resources, if a child fails on an operation
+                /* For clone resources, if a child fails on an operation
                  * with on-fail = stop, all the resources fail.  Do this by preventing
                  * the parent from coming up again. */
                 fail_rsc = parent;
@@ -2764,13 +2636,6 @@ determine_op_status(
                 result = PCMK_LRM_OP_DONE;
                 pe_rsc_info(rsc, "Operation %s found resource %s active on %s",
                             task, rsc->id, node->details->uname);
-
-                /* legacy code for pre-0.6.5 operations */
-            } else if (target_rc < 0 && interval > 0 && rsc->role == RSC_ROLE_MASTER) {
-                /* catch status ops that return 0 instead of 8 while they
-                 *   are supposed to be in master mode
-                 */
-                result = PCMK_LRM_OP_ERROR;
             }
             break;
 
@@ -2799,15 +2664,6 @@ determine_op_status(
 
             } else if (target_rc >= 0) {
                 result = PCMK_LRM_OP_ERROR;
-
-                /* legacy code for pre-0.6.5 operations */
-            } else if (safe_str_neq(task, CRMD_ACTION_STATUS)
-                       || rsc->role != RSC_ROLE_MASTER) {
-                result = PCMK_LRM_OP_ERROR;
-                if (rsc->role != RSC_ROLE_MASTER) {
-                    crm_err("%s reported %s in master mode on %s",
-                            key, rsc->id, node->details->uname);
-                }
             }
             rsc->role = RSC_ROLE_MASTER;
             break;

@@ -433,7 +433,7 @@ time_t stonith_api_time(uint32_t nodeid, const char *uname, bool in_progress);
 
  */
 
-#  define STONITH_LIBRARY "libstonithd.so.2"
+#  define STONITH_LIBRARY "libstonithd.so.5"
 
 static inline int
 stonith_api_kick_helper(uint32_t nodeid, int timeout, bool off)

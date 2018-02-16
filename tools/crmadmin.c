@@ -1,4 +1,3 @@
-
 /* 
  * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  * 
@@ -45,27 +44,15 @@ GMainLoop *mainloop = NULL;
 crm_ipc_t *crmd_channel = NULL;
 char *admin_uuid = NULL;
 
-void usage(const char *cmd, int exit_status);
 gboolean do_init(void);
 int do_work(void);
 void crmadmin_ipc_connection_destroy(gpointer user_data);
-
 int admin_msg_callback(const char *buffer, ssize_t length, gpointer userdata);
-char *pluralSection(const char *a_section);
-xmlNode *handleCibMod(void);
 int do_find_node_list(xmlNode * xml_node);
 gboolean admin_message_timeout(gpointer data);
-gboolean is_node_online(xmlNode * node_state);
-
-enum debug {
-    debug_none,
-    debug_dec,
-    debug_inc
-};
 
 gboolean BE_VERBOSE = FALSE;
 int expected_responses = 1;
-
 gboolean BASH_EXPORT = FALSE;
 gboolean DO_HEALTH = FALSE;
 gboolean DO_RESET = FALSE;
@@ -75,20 +62,9 @@ gboolean DO_WHOIS_DC = FALSE;
 gboolean DO_NODE_LIST = FALSE;
 gboolean BE_SILENT = FALSE;
 gboolean DO_RESOURCE_LIST = FALSE;
-enum debug DO_DEBUG = debug_none;
 const char *crmd_operation = NULL;
-
-xmlNode *msg_options = NULL;
-
-const char *standby_on_off = "on";
-const char *admin_verbose = XML_BOOLEAN_FALSE;
-char *id = NULL;
-char *disconnect = NULL;
 char *dest_node = NULL;
-char *rsc_name = NULL;
-char *crm_option = NULL;
-
-int operation_status = 0;
+crm_exit_t exit_code = CRM_EX_OK;
 const char *sys_to = NULL;
 
 /* *INDENT-OFF* */
@@ -101,8 +77,6 @@ static struct crm_option long_options[] = {
     
     {"-spacer-",	1, 0, '-', "\nCommands:"},
     /* daemon options */
-    {"debug_inc", 1, 0, 'i', "Increase the crmd's debug level on the specified host"},
-    {"debug_dec", 1, 0, 'd', "Decrease the crmd's debug level on the specified host"},
     {"status",    1, 0, 'S', "Display the status of the specified node." },
     {"-spacer-",  1, 0, '-', "\n\tResult is the node's internal FSM state which can be useful for debugging\n"},
     {"dc_lookup", 0, 0, 'D', "Display the uname of the node co-ordinating the cluster."},
@@ -117,7 +91,7 @@ static struct crm_option long_options[] = {
     {"bash-export", 0, 0, 'B', "Create Bash export entries of the form 'export uname=uuid'\n"},
 
     {"-spacer-",  1, 0, '-', "Notes:"},
-    {"-spacer-",  1, 0, '-', " The -i,-d,-K and -E commands are rarely used and may be removed in future versions."},
+    {"-spacer-",  1, 0, '-', " The -K and -E commands are rarely used and may be removed in future versions."},
 
     {0, 0, 0, 0}
 };
@@ -135,7 +109,7 @@ main(int argc, char **argv)
                     "Development tool for performing some crmd-specific commands."
                     "\n  Likely to be replaced by crm_node in the future");
     if (argc < 2) {
-        crm_help('?', EX_USAGE);
+        crm_help('?', CRM_EX_USAGE);
     }
 
     while (1) {
@@ -146,7 +120,6 @@ main(int argc, char **argv)
         switch (flag) {
             case 'V':
                 BE_VERBOSE = TRUE;
-                admin_verbose = XML_BOOLEAN_TRUE;
                 crm_bump_log_level(argc, argv);
                 break;
             case 't':
@@ -158,7 +131,7 @@ main(int argc, char **argv)
 
             case '$':
             case '?':
-                crm_help(flag, EX_OK);
+                crm_help(flag, CRM_EX_OK);
                 break;
             case 'D':
                 DO_WHOIS_DC = TRUE;
@@ -174,16 +147,6 @@ main(int argc, char **argv)
                 break;
             case 'q':
                 BE_SILENT = TRUE;
-                break;
-            case 'i':
-                DO_DEBUG = debug_inc;
-                crm_trace("Option %c => %s", flag, optarg);
-                dest_node = strdup(optarg);
-                break;
-            case 'd':
-                DO_DEBUG = debug_dec;
-                crm_trace("Option %c => %s", flag, optarg);
-                dest_node = strdup(optarg);
                 break;
             case 'S':
                 DO_HEALTH = TRUE;
@@ -218,7 +181,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', EX_USAGE);
+        crm_help('?', CRM_EX_USAGE);
     }
 
     if (do_init()) {
@@ -229,24 +192,24 @@ main(int argc, char **argv)
             /* wait for the reply by creating a mainloop and running it until
              * the callbacks are invoked...
              */
-            mainloop = g_main_new(FALSE);
+            mainloop = g_main_loop_new(NULL, FALSE);
             crm_trace("Waiting for %d replies from the local CRM", expected_responses);
 
             message_timer_id = g_timeout_add(message_timeout_ms, admin_message_timeout, NULL);
 
-            g_main_run(mainloop);
+            g_main_loop_run(mainloop);
 
         } else if (res < 0) {
             crm_err("No message to send");
-            operation_status = -1;
+            exit_code = CRM_EX_ERROR;
         }
     } else {
         crm_warn("Init failed, could not perform requested operations");
-        operation_status = -2;
+        exit_code = CRM_EX_UNAVAILABLE;
     }
 
     crm_trace("%s exiting normally", crm_system_name);
-    return operation_status;
+    return exit_code;
 }
 
 int
@@ -257,10 +220,6 @@ do_work(void)
     /* construct the request */
     xmlNode *msg_data = NULL;
     gboolean all_is_good = TRUE;
-
-    msg_options = create_xml_node(NULL, XML_TAG_OPTIONS);
-    crm_xml_add(msg_options, XML_ATTR_VERBOSE, admin_verbose);
-    crm_xml_add(msg_options, XML_ATTR_TIMEOUT, "0");
 
     if (DO_HEALTH == TRUE) {
         crm_trace("Querying the system");
@@ -275,8 +234,6 @@ do_work(void)
                 expected_responses = 1;
             }
 
-            crm_xml_add(msg_options, XML_ATTR_TIMEOUT, "0");
-
         } else {
             crm_info("Cluster-wide health not available yet");
             all_is_good = FALSE;
@@ -288,15 +245,12 @@ do_work(void)
         dest_node = NULL;
         sys_to = CRM_SYSTEM_CRMD;
         crmd_operation = CRM_OP_VOTE;
-
-        crm_xml_add(msg_options, XML_ATTR_TIMEOUT, "0");
         ret = 0;                /* no return message */
 
     } else if (DO_WHOIS_DC) {
         dest_node = NULL;
         sys_to = CRM_SYSTEM_DC;
         crmd_operation = CRM_OP_PING;
-        crm_xml_add(msg_options, XML_ATTR_TIMEOUT, "0");
 
     } else if (DO_NODE_LIST) {
 
@@ -316,7 +270,7 @@ do_work(void)
             free_xml(output);
         }
         the_cib->cmds->signoff(the_cib);
-        crm_exit(rc);
+        crm_exit(crm_errno2exit(rc));
 
     } else if (DO_RESET) {
         /* tell dest_node to initiate the shutdown procedure
@@ -325,30 +279,6 @@ do_work(void)
          *   local node
          */
         sys_to = CRM_SYSTEM_CRMD;
-        crm_xml_add(msg_options, XML_ATTR_TIMEOUT, "0");
-
-        ret = 0;                /* no return message */
-
-    } else if (DO_DEBUG == debug_inc) {
-        /* tell dest_node to increase its debug level
-         *
-         * if dest_node is NULL, the request will be sent to the
-         *   local node
-         */
-        sys_to = CRM_SYSTEM_CRMD;
-        crmd_operation = CRM_OP_DEBUG_UP;
-
-        ret = 0;                /* no return message */
-
-    } else if (DO_DEBUG == debug_dec) {
-        /* tell dest_node to increase its debug level
-         *
-         * if dest_node is NULL, the request will be sent to the
-         *   local node
-         */
-        sys_to = CRM_SYSTEM_CRMD;
-        crmd_operation = CRM_OP_DEBUG_DOWN;
-
         ret = 0;                /* no return message */
 
     } else {
@@ -391,9 +321,9 @@ crmadmin_ipc_connection_destroy(gpointer user_data)
 {
     crm_err("Connection to CRMd was terminated");
     if (mainloop) {
-        g_main_quit(mainloop);
+        g_main_loop_quit(mainloop);
     } else {
-        crm_exit(ENOTCONN);
+        crm_exit(CRM_EX_DISCONNECT);
     }
 }
 
@@ -491,15 +421,15 @@ admin_msg_callback(const char *buffer, ssize_t length, gpointer userdata)
         if (BE_SILENT && dc != NULL) {
             fprintf(stderr, "%s\n", dc);
         }
-        crm_exit(pcmk_ok);
+        crm_exit(CRM_EX_OK);
     }
 
     free_xml(xml);
 
     if (received_responses >= expected_responses) {
-        crm_trace("Received expected number (%d) of messages from Heartbeat."
-                  "  Exiting normally.", expected_responses);
-        crm_exit(pcmk_ok);
+        crm_trace("Received expected number (%d) of replies, exiting normally",
+                   expected_responses);
+        crm_exit(CRM_EX_OK);
     }
 
     message_timer_id = g_timeout_add(message_timeout_ms, admin_message_timeout, NULL);
@@ -512,30 +442,8 @@ admin_message_timeout(gpointer data)
     fprintf(stderr, "No messages received in %d seconds.. aborting\n",
             (int)message_timeout_ms / 1000);
     crm_err("No messages received in %d seconds", (int)message_timeout_ms / 1000);
-    operation_status = -3;
-    g_main_quit(mainloop);
-    return FALSE;
-}
-
-gboolean
-is_node_online(xmlNode * node_state)
-{
-    const char *uname = crm_element_value(node_state, XML_ATTR_UNAME);
-    const char *join_state = crm_element_value(node_state, XML_NODE_JOIN_STATE);
-    const char *exp_state = crm_element_value(node_state, XML_NODE_EXPECTED);
-    const char *crm_state = crm_element_value(node_state, XML_NODE_IS_PEER);
-    const char *ccm_state = crm_element_value(node_state, XML_NODE_IN_CLUSTER);
-
-    if (safe_str_neq(join_state, CRMD_JOINSTATE_DOWN)
-        && crm_is_true(ccm_state)
-        && safe_str_eq(crm_state, "online")) {
-        crm_trace("Node %s is online", uname);
-        return TRUE;
-    }
-    crm_trace("Node %s: ccm=%s join=%s exp=%s crm=%s",
-              uname, crm_str(ccm_state),
-              crm_str(join_state), crm_str(exp_state), crm_str(crm_state));
-    crm_trace("Node %s is offline", uname);
+    exit_code = CRM_EX_TIMEOUT;
+    g_main_loop_quit(mainloop);
     return FALSE;
 }
 

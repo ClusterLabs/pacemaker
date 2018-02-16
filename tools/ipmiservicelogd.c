@@ -156,7 +156,6 @@ getStringExecOutput(char *args[])
         if (sizeRead > 0) {
 
             char *end = serialNumber + strlen(serialNumber) - 1;
-            char *retSerialNumber = NULL;
 
             while (end > serialNumber
                    && (*end == '\n' || *end == '\r' || *end == '\t' || *end == ' ')
@@ -164,17 +163,7 @@ getStringExecOutput(char *args[])
                 *end = '\0';
                 end--;
             }
-
-            retSerialNumber = malloc(strlen(serialNumber) + 1);
-
-            if (retSerialNumber) {
-
-                strcpy(retSerialNumber, serialNumber);
-
-            }
-
-            return retSerialNumber;
-
+            return strdup(serialNumber);
         }
 
         return NULL;
@@ -511,7 +500,7 @@ entity_change(enum ipmi_update_e op, ipmi_domain_t * domain, ipmi_entity_t * ent
         rv = ipmi_entity_add_sensor_update_handler(entity, sensor_change, entity);
         if (rv) {
             crm_err("ipmi_entity_set_sensor_update_handler: 0x%x", rv);
-            crm_exit(pcmk_err_generic);
+            crm_exit(CRM_EX_ERROR);
         }
     }
 }
@@ -548,7 +537,7 @@ main(int argc, char *argv[])
     os_hnd = ipmi_posix_setup_os_handler();
     if (!os_hnd) {
         crm_err("ipmi_smi_setup_con: Unable to allocate os handler");
-        crm_exit(pcmk_err_generic);
+        crm_exit(CRM_EX_ERROR);
     }
 
     /* Initialize the OpenIPMI library. */
@@ -559,7 +548,7 @@ main(int argc, char *argv[])
     if (rv) {
         crm_err("Error parsing command arguments, argument %d: %s", curr_arg, strerror(rv));
         usage(argv[0]);
-        crm_exit(pcmk_err_generic);
+        crm_exit(CRM_EX_USAGE);
     }
 #endif
 
@@ -572,7 +561,7 @@ main(int argc, char *argv[])
     if (rv) {
         crm_err("ipmi_ip_setup_con: %s", strerror(rv));
         crm_err("Error: Is IPMI configured correctly?");
-        crm_exit(pcmk_err_generic);
+        crm_exit(CRM_EX_ERROR);
     }
 #else
     /* If all you need is an SMI connection, this is all the code you
@@ -587,14 +576,14 @@ main(int argc, char *argv[])
     if (rv) {
         crm_err("ipmi_smi_setup_con: %s", strerror(rv));
         crm_err("Error: Is IPMI configured correctly?");
-        crm_exit(pcmk_err_generic);
+        crm_exit(CRM_EX_ERROR);
     }
 #endif
 
     rv = ipmi_open_domain("", &con, 1, setup_done, NULL, NULL, NULL, NULL, 0, NULL);
     if (rv) {
         crm_err("ipmi_init_domain: %s", strerror(rv));
-        crm_exit(pcmk_err_generic);
+        crm_exit(CRM_EX_ERROR);
     }
 
     /* This is the main loop of the event-driven program. 
@@ -604,4 +593,5 @@ main(int argc, char *argv[])
 
     /* Technically, we can't get here, but this is an example. */
     os_hnd->free_os_handler(os_hnd);
+    return CRM_EX_OK;
 }

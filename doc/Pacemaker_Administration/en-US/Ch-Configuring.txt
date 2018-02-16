@@ -1,0 +1,435 @@
+= Configuring Pacemaker =
+
+== How Should the Configuration be Updated? ==
+
+There are three basic rules for updating the cluster configuration:
+
+ * Rule 1 - Never edit the +cib.xml+ file manually. Ever. I'm not making this up.
+ * Rule 2 - Read Rule 1 again.
+ * Rule 3 - The cluster will notice if you ignored rules 1 &amp; 2 and refuse to use the configuration.
+
+Now that it is clear how 'not' to update the configuration, we can begin
+to explain how you 'should'.
+
+=== Editing the CIB Using XML ===
+
+The most powerful tool for modifying the configuration is the
++cibadmin+ command.  With +cibadmin+, you can query, add, remove, update
+or replace any part of the configuration. All changes take effect immediately,
+so there is no need to perform a reload-like operation.
+
+The simplest way of using `cibadmin` is to use it to save the current
+configuration to a temporary file, edit that file with your favorite
+text or XML editor, and then upload the revised configuration. footnote:[This
+process might appear to risk overwriting changes that happen after the initial
+cibadmin call, but pacemaker will reject any update that is "too old". If the
+CIB is updated in some other fashion after the initial cibadmin, the second
+cibadmin will be rejected because the version number will be too low.]
+      
+.Safely using an editor to modify the cluster configuration
+======
+--------
+# cibadmin --query > tmp.xml
+# vi tmp.xml
+# cibadmin --replace --xml-file tmp.xml
+--------
+======
+
+Some of the better XML editors can make use of a Relax NG schema to
+help make sure any changes you make are valid.  The schema describing
+the configuration can be found in +pacemaker.rng+, which may be
+deployed in a location such as +/usr/share/pacemaker+ or
++/usr/lib/heartbeat+ depending on your operating system and how you
+installed the software.
+
+If you want to modify just one section of the configuration, you can
+query and replace just that section to avoid modifying any others.
+      
+.Safely using an editor to modify only the resources section
+======
+--------
+# cibadmin --query --scope resources > tmp.xml
+# vi tmp.xml
+# cibadmin --replace --scope resources --xml-file tmp.xml
+--------
+======
+
+=== Quickly Deleting Part of the Configuration ===
+
+Identify the object you wish to delete by XML tag and id. For example,
+you might search the CIB for all STONITH-related configuration:
+      
+.Searching for STONITH-related configuration items
+======
+----
+# cibadmin -Q | grep stonith
+ <nvpair id="cib-bootstrap-options-stonith-action" name="stonith-action" value="reboot"/>
+ <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="1"/>
+ <primitive id="child_DoFencing" class="stonith" type="external/vmware">
+ <lrm_resource id="child_DoFencing:0" type="external/vmware" class="stonith">
+ <lrm_resource id="child_DoFencing:0" type="external/vmware" class="stonith">
+ <lrm_resource id="child_DoFencing:1" type="external/vmware" class="stonith">
+ <lrm_resource id="child_DoFencing:0" type="external/vmware" class="stonith">
+ <lrm_resource id="child_DoFencing:2" type="external/vmware" class="stonith">
+ <lrm_resource id="child_DoFencing:0" type="external/vmware" class="stonith">
+ <lrm_resource id="child_DoFencing:3" type="external/vmware" class="stonith">
+----
+======
+
+If you wanted to delete the +primitive+ tag with id +child_DoFencing+,
+you would run:
+
+----
+# cibadmin --delete --xml-text '<primitive id="child_DoFencing"/>'
+----
+
+=== Updating the Configuration Without Using XML ===
+
+Most tasks can be performed with one of the other command-line
+tools provided with pacemaker, avoiding the need to read or edit XML.
+
+To enable STONITH for example, one could run:
+
+----
+# crm_attribute --name stonith-enabled --update 1
+----
+
+Or, to check whether *somenode* is allowed to run resources, there is:
+
+----
+# crm_standby --query --node somenode
+----
+
+Or, to find the current location of *my-test-rsc*, one can use:
+
+----
+# crm_resource --locate --resource my-test-rsc
+----
+
+Examples of using these tools for specific cases will be given throughout this
+document where appropriate.
+
+[[s-config-sandboxes]]
+== Making Configuration Changes in a Sandbox ==
+
+Often it is desirable to preview the effects of a series of changes
+before updating the configuration all at once. For this purpose, we
+have created `crm_shadow` which creates a
+"shadow" copy of the configuration and arranges for all the command
+line tools to use it.
+
+To begin, simply invoke `crm_shadow --create` with
+the name of a configuration to create footnote:[Shadow copies are
+identified with a name, making it possible to have more than one.],
+and follow the simple on-screen instructions.
+
+[WARNING]
+====
+Read this section and the on-screen instructions carefully; failure to do so could
+result in destroying the cluster's active configuration!
+====
+      
+      
+.Creating and displaying the active sandbox
+======
+----
+# crm_shadow --create test
+Setting up shadow instance
+Type Ctrl-D to exit the crm_shadow shell
+shadow[test]: 
+shadow[test] # crm_shadow --which
+test
+----
+======
+
+From this point on, all cluster commands will automatically use the
+shadow copy instead of talking to the cluster's active configuration.
+Once you have finished experimenting, you can either make the
+changes active via the `--commit` option, or discard them using the `--delete`
+option.  Again, be sure to follow the on-screen instructions carefully!
+      
+For a full list of `crm_shadow` options and
+commands, invoke it with the `--help` option.
+
+.Use sandbox to make multiple changes all at once, discard them, and verify real configuration is untouched
+======
+----
+ shadow[test] # crm_failcount -r rsc_c001n01 -G
+ scope=status  name=fail-count-rsc_c001n01 value=0
+ shadow[test] # crm_standby --node c001n02 -v on
+ shadow[test] # crm_standby --node c001n02 -G
+ scope=nodes  name=standby value=on
+
+ shadow[test] # cibadmin --erase --force
+ shadow[test] # cibadmin --query
+ <cib crm_feature_set="3.0.14" validate-with="pacemaker-3.0" epoch="112" num_updates="2" admin_epoch="0" cib-last-written="Mon Jan  8 23:26:47 2018" update-origin="rhel7-1" update-client="crm_node" update-user="root" have-quorum="1" dc-uuid="1">
+   <configuration>
+     <crm_config/>
+     <nodes/>
+     <resources/>
+     <constraints/>
+   </configuration>
+   <status/>
+ </cib>
+  shadow[test] # crm_shadow --delete test --force
+  Now type Ctrl-D to exit the crm_shadow shell
+  shadow[test] # exit
+  # crm_shadow --which
+  No active shadow configuration defined
+  # cibadmin -Q
+ <cib crm_feature_set="3.0.14" validate-with="pacemaker-3.0" epoch="110" num_updates="2" admin_epoch="0" cib-last-written="Mon Jan  8 23:26:47 2018" update-origin="rhel7-1" update-client="crm_node" update-user="root" have-quorum="1">
+    <configuration>
+       <crm_config>
+          <cluster_property_set id="cib-bootstrap-options">
+             <nvpair id="cib-bootstrap-1" name="stonith-enabled" value="1"/>
+             <nvpair id="cib-bootstrap-2" name="pe-input-series-max" value="30000"/>
+----
+======
+
+[[s-config-testing-changes]]
+== Testing Your Configuration Changes ==
+
+We saw previously how to make a series of changes to a "shadow" copy
+of the configuration.  Before loading the changes back into the
+cluster (e.g. `crm_shadow --commit mytest --force`), it is often
+advisable to simulate the effect of the changes with +crm_simulate+.
+For example:
+      
+----
+# crm_simulate --live-check -VVVVV --save-graph tmp.graph --save-dotfile tmp.dot
+----
+
+This tool uses the same library as the live cluster to show what it
+would have done given the supplied input.  Its output, in addition to
+a significant amount of logging, is stored in two files +tmp.graph+
+and +tmp.dot+. Both files are representations of the same thing: the
+cluster's response to your changes.
+
+The graph file stores the complete transition from the existing cluster state
+to your desired new state, containing a list of all the actions, their
+parameters and their pre-requisites. Because the transition graph is not
+terribly easy to read, the tool also generates a Graphviz
+footnote:[Graph visualization software. See http://www.graphviz.org/ for details.]
+dot-file representing the same information.
+
+For information on the options supported by `crm_simulate`, use
+its `--help` option.
+
+.Interpreting the Graphviz output
+ * Arrows indicate ordering dependencies
+ * Dashed arrows indicate dependencies that are not present in the transition graph
+ * Actions with a dashed border of any color do not form part of the transition graph
+ * Actions with a green border form part of the transition graph
+ * Actions with a red border are ones the cluster would like to execute but cannot run
+ * Actions with a blue border are ones the cluster does not feel need to be executed
+ * Actions with orange text are pseudo/pretend actions that the cluster uses to simplify the graph
+ * Actions with black text are sent to the LRM
+ * Resource actions have text of the form pass:[<replaceable>rsc</replaceable>]_pass:[<replaceable>action</replaceable>]_pass:[<replaceable>interval</replaceable>] pass:[<replaceable>node</replaceable>]
+ * Any action depending on an action with a red border will not be able to execute. 
+ * Loops are _really_ bad. Please report them to the development team. 
+
+=== Small Cluster Transition ===
+
+image::images/Policy-Engine-small.png["An example transition graph as represented by Graphviz",width="16cm",height="6cm",align="center"]      
+
+In the above example, it appears that a new node, *pcmk-2*, has come
+online and that the cluster is checking to make sure *rsc1*, *rsc2*
+and *rsc3* are not already running there (Indicated by the
+*rscN_monitor_0* entries).  Once it did that, and assuming the resources
+were not active there, it would have liked to stop *rsc1* and *rsc2*
+on *pcmk-1* and move them to *pcmk-2*.  However, there appears to be
+some problem and the cluster cannot or is not permitted to perform the
+stop actions which implies it also cannot perform the start actions.
+For some reason the cluster does not want to start *rsc3* anywhere.
+
+=== Complex Cluster Transition ===
+
+image::images/Policy-Engine-big.png["Another, slightly more complex, transition graph that you're not expected to be able to read",width="16cm",height="20cm",align="center"]
+
+== Do I Need to Update the Configuration on All Cluster Nodes? ==
+
+No. Any changes are immediately synchronized to the other active
+members of the cluster.
+
+To reduce bandwidth, the cluster only broadcasts the incremental
+updates that result from your changes and uses MD5 checksums to ensure
+that each copy is completely consistent.
+
+== Working with CIB Properties ==
+
+Although these fields can be written to by the user, in
+most cases the cluster will overwrite any values specified by the
+user with the "correct" ones.
+
+To change the ones that can be specified by the user,
+for example +admin_epoch+, one should use:
+----
+# cibadmin --modify --xml-text '<cib admin_epoch="42"/>'
+----
+
+A complete set of CIB properties will look something like this:
+
+.Attributes set for a cib object
+======
+[source,XML]
+-------
+<cib crm_feature_set="3.0.7" validate-with="pacemaker-1.2" 
+   admin_epoch="42" epoch="116" num_updates="1"
+   cib-last-written="Mon Jan 12 15:46:39 2015" update-origin="rhel7-1"
+   update-client="crm_attribute" have-quorum="1" dc-uuid="1">
+-------
+======
+
+== Querying and Setting Cluster Options ==
+
+indexterm:[Querying,Cluster Option]
+indexterm:[Setting,Cluster Option]
+indexterm:[Cluster,Querying Options]
+indexterm:[Cluster,Setting Options]
+
+Cluster options can be queried and modified using the `crm_attribute` tool. To
+get the current value of +cluster-delay+, you can run:
+
+----
+# crm_attribute --query --name cluster-delay
+----
+
+which is more simply written as
+
+----
+# crm_attribute -G -n cluster-delay
+----
+
+If a value is found, you'll see a result like this:
+
+----
+# crm_attribute -G -n cluster-delay
+scope=crm_config name=cluster-delay value=60s
+----
+
+If no value is found, the tool will display an error:
+
+----
+# crm_attribute -G -n clusta-deway
+scope=crm_config name=clusta-deway value=(null)
+Error performing operation: No such device or address
+----
+
+To use a different value (for example, 30 seconds), simply run:
+
+----
+# crm_attribute --name cluster-delay --update 30s
+----
+
+To go back to the cluster's default value, you can delete the value, for example:
+
+----
+# crm_attribute --name cluster-delay --delete
+Deleted crm_config option: id=cib-bootstrap-options-cluster-delay name=cluster-delay
+----
+
+=== When Options are Listed More Than Once ===
+
+If you ever see something like the following, it means that the option you're modifying is present more than once.
+
+.Deleting an option that is listed twice
+=======
+------
+# crm_attribute --name batch-limit --delete
+
+Multiple attributes match name=batch-limit in crm_config:
+Value: 50          (set=cib-bootstrap-options, id=cib-bootstrap-options-batch-limit)
+Value: 100         (set=custom, id=custom-batch-limit)
+Please choose from one of the matches above and supply the 'id' with --id
+-------
+=======
+
+In such cases, follow the on-screen instructions to perform the
+requested action.  To determine which value is currently being used by
+the cluster, refer to the 'Rules' chapter of 'Pacemaker Explained'.
+
+[[s-remote-connection]]
+== Connecting from a Remote Machine ==
+indexterm:[Cluster,Remote connection]
+indexterm:[Cluster,Remote administration]
+
+Provided Pacemaker is installed on a machine, it is possible to
+connect to the cluster even if the machine itself is not in the same
+cluster.  To do this, one simply sets up a number of environment
+variables and runs the same commands as when working on a cluster
+node.
+
+.Environment Variables Used to Connect to Remote Instances of the CIB
+[width="95%",cols="1m,1,3<",options="header",align="center"]
+|=========================================================
+
+|Environment Variable
+|Default
+|Description
+
+|CIB_user
+|$USER
+|The user to connect as. Needs to be part of the +haclient+ group on
+ the target host.
+ indexterm:[Environment Variable,CIB_user]
+
+|CIB_passwd
+|
+|The user's password. Read from the command line if unset.
+ indexterm:[Environment Variable,CIB_passwd]
+
+|CIB_server
+|localhost
+|The host to contact
+ indexterm:[Environment Variable,CIB_server]
+
+|CIB_port
+|
+|The port on which to contact the server; required.
+ indexterm:[Environment Variable,CIB_port]
+
+|CIB_encrypted
+|TRUE
+|Whether to encrypt network traffic
+ indexterm:[Environment Variable,CIB_encrypted]
+
+|=========================================================
+
+So, if *c001n01* is an active cluster node and is listening on port 1234
+for connections, and *someuser* is a member of the *haclient* group,
+then the following would prompt for *someuser*'s password and return
+the cluster's current configuration:
+
+----
+# export CIB_port=1234; export CIB_server=c001n01; export CIB_user=someuser;
+# cibadmin -Q
+----
+
+For security reasons, the cluster does not listen for remote
+connections by default.  If you wish to allow remote access, you need
+to set the +remote-tls-port+ (encrypted) or +remote-clear-port+
+(unencrypted) CIB properties (i.e., those kept in the +cib+ tag, like
++num_updates+ and +epoch+).
+
+.Extra top-level CIB properties for remote access
+[width="95%",cols="1m,1,3<",options="header",align="center"]
+|=========================================================
+
+|Field
+|Default
+|Description
+
+|remote-tls-port
+|_none_
+|Listen for encrypted remote connections on this port.
+ indexterm:[remote-tls-port,Remote Connection Option]
+ indexterm:[Remote Connection,Option,remote-tls-port]
+
+|remote-clear-port
+|_none_
+|Listen for plaintext remote connections on this port.
+ indexterm:[remote-clear-port,Remote Connection Option]
+ indexterm:[Remote Connection,Option,remote-clear-port]
+
+|=========================================================
+

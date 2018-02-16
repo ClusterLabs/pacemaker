@@ -5,7 +5,7 @@
 === Boot the Install Image ===
 
 Download the 4GB
-http://isoredirect.centos.org/centos/7/isos/x86_64/CentOS-7-x86_64-DVD-1503-01.iso[&DISTRO;
+http://isoredirect.centos.org/centos/7/isos/x86_64/CentOS-7-x86_64-DVD-1708.iso[&DISTRO;
 &DISTRO_VERSION; DVD ISO]. Use the image to boot a virtual machine, or
 burn it to a DVD or USB drive and boot a physical server from that.
 
@@ -437,7 +437,7 @@ different machine from the one you're logged into, you can use
 the `--stdin` option for `passwd`:
 
 ----
-[root@pcmk-1 ~]# ssh pcmk-2 -- 'echo redhat1 | passwd --stdin hacluster'
+[root@pcmk-1 ~]# ssh pcmk-2 -- 'echo mysupersecretpassword | passwd --stdin hacluster'
 ----
 ===========
 
@@ -472,18 +472,18 @@ with the same password.
 
 [NOTE]
 ======
-Early versions of pcs required that `--name` be omitted from the above command.
-
 If you are not using `pcs` for cluster administration,
 follow whatever procedures are appropriate for your tools
 to create a corosync.conf and copy it to all nodes.
 
 The `pcs` command will configure corosync to use UDP unicast transport; if you
 choose to use multicast instead, choose a multicast address carefully.
-footnote:[For some subtle issues, see the now-defunct http://web.archive.org/web/20101211210054/http://29west.com/docs/THPM/multicast-address-assignment.html or the more detailed treatment in
-http://www.cisco.com/c/dam/en/us/support/docs/ip/ip-multicast/ipmlt_wp.pdf[Cisco's
-Guidelines for Enterprise IP Multicast Address Allocation] paper.]
+footnote:[For some subtle issues, see
+http://web.archive.org/web/20101211210054/http://29west.com/docs/THPM/multicast-address-assignment.html[Topics
+in High-Performance Messaging: Multicast Address Assignment] or the more detailed treatment in
+https://www.cisco.com/c/dam/en/us/support/docs/ip/ip-multicast/ipmlt_wp.pdf[Cisco's
+Guidelines for Enterprise IP Multicast Address Allocation].]
 ======
 
-The final /etc/corosync.conf configuration on each node should look
+The final corosync.conf configuration on each node should look
 something like the sample in <<ap-corosync-conf>>.

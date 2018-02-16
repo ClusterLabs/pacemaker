@@ -61,7 +61,7 @@ do_cl_join_query(long long action,
     xmlNode *req = create_request(CRM_OP_JOIN_ANNOUNCE, NULL, NULL,
                                   CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
 
-    sleep(1);                   /* give the CCM time to propogate to the DC */
+    sleep(1);                   // Give the cluster layer time to propagate to the DC
     update_dc(NULL);            /* Unset any existing value so that the result is not discarded */
     crm_debug("Querying for a DC");
     send_cluster_message(NULL, crm_msg_crmd, req, FALSE);
@@ -79,12 +79,6 @@ do_cl_join_announce(long long action,
                     enum crmd_fsa_state cur_state,
                     enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-    /* Once we hear from the DC, we can stop the timer
-     *
-     * This timer was started either on startup or when a node
-     * left the CCM list
-     */
-
     /* don't announce if we're in one of these states */
     if (cur_state != S_PENDING) {
         crm_warn("Not announcing cluster join because in state %s",
@@ -191,6 +185,7 @@ join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
                                CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
 
         crm_xml_add(reply, F_CRM_JOIN_ID, join_id);
+        crm_xml_add(reply, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
         send_cluster_message(crm_get_peer(0, fsa_our_dc), crm_msg_crmd, reply, TRUE);
         free_xml(reply);
     }
@@ -299,16 +294,6 @@ do_cl_join_finalize_respond(long long action,
          */
         if (first_join && is_not_set(fsa_input_register, R_SHUTDOWN)) {
             first_join = FALSE;
-#if !HAVE_ATOMIC_ATTRD
-            /* c9d1c3cd made this unnecessary for atomic attrd.
-             * This means that the issue addressed by that commit is still
-             * present for legacy attrd, but given legacy attrd's imminent
-             * demise, this is preferable to making intrusive changes to it.
-             */
-            erase_status_tag(fsa_our_uname, XML_TAG_TRANSIENT_NODEATTRS, 0);
-            update_attrd(fsa_our_uname, "terminate", NULL, NULL, FALSE);
-            update_attrd(fsa_our_uname, XML_CIB_ATTR_SHUTDOWN, "0", NULL, FALSE);
-#endif
             if (start_state) {
                 set_join_state(start_state);
             }
@@ -319,13 +304,6 @@ do_cl_join_finalize_respond(long long action,
 
         if (AM_I_DC == FALSE) {
             register_fsa_input_adv(cause, I_NOT_DC, NULL, A_NOTHING, TRUE, __FUNCTION__);
-#if !HAVE_ATOMIC_ATTRD
-            /* Ask attrd to write all attributes to disk. This is not needed for
-             * atomic attrd because atomic attrd does a peer sync and write-out
-             * when winning an election.
-             */
-            update_attrd(NULL, NULL, NULL, NULL, FALSE);
-#endif
         }
 
         free_xml(tmp1);

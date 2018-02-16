@@ -1,4 +1,4 @@
-addFilter("E: non-standard-dir-perm .* 0750")
+addFilter("E: non-standard-dir-perm .* 07.0")
 addFilter("W: shared-lib-calls-exit")
 
 # Really, really do not care
@@ -30,9 +30,6 @@ addFilter("W: hidden-file-or-dir /var/lib/pacemaker/gcov")
 addFilter("E: changelog-time-in-future")
 addFilter("pacemaker.src: W: strange-permission .* 0600")
 addFilter("enchant-dictionary-not-found en_US")
-
-# Isolation agents are hidden so they don't show up in agent list
-addFilter("W: hidden-file-or-dir /usr/lib/ocf/resource.d/.isolation")
 
 # rpmlint doesn't like logrotate script being in pacemaker-cli package
 addFilter("E: incoherent-logrotate-file /etc/logrotate.d/pacemaker")

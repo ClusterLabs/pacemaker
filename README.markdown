@@ -3,8 +3,6 @@
 ## What is Pacemaker?
 
 Pacemaker is an advanced, scalable high-availability cluster resource manager.
-It runs on top of a cluster communication layer, either Corosync or
-Linux-HA's Heartbeat.
 
 It supports "N-node" clusters with significant capabilities for
 managing resources and dependencies.
@@ -47,8 +45,14 @@ This is not an exhaustive list:
 * pcs: https://github.com/ClusterLabs/pcs
 * LCMC: http://lcmc.sourceforge.net/
 * hawk: https://github.com/ClusterLabs/hawk
-* Pacemaker-mgmt: https://github.com/ClusterLabs/pacemaker-mgmt
 * Striker: https://github.com/ClusterLabs/striker
+
+### Can I convert some other cluster configuration to Pacemaker?
+
+[clufter](https://github.com/jnpkrn/clufter) is a general-purpose tool
+for converting one cluster representation format to another. Among other
+possibilities, it can convert from a CMAN+rgmanager-based cluster to
+a corosync+pacemaker-based one. See its documentation for details.
 
 ## How can I help?
 

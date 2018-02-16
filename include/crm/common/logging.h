@@ -24,15 +24,12 @@
 
 #ifndef CRM_LOGGING__H
 #  define CRM_LOGGING__H
+
 #  include <qb/qblog.h>
+
 #  ifndef LOG_TRACE
 #    define LOG_TRACE    LOG_DEBUG+1
 #  endif
-#  define LOG_DEBUG_2  LOG_TRACE
-#  define LOG_DEBUG_3  LOG_TRACE
-#  define LOG_DEBUG_4  LOG_TRACE
-#  define LOG_DEBUG_5  LOG_TRACE
-#  define LOG_DEBUG_6  LOG_TRACE
 
 /* "Extended information" logging support */
 #ifdef QB_XS
@@ -101,7 +98,6 @@ gboolean crm_is_callsite_active(struct qb_log_callsite *cs, uint8_t level, uint3
 
 void log_data_element(int log_level, const char *file, const char *function, int line,
                       const char *prefix, xmlNode * data, int depth, gboolean formatted);
-char *crm_strdup_printf (char const *format, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
 
 /* returns the old value */
 unsigned int set_crm_log_level(unsigned int level);
@@ -116,6 +112,7 @@ unsigned int get_crm_log_level(void);
 #if defined(__clang__)
 #    define CRM_TRACE_INIT_DATA(name)
 #  else
+#    include <assert.h> // required by QB_LOG_INIT_DATA() macro
 #    define CRM_TRACE_INIT_DATA(name) QB_LOG_INIT_DATA(name)
 #endif
 

@@ -1,0 +1,378 @@
+<cib epoch="709" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" crm_feature_set="3.0.5" cib-last-written="Fri Jul 13 13:51:22 2012" have-quorum="1" dc-uuid="deglxen001">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="2"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-stonith-action" name="stonith-action" value="reboot"/>
+        <nvpair id="cib-bootstrap-options-placement-strategy" name="placement-strategy" value="utilization"/>
+        <nvpair id="cib-bootstrap-options-batch-limit" name="batch-limit" value="1"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.5-5ce2879aa0d5f43d01629bc20edc6868a9352002"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1305879804"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="deglxen001" type="member" uname="deglxen001">
+        <utilization id="deglxen001-utilization">
+          <nvpair id="deglxen001-utilization-cpu" name="cpu" value="64"/>
+          <nvpair id="deglxen001-utilization-memory" name="memory" value="513"/>
+        </utilization>
+        <instance_attributes id="deglxen001-instance_attributes">
+          <nvpair id="deglxen001-instance_attributes-datacenter" name="datacenter" value="maindc"/>
+          <nvpair id="deglxen001-instance_attributes-standby" name="standby" value="off"/>
+        </instance_attributes>
+      </node>
+      <node id="deglxen002" type="member" uname="deglxen002">
+        <utilization id="deglxen002-utilization">
+          <nvpair id="deglxen002-utilization-cpu" name="cpu" value="64"/>
+          <nvpair id="deglxen002-utilization-memory" name="memory" value="513636"/>
+        </utilization>
+        <instance_attributes id="deglxen002-instance_attributes">
+          <nvpair id="deglxen002-instance_attributes-datacenter" name="datacenter" value="backupdc"/>
+          <nvpair id="deglxen002-instance_attributes-standby" name="standby" value="on"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <rsc_defaults>
+      <meta_attributes id="rsc_defaults-meta_attributes">
+        <nvpair id="rsc_defaults-resource-stickiness" name="resource-stickiness" value="100000"/>
+      </meta_attributes>
+    </rsc_defaults>
+    <resources>
+      <primitive class="ocf" id="degllx61-vm" provider="heartbeat" type="Xen">
+        <meta_attributes id="degllx61-vm-meta_attributes">
+          <nvpair id="degllx61-vm-meta_attributes-allow-migrate" name="allow-migrate" value="true"/>
+          <nvpair id="degllx61-vm-meta_attributes-priority" name="priority" value="2"/>
+          <nvpair id="degllx61-vm-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+        <instance_attributes id="degllx61-vm-instance_attributes">
+          <nvpair id="degllx61-vm-instance_attributes-xmfile" name="xmfile" value="/etc/xen/vm/degllx61"/>
+        </instance_attributes>
+        <utilization id="degllx61-vm-utilization">
+          <nvpair id="degllx61-vm-utilization-cpu" name="cpu" value="8"/>
+          <nvpair id="degllx61-vm-utilization-memory" name="memory" value="512"/>
+        </utilization>
+        <operations>
+          <op id="degllx61-vm-monitor-30" interval="30" name="monitor" timeout="120"/>
+          <op id="degllx61-vm-start-0" interval="0" name="start" timeout="300"/>
+          <op id="degllx61-vm-stop-0" interval="0" name="stop" timeout="120"/>
+          <op id="degllx61-vm-migrate_to-0" interval="0" name="migrate_to" timeout="1800"/>
+          <op id="degllx61-vm-migrate_from-0" interval="0" name="migrate_from" timeout="1800"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="degllx62-vm" provider="heartbeat" type="Xen">
+        <meta_attributes id="degllx62-vm-meta_attributes">
+          <nvpair id="degllx62-vm-meta_attributes-allow-migrate" name="allow-migrate" value="true"/>
+          <nvpair id="degllx62-vm-meta_attributes-priority" name="priority" value="4"/>
+          <nvpair id="degllx62-vm-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+        <instance_attributes id="degllx62-vm-instance_attributes">
+          <nvpair id="degllx62-vm-instance_attributes-xmfile" name="xmfile" value="/etc/xen/vm/degllx62"/>
+        </instance_attributes>
+        <utilization id="degllx62-vm-utilization">
+          <nvpair id="degllx62-vm-utilization-cpu" name="cpu" value="8"/>
+          <nvpair id="degllx62-vm-utilization-memory" name="memory" value="512"/>
+        </utilization>
+        <operations>
+          <op id="degllx62-vm-monitor-30" interval="30" name="monitor" timeout="120"/>
+          <op id="degllx62-vm-start-0" interval="0" name="start" timeout="300"/>
+          <op id="degllx62-vm-stop-0" interval="0" name="stop" timeout="120"/>
+          <op id="degllx62-vm-migrate_to-0" interval="0" name="migrate_to" timeout="1800"/>
+          <op id="degllx62-vm-migrate_from-0" interval="0" name="migrate_from" timeout="1800"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="degllx63-vm" provider="heartbeat" type="Xen">
+        <meta_attributes id="degllx63-vm-meta_attributes">
+          <nvpair id="degllx63-vm-meta_attributes-allow-migrate" name="allow-migrate" value="true"/>
+          <nvpair id="degllx63-vm-meta_attributes-priority" name="priority" value="3"/>
+          <nvpair id="degllx63-vm-meta_attributes-target-role" name="target-role" value="Stopped"/>
+        </meta_attributes>
+        <instance_attributes id="degllx63-vm-instance_attributes">
+          <nvpair id="degllx63-vm-instance_attributes-xmfile" name="xmfile" value="/etc/xen/vm/degllx63"/>
+        </instance_attributes>
+        <utilization id="degllx63-vm-utilization">
+          <nvpair id="degllx63-vm-utilization-cpu" name="cpu" value="8"/>
+          <nvpair id="degllx63-vm-utilization-memory" name="memory" value="512"/>
+        </utilization>
+        <operations>
+          <op id="degllx63-vm-monitor-30" interval="30" name="monitor" timeout="120"/>
+          <op id="degllx63-vm-start-0" interval="0" name="start" timeout="300"/>
+          <op id="degllx63-vm-stop-0" interval="0" name="stop" timeout="120"/>
+          <op id="degllx63-vm-migrate_to-0" interval="0" name="migrate_to" timeout="1800"/>
+          <op id="degllx63-vm-migrate_from-0" interval="0" name="migrate_from" timeout="1800"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="degllx64-vm" provider="heartbeat" type="Xen">
+        <meta_attributes id="degllx64-vm-meta_attributes">
+          <nvpair id="degllx64-vm-meta_attributes-allow-migrate" name="allow-migrate" value="true"/>
+          <nvpair id="degllx64-vm-meta_attributes-priority" name="priority" value="1"/>
+          <nvpair id="degllx64-vm-meta_attributes-target-role" name="target-role" value="Stopped"/>
+        </meta_attributes>
+        <instance_attributes id="degllx64-vm-instance_attributes">
+          <nvpair id="degllx64-vm-instance_attributes-xmfile" name="xmfile" value="/etc/xen/vm/degllx64"/>
+        </instance_attributes>
+        <utilization id="degllx64-vm-utilization">
+          <nvpair id="degllx64-vm-utilization-cpu" name="cpu" value="8"/>
+          <nvpair id="degllx64-vm-utilization-memory" name="memory" value="1024"/>
+        </utilization>
+        <operations>
+          <op id="degllx64-vm-monitor-30" interval="30" name="monitor" timeout="120"/>
+          <op id="degllx64-vm-start-0" interval="0" name="start" timeout="300"/>
+          <op id="degllx64-vm-stop-0" interval="0" name="stop" timeout="120"/>
+          <op id="degllx64-vm-migrate_to-0" interval="0" name="migrate_to" timeout="1800"/>
+          <op id="degllx64-vm-migrate_from-0" interval="0" name="migrate_from" timeout="1800"/>
+        </operations>
+      </primitive>
+      <primitive class="stonith" id="stonith_sbd" type="external/sbd">
+        <instance_attributes id="stonith_sbd-instance_attributes">
+          <nvpair id="stonith_sbd-instance_attributes-sbd_device" name="sbd_device" value="/dev/mapper/sbd"/>
+        </instance_attributes>
+      </primitive>
+      <clone id="clone-nfs">
+        <meta_attributes id="clone-nfs-meta_attributes">
+          <nvpair id="clone-nfs-meta_attributes-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+        <group id="grp-nfs">
+          <primitive class="ocf" id="nfs-xen_config" provider="heartbeat" type="Filesystem">
+            <instance_attributes id="nfs-xen_config-instance_attributes">
+              <nvpair id="nfs-xen_config-instance_attributes-device" name="device" value="deglnap098nfs:/vol/xen_config"/>
+              <nvpair id="nfs-xen_config-instance_attributes-directory" name="directory" value="/etc/xen/vm"/>
+              <nvpair id="nfs-xen_config-instance_attributes-fstype" name="fstype" value="nfs"/>
+              <nvpair id="nfs-xen_config-instance_attributes-options" name="options" value="rw,bg,hard,nointr,rsize=32768,wsize=32768,tcp,nfsvers=3,timeo=600"/>
+            </instance_attributes>
+            <operations id="nfs-xen_config-operations">
+              <op id="nfs-xen_config-monitor-60" interval="60" name="monitor" timeout="240"/>
+              <op id="nfs-xen_config-start-0" interval="0" name="start" timeout="60"/>
+              <op id="nfs-xen_config-stop-0" interval="0" name="stop" timeout="60"/>
+            </operations>
+          </primitive>
+          <primitive class="ocf" id="nfs-xen_swapfiles" provider="heartbeat" type="Filesystem">
+            <instance_attributes id="nfs-xen_swapfiles-instance_attributes">
+              <nvpair id="nfs-xen_swapfiles-instance_attributes-device" name="device" value="deglnap098nfs:/vol/xen_swapfiles"/>
+              <nvpair id="nfs-xen_swapfiles-instance_attributes-directory" name="directory" value="/var/lib/xen/deglnap098_swapfiles"/>
+              <nvpair id="nfs-xen_swapfiles-instance_attributes-fstype" name="fstype" value="nfs"/>
+              <nvpair id="nfs-xen_swapfiles-instance_attributes-options" name="options" value="rw,bg,hard,nointr,rsize=32768,wsize=32768,tcp,nfsvers=3,timeo=600"/>
+            </instance_attributes>
+            <operations>
+              <op id="nfs-xen_swapfiles-monitor-60" interval="60" name="monitor" timeout="240"/>
+              <op id="nfs-xen_swapfiles-start-0" interval="0" name="start" timeout="60"/>
+              <op id="nfs-xen_swapfiles-stop-0" interval="0" name="stop" timeout="60"/>
+            </operations>
+          </primitive>
+          <primitive class="ocf" id="nfs-xen_images" provider="heartbeat" type="Filesystem">
+            <instance_attributes id="nfs-xen_images-instance_attributes">
+              <nvpair id="nfs-xen_images-instance_attributes-device" name="device" value="deglnap099nfs:/vol/xen_images"/>
+              <nvpair id="nfs-xen_images-instance_attributes-directory" name="directory" value="/var/lib/xen/deglnap099_images"/>
+              <nvpair id="nfs-xen_images-instance_attributes-fstype" name="fstype" value="nfs"/>
+              <nvpair id="nfs-xen_images-instance_attributes-options" name="options" value="rw,bg,hard,nointr,rsize=32768,wsize=32768,tcp,nfsvers=3,timeo=600"/>
+            </instance_attributes>
+            <operations>
+              <op id="nfs-xen_images-monitor-60" interval="60" name="monitor" timeout="240"/>
+              <op id="nfs-xen_images-start-0" interval="0" name="start" timeout="60"/>
+              <op id="nfs-xen_images-stop-0" interval="0" name="stop" timeout="60"/>
+            </operations>
+          </primitive>
+        </group>
+      </clone>
+      <clone id="clone-ping">
+        <meta_attributes id="clone-ping-meta_attributes">
+          <nvpair id="clone-ping-meta_attributes-globally-unique" name="globally-unique" value="false"/>
+          <nvpair id="clone-ping-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+        <primitive class="ocf" id="prim-ping" provider="pacemaker" type="ping">
+          <instance_attributes id="prim-ping-instance_attributes">
+            <nvpair id="prim-ping-instance_attributes-host_list" name="host_list" value="77.77.77.138 77.77.77.139"/>
+            <nvpair id="prim-ping-instance_attributes-multiplier" name="multiplier" value="2000"/>
+            <nvpair id="prim-ping-instance_attributes-name" name="name" value="ping-hosts"/>
+          </instance_attributes>
+          <operations>
+            <op id="prim-ping-monitor-30" interval="30" name="monitor" timeout="240"/>
+            <op id="prim-ping-start-0" interval="0" name="start" timeout="60"/>
+            <op id="prim-ping-stop-0" interval="0" name="stop" timeout="60"/>
+          </operations>
+        </primitive>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_location id="degllx61-preferred-datacenter" rsc="degllx61-vm">
+        <rule id="degllx61-rule" score="5000">
+          <expression attribute="datacenter" id="degllx61-preferred-datacenter-expression" operation="eq" value="maindc"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="degllx62-preferred-datacenter" rsc="degllx62-vm">
+        <rule id="degllx62-rule" score="5000">
+          <expression attribute="datacenter" id="degllx62-preferred-datacenter-expression" operation="eq" value="backupdc"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="degllx63-preferred-datacenter" rsc="degllx63-vm">
+        <rule id="degllx63-rule" score="5000">
+          <expression attribute="datacenter" id="degllx63-preferred-datacenter-expression" operation="eq" value="maindc"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="degllx64-preferred-datacenter" rsc="degllx64-vm">
+        <rule id="degllx64-rule" score="5000">
+          <expression attribute="datacenter" id="degllx64-preferred-datacenter-expression" operation="eq" value="backupdc"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="loc-ping-not-ok" rsc="clone-nfs">
+        <rule boolean-op="or" id="loc-ping-not-ok-rule" score="-10000">
+          <expression attribute="ping-hosts" id="loc-ping-not-ok-expression" operation="not_defined"/>
+          <expression attribute="ping-hosts" id="loc-ping-not-ok-expression-0" operation="lte" value="0"/>
+        </rule>
+      </rsc_location>
+      <rsc_colocation id="degllx61-vm-with-nfs" rsc="degllx61-vm" score="INFINITY" with-rsc="clone-nfs"/>
+      <rsc_colocation id="degllx62-vm-with-nfs" rsc="degllx62-vm" score="INFINITY" with-rsc="clone-nfs"/>
+      <rsc_colocation id="degllx63-vm-with-nfs" rsc="degllx63-vm" score="INFINITY" with-rsc="clone-nfs"/>
+      <rsc_colocation id="degllx64-vm-with-nfs" rsc="degllx64-vm" score="INFINITY" with-rsc="clone-nfs"/>
+      <rsc_order first="clone-nfs" id="nfs-before-degllx61-vm" score="INFINITY" then="degllx61-vm"/>
+      <rsc_order first="clone-nfs" id="nfs-before-degllx62-vm" score="INFINITY" then="degllx62-vm"/>
+      <rsc_order first="clone-nfs" id="nfs-before-degllx63-vm" score="INFINITY" then="degllx63-vm"/>
+      <rsc_order first="clone-nfs" id="nfs-before-degllx64-vm" score="INFINITY" then="degllx64-vm"/>
+      <rsc_order first="clone-ping" id="ping-before-nfs" score="INFINITY" then="clone-nfs"/>
+    </constraints>
+    <op_defaults>
+      <meta_attributes id="op_defaults-options">
+        <nvpair id="op_defaults-options-record-pending" name="record-pending" value="false"/>
+      </meta_attributes>
+    </op_defaults>
+  </configuration>
+  <status>
+    <node_state id="deglxen001" uname="deglxen001" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_state_transition" shutdown="0">
+      <transient_attributes id="deglxen001">
+        <instance_attributes id="status-deglxen001">
+          <nvpair id="status-deglxen001-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-deglxen001-ping-hosts" name="ping-hosts" value="4000"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="deglxen001">
+        <lrm_resources>
+          <lrm_resource id="nfs-xen_swapfiles:0" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="nfs-xen_swapfiles:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="12:0:7:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:7;12:0:7:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="8" rc-code="7" op-status="0" interval="0" last-run="1305819194" last-rc-change="1305819194" exec-time="110" queue-time="0" op-digest="f0c3bc486ee7c8f03d78cdd7c8d36a10"/>
+            <lrm_rsc_op id="nfs-xen_swapfiles:0_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="30:335:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;30:335:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="1766" rc-code="0" op-status="0" interval="0" last-run="1305875852" last-rc-change="1305875852" exec-time="320" queue-time="0" op-digest="f0c3bc486ee7c8f03d78cdd7c8d36a10"/>
+            <lrm_rsc_op id="nfs-xen_swapfiles:0_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="28:338:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;28:338:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="1773" rc-code="0" op-status="0" interval="0" last-run="1305876147" last-rc-change="1305876147" exec-time="180" queue-time="0" op-digest="f0c3bc486ee7c8f03d78cdd7c8d36a10"/>
+            <lrm_rsc_op id="nfs-xen_swapfiles:0_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="29:338:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;29:338:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="1774" rc-code="0" op-status="0" interval="60000" last-rc-change="1305876148" exec-time="110" queue-time="0" op-digest="df588422a1a3a55ed2483585f9aeb739"/>
+          </lrm_resource>
+          <lrm_resource id="prim-ping:1" type="ping" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prim-ping:1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="14:0:7:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:7;14:0:7:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1305819194" last-rc-change="1305819194" exec-time="60" queue-time="0" op-digest="590725aa98fb269e16ca29b728451083"/>
+            <lrm_rsc_op id="prim-ping:1_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="52:335:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;52:335:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="1768" rc-code="0" op-status="0" interval="0" last-run="1305875852" last-rc-change="1305875852" exec-time="60" queue-time="0" op-digest="590725aa98fb269e16ca29b728451083"/>
+            <lrm_rsc_op id="prim-ping:1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="45:337:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;45:337:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="1769" rc-code="0" op-status="0" interval="0" last-run="1305876128" last-rc-change="1305876128" exec-time="8090" queue-time="0" op-digest="590725aa98fb269e16ca29b728451083"/>
+            <lrm_rsc_op id="prim-ping:1_monitor_30000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="46:337:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;46:337:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="1770" rc-code="0" op-status="0" interval="30000" last-rc-change="1305876137" exec-time="8080" queue-time="0" op-digest="b0e3b9b18ba7a61a3ae193488c2a13ce"/>
+          </lrm_resource>
+          <lrm_resource id="degllx64-vm" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="degllx64-vm_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="9:0:7:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:7;9:0:7:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1305819193" last-rc-change="1305819193" exec-time="610" queue-time="0" op-digest="d3c2033495bb73b4b516a04d513e98b2"/>
+            <lrm_rsc_op id="degllx64-vm_migrate_from_0" operation="migrate_from" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="70:331:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;70:331:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="1738" rc-code="0" op-status="0" interval="0" last-run="1305875170" last-rc-change="1305875170" exec-time="660" queue-time="0" migrate_source="deglxen002" migrate_target="deglxen001" op-digest="d3c2033495bb73b4b516a04d513e98b2"/>
+            <lrm_rsc_op id="degllx64-vm_migrate_to_0" operation="migrate_to" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="64:348:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;64:348:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="1788" rc-code="0" op-status="0" interval="0" last-run="1305879775" last-rc-change="1305879775" exec-time="8370" queue-time="0" migrate_source="deglxen001" migrate_target="deglxen002" op-digest="d3c2033495bb73b4b516a04d513e98b2"/>
+            <lrm_rsc_op id="degllx64-vm_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="18:355:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;18:355:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="1793" rc-code="0" op-status="0" interval="0" last-run="1305879965" last-rc-change="1305879965" exec-time="4890" queue-time="0" op-digest="d3c2033495bb73b4b516a04d513e98b2"/>
+            <lrm_rsc_op id="degllx64-vm_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="16:365:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;16:365:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="1798" rc-code="0" op-status="0" interval="0" last-run="1305885684" last-rc-change="1305885684" exec-time="9690" queue-time="0" op-digest="d3c2033495bb73b4b516a04d513e98b2"/>
+          </lrm_resource>
+          <lrm_resource id="degllx63-vm" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="degllx63-vm_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="7:0:7:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:7;7:0:7:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="3" rc-code="7" op-status="0" interval="0" last-run="1305819191" last-rc-change="1305819191" exec-time="600" queue-time="0" op-digest="7d725156f1f09e73446bcbade741a4c7"/>
+            <lrm_rsc_op id="degllx63-vm_migrate_from_0" operation="migrate_from" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="66:331:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;66:331:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="1736" rc-code="0" op-status="0" interval="0" last-run="1305875149" last-rc-change="1305875149" exec-time="650" queue-time="0" migrate_source="deglxen002" migrate_target="deglxen001" op-digest="7d725156f1f09e73446bcbade741a4c7"/>
+            <lrm_rsc_op id="degllx63-vm_migrate_to_0" operation="migrate_to" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="65:335:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;65:335:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="1758" rc-code="0" op-status="0" interval="0" last-run="1305875824" last-rc-change="1305875824" exec-time="5960" queue-time="0" migrate_source="deglxen001" migrate_target="deglxen002" op-digest="7d725156f1f09e73446bcbade741a4c7"/>
+            <lrm_rsc_op id="degllx63-vm_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="12:342:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;12:342:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="1780" rc-code="0" op-status="0" interval="0" last-run="1305878817" last-rc-change="1305878817" exec-time="5270" queue-time="0" op-digest="7d725156f1f09e73446bcbade741a4c7"/>
+            <lrm_rsc_op id="degllx63-vm_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="19:364:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;19:364:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="1797" rc-code="0" op-status="0" interval="0" last-run="1305885672" last-rc-change="1305885672" exec-time="12110" queue-time="0" op-digest="7d725156f1f09e73446bcbade741a4c7"/>
+          </lrm_resource>
+          <lrm_resource id="degllx62-vm" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="degllx62-vm_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="16:352:7:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:7;16:352:7:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="1790" rc-code="7" op-status="0" interval="0" last-run="1305879805" last-rc-change="1305879805" exec-time="640" queue-time="0" op-digest="1cb2cc15fa4367ac474aa6abda635473"/>
+            <lrm_rsc_op id="degllx62-vm_migrate_from_0" operation="migrate_from" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="56:377:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;56:377:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="1809" rc-code="0" op-status="0" interval="0" last-run="1305885944" last-rc-change="1305885944" exec-time="630" queue-time="0" migrate_source="deglxen002" migrate_target="deglxen001" op-digest="1cb2cc15fa4367ac474aa6abda635473"/>
+            <lrm_rsc_op id="degllx62-vm_migrate_to_0" operation="migrate_to" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="57:381:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;57:381:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="1815" rc-code="0" op-status="0" interval="0" last-run="1305885998" last-rc-change="1305885998" exec-time="6480" queue-time="0" migrate_source="deglxen001" migrate_target="deglxen002" op-digest="1cb2cc15fa4367ac474aa6abda635473"/>
+            <lrm_rsc_op id="degllx62-vm_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="16:387:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;16:387:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="1822" rc-code="0" op-status="0" interval="0" last-run="1305886063" last-rc-change="1305886063" exec-time="4070" queue-time="0" op-digest="1cb2cc15fa4367ac474aa6abda635473"/>
+            <lrm_rsc_op id="degllx62-vm_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="17:391:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;17:391:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="1824" rc-code="0" op-status="0" interval="0" last-run="1305886894" last-rc-change="1305886894" exec-time="9560" queue-time="0" op-digest="1cb2cc15fa4367ac474aa6abda635473"/>
+          </lrm_resource>
+          <lrm_resource id="nfs-xen_config:0" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="nfs-xen_config:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="11:0:7:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:7;11:0:7:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="7" rc-code="7" op-status="0" interval="0" last-run="1305819193" last-rc-change="1305819193" exec-time="120" queue-time="0" op-digest="a3faaed4e15aa99b6b32c6c69e18a8f7"/>
+            <lrm_rsc_op id="nfs-xen_config:0_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="29:335:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;29:335:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="1767" rc-code="0" op-status="0" interval="0" last-run="1305875852" last-rc-change="1305875852" exec-time="350" queue-time="0" op-digest="a3faaed4e15aa99b6b32c6c69e18a8f7"/>
+            <lrm_rsc_op id="nfs-xen_config:0_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="26:338:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;26:338:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="1771" rc-code="0" op-status="0" interval="0" last-run="1305876146" last-rc-change="1305876146" exec-time="190" queue-time="0" op-digest="a3faaed4e15aa99b6b32c6c69e18a8f7"/>
+            <lrm_rsc_op id="nfs-xen_config:0_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="27:338:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;27:338:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="1772" rc-code="0" op-status="0" interval="60000" last-rc-change="1305876146" exec-time="110" queue-time="0" op-digest="5055675078cf39593d6cdec9f2d50a31"/>
+          </lrm_resource>
+          <lrm_resource id="degllx61-vm" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="degllx61-vm_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="8:0:7:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:7;8:0:7:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="4" rc-code="7" op-status="0" interval="0" last-run="1305819192" last-rc-change="1305819192" exec-time="610" queue-time="0" op-digest="28f427cb4ac2c9c95fcc329da6972511"/>
+            <lrm_rsc_op id="degllx61-vm_migrate_to_0" operation="migrate_to" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="67:335:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;67:335:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="1760" rc-code="0" op-status="0" interval="0" last-run="1305875831" last-rc-change="1305875831" exec-time="6090" queue-time="0" migrate_source="deglxen001" migrate_target="deglxen002" op-digest="28f427cb4ac2c9c95fcc329da6972511"/>
+            <lrm_rsc_op id="degllx61-vm_migrate_from_0" operation="migrate_from" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="59:383:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;59:383:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="1817" rc-code="0" op-status="0" interval="0" last-run="1305886016" last-rc-change="1305886016" exec-time="720" queue-time="0" migrate_source="deglxen002" migrate_target="deglxen001" op-digest="28f427cb4ac2c9c95fcc329da6972511"/>
+            <lrm_rsc_op id="degllx61-vm_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="18:387:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;18:387:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="1821" rc-code="0" op-status="0" interval="0" last-run="1305886054" last-rc-change="1305886054" exec-time="9540" queue-time="0" op-digest="28f427cb4ac2c9c95fcc329da6972511"/>
+            <lrm_rsc_op id="degllx61-vm_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="18:394:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;18:394:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="1825" rc-code="0" op-status="0" interval="0" last-run="1305886919" last-rc-change="1305886919" exec-time="3960" queue-time="0" op-digest="28f427cb4ac2c9c95fcc329da6972511"/>
+            <lrm_rsc_op id="degllx61-vm_monitor_30000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="19:394:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;19:394:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="1826" rc-code="0" op-status="0" interval="30000" last-rc-change="1305886923" exec-time="450" queue-time="0" op-digest="dcaeb2e469762f47efcdc196325c5c71"/>
+          </lrm_resource>
+          <lrm_resource id="stonith_sbd" type="external/sbd" class="stonith">
+            <lrm_rsc_op id="stonith_sbd_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="10:0:7:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:7;10:0:7:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="6" rc-code="7" op-status="0" interval="0" last-run="1305819193" last-rc-change="1305819193" exec-time="40" queue-time="0" op-digest="023c8f107f1beca7df1e08efe592cdd8"/>
+            <lrm_rsc_op id="stonith_sbd_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="27:335:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;27:335:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="1764" rc-code="0" op-status="0" interval="0" last-run="1305875849" last-rc-change="1305875849" exec-time="10" queue-time="0" op-digest="023c8f107f1beca7df1e08efe592cdd8"/>
+            <lrm_rsc_op id="stonith_sbd_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="23:341:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;23:341:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="1777" rc-code="0" op-status="0" interval="0" last-run="1305878779" last-rc-change="1305878779" exec-time="10" queue-time="0" op-digest="023c8f107f1beca7df1e08efe592cdd8"/>
+          </lrm_resource>
+          <lrm_resource id="nfs-xen_images:0" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="nfs-xen_images:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="13:0:7:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:7;13:0:7:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1305819194" last-rc-change="1305819194" exec-time="110" queue-time="0" op-digest="58e321f925dcfe53a9955ccad934f90d"/>
+            <lrm_rsc_op id="nfs-xen_images:0_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="31:335:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;31:335:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="1765" rc-code="0" op-status="0" interval="0" last-run="1305875850" last-rc-change="1305875850" exec-time="310" queue-time="0" op-digest="58e321f925dcfe53a9955ccad934f90d"/>
+            <lrm_rsc_op id="nfs-xen_images:0_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="30:338:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;30:338:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="1775" rc-code="0" op-status="0" interval="0" last-run="1305876147" last-rc-change="1305876147" exec-time="190" queue-time="0" op-digest="58e321f925dcfe53a9955ccad934f90d"/>
+            <lrm_rsc_op id="nfs-xen_images:0_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="31:338:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;31:338:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="1776" rc-code="0" op-status="0" interval="60000" last-rc-change="1305876147" exec-time="110" queue-time="0" op-digest="cabfa468bb5b093f70da41fd24f1207e"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="deglxen002" uname="deglxen002" ha="active" in_ccm="true" crmd="online" join="member" expected="member" shutdown="0" crm-debug-origin="do_state_transition">
+      <transient_attributes id="deglxen002">
+        <instance_attributes id="status-deglxen002">
+          <nvpair id="status-deglxen002-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-deglxen002-ping-hosts" name="ping-hosts" value="4000"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="deglxen002">
+        <lrm_resources>
+          <lrm_resource id="nfs-xen_swapfiles:0" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="nfs-xen_swapfiles:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="21:358:7:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:7;21:358:7:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="8" rc-code="7" op-status="0" interval="0" last-run="1305882398" last-rc-change="1305882398" exec-time="110" queue-time="0" op-digest="f0c3bc486ee7c8f03d78cdd7c8d36a10"/>
+          </lrm_resource>
+          <lrm_resource id="nfs-xen_swapfiles:1" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="nfs-xen_swapfiles:1_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="32:387:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;32:387:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="66" rc-code="0" op-status="0" interval="0" last-run="1305886068" last-rc-change="1305886068" exec-time="300" queue-time="0" op-digest="f0c3bc486ee7c8f03d78cdd7c8d36a10"/>
+            <lrm_rsc_op id="nfs-xen_swapfiles:1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="31:390:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;31:390:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="73" rc-code="0" op-status="0" interval="0" last-run="1305886867" last-rc-change="1305886867" exec-time="180" queue-time="0" op-digest="f0c3bc486ee7c8f03d78cdd7c8d36a10"/>
+            <lrm_rsc_op id="nfs-xen_swapfiles:1_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="32:390:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;32:390:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="74" rc-code="0" op-status="0" interval="60000" last-rc-change="1305886867" exec-time="120" queue-time="0" op-digest="df588422a1a3a55ed2483585f9aeb739"/>
+          </lrm_resource>
+          <lrm_resource id="prim-ping:0" type="ping" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prim-ping:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="23:358:7:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:7;23:358:7:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1305882398" last-rc-change="1305882398" exec-time="70" queue-time="0" op-digest="590725aa98fb269e16ca29b728451083"/>
+            <lrm_rsc_op id="prim-ping:0_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="42:387:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;42:387:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="68" rc-code="0" op-status="0" interval="0" last-run="1305886069" last-rc-change="1305886069" exec-time="60" queue-time="0" op-digest="590725aa98fb269e16ca29b728451083"/>
+            <lrm_rsc_op id="prim-ping:0_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="34:389:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;34:389:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="69" rc-code="0" op-status="0" interval="0" last-run="1305886850" last-rc-change="1305886850" exec-time="8090" queue-time="0" op-digest="590725aa98fb269e16ca29b728451083"/>
+            <lrm_rsc_op id="prim-ping:0_monitor_30000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="35:389:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;35:389:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="70" rc-code="0" op-status="0" interval="30000" last-rc-change="1305886858" exec-time="8080" queue-time="0" op-digest="b0e3b9b18ba7a61a3ae193488c2a13ce"/>
+          </lrm_resource>
+          <lrm_resource id="degllx64-vm" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="degllx64-vm_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="18:358:7:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:7;18:358:7:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1305882398" last-rc-change="1305882398" exec-time="510" queue-time="10" op-digest="d3c2033495bb73b4b516a04d513e98b2"/>
+          </lrm_resource>
+          <lrm_resource id="degllx63-vm" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="degllx63-vm_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="16:358:7:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:7;16:358:7:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="3" rc-code="7" op-status="0" interval="0" last-run="1305882397" last-rc-change="1305882397" exec-time="530" queue-time="0" op-digest="7d725156f1f09e73446bcbade741a4c7"/>
+          </lrm_resource>
+          <lrm_resource id="degllx62-vm" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="degllx62-vm_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="15:358:7:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:7;15:358:7:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1305882396" last-rc-change="1305882396" exec-time="720" queue-time="0" op-digest="1cb2cc15fa4367ac474aa6abda635473"/>
+            <lrm_rsc_op id="degllx62-vm_migrate_to_0" operation="migrate_to" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="55:377:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;55:377:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="40" rc-code="0" op-status="0" interval="0" last-run="1305885939" last-rc-change="1305885939" exec-time="5500" queue-time="0" migrate_source="deglxen002" migrate_target="deglxen001" op-digest="1cb2cc15fa4367ac474aa6abda635473"/>
+            <lrm_rsc_op id="degllx62-vm_migrate_from_0" operation="migrate_from" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="58:381:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;58:381:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="56" rc-code="0" op-status="0" interval="0" last-run="1305886004" last-rc-change="1305886004" exec-time="640" queue-time="0" migrate_source="deglxen001" migrate_target="deglxen002" op-digest="1cb2cc15fa4367ac474aa6abda635473"/>
+            <lrm_rsc_op id="degllx62-vm_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="15:387:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;15:387:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="64" rc-code="0" op-status="0" interval="0" last-run="1305886044" last-rc-change="1305886044" exec-time="9570" queue-time="0" op-digest="1cb2cc15fa4367ac474aa6abda635473"/>
+            <lrm_rsc_op id="degllx62-vm_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="16:392:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;16:392:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="79" rc-code="0" op-status="0" interval="0" last-run="1305886904" last-rc-change="1305886904" exec-time="4550" queue-time="0" op-digest="1cb2cc15fa4367ac474aa6abda635473"/>
+            <lrm_rsc_op id="degllx62-vm_monitor_30000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="18:393:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;18:393:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="80" rc-code="0" op-status="0" interval="30000" last-rc-change="1305886909" exec-time="410" queue-time="0" op-digest="b5feca90150cc3d4d13f90f4e42b3f10"/>
+          </lrm_resource>
+          <lrm_resource id="nfs-xen_config:0" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="nfs-xen_config:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="20:358:7:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:7;20:358:7:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="7" rc-code="7" op-status="0" interval="0" last-run="1305882398" last-rc-change="1305882398" exec-time="150" queue-time="0" op-digest="a3faaed4e15aa99b6b32c6c69e18a8f7"/>
+          </lrm_resource>
+          <lrm_resource id="degllx61-vm" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="degllx61-vm_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="17:358:7:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:7;17:358:7:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="4" rc-code="7" op-status="0" interval="0" last-run="1305882397" last-rc-change="1305882397" exec-time="460" queue-time="0" op-digest="28f427cb4ac2c9c95fcc329da6972511"/>
+            <lrm_rsc_op id="degllx61-vm_migrate_to_0" operation="migrate_to" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="58:383:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;58:383:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="60" rc-code="0" op-status="0" interval="0" last-run="1305886011" last-rc-change="1305886011" exec-time="5930" queue-time="0" migrate_source="deglxen002" migrate_target="deglxen001" op-digest="28f427cb4ac2c9c95fcc329da6972511"/>
+            <lrm_rsc_op id="degllx61-vm_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="15:390:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;15:390:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="77" rc-code="0" op-status="0" interval="0" last-run="1305886868" last-rc-change="1305886868" exec-time="4710" queue-time="0" op-digest="28f427cb4ac2c9c95fcc329da6972511"/>
+            <lrm_rsc_op id="degllx61-vm_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="19:393:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;19:393:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="81" rc-code="0" op-status="0" interval="0" last-run="1305886909" last-rc-change="1305886909" exec-time="9550" queue-time="0" op-digest="28f427cb4ac2c9c95fcc329da6972511"/>
+          </lrm_resource>
+          <lrm_resource id="nfs-xen_config:1" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="nfs-xen_config:1_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="31:387:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;31:387:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="67" rc-code="0" op-status="0" interval="0" last-run="1305886069" last-rc-change="1305886069" exec-time="330" queue-time="0" op-digest="a3faaed4e15aa99b6b32c6c69e18a8f7"/>
+            <lrm_rsc_op id="nfs-xen_config:1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="29:390:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;29:390:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="71" rc-code="0" op-status="0" interval="0" last-run="1305886866" last-rc-change="1305886866" exec-time="190" queue-time="0" op-digest="a3faaed4e15aa99b6b32c6c69e18a8f7"/>
+            <lrm_rsc_op id="nfs-xen_config:1_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="30:390:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;30:390:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="72" rc-code="0" op-status="0" interval="60000" last-rc-change="1305886867" exec-time="110" queue-time="0" op-digest="5055675078cf39593d6cdec9f2d50a31"/>
+          </lrm_resource>
+          <lrm_resource id="stonith_sbd" type="external/sbd" class="stonith">
+            <lrm_rsc_op id="stonith_sbd_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="19:358:7:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:7;19:358:7:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="6" rc-code="7" op-status="0" interval="0" last-run="1305882398" last-rc-change="1305882398" exec-time="50" queue-time="0" op-digest="023c8f107f1beca7df1e08efe592cdd8"/>
+          </lrm_resource>
+          <lrm_resource id="nfs-xen_images:0" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="nfs-xen_images:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="22:358:7:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:7;22:358:7:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1305882398" last-rc-change="1305882398" exec-time="120" queue-time="0" op-digest="58e321f925dcfe53a9955ccad934f90d"/>
+          </lrm_resource>
+          <lrm_resource id="nfs-xen_images:1" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="nfs-xen_images:1_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="33:387:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;33:387:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="65" rc-code="0" op-status="0" interval="0" last-run="1305886068" last-rc-change="1305886068" exec-time="350" queue-time="0" op-digest="58e321f925dcfe53a9955ccad934f90d"/>
+            <lrm_rsc_op id="nfs-xen_images:1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="33:390:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;33:390:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="75" rc-code="0" op-status="0" interval="0" last-run="1305886867" last-rc-change="1305886867" exec-time="190" queue-time="0" op-digest="58e321f925dcfe53a9955ccad934f90d"/>
+            <lrm_rsc_op id="nfs-xen_images:1_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.5" transition-key="34:390:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" transition-magic="0:0;34:390:0:522a7a4e-6d92-4c40-8ad1-0e5e7f749536" call-id="76" rc-code="0" op-status="0" interval="60000" last-rc-change="1305886867" exec-time="120" queue-time="0" op-digest="cabfa468bb5b093f70da41fd24f1207e"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

@@ -20,26 +20,8 @@
 
 extern void crmd_ha_msg_filter(xmlNode * msg);
 
-/*
- * Apparently returning TRUE means "stay connected, keep doing stuff".
- * Returning FALSE means "we're all done, close the connection"
- */
-
-extern void crmd_ipc_connection_destroy(gpointer user_data);
-
-extern void crmd_ha_status_callback(const char *node, const char *status, void *private_data);
-
-extern void crmd_client_status_callback(const char *node, const char *client, const char *status,
-                                        void *private);
-
-extern void msg_ccm_join(const xmlNode * msg, void *foo);
-
 extern void crmd_cib_connection_destroy(gpointer user_data);
 
 extern gboolean crm_fsa_trigger(gpointer user_data);
 
 extern void peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *data);
-
-#if SUPPORT_HEARTBEAT
-void crmd_ha_msg_callback(HA_Message * hamsg, void *private_data);
-#endif

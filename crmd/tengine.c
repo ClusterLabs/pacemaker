@@ -30,7 +30,6 @@
 
 
 extern crm_graph_functions_t te_graph_fns;
-struct crm_subsystem_s *te_subsystem = NULL;
 stonith_t *stonith_api = NULL;
 
 static void
@@ -69,19 +68,19 @@ do_te_control(long long action,
                                                     te_update_diff);
         }
 
-        clear_bit(fsa_input_register, te_subsystem->flag_connected);
+        clear_bit(fsa_input_register, R_TE_CONNECTED);
         crm_info("Transitioner is now inactive");
     }
 
     if ((action & A_TE_START) == 0) {
         return;
 
-    } else if (is_set(fsa_input_register, te_subsystem->flag_connected)) {
+    } else if (is_set(fsa_input_register, R_TE_CONNECTED)) {
         crm_debug("The transitioner is already active");
         return;
 
     } else if ((action & A_TE_START) && cur_state == S_STOPPING) {
-        crm_info("Ignoring request to start %s while shutting down", te_subsystem->name);
+        crm_info("Ignoring request to start the transitioner while shutting down");
         return;
     }
 
@@ -119,7 +118,7 @@ do_te_control(long long action,
         /* create a blank one */
         crm_debug("Transitioner is now active");
         transition_graph = create_blank_graph();
-        set_bit(fsa_input_register, te_subsystem->flag_connected);
+        set_bit(fsa_input_register, R_TE_CONNECTED);
     }
 }
 
@@ -213,7 +212,7 @@ do_te_invoke(long long action,
         }
 
         trigger_graph();
-        print_graph(LOG_DEBUG_2, transition_graph);
+        print_graph(LOG_TRACE, transition_graph);
 
         if (graph_data != input->xml) {
             free_xml(graph_data);

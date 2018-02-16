@@ -1,0 +1,2197 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
+  <synapse id="0" priority="1000000">
+    <action_set>
+      <rsc_op id="179" operation="notify" operation_key="storage:0_post_notify_start_0" on_node="metal-1" on_node_uuid="1">
+        <primitive id="storage" long-id="storage:0" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="galera-bundle-0 galera-bundle-1 galera-bundle-2 metal-1 metal-2 metal-3 rabbitmq-bundle-0 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_available_uname="metal-2 metal-3 rabbitmq-bundle-0 metal-1" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="storage:0 storage:1 storage:2 storage:3" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="storage:0 storage:1 storage:2" CRM_meta_notify_start_uname="metal-1 metal-2 metal-3" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_on_node="metal-1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000"  device="nfs:/share/drbd_www/data/" directory="/data/www" fstype="nfs"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="60" operation="notify" operation_key="storage-clone_post_notify_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <rsc_op id="51" operation="monitor" operation_key="storage:0_monitor_30000" on_node="metal-1" on_node_uuid="1">
+        <primitive id="storage" long-id="storage:0" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="metal-1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="30000"  device="nfs:/share/drbd_www/data/" directory="/data/www" fstype="nfs"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="50" operation="start" operation_key="storage:0_start_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="61" operation="notified" operation_key="storage-clone_confirmed-post_notify_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <rsc_op id="50" operation="start" operation_key="storage:0_start_0" on_node="metal-1" on_node_uuid="1">
+        <primitive id="storage" long-id="storage:0" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="galera-bundle-0 galera-bundle-1 galera-bundle-2 metal-1 metal-2 metal-3 rabbitmq-bundle-0 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_available_uname="metal-2 metal-3 rabbitmq-bundle-0 metal-1" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="storage:0 storage:1 storage:2 storage:3" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="storage:0 storage:1 storage:2" CRM_meta_notify_start_uname="metal-1 metal-2 metal-3" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_on_node="metal-1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000"  device="nfs:/share/drbd_www/data/" directory="/data/www" fstype="nfs"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="56" operation="start" operation_key="storage-clone_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <rsc_op id="2" operation="monitor" operation_key="storage:0_monitor_0" on_node="metal-1" on_node_uuid="1">
+        <primitive id="storage" long-id="storage:0" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_on_node="metal-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000"  device="nfs:/share/drbd_www/data/" directory="/data/www" fstype="nfs"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="4" priority="1000000">
+    <action_set>
+      <rsc_op id="180" operation="notify" operation_key="storage:1_post_notify_start_0" on_node="metal-2" on_node_uuid="2">
+        <primitive id="storage" long-id="storage:1" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="galera-bundle-0 galera-bundle-1 galera-bundle-2 metal-1 metal-2 metal-3 rabbitmq-bundle-0 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_available_uname="metal-2 metal-3 rabbitmq-bundle-0 metal-1" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="storage:0 storage:1 storage:2 storage:3" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="storage:0 storage:1 storage:2" CRM_meta_notify_start_uname="metal-1 metal-2 metal-3" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_on_node="metal-2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000"  device="nfs:/share/drbd_www/data/" directory="/data/www" fstype="nfs"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="60" operation="notify" operation_key="storage-clone_post_notify_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="5">
+    <action_set>
+      <rsc_op id="53" operation="monitor" operation_key="storage:1_monitor_30000" on_node="metal-2" on_node_uuid="2">
+        <primitive id="storage" long-id="storage:1" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="metal-2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="30000"  device="nfs:/share/drbd_www/data/" directory="/data/www" fstype="nfs"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="52" operation="start" operation_key="storage:1_start_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="61" operation="notified" operation_key="storage-clone_confirmed-post_notify_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="6">
+    <action_set>
+      <rsc_op id="52" operation="start" operation_key="storage:1_start_0" on_node="metal-2" on_node_uuid="2">
+        <primitive id="storage" long-id="storage:1" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="galera-bundle-0 galera-bundle-1 galera-bundle-2 metal-1 metal-2 metal-3 rabbitmq-bundle-0 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_available_uname="metal-2 metal-3 rabbitmq-bundle-0 metal-1" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="storage:0 storage:1 storage:2 storage:3" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="storage:0 storage:1 storage:2" CRM_meta_notify_start_uname="metal-1 metal-2 metal-3" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_on_node="metal-2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000"  device="nfs:/share/drbd_www/data/" directory="/data/www" fstype="nfs"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="56" operation="start" operation_key="storage-clone_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="7">
+    <action_set>
+      <rsc_op id="18" operation="monitor" operation_key="storage:1_monitor_0" on_node="metal-2" on_node_uuid="2">
+        <primitive id="storage" long-id="storage:1" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_on_node="metal-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000"  device="nfs:/share/drbd_www/data/" directory="/data/www" fstype="nfs"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="8" priority="1000000">
+    <action_set>
+      <rsc_op id="181" operation="notify" operation_key="storage:2_post_notify_start_0" on_node="metal-3" on_node_uuid="3">
+        <primitive id="storage" long-id="storage:2" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="galera-bundle-0 galera-bundle-1 galera-bundle-2 metal-1 metal-2 metal-3 rabbitmq-bundle-0 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_available_uname="metal-2 metal-3 rabbitmq-bundle-0 metal-1" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="storage:0 storage:1 storage:2 storage:3" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="storage:0 storage:1 storage:2" CRM_meta_notify_start_uname="metal-1 metal-2 metal-3" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_on_node="metal-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000"  device="nfs:/share/drbd_www/data/" directory="/data/www" fstype="nfs"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="60" operation="notify" operation_key="storage-clone_post_notify_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="9">
+    <action_set>
+      <rsc_op id="55" operation="monitor" operation_key="storage:2_monitor_30000" on_node="metal-3" on_node_uuid="3">
+        <primitive id="storage" long-id="storage:2" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="metal-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="30000"  device="nfs:/share/drbd_www/data/" directory="/data/www" fstype="nfs"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="54" operation="start" operation_key="storage:2_start_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="61" operation="notified" operation_key="storage-clone_confirmed-post_notify_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="10">
+    <action_set>
+      <rsc_op id="54" operation="start" operation_key="storage:2_start_0" on_node="metal-3" on_node_uuid="3">
+        <primitive id="storage" long-id="storage:2" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="galera-bundle-0 galera-bundle-1 galera-bundle-2 metal-1 metal-2 metal-3 rabbitmq-bundle-0 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_available_uname="metal-2 metal-3 rabbitmq-bundle-0 metal-1" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="storage:0 storage:1 storage:2 storage:3" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="storage:0 storage:1 storage:2" CRM_meta_notify_start_uname="metal-1 metal-2 metal-3" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_on_node="metal-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000"  device="nfs:/share/drbd_www/data/" directory="/data/www" fstype="nfs"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="56" operation="start" operation_key="storage-clone_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="11">
+    <action_set>
+      <rsc_op id="34" operation="monitor" operation_key="storage:2_monitor_0" on_node="metal-3" on_node_uuid="3">
+        <primitive id="storage" long-id="storage:2" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_on_node="metal-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000"  device="nfs:/share/drbd_www/data/" directory="/data/www" fstype="nfs"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="12" priority="1000000">
+    <action_set>
+      <pseudo_event id="61" operation="notified" operation_key="storage-clone_confirmed-post_notify_running_0">
+        <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="60" operation="notify" operation_key="storage-clone_post_notify_running_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="179" operation="notify" operation_key="storage:0_post_notify_start_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="180" operation="notify" operation_key="storage:1_post_notify_start_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="181" operation="notify" operation_key="storage:2_post_notify_start_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="13" priority="1000000">
+    <action_set>
+      <pseudo_event id="60" operation="notify" operation_key="storage-clone_post_notify_running_0">
+        <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="57" operation="running" operation_key="storage-clone_running_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="59" operation="notified" operation_key="storage-clone_confirmed-pre_notify_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="14">
+    <action_set>
+      <pseudo_event id="59" operation="notified" operation_key="storage-clone_confirmed-pre_notify_start_0">
+        <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="58" operation="notify" operation_key="storage-clone_pre_notify_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="15">
+    <action_set>
+      <pseudo_event id="58" operation="notify" operation_key="storage-clone_pre_notify_start_0">
+        <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="16" priority="1000000">
+    <action_set>
+      <pseudo_event id="57" operation="running" operation_key="storage-clone_running_0">
+        <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="50" operation="start" operation_key="storage:0_start_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="52" operation="start" operation_key="storage:1_start_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="54" operation="start" operation_key="storage:2_start_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="56" operation="start" operation_key="storage-clone_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="17">
+    <action_set>
+      <pseudo_event id="56" operation="start" operation_key="storage-clone_start_0">
+        <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="2" operation="monitor" operation_key="storage:0_monitor_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="18" operation="monitor" operation_key="storage:1_monitor_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="34" operation="monitor" operation_key="storage:2_monitor_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="59" operation="notified" operation_key="storage-clone_confirmed-pre_notify_start_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="112" operation="running" operation_key="haproxy-bundle_running_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="165" operation="promoted" operation_key="redis-bundle_promoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="18">
+    <action_set>
+      <rsc_op id="86" operation="monitor" operation_key="galera:0_monitor_30000" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="metal-1">
+        <primitive id="galera" long-id="galera:0" class="ocf" provider="heartbeat" type="galera"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="galera-bundle-0" CRM_meta_on_node_uuid="galera-bundle-0" CRM_meta_physical_host="metal-1" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_role="Slave" CRM_meta_timeout="30000" additional_parameters="--open-files-limit=16384" cluster_host_map="galera-bundle-0:metal"  enable_creation="true" wsrep_cluster_address="gcomm://metal"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="70" operation="start" operation_key="galera-bundle-0_start_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="84" operation="start" operation_key="galera:0_start_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="metal-1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="19">
+    <action_set>
+      <rsc_op id="85" operation="monitor" operation_key="galera:0_monitor_20000" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="metal-1">
+        <primitive id="galera" long-id="galera:0" class="ocf" provider="heartbeat" type="galera"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="20000" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="galera-bundle-0" CRM_meta_on_node_uuid="galera-bundle-0" CRM_meta_physical_host="metal-1" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="30000" additional_parameters="--open-files-limit=16384" cluster_host_map="galera-bundle-0:metal"  enable_creation="true" wsrep_cluster_address="gcomm://metal"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="70" operation="start" operation_key="galera-bundle-0_start_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="84" operation="start" operation_key="galera:0_start_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="metal-1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="20">
+    <action_set>
+      <rsc_op id="84" operation="start" operation_key="galera:0_start_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="metal-1">
+        <primitive id="galera" long-id="galera:0" class="ocf" provider="heartbeat" type="galera"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="galera-bundle-0" CRM_meta_on_node_uuid="galera-bundle-0" CRM_meta_physical_host="metal-1" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" additional_parameters="--open-files-limit=16384" cluster_host_map="galera-bundle-0:metal"  enable_creation="true" wsrep_cluster_address="gcomm://metal"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="68" operation="start" operation_key="galera-bundle-docker-0_start_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="70" operation="start" operation_key="galera-bundle-0_start_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="93" operation="start" operation_key="galera-bundle-master_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="21">
+    <action_set>
+      <rsc_op id="89" operation="monitor" operation_key="galera:1_monitor_30000" on_node="galera-bundle-1" on_node_uuid="galera-bundle-1" router_node="metal-2">
+        <primitive id="galera" long-id="galera:1" class="ocf" provider="heartbeat" type="galera"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="galera-bundle-1" CRM_meta_on_node_uuid="galera-bundle-1" CRM_meta_physical_host="metal-2" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_role="Slave" CRM_meta_timeout="30000" additional_parameters="--open-files-limit=16384" cluster_host_map="galera-bundle-0:metal"  enable_creation="true" wsrep_cluster_address="gcomm://metal"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="74" operation="start" operation_key="galera-bundle-1_start_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="87" operation="start" operation_key="galera:1_start_0" on_node="galera-bundle-1" on_node_uuid="galera-bundle-1" router_node="metal-2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="22">
+    <action_set>
+      <rsc_op id="88" operation="monitor" operation_key="galera:1_monitor_20000" on_node="galera-bundle-1" on_node_uuid="galera-bundle-1" router_node="metal-2">
+        <primitive id="galera" long-id="galera:1" class="ocf" provider="heartbeat" type="galera"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="20000" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="galera-bundle-1" CRM_meta_on_node_uuid="galera-bundle-1" CRM_meta_physical_host="metal-2" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="30000" additional_parameters="--open-files-limit=16384" cluster_host_map="galera-bundle-0:metal"  enable_creation="true" wsrep_cluster_address="gcomm://metal"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="74" operation="start" operation_key="galera-bundle-1_start_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="87" operation="start" operation_key="galera:1_start_0" on_node="galera-bundle-1" on_node_uuid="galera-bundle-1" router_node="metal-2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="23">
+    <action_set>
+      <rsc_op id="87" operation="start" operation_key="galera:1_start_0" on_node="galera-bundle-1" on_node_uuid="galera-bundle-1" router_node="metal-2">
+        <primitive id="galera" long-id="galera:1" class="ocf" provider="heartbeat" type="galera"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="galera-bundle-1" CRM_meta_on_node_uuid="galera-bundle-1" CRM_meta_physical_host="metal-2" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" additional_parameters="--open-files-limit=16384" cluster_host_map="galera-bundle-0:metal"  enable_creation="true" wsrep_cluster_address="gcomm://metal"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="72" operation="start" operation_key="galera-bundle-docker-1_start_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="74" operation="start" operation_key="galera-bundle-1_start_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="84" operation="start" operation_key="galera:0_start_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="metal-1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="93" operation="start" operation_key="galera-bundle-master_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="24">
+    <action_set>
+      <rsc_op id="92" operation="monitor" operation_key="galera:2_monitor_30000" on_node="galera-bundle-2" on_node_uuid="galera-bundle-2" router_node="metal-3">
+        <primitive id="galera" long-id="galera:2" class="ocf" provider="heartbeat" type="galera"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="30000" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="galera-bundle-2" CRM_meta_on_node_uuid="galera-bundle-2" CRM_meta_physical_host="metal-3" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_role="Slave" CRM_meta_timeout="30000" additional_parameters="--open-files-limit=16384" cluster_host_map="galera-bundle-0:metal"  enable_creation="true" wsrep_cluster_address="gcomm://metal"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="78" operation="start" operation_key="galera-bundle-2_start_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="90" operation="start" operation_key="galera:2_start_0" on_node="galera-bundle-2" on_node_uuid="galera-bundle-2" router_node="metal-3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="25">
+    <action_set>
+      <rsc_op id="91" operation="monitor" operation_key="galera:2_monitor_20000" on_node="galera-bundle-2" on_node_uuid="galera-bundle-2" router_node="metal-3">
+        <primitive id="galera" long-id="galera:2" class="ocf" provider="heartbeat" type="galera"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="20000" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="galera-bundle-2" CRM_meta_on_node_uuid="galera-bundle-2" CRM_meta_physical_host="metal-3" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="30000" additional_parameters="--open-files-limit=16384" cluster_host_map="galera-bundle-0:metal"  enable_creation="true" wsrep_cluster_address="gcomm://metal"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="78" operation="start" operation_key="galera-bundle-2_start_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="90" operation="start" operation_key="galera:2_start_0" on_node="galera-bundle-2" on_node_uuid="galera-bundle-2" router_node="metal-3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="26">
+    <action_set>
+      <rsc_op id="90" operation="start" operation_key="galera:2_start_0" on_node="galera-bundle-2" on_node_uuid="galera-bundle-2" router_node="metal-3">
+        <primitive id="galera" long-id="galera:2" class="ocf" provider="heartbeat" type="galera"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="galera-bundle-2" CRM_meta_on_node_uuid="galera-bundle-2" CRM_meta_physical_host="metal-3" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000" additional_parameters="--open-files-limit=16384" cluster_host_map="galera-bundle-0:metal"  enable_creation="true" wsrep_cluster_address="gcomm://metal"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="76" operation="start" operation_key="galera-bundle-docker-2_start_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="78" operation="start" operation_key="galera-bundle-2_start_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="87" operation="start" operation_key="galera:1_start_0" on_node="galera-bundle-1" on_node_uuid="galera-bundle-1" router_node="metal-2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="93" operation="start" operation_key="galera-bundle-master_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="27" priority="1000000">
+    <action_set>
+      <pseudo_event id="94" operation="running" operation_key="galera-bundle-master_running_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="84" operation="start" operation_key="galera:0_start_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="metal-1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="87" operation="start" operation_key="galera:1_start_0" on_node="galera-bundle-1" on_node_uuid="galera-bundle-1" router_node="metal-2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="90" operation="start" operation_key="galera:2_start_0" on_node="galera-bundle-2" on_node_uuid="galera-bundle-2" router_node="metal-3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="93" operation="start" operation_key="galera-bundle-master_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="28">
+    <action_set>
+      <pseudo_event id="93" operation="start" operation_key="galera-bundle-master_start_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="3" operation="monitor" operation_key="galera-bundle-docker-0_monitor_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="5" operation="monitor" operation_key="galera-bundle-docker-1_monitor_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="7" operation="monitor" operation_key="galera-bundle-docker-2_monitor_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="19" operation="monitor" operation_key="galera-bundle-docker-0_monitor_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="21" operation="monitor" operation_key="galera-bundle-docker-1_monitor_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="23" operation="monitor" operation_key="galera-bundle-docker-2_monitor_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="35" operation="monitor" operation_key="galera-bundle-docker-0_monitor_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="37" operation="monitor" operation_key="galera-bundle-docker-1_monitor_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="39" operation="monitor" operation_key="galera-bundle-docker-2_monitor_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="80" operation="start" operation_key="galera-bundle_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="29">
+    <action_set>
+      <rsc_op id="69" operation="monitor" operation_key="galera-bundle-docker-0_monitor_60000" on_node="metal-1" on_node_uuid="1">
+        <primitive id="galera-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="metal-1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/galera-bundle-0" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3123 -v /var/lib/kolla/config_files/mysql.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/mysql:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/mysql:/var/lib/mysql:rw -v /var/log/mariadb:/var/log/mariadb:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/galera-bundle-0:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="68" operation="start" operation_key="galera-bundle-docker-0_start_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="30">
+    <action_set>
+      <rsc_op id="68" operation="start" operation_key="galera-bundle-docker-0_start_0" on_node="metal-1" on_node_uuid="1">
+        <primitive id="galera-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="metal-1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/galera-bundle-0" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3123 -v /var/lib/kolla/config_files/mysql.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/mysql:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/mysql:/var/lib/mysql:rw -v /var/log/mariadb:/var/log/mariadb:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/galera-bundle-0:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="3" operation="monitor" operation_key="galera-bundle-docker-0_monitor_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="5" operation="monitor" operation_key="galera-bundle-docker-1_monitor_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="7" operation="monitor" operation_key="galera-bundle-docker-2_monitor_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="19" operation="monitor" operation_key="galera-bundle-docker-0_monitor_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="35" operation="monitor" operation_key="galera-bundle-docker-0_monitor_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="80" operation="start" operation_key="galera-bundle_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="31">
+    <action_set>
+      <rsc_op id="35" operation="monitor" operation_key="galera-bundle-docker-0_monitor_0" on_node="metal-3" on_node_uuid="3">
+        <primitive id="galera-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="metal-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/galera-bundle-0" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3123 -v /var/lib/kolla/config_files/mysql.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/mysql:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/mysql:/var/lib/mysql:rw -v /var/log/mariadb:/var/log/mariadb:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/galera-bundle-0:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="32">
+    <action_set>
+      <rsc_op id="19" operation="monitor" operation_key="galera-bundle-docker-0_monitor_0" on_node="metal-2" on_node_uuid="2">
+        <primitive id="galera-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="metal-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/galera-bundle-0" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3123 -v /var/lib/kolla/config_files/mysql.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/mysql:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/mysql:/var/lib/mysql:rw -v /var/log/mariadb:/var/log/mariadb:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/galera-bundle-0:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="33">
+    <action_set>
+      <rsc_op id="3" operation="monitor" operation_key="galera-bundle-docker-0_monitor_0" on_node="metal-1" on_node_uuid="1">
+        <primitive id="galera-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="metal-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/galera-bundle-0" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3123 -v /var/lib/kolla/config_files/mysql.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/mysql:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/mysql:/var/lib/mysql:rw -v /var/log/mariadb:/var/log/mariadb:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/galera-bundle-0:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="34">
+    <action_set>
+      <rsc_op id="71" operation="monitor" operation_key="galera-bundle-0_monitor_30000" on_node="metal-1" on_node_uuid="1">
+        <primitive id="galera-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="galera-bundle-docker-0" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="metal-1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="30000" addr="metal-1"  port="3123"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="70" operation="start" operation_key="galera-bundle-0_start_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="35">
+    <action_set>
+      <rsc_op id="70" operation="start" operation_key="galera-bundle-0_start_0" on_node="metal-1" on_node_uuid="1">
+        <primitive id="galera-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="galera-bundle-docker-0" CRM_meta_on_node="metal-1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" addr="metal-1"  port="3123"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="4" operation="monitor" operation_key="galera-bundle-0_monitor_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="20" operation="monitor" operation_key="galera-bundle-0_monitor_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="36" operation="monitor" operation_key="galera-bundle-0_monitor_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="68" operation="start" operation_key="galera-bundle-docker-0_start_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="36">
+    <action_set>
+      <rsc_op id="36" operation="monitor" operation_key="galera-bundle-0_monitor_0" on_node="metal-3" on_node_uuid="3">
+        <primitive id="galera-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="galera-bundle-docker-0" CRM_meta_on_node="metal-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="metal-1"  port="3123"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="68" operation="start" operation_key="galera-bundle-docker-0_start_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="37">
+    <action_set>
+      <rsc_op id="20" operation="monitor" operation_key="galera-bundle-0_monitor_0" on_node="metal-2" on_node_uuid="2">
+        <primitive id="galera-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="galera-bundle-docker-0" CRM_meta_on_node="metal-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="metal-1"  port="3123"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="68" operation="start" operation_key="galera-bundle-docker-0_start_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="38">
+    <action_set>
+      <rsc_op id="4" operation="monitor" operation_key="galera-bundle-0_monitor_0" on_node="metal-1" on_node_uuid="1">
+        <primitive id="galera-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="galera-bundle-docker-0" CRM_meta_on_node="metal-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="metal-1"  port="3123"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="68" operation="start" operation_key="galera-bundle-docker-0_start_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="39">
+    <action_set>
+      <rsc_op id="73" operation="monitor" operation_key="galera-bundle-docker-1_monitor_60000" on_node="metal-2" on_node_uuid="2">
+        <primitive id="galera-bundle-docker-1" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="metal-2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/galera-bundle-1" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3123 -v /var/lib/kolla/config_files/mysql.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/mysql:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/mysql:/var/lib/mysql:rw -v /var/log/mariadb:/var/log/mariadb:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/galera-bundle-1:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="72" operation="start" operation_key="galera-bundle-docker-1_start_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="40">
+    <action_set>
+      <rsc_op id="72" operation="start" operation_key="galera-bundle-docker-1_start_0" on_node="metal-2" on_node_uuid="2">
+        <primitive id="galera-bundle-docker-1" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="metal-2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/galera-bundle-1" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3123 -v /var/lib/kolla/config_files/mysql.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/mysql:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/mysql:/var/lib/mysql:rw -v /var/log/mariadb:/var/log/mariadb:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/galera-bundle-1:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="5" operation="monitor" operation_key="galera-bundle-docker-1_monitor_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="19" operation="monitor" operation_key="galera-bundle-docker-0_monitor_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="21" operation="monitor" operation_key="galera-bundle-docker-1_monitor_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="23" operation="monitor" operation_key="galera-bundle-docker-2_monitor_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="37" operation="monitor" operation_key="galera-bundle-docker-1_monitor_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="80" operation="start" operation_key="galera-bundle_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="41">
+    <action_set>
+      <rsc_op id="37" operation="monitor" operation_key="galera-bundle-docker-1_monitor_0" on_node="metal-3" on_node_uuid="3">
+        <primitive id="galera-bundle-docker-1" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="metal-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/galera-bundle-1" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3123 -v /var/lib/kolla/config_files/mysql.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/mysql:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/mysql:/var/lib/mysql:rw -v /var/log/mariadb:/var/log/mariadb:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/galera-bundle-1:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="42">
+    <action_set>
+      <rsc_op id="21" operation="monitor" operation_key="galera-bundle-docker-1_monitor_0" on_node="metal-2" on_node_uuid="2">
+        <primitive id="galera-bundle-docker-1" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="metal-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/galera-bundle-1" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3123 -v /var/lib/kolla/config_files/mysql.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/mysql:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/mysql:/var/lib/mysql:rw -v /var/log/mariadb:/var/log/mariadb:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/galera-bundle-1:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="43">
+    <action_set>
+      <rsc_op id="5" operation="monitor" operation_key="galera-bundle-docker-1_monitor_0" on_node="metal-1" on_node_uuid="1">
+        <primitive id="galera-bundle-docker-1" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="metal-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/galera-bundle-1" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3123 -v /var/lib/kolla/config_files/mysql.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/mysql:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/mysql:/var/lib/mysql:rw -v /var/log/mariadb:/var/log/mariadb:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/galera-bundle-1:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="44">
+    <action_set>
+      <rsc_op id="75" operation="monitor" operation_key="galera-bundle-1_monitor_30000" on_node="metal-2" on_node_uuid="2">
+        <primitive id="galera-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="galera-bundle-docker-1" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="metal-2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="30000" addr="metal-2"  port="3123"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="74" operation="start" operation_key="galera-bundle-1_start_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="45">
+    <action_set>
+      <rsc_op id="74" operation="start" operation_key="galera-bundle-1_start_0" on_node="metal-2" on_node_uuid="2">
+        <primitive id="galera-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="galera-bundle-docker-1" CRM_meta_on_node="metal-2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" addr="metal-2"  port="3123"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="6" operation="monitor" operation_key="galera-bundle-1_monitor_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="22" operation="monitor" operation_key="galera-bundle-1_monitor_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="38" operation="monitor" operation_key="galera-bundle-1_monitor_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="72" operation="start" operation_key="galera-bundle-docker-1_start_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="46">
+    <action_set>
+      <rsc_op id="38" operation="monitor" operation_key="galera-bundle-1_monitor_0" on_node="metal-3" on_node_uuid="3">
+        <primitive id="galera-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="galera-bundle-docker-1" CRM_meta_on_node="metal-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="metal-2"  port="3123"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="72" operation="start" operation_key="galera-bundle-docker-1_start_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="47">
+    <action_set>
+      <rsc_op id="22" operation="monitor" operation_key="galera-bundle-1_monitor_0" on_node="metal-2" on_node_uuid="2">
+        <primitive id="galera-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="galera-bundle-docker-1" CRM_meta_on_node="metal-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="metal-2"  port="3123"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="72" operation="start" operation_key="galera-bundle-docker-1_start_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="48">
+    <action_set>
+      <rsc_op id="6" operation="monitor" operation_key="galera-bundle-1_monitor_0" on_node="metal-1" on_node_uuid="1">
+        <primitive id="galera-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="galera-bundle-docker-1" CRM_meta_on_node="metal-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="metal-2"  port="3123"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="72" operation="start" operation_key="galera-bundle-docker-1_start_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="49">
+    <action_set>
+      <rsc_op id="77" operation="monitor" operation_key="galera-bundle-docker-2_monitor_60000" on_node="metal-3" on_node_uuid="3">
+        <primitive id="galera-bundle-docker-2" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="metal-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/galera-bundle-2" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3123 -v /var/lib/kolla/config_files/mysql.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/mysql:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/mysql:/var/lib/mysql:rw -v /var/log/mariadb:/var/log/mariadb:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/galera-bundle-2:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="76" operation="start" operation_key="galera-bundle-docker-2_start_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="50">
+    <action_set>
+      <rsc_op id="76" operation="start" operation_key="galera-bundle-docker-2_start_0" on_node="metal-3" on_node_uuid="3">
+        <primitive id="galera-bundle-docker-2" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="metal-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/galera-bundle-2" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3123 -v /var/lib/kolla/config_files/mysql.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/mysql:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/mysql:/var/lib/mysql:rw -v /var/log/mariadb:/var/log/mariadb:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/galera-bundle-2:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="7" operation="monitor" operation_key="galera-bundle-docker-2_monitor_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="23" operation="monitor" operation_key="galera-bundle-docker-2_monitor_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="35" operation="monitor" operation_key="galera-bundle-docker-0_monitor_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="37" operation="monitor" operation_key="galera-bundle-docker-1_monitor_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="39" operation="monitor" operation_key="galera-bundle-docker-2_monitor_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="80" operation="start" operation_key="galera-bundle_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="51">
+    <action_set>
+      <rsc_op id="39" operation="monitor" operation_key="galera-bundle-docker-2_monitor_0" on_node="metal-3" on_node_uuid="3">
+        <primitive id="galera-bundle-docker-2" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="metal-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/galera-bundle-2" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3123 -v /var/lib/kolla/config_files/mysql.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/mysql:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/mysql:/var/lib/mysql:rw -v /var/log/mariadb:/var/log/mariadb:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/galera-bundle-2:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="52">
+    <action_set>
+      <rsc_op id="23" operation="monitor" operation_key="galera-bundle-docker-2_monitor_0" on_node="metal-2" on_node_uuid="2">
+        <primitive id="galera-bundle-docker-2" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="metal-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/galera-bundle-2" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3123 -v /var/lib/kolla/config_files/mysql.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/mysql:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/mysql:/var/lib/mysql:rw -v /var/log/mariadb:/var/log/mariadb:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/galera-bundle-2:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="53">
+    <action_set>
+      <rsc_op id="7" operation="monitor" operation_key="galera-bundle-docker-2_monitor_0" on_node="metal-1" on_node_uuid="1">
+        <primitive id="galera-bundle-docker-2" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="metal-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/galera-bundle-2" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3123 -v /var/lib/kolla/config_files/mysql.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/mysql:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/mysql:/var/lib/mysql:rw -v /var/log/mariadb:/var/log/mariadb:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/galera-bundle-2:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="54">
+    <action_set>
+      <rsc_op id="79" operation="monitor" operation_key="galera-bundle-2_monitor_30000" on_node="metal-3" on_node_uuid="3">
+        <primitive id="galera-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="galera-bundle-docker-2" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="metal-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="30000" addr="metal-3"  port="3123"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="78" operation="start" operation_key="galera-bundle-2_start_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="55">
+    <action_set>
+      <rsc_op id="78" operation="start" operation_key="galera-bundle-2_start_0" on_node="metal-3" on_node_uuid="3">
+        <primitive id="galera-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="galera-bundle-docker-2" CRM_meta_on_node="metal-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" addr="metal-3"  port="3123"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="8" operation="monitor" operation_key="galera-bundle-2_monitor_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="24" operation="monitor" operation_key="galera-bundle-2_monitor_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="40" operation="monitor" operation_key="galera-bundle-2_monitor_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="76" operation="start" operation_key="galera-bundle-docker-2_start_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="56">
+    <action_set>
+      <rsc_op id="40" operation="monitor" operation_key="galera-bundle-2_monitor_0" on_node="metal-3" on_node_uuid="3">
+        <primitive id="galera-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="galera-bundle-docker-2" CRM_meta_on_node="metal-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="metal-3"  port="3123"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="76" operation="start" operation_key="galera-bundle-docker-2_start_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="57">
+    <action_set>
+      <rsc_op id="24" operation="monitor" operation_key="galera-bundle-2_monitor_0" on_node="metal-2" on_node_uuid="2">
+        <primitive id="galera-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="galera-bundle-docker-2" CRM_meta_on_node="metal-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="metal-3"  port="3123"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="76" operation="start" operation_key="galera-bundle-docker-2_start_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="58">
+    <action_set>
+      <rsc_op id="8" operation="monitor" operation_key="galera-bundle-2_monitor_0" on_node="metal-1" on_node_uuid="1">
+        <primitive id="galera-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="galera-bundle-docker-2" CRM_meta_on_node="metal-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="metal-3"  port="3123"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="76" operation="start" operation_key="galera-bundle-docker-2_start_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="59">
+    <action_set>
+      <rsc_op id="106" operation="monitor" operation_key="haproxy-bundle-docker-0_monitor_60000" on_node="metal-1" on_node_uuid="1">
+        <primitive id="haproxy-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="metal-1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest" monitor_cmd="/bin/true" mount_points="" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3121 -v /var/lib/kolla/config_files/haproxy.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/haproxy/etc:/etc:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="105" operation="start" operation_key="haproxy-bundle-docker-0_start_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="60">
+    <action_set>
+      <rsc_op id="105" operation="start" operation_key="haproxy-bundle-docker-0_start_0" on_node="metal-1" on_node_uuid="1">
+        <primitive id="haproxy-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="metal-1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest" monitor_cmd="/bin/true" mount_points="" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3121 -v /var/lib/kolla/config_files/haproxy.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/haproxy/etc:/etc:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="9" operation="monitor" operation_key="haproxy-bundle-docker-0_monitor_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="10" operation="monitor" operation_key="haproxy-bundle-docker-1_monitor_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="11" operation="monitor" operation_key="haproxy-bundle-docker-2_monitor_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="25" operation="monitor" operation_key="haproxy-bundle-docker-0_monitor_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="41" operation="monitor" operation_key="haproxy-bundle-docker-0_monitor_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="111" operation="start" operation_key="haproxy-bundle_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="61">
+    <action_set>
+      <rsc_op id="41" operation="monitor" operation_key="haproxy-bundle-docker-0_monitor_0" on_node="metal-3" on_node_uuid="3">
+        <primitive id="haproxy-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="metal-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest" monitor_cmd="/bin/true" mount_points="" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3121 -v /var/lib/kolla/config_files/haproxy.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/haproxy/etc:/etc:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="62">
+    <action_set>
+      <rsc_op id="25" operation="monitor" operation_key="haproxy-bundle-docker-0_monitor_0" on_node="metal-2" on_node_uuid="2">
+        <primitive id="haproxy-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="metal-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest" monitor_cmd="/bin/true" mount_points="" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3121 -v /var/lib/kolla/config_files/haproxy.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/haproxy/etc:/etc:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="63">
+    <action_set>
+      <rsc_op id="9" operation="monitor" operation_key="haproxy-bundle-docker-0_monitor_0" on_node="metal-1" on_node_uuid="1">
+        <primitive id="haproxy-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="metal-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest" monitor_cmd="/bin/true" mount_points="" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3121 -v /var/lib/kolla/config_files/haproxy.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/haproxy/etc:/etc:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="64">
+    <action_set>
+      <rsc_op id="108" operation="monitor" operation_key="haproxy-bundle-docker-1_monitor_60000" on_node="metal-2" on_node_uuid="2">
+        <primitive id="haproxy-bundle-docker-1" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="metal-2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest" monitor_cmd="/bin/true" mount_points="" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3121 -v /var/lib/kolla/config_files/haproxy.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/haproxy/etc:/etc:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="107" operation="start" operation_key="haproxy-bundle-docker-1_start_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="65">
+    <action_set>
+      <rsc_op id="107" operation="start" operation_key="haproxy-bundle-docker-1_start_0" on_node="metal-2" on_node_uuid="2">
+        <primitive id="haproxy-bundle-docker-1" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="metal-2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest" monitor_cmd="/bin/true" mount_points="" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3121 -v /var/lib/kolla/config_files/haproxy.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/haproxy/etc:/etc:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="10" operation="monitor" operation_key="haproxy-bundle-docker-1_monitor_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="25" operation="monitor" operation_key="haproxy-bundle-docker-0_monitor_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="26" operation="monitor" operation_key="haproxy-bundle-docker-1_monitor_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="27" operation="monitor" operation_key="haproxy-bundle-docker-2_monitor_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="42" operation="monitor" operation_key="haproxy-bundle-docker-1_monitor_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="111" operation="start" operation_key="haproxy-bundle_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="66">
+    <action_set>
+      <rsc_op id="42" operation="monitor" operation_key="haproxy-bundle-docker-1_monitor_0" on_node="metal-3" on_node_uuid="3">
+        <primitive id="haproxy-bundle-docker-1" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="metal-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest" monitor_cmd="/bin/true" mount_points="" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3121 -v /var/lib/kolla/config_files/haproxy.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/haproxy/etc:/etc:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="67">
+    <action_set>
+      <rsc_op id="26" operation="monitor" operation_key="haproxy-bundle-docker-1_monitor_0" on_node="metal-2" on_node_uuid="2">
+        <primitive id="haproxy-bundle-docker-1" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="metal-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest" monitor_cmd="/bin/true" mount_points="" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3121 -v /var/lib/kolla/config_files/haproxy.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/haproxy/etc:/etc:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="68">
+    <action_set>
+      <rsc_op id="10" operation="monitor" operation_key="haproxy-bundle-docker-1_monitor_0" on_node="metal-1" on_node_uuid="1">
+        <primitive id="haproxy-bundle-docker-1" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="metal-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest" monitor_cmd="/bin/true" mount_points="" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3121 -v /var/lib/kolla/config_files/haproxy.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/haproxy/etc:/etc:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="69">
+    <action_set>
+      <rsc_op id="110" operation="monitor" operation_key="haproxy-bundle-docker-2_monitor_60000" on_node="metal-3" on_node_uuid="3">
+        <primitive id="haproxy-bundle-docker-2" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="metal-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest" monitor_cmd="/bin/true" mount_points="" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3121 -v /var/lib/kolla/config_files/haproxy.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/haproxy/etc:/etc:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="109" operation="start" operation_key="haproxy-bundle-docker-2_start_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="70">
+    <action_set>
+      <rsc_op id="109" operation="start" operation_key="haproxy-bundle-docker-2_start_0" on_node="metal-3" on_node_uuid="3">
+        <primitive id="haproxy-bundle-docker-2" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="metal-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest" monitor_cmd="/bin/true" mount_points="" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3121 -v /var/lib/kolla/config_files/haproxy.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/haproxy/etc:/etc:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="11" operation="monitor" operation_key="haproxy-bundle-docker-2_monitor_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="27" operation="monitor" operation_key="haproxy-bundle-docker-2_monitor_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="41" operation="monitor" operation_key="haproxy-bundle-docker-0_monitor_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="42" operation="monitor" operation_key="haproxy-bundle-docker-1_monitor_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="43" operation="monitor" operation_key="haproxy-bundle-docker-2_monitor_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="111" operation="start" operation_key="haproxy-bundle_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="71">
+    <action_set>
+      <rsc_op id="43" operation="monitor" operation_key="haproxy-bundle-docker-2_monitor_0" on_node="metal-3" on_node_uuid="3">
+        <primitive id="haproxy-bundle-docker-2" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="metal-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest" monitor_cmd="/bin/true" mount_points="" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3121 -v /var/lib/kolla/config_files/haproxy.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/haproxy/etc:/etc:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="72">
+    <action_set>
+      <rsc_op id="27" operation="monitor" operation_key="haproxy-bundle-docker-2_monitor_0" on_node="metal-2" on_node_uuid="2">
+        <primitive id="haproxy-bundle-docker-2" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="metal-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest" monitor_cmd="/bin/true" mount_points="" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3121 -v /var/lib/kolla/config_files/haproxy.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/haproxy/etc:/etc:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="73">
+    <action_set>
+      <rsc_op id="11" operation="monitor" operation_key="haproxy-bundle-docker-2_monitor_0" on_node="metal-1" on_node_uuid="1">
+        <primitive id="haproxy-bundle-docker-2" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="metal-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest" monitor_cmd="/bin/true" mount_points="" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3121 -v /var/lib/kolla/config_files/haproxy.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/haproxy/etc:/etc:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="74" priority="1000000">
+    <action_set>
+      <rsc_op id="186" operation="notify" operation_key="redis:0_post_notify_promote_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="metal-1">
+        <primitive id="redis" long-id="redis:0" class="ocf" provider="heartbeat" type="redis"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="galera-bundle-0 galera-bundle-1 galera-bundle-2 metal-1 metal-2 metal-3 rabbitmq-bundle-0 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_available_uname="redis-bundle-1 redis-bundle-0 rabbitmq-bundle-0 redis-bundle-2 metal-3 metal-2 metal-1" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="redis:0 redis:1 redis:2" CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="redis:0 redis:1 redis:2" CRM_meta_notify_promote_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="redis:0 redis:1 redis:2" CRM_meta_notify_start_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_on_node="redis-bundle-0" CRM_meta_on_node_uuid="redis-bundle-0" CRM_meta_physical_host="metal-1" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="156" operation="notify" operation_key="redis-bundle-master_post_notify_promoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="75">
+    <action_set>
+      <rsc_op id="185" operation="notify" operation_key="redis:0_pre_notify_promote_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="metal-1">
+        <primitive id="redis" long-id="redis:0" class="ocf" provider="heartbeat" type="redis"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="galera-bundle-0 galera-bundle-1 galera-bundle-2 metal-1 metal-2 metal-3 rabbitmq-bundle-0 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_available_uname="redis-bundle-1 redis-bundle-0 rabbitmq-bundle-0 redis-bundle-2 metal-3 metal-2 metal-1" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="redis:0 redis:1 redis:2" CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="redis:0 redis:1 redis:2" CRM_meta_notify_promote_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="redis:0 redis:1 redis:2" CRM_meta_notify_start_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_on_node="redis-bundle-0" CRM_meta_on_node_uuid="redis-bundle-0" CRM_meta_physical_host="metal-1" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="154" operation="notify" operation_key="redis-bundle-master_pre_notify_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="76" priority="1000000">
+    <action_set>
+      <rsc_op id="182" operation="notify" operation_key="redis:0_post_notify_start_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="metal-1">
+        <primitive id="redis" long-id="redis:0" class="ocf" provider="heartbeat" type="redis"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="galera-bundle-0 galera-bundle-1 galera-bundle-2 metal-1 metal-2 metal-3 rabbitmq-bundle-0 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_available_uname="redis-bundle-1 redis-bundle-0 rabbitmq-bundle-0 redis-bundle-2 metal-3 metal-2 metal-1" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="redis:0 redis:1 redis:2" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource="redis:0 redis:1 redis:2" CRM_meta_notify_promote_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="redis:0 redis:1 redis:2" CRM_meta_notify_start_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_on_node="redis-bundle-0" CRM_meta_on_node_uuid="redis-bundle-0" CRM_meta_physical_host="metal-1" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="144" operation="notify" operation_key="redis-bundle-master_post_notify_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="77">
+    <action_set>
+      <rsc_op id="133" operation="monitor" operation_key="redis:0_monitor_20000" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="metal-1">
+        <primitive id="redis" long-id="redis:0" class="ocf" provider="heartbeat" type="redis"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="20000" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="redis-bundle-0" CRM_meta_on_node_uuid="redis-bundle-0" CRM_meta_op_target_rc="8" CRM_meta_physical_host="metal-1" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_role="Master" CRM_meta_timeout="60000"  wait_last_known_master="true"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="117" operation="start" operation_key="redis-bundle-0_start_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="131" operation="start" operation_key="redis:0_start_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="metal-1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="132" operation="promote" operation_key="redis:0_promote_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="metal-1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="145" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_running_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="157" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_promoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="78">
+    <action_set>
+      <rsc_op id="132" operation="promote" operation_key="redis:0_promote_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="metal-1">
+        <primitive id="redis" long-id="redis:0" class="ocf" provider="heartbeat" type="redis"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="promote" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="galera-bundle-0 galera-bundle-1 galera-bundle-2 metal-1 metal-2 metal-3 rabbitmq-bundle-0 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_available_uname="redis-bundle-1 redis-bundle-0 rabbitmq-bundle-0 redis-bundle-2 metal-3 metal-2 metal-1" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="redis:0 redis:1 redis:2" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource="redis:0 redis:1 redis:2" CRM_meta_notify_promote_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="redis:0 redis:1 redis:2" CRM_meta_notify_start_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_on_node="redis-bundle-0" CRM_meta_on_node_uuid="redis-bundle-0" CRM_meta_physical_host="metal-1" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000"  wait_last_known_master="true"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="115" operation="start" operation_key="redis-bundle-docker-0_start_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="117" operation="start" operation_key="redis-bundle-0_start_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="131" operation="start" operation_key="redis:0_start_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="metal-1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="152" operation="promote" operation_key="redis-bundle-master_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="79">
+    <action_set>
+      <rsc_op id="131" operation="start" operation_key="redis:0_start_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="metal-1">
+        <primitive id="redis" long-id="redis:0" class="ocf" provider="heartbeat" type="redis"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="galera-bundle-0 galera-bundle-1 galera-bundle-2 metal-1 metal-2 metal-3 rabbitmq-bundle-0 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_available_uname="redis-bundle-1 redis-bundle-0 rabbitmq-bundle-0 redis-bundle-2 metal-3 metal-2 metal-1" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="redis:0 redis:1 redis:2" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource="redis:0 redis:1 redis:2" CRM_meta_notify_promote_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="redis:0 redis:1 redis:2" CRM_meta_notify_start_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_on_node="redis-bundle-0" CRM_meta_on_node_uuid="redis-bundle-0" CRM_meta_physical_host="metal-1" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="200000"  wait_last_known_master="true"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="115" operation="start" operation_key="redis-bundle-docker-0_start_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="117" operation="start" operation_key="redis-bundle-0_start_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="140" operation="start" operation_key="redis-bundle-master_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="80" priority="1000000">
+    <action_set>
+      <rsc_op id="188" operation="notify" operation_key="redis:1_post_notify_promote_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="metal-2">
+        <primitive id="redis" long-id="redis:1" class="ocf" provider="heartbeat" type="redis"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="galera-bundle-0 galera-bundle-1 galera-bundle-2 metal-1 metal-2 metal-3 rabbitmq-bundle-0 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_available_uname="redis-bundle-1 redis-bundle-0 rabbitmq-bundle-0 redis-bundle-2 metal-3 metal-2 metal-1" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="redis:0 redis:1 redis:2" CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="redis:0 redis:1 redis:2" CRM_meta_notify_promote_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="redis:0 redis:1 redis:2" CRM_meta_notify_start_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_on_node="redis-bundle-1" CRM_meta_on_node_uuid="redis-bundle-1" CRM_meta_physical_host="metal-2" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="156" operation="notify" operation_key="redis-bundle-master_post_notify_promoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="81">
+    <action_set>
+      <rsc_op id="187" operation="notify" operation_key="redis:1_pre_notify_promote_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="metal-2">
+        <primitive id="redis" long-id="redis:1" class="ocf" provider="heartbeat" type="redis"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="galera-bundle-0 galera-bundle-1 galera-bundle-2 metal-1 metal-2 metal-3 rabbitmq-bundle-0 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_available_uname="redis-bundle-1 redis-bundle-0 rabbitmq-bundle-0 redis-bundle-2 metal-3 metal-2 metal-1" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="redis:0 redis:1 redis:2" CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="redis:0 redis:1 redis:2" CRM_meta_notify_promote_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="redis:0 redis:1 redis:2" CRM_meta_notify_start_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_on_node="redis-bundle-1" CRM_meta_on_node_uuid="redis-bundle-1" CRM_meta_physical_host="metal-2" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="154" operation="notify" operation_key="redis-bundle-master_pre_notify_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="82" priority="1000000">
+    <action_set>
+      <rsc_op id="183" operation="notify" operation_key="redis:1_post_notify_start_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="metal-2">
+        <primitive id="redis" long-id="redis:1" class="ocf" provider="heartbeat" type="redis"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="galera-bundle-0 galera-bundle-1 galera-bundle-2 metal-1 metal-2 metal-3 rabbitmq-bundle-0 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_available_uname="redis-bundle-1 redis-bundle-0 rabbitmq-bundle-0 redis-bundle-2 metal-3 metal-2 metal-1" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="redis:0 redis:1 redis:2" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource="redis:0 redis:1 redis:2" CRM_meta_notify_promote_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="redis:0 redis:1 redis:2" CRM_meta_notify_start_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_on_node="redis-bundle-1" CRM_meta_on_node_uuid="redis-bundle-1" CRM_meta_physical_host="metal-2" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="144" operation="notify" operation_key="redis-bundle-master_post_notify_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="83">
+    <action_set>
+      <rsc_op id="136" operation="monitor" operation_key="redis:1_monitor_20000" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="metal-2">
+        <primitive id="redis" long-id="redis:1" class="ocf" provider="heartbeat" type="redis"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="20000" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="redis-bundle-1" CRM_meta_on_node_uuid="redis-bundle-1" CRM_meta_op_target_rc="8" CRM_meta_physical_host="metal-2" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_role="Master" CRM_meta_timeout="60000"  wait_last_known_master="true"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="121" operation="start" operation_key="redis-bundle-1_start_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="134" operation="start" operation_key="redis:1_start_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="metal-2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="135" operation="promote" operation_key="redis:1_promote_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="metal-2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="145" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_running_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="157" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_promoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="84">
+    <action_set>
+      <rsc_op id="135" operation="promote" operation_key="redis:1_promote_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="metal-2">
+        <primitive id="redis" long-id="redis:1" class="ocf" provider="heartbeat" type="redis"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="promote" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="galera-bundle-0 galera-bundle-1 galera-bundle-2 metal-1 metal-2 metal-3 rabbitmq-bundle-0 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_available_uname="redis-bundle-1 redis-bundle-0 rabbitmq-bundle-0 redis-bundle-2 metal-3 metal-2 metal-1" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="redis:0 redis:1 redis:2" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource="redis:0 redis:1 redis:2" CRM_meta_notify_promote_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="redis:0 redis:1 redis:2" CRM_meta_notify_start_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_on_node="redis-bundle-1" CRM_meta_on_node_uuid="redis-bundle-1" CRM_meta_physical_host="metal-2" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000"  wait_last_known_master="true"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="119" operation="start" operation_key="redis-bundle-docker-1_start_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="121" operation="start" operation_key="redis-bundle-1_start_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="132" operation="promote" operation_key="redis:0_promote_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="metal-1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="134" operation="start" operation_key="redis:1_start_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="metal-2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="152" operation="promote" operation_key="redis-bundle-master_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="85">
+    <action_set>
+      <rsc_op id="134" operation="start" operation_key="redis:1_start_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="metal-2">
+        <primitive id="redis" long-id="redis:1" class="ocf" provider="heartbeat" type="redis"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="galera-bundle-0 galera-bundle-1 galera-bundle-2 metal-1 metal-2 metal-3 rabbitmq-bundle-0 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_available_uname="redis-bundle-1 redis-bundle-0 rabbitmq-bundle-0 redis-bundle-2 metal-3 metal-2 metal-1" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="redis:0 redis:1 redis:2" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource="redis:0 redis:1 redis:2" CRM_meta_notify_promote_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="redis:0 redis:1 redis:2" CRM_meta_notify_start_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_on_node="redis-bundle-1" CRM_meta_on_node_uuid="redis-bundle-1" CRM_meta_physical_host="metal-2" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="200000"  wait_last_known_master="true"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="119" operation="start" operation_key="redis-bundle-docker-1_start_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="121" operation="start" operation_key="redis-bundle-1_start_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="131" operation="start" operation_key="redis:0_start_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="metal-1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="140" operation="start" operation_key="redis-bundle-master_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="86" priority="1000000">
+    <action_set>
+      <rsc_op id="190" operation="notify" operation_key="redis:2_post_notify_promote_0" on_node="redis-bundle-2" on_node_uuid="redis-bundle-2" router_node="metal-3">
+        <primitive id="redis" long-id="redis:2" class="ocf" provider="heartbeat" type="redis"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="galera-bundle-0 galera-bundle-1 galera-bundle-2 metal-1 metal-2 metal-3 rabbitmq-bundle-0 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_available_uname="redis-bundle-1 redis-bundle-0 rabbitmq-bundle-0 redis-bundle-2 metal-3 metal-2 metal-1" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="redis:0 redis:1 redis:2" CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="redis:0 redis:1 redis:2" CRM_meta_notify_promote_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="redis:0 redis:1 redis:2" CRM_meta_notify_start_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_on_node="redis-bundle-2" CRM_meta_on_node_uuid="redis-bundle-2" CRM_meta_physical_host="metal-3" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="156" operation="notify" operation_key="redis-bundle-master_post_notify_promoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="87">
+    <action_set>
+      <rsc_op id="189" operation="notify" operation_key="redis:2_pre_notify_promote_0" on_node="redis-bundle-2" on_node_uuid="redis-bundle-2" router_node="metal-3">
+        <primitive id="redis" long-id="redis:2" class="ocf" provider="heartbeat" type="redis"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="galera-bundle-0 galera-bundle-1 galera-bundle-2 metal-1 metal-2 metal-3 rabbitmq-bundle-0 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_available_uname="redis-bundle-1 redis-bundle-0 rabbitmq-bundle-0 redis-bundle-2 metal-3 metal-2 metal-1" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="redis:0 redis:1 redis:2" CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="redis:0 redis:1 redis:2" CRM_meta_notify_promote_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="redis:0 redis:1 redis:2" CRM_meta_notify_start_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_on_node="redis-bundle-2" CRM_meta_on_node_uuid="redis-bundle-2" CRM_meta_physical_host="metal-3" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="154" operation="notify" operation_key="redis-bundle-master_pre_notify_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="88" priority="1000000">
+    <action_set>
+      <rsc_op id="184" operation="notify" operation_key="redis:2_post_notify_start_0" on_node="redis-bundle-2" on_node_uuid="redis-bundle-2" router_node="metal-3">
+        <primitive id="redis" long-id="redis:2" class="ocf" provider="heartbeat" type="redis"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="galera-bundle-0 galera-bundle-1 galera-bundle-2 metal-1 metal-2 metal-3 rabbitmq-bundle-0 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_available_uname="redis-bundle-1 redis-bundle-0 rabbitmq-bundle-0 redis-bundle-2 metal-3 metal-2 metal-1" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="redis:0 redis:1 redis:2" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource="redis:0 redis:1 redis:2" CRM_meta_notify_promote_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="redis:0 redis:1 redis:2" CRM_meta_notify_start_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_on_node="redis-bundle-2" CRM_meta_on_node_uuid="redis-bundle-2" CRM_meta_physical_host="metal-3" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="144" operation="notify" operation_key="redis-bundle-master_post_notify_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="89">
+    <action_set>
+      <rsc_op id="139" operation="monitor" operation_key="redis:2_monitor_20000" on_node="redis-bundle-2" on_node_uuid="redis-bundle-2" router_node="metal-3">
+        <primitive id="redis" long-id="redis:2" class="ocf" provider="heartbeat" type="redis"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="20000" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="redis-bundle-2" CRM_meta_on_node_uuid="redis-bundle-2" CRM_meta_op_target_rc="8" CRM_meta_physical_host="metal-3" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_role="Master" CRM_meta_timeout="60000"  wait_last_known_master="true"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="125" operation="start" operation_key="redis-bundle-2_start_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="137" operation="start" operation_key="redis:2_start_0" on_node="redis-bundle-2" on_node_uuid="redis-bundle-2" router_node="metal-3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="138" operation="promote" operation_key="redis:2_promote_0" on_node="redis-bundle-2" on_node_uuid="redis-bundle-2" router_node="metal-3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="145" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_running_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="157" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_promoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="90">
+    <action_set>
+      <rsc_op id="138" operation="promote" operation_key="redis:2_promote_0" on_node="redis-bundle-2" on_node_uuid="redis-bundle-2" router_node="metal-3">
+        <primitive id="redis" long-id="redis:2" class="ocf" provider="heartbeat" type="redis"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="promote" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="galera-bundle-0 galera-bundle-1 galera-bundle-2 metal-1 metal-2 metal-3 rabbitmq-bundle-0 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_available_uname="redis-bundle-1 redis-bundle-0 rabbitmq-bundle-0 redis-bundle-2 metal-3 metal-2 metal-1" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="redis:0 redis:1 redis:2" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource="redis:0 redis:1 redis:2" CRM_meta_notify_promote_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="redis:0 redis:1 redis:2" CRM_meta_notify_start_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_on_node="redis-bundle-2" CRM_meta_on_node_uuid="redis-bundle-2" CRM_meta_physical_host="metal-3" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="120000"  wait_last_known_master="true"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="123" operation="start" operation_key="redis-bundle-docker-2_start_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="125" operation="start" operation_key="redis-bundle-2_start_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="135" operation="promote" operation_key="redis:1_promote_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="metal-2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="137" operation="start" operation_key="redis:2_start_0" on_node="redis-bundle-2" on_node_uuid="redis-bundle-2" router_node="metal-3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="152" operation="promote" operation_key="redis-bundle-master_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="91">
+    <action_set>
+      <rsc_op id="137" operation="start" operation_key="redis:2_start_0" on_node="redis-bundle-2" on_node_uuid="redis-bundle-2" router_node="metal-3">
+        <primitive id="redis" long-id="redis:2" class="ocf" provider="heartbeat" type="redis"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_all_uname="galera-bundle-0 galera-bundle-1 galera-bundle-2 metal-1 metal-2 metal-3 rabbitmq-bundle-0 redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_available_uname="redis-bundle-1 redis-bundle-0 rabbitmq-bundle-0 redis-bundle-2 metal-3 metal-2 metal-1" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="redis:0 redis:1 redis:2" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource="redis:0 redis:1 redis:2" CRM_meta_notify_promote_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="redis:0 redis:1 redis:2" CRM_meta_notify_start_uname="redis-bundle-0 redis-bundle-1 redis-bundle-2" CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_on_node="redis-bundle-2" CRM_meta_on_node_uuid="redis-bundle-2" CRM_meta_physical_host="metal-3" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="200000"  wait_last_known_master="true"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="123" operation="start" operation_key="redis-bundle-docker-2_start_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="125" operation="start" operation_key="redis-bundle-2_start_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="134" operation="start" operation_key="redis:1_start_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="metal-2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="140" operation="start" operation_key="redis-bundle-master_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="92" priority="1000000">
+    <action_set>
+      <pseudo_event id="157" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_promoted_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="promote" CRM_meta_notify_type="post" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="156" operation="notify" operation_key="redis-bundle-master_post_notify_promoted_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="186" operation="notify" operation_key="redis:0_post_notify_promote_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="metal-1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="188" operation="notify" operation_key="redis:1_post_notify_promote_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="metal-2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="190" operation="notify" operation_key="redis:2_post_notify_promote_0" on_node="redis-bundle-2" on_node_uuid="redis-bundle-2" router_node="metal-3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="93" priority="1000000">
+    <action_set>
+      <pseudo_event id="156" operation="notify" operation_key="redis-bundle-master_post_notify_promoted_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="promote" CRM_meta_notify_type="post" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="153" operation="promoted" operation_key="redis-bundle-master_promoted_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="155" operation="notified" operation_key="redis-bundle-master_confirmed-pre_notify_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="94">
+    <action_set>
+      <pseudo_event id="155" operation="notified" operation_key="redis-bundle-master_confirmed-pre_notify_promote_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="promote" CRM_meta_notify_type="pre" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="154" operation="notify" operation_key="redis-bundle-master_pre_notify_promote_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="185" operation="notify" operation_key="redis:0_pre_notify_promote_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="metal-1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="187" operation="notify" operation_key="redis:1_pre_notify_promote_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="metal-2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="189" operation="notify" operation_key="redis:2_pre_notify_promote_0" on_node="redis-bundle-2" on_node_uuid="redis-bundle-2" router_node="metal-3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="95">
+    <action_set>
+      <pseudo_event id="154" operation="notify" operation_key="redis-bundle-master_pre_notify_promote_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="promote" CRM_meta_notify_type="pre" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="145" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="96" priority="1000000">
+    <action_set>
+      <pseudo_event id="153" operation="promoted" operation_key="redis-bundle-master_promoted_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="132" operation="promote" operation_key="redis:0_promote_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="metal-1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="135" operation="promote" operation_key="redis:1_promote_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="metal-2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="138" operation="promote" operation_key="redis:2_promote_0" on_node="redis-bundle-2" on_node_uuid="redis-bundle-2" router_node="metal-3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="97">
+    <action_set>
+      <pseudo_event id="152" operation="promote" operation_key="redis-bundle-master_promote_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="141" operation="running" operation_key="redis-bundle-master_running_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="155" operation="notified" operation_key="redis-bundle-master_confirmed-pre_notify_promote_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="164" operation="promote" operation_key="redis-bundle_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="98" priority="1000000">
+    <action_set>
+      <pseudo_event id="145" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_running_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="144" operation="notify" operation_key="redis-bundle-master_post_notify_running_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="182" operation="notify" operation_key="redis:0_post_notify_start_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="metal-1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="183" operation="notify" operation_key="redis:1_post_notify_start_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="metal-2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="184" operation="notify" operation_key="redis:2_post_notify_start_0" on_node="redis-bundle-2" on_node_uuid="redis-bundle-2" router_node="metal-3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="99" priority="1000000">
+    <action_set>
+      <pseudo_event id="144" operation="notify" operation_key="redis-bundle-master_post_notify_running_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="141" operation="running" operation_key="redis-bundle-master_running_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="143" operation="notified" operation_key="redis-bundle-master_confirmed-pre_notify_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="100">
+    <action_set>
+      <pseudo_event id="143" operation="notified" operation_key="redis-bundle-master_confirmed-pre_notify_start_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="142" operation="notify" operation_key="redis-bundle-master_pre_notify_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="101">
+    <action_set>
+      <pseudo_event id="142" operation="notify" operation_key="redis-bundle-master_pre_notify_start_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="102" priority="1000000">
+    <action_set>
+      <pseudo_event id="141" operation="running" operation_key="redis-bundle-master_running_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="131" operation="start" operation_key="redis:0_start_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="metal-1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="134" operation="start" operation_key="redis:1_start_0" on_node="redis-bundle-1" on_node_uuid="redis-bundle-1" router_node="metal-2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="137" operation="start" operation_key="redis:2_start_0" on_node="redis-bundle-2" on_node_uuid="redis-bundle-2" router_node="metal-3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="140" operation="start" operation_key="redis-bundle-master_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="103">
+    <action_set>
+      <pseudo_event id="140" operation="start" operation_key="redis-bundle-master_start_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="12" operation="monitor" operation_key="redis-bundle-docker-0_monitor_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="14" operation="monitor" operation_key="redis-bundle-docker-1_monitor_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="16" operation="monitor" operation_key="redis-bundle-docker-2_monitor_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="28" operation="monitor" operation_key="redis-bundle-docker-0_monitor_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="30" operation="monitor" operation_key="redis-bundle-docker-1_monitor_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="32" operation="monitor" operation_key="redis-bundle-docker-2_monitor_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="44" operation="monitor" operation_key="redis-bundle-docker-0_monitor_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="46" operation="monitor" operation_key="redis-bundle-docker-1_monitor_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="48" operation="monitor" operation_key="redis-bundle-docker-2_monitor_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="127" operation="start" operation_key="redis-bundle_start_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="143" operation="notified" operation_key="redis-bundle-master_confirmed-pre_notify_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="104">
+    <action_set>
+      <rsc_op id="116" operation="monitor" operation_key="redis-bundle-docker-0_monitor_60000" on_node="metal-1" on_node_uuid="1">
+        <primitive id="redis-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="metal-1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/redis-bundle-0" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3124 -v /var/lib/kolla/config_files/redis.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/redis/etc/redis:/etc/redis:ro -v /var/lib/config-data/redis/etc/redis.conf:/etc/redis.conf:ro -v /var/lib/config-data/redis/etc/redis.conf.puppet:/etc/redis.conf.puppet:ro -v /var/lib/config-data/redis/etc/redis-sentinel.conf:/etc/redis-sentinel.conf:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/redis:/var/lib/redis:rw -v /var/log/redis:/var/log/redis:rw -v /var/run/redis:/var/run/redis:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/redis-bundle-0:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="115" operation="start" operation_key="redis-bundle-docker-0_start_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="105">
+    <action_set>
+      <rsc_op id="115" operation="start" operation_key="redis-bundle-docker-0_start_0" on_node="metal-1" on_node_uuid="1">
+        <primitive id="redis-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="metal-1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/redis-bundle-0" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3124 -v /var/lib/kolla/config_files/redis.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/redis/etc/redis:/etc/redis:ro -v /var/lib/config-data/redis/etc/redis.conf:/etc/redis.conf:ro -v /var/lib/config-data/redis/etc/redis.conf.puppet:/etc/redis.conf.puppet:ro -v /var/lib/config-data/redis/etc/redis-sentinel.conf:/etc/redis-sentinel.conf:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/redis:/var/lib/redis:rw -v /var/log/redis:/var/log/redis:rw -v /var/run/redis:/var/run/redis:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/redis-bundle-0:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="12" operation="monitor" operation_key="redis-bundle-docker-0_monitor_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="14" operation="monitor" operation_key="redis-bundle-docker-1_monitor_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="16" operation="monitor" operation_key="redis-bundle-docker-2_monitor_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="28" operation="monitor" operation_key="redis-bundle-docker-0_monitor_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="44" operation="monitor" operation_key="redis-bundle-docker-0_monitor_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="127" operation="start" operation_key="redis-bundle_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="106">
+    <action_set>
+      <rsc_op id="44" operation="monitor" operation_key="redis-bundle-docker-0_monitor_0" on_node="metal-3" on_node_uuid="3">
+        <primitive id="redis-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="metal-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/redis-bundle-0" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3124 -v /var/lib/kolla/config_files/redis.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/redis/etc/redis:/etc/redis:ro -v /var/lib/config-data/redis/etc/redis.conf:/etc/redis.conf:ro -v /var/lib/config-data/redis/etc/redis.conf.puppet:/etc/redis.conf.puppet:ro -v /var/lib/config-data/redis/etc/redis-sentinel.conf:/etc/redis-sentinel.conf:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/redis:/var/lib/redis:rw -v /var/log/redis:/var/log/redis:rw -v /var/run/redis:/var/run/redis:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/redis-bundle-0:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="107">
+    <action_set>
+      <rsc_op id="28" operation="monitor" operation_key="redis-bundle-docker-0_monitor_0" on_node="metal-2" on_node_uuid="2">
+        <primitive id="redis-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="metal-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/redis-bundle-0" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3124 -v /var/lib/kolla/config_files/redis.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/redis/etc/redis:/etc/redis:ro -v /var/lib/config-data/redis/etc/redis.conf:/etc/redis.conf:ro -v /var/lib/config-data/redis/etc/redis.conf.puppet:/etc/redis.conf.puppet:ro -v /var/lib/config-data/redis/etc/redis-sentinel.conf:/etc/redis-sentinel.conf:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/redis:/var/lib/redis:rw -v /var/log/redis:/var/log/redis:rw -v /var/run/redis:/var/run/redis:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/redis-bundle-0:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="108">
+    <action_set>
+      <rsc_op id="12" operation="monitor" operation_key="redis-bundle-docker-0_monitor_0" on_node="metal-1" on_node_uuid="1">
+        <primitive id="redis-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="metal-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/redis-bundle-0" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3124 -v /var/lib/kolla/config_files/redis.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/redis/etc/redis:/etc/redis:ro -v /var/lib/config-data/redis/etc/redis.conf:/etc/redis.conf:ro -v /var/lib/config-data/redis/etc/redis.conf.puppet:/etc/redis.conf.puppet:ro -v /var/lib/config-data/redis/etc/redis-sentinel.conf:/etc/redis-sentinel.conf:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/redis:/var/lib/redis:rw -v /var/log/redis:/var/log/redis:rw -v /var/run/redis:/var/run/redis:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/redis-bundle-0:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="109">
+    <action_set>
+      <rsc_op id="118" operation="monitor" operation_key="redis-bundle-0_monitor_30000" on_node="metal-1" on_node_uuid="1">
+        <primitive id="redis-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="redis-bundle-docker-0" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="metal-1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="30000" addr="metal-1"  port="3124"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="117" operation="start" operation_key="redis-bundle-0_start_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="110">
+    <action_set>
+      <rsc_op id="117" operation="start" operation_key="redis-bundle-0_start_0" on_node="metal-1" on_node_uuid="1">
+        <primitive id="redis-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="redis-bundle-docker-0" CRM_meta_on_node="metal-1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" addr="metal-1"  port="3124"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="13" operation="monitor" operation_key="redis-bundle-0_monitor_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="29" operation="monitor" operation_key="redis-bundle-0_monitor_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="45" operation="monitor" operation_key="redis-bundle-0_monitor_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="115" operation="start" operation_key="redis-bundle-docker-0_start_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="111">
+    <action_set>
+      <rsc_op id="45" operation="monitor" operation_key="redis-bundle-0_monitor_0" on_node="metal-3" on_node_uuid="3">
+        <primitive id="redis-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="redis-bundle-docker-0" CRM_meta_on_node="metal-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="metal-1"  port="3124"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="115" operation="start" operation_key="redis-bundle-docker-0_start_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="112">
+    <action_set>
+      <rsc_op id="29" operation="monitor" operation_key="redis-bundle-0_monitor_0" on_node="metal-2" on_node_uuid="2">
+        <primitive id="redis-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="redis-bundle-docker-0" CRM_meta_on_node="metal-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="metal-1"  port="3124"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="115" operation="start" operation_key="redis-bundle-docker-0_start_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="113">
+    <action_set>
+      <rsc_op id="13" operation="monitor" operation_key="redis-bundle-0_monitor_0" on_node="metal-1" on_node_uuid="1">
+        <primitive id="redis-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="redis-bundle-docker-0" CRM_meta_on_node="metal-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="metal-1"  port="3124"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="115" operation="start" operation_key="redis-bundle-docker-0_start_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="114">
+    <action_set>
+      <rsc_op id="120" operation="monitor" operation_key="redis-bundle-docker-1_monitor_60000" on_node="metal-2" on_node_uuid="2">
+        <primitive id="redis-bundle-docker-1" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="metal-2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/redis-bundle-1" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3124 -v /var/lib/kolla/config_files/redis.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/redis/etc/redis:/etc/redis:ro -v /var/lib/config-data/redis/etc/redis.conf:/etc/redis.conf:ro -v /var/lib/config-data/redis/etc/redis.conf.puppet:/etc/redis.conf.puppet:ro -v /var/lib/config-data/redis/etc/redis-sentinel.conf:/etc/redis-sentinel.conf:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/redis:/var/lib/redis:rw -v /var/log/redis:/var/log/redis:rw -v /var/run/redis:/var/run/redis:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/redis-bundle-1:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="119" operation="start" operation_key="redis-bundle-docker-1_start_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="115">
+    <action_set>
+      <rsc_op id="119" operation="start" operation_key="redis-bundle-docker-1_start_0" on_node="metal-2" on_node_uuid="2">
+        <primitive id="redis-bundle-docker-1" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="metal-2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/redis-bundle-1" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3124 -v /var/lib/kolla/config_files/redis.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/redis/etc/redis:/etc/redis:ro -v /var/lib/config-data/redis/etc/redis.conf:/etc/redis.conf:ro -v /var/lib/config-data/redis/etc/redis.conf.puppet:/etc/redis.conf.puppet:ro -v /var/lib/config-data/redis/etc/redis-sentinel.conf:/etc/redis-sentinel.conf:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/redis:/var/lib/redis:rw -v /var/log/redis:/var/log/redis:rw -v /var/run/redis:/var/run/redis:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/redis-bundle-1:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="14" operation="monitor" operation_key="redis-bundle-docker-1_monitor_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="28" operation="monitor" operation_key="redis-bundle-docker-0_monitor_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="30" operation="monitor" operation_key="redis-bundle-docker-1_monitor_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="32" operation="monitor" operation_key="redis-bundle-docker-2_monitor_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="46" operation="monitor" operation_key="redis-bundle-docker-1_monitor_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="127" operation="start" operation_key="redis-bundle_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="116">
+    <action_set>
+      <rsc_op id="46" operation="monitor" operation_key="redis-bundle-docker-1_monitor_0" on_node="metal-3" on_node_uuid="3">
+        <primitive id="redis-bundle-docker-1" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="metal-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/redis-bundle-1" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3124 -v /var/lib/kolla/config_files/redis.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/redis/etc/redis:/etc/redis:ro -v /var/lib/config-data/redis/etc/redis.conf:/etc/redis.conf:ro -v /var/lib/config-data/redis/etc/redis.conf.puppet:/etc/redis.conf.puppet:ro -v /var/lib/config-data/redis/etc/redis-sentinel.conf:/etc/redis-sentinel.conf:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/redis:/var/lib/redis:rw -v /var/log/redis:/var/log/redis:rw -v /var/run/redis:/var/run/redis:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/redis-bundle-1:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="117">
+    <action_set>
+      <rsc_op id="30" operation="monitor" operation_key="redis-bundle-docker-1_monitor_0" on_node="metal-2" on_node_uuid="2">
+        <primitive id="redis-bundle-docker-1" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="metal-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/redis-bundle-1" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3124 -v /var/lib/kolla/config_files/redis.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/redis/etc/redis:/etc/redis:ro -v /var/lib/config-data/redis/etc/redis.conf:/etc/redis.conf:ro -v /var/lib/config-data/redis/etc/redis.conf.puppet:/etc/redis.conf.puppet:ro -v /var/lib/config-data/redis/etc/redis-sentinel.conf:/etc/redis-sentinel.conf:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/redis:/var/lib/redis:rw -v /var/log/redis:/var/log/redis:rw -v /var/run/redis:/var/run/redis:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/redis-bundle-1:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="118">
+    <action_set>
+      <rsc_op id="14" operation="monitor" operation_key="redis-bundle-docker-1_monitor_0" on_node="metal-1" on_node_uuid="1">
+        <primitive id="redis-bundle-docker-1" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="metal-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/redis-bundle-1" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3124 -v /var/lib/kolla/config_files/redis.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/redis/etc/redis:/etc/redis:ro -v /var/lib/config-data/redis/etc/redis.conf:/etc/redis.conf:ro -v /var/lib/config-data/redis/etc/redis.conf.puppet:/etc/redis.conf.puppet:ro -v /var/lib/config-data/redis/etc/redis-sentinel.conf:/etc/redis-sentinel.conf:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/redis:/var/lib/redis:rw -v /var/log/redis:/var/log/redis:rw -v /var/run/redis:/var/run/redis:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/redis-bundle-1:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="119">
+    <action_set>
+      <rsc_op id="122" operation="monitor" operation_key="redis-bundle-1_monitor_30000" on_node="metal-2" on_node_uuid="2">
+        <primitive id="redis-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="redis-bundle-docker-1" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="metal-2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="30000" addr="metal-2"  port="3124"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="121" operation="start" operation_key="redis-bundle-1_start_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="120">
+    <action_set>
+      <rsc_op id="121" operation="start" operation_key="redis-bundle-1_start_0" on_node="metal-2" on_node_uuid="2">
+        <primitive id="redis-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="redis-bundle-docker-1" CRM_meta_on_node="metal-2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" addr="metal-2"  port="3124"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="15" operation="monitor" operation_key="redis-bundle-1_monitor_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="31" operation="monitor" operation_key="redis-bundle-1_monitor_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="47" operation="monitor" operation_key="redis-bundle-1_monitor_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="119" operation="start" operation_key="redis-bundle-docker-1_start_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="121">
+    <action_set>
+      <rsc_op id="47" operation="monitor" operation_key="redis-bundle-1_monitor_0" on_node="metal-3" on_node_uuid="3">
+        <primitive id="redis-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="redis-bundle-docker-1" CRM_meta_on_node="metal-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="metal-2"  port="3124"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="119" operation="start" operation_key="redis-bundle-docker-1_start_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="122">
+    <action_set>
+      <rsc_op id="31" operation="monitor" operation_key="redis-bundle-1_monitor_0" on_node="metal-2" on_node_uuid="2">
+        <primitive id="redis-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="redis-bundle-docker-1" CRM_meta_on_node="metal-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="metal-2"  port="3124"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="119" operation="start" operation_key="redis-bundle-docker-1_start_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="123">
+    <action_set>
+      <rsc_op id="15" operation="monitor" operation_key="redis-bundle-1_monitor_0" on_node="metal-1" on_node_uuid="1">
+        <primitive id="redis-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="redis-bundle-docker-1" CRM_meta_on_node="metal-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="metal-2"  port="3124"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="119" operation="start" operation_key="redis-bundle-docker-1_start_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="124">
+    <action_set>
+      <rsc_op id="124" operation="monitor" operation_key="redis-bundle-docker-2_monitor_60000" on_node="metal-3" on_node_uuid="3">
+        <primitive id="redis-bundle-docker-2" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="metal-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/redis-bundle-2" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3124 -v /var/lib/kolla/config_files/redis.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/redis/etc/redis:/etc/redis:ro -v /var/lib/config-data/redis/etc/redis.conf:/etc/redis.conf:ro -v /var/lib/config-data/redis/etc/redis.conf.puppet:/etc/redis.conf.puppet:ro -v /var/lib/config-data/redis/etc/redis-sentinel.conf:/etc/redis-sentinel.conf:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/redis:/var/lib/redis:rw -v /var/log/redis:/var/log/redis:rw -v /var/run/redis:/var/run/redis:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/redis-bundle-2:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="123" operation="start" operation_key="redis-bundle-docker-2_start_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="125">
+    <action_set>
+      <rsc_op id="123" operation="start" operation_key="redis-bundle-docker-2_start_0" on_node="metal-3" on_node_uuid="3">
+        <primitive id="redis-bundle-docker-2" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="metal-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/redis-bundle-2" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3124 -v /var/lib/kolla/config_files/redis.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/redis/etc/redis:/etc/redis:ro -v /var/lib/config-data/redis/etc/redis.conf:/etc/redis.conf:ro -v /var/lib/config-data/redis/etc/redis.conf.puppet:/etc/redis.conf.puppet:ro -v /var/lib/config-data/redis/etc/redis-sentinel.conf:/etc/redis-sentinel.conf:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/redis:/var/lib/redis:rw -v /var/log/redis:/var/log/redis:rw -v /var/run/redis:/var/run/redis:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/redis-bundle-2:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="16" operation="monitor" operation_key="redis-bundle-docker-2_monitor_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="32" operation="monitor" operation_key="redis-bundle-docker-2_monitor_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="44" operation="monitor" operation_key="redis-bundle-docker-0_monitor_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="46" operation="monitor" operation_key="redis-bundle-docker-1_monitor_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="48" operation="monitor" operation_key="redis-bundle-docker-2_monitor_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="127" operation="start" operation_key="redis-bundle_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="126">
+    <action_set>
+      <rsc_op id="48" operation="monitor" operation_key="redis-bundle-docker-2_monitor_0" on_node="metal-3" on_node_uuid="3">
+        <primitive id="redis-bundle-docker-2" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="metal-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/redis-bundle-2" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3124 -v /var/lib/kolla/config_files/redis.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/redis/etc/redis:/etc/redis:ro -v /var/lib/config-data/redis/etc/redis.conf:/etc/redis.conf:ro -v /var/lib/config-data/redis/etc/redis.conf.puppet:/etc/redis.conf.puppet:ro -v /var/lib/config-data/redis/etc/redis-sentinel.conf:/etc/redis-sentinel.conf:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/redis:/var/lib/redis:rw -v /var/log/redis:/var/log/redis:rw -v /var/run/redis:/var/run/redis:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/redis-bundle-2:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="127">
+    <action_set>
+      <rsc_op id="32" operation="monitor" operation_key="redis-bundle-docker-2_monitor_0" on_node="metal-2" on_node_uuid="2">
+        <primitive id="redis-bundle-docker-2" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="metal-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/redis-bundle-2" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3124 -v /var/lib/kolla/config_files/redis.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/redis/etc/redis:/etc/redis:ro -v /var/lib/config-data/redis/etc/redis.conf:/etc/redis.conf:ro -v /var/lib/config-data/redis/etc/redis.conf.puppet:/etc/redis.conf.puppet:ro -v /var/lib/config-data/redis/etc/redis-sentinel.conf:/etc/redis-sentinel.conf:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/redis:/var/lib/redis:rw -v /var/log/redis:/var/log/redis:rw -v /var/run/redis:/var/run/redis:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/redis-bundle-2:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="128">
+    <action_set>
+      <rsc_op id="16" operation="monitor" operation_key="redis-bundle-docker-2_monitor_0" on_node="metal-1" on_node_uuid="1">
+        <primitive id="redis-bundle-docker-2" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="metal-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/redis-bundle-2" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3124 -v /var/lib/kolla/config_files/redis.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/redis/etc/redis:/etc/redis:ro -v /var/lib/config-data/redis/etc/redis.conf:/etc/redis.conf:ro -v /var/lib/config-data/redis/etc/redis.conf.puppet:/etc/redis.conf.puppet:ro -v /var/lib/config-data/redis/etc/redis-sentinel.conf:/etc/redis-sentinel.conf:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/redis:/var/lib/redis:rw -v /var/log/redis:/var/log/redis:rw -v /var/run/redis:/var/run/redis:rw -v /etc/pki/ca-trust/extracted:/etc/pki/ca-trust/extracted:ro -v /etc/pki/tls/certs/ca-bundle.crt:/etc/pki/tls/certs/ca-bundle.crt:ro -v /etc/pki/tls/certs/ca-bundle.trust.crt:/etc/pki/tls/certs/ca-bundle.trust.crt:ro -v /etc/pki/tls/cert.pem:/etc/pki/tls/cert.pem:ro -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/redis-bundle-2:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="129">
+    <action_set>
+      <rsc_op id="126" operation="monitor" operation_key="redis-bundle-2_monitor_30000" on_node="metal-3" on_node_uuid="3">
+        <primitive id="redis-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="redis-bundle-docker-2" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="metal-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="30000" addr="metal-3"  port="3124"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="125" operation="start" operation_key="redis-bundle-2_start_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="130">
+    <action_set>
+      <rsc_op id="125" operation="start" operation_key="redis-bundle-2_start_0" on_node="metal-3" on_node_uuid="3">
+        <primitive id="redis-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="redis-bundle-docker-2" CRM_meta_on_node="metal-3" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" addr="metal-3"  port="3124"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="17" operation="monitor" operation_key="redis-bundle-2_monitor_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="33" operation="monitor" operation_key="redis-bundle-2_monitor_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="49" operation="monitor" operation_key="redis-bundle-2_monitor_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="123" operation="start" operation_key="redis-bundle-docker-2_start_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="131">
+    <action_set>
+      <rsc_op id="49" operation="monitor" operation_key="redis-bundle-2_monitor_0" on_node="metal-3" on_node_uuid="3">
+        <primitive id="redis-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="redis-bundle-docker-2" CRM_meta_on_node="metal-3" CRM_meta_on_node_uuid="3" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="metal-3"  port="3124"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="123" operation="start" operation_key="redis-bundle-docker-2_start_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="132">
+    <action_set>
+      <rsc_op id="33" operation="monitor" operation_key="redis-bundle-2_monitor_0" on_node="metal-2" on_node_uuid="2">
+        <primitive id="redis-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="redis-bundle-docker-2" CRM_meta_on_node="metal-2" CRM_meta_on_node_uuid="2" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="metal-3"  port="3124"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="123" operation="start" operation_key="redis-bundle-docker-2_start_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="133">
+    <action_set>
+      <rsc_op id="17" operation="monitor" operation_key="redis-bundle-2_monitor_0" on_node="metal-1" on_node_uuid="1">
+        <primitive id="redis-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="redis-bundle-docker-2" CRM_meta_on_node="metal-1" CRM_meta_on_node_uuid="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="metal-3"  port="3124"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="123" operation="start" operation_key="redis-bundle-docker-2_start_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="134" priority="1000000">
+    <action_set>
+      <pseudo_event id="165" operation="promoted" operation_key="redis-bundle_promoted_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="157" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_promoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="135">
+    <action_set>
+      <pseudo_event id="164" operation="promote" operation_key="redis-bundle_promote_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="128" operation="running" operation_key="redis-bundle_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="136" priority="1000000">
+    <action_set>
+      <pseudo_event id="128" operation="running" operation_key="redis-bundle_running_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="115" operation="start" operation_key="redis-bundle-docker-0_start_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="119" operation="start" operation_key="redis-bundle-docker-1_start_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="123" operation="start" operation_key="redis-bundle-docker-2_start_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="145" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="137">
+    <action_set>
+      <pseudo_event id="127" operation="start" operation_key="redis-bundle_start_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="138" priority="1000000">
+    <action_set>
+      <pseudo_event id="112" operation="running" operation_key="haproxy-bundle_running_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="105" operation="start" operation_key="haproxy-bundle-docker-0_start_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="107" operation="start" operation_key="haproxy-bundle-docker-1_start_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="109" operation="start" operation_key="haproxy-bundle-docker-2_start_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="139">
+    <action_set>
+      <pseudo_event id="111" operation="start" operation_key="haproxy-bundle_start_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="140" priority="1000000">
+    <action_set>
+      <pseudo_event id="81" operation="running" operation_key="galera-bundle_running_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="68" operation="start" operation_key="galera-bundle-docker-0_start_0" on_node="metal-1" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="72" operation="start" operation_key="galera-bundle-docker-1_start_0" on_node="metal-2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="76" operation="start" operation_key="galera-bundle-docker-2_start_0" on_node="metal-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="94" operation="running" operation_key="galera-bundle-master_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="141">
+    <action_set>
+      <pseudo_event id="80" operation="start" operation_key="galera-bundle_start_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="61" operation="notified" operation_key="storage-clone_confirmed-post_notify_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+</transition_graph>

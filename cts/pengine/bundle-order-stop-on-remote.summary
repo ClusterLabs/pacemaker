@@ -1,0 +1,230 @@
+
+Current cluster status:
+RemoteNode database-0: UNCLEAN (offline)
+RemoteNode database-2: UNCLEAN (offline)
+Online: [ controller-0 controller-1 controller-2 ]
+RemoteOnline: [ database-1 messaging-0 messaging-1 messaging-2 ]
+Containers: [ galera-bundle-1:galera-bundle-docker-1 rabbitmq-bundle-0:rabbitmq-bundle-docker-0 rabbitmq-bundle-1:rabbitmq-bundle-docker-1 rabbitmq-bundle-2:rabbitmq-bundle-docker-2 redis-bundle-0:redis-bundle-docker-0 redis-bundle-2:redis-bundle-docker-2 ]
+
+ database-0	(ocf::pacemaker:remote):	Stopped
+ database-1	(ocf::pacemaker:remote):	Started controller-2
+ database-2	(ocf::pacemaker:remote):	Stopped
+ messaging-0	(ocf::pacemaker:remote):	Started controller-2
+ messaging-1	(ocf::pacemaker:remote):	Started controller-2
+ messaging-2	(ocf::pacemaker:remote):	Started controller-2
+ Docker container set: rabbitmq-bundle [192.168.24.1:8787/rhosp12/openstack-rabbitmq-docker:pcmklatest]
+   rabbitmq-bundle-0	(ocf::heartbeat:rabbitmq-cluster):	Started messaging-0
+   rabbitmq-bundle-1	(ocf::heartbeat:rabbitmq-cluster):	Started messaging-1
+   rabbitmq-bundle-2	(ocf::heartbeat:rabbitmq-cluster):	Started messaging-2
+ Docker container set: galera-bundle [192.168.24.1:8787/rhosp12/openstack-mariadb-docker:pcmklatest]
+   galera-bundle-0	(ocf::heartbeat:galera):	FAILED Master database-0 (UNCLEAN)
+   galera-bundle-1	(ocf::heartbeat:galera):	Master database-1
+   galera-bundle-2	(ocf::heartbeat:galera):	FAILED Master database-2 (UNCLEAN)
+ Docker container set: redis-bundle [192.168.24.1:8787/rhosp12/openstack-redis-docker:pcmklatest]
+   redis-bundle-0	(ocf::heartbeat:redis):	Slave controller-0
+   redis-bundle-1	(ocf::heartbeat:redis):	Stopped
+   redis-bundle-2	(ocf::heartbeat:redis):	Slave controller-2
+ ip-192.168.24.11	(ocf::heartbeat:IPaddr2):	Stopped
+ ip-10.0.0.104	(ocf::heartbeat:IPaddr2):	Stopped
+ ip-172.17.1.19	(ocf::heartbeat:IPaddr2):	Started controller-2
+ ip-172.17.1.11	(ocf::heartbeat:IPaddr2):	Stopped
+ ip-172.17.3.13	(ocf::heartbeat:IPaddr2):	Stopped
+ ip-172.17.4.19	(ocf::heartbeat:IPaddr2):	Started controller-2
+ Docker container set: haproxy-bundle [192.168.24.1:8787/rhosp12/openstack-haproxy-docker:pcmklatest]
+   haproxy-bundle-docker-0	(ocf::heartbeat:docker):	Started controller-0
+   haproxy-bundle-docker-1	(ocf::heartbeat:docker):	Stopped
+   haproxy-bundle-docker-2	(ocf::heartbeat:docker):	Started controller-2
+ openstack-cinder-volume	(systemd:openstack-cinder-volume):	Stopped
+ stonith-fence_ipmilan-525400244e09	(stonith:fence_ipmilan):	Started controller-2
+ stonith-fence_ipmilan-525400cdec10	(stonith:fence_ipmilan):	Started controller-2
+ stonith-fence_ipmilan-525400c709f7	(stonith:fence_ipmilan):	Stopped
+ stonith-fence_ipmilan-525400a7f9e0	(stonith:fence_ipmilan):	Started controller-0
+ stonith-fence_ipmilan-525400a25787	(stonith:fence_ipmilan):	Started controller-2
+ stonith-fence_ipmilan-5254005ea387	(stonith:fence_ipmilan):	Stopped
+ stonith-fence_ipmilan-525400542c06	(stonith:fence_ipmilan):	Stopped
+ stonith-fence_ipmilan-525400aac413	(stonith:fence_ipmilan):	Started controller-2
+ stonith-fence_ipmilan-525400498d34	(stonith:fence_ipmilan):	Stopped
+
+Transition Summary:
+ * Fence (reboot) galera-bundle-2 (resource: galera-bundle-docker-2) 'guest is unclean'
+ * Fence (reboot) galera-bundle-0 (resource: galera-bundle-docker-0) 'guest is unclean'
+ * Start      database-0                             (                   controller-0 )  
+ * Start      database-2                             (                   controller-1 )  
+ * Recover    galera-bundle-docker-0                 (                     database-0 )  
+ * Start      galera-bundle-0                        (                   controller-0 )  
+ * Recover    galera:0                               (         Master galera-bundle-0 )  
+ * Recover    galera-bundle-docker-2                 (                     database-2 )  
+ * Start      galera-bundle-2                        (                   controller-1 )  
+ * Recover    galera:2                               (         Master galera-bundle-2 )  
+ * Promote    redis:0                                ( Slave -> Master redis-bundle-0 )  
+ * Start      redis-bundle-docker-1                  (                   controller-1 )  
+ * Start      redis-bundle-1                         (                   controller-1 )  
+ * Start      redis:1                                (                 redis-bundle-1 )  
+ * Start      ip-192.168.24.11                       (                   controller-0 )  
+ * Start      ip-10.0.0.104                          (                   controller-1 )  
+ * Start      ip-172.17.1.11                         (                   controller-0 )  
+ * Start      ip-172.17.3.13                         (                   controller-1 )  
+ * Start      haproxy-bundle-docker-1                (                   controller-1 )  
+ * Start      openstack-cinder-volume                (                   controller-0 )  
+ * Start      stonith-fence_ipmilan-525400c709f7     (                   controller-1 )  
+ * Start      stonith-fence_ipmilan-5254005ea387     (                   controller-1 )  
+ * Start      stonith-fence_ipmilan-525400542c06     (                   controller-0 )  
+ * Start      stonith-fence_ipmilan-525400498d34     (                   controller-1 )  
+
+Executing cluster transition:
+ * Resource action: database-0      start on controller-0
+ * Resource action: database-2      start on controller-1
+ * Resource action: rabbitmq-bundle-0 monitor=30000 on controller-2
+ * Resource action: rabbitmq-bundle-1 monitor=30000 on controller-2
+ * Resource action: rabbitmq-bundle-2 monitor=30000 on controller-2
+ * Resource action: galera-bundle-1 monitor=30000 on controller-2
+ * Pseudo action:   redis-bundle-master_pre_notify_start_0
+ * Resource action: redis-bundle-0  monitor=30000 on controller-0
+ * Resource action: redis-bundle-2  monitor=30000 on controller-2
+ * Resource action: stonith-fence_ipmilan-525400c709f7 start on controller-1
+ * Resource action: stonith-fence_ipmilan-5254005ea387 start on controller-1
+ * Resource action: stonith-fence_ipmilan-525400542c06 start on controller-0
+ * Resource action: stonith-fence_ipmilan-525400498d34 start on controller-1
+ * Pseudo action:   redis-bundle_start_0
+ * Pseudo action:   galera-bundle_demote_0
+ * Resource action: database-0      monitor=20000 on controller-0
+ * Resource action: database-2      monitor=20000 on controller-1
+ * Pseudo action:   galera-bundle-master_demote_0
+ * Resource action: redis           notify on redis-bundle-0
+ * Resource action: redis           notify on redis-bundle-2
+ * Pseudo action:   redis-bundle-master_confirmed-pre_notify_start_0
+ * Pseudo action:   redis-bundle-master_start_0
+ * Resource action: stonith-fence_ipmilan-525400c709f7 monitor=60000 on controller-1
+ * Resource action: stonith-fence_ipmilan-5254005ea387 monitor=60000 on controller-1
+ * Resource action: stonith-fence_ipmilan-525400542c06 monitor=60000 on controller-0
+ * Resource action: stonith-fence_ipmilan-525400498d34 monitor=60000 on controller-1
+ * Pseudo action:   galera_demote_0
+ * Pseudo action:   galera_demote_0
+ * Pseudo action:   galera-bundle-master_demoted_0
+ * Pseudo action:   galera-bundle_demoted_0
+ * Pseudo action:   galera-bundle_stop_0
+ * Resource action: galera-bundle-docker-0 stop on database-0
+ * Resource action: galera-bundle-docker-2 stop on database-2
+ * Pseudo action:   stonith-galera-bundle-2-reboot on galera-bundle-2
+ * Pseudo action:   stonith-galera-bundle-0-reboot on galera-bundle-0
+ * Pseudo action:   stonith_complete
+ * Pseudo action:   galera-bundle-master_stop_0
+ * Resource action: redis-bundle-docker-1 start on controller-1
+ * Resource action: redis-bundle-1  monitor on controller-1
+ * Resource action: ip-192.168.24.11 start on controller-0
+ * Resource action: ip-10.0.0.104   start on controller-1
+ * Resource action: ip-172.17.1.11  start on controller-0
+ * Resource action: ip-172.17.3.13  start on controller-1
+ * Resource action: openstack-cinder-volume start on controller-0
+ * Pseudo action:   haproxy-bundle_start_0
+ * Pseudo action:   galera_stop_0
+ * Resource action: redis-bundle-docker-1 monitor=60000 on controller-1
+ * Resource action: redis-bundle-1  start on controller-1
+ * Resource action: ip-192.168.24.11 monitor=10000 on controller-0
+ * Resource action: ip-10.0.0.104   monitor=10000 on controller-1
+ * Resource action: ip-172.17.1.11  monitor=10000 on controller-0
+ * Resource action: ip-172.17.3.13  monitor=10000 on controller-1
+ * Resource action: haproxy-bundle-docker-1 start on controller-1
+ * Resource action: openstack-cinder-volume monitor=60000 on controller-0
+ * Pseudo action:   haproxy-bundle_running_0
+ * Pseudo action:   galera_stop_0
+ * Pseudo action:   galera-bundle-master_stopped_0
+ * Resource action: redis           start on redis-bundle-1
+ * Pseudo action:   redis-bundle-master_running_0
+ * Resource action: redis-bundle-1  monitor=30000 on controller-1
+ * Resource action: haproxy-bundle-docker-1 monitor=60000 on controller-1
+ * Pseudo action:   galera-bundle_stopped_0
+ * Pseudo action:   galera-bundle_start_0
+ * Pseudo action:   all_stopped
+ * Pseudo action:   galera-bundle-master_start_0
+ * Resource action: galera-bundle-docker-0 start on database-0
+ * Resource action: galera-bundle-0 monitor on controller-1
+ * Resource action: galera-bundle-docker-2 start on database-2
+ * Resource action: galera-bundle-2 monitor on controller-1
+ * Pseudo action:   redis-bundle-master_post_notify_running_0
+ * Resource action: galera-bundle-docker-0 monitor=60000 on database-0
+ * Resource action: galera-bundle-0 start on controller-0
+ * Resource action: galera-bundle-docker-2 monitor=60000 on database-2
+ * Resource action: galera-bundle-2 start on controller-1
+ * Resource action: redis           notify on redis-bundle-0
+ * Resource action: redis           notify on redis-bundle-1
+ * Resource action: redis           notify on redis-bundle-2
+ * Pseudo action:   redis-bundle-master_confirmed-post_notify_running_0
+ * Pseudo action:   redis-bundle_running_0
+ * Resource action: galera          start on galera-bundle-0
+ * Resource action: galera          start on galera-bundle-2
+ * Pseudo action:   galera-bundle-master_running_0
+ * Resource action: galera-bundle-0 monitor=30000 on controller-0
+ * Resource action: galera-bundle-2 monitor=30000 on controller-1
+ * Pseudo action:   redis-bundle-master_pre_notify_promote_0
+ * Pseudo action:   redis-bundle_promote_0
+ * Pseudo action:   galera-bundle_running_0
+ * Resource action: redis           notify on redis-bundle-0
+ * Resource action: redis           notify on redis-bundle-1
+ * Resource action: redis           notify on redis-bundle-2
+ * Pseudo action:   redis-bundle-master_confirmed-pre_notify_promote_0
+ * Pseudo action:   redis-bundle-master_promote_0
+ * Pseudo action:   galera-bundle_promote_0
+ * Pseudo action:   galera-bundle-master_promote_0
+ * Resource action: redis           promote on redis-bundle-0
+ * Pseudo action:   redis-bundle-master_promoted_0
+ * Resource action: galera          promote on galera-bundle-0
+ * Resource action: galera          promote on galera-bundle-2
+ * Pseudo action:   galera-bundle-master_promoted_0
+ * Pseudo action:   redis-bundle-master_post_notify_promoted_0
+ * Pseudo action:   galera-bundle_promoted_0
+ * Resource action: galera          monitor=10000 on galera-bundle-0
+ * Resource action: galera          monitor=10000 on galera-bundle-2
+ * Resource action: redis           notify on redis-bundle-0
+ * Resource action: redis           notify on redis-bundle-1
+ * Resource action: redis           notify on redis-bundle-2
+ * Pseudo action:   redis-bundle-master_confirmed-post_notify_promoted_0
+ * Pseudo action:   redis-bundle_promoted_0
+ * Resource action: redis           monitor=20000 on redis-bundle-0
+ * Resource action: redis           monitor=60000 on redis-bundle-1
+ * Resource action: redis           monitor=45000 on redis-bundle-1
+
+Revised cluster status:
+Online: [ controller-0 controller-1 controller-2 ]
+RemoteOnline: [ database-0 database-1 database-2 messaging-0 messaging-1 messaging-2 ]
+Containers: [ galera-bundle-0:galera-bundle-docker-0 galera-bundle-1:galera-bundle-docker-1 galera-bundle-2:galera-bundle-docker-2 rabbitmq-bundle-0:rabbitmq-bundle-docker-0 rabbitmq-bundle-1:rabbitmq-bundle-docker-1 rabbitmq-bundle-2:rabbitmq-bundle-docker-2 redis-bundle-0:redis-bundle-docker-0 redis-bundle-1:redis-bundle-docker-1 redis-bundle-2:redis-bundle-docker-2 ]
+
+ database-0	(ocf::pacemaker:remote):	Started controller-0
+ database-1	(ocf::pacemaker:remote):	Started controller-2
+ database-2	(ocf::pacemaker:remote):	Started controller-1
+ messaging-0	(ocf::pacemaker:remote):	Started controller-2
+ messaging-1	(ocf::pacemaker:remote):	Started controller-2
+ messaging-2	(ocf::pacemaker:remote):	Started controller-2
+ Docker container set: rabbitmq-bundle [192.168.24.1:8787/rhosp12/openstack-rabbitmq-docker:pcmklatest]
+   rabbitmq-bundle-0	(ocf::heartbeat:rabbitmq-cluster):	Started messaging-0
+   rabbitmq-bundle-1	(ocf::heartbeat:rabbitmq-cluster):	Started messaging-1
+   rabbitmq-bundle-2	(ocf::heartbeat:rabbitmq-cluster):	Started messaging-2
+ Docker container set: galera-bundle [192.168.24.1:8787/rhosp12/openstack-mariadb-docker:pcmklatest]
+   galera-bundle-0	(ocf::heartbeat:galera):	Master database-0
+   galera-bundle-1	(ocf::heartbeat:galera):	Master database-1
+   galera-bundle-2	(ocf::heartbeat:galera):	Master database-2
+ Docker container set: redis-bundle [192.168.24.1:8787/rhosp12/openstack-redis-docker:pcmklatest]
+   redis-bundle-0	(ocf::heartbeat:redis):	Master controller-0
+   redis-bundle-1	(ocf::heartbeat:redis):	Slave controller-1
+   redis-bundle-2	(ocf::heartbeat:redis):	Slave controller-2
+ ip-192.168.24.11	(ocf::heartbeat:IPaddr2):	Started controller-0
+ ip-10.0.0.104	(ocf::heartbeat:IPaddr2):	Started controller-1
+ ip-172.17.1.19	(ocf::heartbeat:IPaddr2):	Started controller-2
+ ip-172.17.1.11	(ocf::heartbeat:IPaddr2):	Started controller-0
+ ip-172.17.3.13	(ocf::heartbeat:IPaddr2):	Started controller-1
+ ip-172.17.4.19	(ocf::heartbeat:IPaddr2):	Started controller-2
+ Docker container set: haproxy-bundle [192.168.24.1:8787/rhosp12/openstack-haproxy-docker:pcmklatest]
+   haproxy-bundle-docker-0	(ocf::heartbeat:docker):	Started controller-0
+   haproxy-bundle-docker-1	(ocf::heartbeat:docker):	Started controller-1
+   haproxy-bundle-docker-2	(ocf::heartbeat:docker):	Started controller-2
+ openstack-cinder-volume	(systemd:openstack-cinder-volume):	Started controller-0
+ stonith-fence_ipmilan-525400244e09	(stonith:fence_ipmilan):	Started controller-2
+ stonith-fence_ipmilan-525400cdec10	(stonith:fence_ipmilan):	Started controller-2
+ stonith-fence_ipmilan-525400c709f7	(stonith:fence_ipmilan):	Started controller-1
+ stonith-fence_ipmilan-525400a7f9e0	(stonith:fence_ipmilan):	Started controller-0
+ stonith-fence_ipmilan-525400a25787	(stonith:fence_ipmilan):	Started controller-2
+ stonith-fence_ipmilan-5254005ea387	(stonith:fence_ipmilan):	Started controller-1
+ stonith-fence_ipmilan-525400542c06	(stonith:fence_ipmilan):	Started controller-0
+ stonith-fence_ipmilan-525400aac413	(stonith:fence_ipmilan):	Started controller-2
+ stonith-fence_ipmilan-525400498d34	(stonith:fence_ipmilan):	Started controller-1
+

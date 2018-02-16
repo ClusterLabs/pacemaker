@@ -31,12 +31,13 @@
 #include <internal.h>
 
 /*
- * Legacy attrd (all pre-1.1.11 Pacemaker versions, plus all versions when using
- * heartbeat, CMAN, or corosync-plugin stacks) is unversioned.
+ * Legacy attrd (all pre-1.1.11 Pacemaker versions, plus all versions when used
+ * with the no-longer-supported CMAN or corosync-plugin stacks) is unversioned.
  *
  * With atomic attrd, each attrd will send ATTRD_PROTOCOL_VERSION with every
- * peer request and reply. Currently, there is no way to know the minimum
- * version supported by all peers, which limits its usefulness.
+ * peer request and reply. As of Pacemaker 2.0.0, at start-up each attrd will
+ * also set a private attribute for itself with its version, so any attrd can
+ * determine the minimum version supported by all peers.
  *
  * Protocol  Pacemaker  Significant changes
  * --------  ---------  -------------------
@@ -63,7 +64,6 @@ static gboolean
 send_attrd_message(crm_node_t * node, xmlNode * data)
 {
     crm_xml_add(data, F_TYPE, T_ATTRD);
-    crm_xml_add(data, F_ATTRD_IGNORE_LOCALLY, "atomic-version"); /* Tell older versions to ignore our messages */
     crm_xml_add(data, F_ATTRD_VERSION, ATTRD_PROTOCOL_VERSION);
     crm_xml_add_int(data, F_ATTRD_WRITER, election_state(writer));
 
@@ -289,11 +289,10 @@ void
 attrd_client_clear_failure(xmlNode *xml)
 {
 #if 0
-    /* @TODO This would be most efficient, but there is currently no way to
-     * verify that all peers support the op. If that ever changes, we could
-     * enable this code.
+    /* @TODO Track the minimum supported protocol version across all nodes,
+     * then enable this more-efficient code.
      */
-    if (all_peers_support_clear_failure) {
+    if (compare_version("2", minimum_protocol_version) <= 0) {
         /* Propagate to all peers (including ourselves).
          * This ends up at attrd_peer_message().
          */
@@ -523,11 +522,29 @@ attrd_peer_clear_failure(crm_node_t *peer, xmlNode *xml)
     regfree(&regex);
 }
 
+/*!
+    \internal
+    \brief Broadcast private attribute for local node with protocol version
+*/
+void
+attrd_broadcast_protocol()
+{
+    xmlNode *attrd_op = create_xml_node(NULL, __FUNCTION__);
+
+    crm_xml_add(attrd_op, F_TYPE, T_ATTRD);
+    crm_xml_add(attrd_op, F_ORIG, crm_system_name);
+    crm_xml_add(attrd_op, F_ATTRD_TASK, ATTRD_OP_UPDATE);
+    crm_xml_add(attrd_op, F_ATTRD_ATTRIBUTE, CRM_ATTR_PROTOCOL);
+    crm_xml_add(attrd_op, F_ATTRD_VALUE, ATTRD_PROTOCOL_VERSION);
+    crm_xml_add_int(attrd_op, F_ATTRD_IS_PRIVATE, 1);
+    attrd_client_update(attrd_op);
+    free_xml(attrd_op);
+}
+
 void
 attrd_peer_message(crm_node_t *peer, xmlNode *xml)
 {
     int peer_state = 0;
-    const char *v = crm_element_value(xml, F_ATTRD_VERSION);
     const char *op = crm_element_value(xml, F_ATTRD_TASK);
     const char *election_op = crm_element_value(xml, F_CRM_TASK);
     const char *host = crm_element_value(xml, F_ATTRD_HOST);
@@ -552,34 +569,6 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
                 break;
         }
         return;
-
-    } else if(v == NULL) {
-        /* From the non-atomic version */
-        if (safe_str_eq(op, ATTRD_OP_UPDATE)) {
-            const char *name = crm_element_value(xml, F_ATTRD_ATTRIBUTE);
-
-            crm_trace("Compatibility update of %s from %s", name, peer->uname);
-            attrd_peer_update(peer, xml, host, FALSE);
-
-        } else if (safe_str_eq(op, ATTRD_OP_FLUSH)) {
-            const char *name = crm_element_value(xml, F_ATTRD_ATTRIBUTE);
-            attribute_t *a = g_hash_table_lookup(attributes, name);
-
-            if(a) {
-                crm_trace("Compatibility write-out of %s for %s from %s", a->id, op, peer->uname);
-                write_or_elect_attribute(a);
-            }
-
-        } else if (safe_str_eq(op, ATTRD_OP_REFRESH)) {
-            GHashTableIter aIter;
-            attribute_t *a = NULL;
-
-            g_hash_table_iter_init(&aIter, attributes);
-            while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
-                crm_trace("Compatibility write-out of %s for %s from %s", a->id, op, peer->uname);
-                write_or_elect_attribute(a);
-            }
-        }
     }
 
     crm_element_value_int(xml, F_ATTRD_WRITER, &peer_state);

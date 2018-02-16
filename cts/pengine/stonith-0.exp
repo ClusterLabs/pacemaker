@@ -1,0 +1,441 @@
+<transition_graph cluster-delay="3m" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <pseudo_event id="41" operation="stopped" operation_key="group-1_stopped_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="27" operation="stop" operation_key="ocf_192.168.100.181_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="28" operation="stop" operation_key="ocf_192.168.100.181_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="31" operation="stop" operation_key="heartbeat_192.168.100.182_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="34" operation="stop" operation_key="ocf_192.168.100.183_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="35" operation="stop" operation_key="ocf_192.168.100.183_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="40" operation="stop" operation_key="group-1_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <pseudo_event id="40" operation="stop" operation_key="group-1_stop_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="2" operation="stonith" operation_key="stonith-c001n03-reboot" on_node="c001n03" on_node_uuid="f5e1d2de-73da-432a-9d5c-37472253c2ee"/>
+      </trigger>
+      <trigger>
+        <crm_event id="14" operation="stonith" operation_key="stonith-c001n05-reboot" on_node="c001n05" on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <pseudo_event id="39" operation="running" operation_key="group-1_running_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="29" operation="start" operation_key="ocf_192.168.100.181_start_0" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="32" operation="start" operation_key="heartbeat_192.168.100.182_start_0" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="36" operation="start" operation_key="ocf_192.168.100.183_start_0" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="38" operation="start" operation_key="group-1_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <pseudo_event id="38" operation="start" operation_key="group-1_start_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="41" operation="stopped" operation_key="group-1_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="4">
+    <action_set>
+      <rsc_op id="30" operation="monitor" operation_key="ocf_192.168.100.181_monitor_5000" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5">
+        <primitive id="ocf_192.168.100.181" class="ocf" provider="heartbeat" type="IPaddr"/>
+        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_on_node="c001n02" CRM_meta_on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5" CRM_meta_timeout="20000"  ip="192.168.100.181"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="29" operation="start" operation_key="ocf_192.168.100.181_start_0" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="5">
+    <action_set>
+      <rsc_op id="29" operation="start" operation_key="ocf_192.168.100.181_start_0" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5">
+        <primitive id="ocf_192.168.100.181" class="ocf" provider="heartbeat" type="IPaddr"/>
+        <attributes CRM_meta_on_node="c001n02" CRM_meta_on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5" CRM_meta_timeout="20000"  ip="192.168.100.181"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="27" operation="stop" operation_key="ocf_192.168.100.181_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="28" operation="stop" operation_key="ocf_192.168.100.181_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="38" operation="start" operation_key="group-1_start_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="105" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="6">
+    <action_set>
+      <pseudo_event id="28" operation="stop" operation_key="ocf_192.168.100.181_stop_0">
+        <attributes CRM_meta_timeout="20000"  ip="192.168.100.181"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="14" operation="stonith" operation_key="stonith-c001n05-reboot" on_node="c001n05" on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="31" operation="stop" operation_key="heartbeat_192.168.100.182_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="40" operation="stop" operation_key="group-1_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="7">
+    <action_set>
+      <pseudo_event id="27" operation="stop" operation_key="ocf_192.168.100.181_stop_0">
+        <attributes CRM_meta_timeout="20000"  ip="192.168.100.181"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="2" operation="stonith" operation_key="stonith-c001n03-reboot" on_node="c001n03" on_node_uuid="f5e1d2de-73da-432a-9d5c-37472253c2ee"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="31" operation="stop" operation_key="heartbeat_192.168.100.182_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="40" operation="stop" operation_key="group-1_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="8">
+    <action_set>
+      <rsc_op id="33" operation="monitor" operation_key="heartbeat_192.168.100.182_monitor_5000" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5">
+        <primitive id="heartbeat_192.168.100.182" class="ocf" provider="heartbeat" type="IPaddr"/>
+        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_on_node="c001n02" CRM_meta_on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5" CRM_meta_timeout="20000" >
+          <param name="1" value="192.168.100.182"/>
+        </attributes>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="32" operation="start" operation_key="heartbeat_192.168.100.182_start_0" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="9">
+    <action_set>
+      <rsc_op id="32" operation="start" operation_key="heartbeat_192.168.100.182_start_0" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5">
+        <primitive id="heartbeat_192.168.100.182" class="ocf" provider="heartbeat" type="IPaddr"/>
+        <attributes CRM_meta_on_node="c001n02" CRM_meta_on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5" CRM_meta_timeout="20000" >
+          <param name="1" value="192.168.100.182"/>
+        </attributes>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="29" operation="start" operation_key="ocf_192.168.100.181_start_0" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="31" operation="stop" operation_key="heartbeat_192.168.100.182_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="38" operation="start" operation_key="group-1_start_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="105" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="10">
+    <action_set>
+      <pseudo_event id="31" operation="stop" operation_key="heartbeat_192.168.100.182_stop_0">
+        <attributes CRM_meta_timeout="20000" >
+          <param name="1" value="192.168.100.182"/>
+        </attributes>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="2" operation="stonith" operation_key="stonith-c001n03-reboot" on_node="c001n03" on_node_uuid="f5e1d2de-73da-432a-9d5c-37472253c2ee"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="34" operation="stop" operation_key="ocf_192.168.100.183_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="35" operation="stop" operation_key="ocf_192.168.100.183_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="40" operation="stop" operation_key="group-1_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="11">
+    <action_set>
+      <rsc_op id="37" operation="monitor" operation_key="ocf_192.168.100.183_monitor_5000" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5">
+        <primitive id="ocf_192.168.100.183" class="ocf" provider="heartbeat" type="IPaddr"/>
+        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_on_node="c001n02" CRM_meta_on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5" CRM_meta_timeout="20000"  ip="192.168.100.183"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="36" operation="start" operation_key="ocf_192.168.100.183_start_0" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="12">
+    <action_set>
+      <rsc_op id="36" operation="start" operation_key="ocf_192.168.100.183_start_0" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5">
+        <primitive id="ocf_192.168.100.183" class="ocf" provider="heartbeat" type="IPaddr"/>
+        <attributes CRM_meta_on_node="c001n02" CRM_meta_on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5" CRM_meta_timeout="20000"  ip="192.168.100.183"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="32" operation="start" operation_key="heartbeat_192.168.100.182_start_0" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="34" operation="stop" operation_key="ocf_192.168.100.183_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="35" operation="stop" operation_key="ocf_192.168.100.183_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="38" operation="start" operation_key="group-1_start_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="105" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="13">
+    <action_set>
+      <pseudo_event id="35" operation="stop" operation_key="ocf_192.168.100.183_stop_0">
+        <attributes CRM_meta_timeout="20000"  ip="192.168.100.183"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="14" operation="stonith" operation_key="stonith-c001n05-reboot" on_node="c001n05" on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="40" operation="stop" operation_key="group-1_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="14">
+    <action_set>
+      <pseudo_event id="34" operation="stop" operation_key="ocf_192.168.100.183_stop_0">
+        <attributes CRM_meta_timeout="20000"  ip="192.168.100.183"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="2" operation="stonith" operation_key="stonith-c001n03-reboot" on_node="c001n03" on_node_uuid="f5e1d2de-73da-432a-9d5c-37472253c2ee"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="40" operation="stop" operation_key="group-1_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="15">
+    <action_set>
+      <rsc_op id="52" operation="monitor" operation_key="rsc_c001n05_monitor_5000" on_node="c001n07" on_node_uuid="6637ebb5-ab11-4728-b69e-b61222af9a0c">
+        <primitive id="rsc_c001n05" class="ocf" provider="heartbeat" type="IPaddr"/>
+        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_on_node="c001n07" CRM_meta_on_node_uuid="6637ebb5-ab11-4728-b69e-b61222af9a0c" CRM_meta_timeout="20000"  ip="192.168.100.187"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="51" operation="start" operation_key="rsc_c001n05_start_0" on_node="c001n07" on_node_uuid="6637ebb5-ab11-4728-b69e-b61222af9a0c"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="16">
+    <action_set>
+      <rsc_op id="51" operation="start" operation_key="rsc_c001n05_start_0" on_node="c001n07" on_node_uuid="6637ebb5-ab11-4728-b69e-b61222af9a0c">
+        <primitive id="rsc_c001n05" class="ocf" provider="heartbeat" type="IPaddr"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_node="c001n07" CRM_meta_on_node_uuid="6637ebb5-ab11-4728-b69e-b61222af9a0c" CRM_meta_timeout="40000"  ip="192.168.100.187"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="50" operation="stop" operation_key="rsc_c001n05_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="105" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="17">
+    <action_set>
+      <pseudo_event id="50" operation="stop" operation_key="rsc_c001n05_stop_0">
+        <attributes CRM_meta_timeout="20000"  ip="192.168.100.187"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="14" operation="stonith" operation_key="stonith-c001n05-reboot" on_node="c001n05" on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="18">
+    <action_set>
+      <rsc_op id="57" operation="monitor" operation_key="rsc_c001n07_monitor_5000" on_node="c001n07" on_node_uuid="6637ebb5-ab11-4728-b69e-b61222af9a0c">
+        <primitive id="rsc_c001n07" class="ocf" provider="heartbeat" type="IPaddr"/>
+        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_on_node="c001n07" CRM_meta_on_node_uuid="6637ebb5-ab11-4728-b69e-b61222af9a0c" CRM_meta_timeout="20000"  ip="192.168.100.189"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="56" operation="start" operation_key="rsc_c001n07_start_0" on_node="c001n07" on_node_uuid="6637ebb5-ab11-4728-b69e-b61222af9a0c"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="19">
+    <action_set>
+      <rsc_op id="56" operation="start" operation_key="rsc_c001n07_start_0" on_node="c001n07" on_node_uuid="6637ebb5-ab11-4728-b69e-b61222af9a0c">
+        <primitive id="rsc_c001n07" class="ocf" provider="heartbeat" type="IPaddr"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_node="c001n07" CRM_meta_on_node_uuid="6637ebb5-ab11-4728-b69e-b61222af9a0c" CRM_meta_timeout="40000"  ip="192.168.100.189"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="55" operation="stop" operation_key="rsc_c001n07_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="105" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="20">
+    <action_set>
+      <pseudo_event id="55" operation="stop" operation_key="rsc_c001n07_stop_0">
+        <attributes CRM_meta_timeout="20000"  ip="192.168.100.189"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="2" operation="stonith" operation_key="stonith-c001n03-reboot" on_node="c001n03" on_node_uuid="f5e1d2de-73da-432a-9d5c-37472253c2ee"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="21">
+    <action_set>
+      <rsc_op id="70" operation="monitor" operation_key="child_DoFencing:4_monitor_20000" on_node="c001n08" on_node_uuid="f3dcc75c-12da-4949-b01c-1988f7df5238">
+        <primitive id="child_DoFencing" long-id="child_DoFencing:4" class="stonith" type="ssh"/>
+        <attributes CRM_meta_clone="4" CRM_meta_clone_max="7" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="20000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="c001n08" CRM_meta_on_node_uuid="f3dcc75c-12da-4949-b01c-1988f7df5238" CRM_meta_timeout="40000"  hostlist="c001n03 c001n02 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="22">
+    <action_set>
+      <pseudo_event id="105" operation="stonith_complete" operation_key="stonith_complete">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="2" operation="stonith" operation_key="stonith-c001n03-reboot" on_node="c001n03" on_node_uuid="f5e1d2de-73da-432a-9d5c-37472253c2ee"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="23">
+    <action_set>
+      <pseudo_event id="26" operation="all_stopped" operation_key="all_stopped">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="27" operation="stop" operation_key="ocf_192.168.100.181_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="28" operation="stop" operation_key="ocf_192.168.100.181_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="31" operation="stop" operation_key="heartbeat_192.168.100.182_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="34" operation="stop" operation_key="ocf_192.168.100.183_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="35" operation="stop" operation_key="ocf_192.168.100.183_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="50" operation="stop" operation_key="rsc_c001n05_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="55" operation="stop" operation_key="rsc_c001n07_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="105" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="24">
+    <action_set>
+      <crm_event id="14" operation="stonith" operation_key="stonith-c001n05-reboot" on_node="c001n05" on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e">
+        <attributes CRM_meta_on_node="c001n05" CRM_meta_on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e" CRM_meta_probe_complete="true" CRM_meta_stonith_action="reboot" />
+        <downed>
+          <node id="52a5ea5e-86ee-442c-b251-0bc9825c517e"/>
+        </downed>
+      </crm_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="25">
+    <action_set>
+      <crm_event id="2" operation="stonith" operation_key="stonith-c001n03-reboot" on_node="c001n03" on_node_uuid="f5e1d2de-73da-432a-9d5c-37472253c2ee">
+        <attributes CRM_meta_on_node="c001n03" CRM_meta_on_node_uuid="f5e1d2de-73da-432a-9d5c-37472253c2ee" CRM_meta_op_no_wait="true" CRM_meta_probe_complete="true" CRM_meta_stonith_action="reboot" />
+        <downed>
+          <node id="f5e1d2de-73da-432a-9d5c-37472253c2ee"/>
+        </downed>
+      </crm_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="14" operation="stonith" operation_key="stonith-c001n05-reboot" on_node="c001n05" on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e"/>
+      </trigger>
+    </inputs>
+  </synapse>
+</transition_graph>
+

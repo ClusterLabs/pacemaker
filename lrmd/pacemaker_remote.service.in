@@ -2,8 +2,11 @@
 Description=Pacemaker Remote Service
 Documentation=man:pacemaker_remoted http://clusterlabs.org/doc/en-US/Pacemaker/1.1-pcs/html/Pacemaker_Remote/index.html
 
+# See main pacemaker unit file for descriptions of why these are needed
 After=network.target
 After=time-sync.target
+After=dbus.service
+Wants=dbus.service
 After=resource-agents-deps.target
 Wants=resource-agents-deps.target
 After=syslog.service
@@ -21,9 +24,12 @@ EnvironmentFile=-@CONFIGDIR@/sbd
 
 ExecStart=@sbindir@/pacemaker_remoted
 
-# Uncomment TasksMax if your systemd version supports it.
-# Only systemd v227 and above support this option.
-#TasksMax=infinity
+# Systemd v227 and above can limit the number of processes spawned by a
+# service. That is a bad idea for an HA cluster resource manager, so disable it
+# by default. The administrator can create a local override if they really want
+# a limit. If your systemd version does not support TasksMax, and you want to
+# get rid of the resulting log warnings, comment out this option.
+TasksMax=infinity
 
 # Pacemaker Remote can exit only after all managed services have shut down;
 # an HA database could conceivably take even longer than this 

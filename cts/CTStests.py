@@ -3,6 +3,8 @@
 There are a few things we want to do here:
 
  '''
+from __future__ import division
+from __future__ import print_function
 
 __copyright__ = '''
 Copyright (C) 2000, 2001 Alan Robertson <alanr@unix.sh>
@@ -45,14 +47,14 @@ from cts.CTSaudits import *
 from cts.CTSvars   import *
 from cts.patterns  import PatternSelector
 from cts.logging   import LogFactory
-from cts.remote    import RemoteFactory
+from cts.remote    import RemoteFactory, input_wrapper
 from cts.watcher   import LogWatcher
 from cts.environment import EnvFactory
 
 AllTestClasses = [ ]
 
 
-class CTSTest:
+class CTSTest(object):
     '''
     A Cluster test.
     We implement the basic set of properties and behaviors for a generic
@@ -282,9 +284,6 @@ class StopTest(CTSTest):
         patterns = []
         # Technically we should always be able to notice ourselves stopping
         patterns.append(self.templates["Pat:We_stopped"] % node)
-
-        #if self.Env["use_logd"]:
-        #    patterns.append(self.templates["Pat:Logd_stopped"] % node)
 
         # Any active node needs to notice this one left
         # NOTE: This wont work if we have multiple partitions
@@ -539,7 +538,7 @@ class StonithdTest(CTSTest):
         if not self.is_applicable_common():
             return 0
 
-        if "DoFencing" in self.Env.keys():
+        if "DoFencing" in list(self.Env.keys()):
             return self.Env["DoFencing"]
 
         return 1
@@ -600,8 +599,6 @@ class SimulStart(CTSTest):
         ret = self.stopall(None)
         if not ret:
             return self.failure("Setup failed")
-
-        self.CM.clear_all_caches()
 
         if not self.startall(None):
             return self.failure("Startall failed")
@@ -668,7 +665,6 @@ class StopOnebyOne(CTSTest):
         if len(failed) > 0:
             return self.failure("Some node failed to stop: " + repr(failed))
 
-        self.CM.clear_all_caches()
         return self.success()
 
 #     Register StopOnebyOne as a good test to run
@@ -872,11 +868,6 @@ class ValgrindTest(CTSTest):
         if not ret:
             return self.failure("Start all nodes failed")
 
-        for node in self.Env["nodes"]:
-            (rc, output) = self.rsh(node, "ps u --ppid `pidofproc aisexec`", None)
-            for line in output:
-                self.debug(line)
-
         return self.success()
 
     def teardown(self, node):
@@ -896,7 +887,6 @@ class ValgrindTest(CTSTest):
         self.stop = StopTest(self.CM)
 
         for node in self.Env["nodes"]:
-            (rc, ps_out) = self.rsh(node, "ps u --ppid `pidofproc aisexec`", None)
             rc = self.stop(node)
             if not rc:
                 self.failure("Couldn't shut down %s" % node)
@@ -905,8 +895,6 @@ class ValgrindTest(CTSTest):
             if rc != 1:
                 leaked.append(node)
                 self.failure("Valgrind errors detected on %s" % node)
-                for line in ps_out:
-                    self.logger.log(line)
                 (rc, output) = self.rsh(node, "grep -e lost: -e SUMMARY: %s" % self.logger.logPat, None)
                 for line in output:
                     self.logger.log(line)
@@ -973,7 +961,7 @@ class BandwidthTest(CTSTest):
 #        Tests should not be cluster-manager-specific
 #        If you need to find out cluster manager configuration to do this, then
 #        it should be added to the generic cluster manager API.
-    '''Test the bandwidth which heartbeat uses'''
+    '''Test the bandwidth which the cluster uses'''
     def __init__(self, cm):
         CTSTest.__init__(self, cm)
         self.name = "Bandwidth"
@@ -1042,7 +1030,7 @@ class BandwidthTest(CTSTest):
                 return None
             if re.search("udp",line) or re.search("UDP,", line):
                 count = count + 1
-                linesplit = string.split(line," ")
+                linesplit = str.split(line," ")
                 for j in range(len(linesplit)-1):
                     if linesplit[j] == "udp": break
                     if linesplit[j] == "length:": break
@@ -1053,8 +1041,8 @@ class BandwidthTest(CTSTest):
                     self.logger.log("Invalid tcpdump line: %s" % line)
                     return None
                 T1 = linesplit[0]
-                timesplit = string.split(T1,":")
-                time2split = string.split(timesplit[2],".")
+                timesplit = str.split(T1,":")
+                time2split = str.split(timesplit[2],".")
                 time1 = (int(timesplit[0])*60+int(timesplit[1]))*60+int(time2split[0])+int(time2split[1])*0.000001
                 break
 
@@ -1064,7 +1052,7 @@ class BandwidthTest(CTSTest):
                 return None
             if re.search("udp",line) or re.search("UDP,", line):
                 count = count+1
-                linessplit = string.split(line," ")
+                linessplit = str.split(line," ")
                 for j in range(len(linessplit)-1):
                     if linessplit[j] == "udp": break
                     if linesplit[j] == "length:": break
@@ -1075,13 +1063,13 @@ class BandwidthTest(CTSTest):
                     return None
 
         T2 = linessplit[0]
-        timesplit = string.split(T2,":")
-        time2split = string.split(timesplit[2],".")
+        timesplit = str.split(T2,":")
+        time2split = str.split(timesplit[2],".")
         time2 = (int(timesplit[0])*60+int(timesplit[1]))*60+int(time2split[0])+int(time2split[1])*0.000001
         time = time2-time1
         if (time <= 0):
             return 0
-        return (sum*8)/time
+        return int((sum*8)/time)
 
     def is_applicable(self):
         '''BandwidthTest never applicable'''
@@ -1408,35 +1396,13 @@ class ComponentFail(CTSTest):
         self.debug("...component %s (dc=%d,boot=%d)" % (chosen.name, node_is_dc,chosen.triggersreboot))
         self.incr(chosen.name)
 
-        if chosen.name != "aisexec" and chosen.name != "corosync":
-            if self.Env["Name"] != "crm-lha" or chosen.name != "pengine":
-                self.patterns.append(self.templates["Pat:ChildKilled"] %(node, chosen.name))
-                self.patterns.append(self.templates["Pat:ChildRespawn"] %(node, chosen.name))
+        if chosen.name != "corosync":
+            self.patterns.append(self.templates["Pat:ChildKilled"] %(node, chosen.name))
+            self.patterns.append(self.templates["Pat:ChildRespawn"] %(node, chosen.name))
 
         self.patterns.extend(chosen.pats)
         if node_is_dc:
           self.patterns.extend(chosen.dc_pats)
-
-        # In an ideal world, this next stuff should be in the "chosen" object as a member function
-        if self.Env["Name"] == "crm-lha" and chosen.triggersreboot:
-            # Make sure the node goes down and then comes back up if it should reboot...
-            for other in self.Env["nodes"]:
-                if other != node:
-                    self.patterns.append(self.templates["Pat:They_stopped"] %(other, self.CM.key_for_node(node)))
-            self.patterns.append(self.templates["Pat:Slave_started"] % node)
-            self.patterns.append(self.templates["Pat:Local_started"] % node)
-
-            if chosen.dc_only:
-                # Sometimes these will be in the log, and sometimes they won't...
-                self.okerrpatterns.append("%s .*Process %s:.* exited" % (node, chosen.name))
-                self.okerrpatterns.append("%s .*I_ERROR.*crmdManagedChildDied" % node)
-                self.okerrpatterns.append("%s .*The %s subsystem terminated unexpectedly" % (node, chosen.name))
-                self.okerrpatterns.append("(ERROR|error): Client .* exited with return code")
-            else:
-                # Sometimes this won't be in the log...
-                self.okerrpatterns.append(self.templates["Pat:ChildKilled"] %(node, chosen.name))
-                self.okerrpatterns.append(self.templates["Pat:ChildRespawn"] %(node, chosen.name))
-                self.okerrpatterns.append(self.templates["Pat:ChildExit"])
 
         if chosen.name == "stonith":
             # Ignore actions for STONITH resources
@@ -1584,7 +1550,7 @@ class SplitBrainTest(CTSTest):
                 if not p in partitions:
                     partitions[p] = []
                 partitions[p].append(node)
-            p_max = len(partitions.keys())
+            p_max = len(list(partitions.keys()))
             if p_max > 1:
                 break
             # else, try again
@@ -1658,7 +1624,7 @@ class SplitBrainTest(CTSTest):
                 answer = "Y"
             else:
                 try:
-                    answer = raw_input('Continue? [nY]')
+                    answer = input_wrapper('Continue? [nY]')
                 except EOFError as e:
                     answer = "n" 
             if answer and answer == "n":
@@ -1701,7 +1667,7 @@ class Reattach(CTSTest):
         self.is_unsafe = 0 # Handled by canrunnow()
 
     def _is_managed(self, node):
-        is_managed = self.rsh(node, "crm_attribute -t rsc_defaults -n is-managed -Q -G -d true", 1)
+        is_managed = self.rsh(node, "crm_attribute -t rsc_defaults -n is-managed -q -G -d true", 1)
         is_managed = is_managed[:-1] # Strip off the newline
         return is_managed == "true"
 
@@ -1828,8 +1794,6 @@ class Reattach(CTSTest):
         ]
 
     def is_applicable(self):
-        if self.Env["Name"] == "crm-lha":
-            return None
         return 1
 
 AllTestClasses.append(Reattach)
@@ -2107,7 +2071,7 @@ class NearQuorumPointTest(CTSTest):
 
         for node in startset:
             if self.CM.ShouldBeStatus[node] == "down":
-                #watchpats.append(self.templates["Pat:Slave_started"] % node)
+                #watchpats.append(self.templates["Pat:NonDC_started"] % node)
                 watchpats.append(self.templates["Pat:Local_started"] % node)
             else:
                 for stopping in stopset:
@@ -2171,8 +2135,6 @@ class NearQuorumPointTest(CTSTest):
         return self.failure()
 
     def is_applicable(self):
-        if self.Env["Name"] == "crm-cman":
-            return None
         return 1
 
 AllTestClasses.append(NearQuorumPointTest)
@@ -2259,11 +2221,11 @@ class RollingUpgradeTest(CTSTest):
         if not self.is_applicable_common():
             return None
 
-        if not "rpm-dir" in self.Env.keys():
+        if not "rpm-dir" in list(self.Env.keys()):
             return None
-        if not "current-version" in self.Env.keys():
+        if not "current-version" in list(self.Env.keys()):
             return None
-        if not "previous-version" in self.Env.keys():
+        if not "previous-version" in list(self.Env.keys()):
             return None
 
         return 1
@@ -2382,11 +2344,8 @@ class SimulStopLite(CTSTest):
             if self.CM.ShouldBeStatus[node] == "up":
                 self.incr("WasStarted")
                 watchpats.append(self.templates["Pat:We_stopped"] % node)
-                #if self.Env["use_logd"]:
-                #    watchpats.append(self.templates["Pat:Logd_stopped"] % node)
 
         if len(watchpats) == 0:
-            self.CM.clear_all_caches()
             return self.success()
 
         #     Stop all the nodes - at about the same time...
@@ -2398,8 +2357,6 @@ class SimulStopLite(CTSTest):
             if self.CM.ShouldBeStatus[node] == "up":
                 self.CM.StopaCMnoBlock(node)
         if watch.lookforall():
-            self.CM.clear_all_caches()
-
             # Make sure they're completely down with no residule
             for node in self.Env["nodes"]:
                 self.rsh(node, self.templates["StopCmd"])
@@ -2419,7 +2376,6 @@ class SimulStopLite(CTSTest):
         self.logger.log("Warn: All nodes stopped but CTS didnt detect: "
                     + repr(watch.unmatched))
 
-        self.CM.clear_all_caches()
         return self.failure("Missing log message: "+repr(watch.unmatched))
 
     def is_applicable(self):
@@ -2450,7 +2406,7 @@ class SimulStartLite(CTSTest):
             # Repeat until all nodes come up
             watchpats = [ ]
 
-            uppat = self.templates["Pat:Slave_started"]
+            uppat = self.templates["Pat:NonDC_started"]
             if self.CM.upcount() == 0:
                 uppat = self.templates["Pat:Local_started"]
 
@@ -2930,7 +2886,7 @@ class RemoteDriver(CTSTest):
             self.fail("Failed to set remote-node attribute. rc:%s output:%s" % (rc, line))
             return
 
-        (rc, line) = self.CM.rsh(node, "crm_attribute -l forever -n testattr -Q -N %s" % (self.remote_node), None)
+        (rc, line) = self.CM.rsh(node, "crm_attribute -l forever -n testattr -q -N %s" % (self.remote_node), None)
         if rc != 0:
             self.fail("Failed to get remote-node attribute")
             return
@@ -3094,7 +3050,7 @@ class RemoteStonithd(RemoteDriver):
         if not RemoteDriver.is_applicable(self):
             return False
 
-        if "DoFencing" in self.Env.keys():
+        if "DoFencing" in list(self.Env.keys()):
             return self.Env["DoFencing"]
 
         return True

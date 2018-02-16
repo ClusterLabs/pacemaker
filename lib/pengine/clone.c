@@ -122,31 +122,13 @@ create_child_clone(resource_t * rsc, int sub_id, pe_working_set_t * data_set)
 
     add_hash_param(child_rsc->meta, XML_RSC_ATTR_INCARNATION_MAX, inc_max);
 
-    print_resource(LOG_DEBUG_3, "Added ", child_rsc, FALSE);
+    print_resource(LOG_TRACE, "Added ", child_rsc, FALSE);
 
   bail:
     free(inc_num);
     free(inc_max);
 
     return child_rsc;
-}
-
-gboolean
-master_unpack(resource_t * rsc, pe_working_set_t * data_set)
-{
-    const char *master_max = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_MASTER_MAX);
-    const char *master_node_max = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_MASTER_NODEMAX);
-
-    g_hash_table_replace(rsc->meta, strdup("stateful"), strdup(XML_BOOLEAN_TRUE));
-    if (clone_unpack(rsc, data_set)) {
-        clone_variant_data_t *clone_data = NULL;
-
-        get_clone_variant_data(clone_data, rsc);
-        clone_data->master_max = crm_parse_int(master_max, "1");
-        clone_data->master_node_max = crm_parse_int(master_node_max, "1");
-        return TRUE;
-    }
-    return FALSE;
 }
 
 gboolean
@@ -166,6 +148,30 @@ clone_unpack(resource_t * rsc, pe_working_set_t * data_set)
 
     clone_data = calloc(1, sizeof(clone_variant_data_t));
     rsc->variant_opaque = clone_data;
+
+    if (is_set(rsc->flags, pe_rsc_promotable)) {
+        const char *promoted_max = NULL;
+        const char *promoted_node_max = NULL;
+
+        promoted_max = g_hash_table_lookup(rsc->meta,
+                                           XML_RSC_ATTR_PROMOTED_MAX);
+        if (promoted_max == NULL) {
+            // @COMPAT deprecated since 2.0.0
+            promoted_max = g_hash_table_lookup(rsc->meta,
+                                               XML_RSC_ATTR_MASTER_MAX);
+        }
+
+        promoted_node_max = g_hash_table_lookup(rsc->meta,
+                                                XML_RSC_ATTR_PROMOTED_NODEMAX);
+        if (promoted_node_max == NULL) {
+            // @COMPAT deprecated since 2.0.0
+            promoted_node_max = g_hash_table_lookup(rsc->meta,
+                                                    XML_RSC_ATTR_MASTER_NODEMAX);
+        }
+
+        clone_data->promoted_max = crm_parse_int(promoted_max, "1");
+        clone_data->promoted_node_max = crm_parse_int(promoted_node_max, "1");
+    }
 
     clone_data->active_clones = 0;
     clone_data->xml_obj_child = NULL;
@@ -194,6 +200,8 @@ clone_unpack(resource_t * rsc, pe_working_set_t * data_set)
     pe_rsc_trace(rsc, "\tClone node max: %d", clone_data->clone_node_max);
     pe_rsc_trace(rsc, "\tClone is unique: %s",
                  is_set(rsc->flags, pe_rsc_unique) ? "true" : "false");
+    pe_rsc_trace(rsc, "\tClone is promotable: %s",
+                 is_set(rsc->flags, pe_rsc_promotable) ? "true" : "false");
 
     // Clones may contain a single group or primitive
     for (a_child = __xml_first_child(xml_obj); a_child != NULL;
@@ -321,14 +329,13 @@ configured_role(resource_t * rsc)
 static void
 clone_print_xml(resource_t * rsc, const char *pre_text, long options, void *print_data)
 {
-    int is_master_slave = rsc->variant == pe_master ? 1 : 0;
     char *child_text = crm_concat(pre_text, "   ", ' ');
     const char *target_role = configured_role_str(rsc);
     GListPtr gIter = rsc->children;
 
     status_print("%s<clone ", pre_text);
     status_print("id=\"%s\" ", rsc->id);
-    status_print("multi_state=\"%s\" ", is_master_slave ? "true" : "false");
+    status_print("multi_state=\"%s\" ", is_set(rsc->flags, pe_rsc_promotable)? "true" : "false");
     status_print("unique=\"%s\" ", is_set(rsc->flags, pe_rsc_unique) ? "true" : "false");
     status_print("managed=\"%s\" ", is_set(rsc->flags, pe_rsc_managed) ? "true" : "false");
     status_print("failed=\"%s\" ", is_set(rsc->flags, pe_rsc_failed) ? "true" : "false");
@@ -407,7 +414,7 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
 
     child_text = crm_concat(pre_text, "   ", ' ');
 
-    if (rsc->variant == pe_master) {
+    if (is_set(rsc->flags, pe_rsc_promotable)) {
         type = "Master/Slave";
     }
 
@@ -518,7 +525,7 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
 	active_instances++;
     }
 
-    if(rsc->variant == pe_master) {
+    if (is_set(rsc->flags, pe_rsc_promotable)) {
         enum rsc_role_e role = configured_role(rsc);
 
         if(role == RSC_ROLE_SLAVE) {

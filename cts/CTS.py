@@ -3,6 +3,8 @@
 Classes related to testing high-availability clusters...
  '''
 
+from __future__ import print_function
+
 __copyright__ = '''
 Copyright (C) 2000, 2001 Alan Robertson <alanr@unix.sh>
 Licensed under the GNU GPL.
@@ -25,12 +27,15 @@ Licensed under the GNU GPL.
 
 import string, sys, time, re, os, traceback
 
-from UserDict import UserDict
+if sys.version_info > (3,):
+    from collections import UserDict
+else:
+    from UserDict import UserDict
 
 from cts.CTSvars     import *
 from cts.logging     import LogFactory
 from cts.watcher     import LogWatcher
-from cts.remote      import RemoteFactory
+from cts.remote      import RemoteFactory, input_wrapper
 from cts.environment import EnvFactory
 from cts.patterns    import PatternSelector
 
@@ -111,7 +116,7 @@ case $action in
 esac
 """
 
-class CtsLab:
+class CtsLab(object):
     '''This class defines the Lab Environment for the Cluster Test System.
     It defines those things which are expected to change from test
     environment to test environment for the same cluster manager.
@@ -157,7 +162,7 @@ class CtsLab:
         self.Env.dump()
 
     def has_key(self, key):
-        return key in self.Env.keys()
+        return key in list(self.Env.keys())
 
     def __getitem__(self, key):
         return self.Env[key]
@@ -206,7 +211,7 @@ class CtsLab:
         if not self.IsValidNode(node):
             raise ValueError("Invalid node [%s] in CheckNode" % node)
 
-class NodeStatus:
+class NodeStatus(object):
     def __init__(self, env):
         self.Env = env
 
@@ -245,7 +250,7 @@ class NodeStatus:
             answer = "Y"
         else:
             try:
-                answer = raw_input('Continue? [nY]')
+                answer = input_wrapper('Continue? [nY]')
             except EOFError as e:
                 answer = "n"
         if answer and answer == "n":
@@ -290,7 +295,6 @@ class ClusterManager(UserDict):
         self.templates = PatternSelector(self.Env["Name"])
         self.__InitialConditions()
         self.logger = LogFactory()
-        self.clear_cache = 0
         self.TestLoggingLevel=0
         self.data = {}
         self.name = self.Env["Name"]
@@ -298,7 +302,7 @@ class ClusterManager(UserDict):
         self.rsh = RemoteFactory().getInstance()
         self.ShouldBeStatus={}
         self.ns = NodeStatus(self.Env)
-        self.OurNode = string.lower(os.uname()[1])
+        self.OurNode = os.uname()[1].lower()
         self.__instance_errorstoignore = []
 
     def __getitem__(self, key):
@@ -375,15 +379,6 @@ class ClusterManager(UserDict):
     def install_config(self, node):
         return None
 
-    def clear_all_caches(self):
-        if self.clear_cache:
-            for node in self.Env["nodes"]:
-                if self.ShouldBeStatus[node] == "down":
-                    self.debug("Removing cache file on: "+node)
-                    self.rsh(node, "rm -f "+CTSvars.HA_VARLIBHBDIR+"/hostcache")
-                else:
-                    self.debug("NOT Removing cache file on: "+node)
-
     def prepare_fencing_watcher(self, name):
         # If we don't have quorum now but get it as a result of starting this node,
         # then a bunch of nodes might get fenced
@@ -404,12 +399,6 @@ class ClusterManager(UserDict):
         stonithPats = []
         for peer in self.Env["nodes"]:
             if self.ShouldBeStatus[peer] != "up":
-                stonithPats.append(self.templates["Pat:Fencing_ok"] % peer)
-                stonithPats.append(self.templates["Pat:Fencing_start"] % peer)
-            elif self.Env["Stack"] == "corosync (cman)":
-                # There is a delay between gaining quorum and CMAN starting fencing
-                # This can mean that even nodes that are fully up get fenced
-                # There is no use fighting it, just look for everyone so that CTS doesn't get confused
                 stonithPats.append(self.templates["Pat:Fencing_ok"] % peer)
                 stonithPats.append(self.templates["Pat:Fencing_start"] % peer)
 
@@ -516,9 +505,9 @@ class ClusterManager(UserDict):
         # Technically we should always be able to notice ourselves starting
         patterns.append(self.templates["Pat:Local_started"] % node)
         if self.upcount() == 0:
-            patterns.append(self.templates["Pat:Master_started"] % node)
+            patterns.append(self.templates["Pat:DC_started"] % node)
         else:
-            patterns.append(self.templates["Pat:Slave_started"] % node)
+            patterns.append(self.templates["Pat:NonDC_started"] % node)
 
         watch = LogWatcher(
             self.Env["LogFileName"], patterns, "StartaCM", self.Env["StartTime"]+10, hosts=self.Env["nodes"], kind=self.Env["LogWatcher"])
@@ -529,11 +518,6 @@ class ClusterManager(UserDict):
         if self.StataCM(node) and self.cluster_stable(self.Env["DeadTime"]):
             self.logger.log ("%s was already started" % (node))
             return 1
-
-        # Clear out the host cache so autojoin can be exercised
-        if self.clear_cache:
-            self.debug("Removing cache file on: "+node)
-            self.rsh(node, "rm -f "+CTSvars.HA_VARLIBHBDIR+"/hostcache")
 
         if not(self.Env["valgrind-tests"]):
             startCmd = self.templates["StartCmd"]
@@ -580,11 +564,6 @@ class ClusterManager(UserDict):
 
         if verbose: self.logger.log("Starting %s on node %s" % (self["Name"], node))
         else: self.debug("Starting %s on node %s" % (self["Name"], node))
-
-        # Clear out the host cache so autojoin can be exercised
-        if self.clear_cache:
-            self.debug("Removing cache file on: "+node)
-            self.rsh(node, "rm -f "+CTSvars.HA_VARLIBHBDIR+"/hostcache")
 
         self.install_config(node)
         if not(self.Env["valgrind-tests"]):
@@ -659,7 +638,7 @@ class ClusterManager(UserDict):
         '''Report the status of the cluster manager on a given node'''
 
         out=self.rsh(node, self.templates["StatusCmd"] % node, 1)
-        ret= (string.find(out, 'stopped') == -1)
+        ret= (str.find(out, 'stopped') == -1)
 
         try:
             if ret:
@@ -854,7 +833,7 @@ class ClusterManager(UserDict):
         elif node in self.Env["oprofile"]:
             self.rsh(node, "opcontrol --dump")
             self.rsh(node, "opcontrol --save=cts.%d" % test)
-            # Read back with: opreport -l session:cts.0 image:/usr/lib/heartbeat/c*
+            # Read back with: opreport -l session:cts.0 image:<directory>/c*
             if None:
                 self.rsh(node, "opcontrol --reset")
             else:
@@ -918,7 +897,7 @@ class ClusterManager(UserDict):
             self.rsh(host, '''bash %s %s mark %s''' % (log_stats_bin, log_stats_file, testnum), synchronous=0)
 
 
-class Resource:
+class Resource(object):
     '''
     This is an HA resource (not a resource group).
     A resource group is just an ordered list of Resource objects.
@@ -950,7 +929,7 @@ class Resource:
         '''
         This member function returns true if our resource is operating
         correctly on the given node in the cluster.
-        Heartbeat does not require this operation, but it might be called
+        OCF does not require this operation, but it might be called
         the Monitor operation, which is what FailSafe calls it.
         For remotely monitorable resources (like IP addresses), they *should*
         be monitored remotely for testing.
@@ -979,7 +958,7 @@ class Resource:
                 return "{" + self.ResourceType + "}"
 
 
-class Component:
+class Component(object):
     def kill(self, node):
         None
 

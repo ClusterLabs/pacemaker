@@ -58,16 +58,6 @@ resource_object_functions_t resource_class_functions[] = {
      clone_free
     },
     {
-     master_unpack,
-     native_find_rsc,
-     native_parameter,
-     clone_print,
-     clone_active,
-     clone_resource_state,
-     native_location,
-     clone_free
-    },
-    {
      container_unpack,
      native_find_rsc,
      native_parameter,
@@ -79,7 +69,7 @@ resource_object_functions_t resource_class_functions[] = {
     }
 };
 
-enum pe_obj_types
+static enum pe_obj_types
 get_resource_type(const char *name)
 {
     if (safe_str_eq(name, XML_CIB_TAG_RESOURCE)) {
@@ -92,33 +82,14 @@ get_resource_type(const char *name)
         return pe_clone;
 
     } else if (safe_str_eq(name, XML_CIB_TAG_MASTER)) {
-        return pe_master;
+        // @COMPAT deprecated since 2.0.0
+        return pe_clone;
 
     } else if (safe_str_eq(name, XML_CIB_TAG_CONTAINER)) {
         return pe_container;
     }
 
     return pe_unknown;
-}
-
-const char *
-get_resource_typename(enum pe_obj_types type)
-{
-    switch (type) {
-        case pe_native:
-            return XML_CIB_TAG_RESOURCE;
-        case pe_group:
-            return XML_CIB_TAG_GROUP;
-        case pe_clone:
-            return XML_CIB_TAG_INCARNATION;
-        case pe_master:
-            return XML_CIB_TAG_MASTER;
-        case pe_container:
-            return XML_CIB_TAG_CONTAINER;
-        case pe_unknown:
-            return "unknown";
-    }
-    return "<unknown>";
 }
 
 static void
@@ -132,7 +103,6 @@ get_meta_attributes(GHashTable * meta_hash, resource_t * rsc,
                     node_t * node, pe_working_set_t * data_set)
 {
     GHashTable *node_hash = NULL;
-    const char *version = crm_element_value(data_set->input, XML_ATTR_CRM_VERSION);
 
     if (node) {
         node_hash = node->details->attrs;
@@ -151,14 +121,6 @@ get_meta_attributes(GHashTable * meta_hash, resource_t * rsc,
 
     unpack_instance_attributes(data_set->input, rsc->xml, XML_TAG_META_SETS, node_hash,
                                meta_hash, NULL, FALSE, data_set->now);
-
-    if(version == NULL || compare_version(version, "3.0.9") < 0) {
-        /* populate from the regular attributes until the GUI can create
-         * meta attributes
-         */
-        unpack_instance_attributes(data_set->input, rsc->xml, XML_TAG_ATTR_SETS, node_hash,
-                                   meta_hash, NULL, FALSE, data_set->now);
-    }
 
     /* set anything else based on the parent */
     if (rsc->parent != NULL) {
@@ -380,85 +342,26 @@ add_template_rsc(xmlNode * xml_obj, pe_working_set_t * data_set)
     return TRUE;
 }
 
-static void
-handle_rsc_isolation(resource_t *rsc)
+static bool
+detect_promotable(resource_t *rsc)
 {
-    resource_t *top = uber_parent(rsc);
-    resource_t *iso = rsc;
-    const char *wrapper = NULL;
-    const char *value;
+    const char *promotable = g_hash_table_lookup(rsc->meta,
+                                                 XML_RSC_ATTR_PROMOTABLE);
 
-    /* check for isolation wrapper mapping if the parent doesn't have one set
-     * isolation mapping is enabled by default. For safety, we are allowing isolation
-     * to be disabled by setting the meta attr, isolation=false. */
-    value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_ISOLATION);
-    if (top->isolation_wrapper == NULL && (value == NULL || crm_is_true(value))) {
-        if (g_hash_table_lookup(rsc->parameters, "pcmk_docker_image")) {
-            wrapper = "docker-wrapper";
-        }
-        /* add more isolation technologies here as we expand */
-    } else if (top->isolation_wrapper) {
-        goto set_rsc_opts;
+    if (crm_is_true(promotable)) {
+        return TRUE;
     }
 
-    if (wrapper == NULL) {
-        return;
+    // @COMPAT deprecated since 2.0.0
+    if (safe_str_eq(crm_element_name(rsc->xml), XML_CIB_TAG_MASTER)) {
+        /* @TODO in some future version, pe_warn_once() here,
+         *       then drop support in even later version
+         */
+        g_hash_table_insert(rsc->meta, strdup(XML_RSC_ATTR_PROMOTABLE),
+                            strdup(XML_BOOLEAN_TRUE));
+        return TRUE;
     }
-
-    /* if this is a cloned primitive/group, go head and set the isolation wrapper at
-     * at the clone level. this is really the only sane thing to do in this situation.
-     * This allows someone to clone an isolated resource without having to shuffle
-     * around the isolation attributes to the clone parent */
-    if (top == rsc->parent && pe_rsc_is_clone(top)) {
-        iso = top;
-    }
-
-    iso->isolation_wrapper = wrapper;
-    set_bit(top->flags, pe_rsc_unique);
-
-set_rsc_opts:
-    pe_warn_once(pe_wo_isolation, "Support for 'isolation' resource meta-attribute"
-                                  " is deprecated and will be removed in a future release"
-                                  " (use bundle syntax instead)");
-
-    clear_bit(rsc->flags, pe_rsc_allow_migrate);
-    set_bit(rsc->flags, pe_rsc_unique);
-    if (pe_rsc_is_clone(top)) {
-        add_hash_param(rsc->meta, XML_RSC_ATTR_UNIQUE, XML_BOOLEAN_TRUE);
-    }
-}
-
-static void
-check_deprecated_stonith(resource_t *rsc)
-{
-    GHashTableIter iter;
-    char *key;
-
-    g_hash_table_iter_init(&iter, rsc->parameters);
-    while (g_hash_table_iter_next(&iter, (gpointer *) &key, NULL)) {
-        if (crm_starts_with(key, "pcmk_")) {
-            char *cmp = key + 5; // the part after "pcmk_"
-
-            if (!strcmp(cmp, "poweroff_action")) {
-                pe_warn_once(pe_wo_poweroff,
-                             "Support for the 'pcmk_poweroff_action' stonith resource parameter"
-                             " is deprecated and will be removed in a future version"
-                             " (use 'pcmk_off_action' instead)");
-
-            } else if (!strcmp(cmp, "arg_map")) {
-                pe_warn_once(pe_wo_arg_map,
-                             "Support for the 'pcmk_arg_map' stonith resource parameter"
-                             " is deprecated and will be removed in a future version"
-                             " (use 'pcmk_host_argument' instead)");
-
-            } else if (crm_ends_with(cmp, "_cmd")) {
-                pe_warn_once(pe_wo_stonith_cmd,
-                             "Support for the 'pcmk_*_cmd' stonith resource parameters"
-                             " is deprecated and will be removed in a future version"
-                             " (use 'pcmk_*_action' instead)");
-            }
-        }
-    }
+    return FALSE;
 }
 
 gboolean
@@ -468,7 +371,6 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     bool isdefault = FALSE;
     xmlNode *expanded_xml = NULL;
     xmlNode *ops = NULL;
-    resource_t *top = NULL;
     const char *value = NULL;
     const char *rclass = NULL; /* Look for this after any templates have been expanded */
     const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
@@ -554,7 +456,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     set_bit((*rsc)->flags, pe_rsc_runnable);
     set_bit((*rsc)->flags, pe_rsc_provisional);
 
-    if (is_set(data_set->flags, pe_flag_is_managed_default)) {
+    if (is_not_set(data_set->flags, pe_flag_maintenance_mode)) {
         set_bit((*rsc)->flags, pe_rsc_managed);
     }
 
@@ -565,7 +467,7 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     (*rsc)->next_role = RSC_ROLE_UNKNOWN;
 
     (*rsc)->recovery_type = recovery_stop_start;
-    (*rsc)->stickiness = data_set->default_resource_stickiness;
+    (*rsc)->stickiness = 0;
     (*rsc)->migration_threshold = INFINITY;
     (*rsc)->failure_timeout = 0;
 
@@ -633,20 +535,26 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
         set_bit((*rsc)->flags, pe_rsc_maintenance);
     }
 
-    pe_rsc_trace((*rsc), "Options for %s", (*rsc)->id);
-
-    handle_rsc_isolation(*rsc);
-
-    top = uber_parent(*rsc);
-    value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_UNIQUE);
-    if (crm_is_true(value) || pe_rsc_is_clone(top) == FALSE) {
+    if (pe_rsc_is_clone(uber_parent(*rsc))) {
+        value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_UNIQUE);
+        if (crm_is_true(value)) {
+            set_bit((*rsc)->flags, pe_rsc_unique);
+        }
+        if (detect_promotable(*rsc)) {
+            set_bit((*rsc)->flags, pe_rsc_promotable);
+        }
+    } else {
         set_bit((*rsc)->flags, pe_rsc_unique);
     }
+
+    pe_rsc_trace((*rsc), "Options for %s", (*rsc)->id);
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_RESTART);
     if (safe_str_eq(value, "restart")) {
         (*rsc)->restart_type = pe_restart_restart;
         pe_rsc_trace((*rsc), "\tDependency restart handling: restart");
+        pe_warn_once(pe_wo_restart_type,
+                     "Support for restart-type is deprecated and will be removed in a future release");
 
     } else {
         (*rsc)->restart_type = pe_restart_ignore;
@@ -675,70 +583,11 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_FAIL_STICKINESS);
     if (value != NULL && safe_str_neq("default", value)) {
         (*rsc)->migration_threshold = char2score(value);
-
-    } else if (value == NULL) {
-        /* Make a best-effort guess at a migration threshold for people with 0.6 configs
-         * try with underscores and hyphens, from both the resource and global defaults section
-         */
-        const char *legacy = NULL;
-
-        legacy = g_hash_table_lookup((*rsc)->meta,
-                                     "resource-failure-stickiness");
-        if (legacy == NULL) {
-            legacy = g_hash_table_lookup((*rsc)->meta,
-                                         "resource_failure_stickiness");
-        }
-        if (legacy) {
-            value = legacy;
-            pe_warn_once(pe_wo_rsc_failstick,
-                         "Support for 'resource-failure-stickiness' resource meta-attribute"
-                         " is deprecated and will be removed in a future release"
-                         " (use 'migration-threshold' resource meta-attribute instead)");
-        }
-
-        legacy = g_hash_table_lookup(data_set->config_hash,
-                                     "default-resource-failure-stickiness");
-        if (legacy == NULL) {
-            legacy = g_hash_table_lookup(data_set->config_hash,
-                                         "default_resource_failure_stickiness");
-        }
-        if (legacy) {
-            if (value == NULL) {
-                value = legacy;
-            }
-            pe_warn_once(pe_wo_default_rscfs,
-                         "Support for 'default-resource-failure-stickiness' cluster option"
-                         " is deprecated and will be removed in a future release"
-                         " (use 'migration-threshold' in rsc_defaults instead)");
-        }
-
-        if (value) {
-            int fail_sticky = char2score(value);
-
-            if (fail_sticky == -INFINITY) {
-                (*rsc)->migration_threshold = 1;
-                pe_rsc_info((*rsc),
-                            "Set a migration threshold of %d for %s based on a failure-stickiness of %s",
-                            (*rsc)->migration_threshold, (*rsc)->id, value);
-
-            } else if ((*rsc)->stickiness != 0 && fail_sticky != 0) {
-                (*rsc)->migration_threshold = (*rsc)->stickiness / fail_sticky;
-                if ((*rsc)->migration_threshold < 0) {
-                    /* Make sure it's positive */
-                    (*rsc)->migration_threshold = 0 - (*rsc)->migration_threshold;
-                }
-                (*rsc)->migration_threshold += 1;
-                pe_rsc_info((*rsc),
-                            "Calculated a migration threshold for %s of %d based on a stickiness of %d/%s",
-                            (*rsc)->id, (*rsc)->migration_threshold, (*rsc)->stickiness, value);
-            }
-        }
     }
 
     if (safe_str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH)) {
         set_bit(data_set->flags, pe_flag_have_stonith_resource);
         set_bit((*rsc)->flags, pe_rsc_fence_device);
-        check_deprecated_stonith(*rsc);
     }
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_REQUIRES);

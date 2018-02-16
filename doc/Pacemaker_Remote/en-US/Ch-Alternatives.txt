@@ -57,7 +57,7 @@ using virtual machines. Key differences:
 
 * The underlying host must install the libvirt driver for the desired container
   technology -- for example, the +libvirt-daemon-lxc+ package to get the
-  http://libvirt.org/drvlxc.html:[libvirt-lxc] driver for LXC containers.
+  http://libvirt.org/drvlxc.html[libvirt-lxc] driver for LXC containers.
 
 * Libvirt XML definitions must be generated for the containers. The
   +pacemaker-cts+ package includes a script for this purpose,

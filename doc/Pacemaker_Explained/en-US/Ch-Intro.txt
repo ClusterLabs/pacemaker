@@ -2,22 +2,22 @@
 
 == The Scope of this Document ==
 
-The purpose of this document is to definitively explain the concepts
-used to configure Pacemaker.  To achieve this, it will focus
-exclusively on the XML syntax used to configure the CIB.
-      
-For those that are allergic to XML, there exist several unified shells
-and GUIs for Pacemaker. However these tools will not be covered at all
-in this document
-footnote:[I hope, however, that the concepts explained here make the functionality of these tools more easily understood.]
-, precisely because they hide the XML.
-      
-Additionally, this document is NOT a step-by-step how-to guide for
-configuring a specific clustering scenario.
+This document is intended to be an exhaustive reference for
+configuring Pacemaker.
 
-Although such guides exist,
-footnote:[For example, see the http://www.clusterlabs.org/doc/[Clusters from Scratch] guide.]
-the purpose of this document is to provide an understanding of the building
-blocks that can be used to construct any type of Pacemaker cluster.
+To achieve this, it focuses on the XML syntax used to configure the CIB.
+For those that are allergic to XML, multiple higher-level front-ends
+(both command-line and GUI) are available. These tools will not be covered at
+all in this document
+footnote:[
+I hope, however, that the concepts explained here make the functionality of
+these tools more easily understood.
+].
+      
+Users may be interested in other parts of the
+https://www.clusterlabs.org/pacemaker/doc/[Pacemaker documentation set],
+such as 'Clusters from Scratch', a step-by-step guide to setting up an
+example cluster, and 'Pacemaker Administration', a guide to maintaining a
+cluster.
 
 include::../../shared/en-US/pacemaker-intro.txt[]

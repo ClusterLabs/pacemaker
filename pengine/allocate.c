@@ -111,20 +111,6 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
      clone_append_meta,
      },
     {
-     master_merge_weights,
-     master_color,
-     master_create_actions,
-     clone_create_probe,
-     master_internal_constraints,
-     clone_rsc_colocation_lh,
-     master_rsc_colocation_rh,
-     clone_rsc_location,
-     clone_action_flags,
-     container_update_actions,
-     clone_expand,
-     master_append_meta,
-     },
-    {
      container_merge_weights,
      container_color,
      container_create_actions,
@@ -367,7 +353,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
             set_bit(op->flags, pe_action_reschedule);
 #endif
 
-        } else if (digest_restart && rsc->isolation_wrapper == NULL && (uber_parent(rsc))->isolation_wrapper == NULL) {
+        } else if (digest_restart) {
             pe_rsc_trace(rsc, "Reloading '%s' action for resource %s", task, rsc->id);
 
             /* Reload this resource */

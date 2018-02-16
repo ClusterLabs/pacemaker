@@ -43,15 +43,11 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#ifdef RHEL7_COMPAT
-// for pe_enable_legacy_alerts()
-#include <crm/pengine/rules_internal.h>
-#endif
-
 qb_ipcs_service_t *ipcs = NULL;
 
+#if SUPPORT_COROSYNC
 extern gboolean crm_connect_corosync(crm_cluster_t * cluster);
-extern void crmd_ha_connection_destroy(gpointer user_data);
+#endif
 
 void crm_shutdown(int nsig);
 gboolean crm_read_options(gpointer user_data);
@@ -95,45 +91,9 @@ do_ha_control(long long action,
         crm_set_status_callback(&peer_update_callback);
         crm_set_autoreap(FALSE);
 
-        if (is_openais_cluster()) {
+        if (is_corosync_cluster()) {
 #if SUPPORT_COROSYNC
             registered = crm_connect_corosync(cluster);
-#endif
-        } else if (is_heartbeat_cluster()) {
-#if SUPPORT_HEARTBEAT
-            cluster->destroy = crmd_ha_connection_destroy;
-            cluster->hb_dispatch = crmd_ha_msg_callback;
-
-            registered = crm_cluster_connect(cluster);
-            fsa_cluster_conn = cluster->hb_conn;
-
-            crm_trace("Be informed of Node Status changes");
-            if (registered &&
-                fsa_cluster_conn->llc_ops->set_nstatus_callback(fsa_cluster_conn,
-                                                                crmd_ha_status_callback,
-                                                                fsa_cluster_conn) != HA_OK) {
-
-                crm_err("Cannot set nstatus callback: %s",
-                        fsa_cluster_conn->llc_ops->errmsg(fsa_cluster_conn));
-                registered = FALSE;
-            }
-
-            crm_trace("Be informed of CRM Client Status changes");
-            if (registered &&
-                fsa_cluster_conn->llc_ops->set_cstatus_callback(fsa_cluster_conn,
-                                                                crmd_client_status_callback,
-                                                                fsa_cluster_conn) != HA_OK) {
-
-                crm_err("Cannot set cstatus callback: %s",
-                        fsa_cluster_conn->llc_ops->errmsg(fsa_cluster_conn));
-                registered = FALSE;
-            }
-
-            if (registered) {
-                crm_trace("Requesting an initial dump of CRMD client_status");
-                fsa_cluster_conn->llc_ops->client_status(fsa_cluster_conn, NULL, CRM_SYSTEM_CRMD,
-                                                         -1);
-            }
 #endif
         }
         fsa_election = election_init(NULL, cluster->uname, 60000/*60s*/, election_timeout_popped);
@@ -160,24 +120,6 @@ do_ha_control(long long action,
     }
 }
 
-static bool
-need_spawn_pengine_from_crmd(void)
-{
-	static int result = -1;
-
-	if (result != -1)
-		return result;
-	if (!is_heartbeat_cluster()) {
-		result = 0;
-		return result;
-	}
-
-	/* NULL, or "strange" value: rather spawn from here. */
-	result = TRUE;
-	crm_str_to_boolean(daemon_option("crmd_spawns_pengine"), &result);
-	return result;
-}
-
 /*	 A_SHUTDOWN	*/
 void
 do_shutdown(long long action,
@@ -186,21 +128,6 @@ do_shutdown(long long action,
 {
     /* just in case */
     set_bit(fsa_input_register, R_SHUTDOWN);
-
-    if (need_spawn_pengine_from_crmd()) {
-        if (is_set(fsa_input_register, pe_subsystem->flag_connected)) {
-            crm_info("Terminating the %s", pe_subsystem->name);
-            if (stop_subsystem(pe_subsystem, TRUE) == FALSE) {
-                /* It's gone ... */
-                crm_err("Faking %s exit", pe_subsystem->name);
-                clear_bit(fsa_input_register, pe_subsystem->flag_connected);
-            } else {
-                crm_info("Waiting for subsystems to exit");
-                crmd_fsa_stall(FALSE);
-            }
-        }
-        crm_info("All subsystems stopped, continuing");
-    }
 
     if (stonith_api) {
         /* Prevent it from coming up again */
@@ -249,43 +176,44 @@ log_connected_client(gpointer key, gpointer value, gpointer user_data)
     crm_err("%s is still connected at exit", crm_client_name(client));
 }
 
-int
-crmd_fast_exit(int rc) 
+crm_exit_t
+crmd_fast_exit(crm_exit_t exit_code)
 {
     if (is_set(fsa_input_register, R_STAYDOWN)) {
         crm_warn("Inhibiting respawn "CRM_XS" remapping exit code %d to %d",
-                 rc, DAEMON_RESPAWN_STOP);
-        rc = DAEMON_RESPAWN_STOP;
-    }
+                 exit_code, CRM_EX_FATAL);
+        exit_code = CRM_EX_FATAL;
 
-    if (rc == pcmk_ok && is_set(fsa_input_register, R_IN_RECOVERY)) {
+    } else if ((exit_code == CRM_EX_OK)
+               && is_set(fsa_input_register, R_IN_RECOVERY)) {
         crm_err("Could not recover from internal error");
-        rc = pcmk_err_generic;
+        exit_code = CRM_EX_ERROR;
     }
-    return crm_exit(rc);
+    return crm_exit(exit_code);
 }
 
-int
-crmd_exit(int rc)
+crm_exit_t
+crmd_exit(crm_exit_t exit_code)
 {
     GListPtr gIter = NULL;
     GMainLoop *mloop = crmd_mainloop;
 
     static bool in_progress = FALSE;
 
-    if(in_progress && rc == 0) {
+    if (in_progress && (exit_code == CRM_EX_OK)) {
         crm_debug("Exit is already in progress");
-        return rc;
+        return exit_code;
 
     } else if(in_progress) {
-        crm_notice("Error during shutdown process, terminating now with status %d: %s",
-                   rc, pcmk_strerror(rc));
+        crm_notice("Error during shutdown process, exiting now with status %d (%s)",
+                   exit_code, crm_exit_str(exit_code));
         crm_write_blackbox(SIGTRAP, NULL);
-        crmd_fast_exit(rc);
+        crmd_fast_exit(exit_code);
     }
 
     in_progress = TRUE;
-    crm_trace("Preparing to exit: %d", rc);
+    crm_trace("Preparing to exit with status %d (%s)",
+              exit_code, crm_exit_str(exit_code));
 
     /* Suppress secondary errors resulting from us disconnecting everything */
     set_bit(fsa_input_register, R_HA_DISCONNECTED);
@@ -305,10 +233,7 @@ crmd_exit(int rc)
         attrd_ipc = NULL;
     }
 
-    if (pe_subsystem && pe_subsystem->client && pe_subsystem->client->ipcs) {
-        crm_trace("Disconnecting Policy Engine");
-        qb_ipcs_disconnect(pe_subsystem->client->ipcs);
-    }
+    pe_subsystem_free();
 
     if(stonith_api) {
         crm_trace("Disconnecting fencing API");
@@ -316,9 +241,9 @@ crmd_exit(int rc)
         stonith_api->cmds->free(stonith_api); stonith_api = NULL;
     }
 
-    if (rc == pcmk_ok && crmd_mainloop == NULL) {
+    if ((exit_code == CRM_EX_OK) && (crmd_mainloop == NULL)) {
         crm_debug("No mainloop detected");
-        rc = EPROTO;
+        exit_code = CRM_EX_ERROR;
     }
 
     /* On an error, just get out.
@@ -327,11 +252,11 @@ crmd_exit(int rc)
      * that it (mostly) cleans up after itself and valgrind has less
      * to report on - allowing real errors stand out
      */
-    if(rc != pcmk_ok) {
-        crm_notice("Forcing immediate exit with status %d: %s",
-                   rc, pcmk_strerror(rc));
+    if (exit_code != CRM_EX_OK) {
+        crm_notice("Forcing immediate exit with status %d (%s)",
+                   exit_code, crm_exit_str(exit_code));
         crm_write_blackbox(SIGTRAP, NULL);
-        return crmd_fast_exit(rc);
+        return crmd_fast_exit(exit_code);
     }
 
 /* Clean up as much memory as possible for valgrind */
@@ -348,10 +273,6 @@ crmd_exit(int rc)
 
     clear_bit(fsa_input_register, R_MEMBERSHIP);
     g_list_free(fsa_message_queue); fsa_message_queue = NULL;
-
-    free(pe_subsystem); pe_subsystem = NULL;
-    free(te_subsystem); te_subsystem = NULL;
-    free(cib_subsystem); cib_subsystem = NULL;
 
     metadata_cache_fini();
 
@@ -441,49 +362,8 @@ crmd_exit(int rc)
         crm_trace("Closing mainloop %d %d", g_main_loop_is_running(mloop), g_main_context_pending(ctx));
         g_main_loop_quit(mloop);
 
-#if SUPPORT_HEARTBEAT
-        /* Do this only after g_main_loop_quit().
-         *
-         * This interface was broken (incomplete) since it was introduced.
-         * ->delete() does cleanup and free most of it, but it does not
-         * actually remove and destroy the corresponding GSource, so the next
-         * prepare/check iteratioin would find a corrupt (because partially
-         * freed) GSource, and segfault.
-         *
-         * Apparently one was supposed to store the GSource as returned by
-         * G_main_add_ll_cluster(), and g_source_destroy() that "by hand".
-         *
-         * But no-one ever did this, not even in the old hb code when this was
-         * introduced.
-         *
-         * Note that fsa_cluster_conn was set as an "alias" to cluster->hb_conn
-         * in do_ha_control() right after crm_cluster_connect(), and only
-         * happens to still point at that object, because do_ha_control() does
-         * not reset it to NULL after crm_cluster_disconnect() above does
-         * reset cluster->hb_conn to NULL.
-         * Not sure if that's something to cleanup, too.
-         *
-         * I'll try to fix this up in heartbeat proper, so ->delete
-         * will actually remove, and destroy, and unref, and free this thing.
-         * Doing so after g_main_loop_quit() is valid with both old,
-         * and eventually fixed heartbeat.
-         *
-         * If we introduce the "by hand" destroy/remove/unref,
-         * this may break again once heartbeat is fixed :-(
-         *
-         *                                              -- Lars Ellenberg
-         */
-        if (fsa_cluster_conn) {
-            crm_trace("Deleting heartbeat api object");
-            fsa_cluster_conn->llc_ops->delete(fsa_cluster_conn);
-            fsa_cluster_conn = NULL;
-        }
-#endif
-
         /* Won't do anything yet, since we're inside it now */
         g_main_loop_unref(mloop);
-
-        crm_trace("Done %d", rc);
     } else {
         mainloop_destroy_signal(SIGCHLD);
     }
@@ -494,7 +374,9 @@ crmd_exit(int rc)
     throttle_fini();
 
     /* Graceful */
-    return rc;
+    crm_trace("Done preparing for exit with status %d (%s)",
+              exit_code, crm_exit_str(exit_code));
+    return exit_code;
 }
 
 /*	 A_EXIT_0, A_EXIT_1	*/
@@ -503,15 +385,14 @@ do_exit(long long action,
         enum crmd_fsa_cause cause,
         enum crmd_fsa_state cur_state, enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-    int exit_code = pcmk_ok;
+    crm_exit_t exit_code = CRM_EX_OK;
     int log_level = LOG_INFO;
     const char *exit_type = "gracefully";
 
     if (action & A_EXIT_1) {
-        /* exit_code = pcmk_err_generic; */
         log_level = LOG_ERR;
         exit_type = "forcefully";
-        exit_code = pcmk_err_generic;
+        exit_code = CRM_EX_ERROR;
     }
 
     verify_stopped(cur_state, LOG_ERR);
@@ -598,7 +479,7 @@ do_startup(long long action,
          * in this loop we continually send probes which the node
          *    NACK's because it's in S_PENDING
          *
-         * if we have nodes where heartbeat is active but the
+         * if we have nodes where the cluster layer is active but the
          *    CRM is not... then this will be handled in the
          *    integration phase
          */
@@ -638,54 +519,9 @@ do_startup(long long action,
         was_error = TRUE;
     }
 
-    /* set up the sub systems */
-    cib_subsystem = calloc(1, sizeof(struct crm_subsystem_s));
-    te_subsystem = calloc(1, sizeof(struct crm_subsystem_s));
-    pe_subsystem = calloc(1, sizeof(struct crm_subsystem_s));
-
-    if (cib_subsystem != NULL) {
-        cib_subsystem->pid = -1;
-        cib_subsystem->name = CRM_SYSTEM_CIB;
-        cib_subsystem->flag_connected = R_CIB_CONNECTED;
-        cib_subsystem->flag_required = R_CIB_REQUIRED;
-
-    } else {
-        was_error = TRUE;
-    }
-
-    if (te_subsystem != NULL) {
-        te_subsystem->pid = -1;
-        te_subsystem->name = CRM_SYSTEM_TENGINE;
-        te_subsystem->flag_connected = R_TE_CONNECTED;
-        te_subsystem->flag_required = R_TE_REQUIRED;
-
-    } else {
-        was_error = TRUE;
-    }
-
-    if (pe_subsystem != NULL) {
-        pe_subsystem->pid = -1;
-        pe_subsystem->path = CRM_DAEMON_DIR;
-        pe_subsystem->name = CRM_SYSTEM_PENGINE;
-        pe_subsystem->command = CRM_DAEMON_DIR "/" CRM_SYSTEM_PENGINE;
-        pe_subsystem->args = NULL;
-        pe_subsystem->flag_connected = R_PE_CONNECTED;
-        pe_subsystem->flag_required = R_PE_REQUIRED;
-
-    } else {
-        was_error = TRUE;
-    }
-
-    if (was_error == FALSE && need_spawn_pengine_from_crmd()) {
-        if (start_subsystem(pe_subsystem) == FALSE) {
-            was_error = TRUE;
-        }
-    }
-
     if (was_error) {
         register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
     }
-
 }
 
 static int32_t
@@ -742,42 +578,15 @@ static int32_t
 crmd_ipc_closed(qb_ipcs_connection_t * c)
 {
     crm_client_t *client = crm_client_get(c);
-    struct crm_subsystem_s *the_subsystem = NULL;
 
-    if (client == NULL) {
-        return 0;
+    if (client) {
+        crm_trace("Disconnecting %sregistered client %s (%p/%p)",
+                  (client->userdata? "" : "un"), crm_client_name(client),
+                  c, client);
+        free(client->userdata);
+        crm_client_destroy(client);
+        trigger_fsa(fsa_source);
     }
-
-    crm_trace("Connection %p", c);
-
-    if (client->userdata == NULL) {
-        crm_trace("Client hadn't registered with us yet");
-
-    } else if (strcasecmp(CRM_SYSTEM_PENGINE, client->userdata) == 0) {
-        the_subsystem = pe_subsystem;
-
-    } else if (strcasecmp(CRM_SYSTEM_TENGINE, client->userdata) == 0) {
-        the_subsystem = te_subsystem;
-
-    } else if (strcasecmp(CRM_SYSTEM_CIB, client->userdata) == 0) {
-        the_subsystem = cib_subsystem;
-    }
-
-    if (the_subsystem != NULL) {
-        the_subsystem->source = NULL;
-        the_subsystem->client = NULL;
-        crm_info("Received HUP from %s:[%d]", the_subsystem->name, the_subsystem->pid);
-
-    } else {
-        /* else that was a transient client */
-        crm_trace("Received HUP from transient client");
-    }
-
-    crm_trace("Disconnecting client %s (%p)", crm_client_name(client), client);
-    free(client->userdata);
-    crm_client_destroy(client);
-
-    trigger_fsa(fsa_source);
     return 0;
 }
 
@@ -843,21 +652,7 @@ do_started(long long action,
 
     } else if (is_set(fsa_input_register, R_PEER_DATA) == FALSE) {
 
-        /* try reading from HA */
         crm_info("Delaying start, No peer data (%.16llx)", R_PEER_DATA);
-
-#if SUPPORT_HEARTBEAT
-        if (is_heartbeat_cluster()) {
-            HA_Message *msg = NULL;
-
-            crm_trace("Looking for a HA message");
-            msg = fsa_cluster_conn->llc_ops->readmsg(fsa_cluster_conn, 0);
-            if (msg != NULL) {
-                crm_trace("There was a HA message");
-                ha_msg_del(msg);
-            }
-        }
-#endif
         crmd_fsa_stall(TRUE);
         return;
     }
@@ -895,42 +690,26 @@ do_recover(long long action,
 }
 
 /* *INDENT-OFF* */
-pe_cluster_option crmd_opts[] = {
+static pe_cluster_option crmd_opts[] = {
 	/* name, old-name, validate, values, default, short description, long description */
 	{ "dc-version", NULL, "string", NULL, "none", NULL,
           "Version of Pacemaker on the cluster's DC.",
           "Includes the hash which identifies the exact changeset it was built from.  Used for diagnostic purposes."
         },
-	{ "cluster-infrastructure", NULL, "string", NULL, "heartbeat", NULL,
+	{ "cluster-infrastructure", NULL, "string", NULL, "corosync", NULL,
           "The messaging stack on which Pacemaker is currently running.",
           "Used for informational and diagnostic purposes." },
-	{ XML_CONFIG_ATTR_DC_DEADTIME, "dc_deadtime", "time", NULL, "20s", &check_time,
+	{ XML_CONFIG_ATTR_DC_DEADTIME, NULL, "time", NULL, "20s", &check_time,
           "How long to wait for a response from other nodes during startup.",
           "The \"correct\" value will depend on the speed/load of your network and the type of switches used."
         },
-	{ XML_CONFIG_ATTR_RECHECK, "cluster_recheck_interval", "time",
+	{ XML_CONFIG_ATTR_RECHECK, NULL, "time",
 	  "Zero disables polling.  Positive values are an interval in seconds (unless other SI units are specified. eg. 5min)",
           "15min", &check_timer,
 	  "Polling interval for time based changes to options, resource parameters and constraints.",
 	  "The Cluster is primarily event driven, however the configuration can have elements that change based on time."
 	  "  To ensure these changes take effect, we can optionally poll the cluster's status for changes."
         },
-
-#ifdef RHEL7_COMPAT
-    /* These options were superseded by the alerts feature and now are just an
-     * alternate interface to it. It was never released upstream, but was
-     * released in RHEL 7, so we allow it to be enabled at compile-time by
-     * defining RHEL7_COMPAT.
-     */
-	{ "notification-agent", NULL, "string", NULL, "/dev/null", &check_script,
-          "Deprecated",
-          "Use alert path in alerts section instead"
-        },
-	{ "notification-recipient", NULL, "string", NULL, "", NULL,
-          "Deprecated",
-          "Use recipient value in alerts section instead"
-        },
-#endif
 
 	{ "load-threshold", NULL, "percentage", NULL, "80%", &check_utilization,
 	  "The maximum amount of system resources that should be used by nodes in the cluster",
@@ -939,10 +718,10 @@ pe_cluster_option crmd_opts[] = {
         },
 	{ "node-action-limit", NULL, "integer", NULL, "0", &check_number,
           "The maximum number of jobs that can be scheduled per node. Defaults to 2x cores"},
-	{ XML_CONFIG_ATTR_ELECTION_FAIL, "election_timeout", "time", NULL, "2min", &check_timer,
+	{ XML_CONFIG_ATTR_ELECTION_FAIL, NULL, "time", NULL, "2min", &check_timer,
           "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug."
         },
-	{ XML_CONFIG_ATTR_FORCE_QUIT, "shutdown_escalation", "time", NULL, "20min", &check_timer,
+	{ XML_CONFIG_ATTR_FORCE_QUIT, NULL, "time", NULL, "20min", &check_timer,
           "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug."
         },
 	{ "crmd-integration-timeout", NULL, "time", NULL, "3min", &check_timer,
@@ -963,11 +742,7 @@ pe_cluster_option crmd_opts[] = {
         { "stonith-max-attempts",NULL,"integer",NULL,"10",&check_positive_number,
           "How many times stonith can fail before it will no longer be attempted on a target"
         },   
-	{ "no-quorum-policy", "no_quorum_policy", "enum", "stop, freeze, ignore, suicide", "stop", &check_quorum, NULL, NULL },
-
-#if SUPPORT_PLUGIN
-	{ XML_ATTR_EXPECTED_VOTES, NULL, "integer", NULL, "2", &check_number, "The number of nodes expected to be in the cluster", "Used to calculate quorum in openais based clusters." },
-#endif
+	{ "no-quorum-policy", NULL, "enum", "stop, freeze, ignore, suicide", "stop", &check_quorum, NULL, NULL },
 };
 /* *INDENT-ON* */
 
@@ -1035,15 +810,6 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     verify_crmd_options(config_hash);
 
-#ifdef RHEL7_COMPAT
-    {
-        const char *script = crmd_pref(config_hash, "notification-agent");
-        const char *recip  = crmd_pref(config_hash, "notification-recipient");
-
-        pe_enable_legacy_alerts(script, recip);
-    }
-#endif
-
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
     election_trigger->period_ms = crm_get_msec(value);
 
@@ -1083,14 +849,6 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     value = crmd_pref(config_hash, "crmd-finalization-timeout");
     finalization_timer->period_ms = crm_get_msec(value);
-
-#if SUPPORT_COROSYNC
-    if (is_classic_ais_cluster()) {
-        value = crmd_pref(config_hash, XML_ATTR_EXPECTED_VOTES);
-        crm_debug("Sending expected-votes=%s to corosync", value);
-        send_cluster_text(crm_class_quorum, value, TRUE, NULL, crm_msg_ais);
-    }
-#endif
 
     free(fsa_cluster_name);
     fsa_cluster_name = NULL;
@@ -1164,6 +922,6 @@ crm_shutdown(int nsig)
 
     } else {
         crm_info("exit from shutdown");
-        crmd_exit(pcmk_ok);
+        crmd_exit(CRM_EX_OK);
     }
 }

@@ -1,16 +1,20 @@
 '''CTS: Cluster Testing System: CIB generator
 '''
+from __future__ import print_function
+from __future__ import absolute_import
+
 __copyright__ = '''
 Author: Andrew Beekhof <abeekhof@suse.de>
 Copyright (C) 2008 Andrew Beekhof
 '''
 
 import os, string, warnings
+import tempfile
 
 from cts.CTSvars import *
 
 
-class CibBase:
+class CibBase(object):
     def __init__(self, Factory, tag, _id, **kwargs):
         self.tag = tag
         self.name = _id
@@ -30,10 +34,10 @@ class CibBase:
         else:
             self.kwargs.pop(key, None)
 
-from cib_xml import *
+from cts.cib_xml import *
 
 
-class ConfigBase:
+class ConfigBase(object):
     cts_cib = None
     version = "unknown"
     feature_set = "unknown"
@@ -45,7 +49,9 @@ class ConfigBase:
 
         if not tmpfile:
             warnings.filterwarnings("ignore")
-            tmpfile = os.tmpnam()
+            f=tempfile.NamedTemporaryFile(delete=True)
+            f.close()
+            tmpfile = f.name
             warnings.resetwarnings()
 
         self.Factory.tmpfile = tmpfile
@@ -67,9 +73,9 @@ class ConfigBase:
         return ip.strip()
 
 
-class CIB11(ConfigBase):
+class CIB12(ConfigBase):
     feature_set = "3.0"
-    version = "pacemaker-1.1"
+    version = "pacemaker-1.2"
     counter = 1
 
     def _show(self, command=""):
@@ -116,8 +122,6 @@ class CIB11(ConfigBase):
         # * The node is specified in /etc/corosync/corosync.conf
         #   with "ring0_addr:" equal to node_name and "nodeid:"
         #   explicitly specified.
-        # * Or, the node is specified in /etc/cluster/cluster.conf
-        #   with name="node_name" nodeid="X"
         # In all other cases, we return 0.
         node_id = 0
 
@@ -136,23 +140,6 @@ class CIB11(ConfigBase):
                 node_id = int(output[0])
             except ValueError:
                 node_id = 0
-
-        # another awkward command: use < or > as record separator
-        # so each cluster.conf XML tag is one record;
-        # match the clusternode record that has name="node_name";
-        # then print the substring of that record for nodeid="X"
-        if node_id == 0:
-            (rc, output) = self.Factory.rsh(self.Factory.target,
-                r"""awk -v RS="[<>]" """
-                r"""'/^clusternode\s+.*name="%s".*/"""
-                r"""{gsub(/.*nodeid="/,"");gsub(/".*/,"");print}'"""
-                r""" /etc/cluster/cluster.conf""" % node_name, None)
-
-            if rc == 0 and len(output) == 1:
-                try:
-                    node_id = int(output[0])
-                except ValueError:
-                    node_id = 0
 
         return node_id
 
@@ -208,17 +195,17 @@ class CIB11(ConfigBase):
             all_node_names = [ prefix+n for n in self.CM.Env["nodes"] for prefix in ('', 'remote-') ]
 
             # Add all parameters specified by user
-            entries = string.split(self.CM.Env["stonith-params"], ',')
+            entries = str.split(self.CM.Env["stonith-params"], ',')
             for entry in entries:
                 try:
-                    (name, value) = string.split(entry, '=', 1)
+                    (name, value) = str.split(entry, '=', 1)
                 except ValueError:
                     print("Warning: skipping invalid fencing parameter: %s" % entry)
                     continue
 
                 # Allow user to specify "all" as the node list, and expand it here
                 if name in [ "hostlist", "pcmk_host_list" ] and value == "all":
-                    value = string.join(all_node_names, " ")
+                    value = ' '.join(all_node_names)
 
                 st[name] = value
 
@@ -275,7 +262,7 @@ class CIB11(ConfigBase):
                 # create the attributes and a level for the attribute.
                 if attr_nodes:
                     stn = Nodes(self.Factory)
-                    for (node_name, node_id) in attr_nodes.items():
+                    for (node_name, node_id) in list(attr_nodes.items()):
                         stn.add_node(node_name, node_id, { "cts-fencing" : "levels-and" })
                     stl.level(1, None, "FencingPass,Fencing", "cts-fencing", "levels-and")
 
@@ -283,7 +270,7 @@ class CIB11(ConfigBase):
                 if len(stt_nodes):
                     self.CM.install_helper("fence_dummy", destdir="/usr/sbin", sourcedir=CTSvars.Fencing_home)
                     stt = Resource(self.Factory, "FencingPass", "fence_dummy", "stonith")
-                    stt["pcmk_host_list"] = string.join(stt_nodes, " ")
+                    stt["pcmk_host_list"] = " ".join(stt_nodes)
                     # Wait this many seconds before doing anything, handy for letting disks get flushed too
                     stt["random_sleep_range"] = "30"
                     stt["mode"] = "pass"
@@ -293,7 +280,7 @@ class CIB11(ConfigBase):
                 if len(stf_nodes):
                     self.CM.install_helper("fence_dummy", destdir="/usr/sbin", sourcedir=CTSvars.Fencing_home)
                     stf = Resource(self.Factory, "FencingFail", "fence_dummy", "stonith")
-                    stf["pcmk_host_list"] = string.join(stf_nodes, " ")
+                    stf["pcmk_host_list"] = " ".join(stf_nodes)
                     # Wait this many seconds before doing anything, handy for letting disks get flushed too
                     stf["random_sleep_range"] = "30"
                     stf["mode"] = "fail"
@@ -310,7 +297,6 @@ class CIB11(ConfigBase):
         o["batch-limit"] = "10"
         o["dc-deadtime"] = "5s"
         o["no-quorum-policy"] = no_quorum
-        o["expected-quorum-votes"] = self.num_nodes
 
         if self.CM.Env["DoBSC"] == 1:
             o["ident-string"] = "Linux-HA TEST configuration file - REMOVEME!!"
@@ -384,17 +370,18 @@ class CIB11(ConfigBase):
         c["globally-unique"] = "false"
         c.commit()
 
-        #master slave resource
+        # promotable clone resource
         s = Resource(self.Factory, "stateful-1", "Stateful", "ocf", "pacemaker")
         s.add_op("monitor", "15s", timeout="60s")
         s.add_op("monitor", "16s", timeout="60s", role="Master")
-        ms = Master(self.Factory, "master-1", s)
+        ms = Clone(self.Factory, "promotable-1", s)
+        ms["promotable"] = "true"
         ms["clone-max"] = self.num_nodes
-        ms["master-max"] = 1
         ms["clone-node-max"] = 1
-        ms["master-node-max"] = 1
+        ms["promoted-max"] = 1
+        ms["promoted-node-max"] = 1
 
-        # Require conectivity to run the master
+        # Require connectivity to run the promotable clone
         r = Rule(self.Factory, "connected", "-INFINITY", op="or")
         r.add_child(Expression(self.Factory, "m1-connected-1", "connected", "lt", "1"))
         r.add_child(Expression(self.Factory, "m1-connected-2", "connected", "not_defined", None))
@@ -432,9 +419,9 @@ ExecStop=/bin/sh -c 'sleep 10; [ -n "\$MAINPID" ] && kill -s KILL \$MAINPID'
 
         g.add_child(self.NewIP())
 
-        # Group with the master
-        g.after("master-1", first="promote", then="start")
-        g.colocate("master-1", "INFINITY", withrole="Master")
+        # Make group depend on the promotable clone
+        g.after("promotable-1", first="promote", then="start")
+        g.colocate("promotable-1", "INFINITY", withrole="Master")
 
         g.commit()
 
@@ -451,11 +438,7 @@ ExecStop=/bin/sh -c 'sleep 10; [ -n "\$MAINPID" ] && kill -s KILL \$MAINPID'
         lsb.commit()
 
 
-class CIB12(CIB11):
-    feature_set = "3.0"
-    version = "pacemaker-1.2"
-
-class CIB20(CIB11):
+class CIB20(CIB12):
     feature_set = "3.0"
     version = "pacemaker-2.5"
 
@@ -472,11 +455,10 @@ class CIB20(CIB11):
 #        self._create('''order start-o2cb-after-dlm mandatory: dlm-clone o2cb-clone''')
 
 
-class ConfigFactory:
+class ConfigFactory(object):
     def __init__(self, CM):
         self.CM = CM
         self.rsh = self.CM.rsh
-        self.register("pacemaker11", CIB11, CM, self)
         self.register("pacemaker12", CIB12, CM, self)
         self.register("pacemaker20", CIB20, CM, self)
 #        self.register("hae", HASI, CM, self)
@@ -502,8 +484,6 @@ class ConfigFactory:
     def createConfig(self, name="pacemaker-1.0"):
         if name == "pacemaker-1.0":
             name = "pacemaker10";
-        elif name == "pacemaker-1.1":
-            name = "pacemaker11";
         elif name == "pacemaker-1.2":
             name = "pacemaker12";
         elif name == "pacemaker-2.0":
@@ -516,10 +496,10 @@ class ConfigFactory:
         else:
             self.CM.log("Configuration variant '%s' is unknown.  Defaulting to latest config" % name)
 
-        return self.pacemaker12()
+        return self.pacemaker20()
 
 
-class ConfigFactoryItem:
+class ConfigFactoryItem(object):
     def __init__(self, function, *args, **kargs):
         self._function = function
         self._args = args
@@ -536,8 +516,8 @@ class ConfigFactoryItem:
 if __name__ == '__main__':
     """ Unit test (pass cluster node names as command line arguments) """
 
-    import CTS
-    import CM_ais
+    import cts.CTS
+    import cts.CM_corosync
     import sys
 
     if len(sys.argv) < 2:
@@ -553,7 +533,7 @@ if __name__ == '__main__':
         "--stonith", "rhcs",
     ]
     env = CTS.CtsLab(args)
-    cm = CM_ais.crm_mcp(env)
+    cm = CM_corosync.crm_corosync(env)
     CibFactory = ConfigFactory(cm)
-    cib = CibFactory.createConfig("pacemaker-1.1")
+    cib = CibFactory.createConfig("pacemaker-2.0")
     print(cib.contents())

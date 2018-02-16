@@ -1,0 +1,23 @@
+
+Current cluster status:
+Online: [ node2 ]
+OFFLINE: [ node1 ]
+
+ rsc1	(ocf::heartbeat:apache):	Stopped
+ rsc2	(ocf::heartbeat:apache):	Stopped
+
+Transition Summary:
+ * Start      rsc1    ( node2 )   due to no quorum (blocked)
+ * Start      rsc2    ( node2 )   due to no quorum (blocked)
+
+Executing cluster transition:
+ * Resource action: rsc1            monitor on node2
+ * Resource action: rsc2            monitor on node2
+
+Revised cluster status:
+Online: [ node2 ]
+OFFLINE: [ node1 ]
+
+ rsc1	(ocf::heartbeat:apache):	Stopped
+ rsc2	(ocf::heartbeat:apache):	Stopped
+

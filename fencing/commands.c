@@ -661,15 +661,11 @@ parse_host_list(const char *hosts)
     max = strlen(hosts);
     for (lpc = 0; lpc <= max; lpc++) {
         if (hosts[lpc] == '\n' || hosts[lpc] == 0) {
-            char *line = NULL;
             int len = lpc - last;
 
             if(len > 1) {
-                line = malloc(1 + len);
-            }
+                char *line = strndup(hosts + last, len);
 
-            if(line) {
-                snprintf(line, 1 + len, "%s", hosts + last);
                 line[len] = 0; /* Because it might be '\n' */
                 parse_host_line(line, len, &output);
                 free(line);
@@ -1327,10 +1323,8 @@ parse_device_list(const char *devices)
     max = strlen(devices);
     for (lpc = 0; lpc <= max; lpc++) {
         if (devices[lpc] == ',' || devices[lpc] == 0) {
-            char *line = NULL;
+            char *line = strndup(devices + last, lpc - last);
 
-            line = calloc(1, 2 + lpc - last);
-            snprintf(line, 1 + lpc - last, "%s", devices + last);
             output = stonith_key_value_add(output, NULL, line);
             free(line);
 
@@ -1943,7 +1937,7 @@ stonith_query(xmlNode * msg, const char *remote_peer, const char *client_id, int
     const char *action = NULL;
     const char *target = NULL;
     int timeout = 0;
-    xmlNode *dev = get_xpath_object("//@" F_STONITH_ACTION, msg, LOG_DEBUG_3);
+    xmlNode *dev = get_xpath_object("//@" F_STONITH_ACTION, msg, LOG_TRACE);
 
     crm_element_value_int(msg, F_STONITH_TIMEOUT, &timeout);
     if (dev) {
@@ -2076,7 +2070,7 @@ unfence_cb(GPid pid, int rc, const char *output, gpointer user_data)
     }
 
     if(rc != 0) {
-        crm_exit(DAEMON_RESPAWN_STOP);
+        crm_exit(CRM_EX_FATAL);
     }
 }
 
@@ -2710,7 +2704,7 @@ stonith_command(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * re
      */
     char *op = crm_element_value_copy(request, F_STONITH_OPERATION);
 
-    if (get_xpath_object("//" T_STONITH_REPLY, request, LOG_DEBUG_3)) {
+    if (get_xpath_object("//" T_STONITH_REPLY, request, LOG_TRACE)) {
         is_reply = TRUE;
     }
 

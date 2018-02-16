@@ -1,5 +1,0 @@
- digraph "g" {
-"all_stopped" [ style=bold color="green" fontcolor="orange" ]
-"sles10_stop_0 node2" -> "all_stopped" [ style = bold]
-"sles10_stop_0 node2" [ style=bold color="green" fontcolor="black" ]
-}

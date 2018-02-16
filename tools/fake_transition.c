@@ -116,19 +116,14 @@ static void
 create_node_entry(cib_t * cib_conn, const char *node)
 {
     int rc = pcmk_ok;
-    int max = strlen(new_node_template) + strlen(node) + 1;
-    char *xpath = NULL;
+    char *xpath = crm_strdup_printf(new_node_template, node);
 
-    xpath = calloc(1, max);
-
-    snprintf(xpath, max, new_node_template, node);
     rc = cib_conn->cmds->query(cib_conn, xpath, NULL, cib_xpath | cib_sync_call | cib_scope_local);
 
     if (rc == -ENXIO) {
         xmlNode *cib_object = create_xml_node(NULL, XML_CIB_TAG_NODE);
 
-        /* Using node uname as uuid ala corosync/openais */
-        crm_xml_add(cib_object, XML_ATTR_ID, node);
+        crm_xml_add(cib_object, XML_ATTR_ID, node); // Use node name as ID
         crm_xml_add(cib_object, XML_ATTR_UNAME, node);
         cib_conn->cmds->create(cib_conn, XML_CIB_TAG_NODES, cib_object,
                                cib_sync_call | cib_scope_local);
@@ -176,8 +171,8 @@ create_op(xmlNode * cib_resource, const char *task, int interval, int outcome)
 static xmlNode *
 inject_op(xmlNode * cib_resource, lrmd_event_data_t * op, int target_rc)
 {
-    return create_operation_update(cib_resource, op, CRM_FEATURE_SET, target_rc, NULL, crm_system_name,
-                                   LOG_DEBUG_2);
+    return create_operation_update(cib_resource, op, CRM_FEATURE_SET, target_rc,
+                                   NULL, crm_system_name, LOG_TRACE);
 }
 
 static xmlNode *
@@ -198,7 +193,7 @@ inject_node_state(cib_t * cib_conn, const char *node, const char *uuid)
         crm_err("Detected multiple node_state entries for xpath=%s, bailing", xpath);
         crm_log_xml_warn(cib_object, "Duplicates");
         free(xpath);
-        crm_exit(ENOTUNIQ);
+        crm_exit(CRM_EX_SOFTWARE);
         return NULL; // not reached, but makes static analysis happy
     }
 
@@ -254,16 +249,11 @@ modify_node(cib_t * cib_conn, char *node, gboolean up)
 static xmlNode *
 find_resource_xml(xmlNode * cib_node, const char *resource)
 {
-    char *xpath = NULL;
     xmlNode *match = NULL;
     const char *node = crm_element_value(cib_node, XML_ATTR_UNAME);
-    int max = strlen(rsc_template) + strlen(node) + strlen(resource) + 1;
+    char *xpath = crm_strdup_printf(rsc_template, node, resource);
 
-    xpath = calloc(1, max);
-
-    snprintf(xpath, max, rsc_template, node, resource);
-    match = get_xpath_object(xpath, cib_node, LOG_DEBUG_2);
-
+    match = get_xpath_object(xpath, cib_node, LOG_TRACE);
     free(xpath);
     return match;
 }
@@ -292,7 +282,6 @@ inject_resource(xmlNode * cib_node, const char *resource, const char *rclass, co
 
     } else if (safe_str_neq(rclass, PCMK_RESOURCE_CLASS_OCF)
                && safe_str_neq(rclass, PCMK_RESOURCE_CLASS_STONITH)
-               && safe_str_neq(rclass, PCMK_RESOURCE_CLASS_HB)
                && safe_str_neq(rclass, PCMK_RESOURCE_CLASS_SERVICE)
                && safe_str_neq(rclass, PCMK_RESOURCE_CLASS_UPSTART)
                && safe_str_neq(rclass, PCMK_RESOURCE_CLASS_SYSTEMD)
@@ -624,7 +613,6 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
     GListPtr gIter = NULL;
     lrmd_event_data_t *op = NULL;
     int target_outcome = 0;
-    gboolean uname_is_uuid = FALSE;
 
     const char *rtype = NULL;
     const char *rclass = NULL;
@@ -682,15 +670,14 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
     CRM_ASSERT(fake_cib->cmds->query(fake_cib, NULL, NULL, cib_sync_call | cib_scope_local) ==
                pcmk_ok);
 
-    if (router_node) {
-        uname_is_uuid = TRUE;
-    }
-
-    cib_node = inject_node_state(fake_cib, node, uname_is_uuid ? node : uuid);
+    cib_node = inject_node_state(fake_cib, node, (router_node? node : uuid));
     CRM_ASSERT(cib_node != NULL);
 
     cib_resource = inject_resource(cib_node, resource, rclass, rtype, rprovider);
-    CRM_ASSERT(cib_resource != NULL);
+    if (cib_resource == NULL) {
+        crm_err("invalid resource in transition");
+        return FALSE;
+    }
 
     op = convert_graph_action(cib_resource, action, 0, target_outcome);
     if (op->interval) {
@@ -702,10 +689,8 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
 
     for (gIter = fake_op_fail_list; gIter != NULL; gIter = gIter->next) {
         char *spec = (char *)gIter->data;
-        char *key = NULL;
-
-        key = calloc(1, 1 + strlen(spec));
-        snprintf(key, strlen(spec), "%s_%s_%d@%s=", resource, op->op_type, op->interval, node);
+        char *key = crm_strdup_printf("%s_%s_%d@%s=", resource, op->op_type,
+                                      op->interval, node);
 
         if (strncasecmp(key, spec, strlen(key)) == 0) {
             rc = sscanf(spec, "%*[^=]=%d", (int *) &op->rc);

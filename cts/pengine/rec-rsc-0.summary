@@ -1,0 +1,20 @@
+
+Current cluster status:
+Online: [ node1 node2 ]
+
+ rsc1	(ocf::heartbeat:apache):	FAILED[ node1 node2 ]
+
+Transition Summary:
+ * Stop       rsc1    ( node1 )   due to node availability
+ * Stop       rsc1    ( node2 )   due to node availability
+
+Executing cluster transition:
+ * Resource action: rsc1            stop on node2
+ * Resource action: rsc1            stop on node1
+ * Pseudo action:   all_stopped
+
+Revised cluster status:
+Online: [ node1 node2 ]
+
+ rsc1	(ocf::heartbeat:apache):	Stopped
+

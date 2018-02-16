@@ -75,7 +75,6 @@ enum cib_call_options {
 	cib_force_diff	    = 0x10000000
 };
 
-#define cib_default_options = cib_none
 #define T_CIB_DIFF_NOTIFY	"cib_diff_notify"
 
 /* *INDENT-ON* */
@@ -179,12 +178,8 @@ void cib_dump_pending_callbacks(void);
 int num_cib_op_callbacks(void);
 void remove_cib_op_callback(int call_id, gboolean all_callbacks);
 
-/* Deprecated */
-#  define add_cib_op_callback(cib, id, flag, data, fn) do {             \
-        cib->cmds->register_callback(cib, id, 120, flag, data, #fn, fn); \
-    } while(0)
 #  include <crm/cib/util.h>
 
-#  define CIB_LIBRARY "libcib.so.4"
+#  define CIB_LIBRARY "libcib.so.6"
 
 #endif

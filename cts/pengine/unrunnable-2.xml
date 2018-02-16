@@ -1,0 +1,1191 @@
+<cib crm_feature_set="3.0.10" validate-with="pacemaker-2.3" epoch="118" num_updates="79" admin_epoch="0" cib-last-written="Tue Apr 12 16:16:51 2016" update-origin="overcloud-controller-0" update-client="crm_resource" update-user="root" have-quorum="1" dc-uuid="2">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.13-10.el7_2.2-44eb2dd"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="tripleo_cluster"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-maintenance-mode" name="maintenance-mode" value="false"/>
+      </cluster_property_set>
+      <cluster_property_set id="redis_replication">
+        <nvpair id="redis_replication-redis_REPL_INFO" name="redis_REPL_INFO" value="overcloud-controller-1"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="overcloud-controller-0">
+        <instance_attributes id="nodes-1">
+          <nvpair id="nodes-1-rmq-node-attr-last-known-rabbitmq" name="rmq-node-attr-last-known-rabbitmq" value="rabbit@overcloud-controller-0"/>
+        </instance_attributes>
+      </node>
+      <node id="2" uname="overcloud-controller-1">
+        <instance_attributes id="nodes-2">
+          <nvpair id="nodes-2-rmq-node-attr-last-known-rabbitmq" name="rmq-node-attr-last-known-rabbitmq" value="rabbit@overcloud-controller-1"/>
+        </instance_attributes>
+      </node>
+      <node id="3" uname="overcloud-controller-2">
+        <instance_attributes id="nodes-3">
+          <nvpair id="nodes-3-rmq-node-attr-last-known-rabbitmq" name="rmq-node-attr-last-known-rabbitmq" value="rabbit@overcloud-controller-2"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <primitive class="ocf" id="ip-192.0.2.12" provider="heartbeat" type="IPaddr2">
+        <instance_attributes id="ip-192.0.2.12-instance_attributes">
+          <nvpair id="ip-192.0.2.12-instance_attributes-ip" name="ip" value="192.0.2.12"/>
+          <nvpair id="ip-192.0.2.12-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
+        </instance_attributes>
+        <operations>
+          <op id="ip-192.0.2.12-start-interval-0s" interval="0s" name="start" timeout="20s"/>
+          <op id="ip-192.0.2.12-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
+          <op id="ip-192.0.2.12-monitor-interval-10s" interval="10s" name="monitor" timeout="20s"/>
+        </operations>
+      </primitive>
+      <clone id="haproxy-clone">
+        <primitive class="systemd" id="haproxy" type="haproxy">
+          <instance_attributes id="haproxy-instance_attributes"/>
+          <operations>
+            <op id="haproxy-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="haproxy-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+            <op id="haproxy-monitor-interval-60s" interval="60s" name="monitor"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="haproxy-clone-meta_attributes"/>
+      </clone>
+      <clone id="galera-master">
+        <primitive class="ocf" id="galera" provider="heartbeat" type="galera">
+          <instance_attributes id="galera-instance_attributes">
+            <nvpair id="galera-instance_attributes-additional_parameters" name="additional_parameters" value="--open-files-limit=16384"/>
+            <nvpair id="galera-instance_attributes-enable_creation" name="enable_creation" value="true"/>
+            <nvpair id="galera-instance_attributes-wsrep_cluster_address" name="wsrep_cluster_address" value="gcomm://overcloud-controller-0,overcloud-controller-1,overcloud-controller-2"/>
+          </instance_attributes>
+          <operations>
+            <op id="galera-start-interval-0s" interval="0s" name="start" timeout="120"/>
+            <op id="galera-stop-interval-0s" interval="0s" name="stop" timeout="120"/>
+            <op id="galera-monitor-interval-20" interval="20" name="monitor" timeout="30"/>
+            <op id="galera-monitor-interval-10" interval="10" name="monitor" role="Master" timeout="30"/>
+            <op id="galera-monitor-interval-30" interval="30" name="monitor" role="Slave" timeout="30"/>
+            <op id="galera-demote-interval-0s" interval="0s" name="demote" timeout="120"/>
+            <op id="galera-promote-interval-0s" interval="0s" name="promote" on-fail="block" timeout="300s"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="galera-master-meta_attributes">
+          <nvpair id="galera-master-meta_attributes-promotable" name="promotable" value="true"/>
+          <nvpair id="galera-master-meta_attributes-promoted-max" name="promoted-max" value="3"/>
+          <nvpair id="galera-master-meta_attributes-ordered" name="ordered" value="true"/>
+        </meta_attributes>
+      </clone>
+      <clone id="memcached-clone">
+        <primitive class="systemd" id="memcached" type="memcached">
+          <instance_attributes id="memcached-instance_attributes"/>
+          <operations>
+            <op id="memcached-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="memcached-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+            <op id="memcached-monitor-interval-60s" interval="60s" name="monitor"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="memcached-clone-meta_attributes">
+          <nvpair id="memcached-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+      <clone id="rabbitmq-clone">
+        <primitive class="ocf" id="rabbitmq" provider="heartbeat" type="rabbitmq-cluster">
+          <instance_attributes id="rabbitmq-instance_attributes">
+            <nvpair id="rabbitmq-instance_attributes-set_policy" name="set_policy" value="ha-all ^(?!amq\.).* {&quot;ha-mode&quot;:&quot;all&quot;}"/>
+          </instance_attributes>
+          <meta_attributes id="rabbitmq-meta_attributes">
+            <nvpair id="rabbitmq-meta_attributes-notify" name="notify" value="true"/>
+          </meta_attributes>
+          <operations>
+            <op id="rabbitmq-start-interval-0s" interval="0s" name="start" timeout="100"/>
+            <op id="rabbitmq-stop-interval-0s" interval="0s" name="stop" timeout="90"/>
+            <op id="rabbitmq-monitor-interval-10" interval="10" name="monitor" timeout="40"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="rabbitmq-clone-meta_attributes">
+          <nvpair id="rabbitmq-ordered" name="ordered" value="true"/>
+          <nvpair id="rabbitmq-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+      <clone id="openstack-core-clone">
+        <primitive class="ocf" id="openstack-core" provider="heartbeat" type="Dummy">
+          <instance_attributes id="openstack-core-instance_attributes"/>
+          <operations>
+            <op id="openstack-core-start-interval-0s" interval="0s" name="start" timeout="20"/>
+            <op id="openstack-core-stop-interval-0s" interval="0s" name="stop" timeout="20"/>
+            <op id="openstack-core-monitor-interval-10" interval="10" name="monitor" timeout="20"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="openstack-core-clone-meta_attributes">
+          <nvpair id="openstack-core-clone-meta_attributes-target-role" name="target-role" value="Stopped"/>
+        </meta_attributes>
+      </clone>
+      <clone id="redis-master">
+        <primitive class="ocf" id="redis" provider="heartbeat" type="redis">
+          <instance_attributes id="redis-instance_attributes">
+            <nvpair id="redis-instance_attributes-wait_last_known_master" name="wait_last_known_master" value="true"/>
+          </instance_attributes>
+          <operations>
+            <op id="redis-start-interval-0s" interval="0s" name="start" timeout="120"/>
+            <op id="redis-stop-interval-0s" interval="0s" name="stop" timeout="120"/>
+            <op id="redis-monitor-interval-45" interval="45" name="monitor" timeout="60"/>
+            <op id="redis-monitor-interval-20" interval="20" name="monitor" role="Master" timeout="60"/>
+            <op id="redis-monitor-interval-60" interval="60" name="monitor" role="Slave" timeout="60"/>
+            <op id="redis-promote-interval-0s" interval="0s" name="promote" timeout="120"/>
+            <op id="redis-demote-interval-0s" interval="0s" name="demote" timeout="120"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="redis-master-meta_attributes">
+          <nvpair id="redis-master-meta_attributes-promotable" name="promotable" value="true"/>
+          <nvpair id="redis-master-meta_attributes-notify" name="notify" value="true"/>
+          <nvpair id="redis-master-meta_attributes-ordered" name="ordered" value="true"/>
+          <nvpair id="redis-master-meta_attributes-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+      <primitive class="ocf" id="ip-192.0.2.11" provider="heartbeat" type="IPaddr2">
+        <instance_attributes id="ip-192.0.2.11-instance_attributes">
+          <nvpair id="ip-192.0.2.11-instance_attributes-ip" name="ip" value="192.0.2.11"/>
+          <nvpair id="ip-192.0.2.11-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
+        </instance_attributes>
+        <operations>
+          <op id="ip-192.0.2.11-start-interval-0s" interval="0s" name="start" timeout="20s"/>
+          <op id="ip-192.0.2.11-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
+          <op id="ip-192.0.2.11-monitor-interval-10s" interval="10s" name="monitor" timeout="20s"/>
+        </operations>
+      </primitive>
+      <clone id="mongod-clone">
+        <primitive class="systemd" id="mongod" type="mongod">
+          <instance_attributes id="mongod-instance_attributes"/>
+          <operations>
+            <op id="mongod-start-interval-0s" interval="0s" name="start" timeout="370s"/>
+            <op id="mongod-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+            <op id="mongod-monitor-interval-60s" interval="60s" name="monitor"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="mongod-clone-meta_attributes"/>
+      </clone>
+      <clone id="openstack-aodh-evaluator-clone">
+        <primitive class="systemd" id="openstack-aodh-evaluator" type="openstack-aodh-evaluator">
+          <instance_attributes id="openstack-aodh-evaluator-instance_attributes"/>
+          <operations>
+            <op id="openstack-aodh-evaluator-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="openstack-aodh-evaluator-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+            <op id="openstack-aodh-evaluator-monitor-interval-60s" interval="60s" name="monitor"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="openstack-aodh-evaluator-clone-meta_attributes">
+          <nvpair id="openstack-aodh-evaluator-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+      <clone id="openstack-nova-scheduler-clone">
+        <primitive class="systemd" id="openstack-nova-scheduler" type="openstack-nova-scheduler">
+          <instance_attributes id="openstack-nova-scheduler-instance_attributes"/>
+          <operations>
+            <op id="openstack-nova-scheduler-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="openstack-nova-scheduler-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+            <op id="openstack-nova-scheduler-monitor-interval-60s" interval="60s" name="monitor"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="openstack-nova-scheduler-clone-meta_attributes">
+          <nvpair id="openstack-nova-scheduler-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+      <clone id="neutron-l3-agent-clone">
+        <primitive class="systemd" id="neutron-l3-agent" type="neutron-l3-agent">
+          <instance_attributes id="neutron-l3-agent-instance_attributes"/>
+          <operations>
+            <op id="neutron-l3-agent-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="neutron-l3-agent-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+            <op id="neutron-l3-agent-monitor-interval-60s" interval="60s" name="monitor"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="neutron-l3-agent-clone-meta_attributes">
+          <nvpair id="neutron-l3-agent-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+      <clone id="neutron-netns-cleanup-clone">
+        <primitive class="ocf" id="neutron-netns-cleanup" provider="neutron" type="NetnsCleanup">
+          <instance_attributes id="neutron-netns-cleanup-instance_attributes"/>
+          <operations>
+            <op id="neutron-netns-cleanup-start-interval-0s" interval="0s" name="start" timeout="40"/>
+            <op id="neutron-netns-cleanup-stop-interval-0s" interval="0s" name="stop" timeout="300"/>
+            <op id="neutron-netns-cleanup-monitor-interval-10" interval="10" name="monitor" timeout="20"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="neutron-netns-cleanup-clone-meta_attributes">
+          <nvpair id="neutron-netns-cleanup-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+      <clone id="neutron-ovs-cleanup-clone">
+        <primitive class="ocf" id="neutron-ovs-cleanup" provider="neutron" type="OVSCleanup">
+          <instance_attributes id="neutron-ovs-cleanup-instance_attributes"/>
+          <operations>
+            <op id="neutron-ovs-cleanup-start-interval-0s" interval="0s" name="start" timeout="40"/>
+            <op id="neutron-ovs-cleanup-stop-interval-0s" interval="0s" name="stop" timeout="300"/>
+            <op id="neutron-ovs-cleanup-monitor-interval-10" interval="10" name="monitor" timeout="20"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="neutron-ovs-cleanup-clone-meta_attributes">
+          <nvpair id="neutron-ovs-cleanup-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+      <primitive class="systemd" id="openstack-cinder-volume" type="openstack-cinder-volume">
+        <instance_attributes id="openstack-cinder-volume-instance_attributes"/>
+        <operations>
+          <op id="openstack-cinder-volume-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+          <op id="openstack-cinder-volume-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+          <op id="openstack-cinder-volume-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+      <clone id="openstack-heat-engine-clone">
+        <primitive class="systemd" id="openstack-heat-engine" type="openstack-heat-engine">
+          <instance_attributes id="openstack-heat-engine-instance_attributes"/>
+          <operations>
+            <op id="openstack-heat-engine-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="openstack-heat-engine-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+            <op id="openstack-heat-engine-monitor-interval-60s" interval="60s" name="monitor"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="openstack-heat-engine-clone-meta_attributes">
+          <nvpair id="openstack-heat-engine-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+      <clone id="openstack-ceilometer-api-clone">
+        <primitive class="systemd" id="openstack-ceilometer-api" type="openstack-ceilometer-api">
+          <instance_attributes id="openstack-ceilometer-api-instance_attributes"/>
+          <operations>
+            <op id="openstack-ceilometer-api-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="openstack-ceilometer-api-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+            <op id="openstack-ceilometer-api-monitor-interval-60s" interval="60s" name="monitor"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="openstack-ceilometer-api-clone-meta_attributes">
+          <nvpair id="openstack-ceilometer-api-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+      <clone id="openstack-aodh-listener-clone">
+        <primitive class="systemd" id="openstack-aodh-listener" type="openstack-aodh-listener">
+          <instance_attributes id="openstack-aodh-listener-instance_attributes"/>
+          <operations>
+            <op id="openstack-aodh-listener-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="openstack-aodh-listener-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+            <op id="openstack-aodh-listener-monitor-interval-60s" interval="60s" name="monitor"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="openstack-aodh-listener-clone-meta_attributes">
+          <nvpair id="openstack-aodh-listener-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+      <clone id="neutron-metadata-agent-clone">
+        <primitive class="systemd" id="neutron-metadata-agent" type="neutron-metadata-agent">
+          <instance_attributes id="neutron-metadata-agent-instance_attributes"/>
+          <operations>
+            <op id="neutron-metadata-agent-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="neutron-metadata-agent-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+            <op id="neutron-metadata-agent-monitor-interval-60s" interval="60s" name="monitor"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="neutron-metadata-agent-clone-meta_attributes">
+          <nvpair id="neutron-metadata-agent-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+      <clone id="openstack-aodh-notifier-clone">
+        <primitive class="systemd" id="openstack-aodh-notifier" type="openstack-aodh-notifier">
+          <instance_attributes id="openstack-aodh-notifier-instance_attributes"/>
+          <operations>
+            <op id="openstack-aodh-notifier-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="openstack-aodh-notifier-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+            <op id="openstack-aodh-notifier-monitor-interval-60s" interval="60s" name="monitor"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="openstack-aodh-notifier-clone-meta_attributes">
+          <nvpair id="openstack-aodh-notifier-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+      <clone id="openstack-heat-api-clone">
+        <primitive class="systemd" id="openstack-heat-api" type="openstack-heat-api">
+          <instance_attributes id="openstack-heat-api-instance_attributes"/>
+          <operations>
+            <op id="openstack-heat-api-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="openstack-heat-api-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+            <op id="openstack-heat-api-monitor-interval-60s" interval="60s" name="monitor"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="openstack-heat-api-clone-meta_attributes">
+          <nvpair id="openstack-heat-api-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+      <clone id="openstack-ceilometer-collector-clone">
+        <primitive class="systemd" id="openstack-ceilometer-collector" type="openstack-ceilometer-collector">
+          <instance_attributes id="openstack-ceilometer-collector-instance_attributes"/>
+          <operations>
+            <op id="openstack-ceilometer-collector-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="openstack-ceilometer-collector-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+            <op id="openstack-ceilometer-collector-monitor-interval-60s" interval="60s" name="monitor"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="openstack-ceilometer-collector-clone-meta_attributes">
+          <nvpair id="openstack-ceilometer-collector-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+      <clone id="openstack-glance-api-clone">
+        <primitive class="systemd" id="openstack-glance-api" type="openstack-glance-api">
+          <instance_attributes id="openstack-glance-api-instance_attributes"/>
+          <operations>
+            <op id="openstack-glance-api-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="openstack-glance-api-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+            <op id="openstack-glance-api-monitor-interval-60s" interval="60s" name="monitor"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="openstack-glance-api-clone-meta_attributes">
+          <nvpair id="openstack-glance-api-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+      <clone id="openstack-cinder-scheduler-clone">
+        <primitive class="systemd" id="openstack-cinder-scheduler" type="openstack-cinder-scheduler">
+          <instance_attributes id="openstack-cinder-scheduler-instance_attributes"/>
+          <operations>
+            <op id="openstack-cinder-scheduler-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="openstack-cinder-scheduler-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+            <op id="openstack-cinder-scheduler-monitor-interval-60s" interval="60s" name="monitor"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="openstack-cinder-scheduler-clone-meta_attributes">
+          <nvpair id="openstack-cinder-scheduler-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+      <clone id="openstack-nova-api-clone">
+        <primitive class="systemd" id="openstack-nova-api" type="openstack-nova-api">
+          <instance_attributes id="openstack-nova-api-instance_attributes"/>
+          <operations>
+            <op id="openstack-nova-api-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="openstack-nova-api-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+            <op id="openstack-nova-api-monitor-interval-60s" interval="60s" name="monitor"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="openstack-nova-api-clone-meta_attributes">
+          <nvpair id="openstack-nova-api-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+      <clone id="openstack-nova-consoleauth-clone">
+        <primitive class="systemd" id="openstack-nova-consoleauth" type="openstack-nova-consoleauth">
+          <instance_attributes id="openstack-nova-consoleauth-instance_attributes"/>
+          <operations>
+            <op id="openstack-nova-consoleauth-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="openstack-nova-consoleauth-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+            <op id="openstack-nova-consoleauth-monitor-interval-60s" interval="60s" name="monitor"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="openstack-nova-consoleauth-clone-meta_attributes">
+          <nvpair id="openstack-nova-consoleauth-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+      <clone id="openstack-sahara-api-clone">
+        <primitive class="systemd" id="openstack-sahara-api" type="openstack-sahara-api">
+          <instance_attributes id="openstack-sahara-api-instance_attributes"/>
+          <operations>
+            <op id="openstack-sahara-api-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="openstack-sahara-api-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+            <op id="openstack-sahara-api-monitor-interval-60s" interval="60s" name="monitor"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="openstack-sahara-api-clone-meta_attributes">
+          <nvpair id="openstack-sahara-api-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+      <clone id="openstack-heat-api-cloudwatch-clone">
+        <primitive class="systemd" id="openstack-heat-api-cloudwatch" type="openstack-heat-api-cloudwatch">
+          <instance_attributes id="openstack-heat-api-cloudwatch-instance_attributes"/>
+          <operations>
+            <op id="openstack-heat-api-cloudwatch-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="openstack-heat-api-cloudwatch-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+            <op id="openstack-heat-api-cloudwatch-monitor-interval-60s" interval="60s" name="monitor"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="openstack-heat-api-cloudwatch-clone-meta_attributes">
+          <nvpair id="openstack-heat-api-cloudwatch-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+      <clone id="openstack-sahara-engine-clone">
+        <primitive class="systemd" id="openstack-sahara-engine" type="openstack-sahara-engine">
+          <instance_attributes id="openstack-sahara-engine-instance_attributes"/>
+          <operations>
+            <op id="openstack-sahara-engine-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="openstack-sahara-engine-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+            <op id="openstack-sahara-engine-monitor-interval-60s" interval="60s" name="monitor"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="openstack-sahara-engine-clone-meta_attributes">
+          <nvpair id="openstack-sahara-engine-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+      <clone id="openstack-glance-registry-clone">
+        <primitive class="systemd" id="openstack-glance-registry" type="openstack-glance-registry">
+          <instance_attributes id="openstack-glance-registry-instance_attributes"/>
+          <operations>
+            <op id="openstack-glance-registry-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="openstack-glance-registry-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+            <op id="openstack-glance-registry-monitor-interval-60s" interval="60s" name="monitor"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="openstack-glance-registry-clone-meta_attributes">
+          <nvpair id="openstack-glance-registry-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+      <clone id="openstack-ceilometer-notification-clone">
+        <primitive class="systemd" id="openstack-ceilometer-notification" type="openstack-ceilometer-notification">
+          <instance_attributes id="openstack-ceilometer-notification-instance_attributes"/>
+          <operations>
+            <op id="openstack-ceilometer-notification-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="openstack-ceilometer-notification-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+            <op id="openstack-ceilometer-notification-monitor-interval-60s" interval="60s" name="monitor"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="openstack-ceilometer-notification-clone-meta_attributes">
+          <nvpair id="openstack-ceilometer-notification-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+      <clone id="openstack-cinder-api-clone">
+        <primitive class="systemd" id="openstack-cinder-api" type="openstack-cinder-api">
+          <instance_attributes id="openstack-cinder-api-instance_attributes"/>
+          <operations>
+            <op id="openstack-cinder-api-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="openstack-cinder-api-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+            <op id="openstack-cinder-api-monitor-interval-60s" interval="60s" name="monitor"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="openstack-cinder-api-clone-meta_attributes">
+          <nvpair id="openstack-cinder-api-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+      <clone id="neutron-dhcp-agent-clone">
+        <primitive class="systemd" id="neutron-dhcp-agent" type="neutron-dhcp-agent">
+          <instance_attributes id="neutron-dhcp-agent-instance_attributes"/>
+          <operations>
+            <op id="neutron-dhcp-agent-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="neutron-dhcp-agent-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+            <op id="neutron-dhcp-agent-monitor-interval-60s" interval="60s" name="monitor"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="neutron-dhcp-agent-clone-meta_attributes">
+          <nvpair id="neutron-dhcp-agent-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+      <clone id="neutron-openvswitch-agent-clone">
+        <primitive class="systemd" id="neutron-openvswitch-agent" type="neutron-openvswitch-agent">
+          <instance_attributes id="neutron-openvswitch-agent-instance_attributes"/>
+          <operations>
+            <op id="neutron-openvswitch-agent-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="neutron-openvswitch-agent-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+            <op id="neutron-openvswitch-agent-monitor-interval-60s" interval="60s" name="monitor"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="neutron-openvswitch-agent-clone-meta_attributes">
+          <nvpair id="neutron-openvswitch-agent-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+      <clone id="openstack-nova-novncproxy-clone">
+        <primitive class="systemd" id="openstack-nova-novncproxy" type="openstack-nova-novncproxy">
+          <instance_attributes id="openstack-nova-novncproxy-instance_attributes"/>
+          <operations>
+            <op id="openstack-nova-novncproxy-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="openstack-nova-novncproxy-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+            <op id="openstack-nova-novncproxy-monitor-interval-60s" interval="60s" name="monitor"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="openstack-nova-novncproxy-clone-meta_attributes">
+          <nvpair id="openstack-nova-novncproxy-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+      <clone id="delay-clone">
+        <primitive class="ocf" id="delay" provider="heartbeat" type="Delay">
+          <instance_attributes id="delay-instance_attributes">
+            <nvpair id="delay-instance_attributes-startdelay" name="startdelay" value="10"/>
+          </instance_attributes>
+          <operations>
+            <op id="delay-start-interval-0s" interval="0s" name="start" timeout="30"/>
+            <op id="delay-stop-interval-0s" interval="0s" name="stop" timeout="30"/>
+            <op id="delay-monitor-interval-10" interval="10" name="monitor" timeout="30"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="delay-clone-meta_attributes">
+          <nvpair id="delay-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+      <clone id="neutron-server-clone">
+        <primitive class="systemd" id="neutron-server" type="neutron-server">
+          <instance_attributes id="neutron-server-instance_attributes"/>
+          <operations>
+            <op id="neutron-server-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="neutron-server-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+            <op id="neutron-server-monitor-interval-60s" interval="60s" name="monitor"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="neutron-server-clone-meta_attributes">
+          <nvpair id="neutron-server-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+      <clone id="openstack-ceilometer-central-clone">
+        <primitive class="systemd" id="openstack-ceilometer-central" type="openstack-ceilometer-central">
+          <instance_attributes id="openstack-ceilometer-central-instance_attributes"/>
+          <operations>
+            <op id="openstack-ceilometer-central-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="openstack-ceilometer-central-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+            <op id="openstack-ceilometer-central-monitor-interval-60s" interval="60s" name="monitor"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="openstack-ceilometer-central-clone-meta_attributes">
+          <nvpair id="openstack-ceilometer-central-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+      <clone id="httpd-clone">
+        <primitive class="systemd" id="httpd" type="httpd">
+          <instance_attributes id="httpd-instance_attributes"/>
+          <operations>
+            <op id="httpd-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="httpd-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+            <op id="httpd-monitor-interval-60s" interval="60s" name="monitor"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="httpd-clone-meta_attributes">
+          <nvpair id="httpd-interleave" name="interleave" value="true"/>
+          <nvpair id="httpd-clone-meta_attributes-target-role" name="target-role" value="Stopped"/>
+        </meta_attributes>
+      </clone>
+      <clone id="openstack-heat-api-cfn-clone">
+        <primitive class="systemd" id="openstack-heat-api-cfn" type="openstack-heat-api-cfn">
+          <instance_attributes id="openstack-heat-api-cfn-instance_attributes"/>
+          <operations>
+            <op id="openstack-heat-api-cfn-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="openstack-heat-api-cfn-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+            <op id="openstack-heat-api-cfn-monitor-interval-60s" interval="60s" name="monitor"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="openstack-heat-api-cfn-clone-meta_attributes">
+          <nvpair id="openstack-heat-api-cfn-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+      <clone id="openstack-nova-conductor-clone">
+        <primitive class="systemd" id="openstack-nova-conductor" type="openstack-nova-conductor">
+          <instance_attributes id="openstack-nova-conductor-instance_attributes"/>
+          <operations>
+            <op id="openstack-nova-conductor-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="openstack-nova-conductor-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+            <op id="openstack-nova-conductor-monitor-interval-60s" interval="60s" name="monitor"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="openstack-nova-conductor-clone-meta_attributes">
+          <nvpair id="openstack-nova-conductor-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_colocation id="colocation-ip-192.0.2.12-haproxy-clone-INFINITY" rsc="ip-192.0.2.12" rsc-role="Started" score="INFINITY" with-rsc="haproxy-clone" with-rsc-role="Master"/>
+      <rsc_order first="ip-192.0.2.11" first-action="start" id="order-ip-192.0.2.11-haproxy-clone-Optional" kind="Optional" then="haproxy-clone" then-action="start"/>
+      <rsc_colocation id="colocation-ip-192.0.2.11-haproxy-clone-INFINITY" rsc="ip-192.0.2.11" rsc-role="Started" score="INFINITY" with-rsc="haproxy-clone" with-rsc-role="Master"/>
+      <rsc_order first="ip-192.0.2.12" first-action="start" id="order-ip-192.0.2.12-haproxy-clone-Optional" kind="Optional" then="haproxy-clone" then-action="start"/>
+      <rsc_order first="memcached-clone" first-action="start" id="order-memcached-clone-openstack-core-clone-mandatory" then="openstack-core-clone" then-action="start"/>
+      <rsc_order first="rabbitmq-clone" first-action="start" id="order-rabbitmq-clone-openstack-core-clone-mandatory" then="openstack-core-clone" then-action="start"/>
+      <rsc_order first="galera-master" first-action="promote" id="order-galera-master-openstack-core-clone-mandatory" then="openstack-core-clone" then-action="start"/>
+      <rsc_order first="neutron-l3-agent-clone" first-action="start" id="order-neutron-l3-agent-clone-neutron-metadata-agent-clone-mandatory" then="neutron-metadata-agent-clone" then-action="start"/>
+      <rsc_order first="openstack-core-clone" first-action="start" id="order-openstack-core-clone-openstack-nova-consoleauth-clone-mandatory" then="openstack-nova-consoleauth-clone" then-action="start"/>
+      <rsc_order first="haproxy-clone" first-action="start" id="order-haproxy-clone-openstack-core-clone-mandatory" then="openstack-core-clone" then-action="start"/>
+      <rsc_colocation id="colocation-neutron-netns-cleanup-clone-neutron-ovs-cleanup-clone-INFINITY" rsc="neutron-netns-cleanup-clone" rsc-role="Started" score="INFINITY" with-rsc="neutron-ovs-cleanup-clone" with-rsc-role="Master"/>
+      <rsc_order first="neutron-ovs-cleanup-clone" first-action="start" id="order-neutron-ovs-cleanup-clone-neutron-netns-cleanup-clone-mandatory" then="neutron-netns-cleanup-clone" then-action="start"/>
+      <rsc_order first="openstack-ceilometer-notification-clone" first-action="start" id="order-openstack-ceilometer-notification-clone-openstack-heat-api-clone-mandatory" then="openstack-heat-api-clone" then-action="start"/>
+      <rsc_colocation id="colocation-openstack-aodh-listener-clone-openstack-aodh-evaluator-clone-INFINITY" rsc="openstack-aodh-listener-clone" rsc-role="Started" score="INFINITY" with-rsc="openstack-aodh-evaluator-clone" with-rsc-role="Master"/>
+      <rsc_order first="openstack-core-clone" first-action="start" id="order-openstack-core-clone-openstack-sahara-api-clone-mandatory" then="openstack-sahara-api-clone" then-action="start"/>
+      <rsc_colocation id="colocation-openstack-ceilometer-api-clone-openstack-ceilometer-collector-clone-INFINITY" rsc="openstack-ceilometer-api-clone" rsc-role="Started" score="INFINITY" with-rsc="openstack-ceilometer-collector-clone" with-rsc-role="Master"/>
+      <rsc_colocation id="colocation-openstack-heat-engine-clone-openstack-heat-api-cloudwatch-clone-INFINITY" rsc="openstack-heat-engine-clone" rsc-role="Started" score="INFINITY" with-rsc="openstack-heat-api-cloudwatch-clone" with-rsc-role="Master"/>
+      <rsc_order first="openstack-heat-api-cloudwatch-clone" first-action="start" id="order-openstack-heat-api-cloudwatch-clone-openstack-heat-engine-clone-mandatory" then="openstack-heat-engine-clone" then-action="start"/>
+      <rsc_order first="openstack-core-clone" first-action="start" id="order-openstack-core-clone-openstack-glance-registry-clone-mandatory" then="openstack-glance-registry-clone" then-action="start"/>
+      <rsc_colocation id="colocation-openstack-glance-api-clone-openstack-glance-registry-clone-INFINITY" rsc="openstack-glance-api-clone" rsc-role="Started" score="INFINITY" with-rsc="openstack-glance-registry-clone" with-rsc-role="Master"/>
+      <rsc_order first="openstack-glance-registry-clone" first-action="start" id="order-openstack-glance-registry-clone-openstack-glance-api-clone-mandatory" then="openstack-glance-api-clone" then-action="start"/>
+      <rsc_order first="openstack-ceilometer-collector-clone" first-action="start" id="order-openstack-ceilometer-collector-clone-openstack-ceilometer-api-clone-mandatory" then="openstack-ceilometer-api-clone" then-action="start"/>
+      <rsc_order first="openstack-cinder-scheduler-clone" first-action="start" id="order-openstack-cinder-scheduler-clone-openstack-cinder-volume-mandatory" then="openstack-cinder-volume" then-action="start"/>
+      <rsc_colocation id="colocation-openstack-cinder-scheduler-clone-openstack-cinder-api-clone-INFINITY" rsc="openstack-cinder-scheduler-clone" rsc-role="Started" score="INFINITY" with-rsc="openstack-cinder-api-clone" with-rsc-role="Master"/>
+      <rsc_colocation id="colocation-openstack-cinder-volume-openstack-cinder-scheduler-clone-INFINITY" rsc="openstack-cinder-volume" rsc-role="Started" score="INFINITY" with-rsc="openstack-cinder-scheduler-clone" with-rsc-role="Master"/>
+      <rsc_order first="openstack-cinder-api-clone" first-action="start" id="order-openstack-cinder-api-clone-openstack-cinder-scheduler-clone-mandatory" then="openstack-cinder-scheduler-clone" then-action="start"/>
+      <rsc_order first="openstack-core-clone" first-action="start" id="order-openstack-core-clone-openstack-cinder-api-clone-mandatory" then="openstack-cinder-api-clone" then-action="start"/>
+      <rsc_order first="openstack-nova-novncproxy-clone" first-action="start" id="order-openstack-nova-novncproxy-clone-openstack-nova-api-clone-mandatory" then="openstack-nova-api-clone" then-action="start"/>
+      <rsc_colocation id="colocation-openstack-nova-api-clone-openstack-nova-novncproxy-clone-INFINITY" rsc="openstack-nova-api-clone" rsc-role="Started" score="INFINITY" with-rsc="openstack-nova-novncproxy-clone" with-rsc-role="Master"/>
+      <rsc_order first="openstack-nova-consoleauth-clone" first-action="start" id="order-openstack-nova-consoleauth-clone-openstack-nova-novncproxy-clone-mandatory" then="openstack-nova-novncproxy-clone" then-action="start"/>
+      <rsc_colocation id="colocation-openstack-nova-novncproxy-clone-openstack-nova-consoleauth-clone-INFINITY" rsc="openstack-nova-novncproxy-clone" rsc-role="Started" score="INFINITY" with-rsc="openstack-nova-consoleauth-clone" with-rsc-role="Master"/>
+      <rsc_colocation id="colocation-neutron-metadata-agent-clone-neutron-l3-agent-clone-INFINITY" rsc="neutron-metadata-agent-clone" rsc-role="Started" score="INFINITY" with-rsc="neutron-l3-agent-clone" with-rsc-role="Master"/>
+      <rsc_order first="redis-master" first-action="promote" id="order-redis-master-openstack-aodh-evaluator-clone-mandatory" require-all="false" then="openstack-aodh-evaluator-clone" then-action="start"/>
+      <rsc_order first="openstack-nova-api-clone" first-action="start" id="order-openstack-nova-api-clone-openstack-nova-scheduler-clone-mandatory" then="openstack-nova-scheduler-clone" then-action="start"/>
+      <rsc_colocation id="colocation-openstack-nova-scheduler-clone-openstack-nova-api-clone-INFINITY" rsc="openstack-nova-scheduler-clone" rsc-role="Started" score="INFINITY" with-rsc="openstack-nova-api-clone" with-rsc-role="Master"/>
+      <rsc_order first="delay-clone" first-action="start" id="order-delay-clone-openstack-aodh-evaluator-clone-mandatory" then="openstack-aodh-evaluator-clone" then-action="start"/>
+      <rsc_colocation id="colocation-openstack-aodh-evaluator-clone-delay-clone-INFINITY" rsc="openstack-aodh-evaluator-clone" rsc-role="Started" score="INFINITY" with-rsc="delay-clone" with-rsc-role="Master"/>
+      <rsc_order first="openstack-ceilometer-api-clone" first-action="start" id="order-openstack-ceilometer-api-clone-delay-clone-mandatory" then="delay-clone" then-action="start"/>
+      <rsc_colocation id="colocation-delay-clone-openstack-ceilometer-api-clone-INFINITY" rsc="delay-clone" rsc-role="Started" score="INFINITY" with-rsc="openstack-ceilometer-api-clone" with-rsc-role="Master"/>
+      <rsc_order first="redis-master" first-action="promote" id="order-redis-master-openstack-ceilometer-central-clone-mandatory" require-all="false" then="openstack-ceilometer-central-clone" then-action="start"/>
+      <rsc_order first="openstack-core-clone" first-action="start" id="order-openstack-core-clone-openstack-ceilometer-central-clone-mandatory" then="openstack-ceilometer-central-clone" then-action="start"/>
+      <rsc_order first="mongod-clone" first-action="start" id="order-mongod-clone-openstack-ceilometer-central-clone-mandatory" then="openstack-ceilometer-central-clone" then-action="start"/>
+      <rsc_order first="openstack-ceilometer-central-clone" first-action="start" id="order-openstack-ceilometer-central-clone-openstack-ceilometer-collector-clone-mandatory" then="openstack-ceilometer-collector-clone" then-action="start"/>
+      <rsc_order first="openstack-core-clone" first-action="start" id="order-openstack-core-clone-openstack-heat-api-clone-mandatory" then="openstack-heat-api-clone" then-action="start"/>
+      <rsc_order first="openstack-core-clone" first-action="start" id="order-openstack-core-clone-httpd-clone-mandatory" then="httpd-clone" then-action="start"/>
+      <rsc_order first="neutron-netns-cleanup-clone" first-action="start" id="order-neutron-netns-cleanup-clone-neutron-openvswitch-agent-clone-mandatory" then="neutron-openvswitch-agent-clone" then-action="start"/>
+      <rsc_colocation id="colocation-neutron-openvswitch-agent-clone-neutron-netns-cleanup-clone-INFINITY" rsc="neutron-openvswitch-agent-clone" rsc-role="Started" score="INFINITY" with-rsc="neutron-netns-cleanup-clone" with-rsc-role="Master"/>
+      <rsc_order first="neutron-server-clone" first-action="start" id="order-neutron-server-clone-neutron-openvswitch-agent-clone-mandatory" then="neutron-openvswitch-agent-clone" then-action="start"/>
+      <rsc_colocation id="colocation-openstack-heat-api-cloudwatch-clone-openstack-heat-api-cfn-clone-INFINITY" rsc="openstack-heat-api-cloudwatch-clone" rsc-role="Started" score="INFINITY" with-rsc="openstack-heat-api-cfn-clone" with-rsc-role="Master"/>
+      <rsc_order first="openstack-heat-api-clone" first-action="start" id="order-openstack-heat-api-clone-openstack-heat-api-cfn-clone-mandatory" then="openstack-heat-api-cfn-clone" then-action="start"/>
+      <rsc_colocation id="colocation-openstack-heat-api-cfn-clone-openstack-heat-api-clone-INFINITY" rsc="openstack-heat-api-cfn-clone" rsc-role="Started" score="INFINITY" with-rsc="openstack-heat-api-clone" with-rsc-role="Master"/>
+      <rsc_order first="openstack-heat-api-cfn-clone" first-action="start" id="order-openstack-heat-api-cfn-clone-openstack-heat-api-cloudwatch-clone-mandatory" then="openstack-heat-api-cloudwatch-clone" then-action="start"/>
+      <rsc_order first="openstack-core-clone" first-action="start" id="order-openstack-core-clone-neutron-server-clone-mandatory" then="neutron-server-clone" then-action="start"/>
+      <rsc_order first="openstack-aodh-evaluator-clone" first-action="start" id="order-openstack-aodh-evaluator-clone-openstack-aodh-notifier-clone-mandatory" then="openstack-aodh-notifier-clone" then-action="start"/>
+      <rsc_order first="openstack-nova-scheduler-clone" first-action="start" id="order-openstack-nova-scheduler-clone-openstack-nova-conductor-clone-mandatory" then="openstack-nova-conductor-clone" then-action="start"/>
+      <rsc_colocation id="colocation-openstack-nova-conductor-clone-openstack-nova-scheduler-clone-INFINITY" rsc="openstack-nova-conductor-clone" rsc-role="Started" score="INFINITY" with-rsc="openstack-nova-scheduler-clone" with-rsc-role="Master"/>
+      <rsc_colocation id="colocation-neutron-l3-agent-clone-neutron-dhcp-agent-clone-INFINITY" rsc="neutron-l3-agent-clone" rsc-role="Started" score="INFINITY" with-rsc="neutron-dhcp-agent-clone" with-rsc-role="Master"/>
+      <rsc_colocation id="colocation-neutron-dhcp-agent-clone-neutron-openvswitch-agent-clone-INFINITY" rsc="neutron-dhcp-agent-clone" rsc-role="Started" score="INFINITY" with-rsc="neutron-openvswitch-agent-clone" with-rsc-role="Master"/>
+      <rsc_order first="neutron-dhcp-agent-clone" first-action="start" id="order-neutron-dhcp-agent-clone-neutron-l3-agent-clone-mandatory" then="neutron-l3-agent-clone" then-action="start"/>
+      <rsc_order first="neutron-openvswitch-agent-clone" first-action="start" id="order-neutron-openvswitch-agent-clone-neutron-dhcp-agent-clone-mandatory" then="neutron-dhcp-agent-clone" then-action="start"/>
+      <rsc_colocation id="colocation-openstack-aodh-notifier-clone-openstack-aodh-evaluator-clone-INFINITY" rsc="openstack-aodh-notifier-clone" rsc-role="Started" score="INFINITY" with-rsc="openstack-aodh-evaluator-clone" with-rsc-role="Master"/>
+    </constraints>
+    <rsc_defaults>
+      <meta_attributes id="rsc_defaults-options">
+        <nvpair id="rsc_defaults-options-resource-stickiness" name="resource-stickiness" value="INFINITY"/>
+      </meta_attributes>
+    </rsc_defaults>
+  </configuration>
+  <status>
+    <node_state id="2" uname="overcloud-controller-1" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="ip-192.0.2.12" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-192.0.2.12_last_0" operation_key="ip-192.0.2.12_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="6:4:7:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:7;6:4:7:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1460476216" last-rc-change="1460476216" exec-time="79" queue-time="0" op-digest="1db428884c94b63d249300d41d2d573e"/>
+          </lrm_resource>
+          <lrm_resource id="haproxy" type="haproxy" class="systemd">
+            <lrm_rsc_op id="haproxy_last_0" operation_key="haproxy_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="12:5:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;12:5:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="11" rc-code="0" op-status="0" interval="0" last-run="1460476216" last-rc-change="1460476216" exec-time="2088" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="haproxy_monitor_60000" operation_key="haproxy_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="13:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;13:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="343" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477776" exec-time="7" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="galera" type="galera" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera_last_0" operation_key="galera_promote_0" operation="promote" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="28:10:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;28:10:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="23" rc-code="0" op-status="0" interval="0" last-run="1460476242" last-rc-change="1460476242" exec-time="10401" queue-time="0" op-digest="7581597d2403b46ccfd48d3a7285d437" op-secure-params=" user " op-secure-digest="7581597d2403b46ccfd48d3a7285d437"/>
+            <lrm_rsc_op id="galera_monitor_10000" operation_key="galera_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="28:42:8:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:8;28:42:8:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="344" rc-code="8" op-status="0" interval="10000" last-rc-change="1460477776" exec-time="162" queue-time="0" op-digest="a541fe86df643b88084fbbbc2f568fbf" op-secure-params=" user " op-secure-digest="7581597d2403b46ccfd48d3a7285d437"/>
+          </lrm_resource>
+          <lrm_resource id="memcached" type="memcached" class="systemd">
+            <lrm_rsc_op id="memcached_last_0" operation_key="memcached_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="48:13:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;48:13:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="30" rc-code="0" op-status="0" interval="0" last-run="1460476268" last-rc-change="1460476268" exec-time="2089" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="memcached_monitor_60000" operation_key="memcached_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="49:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;49:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="345" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477776" exec-time="5" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-core" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="openstack-core_last_0" operation_key="openstack-core_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="176:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;176:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="435" rc-code="0" op-status="0" interval="0" last-run="1460477925" last-rc-change="1460477925" exec-time="12" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-core_monitor_10000" operation_key="openstack-core_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="75:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;75:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="347" rc-code="0" op-status="0" interval="10000" last-rc-change="1460477776" exec-time="24" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq" type="rabbitmq-cluster" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq_last_0" operation_key="rabbitmq_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="64:14:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;64:14:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="42" rc-code="0" op-status="0" interval="0" last-run="1460476271" last-rc-change="1460476271" exec-time="3028" queue-time="0" op-digest="780d433233eb4f94c1a151623d002e84"/>
+            <lrm_rsc_op id="rabbitmq_monitor_10000" operation_key="rabbitmq_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="62:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;62:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="346" rc-code="0" op-status="0" interval="10000" last-rc-change="1460477776" exec-time="1159" queue-time="1" op-digest="6b46cdf9111345cbd0460b2540d3b2c7"/>
+          </lrm_resource>
+          <lrm_resource id="mongod" type="mongod" class="systemd">
+            <lrm_rsc_op id="mongod_last_0" operation_key="mongod_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="130:15:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;130:15:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="62" rc-code="0" op-status="0" interval="0" last-run="1460476274" last-rc-change="1460476274" exec-time="2088" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="mongod_monitor_60000" operation_key="mongod_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="128:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;128:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="350" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="6" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="redis" type="redis" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis_last_0" operation_key="redis_promote_0" operation="promote" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="90:18:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;90:18:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="69" rc-code="0" op-status="0" interval="0" last-run="1460476283" last-rc-change="1460476283" exec-time="159" queue-time="0" op-digest="a5b2a4f5c557278af14d6cbffc5a229d" op-secure-params=" user " op-secure-digest="a5b2a4f5c557278af14d6cbffc5a229d"/>
+            <lrm_rsc_op id="redis_monitor_20000" operation_key="redis_monitor_20000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="90:42:8:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:8;90:42:8:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="348" rc-code="8" op-status="0" interval="20000" last-rc-change="1460477777" exec-time="395" queue-time="0" op-digest="992feffd37882eb5ce9bfc847b2fa75e" op-secure-params=" user " op-secure-digest="a5b2a4f5c557278af14d6cbffc5a229d"/>
+          </lrm_resource>
+          <lrm_resource id="ip-192.0.2.11" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-192.0.2.11_last_0" operation_key="ip-192.0.2.11_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="124:15:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;124:15:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="61" rc-code="0" op-status="0" interval="0" last-run="1460476274" last-rc-change="1460476274" exec-time="223" queue-time="0" op-digest="d572fe9eefb0b8b75c625ca4bdb40ef3"/>
+            <lrm_rsc_op id="ip-192.0.2.11_monitor_10000" operation_key="ip-192.0.2.11_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="125:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;125:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="349" rc-code="0" op-status="0" interval="10000" last-rc-change="1460477777" exec-time="87" queue-time="0" op-digest="5cdabf3f0a31f8a813657a76c3adbe16"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-aodh-evaluator" type="openstack-aodh-evaluator" class="systemd">
+            <lrm_rsc_op id="openstack-aodh-evaluator_last_0" operation_key="openstack-aodh-evaluator_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="227:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;227:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="403" rc-code="0" op-status="0" interval="0" last-run="1460477827" last-rc-change="1460477827" exec-time="2083" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-aodh-evaluator_monitor_60000" operation_key="openstack-aodh-evaluator_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="141:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;141:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="351" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="4" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-nova-scheduler" type="openstack-nova-scheduler" class="systemd">
+            <lrm_rsc_op id="openstack-nova-scheduler_last_0" operation_key="openstack-nova-scheduler_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="237:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;237:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="427" rc-code="0" op-status="0" interval="0" last-run="1460477900" last-rc-change="1460477900" exec-time="10069" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-nova-scheduler_monitor_60000" operation_key="openstack-nova-scheduler_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="154:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;154:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="352" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="5" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-l3-agent" type="neutron-l3-agent" class="systemd">
+            <lrm_rsc_op id="neutron-l3-agent_last_0" operation_key="neutron-l3-agent_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="247:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;247:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="401" rc-code="0" op-status="0" interval="0" last-run="1460477825" last-rc-change="1460477825" exec-time="2074" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="neutron-l3-agent_monitor_60000" operation_key="neutron-l3-agent_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="167:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;167:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="353" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="7" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-cinder-volume" type="openstack-cinder-volume" class="systemd">
+            <lrm_rsc_op id="openstack-cinder-volume_last_0" operation_key="openstack-cinder-volume_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="39:22:7:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:7;39:22:7:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="102" rc-code="7" op-status="0" interval="0" last-run="1460476564" last-rc-change="1460476564" exec-time="2" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-ovs-cleanup" type="OVSCleanup" class="ocf" provider="neutron">
+            <lrm_rsc_op id="neutron-ovs-cleanup_last_0" operation_key="neutron-ovs-cleanup_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="199:22:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;199:22:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="106" rc-code="0" op-status="0" interval="0" last-run="1460476564" last-rc-change="1460476564" exec-time="1641" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart="" op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="neutron-ovs-cleanup_monitor_10000" operation_key="neutron-ovs-cleanup_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="193:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;193:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="355" rc-code="0" op-status="0" interval="10000" last-rc-change="1460477777" exec-time="23" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-netns-cleanup" type="NetnsCleanup" class="ocf" provider="neutron">
+            <lrm_rsc_op id="neutron-netns-cleanup_last_0" operation_key="neutron-netns-cleanup_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="189:22:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;189:22:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="105" rc-code="0" op-status="0" interval="0" last-run="1460476564" last-rc-change="1460476564" exec-time="1474" queue-time="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart="" op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="neutron-netns-cleanup_monitor_10000" operation_key="neutron-netns-cleanup_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="180:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;180:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="354" rc-code="0" op-status="0" interval="10000" last-rc-change="1460477777" exec-time="26" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-heat-engine" type="openstack-heat-engine" class="systemd">
+            <lrm_rsc_op id="openstack-heat-engine_last_0" operation_key="openstack-heat-engine_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="279:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;279:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="385" rc-code="0" op-status="0" interval="0" last-run="1460477811" last-rc-change="1460477811" exec-time="8171" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-heat-engine_monitor_60000" operation_key="openstack-heat-engine_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="209:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;209:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="356" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="5" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-ceilometer-api" type="openstack-ceilometer-api" class="systemd">
+            <lrm_rsc_op id="openstack-ceilometer-api_last_0" operation_key="openstack-ceilometer-api_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="289:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;289:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="415" rc-code="0" op-status="0" interval="0" last-run="1460477868" last-rc-change="1460477868" exec-time="2076" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-ceilometer-api_monitor_60000" operation_key="openstack-ceilometer-api_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="222:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;222:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="357" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="6" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-aodh-listener" type="openstack-aodh-listener" class="systemd">
+            <lrm_rsc_op id="openstack-aodh-listener_last_0" operation_key="openstack-aodh-listener_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="256:23:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;256:23:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="163" rc-code="0" op-status="0" interval="0" last-run="1460476571" last-rc-change="1460476571" exec-time="2233" queue-time="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-aodh-listener_monitor_60000" operation_key="openstack-aodh-listener_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="235:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;235:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="358" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="4" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-metadata-agent" type="neutron-metadata-agent" class="systemd">
+            <lrm_rsc_op id="neutron-metadata-agent_last_0" operation_key="neutron-metadata-agent_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="309:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;309:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="387" rc-code="0" op-status="0" interval="0" last-run="1460477811" last-rc-change="1460477811" exec-time="2208" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="neutron-metadata-agent_monitor_60000" operation_key="neutron-metadata-agent_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="248:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;248:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="359" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="4" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-aodh-notifier" type="openstack-aodh-notifier" class="systemd">
+            <lrm_rsc_op id="openstack-aodh-notifier_last_0" operation_key="openstack-aodh-notifier_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="319:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;319:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="389" rc-code="0" op-status="0" interval="0" last-run="1460477813" last-rc-change="1460477813" exec-time="2080" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-aodh-notifier_monitor_60000" operation_key="openstack-aodh-notifier_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="261:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;261:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="360" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="2" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-heat-api" type="openstack-heat-api" class="systemd">
+            <lrm_rsc_op id="openstack-heat-api_last_0" operation_key="openstack-heat-api_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="329:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;329:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="425" rc-code="0" op-status="0" interval="0" last-run="1460477900" last-rc-change="1460477900" exec-time="2091" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-heat-api_monitor_60000" operation_key="openstack-heat-api_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="274:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;274:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="361" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="3" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-ceilometer-collector" type="openstack-ceilometer-collector" class="systemd">
+            <lrm_rsc_op id="openstack-ceilometer-collector_last_0" operation_key="openstack-ceilometer-collector_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="339:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;339:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="419" rc-code="0" op-status="0" interval="0" last-run="1460477872" last-rc-change="1460477872" exec-time="6234" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-ceilometer-collector_monitor_60000" operation_key="openstack-ceilometer-collector_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="287:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;287:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="362" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="4" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-glance-api" type="openstack-glance-api" class="systemd">
+            <lrm_rsc_op id="openstack-glance-api_last_0" operation_key="openstack-glance-api_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="349:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;349:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="391" rc-code="0" op-status="0" interval="0" last-run="1460477815" last-rc-change="1460477815" exec-time="4093" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-glance-api_monitor_60000" operation_key="openstack-glance-api_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="300:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;300:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="363" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="6" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-cinder-scheduler" type="openstack-cinder-scheduler" class="systemd">
+            <lrm_rsc_op id="openstack-cinder-scheduler_last_0" operation_key="openstack-cinder-scheduler_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="359:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;359:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="399" rc-code="0" op-status="0" interval="0" last-run="1460477825" last-rc-change="1460477825" exec-time="30129" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-cinder-scheduler_monitor_60000" operation_key="openstack-cinder-scheduler_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="313:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;313:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="364" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="13" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-nova-api" type="openstack-nova-api" class="systemd">
+            <lrm_rsc_op id="openstack-nova-api_last_0" operation_key="openstack-nova-api_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="369:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;369:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="429" rc-code="0" op-status="0" interval="0" last-run="1460477910" last-rc-change="1460477910" exec-time="2089" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-nova-api_monitor_60000" operation_key="openstack-nova-api_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="326:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;326:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="365" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="2" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-nova-consoleauth" type="openstack-nova-consoleauth" class="systemd">
+            <lrm_rsc_op id="openstack-nova-consoleauth_last_0" operation_key="openstack-nova-consoleauth_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="379:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;379:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="433" rc-code="0" op-status="0" interval="0" last-run="1460477915" last-rc-change="1460477915" exec-time="10096" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-nova-consoleauth_monitor_60000" operation_key="openstack-nova-consoleauth_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="339:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;339:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="366" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="3" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-sahara-api" type="openstack-sahara-api" class="systemd">
+            <lrm_rsc_op id="openstack-sahara-api_last_0" operation_key="openstack-sahara-api_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="389:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;389:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="393" rc-code="0" op-status="0" interval="0" last-run="1460477819" last-rc-change="1460477819" exec-time="2076" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-sahara-api_monitor_60000" operation_key="openstack-sahara-api_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="352:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;352:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="367" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="2" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-heat-api-cloudwatch" type="openstack-heat-api-cloudwatch" class="systemd">
+            <lrm_rsc_op id="openstack-heat-api-cloudwatch_last_0" operation_key="openstack-heat-api-cloudwatch_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="399:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;399:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="397" rc-code="0" op-status="0" interval="0" last-run="1460477823" last-rc-change="1460477823" exec-time="2086" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-heat-api-cloudwatch_monitor_60000" operation_key="openstack-heat-api-cloudwatch_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="365:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;365:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="368" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="5" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-sahara-engine" type="openstack-sahara-engine" class="systemd">
+            <lrm_rsc_op id="openstack-sahara-engine_last_0" operation_key="openstack-sahara-engine_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="390:27:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;390:27:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="216" rc-code="0" op-status="0" interval="0" last-run="1460476589" last-rc-change="1460476589" exec-time="2144" queue-time="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-sahara-engine_monitor_60000" operation_key="openstack-sahara-engine_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="378:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;378:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="369" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="7" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-glance-registry" type="openstack-glance-registry" class="systemd">
+            <lrm_rsc_op id="openstack-glance-registry_last_0" operation_key="openstack-glance-registry_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="419:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;419:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="407" rc-code="0" op-status="0" interval="0" last-run="1460477855" last-rc-change="1460477855" exec-time="2092" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-glance-registry_monitor_60000" operation_key="openstack-glance-registry_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="391:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;391:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="370" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="2" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-ceilometer-notification" type="openstack-ceilometer-notification" class="systemd">
+            <lrm_rsc_op id="openstack-ceilometer-notification_last_0" operation_key="openstack-ceilometer-notification_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="404:29:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;404:29:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="240" rc-code="0" op-status="0" interval="0" last-run="1460476592" last-rc-change="1460476592" exec-time="2167" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-ceilometer-notification_monitor_60000" operation_key="openstack-ceilometer-notification_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="404:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;404:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="371" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="2" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-cinder-api" type="openstack-cinder-api" class="systemd">
+            <lrm_rsc_op id="openstack-cinder-api_last_0" operation_key="openstack-cinder-api_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="439:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;439:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="421" rc-code="0" op-status="0" interval="0" last-run="1460477880" last-rc-change="1460477880" exec-time="2089" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-cinder-api_monitor_60000" operation_key="openstack-cinder-api_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="417:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;417:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="372" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="3" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-dhcp-agent" type="neutron-dhcp-agent" class="systemd">
+            <lrm_rsc_op id="neutron-dhcp-agent_last_0" operation_key="neutron-dhcp-agent_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="449:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;449:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="405" rc-code="0" op-status="0" interval="0" last-run="1460477843" last-rc-change="1460477843" exec-time="14114" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="neutron-dhcp-agent_monitor_60000" operation_key="neutron-dhcp-agent_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="430:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;430:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="373" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="4" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-openvswitch-agent" type="neutron-openvswitch-agent" class="systemd">
+            <lrm_rsc_op id="neutron-openvswitch-agent_last_0" operation_key="neutron-openvswitch-agent_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="459:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;459:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="413" rc-code="0" op-status="0" interval="0" last-run="1460477860" last-rc-change="1460477860" exec-time="2066" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="neutron-openvswitch-agent_monitor_60000" operation_key="neutron-openvswitch-agent_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="443:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;443:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="374" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="2" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-nova-novncproxy" type="openstack-nova-novncproxy" class="systemd">
+            <lrm_rsc_op id="openstack-nova-novncproxy_last_0" operation_key="openstack-nova-novncproxy_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="469:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;469:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="431" rc-code="0" op-status="0" interval="0" last-run="1460477913" last-rc-change="1460477913" exec-time="2053" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-nova-novncproxy_monitor_60000" operation_key="openstack-nova-novncproxy_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="456:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;456:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="375" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="2" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="delay" type="Delay" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="delay_last_0" operation_key="delay_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="479:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;479:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="409" rc-code="0" op-status="0" interval="0" last-run="1460477857" last-rc-change="1460477857" exec-time="10020" queue-time="0" op-digest="ad19c7364a8662d5d94488a98ccc4fda"/>
+            <lrm_rsc_op id="delay_monitor_10000" operation_key="delay_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="469:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;469:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="376" rc-code="0" op-status="0" interval="10000" last-rc-change="1460477777" exec-time="10023" queue-time="0" op-digest="e5d5e2a8b3e3e78f22e76dfc79a91e9d"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-server" type="neutron-server" class="systemd">
+            <lrm_rsc_op id="neutron-server_last_0" operation_key="neutron-server_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="489:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;489:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="417" rc-code="0" op-status="0" interval="0" last-run="1460477870" last-rc-change="1460477870" exec-time="8085" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="neutron-server_monitor_60000" operation_key="neutron-server_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="482:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;482:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="377" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="4" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-ceilometer-central" type="openstack-ceilometer-central" class="systemd">
+            <lrm_rsc_op id="openstack-ceilometer-central_last_0" operation_key="openstack-ceilometer-central_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="499:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;499:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="423" rc-code="0" op-status="0" interval="0" last-run="1460477898" last-rc-change="1460477898" exec-time="2132" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-ceilometer-central_monitor_60000" operation_key="openstack-ceilometer-central_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="495:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;495:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="378" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="4" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="httpd" type="httpd" class="systemd">
+            <lrm_rsc_op id="httpd_last_failure_0" operation_key="httpd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="113:37:7:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;113:37:7:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="278" rc-code="0" op-status="0" interval="0" last-run="1460476628" last-rc-change="1460476628" exec-time="7" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="httpd_last_0" operation_key="httpd_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="515:43:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;515:43:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="383" rc-code="0" op-status="0" interval="0" last-run="1460477807" last-rc-change="1460477807" exec-time="2216" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="httpd_monitor_60000" operation_key="httpd_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="508:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;508:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="379" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="3" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-heat-api-cfn" type="openstack-heat-api-cfn" class="systemd">
+            <lrm_rsc_op id="openstack-heat-api-cfn_last_0" operation_key="openstack-heat-api-cfn_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="513:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;513:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="411" rc-code="0" op-status="0" interval="0" last-run="1460477858" last-rc-change="1460477858" exec-time="2077" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-heat-api-cfn_monitor_60000" operation_key="openstack-heat-api-cfn_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="521:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;521:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="380" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="2" queue-time="1" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-nova-conductor" type="openstack-nova-conductor" class="systemd">
+            <lrm_rsc_op id="openstack-nova-conductor_last_0" operation_key="openstack-nova-conductor_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="523:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;523:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="395" rc-code="0" op-status="0" interval="0" last-run="1460477819" last-rc-change="1460477819" exec-time="2085" queue-time="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-nova-conductor_monitor_60000" operation_key="openstack-nova-conductor_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="534:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;534:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-1" call-id="381" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="4" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="2">
+        <instance_attributes id="status-2">
+          <nvpair id="status-2-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-2-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-2-master-galera" name="master-galera" value="100"/>
+          <nvpair id="status-2-rmq-node-attr-rabbitmq" name="rmq-node-attr-rabbitmq" value="rabbit@overcloud-controller-1"/>
+          <nvpair id="status-2-master-redis" name="master-redis" value="1"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="1" uname="overcloud-controller-0" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="ip-192.0.2.12" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-192.0.2.12_last_0" operation_key="ip-192.0.2.12_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="9:4:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;9:4:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="6" rc-code="0" op-status="0" interval="0" last-run="1460476216" last-rc-change="1460476216" exec-time="40" queue-time="0" op-digest="1db428884c94b63d249300d41d2d573e"/>
+            <lrm_rsc_op id="ip-192.0.2.12_monitor_10000" operation_key="ip-192.0.2.12_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="10:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;10:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="341" rc-code="0" op-status="0" interval="10000" last-rc-change="1460477776" exec-time="108" queue-time="0" op-digest="1dbe8917e0d81da1319335e257305b44"/>
+          </lrm_resource>
+          <lrm_resource id="haproxy" type="haproxy" class="systemd">
+            <lrm_rsc_op id="haproxy_last_0" operation_key="haproxy_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="16:5:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;16:5:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="13" rc-code="0" op-status="0" interval="0" last-run="1460476216" last-rc-change="1460476216" exec-time="2075" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="haproxy_monitor_60000" operation_key="haproxy_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="16:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;16:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="342" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477776" exec-time="8" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="galera" type="galera" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera_last_0" operation_key="galera_promote_0" operation="promote" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="30:11:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;30:11:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="25" rc-code="0" op-status="0" interval="0" last-run="1460476253" last-rc-change="1460476253" exec-time="10386" queue-time="0" op-digest="7581597d2403b46ccfd48d3a7285d437" op-secure-params=" user " op-secure-digest="7581597d2403b46ccfd48d3a7285d437"/>
+            <lrm_rsc_op id="galera_monitor_10000" operation_key="galera_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="33:42:8:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:8;33:42:8:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="343" rc-code="8" op-status="0" interval="10000" last-rc-change="1460477776" exec-time="184" queue-time="0" op-digest="a541fe86df643b88084fbbbc2f568fbf" op-secure-params=" user " op-secure-digest="7581597d2403b46ccfd48d3a7285d437"/>
+          </lrm_resource>
+          <lrm_resource id="memcached" type="memcached" class="systemd">
+            <lrm_rsc_op id="memcached_last_0" operation_key="memcached_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="52:13:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;52:13:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="32" rc-code="0" op-status="0" interval="0" last-run="1460476268" last-rc-change="1460476268" exec-time="2092" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="memcached_monitor_60000" operation_key="memcached_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="52:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;52:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="344" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477776" exec-time="5" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-core" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="openstack-core_last_0" operation_key="openstack-core_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="177:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;177:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="434" rc-code="0" op-status="0" interval="0" last-run="1460477925" last-rc-change="1460477925" exec-time="22" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-core_monitor_10000" operation_key="openstack-core_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="78:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;78:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="346" rc-code="0" op-status="0" interval="10000" last-rc-change="1460477776" exec-time="9" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq" type="rabbitmq-cluster" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq_last_0" operation_key="rabbitmq_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="68:16:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;68:16:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="62" rc-code="0" op-status="0" interval="0" last-run="1460476278" last-rc-change="1460476278" exec-time="4154" queue-time="2" op-digest="780d433233eb4f94c1a151623d002e84"/>
+            <lrm_rsc_op id="rabbitmq_monitor_10000" operation_key="rabbitmq_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="65:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;65:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="345" rc-code="0" op-status="0" interval="10000" last-rc-change="1460477776" exec-time="1446" queue-time="0" op-digest="6b46cdf9111345cbd0460b2540d3b2c7"/>
+          </lrm_resource>
+          <lrm_resource id="mongod" type="mongod" class="systemd">
+            <lrm_rsc_op id="mongod_last_0" operation_key="mongod_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="128:15:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;128:15:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="60" rc-code="0" op-status="0" interval="0" last-run="1460476274" last-rc-change="1460476274" exec-time="2079" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="mongod_monitor_60000" operation_key="mongod_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="131:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;131:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="349" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="7" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="ip-192.0.2.11" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-192.0.2.11_last_0" operation_key="ip-192.0.2.11_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="18:15:7:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:7;18:15:7:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="54" rc-code="7" op-status="0" interval="0" last-run="1460476274" last-rc-change="1460476274" exec-time="51" queue-time="0" op-digest="d572fe9eefb0b8b75c625ca4bdb40ef3"/>
+          </lrm_resource>
+          <lrm_resource id="redis" type="redis" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis_last_0" operation_key="redis_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="96:17:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;96:17:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="64" rc-code="0" op-status="0" interval="0" last-run="1460476282" last-rc-change="1460476282" exec-time="376" queue-time="0" op-digest="a5b2a4f5c557278af14d6cbffc5a229d" op-secure-params=" user " op-secure-digest="a5b2a4f5c557278af14d6cbffc5a229d"/>
+            <lrm_rsc_op id="redis_monitor_60000" operation_key="redis_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="94:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;94:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="347" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477776" exec-time="391" queue-time="0" op-digest="992feffd37882eb5ce9bfc847b2fa75e" op-secure-params=" user " op-secure-digest="a5b2a4f5c557278af14d6cbffc5a229d"/>
+            <lrm_rsc_op id="redis_monitor_45000" operation_key="redis_monitor_45000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="93:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;93:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="348" rc-code="0" op-status="0" interval="45000" last-rc-change="1460477777" exec-time="372" queue-time="0" op-digest="992feffd37882eb5ce9bfc847b2fa75e" op-secure-params=" user " op-secure-digest="a5b2a4f5c557278af14d6cbffc5a229d"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-aodh-evaluator" type="openstack-aodh-evaluator" class="systemd">
+            <lrm_rsc_op id="openstack-aodh-evaluator_last_0" operation_key="openstack-aodh-evaluator_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="229:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;229:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="392" rc-code="0" op-status="0" interval="0" last-run="1460477843" last-rc-change="1460477843" exec-time="2089" queue-time="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-aodh-evaluator_monitor_60000" operation_key="openstack-aodh-evaluator_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="144:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;144:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="350" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="3" queue-time="1" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-nova-scheduler" type="openstack-nova-scheduler" class="systemd">
+            <lrm_rsc_op id="openstack-nova-scheduler_last_0" operation_key="openstack-nova-scheduler_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="239:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;239:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="426" rc-code="0" op-status="0" interval="0" last-run="1460477902" last-rc-change="1460477902" exec-time="8091" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-nova-scheduler_monitor_60000" operation_key="openstack-nova-scheduler_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="157:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;157:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="351" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="3" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-l3-agent" type="neutron-l3-agent" class="systemd">
+            <lrm_rsc_op id="neutron-l3-agent_last_0" operation_key="neutron-l3-agent_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="249:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;249:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="390" rc-code="0" op-status="0" interval="0" last-run="1460477825" last-rc-change="1460477825" exec-time="18111" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="neutron-l3-agent_monitor_60000" operation_key="neutron-l3-agent_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="170:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;170:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="352" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="2" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-cinder-volume" type="openstack-cinder-volume" class="systemd">
+            <lrm_rsc_op id="openstack-cinder-volume_last_0" operation_key="openstack-cinder-volume_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="33:22:7:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:7;33:22:7:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="100" rc-code="7" op-status="0" interval="0" last-run="1460476564" last-rc-change="1460476564" exec-time="4" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-netns-cleanup" type="NetnsCleanup" class="ocf" provider="neutron">
+            <lrm_rsc_op id="neutron-netns-cleanup_last_0" operation_key="neutron-netns-cleanup_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="187:22:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;187:22:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="103" rc-code="0" op-status="0" interval="0" last-run="1460476564" last-rc-change="1460476564" exec-time="2119" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart="" op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="neutron-netns-cleanup_monitor_10000" operation_key="neutron-netns-cleanup_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="183:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;183:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="353" rc-code="0" op-status="0" interval="10000" last-rc-change="1460477777" exec-time="61" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-ovs-cleanup" type="OVSCleanup" class="ocf" provider="neutron">
+            <lrm_rsc_op id="neutron-ovs-cleanup_last_0" operation_key="neutron-ovs-cleanup_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="197:22:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;197:22:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="104" rc-code="0" op-status="0" interval="0" last-run="1460476564" last-rc-change="1460476564" exec-time="2026" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart="" op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="neutron-ovs-cleanup_monitor_10000" operation_key="neutron-ovs-cleanup_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="196:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;196:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="354" rc-code="0" op-status="0" interval="10000" last-rc-change="1460477777" exec-time="55" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-heat-engine" type="openstack-heat-engine" class="systemd">
+            <lrm_rsc_op id="openstack-heat-engine_last_0" operation_key="openstack-heat-engine_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="281:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;281:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="384" rc-code="0" op-status="0" interval="0" last-run="1460477811" last-rc-change="1460477811" exec-time="10124" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-heat-engine_monitor_60000" operation_key="openstack-heat-engine_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="212:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;212:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="355" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="7" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-ceilometer-api" type="openstack-ceilometer-api" class="systemd">
+            <lrm_rsc_op id="openstack-ceilometer-api_last_0" operation_key="openstack-ceilometer-api_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="291:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;291:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="410" rc-code="0" op-status="0" interval="0" last-run="1460477870" last-rc-change="1460477870" exec-time="2077" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-ceilometer-api_monitor_60000" operation_key="openstack-ceilometer-api_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="225:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;225:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="356" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="3" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-aodh-listener" type="openstack-aodh-listener" class="systemd">
+            <lrm_rsc_op id="openstack-aodh-listener_last_0" operation_key="openstack-aodh-listener_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="254:23:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;254:23:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="161" rc-code="0" op-status="0" interval="0" last-run="1460476571" last-rc-change="1460476571" exec-time="2228" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-aodh-listener_monitor_60000" operation_key="openstack-aodh-listener_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="238:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;238:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="357" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="9" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-metadata-agent" type="neutron-metadata-agent" class="systemd">
+            <lrm_rsc_op id="neutron-metadata-agent_last_0" operation_key="neutron-metadata-agent_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="311:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;311:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="386" rc-code="0" op-status="0" interval="0" last-run="1460477821" last-rc-change="1460477821" exec-time="2094" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="neutron-metadata-agent_monitor_60000" operation_key="neutron-metadata-agent_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="251:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;251:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="358" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="4" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-aodh-notifier" type="openstack-aodh-notifier" class="systemd">
+            <lrm_rsc_op id="openstack-aodh-notifier_last_0" operation_key="openstack-aodh-notifier_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="321:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;321:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="388" rc-code="0" op-status="0" interval="0" last-run="1460477823" last-rc-change="1460477823" exec-time="2097" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-aodh-notifier_monitor_60000" operation_key="openstack-aodh-notifier_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="264:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;264:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="359" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="5" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-heat-api" type="openstack-heat-api" class="systemd">
+            <lrm_rsc_op id="openstack-heat-api_last_0" operation_key="openstack-heat-api_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="331:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;331:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="424" rc-code="0" op-status="0" interval="0" last-run="1460477900" last-rc-change="1460477900" exec-time="2084" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-heat-api_monitor_60000" operation_key="openstack-heat-api_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="277:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;277:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="360" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="3" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-ceilometer-collector" type="openstack-ceilometer-collector" class="systemd">
+            <lrm_rsc_op id="openstack-ceilometer-collector_last_0" operation_key="openstack-ceilometer-collector_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="341:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;341:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="414" rc-code="0" op-status="0" interval="0" last-run="1460477888" last-rc-change="1460477888" exec-time="10083" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-ceilometer-collector_monitor_60000" operation_key="openstack-ceilometer-collector_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="290:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;290:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="361" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="3" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-glance-api" type="openstack-glance-api" class="systemd">
+            <lrm_rsc_op id="openstack-glance-api_last_0" operation_key="openstack-glance-api_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="351:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;351:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="394" rc-code="0" op-status="0" interval="0" last-run="1460477843" last-rc-change="1460477843" exec-time="2067" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-glance-api_monitor_60000" operation_key="openstack-glance-api_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="303:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;303:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="362" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="3" queue-time="1" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-cinder-scheduler" type="openstack-cinder-scheduler" class="systemd">
+            <lrm_rsc_op id="openstack-cinder-scheduler_last_0" operation_key="openstack-cinder-scheduler_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="361:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;361:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="396" rc-code="0" op-status="0" interval="0" last-run="1460477845" last-rc-change="1460477845" exec-time="20136" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-cinder-scheduler_monitor_60000" operation_key="openstack-cinder-scheduler_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="316:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;316:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="363" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="3" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-nova-api" type="openstack-nova-api" class="systemd">
+            <lrm_rsc_op id="openstack-nova-api_last_0" operation_key="openstack-nova-api_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="371:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;371:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="428" rc-code="0" op-status="0" interval="0" last-run="1460477910" last-rc-change="1460477910" exec-time="2098" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-nova-api_monitor_60000" operation_key="openstack-nova-api_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="329:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;329:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="364" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="3" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-nova-consoleauth" type="openstack-nova-consoleauth" class="systemd">
+            <lrm_rsc_op id="openstack-nova-consoleauth_last_0" operation_key="openstack-nova-consoleauth_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="381:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;381:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="432" rc-code="0" op-status="0" interval="0" last-run="1460477915" last-rc-change="1460477915" exec-time="10084" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-nova-consoleauth_monitor_60000" operation_key="openstack-nova-consoleauth_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="342:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;342:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="365" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="3" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-sahara-api" type="openstack-sahara-api" class="systemd">
+            <lrm_rsc_op id="openstack-sahara-api_last_0" operation_key="openstack-sahara-api_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="391:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;391:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="398" rc-code="0" op-status="0" interval="0" last-run="1460477845" last-rc-change="1460477845" exec-time="2055" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-sahara-api_monitor_60000" operation_key="openstack-sahara-api_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="355:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;355:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="366" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="5" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-heat-api-cloudwatch" type="openstack-heat-api-cloudwatch" class="systemd">
+            <lrm_rsc_op id="openstack-heat-api-cloudwatch_last_0" operation_key="openstack-heat-api-cloudwatch_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="401:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;401:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="400" rc-code="0" op-status="0" interval="0" last-run="1460477848" last-rc-change="1460477848" exec-time="2114" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-heat-api-cloudwatch_monitor_60000" operation_key="openstack-heat-api-cloudwatch_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="368:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;368:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="367" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="5" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-sahara-engine" type="openstack-sahara-engine" class="systemd">
+            <lrm_rsc_op id="openstack-sahara-engine_last_0" operation_key="openstack-sahara-engine_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="388:27:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;388:27:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="218" rc-code="0" op-status="0" interval="0" last-run="1460476589" last-rc-change="1460476589" exec-time="2145" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-sahara-engine_monitor_60000" operation_key="openstack-sahara-engine_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="381:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;381:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="368" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="5" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-glance-registry" type="openstack-glance-registry" class="systemd">
+            <lrm_rsc_op id="openstack-glance-registry_last_0" operation_key="openstack-glance-registry_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="421:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;421:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="402" rc-code="0" op-status="0" interval="0" last-run="1460477850" last-rc-change="1460477850" exec-time="2094" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-glance-registry_monitor_60000" operation_key="openstack-glance-registry_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="394:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;394:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="369" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="6" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-ceilometer-notification" type="openstack-ceilometer-notification" class="systemd">
+            <lrm_rsc_op id="openstack-ceilometer-notification_last_0" operation_key="openstack-ceilometer-notification_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="402:29:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;402:29:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="233" rc-code="0" op-status="0" interval="0" last-run="1460476592" last-rc-change="1460476592" exec-time="2357" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-ceilometer-notification_monitor_60000" operation_key="openstack-ceilometer-notification_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="407:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;407:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="370" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="3" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-cinder-api" type="openstack-cinder-api" class="systemd">
+            <lrm_rsc_op id="openstack-cinder-api_last_0" operation_key="openstack-cinder-api_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="441:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;441:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="416" rc-code="0" op-status="0" interval="0" last-run="1460477896" last-rc-change="1460477896" exec-time="2063" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-cinder-api_monitor_60000" operation_key="openstack-cinder-api_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="420:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;420:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="371" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477778" exec-time="3" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-dhcp-agent" type="neutron-dhcp-agent" class="systemd">
+            <lrm_rsc_op id="neutron-dhcp-agent_last_0" operation_key="neutron-dhcp-agent_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="451:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;451:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="404" rc-code="0" op-status="0" interval="0" last-run="1460477852" last-rc-change="1460477852" exec-time="6081" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="neutron-dhcp-agent_monitor_60000" operation_key="neutron-dhcp-agent_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="433:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;433:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="372" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477778" exec-time="3" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-openvswitch-agent" type="neutron-openvswitch-agent" class="systemd">
+            <lrm_rsc_op id="neutron-openvswitch-agent_last_0" operation_key="neutron-openvswitch-agent_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="461:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;461:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="408" rc-code="0" op-status="0" interval="0" last-run="1460477868" last-rc-change="1460477868" exec-time="2114" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="neutron-openvswitch-agent_monitor_60000" operation_key="neutron-openvswitch-agent_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="446:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;446:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="373" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477778" exec-time="5" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-nova-novncproxy" type="openstack-nova-novncproxy" class="systemd">
+            <lrm_rsc_op id="openstack-nova-novncproxy_last_0" operation_key="openstack-nova-novncproxy_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="471:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;471:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="430" rc-code="0" op-status="0" interval="0" last-run="1460477913" last-rc-change="1460477913" exec-time="2071" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-nova-novncproxy_monitor_60000" operation_key="openstack-nova-novncproxy_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="459:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;459:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="374" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477778" exec-time="18" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="delay" type="Delay" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="delay_last_0" operation_key="delay_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="481:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;481:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="406" rc-code="0" op-status="0" interval="0" last-run="1460477858" last-rc-change="1460477858" exec-time="10015" queue-time="0" op-digest="ad19c7364a8662d5d94488a98ccc4fda"/>
+            <lrm_rsc_op id="delay_monitor_10000" operation_key="delay_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="472:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;472:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="375" rc-code="0" op-status="0" interval="10000" last-rc-change="1460477778" exec-time="10114" queue-time="0" op-digest="e5d5e2a8b3e3e78f22e76dfc79a91e9d"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-server" type="neutron-server" class="systemd">
+            <lrm_rsc_op id="neutron-server_last_failure_0" operation_key="neutron-server_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="104:32:7:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;104:32:7:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="262" rc-code="0" op-status="0" interval="0" last-run="1460476612" last-rc-change="1460476612" exec-time="3" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="neutron-server_last_0" operation_key="neutron-server_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="491:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;491:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="412" rc-code="0" op-status="0" interval="0" last-run="1460477872" last-rc-change="1460477872" exec-time="16114" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="neutron-server_monitor_60000" operation_key="neutron-server_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="485:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;485:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="376" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477778" exec-time="4" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-ceilometer-central" type="openstack-ceilometer-central" class="systemd">
+            <lrm_rsc_op id="openstack-ceilometer-central_last_0" operation_key="openstack-ceilometer-central_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="501:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;501:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="422" rc-code="0" op-status="0" interval="0" last-run="1460477900" last-rc-change="1460477900" exec-time="2082" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-ceilometer-central_monitor_60000" operation_key="openstack-ceilometer-central_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="498:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;498:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="377" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477778" exec-time="3" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="httpd" type="httpd" class="systemd">
+            <lrm_rsc_op id="httpd_last_failure_0" operation_key="httpd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="109:36:7:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;109:36:7:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="273" rc-code="0" op-status="0" interval="0" last-run="1460476621" last-rc-change="1460476621" exec-time="15" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="httpd_last_0" operation_key="httpd_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="516:43:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;516:43:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="382" rc-code="0" op-status="0" interval="0" last-run="1460477807" last-rc-change="1460477807" exec-time="2131" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="httpd_monitor_60000" operation_key="httpd_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="511:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;511:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="378" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477778" exec-time="4" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-heat-api-cfn" type="openstack-heat-api-cfn" class="systemd">
+            <lrm_rsc_op id="openstack-heat-api-cfn_last_0" operation_key="openstack-heat-api-cfn_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="515:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;515:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="418" rc-code="0" op-status="0" interval="0" last-run="1460477898" last-rc-change="1460477898" exec-time="2076" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-heat-api-cfn_monitor_60000" operation_key="openstack-heat-api-cfn_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="524:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;524:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="379" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477778" exec-time="6" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-nova-conductor" type="openstack-nova-conductor" class="systemd">
+            <lrm_rsc_op id="openstack-nova-conductor_last_0" operation_key="openstack-nova-conductor_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="525:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;525:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="420" rc-code="0" op-status="0" interval="0" last-run="1460477898" last-rc-change="1460477898" exec-time="2062" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-nova-conductor_monitor_60000" operation_key="openstack-nova-conductor_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="537:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;537:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-0" call-id="380" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477778" exec-time="3" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="1">
+        <instance_attributes id="status-1">
+          <nvpair id="status-1-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-1-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-1-master-galera" name="master-galera" value="100"/>
+          <nvpair id="status-1-rmq-node-attr-rabbitmq" name="rmq-node-attr-rabbitmq" value="rabbit@overcloud-controller-0"/>
+          <nvpair id="status-1-master-redis" name="master-redis" value="1"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="3" uname="overcloud-controller-2" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="3">
+        <lrm_resources>
+          <lrm_resource id="ip-192.0.2.12" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-192.0.2.12_last_0" operation_key="ip-192.0.2.12_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="8:4:7:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:7;8:4:7:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1460476216" last-rc-change="1460476216" exec-time="44" queue-time="0" op-digest="1db428884c94b63d249300d41d2d573e"/>
+          </lrm_resource>
+          <lrm_resource id="haproxy" type="haproxy" class="systemd">
+            <lrm_rsc_op id="haproxy_last_0" operation_key="haproxy_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="14:5:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;14:5:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="11" rc-code="0" op-status="0" interval="0" last-run="1460476216" last-rc-change="1460476216" exec-time="2087" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="haproxy_monitor_60000" operation_key="haproxy_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="19:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;19:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="343" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477776" exec-time="18" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="galera" type="galera" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="galera_last_0" operation_key="galera_promote_0" operation="promote" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="34:9:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;34:9:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="23" rc-code="0" op-status="0" interval="0" last-run="1460476236" last-rc-change="1460476236" exec-time="6553" queue-time="0" op-digest="7581597d2403b46ccfd48d3a7285d437" op-secure-params=" user " op-secure-digest="7581597d2403b46ccfd48d3a7285d437"/>
+            <lrm_rsc_op id="galera_monitor_10000" operation_key="galera_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="38:42:8:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:8;38:42:8:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="344" rc-code="8" op-status="0" interval="10000" last-rc-change="1460477776" exec-time="234" queue-time="0" op-digest="a541fe86df643b88084fbbbc2f568fbf" op-secure-params=" user " op-secure-digest="7581597d2403b46ccfd48d3a7285d437"/>
+          </lrm_resource>
+          <lrm_resource id="memcached" type="memcached" class="systemd">
+            <lrm_rsc_op id="memcached_last_0" operation_key="memcached_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="50:13:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;50:13:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="30" rc-code="0" op-status="0" interval="0" last-run="1460476268" last-rc-change="1460476268" exec-time="2096" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="memcached_monitor_60000" operation_key="memcached_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="55:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;55:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="345" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477776" exec-time="26" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-core" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="openstack-core_last_0" operation_key="openstack-core_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="178:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;178:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="438" rc-code="0" op-status="0" interval="0" last-run="1460477925" last-rc-change="1460477925" exec-time="17" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-core_monitor_10000" operation_key="openstack-core_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="81:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;81:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="347" rc-code="0" op-status="0" interval="10000" last-rc-change="1460477776" exec-time="42" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq" type="rabbitmq-cluster" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq_last_0" operation_key="rabbitmq_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="73:15:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;73:15:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="58" rc-code="0" op-status="0" interval="0" last-run="1460476274" last-rc-change="1460476274" exec-time="3749" queue-time="0" op-digest="780d433233eb4f94c1a151623d002e84"/>
+            <lrm_rsc_op id="rabbitmq_monitor_10000" operation_key="rabbitmq_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="68:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;68:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="346" rc-code="0" op-status="0" interval="10000" last-rc-change="1460477776" exec-time="1352" queue-time="0" op-digest="6b46cdf9111345cbd0460b2540d3b2c7"/>
+          </lrm_resource>
+          <lrm_resource id="mongod" type="mongod" class="systemd">
+            <lrm_rsc_op id="mongod_last_0" operation_key="mongod_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="126:15:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;126:15:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="59" rc-code="0" op-status="0" interval="0" last-run="1460476274" last-rc-change="1460476274" exec-time="2061" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="mongod_monitor_60000" operation_key="mongod_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="134:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;134:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="350" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477776" exec-time="23" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="redis" type="redis" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis_last_0" operation_key="redis_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="88:16:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;88:16:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="62" rc-code="0" op-status="0" interval="0" last-run="1460476278" last-rc-change="1460476278" exec-time="326" queue-time="0" op-digest="a5b2a4f5c557278af14d6cbffc5a229d" op-secure-params=" user " op-secure-digest="a5b2a4f5c557278af14d6cbffc5a229d"/>
+            <lrm_rsc_op id="redis_monitor_60000" operation_key="redis_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="98:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;98:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="348" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477776" exec-time="228" queue-time="0" op-digest="992feffd37882eb5ce9bfc847b2fa75e" op-secure-params=" user " op-secure-digest="a5b2a4f5c557278af14d6cbffc5a229d"/>
+            <lrm_rsc_op id="redis_monitor_45000" operation_key="redis_monitor_45000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="97:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;97:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="349" rc-code="0" op-status="0" interval="45000" last-rc-change="1460477776" exec-time="376" queue-time="182" op-digest="992feffd37882eb5ce9bfc847b2fa75e" op-secure-params=" user " op-secure-digest="a5b2a4f5c557278af14d6cbffc5a229d"/>
+          </lrm_resource>
+          <lrm_resource id="ip-192.0.2.11" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-192.0.2.11_last_0" operation_key="ip-192.0.2.11_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="26:15:7:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:7;26:15:7:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="52" rc-code="7" op-status="0" interval="0" last-run="1460476274" last-rc-change="1460476274" exec-time="87" queue-time="0" op-digest="d572fe9eefb0b8b75c625ca4bdb40ef3"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-aodh-evaluator" type="openstack-aodh-evaluator" class="systemd">
+            <lrm_rsc_op id="openstack-aodh-evaluator_last_0" operation_key="openstack-aodh-evaluator_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="231:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;231:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="398" rc-code="0" op-status="0" interval="0" last-run="1460477827" last-rc-change="1460477827" exec-time="2064" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-aodh-evaluator_monitor_60000" operation_key="openstack-aodh-evaluator_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="147:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;147:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="351" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477776" exec-time="6" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-nova-scheduler" type="openstack-nova-scheduler" class="systemd">
+            <lrm_rsc_op id="openstack-nova-scheduler_last_0" operation_key="openstack-nova-scheduler_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="241:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;241:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="430" rc-code="0" op-status="0" interval="0" last-run="1460477900" last-rc-change="1460477900" exec-time="10069" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-nova-scheduler_monitor_60000" operation_key="openstack-nova-scheduler_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="160:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;160:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="352" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477776" exec-time="4" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-l3-agent" type="neutron-l3-agent" class="systemd">
+            <lrm_rsc_op id="neutron-l3-agent_last_0" operation_key="neutron-l3-agent_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="251:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;251:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="396" rc-code="0" op-status="0" interval="0" last-run="1460477827" last-rc-change="1460477827" exec-time="16095" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="neutron-l3-agent_monitor_60000" operation_key="neutron-l3-agent_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="173:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;173:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="353" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477776" exec-time="4" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-cinder-volume" type="openstack-cinder-volume" class="systemd">
+            <lrm_rsc_op id="openstack-cinder-volume_last_0" operation_key="openstack-cinder-volume_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="277:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;277:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="386" rc-code="0" op-status="0" interval="0" last-run="1460477811" last-rc-change="1460477811" exec-time="14152" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-cinder-volume_monitor_60000" operation_key="openstack-cinder-volume_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="206:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;206:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="356" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477776" exec-time="6" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-ovs-cleanup" type="OVSCleanup" class="ocf" provider="neutron">
+            <lrm_rsc_op id="neutron-ovs-cleanup_last_0" operation_key="neutron-ovs-cleanup_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="195:22:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;195:22:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="103" rc-code="0" op-status="0" interval="0" last-run="1460476564" last-rc-change="1460476564" exec-time="3099" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart="" op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="neutron-ovs-cleanup_monitor_10000" operation_key="neutron-ovs-cleanup_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="199:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;199:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="355" rc-code="0" op-status="0" interval="10000" last-rc-change="1460477776" exec-time="79" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-netns-cleanup" type="NetnsCleanup" class="ocf" provider="neutron">
+            <lrm_rsc_op id="neutron-netns-cleanup_last_0" operation_key="neutron-netns-cleanup_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="185:22:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;185:22:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="102" rc-code="0" op-status="0" interval="0" last-run="1460476564" last-rc-change="1460476564" exec-time="2986" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart="" op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="neutron-netns-cleanup_monitor_10000" operation_key="neutron-netns-cleanup_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="186:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;186:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="354" rc-code="0" op-status="0" interval="10000" last-rc-change="1460477776" exec-time="38" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-heat-engine" type="openstack-heat-engine" class="systemd">
+            <lrm_rsc_op id="openstack-heat-engine_last_0" operation_key="openstack-heat-engine_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="283:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;283:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="388" rc-code="0" op-status="0" interval="0" last-run="1460477811" last-rc-change="1460477811" exec-time="12218" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-heat-engine_monitor_60000" operation_key="openstack-heat-engine_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="215:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;215:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="357" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477776" exec-time="4" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-ceilometer-api" type="openstack-ceilometer-api" class="systemd">
+            <lrm_rsc_op id="openstack-ceilometer-api_last_0" operation_key="openstack-ceilometer-api_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="293:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;293:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="418" rc-code="0" op-status="0" interval="0" last-run="1460477868" last-rc-change="1460477868" exec-time="2064" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-ceilometer-api_monitor_60000" operation_key="openstack-ceilometer-api_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="228:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;228:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="358" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477776" exec-time="3" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-aodh-listener" type="openstack-aodh-listener" class="systemd">
+            <lrm_rsc_op id="openstack-aodh-listener_last_0" operation_key="openstack-aodh-listener_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="258:23:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;258:23:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="161" rc-code="0" op-status="0" interval="0" last-run="1460476571" last-rc-change="1460476571" exec-time="2206" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-aodh-listener_monitor_60000" operation_key="openstack-aodh-listener_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="241:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;241:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="359" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477776" exec-time="3" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-metadata-agent" type="neutron-metadata-agent" class="systemd">
+            <lrm_rsc_op id="neutron-metadata-agent_last_0" operation_key="neutron-metadata-agent_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="313:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;313:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="390" rc-code="0" op-status="0" interval="0" last-run="1460477823" last-rc-change="1460477823" exec-time="2095" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="neutron-metadata-agent_monitor_60000" operation_key="neutron-metadata-agent_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="254:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;254:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="360" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="2" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-aodh-notifier" type="openstack-aodh-notifier" class="systemd">
+            <lrm_rsc_op id="openstack-aodh-notifier_last_0" operation_key="openstack-aodh-notifier_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="323:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;323:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="392" rc-code="0" op-status="0" interval="0" last-run="1460477825" last-rc-change="1460477825" exec-time="2085" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-aodh-notifier_monitor_60000" operation_key="openstack-aodh-notifier_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="267:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;267:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="361" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="2" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-heat-api" type="openstack-heat-api" class="systemd">
+            <lrm_rsc_op id="openstack-heat-api_last_0" operation_key="openstack-heat-api_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="333:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;333:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="428" rc-code="0" op-status="0" interval="0" last-run="1460477900" last-rc-change="1460477900" exec-time="2075" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-heat-api_monitor_60000" operation_key="openstack-heat-api_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="280:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;280:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="362" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="5" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-ceilometer-collector" type="openstack-ceilometer-collector" class="systemd">
+            <lrm_rsc_op id="openstack-ceilometer-collector_last_0" operation_key="openstack-ceilometer-collector_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="343:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;343:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="422" rc-code="0" op-status="0" interval="0" last-run="1460477872" last-rc-change="1460477872" exec-time="10160" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-ceilometer-collector_monitor_60000" operation_key="openstack-ceilometer-collector_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="293:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;293:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="363" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="3" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-glance-api" type="openstack-glance-api" class="systemd">
+            <lrm_rsc_op id="openstack-glance-api_last_0" operation_key="openstack-glance-api_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="353:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;353:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="394" rc-code="0" op-status="0" interval="0" last-run="1460477825" last-rc-change="1460477825" exec-time="2080" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-glance-api_monitor_60000" operation_key="openstack-glance-api_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="306:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;306:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="364" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="3" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-cinder-scheduler" type="openstack-cinder-scheduler" class="systemd">
+            <lrm_rsc_op id="openstack-cinder-scheduler_last_0" operation_key="openstack-cinder-scheduler_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="363:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;363:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="400" rc-code="0" op-status="0" interval="0" last-run="1460477829" last-rc-change="1460477829" exec-time="50324" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-cinder-scheduler_monitor_60000" operation_key="openstack-cinder-scheduler_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="319:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;319:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="365" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="4" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-nova-api" type="openstack-nova-api" class="systemd">
+            <lrm_rsc_op id="openstack-nova-api_last_0" operation_key="openstack-nova-api_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="373:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;373:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="432" rc-code="0" op-status="0" interval="0" last-run="1460477910" last-rc-change="1460477910" exec-time="2065" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-nova-api_monitor_60000" operation_key="openstack-nova-api_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="332:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;332:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="366" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="5" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-nova-consoleauth" type="openstack-nova-consoleauth" class="systemd">
+            <lrm_rsc_op id="openstack-nova-consoleauth_last_0" operation_key="openstack-nova-consoleauth_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="383:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;383:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="436" rc-code="0" op-status="0" interval="0" last-run="1460477915" last-rc-change="1460477915" exec-time="10095" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-nova-consoleauth_monitor_60000" operation_key="openstack-nova-consoleauth_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="345:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;345:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="367" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="7" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-sahara-api" type="openstack-sahara-api" class="systemd">
+            <lrm_rsc_op id="openstack-sahara-api_last_0" operation_key="openstack-sahara-api_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="393:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;393:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="402" rc-code="0" op-status="0" interval="0" last-run="1460477843" last-rc-change="1460477843" exec-time="2090" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-sahara-api_monitor_60000" operation_key="openstack-sahara-api_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="358:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;358:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="368" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="7" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-heat-api-cloudwatch" type="openstack-heat-api-cloudwatch" class="systemd">
+            <lrm_rsc_op id="openstack-heat-api-cloudwatch_last_0" operation_key="openstack-heat-api-cloudwatch_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="403:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;403:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="404" rc-code="0" op-status="0" interval="0" last-run="1460477845" last-rc-change="1460477845" exec-time="2079" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-heat-api-cloudwatch_monitor_60000" operation_key="openstack-heat-api-cloudwatch_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="371:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;371:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="369" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="4" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-sahara-engine" type="openstack-sahara-engine" class="systemd">
+            <lrm_rsc_op id="openstack-sahara-engine_last_0" operation_key="openstack-sahara-engine_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="392:27:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;392:27:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="215" rc-code="0" op-status="0" interval="0" last-run="1460476589" last-rc-change="1460476589" exec-time="2164" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-sahara-engine_monitor_60000" operation_key="openstack-sahara-engine_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="384:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;384:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="370" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="5" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-glance-registry" type="openstack-glance-registry" class="systemd">
+            <lrm_rsc_op id="openstack-glance-registry_last_0" operation_key="openstack-glance-registry_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="423:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;423:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="406" rc-code="0" op-status="0" interval="0" last-run="1460477847" last-rc-change="1460477847" exec-time="2107" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-glance-registry_monitor_60000" operation_key="openstack-glance-registry_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="397:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;397:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="371" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="3" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-ceilometer-notification" type="openstack-ceilometer-notification" class="systemd">
+            <lrm_rsc_op id="openstack-ceilometer-notification_last_0" operation_key="openstack-ceilometer-notification_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="406:29:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;406:29:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="239" rc-code="0" op-status="0" interval="0" last-run="1460476592" last-rc-change="1460476592" exec-time="2233" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-ceilometer-notification_monitor_60000" operation_key="openstack-ceilometer-notification_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="410:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;410:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="372" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="5" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-cinder-api" type="openstack-cinder-api" class="systemd">
+            <lrm_rsc_op id="openstack-cinder-api_last_0" operation_key="openstack-cinder-api_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="443:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;443:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="424" rc-code="0" op-status="0" interval="0" last-run="1460477880" last-rc-change="1460477880" exec-time="2084" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-cinder-api_monitor_60000" operation_key="openstack-cinder-api_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="423:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;423:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="373" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="5" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-dhcp-agent" type="neutron-dhcp-agent" class="systemd">
+            <lrm_rsc_op id="neutron-dhcp-agent_last_0" operation_key="neutron-dhcp-agent_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="453:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;453:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="408" rc-code="0" op-status="0" interval="0" last-run="1460477850" last-rc-change="1460477850" exec-time="8118" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="neutron-dhcp-agent_monitor_60000" operation_key="neutron-dhcp-agent_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="436:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;436:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="374" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="10" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-openvswitch-agent" type="neutron-openvswitch-agent" class="systemd">
+            <lrm_rsc_op id="neutron-openvswitch-agent_last_0" operation_key="neutron-openvswitch-agent_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="463:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;463:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="412" rc-code="0" op-status="0" interval="0" last-run="1460477866" last-rc-change="1460477866" exec-time="2108" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="neutron-openvswitch-agent_monitor_60000" operation_key="neutron-openvswitch-agent_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="449:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;449:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="375" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="14" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-nova-novncproxy" type="openstack-nova-novncproxy" class="systemd">
+            <lrm_rsc_op id="openstack-nova-novncproxy_last_0" operation_key="openstack-nova-novncproxy_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="473:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;473:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="434" rc-code="0" op-status="0" interval="0" last-run="1460477913" last-rc-change="1460477913" exec-time="2081" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-nova-novncproxy_monitor_60000" operation_key="openstack-nova-novncproxy_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="462:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;462:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="376" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="14" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="delay" type="Delay" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="delay_last_0" operation_key="delay_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="483:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;483:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="410" rc-code="0" op-status="0" interval="0" last-run="1460477858" last-rc-change="1460477858" exec-time="10020" queue-time="0" op-digest="ad19c7364a8662d5d94488a98ccc4fda"/>
+            <lrm_rsc_op id="delay_monitor_10000" operation_key="delay_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="475:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;475:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="377" rc-code="0" op-status="0" interval="10000" last-rc-change="1460477777" exec-time="10073" queue-time="0" op-digest="e5d5e2a8b3e3e78f22e76dfc79a91e9d"/>
+          </lrm_resource>
+          <lrm_resource id="neutron-server" type="neutron-server" class="systemd">
+            <lrm_rsc_op id="neutron-server_last_0" operation_key="neutron-server_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="493:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;493:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="420" rc-code="0" op-status="0" interval="0" last-run="1460477870" last-rc-change="1460477870" exec-time="26109" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="neutron-server_monitor_60000" operation_key="neutron-server_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="488:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;488:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="378" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="5" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-ceilometer-central" type="openstack-ceilometer-central" class="systemd">
+            <lrm_rsc_op id="openstack-ceilometer-central_last_0" operation_key="openstack-ceilometer-central_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="503:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;503:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="426" rc-code="0" op-status="0" interval="0" last-run="1460477898" last-rc-change="1460477898" exec-time="2117" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-ceilometer-central_monitor_60000" operation_key="openstack-ceilometer-central_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="501:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;501:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="379" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="4" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="httpd" type="httpd" class="systemd">
+            <lrm_rsc_op id="httpd_last_failure_0" operation_key="httpd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="120:38:7:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;120:38:7:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="279" rc-code="0" op-status="0" interval="0" last-run="1460476688" last-rc-change="1460476688" exec-time="4" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="httpd_last_0" operation_key="httpd_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="517:43:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;517:43:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="384" rc-code="0" op-status="0" interval="0" last-run="1460477807" last-rc-change="1460477807" exec-time="2118" queue-time="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="httpd_monitor_60000" operation_key="httpd_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="514:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;514:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="380" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="10" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-heat-api-cfn" type="openstack-heat-api-cfn" class="systemd">
+            <lrm_rsc_op id="openstack-heat-api-cfn_last_0" operation_key="openstack-heat-api-cfn_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="517:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;517:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="414" rc-code="0" op-status="0" interval="0" last-run="1460477866" last-rc-change="1460477866" exec-time="2189" queue-time="1" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-heat-api-cfn_monitor_60000" operation_key="openstack-heat-api-cfn_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="527:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;527:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="381" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="4" queue-time="1" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-nova-conductor" type="openstack-nova-conductor" class="systemd">
+            <lrm_rsc_op id="openstack-nova-conductor_last_0" operation_key="openstack-nova-conductor_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="527:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;527:44:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="416" rc-code="0" op-status="0" interval="0" last-run="1460477868" last-rc-change="1460477868" exec-time="2078" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="openstack-nova-conductor_monitor_60000" operation_key="openstack-nova-conductor_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="540:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" transition-magic="0:0;540:42:0:c1bb8b1b-6b17-491a-8dad-fd97f495b0cc" on_node="overcloud-controller-2" call-id="382" rc-code="0" op-status="0" interval="60000" last-rc-change="1460477777" exec-time="5" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="3">
+        <instance_attributes id="status-3">
+          <nvpair id="status-3-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-3-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-3-master-galera" name="master-galera" value="100"/>
+          <nvpair id="status-3-rmq-node-attr-rabbitmq" name="rmq-node-attr-rabbitmq" value="rabbit@overcloud-controller-2"/>
+          <nvpair id="status-3-master-redis" name="master-redis" value="1"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>

@@ -58,7 +58,6 @@ bool pe_can_fence(pe_working_set_t *data_set, node_t *node);
 
 int merge_weights(int w1, int w2);
 void add_hash_param(GHashTable * hash, const char *name, const char *value);
-void append_hashtable(gpointer key, gpointer value, gpointer user_data);
 
 char *native_parameter(resource_t * rsc, node_t * node, gboolean create, const char *name,
                        pe_working_set_t * data_set);
@@ -74,7 +73,6 @@ node_t *rsc_known_on(resource_t * rsc, GListPtr * list);
 gboolean native_unpack(resource_t * rsc, pe_working_set_t * data_set);
 gboolean group_unpack(resource_t * rsc, pe_working_set_t * data_set);
 gboolean clone_unpack(resource_t * rsc, pe_working_set_t * data_set);
-gboolean master_unpack(resource_t * rsc, pe_working_set_t * data_set);
 gboolean container_unpack(resource_t * rsc, pe_working_set_t * data_set);
 
 resource_t *native_find_rsc(resource_t * rsc, const char *id, node_t * node, int flags);
@@ -82,25 +80,21 @@ resource_t *native_find_rsc(resource_t * rsc, const char *id, node_t * node, int
 gboolean native_active(resource_t * rsc, gboolean all);
 gboolean group_active(resource_t * rsc, gboolean all);
 gboolean clone_active(resource_t * rsc, gboolean all);
-gboolean master_active(resource_t * rsc, gboolean all);
 gboolean container_active(resource_t * rsc, gboolean all);
 
 void native_print(resource_t * rsc, const char *pre_text, long options, void *print_data);
 void group_print(resource_t * rsc, const char *pre_text, long options, void *print_data);
 void clone_print(resource_t * rsc, const char *pre_text, long options, void *print_data);
-void master_print(resource_t * rsc, const char *pre_text, long options, void *print_data);
 void container_print(resource_t * rsc, const char *pre_text, long options, void *print_data);
 
 void native_free(resource_t * rsc);
 void group_free(resource_t * rsc);
 void clone_free(resource_t * rsc);
-void master_free(resource_t * rsc);
 void container_free(resource_t * rsc);
 
 enum rsc_role_e native_resource_state(const resource_t * rsc, gboolean current);
 enum rsc_role_e group_resource_state(const resource_t * rsc, gboolean current);
 enum rsc_role_e clone_resource_state(const resource_t * rsc, gboolean current);
-enum rsc_role_e master_resource_state(const resource_t * rsc, gboolean current);
 enum rsc_role_e container_resource_state(const resource_t * rsc, gboolean current);
 
 gboolean common_unpack(xmlNode * xml_obj, resource_t ** rsc, resource_t * parent,
@@ -128,7 +122,6 @@ int pe_get_failcount(node_t *node, resource_t *rsc, time_t *last_failure,
 /* Binary like operators for lists of nodes */
 extern void node_list_exclude(GHashTable * list, GListPtr list2, gboolean merge_scores);
 extern GListPtr node_list_dup(GListPtr list, gboolean reset, gboolean filter);
-extern GListPtr node_list_from_hash(GHashTable * hash, gboolean reset, gboolean filter);
 
 extern GHashTable *node_hash_from_list(GListPtr list);
 static inline gpointer
@@ -144,14 +137,6 @@ extern action_t *get_pseudo_op(const char *name, pe_working_set_t * data_set);
 extern gboolean order_actions(action_t * lh_action, action_t * rh_action, enum pe_ordering order);
 
 GHashTable *node_hash_dup(GHashTable * hash);
-extern GListPtr node_list_and(GListPtr list1, GListPtr list2, gboolean filter);
-
-extern GListPtr node_list_xor(GListPtr list1, GListPtr list2, gboolean filter);
-
-extern GListPtr node_list_minus(GListPtr list1, GListPtr list2, gboolean filter);
-
-extern void pe_free_shallow(GListPtr alist);
-extern void pe_free_shallow_adv(GListPtr alist, gboolean with_data);
 
 /* Printing functions for debug */
 extern void print_node(const char *pre_text, node_t * node, gboolean details);

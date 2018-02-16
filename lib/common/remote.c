@@ -410,7 +410,8 @@ crm_remote_parse_buffer(crm_remote_t * remote)
             return NULL;
 
         } else if (rc != BZ_OK) {
-            crm_err("Decompression failed: %s (%d)", bz2_strerror(rc), rc);
+            crm_err("Decompression failed: %s " CRM_XS " bzerror=%d",
+                    bz2_strerror(rc), rc);
             free(uncompressed);
             return NULL;
         }

@@ -1,0 +1,398 @@
+<cib crm_feature_set="3.0.12" validate-with="pacemaker-3.0" epoch="58" num_updates="222" admin_epoch="0" cib-last-written="Thu Jun  1 03:59:09 2017" update-origin="undercloud" update-client="cibadmin" update-user="root" have-quorum="1" dc-uuid="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.16-10.el7-94ff4df"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="tripleo_cluster"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+      </cluster_property_set>
+      <cluster_property_set id="redis_replication">
+        <nvpair id="redis_replication-redis_REPL_INFO" name="redis_REPL_INFO" value="redis-bundle-0"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="metal-1">
+        <instance_attributes id="nodes-1">
+          <nvpair id="nodes-1-rabbitmq-role" name="rabbitmq-role" value="true"/>
+          <nvpair id="nodes-1-galera-role" name="galera-role" value="true"/>
+          <nvpair id="nodes-1-redis-role" name="redis-role" value="true"/>
+          <nvpair id="nodes-1-haproxy-role" name="haproxy-role" value="true"/>
+          <nvpair id="nodes-1-cinder-volume-role" name="cinder-volume-role" value="true"/>
+        </instance_attributes>
+      </node>
+      <node id="2" uname="metal-2">
+        <instance_attributes id="nodes-2">
+          <nvpair id="nodes-2-rabbitmq-role" name="rabbitmq-role" value="true"/>
+          <nvpair id="nodes-2-galera-role" name="galera-role" value="true"/>
+          <nvpair id="nodes-2-redis-role" name="redis-role" value="true"/>
+          <nvpair id="nodes-2-haproxy-role" name="haproxy-role" value="true"/>
+          <nvpair id="nodes-2-cinder-volume-role" name="cinder-volume-role" value="true"/>
+        </instance_attributes>
+      </node>
+      <node id="3" uname="metal-3">
+        <instance_attributes id="nodes-3">
+          <nvpair id="nodes-3-rabbitmq-role" name="rabbitmq-role" value="true"/>
+          <nvpair id="nodes-3-galera-role" name="galera-role" value="true"/>
+          <nvpair id="nodes-3-redis-role" name="redis-role" value="true"/>
+          <nvpair id="nodes-3-haproxy-role" name="haproxy-role" value="true"/>
+          <nvpair id="nodes-3-cinder-volume-role" name="cinder-volume-role" value="true"/>
+        </instance_attributes>
+      </node>
+      <node id="rabbitmq-bundle-0" type="remote" uname="rabbitmq-bundle-0">
+        <instance_attributes id="nodes-rabbitmq-bundle-0">
+          <nvpair id="nodes-rabbitmq-bundle-0-rmq-node-attr-last-known-rabbitmq" name="rmq-node-attr-last-known-rabbitmq" value="rabbit@metal"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <clone id="storage-clone">
+        <meta_attributes id="storage_ma">
+          <nvpair id="storage_globally-unique" name="globally-unique" value="false"/>
+          <nvpair id="storage_notify" name="notify" value="true"/>
+        </meta_attributes>
+        <primitive class="ocf" id="storage" provider="heartbeat" type="Filesystem">
+          <operations>
+            <op id="storage_mon" interval="30s" name="monitor" timeout="30s"/>
+          </operations>
+          <instance_attributes id="storage_ia">
+            <nvpair id="storage_attr_0" name="device" value="nfs:/share/drbd_www/data/"/>
+            <nvpair id="storage_attr_1" name="directory" value="/data/www"/>
+            <nvpair id="storage_attr_2" name="fstype" value="nfs"/>
+          </instance_attributes>
+        </primitive>
+      </clone>
+      <bundle id="galera-bundle">
+        <docker image="192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest" promoted-max="3" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" run-command="/bin/bash /usr/local/bin/kolla_start"/>
+        <network control-port="3123"/>
+        <storage>
+          <storage-mapping id="mysql-cfg-files" options="ro" source-dir="/var/lib/kolla/config_files/mysql.json" target-dir="/var/lib/kolla/config_files/config.json"/>
+          <storage-mapping id="mysql-cfg-data" options="ro" source-dir="/var/lib/config-data/mysql" target-dir="/var/lib/kolla/config_files/src"/>
+          <storage-mapping id="mysql-hosts" options="ro" source-dir="/etc/hosts" target-dir="/etc/hosts"/>
+          <storage-mapping id="mysql-localtime" options="ro" source-dir="/etc/localtime" target-dir="/etc/localtime"/>
+          <storage-mapping id="mysql-lib" options="rw" source-dir="/var/lib/mysql" target-dir="/var/lib/mysql"/>
+          <storage-mapping id="mysql-log-mariadb" options="rw" source-dir="/var/log/mariadb" target-dir="/var/log/mariadb"/>
+          <storage-mapping id="mysql-pki-extracted" options="ro" source-dir="/etc/pki/ca-trust/extracted" target-dir="/etc/pki/ca-trust/extracted"/>
+          <storage-mapping id="mysql-pki-ca-bundle-crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.crt" target-dir="/etc/pki/tls/certs/ca-bundle.crt"/>
+          <storage-mapping id="mysql-pki-ca-bundle-trust-crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.trust.crt" target-dir="/etc/pki/tls/certs/ca-bundle.trust.crt"/>
+          <storage-mapping id="mysql-pki-cert" options="ro" source-dir="/etc/pki/tls/cert.pem" target-dir="/etc/pki/tls/cert.pem"/>
+          <storage-mapping id="mysql-dev-log" options="rw" source-dir="/dev/log" target-dir="/dev/log"/>
+        </storage>
+        <primitive class="ocf" id="galera" provider="heartbeat" type="galera">
+          <instance_attributes id="galera-instance_attributes">
+            <nvpair id="galera-instance_attributes-additional_parameters" name="additional_parameters" value="--open-files-limit=16384"/>
+            <nvpair id="galera-instance_attributes-cluster_host_map" name="cluster_host_map" value="galera-bundle-0:metal"/>
+            <nvpair id="galera-instance_attributes-enable_creation" name="enable_creation" value="true"/>
+            <nvpair id="galera-instance_attributes-wsrep_cluster_address" name="wsrep_cluster_address" value="gcomm://metal"/>
+          </instance_attributes>
+          <meta_attributes id="galera-meta_attributes">
+            <nvpair id="galera-meta_attributes-promoted-max" name="promoted-max" value="1"/>
+            <nvpair id="galera-meta_attributes-ordered" name="ordered" value="true"/>
+          </meta_attributes>
+          <operations>
+            <op id="galera-demote-interval-0s" interval="0s" name="demote" timeout="120"/>
+            <op id="galera-monitor-interval-20" interval="20" name="monitor" timeout="30"/>
+            <op id="galera-monitor-interval-10" interval="10" name="monitor" role="Master" timeout="30"/>
+            <op id="galera-monitor-interval-30" interval="30" name="monitor" role="Slave" timeout="30"/>
+            <op id="galera-promote-interval-0s" interval="0s" name="promote" on-fail="block" timeout="300s"/>
+            <op id="galera-start-interval-0s" interval="0s" name="start" timeout="120"/>
+            <op id="galera-stop-interval-0s" interval="0s" name="stop" timeout="120"/>
+          </operations>
+        </primitive>
+      </bundle>
+      <bundle id="haproxy-bundle">
+        <docker image="192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="3" run-command="/bin/bash /usr/local/bin/kolla_start"/>
+        <storage>
+          <storage-mapping id="haproxy-cfg-files" options="ro" source-dir="/var/lib/kolla/config_files/haproxy.json" target-dir="/var/lib/kolla/config_files/config.json"/>
+          <storage-mapping id="haproxy-cfg-data" options="ro" source-dir="/var/lib/config-data/haproxy/etc" target-dir="/etc"/>
+          <storage-mapping id="haproxy-hosts" options="ro" source-dir="/etc/hosts" target-dir="/etc/hosts"/>
+          <storage-mapping id="haproxy-localtime" options="ro" source-dir="/etc/localtime" target-dir="/etc/localtime"/>
+          <storage-mapping id="haproxy-pki-extracted" options="ro" source-dir="/etc/pki/ca-trust/extracted" target-dir="/etc/pki/ca-trust/extracted"/>
+          <storage-mapping id="haproxy-pki-ca-bundle-crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.crt" target-dir="/etc/pki/tls/certs/ca-bundle.crt"/>
+          <storage-mapping id="haproxy-pki-ca-bundle-trust-crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.trust.crt" target-dir="/etc/pki/tls/certs/ca-bundle.trust.crt"/>
+          <storage-mapping id="haproxy-pki-cert" options="ro" source-dir="/etc/pki/tls/cert.pem" target-dir="/etc/pki/tls/cert.pem"/>
+          <storage-mapping id="haproxy-dev-log" options="rw" source-dir="/dev/log" target-dir="/dev/log"/>
+        </storage>
+      </bundle>
+      <bundle id="redis-bundle">
+        <docker image="192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest" promoted-max="3" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" run-command="/bin/bash /usr/local/bin/kolla_start"/>
+        <network control-port="3124"/>
+        <storage>
+          <storage-mapping id="redis-cfg-files" options="ro" source-dir="/var/lib/kolla/config_files/redis.json" target-dir="/var/lib/kolla/config_files/config.json"/>
+          <storage-mapping id="redis-cfg-data-redis" options="ro" source-dir="/var/lib/config-data/redis/etc/redis" target-dir="/etc/redis"/>
+          <storage-mapping id="redis-cfg-data-redis-conf" options="ro" source-dir="/var/lib/config-data/redis/etc/redis.conf" target-dir="/etc/redis.conf"/>
+          <storage-mapping id="redis-cfg-data-redis-conf-puppet" options="ro" source-dir="/var/lib/config-data/redis/etc/redis.conf.puppet" target-dir="/etc/redis.conf.puppet"/>
+          <storage-mapping id="redis-cfg-data-redis-sentinel" options="ro" source-dir="/var/lib/config-data/redis/etc/redis-sentinel.conf" target-dir="/etc/redis-sentinel.conf"/>
+          <storage-mapping id="redis-hosts" options="ro" source-dir="/etc/hosts" target-dir="/etc/hosts"/>
+          <storage-mapping id="redis-localtime" options="ro" source-dir="/etc/localtime" target-dir="/etc/localtime"/>
+          <storage-mapping id="redis-lib" options="rw" source-dir="/var/lib/redis" target-dir="/var/lib/redis"/>
+          <storage-mapping id="redis-log" options="rw" source-dir="/var/log/redis" target-dir="/var/log/redis"/>
+          <storage-mapping id="redis-run" options="rw" source-dir="/var/run/redis" target-dir="/var/run/redis"/>
+          <storage-mapping id="redis-pki-extracted" options="ro" source-dir="/etc/pki/ca-trust/extracted" target-dir="/etc/pki/ca-trust/extracted"/>
+          <storage-mapping id="redis-pki-ca-bundle-crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.crt" target-dir="/etc/pki/tls/certs/ca-bundle.crt"/>
+          <storage-mapping id="redis-pki-ca-bundle-trust-crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.trust.crt" target-dir="/etc/pki/tls/certs/ca-bundle.trust.crt"/>
+          <storage-mapping id="redis-pki-cert" options="ro" source-dir="/etc/pki/tls/cert.pem" target-dir="/etc/pki/tls/cert.pem"/>
+          <storage-mapping id="redis-dev-log" options="rw" source-dir="/dev/log" target-dir="/dev/log"/>
+        </storage>
+        <primitive class="ocf" id="redis" provider="heartbeat" type="redis">
+          <instance_attributes id="redis-instance_attributes">
+            <nvpair id="redis-instance_attributes-wait_last_known_master" name="wait_last_known_master" value="true"/>
+          </instance_attributes>
+          <meta_attributes id="redis-meta_attributes">
+            <nvpair id="redis-meta_attributes-interleave" name="interleave" value="true"/>
+            <nvpair id="redis-meta_attributes-notify" name="notify" value="true"/>
+            <nvpair id="redis-meta_attributes-ordered" name="ordered" value="true"/>
+          </meta_attributes>
+          <operations>
+            <op id="redis-demote-interval-0s" interval="0s" name="demote" timeout="120"/>
+            <op id="redis-monitor-interval-45" interval="45" name="monitor" timeout="60"/>
+            <op id="redis-monitor-interval-20" interval="20" name="monitor" role="Master" timeout="60"/>
+            <op id="redis-monitor-interval-60" interval="60" name="monitor" role="Slave" timeout="60"/>
+            <op id="redis-promote-interval-0s" interval="0s" name="promote" timeout="120"/>
+            <op id="redis-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="redis-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+          </operations>
+        </primitive>
+      </bundle>
+    </resources>
+    <constraints>
+      <rsc_location id="location-redis-bundle" resource-discovery="exclusive" rsc="redis-bundle">
+        <rule id="location-redis-bundle-rule" score="0">
+          <expression attribute="redis-role" id="location-redis-bundle-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-galera-bundle" resource-discovery="exclusive" rsc="galera-bundle">
+        <rule id="location-galera-bundle-rule" score="0">
+          <expression attribute="galera-role" id="location-galera-bundle-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="storage-ban-1" rsc="storage-clone" node="metal-1" score="-INFINITY"/>
+      <rsc_location id="make-promote-now-1" rsc="redis-bundle" role="Master" node="redis-bundle-0" score="100"/>
+      <rsc_location id="make-promote-now-2" rsc="redis-bundle" role="Master" node="redis-bundle-1" score="100"/>
+      <rsc_location id="make-promote-now-3" rsc="redis-bundle" role="Master" node="redis-bundle-2" score="100"/>
+      <rsc_colocation id="colocation-1" rsc="redis-bundle" score="INFINITY" with-rsc="haproxy-bundle"/>
+      <rsc_colocation id="colocation-2" rsc="galera-bundle" score="INFINITY" with-rsc="storage-clone"/>
+      <rsc_order first="redis-bundle" first-action="promote" id="order-1" kind="Mandatory" then="storage-clone" then-action="start"/>
+      <rsc_order first="storage-clone" first-action="start" id="order-2" kind="Mandatory" then="galera-bundle" then-action="start"/>
+      <rsc_order first="haproxy-bundle" first-action="start" id="order-3" kind="Mandatory" then="storage-clone" then-action="start"/>
+    </constraints>
+    <rsc_defaults>
+      <meta_attributes id="rsc_defaults-options">
+        <nvpair id="rsc_defaults-options-resource-stickiness" name="resource-stickiness" value="INFINITY"/>
+      </meta_attributes>
+    </rsc_defaults>
+  </configuration>
+  <status>
+    <node_state id="1" uname="metal-1" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="storage:0" class="ocf" provider="heartbeat" type="Filesystem">
+            <lrm_rsc_op id="storage_last_0" operation_key="storage_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="011d6ab00aa8677f8496f1a3e768a370"/>
+            <lrm_rsc_op id="storage_post_notify_start_0" operation_key="storage_notify_0" operation="notify" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="0" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="011d6ab00aa8677f8496f1a3e768a370"/>
+            <lrm_rsc_op id="storage_monitor_30000" operation_key="storage_monitor_30000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="4:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;4:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="4" rc-code="0" op-status="0" interval="30000" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="5fdd98b808a9cd8496a49fc679446175"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-docker-0" class="ocf" provider="heartbeat" type="docker">
+            <lrm_rsc_op id="galera-bundle-docker-0_last_0" operation_key="galera-bundle-docker-0_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="a25a3351a7fd1a430a6a8991da64de98"/>
+            <lrm_rsc_op id="galera-bundle-docker-0_monitor_60000" operation_key="galera-bundle-docker-0_monitor_60000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="0" op-status="0" interval="60000" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="65788bd6ff81ed3cb6552df07faacd51"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-docker-1" class="ocf" provider="heartbeat" type="docker">
+            <lrm_rsc_op id="galera-bundle-docker-1_last_0" operation_key="galera-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="810c6ca70f61efcf84f03ce4ebf1583e"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-docker-2" class="ocf" provider="heartbeat" type="docker">
+            <lrm_rsc_op id="galera-bundle-docker-2_last_0" operation_key="galera-bundle-docker-2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="d382f6658eb81d66313704072c2d9704"/>
+          </lrm_resource>
+          <lrm_resource id="haproxy-bundle-docker-0" class="ocf" provider="heartbeat" type="docker">
+            <lrm_rsc_op id="haproxy-bundle-docker-0_last_0" operation_key="haproxy-bundle-docker-0_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="59b63ee653b1666ceb30ec6e2d10eef7"/>
+            <lrm_rsc_op id="haproxy-bundle-docker-0_monitor_60000" operation_key="haproxy-bundle-docker-0_monitor_60000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="0" op-status="0" interval="60000" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="6560898bb4a594e45af727baab2e600d"/>
+          </lrm_resource>
+          <lrm_resource id="haproxy-bundle-docker-1" class="ocf" provider="heartbeat" type="docker">
+            <lrm_rsc_op id="haproxy-bundle-docker-1_last_0" operation_key="haproxy-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="50c5ea783cadafec1f3787e5cf2dcd62"/>
+          </lrm_resource>
+          <lrm_resource id="haproxy-bundle-docker-2" class="ocf" provider="heartbeat" type="docker">
+            <lrm_rsc_op id="haproxy-bundle-docker-2_last_0" operation_key="haproxy-bundle-docker-2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="50c5ea783cadafec1f3787e5cf2dcd62"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-docker-0" class="ocf" provider="heartbeat" type="docker">
+            <lrm_rsc_op id="redis-bundle-docker-0_last_0" operation_key="redis-bundle-docker-0_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="b26392b2cfc73ee1c83c6bb1ec2aa4c7"/>
+            <lrm_rsc_op id="redis-bundle-docker-0_monitor_60000" operation_key="redis-bundle-docker-0_monitor_60000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="0" op-status="0" interval="60000" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="646f8db9f7baea61a60753b5ae8b9987"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-docker-1" class="ocf" provider="heartbeat" type="docker">
+            <lrm_rsc_op id="redis-bundle-docker-1_last_0" operation_key="redis-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="029dcdb8e6d039453207529ddf76e626"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-docker-2" class="ocf" provider="heartbeat" type="docker">
+            <lrm_rsc_op id="redis-bundle-docker-2_last_0" operation_key="redis-bundle-docker-2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="78dfacba4be0b97e9a6426b342bb2fdd"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-0" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="redis-bundle-0_last_0" operation_key="redis-bundle-0_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="0" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="cdc2746943a66a3b93738e3548dfc96d"/>
+            <lrm_rsc_op id="redis-bundle-0_monitor_30000" operation_key="redis-bundle-0_monitor_30000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="30000" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="c940666e909d2a466bc9e3908ec137f5"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-0" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="galera-bundle-0_last_0" operation_key="galera-bundle-0_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="0" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="504a42401176c2e94483b1e091f79a5a"/>
+            <lrm_rsc_op id="galera-bundle-0_monitor_30000" operation_key="galera-bundle-0_monitor_30000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="30000" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="9901da5f8c52b9011a1b27b74e2c4eee"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="2" uname="metal-2" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="storage:1" class="ocf" provider="heartbeat" type="Filesystem">
+            <lrm_rsc_op id="storage_last_0" operation_key="storage_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="011d6ab00aa8677f8496f1a3e768a370"/>
+            <lrm_rsc_op id="storage_post_notify_start_0" operation_key="storage_notify_0" operation="notify" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="0" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="011d6ab00aa8677f8496f1a3e768a370"/>
+            <lrm_rsc_op id="storage_monitor_30000" operation_key="storage_monitor_30000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="4:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;4:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="4" rc-code="0" op-status="0" interval="30000" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="5fdd98b808a9cd8496a49fc679446175"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-docker-0" class="ocf" provider="heartbeat" type="docker">
+            <lrm_rsc_op id="galera-bundle-docker-0_last_0" operation_key="galera-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="ed3aad657e7994e60ac4dbd3a200b0b7"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-docker-1" class="ocf" provider="heartbeat" type="docker">
+            <lrm_rsc_op id="galera-bundle-docker-1_last_0" operation_key="galera-bundle-docker-1_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="9be25018e115be06a50f1d7fdb69cb66"/>
+            <lrm_rsc_op id="galera-bundle-docker-1_monitor_60000" operation_key="galera-bundle-docker-1_monitor_60000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="0" op-status="0" interval="60000" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="486cc657e64e3e5abaca075a67dd7fc9"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-docker-2" class="ocf" provider="heartbeat" type="docker">
+            <lrm_rsc_op id="galera-bundle-docker-2_last_0" operation_key="galera-bundle-docker-2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="d382f6658eb81d66313704072c2d9704"/>
+          </lrm_resource>
+          <lrm_resource id="haproxy-bundle-docker-0" class="ocf" provider="heartbeat" type="docker">
+            <lrm_rsc_op id="haproxy-bundle-docker-0_last_0" operation_key="haproxy-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="59b63ee653b1666ceb30ec6e2d10eef7"/>
+          </lrm_resource>
+          <lrm_resource id="haproxy-bundle-docker-1" class="ocf" provider="heartbeat" type="docker">
+            <lrm_rsc_op id="haproxy-bundle-docker-1_last_0" operation_key="haproxy-bundle-docker-1_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="59b63ee653b1666ceb30ec6e2d10eef7"/>
+            <lrm_rsc_op id="haproxy-bundle-docker-1_monitor_60000" operation_key="haproxy-bundle-docker-1_monitor_60000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="0" op-status="0" interval="60000" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="6560898bb4a594e45af727baab2e600d"/>
+          </lrm_resource>
+          <lrm_resource id="haproxy-bundle-docker-2" class="ocf" provider="heartbeat" type="docker">
+            <lrm_rsc_op id="haproxy-bundle-docker-2_last_0" operation_key="haproxy-bundle-docker-2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="50c5ea783cadafec1f3787e5cf2dcd62"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-docker-0" class="ocf" provider="heartbeat" type="docker">
+            <lrm_rsc_op id="redis-bundle-docker-0_last_0" operation_key="redis-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="90ccdc75136c9ebfb1985f14df781477"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-docker-1" class="ocf" provider="heartbeat" type="docker">
+            <lrm_rsc_op id="redis-bundle-docker-1_last_0" operation_key="redis-bundle-docker-1_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="7cb97c89c7e1150856aeab87eff14450"/>
+            <lrm_rsc_op id="redis-bundle-docker-1_monitor_60000" operation_key="redis-bundle-docker-1_monitor_60000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="0" op-status="0" interval="60000" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="e76c2e8a26aabe056305ab7b9972c322"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-docker-2" class="ocf" provider="heartbeat" type="docker">
+            <lrm_rsc_op id="redis-bundle-docker-2_last_0" operation_key="redis-bundle-docker-2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="78dfacba4be0b97e9a6426b342bb2fdd"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-1" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="redis-bundle-1_last_0" operation_key="redis-bundle-1_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="0" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="40c70f9d61dc1fe2dba5a6fd7d5bd567"/>
+            <lrm_rsc_op id="redis-bundle-1_monitor_30000" operation_key="redis-bundle-1_monitor_30000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="30000" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="37aa58ee2ef2f5fc5a9e67e44f0145de"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-1" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="galera-bundle-1_last_0" operation_key="galera-bundle-1_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="0" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="912f68441e818e51b92b60f340f6faa5"/>
+            <lrm_rsc_op id="galera-bundle-1_monitor_30000" operation_key="galera-bundle-1_monitor_30000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="30000" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="13faade612ff8785f57142d32a076778"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="3" uname="metal-3" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="3">
+        <lrm_resources>
+          <lrm_resource id="storage:2" class="ocf" provider="heartbeat" type="Filesystem">
+            <lrm_rsc_op id="storage_last_0" operation_key="storage_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="011d6ab00aa8677f8496f1a3e768a370"/>
+            <lrm_rsc_op id="storage_post_notify_start_0" operation_key="storage_notify_0" operation="notify" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="0" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="011d6ab00aa8677f8496f1a3e768a370"/>
+            <lrm_rsc_op id="storage_monitor_30000" operation_key="storage_monitor_30000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="4:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;4:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="4" rc-code="0" op-status="0" interval="30000" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="5fdd98b808a9cd8496a49fc679446175"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-docker-0" class="ocf" provider="heartbeat" type="docker">
+            <lrm_rsc_op id="galera-bundle-docker-0_last_0" operation_key="galera-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="ed3aad657e7994e60ac4dbd3a200b0b7"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-docker-1" class="ocf" provider="heartbeat" type="docker">
+            <lrm_rsc_op id="galera-bundle-docker-1_last_0" operation_key="galera-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="810c6ca70f61efcf84f03ce4ebf1583e"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-docker-2" class="ocf" provider="heartbeat" type="docker">
+            <lrm_rsc_op id="galera-bundle-docker-2_last_0" operation_key="galera-bundle-docker-2_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="6c2f81de1714e10eacba6279afe5e059"/>
+            <lrm_rsc_op id="galera-bundle-docker-2_monitor_60000" operation_key="galera-bundle-docker-2_monitor_60000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="0" op-status="0" interval="60000" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="fd04e5bc4ae1f504b2653c4326ef8132"/>
+          </lrm_resource>
+          <lrm_resource id="haproxy-bundle-docker-0" class="ocf" provider="heartbeat" type="docker">
+            <lrm_rsc_op id="haproxy-bundle-docker-0_last_0" operation_key="haproxy-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="50c5ea783cadafec1f3787e5cf2dcd62"/>
+          </lrm_resource>
+          <lrm_resource id="haproxy-bundle-docker-1" class="ocf" provider="heartbeat" type="docker">
+            <lrm_rsc_op id="haproxy-bundle-docker-1_last_0" operation_key="haproxy-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="50c5ea783cadafec1f3787e5cf2dcd62"/>
+          </lrm_resource>
+          <lrm_resource id="haproxy-bundle-docker-2" class="ocf" provider="heartbeat" type="docker">
+            <lrm_rsc_op id="haproxy-bundle-docker-2_last_0" operation_key="haproxy-bundle-docker-2_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="59b63ee653b1666ceb30ec6e2d10eef7"/>
+            <lrm_rsc_op id="haproxy-bundle-docker-2_monitor_60000" operation_key="haproxy-bundle-docker-2_monitor_60000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="0" op-status="0" interval="60000" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="6560898bb4a594e45af727baab2e600d"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-docker-0" class="ocf" provider="heartbeat" type="docker">
+            <lrm_rsc_op id="redis-bundle-docker-0_last_0" operation_key="redis-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="90ccdc75136c9ebfb1985f14df781477"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-docker-1" class="ocf" provider="heartbeat" type="docker">
+            <lrm_rsc_op id="redis-bundle-docker-1_last_0" operation_key="redis-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="029dcdb8e6d039453207529ddf76e626"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-docker-2" class="ocf" provider="heartbeat" type="docker">
+            <lrm_rsc_op id="redis-bundle-docker-2_last_0" operation_key="redis-bundle-docker-2_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="8c6035dc510b3d42f7ebc22c2a3a445c"/>
+            <lrm_rsc_op id="redis-bundle-docker-2_monitor_60000" operation_key="redis-bundle-docker-2_monitor_60000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="0" op-status="0" interval="60000" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="95e57f57b6c5a4bb2e252d22d70f01df"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-2" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="redis-bundle-2_last_0" operation_key="redis-bundle-2_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="0" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="3c205c3ee79f4db4f37351207ebff95e"/>
+            <lrm_rsc_op id="redis-bundle-2_monitor_30000" operation_key="redis-bundle-2_monitor_30000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="30000" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="787e79fbbd24d72a776d7b3f69553e3c"/>
+          </lrm_resource>
+          <lrm_resource id="galera-bundle-2" class="ocf" provider="pacemaker" type="remote">
+            <lrm_rsc_op id="galera-bundle-2_last_0" operation_key="galera-bundle-2_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="0" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="b64c504325efb1370a8509833d3fe8ee"/>
+            <lrm_rsc_op id="galera-bundle-2_monitor_30000" operation_key="galera-bundle-2_monitor_30000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="30000" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="203b1e53b636c4d9affe6fe0973d1e0e"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="redis-bundle-0" uname="redis-bundle-0">
+      <lrm id="redis-bundle-0">
+        <lrm_resources>
+          <lrm_resource id="redis:0" class="ocf" provider="heartbeat" type="redis">
+            <lrm_rsc_op id="redis_last_0" operation_key="redis_promote_0" operation="promote" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="a5b2a4f5c557278af14d6cbffc5a229d"/>
+            <lrm_rsc_op id="redis_monitor_20000" operation_key="redis_monitor_20000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="3:-1:8:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:8;3:-1:8:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="8" op-status="0" interval="20000" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="992feffd37882eb5ce9bfc847b2fa75e"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="redis-bundle-1" uname="redis-bundle-1">
+      <lrm id="redis-bundle-1">
+        <lrm_resources>
+          <lrm_resource id="redis:1" class="ocf" provider="heartbeat" type="redis">
+            <lrm_rsc_op id="redis_last_0" operation_key="redis_promote_0" operation="promote" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="a5b2a4f5c557278af14d6cbffc5a229d"/>
+            <lrm_rsc_op id="redis_monitor_20000" operation_key="redis_monitor_20000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="3:-1:8:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:8;3:-1:8:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="8" op-status="0" interval="20000" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="992feffd37882eb5ce9bfc847b2fa75e"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="redis-bundle-2" uname="redis-bundle-2">
+      <lrm id="redis-bundle-2">
+        <lrm_resources>
+          <lrm_resource id="redis:2" class="ocf" provider="heartbeat" type="redis">
+            <lrm_rsc_op id="redis_last_0" operation_key="redis_promote_0" operation="promote" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="a5b2a4f5c557278af14d6cbffc5a229d"/>
+            <lrm_rsc_op id="redis_monitor_20000" operation_key="redis_monitor_20000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="3:-1:8:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:8;3:-1:8:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="8" op-status="0" interval="20000" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="992feffd37882eb5ce9bfc847b2fa75e"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="galera-bundle-0" uname="galera-bundle-0">
+      <lrm id="galera-bundle-0">
+        <lrm_resources>
+          <lrm_resource id="galera:0" class="ocf" provider="heartbeat" type="galera">
+            <lrm_rsc_op id="galera_last_0" operation_key="galera_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="0" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="a9aaa400c381f8dd43ac3a0cbee94c90"/>
+            <lrm_rsc_op id="galera_monitor_30000" operation_key="galera_monitor_30000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="30000" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="372bdbc835a0728d2a83ece1d27f89b8"/>
+            <lrm_rsc_op id="galera_monitor_20000" operation_key="galera_monitor_20000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="0" op-status="0" interval="20000" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="372bdbc835a0728d2a83ece1d27f89b8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="galera-bundle-1" uname="galera-bundle-1">
+      <lrm id="galera-bundle-1">
+        <lrm_resources>
+          <lrm_resource id="galera:1" class="ocf" provider="heartbeat" type="galera">
+            <lrm_rsc_op id="galera_last_0" operation_key="galera_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="0" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="a9aaa400c381f8dd43ac3a0cbee94c90"/>
+            <lrm_rsc_op id="galera_monitor_30000" operation_key="galera_monitor_30000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="30000" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="372bdbc835a0728d2a83ece1d27f89b8"/>
+            <lrm_rsc_op id="galera_monitor_20000" operation_key="galera_monitor_20000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="0" op-status="0" interval="20000" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="372bdbc835a0728d2a83ece1d27f89b8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="galera-bundle-2" uname="galera-bundle-2">
+      <lrm id="galera-bundle-2">
+        <lrm_resources>
+          <lrm_resource id="galera:2" class="ocf" provider="heartbeat" type="galera">
+            <lrm_rsc_op id="galera_last_0" operation_key="galera_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;1:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="0" op-status="0" interval="0" last-run="1498103792" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="a9aaa400c381f8dd43ac3a0cbee94c90"/>
+            <lrm_rsc_op id="galera_monitor_30000" operation_key="galera_monitor_30000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="30000" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="372bdbc835a0728d2a83ece1d27f89b8"/>
+            <lrm_rsc_op id="galera_monitor_20000" operation_key="galera_monitor_20000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.14" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="3" rc-code="0" op-status="0" interval="20000" last-rc-change="1498103792" exec-time="0" queue-time="0" op-digest="372bdbc835a0728d2a83ece1d27f89b8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

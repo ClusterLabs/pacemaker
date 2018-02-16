@@ -1,0 +1,379 @@
+<cib crm_feature_set="3.0.12" validate-with="pacemaker-3.0" epoch="58" num_updates="129" admin_epoch="0" cib-last-written="Thu Jun  1 03:59:09 2017" update-origin="undercloud" update-client="cibadmin" update-user="root" have-quorum="1" dc-uuid="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.16-10.el7-94ff4df"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="tripleo_cluster"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+      </cluster_property_set>
+      <cluster_property_set id="redis_replication">
+        <nvpair id="redis_replication-redis_REPL_INFO" name="redis_REPL_INFO" value="redis-bundle-0"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="undercloud">
+        <instance_attributes id="nodes-1">
+          <nvpair id="nodes-1-rabbitmq-role" name="rabbitmq-role" value="true"/>
+          <nvpair id="nodes-1-galera-role" name="galera-role" value="true"/>
+          <nvpair id="nodes-1-redis-role" name="redis-role" value="true"/>
+          <nvpair id="nodes-1-haproxy-role" name="haproxy-role" value="true"/>
+          <nvpair id="nodes-1-cinder-volume-role" name="cinder-volume-role" value="true"/>
+        </instance_attributes>
+      </node>
+      <node id="rabbitmq-bundle-0" type="remote" uname="rabbitmq-bundle-0">
+        <instance_attributes id="nodes-rabbitmq-bundle-0">
+          <nvpair id="nodes-rabbitmq-bundle-0-rmq-node-attr-last-known-rabbitmq" name="rmq-node-attr-last-known-rabbitmq" value="rabbit@undercloud"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <bundle id="rabbitmq-bundle">
+        <docker image="192.168.24.1:8787/tripleoupstream/centos-binary-rabbitmq:latest" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="1" run-command="/bin/bash /usr/local/bin/kolla_start"/>
+        <network control-port="3121"/>
+        <storage>
+          <storage-mapping id="rabbitmq-cfg-files" options="ro" source-dir="/var/lib/kolla/config_files/rabbitmq.json" target-dir="/var/lib/kolla/config_files/config.json"/>
+          <storage-mapping id="rabbitmq-cfg-data" options="ro" source-dir="/var/lib/config-data/rabbitmq/etc/rabbitmq" target-dir="/etc/rabbitmq"/>
+          <storage-mapping id="rabbitmq-hosts" options="ro" source-dir="/etc/hosts" target-dir="/etc/hosts"/>
+          <storage-mapping id="rabbitmq-localtime" options="ro" source-dir="/etc/localtime" target-dir="/etc/localtime"/>
+          <storage-mapping id="rabbitmq-lib" options="rw" source-dir="/var/lib/rabbitmq" target-dir="/var/lib/rabbitmq"/>
+          <storage-mapping id="rabbitmq-pki-extracted" options="ro" source-dir="/etc/pki/ca-trust/extracted" target-dir="/etc/pki/ca-trust/extracted"/>
+          <storage-mapping id="rabbitmq-pki-ca-bundle-crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.crt" target-dir="/etc/pki/tls/certs/ca-bundle.crt"/>
+          <storage-mapping id="rabbitmq-pki-ca-bundle-trust-crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.trust.crt" target-dir="/etc/pki/tls/certs/ca-bundle.trust.crt"/>
+          <storage-mapping id="rabbitmq-pki-cert" options="ro" source-dir="/etc/pki/tls/cert.pem" target-dir="/etc/pki/tls/cert.pem"/>
+          <storage-mapping id="rabbitmq-dev-log" options="rw" source-dir="/dev/log" target-dir="/dev/log"/>
+        </storage>
+        <primitive class="ocf" id="rabbitmq" provider="heartbeat" type="rabbitmq-cluster">
+          <instance_attributes id="rabbitmq-instance_attributes">
+            <nvpair id="rabbitmq-instance_attributes-set_policy" name="set_policy" value="ha-all ^(?!amq\.).* {&quot;ha-mode&quot;:&quot;all&quot;}"/>
+          </instance_attributes>
+          <meta_attributes id="rabbitmq-meta_attributes">
+            <nvpair id="rabbitmq-meta_attributes-notify" name="notify" value="true"/>
+          </meta_attributes>
+          <operations>
+            <op id="rabbitmq-monitor-interval-10" interval="10" name="monitor" timeout="40"/>
+            <op id="rabbitmq-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="rabbitmq-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+          </operations>
+        </primitive>
+      </bundle>
+      <bundle id="galera-bundle">
+        <docker image="192.168.24.1:8787/tripleoupstream/centos-binary-mariadb:latest" promoted-max="1" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="1" run-command="/bin/bash /usr/local/bin/kolla_start"/>
+        <network control-port="3123"/>
+        <storage>
+          <storage-mapping id="mysql-cfg-files" options="ro" source-dir="/var/lib/kolla/config_files/mysql.json" target-dir="/var/lib/kolla/config_files/config.json"/>
+          <storage-mapping id="mysql-cfg-data" options="ro" source-dir="/var/lib/config-data/mysql" target-dir="/var/lib/kolla/config_files/src"/>
+          <storage-mapping id="mysql-hosts" options="ro" source-dir="/etc/hosts" target-dir="/etc/hosts"/>
+          <storage-mapping id="mysql-localtime" options="ro" source-dir="/etc/localtime" target-dir="/etc/localtime"/>
+          <storage-mapping id="mysql-lib" options="rw" source-dir="/var/lib/mysql" target-dir="/var/lib/mysql"/>
+          <storage-mapping id="mysql-log-mariadb" options="rw" source-dir="/var/log/mariadb" target-dir="/var/log/mariadb"/>
+          <storage-mapping id="mysql-pki-extracted" options="ro" source-dir="/etc/pki/ca-trust/extracted" target-dir="/etc/pki/ca-trust/extracted"/>
+          <storage-mapping id="mysql-pki-ca-bundle-crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.crt" target-dir="/etc/pki/tls/certs/ca-bundle.crt"/>
+          <storage-mapping id="mysql-pki-ca-bundle-trust-crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.trust.crt" target-dir="/etc/pki/tls/certs/ca-bundle.trust.crt"/>
+          <storage-mapping id="mysql-pki-cert" options="ro" source-dir="/etc/pki/tls/cert.pem" target-dir="/etc/pki/tls/cert.pem"/>
+          <storage-mapping id="mysql-dev-log" options="rw" source-dir="/dev/log" target-dir="/dev/log"/>
+        </storage>
+        <primitive class="ocf" id="galera" provider="heartbeat" type="galera">
+          <instance_attributes id="galera-instance_attributes">
+            <nvpair id="galera-instance_attributes-additional_parameters" name="additional_parameters" value="--open-files-limit=16384"/>
+            <nvpair id="galera-instance_attributes-cluster_host_map" name="cluster_host_map" value="galera-bundle-0:undercloud"/>
+            <nvpair id="galera-instance_attributes-enable_creation" name="enable_creation" value="true"/>
+            <nvpair id="galera-instance_attributes-wsrep_cluster_address" name="wsrep_cluster_address" value="gcomm://undercloud"/>
+          </instance_attributes>
+          <meta_attributes id="galera-meta_attributes">
+            <nvpair id="galera-meta_attributes-promoted-max" name="promoted-max" value="1"/>
+            <nvpair id="galera-meta_attributes-ordered" name="ordered" value="true"/>
+          </meta_attributes>
+          <operations>
+            <op id="galera-demote-interval-0s" interval="0s" name="demote" timeout="120"/>
+            <op id="galera-monitor-interval-20" interval="20" name="monitor" timeout="30"/>
+            <op id="galera-monitor-interval-10" interval="10" name="monitor" role="Master" timeout="30"/>
+            <op id="galera-monitor-interval-30" interval="30" name="monitor" role="Slave" timeout="30"/>
+            <op id="galera-promote-interval-0s" interval="0s" name="promote" on-fail="block" timeout="300s"/>
+            <op id="galera-start-interval-0s" interval="0s" name="start" timeout="120"/>
+            <op id="galera-stop-interval-0s" interval="0s" name="stop" timeout="120"/>
+          </operations>
+        </primitive>
+      </bundle>
+      <bundle id="redis-bundle">
+        <docker image="192.168.24.1:8787/tripleoupstream/centos-binary-redis:latest" promoted-max="1" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="1" run-command="/bin/bash /usr/local/bin/kolla_start"/>
+        <network control-port="3124"/>
+        <storage>
+          <storage-mapping id="redis-cfg-files" options="ro" source-dir="/var/lib/kolla/config_files/redis.json" target-dir="/var/lib/kolla/config_files/config.json"/>
+          <storage-mapping id="redis-cfg-data-redis" options="ro" source-dir="/var/lib/config-data/redis/etc/redis" target-dir="/etc/redis"/>
+          <storage-mapping id="redis-cfg-data-redis-conf" options="ro" source-dir="/var/lib/config-data/redis/etc/redis.conf" target-dir="/etc/redis.conf"/>
+          <storage-mapping id="redis-cfg-data-redis-conf-puppet" options="ro" source-dir="/var/lib/config-data/redis/etc/redis.conf.puppet" target-dir="/etc/redis.conf.puppet"/>
+          <storage-mapping id="redis-cfg-data-redis-sentinel" options="ro" source-dir="/var/lib/config-data/redis/etc/redis-sentinel.conf" target-dir="/etc/redis-sentinel.conf"/>
+          <storage-mapping id="redis-hosts" options="ro" source-dir="/etc/hosts" target-dir="/etc/hosts"/>
+          <storage-mapping id="redis-localtime" options="ro" source-dir="/etc/localtime" target-dir="/etc/localtime"/>
+          <storage-mapping id="redis-lib" options="rw" source-dir="/var/lib/redis" target-dir="/var/lib/redis"/>
+          <storage-mapping id="redis-log" options="rw" source-dir="/var/log/redis" target-dir="/var/log/redis"/>
+          <storage-mapping id="redis-run" options="rw" source-dir="/var/run/redis" target-dir="/var/run/redis"/>
+          <storage-mapping id="redis-pki-extracted" options="ro" source-dir="/etc/pki/ca-trust/extracted" target-dir="/etc/pki/ca-trust/extracted"/>
+          <storage-mapping id="redis-pki-ca-bundle-crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.crt" target-dir="/etc/pki/tls/certs/ca-bundle.crt"/>
+          <storage-mapping id="redis-pki-ca-bundle-trust-crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.trust.crt" target-dir="/etc/pki/tls/certs/ca-bundle.trust.crt"/>
+          <storage-mapping id="redis-pki-cert" options="ro" source-dir="/etc/pki/tls/cert.pem" target-dir="/etc/pki/tls/cert.pem"/>
+          <storage-mapping id="redis-dev-log" options="rw" source-dir="/dev/log" target-dir="/dev/log"/>
+        </storage>
+        <primitive class="ocf" id="redis" provider="heartbeat" type="redis">
+          <instance_attributes id="redis-instance_attributes">
+            <nvpair id="redis-instance_attributes-wait_last_known_master" name="wait_last_known_master" value="true"/>
+          </instance_attributes>
+          <meta_attributes id="redis-meta_attributes">
+            <nvpair id="redis-meta_attributes-interleave" name="interleave" value="true"/>
+            <nvpair id="redis-meta_attributes-notify" name="notify" value="true"/>
+            <nvpair id="redis-meta_attributes-ordered" name="ordered" value="true"/>
+          </meta_attributes>
+          <operations>
+            <op id="redis-demote-interval-0s" interval="0s" name="demote" timeout="120"/>
+            <op id="redis-monitor-interval-45" interval="45" name="monitor" timeout="60"/>
+            <op id="redis-monitor-interval-20" interval="20" name="monitor" role="Master" timeout="60"/>
+            <op id="redis-monitor-interval-60" interval="60" name="monitor" role="Slave" timeout="60"/>
+            <op id="redis-promote-interval-0s" interval="0s" name="promote" timeout="120"/>
+            <op id="redis-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="redis-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+          </operations>
+        </primitive>
+      </bundle>
+      <primitive class="ocf" id="ip-192.168.122.254" provider="heartbeat" type="IPaddr2">
+        <instance_attributes id="ip-192.168.122.254-instance_attributes">
+          <nvpair id="ip-192.168.122.254-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
+          <nvpair id="ip-192.168.122.254-instance_attributes-ip" name="ip" value="192.168.122.254"/>
+        </instance_attributes>
+        <operations>
+          <op id="ip-192.168.122.254-monitor-interval-10s" interval="10s" name="monitor" timeout="20s"/>
+          <op id="ip-192.168.122.254-start-interval-0s" interval="0s" name="start" timeout="20s"/>
+          <op id="ip-192.168.122.254-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="ip-192.168.122.250" provider="heartbeat" type="IPaddr2">
+        <instance_attributes id="ip-192.168.122.250-instance_attributes">
+          <nvpair id="ip-192.168.122.250-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
+          <nvpair id="ip-192.168.122.250-instance_attributes-ip" name="ip" value="192.168.122.250"/>
+        </instance_attributes>
+        <operations>
+          <op id="ip-192.168.122.250-monitor-interval-10s" interval="10s" name="monitor" timeout="20s"/>
+          <op id="ip-192.168.122.250-start-interval-0s" interval="0s" name="start" timeout="20s"/>
+          <op id="ip-192.168.122.250-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="ip-192.168.122.249" provider="heartbeat" type="IPaddr2">
+        <instance_attributes id="ip-192.168.122.249-instance_attributes">
+          <nvpair id="ip-192.168.122.249-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
+          <nvpair id="ip-192.168.122.249-instance_attributes-ip" name="ip" value="192.168.122.249"/>
+        </instance_attributes>
+        <operations>
+          <op id="ip-192.168.122.249-monitor-interval-10s" interval="10s" name="monitor" timeout="20s"/>
+          <op id="ip-192.168.122.249-start-interval-0s" interval="0s" name="start" timeout="20s"/>
+          <op id="ip-192.168.122.249-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="ip-192.168.122.253" provider="heartbeat" type="IPaddr2">
+        <instance_attributes id="ip-192.168.122.253-instance_attributes">
+          <nvpair id="ip-192.168.122.253-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
+          <nvpair id="ip-192.168.122.253-instance_attributes-ip" name="ip" value="192.168.122.253"/>
+        </instance_attributes>
+        <operations>
+          <op id="ip-192.168.122.253-monitor-interval-10s" interval="10s" name="monitor" timeout="20s"/>
+          <op id="ip-192.168.122.253-start-interval-0s" interval="0s" name="start" timeout="20s"/>
+          <op id="ip-192.168.122.253-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="ip-192.168.122.247" provider="heartbeat" type="IPaddr2">
+        <instance_attributes id="ip-192.168.122.247-instance_attributes">
+          <nvpair id="ip-192.168.122.247-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
+          <nvpair id="ip-192.168.122.247-instance_attributes-ip" name="ip" value="192.168.122.247"/>
+        </instance_attributes>
+        <operations>
+          <op id="ip-192.168.122.247-monitor-interval-10s" interval="10s" name="monitor" timeout="20s"/>
+          <op id="ip-192.168.122.247-start-interval-0s" interval="0s" name="start" timeout="20s"/>
+          <op id="ip-192.168.122.247-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="ip-192.168.122.248" provider="heartbeat" type="IPaddr2">
+        <instance_attributes id="ip-192.168.122.248-instance_attributes">
+          <nvpair id="ip-192.168.122.248-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
+          <nvpair id="ip-192.168.122.248-instance_attributes-ip" name="ip" value="192.168.122.248"/>
+        </instance_attributes>
+        <operations>
+          <op id="ip-192.168.122.248-monitor-interval-10s" interval="10s" name="monitor" timeout="20s"/>
+          <op id="ip-192.168.122.248-start-interval-0s" interval="0s" name="start" timeout="20s"/>
+          <op id="ip-192.168.122.248-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
+        </operations>
+      </primitive>
+      <bundle id="haproxy-bundle">
+        <docker image="192.168.24.1:8787/tripleoupstream/centos-binary-haproxy:latest" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="1" run-command="/bin/bash /usr/local/bin/kolla_start"/>
+        <storage>
+          <storage-mapping id="haproxy-cfg-files" options="ro" source-dir="/var/lib/kolla/config_files/haproxy.json" target-dir="/var/lib/kolla/config_files/config.json"/>
+          <storage-mapping id="haproxy-cfg-data" options="ro" source-dir="/var/lib/config-data/haproxy/etc" target-dir="/etc"/>
+          <storage-mapping id="haproxy-hosts" options="ro" source-dir="/etc/hosts" target-dir="/etc/hosts"/>
+          <storage-mapping id="haproxy-localtime" options="ro" source-dir="/etc/localtime" target-dir="/etc/localtime"/>
+          <storage-mapping id="haproxy-pki-extracted" options="ro" source-dir="/etc/pki/ca-trust/extracted" target-dir="/etc/pki/ca-trust/extracted"/>
+          <storage-mapping id="haproxy-pki-ca-bundle-crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.crt" target-dir="/etc/pki/tls/certs/ca-bundle.crt"/>
+          <storage-mapping id="haproxy-pki-ca-bundle-trust-crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.trust.crt" target-dir="/etc/pki/tls/certs/ca-bundle.trust.crt"/>
+          <storage-mapping id="haproxy-pki-cert" options="ro" source-dir="/etc/pki/tls/cert.pem" target-dir="/etc/pki/tls/cert.pem"/>
+          <storage-mapping id="haproxy-dev-log" options="rw" source-dir="/dev/log" target-dir="/dev/log"/>
+        </storage>
+      </bundle>
+      <bundle id="openstack-cinder-volume">
+        <docker run-command="/bin/bash /usr/local/bin/kolla_start" network="host" image="192.168.24.1:8787/tripleoupstream/centos-binary-cinder-volume:latest" options="--ipc=host --privileged=true --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="1"/>
+        <storage>
+          <storage-mapping target-dir="/var/lib/kolla/config_files/config.json" options="ro" id="cinder-volume-cfg-files" source-dir="/var/lib/kolla/config_files/cinder_volume.json"/>
+          <storage-mapping target-dir="/etc/cinder" options="ro" id="cinder-volume-cfg-data" source-dir="/var/lib/config-data/cinder/etc/cinder"/>
+          <storage-mapping target-dir="/etc/hosts" options="ro" id="cinder-volume-hosts" source-dir="/etc/hosts"/>
+          <storage-mapping target-dir="/etc/localtime" options="ro" id="cinder-volume-localtime" source-dir="/etc/localtime"/>
+          <storage-mapping target-dir="/dev" options="rw" id="cinder-volume-dev" source-dir="/dev"/>
+          <storage-mapping target-dir="/run" options="rw" id="cinder-volume-run" source-dir="/run"/>
+          <storage-mapping target-dir="/sys" options="rw" id="cinder-volume-sys" source-dir="/sys"/>
+          <storage-mapping target-dir="/lib/modules" options="ro" id="cinder-lib-modules" source-dir="/lib/modules"/>
+          <storage-mapping target-dir="/etc/iscsi" options="rw" id="cinder-volume-iscsi" source-dir="/etc/iscsi"/>
+          <storage-mapping target-dir="/var/lib/cinder" options="rw" id="cinder-volume-var-lib-cinder" source-dir="/var/lib/cinder"/>
+          <storage-mapping target-dir="/var/log/cinder" options="rw" id="cinder-volume-var-log" source-dir="/var/log/containers/cinder"/>
+        </storage>
+      </bundle>
+    </resources>
+    <constraints>
+      <rsc_location id="location-rabbitmq-bundle" resource-discovery="exclusive" rsc="rabbitmq-bundle">
+        <rule id="location-rabbitmq-bundle-rule" score="0">
+          <expression attribute="rabbitmq-role" id="location-rabbitmq-bundle-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-galera-bundle" resource-discovery="exclusive" rsc="galera-bundle">
+        <rule id="location-galera-bundle-rule" score="0">
+          <expression attribute="galera-role" id="location-galera-bundle-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-redis-bundle" resource-discovery="exclusive" rsc="redis-bundle">
+        <rule id="location-redis-bundle-rule" score="0">
+          <expression attribute="redis-role" id="location-redis-bundle-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-ip-192.168.122.254" resource-discovery="exclusive" rsc="ip-192.168.122.254">
+        <rule id="location-ip-192.168.122.254-rule" score="0">
+          <expression attribute="haproxy-role" id="location-ip-192.168.122.254-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-ip-192.168.122.250" resource-discovery="exclusive" rsc="ip-192.168.122.250">
+        <rule id="location-ip-192.168.122.250-rule" score="0">
+          <expression attribute="haproxy-role" id="location-ip-192.168.122.250-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-ip-192.168.122.249" resource-discovery="exclusive" rsc="ip-192.168.122.249">
+        <rule id="location-ip-192.168.122.249-rule" score="0">
+          <expression attribute="haproxy-role" id="location-ip-192.168.122.249-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-ip-192.168.122.253" resource-discovery="exclusive" rsc="ip-192.168.122.253">
+        <rule id="location-ip-192.168.122.253-rule" score="0">
+          <expression attribute="haproxy-role" id="location-ip-192.168.122.253-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-ip-192.168.122.247" resource-discovery="exclusive" rsc="ip-192.168.122.247">
+        <rule id="location-ip-192.168.122.247-rule" score="0">
+          <expression attribute="haproxy-role" id="location-ip-192.168.122.247-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-ip-192.168.122.248" resource-discovery="exclusive" rsc="ip-192.168.122.248">
+        <rule id="location-ip-192.168.122.248-rule" score="0">
+          <expression attribute="haproxy-role" id="location-ip-192.168.122.248-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_order first="ip-192.168.122.254" first-action="start" id="order-ip-192.168.122.254-haproxy-bundle-Optional" kind="Optional" then="haproxy-bundle" then-action="start"/>
+      <rsc_colocation id="colocation-ip-192.168.122.254-haproxy-bundle-INFINITY" rsc="ip-192.168.122.254" score="INFINITY" with-rsc="haproxy-bundle"/>
+      <rsc_order first="ip-192.168.122.250" first-action="start" id="order-ip-192.168.122.250-haproxy-bundle-Optional" kind="Optional" then="haproxy-bundle" then-action="start"/>
+      <rsc_colocation id="colocation-ip-192.168.122.250-haproxy-bundle-INFINITY" rsc="ip-192.168.122.250" score="INFINITY" with-rsc="haproxy-bundle"/>
+      <rsc_order first="ip-192.168.122.249" first-action="start" id="order-ip-192.168.122.249-haproxy-bundle-Optional" kind="Optional" then="haproxy-bundle" then-action="start"/>
+      <rsc_colocation id="colocation-ip-192.168.122.249-haproxy-bundle-INFINITY" rsc="ip-192.168.122.249" score="INFINITY" with-rsc="haproxy-bundle"/>
+      <rsc_order first="ip-192.168.122.253" first-action="start" id="order-ip-192.168.122.253-haproxy-bundle-Optional" kind="Optional" then="haproxy-bundle" then-action="start"/>
+      <rsc_colocation id="colocation-ip-192.168.122.253-haproxy-bundle-INFINITY" rsc="ip-192.168.122.253" score="INFINITY" with-rsc="haproxy-bundle"/>
+      <rsc_order first="ip-192.168.122.247" first-action="start" id="order-ip-192.168.122.247-haproxy-bundle-Optional" kind="Optional" then="haproxy-bundle" then-action="start"/>
+      <rsc_colocation id="colocation-ip-192.168.122.247-haproxy-bundle-INFINITY" rsc="ip-192.168.122.247" score="INFINITY" with-rsc="haproxy-bundle"/>
+      <rsc_order first="ip-192.168.122.248" first-action="start" id="order-ip-192.168.122.248-haproxy-bundle-Optional" kind="Optional" then="haproxy-bundle" then-action="start"/>
+      <rsc_colocation id="colocation-ip-192.168.122.248-haproxy-bundle-INFINITY" rsc="ip-192.168.122.248" score="INFINITY" with-rsc="haproxy-bundle"/>
+      <rsc_colocation id="colocation-rabbit-with-haproxy-bundle-INFINITY" rsc="rabbitmq-bundle" score="INFINITY" with-rsc="haproxy-bundle"/>
+      <rsc_order first="haproxy-bundle" first-action="start"  id="order-1" kind="Mandatory" then="galera-bundle" then-action="start"/>
+      <rsc_order first="rabbitmq-bundle" first-action="start" id="order-2" kind="Mandatory" then="galera-bundle" then-action="start"/>
+      <rsc_order first="redis-bundle" first-action="promote"  id="order-3" kind="Mandatory" then="galera-bundle" then-action="start"/>
+    </constraints>
+    <rsc_defaults>
+      <meta_attributes id="rsc_defaults-options">
+        <nvpair id="rsc_defaults-options-resource-stickiness" name="resource-stickiness" value="INFINITY"/>
+      </meta_attributes>
+    </rsc_defaults>
+  </configuration>
+  <status>
+    <node_state id="1" uname="undercloud" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="rabbitmq-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-docker-0_last_0" operation_key="rabbitmq-bundle-docker-0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="2:6:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" transition-magic="0:0;2:6:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" on_node="undercloud" call-id="10" rc-code="0" op-status="0" interval="0" last-run="1496303575" last-rc-change="1496303575" exec-time="850" queue-time="0" op-digest="9d5e401cce0874816028f0e6f2f99fdd"/>
+            <lrm_rsc_op id="rabbitmq-bundle-docker-0_monitor_60000" operation_key="rabbitmq-bundle-docker-0_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="3:6:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" transition-magic="0:0;3:6:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" on_node="undercloud" call-id="11" rc-code="0" op-status="0" interval="60000" last-rc-change="1496303576" exec-time="76" queue-time="0" op-digest="8712259bfb9d55ff9fbff5f39e5d8a30"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-0" type="remote" class="ocf" provider="pacemaker" container="rabbitmq-bundle-docker-0">
+            <lrm_rsc_op id="rabbitmq-bundle-0_last_0" operation_key="rabbitmq-bundle-0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="4:6:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" transition-magic="0:0;4:6:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" on_node="undercloud" call-id="1" rc-code="0" op-status="0" interval="0" last-run="1496303576" last-rc-change="1496303576" exec-time="0" queue-time="0" op-digest="ee16760fa8c27e6585c1e35c244d7652" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="rabbitmq-bundle-0_monitor_30000" operation_key="rabbitmq-bundle-0_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="7:7:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" transition-magic="0:0;7:7:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" on_node="undercloud" call-id="2" rc-code="0" op-status="0" interval="30000" last-rc-change="1496303578" exec-time="0" queue-time="0" op-digest="ad3679ab0e6f6099d04110a3616c74c2"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis-bundle-docker-0_last_0" operation_key="redis-bundle-docker-0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="34:15:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" transition-magic="0:0;34:15:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" on_node="undercloud" call-id="28" rc-code="0" op-status="0" interval="0" last-run="1496303664" last-rc-change="1496303664" exec-time="824" queue-time="0" op-digest="b26392b2cfc73ee1c83c6bb1ec2aa4c7"/>
+            <lrm_rsc_op id="redis-bundle-docker-0_monitor_60000" operation_key="redis-bundle-docker-0_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="35:15:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" transition-magic="0:0;35:15:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" on_node="undercloud" call-id="29" rc-code="0" op-status="0" interval="60000" last-rc-change="1496303664" exec-time="74" queue-time="0" op-digest="646f8db9f7baea61a60753b5ae8b9987"/>
+          </lrm_resource>
+          <lrm_resource id="redis-bundle-0" type="remote" class="ocf" provider="pacemaker" container="redis-bundle-docker-0">
+            <lrm_rsc_op id="redis-bundle-0_last_0" operation_key="redis-bundle-0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="36:15:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" transition-magic="0:0;36:15:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" on_node="undercloud" call-id="5" rc-code="0" op-status="0" interval="0" last-run="1496303664" last-rc-change="1496303664" exec-time="0" queue-time="0" op-digest="9a6281aab223af75359e5b5a07161162" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="redis-bundle-0_monitor_30000" operation_key="redis-bundle-0_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="39:16:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" transition-magic="0:0;39:16:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" on_node="undercloud" call-id="6" rc-code="0" op-status="0" interval="30000" last-rc-change="1496303667" exec-time="0" queue-time="0" op-digest="d0fc99d0b5bbb65f1da74f86b2eec758"/>
+          </lrm_resource>
+          <lrm_resource id="ip-192.168.122.254" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-192.168.122.254_last_0" operation_key="ip-192.168.122.254_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="53:21:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" transition-magic="0:0;53:21:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" on_node="undercloud" call-id="35" rc-code="0" op-status="0" interval="0" last-run="1496303683" last-rc-change="1496303683" exec-time="63" queue-time="0" op-digest="d6875d68a09b5550030b8b6b7cdc9294"/>
+            <lrm_rsc_op id="ip-192.168.122.254_monitor_10000" operation_key="ip-192.168.122.254_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="54:21:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" transition-magic="0:0;54:21:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" on_node="undercloud" call-id="36" rc-code="0" op-status="0" interval="10000" last-rc-change="1496303683" exec-time="32" queue-time="0" op-digest="5c1c6d0e79751e4002b12de513351a48"/>
+          </lrm_resource>
+          <lrm_resource id="ip-192.168.122.250" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-192.168.122.250_last_0" operation_key="ip-192.168.122.250_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="56:24:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" transition-magic="0:0;56:24:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" on_node="undercloud" call-id="41" rc-code="0" op-status="0" interval="0" last-run="1496303696" last-rc-change="1496303696" exec-time="53" queue-time="0" op-digest="b33b44b3e9e535336108cb43f7474ef6"/>
+            <lrm_rsc_op id="ip-192.168.122.250_monitor_10000" operation_key="ip-192.168.122.250_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="57:24:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" transition-magic="0:0;57:24:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" on_node="undercloud" call-id="42" rc-code="0" op-status="0" interval="10000" last-rc-change="1496303696" exec-time="32" queue-time="0" op-digest="a4aec96753744d49ca9a798d3b0f12aa"/>
+          </lrm_resource>
+          <lrm_resource id="ip-192.168.122.249" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-192.168.122.249_last_0" operation_key="ip-192.168.122.249_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="59:27:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" transition-magic="0:0;59:27:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" on_node="undercloud" call-id="47" rc-code="0" op-status="0" interval="0" last-run="1496303710" last-rc-change="1496303710" exec-time="52" queue-time="0" op-digest="22e58cb8beefb7810d8bf03d0d3a906d"/>
+            <lrm_rsc_op id="ip-192.168.122.249_monitor_10000" operation_key="ip-192.168.122.249_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="60:27:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" transition-magic="0:0;60:27:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" on_node="undercloud" call-id="48" rc-code="0" op-status="0" interval="10000" last-rc-change="1496303710" exec-time="30" queue-time="1" op-digest="860855adc72293b04b1becaeea73ced1"/>
+          </lrm_resource>
+          <lrm_resource id="ip-192.168.122.253" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-192.168.122.253_last_0" operation_key="ip-192.168.122.253_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="62:30:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" transition-magic="0:0;62:30:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" on_node="undercloud" call-id="53" rc-code="0" op-status="0" interval="0" last-run="1496303723" last-rc-change="1496303723" exec-time="69" queue-time="0" op-digest="f36f4ccbd5f16e4e335c65f0802ddc20"/>
+            <lrm_rsc_op id="ip-192.168.122.253_monitor_10000" operation_key="ip-192.168.122.253_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="63:30:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" transition-magic="0:0;63:30:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" on_node="undercloud" call-id="54" rc-code="0" op-status="0" interval="10000" last-rc-change="1496303724" exec-time="39" queue-time="0" op-digest="0ee9a624c731239cdbef5c9118cc2bbe"/>
+          </lrm_resource>
+          <lrm_resource id="ip-192.168.122.247" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-192.168.122.247_last_0" operation_key="ip-192.168.122.247_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="65:33:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" transition-magic="0:0;65:33:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" on_node="undercloud" call-id="59" rc-code="0" op-status="0" interval="0" last-run="1496303737" last-rc-change="1496303737" exec-time="57" queue-time="0" op-digest="37013238bd139c2b589a9508ff4b5c07"/>
+            <lrm_rsc_op id="ip-192.168.122.247_monitor_10000" operation_key="ip-192.168.122.247_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="66:33:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" transition-magic="0:0;66:33:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" on_node="undercloud" call-id="60" rc-code="0" op-status="0" interval="10000" last-rc-change="1496303737" exec-time="35" queue-time="0" op-digest="22cd67ba6dcb54e4f4e6ea3450a52b77"/>
+          </lrm_resource>
+          <lrm_resource id="ip-192.168.122.248" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-192.168.122.248_last_0" operation_key="ip-192.168.122.248_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="68:36:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" transition-magic="0:0;68:36:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" on_node="undercloud" call-id="65" rc-code="0" op-status="0" interval="0" last-run="1496303750" last-rc-change="1496303750" exec-time="52" queue-time="0" op-digest="7565857faaf5a927e16322d5da3e4e38"/>
+            <lrm_rsc_op id="ip-192.168.122.248_monitor_10000" operation_key="ip-192.168.122.248_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="69:36:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" transition-magic="0:0;69:36:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" on_node="undercloud" call-id="66" rc-code="0" op-status="0" interval="10000" last-rc-change="1496303750" exec-time="30" queue-time="0" op-digest="2182cf0cd059930b67d43545b4950c6f"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-cinder-volume-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="openstack-cinder-volume-docker-0_last_0" operation_key="openstack-cinder-volume-docker-0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="76:93:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" transition-magic="0:0;76:93:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" on_node="undercloud" call-id="161" rc-code="0" op-status="0" interval="0" last-run="1496305247" last-rc-change="1496305247" exec-time="838" queue-time="0" op-digest="6bca2ea371d88385f9492e607d2ba781"/>
+            <lrm_rsc_op id="openstack-cinder-volume-docker-0_monitor_60000" operation_key="openstack-cinder-volume-docker-0_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="14:93:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" transition-magic="0:0;14:93:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" on_node="undercloud" call-id="162" rc-code="0" op-status="0" interval="60000" last-rc-change="1496305248" exec-time="63" queue-time="0" op-digest="dead45fc070d603608d342428d68278f"/>
+            <lrm_rsc_op id="openstack-cinder-volume-docker-0_last_failure_0" operation_key="openstack-cinder-volume-docker-0_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="14:91:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" transition-magic="0:7;14:91:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" on_node="undercloud" call-id="158" rc-code="7" op-status="0" interval="60000" last-rc-change="1496305247" exec-time="0" queue-time="0" op-digest="dead45fc070d603608d342428d68278f"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="1">
+        <instance_attributes id="status-1">
+          <nvpair id="status-1-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-1-fail-count-openstack-cinder-volume-docker-0" name="fail-count-openstack-cinder-volume-docker-0" value="21"/>
+          <nvpair id="status-1-last-failure-openstack-cinder-volume-docker-0" name="last-failure-openstack-cinder-volume-docker-0" value="1496305247"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state remote_node="true" id="redis-bundle-0" uname="redis-bundle-0" in_ccm="true" crm-debug-origin="do_update_resource" node_fenced="0">
+      <transient_attributes id="redis-bundle-0">
+        <instance_attributes id="status-redis-bundle-0">
+          <nvpair id="status-redis-bundle-0-master-redis" name="master-redis" value="3000"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="redis-bundle-0">
+        <lrm_resources>
+          <lrm_resource id="redis" type="redis" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="redis_last_0" operation_key="redis_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="42:17:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" transition-magic="0:0;42:17:0:14f1d42b-7a22-4dc5-987e-d4fc94449aea" on_node="undercloud" call-id="58" rc-code="0" op-status="0" interval="0" last-run="1496303672" last-rc-change="1496303672" exec-time="1583" queue-time="0" op-digest="a5b2a4f5c557278af14d6cbffc5a229d" op-secure-params=" user " op-secure-digest="a5b2a4f5c557278af14d6cbffc5a229d"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

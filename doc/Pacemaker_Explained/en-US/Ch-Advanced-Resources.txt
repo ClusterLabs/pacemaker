@@ -132,47 +132,58 @@ five of which are active, then the group as a whole will prefer its
 current location with a score of 500.
 
 [[s-resource-clone]]
-== Clones - Resources That Get Active on Multiple Hosts ==
+== Clones - Resources That Can Have Multiple Active Instances ==
 indexterm:[Clone Resources]
 indexterm:[Resource,Clones]
 
-Clones were initially conceived as a convenient way to start multiple
-instances of an IP address resource and have them distributed throughout the
-cluster for load balancing.  They have turned out to quite useful for
-a number of purposes including integrating with the Distributed Lock Manager
-(used by many cluster filesystems), the fencing subsystem, and OCFS2.
+'Clone' resources are resources that can have more than one copy active at the
+same time. This allows you, for example, to run a copy of a daemon on every
+node. You can clone any primitive or group resource.
+footnote:[
+Of course, the service must support running multiple instances.
+]
 
-You can clone any resource, provided the resource agent supports it.
+=== Anonymous versus Unique Clones ===
 
-Three types of cloned resources exist:
+A clone resource is configured to be either 'anonymous' or 'globally unique'.
 
-* Anonymous
-* Globally unique
-* Stateful
-
-'Anonymous' clones are the simplest.  These behave
-completely identically everywhere they are running.  Because of this,
-there can be only one copy of an anonymous clone active per machine.
+Anonymous clones are the simplest. These behave completely identically
+everywhere they are running. Because of this, there can be only one instance of
+an anonymous clone active per node.
       
-'Globally unique' clones are distinct entities.  A copy of the clone
-running on one machine is not equivalent to another instance on
-another node, nor would any two copies on the same node be
-equivalent.
+The instances of globally unique clones are distinct entities. All instances
+are launched identically, but one instance of the clone is not identical to any
+other instance, whether running on the same node or a different node. As an
+example, a cloned IP address can use special kernel functionality such that
+each instance handles a subset of requests for the same IP address.
 
-'Stateful' clones are covered later in <<s-resource-multistate>>.
+[[s-resource-promotable]]
+=== Promotable clones ===
 
-.A clone of an LSB resource
-======
-[source,XML]
--------
-<clone id="apache-clone">
-    <meta_attributes id="apache-clone-meta">
-       <nvpair id="apache-unique" name="globally-unique" value="false"/>
-    </meta_attributes>
-    <primitive id="apache" class="lsb" type="apache"/>
-</clone> 
--------
-======
+indexterm:[Promotable Clone Resources]
+indexterm:[Resource,Promotable]
+
+If a clone is 'promotable', its instances can perform a special role that
+Pacemaker will manage via the +promote+ and +demote+ actions of the resource
+agent.
+
+Services that support such a special role have various terms for the special
+role and the default role: primary and secondary, master and replica,
+controller and worker, etc. Pacemaker uses the terms 'master' and 'slave',
+footnote:[
+These are historical terms that will eventually be replaced, but the extensive
+use of them and the need for backward compatibility makes it a long process.
+You may see examples using a +master+ tag instead of a +clone+ tag with the
++promotable+ meta-attribute set to +true+; the +master+ tag is supported, but
+deprecated, and will be removed in a future version. You may also see such
+services referred to as 'multi-state' or 'stateful'; these means the same thing
+as 'promotable'.
+]
+but is agnostic to what the service calls them or what they do.
+
+All that Pacemaker cares about is that an instance comes up in the default role
+when started, and the resource agent supports the +promote+ and +demote+ actions
+to manage entering and exiting the special role.
 
 === Clone Properties ===
 
@@ -192,7 +203,7 @@ equivalent.
 
 === Clone Options ===
 
-Options inherited from <<s-resource-options,primitive>> resources:
+<<s-resource-options,Options>> inherited from primitive resources:
 +priority, target-role, is-managed+
 
 .Clone-specific configuration options
@@ -203,74 +214,118 @@ Options inherited from <<s-resource-options,primitive>> resources:
 |Default
 |Description
 
+|globally-unique
+|false
+|If +true+, each clone instance performs a distinct function
+ indexterm:[globally-unique,Clone Option]
+ indexterm:[Clone,Option,globally-unique]
+  
 |clone-max
 |number of nodes in cluster
-|How many copies of the resource to start
+|The maximum number of clone instances that can be started across the entire
+ cluster
  indexterm:[clone-max,Clone Option]
  indexterm:[Clone,Option,clone-max]
 
 |clone-node-max
 |1
-|How many copies of the resource can be started on a single node
+|If +globally-unique+ is +true+, the maximum number of clone instances that can
+ be started on a single node
  indexterm:[clone-node-max,Clone Option]
  indexterm:[Clone,Option,clone-node-max]
   
 |clone-min
 |1
 |Require at least this number of clone instances to be runnable before allowing
-resources depending on the clone to be runnable '(since 1.1.14)'
+ resources depending on the clone to be runnable
  indexterm:[clone-min,Clone Option]
  indexterm:[Clone,Option,clone-min]
 
 |notify
-|true
-|When stopping or starting a copy of the clone, tell all the other
- copies beforehand and again when the action was successful. Allowed values:
- +false+, +true+
+|false
+|Call the resource agent's +notify+ action for all active instances, before and
+ after starting or stopping any clone instance. The resource agent must support
+ this action. Allowed values: +false+, +true+
  indexterm:[notify,Clone Option]
  indexterm:[Clone,Option,notify]
 
-|globally-unique
-|false
-|Does each copy of the clone perform a different function? Allowed
- values: +false+, +true+
- indexterm:[globally-unique,Clone Option]
- indexterm:[Clone,Option,globally-unique]
-  
 |ordered
 |false
-|Should the copies be started in series (instead of in
- parallel)? Allowed values: +false+, +true+
+|If +true+, clone instances must be started sequentially instead of in parallel
+ Allowed values: +false+, +true+
  indexterm:[ordered,Clone Option]
  indexterm:[Clone,Option,ordered]
 
 |interleave
 |false
-|If this clone depends on another clone via an ordering constraint,
-is it allowed to start after the local instance of the other clone
-starts, rather than wait for all instances of the other clone to start?
-Allowed values: +false+, +true+
+|When this clone is ordered relative to another clone, if this option is
+ +false+ (the default), the ordering is relative to 'all' instances of the
+ other clone, whereas if this option is +true+, the ordering is relative only
+ to instances on the same node.
+ Allowed values: +false+, +true+
  indexterm:[interleave,Clone Option]
  indexterm:[Clone,Option,interleave]
 
+|promotable
+|false
+|If +true+, clone instances can perform a special role that Pacemaker will
+ manage via the resource agent's +promote+ and +demote+ actions. The resource
+ agent must support these actions.
+ Allowed values: +false+, +true+
+ indexterm:[promotable,Clone Option]
+ indexterm:[Clone,Option,promotable]
+
+|promoted-max
+|1
+|If +promotable+ is +true+, the number of instances that can be promoted at one
+ time across the entire cluster
+ indexterm:[promoted-max,Clone Option]
+ indexterm:[Clone,Option,promoted-max]
+
+|promoted-node-max
+|1
+|If +promotable+ is +true+ and +globally-unique+ is +false+, the number of
+ clone instances can be promoted at one time on a single node
+ indexterm:[promoted-node-max,Clone Option]
+ indexterm:[Clone,Option,promoted-node-max]
+
 |=========================================================
 
-=== Clone Instance Attributes ===
-
-Clones have no instance attributes; however, any that are set here
-will be inherited by the clone's children.
+For backward compatibility, +master-max+ and +master-node-max+ are accepted as
+aliases for +promoted-max+ and +promoted-node-max+, but are deprecated since
+2.0.0, and support for them will be removed in a future version.
 
 === Clone Contents ===
 
 Clones must contain exactly one primitive or group resource.
 
+.A clone that runs a web server on all nodes
+====
+[source,XML]
+----
+<clone id="apache-clone">
+    <primitive id="apache" class="lsb" type="apache">
+        <operations>
+           <op id="apache-monitor" name="monitor" interval="30"/>
+        </operations>
+    </primitive>
+</clone> 
+----
+====
+
 [WARNING]
-You should never reference the name of a clone's child.
-If you think you need to do this, you probably need to re-evaluate your design.
+You should never reference the name of a clone's child (the primitive or group
+resource being cloned). If you think you need to do this, you probably need to
+re-evaluate your design.
+
+=== Clone Instance Attributes ===
+
+Clones have no instance attributes; however, any that are set here will be
+inherited by the clone's child.
 
 === Clone Constraints ===
 
-In most cases, a clone will have a single copy on each active cluster
+In most cases, a clone will have a single instance on each active cluster
 node.  If this is not the case, you can indicate which nodes the
 cluster should preferentially assign copies to with resource location
 constraints.  These constraints are written no differently from those
@@ -296,14 +351,170 @@ from being active.  Additionally, the clone will wait for
 +apache-stats+ to be stopped before stopping itself.
 
 Colocation of a primitive or group resource with a clone means that
-the resource can run on any machine with an active copy of the clone.
-The cluster will choose a copy based on where the clone is running and
+the resource can run on any node with an active instance of the clone.
+The cluster will choose an instance based on where the clone is running and
 the resource's own location preferences.
 
 Colocation between clones is also possible.  If one clone +A+ is colocated
 with another clone +B+, the set of allowed locations for +A+ is limited to
 nodes on which +B+ is (or will be) active.  Placement is then performed
 normally.
+
+==== Promotable Clone Constraints ====
+
+For promotable clone resources, the +first-action+ and/or +then-action+ fields
+for ordering constraints may be set to +promote+ or +demote+ to constrain the
+master role, and colocation constraints may contain +rsc-role+ and/or
++with-rsc-role+ fields.
+          
+.Additional colocation constraint options for promotable clone resources
+[width="95%",cols="1m,1,3<",options="header",align="center"]
+|=========================================================
+
+|Field
+|Default
+|Description
+
+|rsc-role
+|Started
+|An additional attribute of colocation constraints that specifies the
+ role that +rsc+ must be in.  Allowed values: +Started+, +Master+,
+ +Slave+.
+ indexterm:[rsc-role,Ordering Constraints]
+ indexterm:[Constraints,Ordering,rsc-role]
+
+|with-rsc-role
+|Started
+|An additional attribute of colocation constraints that specifies the
+ role that +with-rsc+ must be in.  Allowed values: +Started+,
+ +Master+, +Slave+.
+ indexterm:[with-rsc-role,Ordering Constraints]
+ indexterm:[Constraints,Ordering,with-rsc-role]
+
+|=========================================================
+
+.Constraints involving promotable clone resources       
+======
+[source,XML]
+-------
+<constraints>
+   <rsc_location id="db-prefers-node1" rsc="database" node="node1" score="500"/>
+   <rsc_colocation id="backup-with-db-slave" rsc="backup"
+     with-rsc="database" with-rsc-role="Slave"/>
+   <rsc_colocation id="myapp-with-db-master" rsc="myApp"
+     with-rsc="database" with-rsc-role="Master"/>
+   <rsc_order id="start-db-before-backup" first="database" then="backup"/>
+   <rsc_order id="promote-db-then-app" first="database" first-action="promote"
+     then="myApp" then-action="start"/>
+</constraints> 
+-------
+======
+
+In the example above, +myApp+ will wait until one of the database
+copies has been started and promoted to master before being started
+itself on the same node.  Only if no copies can be promoted will +myApp+ be
+prevented from being active.  Additionally, the cluster will wait for
++myApp+ to be stopped before demoting the database.
+
+Colocation of a primitive or group resource with a promotable clone
+resource means that it can run on any node with an active instance of
+the promotable clone resource that has the specified role (+master+ or
++slave+).  In the example above, the cluster will choose a location based on
+where database is running as a +master+, and if there are multiple
++master+ instances it will also factor in +myApp+'s own location
+preferences when deciding which location to choose.
+
+Colocation with regular clones and other promotable clone resources is also
+possible.  In such cases, the set of allowed locations for the +rsc+
+clone is (after role filtering) limited to nodes on which the
++with-rsc+ promotable clone resource is (or will be) in the specified role.
+Placement is then performed as normal.
+
+==== Using Promotable Clone Resources in Colocation Sets ====
+
+.Additional colocation set options relevant to promotable clone resources
+[width="95%",cols="1m,1,6<",options="header",align="center"]
+|=========================================================
+
+|Field
+|Default
+|Description
+
+|role
+|Started
+|The role that 'all members' of the set must be in.  Allowed values: +Started+, +Master+,
+ +Slave+.
+ indexterm:[role,Ordering Constraints]
+ indexterm:[Constraints,Ordering,role]
+
+|=========================================================
+
+In the following example +B+'s master must be located on the same node as +A+'s master.
+Additionally resources +C+ and +D+ must be located on the same node as +A+'s
+and +B+'s masters.
+
+.Colocate C and D with A's and B's master instances
+======
+[source,XML]
+-------
+<constraints>
+    <rsc_colocation id="coloc-1" score="INFINITY" >
+      <resource_set id="colocated-set-example-1" sequential="true" role="Master">
+        <resource_ref id="A"/>
+        <resource_ref id="B"/>
+      </resource_set>
+      <resource_set id="colocated-set-example-2" sequential="true">
+        <resource_ref id="C"/>
+        <resource_ref id="D"/>
+      </resource_set>
+    </rsc_colocation>
+</constraints>
+-------
+======
+
+==== Using Promotable Clone Resources in Ordered Sets ====
+
+.Additional ordered set options relevant to promotable clone resources
+[width="95%",cols="1m,1,3<",options="header",align="center"]
+|=========================================================
+
+|Field
+|Default
+|Description
+
+|action
+|value of +first-action+
+|An additional attribute of ordering constraint sets that specifies the
+ action that applies to 'all members' of the set.  Allowed
+ values: +start+, +stop+, +promote+, +demote+.
+ indexterm:[action,Ordering Constraints]
+ indexterm:[Constraints,Ordering,action]
+
+|=========================================================
+
+.Start C and D after first promoting A and B
+======
+[source,XML]
+-------
+<constraints>
+    <rsc_order id="order-1" score="INFINITY" >
+      <resource_set id="ordered-set-1" sequential="true" action="promote">
+        <resource_ref id="A"/>
+        <resource_ref id="B"/>
+      </resource_set>
+      <resource_set id="ordered-set-2" sequential="true" action="start">
+        <resource_ref id="C"/>
+        <resource_ref id="D"/>
+      </resource_set>
+    </rsc_order>
+</constraints>
+-------
+======
+
+In the above example, +B+ cannot be promoted to a master role until +A+ has
+been promoted. Additionally, resources +C+ and +D+ must wait until +A+ and +B+
+have been promoted before they can start.
+
 
 [[s-clone-stickiness]]
 === Clone Stickiness ===
@@ -332,11 +543,12 @@ Any resource can be used as an anonymous clone, as it requires no
 additional support from the resource agent.  Whether it makes sense to
 do so depends on your resource and its resource agent.
 
-Globally unique clones do require some additional support in the
-resource agent.  In particular, it must only respond with
-+$\{OCF_SUCCESS}+ if the node has that exact instance active.  All
-other probes for instances of the clone should result in
-+$\{OCF_NOT_RUNNING}+ (or one of the other OCF error codes if
+==== Resource Agent Requirements for Globally Unique Clones ====
+
+Globally unique clones require additional support in the resource agent. In
+particular, it must only respond with +$\{OCF_SUCCESS}+ if the node has that
+exact instance active. All other probes for instances of the clone should
+result in +$\{OCF_NOT_RUNNING}+ (or one of the other OCF error codes if
 they are failed).
 
 Individual instances of a clone are identified by appending a colon and a
@@ -344,20 +556,64 @@ numerical offset, e.g. +apache:2+.
 
 Resource agents can find out how many copies there are by examining
 the +OCF_RESKEY_CRM_meta_clone_max+ environment variable and which
-copy it is by examining +OCF_RESKEY_CRM_meta_clone+.
+instance it is by examining +OCF_RESKEY_CRM_meta_clone+.
 
 The resource agent must not make any assumptions (based on
 +OCF_RESKEY_CRM_meta_clone+) about which numerical instances are active.  In
 particular, the list of active copies will not always be an unbroken
 sequence, nor always start at 0.
 
+==== Resource Agent Requirements for Promotable Clones ====
+
+Promotable clone resources require two extra actions, +demote+ and +promote+,
+which are responsible for changing the state of the resource. Like +start+ and
++stop+, they should return +$\{OCF_SUCCESS}+ if they completed successfully or
+a relevant error code if they did not.
+
+The states can mean whatever you wish, but when the resource is
+started, it must come up in the mode called +slave+.  From there the
+cluster will decide which instances to promote to +master+.
+
+In addition to the clone requirements for monitor actions, agents must
+also _accurately_ report which state they are in.  The cluster relies
+on the agent to report its status (including role) accurately and does
+not indicate to the agent what role it currently believes it to be in.
+
+.Role implications of OCF return codes
+[width="95%",cols="1,1<",options="header",align="center"]
+|=========================================================
+
+|Monitor Return Code
+|Description
+
+|OCF_NOT_RUNNING
+|Stopped
+ indexterm:[Return Code,OCF_NOT_RUNNING]
+ 
+|OCF_SUCCESS
+|Running (Slave)
+ indexterm:[Return Code,OCF_SUCCESS]
+ 
+|OCF_RUNNING_MASTER
+|Running (Master)
+ indexterm:[Return Code,OCF_RUNNING_MASTER]
+
+|OCF_FAILED_MASTER
+|Failed (Master)
+ indexterm:[Return Code,OCF_FAILED_MASTER]
+ 
+|Other
+|Failed (Slave)
+
+|=========================================================
+
 ==== Clone Notifications ====
 
-Supporting notifications requires the +notify+ action to be
-implemented.  If supported, the notify action will be passed a
-number of extra variables which, when combined with additional
-context, can be used to calculate the current state of the cluster and
-what is about to happen to it.
+If the clone has the +notify+ meta-attribute set to +true+, and the resource
+agent supports the +notify+ action, Pacemaker will call the action when
+appropriate, passing a number of extra variables which, when combined with
+additional context, can be used to calculate the current state of the cluster
+and what is about to happen to it.
 
 .Environment variables supplied with Clone notify actions
 [width="95%",cols="5,3<",options="header",align="center"]
@@ -435,7 +691,7 @@ OCF_RESKEY_CRM_meta_notify_start_uname="sles-1 sles-3 sles-2"
 -------
 ======
 
-==== Proper Interpretation of Notification Environment Variables ====
+==== Interpretation of Notification Variables ====
 
 .Pre-notification (stop):
 
@@ -470,393 +726,12 @@ OCF_RESKEY_CRM_meta_notify_start_uname="sles-1 sles-3 sles-2"
 * Resources that were started: +$OCF_RESKEY_CRM_meta_notify_start_resource+
 * Resources that were stopped: +$OCF_RESKEY_CRM_meta_notify_stop_resource+
 
-[[s-resource-multistate]]
-== Multi-state - Resources That Have Multiple Modes ==
+==== Extra Notifications for Promotable Clones ====
 
-indexterm:[Multi-state Resources]
-indexterm:[Resource,Multi-state]
-
-Multi-state resources are a specialization of clone resources; please
-ensure you understand <<s-resource-clone>> before continuing!
-
-Multi-state resources allow the instances to be in one of two operating modes
-(called 'roles'). The roles are called 'master' and 'slave', but can mean
-whatever you wish them to mean. The only limitation is that when an instance is
-started, it must come up in the slave role.
-
-=== Multi-state Properties ===
-
-.Properties of a Multi-State Resource
-[width="95%",cols="3m,5<",options="header",align="center"]
-|=========================================================
-
-|Field
-|Description
-
-|id
-|Your name for the multi-state resource
- indexterm:[id,Multi-State Property]
- indexterm:[Multi-State,Property,id]
-
-|=========================================================
-
-=== Multi-state Options ===
-
-Options inherited from <<s-resource-options,primitive>> resources:
-+priority+, +target-role+, +is-managed+
-
-Options inherited from <<s-resource-clone,clone>> resources:
-+clone-max+, +clone-node-max+, +notify+, +globally-unique+, +ordered+,
-+interleave+
-
-.Multi-state-specific resource configuration options
-[width="95%",cols="1m,1,3<",options="header",align="center"]
-|=========================================================
-
-|Field
-|Default
-|Description
-
-|master-max
-|1
-|How many copies of the resource can be promoted to the +master+ role
- indexterm:[master-max,Multi-State Option]
- indexterm:[Multi-State,Option,master-max]
-
-|master-node-max
-|1
-|How many copies of the resource can be promoted to the +master+ role on
- a single node
- indexterm:[master-node-max,Multi-State Option]
- indexterm:[Multi-State,Option,master-node-max]
-
-|=========================================================
-
-=== Multi-state Instance Attributes ===
-
-Multi-state resources have no instance attributes; however, any that
-are set here will be inherited by a master's children.
-
-=== Multi-state Contents ===
-
-Masters must contain exactly one primitive or group resource.
-
-[WARNING]
-You should never reference the name of a master's child.
-If you think you need to do this, you probably need to re-evaluate your design.
-
-=== Monitoring Multi-State Resources ===
-
-The usual monitor actions are insufficient to monitor a multi-state resource,
-because pacemaker needs to verify not only that the resource is active, but
-also that its actual role matches its intended one.
-
-Define two monitoring actions: the usual one will cover the slave role,
-and an additional one with +role="master"+ will cover the master role.
-
-.Monitoring both states of a multi-state resource
-======
-[source,XML]
--------
-<master id="myMasterRsc">
-   <primitive id="myRsc" class="ocf" type="myApp" provider="myCorp">
-    <operations>
-     <op id="public-ip-slave-check" name="monitor" interval="60"/>
-     <op id="public-ip-master-check" name="monitor" interval="61" role="Master"/>
-    </operations>
-   </primitive>
-</master> 
--------
-======
-
-[IMPORTANT]
-===========
-It is crucial that _every_ monitor operation has a different interval!
-Pacemaker currently differentiates between operations
-only by resource and interval; so if (for example) a master/slave resource had
-the same monitor interval for both roles, Pacemaker would ignore the
-role when checking the status -- which would cause unexpected return
-codes, and therefore unnecessary complications.
-===========
-
-=== Multi-state Constraints ===
-
-In most cases, multi-state resources will have a single copy on each
-active cluster node.  If this is not the case, you can indicate which
-nodes the cluster should preferentially assign copies to with resource
-location constraints.  These constraints are written no differently from
-those for primitive resources except that the master's +id+ is used.
-
-When considering multi-state resources in constraints, for most
-purposes it is sufficient to treat them as clones. The exception is
-that the +first-action+ and/or +then-action+ fields for ordering constraints
-may be set to +promote+ or +demote+ to constrain the master role,
-and colocation constraints may contain +rsc-role+ and/or +with-rsc-role+
-fields.
-          
-.Additional colocation constraint options for multi-state resources
-[width="95%",cols="1m,1,3<",options="header",align="center"]
-|=========================================================
-
-|Field
-|Default
-|Description
-
-|rsc-role
-|Started
-|An additional attribute of colocation constraints that specifies the
- role that +rsc+ must be in.  Allowed values: +Started+, +Master+,
- +Slave+.
- indexterm:[rsc-role,Ordering Constraints]
- indexterm:[Constraints,Ordering,rsc-role]
-
-|with-rsc-role
-|Started
-|An additional attribute of colocation constraints that specifies the
- role that +with-rsc+ must be in.  Allowed values: +Started+,
- +Master+, +Slave+.
- indexterm:[with-rsc-role,Ordering Constraints]
- indexterm:[Constraints,Ordering,with-rsc-role]
-
-|=========================================================
-
-.Constraints involving multi-state resources       
-======
-[source,XML]
--------
-<constraints>
-   <rsc_location id="db-prefers-node1" rsc="database" node="node1" score="500"/>
-   <rsc_colocation id="backup-with-db-slave" rsc="backup"
-     with-rsc="database" with-rsc-role="Slave"/>
-   <rsc_colocation id="myapp-with-db-master" rsc="myApp"
-     with-rsc="database" with-rsc-role="Master"/>
-   <rsc_order id="start-db-before-backup" first="database" then="backup"/>
-   <rsc_order id="promote-db-then-app" first="database" first-action="promote"
-     then="myApp" then-action="start"/>
-</constraints> 
--------
-======
-
-In the example above, +myApp+ will wait until one of the database
-copies has been started and promoted to master before being started
-itself on the same node.  Only if no copies can be promoted will +myApp+ be
-prevented from being active.  Additionally, the cluster will wait for
-+myApp+ to be stopped before demoting the database.
-
-Colocation of a primitive or group resource with a multi-state
-resource means that it can run on any machine with an active copy of
-the multi-state resource that has the specified role (+master+ or
-+slave+).  In the example above, the cluster will choose a location based on
-where database is running as a +master+, and if there are multiple
-+master+ instances it will also factor in +myApp+'s own location
-preferences when deciding which location to choose.
-
-Colocation with regular clones and other multi-state resources is also
-possible.  In such cases, the set of allowed locations for the +rsc+
-clone is (after role filtering) limited to nodes on which the
-+with-rsc+ multi-state resource is (or will be) in the specified role.
-Placement is then performed as normal.
-
-==== Using Multi-state Resources in Colocation Sets ====
-
-.Additional colocation set options relevant to multi-state resources
-[width="95%",cols="1m,1,6<",options="header",align="center"]
-|=========================================================
-
-|Field
-|Default
-|Description
-
-|role
-|Started
-|The role that 'all members' of the set must be in.  Allowed values: +Started+, +Master+,
- +Slave+.
- indexterm:[role,Ordering Constraints]
- indexterm:[Constraints,Ordering,role]
-
-|=========================================================
-
-In the following example +B+'s master must be located on the same node as +A+'s master.
-Additionally resources +C+ and +D+ must be located on the same node as +A+'s
-and +B+'s masters.
-
-.Colocate C and D with A's and B's master instances
-======
-[source,XML]
--------
-<constraints>
-    <rsc_colocation id="coloc-1" score="INFINITY" >
-      <resource_set id="colocated-set-example-1" sequential="true" role="Master">
-        <resource_ref id="A"/>
-        <resource_ref id="B"/>
-      </resource_set>
-      <resource_set id="colocated-set-example-2" sequential="true">
-        <resource_ref id="C"/>
-        <resource_ref id="D"/>
-      </resource_set>
-    </rsc_colocation>
-</constraints>
--------
-======
-
-==== Using Multi-state Resources in Ordering Sets ====
-
-.Additional ordered set options relevant to multi-state resources
-[width="95%",cols="1m,1,3<",options="header",align="center"]
-|=========================================================
-
-|Field
-|Default
-|Description
-
-|action
-|value of +first-action+
-|An additional attribute of ordering constraint sets that specifies the
- action that applies to 'all members' of the set.  Allowed
- values: +start+, +stop+, +promote+, +demote+.
- indexterm:[action,Ordering Constraints]
- indexterm:[Constraints,Ordering,action]
-
-|=========================================================
-
-.Start C and D after first promoting A and B
-======
-[source,XML]
--------
-<constraints>
-    <rsc_order id="order-1" score="INFINITY" >
-      <resource_set id="ordered-set-1" sequential="true" action="promote">
-        <resource_ref id="A"/>
-        <resource_ref id="B"/>
-      </resource_set>
-      <resource_set id="ordered-set-2" sequential="true" action="start">
-        <resource_ref id="C"/>
-        <resource_ref id="D"/>
-      </resource_set>
-    </rsc_order>
-</constraints>
--------
-======
-
-In the above example, +B+ cannot be promoted to a master role until +A+ has
-been promoted. Additionally, resources +C+ and +D+ must wait until +A+ and +B+
-have been promoted before they can start.
-
-
-=== Multi-state Stickiness ===
-
-indexterm:[resource-stickiness,Multi-State]
-As with regular clones, multi-state resources are
-slightly sticky by default. See <<s-clone-stickiness>> for details.
-
-[[s-master-scores]]
-=== Which Resource Instance is Promoted ===
-
-During the start operation, most resource agents should call
-the `crm_master` utility.  This tool automatically detects both the
-resource and host and should be used to set a preference for being
-promoted.  Based on this, +master-max+, and +master-node-max+, the
-instance(s) with the highest preference will be promoted.
-
-An alternative is to create a location constraint that
-indicates which nodes are most preferred as masters.
-
-.Explicitly preferring node1 to be promoted to master
-======
-[source,XML]
--------
-<rsc_location id="master-location" rsc="myMasterRsc">
-    <rule id="master-rule" score="100" role="Master">
-      <expression id="master-exp" attribute="#uname" operation="eq" value="node1"/>
-    </rule>
-</rsc_location> 
--------
-======
-
-=== Requirements for Multi-state Resource Agents ===
-
-Since multi-state resources are an extension of cloned resources, all
-the requirements for resource agents that support clones are also requirements
-for resource agents that support multi-state resources.
-
-Additionally, multi-state resources require two extra
-actions, +demote+ and +promote+, which are responsible for
-changing the state of the resource.  Like +start+ and +stop+, they
-should return +$\{OCF_SUCCESS}+ if they completed successfully or a
-relevant error code if they did not.
-
-The states can mean whatever you wish, but when the resource is
-started, it must come up in the mode called +slave+.  From there the
-cluster will decide which instances to promote to +master+.
-
-In addition to the clone requirements for monitor actions, agents must
-also _accurately_ report which state they are in.  The cluster relies
-on the agent to report its status (including role) accurately and does
-not indicate to the agent what role it currently believes it to be in.
-
-.Role implications of OCF return codes
-[width="95%",cols="1,1<",options="header",align="center"]
-|=========================================================
-
-|Monitor Return Code
-|Description
-
-|OCF_NOT_RUNNING
-|Stopped
- indexterm:[Return Code,OCF_NOT_RUNNING]
- 
-|OCF_SUCCESS
-|Running (Slave)
- indexterm:[Return Code,OCF_SUCCESS]
- 
-|OCF_RUNNING_MASTER
-|Running (Master)
- indexterm:[Return Code,OCF_RUNNING_MASTER]
-
-|OCF_FAILED_MASTER
-|Failed (Master)
- indexterm:[Return Code,OCF_FAILED_MASTER]
- 
-|Other
-|Failed (Slave)
-
-|=========================================================
-
-==== Multi-state Notifications ====
-
-Like clones, supporting notifications requires the +notify+ action to
-be implemented.  If supported, the notify action will be passed a
-number of extra variables which, when combined with additional
-context, can be used to calculate the current state of the cluster and
-what is about to happen to it.
-          
-.Environment variables supplied with multi-state notify actions footnote:[Emphasized variables are specific to +Master+ resources, and all behave in the same manner as described for Clone resources.]
+.Extra environment variables supplied for promotable clones
 [width="95%",cols="5,3<",options="header",align="center"]
 |=========================================================
 
-|Variable
-|Description
-
-|OCF_RESKEY_CRM_meta_notify_type
-|Allowed values: +pre+, +post+
- indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,type]
- indexterm:[type,Notification Environment Variable]
-
-|OCF_RESKEY_CRM_meta_notify_operation
-|Allowed values: +start+, +stop+
- indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,operation]
- indexterm:[operation,Notification Environment Variable]
-
-|OCF_RESKEY_CRM_meta_notify_active_resource
-|Resources that are running
- indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,active_resource]
- indexterm:[active_resource,Notification Environment Variable]
-
-|OCF_RESKEY_CRM_meta_notify_inactive_resource
-|Resources that are not running
- indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,inactive_resource]
- indexterm:[inactive_resource,Notification Environment Variable]
-  
 |_OCF_RESKEY_CRM_meta_notify_master_resource_
 |Resources that are running in +Master+ mode
  indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,master_resource]
@@ -867,16 +742,6 @@ what is about to happen to it.
  indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,slave_resource]
  indexterm:[slave_resource,Notification Environment Variable]
    
-|OCF_RESKEY_CRM_meta_notify_start_resource
-|Resources to be started
- indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,start_resource]
- indexterm:[start_resource,Notification Environment Variable]
-  
-|OCF_RESKEY_CRM_meta_notify_stop_resource
-|Resources to be stopped
- indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,stop_resource]
- indexterm:[stop_resource,Notification Environment Variable]
-
 |_OCF_RESKEY_CRM_meta_notify_promote_resource_
 |Resources to be promoted
  indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,promote_resource]
@@ -887,16 +752,6 @@ what is about to happen to it.
  indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,demote_resource]
  indexterm:[demote_resource,Notification Environment Variable]
 
-|OCF_RESKEY_CRM_meta_notify_start_uname
-|Nodes on which resources will be started
- indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,start_uname]
- indexterm:[start_uname,Notification Environment Variable]
-
-|OCF_RESKEY_CRM_meta_notify_stop_uname
-|Nodes on which resources will be stopped
- indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,stop_uname]
- indexterm:[stop_uname,Notification Environment Variable]
-
 |_OCF_RESKEY_CRM_meta_notify_promote_uname_
 |Nodes on which resources will be promoted
  indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,promote_uname]
@@ -906,11 +761,6 @@ what is about to happen to it.
 |Nodes on which resources will be demoted
  indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,demote_uname]
  indexterm:[demote_uname,Notification Environment Variable]
-
-|OCF_RESKEY_CRM_meta_notify_active_uname
-|Nodes on which resources are running
- indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,active_uname]
- indexterm:[active_uname,Notification Environment Variable]
 
 |_OCF_RESKEY_CRM_meta_notify_master_uname_
 |Nodes on which resources are running in +Master+ mode
@@ -924,8 +774,7 @@ what is about to happen to it.
 
 |=========================================================
 
-==== Proper Interpretation of Multi-state Notification Environment Variables ====
-
+==== Interpretation of Promotable Notification Variables ====
 
 .Pre-notification (demote):
 
@@ -1029,6 +878,71 @@ what is about to happen to it.
 * Resources that were demoted: +$OCF_RESKEY_CRM_meta_notify_demote_resource+
 * Resources that were stopped: +$OCF_RESKEY_CRM_meta_notify_stop_resource+
 
+=== Monitoring Promotable Clone Resources ===
+
+The usual monitor actions are insufficient to monitor a promotable clone
+resource, because Pacemaker needs to verify not only that the resource is
+active, but also that its actual role matches its intended one.
+
+Define two monitoring actions: the usual one will cover the slave role,
+and an additional one with +role="master"+ will cover the master role.
+
+.Monitoring both states of a promotable clone resource
+======
+[source,XML]
+-------
+<clone id="myMasterRsc">
+   <meta_attributes id="myMasterRsc-meta">
+       <nvpair name="promotable" value="true"/>
+   </meta_attributes>
+   <primitive id="myRsc" class="ocf" type="myApp" provider="myCorp">
+    <operations>
+     <op id="public-ip-slave-check" name="monitor" interval="60"/>
+     <op id="public-ip-master-check" name="monitor" interval="61" role="Master"/>
+    </operations>
+   </primitive>
+</clone> 
+-------
+======
+
+[IMPORTANT]
+===========
+It is crucial that _every_ monitor operation has a different interval!
+Pacemaker currently differentiates between operations
+only by resource and interval; so if (for example) a promotable clone resource
+had the same monitor interval for both roles, Pacemaker would ignore the
+role when checking the status -- which would cause unexpected return
+codes, and therefore unnecessary complications.
+===========
+
+[[s-promotion-scores]]
+=== Determining Which Instance is Promoted ===
+
+Pacemaker can choose a promotable clone instance to be promoted in one of two
+ways:
+
+* Promotion scores: These are node attributes set via the `crm_master` utility,
+  which generally would be called by the resource agent's start action if it
+  supports promotable clones. This tool automatically detects both the resource
+  and host, and should be used to set a preference for being promoted. Based on
+  this, +promoted-max+, and +promoted-node-max+, the instance(s) with the
+  highest preference will be promoted.
+
+* Constraints: Location constraints can indicate which nodes are most preferred
+  as masters.
+
+.Explicitly preferring node1 to be promoted to master
+======
+[source,XML]
+-------
+<rsc_location id="master-location" rsc="myMasterRsc">
+    <rule id="master-rule" score="100" role="Master">
+      <expression id="master-exp" attribute="#uname" operation="eq" value="node1"/>
+    </rule>
+</rsc_location> 
+-------
+======
+
 [[s-resource-bundle]]
 == Bundles - Isolated Environments ==
 indexterm:[bundle]
@@ -1040,9 +954,8 @@ Pacemaker supports a special syntax for launching a
 https://en.wikipedia.org/wiki/Operating-system-level_virtualization[container]
 with any infrastructure it requires: the 'bundle'.
 
-Pacemaker bundles support https://www.docker.com/[Docker] (since version
-1.1.17) and https://coreos.com/rkt/[rkt] (since version 1.1.18) container
-technologies.
+Pacemaker bundles support https://www.docker.com/[Docker] and
+https://coreos.com/rkt/[rkt] container technologies.
 footnote:[Docker is a trademark of Docker, Inc. No endorsement by or
 association with Docker, Inc. is implied.]
 
@@ -1124,7 +1037,7 @@ installed on every node allowed to run the bundle.
  indexterm:[Docker,Property,image]
 
 |replicas
-|Value of +masters+ if that is positive, else 1
+|Value of +promoted-max+ if that is positive, else 1
 |A positive integer specifying the number of container instances to launch
  indexterm:[replicas,Docker]
  indexterm:[Docker,Property,replicas]
@@ -1136,13 +1049,13 @@ installed on every node allowed to run the bundle.
  indexterm:[replicas-per-host,Docker]
  indexterm:[Docker,Property,replicas-per-host]
 
-|masters
+|promoted-max
 |0
 |A non-negative integer that, if positive, indicates that the containerized
- service should be treated as a multistate service, with this many replicas
+ service should be treated as a promotable service, with this many replicas
  allowed to run the service in the master role
- indexterm:[masters,Docker]
- indexterm:[Docker,Property,masters]
+ indexterm:[promoted-max,Docker]
+ indexterm:[Docker,Property,promoted-max]
 
 |network
 |
@@ -1167,6 +1080,10 @@ installed on every node allowed to run the bundle.
  indexterm:[Docker,Property,options]
 
 |=========================================================
+
+For backward compatibility, +masters+ is accepted as an alias for
++promoted-max+, but is deprecated since 2.0.0, and support for it will be
+removed in a future version.
 
 === rkt Properties ===
 
@@ -1193,7 +1110,7 @@ installed on every node allowed to run the bundle.
  indexterm:[rkt,Property,image]
 
 |replicas
-|Value of +masters+ if that is positive, else 1
+|Value of +promoted-max+ if that is positive, else 1
 |A positive integer specifying the number of container instances to launch
  indexterm:[replicas,rkt]
  indexterm:[rkt,Property,replicas]
@@ -1205,13 +1122,13 @@ installed on every node allowed to run the bundle.
  indexterm:[replicas-per-host,rkt]
  indexterm:[rkt,Property,replicas-per-host]
 
-|masters
+|promoted-max
 |0
 |A non-negative integer that, if positive, indicates that the containerized
- service should be treated as a multistate service, with this many replicas
+ service should be treated as a promotable service, with this many replicas
  allowed to run the service in the master role
- indexterm:[masters,rkt]
- indexterm:[rkt,Property,masters]
+ indexterm:[promoted-max,rkt]
+ indexterm:[rkt,Property,promoted-max]
 
 |network
 |
@@ -1235,6 +1152,10 @@ installed on every node allowed to run the bundle.
  indexterm:[rkt,Property,options]
 
 |=========================================================
+
+For backward compatibility, +masters+ is accepted as an alias for
++promoted-max+, but is deprecated since 2.0.0, and support for it will be
+removed in a future version.
 
 === Bundle Network Properties ===
 
@@ -1447,8 +1368,8 @@ resource via Pacemaker Remote.
 
 If the bundle has more than one container instance (replica), the primitive
 resource will function as an implicit clone (see <<s-resource-clone>>) --
-a multistate clone if the bundle has +masters+ greater than zero
-(see <<s-resource-multistate>>).
+a promotable clone if the bundle has +masters+ greater than zero
+(see <<s-resource-promotable>>).
  
 [IMPORTANT]
 ====
@@ -1467,15 +1388,15 @@ specified for each bundle. Any firewall must allow access to the
 === Bundle Node Attributes ===
 
 If the bundle has a +primitive+, the primitive's resource agent may want to set
-node attributes such as <<s-master-scores,master scores>>. However, with
+node attributes such as <<s-promotion-scores,promotion scores>>. However, with
 containers, it is not apparent which node should get the attribute.
 
 If the container uses shared storage that is the same no matter which node the
-container is hosted on, then it is appropriate to use the master score on the
+container is hosted on, then it is appropriate to use the promotion score on the
 bundle node itself.
 
 On the other hand, if the container uses storage exported from the underlying host,
-then it may be more appropriate to use the master score on the underlying host.
+then it may be more appropriate to use the promotion score on the underlying host.
 
 Since this depends on the particular situation, the
 +container-attribute-target+ resource meta-attribute allows the user to specify

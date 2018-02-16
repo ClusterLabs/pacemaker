@@ -1,0 +1,20 @@
+
+Current cluster status:
+Online: [ node1 ]
+
+ rsc1	(ocf::heartbeat:apache):	Started node1
+
+Transition Summary:
+ * Shutdown node1
+ * Stop       rsc1    ( node1 )   due to node availability
+
+Executing cluster transition:
+ * Resource action: rsc1            stop on node1
+ * Cluster action:  do_shutdown on node1
+ * Pseudo action:   all_stopped
+
+Revised cluster status:
+Online: [ node1 ]
+
+ rsc1	(ocf::heartbeat:apache):	Stopped
+

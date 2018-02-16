@@ -1,0 +1,60 @@
+<!--
+ Contrieved example of how rsc_colocation/@score-attribute might have been used
+
+ This was never implemented and, apparently, will not work.
+ -->
+<cib validate-with="pacemaker-3.0" admin_epoch="0" epoch="0" num_updates="0">
+  <configuration>
+    <crm_config/>
+    <nodes>
+
+      <node id="virt-063" uname="virt-063">
+        <instance_attributes id="virt-063-attrs">
+          <nvpair id="virt-063-AddrHttpdTogether" name="AddrHttpdTogether" value="INFINITY"/>
+        </instance_attributes>
+      </node>
+      <node id="virt-064" uname="virt-064">
+        <instance_attributes id="virt-064-attrs">
+          <nvpair id="virt-064-AddrHttpdTogether" name="AddrHttpdTogether" value="INFINITY"/>
+        </instance_attributes>
+      </node>
+      <node id="virt-069" uname="virt-069">
+        <instance_attributes id="virt-069-attrs">
+          <!-- IPaddr2 won't work here, is DNS-load-balanced or something... -->
+          <nvpair id="virt-069-AddrHttpdTogether" name="AddrHttpdTogether" value="-INFINITY"/>
+        </instance_attributes>
+      </node>
+
+    </nodes>
+    <resources>
+
+      <primitive id="myAddr" class="ocf" provider="heartbeat" type="IPaddr2">
+        <operations>
+          <op id="myAddr-monitor" name="monitor" interval="30s"/>
+        </operations>
+        <instance_attributes id="myAddr-params">
+          <nvpair id="myAddr-ip" name="ip" value="192.0.2.10"/>
+        </instance_attributes>
+      </primitive>
+
+      <primitive id="myHttpd" class="ocf" provider="heartbeat" type="apache">
+        <operations>
+          <op id="myHttpd-monitor" name="monitor" interval="30s"/>
+        </operations>
+        <instance_attributes id="myHttpd-params">
+          <nvpair id="myHttpd-configfile" name="configfile" value="/etc/httpd/conf/httpd.conf"/>
+        </instance_attributes>
+      </primitive>
+
+    </resources>
+    <constraints>
+
+      <rsc_order id="order-addr-httpd" first="myAddr" then="myHttpd"/>
+
+      <!-- this never worked like that -->
+      <rsc_colocation id="colocation-addr-httpd" rsc="myHttpd" with-rsc="myAddr"/>
+
+    </constraints>
+  </configuration>
+  <status/>
+</cib>

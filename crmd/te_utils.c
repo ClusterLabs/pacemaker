@@ -191,10 +191,6 @@ tengine_stonith_connection_destroy(stonith_t * st, stonith_event_t * e)
     }
 }
 
-#if SUPPORT_CMAN
-#  include <libfenced.h>
-#endif
-
 char *te_client_id = NULL;
 
 #ifdef HAVE_SYS_REBOOT_H
@@ -256,7 +252,7 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
          * So just stay dead, something is seriously messed up anyway.
          *
          */
-        exit(100); /* None of our wrappers since we already called qb_log_fini() */
+        exit(CRM_EX_FATAL); // None of our wrappers since we already called qb_log_fini()
         return;
     }
 
@@ -280,50 +276,6 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
                (st_event->client_origin? st_event->client_origin : "<unknown>"),
                pcmk_strerror(st_event->result),
                st_event->origin, st_event->id);
-
-#if SUPPORT_CMAN
-    if (st_event->result == pcmk_ok && is_cman_cluster()) {
-        int local_rc = 0;
-        int confirm = 0;
-        char *target_copy = strdup(st_event->target);
-
-        /* In case fenced hasn't noticed yet
-         *
-         * Any fencing that has been inititated will be completed by way of the fence_pcmk redirect
-         */
-        local_rc = fenced_external(target_copy);
-        if (local_rc != 0) {
-            crm_err("Could not notify CMAN that '%s' is now fenced: %d", st_event->target,
-                    local_rc);
-        } else {
-            crm_notice("Notified CMAN that '%s' is now fenced", st_event->target);
-        }
-
-        /* In case fenced is already trying to shoot it */
-        confirm = open("/var/run/cluster/fenced_override", O_NONBLOCK|O_WRONLY);
-        if (confirm >= 0) {
-            int ignore = 0;
-            int len = strlen(target_copy);
-
-            errno = 0;
-            local_rc = write(confirm, target_copy, len);
-            ignore = write(confirm, "\n", 1);
-
-            if(ignore < 0 && errno == EBADF) {
-                crm_trace("CMAN not expecting %s to be fenced (yet)", st_event->target);
-
-            } else if (local_rc < len) {
-                crm_perror(LOG_ERR, "Confirmation of CMAN fencing event for '%s' failed: %d", st_event->target, local_rc);
-
-            } else {
-                fsync(confirm);
-                crm_notice("Confirmed CMAN fencing event for '%s'", st_event->target);
-            }
-            close(confirm);
-        }
-        free(target_copy);
-    }
-#endif
 
     if (st_event->result == pcmk_ok) {
         crm_node_t *peer = crm_find_peer_full(0, st_event->target, CRM_GET_PEER_ANY);
@@ -442,26 +394,17 @@ te_connect_stonith(gpointer user_data)
 gboolean
 stop_te_timer(crm_action_timer_t * timer)
 {
-    const char *timer_desc = "action timer";
-
     if (timer == NULL) {
         return FALSE;
     }
-    if (timer->reason == timeout_abort) {
-        timer_desc = "global timer";
-        crm_trace("Stopping %s", timer_desc);
-    }
-
     if (timer->source_id != 0) {
-        crm_trace("Stopping %s", timer_desc);
+        crm_trace("Stopping action timer");
         g_source_remove(timer->source_id);
         timer->source_id = 0;
-
     } else {
-        crm_trace("%s was already stopped", timer_desc);
+        crm_trace("Action timer was already stopped");
         return FALSE;
     }
-
     return TRUE;
 }
 
@@ -499,7 +442,7 @@ te_graph_trigger(gpointer user_data)
         transition_graph->batch_limit = limit; /* Restore the configured value */
 
         /* significant overhead... */
-        /* print_graph(LOG_DEBUG_3, transition_graph); */
+        /* print_graph(LOG_TRACE, transition_graph); */
 
         if (graph_rc == transition_active) {
             crm_trace("Transition not yet complete");

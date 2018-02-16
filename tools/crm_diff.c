@@ -214,7 +214,7 @@ generate_patch(xmlNode *object_1, xmlNode *object_2, const char *xml_file_2,
     xml_log_patchset(LOG_NOTICE, __FUNCTION__, output);
     print_patch(output);
     free_xml(output);
-    return 1;
+    return -pcmk_err_generic;
 }
 
 int
@@ -242,7 +242,7 @@ main(int argc, char **argv)
                     "produce a custom diff-like output, or apply such an output as a patch\n");
 
     if (argc < 2) {
-        crm_help('?', EX_USAGE);
+        crm_help('?', CRM_EX_USAGE);
     }
 
     while (1) {
@@ -283,7 +283,7 @@ main(int argc, char **argv)
                 break;
             case '?':
             case '$':
-                crm_help(flag, EX_OK);
+                crm_help(flag, CRM_EX_OK);
                 break;
             default:
                 printf("Argument %c (0%o) is not (yet?) supported\n", flag, flag);
@@ -304,14 +304,14 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', EX_USAGE);
+        crm_help('?', CRM_EX_USAGE);
     }
 
     if (apply && no_version) {
         fprintf(stderr, "warning: -u/--no-version ignored with -p/--patch\n");
     } else if (as_cib && no_version) {
         fprintf(stderr, "error: -u/--no-version incompatible with -c/--cib\n");
-        return 1;
+        return CRM_EX_USAGE;
     }
 
     if (raw_1) {
@@ -338,11 +338,11 @@ main(int argc, char **argv)
 
     if (object_1 == NULL) {
         fprintf(stderr, "Could not parse the first XML fragment\n");
-        return 1;
+        return CRM_EX_DATAERR;
     }
     if (object_2 == NULL) {
         fprintf(stderr, "Could not parse the second XML fragment\n");
-        return 1;
+        return CRM_EX_DATAERR;
     }
 
     if (apply) {
@@ -353,5 +353,5 @@ main(int argc, char **argv)
 
     free_xml(object_1);
     free_xml(object_2);
-    return rc;
+    return crm_errno2exit(rc);
 }

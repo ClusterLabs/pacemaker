@@ -19,9 +19,7 @@ include $(top_srcdir)/Makefile.common
 
 EXTRA_DIST	= cib.pam
 
-hadir		= $(sysconfdir)/ha.d
 halibdir	= $(CRM_DAEMON_DIR)
-commmoddir	= $(halibdir)/modules/comm
 
 COMMONLIBS	= $(top_builddir)/lib/common/libcrmcommon.la \
 		$(top_builddir)/lib/cib/libcib.la
@@ -36,7 +34,7 @@ cib_CFLAGS	= $(CFLAGS_HARDENED_EXE)
 cib_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
 
 cib_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la \
-		$(COMMONLIBS) $(CRYPTOLIB) $(CLUSTERLIBS)
+		  $(COMMONLIBS) $(CLUSTERLIBS)
 
 cib_SOURCES	= io.c messages.c notify.c \
 		callbacks.c main.c remote.c common.c

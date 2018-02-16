@@ -36,25 +36,8 @@
 #include <tengine.h>
 #include <membership.h>
 
-void crmd_ha_connection_destroy(gpointer user_data);
-
 /* From join_dc... */
 extern gboolean check_join_state(enum crmd_fsa_state cur_state, const char *source);
-
-void
-crmd_ha_connection_destroy(gpointer user_data)
-{
-    crm_trace("Invoked");
-    if (is_set(fsa_input_register, R_HA_DISCONNECTED)) {
-        /* we signed out, so this is expected */
-        crm_info("Heartbeat disconnection complete");
-        return;
-    }
-
-    crm_crit("Lost connection to heartbeat service!");
-    register_fsa_input(C_HA_DISCONNECT, I_ERROR, NULL);
-    trigger_fsa(fsa_source);
-}
 
 void
 crmd_ha_msg_filter(xmlNode * msg)

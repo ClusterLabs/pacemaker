@@ -40,10 +40,4 @@ clean-local:
 
 ## Subdirectories...
 SUBDIRS	= gnu common pengine transition cib fencing services lrmd cluster
-DIST_SUBDIRS =  $(SUBDIRS) ais
-
-if BUILD_CS_PLUGIN
-SUBDIRS			+= ais
-endif
-
-
+DIST_SUBDIRS =  $(SUBDIRS)

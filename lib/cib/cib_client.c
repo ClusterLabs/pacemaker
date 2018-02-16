@@ -478,7 +478,7 @@ cib_client_add_notify_callback(cib_t * cib, const char *event,
     if (list_item != NULL) {
         crm_warn("Callback already present");
         free(new_client);
-        return -ENOTUNIQ;
+        return -EINVAL;
 
     } else {
         cib->notify_list = g_list_append(cib->notify_list, new_client);

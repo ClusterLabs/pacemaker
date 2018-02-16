@@ -169,7 +169,6 @@ static struct crm_option long_options[] = {
         "\t\t\t(with --fence, --unfence, --reboot)."
     },
 
-    {   "list-all", no_argument, NULL, 'L', NULL, pcmk_option_hidden },
     { 0, 0, 0, 0 }
 };
 /* *INDENT-ON* */
@@ -282,8 +281,8 @@ mainloop_fencing(stonith_t * st, const char *target, const char *action, int tim
     trig = mainloop_add_trigger(G_PRIORITY_HIGH, async_fence_helper, NULL);
     mainloop_set_trigger(trig);
 
-    mainloop = g_main_new(FALSE);
-    g_main_run(mainloop);
+    mainloop = g_main_loop_new(NULL, FALSE);
+    g_main_loop_run(mainloop);
 
     return async_fence_data.rc;
 }
@@ -445,7 +444,7 @@ main(int argc, char **argv)
                 break;
             case '$':
             case '?':
-                crm_help(flag, EX_OK);
+                crm_help(flag, CRM_EX_OK);
                 break;
             case 'I':
                 no_connect = 1;
@@ -553,7 +552,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', EX_USAGE);
+        crm_help('?', CRM_EX_USAGE);
     }
 
     st = stonith_api_new();
@@ -573,7 +572,6 @@ main(int argc, char **argv)
             }
             if (rc == 0) {
                 fprintf(stderr, "No devices found\n");
-
             } else if (rc > 0) {
                 fprintf(stderr, "%d devices found\n", rc);
                 rc = 0;
@@ -643,7 +641,7 @@ main(int argc, char **argv)
         case 'M':
             if (agent == NULL) {
                 printf("Please specify an agent to query using -a,--agent [value]\n");
-                return -1;
+                return CRM_EX_USAGE;
             } else {
                 char *buffer = NULL;
 
@@ -696,5 +694,5 @@ main(int argc, char **argv)
     st->cmds->disconnect(st);
     stonith_api_delete(st);
 
-    return rc;
+    return crm_errno2exit(rc);
 }

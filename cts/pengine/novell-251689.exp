@@ -1,0 +1,96 @@
+ <transition_graph cluster-delay="60" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
+   <synapse id="0">
+     <action_set>
+      <rsc_op id="1" operation="monitor" operation_key="stonithclone:0_monitor_5000" on_node="node2" on_node_uuid="0eb1d4b6-bf02-40f0-b9e1-c386ade8fb61">
+        <primitive id="stonithclone" long-id="stonithclone:0" class="stonith" type="external/ssh"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="node2" CRM_meta_on_node_uuid="0eb1d4b6-bf02-40f0-b9e1-c386ade8fb61" CRM_meta_timeout="20000"  hostlist="node1,node2"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <rsc_op id="6" operation="monitor" operation_key="stonithclone:1_monitor_5000" on_node="node1" on_node_uuid="acf8b8b0-a8e2-448c-a608-176f82354dd6">
+        <primitive id="stonithclone" long-id="stonithclone:1" class="stonith" type="external/ssh"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="node1" CRM_meta_on_node_uuid="acf8b8b0-a8e2-448c-a608-176f82354dd6" CRM_meta_timeout="20000"  hostlist="node1,node2"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <rsc_op id="2" operation="monitor" operation_key="evmsdclone:0_monitor_5000" on_node="node2" on_node_uuid="0eb1d4b6-bf02-40f0-b9e1-c386ade8fb61">
+        <primitive id="evmsdclone" long-id="evmsdclone:0" class="ocf" provider="heartbeat" type="Evmsd"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="node2" CRM_meta_on_node_uuid="0eb1d4b6-bf02-40f0-b9e1-c386ade8fb61" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <rsc_op id="7" operation="monitor" operation_key="evmsdclone:1_monitor_5000" on_node="node1" on_node_uuid="acf8b8b0-a8e2-448c-a608-176f82354dd6">
+        <primitive id="evmsdclone" long-id="evmsdclone:1" class="ocf" provider="heartbeat" type="Evmsd"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="node1" CRM_meta_on_node_uuid="acf8b8b0-a8e2-448c-a608-176f82354dd6" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="4">
+    <action_set>
+      <rsc_op id="3" operation="monitor" operation_key="imagestoreclone:0_monitor_20000" on_node="node2" on_node_uuid="0eb1d4b6-bf02-40f0-b9e1-c386ade8fb61">
+        <primitive id="imagestoreclone" long-id="imagestoreclone:0" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="20000" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="node2" CRM_meta_on_node_uuid="0eb1d4b6-bf02-40f0-b9e1-c386ade8fb61" CRM_meta_timeout="60000"  device="/dev/evms/vmsharedclustercontainer/imagestore" directory="/var/lib/xen/images" fstype="ocfs2"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="5">
+    <action_set>
+      <rsc_op id="8" operation="monitor" operation_key="imagestoreclone:1_monitor_20000" on_node="node1" on_node_uuid="acf8b8b0-a8e2-448c-a608-176f82354dd6">
+        <primitive id="imagestoreclone" long-id="imagestoreclone:1" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="20000" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="node1" CRM_meta_on_node_uuid="acf8b8b0-a8e2-448c-a608-176f82354dd6" CRM_meta_timeout="60000"  device="/dev/evms/vmsharedclustercontainer/imagestore" directory="/var/lib/xen/images" fstype="ocfs2"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="6">
+    <action_set>
+      <rsc_op id="4" operation="monitor" operation_key="configstoreclone:0_monitor_20000" on_node="node2" on_node_uuid="0eb1d4b6-bf02-40f0-b9e1-c386ade8fb61">
+        <primitive id="configstoreclone" long-id="configstoreclone:0" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="20000" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="node2" CRM_meta_on_node_uuid="0eb1d4b6-bf02-40f0-b9e1-c386ade8fb61" CRM_meta_timeout="60000"  device="/dev/evms/vmsharedclustercontainer/configstore" directory="/etc/xen/vm" fstype="ocfs2"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="7">
+    <action_set>
+      <rsc_op id="9" operation="monitor" operation_key="configstoreclone:1_monitor_20000" on_node="node1" on_node_uuid="acf8b8b0-a8e2-448c-a608-176f82354dd6">
+        <primitive id="configstoreclone" long-id="configstoreclone:1" class="ocf" provider="heartbeat" type="Filesystem"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_interval="20000" CRM_meta_name="monitor" CRM_meta_notify="true" CRM_meta_on_node="node1" CRM_meta_on_node_uuid="acf8b8b0-a8e2-448c-a608-176f82354dd6" CRM_meta_timeout="60000"  device="/dev/evms/vmsharedclustercontainer/configstore" directory="/etc/xen/vm" fstype="ocfs2"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="8">
+    <action_set>
+      <rsc_op id="75" operation="stop" operation_key="sles10_stop_0" on_node="node2" on_node_uuid="0eb1d4b6-bf02-40f0-b9e1-c386ade8fb61">
+        <primitive id="sles10" class="ocf" provider="heartbeat" type="Xen"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="node2" CRM_meta_on_node_uuid="0eb1d4b6-bf02-40f0-b9e1-c386ade8fb61" CRM_meta_timeout="60000"  target_role="stopped" xmfile="/etc/xen/vm/sles10"/>
+       </rsc_op>
+     </action_set>
+     <inputs/>
+   </synapse>
+  <synapse id="9">
+     <action_set>
+       <pseudo_event id="10" operation="all_stopped" operation_key="all_stopped">
+        <attributes />
+       </pseudo_event>
+     </action_set>
+     <inputs>
+       <trigger>
+        <rsc_op id="75" operation="stop" operation_key="sles10_stop_0" on_node="node2" on_node_uuid="0eb1d4b6-bf02-40f0-b9e1-c386ade8fb61"/>
+       </trigger>
+     </inputs>
+   </synapse>
+ </transition_graph>
+

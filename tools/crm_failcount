@@ -14,7 +14,7 @@ Commands:
 Additional Options:
  -r, --resource=value   Name of the resource to use (required)
  -n, --operation=value  Name of operation to use (instead of all operations)
- -I, --interval=value   If operation is specified, its interval (MUST be in milliseconds)
+ -I, --interval=value   If operation is specified, its interval
  -N, --node=value       Use failcount on named node (instead of local node)"
 
 
@@ -22,6 +22,11 @@ HELP_TEXT="crm_failcount - Query or delete resource fail counts
 
 $USAGE_TEXT"
 
+# These constants must track crm_exit_t values
+CRM_EX_OK=0
+CRM_EX_ERROR=1
+CRM_EX_USAGE=64
+CRM_EX_NOSUCH=105
 
 exit_usage() {
 	if [ $# -gt 0 ]; then
@@ -29,7 +34,7 @@ exit_usage() {
 	fi
 	echo
 	echo "$USAGE_TEXT"
-	exit 1
+	exit $CRM_EX_USAGE
 }
 
 warn() {
@@ -82,7 +87,7 @@ query_single_attr() {
 	QSR_TARGET="$1"
 	QSR_ATTR="$2"
 
-	crm_attribute $VERBOSE -Q --query -t status -d 0 \
+	crm_attribute $VERBOSE --quiet --query -t status -d 0 \
 		-N "$QSR_TARGET" -n "$QSR_ATTR"
 }
 
@@ -100,14 +105,13 @@ query_attr_sum() {
 	# like an error, but that also makes $VERBOSE pointless.
 	QAS_ALL=$(cibadmin --query --sync-call --local \
 		--xpath="$QAS_XPATH" 2>/dev/null)
+	QAS_EX=$?
 
-	# @TODO There is currently no reliable way to distinguish "no results"
-	# from actual CIB errors. For now, treat any error as "no results".
-	#
-	#if [ $? -ne 0 ]; then
-	#	echo error >&2
-	#	return
-	#fi
+	# "No results" is not an error
+	if [ $QAS_EX -ne $CRM_EX_OK ] && [ $QAS_EX -ne $CRM_EX_NOSUCH ]; then
+		echo "error: could not query CIB for fail counts" >&2
+		exit $QAS_EX
+	fi
 
 	# Extract the attribute values (one per line) from the output
 	QAS_VALUE=$(echo "$QAS_ALL" | sed -n -e \
@@ -196,7 +200,7 @@ while true ; do
 	case "$1" in
 		--help)
 			echo "$HELP_TEXT"
-			exit 0
+			exit $CRM_EX_OK
 			;;
 		--version)
 			crm_attribute --version

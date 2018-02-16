@@ -72,7 +72,7 @@ log_time_period(int log_level, crm_time_period_t * dtp, int flags)
 int
 main(int argc, char **argv)
 {
-    int rc = 0;
+    crm_exit_t exit_code = CRM_EX_OK;
     int argerr = 0;
     int flag;
     int index = 0;
@@ -105,7 +105,7 @@ main(int argc, char **argv)
                 break;
             case '?':
             case '$':
-                crm_help(flag, 0);
+                crm_help(flag, CRM_EX_OK);
                 break;
             case 'n':
                 date_time_s = "now";
@@ -146,7 +146,7 @@ main(int argc, char **argv)
 
         if (date_time == NULL) {
             fprintf(stderr, "Internal error: couldn't determine 'now'!\n");
-            crm_help('?', 1);
+            crm_exit(CRM_EX_SOFTWARE);
         }
         crm_time_log(LOG_TRACE, "Current date/time", date_time,
                      crm_time_ordinal | crm_time_log_date | crm_time_log_timeofday);
@@ -158,7 +158,7 @@ main(int argc, char **argv)
 
         if (date_time == NULL) {
             fprintf(stderr, "Invalid date/time specified: %s\n", optarg);
-            crm_help('?', 1);
+            crm_help('?', CRM_EX_USAGE);
         }
         crm_time_log(LOG_TRACE, "Date", date_time,
                      crm_time_ordinal | crm_time_log_date | crm_time_log_timeofday);
@@ -171,7 +171,7 @@ main(int argc, char **argv)
 
         if (duration == NULL) {
             fprintf(stderr, "Invalid duration specified: %s\n", duration_s);
-            crm_help('?', 1);
+            crm_help('?', CRM_EX_USAGE);
         }
         crm_time_log(LOG_TRACE, "Duration", duration, crm_time_log_duration);
         crm_time_log(-1, "Duration", duration, print_options | crm_time_log_duration);
@@ -182,7 +182,7 @@ main(int argc, char **argv)
 
         if (interval == NULL) {
             fprintf(stderr, "Invalid interval specified: %s\n", optarg);
-            crm_help('?', 1);
+            crm_help('?', CRM_EX_USAGE);
         }
         log_time_period(LOG_TRACE, interval,
                         print_options | crm_time_log_date | crm_time_log_timeofday);
@@ -202,7 +202,7 @@ main(int argc, char **argv)
                                             print_options | crm_time_log_date |
                                             crm_time_log_timeofday);
             if (safe_str_neq(expected_s, dt_s)) {
-                rc = 1;
+                exit_code = CRM_EX_ERROR;
             }
             free(dt_s);
         }
@@ -213,7 +213,7 @@ main(int argc, char **argv)
                                         print_options | crm_time_log_date | crm_time_log_timeofday);
 
         if (safe_str_neq(expected_s, dt_s)) {
-            rc = 1;
+            exit_code = CRM_EX_ERROR;
         }
         free(dt_s);
     }
@@ -230,5 +230,5 @@ main(int argc, char **argv)
         free(interval);
     }
 
-    return crm_exit(rc);
+    return crm_exit(exit_code);
 }

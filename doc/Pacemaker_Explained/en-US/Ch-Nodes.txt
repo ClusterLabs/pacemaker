@@ -5,22 +5,15 @@
 Each node in the cluster will have an entry in the nodes section
 containing its UUID, uname, and type.
 
-.Example Heartbeat cluster node entry
-======
-[source,XML]
-<node id="1186dc9a-324d-425a-966e-d757e693dc86" uname="pcmk-1" type="normal"/>
-======
-
 .Example Corosync cluster node entry
 ======
 [source,XML]
-<node id="101" uname="pcmk-1" type="normal"/>
+<node id="101" uname="pcmk-1"/>
 ======
 
 In normal circumstances, the admin should let the cluster populate
 this information automatically from the communications and membership
-data.  However for Heartbeat, one can use the `crm_uuid` tool
-to read an existing UUID or define a value before the cluster starts.
+data.
 
 [[s-node-name]]
 == Where Pacemaker Gets the Node Name ==
@@ -91,135 +84,3 @@ are kept in the status section which are "forgotten" whenever the node
 rejoins the cluster.  The cluster uses this area to store a record of
 how many times a resource has failed on that node, but administrators
 can also read and write to this section by specifying `--type status`.
-
-== Managing Nodes in a Corosync-Based Cluster ==
-
-=== Adding a New Corosync Node ===
-
-indexterm:[Corosync,Add Cluster Node]
-indexterm:[Add Cluster Node,Corosync]
-
-To add a new node:
-
-. Install Corosync and Pacemaker on the new host.
-. Copy +/etc/corosync/corosync.conf+ and +/etc/corosync/authkey+ (if it exists)
-  from an existing node. You may need to modify the *mcastaddr* option to match
-  the new node's IP address.
-. Start the cluster software on the new host. If a log message containing
-  "Invalid digest" appears from Corosync, the keys are not consistent between
-  the machines.
-
-=== Removing a Corosync Node ===
-
-indexterm:[Corosync,Remove Cluster Node]
-indexterm:[Remove Cluster Node,Corosync]
-
-Because the messaging and membership layers are the authoritative
-source for cluster nodes, deleting them from the CIB is not a complete
-solution.  First, one must arrange for corosync to forget about the
-node (*pcmk-1* in the example below).
-
-. Stop the cluster on the host to be removed. How to do this will vary with
-  your operating system and installed versions of cluster software, for example,
-  `pcs cluster stop` if you are using pcs for cluster management, or
-  `service corosync stop` on a host using corosync 1.x with the pacemaker plugin.
-. From one of the remaining active cluster nodes, tell Pacemaker to forget
-  about the removed host, which will also delete the node from the CIB:
-+
-----
-# crm_node -R pcmk-1
-----
-
-[NOTE]
-======
-This procedure only works for pacemaker 1.1.8 and later.
-======
-
-=== Replacing a Corosync Node ===
-
-indexterm:[Corosync,Replace Cluster Node]
-indexterm:[Replace Cluster Node,Corosync]
-
-To replace an existing cluster node:
-
-. Make sure the old node is completely stopped.
-. Give the new machine the same hostname and IP address as the old one.
-. Follow the procedure above for adding a node.
-
-////
-== Managing Nodes in a CMAN-based Cluster ==
-
-=== Adding a New CMAN Node ===
-
-indexterm:[CMAN,Add Cluster Node]
-indexterm:[Add Cluster Node,CMAN]
-
-=== Removing a CMAN Node ===
-
-indexterm:[CMAN,Remove Cluster Node]
-indexterm:[Remove Cluster Node,CMAN]
-////
-
-== Managing Nodes in a Heartbeat-based Cluster ==
-
-=== Adding a New Heartbeat Node ===
-
-indexterm:[Heartbeat,Add Cluster Node]
-indexterm:[Add Cluster Node,Heartbeat]
-
-To add a new node:
-
-. Install heartbeat and pacemaker on the new host.
-. Copy +ha.cf+ and +authkeys+ from an existing node.
-. If you do not use *autojoin any* in +ha.cf+, run:
-+
-----
-hb_addnode $(uname -n)
-----
-. Start the cluster software on the new node.
-
-=== Removing a Heartbeat Node ===
-
-indexterm:[Heartbeat,Remove Cluster Node]
-indexterm:[Remove Cluster Node,Heartbeat]
-
-Because the messaging and membership layers are the authoritative
-source for cluster nodes, deleting them from the CIB is not a complete
-solution. First, one must arrange for Heartbeat to forget about the node (pcmk-1
-in the example below).
-
-. On the host to be removed, stop the cluster:
-+
-----
-service heartbeat stop
-----
-. From one of the remaining active cluster nodes, tell Heartbeat the node
-should be removed:
-+
-----
-hb_delnode pcmk-1
-----
-. Tell Pacemaker to forget about the removed host:
-+
-----
-crm_node -R pcmk-1
-----
-
-[NOTE]
-======
-This procedure only works for pacemaker versions after 1.1.8.
-======
-
-=== Replacing a Heartbeat Node ===
-
-indexterm:[Heartbeat,Replace Cluster Node]
-indexterm:[Replace Cluster Node,Heartbeat]
-To replace an existing cluster node:
-
-. Make sure the old node is completely stopped.
-. Give the new machine the same hostname as the old one.
-. Go to an active cluster node and look up the UUID for the old node in +/var/lib/heartbeat/hostcache+.
-. Install the cluster software.
-. Copy +ha.cf+ and +authkeys+ to the new node.
-. On the new node, populate its UUID using `crm_uuid -w` and the UUID obtained earlier.
-. Start the new cluster node.

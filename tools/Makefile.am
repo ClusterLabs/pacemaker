@@ -40,14 +40,6 @@ EXTRA_DIST		= $(sbin_SCRIPTS)
 sbin_PROGRAMS		= crm_simulate crmadmin cibadmin crm_node crm_attribute crm_resource crm_verify \
 			 crm_shadow attrd_updater crm_diff crm_mon iso8601 crm_ticket crm_error
 
-testdir			= $(datadir)/$(PACKAGE)/tests/cli
-test_SCRIPTS		= regression.sh
-test_DATA               = regression.dates.exp regression.tools.exp regression.acls.exp \
-			  regression.validity.exp
-
-if BUILD_HEARTBEAT_SUPPORT
-sbin_PROGRAMS           += crm_uuid
-endif
 if BUILD_SERVICELOG
 sbin_PROGRAMS		+= notifyServicelogEvent
 endif
@@ -65,9 +57,6 @@ crmadmin_LDADD		= $(top_builddir)/lib/pengine/libpe_status.la \
 
 crm_error_SOURCES	= crm_error.c
 crm_error_LDADD		= $(COMMONLIBS)
-
-crm_uuid_SOURCES	= crm_uuid.c
-crm_uuid_LDADD		= $(COMMONLIBS) $(top_builddir)/lib/cluster/libcrmcluster.la
 
 cibadmin_SOURCES	= cibadmin.c
 cibadmin_LDADD		= $(COMMONLIBS)
@@ -96,7 +85,7 @@ crm_mon_SOURCES		= crm_mon.c
 crm_mon_LDADD		= $(top_builddir)/lib/pengine/libpe_status.la		\
 			  $(top_builddir)/lib/fencing/libstonithd.la		\
 			  $(top_builddir)/pengine/libpengine.la \
-			  $(COMMONLIBS) $(SNMPLIBS) $(ESMTPLIBS)
+			  $(COMMONLIBS)
 
 # Arguments could be made that this should live in crm/pengine
 crm_verify_SOURCES	= crm_verify.c

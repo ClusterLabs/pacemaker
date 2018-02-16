@@ -7,7 +7,7 @@
 	<title>Clusters from Scratch</title>
 	<subtitle>Step-by-Step Instructions for Building Your First High-Availability Cluster</subtitle>
 	<productname>Pacemaker</productname>
-	<productnumber>1.1</productnumber>
+	<productnumber>2.0</productnumber>
 	<!--
 		EDITION-PUBSNUMBER should match REVNUMBER in Revision_History.xml.
 		Increment EDITION when the syntax of the documented software
@@ -15,10 +15,10 @@
 		simple textual changes (corrections, translations, etc.).
 	-->
 	<edition>9</edition>
-	<pubsnumber>0</pubsnumber>
+	<pubsnumber>1</pubsnumber>
 	<abstract>
 		<para>
-			The purpose of this document is to provide a start-to-finish guide to building an example active/passive cluster with Pacemaker and show how it can be converted to an active/active one.
+			This document provides a step-by-step guide to building a simple high-availability cluster using Pacemaker.
 		</para>
 		<para>
 			The example cluster will use:
@@ -35,7 +35,11 @@
 				</listitem>
 				<listitem>
 					<para>
-						Pacemaker to perform resource management,
+						Pacemaker 1.1.16
+						<footnote><para>While this guide is part of the document set for
+						Pacemaker 2.0, it demonstrates the version available in
+						the standard &DISTRO; repositories</para></footnote>
+						to perform resource management,
 					</para>
 				</listitem>
 				<listitem>

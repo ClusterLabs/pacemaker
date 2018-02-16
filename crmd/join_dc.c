@@ -173,6 +173,9 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
 
     offer = create_dc_message(CRM_OP_JOIN_OFFER, member->uname);
 
+    // Advertise our feature set so the joining node can bail if not compatible
+    crm_xml_add(offer, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
+
     /* send the welcome */
     crm_info("join-%d: Sending offer to %s", current_join_id, member->uname);
 
@@ -192,7 +195,7 @@ do_dc_join_offer_all(long long action,
 {
     /* reset everyone's status back to down or in_ccm in the CIB
      *
-     * any nodes that are active in the CIB but not in the CCM list
+     * any nodes that are active in the CIB but not in the cluster membership
      *   will be seen as offline by the PE anyway
      */
     current_join_id++;
@@ -315,6 +318,8 @@ do_dc_join_filter_offer(long long action,
 
     const char *join_from = crm_element_value(join_ack->msg, F_CRM_HOST_FROM);
     const char *ref = crm_element_value(join_ack->msg, F_CRM_REFERENCE);
+    const char *join_version = crm_element_value(join_ack->msg,
+                                                 XML_ATTR_CRM_VERSION);
 
     crm_node_t *join_node = crm_get_peer(0, join_from);
 
@@ -349,6 +354,13 @@ do_dc_join_filter_offer(long long action,
 
     } else if (generation == NULL) {
         crm_err("Generation was NULL");
+        ack_nack_bool = FALSE;
+
+    } else if ((join_version == NULL)
+               || !feature_set_compatible(CRM_FEATURE_SET, join_version)) {
+        crm_err("Node %s feature set (%s) is incompatible with ours (%s)",
+                join_from, (join_version? join_version : "pre-3.1.0"),
+                CRM_FEATURE_SET);
         ack_nack_bool = FALSE;
 
     } else if (max_generation_xml == NULL) {
@@ -686,13 +698,6 @@ do_dc_join_final(long long action,
                  enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     crm_debug("Ensuring DC, quorum and node attributes are up-to-date");
-#if !HAVE_ATOMIC_ATTRD
-    /* Ask attrd to write all attributes to disk. This is not needed for
-     * atomic attrd because atomic attrd does a peer sync and write-out
-     * when winning an election.
-     */
-    update_attrd(NULL, NULL, NULL, NULL, FALSE);
-#endif
     crm_update_quorum(crm_have_quorum, TRUE);
 }
 

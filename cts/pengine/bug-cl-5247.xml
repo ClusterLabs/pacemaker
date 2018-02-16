@@ -1,0 +1,296 @@
+<cib crm_feature_set="3.0.10" validate-with="pacemaker-2.3" epoch="8" num_updates="33" admin_epoch="0" cib-last-written="Wed Aug 12 11:51:47 2015" update-origin="bl460g8n4" update-client="crm_resource" update-user="root" have-quorum="1" dc-uuid="3232261399" execution-date="1439348020">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.13-ad1f397"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair name="no-quorum-policy" value="ignore" id="cib-bootstrap-options-no-quorum-policy"/>
+        <nvpair name="stonith-enabled" value="true" id="cib-bootstrap-options-stonith-enabled"/>
+        <nvpair name="startup-fencing" value="false" id="cib-bootstrap-options-startup-fencing"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="3232261399" uname="bl460g8n3"/>
+      <node id="3232261400" uname="bl460g8n4"/>
+    </nodes>
+    <resources>
+      <primitive id="prmDB1" class="ocf" provider="heartbeat" type="VirtualDomain">
+        <meta_attributes id="prmDB1-meta_attributes">
+          <nvpair name="remote-node" value="pgsr01" id="prmDB1-meta_attributes-remote-node"/>
+        </meta_attributes>
+        <instance_attributes id="prmDB1-instance_attributes">
+          <nvpair name="config" value="/etc/libvirt/qemu/pgsr01.xml" id="prmDB1-instance_attributes-config"/>
+          <nvpair name="hypervisor" value="qemu:///system" id="prmDB1-instance_attributes-hypervisor"/>
+          <nvpair name="migration_transport" value="ssh" id="prmDB1-instance_attributes-migration_transport"/>
+        </instance_attributes>
+        <operations>
+          <op name="start" interval="0" timeout="120" on-fail="restart" id="prmDB1-start-0"/>
+          <op name="monitor" interval="10" timeout="30" on-fail="restart" id="prmDB1-monitor-10"/>
+          <op name="stop" interval="0" timeout="120" on-fail="fence" id="prmDB1-stop-0"/>
+        </operations>
+        <utilization id="prmDB1-utilization">
+          <nvpair id="prmDB1-utilization-cpu" name="cpu" value="2"/>
+          <nvpair id="prmDB1-utilization-hv_memory" name="hv_memory" value="4024"/>
+        </utilization>
+      </primitive>
+      <primitive id="prmDB2" class="ocf" provider="heartbeat" type="VirtualDomain">
+        <meta_attributes id="prmDB2-meta_attributes">
+          <nvpair name="remote-node" value="pgsr02" id="prmDB2-meta_attributes-remote-node"/>
+        </meta_attributes>
+        <instance_attributes id="prmDB2-instance_attributes">
+          <nvpair name="config" value="/etc/libvirt/qemu/pgsr02.xml" id="prmDB2-instance_attributes-config"/>
+          <nvpair name="hypervisor" value="qemu:///system" id="prmDB2-instance_attributes-hypervisor"/>
+          <nvpair name="migration_transport" value="ssh" id="prmDB2-instance_attributes-migration_transport"/>
+        </instance_attributes>
+        <operations>
+          <op name="start" interval="0" timeout="120" on-fail="restart" id="prmDB2-start-0"/>
+          <op name="monitor" interval="10" timeout="30" on-fail="restart" id="prmDB2-monitor-10"/>
+          <op name="stop" interval="0" timeout="120" on-fail="fence" id="prmDB2-stop-0"/>
+        </operations>
+        <utilization id="prmDB2-utilization">
+          <nvpair id="prmDB2-utilization-cpu" name="cpu" value="2"/>
+          <nvpair id="prmDB2-utilization-hv_memory" name="hv_memory" value="4024"/>
+        </utilization>
+      </primitive>
+      <group id="grpStonith1">
+        <primitive id="prmStonith1-2" class="stonith" type="external/ipmi">
+          <instance_attributes id="prmStonith1-2-instance_attributes">
+            <nvpair name="pcmk_reboot_timeout" value="60s" id="prmStonith1-2-instance_attributes-pcmk_reboot_timeout"/>
+            <nvpair name="hostname" value="bl460g8n3" id="prmStonith1-2-instance_attributes-hostname"/>
+            <nvpair name="ipaddr" value="192.168.28.43" id="prmStonith1-2-instance_attributes-ipaddr"/>
+            <nvpair name="userid" value="USERID" id="prmStonith1-2-instance_attributes-userid"/>
+            <nvpair name="passwd" value="****" id="prmStonith1-2-instance_attributes-passwd"/>
+            <nvpair name="interface" value="lanplus" id="prmStonith1-2-instance_attributes-interface"/>
+          </instance_attributes>
+          <operations>
+            <op name="start" interval="0s" timeout="60s" on-fail="restart" id="prmStonith1-2-start-0s"/>
+            <op name="monitor" interval="3600s" timeout="60s" on-fail="restart" id="prmStonith1-2-monitor-3600s"/>
+            <op name="stop" interval="0s" timeout="60s" on-fail="ignore" id="prmStonith1-2-stop-0s"/>
+          </operations>
+        </primitive>
+      </group>
+      <group id="grpStonith2">
+        <primitive id="prmStonith2-2" class="stonith" type="external/ipmi">
+          <instance_attributes id="prmStonith2-2-instance_attributes">
+            <nvpair name="pcmk_reboot_timeout" value="60s" id="prmStonith2-2-instance_attributes-pcmk_reboot_timeout"/>
+            <nvpair name="hostname" value="bl460g8n4" id="prmStonith2-2-instance_attributes-hostname"/>
+            <nvpair name="ipaddr" value="192.168.28.44" id="prmStonith2-2-instance_attributes-ipaddr"/>
+            <nvpair name="userid" value="USERID" id="prmStonith2-2-instance_attributes-userid"/>
+            <nvpair name="passwd" value="****" id="prmStonith2-2-instance_attributes-passwd"/>
+            <nvpair name="interface" value="lanplus" id="prmStonith2-2-instance_attributes-interface"/>
+          </instance_attributes>
+          <operations>
+            <op name="start" interval="0s" timeout="60s" on-fail="restart" id="prmStonith2-2-start-0s"/>
+            <op name="monitor" interval="3600s" timeout="60s" on-fail="restart" id="prmStonith2-2-monitor-3600s"/>
+            <op name="stop" interval="0s" timeout="60s" on-fail="ignore" id="prmStonith2-2-stop-0s"/>
+          </operations>
+        </primitive>
+      </group>
+      <group id="master-group">
+        <primitive id="vip-master" class="ocf" provider="heartbeat" type="Dummy">
+          <operations>
+            <op name="start" interval="0s" timeout="60s" on-fail="restart" id="vip-master-start-0s"/>
+            <op name="monitor" interval="10s" timeout="60s" on-fail="restart" id="vip-master-monitor-10s"/>
+            <op name="stop" interval="0s" timeout="60s" on-fail="fence" id="vip-master-stop-0s"/>
+          </operations>
+        </primitive>
+        <primitive id="vip-rep" class="ocf" provider="heartbeat" type="Dummy">
+          <operations>
+            <op name="start" interval="0s" timeout="60s" on-fail="stop" id="vip-rep-start-0s"/>
+            <op name="monitor" interval="10s" timeout="60s" on-fail="restart" id="vip-rep-monitor-10s"/>
+            <op name="stop" interval="0s" timeout="60s" on-fail="ignore" id="vip-rep-stop-0s"/>
+          </operations>
+        </primitive>
+      </group>
+      <clone id="msPostgresql">
+        <meta_attributes id="msPostgresql-meta_attributes">
+          <nvpair name="promotable" value="true" id="msPostgresql-meta_attributes-promotable"/>
+          <nvpair name="promoted-max" value="1" id="msPostgresql-meta_attributes-promoted-max"/>
+          <nvpair name="promoted-node-max" value="1" id="msPostgresql-meta_attributes-promoted-node-max"/>
+          <nvpair name="clone-max" value="2" id="msPostgresql-meta_attributes-clone-max"/>
+          <nvpair name="clone-node-max" value="1" id="msPostgresql-meta_attributes-clone-node-max"/>
+          <nvpair name="notify" value="true" id="msPostgresql-meta_attributes-notify"/>
+        </meta_attributes>
+        <primitive id="pgsql" class="ocf" provider="heartbeat" type="Stateful">
+          <operations>
+            <op name="start" interval="0s" timeout="300s" on-fail="restart" id="pgsql-start-0s"/>
+            <op name="monitor" interval="10s" timeout="60s" on-fail="restart" id="pgsql-monitor-10s"/>
+            <op name="monitor" role="Master" interval="9s" timeout="60s" on-fail="restart" id="pgsql-monitor-9s"/>
+            <op name="promote" interval="0s" timeout="300s" on-fail="restart" id="pgsql-promote-0s"/>
+            <op name="demote" interval="0s" timeout="300s" on-fail="fence" id="pgsql-demote-0s"/>
+            <op name="notify" interval="0s" timeout="60s" id="pgsql-notify-0s"/>
+            <op name="stop" interval="0s" timeout="300s" on-fail="fence" id="pgsql-stop-0s"/>
+          </operations>
+        </primitive>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_location id="rsc_location-grpStonith1-4" rsc="grpStonith1">
+        <rule score="-INFINITY" boolean-op="or" id="rsc_location-grpStonith1-4-rule">
+          <expression attribute="#uname" operation="eq" value="bl460g8n3" id="rsc_location-grpStonith1-4-rule-expression"/>
+          <expression attribute="#uname" operation="eq" value="pgsr01" id="rsc_location-grpStonith1-4-rule-expression-0"/>
+          <expression attribute="#uname" operation="eq" value="pgsr02" id="rsc_location-grpStonith1-4-rule-expression-1"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="rsc_location-grpStonith2-5" rsc="grpStonith2">
+        <rule score="-INFINITY" boolean-op="or" id="rsc_location-grpStonith2-5-rule">
+          <expression attribute="#uname" operation="eq" value="bl460g8n4" id="rsc_location-grpStonith2-5-rule-expression"/>
+          <expression attribute="#uname" operation="eq" value="pgsr01" id="rsc_location-grpStonith2-5-rule-expression-0"/>
+          <expression attribute="#uname" operation="eq" value="pgsr02" id="rsc_location-grpStonith2-5-rule-expression-1"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="rsc_location-msPostgresql-1" rsc="msPostgresql">
+        <rule score="-INFINITY" id="rsc_location-msPostgresql-1-rule">
+          <expression attribute="#uname" operation="eq" value="bl460g8n3" id="rsc_location-msPostgresql-1-rule-expression"/>
+        </rule>
+        <rule score="-INFINITY" id="rsc_location-msPostgresql-1-rule-0">
+          <expression attribute="#uname" operation="eq" value="bl460g8n4" id="rsc_location-msPostgresql-1-rule-0-expression"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="rsc_location-prmDB1-2" rsc="prmDB1">
+        <rule score="-INFINITY" id="rsc_location-prmDB1-2-rule">
+          <expression attribute="#uname" operation="eq" value="bl460g8n4" id="rsc_location-prmDB1-2-rule-expression"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="rsc_location-prmDB2-3" rsc="prmDB2">
+        <rule score="-INFINITY" id="rsc_location-prmDB2-3-rule">
+          <expression attribute="#uname" operation="eq" value="bl460g8n3" id="rsc_location-prmDB2-3-rule-expression"/>
+        </rule>
+      </rsc_location>
+      <rsc_colocation id="rsc_colocation-master-group-msPostgresql-1" score="INFINITY" rsc="master-group" with-rsc="msPostgresql" with-rsc-role="Master"/>
+      <rsc_order id="rsc_order-msPostgresql-master-group-1" score="INFINITY" symmetrical="false" first="msPostgresql" first-action="promote" then="master-group" then-action="start"/>
+      <rsc_order id="rsc_order-msPostgresql-master-group-2" score="0" symmetrical="false" first="msPostgresql" first-action="demote" then="master-group" then-action="stop"/>
+    </constraints>
+    <fencing-topology>
+      <fencing-level devices="prmStonith1-2" index="1" target="bl460g8n3" id="fencing"/>
+      <fencing-level devices="prmStonith2-2" index="1" target="bl460g8n4" id="fencing-0"/>
+    </fencing-topology>
+    <rsc_defaults>
+      <meta_attributes id="rsc-options">
+        <nvpair name="resource-stickiness" value="INFINITY" id="rsc-options-resource-stickiness"/>
+        <nvpair name="migration-threshold" value="1" id="rsc-options-migration-threshold"/>
+      </meta_attributes>
+    </rsc_defaults>
+  </configuration>
+  <status>
+    <node_state id="3232261400" uname="bl460g8n4" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="3232261400">
+        <lrm_resources>
+          <lrm_resource id="prmStonith1-2" type="external/ipmi" class="stonith">
+            <lrm_rsc_op id="prmStonith1-2_last_0" operation_key="prmStonith1-2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="24:3:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910" transition-magic="0:0;24:3:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910" on_node="bl460g8n4" call-id="31" rc-code="0" op-status="0" interval="0" last-run="1439347907" last-rc-change="1439347907" exec-time="1226" queue-time="0" op-digest="afe12b5cfc17d93f044b4e7a9cdbcf9b" op-secure-params=" passwd " op-secure-digest="e865267179ef110b6279ff90ad06de48"/>
+            <lrm_rsc_op id="prmStonith1-2_monitor_3600000" operation_key="prmStonith1-2_monitor_3600000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="12:4:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910" transition-magic="0:0;12:4:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910" on_node="bl460g8n4" call-id="33" rc-code="0" op-status="0" interval="3600000" last-rc-change="1439347908" exec-time="1131" queue-time="0" op-digest="e8ae3d1e396335d3601757dd89d0ae69" op-secure-params=" passwd " op-secure-digest="e865267179ef110b6279ff90ad06de48"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith2-2" type="external/ipmi" class="stonith">
+            <lrm_rsc_op id="prmStonith2-2_last_0" operation_key="prmStonith2-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="16:3:7:6cacb40a-dbbb-49b0-bac7-1794a61d2910" transition-magic="0:7;16:3:7:6cacb40a-dbbb-49b0-bac7-1794a61d2910" on_node="bl460g8n4" call-id="17" rc-code="7" op-status="0" interval="0" last-run="1439347907" last-rc-change="1439347907" exec-time="0" queue-time="0" op-digest="92d167320c2a18fe8f3ea285d9f9ee90" op-secure-params=" passwd " op-secure-digest="1149ea95c2c0b76e99fa8fa192158cbf"/>
+          </lrm_resource>
+          <lrm_resource id="vip-master" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-master_last_0" operation_key="vip-master_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="17:3:7:6cacb40a-dbbb-49b0-bac7-1794a61d2910" transition-magic="0:7;17:3:7:6cacb40a-dbbb-49b0-bac7-1794a61d2910" on_node="bl460g8n4" call-id="21" rc-code="7" op-status="0" interval="0" last-run="1439347907" last-rc-change="1439347907" exec-time="20" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="vip-rep" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-rep_last_0" operation_key="vip-rep_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="18:3:7:6cacb40a-dbbb-49b0-bac7-1794a61d2910" transition-magic="0:7;18:3:7:6cacb40a-dbbb-49b0-bac7-1794a61d2910" on_node="bl460g8n4" call-id="25" rc-code="7" op-status="0" interval="0" last-run="1439347907" last-rc-change="1439347907" exec-time="11" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="pgsql" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="pgsql_last_0" operation_key="pgsql_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="19:3:7:6cacb40a-dbbb-49b0-bac7-1794a61d2910" transition-magic="0:7;19:3:7:6cacb40a-dbbb-49b0-bac7-1794a61d2910" on_node="bl460g8n4" call-id="30" rc-code="7" op-status="0" interval="0" last-run="1439347907" last-rc-change="1439347907" exec-time="17" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmDB1" type="VirtualDomain" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmDB1_last_0" operation_key="prmDB1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="13:3:7:6cacb40a-dbbb-49b0-bac7-1794a61d2910" transition-magic="0:7;13:3:7:6cacb40a-dbbb-49b0-bac7-1794a61d2910" on_node="bl460g8n4" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1439347907" last-rc-change="1439347907" exec-time="228" queue-time="0" op-digest="04e86e87e00cd62d2fde3a8ec03d5bc1"/>
+          </lrm_resource>
+          <lrm_resource id="prmDB2" type="VirtualDomain" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmDB2_last_0" operation_key="prmDB2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="8:4:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910" transition-magic="0:0;8:4:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910" on_node="bl460g8n4" call-id="32" rc-code="0" op-status="0" interval="0" last-run="1439347908" last-rc-change="1439347908" exec-time="891" queue-time="0" op-digest="4b7b16f20229da9f7b54b8898eb3de9a"/>
+            <lrm_rsc_op id="prmDB2_monitor_10000" operation_key="prmDB2_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="9:4:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910" transition-magic="0:0;9:4:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910" on_node="bl460g8n4" call-id="34" rc-code="0" op-status="0" interval="10000" last-rc-change="1439347909" exec-time="102" queue-time="0" op-digest="9d078646f59ffe39c041072ed10692be"/>
+          </lrm_resource>
+          <lrm_resource id="pgsr02" type="remote" class="ocf" provider="pacemaker" container="prmDB2">
+            <lrm_rsc_op id="pgsr02_last_0" operation_key="pgsr02_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="58:4:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910" transition-magic="0:0;58:4:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910" on_node="bl460g8n4" call-id="1" rc-code="0" op-status="0" interval="0" last-run="1439347909" last-rc-change="1439347909" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="pgsr02_monitor_30000" operation_key="pgsr02_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="59:4:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910" transition-magic="0:0;59:4:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910" on_node="bl460g8n4" call-id="2" rc-code="0" op-status="0" interval="30000" last-rc-change="1439347937" exec-time="0" queue-time="0" op-digest="02a5bcf940fc8d3239701acb11438d6a"/>
+            <lrm_rsc_op id="pgsr02_last_failure_0" operation_key="pgsr02_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="59:4:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910" transition-magic="4:1;59:4:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910" on_node="bl460g8n4" call-id="2" rc-code="1" op-status="4" interval="30000" last-rc-change="1439348019" exec-time="0" queue-time="0" op-digest="02a5bcf940fc8d3239701acb11438d6a"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="3232261400">
+        <instance_attributes id="status-3232261400">
+          <nvpair id="status-3232261400-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-3232261400-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-3232261400-fail-count-pgsr02" name="fail-count-pgsr02" value="1"/>
+          <nvpair id="status-3232261400-last-failure-pgsr02" name="last-failure-pgsr02" value="1439348019"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="3232261399" uname="bl460g8n3" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="3232261399">
+        <instance_attributes id="status-3232261399">
+          <nvpair id="status-3232261399-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-3232261399-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="3232261399">
+        <lrm_resources>
+          <lrm_resource id="prmStonith1-2" type="external/ipmi" class="stonith">
+            <lrm_rsc_op id="prmStonith1-2_last_0" operation_key="prmStonith1-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="7:3:7:6cacb40a-dbbb-49b0-bac7-1794a61d2910" transition-magic="0:7;7:3:7:6cacb40a-dbbb-49b0-bac7-1794a61d2910" on_node="bl460g8n3" call-id="13" rc-code="7" op-status="0" interval="0" last-run="1439347907" last-rc-change="1439347907" exec-time="1" queue-time="0" op-digest="afe12b5cfc17d93f044b4e7a9cdbcf9b" op-secure-params=" passwd " op-secure-digest="e865267179ef110b6279ff90ad06de48"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith2-2" type="external/ipmi" class="stonith">
+            <lrm_rsc_op id="prmStonith2-2_last_0" operation_key="prmStonith2-2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="30:3:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910" transition-magic="0:0;30:3:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910" on_node="bl460g8n3" call-id="31" rc-code="0" op-status="0" interval="0" last-run="1439347907" last-rc-change="1439347907" exec-time="1171" queue-time="0" op-digest="92d167320c2a18fe8f3ea285d9f9ee90" op-secure-params=" passwd " op-secure-digest="1149ea95c2c0b76e99fa8fa192158cbf"/>
+            <lrm_rsc_op id="prmStonith2-2_monitor_3600000" operation_key="prmStonith2-2_monitor_3600000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="19:4:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910" transition-magic="0:0;19:4:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910" on_node="bl460g8n3" call-id="33" rc-code="0" op-status="0" interval="3600000" last-rc-change="1439347908" exec-time="1105" queue-time="0" op-digest="3726b87d5cee560876fee49ef2f9ce67" op-secure-params=" passwd " op-secure-digest="1149ea95c2c0b76e99fa8fa192158cbf"/>
+          </lrm_resource>
+          <lrm_resource id="vip-master" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-master_last_0" operation_key="vip-master_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="9:3:7:6cacb40a-dbbb-49b0-bac7-1794a61d2910" transition-magic="0:7;9:3:7:6cacb40a-dbbb-49b0-bac7-1794a61d2910" on_node="bl460g8n3" call-id="21" rc-code="7" op-status="0" interval="0" last-run="1439347907" last-rc-change="1439347907" exec-time="27" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="vip-rep" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-rep_last_0" operation_key="vip-rep_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="10:3:7:6cacb40a-dbbb-49b0-bac7-1794a61d2910" transition-magic="0:7;10:3:7:6cacb40a-dbbb-49b0-bac7-1794a61d2910" on_node="bl460g8n3" call-id="25" rc-code="7" op-status="0" interval="0" last-run="1439347907" last-rc-change="1439347907" exec-time="26" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="pgsql" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="pgsql_last_0" operation_key="pgsql_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="11:3:7:6cacb40a-dbbb-49b0-bac7-1794a61d2910" transition-magic="0:7;11:3:7:6cacb40a-dbbb-49b0-bac7-1794a61d2910" on_node="bl460g8n3" call-id="30" rc-code="7" op-status="0" interval="0" last-run="1439347907" last-rc-change="1439347907" exec-time="25" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmDB2" type="VirtualDomain" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmDB2_last_0" operation_key="prmDB2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="6:3:7:6cacb40a-dbbb-49b0-bac7-1794a61d2910" transition-magic="0:7;6:3:7:6cacb40a-dbbb-49b0-bac7-1794a61d2910" on_node="bl460g8n3" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1439347907" last-rc-change="1439347907" exec-time="100" queue-time="0" op-digest="4b7b16f20229da9f7b54b8898eb3de9a"/>
+          </lrm_resource>
+          <lrm_resource id="prmDB1" type="VirtualDomain" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmDB1_last_0" operation_key="prmDB1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="6:4:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910" transition-magic="0:0;6:4:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910" on_node="bl460g8n3" call-id="32" rc-code="0" op-status="0" interval="0" last-run="1439347908" last-rc-change="1439347908" exec-time="910" queue-time="0" op-digest="04e86e87e00cd62d2fde3a8ec03d5bc1"/>
+            <lrm_rsc_op id="prmDB1_monitor_10000" operation_key="prmDB1_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="7:4:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910" transition-magic="0:0;7:4:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910" on_node="bl460g8n3" call-id="34" rc-code="0" op-status="0" interval="10000" last-rc-change="1439347909" exec-time="100" queue-time="0" op-digest="b36f484e0f0d2fd6243f33cbe129b190"/>
+          </lrm_resource>
+          <lrm_resource id="pgsr01" type="remote" class="ocf" provider="pacemaker" container="prmDB1">
+            <lrm_rsc_op id="pgsr01_last_0" operation_key="pgsr01_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="56:4:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910" transition-magic="0:0;56:4:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910" on_node="bl460g8n3" call-id="1" rc-code="0" op-status="0" interval="0" last-run="1439347909" last-rc-change="1439347909" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="pgsr01_monitor_30000" operation_key="pgsr01_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="57:4:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910" transition-magic="0:0;57:4:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910" on_node="bl460g8n3" call-id="2" rc-code="0" op-status="0" interval="30000" last-rc-change="1439347938" exec-time="0" queue-time="0" op-digest="02a5bcf940fc8d3239701acb11438d6a"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state remote_node="true" id="pgsr02" uname="pgsr02" crm-debug-origin="do_update_resource" node_fenced="0">
+      <transient_attributes id="pgsr02">
+        <instance_attributes id="status-pgsr02">
+          <nvpair id="status-pgsr02-master-pgsql" name="master-pgsql" value="10"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="pgsr02">
+        <lrm_resources>
+          <lrm_resource id="pgsql" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="pgsql_last_0" operation_key="pgsql_promote_0" operation="promote" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="38:5:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910" transition-magic="0:0;38:5:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910" on_node="bl460g8n4" call-id="16" rc-code="0" op-status="0" interval="0" last-run="1439347938" last-rc-change="1439347938" exec-time="351" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="pgsql_monitor_9000" operation_key="pgsql_monitor_9000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="40:6:8:6cacb40a-dbbb-49b0-bac7-1794a61d2910" transition-magic="0:8;40:6:8:6cacb40a-dbbb-49b0-bac7-1794a61d2910" on_node="bl460g8n4" call-id="28" rc-code="8" op-status="0" interval="9000" last-rc-change="1439347938" exec-time="10" queue-time="1" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+          </lrm_resource>
+          <lrm_resource id="vip-master" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-master_last_0" operation_key="vip-master_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="28:6:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910" transition-magic="0:0;28:6:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910" on_node="bl460g8n4" call-id="27" rc-code="0" op-status="0" interval="0" last-run="1439347938" last-rc-change="1439347938" exec-time="86" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="vip-master_monitor_10000" operation_key="vip-master_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="29:6:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910" transition-magic="0:0;29:6:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910" on_node="bl460g8n4" call-id="29" rc-code="0" op-status="0" interval="10000" last-rc-change="1439347938" exec-time="14" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+          </lrm_resource>
+          <lrm_resource id="vip-rep" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="vip-rep_last_0" operation_key="vip-rep_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="30:6:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910" transition-magic="0:0;30:6:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910" on_node="bl460g8n4" call-id="33" rc-code="0" op-status="0" interval="0" last-run="1439347939" last-rc-change="1439347939" exec-time="15" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="vip-rep_monitor_10000" operation_key="vip-rep_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="31:6:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910" transition-magic="0:0;31:6:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910" on_node="bl460g8n4" call-id="34" rc-code="0" op-status="0" interval="10000" last-rc-change="1439347939" exec-time="14" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state remote_node="true" id="pgsr01" uname="pgsr01" crm-debug-origin="do_update_resource" node_fenced="0">
+      <transient_attributes id="pgsr01">
+        <instance_attributes id="status-pgsr01">
+          <nvpair id="status-pgsr01-master-pgsql" name="master-pgsql" value="10"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="pgsr01">
+        <lrm_resources>
+          <lrm_resource id="pgsql" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="pgsql_last_0" operation_key="pgsql_promote_0" operation="promote" crm-debug-origin="do_update_resource" crm_feature_set="3.0.10" transition-key="42:8:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910" transition-magic="0:0;42:8:0:6cacb40a-dbbb-49b0-bac7-1794a61d2910" on_node="bl460g8n3" call-id="24" rc-code="0" op-status="0" interval="0" last-run="1439348020" last-rc-change="1439348020" exec-time="323" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

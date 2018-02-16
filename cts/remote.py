@@ -2,6 +2,8 @@
 Classes related to running command remotely
 '''
 
+from __future__ import print_function
+
 __copyright__='''
 Copyright (C) 2014 Andrew Beekhof <andrew@beekhof.net>
 Licensed under the GNU GPL.
@@ -36,6 +38,26 @@ from cts.logging import *
 trace_rsh=None
 trace_lw=None
 
+def convert2string(lines):
+    if sys.version_info < (3, ):
+        return lines
+
+    if isinstance(lines, bytes):
+        return lines.decode("utf-8")
+    elif isinstance(lines, list):
+        aList = []
+        for line in lines:
+            if isinstance(line, bytes):
+                line = line.decode("utf-8")
+            aList.append(line)
+        return aList
+    return lines
+
+def input_wrapper(data):
+    if sys.version_info > (3,):
+        return input(data)
+    return raw_input(data)
+
 class AsyncWaitProc(Thread):
     def __init__(self, proc, node, command, completionDelegate=None):
         self.proc = proc
@@ -59,9 +81,14 @@ class AsyncWaitProc(Thread):
             for line in errLines:
                 self.logger.debug("cmd: stderr[%d]: %s" % (self.proc.pid, line))
 
+            errLines = convert2string(errLines)
+
         if self.proc.stdout:
             outLines = self.proc.stdout.readlines()
             self.proc.stdout.close()
+
+            outLines = convert2string(outLines)
+
 #            for line in outLines:
 #                self.logger.debug("cmd: stdout[%d]: %s" % (self.proc.pid, line))
 
@@ -92,17 +119,20 @@ class AsyncRemoteCmd(Thread):
             self.proc.stderr.close()
             for line in errLines:
                 self.logger.debug("cmd: stderr[%d]: %s" % (self.proc.pid, line))
+            errLines = convert2string(errLines)
 
         if self.proc.stdout:
             outLines = self.proc.stdout.readlines()
             self.proc.stdout.close()
+            outLines = convert2string(outLines)
+ 
 #            for line in outLines:
 #                self.logger.log("cmd: stdout[%d]: %s" % (self.proc.pid, line))
 
         if self.delegate:
             self.delegate.async_complete(self.proc.pid, self.proc.returncode, outLines, errLines)
 
-class RemotePrimitives:
+class RemotePrimitives(object):
     def __init__(self, Command=None, CpCommand=None):
         if CpCommand:
             self.CpCommand = CpCommand
@@ -117,7 +147,7 @@ class RemotePrimitives:
             #   -o ServerAliveInterval=5 disconnect after 3*5s if the server stops responding
             self.Command = "ssh -l root -n -x -o ServerAliveInterval=5 -o ConnectTimeout=10 -o TCPKeepAlive=yes -o ServerAliveCountMax=3 "
 
-class RemoteExec:
+class RemoteExec(object):
     '''This is an abstract remote execution class.  It runs a command on another
        machine - somehow.  The somehow is up to us.  This particular
        class uses ssh.
@@ -133,7 +163,7 @@ class RemoteExec:
         if trace_rsh:
             self.silent = False
 
-        self.OurNode=string.lower(os.uname()[1])
+        self.OurNode=os.uname()[1].lower()
 
     def _fixcmd(self, cmd):
         return re.sub("\'", "'\\''", cmd)
@@ -148,7 +178,7 @@ class RemoteExec:
         command = args[1]
 
         #print("sysname: %s, us: %s" % (sysname, self.OurNode))
-        if sysname == None or string.lower(sysname) == self.OurNode or sysname == "localhost":
+        if sysname == None or sysname.lower() == self.OurNode or sysname == "localhost":
             ret = command
         else:
             ret = self.rsh.Command + " " + sysname + " '" + self._fixcmd(command) + "'"
@@ -208,22 +238,22 @@ class RemoteExec:
         rc = proc.wait()
 
         if not silent: self.debug("cmd: target=%s, rc=%d: %s" % (node, rc, command))
-        if stdout == 1:
-            return result
+
+        result = convert2string(result)
 
         if proc.stderr:
             errors = proc.stderr.readlines()
             proc.stderr.close()
+
+        if stdout == 1:
+            return result
 
         if completionDelegate:
             completionDelegate.async_complete(proc.pid, proc.returncode, result, errors)
 
         if not silent:
             for err in errors:
-                if stdout == 3:
-                    result.append("error: "+err)
-                else:
-                    self.debug("cmd: stderr: %s" % err)
+                self.debug("cmd: stderr: %s" % err)
 
         if stdout == 0:
             if not silent and result:
@@ -253,7 +283,7 @@ class RemoteExec:
         return True
 
 
-class RemoteFactory:
+class RemoteFactory(object):
     # Class variables
     rsh = RemotePrimitives()
     instance = None

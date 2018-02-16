@@ -78,16 +78,16 @@ Verify the start is successful.
 # systemctl status pacemaker_remote
 pacemaker_remote.service - Pacemaker Remote Service
    Loaded: loaded (/usr/lib/systemd/system/pacemaker_remote.service; enabled)
-   Active: active (running) since Fri 2015-08-21 15:21:20 CDT; 20s ago
+   Active: active (running) since Fri 2018-01-12 15:21:20 CDT; 20s ago
  Main PID: 21273 (pacemaker_remot)
    CGroup: /system.slice/pacemaker_remote.service
            └─21273 /usr/sbin/pacemaker_remoted
 
-Aug 21 15:21:20 remote1 systemd[1]: Starting Pacemaker Remote Service...
-Aug 21 15:21:20 remote1 systemd[1]: Started Pacemaker Remote Service.
-Aug 21 15:21:20 remote1 pacemaker_remoted[21273]: notice: crm_add_logfile: Additional logging available in /var/log/pacemaker.log
-Aug 21 15:21:20 remote1 pacemaker_remoted[21273]: notice: lrmd_init_remote_tls_server: Starting a tls listener on port 3121.
-Aug 21 15:21:20 remote1 pacemaker_remoted[21273]: notice: bind_and_listen: Listening on address ::
+Jan 12 15:21:20 remote1 systemd[1]: Starting Pacemaker Remote Service...
+Jan 12 15:21:20 remote1 systemd[1]: Started Pacemaker Remote Service.
+Jan 12 15:21:20 remote1 pacemaker_remoted[21273]: notice: crm_add_logfile: Additional logging available in /var/log/pacemaker.log
+Jan 12 15:21:20 remote1 pacemaker_remoted[21273]: notice: lrmd_init_remote_tls_server: Starting a tls listener on port 3121.
+Jan 12 15:21:20 remote1 pacemaker_remoted[21273]: notice: bind_and_listen: Listening on address ::
 ----
 
 == Verify Connection to Remote Node ==
@@ -192,13 +192,13 @@ like this.
 ----
 # pcs status
 Cluster name: mycluster
-Last updated: Fri Aug 21 16:14:05 2015
-Last change: Fri Aug 21 14:02:14 2015
 Stack: corosync
 Current DC: NONE
-Version: 1.1.12-a14efad
-1 Nodes configured, unknown expected votes
-0 Resources configured
+Last updated: Fri Jan 12 16:14:05 2018
+Last change: Fri Jan 12 14:02:14 2018
+
+1 node configured
+0 resources configured
 ----
 
 After about a minute, you should see your two cluster nodes come online.
@@ -206,13 +206,13 @@ After about a minute, you should see your two cluster nodes come online.
 ----
 # pcs status
 Cluster name: mycluster
-Last updated: Fri Aug 21 16:16:32 2015
-Last change: Fri Aug 21 14:02:14 2015
 Stack: corosync
-Current DC: node1 (1) - partition with quorum
-Version: 1.1.12-a14efad
-2 Nodes configured
-0 Resources configured
+Current DC: node1 (version 1.1.16-12.el7_4.5-94ff4df) - partition with quorum
+Last updated: Fri Jan 12 16:16:32 2018
+Last change: Fri Jan 12 14:02:14 2018
+
+2 nodes configured
+0 resources configured
 
 Online: [ node1 node2 ]
 ----
@@ -245,14 +245,13 @@ That's it.  After a moment you should see the remote node come online.
 
 ----
 Cluster name: mycluster
-Last updated: Fri Aug 21 17:13:09 2015
-Last change: Fri Aug 21 17:02:02 2015
 Stack: corosync
-Current DC: node1 (1) - partition with quorum
-Version: 1.1.12-a14efad
-3 Nodes configured
-1 Resources configured
+Current DC: node1 (version 1.1.16-12.el7_4.5-94ff4df) - partition with quorum
+Last updated: Fri Jan 12 17:13:09 2018
+Last change: Fri Jan 12 17:02:02 2018
 
+3 nodes configured
+1 resources configured
 
 Online: [ node1 node2 ]
 RemoteOnline: [ remote1 ]
@@ -260,10 +259,6 @@ RemoteOnline: [ remote1 ]
 Full list of resources:
 
  remote1 (ocf::pacemaker:remote):	Started node1
-
-PCSD Status:
-  node1: Online
-  node2: Online
 
 Daemon Status:
   corosync: active/disabled
@@ -303,8 +298,8 @@ nearly all the pacemaker tools (`crm_resource`, `crm_mon`, `crm_attribute`,
 
 Try it: Run `crm_mon` on the remote node after pacemaker has
 integrated it into the cluster. These tools just work. These means resource
-agents such as master/slave resources which need access to tools like
-`crm_master` work seamlessly on the remote nodes.
+agents such as promotable resources (which need access to tools like
+`crm_master`) work seamlessly on the remote nodes.
 
 Higher-level command shells such as `pcs` may have partial support
 on remote nodes, but it is recommended to run them from a cluster node.

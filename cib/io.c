@@ -44,7 +44,6 @@
 extern const char *cib_root;
 
 crm_trigger_t *cib_writer = NULL;
-gboolean initialized = FALSE;
 
 extern int cib_status;
 
@@ -270,7 +269,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
         create_xml_node(root, XML_CIB_TAG_STATUS);
     }
 
-    /* Do this before DTD validation happens */
+    /* Do this before schema validation happens */
 
     /* fill in some defaults */
     name = XML_ATTR_GENERATION_ADMIN;
@@ -297,7 +296,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
         crm_xml_add_int(root, name, 0);
     }
 
-    /* unset these and require the DC/CCM to update as needed */
+    // Unset (DC should set appropriate value)
     xml_remove_prop(root, XML_ATTR_DC_UUID);
 
     if (discard_status) {
@@ -317,7 +316,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
             crm_notice("Enabling %s validation on"
                        " the existing (sane) configuration", get_schema_name(version));
         } else {
-            crm_err("CIB does not validate with any known DTD or schema");
+            crm_err("CIB does not validate with any known schema");
             cib_status = -pcmk_err_schema_validation;
         }
     }
@@ -344,7 +343,6 @@ uninitializeCib(void)
         return FALSE;
     }
 
-    initialized = FALSE;
     the_cib = NULL;
 
     crm_debug("Deallocating the CIB.");
@@ -357,57 +355,32 @@ uninitializeCib(void)
 }
 
 /*
- * This method will not free the old CIB pointer or the new one.
- * We rely on the caller to have saved a pointer to the old CIB
- *   and to free the old/bad one depending on what is appropriate.
- */
-gboolean
-initializeCib(xmlNode * new_cib)
-{
-    if (new_cib == NULL) {
-        return FALSE;
-    }
-
-    the_cib = new_cib;
-    initialized = TRUE;
-    return TRUE;
-}
-
-/*
  * This method will free the old CIB pointer on success and the new one
  * on failure.
  */
 int
 activateCibXml(xmlNode * new_cib, gboolean to_disk, const char *op)
 {
-    xmlNode *saved_cib = the_cib;
+    if (new_cib) {
+        xmlNode *saved_cib = the_cib;
 
-    CRM_ASSERT(new_cib != saved_cib);
-    if (initializeCib(new_cib) == FALSE) {
-        free_xml(new_cib);
-        crm_err("Ignoring invalid or NULL CIB");
-
-        if (saved_cib != NULL) {
-            crm_warn("Reverting to last known CIB");
-            if (initializeCib(saved_cib) == FALSE) {
-                /* oh we are so dead  */
-                crm_crit("Couldn't re-initialize the old CIB!");
-                exit(1);
-            }
-
-        } else {
-            crm_crit("Could not write out new CIB and no saved" " version to revert to");
+        CRM_ASSERT(new_cib != saved_cib);
+        the_cib = new_cib;
+        free_xml(saved_cib);
+        if (cib_writes_enabled && cib_status == pcmk_ok && to_disk) {
+            crm_debug("Triggering CIB write for %s op", op);
+            mainloop_set_trigger(cib_writer);
         }
-        return -ENODATA;
+        return pcmk_ok;
     }
 
-    free_xml(saved_cib);
-    if (cib_writes_enabled && cib_status == pcmk_ok && to_disk) {
-        crm_debug("Triggering CIB write for %s op", op);
-        mainloop_set_trigger(cib_writer);
+    crm_err("Ignoring invalid CIB");
+    if (the_cib) {
+        crm_warn("Reverting to last known CIB");
+    } else {
+        crm_crit("Could not write out new CIB and no saved version to revert to");
     }
-
-    return pcmk_ok;
+    return -ENODATA;
 }
 
 static void
@@ -485,8 +458,26 @@ write_cib_contents(gpointer p)
     /* A nonzero exit code will cause further writes to be disabled */
     free_xml(cib_local);
     if (p == NULL) {
+        crm_exit_t exit_code = CRM_EX_OK;
+
+        switch (exit_rc) {
+            case pcmk_ok:
+                exit_code = CRM_EX_OK;
+                break;
+            case pcmk_err_cib_modified:
+                exit_code = CRM_EX_DIGEST; // Existing CIB doesn't match digest
+                break;
+            case pcmk_err_cib_backup: // Existing CIB couldn't be backed up
+            case pcmk_err_cib_save:   // New CIB couldn't be saved
+                exit_code = CRM_EX_CANTCREAT;
+                break;
+            default:
+                exit_code = CRM_EX_ERROR;
+                break;
+        }
+
         /* Use _exit() because exit() could affect the parent adversely */
-        _exit(exit_rc);
+        _exit(exit_code);
     }
     return exit_rc;
 }

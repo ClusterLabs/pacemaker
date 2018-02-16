@@ -1,6 +1,9 @@
 #!/bin/bash
-UPLOAD=0
 
+# toplevel rsync destination for www targets (without trailing slash)
+: ${RSYNC_DEST:=root@www.clusterlabs.org:/var/www/html}
+
+UPLOAD=0
 if [ $1 = "-u" ]; then
     UPLOAD=1; shift
 fi
@@ -9,9 +12,9 @@ PACKAGE=$1; shift
 
 function tag() {
     if [[ $1 =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3} ]]; then
-	echo Pacemaker-$1
+        echo Pacemaker-$1
     else
-	echo $1
+        echo $1
     fi
 }
 
@@ -21,15 +24,14 @@ function version() {
 
 function extract() {
 
-    DUMP=1
     TAG=$1
     VERSION=$2
 
     if [ $VERSION = HEAD ]; then
-	rm -rf abi_dumps/$PACKAGE/${PACKAGE}_$VERSION.abi.tar.gz
+        rm -rf abi_dumps/$PACKAGE/${PACKAGE}_$VERSION.abi.tar.gz
 
     elif [ -f abi_dumps/$PACKAGE/${PACKAGE}_$VERSION.abi.tar.gz ]; then
-	return
+        return
     fi
 
     echo "Building ABI dump for $*"
@@ -38,20 +40,19 @@ function extract() {
     rm -rf $BUILD_ROOT
     git archive --prefix $BUILD_ROOT/ $TAG | tar xv
 
-    BUILD_ROOT=`pwd`/$BUILD_ROOT
+    BUILD_ROOT=$(pwd)/$BUILD_ROOT
     DESC=$BUILD_ROOT/$VERSION.xml
 
     sed -i.sed 's: doc::' $BUILD_ROOT/Makefile.am
-    sed -i.sed 's: debian::' $BUILD_ROOT/Makefile.am
 
-    cat<<EOF>$DESC
+    cat <<EOF >$DESC
 <?xml version="1.0" encoding="utf-8"?>
 <descriptor>
 <version>
     $VERSION
 </version>
 <headers>
-	$BUILD_ROOT/root/usr/include/pacemaker/crm
+        $BUILD_ROOT/root/usr/include/pacemaker/crm
 </headers>
 <libs>
 EOF
@@ -59,45 +60,41 @@ EOF
     ( cd $BUILD_ROOT && ./autogen.sh )
     ( cd $BUILD_ROOT && ./configure  --disable-fatal-warnings )
     make -C $BUILD_ROOT V=0 DESTDIR=${BUILD_ROOT}/root install
-    if [ $? != 0 ]; then
-	echo "Build for $TAG failed. Repair, populate <libs/> and re-run: "
-	echo "  abi-compliance-checker -l $PACKAGE -dump_abi $DESC"
-	echo ""
-	echo "To find libraries after building:"
-	echo "  find $BUILD_ROOT/root -name "*.so" -print"
+    if [ $? -ne 0 ]; then
+        echo "Build for $TAG failed. Repair, populate <libs/> and re-run: "
+        echo "  abi-compliance-checker -l $PACKAGE -dump_abi $DESC"
+        echo ""
+        echo "To find libraries after building:"
+        echo "  find $BUILD_ROOT/root -name "*.so" -print"
 
     else
-	find $BUILD_ROOT/root -name "*.so" -print >> $DESC
+        find $BUILD_ROOT/root -name "*.so" -print >> $DESC
     fi
 
-    cat<<EOF>>$DESC
+    cat <<EOF >>$DESC
 </libs>
 </descriptor>
 EOF
 
-    if [ $DUMP = 1 ]; then
-	abi-compliance-checker -l $PACKAGE -dump_abi $DESC
-	rm -rf $BUILD_ROOT
-    else
-	exit 1
-    fi
+    abi-compliance-checker -l $PACKAGE -dump_abi $DESC
+    rm -rf $BUILD_ROOT
 }
 
 for arg in $*; do
-    T=`tag $arg`
-    V=`version $T`
+    T=$(tag $arg)
+    V=$(version $T)
     extract $T $V
 done
 
-if [ $# = 2 ]; then
-    V1=`version $1`
-    V2=`version $2`
+if [ $# -eq 2 ]; then
+    V1=$(version $1)
+    V2=$(version $2)
 
     abi-compliance-checker -l ${PACKAGE} \
-	-d1 abi_dumps/${PACKAGE}/${PACKAGE}_${V1}.abi.tar.gz \
-	-d2 abi_dumps/${PACKAGE}/${PACKAGE}_${V2}.abi.tar.gz
+        -d1 abi_dumps/${PACKAGE}/${PACKAGE}_${V1}.abi.tar.gz \
+        -d2 abi_dumps/${PACKAGE}/${PACKAGE}_${V2}.abi.tar.gz
 
     if [ $UPLOAD = 1 -a -d compat_reports/pacemaker/${V1}_to_${V2} ]; then
-	rsync -azxlSD --progress compat_reports/pacemaker/${V1}_to_${V2} root@www.clusterlabs.org:/var/www/html/abi/pacemaker/
+        rsync -azxlSD --progress compat_reports/pacemaker/${V1}_to_${V2} ${RSYNC_DEST}/${PACKAGE}/abi/
     fi
 fi

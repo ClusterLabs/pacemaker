@@ -28,28 +28,6 @@
 #  include <crm/cluster/election.h>
 #  include <crm/common/ipcs.h>
 
-#  if SUPPORT_HEARTBEAT
-extern ll_cluster_t *fsa_cluster_conn;
-#  endif
-
-/* copy from struct client_child in heartbeat.h
- *
- * Plus a couple of other things
- */
-struct crm_subsystem_s {
-    pid_t pid;                  /* Process id of child process */
-    const char *name;           /* executable name */
-    const char *path;           /* Command location */
-    const char *command;        /* Command with path */
-    const char *args;           /* Command arguments */
-    crm_client_t *client;       /* Client connection object */
-
-    gboolean sent_kill;
-    mainloop_io_t *source;      /* How can we communicate with it */
-    long long flag_connected;   /*  */
-    long long flag_required;    /*  */
-};
-
 typedef struct fsa_timer_s fsa_timer_t;
 struct fsa_timer_s {
     guint source_id;            /* timer source id */
@@ -109,10 +87,6 @@ extern fsa_timer_t *recheck_timer;
 
 extern crm_trigger_t *fsa_source;
 extern crm_trigger_t *config_read;
-
-extern struct crm_subsystem_s *cib_subsystem;
-extern struct crm_subsystem_s *te_subsystem;
-extern struct crm_subsystem_s *pe_subsystem;
 
 /* these two should be moved elsewhere... */
 extern void do_update_cib_nodes(gboolean overwrite, const char *caller);

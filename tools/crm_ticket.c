@@ -280,128 +280,6 @@ dump_constraints(cib_t * the_cib, const char *ticket_id)
 }
 
 static int
-find_ticket_state_attr_legacy(cib_t * the_cib, const char *attr, const char *ticket_id,
-                              const char *set_type, const char *set_name, const char *attr_id,
-                              const char *attr_name, char **value)
-{
-    int offset = 0;
-    int rc = pcmk_ok;
-    xmlNode *xml_search = NULL;
-
-    char *xpath_string = NULL;
-
-    CRM_ASSERT(value != NULL);
-    *value = NULL;
-
-    xpath_string = calloc(1, XPATH_MAX);
-    offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "%s", "/cib/status/tickets");
-
-    if (set_type) {
-        offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "/%s", set_type);
-        if (set_name) {
-            offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "[@id=\"%s\"]", set_name);
-        }
-    }
-
-    offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "//nvpair[");
-    if (attr_id) {
-        offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "@id=\"%s\"", attr_id);
-    }
-
-    if (attr_name) {
-        const char *attr_prefix = NULL;
-        char *long_key = NULL;
-
-        if (crm_str_eq(attr_name, "granted", TRUE)) {
-            attr_prefix = "granted-ticket";
-        } else {
-            attr_prefix = attr_name;
-        }
-        long_key = crm_concat(attr_prefix, ticket_id, '-');
-
-        if (attr_id) {
-            offset += snprintf(xpath_string + offset, XPATH_MAX - offset, " and ");
-        }
-        offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "@name=\"%s\"", long_key);
-
-        free(long_key);
-    }
-    offset += snprintf(xpath_string + offset, XPATH_MAX - offset, "]");
-    CRM_LOG_ASSERT(offset > 0);
-
-    rc = the_cib->cmds->query(the_cib, xpath_string, &xml_search,
-                              cib_sync_call | cib_scope_local | cib_xpath);
-
-    if (rc != pcmk_ok) {
-        goto bail;
-    }
-
-    crm_log_xml_debug(xml_search, "Match");
-    if (xml_has_children(xml_search)) {
-        xmlNode *child = NULL;
-
-        rc = -EINVAL;
-        fprintf(stdout, "Multiple attributes match name=%s\n", attr_name);
-
-        for (child = __xml_first_child(xml_search); child != NULL; child = __xml_next(child)) {
-            fprintf(stdout, "  Value: %s \t(id=%s)\n",
-                    crm_element_value(child, XML_NVPAIR_ATTR_VALUE), ID(child));
-        }
-
-    } else {
-        const char *tmp = crm_element_value(xml_search, attr);
-
-        if (tmp) {
-            *value = strdup(tmp);
-        }
-    }
-
-  bail:
-    free(xpath_string);
-    free_xml(xml_search);
-    return rc;
-}
-
-static int
-delete_ticket_state_attr_legacy(const char *ticket_id, const char *set_name, const char *attr_id,
-                                const char *attr_name, cib_t * cib)
-{
-    xmlNode *xml_obj = NULL;
-
-    int rc = pcmk_ok;
-    char *local_attr_id = NULL;
-
-    rc = find_ticket_state_attr_legacy(cib, XML_ATTR_ID, ticket_id, XML_TAG_ATTR_SETS, set_name,
-                                       attr_id, attr_name, &local_attr_id);
-
-    if (rc == -ENXIO) {
-        return pcmk_ok;
-
-    } else if (rc != pcmk_ok) {
-        return rc;
-    }
-
-    if (attr_id == NULL) {
-        attr_id = local_attr_id;
-    }
-
-    xml_obj = crm_create_nvpair_xml(NULL, attr_id, /*attr_name*/ NULL, NULL);
-    crm_log_xml_debug(xml_obj, "Delete");
-
-    rc = cib->cmds->delete(cib, XML_CIB_TAG_STATUS, xml_obj, cib_options);
-
-    if (rc == pcmk_ok) {
-        fprintf(stdout, "Deleted legacy %s state attribute: id=%s%s%s%s%s\n", ticket_id,
-                local_attr_id, set_name ? " set=" : "", set_name ? set_name : "",
-                attr_name ? " name=" : "", attr_name ? attr_name : "");
-    }
-
-    free_xml(xml_obj);
-    free(local_attr_id);
-    return rc;
-}
-
-static int
 get_ticket_state_attr(const char *ticket_id, const char *attr_name, const char **attr_value,
                       pe_working_set_t * data_set)
 {
@@ -519,12 +397,6 @@ modify_ticket_state(const char * ticket_id, GListPtr attr_delete, GHashTable * a
     char *value = NULL;
 
     ticket_t *ticket = NULL;
-    gboolean is_granting = FALSE;
-
-    for(list_iter = attr_delete; list_iter; list_iter = list_iter->next) {
-        const char *key = (const char *)list_iter->data;
-        delete_ticket_state_attr_legacy(ticket_id, set_name, attr_id, key, cib);
-    }
 
     rc = find_ticket_state(cib, ticket_id, &ticket_state_xml);
     if (rc == pcmk_ok) {
@@ -564,7 +436,6 @@ modify_ticket_state(const char * ticket_id, GListPtr attr_delete, GHashTable * a
 
             char *now = crm_itoa(time(NULL));
 
-            is_granting = TRUE;
             crm_xml_add(ticket_state_xml, "last-granted", now);
             free(now);
         }
@@ -580,20 +451,6 @@ modify_ticket_state(const char * ticket_id, GListPtr attr_delete, GHashTable * a
     }
 
     free_xml(xml_top);
-
-    if (rc != pcmk_ok) {
-        return rc;
-    }
-
-    g_hash_table_iter_init(&hash_iter, attr_set);
-    while (g_hash_table_iter_next(&hash_iter, (gpointer *) & key, (gpointer *) & value)) {
-        delete_ticket_state_attr_legacy(ticket_id, set_name, attr_id, key, cib);
-    }
-
-    if (is_granting == TRUE) {
-        delete_ticket_state_attr_legacy(ticket_id, set_name, attr_id, "last-granted", cib);
-    }
-
     return rc;
 }
 
@@ -707,6 +564,7 @@ main(int argc, char **argv)
     xmlNode *cib_constraints = NULL;
 
     cib_t *cib_conn = NULL;
+    crm_exit_t exit_code = CRM_EX_OK;
     int rc = pcmk_ok;
 
     int option_index = 0;
@@ -722,7 +580,7 @@ main(int argc, char **argv)
                     "Perform tasks related to cluster tickets.\nAllows ticket attributes to be queried, modified and deleted.\n");
 
     if (argc < 2) {
-        crm_help('?', EX_USAGE);
+        crm_help('?', CRM_EX_USAGE);
     }
 
     while (1) {
@@ -736,7 +594,7 @@ main(int argc, char **argv)
                 break;
             case '$':
             case '?':
-                crm_help(flag, EX_OK);
+                crm_help(flag, CRM_EX_OK);
                 break;
             case 'Q':
                 BE_QUIET = TRUE;
@@ -813,19 +671,18 @@ main(int argc, char **argv)
                 break;
 
             default:
-                CMD_ERR("Argument code 0%o (%c) is not (?yet?) supported\n", flag, flag);
+                CMD_ERR("Argument code 0%o (%c) is not (?yet?) supported", flag, flag);
                 ++argerr;
                 break;
         }
     }
 
     if (optind < argc && argv[optind] != NULL) {
-        CMD_ERR("non-option ARGV-elements: ");
+        CMD_ERR("non-option ARGV-elements:");
         while (optind < argc && argv[optind] != NULL) {
-            CMD_ERR("%s ", argv[optind++]);
+            CMD_ERR("%s", argv[optind++]);
             ++argerr;
         }
-        CMD_ERR("\n");
     }
 
     if (optind > argc) {
@@ -833,22 +690,22 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', EX_USAGE);
+        crm_help('?', CRM_EX_USAGE);
     }
 
     set_working_set_defaults(&data_set);
 
     cib_conn = cib_new();
     if (cib_conn == NULL) {
-        rc = -ENOTCONN;
-        CMD_ERR("Error initiating the connection to the CIB service: %s\n", pcmk_strerror(rc));
-        return rc;
+        CMD_ERR("Could not connect to CIB");
+        return CRM_EX_DISCONNECT;
     }
 
     rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
     if (rc != pcmk_ok) {
-        CMD_ERR("Error signing on to the CIB service: %s\n", pcmk_strerror(rc));
-        return rc;
+        CMD_ERR("Could not connect to CIB: %s", pcmk_strerror(rc));
+        exit_code = crm_errno2exit(rc);
+        goto bail;
     }
 
     if (xml_file != NULL) {
@@ -856,13 +713,16 @@ main(int argc, char **argv)
 
     } else {
         rc = cib_conn->cmds->query(cib_conn, NULL, &cib_xml_copy, cib_scope_local | cib_sync_call);
+        if (rc != pcmk_ok) {
+            CMD_ERR("Could not get local CIB: %s", pcmk_strerror(rc));
+            exit_code = crm_errno2exit(rc);
+            goto bail;
+        }
     }
 
-    if (rc != pcmk_ok) {
-        goto bail;
-
-    } else if (cli_config_update(&cib_xml_copy, NULL, FALSE) == FALSE) {
-        rc = -ENOKEY;
+    if (cli_config_update(&cib_xml_copy, NULL, FALSE) == FALSE) {
+        CMD_ERR("Could not update local CIB to latest schema version");
+        exit_code = CRM_EX_CONFIG;
         goto bail;
     }
 
@@ -890,7 +750,8 @@ main(int argc, char **argv)
             ticket_t *ticket = find_ticket(ticket_id, &data_set);
 
             if (ticket == NULL) {
-                rc = -ENXIO;
+                CMD_ERR("No such ticket '%s'", ticket_id);
+                exit_code = CRM_EX_NOSUCH;
                 goto bail;
             }
             rc = print_ticket(ticket, raw, details);
@@ -898,19 +759,31 @@ main(int argc, char **argv)
         } else {
             rc = print_ticket_list(&data_set, raw, details);
         }
+        if (rc != pcmk_ok) {
+            CMD_ERR("Could not print ticket: %s", pcmk_strerror(rc));
+        }
+        exit_code = crm_errno2exit(rc);
 
     } else if (ticket_cmd == 'q') {
         rc = dump_ticket_xml(cib_conn, ticket_id);
+        if (rc != pcmk_ok) {
+            CMD_ERR("Could not query ticket XML: %s", pcmk_strerror(rc));
+        }
+        exit_code = crm_errno2exit(rc);
 
     } else if (ticket_cmd == 'c') {
         rc = dump_constraints(cib_conn, ticket_id);
+        if (rc != pcmk_ok) {
+            CMD_ERR("Could not show ticket constraints: %s", pcmk_strerror(rc));
+        }
+        exit_code = crm_errno2exit(rc);
 
     } else if (ticket_cmd == 'G') {
         const char *value = NULL;
 
         if (ticket_id == NULL) {
-            CMD_ERR("Must supply a ticket id with -t\n");
-            rc = -ENXIO;
+            CMD_ERR("Must supply ticket ID with -t");
+            exit_code = CRM_EX_NOSUCH;
             goto bail;
         }
 
@@ -921,11 +794,12 @@ main(int argc, char **argv)
             fprintf(stdout, "%s\n", attr_default);
             rc = pcmk_ok;
         }
+        exit_code = crm_errno2exit(rc);
 
     } else if (ticket_cmd == 'C') {
         if (ticket_id == NULL) {
-            CMD_ERR("Must supply a ticket id with -t\n");
-            rc = -ENXIO;
+            CMD_ERR("Must supply ticket ID with -t");
+            exit_code = CRM_EX_USAGE;
             goto bail;
         }
 
@@ -934,72 +808,84 @@ main(int argc, char **argv)
 
             ticket = find_ticket(ticket_id, &data_set);
             if (ticket == NULL) {
-                rc = -ENXIO;
+                CMD_ERR("No such ticket '%s'", ticket_id);
+                exit_code = CRM_EX_NOSUCH;
                 goto bail;
             }
 
             if (ticket->granted) {
                 ticket_warning(ticket_id, "revoke");
-                rc = -EPERM;
+                exit_code = CRM_EX_INSUFFICIENT_PRIV;
                 goto bail;
             }
         }
 
         rc = delete_ticket_state(ticket_id, cib_conn);
+        if (rc != pcmk_ok) {
+            CMD_ERR("Could not clean up ticket: %s", pcmk_strerror(rc));
+        }
+        exit_code = crm_errno2exit(rc);
 
     } else if (modified) {
         if (ticket_id == NULL) {
-            CMD_ERR("Must supply a ticket id with -t\n");
-            rc = -ENXIO;
+            CMD_ERR("Must supply ticket ID with -t");
+            exit_code = CRM_EX_USAGE;
             goto bail;
         }
 
         if (attr_value
             && (attr_name == NULL || strlen(attr_name) == 0)) {
-            CMD_ERR("You need to supply an attribute name with the -S command for -v %s\n", attr_value);
-            rc = -EINVAL;
+            CMD_ERR("Must supply attribute name with -S for -v %s", attr_value);
+            exit_code = CRM_EX_USAGE;
             goto bail;
         }
 
         if (attr_name
             && (attr_value == NULL || strlen(attr_value) == 0)) {
-            CMD_ERR("You need to supply a value with the -v option for -S %s\n", attr_name);
-            rc = -EINVAL;
+            CMD_ERR("Must supply attribute value with -v for -S %s", attr_name);
+            exit_code = CRM_EX_USAGE;
             goto bail;
         }
 
         if (allow_modification(ticket_id, attr_delete, attr_set) == FALSE) {
-            rc = -EPERM;
+            CMD_ERR("Ticket modification not allowed");
+            exit_code = CRM_EX_INSUFFICIENT_PRIV;
             goto bail;
         }
 
         rc = modify_ticket_state(ticket_id, attr_delete, attr_set, cib_conn, &data_set);
-        
         if (rc != pcmk_ok) {
-            goto bail;
+            CMD_ERR("Could not modify ticket: %s", pcmk_strerror(rc));
         }
+        exit_code = crm_errno2exit(rc);
 
     } else if (ticket_cmd == 'S') {
-        if (ticket_id == NULL) {
-            CMD_ERR("Must supply a ticket id with -t\n");
-            rc = -ENXIO;
+        /* Correct usage was handled in the "if (modified)" block above, so
+         * this is just for reporting usage errors
+         */
+
+        if (attr_name == NULL || strlen(attr_name) == 0) {
+            // We only get here if ticket_cmd was left as default
+            CMD_ERR("Must supply a command");
+            exit_code = CRM_EX_USAGE;
             goto bail;
         }
 
-        if (attr_name == NULL || strlen(attr_name) == 0) {
-            CMD_ERR("You need to supply a command\n");
-            rc = -EINVAL;
+        if (ticket_id == NULL) {
+            CMD_ERR("Must supply ticket ID with -t");
+            exit_code = CRM_EX_USAGE;
             goto bail;
         }
 
         if (attr_value == NULL || strlen(attr_value) == 0) {
-            CMD_ERR("You need to supply a value with the -v option for -S %s\n", attr_name);
-            rc = -EINVAL;
+            CMD_ERR("Must supply value with -v for -S %s", attr_name);
+            exit_code = CRM_EX_USAGE;
             goto bail;
         }
 
     } else {
-        CMD_ERR("Unknown command: %c\n", ticket_cmd);
+        CMD_ERR("Unknown command: %c", ticket_cmd);
+        exit_code = CRM_EX_USAGE;
     }
 
   bail:
@@ -1020,12 +906,8 @@ main(int argc, char **argv)
     }
 
     if (rc == -pcmk_err_no_quorum) {
-        CMD_ERR("Error performing operation: %s\n", pcmk_strerror(rc));
-        CMD_ERR("Try using -f\n");
-
-    } else if (rc != pcmk_ok) {
-        CMD_ERR("Error performing operation: %s\n", pcmk_strerror(rc));
+        CMD_ERR("Use --force to ignore quorum");
     }
 
-    return crm_exit(rc);
+    return crm_exit(exit_code);
 }

@@ -18,7 +18,7 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 
-EXTRA_DIST              = autogen.sh ConfigureMe README.in m4/gnulib-cache.m4
+EXTRA_DIST              = autogen.sh m4/gnulib-cache.m4
 
 MAINTAINERCLEANFILES    = Makefile.in aclocal.m4 configure DRF/config-h.in \
                         DRF/stamp-h.in libtool.m4 ltdl.m4
@@ -30,17 +30,11 @@ AM_CPPFLAGS		= -I$(top_srcdir)/include
 
 doc_DATA = README.markdown COPYING
 
-ACLOCAL_AMFLAGS  = -I m4
-
 licensedir              = $(docdir)/licenses/
 license_DATA            = $(wildcard licenses/*)
 
 # Test components
 SUBDIRS	+= cts
-
-testdir			= $(datadir)/$(PACKAGE)/tests/
-test_SCRIPTS		= coverage.sh BasicSanity.sh
-test_DATA		= valgrind-pcmk.suppressions
 
 # Scratch file for ad-hoc testing
 noinst_PROGRAMS = scratch
@@ -67,13 +61,13 @@ install-exec-local:
 	$(INSTALL) -d -m 750 $(DESTDIR)/$(CRM_CONFIG_DIR)
 	$(INSTALL) -d -m 750 $(DESTDIR)/$(CRM_CORE_DIR)
 	$(INSTALL) -d -m 750 $(DESTDIR)/$(CRM_BLACKBOX_DIR)
+	$(INSTALL) -d -m 770 $(DESTDIR)/$(CRM_LOG_DIR)
+	$(INSTALL) -d -m 770 $(DESTDIR)/$(CRM_BUNDLE_DIR)
 	-chown $(CRM_DAEMON_USER):$(CRM_DAEMON_GROUP) $(DESTDIR)/$(CRM_CONFIG_DIR)
 	-chown $(CRM_DAEMON_USER):$(CRM_DAEMON_GROUP) $(DESTDIR)/$(CRM_CORE_DIR)
 	-chown $(CRM_DAEMON_USER):$(CRM_DAEMON_GROUP) $(DESTDIR)/$(CRM_BLACKBOX_DIR)
-if BUILD_CS_PLUGIN
-	rm -f $(DESTDIR)$(LCRSODIR)/pacemaker.lcrso $(DESTDIR)$(LCRSODIR)/service_crm.so
-	cp $(DESTDIR)$(libdir)/service_crm.so $(DESTDIR)$(LCRSODIR)/pacemaker.lcrso
-endif
+	-chown $(CRM_DAEMON_USER):$(CRM_DAEMON_GROUP) $(DESTDIR)/$(CRM_LOG_DIR)
+	-chown $(CRM_DAEMON_USER):$(CRM_DAEMON_GROUP) $(DESTDIR)/$(CRM_BUNDLE_DIR)
 # Use chown because the user/group may not exist
 
 clean-generic:

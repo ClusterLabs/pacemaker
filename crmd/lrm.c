@@ -82,13 +82,7 @@ lrm_connection_destroy(void)
 static char *
 make_stop_id(const char *rsc, int call_id)
 {
-    char *op_id = NULL;
-
-    op_id = calloc(1, strlen(rsc) + 34);
-    if (op_id != NULL) {
-        snprintf(op_id, strlen(rsc) + 34, "%s:%d", rsc, call_id);
-    }
-    return op_id;
+    return crm_strdup_printf("%s:%d", rsc, call_id);
 }
 
 static void
@@ -852,26 +846,13 @@ xmlNode *
 do_lrm_query(gboolean is_replace, const char *node_name)
 {
     lrm_state_t *lrm_state = lrm_state_find(node_name);
-    xmlNode *xml_state;
 
     if (!lrm_state) {
         crm_err("Could not query lrm state for lrmd node %s", node_name);
         return NULL;
     }
-    xml_state = do_lrm_query_internal(lrm_state,
-                                      node_update_cluster|node_update_peer);
-
-    if (xml_state) {
-        /* @COMPAT DC <1.1.8
-         * In case this function is called to generate a join confirmation to
-         * send to the DC, force the current and expected join state to member.
-         * This isn't necessary for newer DCs but is backward compatible.
-         */
-        crm_xml_add(xml_state, XML_NODE_JOIN_STATE, CRMD_JOINSTATE_MEMBER);
-        crm_xml_add(xml_state, XML_NODE_EXPECTED, CRMD_JOINSTATE_MEMBER);
-    }
-
-    return xml_state;
+    return do_lrm_query_internal(lrm_state,
+                                 node_update_cluster|node_update_peer);
 }
 
 static void
@@ -952,14 +933,11 @@ delete_rsc_status(lrm_state_t * lrm_state, const char *rsc_id, int call_options,
                   const char *user_name)
 {
     char *rsc_xpath = NULL;
-    int max = 0;
     int rc = pcmk_ok;
 
     CRM_CHECK(rsc_id != NULL, return -ENXIO);
 
-    max = strlen(rsc_template) + strlen(lrm_state->node_name) + strlen(rsc_id) + 1;
-    rsc_xpath = calloc(1, max);
-    snprintf(rsc_xpath, max, rsc_template, lrm_state->node_name, rsc_id);
+    rsc_xpath = crm_strdup_printf(rsc_template, lrm_state->node_name, rsc_id);
 
     rc = cib_internal_op(fsa_cib_conn, CIB_OP_DELETE, NULL, rsc_xpath,
                          NULL, NULL, call_options | cib_xpath, user_name);
@@ -1872,9 +1850,6 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
             while (g_hash_table_iter_next(&iter, (gpointer *) &key, (gpointer *) &value)) {
                 g_hash_table_iter_steal(&iter);
                 g_hash_table_replace(params, key, value);
-                // providing meta-names for instance_attributes is only for backward compatibility,
-                // and will be removed in a future release
-                g_hash_table_replace(params, crm_meta_name(key), strdup(value));
             }
             g_hash_table_destroy(hash);
 
@@ -2162,7 +2137,6 @@ do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operat
     } else if (fsa_state != S_NOT_DC
                && fsa_state != S_POLICY_ENGINE /* Recalculating */
                && fsa_state != S_TRANSITION_ENGINE
-               && safe_str_neq(operation, "fail")
                && safe_str_neq(operation, CRMD_ACTION_STOP)) {
         send_nack = TRUE;
     }

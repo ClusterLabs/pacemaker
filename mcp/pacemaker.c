@@ -61,27 +61,25 @@ typedef struct pcmk_child_s {
 } pcmk_child_t;
 
 /* Index into the array below */
-#define pcmk_child_crmd  4
-#define pcmk_child_mgmtd 8
+#define pcmk_child_crmd  3
 /* *INDENT-OFF* */
 static pcmk_child_t pcmk_children[] = {
     { 0, crm_proc_none,       0, 0, FALSE, "none",       NULL,            NULL },
-    { 0, crm_proc_plugin,     0, 0, FALSE, "ais",        NULL,            NULL },
     { 0, crm_proc_lrmd,       3, 0, TRUE,  "lrmd",       NULL,            CRM_DAEMON_DIR"/lrmd" },
     { 0, crm_proc_cib,        1, 0, TRUE,  "cib",        CRM_DAEMON_USER, CRM_DAEMON_DIR"/cib" },
     { 0, crm_proc_crmd,       6, 0, TRUE,  "crmd",       CRM_DAEMON_USER, CRM_DAEMON_DIR"/crmd" },
     { 0, crm_proc_attrd,      4, 0, TRUE,  "attrd",      CRM_DAEMON_USER, CRM_DAEMON_DIR"/attrd" },
     { 0, crm_proc_stonithd,   0, 0, TRUE,  "stonithd",   NULL,            NULL },
     { 0, crm_proc_pe,         5, 0, TRUE,  "pengine",    CRM_DAEMON_USER, CRM_DAEMON_DIR"/pengine" },
-    { 0, crm_proc_mgmtd,      0, 0, TRUE,  "mgmtd",      NULL,            HB_DAEMON_DIR"/mgmtd" },
     { 0, crm_proc_stonith_ng, 2, 0, TRUE,  "stonith-ng", NULL,            CRM_DAEMON_DIR"/stonithd" },
 };
 /* *INDENT-ON* */
 
 static gboolean start_child(pcmk_child_t * child);
 static gboolean check_active_before_startup_processes(gpointer user_data);
+static gboolean update_node_processes(uint32_t id, const char *uname,
+                                      uint32_t procs);
 void update_process_clients(crm_client_t *client);
-void update_process_peers(void);
 
 void
 enable_crmd_as_root(gboolean enable)
@@ -90,16 +88,6 @@ enable_crmd_as_root(gboolean enable)
         pcmk_children[pcmk_child_crmd].uid = NULL;
     } else {
         pcmk_children[pcmk_child_crmd].uid = CRM_DAEMON_USER;
-    }
-}
-
-void
-enable_mgmtd(gboolean enable)
-{
-    if (enable) {
-        pcmk_children[pcmk_child_mgmtd].start_seq = 7;
-    } else {
-        pcmk_children[pcmk_child_mgmtd].start_seq = 0;
     }
 }
 
@@ -159,27 +147,30 @@ pcmk_child_exit(mainloop_child_t * p, pid_t pid, int core, int signo, int exitco
     pcmk_child_t *child = mainloop_child_userdata(p);
     const char *name = mainloop_child_name(p);
 
-    if (signo && signo == SIGKILL) {
-        crm_warn("The %s process (%d) terminated with signal %d (core=%d)", name, pid, signo, core);
-
-    } else if (signo) {
-        crm_err("The %s process (%d) terminated with signal %d (core=%d)", name, pid, signo, core);
+    if (signo) {
+        do_crm_log(((signo == SIGKILL)? LOG_WARNING : LOG_ERR),
+                   "%s[%d] terminated with signal %d (core=%d)",
+                   name, pid, signo, core);
 
     } else {
         switch(exitcode) {
-            case pcmk_ok:
-                crm_info("The %s process (%d) exited: %s (%d)", name, pid, pcmk_strerror(exitcode), exitcode);
+            case CRM_EX_OK:
+                crm_info("%s[%d] exited with status %d (%s)",
+                         name, pid, exitcode, crm_exit_str(exitcode));
                 break;
 
-            case DAEMON_RESPAWN_STOP:
-                crm_warn("The %s process (%d) can no longer be respawned, shutting the cluster down.", name, pid);
+            case CRM_EX_FATAL:
+                crm_warn("Shutting cluster down because %s[%d] had fatal failure",
+                         name, pid);
                 child->respawn = FALSE;
                 fatal_error = TRUE;
                 pcmk_shutdown(SIGTERM);
                 break;
 
-            case pcmk_err_panic:
-                do_crm_log_always(LOG_EMERG, "The %s process (%d) instructed the machine to reset", name, pid);
+            case CRM_EX_PANIC:
+                do_crm_log_always(LOG_EMERG,
+                                  "%s[%d] instructed the machine to reset",
+                                  name, pid);
                 child->respawn = FALSE;
                 fatal_error = TRUE;
                 pcmk_panic(__FUNCTION__);
@@ -187,7 +178,8 @@ pcmk_child_exit(mainloop_child_t * p, pid_t pid, int core, int signo, int exitco
                 break;
 
             default:
-                crm_err("The %s process (%d) exited: %s (%d)", name, pid, pcmk_strerror(exitcode), exitcode);
+                crm_err("%s[%d] exited with status %d (%s)",
+                        name, pid, exitcode, crm_exit_str(exitcode));
                 break;
         }
     }
@@ -240,7 +232,6 @@ start_child(pcmk_child_t * child)
     const char *devnull = "/dev/null";
     const char *env_valgrind = getenv("PCMK_valgrind_enabled");
     const char *env_callgrind = getenv("PCMK_callgrind_enabled");
-    enum cluster_type_e stack = get_cluster_type();
 
     child->active_before_startup = FALSE;
 
@@ -310,19 +301,26 @@ start_child(pcmk_child_t * child)
         opts_default[0] = strdup(child->command);
 
         if(gid) {
-            if(stack == pcmk_cluster_corosync) {
-                /* Drop root privileges completely
-                 *
-                 * We can do this because we set uidgid.gid.${gid}=1
-                 * via CMAP which allows these processes to connect to
-                 * corosync
-                 */
-                if (setgid(gid) < 0) {
-                    crm_perror(LOG_ERR, "Could not set group to %d", gid);
-                }
+            // Whether we need root group access to talk to cluster layer
+            bool need_root_group = TRUE;
 
-                /* Keep the root group (so we can access corosync), but add the haclient group (so we can access ipc) */
-            } else if (initgroups(child->uid, gid) < 0) {
+            if (is_corosync_cluster()) {
+                /* Corosync clusters can drop root group access, because we set
+                 * uidgid.gid.${gid}=1 via CMAP, which allows these processes to
+                 * connect to corosync.
+                 */
+                need_root_group = FALSE;
+            }
+
+            // Drop root group access if not needed
+            if (!need_root_group && (setgid(gid) < 0)) {
+                crm_perror(LOG_ERR, "Could not set group to %d", gid);
+            }
+
+            /* Initialize supplementary groups to only those always granted to
+             * the user, plus haclient (so we can access IPC).
+             */
+            if (initgroups(child->uid, gid) < 0) {
                 crm_err("Cannot initialize groups for %s: %s (%d)", child->uid, pcmk_strerror(errno), errno);
             }
         }
@@ -347,7 +345,7 @@ start_child(pcmk_child_t * child)
             (void)execvp(child->command, opts_default);
         }
         crm_perror(LOG_ERR, "FATAL: Cannot exec %s", child->command);
-        crm_exit(DAEMON_RESPAWN_STOP);
+        crm_exit(CRM_EX_FATAL);
     }
     return TRUE;                /* never reached */
 }
@@ -433,8 +431,8 @@ pcmk_shutdown_worker(gpointer user_data)
     g_main_loop_quit(mainloop);
 
     if (fatal_error) {
-        crm_notice("Attempting to inhibit respawning after fatal error");
-        crm_exit(DAEMON_RESPAWN_STOP);
+        crm_notice("Shutting down and staying down after fatal error");
+        crm_exit(CRM_EX_FATAL);
     }
 
     return TRUE;
@@ -597,26 +595,23 @@ update_process_clients(crm_client_t *client)
  * \internal
  * \brief Send a CPG message with local node's process list to all peers
  */
-void
+static void
 update_process_peers(void)
 {
     /* Do nothing for corosync-2 based clusters */
 
-    char buffer[1024];
-    struct iovec *iov;
-    int rc = 0;
+    struct iovec *iov = calloc(1, sizeof(struct iovec));
 
+    CRM_ASSERT(iov);
     if (local_name) {
-        rc = snprintf(buffer, SIZEOF(buffer), "<node uname=\"%s\" proclist=\"%u\"/>",
-                      local_name, get_process_list());
+        iov->iov_base = crm_strdup_printf("<node uname=\"%s\" proclist=\"%u\"/>",
+                                          local_name, get_process_list());
     } else {
-        rc = snprintf(buffer, SIZEOF(buffer), "<node proclist=\"%u\"/>", get_process_list());
+        iov->iov_base = crm_strdup_printf("<node proclist=\"%u\"/>",
+                                          get_process_list());
     }
-
-    crm_trace("Sending %s", buffer);
-    iov = calloc(1, sizeof(struct iovec));
-    iov->iov_base = strdup(buffer);
-    iov->iov_len = rc + 1;
+    iov->iov_len = strlen(iov->iov_base) + 1;
+    crm_trace("Sending %s", (char*) iov->iov_base);
     send_cpg_iov(iov);
 }
 
@@ -630,7 +625,7 @@ update_process_peers(void)
  *
  * \return TRUE if the process list changed, FALSE otherwise
  */
-gboolean
+static gboolean
 update_node_processes(uint32_t id, const char *uname, uint32_t procs)
 {
     gboolean changed = FALSE;
@@ -806,7 +801,7 @@ static void
 mcp_cpg_destroy(gpointer user_data)
 {
     crm_err("Connection destroyed");
-    crm_exit(ENOTCONN);
+    crm_exit(CRM_EX_DISCONNECT);
 }
 
 /*!
@@ -833,7 +828,7 @@ mcp_cpg_deliver(cpg_handle_t handle,
 
     if (task == NULL) {
         if (nodeid == local_nodeid) {
-            crm_info("Ignoring process list sent by peer for local node");
+            crm_debug("Ignoring message with local node's process list");
         } else {
             uint32_t procs = 0;
             const char *uname = crm_element_value(xml, "uname");
@@ -887,21 +882,6 @@ mcp_quorum_destroy(gpointer user_data)
     crm_info("connection lost");
 }
 
-#if SUPPORT_CMAN
-static gboolean
-mcp_cman_dispatch(unsigned long long seq, gboolean quorate)
-{
-    pcmk_quorate = quorate;
-    return TRUE;
-}
-
-static void
-mcp_cman_destroy(gpointer user_data)
-{
-    crm_info("connection closed");
-}
-#endif
-
 int
 main(int argc, char **argv)
 {
@@ -917,7 +897,6 @@ main(int argc, char **argv)
     struct rlimit cores;
     crm_ipc_t *old_instance = NULL;
     qb_ipcs_service_t *ipcs = NULL;
-    const char *facility = daemon_option("logfacility");
     static crm_cluster_t cluster;
 
     crm_log_preinit(NULL, argc, argv);
@@ -945,7 +924,7 @@ main(int argc, char **argv)
                 break;
             case '$':
             case '?':
-                crm_help(flag, EX_OK);
+                crm_help(flag, CRM_EX_OK);
                 break;
             case 'S':
                 shutdown = TRUE;
@@ -953,7 +932,7 @@ main(int argc, char **argv)
             case 'F':
                 printf("Pacemaker %s (Build: %s)\n Supporting v%s: %s\n", PACEMAKER_VERSION, BUILD_VERSION,
                        CRM_FEATURE_SET, CRM_FEATURES);
-                crm_exit(pcmk_ok);
+                crm_exit(CRM_EX_OK);
             default:
                 printf("Argument code 0%o (%c) is not (?yet?) supported\n", flag, flag);
                 ++argerr;
@@ -968,20 +947,15 @@ main(int argc, char **argv)
         printf("\n");
     }
     if (argerr) {
-        crm_help('?', EX_USAGE);
+        crm_help('?', CRM_EX_USAGE);
     }
 
 
     setenv("LC_ALL", "C", 1);
-    setenv("HA_LOGD", "no", 1);
 
     set_daemon_option("mcp", "true");
-    set_daemon_option("use_logd", "off");
 
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
-
-    /* Restore the original facility so that mcp_read_config() does the right thing */
-    set_daemon_option("logfacility", facility);
 
     crm_debug("Checking for old instances of %s", CRM_SYSTEM_MCP);
     old_instance = crm_ipc_new(CRM_SYSTEM_MCP, 0);
@@ -1001,13 +975,13 @@ main(int argc, char **argv)
         }
         crm_ipc_close(old_instance);
         crm_ipc_destroy(old_instance);
-        crm_exit(pcmk_ok);
+        crm_exit(CRM_EX_OK);
 
     } else if (crm_ipc_connected(old_instance)) {
         crm_ipc_close(old_instance);
         crm_ipc_destroy(old_instance);
         crm_err("Pacemaker is already active, aborting startup");
-        crm_exit(DAEMON_RESPAWN_STOP);
+        crm_exit(CRM_EX_FATAL);
     }
 
     crm_ipc_close(old_instance);
@@ -1015,12 +989,21 @@ main(int argc, char **argv)
 
     if (mcp_read_config() == FALSE) {
         crm_notice("Could not obtain corosync config data, exiting");
-        crm_exit(ENODATA);
+        crm_exit(CRM_EX_UNAVAILABLE);
+    }
+
+    // OCF shell functions and cluster-glue need facility under different name
+    {
+        const char *facility = daemon_option("logfacility");
+
+        if (facility && safe_str_neq(facility, "none")) {
+            setenv("HA_LOGFACILITY", facility, 1);
+        }
     }
 
     crm_notice("Starting Pacemaker %s "CRM_XS" build=%s features:%s",
                PACEMAKER_VERSION, BUILD_VERSION, CRM_FEATURES);
-    mainloop = g_main_new(FALSE);
+    mainloop = g_main_loop_new(NULL, FALSE);
     sysrq_init();
 
     rc = getrlimit(RLIMIT_CORE, &cores);
@@ -1050,11 +1033,10 @@ main(int argc, char **argv)
         }
 #endif
     }
-    rc = pcmk_ok;
 
     if (crm_user_lookup(CRM_DAEMON_USER, &pcmk_uid, &pcmk_gid) < 0) {
         crm_err("Cluster user %s does not exist, aborting Pacemaker startup", CRM_DAEMON_USER);
-        crm_exit(ENOKEY);
+        crm_exit(CRM_EX_NOUSER);
     }
 
     mkdir(CRM_STATE_DIR, 0750);
@@ -1085,13 +1067,13 @@ main(int argc, char **argv)
     ipcs = mainloop_add_ipc_server(CRM_SYSTEM_MCP, QB_IPC_NATIVE, &mcp_ipc_callbacks);
     if (ipcs == NULL) {
         crm_err("Couldn't start IPC server");
-        crm_exit(EIO);
+        crm_exit(CRM_EX_OSERR);
     }
 
     /* Allows us to block shutdown */
     if (cluster_connect_cfg(&local_nodeid) == FALSE) {
         crm_err("Couldn't connect to Corosync's CFG service");
-        crm_exit(ENOPROTOOPT);
+        crm_exit(CRM_EX_PROTOCOL);
     }
 
     if(pcmk_locate_sbd() > 0) {
@@ -1108,25 +1090,17 @@ main(int argc, char **argv)
 
     crm_set_autoreap(FALSE);
 
-    if(cluster_connect_cpg(&cluster) == FALSE) {
+    rc = pcmk_ok;
+
+    if (cluster_connect_cpg(&cluster) == FALSE) {
         crm_err("Couldn't connect to Corosync's CPG service");
         rc = -ENOPROTOOPT;
-    }
 
-    if (rc == pcmk_ok && is_corosync_cluster()) {
-        /* Keep the membership list up-to-date for crm_node to query */
-        if(cluster_connect_quorum(mcp_quorum_callback, mcp_quorum_destroy) == FALSE) {
-            rc = -ENOTCONN;
-        }
-    }
+    } else if (cluster_connect_quorum(mcp_quorum_callback, mcp_quorum_destroy)
+               == FALSE) {
+        rc = -ENOTCONN;
 
-#if SUPPORT_CMAN
-    if (rc == pcmk_ok && is_cman_cluster()) {
-        init_cman_connection(mcp_cman_dispatch, mcp_cman_destroy);
-    }
-#endif
-
-    if(rc == pcmk_ok) {
+    } else {
         local_name = get_local_node_name();
         update_node_processes(local_nodeid, local_name, get_process_list());
 
@@ -1137,7 +1111,7 @@ main(int argc, char **argv)
 
         crm_info("Starting mainloop");
 
-        g_main_run(mainloop);
+        g_main_loop_run(mainloop);
     }
 
     if (ipcs) {
@@ -1151,7 +1125,5 @@ main(int argc, char **argv)
     cluster_disconnect_cpg(&cluster);
     cluster_disconnect_cfg();
 
-    crm_info("Exiting %s", crm_system_name);
-
-    return crm_exit(rc);
+    return crm_exit(crm_errno2exit(rc));
 }

@@ -47,8 +47,6 @@
 
 #include <internal.h>
 
-#include <standalone_config.h>
-
 char *stonith_our_uname = NULL;
 char *stonith_our_uuid = NULL;
 long stonith_watchdog_timeout_ms = 0;
@@ -192,28 +190,6 @@ stonith_peer_callback(xmlNode * msg, void *private_data)
     crm_log_xml_trace(msg, "Peer[inbound]");
     stonith_command(NULL, 0, 0, msg, remote_peer);
 }
-
-#if SUPPORT_HEARTBEAT
-static void
-stonith_peer_hb_callback(HA_Message * msg, void *private_data)
-{
-    xmlNode *xml = convert_ha_message(NULL, msg, __FUNCTION__);
-
-    stonith_peer_callback(xml, private_data);
-    free_xml(xml);
-}
-
-static void
-stonith_peer_hb_destroy(gpointer user_data)
-{
-    if (stonith_shutdown_flag) {
-        crm_info("Heartbeat disconnection complete... exiting");
-    } else {
-        crm_err("Heartbeat connection lost!  Exiting.");
-    }
-    stonith_shutdown(0);
-}
-#endif
 
 #if SUPPORT_COROSYNC
 static void
@@ -1098,6 +1074,9 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
         if(value) {
             timeout_ms = crm_get_msec(value);
         }
+        if (timeout_ms < 0) {
+            timeout_ms = crm_auto_watchdog_timeout();
+        }
 
         if(timeout_ms != stonith_watchdog_timeout_ms) {
             crm_notice("New watchdog timeout %lds (was %lds)", timeout_ms/1000, stonith_watchdog_timeout_ms/1000);
@@ -1143,10 +1122,10 @@ stonith_shutdown(int nsig)
     crm_info("Terminating with %d clients",
              crm_hash_table_size(client_connections));
     if (mainloop != NULL && g_main_is_running(mainloop)) {
-        g_main_quit(mainloop);
+        g_main_loop_quit(mainloop);
     } else {
         stonith_cleanup();
-        crm_exit(pcmk_ok);
+        crm_exit(CRM_EX_OK);
     }
 }
 
@@ -1285,7 +1264,6 @@ int
 main(int argc, char **argv)
 {
     int flag;
-    int rc = 0;
     int lpc = 0;
     int argerr = 0;
     int option_index = 0;
@@ -1319,7 +1297,7 @@ main(int argc, char **argv)
                 break;
             case '$':
             case '?':
-                crm_help(flag, EX_OK);
+                crm_help(flag, CRM_EX_OK);
                 break;
             default:
                 ++argerr;
@@ -1444,7 +1422,7 @@ main(int argc, char **argv)
 
         printf(" </parameters>\n");
         printf("</resource-agent>\n");
-        return 0;
+        return CRM_EX_OK;
     }
 
     if (optind != argc) {
@@ -1452,7 +1430,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', EX_USAGE);
+        crm_help('?', CRM_EX_USAGE);
     }
 
     crm_log_init("stonith-ng", LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
@@ -1462,13 +1440,8 @@ main(int argc, char **argv)
     known_peer_names = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, free);
 
     if (stand_alone == FALSE) {
-#if SUPPORT_HEARTBEAT
-        cluster.hb_conn = NULL;
-        cluster.hb_dispatch = stonith_peer_hb_callback;
-        cluster.destroy = stonith_peer_hb_destroy;
-#endif
 
-        if (is_openais_cluster()) {
+        if (is_corosync_cluster()) {
 #if SUPPORT_COROSYNC
             cluster.destroy = stonith_peer_cs_destroy;
             cluster.cpg.cpg_deliver_fn = stonith_peer_ais_callback;
@@ -1480,31 +1453,10 @@ main(int argc, char **argv)
 
         if (crm_cluster_connect(&cluster) == FALSE) {
             crm_crit("Cannot sign in to the cluster... terminating");
-            crm_exit(DAEMON_RESPAWN_STOP);
+            crm_exit(CRM_EX_FATAL);
         }
         stonith_our_uname = cluster.uname;
         stonith_our_uuid = cluster.uuid;
-
-#if SUPPORT_HEARTBEAT
-        if (is_heartbeat_cluster()) {
-            /* crm_cluster_connect() registered us for crm_system_name, which
-             * usually is the only F_TYPE used by the respective sub system.
-             * Stonith needs to register two additional F_TYPE callbacks,
-             * because it can :-/ */
-            if (HA_OK !=
-                cluster.hb_conn->llc_ops->set_msg_callback(cluster.hb_conn, T_STONITH_NOTIFY,
-                                                            cluster.hb_dispatch, cluster.hb_conn)) {
-                crm_crit("Cannot set msg callback %s: %s", T_STONITH_NOTIFY, cluster.hb_conn->llc_ops->errmsg(cluster.hb_conn));
-                crm_exit(DAEMON_RESPAWN_STOP);
-            }
-            if (HA_OK !=
-                cluster.hb_conn->llc_ops->set_msg_callback(cluster.hb_conn, T_STONITH_TIMEOUT_VALUE,
-                                                            cluster.hb_dispatch, cluster.hb_conn)) {
-                crm_crit("Cannot set msg callback %s: %s", T_STONITH_TIMEOUT_VALUE, cluster.hb_conn->llc_ops->errmsg(cluster.hb_conn));
-                crm_exit(DAEMON_RESPAWN_STOP);
-            }
-        }
-#endif
 
         if (no_cib_connect == FALSE) {
             setup_cib();
@@ -1534,26 +1486,12 @@ main(int argc, char **argv)
 
     stonith_ipc_server_init(&ipcs, &ipc_callbacks);
 
-#if SUPPORT_STONITH_CONFIG
-    if (((stand_alone == TRUE)) && !(standalone_cfg_read_file(STONITH_NG_CONF_FILE))) {
-        standalone_cfg_commit();
-    }
-#endif
-
     /* Create the mainloop and run it... */
-    mainloop = g_main_new(FALSE);
+    mainloop = g_main_loop_new(NULL, FALSE);
     crm_info("Starting %s mainloop", crm_system_name);
+    g_main_loop_run(mainloop);
 
-    g_main_run(mainloop);
     stonith_cleanup();
-
-#if SUPPORT_HEARTBEAT
-    if (cluster.hb_conn) {
-        cluster.hb_conn->llc_ops->delete(cluster.hb_conn);
-    }
-#endif
-
     crm_info("Done");
-
-    return crm_exit(rc);
+    return crm_exit(CRM_EX_OK);
 }

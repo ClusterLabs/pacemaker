@@ -30,8 +30,6 @@
 #    include <gnutls/gnutls.h>
 #  endif
 
-#define LRMD_ISOLATION_PROVIDER ".isolation"
-
 GHashTable *rsc_list;
 
 typedef struct lrmd_rsc_s {

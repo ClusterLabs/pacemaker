@@ -1,14 +1,14 @@
 # How to Install Pacemaker
 
 ## Build Dependencies
-* automake
-* autoconf
+* automake 1.11 or later
+* autoconf 2.64 or later
 * libtool
 * libtool-ltdl-devel
 * libuuid-devel
 * pkgconfig
 * python (or python-devel if that's preferred as a build dependency)
-* glib2-devel
+* glib2-devel 2.16.0 or later
 * libxml2-devel
 * libxslt-devel 
 * bzip2-devel
@@ -17,26 +17,19 @@
 * libqb-devel
 
 ## Cluster Stack Dependencies (Pick at least one)
-* clusterlib-devel (CMAN)
-* corosynclib-devel (Corosync)
-* heartbeat-devel (Heartbeat)
+* Corosync: corosynclib-devel
+* (no other stacks are currently supported)
 
 ## Optional Build Dependencies
 * ncurses-devel (interactive crm_mon)
 * systemd-devel (systemd support)
 * dbus-devel (systemd/upstart resource support)
-* cluster-glue-libs-devel (LHA style fencing agents)
-* libesmtp-devel (crm_mon --mail-to option)
-* lm_sensors-devel (crm_mon --snmp-traps option)
-* net-snmp-devel (crm_mon --snmp-traps option)
+* cluster-glue-libs-devel (Linux-HA style fencing agents)
 * asciidoc (documentation)
 * help2man (documentation)
 * publican (documentation)
 * inkscape (documentation)
 * docbook-style-xsl (documentation)
-* bison (rpm)
-* byacc (rpm)
-* flex (rpm)
 
 ## Optional testing dependencies
 * valgrind (if running CTS valgrind tests)

@@ -1,0 +1,15 @@
+<!--
+ Copyright 2018 Red Hat, Inc.
+ Author: Jan Pokorny <jpokorny@redhat.com>
+ Part of pacemaker project
+ SPDX-License-Identifier: GPL-2.0-or-later
+ -->
+<grammar xmlns="http://relaxng.org/ns/structure/1.0">
+  <include href="http://www.thaiopensource.com/relaxng/xslt.rng">
+    <define name="top-level-extension">
+      <grammar>
+        <include href="cibtr-2.rng"/>
+      </grammar>
+    </define>
+  </include>
+</grammar>

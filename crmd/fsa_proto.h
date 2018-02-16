@@ -72,13 +72,6 @@ do_ha_control(long long action,
               enum crmd_fsa_cause cause,
               enum crmd_fsa_state cur_state, enum crmd_fsa_input cur_input, fsa_data_t * msg_data);
 
-/*	A_CCM_CONNECT	*/
-void
-
-do_ccm_control(long long action,
-               enum crmd_fsa_cause cause,
-               enum crmd_fsa_state cur_state, enum crmd_fsa_input cur_input, fsa_data_t * msg_data);
-
 /*	A_LRM_CONNECT	*/
 void
 
@@ -160,19 +153,6 @@ do_timer_control(long long action,
                  enum crmd_fsa_cause cause,
                  enum crmd_fsa_state cur_state,
                  enum crmd_fsa_input cur_input, fsa_data_t * msg_data);
-
-#  if SUPPORT_HEARTBEAT
-/*	A_CCM_UPDATE_CACHE	*/
-void do_ccm_update_cache(enum crmd_fsa_cause cause, enum crmd_fsa_state cur_state,
-                         oc_ed_t event, const oc_ev_membership_t * oc, xmlNode * xml);
-#  endif
-
-/*	A_CCM_EVENT	*/
-void
-
-do_ccm_event(long long action,
-             enum crmd_fsa_cause cause,
-             enum crmd_fsa_state cur_state, enum crmd_fsa_input cur_input, fsa_data_t * msg_data);
 
 /*	A_DC_TAKEOVER	*/
 void
@@ -279,13 +259,6 @@ do_lrm_invoke(long long action,
 void
 
 do_lrm_event(long long action,
-             enum crmd_fsa_cause cause,
-             enum crmd_fsa_state cur_state, enum crmd_fsa_input cur_input, fsa_data_t * msg_data);
-
-/*	A_PE_INVOKE	*/
-void
-
-do_pe_invoke(long long action,
              enum crmd_fsa_cause cause,
              enum crmd_fsa_state cur_state, enum crmd_fsa_input cur_input, fsa_data_t * msg_data);
 

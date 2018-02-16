@@ -34,13 +34,6 @@ fi
 tmpfile=/tmp/dkshowscorestmpfiledk
 tmpfile2=/tmp/dkshowscorestmpfile2dk
 
-#doesn't work in ais clusters
-if ! ps -ef|grep -q -w aisexec; then
-	if [ `crmadmin -D | cut -d' ' -f4` != `uname -n|tr "[:upper:]" "[:lower:]"` ] 
-		then echo "Warning: Script is not running on DC. This will be slow."
-	fi
-fi
-
 sortby=1
 if [ "$1" = "node" ] 
 then

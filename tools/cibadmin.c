@@ -36,14 +36,13 @@
 #include <crm/common/ipc.h>
 #include <crm/cib/internal.h>
 
-int exit_code = pcmk_ok;
+crm_exit_t exit_code = CRM_EX_OK;
 int message_timer_id = -1;
 int message_timeout_ms = 30;
 
 GMainLoop *mainloop = NULL;
 
 const char *host = NULL;
-void usage(const char *cmd, int exit_status);
 int do_init(void);
 int do_work(xmlNode * input, int command_options, xmlNode ** output);
 
@@ -69,7 +68,6 @@ char *subtype = NULL;
 char *reset = NULL;
 
 int request_id = 0;
-int operation_status = 0;
 cib_t *the_cib = NULL;
 gboolean force_flag = FALSE;
 gboolean quiet = FALSE;
@@ -118,7 +116,7 @@ static struct crm_option long_options[] = {
 
     {"xpath",       1, 0, 'A', "A valid XPath to use instead of --scope,-o"},
     {"node-path",   0, 0, 'e',  "When performing XPath queries, return the address of any matches found."},
-    {"-spacer-",    0, 0, '-', " Eg: /cib/configuration/resources/master[@id='ms_RH1_SCS']/primitive[@id='prm_RH1_SCS']", pcmk_option_paragraph},
+    {"-spacer-",    0, 0, '-', " Eg: /cib/configuration/resources/clone[@id='ms_RH1_SCS']/primitive[@id='prm_RH1_SCS']", pcmk_option_paragraph},
     {"node",	    1, 0, 'N', "(Advanced) Send command to the specified host\n"},
     {"-space-",	    0, 0, '!', NULL, 1},
 
@@ -201,6 +199,7 @@ int
 main(int argc, char **argv)
 {
     int argerr = 0;
+    int rc = pcmk_ok;
     int flag;
     const char *source = NULL;
     const char *admin_input_xml = NULL;
@@ -221,7 +220,7 @@ main(int argc, char **argv)
                     "\n\nWhere necessary, XML data will be obtained using the -X, -x, or -p options.\n");
 
     if (argc < 2) {
-        crm_help('?', EX_USAGE);
+        crm_help('?', CRM_EX_USAGE);
     }
 
     while (1) {
@@ -296,7 +295,7 @@ main(int argc, char **argv)
             case '?':
             case '$':
             case '!':
-                crm_help(flag, EX_OK);
+                crm_help(flag, CRM_EX_OK);
                 break;
             case 'o':
                 crm_trace("Option %c => %s", flag, optarg);
@@ -348,7 +347,7 @@ main(int argc, char **argv)
                 }
                 admin_input_xml = dump_xml_formatted(output);
                 fprintf(stdout, "%s\n", crm_str(admin_input_xml));
-                goto bail;
+                crm_exit(CRM_EX_OK);
                 break;
             default:
                 printf("Argument code 0%o (%c)" " is not (?yet?) supported\n", flag, flag);
@@ -371,7 +370,7 @@ main(int argc, char **argv)
         while (optind < argc)
             printf("%s ", argv[optind++]);
         printf("\n");
-        crm_help('?', EX_USAGE);
+        crm_help('?', CRM_EX_USAGE);
     }
 
     if (optind > argc || cib_action == NULL) {
@@ -379,7 +378,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', EX_USAGE);
+        crm_help('?', CRM_EX_USAGE);
     }
 
     if (dangerous_cmd && force_flag == FALSE) {
@@ -387,8 +386,7 @@ main(int argc, char **argv)
                 "  To prevent accidental destruction of the cluster,"
                 " the --force flag is required in order to proceed.\n");
         fflush(stderr);
-        exit_code = -EINVAL;
-        goto bail;
+        crm_exit(CRM_EX_UNSAFE);
     }
 
     if (admin_input_file != NULL) {
@@ -409,8 +407,7 @@ main(int argc, char **argv)
 
     } else if (source) {
         fprintf(stderr, "Couldn't parse input from %s.\n", source);
-        exit_code = -EINVAL;
-        goto bail;
+        crm_exit(CRM_EX_CONFIG);
     }
 
     if (safe_str_eq(cib_action, "md5-sum")) {
@@ -418,15 +415,15 @@ main(int argc, char **argv)
 
         if (input == NULL) {
             fprintf(stderr, "Please supply XML to process with -X, -x or -p\n");
-            exit_code = -EINVAL;
-            goto bail;
+            crm_exit(CRM_EX_USAGE);
         }
 
         digest = calculate_on_disk_digest(input);
         fprintf(stderr, "Digest: ");
         fprintf(stdout, "%s\n", crm_str(digest));
         free(digest);
-        goto bail;
+        free_xml(input);
+        crm_exit(CRM_EX_OK);
 
     } else if (safe_str_eq(cib_action, "md5-sum-versioned")) {
         char *digest = NULL;
@@ -434,8 +431,7 @@ main(int argc, char **argv)
 
         if (input == NULL) {
             fprintf(stderr, "Please supply XML to process with -X, -x or -p\n");
-            exit_code = -EINVAL;
-            goto bail;
+            crm_exit(CRM_EX_USAGE);
         }
 
         version = crm_element_value(input, XML_ATTR_CRM_VERSION);
@@ -443,39 +439,40 @@ main(int argc, char **argv)
         fprintf(stderr, "Versioned (%s) digest: ", version);
         fprintf(stdout, "%s\n", crm_str(digest));
         free(digest);
-        goto bail;
+        free_xml(input);
+        crm_exit(CRM_EX_OK);
     }
 
-    exit_code = do_init();
-    if (exit_code != pcmk_ok) {
+    rc = do_init();
+    if (rc != pcmk_ok) {
         crm_err("Init failed, could not perform requested operations");
         fprintf(stderr, "Init failed, could not perform requested operations\n");
-        return crm_exit(-exit_code);
+        free_xml(input);
+        crm_exit(crm_errno2exit(rc));
     }
 
-    exit_code = do_work(input, command_options, &output);
-    if (exit_code > 0) {
+    rc = do_work(input, command_options, &output);
+    if (rc > 0) {
         /* wait for the reply by creating a mainloop and running it until
          * the callbacks are invoked...
          */
-        request_id = exit_code;
+        request_id = rc;
 
         the_cib->cmds->register_callback(the_cib, request_id, message_timeout_ms, FALSE, NULL,
                                          "cibadmin_op_callback", cibadmin_op_callback);
 
-        mainloop = g_main_new(FALSE);
+        mainloop = g_main_loop_new(NULL, FALSE);
 
         crm_trace("%s waiting for reply from the local CIB", crm_system_name);
 
         crm_info("Starting mainloop");
-        g_main_run(mainloop);
+        g_main_loop_run(mainloop);
 
-    } else if (exit_code < 0) {
-        crm_err("Call failed: %s", pcmk_strerror(exit_code));
-        fprintf(stderr, "Call failed: %s\n", pcmk_strerror(exit_code));
-        operation_status = exit_code;
+    } else if (rc < 0) {
+        crm_err("Call failed: %s", pcmk_strerror(rc));
+        fprintf(stderr, "Call failed: %s\n", pcmk_strerror(rc));
 
-        if (exit_code == -pcmk_err_schema_validation) {
+        if (rc == -pcmk_err_schema_validation) {
             if (crm_str_eq(cib_action, CIB_OP_UPGRADE, TRUE)) {
                 xmlNode *obj = NULL;
                 int version = 0, rc = 0;
@@ -489,6 +486,7 @@ main(int argc, char **argv)
                 validate_xml_verbose(output);
             }
         }
+        exit_code = crm_errno2exit(rc);
     }
 
     if (output != NULL) {
@@ -499,13 +497,12 @@ main(int argc, char **argv)
     crm_trace("%s exiting normally", crm_system_name);
 
     free_xml(input);
-    flag = the_cib->cmds->signoff(the_cib);
+    rc = the_cib->cmds->signoff(the_cib);
+    if (exit_code == CRM_EX_OK) {
+        exit_code = crm_errno2exit(rc);
+    }
     cib_delete(the_cib);
 
-    if(exit_code == pcmk_ok) {
-        exit_code = flag;
-    }
-  bail:
     return crm_exit(exit_code);
 }
 
@@ -552,14 +549,14 @@ void
 cib_connection_destroy(gpointer user_data)
 {
     crm_err("Connection to the CIB terminated... exiting");
-    g_main_quit(mainloop);
+    g_main_loop_quit(mainloop);
     return;
 }
 
 void
 cibadmin_op_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
-    exit_code = rc;
+    exit_code = crm_errno2exit(rc);
 
     if (rc != 0) {
         crm_warn("Call %s failed (%d): %s", cib_action, rc, pcmk_strerror(rc));
@@ -567,7 +564,7 @@ cibadmin_op_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void 
         print_xml_output(output);
 
     } else if (safe_str_eq(cib_action, CIB_OP_QUERY) && output == NULL) {
-        crm_err("Output expected in query response");
+        crm_err("Query returned no output");
         crm_log_xml_err(msg, "no output");
 
     } else if (output == NULL) {
@@ -579,10 +576,10 @@ cibadmin_op_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void 
     }
 
     if (call_id == request_id) {
-        g_main_quit(mainloop);
+        g_main_loop_quit(mainloop);
 
     } else {
-        crm_info("Message was not the response we were looking for (%d vs. %d", call_id,
-                 request_id);
+        crm_info("Message was not the response we were looking for (%d vs. %d)",
+                 call_id, request_id);
     }
 }

@@ -594,10 +594,9 @@ distribute_children(resource_t *rsc, GListPtr children, GListPtr nodes,
 
 
 node_t *
-clone_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
+clone_color(resource_t *rsc, node_t *prefer, pe_working_set_t *data_set)
 {
     GListPtr nodes = NULL;
-
     clone_variant_data_t *clone_data = NULL;
 
     get_clone_variant_data(clone_data, rsc);
@@ -608,6 +607,10 @@ clone_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
     } else if (is_set(rsc->flags, pe_rsc_allocating)) {
         pe_rsc_debug(rsc, "Dependency loop detected involving %s", rsc->id);
         return NULL;
+    }
+
+    if (is_set(rsc->flags, pe_rsc_promotable)) {
+        apply_master_prefs(rsc);
     }
 
     set_bit(rsc->flags, pe_rsc_allocating);
@@ -641,9 +644,12 @@ clone_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
     distribute_children(rsc, rsc->children, nodes, clone_data->clone_max, clone_data->clone_node_max, data_set);
     g_list_free(nodes);
 
+    if (is_set(rsc->flags, pe_rsc_promotable)) {
+        color_promotable(rsc, data_set);
+    }
+
     clear_bit(rsc->flags, pe_rsc_provisional);
     clear_bit(rsc->flags, pe_rsc_allocating);
-
     pe_rsc_trace(rsc, "Done allocating %s", rsc->id);
     return NULL;
 }
@@ -808,13 +814,16 @@ child_ordering_constraints(resource_t * rsc, pe_working_set_t * data_set)
 }
 
 void
-clone_create_actions(resource_t * rsc, pe_working_set_t * data_set)
+clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 {
     clone_variant_data_t *clone_data = NULL;
 
     get_clone_variant_data(clone_data, rsc);
     clone_create_pseudo_actions(rsc, rsc->children, &clone_data->start_notify, &clone_data->stop_notify,data_set);
     child_ordering_constraints(rsc, data_set);
+    if (is_set(rsc->flags, pe_rsc_promotable)) {
+        create_promotable_actions(rsc, data_set);
+    }
 }
 
 void
@@ -880,7 +889,7 @@ clone_create_pseudo_actions(
 }
 
 void
-clone_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
+clone_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 {
     resource_t *last_rsc = NULL;
     GListPtr gIter;
@@ -893,7 +902,7 @@ clone_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
     new_rsc_order(rsc, RSC_START, rsc, RSC_STARTED, pe_order_runnable_left, data_set);
     new_rsc_order(rsc, RSC_STOP, rsc, RSC_STOPPED, pe_order_runnable_left, data_set);
 
-    if (rsc->variant == pe_master) {
+    if (is_set(rsc->flags, pe_rsc_promotable)) {
         new_rsc_order(rsc, RSC_DEMOTED, rsc, RSC_STOP, pe_order_optional, data_set);
         new_rsc_order(rsc, RSC_STARTED, rsc, RSC_PROMOTE, pe_order_runnable_left, data_set);
     }
@@ -922,6 +931,9 @@ clone_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
         }
 
         last_rsc = child_rsc;
+    }
+    if (is_set(rsc->flags, pe_rsc_promotable)) {
+        promotable_constraints(rsc, data_set);
     }
 }
 
@@ -955,6 +967,7 @@ is_child_compatible(resource_t *child_rsc, node_t * local_node, enum rsc_role_e 
     node_t *node = NULL;
     enum rsc_role_e next_role = child_rsc->fns->state(child_rsc, current);
 
+    CRM_CHECK(child_rsc && local_node, return FALSE);
     if (is_set_recursive(child_rsc, pe_rsc_block, TRUE) == FALSE) {
         /* We only want instances that haven't failed */
         node = child_rsc->fns->location(child_rsc, NULL, current);
@@ -965,7 +978,7 @@ is_child_compatible(resource_t *child_rsc, node_t * local_node, enum rsc_role_e 
         return FALSE;
     }
 
-    if (node && local_node && node->details == local_node->details) {
+    if (node && (node->details == local_node->details)) {
         return TRUE;
 
     } else if (node) {
@@ -1021,7 +1034,8 @@ clone_rsc_colocation_lh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation
 }
 
 void
-clone_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * constraint)
+clone_rsc_colocation_rh(resource_t *rsc_lh, resource_t *rsc_rh,
+                        rsc_colocation_t *constraint)
 {
     GListPtr gIter = NULL;
     gboolean do_interleave = FALSE;
@@ -1034,6 +1048,18 @@ clone_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation
 
     pe_rsc_trace(rsc_rh, "Processing constraint %s: %s -> %s %d",
                  constraint->id, rsc_lh->id, rsc_rh->id, constraint->score);
+
+    if (is_set(rsc_rh->flags, pe_rsc_promotable)) {
+        if (is_set(rsc_rh->flags, pe_rsc_provisional)) {
+            pe_rsc_trace(rsc_rh, "%s is still provisional", rsc_rh->id);
+            return;
+        } else if (constraint->role_rh == RSC_ROLE_UNKNOWN) {
+            pe_rsc_trace(rsc_rh, "Handling %s as a clone colocation", constraint->id);
+        } else {
+            promotable_colocation_rh(rsc_lh, rsc_rh, constraint);
+            return;
+        }
+    }
 
     /* only the LHS side needs to be labeled as interleave */
     interleave_s = g_hash_table_lookup(constraint->rsc_lh->meta, XML_RSC_ATTR_INTERLEAVE);
@@ -1443,6 +1469,27 @@ clone_append_meta(resource_t * rsc, xmlNode * xml)
     name = crm_meta_name(XML_RSC_ATTR_INCARNATION_NODEMAX);
     crm_xml_add_int(xml, name, clone_data->clone_node_max);
     free(name);
+
+    if (is_set(rsc->flags, pe_rsc_promotable)) {
+        name = crm_meta_name(XML_RSC_ATTR_PROMOTED_MAX);
+        crm_xml_add_int(xml, name, clone_data->promoted_max);
+        free(name);
+
+        name = crm_meta_name(XML_RSC_ATTR_PROMOTED_NODEMAX);
+        crm_xml_add_int(xml, name, clone_data->promoted_node_max);
+        free(name);
+
+        /* @COMPAT Maintain backward compatibility with resource agents that
+         * expect the old names (deprecated since 2.0.0).
+         */
+        name = crm_meta_name(XML_RSC_ATTR_MASTER_MAX);
+        crm_xml_add_int(xml, name, clone_data->promoted_max);
+        free(name);
+
+        name = crm_meta_name(XML_RSC_ATTR_MASTER_NODEMAX);
+        crm_xml_add_int(xml, name, clone_data->promoted_node_max);
+        free(name);
+    }
 }
 
 GHashTable *

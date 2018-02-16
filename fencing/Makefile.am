@@ -18,16 +18,13 @@
 include $(top_srcdir)/Makefile.common
 
 ## binary progs
-testdir			= $(datadir)/$(PACKAGE)/tests/fencing
-test_SCRIPTS		= regression.py
-
 halibdir	= $(CRM_DAEMON_DIR)
 halib_PROGRAMS	= stonithd stonith-test
 
 sbin_PROGRAMS	= stonith_admin
-sbin_SCRIPTS	= fence_legacy fence_pcmk
+sbin_SCRIPTS	= fence_legacy
 
-noinst_HEADERS	= internal.h standalone_config.h
+noinst_HEADERS	= internal.h
 
 if BUILD_XML_HELP
 man7_MANS	= stonithd.7
@@ -36,9 +33,7 @@ endif
 stonith_test_SOURCES	= test.c
 
 stonith_test_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la	\
-			$(top_builddir)/lib/cluster/libcrmcluster.la	\
-			$(top_builddir)/lib/fencing/libstonithd.la	\
-			$(CRYPTOLIB) $(CLUSTERLIBS)
+			$(top_builddir)/lib/fencing/libstonithd.la
 
 stonith_admin_SOURCES	= admin.c
 
@@ -47,7 +42,7 @@ stonith_admin_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la	\
 			$(top_builddir)/lib/pengine/libpe_status.la	\
 			$(top_builddir)/lib/cluster/libcrmcluster.la	\
 			$(top_builddir)/lib/fencing/libstonithd.la	\
-			$(CRYPTOLIB) $(CLUSTERLIBS)
+			$(CLUSTERLIBS)
 
 stonithd_CPPFLAGS	= -I$(top_srcdir)/pengine $(AM_CPPFLAGS)
 stonithd_YFLAGS		= -d
@@ -60,18 +55,8 @@ stonithd_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la	\
 			$(top_builddir)/lib/fencing/libstonithd.la	\
 			$(top_builddir)/lib/pengine/libpe_status.la	\
 			$(top_builddir)/pengine/libpengine.la		\
-			$(CRYPTOLIB) $(CLUSTERLIBS)
+			$(CLUSTERLIBS)
 
 stonithd_SOURCES	= main.c commands.c remote.c
-
-if BUILD_STONITH_CONFIG
-BUILT_SOURCES 		= standalone_config.h
-
-stonithd_SOURCES	+= standalone_config.c config.y config.l
-stonithd_AM_LFLAGS	= -o$(LEX_OUTPUT_ROOT).c
-endif
-
-# lex/yacc issues:
-CFLAGS			= $(CFLAGS_COPY:-Werror=)
 
 CLEANFILES = $(man7_MANS) $(man8_MANS)

@@ -89,11 +89,6 @@ elif [ -d "@localstatedir@/lock" ]; then
 fi
 [ -z "$LOCK_FILE" ] && LOCK_FILE="$LOCK_DIR/pacemaker"
 
-# Unless specified otherwise, assume cman is in use if cluster.conf exists
-if [ x = "x$PCMK_STACK" -a -f "@sysconfdir@/cluster/cluster.conf" ]; then
-    PCMK_STACK=cman
-fi
-
 # Check if there is a valid watchdog-device configured in sbd config
 if [ x != "x$SBD_WATCHDOG_DEV" -a "/dev/null" != "$SBD_WATCHDOG_DEV" -a -c "$SBD_WATCHDOG_DEV" ]; then
 	# enhance for unavailable chkconfig - don't touch sbd for now
@@ -132,92 +127,6 @@ start()
 	echo
 }
 
-cman_pre_start()
-{
-    # start cman if it's not running
-    service cman status >/dev/null 2>&1
-    if [ $? -ne 0 ]; then
-	service cman start
-	if [ $? -ne 0 ]; then
-	    notify "Aborting startup of $desc"
-	    echo
-	    exit 1
-	fi
-    fi
-
-    # start cman's friends if they're not running but were configured to start automatically
-    for cservice in cmirrord clvmd gfs2 $SBD_SERVICE; do
-	chkconfig --list $cservice 2>/dev/null | grep -q ":on"
-	if [ $? -eq 0 ]; then
-	    service $cservice status >/dev/null 2>&1
-	    if [ $? -ne 0 ]; then
-		log "Attempting to start $cservice"
-		service $cservice start
-	    fi
-	fi
-    done
-}
-
-cman_pre_stop()
-{
-    # if cman is not running there is nothing we need to do here
-    service cman status >/dev/null 2>&1
-    if [ $? -ne 0 ]; then
-	return
-    fi
-
-    has_lvm=`crm_resource -c | grep Resource: | grep LVM`
-
-    # migrate resources to another node or shut them down
-    cname=`crm_node --name`
-    crm_attribute -N $cname -n standby -v true -l reboot
-    notify "Waiting for shutdown of managed resources"
-
-
-    while [ 1 = 1 ]; do
-	# 0x0000000000000002 means managed
-	active=`crm_resource -c | grep Resource: | grep 0x...............[2367] | awk '{print $9}' | grep "^${cname}$" | wc -l`
-	if [ $active = 0 ]; then
-	    break;
-	fi
-	sleep 2
-	echo -n "."
-    done
-    success
-    echo
-
-    if [ -d /sys/kernel/dlm/ ]; then
-	lockspace="$(ls -1 /sys/kernel/dlm/)"
-	if [ -n "$lockspace" ]; then
-	    notify "DLM lockspace still in use"
-	    echo ""
-
-	    for cservice in gfs2 clvmd cmirrord; do
-		service $cservice status >/dev/null 2>&1
-		if [ $? -eq 0 ]; then
-		    if [ -n "$has_lvm" ] && [ "$cservice" = "clvmd" ]; then
-			# allow HA-LVM to take a lock on vg/lv before clvmd can exit
-			notify "Waiting for LVM services to start somewhere else"
-			sleep 15
-			success
-		    fi
-		    log "Attempting to shutdown $cservice"
-		    service $cservice stop
-		fi
-	    done
-	fi
-    fi
-
-    notify "Leaving fence domain"
-    fence_tool leave -w 10
-    checkrc
-
-    fenced=$(pidof fenced)
-    notify "Stopping fenced $fenced"
-    kill -KILL $fenced > /dev/null 2>&1
-    checkrc
-}
-
 stop()
 {
 	shutdown_prog=$prog
@@ -251,8 +160,6 @@ rtrn=0
 
 case "$1" in
 start)
-	# For consistency with stop
-	[ "$PCMK_STACK" = cman ] && cman_pre_start
 	start
 ;;
 restart|reload|force-reload)
@@ -270,26 +177,8 @@ status)
 	rtrn=$?
 ;;
 stop)
-	#
-	# stonithd needs to be around until fenced is stopped
-	# fenced can't be stopped until any resource using dlm is active
-	#
-	# So:
-	# 1. put the node into standby
-	# 2. wait for all resources to be stopped
-	# 3. stop fenced and anything that needs it (borrowed from the cman script)
-	# 4. stop pacemaker
-	# 5. stop the rest of cman (so it doesn't end up half up/down)
-	#
-	[ "$PCMK_STACK" = cman ] && cman_pre_stop
 	stop
 	[ "x$SBD_SERVICE" != x ] && service $SBD_SERVICE stop
-
-	# Stop cman if needed, unless --skip-cman is specified (which allows
-	# higher-level tooling to stop pacemaker on all nodes, then stop cman
-	# on all nodes, to maintain quorum for DLM-based resources while
-	# pacemaker shuts down).
-	[ "$PCMK_STACK" = cman ] && [ "$2" != "--skip-cman" ] && service cman stop
 ;;
 *)
 	echo "usage: $0 {start|stop|restart|reload|force-reload|condrestart|try-restart|status}"

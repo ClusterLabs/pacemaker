@@ -18,6 +18,8 @@
 
 #include <crm_internal.h>
 
+#include <stdlib.h>
+
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
@@ -417,9 +419,6 @@ fsa_cause2string(enum crmd_fsa_cause cause)
         case C_HA_MESSAGE:
             causeAsText = "C_HA_MESSAGE";
             break;
-        case C_CCM_CALLBACK:
-            causeAsText = "C_CCM_CALLBACK";
-            break;
         case C_TIMER_POPPED:
             causeAsText = "C_TIMER_POPPED";
             break;
@@ -440,9 +439,6 @@ fsa_cause2string(enum crmd_fsa_cause cause)
             break;
         case C_CRMD_STATUS_CALLBACK:
             causeAsText = "C_CRMD_STATUS_CALLBACK";
-            break;
-        case C_HA_DISCONNECT:
-            causeAsText = "C_HA_DISCONNECT";
             break;
         case C_FSA_INTERNAL:
             causeAsText = "C_FSA_INTERNAL";
@@ -595,12 +591,6 @@ fsa_action2string(long long action)
             break;
         case A_EXIT_1:
             actionAsText = "A_EXIT_1";
-            break;
-        case A_CCM_CONNECT:
-            actionAsText = "A_CCM_CONNECT";
-            break;
-        case A_CCM_DISCONNECT:
-            actionAsText = "A_CCM_DISCONNECT";
             break;
         case O_CIB_RESTART:
             actionAsText = "O_CIB_RESTART";
@@ -868,12 +858,6 @@ fsa_dump_actions(long long action, const char *text)
     if (is_set(action, A_EXIT_1)) {
         crm_trace("Action %.16llx (A_EXIT_1) %s", A_EXIT_1, text);
     }
-    if (is_set(action, A_CCM_CONNECT)) {
-        crm_trace("Action %.16llx (A_CCM_CONNECT) %s", A_CCM_CONNECT, text);
-    }
-    if (is_set(action, A_CCM_DISCONNECT)) {
-        crm_trace("Action %.16llx (A_CCM_DISCONNECT) %s", A_CCM_DISCONNECT, text);
-    }
     if (is_set(action, A_CIB_START)) {
         crm_trace("Action %.16llx (A_CIB_START) %s", A_CIB_START, text);
     }
@@ -1053,4 +1037,68 @@ cib_op_timeout()
         fsa_cib_conn->call_timeout = calculated_timeout;
     }
     return calculated_timeout;
+}
+
+/*!
+ * \internal
+ * \brief Check feature set compatibility of DC and joining node
+ *
+ * Return true if a joining node's CRM feature set is compatible with the
+ * current DC's. The feature sets are compatible if they have the same major
+ * version number, and the DC's minor version number is the same or older than
+ * the joining node's. The minor-minor version is intended solely to allow
+ * resource agents to detect feature support, and so is ignored.
+ *
+ * \param[in] dc_version    DC's feature set
+ * \param[in] join_version  Joining node's version
+ */
+bool
+feature_set_compatible(const char *dc_version, const char *join_version)
+{
+    char *dc_minor = NULL;
+    char *join_minor = NULL;
+    long dc_v = 0;
+    long join_v = 0;
+
+    // Get DC's major version
+    errno = 0;
+    dc_v = strtol(dc_version, &dc_minor, 10);
+    if (errno) {
+        return FALSE;
+    }
+
+    // Get joining node's major version
+    errno = 0;
+    join_v = strtol(join_version, &join_minor, 10);
+    if (errno) {
+        return FALSE;
+    }
+
+    // Major version component must be identical
+    if (dc_v != join_v) {
+        return FALSE;
+    }
+
+    // Get DC's minor version
+    if (*dc_minor == '.') {
+        ++dc_minor;
+    }
+    errno = 0;
+    dc_v = strtol(dc_minor, NULL, 10);
+    if (errno) {
+        return FALSE;
+    }
+
+    // Get joining node's minor version
+    if (*join_minor == '.') {
+        ++join_minor;
+    }
+    errno = 0;
+    join_v = strtol(join_minor, NULL, 10);
+    if (errno) {
+        return FALSE;
+    }
+
+    // DC's minor version must be the same or older
+    return dc_v <= join_v;
 }

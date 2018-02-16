@@ -79,34 +79,6 @@ static const char *crm_app_description = NULL;
 static char *crm_short_options = NULL;
 static const char *crm_app_usage = NULL;
 
-int
-crm_exit(int rc)
-{
-    mainloop_cleanup();
-
-#if HAVE_LIBXML2
-    crm_trace("cleaning up libxml");
-    crm_xml_cleanup();
-#endif
-
-    crm_trace("exit %d", rc);
-    qb_log_fini();
-
-    free(crm_short_options);
-    free(crm_system_name);
-
-    exit(ABS(rc)); /* Always exit with a positive value so that it can be passed to crm_error
-                    *
-                    * Otherwise the system wraps it around and people
-                    * have to jump through hoops figuring out what the
-                    * error was
-                    */
-    return rc;     /* Can never happen, but allows return crm_exit(rc)
-                    * where "return rc" was used previously - which
-                    * keeps compilers happy.
-                    */
-}
-
 gboolean
 check_time(const char *value)
 {
@@ -224,6 +196,13 @@ check_utilization(const char *value)
     }
 
     return TRUE;
+}
+
+void
+crm_args_fini()
+{
+    free(crm_short_options);
+    crm_short_options = NULL;
 }
 
 int
@@ -893,24 +872,24 @@ crm_make_daemon(const char *name, gboolean daemonize, const char *pidfile)
         pid = crm_read_pidfile(pidfile);
         crm_err("%s: already running [pid %ld in %s]", name, pid, pidfile);
         printf("%s: already running [pid %ld in %s]\n", name, pid, pidfile);
-        crm_exit(rc);
+        crm_exit(CRM_EX_ERROR);
     }
 
     pid = fork();
     if (pid < 0) {
         fprintf(stderr, "%s: could not start daemon\n", name);
         crm_perror(LOG_ERR, "fork");
-        crm_exit(EINVAL);
+        crm_exit(CRM_EX_OSERR);
 
     } else if (pid > 0) {
-        crm_exit(pcmk_ok);
+        crm_exit(CRM_EX_OK);
     }
 
     rc = crm_lock_pidfile(pidfile, name);
     if(rc < pcmk_ok) {
         crm_err("Could not lock '%s' for %s: %s (%d)", pidfile, name, pcmk_strerror(rc), rc);
         printf("Could not lock '%s' for %s: %s (%d)\n", pidfile, name, pcmk_strerror(rc), rc);
-        crm_exit(rc);
+        crm_exit(CRM_EX_ERROR);
     }
 
     umask(S_IWGRP | S_IWOTH | S_IROTH);
@@ -1083,10 +1062,10 @@ crm_get_option_long(int argc, char **argv, int *index, const char **longname)
                 break;
             case ':':
                 crm_trace("Missing argument");
-                crm_help('?', 1);
+                crm_help('?', CRM_EX_USAGE);
                 break;
             case '?':
-                crm_help('?', *index ? 0 : 1);
+                crm_help('?', (*index? CRM_EX_OK : CRM_EX_USAGE));
                 break;
         }
         return flag;
@@ -1100,8 +1079,8 @@ crm_get_option_long(int argc, char **argv, int *index, const char **longname)
     return -1;
 }
 
-int
-crm_help(char cmd, int exit_code)
+crm_exit_t
+crm_help(char cmd, crm_exit_t exit_code)
 {
     int i = 0;
     FILE *stream = (exit_code ? stderr : stdout);
@@ -1189,7 +1168,7 @@ void cib_ipc_servers_init(qb_ipcs_service_t **ipcs_ro,
     if (*ipcs_ro == NULL || *ipcs_rw == NULL || *ipcs_shm == NULL) {
         crm_err("Failed to create cib servers: exiting and inhibiting respawn.");
         crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
-        crm_exit(DAEMON_RESPAWN_STOP);
+        crm_exit(CRM_EX_FATAL);
     }
 }
 
@@ -1216,7 +1195,7 @@ attrd_ipc_server_init(qb_ipcs_service_t **ipcs, struct qb_ipcs_service_handlers 
     if (*ipcs == NULL) {
         crm_err("Failed to create attrd servers: exiting and inhibiting respawn.");
         crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
-        crm_exit(DAEMON_RESPAWN_STOP);
+        crm_exit(CRM_EX_FATAL);
     }
 }
 
@@ -1228,7 +1207,7 @@ stonith_ipc_server_init(qb_ipcs_service_t **ipcs, struct qb_ipcs_service_handler
     if (*ipcs == NULL) {
         crm_err("Failed to create stonith-ng servers: exiting and inhibiting respawn.");
         crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
-        crm_exit(DAEMON_RESPAWN_STOP);
+        crm_exit(CRM_EX_FATAL);
     }
 }
 
@@ -1358,7 +1337,7 @@ find_library_function(void **handle, const char *lib, const char *fn, gboolean f
     if (!(*handle)) {
         crm_err("%sCould not open %s: %s", fatal ? "Fatal: " : "", lib, dlerror());
         if (fatal) {
-            crm_exit(DAEMON_RESPAWN_STOP);
+            crm_exit(CRM_EX_FATAL);
         }
         return NULL;
     }
@@ -1368,7 +1347,7 @@ find_library_function(void **handle, const char *lib, const char *fn, gboolean f
         error = dlerror();
         crm_err("%sCould not find %s in %s: %s", fatal ? "Fatal: " : "", fn, lib, error);
         if (fatal) {
-            crm_exit(DAEMON_RESPAWN_STOP);
+            crm_exit(CRM_EX_FATAL);
         }
     }
 
@@ -1486,7 +1465,7 @@ crm_provider_required(const char *standard)
      * - this should probably be case-sensitive, but isn't,
      *   for backward compatibility
      * - it might be nice to keep standards' capabilities (supports provider,
-     *   master/slave, etc.) as structured data somewhere
+     *   can be promotable, etc.) as structured data somewhere
      */
     if (!strcasecmp(standard, PCMK_RESOURCE_CLASS_OCF)) {
         return TRUE;
@@ -1524,8 +1503,7 @@ crm_parse_agent_spec(const char *spec, char **standard, char **provider,
         return -EINVAL;
     }
 
-    *standard = calloc(colon - spec + 1, sizeof(char));
-    strncpy(*standard, spec, colon - spec);
+    *standard = strndup(spec, colon - spec);
     spec = colon + 1;
 
     if (crm_provider_required(*standard)) {
@@ -1534,8 +1512,7 @@ crm_parse_agent_spec(const char *spec, char **standard, char **provider,
             free(*standard);
             return -EINVAL;
         }
-        *provider = calloc(colon - spec + 1, sizeof(char));
-        strncpy(*provider, spec, colon - spec);
+        *provider = strndup(spec, colon - spec);
         spec = colon + 1;
     }
 

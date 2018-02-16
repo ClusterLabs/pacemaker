@@ -116,19 +116,6 @@ cib_process_default(const char *op, int options, const char *section, xmlNode * 
 }
 
 int
-cib_process_quit(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
-                 xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
-{
-    int result = pcmk_ok;
-
-    crm_trace("Processing \"%s\" event", op);
-
-    crm_warn("The CRMd has asked us to exit... complying");
-    crm_exit(pcmk_ok);
-    return result;
-}
-
-int
 cib_process_readwrite(const char *op, int options, const char *section, xmlNode * req,
                       xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
                       xmlNode ** answer)

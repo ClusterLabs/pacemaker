@@ -81,14 +81,6 @@ uint32_t get_local_nodeid(cpg_handle_t handle)
         return local_nodeid;
     }
 
-#if 0
-    /* Should not be necessary */
-    if(get_cluster_type() == pcmk_cluster_classic_ais) {
-        get_ais_details(&local_nodeid, NULL);
-        goto done;
-    }
-#endif
-
     if(handle == 0) {
         crm_trace("Creating connection");
         cs_repeat(retries, 5, rc = cpg_initialize(&local_handle, &cb));
@@ -237,9 +229,7 @@ pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void 
     AIS_Message *msg = (AIS_Message *) content;
 
     if(handle) {
-        /* 'msg' came from CPG not the plugin
-         * Do filtering and field massaging
-         */
+        // Do filtering and field massaging
         uint32_t local_nodeid = get_local_nodeid(handle);
         const char *local_name = get_local_node_name();
 
@@ -301,7 +291,8 @@ pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void 
         rc = BZ2_bzBuffToBuffDecompress(uncompressed, &new_size, msg->data, msg->compressed_size, 1, 0);
 
         if (rc != BZ_OK) {
-            crm_err("Decompression failed: %d", rc);
+            crm_err("Decompression failed: %s " CRM_XS " bzerror=%d",
+                    bz2_strerror(rc), rc);
             free(uncompressed);
             goto badmsg;
         }
@@ -325,24 +316,8 @@ pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void 
         data = strdup(msg->data);
     }
 
-    if (msg->header.id != crm_class_members) {
-        /* Is this even needed anymore? */
-        crm_get_peer(msg->sender.id, msg->sender.uname);
-    }
-
-    if (msg->header.id == crm_class_rmpeer) {
-        uint32_t id = crm_int_helper(data, NULL);
-
-        crm_info("Removing peer %s/%u", data, id);
-        reap_crm_member(id, NULL);
-        free(data);
-        return NULL;
-
-#if SUPPORT_PLUGIN
-    } else if (is_classic_ais_cluster()) {
-        plugin_handle_membership(msg);
-#endif
-    }
+    // Is this necessary?
+    crm_get_peer(msg->sender.id, msg->sender.uname);
 
     crm_trace("Payload: %.200s", data);
     return data;
@@ -531,13 +506,15 @@ send_cluster_text(int class, const char *data,
     AIS_Message *msg = NULL;
     enum crm_ais_msg_types sender = text2msg_type(crm_system_name);
 
-    /* There are only 6 handlers registered to crm_lib_service in plugin.c */
-    CRM_CHECK(class < 6, crm_err("Invalid message class: %d", class);
-              return FALSE);
+    switch (class) {
+        case crm_class_cluster:
+            break;
+        default:
+            crm_err("Invalid message class: %d", class);
+            return FALSE;
+    }
 
-#if !SUPPORT_PLUGIN
     CRM_CHECK(dest != crm_msg_ais, return FALSE);
-#endif
 
     if(local_name == NULL) {
         local_name = get_local_node_name();
@@ -636,13 +613,6 @@ send_cluster_text(int class, const char *data,
     }
     free(target);
 
-#if SUPPORT_PLUGIN
-    /* The plugin is the only time we don't use CPG messaging */
-    if(get_cluster_type() == pcmk_cluster_classic_ais) {
-        return send_plugin_text(class, iov);
-    }
-#endif
-
     send_cpg_iov(iov);
 
     return TRUE;
@@ -655,8 +625,6 @@ text2msg_type(const char *text)
 
     CRM_CHECK(text != NULL, return type);
     if (safe_str_eq(text, "ais")) {
-        type = crm_msg_ais;
-    } else if (safe_str_eq(text, "crm_plugin")) {
         type = crm_msg_ais;
     } else if (safe_str_eq(text, CRM_SYSTEM_CIB)) {
         type = crm_msg_cib;

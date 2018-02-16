@@ -403,7 +403,7 @@ Location where configfs is mounted
 
     <parameter name="stack" unique="0">
       <longdesc lang="en">
-Which userspace stack to use.  Known values: pcmk, cman
+Which userspace stack to use.  Known values: pcmk
       </longdesc>
       <shortdesc lang="en">Userspace stack</shortdesc>
       <content type="string" default="pcmk"/>

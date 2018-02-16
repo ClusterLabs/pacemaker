@@ -1,0 +1,313 @@
+# Valgrind suppressions for Pacemaker testing
+{
+   Valgrind bug
+   Memcheck:Addr8
+   fun:__strspn_sse42
+   fun:crm_get_msec
+}
+
+{
+   Bash leak
+   Memcheck:Leak
+   fun:malloc
+   fun:xmalloc
+   fun:*
+   fun:yyparse
+   fun:parse_command
+   fun:read_command
+   fun:reader_loop
+   fun:main
+}
+
+{
+   Another bash leak
+   Memcheck:Leak
+   fun:malloc
+   fun:xmalloc
+   fun:set_default_locale
+   fun:main
+}
+
+{
+   Bash leak in cli regression testing on epel-6-i386
+   Memcheck:Leak
+   fun:malloc
+   fun:xmalloc
+   obj:*/bash
+   fun:execute_command_internal
+   ...
+   fun:execute_command_internal
+   fun:parse_and_execute
+   fun:command_substitute
+   obj:*/bash
+   obj:*/bash
+   obj:*/bash
+   fun:expand_string_assignment
+   obj:*/bash
+   obj:*/bash
+   obj:*/bash
+   obj:*/bash
+   fun:execute_command_internal
+   ...
+}
+
+{
+   Ignore option parsing
+   Memcheck:Leak
+   fun:realloc
+   fun:crm_get_option_long
+   fun:main
+}
+
+{
+   dlopen internals
+   Memcheck:Leak
+   fun:calloc
+   fun:_dlerror_run
+   fun:dlopen*
+   fun:_log_so_walk_callback
+   fun:dl_iterate_phdr
+   fun:qb_log_init
+}
+
+{
+   quarks - hashtable
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   obj:*/libglib-*
+   fun:g_slice_alloc
+   fun:g_hash_table_new_full
+   fun:g_quark_from_static_string
+}
+
+{
+   quarks - hashtable 2
+   Memcheck:Leak
+   fun:malloc
+   fun:g_malloc
+   fun:g_slice_alloc
+   fun:g_hash_table_new_full
+   fun:g_quark_from_static_string
+}
+
+{
+   quarks - hashtable 3
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   fun:g_hash_table_new_full
+   fun:g_quark_from_static_string
+}
+
+{
+   quarks - hashtable 4
+   Memcheck:Leak
+   fun:malloc
+   fun:realloc
+   fun:g_realloc
+   fun:g_quark_from_static_string
+}
+
+{
+   glib mainloop internals - default
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   fun:g_main_context_new
+   fun:g_main_context_default
+   fun:g_main_loop_new
+   fun:main
+}
+
+{
+   glib mainloop internals - default
+   Memcheck:Leak
+   fun:malloc
+   fun:g_malloc
+   fun:g_slice_alloc
+   fun:*
+   fun:g_main_context_new
+   fun:g_main_context_default
+   fun:g_main_loop_new
+   fun:main
+}
+
+{
+   glib mainloop internals - default
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   obj:*/libglib-2.*
+   fun:g_slice_alloc
+   fun:g_ptr_array_sized_new
+   fun:g_main_context_new
+   fun:g_main_context_default
+   fun:g_main_loop_new
+}
+
+{
+   glib mainloop internals - run
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   fun:g_thread_self
+   fun:g_main_loop_run
+}
+
+{
+   glib mainloop internals - run
+   Memcheck:Leak
+   fun:malloc
+   fun:g_malloc
+   obj:*/libglib-2.*
+   fun:g_main_loop_run
+}
+
+{
+   glib mainloop internals - run
+   Memcheck:Leak
+   fun:malloc
+   fun:realloc
+   fun:g_realloc
+   obj:*/libglib-2.*
+   fun:g_ptr_array_add
+   fun:g_main_context_check
+   obj:*/libglib-2.*
+   fun:g_main_loop_run
+}
+
+{
+   glib mainloop internals - run
+   Memcheck:Leak
+   fun:malloc
+   fun:g_malloc
+   fun:g_slice_alloc
+   fun:g_slice_alloc0
+   obj:*/libglib-2.*
+   fun:g_main_context_dispatch
+   obj:*/libglib-2.*
+   fun:g_main_loop_run
+}
+
+{
+   glib mainloop internals - run
+   Memcheck:Leak
+   fun:malloc
+   fun:realloc
+   fun:g_realloc
+   obj:*/libglib-2.*
+   fun:g_array_set_size
+   fun:g_static_private_set
+   obj:*/libglib-2.*
+   fun:g_main_context_dispatch
+   obj:*/libglib-2.*
+   fun:g_main_loop_run
+}
+
+{
+   glib mainloop internals - run
+   Memcheck:Leak
+   fun:malloc
+   fun:g_malloc
+   fun:g_slice_alloc
+   fun:g_array_sized_new
+   fun:g_static_private_set
+   obj:*/libglib-2.*
+   fun:g_main_context_dispatch
+   obj:*/libglib-2.*
+   fun:g_main_loop_run
+}
+
+{
+   glib types
+   Memcheck:Leak
+   fun:malloc
+   fun:realloc
+   fun:g_realloc
+   obj:*/libgobject-*
+   fun:g_type_register_static
+}
+
+{
+   glib types 2
+   Memcheck:Leak
+   fun:realloc
+   fun:g_realloc
+   obj:*/libgobject-*
+   fun:g_type_register_static
+   fun:g_param_type_register_static
+}
+
+{
+   glib types 3
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   obj:*/libgobject-*
+   fun:g_type_register_fundamental
+}
+
+{
+   glib types 4
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   obj:*/libgobject-*
+   obj:*/libgobject-*
+   fun:g_type_register_fundamental
+}
+
+{
+   glib - the return
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   obj:*/libgobject-*
+   obj:*/libgobject-*
+   fun:_dl_init
+}
+
+{
+   glib - seriously?
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   obj:*/libgobject-*
+   obj:*/libgobject-*
+   obj:*/libgobject-*
+   fun:_dl_init
+}
+
+{
+   glib - this is not funny anymore
+   Memcheck:Leak
+   fun:malloc
+   fun:realloc
+   fun:g_realloc
+   obj:*/libgobject-*
+   fun:g_type_register_fundamental
+}
+
+{
+   glib - why do you hate me?
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   obj:*/libgobject-*
+   obj:*/libgobject-*
+   fun:call_init.part.0
+   fun:_dl_init
+}
+
+{
+   dear glib - you suck at memory management
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   obj:*/libgobject-*
+   obj:*/libgobject-*
+   obj:*/libgobject-*
+   fun:call_init.part.0
+   fun:_dl_init
+}

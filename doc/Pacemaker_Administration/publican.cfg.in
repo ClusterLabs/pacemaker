@@ -1,0 +1,11 @@
+docname: Pacemaker_Administration
+xml_lang: en-US
+#edition: 1
+type: Book
+version: @PACKAGE_SERIES@
+brand: @PUBLICAN_BRAND@
+product: Pacemaker
+
+chunk_first: 0
+chunk_section_depth: 3
+generate_section_toc_level: 4

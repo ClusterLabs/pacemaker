@@ -27,10 +27,11 @@ static struct crm_option long_options[] = {
     {"version",    0, 0, '$', "\tVersion information"  },
     {"verbose",    0, 0, 'V', "\tIncrease debug output"},
 
-    {"name",    0, 0, 'n', "\tShow the error's name rather than the description."
+    {"name",    0, 0, 'n', "\tShow the error's name with its description."
      "\n\t\t\tUseful for looking for sources of the error in source code"},
 
     {"list",    0, 0, 'l', "\tShow all known errors."},
+    {"exit",    0, 0, 'X', "\tInterpret as exit code rather than function return value"},
 
     {0, 0, 0, 0}
 };
@@ -46,6 +47,7 @@ main(int argc, char **argv)
 
     bool do_list = FALSE;
     bool with_name = FALSE;
+    bool as_exit_code = FALSE;
 
     crm_log_cli_init("crm_error");
     crm_set_options(NULL, "[options] -- rc", long_options,
@@ -61,7 +63,7 @@ main(int argc, char **argv)
                 break;
             case '$':
             case '?':
-                crm_help(flag, EX_OK);
+                crm_help(flag, CRM_EX_OK);
                 break;
             case 'n':
                 with_name = TRUE;
@@ -69,34 +71,41 @@ main(int argc, char **argv)
             case 'l':
                 do_list = TRUE;
                 break;
+            case 'X':
+                as_exit_code = TRUE;
+                break;
             default:
-                crm_help(flag, EX_OK);
+                crm_help(flag, CRM_EX_OK);
                 break;
         }
     }
 
     if(do_list) {
         for (rc = 0; rc < 256; rc++) {
-            const char *name = pcmk_errorname(rc);
-            const char *desc = pcmk_strerror(rc);
-            if(name == NULL || strcmp("Unknown", name) == 0) {
+            const char *name = as_exit_code? crm_exit_name(rc) : pcmk_errorname(rc);
+            const char *desc = as_exit_code? crm_exit_str(rc) : pcmk_strerror(rc);
+            if (!name || !strcmp(name, "Unknown") || !strcmp(name, "CRM_EX_UNKNOWN")) {
                 /* Unknown */
             } else if(with_name) {
-                printf("%.3d: %-25s  %s\n", rc, name, desc);
+                printf("%.3d: %-26s  %s\n", rc, name, desc);
             } else {
                 printf("%.3d: %s\n", rc, desc);
             }
         }
-        return 0;
+        return CRM_EX_OK;
     }
 
     for (lpc = optind; lpc < argc; lpc++) {
+        const char *str, *name;
+
         rc = crm_atoi(argv[lpc], NULL);
+        str = as_exit_code? crm_exit_str(rc) : pcmk_strerror(rc);
         if(with_name) {
-            printf("%s - %s\n", pcmk_errorname(rc), pcmk_strerror(rc));
+            name = as_exit_code? crm_exit_name(rc) : pcmk_errorname(rc);
+            printf("%s - %s\n", name, str);
         } else {
-            printf("%s\n", pcmk_strerror(rc));
+            printf("%s\n", str);
         }
     }
-    return 0;
+    return CRM_EX_OK;
 }

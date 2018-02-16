@@ -24,19 +24,8 @@
 #  include <crm/cib/internal.h> /* For CIB_OP_MODIFY */
 #  include "crmd_alerts.h"
 
-#  define CLIENT_EXIT_WAIT 30
 #  define FAKE_TE_ID	"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
-
-#  define fsa_cib_delete(section, data, options, call_id, user_name)	\
-	if(fsa_cib_conn != NULL) {					\
-	    call_id = cib_internal_op(                                  \
-		fsa_cib_conn, CIB_OP_DELETE, NULL, section, data,	\
-		NULL, options, user_name);				\
-									\
-	} else {							\
-		crm_err("No CIB connection available");			\
-	}
 
 #  define fsa_cib_update(section, data, options, call_id, user_name)	\
 	if(fsa_cib_conn != NULL) {					\
@@ -76,10 +65,9 @@ gboolean crm_timer_start(fsa_timer_t * timer);
 gboolean crm_timer_popped(gpointer data);
 gboolean is_timer_started(fsa_timer_t * timer);
 
-int crmd_exit(int rc);
-int crmd_fast_exit(int rc);
-gboolean stop_subsystem(struct crm_subsystem_s *centry, gboolean force_quit);
-gboolean start_subsystem(struct crm_subsystem_s *centry);
+crm_exit_t crmd_exit(crm_exit_t exit_code);
+crm_exit_t crmd_fast_exit(crm_exit_t exit_code);
+void pe_subsystem_free(void);
 
 void fsa_dump_actions(long long action, const char *text);
 void fsa_dump_inputs(int log_level, const char *text, long long input_register);
@@ -108,6 +96,8 @@ void abort_for_stonith_failure(enum transition_action abort_action,
 void crmd_peer_down(crm_node_t *peer, bool full);
 unsigned int cib_op_timeout(void);
 
+bool feature_set_compatible(const char *dc_version, const char *join_version);
+
 /* Convenience macro for registering a CIB callback
  * (assumes that data can be freed with free())
  */
@@ -116,22 +106,6 @@ unsigned int cib_op_timeout(void);
     fsa_cib_conn->cmds->register_callback_full(                         \
         fsa_cib_conn, id, cib_op_timeout(),                             \
             flag, data, #fn, fn, free);                                 \
-    } while(0)
-
-#  define start_transition(state) do {					\
-	switch(state) {							\
-	    case S_TRANSITION_ENGINE:					\
-		register_fsa_action(A_TE_CANCEL);			\
-		break;							\
-	    case S_POLICY_ENGINE:					\
-	    case S_IDLE:						\
-		register_fsa_input(C_FSA_INTERNAL, I_PE_CALC, NULL);	\
-		break;							\
-	    default:							\
-		crm_debug("NOT starting a new transition in state %s",	\
-			  fsa_state2string(fsa_state));			\
-		break;							\
-	}								\
     } while(0)
 
 #endif

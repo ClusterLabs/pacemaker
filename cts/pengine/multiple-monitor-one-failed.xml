@@ -1,0 +1,77 @@
+<cib epoch="8" num_updates="18" admin_epoch="0" validate-with="pacemaker-1.2" cib-last-written="Wed Mar 30 15:44:19 2016" update-origin="dhcp180" update-client="cibadmin" update-user="root" crm_feature_set="3.0.8" have-quorum="1" dc-uuid="dhcp180">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair name="dc-version" value="1.1.11-3ca8c3b" id="cib-bootstrap-options-dc-version"/>
+        <nvpair name="cluster-infrastructure" value="corosync" id="cib-bootstrap-options-cluster-infrastructure"/>
+        <nvpair name="stonith-enabled" value="0" id="cib-bootstrap-options-stonith-enabled"/>
+        <nvpair name="expected-quorum-votes" value="2" id="cib-bootstrap-options-expected-quorum-votes"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="dhcp180" uname="dhcp180"/>
+      <node id="dhcp69" uname="dhcp69"/>
+    </nodes>
+    <resources>
+      <primitive id="Dummy-test2" class="ocf" provider="test" type="Dummy">
+        <meta_attributes id="Dummy-test2-meta_attributes">
+          <nvpair name="target-role" value="Started" id="Dummy-test2-meta_attributes-target-role"/>
+        </meta_attributes>
+        <operations id="Dummy-test2-operations">
+          <op name="monitor" interval="10" timeout="20" id="Dummy-test2-monitor-10">
+            <instance_attributes id="Dummy-test2-monitor-10-instance_attributes">
+              <nvpair name="trace_ra" value="1" id="Dummy-test2-monitor-10-instance_attributes-trace_ra"/>
+            </instance_attributes>
+          </op>
+          <op name="monitor" interval="30" timeout="60" id="Dummy-test2-monitor-30">
+            <instance_attributes id="Dummy-test2-monitor-30-instance_attributes">
+              <nvpair name="OCF_CHECK_LEVEL" value="20" id="Dummy-test2-monitor-30-instance_attributes-OCF_CHECK_LEVEL"/>
+            </instance_attributes>
+          </op>
+        </operations>
+        <instance_attributes id="Dummy-test2-instance_attributes">
+          <nvpair name="state" value="/tmp/dummy-state" id="Dummy-test2-instance_attributes-state"/>
+          <nvpair name="state2" value="/tmp/dummy-state-2" id="Dummy-test2-instance_attributes-state2"/>
+        </instance_attributes>
+      </primitive>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="dhcp180" uname="dhcp180" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <transient_attributes id="dhcp180">
+        <instance_attributes id="status-dhcp180">
+          <nvpair id="status-dhcp180-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-dhcp180-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-dhcp180-fail-count-Dummy-test2" name="fail-count-Dummy-test2" value="1"/>
+          <nvpair id="status-dhcp180-last-failure-Dummy-test2" name="last-failure-Dummy-test2" value="1459345561"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="dhcp180">
+        <lrm_resources>
+          <lrm_resource id="Dummy-test2" type="Dummy" class="ocf" provider="test">
+            <lrm_rsc_op id="Dummy-test2_last_0" operation_key="Dummy-test2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.8" transition-key="8:8:0:51641ea2-5c0b-4579-9137-a71f42f798b9" transition-magic="0:0;8:8:0:51641ea2-5c0b-4579-9137-a71f42f798b9" call-id="15" rc-code="0" op-status="0" interval="0" last-run="1459345561" last-rc-change="1459345561" exec-time="15" queue-time="0" op-digest="709111243f64c1b2998dbf906b898d8d" op-force-restart=" state  state2 " op-restart-digest="709111243f64c1b2998dbf906b898d8d"/>
+            <lrm_rsc_op id="Dummy-test2_monitor_30000" operation_key="Dummy-test2_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.8" transition-key="1:8:0:51641ea2-5c0b-4579-9137-a71f42f798b9" transition-magic="0:0;1:8:0:51641ea2-5c0b-4579-9137-a71f42f798b9" call-id="17" rc-code="0" op-status="0" interval="30000" last-rc-change="1459345561" exec-time="17" queue-time="52" op-digest="88cbe5ebda13278368b81f63edbb6b03"/>
+            <lrm_rsc_op id="Dummy-test2_monitor_10000" operation_key="Dummy-test2_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.8" transition-key="2:8:0:51641ea2-5c0b-4579-9137-a71f42f798b9" transition-magic="0:0;2:8:0:51641ea2-5c0b-4579-9137-a71f42f798b9" call-id="16" rc-code="0" op-status="0" interval="10000" last-rc-change="1459345561" exec-time="53" queue-time="0" op-digest="88f69460c4f7a70e57779a95eaf1799c"/>
+            <lrm_rsc_op id="Dummy-test2_last_failure_0" operation_key="Dummy-test2_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.8" transition-key="2:8:0:51641ea2-5c0b-4579-9137-a71f42f798b9" transition-magic="0:7;2:8:0:51641ea2-5c0b-4579-9137-a71f42f798b9" call-id="16" rc-code="7" op-status="0" interval="10000" last-rc-change="1459345571" exec-time="0" queue-time="0" op-digest="88f69460c4f7a70e57779a95eaf1799c"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="dhcp69" uname="dhcp69" crmd="online" crm-debug-origin="do_update_resource" in_ccm="true" join="member" expected="member">
+      <transient_attributes id="dhcp69">
+        <instance_attributes id="status-dhcp69">
+          <nvpair id="status-dhcp69-shutdown" name="shutdown" value="0"/>
+          <nvpair id="status-dhcp69-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="dhcp69">
+        <lrm_resources>
+          <lrm_resource id="Dummy-test2" type="Dummy" class="ocf" provider="test">
+            <lrm_rsc_op id="Dummy-test2_last_0" operation_key="Dummy-test2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.8" transition-key="6:5:7:51641ea2-5c0b-4579-9137-a71f42f798b9" transition-magic="0:7;6:5:7:51641ea2-5c0b-4579-9137-a71f42f798b9" call-id="8" rc-code="7" op-status="0" interval="0" last-run="1459345459" last-rc-change="1459345459" exec-time="154" queue-time="1" op-digest="709111243f64c1b2998dbf906b898d8d"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

@@ -14,6 +14,10 @@ After=network.target
 # and failure timestamps, so wait until it's done.
 After=time-sync.target
 
+# Managing systemd resources requires DBus.
+After=dbus.service
+Wants=dbus.service
+
 # Some OCF resources may have dependencies that aren't managed by the cluster;
 # these must be started before Pacemaker and stopped after it. The
 # resource-agents package provides this target, which lets system adminstrators
@@ -41,9 +45,12 @@ SuccessExitStatus=100
 
 ExecStart=@sbindir@/pacemakerd -f
 
-# Uncomment TasksMax if your systemd version supports it.
-# Only systemd v227 and above support this option.
-#TasksMax=infinity
+# Systemd v227 and above can limit the number of processes spawned by a
+# service. That is a bad idea for an HA cluster resource manager, so disable it
+# by default. The administrator can create a local override if they really want
+# a limit. If your systemd version does not support TasksMax, and you want to
+# get rid of the resulting log warnings, comment out this option.
+TasksMax=infinity
 
 # If pacemakerd doesn't stop, it's probably waiting on a cluster
 # resource.  Sending -KILL will just get the node fenced

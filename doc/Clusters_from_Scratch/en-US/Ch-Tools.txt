@@ -35,64 +35,89 @@ what `pcs` can do.
 
 ----
 [root@pcmk-1 ~]# pcs
+
 Usage: pcs [-f file] [-h] [commands]...
 Control and configure pacemaker and corosync.
 
 Options:
-    -h, --help  Display usage and exit
-    -f file     Perform actions on file instead of active CIB
-    --debug     Print all network traffic and external commands run
-    --version   Print pcs version information
+    -h, --help         Display usage and exit.
+    -f file            Perform actions on file instead of active CIB.
+    --debug            Print all network traffic and external commands run.
+    --version          Print pcs version information.
+    --request-timeout  Timeout for each outgoing request to another node in
+                       seconds. Default is 60s.
 
 Commands:
-    cluster     Configure cluster options and nodes
-    resource    Manage cluster resources
-    stonith     Configure fence devices
-    constraint  Set resource constraints
-    property    Set pacemaker properties
-    acl         Set pacemaker access control lists
-    status      View cluster status
-    config      View and manage cluster configuration
+    cluster     Configure cluster options and nodes.
+    resource    Manage cluster resources.
+    stonith     Manage fence devices.
+    constraint  Manage resource constraints.
+    property    Manage pacemaker properties.
+    acl         Manage pacemaker access control lists.
+    qdevice     Manage quorum device provider on the local host.
+    quorum      Manage cluster quorum settings.
+    booth       Manage booth (cluster ticket manager).
+    status      View cluster status.
+    config      View and manage cluster configuration.
+    pcsd        Manage pcs daemon.
+    node        Manage cluster nodes.
+    alert       Manage pacemaker alerts.
+
 ----
 
 As you can see, the different aspects of cluster management are separated
-into categories: resource, cluster, stonith, property, constraint,
-and status. To discover the functionality available in each of these
+into categories. To discover the functionality available in each of these
 categories, one can issue the command +pcs pass:[<replaceable>category</replaceable>] help+.  Below
 is an example of all the options available under the status category.
 
 ----
 [root@pcmk-1 ~]# pcs status help
+
 Usage: pcs status [commands]...
 View current cluster and resource status
 Commands:
-    [status] [--full]
+    [status] [--full | --hide-inactive]
         View all information about the cluster and resources (--full provides
-        more details)
+        more details, --hide-inactive hides inactive resources).
 
-    resources
-        View current status of cluster resources
+    resources [<resource id> | --full | --groups | --hide-inactive]
+        Show all currently configured resources or if a resource is specified
+        show the options for the configured resource.  If --full is specified,
+        all configured resource options will be displayed.  If --groups is
+        specified, only show groups (and their resources).  If --hide-inactive
+        is specified, only show active resources.
 
     groups
-        View currently configured groups and their resources
+        View currently configured groups and their resources.
 
     cluster
-        View current cluster status
+        View current cluster status.
 
     corosync
-        View current membership information as seen by corosync
+        View current membership information as seen by corosync.
 
-    nodes [corosync|both|config]
+    quorum
+        View current quorum status.
+
+    qdevice <device model> [--full] [<cluster name>]
+        Show runtime status of specified model of quorum device provider.  Using
+        --full will give more detailed output.  If <cluster name> is specified,
+        only information about the specified cluster will be displayed.
+
+    nodes [corosync | both | config]
         View current status of nodes from pacemaker. If 'corosync' is
-        specified, print nodes currently configured in corosync, if 'both'
-        is specified, print nodes from both corosync & pacemaker.  If 'config'
-        is specified, print nodes from corosync & pacemaker configuration.
+        specified, view current status of nodes from corosync instead. If
+        'both' is specified, view current status of nodes from both corosync &
+        pacemaker. If 'config' is specified, print nodes from corosync &
+        pacemaker configuration.
 
-    pcsd <node> ...
-        Show the current status of pcsd on the specified nodes
+    pcsd [<node>]...
+        Show current status of pcsd on nodes specified, or on all nodes
+        configured in the local cluster if no nodes are specified.
 
     xml
-        View xml version of status (output from crm_mon -r -1 -X)
+        View xml version of status (output from crm_mon -r -1 -X).
+
 ----
 
 Additionally, if you are interested in the version and
@@ -101,14 +126,6 @@ installation, run:
 
 ----
 [root@pcmk-1 ~]# pacemakerd --features
-Pacemaker 1.1.12 (Build: a14efad)
- Supporting v3.0.9:  generated-manpages agent-manpages ascii-docs publican-docs ncurses libqb-logging libqb-ipc upstart systemd nagios  corosync-native atomic-attrd acls
+Pacemaker 1.1.16-12.el7_4.5 (Build: 94ff4df)
+ Supporting v3.0.12:  generated-manpages agent-manpages ncurses libqb-logging libqb-ipc systemd nagios  corosync-native atomic-attrd acls
 ----
-
-[NOTE]
-======
-If the SNMP and/or email options are not listed, then Pacemaker was not
-built to support them. This may be by the choice of your distribution, or
-the required libraries may not have been available. Please contact
-whoever supplied you with the packages for more details.
-======

@@ -229,7 +229,7 @@ container_create_actions(resource_t * rsc, pe_working_set_t * data_set)
     if(container_data->child) {
         container_data->child->cmds->create_actions(container_data->child, data_set);
 
-        if(container_data->child->variant == pe_master) {
+        if (is_set(container_data->child->flags, pe_rsc_promotable)) {
             /* promote */
             action = create_pseudo_resource_op(rsc, RSC_PROMOTE, TRUE, TRUE, data_set);
             action = create_pseudo_resource_op(rsc, RSC_PROMOTED, TRUE, TRUE, data_set);
@@ -315,8 +315,8 @@ container_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
 
     if(container_data->child) {
         container_data->child->cmds->internal_constraints(container_data->child, data_set);
-        if(container_data->child->variant == pe_master) {
-            master_promotion_constraints(rsc, data_set);
+        if (is_set(container_data->child->flags, pe_rsc_promotable)) {
+            promote_demote_constraints(rsc, data_set);
 
             /* child demoted before global demoted */
             new_rsc_order(container_data->child, RSC_DEMOTED, rsc, RSC_DEMOTED, pe_order_implies_then_printed, data_set);
@@ -391,7 +391,7 @@ find_compatible_tuple(resource_t *rsc_lh, resource_t * rsc, enum rsc_role_e filt
         }
     }
 
-    pe_rsc_debug(rsc, "Can't pair %s with %s", rsc_lh->id, rsc->id);
+    pe_rsc_debug(rsc, "Can't pair %s with %s", rsc_lh->id, (rsc? rsc->id : "none"));
   done:
     g_list_free(scratch);
     return pair;
@@ -425,7 +425,6 @@ int copies_per_node(resource_t * rsc)
         case pe_group:
             return 1;
         case pe_clone:
-        case pe_master:
             {
                 const char *max_clones_node = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INCARNATION_NODEMAX);
                 return crm_parse_int(max_clones_node, "1");
@@ -728,7 +727,7 @@ bool can_interleave_actions(pe_action_t *first, pe_action_t *then)
         crm_trace("Not interleaving %s with %s (must belong to different resources)", first->uuid, then->uuid);
         return FALSE;
     } else if(first->rsc->variant < pe_clone || then->rsc->variant < pe_clone) {
-        crm_trace("Not interleaving %s with %s (both sides must be clones, masters, or bundles)", first->uuid, then->uuid);
+        crm_trace("Not interleaving %s with %s (both sides must be clones or bundles)", first->uuid, then->uuid);
         return FALSE;
     }
 

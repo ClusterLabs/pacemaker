@@ -1,0 +1,166 @@
+
+Current cluster status:
+Online: [ c09-h05-r630 c09-h06-r630 c09-h07-r630 ]
+RemoteOFFLINE: [ c09-h08-r630 c09-h09-r630 c09-h10-r630 ]
+
+ c09-h08-r630	(ocf::pacemaker:remote):	Stopped
+ c09-h09-r630	(ocf::pacemaker:remote):	Stopped
+ c09-h10-r630	(ocf::pacemaker:remote):	Stopped
+ Docker container set: scale1-bundle [beekhof:remote]
+   scale1-bundle-0	(ocf::pacemaker:Dummy):	Stopped
+   scale1-bundle-1	(ocf::pacemaker:Dummy):	Stopped
+   scale1-bundle-2	(ocf::pacemaker:Dummy):	Stopped
+   scale1-bundle-3	(ocf::pacemaker:Dummy):	Stopped
+   scale1-bundle-4	(ocf::pacemaker:Dummy):	Stopped
+   scale1-bundle-5	(ocf::pacemaker:Dummy):	Stopped
+
+Transition Summary:
+ * Start      c09-h08-r630               (    c09-h05-r630 )  
+ * Start      c09-h09-r630               (    c09-h06-r630 )  
+ * Start      c09-h10-r630               (    c09-h07-r630 )  
+ * Start      scale1-bundle-docker-0     (    c09-h05-r630 )  
+ * Start      scale1-bundle-0            (    c09-h05-r630 )  
+ * Start      dummy1:0                   ( scale1-bundle-0 )  
+ * Start      scale1-bundle-docker-1     (    c09-h06-r630 )  
+ * Start      scale1-bundle-1            (    c09-h06-r630 )  
+ * Start      dummy1:1                   ( scale1-bundle-1 )  
+ * Start      scale1-bundle-docker-2     (    c09-h07-r630 )  
+ * Start      scale1-bundle-2            (    c09-h07-r630 )  
+ * Start      dummy1:2                   ( scale1-bundle-2 )  
+ * Start      scale1-bundle-docker-3     (    c09-h08-r630 )  
+ * Start      scale1-bundle-3            (    c09-h05-r630 )  
+ * Start      dummy1:3                   ( scale1-bundle-3 )  
+ * Start      scale1-bundle-docker-4     (    c09-h09-r630 )  
+ * Start      scale1-bundle-4            (    c09-h06-r630 )  
+ * Start      dummy1:4                   ( scale1-bundle-4 )  
+ * Start      scale1-bundle-docker-5     (    c09-h10-r630 )  
+ * Start      scale1-bundle-5            (    c09-h07-r630 )  
+ * Start      dummy1:5                   ( scale1-bundle-5 )  
+
+Executing cluster transition:
+ * Resource action: c09-h08-r630    monitor on c09-h07-r630
+ * Resource action: c09-h08-r630    monitor on c09-h06-r630
+ * Resource action: c09-h08-r630    monitor on c09-h05-r630
+ * Resource action: c09-h09-r630    monitor on c09-h07-r630
+ * Resource action: c09-h09-r630    monitor on c09-h06-r630
+ * Resource action: c09-h09-r630    monitor on c09-h05-r630
+ * Resource action: c09-h10-r630    monitor on c09-h07-r630
+ * Resource action: c09-h10-r630    monitor on c09-h06-r630
+ * Resource action: c09-h10-r630    monitor on c09-h05-r630
+ * Resource action: scale1-bundle-docker-0 monitor on c09-h07-r630
+ * Resource action: scale1-bundle-docker-0 monitor on c09-h06-r630
+ * Resource action: scale1-bundle-docker-0 monitor on c09-h05-r630
+ * Resource action: scale1-bundle-docker-1 monitor on c09-h07-r630
+ * Resource action: scale1-bundle-docker-1 monitor on c09-h06-r630
+ * Resource action: scale1-bundle-docker-1 monitor on c09-h05-r630
+ * Resource action: scale1-bundle-docker-2 monitor on c09-h07-r630
+ * Resource action: scale1-bundle-docker-2 monitor on c09-h06-r630
+ * Resource action: scale1-bundle-docker-2 monitor on c09-h05-r630
+ * Resource action: scale1-bundle-docker-3 monitor on c09-h07-r630
+ * Resource action: scale1-bundle-docker-3 monitor on c09-h06-r630
+ * Resource action: scale1-bundle-docker-3 monitor on c09-h05-r630
+ * Resource action: scale1-bundle-docker-4 monitor on c09-h07-r630
+ * Resource action: scale1-bundle-docker-4 monitor on c09-h06-r630
+ * Resource action: scale1-bundle-docker-4 monitor on c09-h05-r630
+ * Resource action: scale1-bundle-docker-5 monitor on c09-h07-r630
+ * Resource action: scale1-bundle-docker-5 monitor on c09-h06-r630
+ * Resource action: scale1-bundle-docker-5 monitor on c09-h05-r630
+ * Pseudo action:   scale1-bundle_start_0
+ * Resource action: c09-h08-r630    start on c09-h05-r630
+ * Resource action: c09-h09-r630    start on c09-h06-r630
+ * Resource action: c09-h10-r630    start on c09-h07-r630
+ * Resource action: scale1-bundle-docker-0 monitor on c09-h10-r630
+ * Resource action: scale1-bundle-docker-0 monitor on c09-h09-r630
+ * Resource action: scale1-bundle-docker-0 monitor on c09-h08-r630
+ * Resource action: scale1-bundle-docker-1 monitor on c09-h10-r630
+ * Resource action: scale1-bundle-docker-1 monitor on c09-h09-r630
+ * Resource action: scale1-bundle-docker-1 monitor on c09-h08-r630
+ * Resource action: scale1-bundle-docker-2 monitor on c09-h10-r630
+ * Resource action: scale1-bundle-docker-2 monitor on c09-h09-r630
+ * Resource action: scale1-bundle-docker-2 monitor on c09-h08-r630
+ * Resource action: scale1-bundle-docker-3 monitor on c09-h10-r630
+ * Resource action: scale1-bundle-docker-3 monitor on c09-h09-r630
+ * Resource action: scale1-bundle-docker-3 monitor on c09-h08-r630
+ * Resource action: scale1-bundle-docker-4 monitor on c09-h10-r630
+ * Resource action: scale1-bundle-docker-4 monitor on c09-h09-r630
+ * Resource action: scale1-bundle-docker-4 monitor on c09-h08-r630
+ * Resource action: scale1-bundle-docker-5 monitor on c09-h10-r630
+ * Resource action: scale1-bundle-docker-5 monitor on c09-h09-r630
+ * Resource action: scale1-bundle-docker-5 monitor on c09-h08-r630
+ * Resource action: c09-h08-r630    monitor=60000 on c09-h05-r630
+ * Resource action: c09-h09-r630    monitor=60000 on c09-h06-r630
+ * Resource action: c09-h10-r630    monitor=60000 on c09-h07-r630
+ * Pseudo action:   scale1-bundle-clone_start_0
+ * Resource action: scale1-bundle-docker-0 start on c09-h05-r630
+ * Resource action: scale1-bundle-0 monitor on c09-h07-r630
+ * Resource action: scale1-bundle-0 monitor on c09-h06-r630
+ * Resource action: scale1-bundle-0 monitor on c09-h05-r630
+ * Resource action: scale1-bundle-docker-1 start on c09-h06-r630
+ * Resource action: scale1-bundle-1 monitor on c09-h07-r630
+ * Resource action: scale1-bundle-1 monitor on c09-h06-r630
+ * Resource action: scale1-bundle-1 monitor on c09-h05-r630
+ * Resource action: scale1-bundle-docker-2 start on c09-h07-r630
+ * Resource action: scale1-bundle-2 monitor on c09-h07-r630
+ * Resource action: scale1-bundle-2 monitor on c09-h06-r630
+ * Resource action: scale1-bundle-2 monitor on c09-h05-r630
+ * Resource action: scale1-bundle-docker-3 start on c09-h08-r630
+ * Resource action: scale1-bundle-3 monitor on c09-h07-r630
+ * Resource action: scale1-bundle-3 monitor on c09-h06-r630
+ * Resource action: scale1-bundle-3 monitor on c09-h05-r630
+ * Resource action: scale1-bundle-docker-4 start on c09-h09-r630
+ * Resource action: scale1-bundle-4 monitor on c09-h07-r630
+ * Resource action: scale1-bundle-4 monitor on c09-h06-r630
+ * Resource action: scale1-bundle-4 monitor on c09-h05-r630
+ * Resource action: scale1-bundle-docker-5 start on c09-h10-r630
+ * Resource action: scale1-bundle-5 monitor on c09-h07-r630
+ * Resource action: scale1-bundle-5 monitor on c09-h06-r630
+ * Resource action: scale1-bundle-5 monitor on c09-h05-r630
+ * Resource action: scale1-bundle-docker-0 monitor=60000 on c09-h05-r630
+ * Resource action: scale1-bundle-0 start on c09-h05-r630
+ * Resource action: scale1-bundle-docker-1 monitor=60000 on c09-h06-r630
+ * Resource action: scale1-bundle-1 start on c09-h06-r630
+ * Resource action: scale1-bundle-docker-2 monitor=60000 on c09-h07-r630
+ * Resource action: scale1-bundle-2 start on c09-h07-r630
+ * Resource action: scale1-bundle-docker-3 monitor=60000 on c09-h08-r630
+ * Resource action: scale1-bundle-3 start on c09-h05-r630
+ * Resource action: scale1-bundle-docker-4 monitor=60000 on c09-h09-r630
+ * Resource action: scale1-bundle-4 start on c09-h06-r630
+ * Resource action: scale1-bundle-docker-5 monitor=60000 on c09-h10-r630
+ * Resource action: scale1-bundle-5 start on c09-h07-r630
+ * Resource action: dummy1:0        start on scale1-bundle-0
+ * Resource action: dummy1:1        start on scale1-bundle-1
+ * Resource action: dummy1:2        start on scale1-bundle-2
+ * Resource action: dummy1:3        start on scale1-bundle-3
+ * Resource action: dummy1:4        start on scale1-bundle-4
+ * Resource action: dummy1:5        start on scale1-bundle-5
+ * Pseudo action:   scale1-bundle-clone_running_0
+ * Resource action: scale1-bundle-0 monitor=30000 on c09-h05-r630
+ * Resource action: scale1-bundle-1 monitor=30000 on c09-h06-r630
+ * Resource action: scale1-bundle-2 monitor=30000 on c09-h07-r630
+ * Resource action: scale1-bundle-3 monitor=30000 on c09-h05-r630
+ * Resource action: scale1-bundle-4 monitor=30000 on c09-h06-r630
+ * Resource action: scale1-bundle-5 monitor=30000 on c09-h07-r630
+ * Pseudo action:   scale1-bundle_running_0
+ * Resource action: dummy1:0        monitor=10000 on scale1-bundle-0
+ * Resource action: dummy1:1        monitor=10000 on scale1-bundle-1
+ * Resource action: dummy1:2        monitor=10000 on scale1-bundle-2
+ * Resource action: dummy1:3        monitor=10000 on scale1-bundle-3
+ * Resource action: dummy1:4        monitor=10000 on scale1-bundle-4
+ * Resource action: dummy1:5        monitor=10000 on scale1-bundle-5
+
+Revised cluster status:
+Online: [ c09-h05-r630 c09-h06-r630 c09-h07-r630 ]
+RemoteOnline: [ c09-h08-r630 c09-h09-r630 c09-h10-r630 ]
+Containers: [ scale1-bundle-0:scale1-bundle-docker-0 scale1-bundle-1:scale1-bundle-docker-1 scale1-bundle-2:scale1-bundle-docker-2 scale1-bundle-3:scale1-bundle-docker-3 scale1-bundle-4:scale1-bundle-docker-4 scale1-bundle-5:scale1-bundle-docker-5 ]
+
+ c09-h08-r630	(ocf::pacemaker:remote):	Started c09-h05-r630
+ c09-h09-r630	(ocf::pacemaker:remote):	Started c09-h06-r630
+ c09-h10-r630	(ocf::pacemaker:remote):	Started c09-h07-r630
+ Docker container set: scale1-bundle [beekhof:remote]
+   scale1-bundle-0	(ocf::pacemaker:Dummy):	Started c09-h05-r630
+   scale1-bundle-1	(ocf::pacemaker:Dummy):	Started c09-h06-r630
+   scale1-bundle-2	(ocf::pacemaker:Dummy):	Started c09-h07-r630
+   scale1-bundle-3	(ocf::pacemaker:Dummy):	Started c09-h08-r630
+   scale1-bundle-4	(ocf::pacemaker:Dummy):	Started c09-h09-r630
+   scale1-bundle-5	(ocf::pacemaker:Dummy):	Started c09-h10-r630
+

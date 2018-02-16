@@ -29,30 +29,15 @@
 #  include <stdbool.h>
 #  include <limits.h>
 #  include <signal.h>
-#  include <sysexits.h>
 #  include <glib.h>
 
 #  include <libxml/tree.h>
 
 #  include <crm/lrmd.h>
+#  include <crm/common/results.h>
 
-#  if SUPPORT_HEARTBEAT
-#    include <heartbeat.h>
-#  else
-#    define	NORMALNODE	"normal"
-#    define	ACTIVESTATUS	"active"/* fully functional, and all links are up */
-#    define	DEADSTATUS	"dead"
-                                /* Status of non-working link or machine */
-#    define	PINGSTATUS	"ping"
-                                /* Status of a working ping node */
-#    define	JOINSTATUS	"join"
-                                /* Status when an api client joins */
-#    define	LEAVESTATUS	"leave"
-                                /* Status when an api client leaves */
-#    define	ONLINESTATUS	"online"/* Status of an online client */
-#    define	OFFLINESTATUS	"offline"
-                                        /* Status of an offline client */
-#  endif
+#  define ONLINESTATUS  "online"  // Status of an online client
+#  define OFFLINESTATUS "offline" // Status of an offline client
 
 /* public Pacemaker Remote functions (from remote.c) */
 int crm_default_remote_port(void);
@@ -68,6 +53,7 @@ gboolean crm_str_eq(const char *a, const char *b, gboolean use_case);
 gboolean safe_str_neq(const char *a, const char *b);
 guint crm_strcase_hash(gconstpointer v);
 guint g_str_hash_traditional(gconstpointer v);
+char *crm_strdup_printf(char const *format, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
 
 #  define safe_str_eq(a, b) crm_str_eq(a, b, FALSE)
 #  define crm_str_hash g_str_hash_traditional
@@ -181,7 +167,6 @@ int crm_user_lookup(const char *name, uid_t * uid, gid_t * gid);
 void crm_gnutls_global_init(void);
 #endif
 
-int crm_exit(int rc);
 bool pcmk_acl_required(const char *user);
 
 char *crm_generate_ra_key(const char *class, const char *provider, const char *type);

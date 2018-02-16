@@ -48,7 +48,6 @@ static gboolean crm_tracing_enabled(void);
 unsigned int crm_trace_nonlog = 0;
 bool crm_is_daemon = 0;
 
-#ifdef HAVE_G_LOG_SET_DEFAULT_HANDLER
 GLogFunc glib_log_default;
 
 static void
@@ -97,7 +96,6 @@ crm_glib_handler(const gchar * log_domain, GLogLevelFlags flags, const gchar * m
 
     do_crm_log(log_level, "%s: %s", log_domain, message);
 }
-#endif
 
 #ifndef NAME_MAX
 #  define NAME_MAX 256
@@ -179,9 +177,7 @@ daemon_option_enabled(const char *daemon, const char *option)
 void
 crm_log_deinit(void)
 {
-#ifdef HAVE_G_LOG_SET_DEFAULT_HANDLER
     g_log_set_default_handler(glib_log_default, NULL);
-#endif
 }
 
 #define FMT_MAX 256
@@ -224,11 +220,7 @@ crm_add_logfile(const char *filename)
     bool is_default = false;
     static int default_fd = -1;
     static gboolean have_logfile = FALSE;
-
-    /* @COMPAT This should be CRM_LOG_DIR "/pacemaker.log". We aren't changing
-     * it yet because it will be a significant user-visible change to publicize.
-     */
-    const char *default_logfile = "/var/log/pacemaker.log";
+    const char *default_logfile = CRM_LOG_DIR "/pacemaker.log";
 
     struct stat parent;
     int fd = 0, rc = 0;
@@ -368,9 +360,10 @@ crm_control_blackbox(int nsig, bool enable)
     if (blackbox_file_prefix == NULL) {
         pid_t pid = getpid();
 
-        blackbox_file_prefix = malloc(NAME_MAX);
-        snprintf(blackbox_file_prefix, NAME_MAX, "%s/%s-%lu",
-                 CRM_BLACKBOX_DIR, crm_system_name, (unsigned long) pid);
+        blackbox_file_prefix = crm_strdup_printf("%s/%s-%lu",
+                                                 CRM_BLACKBOX_DIR,
+                                                 crm_system_name,
+                                                 (unsigned long) pid);
     }
 
     if (enable && qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED) {
@@ -726,9 +719,7 @@ crm_log_preinit(const char *entity, int argc, char **argv)
         umask(S_IWGRP | S_IWOTH | S_IROTH);
 
         /* Redirect messages from glib functions to our handler */
-#ifdef HAVE_G_LOG_SET_DEFAULT_HANDLER
         glib_log_default = g_log_set_default_handler(crm_glib_handler, NULL);
-#endif
 
         /* and for good measure... - this enum is a bit field (!) */
         g_log_set_always_fatal((GLogLevelFlags) 0); /*value out of range */
@@ -977,256 +968,6 @@ crm_log_args(int argc, char **argv)
     free(arg_string);
 }
 
-const char *
-pcmk_errorname(int rc) 
-{
-    int error = ABS(rc);
-
-    switch (error) {
-        case E2BIG: return "E2BIG";
-        case EACCES: return "EACCES";
-        case EADDRINUSE: return "EADDRINUSE";
-        case EADDRNOTAVAIL: return "EADDRNOTAVAIL";
-        case EAFNOSUPPORT: return "EAFNOSUPPORT";
-        case EAGAIN: return "EAGAIN";
-        case EALREADY: return "EALREADY";
-        case EBADF: return "EBADF";
-        case EBADMSG: return "EBADMSG";
-        case EBUSY: return "EBUSY";
-        case ECANCELED: return "ECANCELED";
-        case ECHILD: return "ECHILD";
-        case ECOMM: return "ECOMM";
-        case ECONNABORTED: return "ECONNABORTED";
-        case ECONNREFUSED: return "ECONNREFUSED";
-        case ECONNRESET: return "ECONNRESET";
-        /* case EDEADLK: return "EDEADLK"; */
-        case EDESTADDRREQ: return "EDESTADDRREQ";
-        case EDOM: return "EDOM";
-        case EDQUOT: return "EDQUOT";
-        case EEXIST: return "EEXIST";
-        case EFAULT: return "EFAULT";
-        case EFBIG: return "EFBIG";
-        case EHOSTDOWN: return "EHOSTDOWN";
-        case EHOSTUNREACH: return "EHOSTUNREACH";
-        case EIDRM: return "EIDRM";
-        case EILSEQ: return "EILSEQ";
-        case EINPROGRESS: return "EINPROGRESS";
-        case EINTR: return "EINTR";
-        case EINVAL: return "EINVAL";
-        case EIO: return "EIO";
-        case EISCONN: return "EISCONN";
-        case EISDIR: return "EISDIR";
-        case ELIBACC: return "ELIBACC";
-        case ELOOP: return "ELOOP";
-        case EMFILE: return "EMFILE";
-        case EMLINK: return "EMLINK";
-        case EMSGSIZE: return "EMSGSIZE";
-        case EMULTIHOP: return "EMULTIHOP";
-        case ENAMETOOLONG: return "ENAMETOOLONG";
-        case ENETDOWN: return "ENETDOWN";
-        case ENETRESET: return "ENETRESET";
-        case ENETUNREACH: return "ENETUNREACH";
-        case ENFILE: return "ENFILE";
-        case ENOBUFS: return "ENOBUFS";
-        case ENODATA: return "ENODATA";
-        case ENODEV: return "ENODEV";
-        case ENOENT: return "ENOENT";
-        case ENOEXEC: return "ENOEXEC";
-        case ENOKEY: return "ENOKEY";
-        case ENOLCK: return "ENOLCK";
-        case ENOLINK: return "ENOLINK";
-        case ENOMEM: return "ENOMEM";
-        case ENOMSG: return "ENOMSG";
-        case ENOPROTOOPT: return "ENOPROTOOPT";
-        case ENOSPC: return "ENOSPC";
-        case ENOSR: return "ENOSR";
-        case ENOSTR: return "ENOSTR";
-        case ENOSYS: return "ENOSYS";
-        case ENOTBLK: return "ENOTBLK";
-        case ENOTCONN: return "ENOTCONN";
-        case ENOTDIR: return "ENOTDIR";
-        case ENOTEMPTY: return "ENOTEMPTY";
-        case ENOTSOCK: return "ENOTSOCK";
-        /* case ENOTSUP: return "ENOTSUP"; */
-        case ENOTTY: return "ENOTTY";
-        case ENOTUNIQ: return "ENOTUNIQ";
-        case ENXIO: return "ENXIO";
-        case EOPNOTSUPP: return "EOPNOTSUPP";
-        case EOVERFLOW: return "EOVERFLOW";
-        case EPERM: return "EPERM";
-        case EPFNOSUPPORT: return "EPFNOSUPPORT";
-        case EPIPE: return "EPIPE";
-        case EPROTO: return "EPROTO";
-        case EPROTONOSUPPORT: return "EPROTONOSUPPORT";
-        case EPROTOTYPE: return "EPROTOTYPE";
-        case ERANGE: return "ERANGE";
-        case EREMOTE: return "EREMOTE";
-        case EREMOTEIO: return "EREMOTEIO";
-
-        case EROFS: return "EROFS";
-        case ESHUTDOWN: return "ESHUTDOWN";
-        case ESPIPE: return "ESPIPE";
-        case ESOCKTNOSUPPORT: return "ESOCKTNOSUPPORT";
-        case ESRCH: return "ESRCH";
-        case ESTALE: return "ESTALE";
-        case ETIME: return "ETIME";
-        case ETIMEDOUT: return "ETIMEDOUT";
-        case ETXTBSY: return "ETXTBSY";
-        case EUNATCH: return "EUNATCH";
-        case EUSERS: return "EUSERS";
-        /* case EWOULDBLOCK: return "EWOULDBLOCK"; */
-        case EXDEV: return "EXDEV";
-            
-#ifdef EBADE
-            /* Not available on OSX */
-        case EBADE: return "EBADE";
-        case EBADFD: return "EBADFD";
-        case EBADSLT: return "EBADSLT";
-        case EDEADLOCK: return "EDEADLOCK";
-        case EBADR: return "EBADR";
-        case EBADRQC: return "EBADRQC";
-        case ECHRNG: return "ECHRNG";
-#ifdef EISNAM /* Not available on Illumos/Solaris */
-        case EISNAM: return "EISNAM";
-        case EKEYEXPIRED: return "EKEYEXPIRED";
-        case EKEYREJECTED: return "EKEYREJECTED";
-        case EKEYREVOKED: return "EKEYREVOKED";
-#endif
-        case EL2HLT: return "EL2HLT";
-        case EL2NSYNC: return "EL2NSYNC";
-        case EL3HLT: return "EL3HLT";
-        case EL3RST: return "EL3RST";
-        case ELIBBAD: return "ELIBBAD";
-        case ELIBMAX: return "ELIBMAX";
-        case ELIBSCN: return "ELIBSCN";
-        case ELIBEXEC: return "ELIBEXEC";
-#ifdef ENOMEDIUM  /* Not available on Illumos/Solaris */
-        case ENOMEDIUM: return "ENOMEDIUM";
-        case EMEDIUMTYPE: return "EMEDIUMTYPE";
-#endif
-        case ENONET: return "ENONET";
-        case ENOPKG: return "ENOPKG";
-        case EREMCHG: return "EREMCHG";
-        case ERESTART: return "ERESTART";
-        case ESTRPIPE: return "ESTRPIPE";
-#ifdef EUCLEAN  /* Not available on Illumos/Solaris */
-        case EUCLEAN: return "EUCLEAN";
-#endif
-        case EXFULL: return "EXFULL";
-#endif
-
-        case pcmk_err_generic: return "pcmk_err_generic";
-        case pcmk_err_no_quorum: return "pcmk_err_no_quorum";
-        case pcmk_err_schema_validation: return "pcmk_err_schema_validation";
-        case pcmk_err_transform_failed: return "pcmk_err_transform_failed";
-        case pcmk_err_old_data: return "pcmk_err_old_data";
-        case pcmk_err_diff_failed: return "pcmk_err_diff_failed";
-        case pcmk_err_diff_resync: return "pcmk_err_diff_resync";
-        case pcmk_err_cib_modified: return "pcmk_err_cib_modified";
-        case pcmk_err_cib_backup: return "pcmk_err_cib_backup";
-        case pcmk_err_cib_save: return "pcmk_err_cib_save";
-        case pcmk_err_cib_corrupt: return "pcmk_err_cib_corrupt";
-    }
-    return "Unknown";
-}
-
-
-const char *
-pcmk_strerror(int rc)
-{
-    int error = abs(rc);
-
-    if (error == 0) {
-        return "OK";
-    } else if (error < PCMK_ERROR_OFFSET) {
-        return strerror(error);
-    }
-
-    switch (error) {
-        case pcmk_err_generic:
-            return "Generic Pacemaker error";
-        case pcmk_err_no_quorum:
-            return "Operation requires quorum";
-        case pcmk_err_schema_validation:
-            return "Update does not conform to the configured schema";
-        case pcmk_err_transform_failed:
-            return "Schema transform failed";
-        case pcmk_err_old_data:
-            return "Update was older than existing configuration";
-        case pcmk_err_diff_failed:
-            return "Application of an update diff failed";
-        case pcmk_err_diff_resync:
-            return "Application of an update diff failed, requesting a full refresh";
-        case pcmk_err_cib_modified:
-            return "The on-disk configuration was manually modified";
-        case pcmk_err_cib_backup:
-            return "Could not archive the previous configuration";
-        case pcmk_err_cib_save:
-            return "Could not save the new configuration to disk";
-        case pcmk_err_cib_corrupt:
-            return "Could not parse on-disk configuration";
-
-        case pcmk_err_schema_unchanged:
-            return "Schema is already the latest available";
-
-            /* The following cases will only be hit on systems for which they are non-standard */
-            /* coverity[dead_error_condition] False positive on non-Linux */
-        case ENOTUNIQ:
-            return "Name not unique on network";
-            /* coverity[dead_error_condition] False positive on non-Linux */
-        case ECOMM:
-            return "Communication error on send";
-            /* coverity[dead_error_condition] False positive on non-Linux */
-        case ELIBACC:
-            return "Can not access a needed shared library";
-            /* coverity[dead_error_condition] False positive on non-Linux */
-        case EREMOTEIO:
-            return "Remote I/O error";
-            /* coverity[dead_error_condition] False positive on non-Linux */
-        case EUNATCH:
-            return "Protocol driver not attached";
-            /* coverity[dead_error_condition] False positive on non-Linux */
-        case ENOKEY:
-            return "Required key not available";
-    }
-
-    crm_err("Unknown error code: %d", rc);
-    return "Unknown error";
-}
-
-const char *
-bz2_strerror(int rc)
-{
-    /* http://www.bzip.org/1.0.3/html/err-handling.html */
-    switch (rc) {
-        case BZ_OK:
-        case BZ_RUN_OK:
-        case BZ_FLUSH_OK:
-        case BZ_FINISH_OK:
-        case BZ_STREAM_END:
-            return "Ok";
-        case BZ_CONFIG_ERROR:
-            return "libbz2 has been improperly compiled on your platform";
-        case BZ_SEQUENCE_ERROR:
-            return "library functions called in the wrong order";
-        case BZ_PARAM_ERROR:
-            return "parameter is out of range or otherwise incorrect";
-        case BZ_MEM_ERROR:
-            return "memory allocation failed";
-        case BZ_DATA_ERROR:
-            return "data integrity error is detected during decompression";
-        case BZ_DATA_ERROR_MAGIC:
-            return "the compressed stream does not start with the correct magic bytes";
-        case BZ_IO_ERROR:
-            return "error reading or writing in the compressed file";
-        case BZ_UNEXPECTED_EOF:
-            return "compressed file finishes before the logical end of stream is detected";
-        case BZ_OUTBUFF_FULL:
-            return "output data will not fit into the buffer provided";
-    }
-    return "Unknown error";
-}
-
 void
 crm_log_output_fn(const char *file, const char *function, int line, int level, const char *prefix,
                   const char *output)
@@ -1250,20 +991,4 @@ crm_log_output_fn(const char *file, const char *function, int line, int level, c
         }
 
     } while (next != NULL && next[0] != 0);
-}
-
-char *
-crm_strdup_printf (char const *format, ...)
-{
-    va_list ap;
-    int len = 0;
-    char *string = NULL;
-
-    va_start(ap, format);
-
-    len = vasprintf (&string, format, ap);
-    CRM_ASSERT(len > 0);
-
-    va_end(ap);
-    return string;
 }

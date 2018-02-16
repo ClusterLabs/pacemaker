@@ -1,0 +1,116 @@
+<cib epoch="21" num_updates="4" admin_epoch="0" validate-with="pacemaker-1.2" crm_feature_set="3.0.3" have-quorum="1" cib-last-written="Fri Jul 13 13:51:09 2012" dc-uuid="hex-13">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-placement-strategy" name="placement-strategy" value="balanced"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.3-81db6284125aa3ce4adc386fb45a560a023c34c9"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="2"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1284053402"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="hex-13" type="member" uname="hex-13">
+        <utilization id="hex-13-utilization">
+          <nvpair id="hex-13-utilization-memory" name="memory" value="4096"/>
+        </utilization>
+      </node>
+      <node id="hex-14" type="member" uname="hex-14">
+        <utilization id="hex-14-utilization">
+          <nvpair id="hex-14-utilization-memory" name="memory" value="4096"/>
+        </utilization>
+      </node>
+      <node id="hex-15" type="member" uname="hex-15"/>
+    </nodes>
+    <resources>
+      <primitive class="ocf" id="test-vm" provider="heartbeat" type="Xen">
+        <instance_attributes id="test-vm-instance_attributes">
+          <nvpair id="test-vm-instance_attributes-xmfile" name="xmfile" value="/var/lib/xen/images/SLES_11_SP1_JeOS_Xen_Guest.x86_64-0.0.1.xenconfig"/>
+          <nvpair id="test-vm-instance_attributes-name" name="name" value="test-vm"/>
+        </instance_attributes>
+        <meta_attributes id="test-vm-meta_attributes">
+          <nvpair id="test-vm-meta_attributes-allow-migrate" name="allow-migrate" value="true"/>
+          <nvpair id="test-vm-meta_attributes-is-managed" name="is-managed" value="true"/>
+        </meta_attributes>
+        <utilization id="test-vm-utilization">
+          <nvpair id="test-vm-utilization-memory" name="memory" value="2048"/>
+        </utilization>
+      </primitive>
+      <clone id="c-clusterfs">
+        <meta_attributes id="c-clusterfs-meta_attributes">
+          <nvpair id="c-clusterfs-meta_attributes-interleave" name="interleave" value="true"/>
+        </meta_attributes>
+        <primitive class="ocf" id="dlm" provider="pacemaker" type="controld">
+          <operations>
+            <op id="dlm-start-0" interval="0" name="start" timeout="90"/>
+            <op id="dlm-stop-0" interval="0" name="stop" timeout="100"/>
+          </operations>
+        </primitive>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_colocation id="colo-vm" rsc="test-vm" score="INFINITY" with-rsc="c-clusterfs"/>
+      <rsc_order first="c-clusterfs" id="order-vm" score="INFINITY" then="test-vm"/>
+      <rsc_location id="cli-prefer-test-vm" rsc="test-vm">
+        <rule id="cli-prefer-rule-test-vm" score="-INFINITY" boolean-op="and">
+          <expression id="cli-prefer-expr-test-vm" attribute="#uname" operation="eq" value="hex-14" type="string"/>
+        </rule>
+      </rsc_location>
+    </constraints>
+    <op_defaults>
+      <meta_attributes id="op-options">
+        <nvpair id="op-options-timeout" name="timeout" value="600"/>
+        <nvpair id="op-options-record-pending" name="record-pending" value="true"/>
+      </meta_attributes>
+    </op_defaults>
+    <rsc_defaults>
+      <meta_attributes id="rsc-options">
+        <nvpair id="rsc-options-resource-stickiness" name="resource-stickiness" value="1"/>
+        <nvpair id="rsc-options-migration-threshold" name="migration-threshold" value="3"/>
+      </meta_attributes>
+    </rsc_defaults>
+  </configuration>
+  <status>
+    <node_state id="hex-14" uname="hex-14" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
+      <lrm id="hex-14">
+        <lrm_resources>
+          <lrm_resource id="test-vm" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="test-vm_monitor_0" call-id="2" operation="monitor" crm_feature_set="3.0.3" op-status="0" interval="0" rc-code="7" crm-debug-origin="do_update_resource" transition-key="14:0:7:f0d1f080-5898-4683-b71e-9209afe97464" transition-magic="0:7;14:0:7:f0d1f080-5898-4683-b71e-9209afe97464" op-digest="a3d120556f1c4b9f314841b83f406620" last-run="1285680553" last-rc-change="1285680553" exec-time="910" queue-time="10"/>
+            <lrm_rsc_op id="test-vm_start_0" call-id="16" operation="start" crm_feature_set="3.0.3" op-status="0" interval="0" rc-code="0" crm-debug-origin="do_update_resource" transition-key="7:2:0:f0d1f080-5898-4683-b71e-9209afe97464" transition-magic="0:0;7:2:0:f0d1f080-5898-4683-b71e-9209afe97464" op-digest="a3d120556f1c4b9f314841b83f406620" last-run="1285680566" last-rc-change="1285680566" exec-time="14340" queue-time="0"/>
+            <lrm_rsc_op id="test-vm_migrate_to_0" operation="migrate_to" crm-debug-origin="crm_simulate" crm_feature_set="3.0.3" transition-key="17:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;17:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="17" rc-code="0" op-status="0" interval="0" migrate_source="hex-14" migrate_target="hex-15" op-digest="a3d120556f1c4b9f314841b83f406620"/>
+          </lrm_resource>
+          <lrm_resource id="dlm:1" type="controld" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dlm:1_monitor_0" call-id="3" operation="monitor" crm_feature_set="3.0.3" op-status="0" interval="0" rc-code="7" crm-debug-origin="do_update_resource" transition-key="15:0:7:f0d1f080-5898-4683-b71e-9209afe97464" transition-magic="0:7;15:0:7:f0d1f080-5898-4683-b71e-9209afe97464" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" last-run="1285680552" last-rc-change="1285680552" exec-time="80" queue-time="0"/>
+            <lrm_rsc_op id="dlm:1_start_0" call-id="9" operation="start" crm_feature_set="3.0.3" op-status="0" interval="0" rc-code="0" crm-debug-origin="do_update_resource" transition-key="19:1:0:f0d1f080-5898-4683-b71e-9209afe97464" transition-magic="0:0;19:1:0:f0d1f080-5898-4683-b71e-9209afe97464" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" last-run="1285680554" last-rc-change="1285680554" exec-time="1150" queue-time="0"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="hex-14">
+        <instance_attributes id="status-hex-14">
+          <nvpair id="status-hex-14-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="hex-15" uname="hex-15" ha="active" in_ccm="false" crmd="offline" join="down" expected="down" crm-debug-origin="do_update_resource" shutdown="0"/>
+    <node_state id="hex-13" uname="hex-13" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
+      <lrm id="hex-13">
+        <lrm_resources>
+          <lrm_resource id="test-vm" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="test-vm_monitor_0" call-id="2" operation="monitor" crm_feature_set="3.0.3" op-status="0" interval="0" rc-code="7" crm-debug-origin="do_update_resource" transition-key="6:0:7:f0d1f080-5898-4683-b71e-9209afe97464" transition-magic="0:7;6:0:7:f0d1f080-5898-4683-b71e-9209afe97464" op-digest="a3d120556f1c4b9f314841b83f406620" last-run="1285680553" last-rc-change="1285680553" exec-time="820" queue-time="0"/>
+          </lrm_resource>
+          <lrm_resource id="dlm:0" type="controld" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dlm:0_monitor_0" call-id="3" operation="monitor" crm_feature_set="3.0.3" op-status="0" interval="0" rc-code="7" crm-debug-origin="do_update_resource" transition-key="7:0:7:f0d1f080-5898-4683-b71e-9209afe97464" transition-magic="0:7;7:0:7:f0d1f080-5898-4683-b71e-9209afe97464" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" last-run="1285680552" last-rc-change="1285680552" exec-time="90" queue-time="0"/>
+            <lrm_rsc_op id="dlm:0_start_0" call-id="9" operation="start" crm_feature_set="3.0.3" op-status="0" interval="0" rc-code="0" crm-debug-origin="do_update_resource" transition-key="8:1:0:f0d1f080-5898-4683-b71e-9209afe97464" transition-magic="0:0;8:1:0:f0d1f080-5898-4683-b71e-9209afe97464" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" last-run="1285680554" last-rc-change="1285680554" exec-time="1150" queue-time="0"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="hex-13">
+        <instance_attributes id="status-hex-13">
+          <nvpair id="status-hex-13-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>
