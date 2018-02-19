@@ -457,3 +457,11 @@ crm_set_nonblocking(int fd)
     }
     return pcmk_ok;
 }
+
+const char *
+crm_get_tmpdir()
+{
+    const char *dir = getenv("TMPDIR");
+
+    return (dir && (*dir == '/'))? dir : "/tmp";
+}

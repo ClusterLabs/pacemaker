@@ -3942,7 +3942,7 @@ save_xml_to_file(xmlNode * xml, const char *desc, const char *filename)
     if (filename == NULL) {
         char *uuid = crm_generate_uuid();
 
-        f = crm_strdup_printf("/tmp/%s", uuid);
+        f = crm_strdup_printf("%s/%s", crm_get_tmpdir(), uuid);
         filename = f;
         free(uuid);
     }

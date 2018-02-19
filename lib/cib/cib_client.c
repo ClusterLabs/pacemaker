@@ -247,9 +247,7 @@ get_shadow_file(const char *suffix)
                 }
             }
 
-            if ((dir = getenv("TMPDIR")) == NULL) {
-                dir = "/tmp";
-            }
+            dir = crm_get_tmpdir();
             if (home && home[0] == '/') {
                 int rc = 0;
 
