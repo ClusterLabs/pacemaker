@@ -468,6 +468,13 @@ main(int argc, char **argv)
         crm_info("Starting mainloop");
         g_main_loop_run(mainloop);
 
+    } else if ((rc == -pcmk_err_schema_unchanged)
+               && crm_str_eq(cib_action, CIB_OP_UPGRADE, TRUE)) {
+
+        // Already at latest schema
+        crm_info("Upgrade unnecessary: %s\n", pcmk_strerror(rc));
+        printf("Upgrade unnecessary: %s\n", pcmk_strerror(rc));
+
     } else if (rc < 0) {
         crm_err("Call failed: %s", pcmk_strerror(rc));
         fprintf(stderr, "Call failed: %s\n", pcmk_strerror(rc));
