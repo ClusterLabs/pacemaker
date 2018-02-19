@@ -470,6 +470,14 @@ main(int argc, char **argv)
         crm_info("Starting mainloop");
         g_main_run(mainloop);
 
+    } else if ((exit_code == -pcmk_err_schema_unchanged)
+               && crm_str_eq(cib_action, CIB_OP_UPGRADE, TRUE)) {
+
+        // Already at latest schema
+        crm_info("Upgrade unnecessary: %s\n", pcmk_strerror(exit_code));
+        printf("Upgrade unnecessary: %s\n", pcmk_strerror(exit_code));
+        exit_code = 0;
+
     } else if (exit_code < 0) {
         crm_err("Call failed: %s", pcmk_strerror(exit_code));
         fprintf(stderr, "Call failed: %s\n", pcmk_strerror(exit_code));
