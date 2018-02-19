@@ -210,6 +210,12 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
               is_set(data_set->flags, pe_flag_stonith_enabled) ? "enabled" : "disabled");
 
     data_set->stonith_action = pe_pref(data_set->config_hash, "stonith-action");
+    if (!strcmp(data_set->stonith_action, "poweroff")) {
+        pe_warn_once(pe_wo_poweroff,
+                     "Support for stonith-action of 'poweroff' is deprecated "
+                     "and will be removed in a future release (use 'off' instead)");
+        data_set->stonith_action = "off";
+    }
     crm_trace("STONITH will %s nodes", data_set->stonith_action);
 
     set_config_flag(data_set, "concurrent-fencing", pe_flag_concurrent_fencing);
