@@ -115,6 +115,12 @@ corosync_node_name(uint64_t /*cmap_handle_t */ cmap_handle, uint32_t nodeid)
         if (nodeid == id) {
             crm_trace("Searching for node name for %u in nodelist.node.%d %s", nodeid, lpc, name);
             if (name == NULL) {
+                key = crm_strdup_printf("nodelist.node.%d.name", lpc);
+                cmap_get_string(cmap_handle, key, &name);
+                crm_trace("%s = %s", key, name);
+                free(key);
+            }
+            if (name == NULL) {
                 key = crm_strdup_printf("nodelist.node.%d.ring0_addr", lpc);
                 cmap_get_string(cmap_handle, key, &name);
                 crm_trace("%s = %s", key, name);
@@ -123,13 +129,6 @@ corosync_node_name(uint64_t /*cmap_handle_t */ cmap_handle, uint32_t nodeid)
                     free(name);
                     name = NULL;
                 }
-                free(key);
-            }
-
-            if (name == NULL) {
-                key = crm_strdup_printf("nodelist.node.%d.name", lpc);
-                cmap_get_string(cmap_handle, key, &name);
-                crm_trace("%s = %s %d", key, name, rc);
                 free(key);
             }
             break;
