@@ -20,6 +20,10 @@
 #ifndef LRMD__H
 #  define LRMD__H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * \file
  * \brief Local Resource Manager
@@ -256,7 +260,7 @@ void lrmd_free_event(lrmd_event_data_t * event);
 typedef struct lrmd_rsc_info_s {
     char *id;
     char *type;
-    char *class;
+    char *standard;
     char *provider;
 } lrmd_rsc_info_t;
 
@@ -329,7 +333,7 @@ typedef struct lrmd_api_operations_s {
      */
     int (*register_rsc) (lrmd_t * lrmd,
                          const char *rsc_id,
-                         const char *class,
+                         const char *standard,
                          const char *provider, const char *agent, enum lrmd_call_options options);
 
     /*!
@@ -432,7 +436,7 @@ typedef struct lrmd_api_operations_s {
      * \retval negative error code on failure
      */
     int (*get_metadata) (lrmd_t * lrmd,
-                         const char *class,
+                         const char *standard,
                          const char *provider,
                          const char *agent, char **output, enum lrmd_call_options options);
 
@@ -445,8 +449,8 @@ typedef struct lrmd_api_operations_s {
      * \retval num items in list on success
      * \retval negative error code on failure
      */
-    int (*list_agents) (lrmd_t * lrmd, lrmd_list_t ** agents, const char *class,
-                        const char *provider);
+    int (*list_agents) (lrmd_t * lrmd, lrmd_list_t ** agents,
+                        const char *standard, const char *provider);
 
     /*!
      * \brief Retrieve a list of resource agent providers
@@ -493,7 +497,7 @@ typedef struct lrmd_api_operations_s {
 
 struct lrmd_s {
     lrmd_api_operations_t *cmds;
-    void *private;
+    void *lrmd_private;
 };
 
 static inline const char *
@@ -517,5 +521,9 @@ lrmd_event_type2str(enum lrmd_callback_event type)
     }
     return "unknown";
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

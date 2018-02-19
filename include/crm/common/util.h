@@ -18,6 +18,10 @@
 #ifndef CRM_COMMON_UTIL__H
 #  define CRM_COMMON_UTIL__H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * \file
  * \brief Utility functions
@@ -169,9 +173,14 @@ void crm_gnutls_global_init(void);
 
 bool pcmk_acl_required(const char *user);
 
-char *crm_generate_ra_key(const char *class, const char *provider, const char *type);
+char *crm_generate_ra_key(const char *standard, const char *provider,
+                          const char *type);
 bool crm_provider_required(const char *standard);
 int crm_parse_agent_spec(const char *spec, char **standard, char **provider,
                          char **type);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

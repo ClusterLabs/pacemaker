@@ -18,6 +18,10 @@
 #ifndef CRM_COMMON_MAINLOOP__H
 #  define CRM_COMMON_MAINLOOP__H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * \file
  * \brief Wrappers for and extensions to glib mainloop
@@ -122,5 +126,9 @@ void mainloop_clear_child_userdata(mainloop_child_t * child);
 gboolean mainloop_child_kill(pid_t pid);
 
 #  define G_PRIORITY_MEDIUM (G_PRIORITY_HIGH/2)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

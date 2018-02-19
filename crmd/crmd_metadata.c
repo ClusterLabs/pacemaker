@@ -124,17 +124,17 @@ ra_version_from_xml(xmlNode *metadata_xml, const lrmd_rsc_info_t *rsc)
 
     if (version == NULL) {
         crm_debug("Metadata for %s:%s:%s does not specify a version",
-                  rsc->class, rsc->provider, rsc->type);
+                  rsc->standard, rsc->provider, rsc->type);
         version = PCMK_DEFAULT_AGENT_VERSION;
 
     } else if (!valid_version_format(version)) {
         crm_notice("%s:%s:%s metadata version has unrecognized format",
-                  rsc->class, rsc->provider, rsc->type);
+                  rsc->standard, rsc->provider, rsc->type);
         version = PCMK_DEFAULT_AGENT_VERSION;
 
     } else {
         crm_debug("Metadata for %s:%s:%s has version %s",
-                  rsc->class, rsc->provider, rsc->type, version);
+                  rsc->standard, rsc->provider, rsc->type, version);
     }
     return strdup(version);
 }
@@ -183,7 +183,7 @@ metadata_cache_update(GHashTable *mdc, lrmd_rsc_info_t *rsc,
 
     CRM_CHECK(mdc && rsc && metadata_str, return NULL);
 
-    key = crm_generate_ra_key(rsc->class, rsc->provider, rsc->type);
+    key = crm_generate_ra_key(rsc->standard, rsc->provider, rsc->type);
     if (!key) {
         crm_crit("Could not allocate memory for resource metadata");
         goto err;
@@ -192,7 +192,7 @@ metadata_cache_update(GHashTable *mdc, lrmd_rsc_info_t *rsc,
     metadata = string2xml(metadata_str);
     if (!metadata) {
         crm_err("Metadata for %s:%s:%s is not valid XML",
-                rsc->class, rsc->provider, rsc->type);
+                rsc->standard, rsc->provider, rsc->type);
         goto err;
     }
 
@@ -228,7 +228,7 @@ metadata_cache_update(GHashTable *mdc, lrmd_rsc_info_t *rsc,
 
         if (param_name == NULL) {
             crm_warn("Metadata for %s:%s:%s has parameter without a name",
-                     rsc->class, rsc->provider, rsc->type);
+                     rsc->standard, rsc->provider, rsc->type);
         } else {
             struct ra_param_s *p = ra_param_from_xml(match);
 
@@ -260,7 +260,7 @@ metadata_cache_get(GHashTable *mdc, lrmd_rsc_info_t *rsc)
     struct ra_metadata_s *metadata = NULL;
 
     CRM_CHECK(mdc && rsc, return NULL);
-    key = crm_generate_ra_key(rsc->class, rsc->provider, rsc->type);
+    key = crm_generate_ra_key(rsc->standard, rsc->provider, rsc->type);
     if (key) {
         metadata = g_hash_table_lookup(mdc, key);
         free(key);

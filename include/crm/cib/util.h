@@ -18,6 +18,10 @@
 #ifndef CIB_UTIL__H
 #  define CIB_UTIL__H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Utility functions */
 const char *get_object_path(const char *object_type);
 const char *get_object_parent(const char *object_type);
@@ -66,5 +70,9 @@ xmlNode *cib_get_generation(cib_t * cib);
 void cib_metadata(void);
 const char *cib_pref(GHashTable * options, const char *name);
 int cib_apply_patch_event(xmlNode * event, xmlNode * input, xmlNode ** output, int level);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

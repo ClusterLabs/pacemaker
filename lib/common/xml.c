@@ -3953,7 +3953,7 @@ save_xml_to_file(xmlNode * xml, const char *desc, const char *filename)
 }
 
 gboolean
-apply_xml_diff(xmlNode * old, xmlNode * diff, xmlNode ** new)
+apply_xml_diff(xmlNode *old_xml, xmlNode * diff, xmlNode **new_xml)
 {
     gboolean result = TRUE;
     int root_nodes_seen = 0;
@@ -3965,7 +3965,7 @@ apply_xml_diff(xmlNode * old, xmlNode * diff, xmlNode ** new)
     xmlNode *added = find_xml_node(diff, "diff-added", FALSE);
     xmlNode *removed = find_xml_node(diff, "diff-removed", FALSE);
 
-    CRM_CHECK(new != NULL, return FALSE);
+    CRM_CHECK(new_xml != NULL, return FALSE);
     if (digest_cs == NULL) {
         digest_cs =
             qb_log_callsite_get(__func__, __FILE__, "diff-digest", LOG_TRACE, __LINE__,
@@ -3977,13 +3977,13 @@ apply_xml_diff(xmlNode * old, xmlNode * diff, xmlNode ** new)
          child_diff = __xml_next(child_diff)) {
         CRM_CHECK(root_nodes_seen == 0, result = FALSE);
         if (root_nodes_seen == 0) {
-            *new = subtract_xml_object(NULL, old, child_diff, FALSE, NULL, NULL);
+            *new_xml = subtract_xml_object(NULL, old_xml, child_diff, FALSE, NULL, NULL);
         }
         root_nodes_seen++;
     }
 
     if (root_nodes_seen == 0) {
-        *new = copy_xml(old);
+        *new_xml = copy_xml(old_xml);
 
     } else if (root_nodes_seen > 1) {
         crm_err("(-) Diffs cannot contain more than one change set..." " saw %d", root_nodes_seen);
@@ -3999,7 +3999,7 @@ apply_xml_diff(xmlNode * old, xmlNode * diff, xmlNode ** new)
              child_diff = __xml_next(child_diff)) {
             CRM_CHECK(root_nodes_seen == 0, result = FALSE);
             if (root_nodes_seen == 0) {
-                add_xml_object(NULL, *new, child_diff, TRUE);
+                add_xml_object(NULL, *new_xml, child_diff, TRUE);
             }
             root_nodes_seen++;
         }
@@ -4012,17 +4012,17 @@ apply_xml_diff(xmlNode * old, xmlNode * diff, xmlNode ** new)
     } else if (result && digest) {
         char *new_digest = NULL;
 
-        purge_diff_markers(*new);       /* Purge now so the diff is ok */
-        new_digest = calculate_xml_versioned_digest(*new, FALSE, TRUE, version);
+        purge_diff_markers(*new_xml);       /* Purge now so the diff is ok */
+        new_digest = calculate_xml_versioned_digest(*new_xml, FALSE, TRUE, version);
         if (safe_str_neq(new_digest, digest)) {
             crm_info("Digest mis-match: expected %s, calculated %s", digest, new_digest);
             result = FALSE;
 
             crm_trace("%p %.6x", digest_cs, digest_cs ? digest_cs->targets : 0);
             if (digest_cs && digest_cs->targets) {
-                save_xml_to_file(old, "diff:original", NULL);
+                save_xml_to_file(old_xml, "diff:original", NULL);
                 save_xml_to_file(diff, "diff:input", NULL);
-                save_xml_to_file(*new, "diff:new", NULL);
+                save_xml_to_file(*new_xml, "diff:new", NULL);
             }
 
         } else {
@@ -4031,7 +4031,7 @@ apply_xml_diff(xmlNode * old, xmlNode * diff, xmlNode ** new)
         free(new_digest);
 
     } else if (result) {
-        purge_diff_markers(*new);       /* Purge now so the diff is ok */
+        purge_diff_markers(*new_xml);       /* Purge now so the diff is ok */
     }
 
     return result;
@@ -4207,16 +4207,18 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
 }
 
 void
-xml_calculate_changes(xmlNode * old, xmlNode * new)
+xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml)
 {
-    CRM_CHECK(safe_str_eq(crm_element_name(old), crm_element_name(new)), return);
-    CRM_CHECK(safe_str_eq(ID(old), ID(new)), return);
+    CRM_CHECK(safe_str_eq(crm_element_name(old_xml),
+                          crm_element_name(new_xml)),
+              return);
+    CRM_CHECK(safe_str_eq(ID(old_xml), ID(new_xml)), return);
 
-    if(xml_tracking_changes(new) == FALSE) {
-        xml_track_changes(new, NULL, NULL, FALSE);
+    if(xml_tracking_changes(new_xml) == FALSE) {
+        xml_track_changes(new_xml, NULL, NULL, FALSE);
     }
 
-    __xml_diff_object(old, new);
+    __xml_diff_object(old_xml, new_xml);
 }
 
 xmlNode *

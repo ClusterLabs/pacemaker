@@ -17,6 +17,11 @@
  */
 #ifndef PE_COMMON__H
 #  define PE_COMMON__H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #  include <glib.h>
 
 extern gboolean was_processing_error;
@@ -135,5 +140,9 @@ recovery2text(enum rsc_recovery_type type)
     }
     return "Unknown";
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

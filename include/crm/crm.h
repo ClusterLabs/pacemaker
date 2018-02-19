@@ -18,6 +18,10 @@
 #ifndef CRM__H
 #  define CRM__H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * \file
  * \brief A dumping ground
@@ -199,5 +203,9 @@ static inline const char *crm_action_str(const char *task, int interval) {
     }
     return task;
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -7,6 +7,10 @@
 #ifndef CRM_COMPATIBILITY__H
 #  define CRM_COMPATIBILITY__H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <crm/msg_xml.h>
 
 /* Heartbeat-specific definitions. Support for heartbeat has been removed
@@ -200,5 +204,9 @@ get_resource_typename(enum pe_obj_types type)
     }
     return "<unknown>";
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

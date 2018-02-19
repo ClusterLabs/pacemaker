@@ -988,7 +988,7 @@ erase_status_tag(const char *uname, const char *tag, int options)
 
         crm_info("Deleting %s status entries for %s " CRM_XS " xpath=%s",
                  tag, uname, xpath);
-        call_id = fsa_cib_conn->cmds->delete(fsa_cib_conn, xpath, NULL,
+        call_id = fsa_cib_conn->cmds->remove(fsa_cib_conn, xpath, NULL,
                                              cib_quorum_override | cib_xpath | options);
         fsa_register_cib_callback(call_id, FALSE, xpath, erase_xpath_callback);
         // CIB library handles freeing xpath

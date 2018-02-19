@@ -493,8 +493,8 @@ send_cluster_message_cs(xmlNode * msg, gboolean local, crm_node_t * node, enum c
 }
 
 gboolean
-send_cluster_text(int class, const char *data,
-              gboolean local, crm_node_t * node, enum crm_ais_msg_types dest)
+send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
+                  gboolean local, crm_node_t *node, enum crm_ais_msg_types dest)
 {
     static int msg_id = 0;
     static int local_pid = 0;
@@ -506,11 +506,11 @@ send_cluster_text(int class, const char *data,
     AIS_Message *msg = NULL;
     enum crm_ais_msg_types sender = text2msg_type(crm_system_name);
 
-    switch (class) {
+    switch (msg_class) {
         case crm_class_cluster:
             break;
         default:
-            crm_err("Invalid message class: %d", class);
+            crm_err("Invalid message class: %d", msg_class);
             return FALSE;
     }
 
@@ -539,7 +539,7 @@ send_cluster_text(int class, const char *data,
 
     msg_id++;
     msg->id = msg_id;
-    msg->header.id = class;
+    msg->header.id = msg_class;
     msg->header.error = CS_OK;
 
     msg->host.type = dest;

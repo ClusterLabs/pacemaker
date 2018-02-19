@@ -101,11 +101,11 @@ cib_remove_node(uint32_t id, const char *name)
     cib = cib_new();
     cib->cmds->signon(cib, crm_system_name, cib_command);
 
-    rc = cib->cmds->delete(cib, XML_CIB_TAG_NODES, node, cib_sync_call);
+    rc = cib->cmds->remove(cib, XML_CIB_TAG_NODES, node, cib_sync_call);
     if (rc != pcmk_ok) {
         printf("Could not remove %s/%u from " XML_CIB_TAG_NODES ": %s", name, id, pcmk_strerror(rc));
     }
-    rc = cib->cmds->delete(cib, XML_CIB_TAG_STATUS, node_state, cib_sync_call);
+    rc = cib->cmds->remove(cib, XML_CIB_TAG_STATUS, node_state, cib_sync_call);
     if (rc != pcmk_ok) {
         printf("Could not remove %s/%u from " XML_CIB_TAG_STATUS ": %s", name, id, pcmk_strerror(rc));
     }

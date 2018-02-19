@@ -236,7 +236,7 @@ cli_resource_clear(const char *rsc_id, const char *host, GListPtr allnodes, cib_
     }
 
     crm_log_xml_info(fragment, "Delete");
-    rc = cib_conn->cmds->delete(cib_conn, XML_CIB_TAG_CONSTRAINTS, fragment, cib_options);
+    rc = cib_conn->cmds->remove(cib_conn, XML_CIB_TAG_CONSTRAINTS, fragment, cib_options);
     if (rc == -ENXIO) {
         rc = pcmk_ok;
 

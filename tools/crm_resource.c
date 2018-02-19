@@ -1176,7 +1176,7 @@ main(int argc, char **argv)
         msg_data = create_xml_node(NULL, rsc_type);
         crm_xml_add(msg_data, XML_ATTR_ID, rsc_id);
 
-        rc = cib_conn->cmds->delete(cib_conn, XML_CIB_TAG_RESOURCES, msg_data, cib_options);
+        rc = cib_conn->cmds->remove(cib_conn, XML_CIB_TAG_RESOURCES, msg_data, cib_options);
         free_xml(msg_data);
 
     } else {

@@ -18,6 +18,10 @@
 #ifndef PENGINE_STATUS__H
 #  define PENGINE_STATUS__H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #  include <glib.h>
 #  include <stdbool.h>
 #  include <crm/common/iso8601.h>
@@ -514,5 +518,9 @@ pe_rsc_is_bundled(resource_t *rsc)
 {
     return uber_parent(rsc)->parent != NULL;
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

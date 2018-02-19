@@ -16,18 +16,18 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#ifndef __PCMK_SERVICES__
+#  define __PCMK_SERVICES__
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * \file
  * \brief Services API
  * \ingroup core
  */
-
-#ifndef __PCMK_SERVICES__
-#  define __PCMK_SERVICES__
-
-#  ifdef __cplusplus
-extern "C" {
-#  endif
 
 #  include <glib.h>
 #  include <stdio.h>

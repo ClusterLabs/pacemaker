@@ -18,6 +18,10 @@
 #ifndef CRM_COMMON_XML__H
 #  define CRM_COMMON_XML__H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * \file
  * \brief Wrappers for and extensions to libxml2
@@ -170,7 +174,7 @@ xmlNode *subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
 
 gboolean can_prune_leaf(xmlNode * xml_node);
 
-gboolean apply_xml_diff(xmlNode * old, xmlNode * diff, xmlNode ** new);
+gboolean apply_xml_diff(xmlNode *old_xml, xmlNode *diff, xmlNode **new_xml);
 
 /*
  * Searching & Modifying
@@ -369,7 +373,7 @@ bool xml_acl_filtered_copy(const char *user, xmlNode* acl_source, xmlNode *xml, 
 bool xml_tracking_changes(xmlNode * xml);
 bool xml_document_dirty(xmlNode *xml);
 void xml_track_changes(xmlNode * xml, const char *user, xmlNode *acl_source, bool enforce_acls);
-void xml_calculate_changes(xmlNode * old, xmlNode * new); /* For comparing two documents after the fact */
+void xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml);
 void xml_accept_changes(xmlNode * xml);
 void xml_log_changes(uint8_t level, const char *function, xmlNode *xml);
 void xml_log_patchset(uint8_t level, const char *function, xmlNode *xml);
@@ -393,5 +397,9 @@ void crm_xml_set_id(xmlNode *xml, const char *format, ...)
  * \brief xmlNode destructor which can be used in glib collections
  */
 void crm_destroy_xml(gpointer data);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

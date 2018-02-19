@@ -18,6 +18,10 @@
 #ifndef PENGINE_COMPLEX__H
 #  define PENGINE_COMPLEX__H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 enum pe_obj_types {
     pe_unknown = -1,
     pe_native = 0,
@@ -53,5 +57,9 @@ typedef struct resource_alloc_functions_s resource_alloc_functions_t;
 
 gboolean is_parent(resource_t *child, resource_t *rsc);
 resource_t *uber_parent(resource_t * rsc);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
