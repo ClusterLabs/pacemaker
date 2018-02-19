@@ -91,10 +91,13 @@ test_selfcheck() {
 		shift
 	done
 	_tsc_validator="${_tsc_template:?}"
-	_tsc_validator="xslt_cibtr-${_tsc_validator%%.*}.rng"
+	_tsc_validator="cibtr-${_tsc_validator%%.*}.rng"
 	_tsc_template="upgrade-${_tsc_template}.xsl"
 
-	${RNGVALIDATOR} "${_tsc_validator}" "${_tsc_template}"
+	# check schema (sub-grammar) for custom transformation mapping alone
+	${RNGVALIDATOR} 'http://relaxng.org/relaxng.rng' "${_tsc_validator}"
+	# check the overall XSLT per the main grammar + said sub-grammar
+	${RNGVALIDATOR} "xslt_${_tsc_validator}" "${_tsc_template}"
 }
 
 # stdout: filename of the transformed file

@@ -22,7 +22,7 @@
   <define name="cibtr-2.table">
     <element name="cibtr:table">
       <attribute name="for">
-        <data type="string"/>
+        <data type="ID"/>
       </attribute>
       <attribute name="msg-prefix">
         <data type="string"/>
