@@ -18,60 +18,32 @@
  */
 
 #include <crm_internal.h>
-
-#include <sys/param.h>
-
-#include <crm/crm.h>
-
 #include <stdio.h>
-#include <sys/types.h>
-#include <unistd.h>
-
-#include <stdlib.h>
-#include <errno.h>
-#include <fcntl.h>
-
+#include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/ipc.h>
 #include <crm/cib/internal.h>
 
-crm_exit_t exit_code = CRM_EX_OK;
-int message_timer_id = -1;
 int message_timeout_ms = 30;
-
-GMainLoop *mainloop = NULL;
+int command_options = 0;
+int request_id = 0;
+int bump_log_num = 0;
 
 const char *host = NULL;
-int do_init(void);
-int do_work(xmlNode * input, int command_options, xmlNode ** output);
-
-gboolean admin_message_timeout(gpointer data);
-void cib_connection_destroy(gpointer user_data);
-void cibadmin_op_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data);
-
-int command_options = 0;
 const char *cib_user = NULL;
 const char *cib_action = NULL;
-
-typedef struct str_list_s {
-    int num_items;
-    char *value;
-    struct str_list_s *next;
-} str_list_t;
-
 const char *obj_type = NULL;
-char *status = NULL;
-char *migrate_from = NULL;
-char *migrate_res = NULL;
-char *subtype = NULL;
-char *reset = NULL;
 
-int request_id = 0;
 cib_t *the_cib = NULL;
+GMainLoop *mainloop = NULL;
 gboolean force_flag = FALSE;
-gboolean quiet = FALSE;
-int bump_log_num = 0;
+crm_exit_t exit_code = CRM_EX_OK;
+
+int do_init(void);
+int do_work(xmlNode *input, int command_options, xmlNode **output);
+void cibadmin_op_callback(xmlNode *msg, int call_id, int rc, xmlNode *output,
+                          void *user_data);
 
 /* *INDENT-OFF* */
 static struct crm_option long_options[] = {
@@ -252,7 +224,6 @@ main(int argc, char **argv)
                 break;
             case 'Q':
                 cib_action = CIB_OP_QUERY;
-                quiet = TRUE;
                 break;
             case 'P':
                 cib_action = CIB_OP_APPLY_DIFF;
@@ -354,10 +325,6 @@ main(int argc, char **argv)
                 ++argerr;
                 break;
         }
-    }
-
-    if (bump_log_num > 0) {
-        quiet = FALSE;
     }
 
     while (bump_log_num > 0) {
@@ -550,14 +517,6 @@ do_init(void)
     }
 
     return rc;
-}
-
-void
-cib_connection_destroy(gpointer user_data)
-{
-    crm_err("Connection to the CIB terminated... exiting");
-    g_main_loop_quit(mainloop);
-    return;
 }
 
 void
