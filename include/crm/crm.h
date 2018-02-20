@@ -63,17 +63,21 @@ extern char *crm_system_name;
 // Used for some internal IPC timeouts (maybe should be configurable option)
 #  define MAX_IPC_DELAY   120
 
-/* This header defines INFINITY, but it might be defined elsewhere as well
- * (e.g. math.h), so undefine it first. This, of course, complicates any attempt
- * to use the other definition in any code that includes this header.
+// How we represent "infinite" scores
+#  define CRM_SCORE_INFINITY    1000000
+#  define CRM_INFINITY_S        "INFINITY"
+#  define CRM_PLUS_INFINITY_S   "+" CRM_INFINITY_S
+#  define CRM_MINUS_INFINITY_S  "-" CRM_INFINITY_S
+
+/* @COMPAT API < 2.0.0 Deprecated "infinity" aliases
  *
- * @TODO: Rename our constant (which will break API backward compatibility).
+ * INFINITY might be defined elsewhere (e.g. math.h), so undefine it first.
+ * This, of course, complicates any attempt to use the other definition in any
+ * code that includes this header.
  */
 #  undef INFINITY
-
 #  define INFINITY_S        "INFINITY"
 #  define MINUS_INFINITY_S "-INFINITY"
-
 #  define INFINITY        1000000
 
 /* Sub-systems */

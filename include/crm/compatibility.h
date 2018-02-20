@@ -166,6 +166,8 @@ static int ais_fd_sync = -1;
 #define pe_rsc_unexpectedly_running       0x02000000ULL
 #define pe_rsc_have_unfencing             0x80000000ULL
 
+static int node_score_infinity = 1000000;
+
 /* Clone terminology definitions */
 
 // These can no longer be used in a switch together

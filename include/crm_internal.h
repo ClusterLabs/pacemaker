@@ -139,7 +139,6 @@ void crm_args_fini(void);
 extern int node_score_red;
 extern int node_score_green;
 extern int node_score_yellow;
-extern int node_score_infinity;
 
 /* Assorted convenience functions */
 int crm_pid_active(long pid, const char *daemon);
