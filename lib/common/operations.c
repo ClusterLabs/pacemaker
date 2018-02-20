@@ -387,8 +387,9 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char * c
     crm_trace("DC version: %s", caller_version);
 
     task = op->op_type;
-    /* remap the task name under various scenarios
-     * this makes life easier for the PE when trying determine the current state
+
+    /* Remap the task name under various scenarios, to make life easier for the
+     * PE when determining the current state.
      */
     if (crm_str_eq(task, "reload", TRUE)) {
         if (op->op_status == PCMK_LRM_OP_DONE) {

@@ -444,10 +444,10 @@ write_cib_contents(gpointer p)
             return -1;          /* -1 means 'still work to do' */
         }
 
-        /* A-synchronous write out after a fork() */
+        /* Asynchronous write-out after a fork() */
 
-        /* In theory we can scribble on "the_cib" here and not affect the parent
-         * But lets be safe anyway
+        /* In theory, we can scribble on the_cib here and not affect the parent,
+         * but let's be safe anyway.
          */
         cib_local = copy_xml(the_cib);
     }

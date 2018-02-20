@@ -106,7 +106,7 @@ struct crm_graph_s {
     int completed;
     int incomplete;
 
-    GListPtr synapses;          /* synpase_t* */
+    GListPtr synapses;          /* synapse_t* */
 
     int migration_limit;
 };

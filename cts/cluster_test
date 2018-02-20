@@ -152,7 +152,7 @@ cts_extra=""
 if [ -n "$CTS_stonith" ]; then
     cts_extra="$cts_extra --stonith-type $CTS_stonith"
     [ -z "$CTS_stonith_args" ] \
-        || cts_extra="$cts_extra --stonitha-params \"$CTS_stonith_args\""
+        || cts_extra="$cts_extra --stonith-params \"$CTS_stonith_args\""
 else
     cts_extra="$cts_extra --stonith 0"
     echo " - Testing a cluster without STONITH is like a blunt pencil... pointless"

@@ -794,8 +794,8 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
 	qb_log_filter_ctl(QB_LOG_SYSLOG, QB_LOG_FILTER_ADD, QB_LOG_FILTER_FILE, "*", LOG_NOTICE);
     }
 
+    // Log to syslog unless requested to be quiet
     if (!quiet) {
-        /* Nuke any syslog activity */
         qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_ENABLED, QB_TRUE);
     }
 
@@ -810,7 +810,7 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
     if (safe_str_eq("none", logfile)) {
         /* No soup^Hlogs for you! */
     } else if(crm_is_daemon) {
-        /* The daemons always get a log file, unless explicitly set to configured 'none' */
+        // Daemons always get a log file, unless explicitly set to "none"
         crm_add_logfile(logfile);
     } else if(logfile) {
         crm_add_logfile(logfile);

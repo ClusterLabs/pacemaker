@@ -71,7 +71,7 @@ crm_itoa(int an_int)
 /*!
  * \brief Create hash table with dynamically allocated string keys/values
  *
- * \return Newly hash table
+ * \return Newly allocated hash table
  * \note It is the caller's responsibility to free the result, using
  *       g_hash_table_destroy().
  */
@@ -84,7 +84,7 @@ crm_str_table_new()
 /*!
  * \brief Create hash table with case-insensitive dynamically allocated string keys/values
  *
- * \return Newly hash table
+ * \return Newly allocated hash table
  * \note It is the caller's responsibility to free the result, using
  *       g_hash_table_destroy().
  */
