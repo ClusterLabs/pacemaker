@@ -61,7 +61,6 @@ void crm_schema_cleanup(void);
 
 /* internal generic string functions (from strings.c) */
 
-char *crm_concat(const char *prefix, const char *suffix, char join);
 void g_hash_destroy_str(gpointer data);
 long long crm_int_helper(const char *text, char **end_text);
 bool crm_starts_with(const char *str, const char *prefix);
@@ -71,6 +70,13 @@ char *add_list_element(char *list, const char *value);
 bool crm_compress_string(const char *data, int length, int max, char **result,
                          unsigned int *result_len);
 gint crm_alpha_sort(gconstpointer a, gconstpointer b);
+
+static inline char *
+crm_concat(const char *prefix, const char *suffix, char join)
+{
+    CRM_ASSERT(prefix && suffix);
+    return crm_strdup_printf("%s%c%s", prefix, join, suffix);
+}
 
 static inline int
 crm_strlen_zero(const char *s)
