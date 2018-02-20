@@ -56,6 +56,7 @@ GHashTable *attributes = NULL;
 
 void write_attribute(attribute_t *a);
 void write_or_elect_attribute(attribute_t *a);
+void attrd_current_only_attribute_update(crm_node_t *peer, xmlNode *xml);
 void attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter);
 void attrd_peer_sync(crm_node_t *peer, xmlNode *xml);
 void attrd_peer_remove(const char *host, gboolean uncache, const char *source);
@@ -644,6 +645,11 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
             host = crm_element_value(child, F_ATTRD_HOST);
             attrd_peer_update(peer, child, host, TRUE);
         }
+
+        if (peer_state == election_won) {
+            /* Synchronize if there is an attribute held only by own node that Writer does not have. */
+            attrd_current_only_attribute_update(peer, xml);
+        }
     }
 }
 
@@ -746,6 +752,68 @@ attrd_lookup_or_create_value(GHashTable *values, const char *host, xmlNode *xml)
         g_hash_table_replace(values, v->nodename, v);
     }
     return(v);
+}
+
+static gboolean
+check_current_attribute_from_sync_response(crm_node_t *peer, xmlNode *xml, const char *search_host, const char *name, const char *current_value)
+{
+    xmlNode *child = NULL;
+    gboolean find = FALSE;
+
+    for (child = __xml_first_child(xml); child != NULL; child = __xml_next(child)) {
+        const char *host = crm_element_value(child, F_ATTRD_HOST);
+        const char *attr = crm_element_value(child, F_ATTRD_ATTRIBUTE);
+        const char *value = crm_element_value(xml, F_ATTRD_VALUE);
+
+        if (safe_str_eq(host, search_host)) {
+            if (safe_str_eq(attr, name)) {
+                crm_debug("Sync response attribute(%s[%s] = %s) was ignore.(already stored) : [%s] = %s", attr, host, value, search_host, current_value);
+                find = TRUE;
+                break;
+            }
+        } else {
+            crm_debug("Sync response attribute(%s[%s] = %s) was ignore.(from another host) : [%s]", attr, host, value, search_host);
+        }
+    }
+    return find;
+}
+
+void 
+attrd_current_only_attribute_update(crm_node_t *peer, xmlNode *xml)
+{
+    GHashTableIter aIter;
+    GHashTableIter vIter;
+    attribute_t *a;
+    attribute_value_t *v = NULL;
+    xmlNode *sync = create_xml_node(NULL, __FUNCTION__);
+    gboolean build = FALSE;    
+
+    crm_xml_add(sync, F_ATTRD_TASK, ATTRD_OP_SYNC_RESPONSE);
+
+    g_hash_table_iter_init(&aIter, attributes);
+    while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
+        g_hash_table_iter_init(&vIter, a->values);
+        while (g_hash_table_iter_next(&vIter, NULL, (gpointer *) & v)) {
+            if (safe_str_eq(v->nodename, attrd_cluster->uname)) {
+                if (check_current_attribute_from_sync_response(peer, xml, attrd_cluster->uname, a->id, v->current) == FALSE) {
+                    crm_debug("Syncing %s[%s] = %s to %s.(from local only attributes)", a->id, v->nodename, v->current, peer?peer->uname:"everyone");
+
+                    build = TRUE;
+                    build_attribute_xml(sync, a->id, a->set, a->uuid, a->timeout_ms, a->user, a->is_private,
+                                v->nodename, v->nodeid, v->current);
+                }
+            } else {
+                crm_debug("Local attribute(%s[%s] = %s) was ignore.(another host) : [%s]", a->id, v->nodename, v->current, attrd_cluster->uname);
+                continue;
+            }
+        }
+    }
+
+    if (build) {
+        crm_debug("Syncing values to %s.(from local only attributes)", peer?peer->uname:"everyone");
+        send_attrd_message(peer, sync);
+    }
+    free_xml(sync);
 }
 
 void
