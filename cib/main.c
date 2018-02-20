@@ -316,7 +316,6 @@ cib_peer_update_callback(enum crm_status_type type, crm_node_t * node, const voi
             break;
 
         case crm_status_uname:
-        case crm_status_rstate:
         case crm_status_nstate:
             if (cib_shutdown_flag && (crm_active_peers() < 2)
                 && crm_hash_table_size(client_connections) == 0) {

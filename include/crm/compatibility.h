@@ -118,6 +118,7 @@ static int ais_fd_sync = -1;
 #define PE_OBJ_T_GROUP              "group"
 #define PE_OBJ_T_INCARNATION        "clone"
 #define PE_OBJ_T_MASTER             "master"
+#define SERVICE_SCRIPT              "/sbin/service"
 #define SOCKET_LEN                  1024
 #define XML_ATTR_TAGNAME            F_XML_TAGNAME
 #define XML_ATTR_FILTER_TYPE        "type-filter"
@@ -154,7 +155,10 @@ static int ais_fd_sync = -1;
         cib->cmds->register_callback(cib, id, 120, flag, data, #fn, fn); \
     } while(0)
 #define cib_default_options = cib_none
+#define crm_remote_baremetal              0x0004
+#define crm_remote_container              0x0002
 #define n_object_classes 3
+#define pe_action_failure_is_fatal        0x00020
 #define pe_rsc_munging                    0x00000800ULL
 #define pe_rsc_try_reload                 0x00001000ULL
 #define pe_rsc_shutdown                   0x00020000ULL

@@ -48,11 +48,6 @@ extern "C" {
 #    define SYSTEMCTL "/bin/systemctl"
 #  endif
 
-/* Deprecated and unused by Pacemaker, kept for API backward compatibility */
-#  ifndef SERVICE_SCRIPT
-#    define SERVICE_SCRIPT "/sbin/service"
-#  endif
-
 /* Known resource classes */
 #define PCMK_RESOURCE_CLASS_OCF     "ocf"
 #define PCMK_RESOURCE_CLASS_SERVICE "service"

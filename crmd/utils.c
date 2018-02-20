@@ -425,26 +425,14 @@ fsa_cause2string(enum crmd_fsa_cause cause)
         case C_SHUTDOWN:
             causeAsText = "C_SHUTDOWN";
             break;
-        case C_HEARTBEAT_FAILED:
-            causeAsText = "C_HEARTBEAT_FAILED";
-            break;
-        case C_SUBSYSTEM_CONNECT:
-            causeAsText = "C_SUBSYSTEM_CONNECT";
-            break;
         case C_LRM_OP_CALLBACK:
             causeAsText = "C_LRM_OP_CALLBACK";
-            break;
-        case C_LRM_MONITOR_CALLBACK:
-            causeAsText = "C_LRM_MONITOR_CALLBACK";
             break;
         case C_CRMD_STATUS_CALLBACK:
             causeAsText = "C_CRMD_STATUS_CALLBACK";
             break;
         case C_FSA_INTERNAL:
             causeAsText = "C_FSA_INTERNAL";
-            break;
-        case C_ILLEGAL:
-            causeAsText = "C_ILLEGAL";
             break;
     }
 

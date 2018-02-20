@@ -53,10 +53,6 @@ enum crm_node_flags
     /* node is not a cluster node and should not be considered for cluster membership */
     crm_remote_node          = 0x0001,
 
-    /* deprecated (not used by cluster) */
-    crm_remote_container     = 0x0002,
-    crm_remote_baremetal     = 0x0004,
-
     /* node's cache entry is dirty */
     crm_node_dirty           = 0x0010,
 };
@@ -134,7 +130,6 @@ int crm_remote_peer_cache_size(void);
 
 /* Initialize and refresh the remote peer cache from a cib config */
 void crm_remote_peer_cache_refresh(xmlNode *cib);
-void crm_remote_peer_cache_add(const char *node_name);
 crm_node_t *crm_remote_peer_get(const char *node_name);
 void crm_remote_peer_cache_remove(const char *node_name);
 
@@ -177,7 +172,6 @@ enum crm_status_type {
     crm_status_uname,
     crm_status_nstate,
     crm_status_processes,
-    crm_status_rstate, /* remote node state */
 };
 
 enum crm_ais_msg_types text2msg_type(const char *text);

@@ -64,7 +64,6 @@ int query_node_uname(cib_t * the_cib, const char *uuid, char **uname);
 
 int set_standby(cib_t * the_cib, const char *uuid, const char *scope, const char *standby_value);
 
-xmlNode *get_cib_copy(cib_t * cib);
 xmlNode *cib_get_generation(cib_t * cib);
 
 void cib_metadata(void);

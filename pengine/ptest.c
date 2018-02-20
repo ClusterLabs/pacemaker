@@ -270,7 +270,8 @@ main(int argc, char **argv)
 
         if (rc == pcmk_ok) {
             crm_info("Reading XML from: live cluster");
-            cib_object = get_cib_copy(cib_conn);
+            rc = cib_conn->cmds->query(cib_conn, NULL, &cib_object,
+                                       cib_scope_local | cib_sync_call);
 
         } else {
             fprintf(stderr, "Live CIB query failed: %s\n", pcmk_strerror(rc));

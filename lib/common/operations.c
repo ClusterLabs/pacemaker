@@ -125,13 +125,6 @@ generate_notify_key(const char *rsc_id, const char *notify_type, const char *op_
 }
 
 char *
-generate_transition_magic_v202(const char *transition_key, int op_status)
-{
-    CRM_CHECK(transition_key != NULL, return NULL);
-    return crm_strdup_printf("%d:%s", op_status, transition_key);
-}
-
-char *
 generate_transition_magic(const char *transition_key, int op_status, int op_rc)
 {
     CRM_CHECK(transition_key != NULL, return NULL);

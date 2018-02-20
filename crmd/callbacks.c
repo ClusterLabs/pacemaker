@@ -113,7 +113,6 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                      node->uname, state_text(node->state));
             return;
 
-        case crm_status_rstate:
         case crm_status_nstate:
             /* This callback should not be called unless the state actually
              * changed, but here's a failsafe just in case.
