@@ -429,8 +429,9 @@ match_down_event(const char *target, bool quiet)
                   target, match->id,
                   crm_element_value(match->xml, XML_LRM_ATTR_TASK_KEY));
 
-    } else if(quiet == FALSE) {
-        crm_warn("No reason to expect node %s to be down", target);
+    } else {
+        do_crm_log((quiet? LOG_DEBUG : LOG_WARNING),
+                   "No reason to expect node %s to be down", target);
     }
 
     return match;
