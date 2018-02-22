@@ -414,11 +414,16 @@ match_down_event(const char *target, bool quiet)
              gIter2 = gIter2->next) {
 
             match = (crm_action_t*)gIter2->data;
-            xpath_ret = xpath_search(match->xml, xpath);
-            if (numXpathResults(xpath_ret) < 1) {
+            if (match->executed) {
+                xpath_ret = xpath_search(match->xml, xpath);
+                if (numXpathResults(xpath_ret) < 1) {
+                    match = NULL;
+                }
+                freeXpathObject(xpath_ret);
+            } else {
+                // Only actions that were actually started can match
                 match = NULL;
             }
-            freeXpathObject(xpath_ret);
         }
     }
 
