@@ -19,6 +19,65 @@
 <cibtr:map>
 
   <!--
+   Target tag:     cluster_property_set
+   Object:         ./nvpair/@name
+   Selector ctxt:  ./nvpair/@value
+   Move ctxt:      N/A
+   -->
+  <cibtr:table for="cluster-properties" msg-prefix="Cluster properties">
+    <cibtr:replace what="cluster-infrastructure"
+                   with=""
+                   in-case-of="heartbeat|openais|classic openais|classic openais (with plugin)|cman"
+                   msg-extra="corosync (2+) infrastructure can be used instead, though the value is not of significance"/>
+
+    <cibtr:replace what="cluster_recheck_interval"
+                   with="cluster-recheck-interval"/>
+    <cibtr:replace what="dc_deadtime"
+                   with="dc-deadtime"/>
+
+    <cibtr:replace what="default-migration-threshold"
+                   with=""
+                   msg-extra="migration-threshold in rsc_defaults can be configured instead"/>
+    <cibtr:replace what="default_migration_threshold"
+                   with=""
+                   msg-extra="migration-threshold in rsc_defaults can be configured instead"/>
+
+    <cibtr:replace what="election_timeout"
+                   with="election-timeout"/>
+    <cibtr:replace what="expected-quorum-votes"
+                   with=""
+                   msg-extra="corosync (2+) infrastructure tracks quorum on its own"/>
+    <cibtr:replace what="no_quorum_policy"
+                   with="no-quorum-policy"/>
+
+    <cibtr:replace what="notification-agent"
+                   with=""
+                   msg-extra="standalone alerts can be configured instead"/>
+    <cibtr:replace what="notification-recipient"
+                   with=""
+                   msg-extra="standalone alerts can be configured instead"/>
+
+    <cibtr:replace what="remove_after_stop"
+                   with="remove-after-stop"/>
+    <cibtr:replace what="shutdown_escalation"
+                   with="shutdown-escalation"/>
+    <cibtr:replace what="startup_fencing"
+                   with="startup-fencing"/>
+    <cibtr:replace what="stonith_action"
+                   with="stonith-action"/>
+    <cibtr:replace what="stonith_enabled"
+                   with="stonith-enabled"/>
+    <cibtr:replace what="stop_orphan_actions"
+                   with="stop-orphan-actions"/>
+    <cibtr:replace what="stop_orphan_resources"
+                   with="stop-orphan-resources"/>
+    <cibtr:replace what="symmetric_cluster"
+                   with="symmetric-cluster"/>
+    <cibtr:replace what="transition_idle_timeout"
+                   with="cluster-delay"/>
+  </cibtr:table>
+
+  <!--
    Target tag:     primitive
                    template
    Object:         ./operations/op/@*
@@ -53,6 +112,12 @@
   </cibtr:table>
 
 </cibtr:map>
+
+<xsl:variable name="MapClusterProperties"
+              select="document('')/xsl:stylesheet
+                        /cibtr:map/cibtr:table[
+                          @for = 'cluster-properties'
+                        ]"/>
 
 <xsl:variable name="MapResourcesOperation"
               select="document('')/xsl:stylesheet
@@ -267,6 +332,148 @@
     (implicit default) and false(), respectively
 
  -->
+
+<!--
+ Source ctxt:    cluster_property_set
+ Target ctxt:    cluster_property_set
+ Target-inv ctxt:N/A
+ Dependencies:   N/A
+ -->
+<xsl:template name="ProcessClusterProperties">
+  <xsl:param name="Source"/>
+  <xsl:param name="InverseMode" select="false()"/>
+  <xsl:param name="InnerSimulation" select="false()"/>
+
+  <xsl:variable name="InnerPass">
+    <xsl:choose>
+      <xsl:when test="$InnerSimulation">
+        <xsl:value-of select="''"/>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:call-template name="ProcessClusterProperties">
+          <xsl:with-param name="Source" select="$Source"/>
+          <xsl:with-param name="InverseMode" select="$InverseMode"/>
+          <xsl:with-param name="InnerSimulation" select="true()"/>
+        </xsl:call-template>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:variable>
+
+  <xsl:for-each select="$Source/node()">
+    <xsl:choose>
+      <xsl:when test="self::text()">
+        <!-- cf. trick A. (consideration 1.) -->
+        <xsl:choose>
+          <xsl:when test="normalize-space($InnerPass)
+                          != $InnerPass
+                          and
+                          (
+                            not(following-sibling::nvpair)
+                            or
+                            generate-id(following-sibling::nvpair[1])
+                            != generate-id(following-sibling::*[1])
+                          )">
+            <xsl:value-of select="."/>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:value-of select="normalize-space(.)"/>
+          </xsl:otherwise>
+        </xsl:choose>
+      </xsl:when>
+      <xsl:when test="self::nvpair">
+        <xsl:variable name="Replacement"
+                      select="$MapClusterProperties/cibtr:replace[
+                                @what = current()/@name
+                                and
+                                (
+                                  (
+                                    @in-case-of
+                                    and
+                                    contains(concat('|', @in-case-of, '|'),
+                                             concat('|', current()/@value, '|'))
+                                  )
+                                  or
+                                  (
+                                    not(@in-case-of)
+                                    and
+                                    not(
+                                      $MapClusterProperties/cibtr:replace[
+                                        @what = current()/@name
+                                        and
+                                        @in-case-of
+                                        and
+                                        contains(concat('|', @in-case-of, '|'),
+                                                 concat('|', current()/@value, '|'))
+                                      ]
+                                    )
+                                  )
+                                )
+                              ]"/>
+        <xsl:if test="not($InverseMode or $InnerSimulation)">
+          <xsl:call-template name="MapMsg">
+            <xsl:with-param name="Context" select="@id"/>
+            <xsl:with-param name="Replacement" select="$Replacement"/>
+          </xsl:call-template>
+        </xsl:if>
+        <xsl:choose>
+          <xsl:when test="$Replacement
+                          and
+                          (
+                            not(string($Replacement/@with))
+                            or
+                            $Replacement/@where
+                          )">
+            <!-- drop (possibly just move over) -->
+            <xsl:if test="$Replacement/@where
+                          and
+                          $InverseMode">
+              <xsl:call-template name="HelperDenormalizedSpace">
+                <xsl:with-param name="Source" select="."/>
+              </xsl:call-template>
+              <xsl:copy>
+                <xsl:apply-templates select="@*"/>
+              </xsl:copy>
+            </xsl:if>
+          </xsl:when>
+          <xsl:when test="$InverseMode"/>
+          <xsl:when test="$Replacement">
+            <xsl:call-template name="HelperDenormalizedSpace">
+              <xsl:with-param name="Source" select="."/>
+            </xsl:call-template>
+            <xsl:copy>
+              <xsl:for-each select="@*">
+                <xsl:choose>
+                  <xsl:when test="name() = 'name'">
+                    <xsl:attribute name="{name()}">
+                      <xsl:value-of select="$Replacement/@with"/>
+                    </xsl:attribute>
+                  </xsl:when>
+                  <xsl:otherwise>
+                    <xsl:copy/>
+                  </xsl:otherwise>
+                </xsl:choose>
+              </xsl:for-each>
+            </xsl:copy>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:call-template name="HelperDenormalizedSpace">
+              <xsl:with-param name="Source" select="."/>
+            </xsl:call-template>
+            <xsl:call-template name="HelperIdentity"/>
+          </xsl:otherwise>
+        </xsl:choose>
+      </xsl:when>
+      <xsl:when test="$InverseMode
+                      or
+                      self::comment()">
+        <!-- drop -->
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:call-template name="HelperIdentity"/>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:for-each>
+</xsl:template>
 
 <!--
  Source ctxt:    (primitive|template)/operations/op/meta_attributes
@@ -698,6 +905,21 @@
     </xsl:attribute>
     <xsl:apply-templates select="node()"/>
   </xsl:copy>
+</xsl:template>
+
+<xsl:template match="cluster_property_set">
+  <xsl:variable name="ProcessedClusterProperties">
+    <xsl:call-template name="ProcessClusterProperties">
+      <xsl:with-param name="Source" select="."/>
+    </xsl:call-template>
+  </xsl:variable>
+  <xsl:if test="normalize-space($ProcessedClusterProperties)
+                != $ProcessedClusterProperties">
+    <xsl:copy>
+      <xsl:apply-templates select="@*"/>
+      <xsl:copy-of select="$ProcessedClusterProperties"/>
+    </xsl:copy>
+  </xsl:if>
 </xsl:template>
 
 <xsl:template match="rsc_colocation">
