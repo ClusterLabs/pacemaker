@@ -2959,7 +2959,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
     const char *task_key = NULL;
 
     int rc = 0;
-    int status = PCMK_LRM_OP_PENDING-1;
+    int status = PCMK_LRM_OP_UNKNOWN;
     int target_rc = get_target_rc(xml_op);
     int interval = 0;
 

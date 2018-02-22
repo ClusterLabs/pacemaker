@@ -125,6 +125,7 @@ enum ocf_exitcode {
 };
 
 enum op_status {
+    PCMK_LRM_OP_UNKNOWN = -2,
     PCMK_LRM_OP_PENDING = -1,
     PCMK_LRM_OP_DONE,
     PCMK_LRM_OP_CANCELLED,
