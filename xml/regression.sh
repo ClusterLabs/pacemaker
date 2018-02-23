@@ -5,9 +5,14 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 set -eu
+# $1=reference, $2=investigated
+# alt.: wdiff, colordiff, ...
 DIFF=${DIFF:-diff}
 DIFFOPTS=${DIFFOPTS:--u}
 DIFFPAGER=${DIFFPAGER:-less -LRX}
+# $1=schema, $2=validated
+# alt.: jing -i
+RNGVALIDATOR=${RNGVALIDATOR:-xmllint --noout --relaxng}
 tests=
 
 #
@@ -89,7 +94,7 @@ test_selfcheck() {
 	_tsc_validator="xslt_cibtr-${_tsc_validator%%.*}.rng"
 	_tsc_template="upgrade-${_tsc_template}.xsl"
 
-	xmllint --noout --relaxng "${_tsc_validator}" "${_tsc_template}"
+	${RNGVALIDATOR} "${_tsc_validator}" "${_tsc_template}"
 }
 
 # stdout: filename of the transformed file
@@ -111,26 +116,30 @@ test_runner_upgrade() {
 
 	if test "${_tru_mode}" -ne 0; then
 		if test $((_tru_mode & (1 << 0))) -ne 0; then
-			cp -a "${_tru_target}" "${_tru_ref}"
-			cp -a "${_tru_target_err}" "${_tru_ref_err}"
+			mv "${_tru_target}" "${_tru_ref}"
+			mv "${_tru_target_err}" "${_tru_ref_err}"
+			_tru_target="${_tru_ref}"  # passed back
 		fi
 		if test $((_tru_mode & (1 << 1))) -ne 0; then
-			"${DIFF}"  ${DIFFOPTS} "${_tru_source}" "${_tru_ref}" \
+			"${DIFF}" ${DIFFOPTS} "${_tru_source}" "${_tru_ref}" \
 			  | ${DIFFPAGER} >&2
 			if test $? -ne 0; then
 				printf "\npager failure\n" >&2
 				return 1
 			fi
 			printf '\nIs comparison OK? ' >&2
-			read _tru_answer </dev/tty
-			case "${_tru_answer}" in
-			y|yes) ;;
-			*) echo "Answer not 'y' nor 'yes'" >&2; return 1;;
-			esac
+			if read _tru_answer </dev/tty; then
+				case "${_tru_answer}" in
+				y|yes) ;;
+				*) echo "Answer not 'y' nor 'yes'" >&2; return 1;;
+				esac
+			else
+				return 1
+			fi
 		fi
-	elif test -f "${_tru_ref}" && test -f "${_tru_ref_err}"; then
-		"${DIFF}"  ${DIFFOPTS} "${_tru_ref}" "${_tru_target}" >&2 \
-		  && "${DIFF}"  ${DIFFOPTS} "${_tru_ref_err}" "${_tru_target_err}" >&2
+	elif test -f "${_tru_ref}" && test -e "${_tru_ref_err}"; then
+		"${DIFF}" ${DIFFOPTS} "${_tru_ref}" "${_tru_target}" >&2 \
+		  && "${DIFF}" ${DIFFOPTS} "${_tru_ref_err}" "${_tru_target_err}" >&2
 		if test $? -ne 0; then
 			emit_error "Outputs differ from referential ones"
 			echo "/dev/null"
@@ -149,13 +158,12 @@ test_runner_validate() {
 	_trv_schema=${1:?}
 	_trv_target=${2:?}  # filename
 
-	if ! xmllint --noout --relaxng "${_trv_schema}" "${_trv_target}" \
+	if ! ${RNGVALIDATOR} "${_trv_schema}" "${_trv_target}" \
 	    2>/dev/null; then
-		xmllint --noout --relaxng "${_trv_schema}" "${_trv_target}"
+		${RNGVALIDATOR} "${_trv_schema}" "${_trv_target}"
 	fi
 }
 
-# -g  ... request generating "referential" outcomes
 # -o= ... which conventional version to deem as the transform origin
 # -t= ... which conventional version to deem as the transform target
 # -D
@@ -219,7 +227,7 @@ test_runner() {
 # particular test variations
 #
 
-test_2to3() {
+test2to3() {
 	find test-2 -name '*.xml' -print | env LC_ALL=C sort \
 	  | { case " $* " in
 	      *\ -C\ *) test_cleaner;;
@@ -227,7 +235,7 @@ test_2to3() {
 	      *) test_runner -o=2.10 -t=3.0 "$@" || return $?;;
 	      esac; }
 }
-tests="${tests} test_2to3"
+tests="${tests} test2to3"
 
 #
 # "framework"
@@ -237,12 +245,13 @@ tests="${tests} test_2to3"
 # argument-likes ... drives a test selection
 test_suite() {
 	_ts_pass=
+	_ts_select=
 	_ts_global_ret=0
 	_ts_ret=0
-	_ts_select=@
 
 	while test $# -gt 0; do
 		case "$1" in
+		-) while read _ts_spec; do _ts_select="${_ts_spec}@$1"; done;;
 		-*) _ts_pass="${_ts_pass} $1";;
 		*) _ts_select="${_ts_select}@$1";;
 		esac
@@ -251,11 +260,12 @@ test_suite() {
 	_ts_select="${_ts_select}@"
 
 	for _ts_test in ${tests}; do
-		if test "${_ts_select}" != @@; then
-			case "${_ts_test}" in
-			*@${_ts_select}@*) ;;  # jump through
-			*) break;;
+		if test "${_ts_select}" != @; then
+			case "${_ts_select}" in
+			*@${_ts_test}@*) ;;  # jump through
+			*) continue;;
 			esac
+			_ts_select="${_ts_select%@${_ts_test}@*}@${_ts_select#*@${_ts_test}@}"
 		fi
 		"${_ts_test}" ${_ts_pass} || _ts_ret=$?
 		test ${_ts_ret} = 0 \
@@ -264,6 +274,11 @@ test_suite() {
 		log2_or_0_add ${_ts_global_ret} ${_ts_ret}
 		_ts_global_ret=$?
 	done
+	if test "${_ts_select}" != @; then
+		emit_error "Non-existing test(s):$(echo "${_ts_select}" \
+		                                   | tr '@' ' ')"
+		log2_or_0_add ${_ts_global_ret} 1 || _ts_global_ret=$?
+	fi
 
 	return ${_ts_global_ret}
 }
@@ -271,8 +286,9 @@ test_suite() {
 # NOTE: big letters are dedicated for per-test-set behaviour,
 #       small ones for generic/global behaviour
 usage() {
-	printf '%s\n  %s\n  %s\n  %s\n  %s\n' \
-	    "usage: $0 [-{C,G,S}]* [{${tests## }}*]" \
+	printf '%s\n  %s\n  %s\n  %s\n  %s\n  %s\n' \
+	    "usage: $0 [-{C,G,S}]* [-|{${tests## }}*]" \
+	    "- with '-' suite specification the actual ones grabbed on stdin" \
 	    "- use '-C' to only cleanup ephemeral byproducts" \
 	    "- use '-D' to review originals vs. \"referential\" outcomes" \
 	    "- use '-G' to generate \"referential\" outcomes" \
@@ -287,16 +303,15 @@ main() {
 	while test $# -gt 0; do
 		case "$1" in
 		-h) usage; exit;;
-		-C) _main_pass="${_main_pass} $1"; _main_bailout=1;;
-		-S) _main_pass="${_main_pass} $1"; _main_bailout=1;;
-		*) _main_pass="${_main_pass} $1";;
+		-C|-G|-S) _main_bailout=1;;
 		esac
+		_main_pass="${_main_pass} $1"
 		shift
 	done
 
 	test_suite ${_main_pass} || _main_ret=$?
 	test ${_main_bailout} -eq 1 && return ${_main_ret} \
-	  || test_suite -C ${_main_pass} >/dev/null
+	  || test_suite -C ${_main_pass} >/dev/null || true
 	test ${_main_ret} = 0 && emit_result ${_main_ret} "Overall suite" \
 	  || emit_result "at least 2^$((_main_ret - 1))" "Overall suite"
 
