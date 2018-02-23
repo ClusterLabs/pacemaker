@@ -43,6 +43,7 @@ typedef struct attribute_value_s {
         char *nodename;
         char *current;
         char *requested;
+        gboolean seen;
 } attribute_value_t;
 
 crm_cluster_t *attrd_cluster;
