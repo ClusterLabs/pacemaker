@@ -154,20 +154,21 @@ $(PACKAGE)-suse.spec: $(PACKAGE).spec.in GNUmakefile
 	    git show $(TAG):$(PACKAGE).spec.in >> $@;				\
 	    echo "Rebuilt $@ from $(TAG)";					\
 	fi
-	sed -i s:%{_docdir}/%{name}:%{_docdir}/%{name}-%{version}:g $@
-	sed -i s:corosynclib:libcorosync:g $@
-	sed -i s:libexecdir}/lcrso:libdir}/lcrso:g $@
-	sed -i 's:%{name}-libs:lib%{name}3:g' $@
-	sed -i s:cluster-glue-libs:libglue:g $@
-	sed -i s:bzip2-devel:libbz2-devel:g $@
-	sed -i s:docbook-style-xsl:docbook-xsl-stylesheets:g $@
-	sed -i s:libtool-ltdl-devel::g $@
-	sed -i s:publican::g $@
-	sed -i s:byacc::g $@
-	sed -i s:gnutls-devel:libgnutls-devel:g $@
-	sed -i s:189:90:g $@
-	sed -i 's:python-devel:python-curses python-xml python-devel:' $@
-	sed -i 's@Requires:      python@Requires:      python-curses python-xml python@' $@
+	sed -i									\
+	    -e 's:%{_docdir}/%{name}:%{_docdir}/%{name}-%{version}:g'		\
+	    -e 's:%{name}-libs:lib%{name}3:g'					\
+	    -e 's@Requires:      python@Requires:      python-curses python-xml python@' \
+	    -e 's:libtool-ltdl-devel::g $@'					\
+	    -e 's:bzip2-devel:libbz2-devel:g'					\
+	    -e 's:docbook-style-xsl:docbook-xsl-stylesheets:g'			\
+	    -e 's: byacc::g'							\
+	    -e 's:gnutls-devel:libgnutls-devel:g'				\
+	    -e 's:corosynclib:libcorosync:g'					\
+	    -e 's:cluster-glue-libs:libglue:g'					\
+	    -e 's: publican::g'							\
+	    -e 's: 189: 90:g'							\
+	    -e 's:%{_libexecdir}/lcrso:%{_libdir}/lcrso:g'			\
+	    $@
 	@echo "Applied SUSE-specific modifications"
 
 

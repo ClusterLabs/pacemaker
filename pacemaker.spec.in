@@ -227,7 +227,7 @@ BuildRequires: cluster-glue-libs-devel
 ## (note no avoiding effect when building through non-customized mock)
 %if !%{bleeding}
 %if %{with doc}
-BuildRequires: publican inkscape asciidoc
+BuildRequires: inkscape asciidoc publican
 %endif
 %endif
 
