@@ -18,6 +18,10 @@
 #ifndef CRM_COMMON_CLUSTER__H
 #  define CRM_COMMON_CLUSTER__H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #  include <crm/common/xml.h>
 #  include <crm/common/util.h>
 
@@ -48,10 +52,6 @@ enum crm_node_flags
 {
     /* node is not a cluster node and should not be considered for cluster membership */
     crm_remote_node          = 0x0001,
-
-    /* deprecated (not used by cluster) */
-    crm_remote_container     = 0x0002,
-    crm_remote_baremetal     = 0x0004,
 
     /* node's cache entry is dirty */
     crm_node_dirty           = 0x0010,
@@ -130,7 +130,6 @@ int crm_remote_peer_cache_size(void);
 
 /* Initialize and refresh the remote peer cache from a cib config */
 void crm_remote_peer_cache_refresh(xmlNode *cib);
-void crm_remote_peer_cache_add(const char *node_name);
 crm_node_t *crm_remote_peer_get(const char *node_name);
 void crm_remote_peer_cache_remove(const char *node_name);
 
@@ -158,8 +157,9 @@ void pcmk_cpg_membership(cpg_handle_t handle,
                          const struct cpg_address *left_list, size_t left_list_entries,
                          const struct cpg_address *joined_list, size_t joined_list_entries);
 gboolean crm_is_corosync_peer_active(const crm_node_t * node);
-gboolean send_cluster_text(int class, const char *data, gboolean local,
-                       crm_node_t * node, enum crm_ais_msg_types dest);
+gboolean send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
+                           gboolean local, crm_node_t * node,
+                           enum crm_ais_msg_types dest);
 char *pcmk_message_common_cs(cpg_handle_t handle, uint32_t nodeid, uint32_t pid, void *msg,
                         uint32_t *kind, const char **from);
 #  endif
@@ -172,7 +172,6 @@ enum crm_status_type {
     crm_status_uname,
     crm_status_nstate,
     crm_status_processes,
-    crm_status_rstate, /* remote node state */
 };
 
 enum crm_ais_msg_types text2msg_type(const char *text);
@@ -212,5 +211,9 @@ crm_join_phase_str(enum crm_join_phase phase)
     }
     return "invalid";
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

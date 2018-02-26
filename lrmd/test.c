@@ -244,7 +244,7 @@ start_test(gpointer user_data)
 
         if (rsc_info) {
             print_result(printf("RSC_INFO: id:%s class:%s provider:%s type:%s\n",
-                                rsc_info->id, rsc_info->class,
+                                rsc_info->id, rsc_info->standard,
                                 rsc_info->provider ? rsc_info->provider : "<none>",
                                 rsc_info->type));
             lrmd_free_rsc_info(rsc_info);

@@ -55,8 +55,7 @@ GHashTable *crm_peer_cache = NULL;
  * so it would be a good idea to merge them one day.
  *
  * libcluster provides two avenues for populating the cache:
- * crm_remote_peer_get(), crm_remote_peer_cache_add() and
- * crm_remote_peer_cache_remove() directly manage it,
+ * crm_remote_peer_get() and crm_remote_peer_cache_remove() directly manage it,
  * while crm_remote_peer_cache_refresh() populates it via the CIB.
  */
 GHashTable *crm_remote_peer_cache = NULL;
@@ -123,20 +122,6 @@ crm_remote_peer_get(const char *node_name)
     /* Update the entry's uname, ensuring peer status callbacks are called */
     crm_update_peer_uname(node, node_name);
     return node;
-}
-
-/*!
- * \brief Add a node to the remote peer cache
- *
- * \param[in] node_name  Name of remote node
- *
- * \note This is a legacy convenience wrapper for crm_remote_peer_get()
- *       for callers that don't need the cache entry returned.
- */
-void
-crm_remote_peer_cache_add(const char *node_name)
-{
-    CRM_ASSERT(crm_remote_peer_get(node_name) != NULL);
 }
 
 void
@@ -926,15 +911,13 @@ crm_update_peer_state_iter(const char *source, crm_node_t * node, const char *st
 
     if (state && safe_str_neq(node->state, state)) {
         char *last = node->state;
-        enum crm_status_type status_type = is_set(node->flags, crm_remote_node)?
-                                           crm_status_rstate : crm_status_nstate;
 
         node->state = strdup(state);
         crm_notice("Node %s state is now %s " CRM_XS
                    " nodeid=%u previous=%s source=%s", node->uname, state,
                    node->id, (last? last : "unknown"), source);
         if (crm_status_callback) {
-            crm_status_callback(status_type, node, last);
+            crm_status_callback(crm_status_nstate, node, last);
         }
         free(last);
 

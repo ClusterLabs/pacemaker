@@ -889,7 +889,7 @@ remote_ra_get_rsc_info(lrm_state_t * lrm_state, const char *rsc_id)
 
         info->id = strdup(rsc_id);
         info->type = strdup(REMOTE_LRMD_RA);
-        info->class = strdup(PCMK_RESOURCE_CLASS_OCF);
+        info->standard = strdup(PCMK_RESOURCE_CLASS_OCF);
         info->provider = strdup("pacemaker");
     }
 

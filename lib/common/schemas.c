@@ -560,13 +560,9 @@ validate_xml_verbose(xmlNode *xml_blob)
     xmlDoc *doc = NULL;
     xmlNode *xml = NULL;
     gboolean rc = FALSE;
-    const char *tmpdir = getenv("TMPDIR");
     char *filename = NULL;
 
-    if ((tmpdir == NULL) || (*tmpdir != '/')) {
-        tmpdir = "/tmp";
-    }
-    filename = crm_strdup_printf("%s/cib-invalid.XXXXXX", tmpdir);
+    filename = crm_strdup_printf("%s/cib-invalid.XXXXXX", crm_get_tmpdir());
 
     umask(S_IWGRP | S_IWOTH | S_IROTH);
     fd = mkstemp(filename);

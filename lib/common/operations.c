@@ -125,13 +125,6 @@ generate_notify_key(const char *rsc_id, const char *notify_type, const char *op_
 }
 
 char *
-generate_transition_magic_v202(const char *transition_key, int op_status)
-{
-    CRM_CHECK(transition_key != NULL, return NULL);
-    return crm_strdup_printf("%d:%s", op_status, transition_key);
-}
-
-char *
 generate_transition_magic(const char *transition_key, int op_status, int op_rc)
 {
     CRM_CHECK(transition_key != NULL, return NULL);
@@ -394,8 +387,9 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char * c
     crm_trace("DC version: %s", caller_version);
 
     task = op->op_type;
-    /* remap the task name under various scenarios
-     * this makes life easier for the PE when trying determine the current state
+
+    /* Remap the task name under various scenarios, to make life easier for the
+     * PE when determining the current state.
      */
     if (crm_str_eq(task, "reload", TRUE)) {
         if (op->op_status == PCMK_LRM_OP_DONE) {

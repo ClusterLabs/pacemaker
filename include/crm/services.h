@@ -16,18 +16,18 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#ifndef __PCMK_SERVICES__
+#  define __PCMK_SERVICES__
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * \file
  * \brief Services API
  * \ingroup core
  */
-
-#ifndef __PCMK_SERVICES__
-#  define __PCMK_SERVICES__
-
-#  ifdef __cplusplus
-extern "C" {
-#  endif
 
 #  include <glib.h>
 #  include <stdio.h>
@@ -46,11 +46,6 @@ extern "C" {
 /* TODO: Autodetect these two ?*/
 #  ifndef SYSTEMCTL
 #    define SYSTEMCTL "/bin/systemctl"
-#  endif
-
-/* Deprecated and unused by Pacemaker, kept for API backward compatibility */
-#  ifndef SERVICE_SCRIPT
-#    define SERVICE_SCRIPT "/sbin/service"
 #  endif
 
 /* Known resource classes */
@@ -130,6 +125,7 @@ enum ocf_exitcode {
 };
 
 enum op_status {
+    PCMK_LRM_OP_UNKNOWN = -2,
     PCMK_LRM_OP_PENDING = -1,
     PCMK_LRM_OP_DONE,
     PCMK_LRM_OP_CANCELLED,

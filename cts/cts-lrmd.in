@@ -1237,7 +1237,7 @@ class TestOptions(object):
         print("\t [--verbose | -V]                     Verbose output")
         print("\t [--pacemaker-remote | -R             Test pacemaker-remote binary instead of lrmd.")
         print("\t [--run-only-pattern | -p 'string']   Run only tests containing the string value")
-        print("\n\tExample: Run only the test 'start_top'")
+        print("\n\tExample: Run only the test 'start_stop'")
         print("\t\t " + sys.argv[0] + " --run-only start_stop")
         print("\n\tExample: Run only the tests with the string 'systemd' present in them")
         print("\t\t " + sys.argv[0] + " --run-only-pattern systemd")

@@ -35,6 +35,8 @@
 #include <utils.h>
 #include <crm/pengine/rules.h>
 
+#include <../lib/pengine/unpack.h>
+
 enum pe_order_kind {
     pe_order_kind_optional,
     pe_order_kind_mandatory,
@@ -266,7 +268,6 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     const char *action_first = NULL;
     const char *instance_then = NULL;
     const char *instance_first = NULL;
-    const char *require_all_s = NULL;
 
     const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
     const char *invert = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
@@ -346,22 +347,6 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
         }
     }
 
-    require_all_s = crm_element_value(xml_obj, "require-all");
-    if (require_all_s
-        && crm_is_true(require_all_s) == FALSE
-        && pe_rsc_is_clone(rsc_first)) {
-
-        /* require-all=false means only one instance of the clone is required */
-        min_required_before = 1;
-    } else if (pe_rsc_is_clone(rsc_first)) {
-        const char *min_clones_s = g_hash_table_lookup(rsc_first->meta, XML_RSC_ATTR_INCARNATION_MIN);
-        if (min_clones_s) {
-            /* if clone min is set, we require at a minimum X number of instances
-             * to be runnable before allowing dependencies to be runnable. */
-            min_required_before = crm_parse_int(min_clones_s, "0");
-        }
-    }
-
     cons_weight = pe_order_optional;
     kind = get_ordering_type(xml_obj);
 
@@ -374,6 +359,31 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
         cons_weight |= get_asymmetrical_flags(kind);
     } else {
         cons_weight |= get_flags(id, kind, action_first, action_then, FALSE);
+    }
+
+    if (pe_rsc_is_clone(rsc_first)) {
+        /* If clone-min is set, require at least that number of instances to be
+         * runnable before allowing dependencies to be runnable.
+         */
+        const char *min_clones_s = g_hash_table_lookup(rsc_first->meta,
+                                                       XML_RSC_ATTR_INCARNATION_MIN);
+
+        // @COMPAT 1.1.13: deprecated
+        const char *require_all_s = crm_element_value(xml_obj, "require-all");
+
+        if (min_clones_s) {
+            min_required_before = crm_parse_int(min_clones_s, "0");
+
+        } else if (require_all_s) {
+            pe_warn_once(pe_wo_require_all,
+                        "Support for require-all in ordering constraints "
+                        "is deprecated and will be removed in a future release"
+                        " (use clone-min clone meta-attribute instead)");
+            if (crm_is_true(require_all_s) == FALSE) {
+                // require-all=false is deprecated equivalent of clone-min=1
+                min_required_before = 1;
+            }
+        }
     }
 
     /* If there is a minimum number of instances that must be runnable before

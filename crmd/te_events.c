@@ -158,20 +158,20 @@ update_failcount(xmlNode * event, const char *event_node_uuid, int rc,
     } else if (safe_str_eq(task, CRMD_ACTION_START)) {
         do_update = TRUE;
         if (failed_start_offset == NULL) {
-            failed_start_offset = strdup(INFINITY_S);
+            failed_start_offset = strdup(CRM_INFINITY_S);
         }
         value = failed_start_offset;
 
     } else if (safe_str_eq(task, CRMD_ACTION_STOP)) {
         do_update = TRUE;
         if (failed_stop_offset == NULL) {
-            failed_stop_offset = strdup(INFINITY_S);
+            failed_stop_offset = strdup(CRM_INFINITY_S);
         }
         value = failed_stop_offset;
     }
 
     /* Fail count will be either incremented or set to infinity */
-    if (value == NULL || safe_str_neq(value, INFINITY_S)) {
+    if (value == NULL || safe_str_neq(value, CRM_INFINITY_S)) {
         value = XML_NVPAIR_ATTR_VALUE "++";
     }
 
@@ -429,8 +429,9 @@ match_down_event(const char *target, bool quiet)
                   target, match->id,
                   crm_element_value(match->xml, XML_LRM_ATTR_TASK_KEY));
 
-    } else if(quiet == FALSE) {
-        crm_warn("No reason to expect node %s to be down", target);
+    } else {
+        do_crm_log((quiet? LOG_DEBUG : LOG_WARNING),
+                   "No reason to expect node %s to be down", target);
     }
 
     return match;

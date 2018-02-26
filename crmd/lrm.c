@@ -165,7 +165,7 @@ history_free(gpointer data)
 
     /* Don't need to free history->rsc.id because it's set to history->id */
     free(history->rsc.type);
-    free(history->rsc.class);
+    free(history->rsc.standard);
     free(history->rsc.provider);
 
     lrmd_free_event(history->failed);
@@ -201,7 +201,7 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
 
         entry->rsc.id = entry->id;
         entry->rsc.type = strdup(rsc->type);
-        entry->rsc.class = strdup(rsc->class);
+        entry->rsc.standard = strdup(rsc->standard);
         if (rsc->provider) {
             entry->rsc.provider = strdup(rsc->provider);
         } else {
@@ -685,7 +685,7 @@ build_operation_update(xmlNode * parent, lrmd_rsc_info_t * rsc, lrmd_event_data_
     }
 
     if ((rsc == NULL) || (op == NULL) || (op->params == NULL)
-        || !crm_op_needs_metadata(rsc->class, op->op_type)) {
+        || !crm_op_needs_metadata(rsc->standard, op->op_type)) {
 
         crm_trace("No digests needed for %s action on %s (params=%p rsc=%p)",
                   op->op_type, op->rsc_id, op->params, rsc);
@@ -715,13 +715,13 @@ build_operation_update(xmlNode * parent, lrmd_rsc_info_t * rsc, lrmd_event_data_
          */
         char *metadata_str = NULL;
 
-        int rc = lrm_state_get_metadata(lrm_state, rsc->class,
+        int rc = lrm_state_get_metadata(lrm_state, rsc->standard,
                                         rsc->provider, rsc->type,
                                         &metadata_str, 0);
 
         if (rc != pcmk_ok) {
             crm_warn("Failed to get metadata for %s (%s:%s:%s)",
-                     rsc->id, rsc->class, rsc->provider, rsc->type);
+                     rsc->id, rsc->standard, rsc->provider, rsc->type);
             return TRUE;
         }
 
@@ -730,7 +730,7 @@ build_operation_update(xmlNode * parent, lrmd_rsc_info_t * rsc, lrmd_event_data_
         free(metadata_str);
         if (metadata == NULL) {
             crm_warn("Failed to update metadata for %s (%s:%s:%s)",
-                     rsc->id, rsc->class, rsc->provider, rsc->type);
+                     rsc->id, rsc->standard, rsc->provider, rsc->type);
             return TRUE;
         }
     }
@@ -739,7 +739,7 @@ build_operation_update(xmlNode * parent, lrmd_rsc_info_t * rsc, lrmd_event_data_
     crm_xml_add(xml_op, XML_ATTR_RA_VERSION, metadata->ra_version);
 #endif
 
-    crm_trace("Including additional digests for %s::%s:%s", rsc->class, rsc->provider, rsc->type);
+    crm_trace("Including additional digests for %s::%s:%s", rsc->standard, rsc->provider, rsc->type);
     append_restart_list(op, metadata, xml_op, caller_version);
     append_secure_list(op, metadata, xml_op, caller_version);
 
@@ -793,7 +793,7 @@ build_active_RAs(lrm_state_t * lrm_state, xmlNode * rsc_list)
 
         crm_xml_add(xml_rsc, XML_ATTR_ID, entry->id);
         crm_xml_add(xml_rsc, XML_ATTR_TYPE, entry->rsc.type);
-        crm_xml_add(xml_rsc, XML_AGENT_ATTR_CLASS, entry->rsc.class);
+        crm_xml_add(xml_rsc, XML_AGENT_ATTR_CLASS, entry->rsc.standard);
         crm_xml_add(xml_rsc, XML_AGENT_ATTR_PROVIDER, entry->rsc.provider);
 
         if (entry->last && entry->last->params) {
@@ -1007,7 +1007,7 @@ erase_lrm_history_by_op(lrm_state_t *lrm_state, lrmd_event_data_t *op)
     crm_debug("Erasing LRM resource history for %s_%s_%d (call=%d)",
               op->rsc_id, op->op_type, op->interval, op->call_id);
 
-    fsa_cib_conn->cmds->delete(fsa_cib_conn, XML_CIB_TAG_STATUS, xml_top,
+    fsa_cib_conn->cmds->remove(fsa_cib_conn, XML_CIB_TAG_STATUS, xml_top,
                                cib_quorum_override);
 
     crm_log_xml_trace(xml_top, "op:cancel");
@@ -1068,7 +1068,7 @@ erase_lrm_history_by_id(lrm_state_t *lrm_state, const char *rsc_id,
 
     crm_debug("Erasing LRM resource history for %s on %s (call=%d)",
               key, rsc_id, call_id);
-    fsa_cib_conn->cmds->delete(fsa_cib_conn, op_xpath, NULL,
+    fsa_cib_conn->cmds->remove(fsa_cib_conn, op_xpath, NULL,
                                cib_quorum_override | cib_xpath);
     free(op_xpath);
 }
@@ -1428,14 +1428,14 @@ synthesize_lrmd_failure(lrm_state_t *lrm_state, xmlNode *action, int rc)
 
         rsc.id = strdup(op->rsc_id);
         rsc.type = crm_element_value_copy(xml_rsc, XML_ATTR_TYPE);
-        rsc.class = crm_element_value_copy(xml_rsc, XML_AGENT_ATTR_CLASS);
+        rsc.standard = crm_element_value_copy(xml_rsc, XML_AGENT_ATTR_CLASS);
         rsc.provider = crm_element_value_copy(xml_rsc, XML_AGENT_ATTR_PROVIDER);
 
         do_update_resource(target_node, &rsc, op);
 
         free(rsc.id);
         free(rsc.type);
-        free(rsc.class);
+        free(rsc.standard);
         free(rsc.provider);
     }
     lrmd_free_event(op);
@@ -2310,7 +2310,7 @@ do_update_resource(const char *node_name, lrmd_rsc_info_t * rsc, lrmd_event_data
         const char *container = NULL;
 
         crm_xml_add(iter, XML_ATTR_TYPE, rsc->type);
-        crm_xml_add(iter, XML_AGENT_ATTR_CLASS, rsc->class);
+        crm_xml_add(iter, XML_AGENT_ATTR_CLASS, rsc->standard);
         crm_xml_add(iter, XML_AGENT_ATTR_PROVIDER, rsc->provider);
 
         if (op->params) {

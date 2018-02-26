@@ -108,14 +108,14 @@ cli_resource_ban(const char *rsc_id, const char *host, GListPtr allnodes, cib_t 
     if (later_s == NULL) {
         /* Short form */
         crm_xml_add(location, XML_CIB_TAG_NODE, host);
-        crm_xml_add(location, XML_RULE_ATTR_SCORE, MINUS_INFINITY_S);
+        crm_xml_add(location, XML_RULE_ATTR_SCORE, CRM_MINUS_INFINITY_S);
 
     } else {
         xmlNode *rule = create_xml_node(location, XML_TAG_RULE);
         xmlNode *expr = create_xml_node(rule, XML_TAG_EXPRESSION);
 
         crm_xml_set_id(rule, "cli-ban-%s-on-%s-rule", rsc_id, host);
-        crm_xml_add(rule, XML_RULE_ATTR_SCORE, MINUS_INFINITY_S);
+        crm_xml_add(rule, XML_RULE_ATTR_SCORE, CRM_MINUS_INFINITY_S);
         crm_xml_add(rule, XML_RULE_ATTR_BOOLEAN_OP, "and");
 
         crm_xml_set_id(expr, "cli-ban-%s-on-%s-expr", rsc_id, host);
@@ -171,14 +171,14 @@ cli_resource_prefer(const char *rsc_id, const char *host, cib_t * cib_conn)
     if (later_s == NULL) {
         /* Short form */
         crm_xml_add(location, XML_CIB_TAG_NODE, host);
-        crm_xml_add(location, XML_RULE_ATTR_SCORE, INFINITY_S);
+        crm_xml_add(location, XML_RULE_ATTR_SCORE, CRM_INFINITY_S);
 
     } else {
         xmlNode *rule = create_xml_node(location, XML_TAG_RULE);
         xmlNode *expr = create_xml_node(rule, XML_TAG_EXPRESSION);
 
         crm_xml_set_id(rule, "cli-prefer-rule-%s", rsc_id);
-        crm_xml_add(rule, XML_RULE_ATTR_SCORE, INFINITY_S);
+        crm_xml_add(rule, XML_RULE_ATTR_SCORE, CRM_INFINITY_S);
         crm_xml_add(rule, XML_RULE_ATTR_BOOLEAN_OP, "and");
 
         crm_xml_set_id(expr, "cli-prefer-expr-%s", rsc_id);
@@ -236,7 +236,7 @@ cli_resource_clear(const char *rsc_id, const char *host, GListPtr allnodes, cib_
     }
 
     crm_log_xml_info(fragment, "Delete");
-    rc = cib_conn->cmds->delete(cib_conn, XML_CIB_TAG_CONSTRAINTS, fragment, cib_options);
+    rc = cib_conn->cmds->remove(cib_conn, XML_CIB_TAG_CONSTRAINTS, fragment, cib_options);
     if (rc == -ENXIO) {
         rc = pcmk_ok;
 

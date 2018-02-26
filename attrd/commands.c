@@ -732,7 +732,7 @@ attrd_lookup_or_create_value(GHashTable *values, const char *host, xmlNode *xml)
         }
 
         /* Ensure this host is in the remote peer cache */
-        crm_remote_peer_cache_add(host);
+        CRM_ASSERT(crm_remote_peer_get(host) != NULL);
     }
 
     if (v == NULL) {
@@ -966,7 +966,7 @@ attrd_election_cb(gpointer user_data)
 void
 attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *data)
 {
-    if ((kind == crm_status_nstate) || (kind == crm_status_rstate)) {
+    if (kind == crm_status_nstate) {
         if (safe_str_eq(peer->state, CRM_NODE_MEMBER)) {
             /* If we're the writer, send new peers a list of all attributes
              * (unless it's a remote node, which doesn't run its own attrd)

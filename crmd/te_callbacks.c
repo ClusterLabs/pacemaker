@@ -58,8 +58,8 @@ get_node_id(xmlNode * rsc_op)
 void
 update_stonith_max_attempts(const char* value)
 {
-    if (safe_str_eq(value, INFINITY_S)) {
-       stonith_max_attempts = node_score_infinity;
+    if (safe_str_eq(value, CRM_INFINITY_S)) {
+       stonith_max_attempts = CRM_SCORE_INFINITY;
     }
     else {
        stonith_max_attempts = crm_int_helper(value, NULL);

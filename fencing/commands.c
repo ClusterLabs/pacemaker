@@ -2617,17 +2617,6 @@ handle_request(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * req
         rc = stonith_level_remove(request, &device_id);
         do_stonith_notify_level(call_options, op, rc, device_id);
 
-    } else if (crm_str_eq(op, STONITH_OP_CONFIRM, TRUE)) {
-        async_command_t *cmd = create_async_command(request);
-        xmlNode *reply = stonith_construct_async_reply(cmd, NULL, NULL, 0);
-
-        crm_xml_add(reply, F_STONITH_OPERATION, T_STONITH_NOTIFY);
-        crm_notice("Broadcasting manual fencing confirmation for node %s", cmd->victim);
-        send_cluster_message(NULL, crm_msg_stonith_ng, reply, FALSE);
-
-        free_async_command(cmd);
-        free_xml(reply);
-
     } else if(safe_str_eq(op, CRM_OP_RM_NODE_CACHE)) {
         int node_id = 0;
         const char *name = NULL;

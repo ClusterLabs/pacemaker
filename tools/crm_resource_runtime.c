@@ -401,7 +401,7 @@ cli_resource_delete_attribute(resource_t *rsc, const char *requested_name,
     crm_log_xml_debug(xml_obj, "Delete");
 
     CRM_ASSERT(cib);
-    rc = cib->cmds->delete(cib, XML_CIB_TAG_RESOURCES, xml_obj, cib_options);
+    rc = cib->cmds->remove(cib, XML_CIB_TAG_RESOURCES, xml_obj, cib_options);
 
     if (rc == pcmk_ok && BE_QUIET == FALSE) {
         printf("Deleted '%s' option: id=%s%s%s%s%s\n", lookup_id, local_attr_id,

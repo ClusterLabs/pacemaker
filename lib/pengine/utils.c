@@ -2266,8 +2266,6 @@ void pe_action_set_flag_reason(const char *function, long line,
     } else if(is_set(flags, pe_action_optional)) {
         unset = TRUE;
         change = "required";
-    } else if(is_set(flags, pe_action_failure_is_fatal)) {
-        change = "fatally failed";
     } else if(is_set(flags, pe_action_migrate_runnable)) {
         unset = TRUE;
         overwrite = TRUE;

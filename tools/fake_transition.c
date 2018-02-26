@@ -464,12 +464,12 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib,
         free_xml(cib_node);
 
         snprintf(xpath, STATUS_PATH_MAX, "//node_state[@uname='%s']/%s", node, XML_CIB_TAG_LRM);
-        cib->cmds->delete(cib, xpath, NULL,
+        cib->cmds->remove(cib, xpath, NULL,
                                       cib_xpath | cib_sync_call | cib_scope_local);
 
         snprintf(xpath, STATUS_PATH_MAX, "//node_state[@uname='%s']/%s", node,
                  XML_TAG_TRANSIENT_NODEATTRS);
-        cib->cmds->delete(cib, xpath, NULL,
+        cib->cmds->remove(cib, xpath, NULL,
                                       cib_xpath | cib_sync_call | cib_scope_local);
 
     }
@@ -766,12 +766,12 @@ exec_stonith_action(crm_graph_t * graph, crm_action_t * action)
         CRM_ASSERT(rc == pcmk_ok);
 
         snprintf(xpath, STATUS_PATH_MAX, "//node_state[@uname='%s']/%s", target, XML_CIB_TAG_LRM);
-        fake_cib->cmds->delete(fake_cib, xpath, NULL,
+        fake_cib->cmds->remove(fake_cib, xpath, NULL,
                                       cib_xpath | cib_sync_call | cib_scope_local);
 
         snprintf(xpath, STATUS_PATH_MAX, "//node_state[@uname='%s']/%s", target,
                  XML_TAG_TRANSIENT_NODEATTRS);
-        fake_cib->cmds->delete(fake_cib, xpath, NULL,
+        fake_cib->cmds->remove(fake_cib, xpath, NULL,
                                       cib_xpath | cib_sync_call | cib_scope_local);
 
         free_xml(cib_node);

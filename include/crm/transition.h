@@ -18,6 +18,10 @@
 #ifndef CRM_TRANSITION__H
 #  define CRM_TRANSITION__H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
@@ -102,7 +106,7 @@ struct crm_graph_s {
     int completed;
     int incomplete;
 
-    GListPtr synapses;          /* synpase_t* */
+    GListPtr synapses;          /* synapse_t* */
 
     int migration_limit;
 };
@@ -139,5 +143,9 @@ bool update_abort_priority(crm_graph_t * graph, int priority,
 const char *actiontype2text(action_type_e type);
 lrmd_event_data_t *convert_graph_action(xmlNode * resource, crm_action_t * action, int status,
                                         int rc);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

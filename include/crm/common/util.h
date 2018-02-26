@@ -18,6 +18,10 @@
 #ifndef CRM_COMMON_UTIL__H
 #  define CRM_COMMON_UTIL__H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * \file
  * \brief Utility functions
@@ -44,13 +48,13 @@ int crm_default_remote_port(void);
 
 /* public string functions (from strings.c) */
 char *crm_itoa_stack(int an_int, char *buf, size_t len);
-char *crm_itoa(int an_int);
 gboolean crm_is_true(const char *s);
 int crm_str_to_boolean(const char *s, int *ret);
 int crm_parse_int(const char *text, const char *default_text);
 char * crm_strip_trailing_newline(char *str);
 gboolean crm_str_eq(const char *a, const char *b, gboolean use_case);
 gboolean safe_str_neq(const char *a, const char *b);
+gboolean crm_strcase_equal(gconstpointer a, gconstpointer b);
 guint crm_strcase_hash(gconstpointer v);
 guint g_str_hash_traditional(gconstpointer v);
 char *crm_strdup_printf(char const *format, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
@@ -58,17 +62,16 @@ char *crm_strdup_printf(char const *format, ...) __attribute__ ((__format__ (__p
 #  define safe_str_eq(a, b) crm_str_eq(a, b, FALSE)
 #  define crm_str_hash g_str_hash_traditional
 
-/* used with hash tables where case does not matter */
-static inline gboolean
-crm_strcase_equal(gconstpointer a, gconstpointer b)
+static inline char *
+crm_itoa(int an_int)
 {
-    return crm_str_eq((const char *) a, (const char *) b, FALSE);
+    return crm_strdup_printf("%d", an_int);
 }
 
 /*!
  * \brief Create hash table with dynamically allocated string keys/values
  *
- * \return Newly hash table
+ * \return Newly allocated hash table
  * \note It is the caller's responsibility to free the result, using
  *       g_hash_table_destroy().
  */
@@ -81,7 +84,7 @@ crm_str_table_new()
 /*!
  * \brief Create hash table with case-insensitive dynamically allocated string keys/values
  *
- * \return Newly hash table
+ * \return Newly allocated hash table
  * \note It is the caller's responsibility to free the result, using
  *       g_hash_table_destroy().
  */
@@ -169,9 +172,14 @@ void crm_gnutls_global_init(void);
 
 bool pcmk_acl_required(const char *user);
 
-char *crm_generate_ra_key(const char *class, const char *provider, const char *type);
+char *crm_generate_ra_key(const char *standard, const char *provider,
+                          const char *type);
 bool crm_provider_required(const char *standard);
 int crm_parse_agent_spec(const char *spec, char **standard, char **provider,
                          char **type);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

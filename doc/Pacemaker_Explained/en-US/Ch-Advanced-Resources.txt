@@ -235,9 +235,10 @@ to manage entering and exiting the special role.
  indexterm:[Clone,Option,clone-node-max]
   
 |clone-min
-|1
+|0
 |Require at least this number of clone instances to be runnable before allowing
- resources depending on the clone to be runnable
+ resources depending on the clone to be runnable. A value of 0 means require
+ all clone instances to be runnable.
  indexterm:[clone-min,Clone Option]
  indexterm:[Clone,Option,clone-min]
 

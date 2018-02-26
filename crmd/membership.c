@@ -273,7 +273,7 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
             crm_notice("Deleting unknown node %s/%s which has conflicting uname with %s",
                        node_uuid, node_uname, new_node_uuid);
 
-            delete_call_id = fsa_cib_conn->cmds->delete(fsa_cib_conn, XML_CIB_TAG_NODES, node_xml,
+            delete_call_id = fsa_cib_conn->cmds->remove(fsa_cib_conn, XML_CIB_TAG_NODES, node_xml,
                                                         cib_scope_local | cib_quorum_override);
             fsa_register_cib_callback(delete_call_id, FALSE, strdup(node_uuid),
                                       remove_conflicting_node_callback);
@@ -282,7 +282,7 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
             crm_xml_add(node_state_xml, XML_ATTR_ID, node_uuid);
             crm_xml_add(node_state_xml, XML_ATTR_UNAME, node_uname);
 
-            delete_call_id = fsa_cib_conn->cmds->delete(fsa_cib_conn, XML_CIB_TAG_STATUS, node_state_xml,
+            delete_call_id = fsa_cib_conn->cmds->remove(fsa_cib_conn, XML_CIB_TAG_STATUS, node_state_xml,
                                                         cib_scope_local | cib_quorum_override);
             fsa_register_cib_callback(delete_call_id, FALSE, strdup(node_uuid),
                                       remove_conflicting_node_callback);

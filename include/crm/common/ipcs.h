@@ -19,6 +19,10 @@
 #ifndef CRM_COMMON_IPCS__H
 #  define CRM_COMMON_IPCS__H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #  include <stdbool.h>
 #  include <qb/qbipcs.h>
 #  ifdef HAVE_GNUTLS_GNUTLS_H
@@ -124,5 +128,9 @@ ssize_t crm_ipcs_sendv(crm_client_t * c, struct iovec *iov, enum crm_ipc_flags f
 xmlNode *crm_ipcs_recv(crm_client_t * c, void *data, size_t size, uint32_t * id, uint32_t * flags);
 
 int crm_ipcs_client_pid(qb_ipcs_connection_t * c);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

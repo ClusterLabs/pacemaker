@@ -18,6 +18,10 @@
 #ifndef XML_TAGS__H
 #  define XML_TAGS__H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #  ifndef F_ORIG
 #    define F_ORIG    "src"
 #  endif
@@ -409,5 +413,9 @@
 #  define TYPE(x) crm_element_name(x)
 #  define NAME(x) crm_element_value(x, XML_NVPAIR_ATTR_NAME)
 #  define VALUE(x) crm_element_value(x, XML_NVPAIR_ATTR_VALUE)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

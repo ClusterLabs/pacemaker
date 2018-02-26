@@ -7,6 +7,10 @@
 #ifndef CRM_COMPATIBILITY__H
 #  define CRM_COMPATIBILITY__H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <crm/msg_xml.h>
 
 /* Heartbeat-specific definitions. Support for heartbeat has been removed
@@ -114,6 +118,7 @@ static int ais_fd_sync = -1;
 #define PE_OBJ_T_GROUP              "group"
 #define PE_OBJ_T_INCARNATION        "clone"
 #define PE_OBJ_T_MASTER             "master"
+#define SERVICE_SCRIPT              "/sbin/service"
 #define SOCKET_LEN                  1024
 #define XML_ATTR_TAGNAME            F_XML_TAGNAME
 #define XML_ATTR_FILTER_TYPE        "type-filter"
@@ -150,13 +155,18 @@ static int ais_fd_sync = -1;
         cib->cmds->register_callback(cib, id, 120, flag, data, #fn, fn); \
     } while(0)
 #define cib_default_options = cib_none
+#define crm_remote_baremetal              0x0004
+#define crm_remote_container              0x0002
 #define n_object_classes 3
+#define pe_action_failure_is_fatal        0x00020
 #define pe_rsc_munging                    0x00000800ULL
 #define pe_rsc_try_reload                 0x00001000ULL
 #define pe_rsc_shutdown                   0x00020000ULL
 #define pe_rsc_migrating                  0x00400000ULL
 #define pe_rsc_unexpectedly_running       0x02000000ULL
 #define pe_rsc_have_unfencing             0x80000000ULL
+
+static int node_score_infinity = 1000000;
 
 /* Clone terminology definitions */
 
@@ -200,5 +210,9 @@ get_resource_typename(enum pe_obj_types type)
     }
     return "<unknown>";
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

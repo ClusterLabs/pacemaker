@@ -61,7 +61,7 @@ class crm_common(ClusterManager):
     def errorstoignore(self):
         # At some point implement a more elegant solution that 
         #   also produces a report at the end
-        '''Return list of errors which are known and very noisey should be ignored'''
+        """ Return a list of known error messages that should be ignored """
         return PatternSelector().get_patterns(self.name, "BadNewsIgnore")
 
     def install_config(self, node):

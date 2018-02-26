@@ -29,14 +29,6 @@
 #include <sys/types.h>
 
 char *
-crm_concat(const char *prefix, const char *suffix, char join)
-{
-    CRM_ASSERT(prefix != NULL);
-    CRM_ASSERT(suffix != NULL);
-    return crm_strdup_printf("%s%c%s", prefix, join, suffix);
-}
-
-char *
 crm_itoa_stack(int an_int, char *buffer, size_t len)
 {
     if (buffer != NULL) {
@@ -44,12 +36,6 @@ crm_itoa_stack(int an_int, char *buffer, size_t len)
     }
 
     return buffer;
-}
-
-char *
-crm_itoa(int an_int)
-{
-    return crm_strdup_printf("%d", an_int);
 }
 
 void
@@ -338,6 +324,13 @@ g_str_hash_traditional(gconstpointer v)
         h = (h << 5) - h + *p;
 
     return h;
+}
+
+/* used with hash tables where case does not matter */
+gboolean
+crm_strcase_equal(gconstpointer a, gconstpointer b)
+{
+    return crm_str_eq((const char *) a, (const char *) b, FALSE);
 }
 
 guint
