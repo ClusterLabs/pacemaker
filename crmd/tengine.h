@@ -38,7 +38,7 @@ extern crm_action_t *get_cancel_action(const char *id, const char *node);
 
 extern gboolean cib_action_update(crm_action_t * action, int status, int op_rc);
 extern gboolean fail_incompletable_actions(crm_graph_t * graph, const char *down_node);
-extern gboolean process_graph_event(xmlNode * event, const char *event_node);
+void process_graph_event(xmlNode *event, const char *event_node);
 
 /* utils */
 extern crm_action_t *get_action(int id, gboolean confirmed);
