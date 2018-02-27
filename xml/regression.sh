@@ -102,6 +102,19 @@ test_selfcheck() {
 	${RNGVALIDATOR} "xslt_${_tsc_validator}" "${_tsc_template}"
 }
 
+test_explanation() {
+	_tsc_template=
+
+	while test $# -gt 0; do
+		case "$1" in
+		-o=*) _tsc_template="upgrade-${1#-o=}.xsl";;
+		esac
+		shift
+	done
+
+	xsltproc upgrade-detail.xsl "${_tsc_template}"
+}
+
 # stdout: filename of the transformed file
 test_runner_upgrade() {
 	_tru_template=${1:?}
@@ -155,9 +168,8 @@ EOF
 
 	if test "$((_tru_mode ^ (1 << 2)))" -ne $((1 << 2)); then
 		if test $((_tru_mode & (1 << 0))) -ne 0; then
-			mv "${_tru_target}" "${_tru_ref}"
-			mv "${_tru_target_err}" "${_tru_ref_err}"
-			_tru_target="${_tru_ref}"  # passed back
+			cp -a "${_tru_target}" "${_tru_ref}"
+			cp -a "${_tru_target_err}" "${_tru_ref_err}"
 		fi
 		if test $((_tru_mode & (1 << 1))) -ne 0; then
 			"${DIFF}" ${DIFFOPTS} "${_tru_source}" "${_tru_ref}" \
@@ -289,6 +301,7 @@ test2to3() {
 	  | { case " $* " in
 	      *\ -C\ *) test_cleaner;;
 	      *\ -S\ *) test_selfcheck -o=2.10;;
+	      *\ -X\ *) test_explanation -o=2.10;;
 	      *) test_runner -o=2.10 -t=3.0 "$@" || return $?;;
 	      esac; }
 }
@@ -343,14 +356,15 @@ test_suite() {
 # NOTE: big letters are dedicated for per-test-set behaviour,
 #       small ones for generic/global behaviour
 usage() {
-	printf '%s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n' \
-	    "usage: $0 [-{B,C,D,G,S}]* [-|{${tests## }}*]" \
+	printf '%s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n' \
+	    "usage: $0 [-{B,C,D,G,S,X}]* [-|{${tests## }}*]" \
 	    "- with '-' suite specification the actual ones grabbed on stdin" \
 	    "- use '-B' to run validate-only check suppressing blanks first" \
 	    "- use '-C' to only cleanup ephemeral byproducts" \
 	    "- use '-D' to review originals vs. \"referential\" outcomes" \
 	    "- use '-G' to generate \"referential\" outcomes" \
-	    "- use '-S' for template self-check (requires net access)"
+	    "- use '-S' for template self-check (requires net access)" \
+	    "- use '-X' to show explanatory details about the upgrade"
 }
 
 main() {
@@ -361,7 +375,7 @@ main() {
 	while test $# -gt 0; do
 		case "$1" in
 		-h) usage; exit;;
-		-C|-G|-S) _main_bailout=1;;
+		-C|-G|-S|-X) _main_bailout=1;;
 		esac
 		_main_pass="${_main_pass} $1"
 		shift
