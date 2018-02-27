@@ -248,9 +248,7 @@ static void
 process_resource_updates(const char *node, xmlNode *xml, xmlNode *change,
                          const char *op, const char *xpath)
 {
-    xmlNode *cIter = NULL;
     xmlNode *rsc = NULL;
-    int num_resources = 0;
 
     if (xml == NULL) {
         return;
@@ -262,24 +260,21 @@ process_resource_updates(const char *node, xmlNode *xml, xmlNode *change,
 
     CRM_ASSERT(strcmp((const char*)xml->name, XML_LRM_TAG_RESOURCES) == 0);
 
-    for (cIter = xml->children; cIter; cIter = cIter->next) {
-        num_resources++;
-    }
+    /*
+     * Updates by, or in response to, TE actions will never contain updates
+     * for more than one resource at a time, so such updates indicate an
+     * LRM refresh.
+     *
+     * In that case, start a new transition rather than check each result
+     * individually, which can result in _huge_ speedups in large clusters.
+     *
+     * Unfortunately, we can only do so when there are no pending actions.
+     * Otherwise, we could mistakenly throw away those results here, and
+     * the cluster will stall waiting for them and time out the operation.
+     */
+    if ((transition_graph->pending == 0)
+        && xml->children && xml->children->next) {
 
-    if (num_resources > 1) {
-        /*
-         * Updates by, or in response to, TE actions will never contain updates
-         * for more than one resource at a time, so such updates indicate an
-         * LRM refresh.
-         *
-         * In that case, start a new transition rather than check each result
-         * individually, which can result in _huge_ speedups in large clusters.
-         *
-         * Unfortunately, we can only do so when there are no pending actions.
-         * Otherwise, we could mistakenly throw away those results here, and
-         * the cluster will stall waiting for them and time out the operation.
-         */
-        crm_debug("Detected LRM refresh - %d resources updated", num_resources);
         crm_log_xml_trace(change, "lrm-refresh");
         abort_transition(INFINITY, tg_restart, "LRM Refresh", NULL);
         return;
