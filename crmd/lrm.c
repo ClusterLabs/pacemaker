@@ -1344,41 +1344,42 @@ get_fake_call_id(lrm_state_t *lrm_state, const char *rsc_id)
 }
 
 static void
-force_reprobe(lrm_state_t *lrm_state, const char *from_sys, const char *from_host, const char *user_name, gboolean is_remote_node)
+force_reprobe(lrm_state_t *lrm_state, const char *from_sys,
+              const char *from_host, const char *user_name,
+              gboolean is_remote_node)
 {
-        GHashTableIter gIter;
-        rsc_history_t *entry = NULL;
+    GHashTableIter gIter;
+    rsc_history_t *entry = NULL;
 
+    crm_info("Clearing resource history on node %s", lrm_state->node_name);
+    g_hash_table_iter_init(&gIter, lrm_state->resource_history);
+    while (g_hash_table_iter_next(&gIter, NULL, (void **)&entry)) {
+        /* only unregister the resource during a reprobe if it is not a remote connection
+         * resource. otherwise unregistering the connection will terminate remote-node
+         * membership */
+        gboolean unregister = TRUE;
 
-        crm_info("clearing resource history on node %s", lrm_state->node_name);
-        g_hash_table_iter_init(&gIter, lrm_state->resource_history);
-        while (g_hash_table_iter_next(&gIter, NULL, (void **)&entry)) {
-            /* only unregister the resource during a reprobe if it is not a remote connection
-             * resource. otherwise unregistering the connection will terminate remote-node
-             * membership */
-            gboolean unregister = TRUE;
-
-            if (is_remote_lrmd_ra(NULL, NULL, entry->id)) {
-                lrm_state_t *remote_lrm_state = lrm_state_find(entry->id);
-                if (remote_lrm_state) {
-                    /* when forcing a reprobe, make sure to clear remote node before
-                     * clearing the remote node's connection resource */ 
-                    force_reprobe(remote_lrm_state, from_sys, from_host, user_name, TRUE);
-                }
-                unregister = FALSE;
+        if (is_remote_lrmd_ra(NULL, NULL, entry->id)) {
+            lrm_state_t *remote_lrm_state = lrm_state_find(entry->id);
+            if (remote_lrm_state) {
+                /* when forcing a reprobe, make sure to clear remote node before
+                 * clearing the remote node's connection resource */ 
+                force_reprobe(remote_lrm_state, from_sys, from_host, user_name, TRUE);
             }
-
-            delete_resource(lrm_state, entry->id, &entry->rsc, &gIter, from_sys, from_host,
-                            user_name, NULL, unregister);
+            unregister = FALSE;
         }
 
-        /* Now delete the copy in the CIB */
-        erase_status_tag(lrm_state->node_name, XML_CIB_TAG_LRM, cib_scope_local);
+        delete_resource(lrm_state, entry->id, &entry->rsc, &gIter, from_sys, from_host,
+                        user_name, NULL, unregister);
+    }
 
-        /* And finally, _delete_ the value in attrd
-         * Setting it to FALSE results in the PE sending us back here again
-         */
-        update_attrd(lrm_state->node_name, CRM_OP_PROBED, NULL, user_name, is_remote_node);
+    /* Now delete the copy in the CIB */
+    erase_status_tag(lrm_state->node_name, XML_CIB_TAG_LRM, cib_scope_local);
+
+    /* And finally, _delete_ the value in attrd
+     * Setting it to FALSE results in the PE sending us back here again
+     */
+    update_attrd(lrm_state->node_name, CRM_OP_PROBED, NULL, user_name, is_remote_node);
 }
 
 static void
@@ -1441,6 +1442,267 @@ synthesize_lrmd_failure(lrm_state_t *lrm_state, xmlNode *action, int rc)
     lrmd_free_event(op);
 }
 
+/*!
+ * \internal
+ * \brief Get target of an LRM operation
+ *
+ * \param[in] xml  LRM operation data XML
+ *
+ * \return LRM operation target node name (local node or Pacemaker Remote node)
+ */
+static const char *
+lrm_op_target(xmlNode *xml)
+{
+    const char *target = NULL;
+
+    if (xml) {
+        target = crm_element_value(xml, XML_LRM_ATTR_TARGET);
+    }
+    if (target == NULL) {
+        target = fsa_our_uname;
+    }
+    return target;
+}
+
+static void
+fail_lrm_resource(xmlNode *xml, lrm_state_t *lrm_state, const char *user_name,
+                  const char *from_host, const char *from_sys)
+{
+    lrmd_event_data_t *op = NULL;
+    lrmd_rsc_info_t *rsc = NULL;
+    xmlNode *xml_rsc = find_xml_node(xml, XML_CIB_TAG_RESOURCE, TRUE);
+
+    CRM_CHECK(xml_rsc != NULL, return);
+
+    /* The lrmd simply executes operations and reports the results, without any
+     * concept of success or failure, so to fail a resource, we must fake what a
+     * failure looks like.
+     *
+     * To do this, we create a fake lrmd operation event for the resource, and
+     * pass that event to the lrmd client callback so it will be processed as if
+     * it came from the lrmd.
+     */
+    op = construct_op(lrm_state, xml, ID(xml_rsc), "asyncmon");
+    CRM_ASSERT(op != NULL);
+
+    free((char*) op->user_data);
+    op->user_data = NULL;
+    op->call_id = get_fake_call_id(lrm_state, op->rsc_id);
+    op->interval = 0;
+    op->op_status = PCMK_LRM_OP_DONE;
+    op->rc = PCMK_OCF_UNKNOWN_ERROR;
+    op->t_run = time(NULL);
+    op->t_rcchange = op->t_run;
+
+#if ENABLE_ACL
+    if (user_name && is_privileged(user_name) == FALSE) {
+        crm_err("%s does not have permission to fail %s", user_name, ID(xml_rsc));
+        send_direct_ack(from_host, from_sys, NULL, op, ID(xml_rsc));
+        lrmd_free_event(op);
+        return;
+    }
+#endif
+
+    rsc = get_lrm_resource(lrm_state, xml_rsc, xml, TRUE);
+    if (rsc) {
+        crm_info("Failing resource %s...", rsc->id);
+        process_lrm_event(lrm_state, op, NULL);
+        op->op_status = PCMK_LRM_OP_DONE;
+        op->rc = PCMK_OCF_OK;
+        lrmd_free_rsc_info(rsc);
+    } else {
+        crm_info("Cannot find/create resource in order to fail it...");
+        crm_log_xml_warn(xml, "bad input");
+    }
+
+    send_direct_ack(from_host, from_sys, NULL, op, ID(xml_rsc));
+    lrmd_free_event(op);
+}
+
+static void
+handle_refresh_op(lrm_state_t *lrm_state, const char *user_name,
+                  const char *from_host, const char *from_sys)
+{
+    int rc = pcmk_ok;
+    xmlNode *fragment = do_lrm_query_internal(lrm_state, node_update_all);
+
+    fsa_cib_update(XML_CIB_TAG_STATUS, fragment, cib_quorum_override, rc, user_name);
+    crm_info("Forced a local LRM refresh: call=%d", rc);
+
+    if (safe_str_neq(CRM_SYSTEM_CRMD, from_sys)) {
+        xmlNode *reply = create_request(CRM_OP_INVOKE_LRM, fragment, from_host,
+                                        from_sys, CRM_SYSTEM_LRMD,
+                                        fsa_our_uuid);
+
+        crm_debug("ACK'ing refresh from %s (%s)", from_sys, from_host);
+
+        if (relay_message(reply, TRUE) == FALSE) {
+            crm_log_xml_err(reply, "Unable to route reply");
+        }
+        free_xml(reply);
+    }
+
+    free_xml(fragment);
+}
+
+static void
+handle_query_op(xmlNode *msg, lrm_state_t *lrm_state)
+{
+    xmlNode *data = do_lrm_query_internal(lrm_state, node_update_all);
+    xmlNode *reply = create_reply(msg, data);
+
+    if (relay_message(reply, TRUE) == FALSE) {
+        crm_err("Unable to route reply");
+        crm_log_xml_err(reply, "reply");
+    }
+    free_xml(reply);
+    free_xml(data);
+}
+
+static void
+handle_reprobe_op(lrm_state_t *lrm_state, const char *from_sys,
+                  const char *from_host, const char *user_name,
+                  gboolean is_remote_node)
+{
+    crm_notice("Forcing the status of all resources to be redetected");
+    force_reprobe(lrm_state, from_sys, from_host, user_name, is_remote_node);
+
+    if (safe_str_neq(CRM_SYSTEM_PENGINE, from_sys)
+        && safe_str_neq(CRM_SYSTEM_TENGINE, from_sys)) {
+
+        xmlNode *reply = create_request(CRM_OP_INVOKE_LRM, NULL, from_host,
+                                        from_sys, CRM_SYSTEM_LRMD,
+                                        fsa_our_uuid);
+
+        crm_debug("ACK'ing re-probe from %s (%s)", from_sys, from_host);
+
+        if (relay_message(reply, TRUE) == FALSE) {
+            crm_log_xml_err(reply, "Unable to route reply");
+        }
+        free_xml(reply);
+    }
+}
+
+static bool do_lrm_cancel(ha_msg_input_t *input, lrm_state_t *lrm_state,
+              lrmd_rsc_info_t *rsc, const char *from_host, const char *from_sys)
+{
+    char *op_key = NULL;
+    char *meta_key = NULL;
+    int call = 0;
+    const char *call_id = NULL;
+    const char *op_task = NULL;
+    const char *op_interval = NULL;
+    gboolean in_progress = FALSE;
+    xmlNode *params = find_xml_node(input->xml, XML_TAG_ATTRS, TRUE);
+
+    CRM_CHECK(params != NULL, return FALSE);
+
+    meta_key = crm_meta_name(XML_LRM_ATTR_INTERVAL);
+    op_interval = crm_element_value(params, meta_key);
+    free(meta_key);
+    CRM_CHECK(op_interval != NULL, return FALSE);
+
+    meta_key = crm_meta_name(XML_LRM_ATTR_TASK);
+    op_task = crm_element_value(params, meta_key);
+    free(meta_key);
+    CRM_CHECK(op_task != NULL, return FALSE);
+
+    meta_key = crm_meta_name(XML_LRM_ATTR_CALLID);
+    call_id = crm_element_value(params, meta_key);
+    free(meta_key);
+
+    op_key = generate_op_key(rsc->id, op_task, crm_parse_int(op_interval, "0"));
+
+    crm_debug("PE requested op %s (call=%s) be cancelled",
+              op_key, (call_id? call_id : "NA"));
+    call = crm_parse_int(call_id, "0");
+    if (call == 0) {
+        /* the normal case when the PE cancels a recurring op */
+        in_progress = cancel_op_key(lrm_state, rsc, op_key, TRUE);
+
+    } else {
+        /* the normal case when the PE cancels an orphan op */
+        in_progress = cancel_op(lrm_state, rsc->id, NULL, call, TRUE);
+    }
+
+    // Acknowledge cancellation operation if for a remote connection resource
+    if (!in_progress || is_remote_lrmd_ra(NULL, NULL, rsc->id)) {
+        char *op_id = make_stop_id(rsc->id, call);
+
+        if (is_remote_lrmd_ra(NULL, NULL, rsc->id) == FALSE) {
+            crm_info("Nothing known about operation %d for %s", call, op_key);
+        }
+        erase_lrm_history_by_id(lrm_state, rsc->id, op_key, NULL, call);
+        send_task_ok_ack(lrm_state, input, rsc->id, rsc, op_task,
+                         from_host, from_sys);
+
+        /* needed at least for cancellation of a remote operation */
+        g_hash_table_remove(lrm_state->pending_ops, op_id);
+        free(op_id);
+
+    } else {
+        /* No ack is needed since abcdaa8, but peers with older versions
+         * in a rolling upgrade need one. We didn't bump the feature set
+         * at that commit, so we can only compare against the previous
+         * CRM version (3.0.8). If any peers have feature set 3.0.9 but
+         * not abcdaa8, they will time out waiting for the ack (no
+         * released versions of Pacemaker are affected).
+         */
+        const char *peer_version = crm_element_value(params, XML_ATTR_CRM_VERSION);
+
+        if (compare_version(peer_version, "3.0.8") <= 0) {
+            crm_info("Sending compatibility ack for %s cancellation to %s (CRM version %s)",
+                     op_key, from_host, peer_version);
+            send_task_ok_ack(lrm_state, input, rsc->id, rsc, op_task,
+                             from_host, from_sys);
+        }
+    }
+
+    free(op_key);
+    return TRUE;
+}
+
+static void
+do_lrm_delete(ha_msg_input_t *input, lrm_state_t *lrm_state,
+              lrmd_rsc_info_t *rsc, const char *from_sys, const char *from_host,
+              bool crm_rsc_delete, const char *user_name)
+{
+    gboolean unregister = TRUE;
+
+#if ENABLE_ACL
+    int cib_rc = delete_rsc_status(lrm_state, rsc->id,
+                                   cib_dryrun|cib_sync_call, user_name);
+
+    if (cib_rc != pcmk_ok) {
+        lrmd_event_data_t *op = NULL;
+
+        crm_err("Could not delete resource status of %s for %s (user %s) on %s: %s"
+                CRM_XS " rc=%d",
+                rsc->id, from_sys, (user_name? user_name : "unknown"),
+                from_host, pcmk_strerror(cib_rc), cib_rc);
+
+        op = construct_op(lrm_state, input->xml, rsc->id, CRMD_ACTION_DELETE);
+        op->op_status = PCMK_LRM_OP_ERROR;
+
+        if (cib_rc == -EACCES) {
+            op->rc = PCMK_OCF_INSUFFICIENT_PRIV;
+        } else {
+            op->rc = PCMK_OCF_UNKNOWN_ERROR;
+        }
+        send_direct_ack(from_host, from_sys, NULL, op, rsc->id);
+        lrmd_free_event(op);
+        lrmd_free_rsc_info(rsc);
+        return;
+    }
+#endif
+
+    if (crm_rsc_delete && is_remote_lrmd_ra(NULL, NULL, rsc->id)) {
+        unregister = FALSE;
+    }
+
+    delete_resource(lrm_state, rsc->id, rsc, NULL, from_sys, from_host,
+                    user_name, input, unregister);
+}
 
 /*	 A_LRM_INVOKE	*/
 void
@@ -1449,7 +1711,6 @@ do_lrm_invoke(long long action,
               enum crmd_fsa_state cur_state,
               enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-    gboolean create_rsc = TRUE;
     lrm_state_t *lrm_state = NULL;
     const char *crm_op = NULL;
     const char *from_sys = NULL;
@@ -1459,21 +1720,13 @@ do_lrm_invoke(long long action,
     const char *user_name = NULL;
     const char *target_node = NULL;
     gboolean is_remote_node = FALSE;
-    gboolean crm_rsc_delete = FALSE;
+    bool crm_rsc_delete = FALSE;
 
-    if (input->xml != NULL) {
-        /* Remote node operations are routed here to their remote connections */
-        target_node = crm_element_value(input->xml, XML_LRM_ATTR_TARGET);
-    }
-    if (target_node == NULL) {
-        target_node = fsa_our_uname;
-    } else if (safe_str_neq(target_node, fsa_our_uname)) {
-        is_remote_node = TRUE;
-    }
+    target_node = lrm_op_target(input->xml);
+    is_remote_node = safe_str_neq(target_node, fsa_our_uname);
 
     lrm_state = lrm_state_find(target_node);
-
-    if (lrm_state == NULL && is_remote_node) {
+    if ((lrm_state == NULL) && is_remote_node) {
         crm_err("Failing action because remote node %s has no connection to cluster node %s",
                 target_node, fsa_our_uname);
 
@@ -1481,7 +1734,6 @@ do_lrm_invoke(long long action,
         synthesize_lrmd_failure(NULL, input->xml, PCMK_OCF_CONNECTION_DIED);
         return;
     }
-
     CRM_ASSERT(lrm_state != NULL);
 
 #if ENABLE_ACL
@@ -1494,68 +1746,15 @@ do_lrm_invoke(long long action,
     if (safe_str_neq(from_sys, CRM_SYSTEM_TENGINE)) {
         from_host = crm_element_value(input->msg, F_CRM_HOST_FROM);
     }
-
-    crm_trace("LRM command from: %s", from_sys);
+    crm_trace("LRM %s command from %s", crm_op, from_sys);
 
     if (safe_str_eq(crm_op, CRM_OP_LRM_DELETE)) {
-        /* remember this delete op came from crm_resource */
-        crm_rsc_delete = TRUE;
+        crm_rsc_delete = TRUE; // Only crm_resource uses this op
         operation = CRMD_ACTION_DELETE;
 
-    } else if (safe_str_eq(crm_op, CRM_OP_LRM_REFRESH)) {
-        operation = CRM_OP_LRM_REFRESH;
-
     } else if (safe_str_eq(crm_op, CRM_OP_LRM_FAIL)) {
-        lrmd_event_data_t *op = NULL;
-        lrmd_rsc_info_t *rsc = NULL;
-        xmlNode *xml_rsc = find_xml_node(input->xml, XML_CIB_TAG_RESOURCE, TRUE);
-
-        CRM_CHECK(xml_rsc != NULL, return);
-
-        /* The lrmd can not fail a resource, it does not understand the
-         * concept of success or failure in relation to a resource, it simply
-         * executes operations and reports the results. We determine what a failure is.
-         * Because of this, if we want to fail a resource we have to fake what we
-         * understand a failure to look like.
-         *
-         * To do this we create a fake lrmd operation event for the resource
-         * we want to fail.  We then pass that event to the lrmd client callback
-         * so it will be processed as if it actually came from the lrmd. */
-        op = construct_op(lrm_state, input->xml, ID(xml_rsc), "asyncmon");
-        CRM_ASSERT(op != NULL);
-
-        free((char *)op->user_data);
-        op->user_data = NULL;
-        op->call_id = get_fake_call_id(lrm_state, op->rsc_id);
-        op->interval = 0;
-        op->op_status = PCMK_LRM_OP_DONE;
-        op->rc = PCMK_OCF_UNKNOWN_ERROR;
-        op->t_run = time(NULL);
-        op->t_rcchange = op->t_run;
-
-#if ENABLE_ACL
-        if (user_name && is_privileged(user_name) == FALSE) {
-            crm_err("%s does not have permission to fail %s", user_name, ID(xml_rsc));
-            send_direct_ack(from_host, from_sys, NULL, op, ID(xml_rsc));
-            lrmd_free_event(op);
-            return;
-        }
-#endif
-
-        rsc = get_lrm_resource(lrm_state, xml_rsc, input->xml, create_rsc);
-        if (rsc) {
-            crm_info("Failing resource %s...", rsc->id);
-            process_lrm_event(lrm_state, op, NULL);
-            op->op_status = PCMK_LRM_OP_DONE;
-            op->rc = PCMK_OCF_OK;
-            lrmd_free_rsc_info(rsc);
-        } else {
-            crm_info("Cannot find/create resource in order to fail it...");
-            crm_log_xml_warn(input->msg, "bad input");
-        }
-
-        send_direct_ack(from_host, from_sys, NULL, op, ID(xml_rsc));
-        lrmd_free_event(op);
+        fail_lrm_resource(input->xml, lrm_state, user_name, from_host,
+                          from_sys);
         return;
 
     } else if (input->xml != NULL) {
@@ -1563,81 +1762,34 @@ do_lrm_invoke(long long action,
     }
 
     if (safe_str_eq(crm_op, CRM_OP_LRM_REFRESH)) {
-        int rc = pcmk_ok;
-        xmlNode *fragment = do_lrm_query_internal(lrm_state, node_update_all);
-
-        fsa_cib_update(XML_CIB_TAG_STATUS, fragment, cib_quorum_override, rc, user_name);
-        crm_info("Forced a local LRM refresh: call=%d", rc);
-
-        if (safe_str_neq(CRM_SYSTEM_CRMD, from_sys)) {
-            xmlNode *reply = create_request(
-                CRM_OP_INVOKE_LRM, fragment,
-                from_host, from_sys, CRM_SYSTEM_LRMD, fsa_our_uuid);
-
-            crm_debug("ACK'ing refresh from %s (%s)", from_sys, from_host);
-
-            if (relay_message(reply, TRUE) == FALSE) {
-                crm_log_xml_err(reply, "Unable to route reply");
-            }
-            free_xml(reply);
-        }
-
-        free_xml(fragment);
+        handle_refresh_op(lrm_state, user_name, from_host, from_sys);
 
     } else if (safe_str_eq(crm_op, CRM_OP_LRM_QUERY)) {
-        xmlNode *data = do_lrm_query_internal(lrm_state, node_update_all);
-        xmlNode *reply = create_reply(input->msg, data);
-
-        if (relay_message(reply, TRUE) == FALSE) {
-            crm_err("Unable to route reply");
-            crm_log_xml_err(reply, "reply");
-        }
-        free_xml(reply);
-        free_xml(data);
+        handle_query_op(input->msg, lrm_state);
 
     } else if (safe_str_eq(operation, CRM_OP_PROBED)) {
-        update_attrd(lrm_state->node_name, CRM_OP_PROBED, XML_BOOLEAN_TRUE, user_name, is_remote_node);
+        update_attrd(lrm_state->node_name, CRM_OP_PROBED, XML_BOOLEAN_TRUE,
+                     user_name, is_remote_node);
 
-    } else if (safe_str_eq(operation, CRM_OP_REPROBE) || safe_str_eq(crm_op, CRM_OP_REPROBE)) {
-        crm_notice("Forcing the status of all resources to be redetected");
-
-        force_reprobe(lrm_state, from_sys, from_host, user_name, is_remote_node);
-
-        if (safe_str_neq(CRM_SYSTEM_PENGINE, from_sys)
-           && safe_str_neq(CRM_SYSTEM_TENGINE, from_sys)) {
-
-            xmlNode *reply = create_request(
-                CRM_OP_INVOKE_LRM, NULL,
-                from_host, from_sys, CRM_SYSTEM_LRMD, fsa_our_uuid);
-
-            crm_debug("ACK'ing re-probe from %s (%s)", from_sys, from_host);
-
-            if (relay_message(reply, TRUE) == FALSE) {
-                crm_log_xml_err(reply, "Unable to route reply");
-            }
-            free_xml(reply);
-        }
+    } else if (safe_str_eq(operation, CRM_OP_REPROBE)
+               || safe_str_eq(crm_op, CRM_OP_REPROBE)) {
+        handle_reprobe_op(lrm_state, from_sys, from_host, user_name,
+                          is_remote_node);
 
     } else if (operation != NULL) {
         lrmd_rsc_info_t *rsc = NULL;
-        xmlNode *params = NULL;
         xmlNode *xml_rsc = find_xml_node(input->xml, XML_CIB_TAG_RESOURCE, TRUE);
+        gboolean create_rsc = safe_str_neq(operation, CRMD_ACTION_DELETE);
 
         CRM_CHECK(xml_rsc != NULL, return);
 
-        params = find_xml_node(input->xml, XML_TAG_ATTRS, TRUE);
-
-        if (safe_str_eq(operation, CRMD_ACTION_DELETE)) {
-            create_rsc = FALSE;
-        }
-
-        if(lrm_state_is_connected(lrm_state) == FALSE) {
+        if (lrm_state_is_connected(lrm_state) == FALSE) {
             synthesize_lrmd_failure(lrm_state, input->xml, PCMK_OCF_CONNECTION_DIED);
             return;
         }
 
         rsc = get_lrm_resource(lrm_state, xml_rsc, input->xml, create_rsc);
-        if (rsc == NULL && create_rsc) {
+        if ((rsc == NULL) && create_rsc) {
             crm_err("Invalid resource definition for %s", ID(xml_rsc));
             crm_log_xml_warn(input->msg, "bad input");
 
@@ -1646,7 +1798,9 @@ do_lrm_invoke(long long action,
             synthesize_lrmd_failure(lrm_state, input->xml, PCMK_OCF_NOT_CONFIGURED);
 
         } else if (rsc == NULL) {
-            crm_notice("Not creating resource for a %s event: %s", operation, ID(input->xml));
+            crm_notice("Not creating %s resource for a %s event "
+                       CRM_XS " transition key %s",
+                       ID(xml_rsc), operation, ID(input->xml));
             delete_rsc_entry(lrm_state, input, ID(xml_rsc), NULL, pcmk_ok, user_name);
 
             /* Deleting something that does not exist is a success */
@@ -1654,115 +1808,13 @@ do_lrm_invoke(long long action,
                              from_host, from_sys);
 
         } else if (safe_str_eq(operation, CRMD_ACTION_CANCEL)) {
-            char *op_key = NULL;
-            char *meta_key = NULL;
-            int call = 0;
-            const char *call_id = NULL;
-            const char *op_task = NULL;
-            const char *op_interval = NULL;
-            gboolean in_progress = FALSE;
-
-            CRM_CHECK(params != NULL, crm_log_xml_warn(input->xml, "Bad command");
-                      lrmd_free_rsc_info(rsc); return);
-
-            meta_key = crm_meta_name(XML_LRM_ATTR_INTERVAL);
-            op_interval = crm_element_value(params, meta_key);
-            free(meta_key);
-
-            meta_key = crm_meta_name(XML_LRM_ATTR_TASK);
-            op_task = crm_element_value(params, meta_key);
-            free(meta_key);
-
-            meta_key = crm_meta_name(XML_LRM_ATTR_CALLID);
-            call_id = crm_element_value(params, meta_key);
-            free(meta_key);
-
-            CRM_CHECK(op_task != NULL, crm_log_xml_warn(input->xml, "Bad command");
-                      lrmd_free_rsc_info(rsc); return);
-            CRM_CHECK(op_interval != NULL, crm_log_xml_warn(input->xml, "Bad command");
-                      lrmd_free_rsc_info(rsc); return);
-
-            op_key = generate_op_key(rsc->id, op_task, crm_parse_int(op_interval, "0"));
-
-            crm_debug("PE requested op %s (call=%s) be cancelled",
-                      op_key, call_id ? call_id : "NA");
-            call = crm_parse_int(call_id, "0");
-            if (call == 0) {
-                /* the normal case when the PE cancels a recurring op */
-                in_progress = cancel_op_key(lrm_state, rsc, op_key, TRUE);
-
-            } else {
-                /* the normal case when the PE cancels an orphan op */
-                in_progress = cancel_op(lrm_state, rsc->id, NULL, call, TRUE);
+            if (!do_lrm_cancel(input, lrm_state, rsc, from_host, from_sys)) {
+                crm_log_xml_warn(input->xml, "Bad command");
             }
-
-            /* Acknowledge the cancellation operation if it's for a remote connection resource */
-            if (in_progress == FALSE || is_remote_lrmd_ra(NULL, NULL, rsc->id)) {
-                char *op_id = make_stop_id(rsc->id, call);
-
-                if (is_remote_lrmd_ra(NULL, NULL, rsc->id) == FALSE) {
-                    crm_info("Nothing known about operation %d for %s", call, op_key);
-                }
-                erase_lrm_history_by_id(lrm_state, rsc->id, op_key, NULL, call);
-                send_task_ok_ack(lrm_state, input, rsc->id, rsc, op_task,
-                                 from_host, from_sys);
-
-                /* needed at least for cancellation of a remote operation */
-                g_hash_table_remove(lrm_state->pending_ops, op_id);
-                free(op_id);
-
-            } else {
-                /* No ack is needed since abcdaa8, but peers with older versions
-                 * in a rolling upgrade need one. We didn't bump the feature set
-                 * at that commit, so we can only compare against the previous
-                 * CRM version (3.0.8). If any peers have feature set 3.0.9 but
-                 * not abcdaa8, they will time out waiting for the ack (no
-                 * released versions of Pacemaker are affected).
-                 */
-                const char *peer_version = crm_element_value(params, XML_ATTR_CRM_VERSION);
-
-                if (compare_version(peer_version, "3.0.8") <= 0) {
-                    crm_info("Sending compatibility ack for %s cancellation to %s (CRM version %s)",
-                             op_key, from_host, peer_version);
-                    send_task_ok_ack(lrm_state, input, rsc->id, rsc, op_task,
-                                     from_host, from_sys);
-                }
-            }
-
-            free(op_key);
 
         } else if (safe_str_eq(operation, CRMD_ACTION_DELETE)) {
-            gboolean unregister = TRUE;
-
-#if ENABLE_ACL
-            int cib_rc = delete_rsc_status(lrm_state, rsc->id, cib_dryrun | cib_sync_call, user_name);
-            if (cib_rc != pcmk_ok) {
-                lrmd_event_data_t *op = NULL;
-
-                crm_err
-                    ("Attempted deletion of resource status '%s' from CIB for %s (user=%s) on %s failed: (rc=%d) %s",
-                     rsc->id, from_sys, user_name ? user_name : "unknown", from_host, cib_rc,
-                     pcmk_strerror(cib_rc));
-
-                op = construct_op(lrm_state, input->xml, rsc->id, operation);
-                op->op_status = PCMK_LRM_OP_ERROR;
-
-                if (cib_rc == -EACCES) {
-                    op->rc = PCMK_OCF_INSUFFICIENT_PRIV;
-                } else {
-                    op->rc = PCMK_OCF_UNKNOWN_ERROR;
-                }
-                send_direct_ack(from_host, from_sys, NULL, op, rsc->id);
-                lrmd_free_event(op);
-                lrmd_free_rsc_info(rsc);
-                return;
-            }
-#endif
-            if (crm_rsc_delete == TRUE && is_remote_lrmd_ra(NULL, NULL, rsc->id)) {
-                unregister = FALSE;
-            }
-
-            delete_resource(lrm_state, rsc->id, rsc, NULL, from_sys, from_host, user_name, input, unregister);
+            do_lrm_delete(input, lrm_state, rsc, from_sys, from_host,
+                          crm_rsc_delete, user_name);
 
         } else {
             do_lrm_rsc_op(lrm_state, rsc, operation, input->xml, input->msg);
