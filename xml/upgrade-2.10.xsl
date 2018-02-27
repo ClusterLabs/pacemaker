@@ -22,9 +22,11 @@
    Target tag:     cluster_property_set
    Object:         ./nvpair/@name
    Selector ctxt:  ./nvpair/@value
-   Move ctxt:      N/A
+   Move ctxt:      op_defaults ~ /cib/configuration/op_defaults
+                   rsc_defaults ~ /cib/configuration/rsc_defaults
    -->
-  <cibtr:table for="cluster-properties" msg-prefix="Cluster properties">
+  <cibtr:table for="cluster-properties" msg-prefix="Cluster properties"
+               where-cases="op_defaults|rsc_defaults">
     <cibtr:replace what="cluster-infrastructure"
                    with=""
                    in-case-of="heartbeat|openais|classic openais|classic openais (with plugin)|cman"
@@ -35,6 +37,13 @@
     <cibtr:replace what="dc_deadtime"
                    with="dc-deadtime"/>
 
+    <cibtr:replace what="default-action-timeout"
+                   with="timeout"
+                   where="op_defaults"/>
+    <cibtr:replace what="default_action_timeout"
+                   with="timeout"
+                   where="op_defaults"/>
+
     <cibtr:replace what="default-migration-threshold"
                    with=""
                    msg-extra="migration-threshold in rsc_defaults can be configured instead"/>
@@ -42,11 +51,25 @@
                    with=""
                    msg-extra="migration-threshold in rsc_defaults can be configured instead"/>
 
+    <cibtr:replace what="default-resource-stickiness"
+                   with="resource-stickiness"
+                   where="rsc_defaults"/>
+    <cibtr:replace what="default_resource_stickiness"
+                   with="resource-stickiness"
+                   where="rsc_defaults"/>
+
     <cibtr:replace what="election_timeout"
                    with="election-timeout"/>
     <cibtr:replace what="expected-quorum-votes"
                    with=""
                    msg-extra="corosync (2+) infrastructure tracks quorum on its own"/>
+
+    <cibtr:replace what="is-managed-default"
+                   with="is-managed"
+                   where="rsc_defaults"/>
+    <cibtr:replace what="is_managed_default"
+                   with="is-managed"
+                   where="rsc_defaults"/>
     <cibtr:replace what="no_quorum_policy"
                    with="no-quorum-policy"/>
 
@@ -336,7 +359,8 @@
 <!--
  Source ctxt:    cluster_property_set
  Target ctxt:    cluster_property_set
- Target-inv ctxt:N/A
+ Target-inv ctxt:/cib/configuration/(op_defaults|rsc_defaults)
+                 [cluster_property_set -> meta_attributes]
  Dependencies:   N/A
  -->
 <xsl:template name="ProcessClusterProperties">
@@ -426,12 +450,43 @@
             <!-- drop (possibly just move over) -->
             <xsl:if test="$Replacement/@where
                           and
-                          $InverseMode">
+                          (
+                            (
+                              normalize-space($InverseMode)
+                              and
+                              $Replacement/@where = $InverseMode
+                            )
+                            or
+                            (
+                              not(normalize-space($InverseMode))
+                              and
+                              (true() or count($InverseMode))
+                              and
+                              not(
+                                $InverseMode/nvpair[
+                                  @name = $Replacement/@with
+                                ]
+                              )
+                              and
+                              $Replacement/@where = name($InverseMode/..)
+                            )
+                          )">
               <xsl:call-template name="HelperDenormalizedSpace">
                 <xsl:with-param name="Source" select="."/>
               </xsl:call-template>
               <xsl:copy>
-                <xsl:apply-templates select="@*"/>
+                <xsl:for-each select="@*">
+                  <xsl:choose>
+                    <xsl:when test="name() = 'name'">
+                      <xsl:attribute name="{name()}">
+                        <xsl:value-of select="$Replacement/@with"/>
+                      </xsl:attribute>
+                    </xsl:when>
+                    <xsl:otherwise>
+                      <xsl:copy/>
+                    </xsl:otherwise>
+                  </xsl:choose>
+                </xsl:for-each>
               </xsl:copy>
             </xsl:if>
           </xsl:when>
@@ -1057,6 +1112,231 @@
         </xsl:copy>
       </xsl:if>
     </xsl:for-each>
+  </xsl:copy>
+</xsl:template>
+
+<xsl:template match="configuration">
+  <xsl:variable name="ProcessedOpDefaultsNonruleClusterProperties">
+    <xsl:choose>
+      <xsl:when test="op_defaults/meta_attributes[
+                        not(@id-ref)
+                        and
+                        not(rule)
+                      ]">
+        <xsl:call-template name="ProcessClusterProperties">
+          <xsl:with-param name="Source"
+                          select="crm_config/cluster_property_set[
+                                    not(@id-ref)
+                                    and
+                                    not(rule)
+                                  ]"/>
+          <xsl:with-param name="InverseMode"
+                          select="op_defaults/meta_attributes[
+                                    not(@id-ref)
+                                    and
+                                    not(rule)
+                                  ]"/>
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:call-template name="ProcessClusterProperties">
+          <xsl:with-param name="Source"
+                          select="crm_config/cluster_property_set[
+                                    not(@id-ref)
+                                    and
+                                    not(rule)
+                                  ]"/>
+          <xsl:with-param name="InverseMode"
+                          select="'op_defaults'"/>
+        </xsl:call-template>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:variable>
+  <xsl:variable name="ProcessedRscDefaultsNonruleClusterProperties">
+    <xsl:choose>
+      <xsl:when test="rsc_defaults/meta_attributes[
+                        not(@id-ref)
+                        and
+                        not(rule)
+                      ]">
+        <xsl:call-template name="ProcessClusterProperties">
+          <xsl:with-param name="Source"
+                          select="crm_config/cluster_property_set[
+                                    not(@id-ref)
+                                    and
+                                    not(rule)
+                                  ]"/>
+          <xsl:with-param name="InverseMode"
+                          select="rsc_defaults/meta_attributes[
+                                    not(@id-ref)
+                                    and
+                                    not(rule)
+                                  ]"/>
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:call-template name="ProcessClusterProperties">
+          <xsl:with-param name="Source"
+                          select="crm_config/cluster_property_set[
+                                    not(@id-ref)
+                                    and
+                                    not(rule)
+                                  ]"/>
+          <xsl:with-param name="InverseMode"
+                          select="'rsc_defaults'"/>
+        </xsl:call-template>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:variable>
+  <xsl:variable name="ProcessedOpDefaultsRuleClusterProperties">
+    <xsl:for-each select="crm_config/cluster_property_set[
+                            not(@id-ref)
+                            and
+                            rule
+                          ]">
+
+      <xsl:variable name="ProcessedPartial">
+        <xsl:call-template name="ProcessClusterProperties">
+          <xsl:with-param name="Source"
+                          select="."/>
+          <xsl:with-param name="InverseMode" select="'op_defaults'"/>
+        </xsl:call-template>
+      </xsl:variable>
+      <xsl:if test="normalize-space($ProcessedPartial)
+                    != $ProcessedPartial">
+        <meta_attributes id="{concat('_2TO3_', @id)}">
+          <xsl-copy-of select="rule"/>
+          <xsl:copy-of select="$ProcessedPartial"/>
+        </meta_attributes>
+      </xsl:if>
+    </xsl:for-each>
+  </xsl:variable>
+  <xsl:variable name="ProcessedRscDefaultsRuleClusterProperties">
+    <xsl:for-each select="crm_config/cluster_property_set[
+                            not(@id-ref)
+                            and
+                            rule
+                          ]">
+      <xsl:variable name="ProcessedPartial">
+        <xsl:call-template name="ProcessClusterProperties">
+          <xsl:with-param name="Source"
+                          select="."/>
+          <xsl:with-param name="InverseMode" select="'rsc_defaults'"/>
+        </xsl:call-template>
+      </xsl:variable>
+      <xsl:if test="normalize-space($ProcessedPartial)
+                    != $ProcessedPartial">
+        <meta_attributes id="{concat('_2TO3_', @id)}">
+          <xsl-copy-of select="rule"/>
+          <xsl:copy-of select="$ProcessedPartial"/>
+        </meta_attributes>
+      </xsl:if>
+    </xsl:for-each>
+  </xsl:variable>
+
+  <xsl:copy>
+    <xsl:apply-templates select="@*"/>
+    <!-- B: special-casing {op,rsc}_defaults -->
+    <xsl:for-each select="node()">
+      <xsl:choose>
+        <xsl:when test="self::op_defaults|self::rsc_defaults">
+          <xsl:variable name="WhichDefaults" select="name()"/>
+          <xsl:copy>
+            <xsl:apply-templates select="@*"/>
+            <!-- B: special-casing meta_attributes -->
+            <xsl:for-each select="node()">
+              <xsl:copy>
+                <xsl:choose>
+                  <xsl:when test="self::meta_attributes[
+                                    not(@id-ref)
+                                    and
+                                    not(rule)
+                                    and
+                                    not(
+                                      preceding-sibling::meta_attributes[
+                                        not(@id-ref)
+                                        and
+                                        not(rule)
+                                      ]
+                                    )
+                                  ]">
+                    <xsl:apply-templates select="@*|node()"/>
+                    <xsl:if test="$WhichDefaults = 'op_defaults'">
+                      <xsl:copy-of select="$ProcessedOpDefaultsNonruleClusterProperties"/>
+                    </xsl:if>
+                    <xsl:if test="$WhichDefaults = 'rsc_defaults'">
+                      <xsl:copy-of select="$ProcessedRscDefaultsNonruleClusterProperties"/>
+                    </xsl:if>
+                  </xsl:when>
+                  <xsl:otherwise>
+                    <xsl:apply-templates select="@*|node()"/>
+                  </xsl:otherwise>
+                </xsl:choose>
+                <xsl:if test="$WhichDefaults = 'op_defaults'
+                              and
+                              normalize-space($ProcessedOpDefaultsRuleClusterProperties)
+                              != $ProcessedOpDefaultsRuleClusterProperties">
+                  <xsl:copy-of select="$ProcessedOpDefaultsRuleClusterProperties"/>
+                </xsl:if>
+                <xsl:if test="$WhichDefaults = 'rsc_defaults'
+                              and
+                              normalize-space($ProcessedRscDefaultsRuleClusterProperties)
+                              != $ProcessedRscDefaultsRuleClusterProperties">
+                  <xsl:copy-of select="$ProcessedRscDefaultsRuleClusterProperties"/>
+                </xsl:if>
+              </xsl:copy>
+            </xsl:for-each>
+            <!-- E: special-casing meta_attributes -->
+          </xsl:copy>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:copy>
+            <xsl:apply-templates select="@*|node()"/>
+          </xsl:copy>
+        </xsl:otherwise>
+      </xsl:choose>
+    </xsl:for-each>
+    <!-- E: special-casing {op,rsc}_defaults -->
+    <xsl:if test="not(op_defaults)
+                  and
+                  (
+                    normalize-space($ProcessedOpDefaultsNonruleClusterProperties)
+                    != $ProcessedOpDefaultsNonruleClusterProperties
+                    or
+                    normalize-space($ProcessedOpDefaultsRuleClusterProperties)
+                    != $ProcessedOpDefaultsRuleClusterProperties
+                  )">
+      <op_defaults>
+        <xsl:if test="normalize-space($ProcessedOpDefaultsNonruleClusterProperties)
+                      != $ProcessedOpDefaultsNonruleClusterProperties">
+          <meta_attributes id="{concat('_2TO3_', '-op-defaults')}">
+            <xsl:copy-of select="$ProcessedOpDefaultsNonruleClusterProperties"/>
+          </meta_attributes>
+        </xsl:if>
+        <xsl:copy-of select="$ProcessedOpDefaultsRuleClusterProperties"/>
+        <xsl:apply-templates select="text()[position() = last()]"/>
+      </op_defaults>
+    </xsl:if>
+    <xsl:if test="not(rsc_defaults)
+                  and
+                  (
+                    normalize-space($ProcessedRscDefaultsNonruleClusterProperties)
+                    != $ProcessedRscDefaultsNonruleClusterProperties
+                    or
+                    normalize-space($ProcessedRscDefaultsRuleClusterProperties)
+                    != $ProcessedRscDefaultsRuleClusterProperties
+                  )">
+      <rsc_defaults>
+        <xsl:if test="normalize-space($ProcessedRscDefaultsNonruleClusterProperties)
+                      != $ProcessedRscDefaultsNonruleClusterProperties">
+          <meta_attributes id="{concat('_2TO3_', '-rsc-defaults')}">
+            <xsl:copy-of select="$ProcessedRscDefaultsNonruleClusterProperties"/>
+          </meta_attributes>
+        </xsl:if>
+        <xsl:copy-of select="$ProcessedRscDefaultsRuleClusterProperties"/>
+        <xsl:apply-templates select="text()[position() = last()]"/>
+      </rsc_defaults>
+    </xsl:if>
   </xsl:copy>
 </xsl:template>
 

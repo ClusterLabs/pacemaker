@@ -1,0 +1,18 @@
+<cib validate-with="pacemaker-3.0" admin_epoch="0" epoch="0" num_updates="0">
+  <configuration>
+    <crm_config>
+      
+    </crm_config>
+    <nodes/>
+    <resources/>
+    <constraints/>
+  <op_defaults><meta_attributes id="_2TO3_-op-defaults">
+        <nvpair id="cluster-opts-default-action-timeout" name="timeout" value="30s"/>
+      </meta_attributes>
+  </op_defaults><rsc_defaults><meta_attributes id="_2TO3_-rsc-defaults">
+        <nvpair id="cluster-opts-default-resource-stickiness" name="resource-stickiness" value="100"/>
+        <nvpair id="cluster-opts-is-managed-default" name="is-managed" value="true"/>
+      </meta_attributes>
+  </rsc_defaults></configuration>
+  <status/>
+</cib>

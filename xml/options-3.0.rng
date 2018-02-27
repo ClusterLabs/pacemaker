@@ -37,10 +37,16 @@
                 <value>cluster-infrastructure</value>
                 <value>cluster_recheck_interval</value>
                 <value>dc_deadtime</value>
+                <value>default-action-timeout</value>
+                <value>default_action_timeout</value>
                 <value>default-migration-threshold</value>
                 <value>default_migration_threshold</value>
+                <value>default-resource-stickiness</value>
+                <value>default_resource_stickiness</value>
                 <value>election_timeout</value>
                 <value>expected-quorum-votes</value>
+                <value>is-managed-default</value>
+                <value>is_managed_default</value>
                 <value>no_quorum_policy</value>
                 <value>notification-agent</value>
                 <value>notification-recipient</value>
