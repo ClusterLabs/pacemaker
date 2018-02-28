@@ -684,20 +684,21 @@ lrm_state_register_rsc(lrm_state_t * lrm_state,
                        const char *class,
                        const char *provider, const char *agent, enum lrmd_call_options options)
 {
-    if (!lrm_state->conn) {
+    lrmd_t *conn = (lrmd_t *) lrm_state->conn;
+
+    if (conn == NULL) {
         return -ENOTCONN;
     }
 
-    /* optimize this... this function is a synced round trip from client to daemon.
-     * The crmd/lrm.c code path should be re-factored to allow the register of resources
-     * to be performed async. The lrmd client api needs to make an async version
-     * of register available. */
     if (is_remote_lrmd_ra(agent, provider, NULL)) {
-        return lrm_state_find_or_create(rsc_id) ? pcmk_ok : -1;
+        return lrm_state_find_or_create(rsc_id)? pcmk_ok : -EINVAL;
     }
 
-    return ((lrmd_t *) lrm_state->conn)->cmds->register_rsc(lrm_state->conn, rsc_id, class,
-                                                            provider, agent, options);
+    /* @TODO Implement an asynchronous version of this (currently a blocking
+     * call to the lrmd).
+     */
+    return conn->cmds->register_rsc(lrm_state->conn, rsc_id, class, provider,
+                                    agent, options);
 }
 
 int

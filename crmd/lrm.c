@@ -1256,49 +1256,77 @@ cancel_op_key(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *key, g
     return data.done;
 }
 
-static lrmd_rsc_info_t *
-get_lrm_resource(lrm_state_t * lrm_state, xmlNode * resource, xmlNode * op_msg, gboolean do_create)
+/*!
+ * \internal
+ * \brief Retrieve resource information from LRM
+ *
+ * \param[in]  lrm_state LRM connection to use
+ * \param[in]  rsc_xml   XML containing resource configuration
+ * \param[in]  do_create If true, register resource with LRM if not already
+ * \param[out] rsc_info  Where to store resource information obtained from LRM
+ *
+ * \retval pcmk_ok   Success (and rsc_info holds newly allocated result)
+ * \retval -EINVAL   Required information is missing from arguments
+ * \retval -ENOTCONN No active connection to LRM
+ * \retval -ENODEV   Resource not found
+ * \retval -errno    Error communicating with lrmd when registering resource
+ *
+ * \note Caller is responsible for freeing result on success.
+ */
+static int
+get_lrm_resource(lrm_state_t *lrm_state, xmlNode *rsc_xml, gboolean do_create,
+                 lrmd_rsc_info_t **rsc_info)
 {
-    lrmd_rsc_info_t *rsc = NULL;
-    const char *id = ID(resource);
-    const char *type = crm_element_value(resource, XML_ATTR_TYPE);
-    const char *class = crm_element_value(resource, XML_AGENT_ATTR_CLASS);
-    const char *provider = crm_element_value(resource, XML_AGENT_ATTR_PROVIDER);
-    const char *long_id = crm_element_value(resource, XML_ATTR_ID_LONG);
+    const char *id = ID(rsc_xml);
 
-    crm_trace("Retrieving %s from the LRM.", id);
-    CRM_CHECK(id != NULL, return NULL);
+    CRM_CHECK(lrm_state && rsc_xml && rsc_info, return -EINVAL);
+    CRM_CHECK(id, return -EINVAL);
 
-    rsc = lrm_state_get_rsc_info(lrm_state, id, 0);
-
-    if (!rsc && long_id) {
-        rsc = lrm_state_get_rsc_info(lrm_state, long_id, 0);
+    if (lrm_state_is_connected(lrm_state) == FALSE) {
+        return -ENOTCONN;
     }
 
-    if (!rsc && do_create) {
-        CRM_CHECK(class != NULL, return NULL);
-        CRM_CHECK(type != NULL, return NULL);
+    crm_trace("Retrieving resource information for %s from the LRM", id);
+    *rsc_info = lrm_state_get_rsc_info(lrm_state, id, 0);
 
-        crm_trace("Adding rsc %s before operation", id);
+    // If resource isn't known by ID, try clone name, if provided
+    if (!*rsc_info) {
+        const char *long_id = crm_element_value(rsc_xml, XML_ATTR_ID_LONG);
 
-        lrm_state_register_rsc(lrm_state, id, class, provider, type, lrmd_opt_drop_recurring);
-
-        rsc = lrm_state_get_rsc_info(lrm_state, id, 0);
-
-        if (!rsc) {
-            fsa_data_t *msg_data = NULL;
-
-            crm_err("Could not add resource %s to LRM %s", id, lrm_state->node_name);
-            /* only register this as a internal error if this involves the local
-             * lrmd. Otherwise we're likely dealing with an unresponsive remote-node
-             * which is not a FSA failure. */
-            if (lrm_state_is_local(lrm_state) == TRUE) {
-                register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
-            }
+        if (long_id) {
+            *rsc_info = lrm_state_get_rsc_info(lrm_state, long_id, 0);
         }
     }
 
-    return rsc;
+    if ((*rsc_info == NULL) && do_create) {
+        const char *class = crm_element_value(rsc_xml, XML_AGENT_ATTR_CLASS);
+        const char *provider = crm_element_value(rsc_xml, XML_AGENT_ATTR_PROVIDER);
+        const char *type = crm_element_value(rsc_xml, XML_ATTR_TYPE);
+        int rc;
+
+        crm_trace("Registering resource %s with LRM", id);
+        rc = lrm_state_register_rsc(lrm_state, id, class, provider, type,
+                                    lrmd_opt_drop_recurring);
+        if (rc != pcmk_ok) {
+            fsa_data_t *msg_data = NULL;
+
+            crm_err("Could not register resource %s with LRM on %s: %s "
+                    CRM_XS " rc=%d",
+                    id, lrm_state->node_name, pcmk_strerror(rc), rc);
+
+            /* Register this as an internal error if this involves the local
+             * lrmd. Otherwise, we're likely dealing with an unresponsive remote
+             * node, which is not an FSA failure.
+             */
+            if (lrm_state_is_local(lrm_state) == TRUE) {
+                register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
+            }
+            return rc;
+        }
+
+        *rsc_info = lrm_state_get_rsc_info(lrm_state, id, 0);
+    }
+    return *rsc_info? pcmk_ok : -ENODEV;
 }
 
 static void
@@ -1525,13 +1553,13 @@ fail_lrm_resource(xmlNode *xml, lrm_state_t *lrm_state, const char *user_name,
     }
 #endif
 
-    rsc = get_lrm_resource(lrm_state, xml_rsc, xml, TRUE);
-    if (rsc) {
+    if (get_lrm_resource(lrm_state, xml_rsc, TRUE, &rsc) == pcmk_ok) {
         crm_info("Failing resource %s...", rsc->id);
         process_lrm_event(lrm_state, op, NULL);
         op->op_status = PCMK_LRM_OP_DONE;
         op->rc = PCMK_OCF_OK;
         lrmd_free_rsc_info(rsc);
+
     } else {
         crm_info("Cannot find/create resource in order to fail it...");
         crm_log_xml_warn(xml, "bad input");
@@ -1802,24 +1830,27 @@ do_lrm_invoke(long long action,
         lrmd_rsc_info_t *rsc = NULL;
         xmlNode *xml_rsc = find_xml_node(input->xml, XML_CIB_TAG_RESOURCE, TRUE);
         gboolean create_rsc = safe_str_neq(operation, CRMD_ACTION_DELETE);
+        int rc;
 
-        CRM_CHECK(xml_rsc != NULL, return);
+        // We can't return anything meaningful without a resource ID
+        CRM_CHECK(xml_rsc && ID(xml_rsc), return);
 
-        if (lrm_state_is_connected(lrm_state) == FALSE) {
-            synthesize_lrmd_failure(lrm_state, input->xml, PCMK_OCF_CONNECTION_DIED);
+        rc = get_lrm_resource(lrm_state, xml_rsc, create_rsc, &rsc);
+        if (rc == -ENOTCONN) {
+            synthesize_lrmd_failure(lrm_state, input->xml,
+                                    PCMK_OCF_CONNECTION_DIED);
             return;
-        }
 
-        rsc = get_lrm_resource(lrm_state, xml_rsc, input->xml, create_rsc);
-        if ((rsc == NULL) && create_rsc) {
+        } else if ((rc < 0) && create_rsc) {
             crm_err("Invalid resource definition for %s", ID(xml_rsc));
             crm_log_xml_warn(input->msg, "bad input");
 
             /* if the operation couldn't complete because we can't register
              * the resource, return a generic error */
             synthesize_lrmd_failure(lrm_state, input->xml, PCMK_OCF_NOT_CONFIGURED);
+            return;
 
-        } else if (rsc == NULL) {
+        } else if (rc < 0) {
             crm_notice("Not creating %s resource for a %s event "
                        CRM_XS " transition key %s",
                        ID(xml_rsc), operation, ID(input->xml));
@@ -1828,8 +1859,10 @@ do_lrm_invoke(long long action,
             /* Deleting something that does not exist is a success */
             send_task_ok_ack(lrm_state, input, ID(xml_rsc), NULL, operation,
                              from_host, from_sys);
+            return;
+        }
 
-        } else if (safe_str_eq(operation, CRMD_ACTION_CANCEL)) {
+        if (safe_str_eq(operation, CRMD_ACTION_CANCEL)) {
             if (!do_lrm_cancel(input, lrm_state, rsc, from_host, from_sys)) {
                 crm_log_xml_warn(input->xml, "Bad command");
             }
