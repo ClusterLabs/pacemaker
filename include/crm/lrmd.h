@@ -30,6 +30,7 @@ extern "C" {
  * \ingroup lrmd
  */
 #include <stdbool.h>
+#include <crm_config.h>
 #include <crm/services.h>
 
 typedef struct lrmd_s lrmd_t;
@@ -53,7 +54,7 @@ typedef struct lrmd_key_value_s {
 #define LRMD_MIN_PROTOCOL_VERSION "1.0"
 
 /* *INDENT-OFF* */
-#define DEFAULT_REMOTE_KEY_LOCATION "/etc/pacemaker/authkey"
+#define DEFAULT_REMOTE_KEY_LOCATION PACEMAKER_CONFIG_DIR "/authkey"
 #define ALT_REMOTE_KEY_LOCATION "/etc/corosync/authkey"
 #define DEFAULT_REMOTE_PORT 3121
 #define DEFAULT_REMOTE_USERNAME "lrmd"

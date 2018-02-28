@@ -646,6 +646,7 @@ exit 0
 %files cli
 %defattr(-,root,root)
 
+%dir %attr (750, root, %{gname}) %{_sysconfdir}/pacemaker
 %config(noreplace) %{_sysconfdir}/logrotate.d/pacemaker
 %config(noreplace) %{_sysconfdir}/sysconfig/crm_mon
 

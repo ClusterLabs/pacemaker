@@ -978,6 +978,10 @@ CRM_RSCTMP_DIR="${localstatedir}/run/resource-agents"
 AC_DEFINE_UNQUOTED(CRM_RSCTMP_DIR,"$CRM_RSCTMP_DIR", Where resource agents should keep state files)
 AC_SUBST(CRM_RSCTMP_DIR)
 
+PACEMAKER_CONFIG_DIR="${sysconfdir}/pacemaker"
+AC_DEFINE_UNQUOTED(PACEMAKER_CONFIG_DIR,"$PACEMAKER_CONFIG_DIR", Where to keep configuration files like authkey)
+AC_SUBST(PACEMAKER_CONFIG_DIR)
+
 OCF_ROOT_DIR="/usr/lib/ocf"
 if test "X$OCF_ROOT_DIR" = X; then
     AC_MSG_ERROR(Could not locate OCF directory)
