@@ -1423,20 +1423,22 @@ static void
 synthesize_lrmd_failure(lrm_state_t *lrm_state, xmlNode *action, int rc) 
 {
     lrmd_event_data_t *op = NULL;
+    lrmd_rsc_info_t *rsc_info = NULL;
     const char *operation = crm_element_value(action, XML_LRM_ATTR_TASK);
     const char *target_node = crm_element_value(action, XML_LRM_ATTR_TARGET);
     xmlNode *xml_rsc = find_xml_node(action, XML_CIB_TAG_RESOURCE, TRUE);
 
-    if(xml_rsc == NULL) {
+    if ((xml_rsc == NULL) || (ID(xml_rsc) == NULL)) {
         /* @TODO Should we do something else, like direct ack? */
-        crm_info("Skipping %s=%d on %s (%p): no resource",
-                 crm_element_value(action, XML_LRM_ATTR_TASK_KEY), rc, target_node, lrm_state);
+        crm_info("Can't fake %s failure (%d) on %s without resource configuration",
+                 crm_element_value(action, XML_LRM_ATTR_TASK_KEY), rc,
+                 target_node);
         return;
 
     } else if(operation == NULL) {
         /* This probably came from crm_resource -C, nothing to do */
-        crm_info("Skipping %s=%d on %s (%p): no operation",
-                 crm_element_value(action, XML_ATTR_TRANSITION_KEY), rc, target_node, lrm_state);
+        crm_info("Can't fake %s failure (%d) on %s without operation",
+                 ID(xml_rsc), rc, target_node);
         return;
     }
 
@@ -1448,25 +1450,36 @@ synthesize_lrmd_failure(lrm_state_t *lrm_state, xmlNode *action, int rc)
         fake_op_status(lrm_state, op, PCMK_LRM_OP_ERROR, rc);
     }
 
-    crm_info("Faking result %d for %s_%s_%d on %s (%p)", op->rc, op->rsc_id, op->op_type, op->interval, target_node, lrm_state);
+    crm_info("Faking %s_%s_%d result (%d) on %s",
+             op->rsc_id, op->op_type, op->interval, op->rc, target_node);
 
-    if(lrm_state) {
+    /* Process the result as if it came from the LRM, if possible
+     * (i.e. resource info can be obtained from the lrm_state).
+     */
+    if (lrm_state) {
+        rsc_info = lrm_state_get_rsc_info(lrm_state, op->rsc_id, 0);
+    }
+    if (rsc_info) {
         process_lrm_event(lrm_state, op, NULL);
 
     } else {
-        lrmd_rsc_info_t rsc;
+        /* If we can't process the result normally, at least write it to the CIB
+         * if possible, so the PE can act on it.
+         */
+        char *standard = crm_element_value_copy(xml_rsc, XML_AGENT_ATTR_CLASS);
+        char *provider = crm_element_value_copy(xml_rsc, XML_AGENT_ATTR_PROVIDER);
+        char *type = crm_element_value_copy(xml_rsc, XML_ATTR_TYPE);
 
-        rsc.id = strdup(op->rsc_id);
-        rsc.type = crm_element_value_copy(xml_rsc, XML_ATTR_TYPE);
-        rsc.standard = crm_element_value_copy(xml_rsc, XML_AGENT_ATTR_CLASS);
-        rsc.provider = crm_element_value_copy(xml_rsc, XML_AGENT_ATTR_PROVIDER);
-
-        do_update_resource(target_node, &rsc, op);
-
-        free(rsc.id);
-        free(rsc.type);
-        free(rsc.standard);
-        free(rsc.provider);
+        if (standard && type) {
+            rsc_info = lrmd_new_rsc_info(op->rsc_id, standard, provider, type);
+            do_update_resource(target_node, rsc_info, op);
+            lrmd_free_rsc_info(rsc_info);
+        } else {
+            // @TODO Should we direct ack?
+            crm_info("Can't fake %s failure (%d) on %s without resource standard and type",
+                     crm_element_value(action, XML_LRM_ATTR_TASK_KEY), rc,
+                     target_node);
+        }
     }
     lrmd_free_event(op);
 }
@@ -1751,10 +1764,8 @@ do_lrm_invoke(long long action,
 
     lrm_state = lrm_state_find(target_node);
     if ((lrm_state == NULL) && is_remote_node) {
-        crm_err("Failing action because remote node %s has no connection to cluster node %s",
-                target_node, fsa_our_uname);
-
-        /* The action must be recorded here and in the CIB as failed */
+        crm_err("Failing action because local node has never had connection to remote node %s",
+                target_node);
         synthesize_lrmd_failure(NULL, input->xml, PCMK_OCF_CONNECTION_DIED);
         return;
     }
