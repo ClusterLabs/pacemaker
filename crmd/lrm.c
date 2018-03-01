@@ -1819,24 +1819,35 @@ do_lrm_invoke(long long action,
                                     PCMK_OCF_CONNECTION_DIED);
             return;
 
-        } else if ((rc < 0) && create_rsc) {
-            crm_err("Invalid resource definition for %s", ID(xml_rsc));
-            crm_log_xml_warn(input->msg, "bad input");
+        } else if (!create_rsc) {
+            /* Delete of malformed or nonexistent resource
+             * (deleting something that does not exist is a success)
+             */
+            crm_notice("Not registering resource '%s' for a %s event "
+                       CRM_XS " get-rc=%d (%s) transition-key=%s",
+                       ID(xml_rsc), operation,
+                       rc, pcmk_strerror(rc), ID(input->xml));
+            delete_rsc_entry(lrm_state, input, ID(xml_rsc), NULL, pcmk_ok,
+                             user_name);
+            send_task_ok_ack(lrm_state, input, ID(xml_rsc), NULL, operation,
+                             from_host, from_sys);
+            return;
 
-            /* if the operation couldn't complete because we can't register
-             * the resource, return a generic error */
-            synthesize_lrmd_failure(lrm_state, input->xml, PCMK_OCF_NOT_CONFIGURED);
+        } else if (rc == -EINVAL) {
+            // Resource operation on malformed resource
+            crm_err("Invalid resource definition for %s", ID(xml_rsc));
+            crm_log_xml_warn(input->msg, "invalid resource");
+            synthesize_lrmd_failure(lrm_state, input->xml,
+                                    PCMK_OCF_NOT_CONFIGURED); // fatal error
             return;
 
         } else if (rc < 0) {
-            crm_notice("Not creating %s resource for a %s event "
-                       CRM_XS " transition key %s",
-                       ID(xml_rsc), operation, ID(input->xml));
-            delete_rsc_entry(lrm_state, input, ID(xml_rsc), NULL, pcmk_ok, user_name);
-
-            /* Deleting something that does not exist is a success */
-            send_task_ok_ack(lrm_state, input, ID(xml_rsc), NULL, operation,
-                             from_host, from_sys);
+            // Error communicating with lrmd
+            crm_err("Could not register resource '%s' with lrmd: %s " CRM_XS " rc=%d",
+                    ID(xml_rsc), pcmk_strerror(rc), rc);
+            crm_log_xml_warn(input->msg, "failed registration");
+            synthesize_lrmd_failure(lrm_state, input->xml,
+                                    PCMK_OCF_INVALID_PARAM); // hard error
             return;
         }
 
