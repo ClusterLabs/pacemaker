@@ -295,7 +295,6 @@ send_task_ok_ack(lrm_state_t *lrm_state, ha_msg_input_t *input,
 {
     lrmd_event_data_t *op = construct_op(lrm_state, input->xml, rsc_id, task);
 
-    CRM_ASSERT(op != NULL);
     op->rc = PCMK_OCF_OK;
     op->op_status = PCMK_LRM_OP_DONE;
     send_direct_ack(ack_host, ack_sys, rsc, op, rsc_id);
@@ -886,7 +885,6 @@ notify_deleted(lrm_state_t * lrm_state, ha_msg_input_t * input, const char *rsc_
              ((rc == pcmk_ok)? "" : " not"));
 
     op = construct_op(lrm_state, input->xml, rsc_id, CRMD_ACTION_DELETE);
-    CRM_ASSERT(op != NULL);
 
     if (rc == pcmk_ok) {
         op->op_status = PCMK_LRM_OP_DONE;
@@ -1454,7 +1452,6 @@ synthesize_lrmd_failure(lrm_state_t *lrm_state, xmlNode *action, int rc)
     }
 
     op = construct_op(lrm_state, action, ID(xml_rsc), operation);
-    CRM_ASSERT(op != NULL);
 
     op->call_id = get_fake_call_id(lrm_state, op->rsc_id);
     if(safe_str_eq(operation, RSC_NOTIFY)) {
@@ -1533,7 +1530,6 @@ fail_lrm_resource(xmlNode *xml, lrm_state_t *lrm_state, const char *user_name,
      * it came from the lrmd.
      */
     op = construct_op(lrm_state, xml, ID(xml_rsc), "asyncmon");
-    CRM_ASSERT(op != NULL);
 
     free((char*) op->user_data);
     op->user_data = NULL;
@@ -1905,9 +1901,11 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
 
     const char *transition = NULL;
 
-    CRM_ASSERT(rsc_id != NULL);
+    CRM_ASSERT(rsc_id && operation);
 
     op = calloc(1, sizeof(lrmd_event_data_t));
+    CRM_ASSERT(op != NULL);
+
     op->type = lrmd_event_exec_complete;
     op->op_type = strdup(operation);
     op->op_status = PCMK_LRM_OP_PENDING;
