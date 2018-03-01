@@ -1370,6 +1370,17 @@ get_fake_call_id(lrm_state_t *lrm_state, const char *rsc_id)
 }
 
 static void
+fake_op_status(lrm_state_t *lrm_state, lrmd_event_data_t *op, int op_status,
+               enum ocf_exitcode op_exitcode)
+{
+    op->call_id = get_fake_call_id(lrm_state, op->rsc_id);
+    op->t_run = time(NULL);
+    op->t_rcchange = op->t_run;
+    op->op_status = op_status;
+    op->rc = op_exitcode;
+}
+
+static void
 force_reprobe(lrm_state_t *lrm_state, const char *from_sys,
               const char *from_host, const char *user_name,
               gboolean is_remote_node)
@@ -1431,18 +1442,11 @@ synthesize_lrmd_failure(lrm_state_t *lrm_state, xmlNode *action, int rc)
 
     op = construct_op(lrm_state, action, ID(xml_rsc), operation);
 
-    op->call_id = get_fake_call_id(lrm_state, op->rsc_id);
-    if(safe_str_eq(operation, RSC_NOTIFY)) {
-        /* Notifications can't fail yet */
-        op->op_status = PCMK_LRM_OP_DONE;
-        op->rc = PCMK_OCF_OK;
-
+    if (safe_str_eq(operation, RSC_NOTIFY)) { // Notifications can't fail
+        fake_op_status(lrm_state, op, PCMK_LRM_OP_DONE, PCMK_OCF_OK);
     } else {
-        op->op_status = PCMK_LRM_OP_ERROR;
-        op->rc = rc;
+        fake_op_status(lrm_state, op, PCMK_LRM_OP_ERROR, rc);
     }
-    op->t_run = time(NULL);
-    op->t_rcchange = op->t_run;
 
     crm_info("Faking result %d for %s_%s_%d on %s (%p)", op->rc, op->rsc_id, op->op_type, op->interval, target_node, lrm_state);
 
@@ -1508,15 +1512,11 @@ fail_lrm_resource(xmlNode *xml, lrm_state_t *lrm_state, const char *user_name,
      * it came from the lrmd.
      */
     op = construct_op(lrm_state, xml, ID(xml_rsc), "asyncmon");
+    fake_op_status(lrm_state, op, PCMK_LRM_OP_DONE, PCMK_OCF_UNKNOWN_ERROR);
 
     free((char*) op->user_data);
     op->user_data = NULL;
-    op->call_id = get_fake_call_id(lrm_state, op->rsc_id);
     op->interval = 0;
-    op->op_status = PCMK_LRM_OP_DONE;
-    op->rc = PCMK_OCF_UNKNOWN_ERROR;
-    op->t_run = time(NULL);
-    op->t_rcchange = op->t_run;
 
 #if ENABLE_ACL
     if (user_name && is_privileged(user_name) == FALSE) {
@@ -2282,13 +2282,9 @@ do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operat
         register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 
     } else if (call_id <= 0) {
-
-        crm_err("Operation %s on resource %s failed to execute on remote node %s: %d", operation, rsc->id, lrm_state->node_name, call_id);
-        op->call_id = get_fake_call_id(lrm_state, rsc->id);
-        op->op_status = PCMK_LRM_OP_DONE;
-        op->rc = PCMK_OCF_UNKNOWN_ERROR;
-        op->t_run = time(NULL);
-        op->t_rcchange = op->t_run;
+        crm_err("Operation %s on resource %s failed to execute on remote node %s: %d",
+                operation, rsc->id, lrm_state->node_name, call_id);
+        fake_op_status(lrm_state, op, PCMK_LRM_OP_DONE, PCMK_OCF_UNKNOWN_ERROR);
         process_lrm_event(lrm_state, op, NULL);
 
     } else {
