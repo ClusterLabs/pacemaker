@@ -264,6 +264,8 @@ typedef struct lrmd_rsc_info_s {
     char *provider;
 } lrmd_rsc_info_t;
 
+lrmd_rsc_info_t *lrmd_new_rsc_info(const char *rsc_id, const char *standard,
+                                   const char *provider, const char *type);
 lrmd_rsc_info_t *lrmd_copy_rsc_info(lrmd_rsc_info_t * rsc_info);
 void lrmd_free_rsc_info(lrmd_rsc_info_t * rsc_info);
 
