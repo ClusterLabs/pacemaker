@@ -1924,7 +1924,7 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
 
 #if ENABLE_VERSIONED_ATTRS
     // Resolve any versioned parameters
-    if (safe_str_neq(op->op_type, RSC_METADATA)
+    if (lrm_state && safe_str_neq(op->op_type, RSC_METADATA)
         && safe_str_neq(op->op_type, CRMD_ACTION_DELETE)
         && !is_remote_lrmd_ra(NULL, NULL, rsc_id)) {
 
@@ -1981,7 +1981,11 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
         op->params = params;
 
     } else {
-        rsc_history_t *entry = g_hash_table_lookup(lrm_state->resource_history, rsc_id);
+        rsc_history_t *entry = NULL;
+
+        if (lrm_state) {
+            entry = g_hash_table_lookup(lrm_state->resource_history, rsc_id);
+        }
 
         /* If we do not have stop parameters cached, use
          * whatever we are given */
