@@ -372,7 +372,8 @@ send_reply(crm_client_t * client, int rc, uint32_t id, int call_id)
 
     free_xml(reply);
     if (send_rc < 0) {
-        crm_warn("LRMD reply to %s failed: %d", client->name, send_rc);
+        crm_warn("Reply to client %s failed: %s " CRM_XS " %d",
+                 client->name, pcmk_strerror(send_rc), send_rc);
     }
 }
 

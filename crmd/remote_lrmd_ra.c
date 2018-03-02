@@ -466,7 +466,8 @@ monitor_timeout_cb(gpointer data)
 
     lrm_state = lrm_state_find(cmd->rsc_id);
 
-    crm_info("Poke async response timed out for node %s (%p)", cmd->rsc_id, lrm_state);
+    crm_info("Timed out waiting for remote poke response from %s%s",
+             cmd->rsc_id, (lrm_state? "" : " (no LRM state)"));
     cmd->monitor_timeout_id = 0;
     cmd->op_status = PCMK_LRM_OP_TIMEOUT;
     cmd->rc = PCMK_OCF_UNKNOWN_ERROR;
@@ -565,11 +566,13 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
         (ra_data->active == TRUE)) {
 
         if (!remote_ra_is_in_maintenance(lrm_state)) {
-            crm_err("Unexpected disconnect on remote-node %s", lrm_state->node_name);
+            crm_err("Lost connection to Pacemaker Remote node %s",
+                    lrm_state->node_name);
             ra_data->recurring_cmds = fail_all_monitor_cmds(ra_data->recurring_cmds);
             ra_data->cmds = fail_all_monitor_cmds(ra_data->cmds);
         } else {
-            crm_notice("Disconnect on unmanaged remote-node %s", lrm_state->node_name);
+            crm_notice("Unmanaged Pacemaker Remote node %s disconnected",
+                       lrm_state->node_name);
             /* Do roughly what a 'stop' on the remote-resource would do */
             handle_remote_ra_stop(lrm_state, NULL);
             remote_node_down(lrm_state->node_name, DOWN_KEEP_LRM);

@@ -341,11 +341,11 @@ lrmd_tls_dispatch(gpointer userdata)
     int disconnected = 0;
 
     if (lrmd_tls_connected(lrmd) == FALSE) {
-        crm_trace("tls dispatch triggered after disconnect");
+        crm_trace("TLS dispatch triggered after disconnect");
         return 0;
     }
 
-    crm_trace("tls_dispatch triggered");
+    crm_trace("TLS dispatch triggered");
 
     /* First check if there are any pending notifies to process that came
      * while we were waiting for replies earlier. */
@@ -382,7 +382,7 @@ lrmd_tls_dispatch(gpointer userdata)
                 int reply_id = 0;
                 crm_element_value_int(xml, F_LRMD_CALLID, &reply_id);
                 /* if this happens, we want to know about it */
-                crm_err("Got outdated reply %d", reply_id);
+                crm_err("Got outdated remote LRM reply %d", reply_id);
             }
         }
         free_xml(xml);
@@ -390,7 +390,8 @@ lrmd_tls_dispatch(gpointer userdata)
     }
 
     if (disconnected) {
-        crm_info("Server disconnected while reading remote server msg.");
+        crm_info("Lost %s LRM connection while reading data",
+                 (native->remote_nodename? native->remote_nodename : "local"));
         lrmd_tls_disconnect(lrmd);
         return 0;
     }
@@ -1389,7 +1390,9 @@ lrmd_api_disconnect(lrmd_t * lrmd)
 {
     lrmd_private_t *native = lrmd->lrmd_private;
 
-    crm_info("Disconnecting from %d lrmd service", native->type);
+    crm_info("Disconnecting %s LRM connection to %s",
+             crm_client_type_text(native->type),
+             (native->remote_nodename? native->remote_nodename : "local"));
     switch (native->type) {
         case CRM_CLIENT_IPC:
             lrmd_ipc_disconnect(lrmd);

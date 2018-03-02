@@ -3057,7 +3057,8 @@ class RemoteStonithd(RemoteDriver):
 
     def errorstoignore(self):
         ignore_pats = [
-            r"Unexpected disconnect on remote-node",
+            r"Lost connection to Pacemaker Remote node",
+            r"Software caused connection abort",
             r"crmd.*:\s+error.*: Operation remote-.*_monitor",
             r"crmd.*:\s+error.*: Result of monitor operation for remote-.*",
             r"pengine.*:\s+Recover remote-.*\s*\(.*\)",
