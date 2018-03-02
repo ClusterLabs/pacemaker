@@ -286,7 +286,6 @@ crm_schema_init(void)
                 // Shouldn't be possible, but makes static analysis happy
                 crm_err("Skipping schema '%s': could not parse version",
                         namelist[lpc]->d_name);
-                free(namelist[lpc]);
                 continue;
             }
             if ((lpc + 1) < max) {
@@ -316,9 +315,13 @@ crm_schema_init(void)
             }
             add_schema(schema_validator_rng, &version, NULL, NULL, transform,
                        next);
-            free(namelist[lpc]);
             free(transform);
         }
+
+        for (lpc = 0; lpc < max; lpc++) {
+            free(namelist[lpc]);
+        }
+        free(namelist);
     }
 
     add_schema(schema_validator_rng, &zero, "pacemaker-next",
@@ -326,7 +329,6 @@ crm_schema_init(void)
 
     add_schema(schema_validator_none, &zero, "none",
                "N/A", NULL, -1);
-    free(namelist);
 }
 
 #if 0
