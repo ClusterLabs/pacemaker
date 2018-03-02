@@ -157,6 +157,8 @@ static int ais_fd_sync = -1;
 #define cib_default_options = cib_none
 #define crm_remote_baremetal              0x0004
 #define crm_remote_container              0x0002
+#define crm_element_value_const           crm_element_value
+#define crm_element_value_const_int       crm_element_value_int
 #define n_object_classes 3
 #define pe_action_failure_is_fatal        0x00020
 #define pe_rsc_munging                    0x00000800ULL

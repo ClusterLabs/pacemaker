@@ -194,20 +194,18 @@ int find_xml_children(xmlNode ** children, xmlNode * root,
                       const char *tag, const char *field, const char *value,
                       gboolean search_matches);
 
-int crm_element_value_int(xmlNode * data, const char *name, int *dest);
-char *crm_element_value_copy(xmlNode * data, const char *name);
-int crm_element_value_const_int(const xmlNode * data, const char *name, int *dest);
-const char *crm_element_value_const(const xmlNode * data, const char *name);
+int crm_element_value_int(const xmlNode *data, const char *name, int *dest);
+char *crm_element_value_copy(const xmlNode *data, const char *name);
 xmlNode *get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level);
 xmlNode *get_xpath_object_relative(const char *xpath, xmlNode * xml_obj, int error_level);
 
 static inline const char *
-crm_element_name(xmlNode *xml)
+crm_element_name(const xmlNode *xml)
 {
     return xml? (const char *)(xml->name) : NULL;
 }
 
-const char *crm_element_value(xmlNode * data, const char *name);
+const char *crm_element_value(const xmlNode *data, const char *name);
 
 /*!
  * \brief Copy an element from one XML object to another
@@ -287,65 +285,53 @@ void crm_xml_init(void);
 void crm_xml_cleanup(void);
 
 static inline xmlNode *
-__xml_first_child(xmlNode * parent)
+__xml_first_child(const xmlNode *parent)
 {
-    xmlNode *child = NULL;
+    xmlNode *child = parent? parent->children : NULL;
 
-    if (parent) {
-        child = parent->children;
-        while (child && child->type == XML_TEXT_NODE) {
-            child = child->next;
-        }
+    while (child && (child->type == XML_TEXT_NODE)) {
+        child = child->next;
     }
     return child;
 }
 
 static inline xmlNode *
-__xml_next(xmlNode * child)
+__xml_next(const xmlNode *child)
 {
-    if (child) {
+    xmlNode *next = child? child->next : NULL;
+
+    while (next && (next->type == XML_TEXT_NODE)) {
+        next = next->next;
+    }
+    return next;
+}
+
+static inline xmlNode *
+__xml_first_child_element(const xmlNode *parent)
+{
+    xmlNode *child = parent? parent->children : NULL;
+
+    while (child && (child->type != XML_ELEMENT_NODE)) {
         child = child->next;
-        while (child && child->type == XML_TEXT_NODE) {
-            child = child->next;
-        }
     }
     return child;
 }
 
 static inline xmlNode *
-__xml_first_child_element(xmlNode * parent)
+__xml_next_element(const xmlNode *child)
 {
-    xmlNode *child = NULL;
+    xmlNode *next = child? child->next : NULL;
 
-    if (parent) {
-        child = parent->children;
+    while (next && (next->type != XML_ELEMENT_NODE)) {
+        next = next->next;
     }
-
-    while (child) {
-        if(child->type == XML_ELEMENT_NODE) {
-            return child;
-        }
-        child = child->next;
-    }
-    return NULL;
-}
-
-static inline xmlNode *
-__xml_next_element(xmlNode * child)
-{
-    while (child) {
-        child = child->next;
-        if(child && child->type == XML_ELEMENT_NODE) {
-            return child;
-        }
-    }
-    return NULL;
+    return next;
 }
 
 void free_xml(xmlNode * child);
 
-xmlNode *first_named_child(xmlNode * parent, const char *name);
-xmlNode *crm_next_same_xml(xmlNode *sibling);
+xmlNode *first_named_child(const xmlNode *parent, const char *name);
+xmlNode *crm_next_same_xml(const xmlNode *sibling);
 
 xmlNode *sorted_xml(xmlNode * input, xmlNode * parent, gboolean recursive);
 xmlXPathObjectPtr xpath_search(xmlNode * xml_top, const char *path);
