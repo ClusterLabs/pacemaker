@@ -610,7 +610,9 @@ create_remote_resource(
 
         /* Ensure the node shows up as allowed and with the correct discovery set */
         g_hash_table_destroy(tuple->child->allowed_nodes);
-        tuple->child->allowed_nodes = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, g_hash_destroy_str);
+        tuple->child->allowed_nodes = g_hash_table_new_full(crm_str_hash,
+                                                            g_str_equal, NULL,
+                                                            free);
         g_hash_table_insert(tuple->child->allowed_nodes, (gpointer) tuple->node->details->id, node_copy(tuple->node));
 
         {

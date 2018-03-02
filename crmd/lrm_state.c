@@ -135,11 +135,11 @@ lrm_state_create(const char *node_name)
     state->rsc_info_cache = g_hash_table_new_full(crm_str_hash,
                                                 g_str_equal, NULL, free_rsc_info);
 
-    state->deletion_ops = g_hash_table_new_full(crm_str_hash,
-                                                g_str_equal, g_hash_destroy_str, free_deletion_op);
+    state->deletion_ops = g_hash_table_new_full(crm_str_hash, g_str_equal, free,
+                                                free_deletion_op);
 
-    state->pending_ops = g_hash_table_new_full(crm_str_hash,
-                                               g_str_equal, g_hash_destroy_str, free_recurring_op);
+    state->pending_ops = g_hash_table_new_full(crm_str_hash, g_str_equal, free,
+                                               free_recurring_op);
 
     state->resource_history = g_hash_table_new_full(crm_str_hash,
                                                     g_str_equal, NULL, history_free);

@@ -2897,7 +2897,7 @@ unpack_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
 
     if (data_set->tickets == NULL) {
         data_set->tickets =
-            g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, destroy_ticket);
+            g_hash_table_new_full(crm_str_hash, g_str_equal, free, destroy_ticket);
     }
 
     if (ticket_str == NULL) {

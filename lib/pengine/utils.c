@@ -183,7 +183,8 @@ GHashTable *
 node_hash_from_list(GListPtr list)
 {
     GListPtr gIter = list;
-    GHashTable *result = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, g_hash_destroy_str);
+    GHashTable *result = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL,
+                                               free);
 
     for (; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
@@ -1778,7 +1779,8 @@ ticket_new(const char *ticket_id, pe_working_set_t * data_set)
 
     if (data_set->tickets == NULL) {
         data_set->tickets =
-            g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, destroy_ticket);
+            g_hash_table_new_full(crm_str_hash, g_str_equal, free,
+                                  destroy_ticket);
     }
 
     ticket = g_hash_table_lookup(data_set->tickets, ticket_id);
