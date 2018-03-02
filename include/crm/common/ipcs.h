@@ -111,6 +111,7 @@ void crm_client_cleanup(void);
 crm_client_t *crm_client_get(qb_ipcs_connection_t * c);
 crm_client_t *crm_client_get_by_id(const char *id);
 const char *crm_client_name(crm_client_t * c);
+const char *crm_client_type_text(enum client_type client_type);
 
 crm_client_t *crm_client_alloc(void *key);
 crm_client_t *crm_client_new(qb_ipcs_connection_t * c, uid_t uid, gid_t gid);
