@@ -106,6 +106,7 @@ static int ais_fd_sync = -1;
 #define F_LRMD_CANCEL_CALLID        "lrmd_cancel_callid"
 #define F_LRMD_RSC_METADATA         "lrmd_rsc_metadata_res"
 #define F_LRMD_IPC_PROXY_NODE       "lrmd_ipc_proxy_node"
+#define INSTANCE(x)                 crm_element_value(x, XML_CIB_ATTR_INSTANCE)
 #define LOG_DEBUG_2  LOG_TRACE
 #define LOG_DEBUG_3  LOG_TRACE
 #define LOG_DEBUG_4  LOG_TRACE
@@ -113,6 +114,7 @@ static int ais_fd_sync = -1;
 #define LOG_DEBUG_6  LOG_TRACE
 #define LRMD_OP_RSC_CHK_REG         "lrmd_rsc_check_register"
 #define MAX_IPC_FAIL                5
+#define NAME(x)                     crm_element_value(x, XML_NVPAIR_ATTR_NAME)
 #define MSG_LOG                     1
 #define PE_OBJ_T_NATIVE             "native"
 #define PE_OBJ_T_GROUP              "group"
@@ -120,6 +122,7 @@ static int ais_fd_sync = -1;
 #define PE_OBJ_T_MASTER             "master"
 #define SERVICE_SCRIPT              "/sbin/service"
 #define SOCKET_LEN                  1024
+#define TSTAMP(x)                   crm_element_value(x, XML_ATTR_TSTAMP)
 #define XML_ATTR_TAGNAME            F_XML_TAGNAME
 #define XML_ATTR_FILTER_TYPE        "type-filter"
 #define XML_ATTR_FILTER_ID          "id-filter"
@@ -151,6 +154,7 @@ static int ais_fd_sync = -1;
 #define XML_NODE_ATTR_STATE         "state"
 #define XML_ATTR_LRM_PROBE          "lrm-is-probe"
 #define XML_ATTR_TE_ALLOWFAIL       "op_allow_fail"
+#define VALUE(x)                    crm_element_value(x, XML_NVPAIR_ATTR_VALUE)
 #define add_cib_op_callback(cib, id, flag, data, fn) do {                \
         cib->cmds->register_callback(cib, id, 120, flag, data, #fn, fn); \
     } while(0)
