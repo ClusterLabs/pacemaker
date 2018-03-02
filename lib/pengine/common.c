@@ -427,7 +427,8 @@ add_hash_param(GHashTable * hash, const char *name, const char *value)
 }
 
 const char *
-pe_node_attribute_calculated(pe_node_t *node, const char *name, resource_t *rsc)
+pe_node_attribute_calculated(const pe_node_t *node, const char *name,
+                             const resource_t *rsc)
 {
     const char *source;
 

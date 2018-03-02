@@ -75,7 +75,8 @@ gboolean group_unpack(resource_t * rsc, pe_working_set_t * data_set);
 gboolean clone_unpack(resource_t * rsc, pe_working_set_t * data_set);
 gboolean container_unpack(resource_t * rsc, pe_working_set_t * data_set);
 
-resource_t *native_find_rsc(resource_t * rsc, const char *id, node_t * node, int flags);
+resource_t *native_find_rsc(resource_t *rsc, const char *id, const node_t *node,
+                            int flags);
 
 gboolean native_active(resource_t * rsc, gboolean all);
 gboolean group_active(resource_t * rsc, gboolean all);
@@ -307,7 +308,9 @@ void common_print(resource_t * rsc, const char *pre_text, const char *name, node
 resource_t *find_container_child(const char *stem, resource_t * rsc, node_t *node);
 bool container_fix_remote_addr(resource_t *rsc);
 const char *container_fix_remote_addr_in(resource_t *rsc, xmlNode *xml, const char *field);
-const char *pe_node_attribute_calculated(pe_node_t *node, const char *name, resource_t *rsc);
+const char *pe_node_attribute_calculated(const pe_node_t *node,
+                                         const char *name,
+                                         const resource_t *rsc);
 const char *pe_node_attribute_raw(pe_node_t *node, const char *name);
 
 #endif

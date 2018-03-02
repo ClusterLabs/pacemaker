@@ -156,7 +156,7 @@ native_unpack(resource_t * rsc, pe_working_set_t * data_set)
 }
 
 static bool
-rsc_is_on_node(resource_t *rsc, node_t *node, int flags)
+rsc_is_on_node(resource_t *rsc, const node_t *node, int flags)
 {
     pe_rsc_trace(rsc, "Checking whether %s is on %s",
                  rsc->id, node->details->uname);
@@ -182,7 +182,8 @@ rsc_is_on_node(resource_t *rsc, node_t *node, int flags)
 }
 
 resource_t *
-native_find_rsc(resource_t * rsc, const char *id, node_t * on_node, int flags)
+native_find_rsc(resource_t * rsc, const char *id, const node_t *on_node,
+                int flags)
 {
     bool match = FALSE;
     resource_t *result = NULL;

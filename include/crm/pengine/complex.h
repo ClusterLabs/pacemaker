@@ -32,7 +32,8 @@ enum pe_obj_types {
 
 typedef struct resource_object_functions_s {
     gboolean(*unpack) (resource_t *, pe_working_set_t *);
-    resource_t *(*find_rsc) (resource_t * parent, const char *search, node_t * node, int flags);
+    resource_t *(*find_rsc) (resource_t *parent, const char *search,
+                             const node_t *node, int flags);
     /* parameter result must be free'd */
     char *(*parameter) (resource_t *, node_t *, gboolean, const char *, pe_working_set_t *);
     void (*print) (resource_t *, const char *, long, void *);
