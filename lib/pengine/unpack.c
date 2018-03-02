@@ -354,7 +354,7 @@ pe_create_node(const char *id, const char *uname, const char *type,
 
     new_node->weight = char2score(score);
     new_node->fixed = FALSE;
-    new_node->details = calloc(1, sizeof(struct node_shared_s));
+    new_node->details = calloc(1, sizeof(struct pe_node_shared_s));
 
     if (new_node->details == NULL) {
         free(new_node);

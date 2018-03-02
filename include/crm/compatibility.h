@@ -155,6 +155,7 @@ static int ais_fd_sync = -1;
 #define XML_ATTR_LRM_PROBE          "lrm-is-probe"
 #define XML_ATTR_TE_ALLOWFAIL       "op_allow_fail"
 #define VALUE(x)                    crm_element_value(x, XML_NVPAIR_ATTR_VALUE)
+#define action_wrapper_s            pe_action_wrapper_s
 #define add_cib_op_callback(cib, id, flag, data, fn) do {                \
         cib->cmds->register_callback(cib, id, 120, flag, data, #fn, fn); \
     } while(0)
@@ -163,7 +164,10 @@ static int ais_fd_sync = -1;
 #define crm_remote_container              0x0002
 #define crm_element_value_const           crm_element_value
 #define crm_element_value_const_int       crm_element_value_int
-#define n_object_classes 3
+#define n_object_classes                  3
+#define no_quorum_policy_e                pe_quorum_policy
+#define node_s                            pe_node_s
+#define node_shared_s                     pe_node_shared_s
 #define pe_action_failure_is_fatal        0x00020
 #define pe_rsc_munging                    0x00000800ULL
 #define pe_rsc_try_reload                 0x00001000ULL
@@ -171,6 +175,8 @@ static int ais_fd_sync = -1;
 #define pe_rsc_migrating                  0x00400000ULL
 #define pe_rsc_unexpectedly_running       0x02000000ULL
 #define pe_rsc_have_unfencing             0x80000000ULL
+#define resource_s                        pe_resource_s
+#define ticket_s                          pe_ticket_s
 
 static int node_score_infinity = 1000000;
 

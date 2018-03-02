@@ -887,7 +887,7 @@ add_maintenance_nodes(xmlNode *xml, const pe_working_set_t *data_set)
     for (gIter = data_set->nodes; gIter != NULL;
          gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
-        struct node_shared_s *details = node->details;
+        struct pe_node_shared_s *details = node->details;
 
         if (!(is_remote_node(node))) {
             continue; /* just remote nodes need to know atm */

@@ -31,33 +31,34 @@ enum pe_obj_types {
 };
 
 typedef struct resource_object_functions_s {
-    gboolean(*unpack) (resource_t *, pe_working_set_t *);
-    resource_t *(*find_rsc) (resource_t *parent, const char *search,
-                             const node_t *node, int flags);
+    gboolean (*unpack) (pe_resource_t*, pe_working_set_t*);
+    pe_resource_t *(*find_rsc) (pe_resource_t *parent, const char *search,
+                                const pe_node_t *node, int flags);
     /* parameter result must be free'd */
-    char *(*parameter) (resource_t *, node_t *, gboolean, const char *, pe_working_set_t *);
-    void (*print) (resource_t *, const char *, long, void *);
-     gboolean(*active) (resource_t *, gboolean);
-    enum rsc_role_e (*state) (const resource_t *, gboolean);
-    node_t *(*location) (resource_t *, GListPtr *, gboolean);
-    void (*free) (resource_t *);
+    char *(*parameter) (pe_resource_t*, pe_node_t*, gboolean, const char*,
+                        pe_working_set_t*);
+    void (*print) (pe_resource_t*, const char*, long, void*);
+    gboolean (*active) (pe_resource_t*, gboolean);
+    enum rsc_role_e (*state) (const pe_resource_t*, gboolean);
+    pe_node_t *(*location) (pe_resource_t*, GListPtr*, gboolean);
+    void (*free) (pe_resource_t*);
 } resource_object_functions_t;
 
 extern resource_object_functions_t resource_class_functions[];
-void get_meta_attributes(GHashTable * meta_hash, resource_t * rsc, node_t * node,
-                         pe_working_set_t * data_set);
-void get_rsc_attributes(GHashTable * meta_hash, resource_t * rsc, node_t * node,
-                        pe_working_set_t * data_set);
+void get_meta_attributes(GHashTable * meta_hash, pe_resource_t *rsc,
+                         pe_node_t *node, pe_working_set_t *data_set);
+void get_rsc_attributes(GHashTable *meta_hash, pe_resource_t *rsc,
+                        pe_node_t *node, pe_working_set_t *data_set);
 
 #ifdef ENABLE_VERSIONED_ATTRS
-void pe_get_versioned_attributes(xmlNode * meta_hash, resource_t * rsc, node_t * node,
-                                 pe_working_set_t * data_set);
+void pe_get_versioned_attributes(xmlNode *meta_hash, pe_resource_t *rsc,
+                                 pe_node_t *node, pe_working_set_t *data_set);
 #endif
 
 typedef struct resource_alloc_functions_s resource_alloc_functions_t;
 
-gboolean is_parent(resource_t *child, resource_t *rsc);
-resource_t *uber_parent(resource_t * rsc);
+gboolean is_parent(pe_resource_t *child, pe_resource_t *rsc);
+pe_resource_t *uber_parent(pe_resource_t *rsc);
 
 #ifdef __cplusplus
 }
