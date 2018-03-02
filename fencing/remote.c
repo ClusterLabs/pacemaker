@@ -2074,7 +2074,7 @@ stonith_fence_history(xmlNode * msg, xmlNode ** output)
             crm_xml_add(entry, F_STONITH_ORIGIN, op->originator);
             crm_xml_add(entry, F_STONITH_DELEGATE, op->delegate);
             crm_xml_add(entry, F_STONITH_CLIENTNAME, op->client_name);
-            crm_xml_add_int(entry, F_STONITH_DATE, op->completed);
+            crm_xml_add_int(entry, F_STONITH_DATE, (int) op->completed);
             crm_xml_add_int(entry, F_STONITH_STATE, op->state);
         }
     }
