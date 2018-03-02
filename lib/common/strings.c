@@ -38,12 +38,6 @@ crm_itoa_stack(int an_int, char *buffer, size_t len)
     return buffer;
 }
 
-void
-g_hash_destroy_str(gpointer data)
-{
-    free(data);
-}
-
 long long
 crm_int_helper(const char *text, char **end_text)
 {

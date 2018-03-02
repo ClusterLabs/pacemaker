@@ -217,7 +217,7 @@ cib_get_operation_id(const char *op, int *operation)
         int lpc = 0;
         int max_msg_types = DIMOF(cib_server_ops);
 
-        operation_hash = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, g_hash_destroy_str);
+        operation_hash = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free);
         for (lpc = 1; lpc < max_msg_types; lpc++) {
             int *value = malloc(sizeof(int));
 

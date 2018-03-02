@@ -61,7 +61,6 @@ void crm_schema_cleanup(void);
 
 /* internal generic string functions (from strings.c) */
 
-void g_hash_destroy_str(gpointer data);
 long long crm_int_helper(const char *text, char **end_text);
 bool crm_starts_with(const char *str, const char *prefix);
 gboolean crm_ends_with(const char *s, const char *match);

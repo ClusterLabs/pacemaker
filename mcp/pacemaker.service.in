@@ -1,6 +1,7 @@
 [Unit]
 Description=Pacemaker High Availability Cluster Manager
-Documentation=man:pacemakerd http://clusterlabs.org/doc/en-US/Pacemaker/1.1-pcs/html/Pacemaker_Explained/index.html
+Documentation=man:pacemakerd
+Documentation=https://clusterlabs.org/pacemaker/doc/en-US/Pacemaker/2.0/html-single/Pacemaker_Explained/index.html
 
 # DefaultDependencies takes care of sysinit.target,
 # basic.target, and shutdown.target

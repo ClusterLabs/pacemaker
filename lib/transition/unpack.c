@@ -321,8 +321,7 @@ convert_graph_action(xmlNode * resource, crm_action_t * action, int status, int 
     op->t_run = time(NULL);
     op->t_rcchange = op->t_run;
 
-    op->params = g_hash_table_new_full(crm_str_hash, g_str_equal,
-                                       g_hash_destroy_str, g_hash_destroy_str);
+    op->params = g_hash_table_new_full(crm_str_hash, g_str_equal, free, free);
 
     g_hash_table_iter_init(&iter, action->params);
     while (g_hash_table_iter_next(&iter, (void **)&name, (void **)&value)) {

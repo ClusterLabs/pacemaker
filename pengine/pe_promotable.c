@@ -390,7 +390,7 @@ promotion_order(resource_t *rsc, pe_working_set_t *data_set)
 }
 
 static gboolean
-filter_anonymous_instance(resource_t * rsc, node_t * node)
+filter_anonymous_instance(resource_t *rsc, const node_t *node)
 {
     GListPtr rIter = NULL;
     char *key = clone_strip(rsc->id);
@@ -442,7 +442,7 @@ filter_anonymous_instance(resource_t * rsc, node_t * node)
 }
 
 static const char *
-lookup_promotion_score(resource_t * rsc, node_t *node, const char *name)
+lookup_promotion_score(resource_t *rsc, const node_t *node, const char *name)
 {
     const char *attr_value = NULL;
 
@@ -456,7 +456,7 @@ lookup_promotion_score(resource_t * rsc, node_t *node, const char *name)
 }
 
 static int
-promotion_score(resource_t * rsc, node_t * node, int not_set_value)
+promotion_score(resource_t *rsc, const node_t *node, int not_set_value)
 {
     char *name = rsc->id;
     const char *attr_value = NULL;

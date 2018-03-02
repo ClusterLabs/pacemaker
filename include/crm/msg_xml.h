@@ -408,11 +408,7 @@ extern "C" {
 #  include <crm/common/xml.h>
 
 #  define ID(x) crm_element_value(x, XML_ATTR_ID)
-#  define INSTANCE(x) crm_element_value(x, XML_CIB_ATTR_INSTANCE)
-#  define TSTAMP(x) crm_element_value(x, XML_ATTR_TSTAMP)
 #  define TYPE(x) crm_element_name(x)
-#  define NAME(x) crm_element_value(x, XML_NVPAIR_ATTR_NAME)
-#  define VALUE(x) crm_element_value(x, XML_NVPAIR_ATTR_VALUE)
 
 #ifdef __cplusplus
 }

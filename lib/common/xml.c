@@ -74,8 +74,7 @@ enum xml_private_flags {
      xpf_acl_denied  = 0x2000,
 };
 
-typedef struct xml_private_s 
-{
+typedef struct xml_private_s {
         long check;
         uint32_t flags;
         char *user;
@@ -252,16 +251,16 @@ int in_upper_context(int depth, int context, xmlNode * xml_node);
 int add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * update, gboolean as_diff);
 
 static inline const char *
-crm_attr_value(xmlAttr * attr)
+crm_attr_value(const xmlAttr *attr)
 {
     if (attr == NULL || attr->children == NULL) {
         return NULL;
     }
-    return (const char *)attr->children->content;
+    return (const char *) attr->children->content;
 }
 
 static inline xmlAttr *
-crm_first_attr(xmlNode * xml)
+crm_first_attr(const xmlNode *xml)
 {
     if (xml == NULL) {
         return NULL;
@@ -3864,7 +3863,7 @@ xml_has_children(const xmlNode * xml_root)
 }
 
 int
-crm_element_value_int(xmlNode * data, const char *name, int *dest)
+crm_element_value_int(const xmlNode *data, const char *name, int *dest)
 {
     const char *value = crm_element_value(data, name);
 
@@ -3876,20 +3875,8 @@ crm_element_value_int(xmlNode * data, const char *name, int *dest)
     return -1;
 }
 
-int
-crm_element_value_const_int(const xmlNode * data, const char *name, int *dest)
-{
-    return crm_element_value_int((xmlNode *) data, name, dest);
-}
-
-const char *
-crm_element_value_const(const xmlNode * data, const char *name)
-{
-    return crm_element_value((xmlNode *) data, name);
-}
-
 char *
-crm_element_value_copy(xmlNode * data, const char *name)
+crm_element_value_copy(const xmlNode *data, const char *name)
 {
     char *value_copy = NULL;
     const char *value = crm_element_value(data, name);
@@ -5075,7 +5062,7 @@ sorted_xml(xmlNode * input, xmlNode * parent, gboolean recursive)
 }
 
 xmlNode *
-first_named_child(xmlNode * parent, const char *name)
+first_named_child(const xmlNode *parent, const char *name)
 {
     xmlNode *match = NULL;
 
@@ -5100,7 +5087,7 @@ first_named_child(xmlNode * parent, const char *name)
  * \return Next sibling XML tag with same name
  */
 xmlNode *
-crm_next_same_xml(xmlNode *sibling)
+crm_next_same_xml(const xmlNode *sibling)
 {
     xmlNode *match = __xml_next(sibling);
     const char *name = crm_element_name(sibling);
@@ -5180,7 +5167,7 @@ expand_idref(xmlNode * input, xmlNode * top)
 }
 
 const char *
-crm_element_value(xmlNode * data, const char *name)
+crm_element_value(const xmlNode *data, const char *name)
 {
     xmlAttr *attr = NULL;
 
@@ -5194,7 +5181,10 @@ crm_element_value(xmlNode * data, const char *name)
         return NULL;
     }
 
-    attr = xmlHasProp(data, (const xmlChar *)name);
+    /* The first argument to xmlHasProp() has always been const,
+     * but libxml2 <2.9.2 didn't declare that, so cast it
+     */
+    attr = xmlHasProp((xmlNode *) data, (const xmlChar *)name);
     if (attr == NULL || attr->children == NULL) {
         return NULL;
     }

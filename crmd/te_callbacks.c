@@ -817,7 +817,7 @@ tengine_stonith_callback(stonith_t * stonith, stonith_callback_data_t * data)
         st_fail_count_reset(target);
 
     } else {
-        const char *target = crm_element_value_const(action->xml, XML_LRM_ATTR_TARGET);
+        const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
         enum transition_action abort_action = tg_restart;
 
         action->failed = TRUE;

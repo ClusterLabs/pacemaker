@@ -50,7 +50,7 @@ metadata_free(void *metadata)
 GHashTable *
 metadata_cache_new()
 {
-    return g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str,
+    return g_hash_table_new_full(crm_str_hash, g_str_equal, free,
                                  metadata_free);
 }
 

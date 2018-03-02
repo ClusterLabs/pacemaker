@@ -1457,6 +1457,7 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
 
         for (op = __xml_first_child(reply); op != NULL; op = __xml_next(op)) {
             stonith_history_t *kvp;
+            int completed;
 
             kvp = calloc(1, sizeof(stonith_history_t));
             kvp->target = crm_element_value_copy(op, F_STONITH_TARGET);
@@ -1464,7 +1465,8 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
             kvp->origin = crm_element_value_copy(op, F_STONITH_ORIGIN);
             kvp->delegate = crm_element_value_copy(op, F_STONITH_DELEGATE);
             kvp->client = crm_element_value_copy(op, F_STONITH_CLIENTNAME);
-            crm_element_value_int(op, F_STONITH_DATE, &kvp->completed);
+            crm_element_value_int(op, F_STONITH_DATE, &completed);
+            kvp->completed = (time_t) completed;
             crm_element_value_int(op, F_STONITH_STATE, &kvp->state);
 
             if (last) {

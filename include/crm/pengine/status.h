@@ -27,19 +27,19 @@ extern "C" {
 #  include <crm/common/iso8601.h>
 #  include <crm/pengine/common.h>
 
-typedef struct node_s pe_node_t;
-typedef struct node_s node_t;
-typedef struct pe_action_s action_t;
+typedef struct pe_node_s pe_node_t;
 typedef struct pe_action_s pe_action_t;
-typedef struct resource_s resource_t;
-typedef struct ticket_s ticket_t;
+typedef struct pe_resource_s pe_resource_t;
+typedef struct pe_working_set_s pe_working_set_t;
 
-typedef enum no_quorum_policy_e {
+#  include <crm/pengine/complex.h>
+
+enum pe_quorum_policy {
     no_quorum_freeze,
     no_quorum_stop,
     no_quorum_ignore,
     no_quorum_suicide
-} no_quorum_policy_t;
+};
 
 enum node_type {
     node_ping,
@@ -85,20 +85,20 @@ enum pe_find {
 #  define pe_flag_quick_location        0x00100000ULL
 #  define pe_flag_sanitized             0x00200000ULL
 
-typedef struct pe_working_set_s {
+struct pe_working_set_s {
     xmlNode *input;
     crm_time_t *now;
 
     /* options extracted from the input */
     char *dc_uuid;
-    node_t *dc_node;
+    pe_node_t *dc_node;
     const char *stonith_action;
     const char *placement_strategy;
 
     unsigned long long flags;
 
     int stonith_timeout;
-    no_quorum_policy_t no_quorum_policy;
+    enum pe_quorum_policy no_quorum_policy;
 
     GHashTable *config_hash;
     GHashTable *tickets;
@@ -133,10 +133,9 @@ typedef struct pe_working_set_s {
 
     int blocked_resources;
     int disabled_resources;
+};
 
-} pe_working_set_t;
-
-struct node_shared_s {
+struct pe_node_shared_s {
     const char *id;
     const char *uname;
 
@@ -152,10 +151,10 @@ struct node_shared_s {
     gboolean is_dc;
 
     int num_resources;
-    GListPtr running_rsc;       /* resource_t* */
-    GListPtr allocated_rsc;     /* resource_t* */
+    GListPtr running_rsc;       /* pe_resource_t* */
+    GListPtr allocated_rsc;     /* pe_resource_t* */
 
-    resource_t *remote_rsc;
+    pe_resource_t *remote_rsc;
 
     GHashTable *attrs;          /* char* => char* */
     enum node_type type;
@@ -173,15 +172,13 @@ struct node_shared_s {
     gboolean unpacked;
 };
 
-struct node_s {
+struct pe_node_s {
     int weight;
     gboolean fixed;
     int count;
-    struct node_shared_s *details;
+    struct pe_node_shared_s *details;
     int rsc_discover_mode;
 };
-
-#  include <crm/pengine/complex.h>
 
 #  define pe_rsc_orphan                     0x00000001ULL
 #  define pe_rsc_managed                    0x00000002ULL
@@ -249,14 +246,14 @@ enum pe_action_flags {
 };
 /* *INDENT-ON* */
 
-struct resource_s {
+struct pe_resource_s {
     char *id;
     char *clone_name;
     xmlNode *xml;
     xmlNode *orig_xml;
     xmlNode *ops_xml;
 
-    resource_t *parent;
+    pe_resource_t *parent;
     void *variant_opaque;
     enum pe_obj_types variant;
     resource_object_functions_t *fns;
@@ -269,7 +266,6 @@ struct resource_s {
     int stickiness;
     int sort_index;
     int failure_timeout;
-    int effective_priority;
     int migration_threshold;
 
     gboolean is_remote_node;
@@ -279,13 +275,13 @@ struct resource_s {
     GListPtr rsc_cons_lhs;      /* rsc_colocation_t* */
     GListPtr rsc_cons;          /* rsc_colocation_t* */
     GListPtr rsc_location;      /* rsc_to_node_t*    */
-    GListPtr actions;           /* action_t*         */
+    GListPtr actions;           /* pe_action_t*      */
     GListPtr rsc_tickets;       /* rsc_ticket*       */
 
-    node_t *allocated_to;
-    GListPtr running_on;        /* node_t*   */
-    GHashTable *known_on;       /* node_t*   */
-    GHashTable *allowed_nodes;  /* node_t*   */
+    pe_node_t *allocated_to;
+    GListPtr running_on;        /* pe_node_t*   */
+    GHashTable *known_on;       /* pe_node_t*   */
+    GHashTable *allowed_nodes;  /* pe_node_t*   */
 
     enum rsc_role_e role;
     enum rsc_role_e next_role;
@@ -294,13 +290,13 @@ struct resource_s {
     GHashTable *parameters;
     GHashTable *utilization;
 
-    GListPtr children;          /* resource_t*   */
-    GListPtr dangling_migrations;       /* node_t*       */
+    GListPtr children;          /* pe_resource_t*   */
+    GListPtr dangling_migrations;       /* pe_node_t*       */
 
-    node_t *partial_migration_target;
-    node_t *partial_migration_source;
+    pe_node_t *partial_migration_target;
+    pe_node_t *partial_migration_source;
 
-    resource_t *container;
+    pe_resource_t *container;
     GListPtr fillers;
 
     char *pending_task;
@@ -327,8 +323,8 @@ struct pe_action_s {
     int id;
     int priority;
 
-    resource_t *rsc;
-    node_t *node;
+    pe_resource_t *rsc;
+    pe_node_t *node;
     xmlNode *op_entry;
 
     char *task;
@@ -340,10 +336,10 @@ struct pe_action_s {
     enum action_fail_response on_fail;
     enum rsc_role_e fail_role;
 
-    action_t *pre_notify;
-    action_t *pre_notified;
-    action_t *post_notify;
-    action_t *post_notified;
+    pe_action_t *pre_notify;
+    pe_action_t *pre_notified;
+    pe_action_t *post_notify;
+    pe_action_t *post_notified;
 
     int seen_count;
 
@@ -370,8 +366,8 @@ struct pe_action_s {
      * to be considered runnable */ 
     int required_runnable_before;
 
-    GListPtr actions_before;    /* action_wrapper_t* */
-    GListPtr actions_after;     /* action_wrapper_t* */
+    GListPtr actions_before;    /* pe_action_wrapper_t* */
+    GListPtr actions_after;     /* pe_action_wrapper_t* */
 
     /* Some of the above fields could be moved to the details,
      * except for API backward compatibility.
@@ -381,18 +377,18 @@ struct pe_action_s {
     char *reason;
 };
 
-struct ticket_s {
+typedef struct pe_ticket_s {
     char *id;
     gboolean granted;
     time_t last_granted;
     gboolean standby;
     GHashTable *state;
-};
+} pe_ticket_t;
 
-typedef struct tag_s {
+typedef struct pe_tag_s {
     char *id;
     GListPtr refs;
-} tag_t;
+} pe_tag_t;
 
 enum pe_link_state {
     pe_link_not_dumped,
@@ -450,25 +446,24 @@ enum pe_ordering {
 };
 /* *INDENT-ON* */
 
-typedef struct action_wrapper_s action_wrapper_t;
-struct action_wrapper_s {
+typedef struct pe_action_wrapper_s {
     enum pe_ordering type;
     enum pe_link_state state;
-    action_t *action;
-};
+    pe_action_t *action;
+} pe_action_wrapper_t;
 
-const char *rsc_printable_id(resource_t *rsc);
+const char *rsc_printable_id(pe_resource_t *rsc);
 gboolean cluster_status(pe_working_set_t * data_set);
 void set_working_set_defaults(pe_working_set_t * data_set);
 void cleanup_calculations(pe_working_set_t * data_set);
-resource_t *pe_find_resource(GListPtr rsc_list, const char *id_rh);
-resource_t *pe_find_resource_with_flags(GListPtr rsc_list, const char *id, enum pe_find flags);
-node_t *pe_find_node(GListPtr node_list, const char *uname);
-node_t *pe_find_node_id(GListPtr node_list, const char *id);
-node_t *pe_find_node_any(GListPtr node_list, const char *id, const char *uname);
+pe_resource_t *pe_find_resource(GListPtr rsc_list, const char *id_rh);
+pe_resource_t *pe_find_resource_with_flags(GListPtr rsc_list, const char *id, enum pe_find flags);
+pe_node_t *pe_find_node(GListPtr node_list, const char *uname);
+pe_node_t *pe_find_node_id(GListPtr node_list, const char *id);
+pe_node_t *pe_find_node_any(GListPtr node_list, const char *id, const char *uname);
 GListPtr find_operations(const char *rsc, const char *node, gboolean active_filter,
                          pe_working_set_t * data_set);
-int pe_bundle_replicas(const resource_t *rsc);
+int pe_bundle_replicas(const pe_resource_t *rsc);
 #if ENABLE_VERSIONED_ATTRS
 pe_rsc_action_details_t *pe_rsc_action_details(pe_action_t *action);
 #endif
@@ -481,7 +476,7 @@ pe_rsc_action_details_t *pe_rsc_action_details(pe_action_t *action);
  * \return TRUE if resource is clone, FALSE otherwise
  */
 static inline bool
-pe_rsc_is_clone(resource_t *rsc)
+pe_rsc_is_clone(pe_resource_t *rsc)
 {
     return rsc && (rsc->variant == pe_clone);
 }
@@ -494,7 +489,7 @@ pe_rsc_is_clone(resource_t *rsc)
  * \return TRUE if resource is unique clone, FALSE otherwise
  */
 static inline bool
-pe_rsc_is_unique_clone(resource_t *rsc)
+pe_rsc_is_unique_clone(pe_resource_t *rsc)
 {
     return pe_rsc_is_clone(rsc) && is_set(rsc->flags, pe_rsc_unique);
 }
@@ -507,16 +502,25 @@ pe_rsc_is_unique_clone(resource_t *rsc)
  * \return TRUE if resource is anonymous clone, FALSE otherwise
  */
 static inline bool
-pe_rsc_is_anon_clone(resource_t *rsc)
+pe_rsc_is_anon_clone(pe_resource_t *rsc)
 {
     return pe_rsc_is_clone(rsc) && is_not_set(rsc->flags, pe_rsc_unique);
 }
 
 static inline bool
-pe_rsc_is_bundled(resource_t *rsc)
+pe_rsc_is_bundled(pe_resource_t *rsc)
 {
     return uber_parent(rsc)->parent != NULL;
 }
+
+// Deprecated type aliases
+typedef struct pe_action_s action_t;
+typedef struct pe_action_wrapper_s action_wrapper_t;
+typedef struct pe_node_s node_t;
+typedef struct pe_resource_s resource_t;
+typedef struct pe_tag_s tag_t;
+typedef struct pe_ticket_s ticket_t;
+typedef enum pe_quorum_policy no_quorum_policy_t;
 
 #ifdef __cplusplus
 }

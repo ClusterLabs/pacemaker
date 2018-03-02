@@ -268,8 +268,9 @@ unpack_template(xmlNode * xml_obj, xmlNode ** expanded_xml, pe_working_set_t * d
 
     if (template_ops && rsc_ops) {
         xmlNode *op = NULL;
-        GHashTable *rsc_ops_hash =
-            g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, NULL);
+        GHashTable *rsc_ops_hash = g_hash_table_new_full(crm_str_hash,
+                                                         g_str_equal, free,
+                                                         NULL);
 
         for (op = __xml_first_child(rsc_ops); op != NULL; op = __xml_next_element(op)) {
             char *key = template_op_key(op);
@@ -430,9 +431,10 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
     (*rsc)->meta = crm_str_table_new();
 
     (*rsc)->allowed_nodes =
-        g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, g_hash_destroy_str);
+        g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free);
 
-    (*rsc)->known_on = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, g_hash_destroy_str);
+    (*rsc)->known_on = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL,
+                                             free);
 
     value = crm_element_value((*rsc)->xml, XML_RSC_ATTR_INCARNATION);
     if (value) {
@@ -473,7 +475,6 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
 
     value = g_hash_table_lookup((*rsc)->meta, XML_CIB_ATTR_PRIORITY);
     (*rsc)->priority = crm_parse_int(value, "0");
-    (*rsc)->effective_priority = (*rsc)->priority;
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_NOTIFY);
     if (crm_is_true(value)) {

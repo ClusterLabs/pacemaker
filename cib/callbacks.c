@@ -1383,10 +1383,10 @@ cib_GCompareFunc(gconstpointer a, gconstpointer b)
     int msg_b_id = 0;
     const char *value = NULL;
 
-    value = crm_element_value_const(a_msg, F_CIB_CALLID);
+    value = crm_element_value(a_msg, F_CIB_CALLID);
     msg_a_id = crm_parse_int(value, NULL);
 
-    value = crm_element_value_const(b_msg, F_CIB_CALLID);
+    value = crm_element_value(b_msg, F_CIB_CALLID);
     msg_b_id = crm_parse_int(value, NULL);
 
     if (msg_a_id == msg_b_id) {

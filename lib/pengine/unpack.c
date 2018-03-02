@@ -354,7 +354,7 @@ pe_create_node(const char *id, const char *uname, const char *type,
 
     new_node->weight = char2score(score);
     new_node->fixed = FALSE;
-    new_node->details = calloc(1, sizeof(struct node_shared_s));
+    new_node->details = calloc(1, sizeof(struct pe_node_shared_s));
 
     if (new_node->details == NULL) {
         free(new_node);
@@ -389,9 +389,9 @@ pe_create_node(const char *id, const char *uname, const char *type,
 
     new_node->details->utilization = crm_str_table_new();
 
-    new_node->details->digest_cache =
-        g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str,
-                              destroy_digest_cache);
+    new_node->details->digest_cache = g_hash_table_new_full(crm_str_hash,
+                                                            g_str_equal, free,
+                                                            destroy_digest_cache);
 
     data_set->nodes = g_list_insert_sorted(data_set->nodes, new_node, sort_node_uname);
     return new_node;
@@ -722,9 +722,9 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
     xmlNode *xml_obj = NULL;
     GListPtr gIter = NULL;
 
-    data_set->template_rsc_sets =
-        g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str,
-                              destroy_tag);
+    data_set->template_rsc_sets = g_hash_table_new_full(crm_str_hash,
+                                                        g_str_equal, free,
+                                                        destroy_tag);
 
     for (xml_obj = __xml_first_child(xml_resources); xml_obj != NULL; xml_obj = __xml_next_element(xml_obj)) {
         resource_t *new_rsc = NULL;
@@ -781,8 +781,8 @@ unpack_tags(xmlNode * xml_tags, pe_working_set_t * data_set)
 {
     xmlNode *xml_tag = NULL;
 
-    data_set->tags =
-        g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, destroy_tag);
+    data_set->tags = g_hash_table_new_full(crm_str_hash, g_str_equal, free,
+                                           destroy_tag);
 
     for (xml_tag = __xml_first_child(xml_tags); xml_tag != NULL; xml_tag = __xml_next_element(xml_tag)) {
         xmlNode *xml_obj_ref = NULL;
@@ -1067,8 +1067,8 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
     crm_trace("Beginning unpack");
 
     if (data_set->tickets == NULL) {
-        data_set->tickets =
-            g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, destroy_ticket);
+        data_set->tickets = g_hash_table_new_full(crm_str_hash, g_str_equal,
+                                                  free, destroy_ticket);
     }
 
     for (state = __xml_first_child(status); state != NULL; state = __xml_next_element(state)) {

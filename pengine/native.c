@@ -1599,8 +1599,8 @@ filter_colocation_constraint(resource_t * rsc_lh, resource_t * rsc_rh,
 
     if (preview == FALSE && is_not_set(rsc_lh->flags, pe_rsc_provisional)) {
         /* error check */
-        struct node_shared_s *details_lh;
-        struct node_shared_s *details_rh;
+        struct pe_node_shared_s *details_lh;
+        struct pe_node_shared_s *details_rh;
 
         if ((constraint->score > -INFINITY) && (constraint->score < INFINITY)) {
             return influence_nothing;

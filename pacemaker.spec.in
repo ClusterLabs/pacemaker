@@ -238,7 +238,7 @@ BuildRequires: cluster-glue-libs-devel
 ## (note no avoiding effect when building through non-customized mock)
 %if !%{bleeding}
 %if %{with doc}
-BuildRequires: publican inkscape asciidoc
+BuildRequires: inkscape asciidoc publican
 %endif
 %endif
 
@@ -328,7 +328,7 @@ Group:         Development/Libraries
 Requires:      %{name}-cts = %{version}-%{release}
 Requires:      %{name}-libs%{?_isa} = %{version}-%{release}
 Requires:      %{name}-cluster-libs%{?_isa} = %{version}-%{release}
-Requires:      libtool-ltdl-devel%{?_isa} libuuid-devel%{?_isa}
+Requires:      libuuid-devel%{?_isa} libtool-ltdl-devel%{?_isa}
 Requires:      libxml2-devel%{?_isa} libxslt-devel%{?_isa}
 Requires:      bzip2-devel%{?_isa} glib2-devel%{?_isa}
 Requires:      libqb-devel%{?_isa} corosynclib-devel%{?_isa}

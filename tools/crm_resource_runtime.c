@@ -1581,6 +1581,7 @@ wait_till_stable(int timeout_ms, cib_t * cib)
     int timeout_s = timeout_ms? ((timeout_ms + 999) / 1000) : WAIT_DEFAULT_TIMEOUT_S;
     time_t expire_time = time(NULL) + timeout_s;
     time_t time_diff;
+    bool printed_version_warning = BE_QUIET; // i.e. don't print if quiet
 
     set_working_set_defaults(&data_set);
     do {
@@ -1606,6 +1607,24 @@ wait_till_stable(int timeout_ms, cib_t * cib)
             return rc;
         }
         do_calculations(&data_set, data_set.input, NULL);
+
+        if (!printed_version_warning) {
+            /* If the DC has a different version than the local node, the two
+             * could come to different conclusions about what actions need to be
+             * done. Warn the user in this case.
+             *
+             * @TODO A possible long-term solution would be to reimplement the
+             * wait as a new crmd operation that would be forwarded to the DC.
+             * However, that would have potential problems of its own.
+             */
+            const char *dc_version = g_hash_table_lookup(data_set.config_hash,
+                                                         "dc-version");
+
+            if (safe_str_neq(dc_version, PACEMAKER_VERSION "-" BUILD_VERSION)) {
+                printf("warning: --wait command may not work properly in mixed-version cluster\n");
+                printed_version_warning = TRUE;
+            }
+        }
 
     } while (actions_are_pending(data_set.actions));
 

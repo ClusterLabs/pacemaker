@@ -183,7 +183,8 @@ GHashTable *
 node_hash_from_list(GListPtr list)
 {
     GListPtr gIter = list;
-    GHashTable *result = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, g_hash_destroy_str);
+    GHashTable *result = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL,
+                                               free);
 
     for (; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
@@ -1532,8 +1533,8 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
     const xmlNode *xml_a = a;
     const xmlNode *xml_b = b;
 
-    const char *a_xml_id = crm_element_value_const(xml_a, XML_ATTR_ID);
-    const char *b_xml_id = crm_element_value_const(xml_b, XML_ATTR_ID);
+    const char *a_xml_id = crm_element_value(xml_a, XML_ATTR_ID);
+    const char *b_xml_id = crm_element_value(xml_b, XML_ATTR_ID);
 
     if (safe_str_eq(a_xml_id, b_xml_id)) {
         /* We have duplicate lrm_rsc_op entries in the status
@@ -1545,8 +1546,8 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
         sort_return(0, "duplicate");
     }
 
-    crm_element_value_const_int(xml_a, XML_LRM_ATTR_CALLID, &a_call_id);
-    crm_element_value_const_int(xml_b, XML_LRM_ATTR_CALLID, &b_call_id);
+    crm_element_value_int(xml_a, XML_LRM_ATTR_CALLID, &a_call_id);
+    crm_element_value_int(xml_b, XML_LRM_ATTR_CALLID, &b_call_id);
 
     if (a_call_id == -1 && b_call_id == -1) {
         /* both are pending ops so it doesn't matter since
@@ -1568,8 +1569,8 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
         int last_a = -1;
         int last_b = -1;
 
-        crm_element_value_const_int(xml_a, XML_RSC_OP_LAST_CHANGE, &last_a);
-        crm_element_value_const_int(xml_b, XML_RSC_OP_LAST_CHANGE, &last_b);
+        crm_element_value_int(xml_a, XML_RSC_OP_LAST_CHANGE, &last_a);
+        crm_element_value_int(xml_b, XML_RSC_OP_LAST_CHANGE, &last_b);
 
         crm_trace("rc-change: %d vs %d", last_a, last_b);
         if (last_a >= 0 && last_a < last_b) {
@@ -1589,8 +1590,8 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
         int b_id = -1;
         int dummy = -1;
 
-        const char *a_magic = crm_element_value_const(xml_a, XML_ATTR_TRANSITION_MAGIC);
-        const char *b_magic = crm_element_value_const(xml_b, XML_ATTR_TRANSITION_MAGIC);
+        const char *a_magic = crm_element_value(xml_a, XML_ATTR_TRANSITION_MAGIC);
+        const char *b_magic = crm_element_value(xml_b, XML_ATTR_TRANSITION_MAGIC);
 
         CRM_CHECK(a_magic != NULL && b_magic != NULL, sort_return(0, "No magic"));
         if(!decode_transition_magic(a_magic, &a_uuid, &a_id, &dummy, &dummy, &dummy, &dummy)) {
@@ -1778,7 +1779,8 @@ ticket_new(const char *ticket_id, pe_working_set_t * data_set)
 
     if (data_set->tickets == NULL) {
         data_set->tickets =
-            g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, destroy_ticket);
+            g_hash_table_new_full(crm_str_hash, g_str_equal, free,
+                                  destroy_ticket);
     }
 
     ticket = g_hash_table_lookup(data_set->tickets, ticket_id);
