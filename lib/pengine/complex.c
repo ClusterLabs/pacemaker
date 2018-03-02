@@ -475,7 +475,6 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
 
     value = g_hash_table_lookup((*rsc)->meta, XML_CIB_ATTR_PRIORITY);
     (*rsc)->priority = crm_parse_int(value, "0");
-    (*rsc)->effective_priority = (*rsc)->priority;
 
     value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_NOTIFY);
     if (crm_is_true(value)) {

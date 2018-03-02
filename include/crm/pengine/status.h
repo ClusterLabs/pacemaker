@@ -266,7 +266,6 @@ struct pe_resource_s {
     int stickiness;
     int sort_index;
     int failure_timeout;
-    int effective_priority;
     int migration_threshold;
 
     gboolean is_remote_node;
