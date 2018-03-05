@@ -13,7 +13,7 @@ DIFFPAGER=${DIFFPAGER:-less -LRX}
 # $1=schema, $2=validated
 # alt.: jing -i
 RNGVALIDATOR=${RNGVALIDATOR:-xmllint --noout --relaxng}
-tests=
+tests=  # test* names (should go first) here will become preselected default
 
 #
 # commons
@@ -73,12 +73,24 @@ log2_or_0_add() {
 # test phases
 #
 
+# -r ... whether to remove referential files as well
 # stdin: input file per line
 test_cleaner() {
+	_tc_cleanref=0
+
+	while test $# -gt 0; do
+		case "$1" in
+		-r) _tc_cleanref=1;;
+		esac
+		shift
+	done
+
 	while read _tc_origin; do
 		_tc_origin=${_tc_origin%.*}
 		rm -f "${_tc_origin}.up" "${_tc_origin}.up.err"
 		rm -f "$(dirname "${_tc_origin}")/.$(basename "${_tc_origin}").up"
+		test ${_tc_cleanref} -eq 0 \
+		  || rm -f "${_tc_origin}.ref" "${_tc_origin}.ref.err"
 	done
 }
 
@@ -307,6 +319,98 @@ test2to3() {
 }
 tests="${tests} test2to3"
 
+# -B
+# -D
+# -G  ... see usage
+cts_pengine() {
+	_tcp_mode=0
+	_tcp_ret=0
+	_tcp_validatewith=
+	_tcp_schema_o=
+	_tcp_schema_t=
+	_tcp_template=
+
+	find ../cts/pengine -name '*.xml' -print | env LC_ALL=C sort \
+	  | { case " $* " in
+	      *\ -C\ *) test_cleaner -r;;
+	      *\ -S\ *) emit_result "not implemented" "option -S";;
+	      *\ -X\ *) emit_result "not implemented" "option -X";;
+	      *)
+		while test $# -gt 0; do
+			case "$1" in
+			-G) _tcp_mode=$((_tcp_mode | (1 << 0)));;
+			-D) _tcp_mode=$((_tcp_mode | (1 << 1)));;
+			-B) _tcp_mode=$((_tcp_mode | (1 << 2)));;
+			esac
+			shift
+		done
+		while read _tcp_origin; do
+			_tcp_validatewith=$(xsltproc - "${_tcp_origin}" <<-EOF
+	<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+	<xsl:output method="text" encoding="UTF-8"/>
+	<xsl:template match="/">
+	  <xsl:choose>
+	    <xsl:when test="starts-with(cib/@validate-with, 'pacemaker-')">
+	      <xsl:variable name="Version" select="substring-after(cib/@validate-with, 'pacemaker-')"/>
+	      <xsl:choose>
+	        <xsl:when test="contains(\$Version, '.')">
+	          <xsl:value-of select="substring-before(\$Version, '.')"/>
+	        </xsl:when>
+	        <xsl:otherwise>
+	          <xsl:value-of select="cib/@validate-with"/>
+	        </xsl:otherwise>
+	      </xsl:choose>
+	    </xsl:when>
+	    <xsl:otherwise>
+	     <xsl:value-of select="cib/@validate-with"/>
+	    </xsl:otherwise>
+	  </xsl:choose>
+	</xsl:template>
+	</xsl:stylesheet>
+EOF
+)
+			case "${_tcp_validatewith}" in
+			2) _tcp_schema_o=2.10;;
+			*) emit_error \
+			   "need to skip ${_tcp_origin} (schema: ${_tcp_validatewith})"
+			   continue;;
+			esac
+			_tcp_template="upgrade-${_tcp_schema_o}.xsl"
+			_tcp_schema_o="pacemaker-${_tcp_schema_o}.rng"
+			_tcp_schema_t="pacemaker-$((_tcp_validatewith + 1)).0.rng"
+
+			# pre-validate
+			if ! test_runner_validate "${_tcp_schema_o}" "${_tcp_origin}"; then
+				_tcp_ret=$((_tcp_ret + 1)); echo "E:pre-validate"; continue
+			fi
+
+			# upgrade
+			test "$((_tcp_mode & (1 << 0)))" -ne 0 \
+			  || ln -fs "$(pwd)/${_tcp_origin}" "${_tcp_origin%.*}.ref"
+			if ! _tcp_target=$(test_runner_upgrade "${_tcp_template}" \
+			                   "${_tcp_origin}" "${_tcp_mode}"); then
+				_tcp_ret=$((_tcp_ret + 1));
+				test -n "${_tcp_target}" || break
+				echo "E:upgrade"
+				test -s "${_tcp_target}" \
+				  && { echo ---; cat "${_tcp_target}" || :; echo ---; }
+				continue
+			fi
+			test "$((_tcp_mode & (1 << 0)))" -ne 0 \
+			  || rm -f "${_tcp_origin%.*}.ref"
+
+			# post-validate
+			if ! test_runner_validate "${_tcp_schema_t}" "${_tcp_target}"; then
+				_tcp_ret=$((_tcp_ret + 1)); echo "E:post-validate"; continue
+			fi
+
+			test "$((_tcp_mode & (1 << 0)))" -eq 0 \
+			  || mv "${_tcp_target}" "${_tcp_origin}"
+		done; log2_or_0_return ${_tcp_ret};;
+	      esac; }
+}
+tests="${tests} cts_pengine"
+
 #
 # "framework"
 #
@@ -330,13 +434,16 @@ test_suite() {
 	_ts_select="${_ts_select}@"
 
 	for _ts_test in ${tests}; do
-		if test "${_ts_select}" != @; then
-			case "${_ts_select}" in
-			*@${_ts_test}@*) ;;  # jump through
-			*) continue;;
-			esac
-			_ts_select="${_ts_select%@${_ts_test}@*}@${_ts_select#*@${_ts_test}@}"
-		fi
+
+		case "${_ts_select}" in
+		*@${_ts_test}@*)
+		_ts_select="${_ts_select%@${_ts_test}@*}@${_ts_select#*@${_ts_test}@}"
+		;;
+		@) case "${_ts_test}" in test*) ;; *) continue;; esac
+		;;
+		*) continue;;
+		esac
+
 		"${_ts_test}" ${_ts_pass} || _ts_ret=$?
 		test ${_ts_ret} = 0 \
 		  && emit_result ${_ts_ret} "${_ts_test}" \
@@ -356,8 +463,9 @@ test_suite() {
 # NOTE: big letters are dedicated for per-test-set behaviour,
 #       small ones for generic/global behaviour
 usage() {
-	printf '%s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n' \
+	printf '%s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n' \
 	    "usage: $0 [-{B,C,D,G,S,X}]* [-|{${tests## }}*]" \
+	    "- when no suites (arguments) provided, \"test*\" ones get used" \
 	    "- with '-' suite specification the actual ones grabbed on stdin" \
 	    "- use '-B' to run validate-only check suppressing blanks first" \
 	    "- use '-C' to only cleanup ephemeral byproducts" \
