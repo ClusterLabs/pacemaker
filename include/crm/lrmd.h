@@ -385,7 +385,7 @@ typedef struct lrmd_api_operations_s {
      * \retval negative error code on failure
      */
     int (*exec) (lrmd_t * lrmd, const char *rsc_id, const char *action, const char *userdata,   /* userdata string given back in event notification */
-                 int interval,  /* ms */
+                 int interval_ms,
                  int timeout,   /* ms */
                  int start_delay,       /* ms */
                  enum lrmd_call_options options, lrmd_key_value_t * params);    /* ownership of params is given up to api here */
@@ -413,7 +413,8 @@ typedef struct lrmd_api_operations_s {
      * \retval 0, cancel command sent.
      * \retval negative error code on failure
      */
-    int (*cancel) (lrmd_t * lrmd, const char *rsc_id, const char *action, int interval);
+    int (*cancel) (lrmd_t *lrmd, const char *rsc_id, const char *action,
+                   int interval_ms);
 
     /*!
      * \brief Get resource metadata for a specified resource agent

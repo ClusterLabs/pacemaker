@@ -284,7 +284,7 @@ native_assign_node(resource_t * rsc, GListPtr nodes, node_t * chosen, gboolean f
 
         for (gIter = rsc->actions; gIter != NULL; gIter = gIter->next) {
             action_t *op = (action_t *) gIter->data;
-            const char *interval = g_hash_table_lookup(op->meta, XML_LRM_ATTR_INTERVAL);
+            const char *interval_ms_s = g_hash_table_lookup(op->meta, XML_LRM_ATTR_INTERVAL_MS);
 
             crm_debug("Processing %s", op->uuid);
             if(safe_str_eq(RSC_STOP, op->task)) {
@@ -294,7 +294,7 @@ native_assign_node(resource_t * rsc, GListPtr nodes, node_t * chosen, gboolean f
                 update_action_flags(op, pe_action_runnable | pe_action_clear, __FUNCTION__, __LINE__);
                 /* set_bit(rsc->flags, pe_rsc_block); */
 
-            } else if(interval && safe_str_neq(interval, "0")) {
+            } else if (interval_ms_s && safe_str_neq(interval_ms_s, "0")) {
                 if(safe_str_eq(rc_inactive, g_hash_table_lookup(op->meta, XML_ATTR_TE_TARGET_RC))) {
                     /* This is a recurring monitor for the stopped state, leave it alone */
 

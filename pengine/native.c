@@ -600,7 +600,7 @@ native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
 }
 
 static gboolean
-is_op_dup(resource_t * rsc, const char *name, const char *interval)
+is_op_dup(resource_t *rsc, const char *name, const char *interval_spec)
 {
     gboolean dup = FALSE;
     const char *id = NULL;
@@ -621,7 +621,7 @@ is_op_dup(resource_t * rsc, const char *name, const char *interval)
                 value = "0";
             }
 
-            if (safe_str_neq(value, interval)) {
+            if (safe_str_neq(value, interval_spec)) {
                 continue;
             }
 
@@ -647,7 +647,7 @@ RecurringOp(resource_t * rsc, action_t * start, node_t * node,
     char *key = NULL;
     const char *name = NULL;
     const char *value = NULL;
-    const char *interval = NULL;
+    const char *interval_spec = NULL;
     const char *node_uname = NULL;
 
     unsigned long long interval_ms = 0;
@@ -670,15 +670,15 @@ RecurringOp(resource_t * rsc, action_t * start, node_t * node,
         node_uname = node->details->uname;
     }
 
-    interval = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
-    interval_ms = crm_get_interval(interval);
+    interval_spec = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
+    interval_ms = crm_get_interval(interval_spec);
 
     if (interval_ms == 0) {
         return;
     }
 
     name = crm_element_value(operation, "name");
-    if (is_op_dup(rsc, name, interval)) {
+    if (is_op_dup(rsc, name, interval_spec)) {
         return;
     }
 
@@ -746,7 +746,7 @@ RecurringOp(resource_t * rsc, action_t * start, node_t * node,
             free(mon->cancel_task);
             mon->task = strdup(RSC_CANCEL);
             mon->cancel_task = strdup(name);
-            add_hash_param(mon->meta, XML_LRM_ATTR_INTERVAL, interval);
+            add_hash_param(mon->meta, XML_LRM_ATTR_INTERVAL, interval_spec);
             add_hash_param(mon->meta, XML_LRM_ATTR_TASK, name);
 
             local_key = NULL;
@@ -858,7 +858,7 @@ RecurringOp_Stopped(resource_t * rsc, action_t * start, node_t * node,
     char *key = NULL;
     const char *name = NULL;
     const char *role = NULL;
-    const char *interval = NULL;
+    const char *interval_spec = NULL;
     const char *node_uname = NULL;
 
     unsigned long long interval_ms = 0;
@@ -884,15 +884,15 @@ RecurringOp_Stopped(resource_t * rsc, action_t * start, node_t * node,
         node_uname = node->details->uname;
     }
 
-    interval = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
-    interval_ms = crm_get_interval(interval);
+    interval_spec = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
+    interval_ms = crm_get_interval(interval_spec);
 
     if (interval_ms == 0) {
         return;
     }
 
     name = crm_element_value(operation, "name");
-    if (is_op_dup(rsc, name, interval)) {
+    if (is_op_dup(rsc, name, interval_spec)) {
         return;
     }
 
@@ -927,7 +927,7 @@ RecurringOp_Stopped(resource_t * rsc, action_t * start, node_t * node,
             free(cancel_op->cancel_task);
             cancel_op->task = strdup(RSC_CANCEL);
             cancel_op->cancel_task = strdup(name);
-            add_hash_param(cancel_op->meta, XML_LRM_ATTR_INTERVAL, interval);
+            add_hash_param(cancel_op->meta, XML_LRM_ATTR_INTERVAL, interval_spec);
             add_hash_param(cancel_op->meta, XML_LRM_ATTR_TASK, name);
 
             local_key = NULL;

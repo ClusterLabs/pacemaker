@@ -98,10 +98,10 @@ crm_getpid_s()
  * \internal
  * \brief Generate a failure-related node attribute name for a resource
  *
- * \param[in] prefix    Start of attribute name
- * \param[in] rsc_id    Resource name
- * \param[in] op        Operation name
- * \param[in] interval  Operation interval
+ * \param[in] prefix       Start of attribute name
+ * \param[in] rsc_id       Resource name
+ * \param[in] op           Operation name
+ * \param[in] interval_ms  Operation interval
  *
  * \return Newly allocated string with attribute name
  *
@@ -113,22 +113,22 @@ crm_getpid_s()
  */
 static inline char *
 crm_fail_attr_name(const char *prefix, const char *rsc_id, const char *op,
-                   int interval)
+                   int interval_ms)
 {
     CRM_CHECK(prefix && rsc_id && op, return NULL);
-    return crm_strdup_printf("%s-%s#%s_%d", prefix, rsc_id, op, interval);
+    return crm_strdup_printf("%s-%s#%s_%d", prefix, rsc_id, op, interval_ms);
 }
 
 static inline char *
-crm_failcount_name(const char *rsc_id, const char *op, int interval)
+crm_failcount_name(const char *rsc_id, const char *op, int interval_ms)
 {
-    return crm_fail_attr_name(CRM_FAIL_COUNT_PREFIX, rsc_id, op, interval);
+    return crm_fail_attr_name(CRM_FAIL_COUNT_PREFIX, rsc_id, op, interval_ms);
 }
 
 static inline char *
-crm_lastfailure_name(const char *rsc_id, const char *op, int interval)
+crm_lastfailure_name(const char *rsc_id, const char *op, int interval_ms)
 {
-    return crm_fail_attr_name(CRM_LAST_FAILURE_PREFIX, rsc_id, op, interval);
+    return crm_fail_attr_name(CRM_LAST_FAILURE_PREFIX, rsc_id, op, interval_ms);
 }
 
 #endif /* CRM_COMMON_INTERNAL__H */

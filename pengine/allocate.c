@@ -205,25 +205,25 @@ static void
 CancelXmlOp(resource_t * rsc, xmlNode * xml_op, node_t * active_node,
             const char *reason, pe_working_set_t * data_set)
 {
-    int interval = 0;
+    int interval_ms = 0;
     action_t *cancel = NULL;
 
     char *key = NULL;
     const char *task = NULL;
     const char *call_id = NULL;
-    const char *interval_s = NULL;
+    const char *interval_ms_s = NULL;
 
     CRM_CHECK(xml_op != NULL, return);
     CRM_CHECK(active_node != NULL, return);
 
     task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
     call_id = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
-    interval_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
+    interval_ms_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL_MS);
 
-    interval = crm_parse_int(interval_s, "0");
+    interval_ms = crm_parse_int(interval_ms_s, "0");
 
     /* we need to reconstruct the key because of the way we used to construct resource IDs */
-    key = generate_op_key(rsc->id, task, interval);
+    key = generate_op_key(rsc->id, task, interval_ms);
 
     crm_info("Action %s on %s will be stopped: %s",
              key, active_node->details->uname, reason ? reason : "unknown");
@@ -238,7 +238,7 @@ CancelXmlOp(resource_t * rsc, xmlNode * xml_op, node_t * active_node,
 
     add_hash_param(cancel->meta, XML_LRM_ATTR_TASK, task);
     add_hash_param(cancel->meta, XML_LRM_ATTR_CALLID, call_id);
-    add_hash_param(cancel->meta, XML_LRM_ATTR_INTERVAL, interval_s);
+    add_hash_param(cancel->meta, XML_LRM_ATTR_INTERVAL_MS, interval_ms_s);
 
     custom_action_order(rsc, stop_key(rsc), NULL, rsc, NULL, cancel, pe_order_optional, data_set);
     free(key);
@@ -250,8 +250,8 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
                         pe_working_set_t * data_set)
 {
     char *key = NULL;
-    int interval = 0;
-    const char *interval_s = NULL;
+    int interval_ms = 0;
+    const char *interval_ms_s = NULL;
     const op_digest_cache_t *digest_data = NULL;
     gboolean did_change = FALSE;
 
@@ -263,14 +263,14 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
         return FALSE;
     }
 
-    interval_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
-    interval = crm_parse_int(interval_s, "0");
+    interval_ms_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL_MS);
+    interval_ms = crm_parse_int(interval_ms_s, "0");
 
-    if (interval > 0) {
+    if (interval_ms > 0) {
         xmlNode *op_match = NULL;
 
         /* we need to reconstruct the key because of the way we used to construct resource IDs */
-        key = generate_op_key(rsc->id, task, interval);
+        key = generate_op_key(rsc->id, task, interval_ms);
 
         pe_rsc_trace(rsc, "Checking parameters for %s", key);
         op_match = find_rsc_op_entry(rsc, key);
@@ -290,15 +290,15 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
     }
 
     crm_trace("Testing %s_%s_%d on %s",
-              rsc->id, task, interval, active_node->details->uname);
-    if (interval == 0 && safe_str_eq(task, RSC_STATUS)) {
+              rsc->id, task, interval_ms, active_node->details->uname);
+    if ((interval_ms == 0) && safe_str_eq(task, RSC_STATUS)) {
         /* Reload based on the start action not a probe */
         task = RSC_START;
 
-    } else if (interval == 0 && safe_str_eq(task, RSC_MIGRATED)) {
+    } else if ((interval_ms == 0) && safe_str_eq(task, RSC_MIGRATED)) {
         /* Reload based on the start action not a migrate */
         task = RSC_START;
-    } else if (interval == 0 && safe_str_eq(task, RSC_PROMOTE)) {
+    } else if ((interval_ms == 0) && safe_str_eq(task, RSC_PROMOTE)) {
         /* Reload based on the start action not a promote */
         task = RSC_START;
     }
@@ -315,7 +315,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
        && strcmp(digest_data->digest_secure_calc, digest_secure) == 0) {
         if (is_set(data_set->flags, pe_flag_sanitized)) {
             printf("Only 'private' parameters to %s_%s_%d on %s changed: %s\n",
-                   rsc->id, task, interval, active_node->details->uname,
+                   rsc->id, task, interval_ms, active_node->details->uname,
                    crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
         }
 
@@ -324,7 +324,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
         pe_action_t *required = NULL;
 
         did_change = TRUE;
-        key = generate_op_key(rsc->id, task, interval);
+        key = generate_op_key(rsc->id, task, interval_ms);
         crm_log_xml_info(digest_data->params_restart, "params:restart");
         required = custom_action(rsc, key, task, NULL, TRUE, TRUE, data_set);
         pe_action_set_flag_reason(__FUNCTION__, __LINE__, required, NULL,
@@ -339,9 +339,9 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
         did_change = TRUE;
         trigger_unfencing(rsc, active_node, "Device parameters changed (reload)", NULL, data_set);
         crm_log_xml_info(digest_data->params_all, "params:reload");
-        key = generate_op_key(rsc->id, task, interval);
+        key = generate_op_key(rsc->id, task, interval_ms);
 
-        if (interval > 0) {
+        if (interval_ms > 0) {
             action_t *op = NULL;
 
 #if 0
@@ -382,12 +382,12 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
 {
     GListPtr gIter = NULL;
     int offset = -1;
-    int interval = 0;
+    int interval_ms = 0;
     int stop_index = 0;
     int start_index = 0;
 
     const char *task = NULL;
-    const char *interval_s = NULL;
+    const char *interval_ms_s = NULL;
 
     xmlNode *rsc_op = NULL;
     GListPtr op_list = NULL;
@@ -450,18 +450,20 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
         did_change = FALSE;
         task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
 
-        interval_s = crm_element_value(rsc_op, XML_LRM_ATTR_INTERVAL);
-        interval = crm_parse_int(interval_s, "0");
+        interval_ms_s = crm_element_value(rsc_op, XML_LRM_ATTR_INTERVAL_MS);
+        interval_ms = crm_parse_int(interval_ms_s, "0");
 
-        if (interval == 0 && safe_str_eq(task, RSC_STATUS)) {
+        if ((interval_ms == 0) && safe_str_eq(task, RSC_STATUS)) {
             is_probe = TRUE;
         }
 
-        if (interval > 0 &&
+        if ((interval_ms > 0) &&
             (is_set(rsc->flags, pe_rsc_maintenance) || node->details->maintenance)) {
             CancelXmlOp(rsc, rsc_op, node, "maintenance mode", data_set);
 
-        } else if (is_probe || safe_str_eq(task, RSC_START) || safe_str_eq(task, RSC_PROMOTE) || interval > 0
+        } else if (is_probe || (interval_ms > 0)
+                   || safe_str_eq(task, RSC_START)
+                   || safe_str_eq(task, RSC_PROMOTE)
                    || safe_str_eq(task, RSC_MIGRATED)) {
             did_change = check_action_definition(rsc, node, rsc_op, data_set);
         }
@@ -1665,10 +1667,10 @@ find_actions_by_task(GListPtr actions, resource_t * rsc, const char *original_ke
         char *key = NULL;
         char *tmp = NULL;
         char *task = NULL;
-        int interval = 0;
+        int interval_ms = 0;
 
-        if (parse_op_key(original_key, &tmp, &task, &interval)) {
-            key = generate_op_key(rsc->id, task, interval);
+        if (parse_op_key(original_key, &tmp, &task, &interval_ms)) {
+            key = generate_op_key(rsc->id, task, interval_ms);
             /* crm_err("looking up %s instead of %s", key, original_key); */
             /* slist_iter(action, action_t, actions, lpc, */
             /*         crm_err("  - %s", action->uuid)); */
@@ -1762,10 +1764,10 @@ rsc_order_first(resource_t * lh_rsc, order_constraint_t * order, pe_working_set_
         char *key = NULL;
         char *rsc_id = NULL;
         char *op_type = NULL;
-        int interval = 0;
+        int interval_ms = 0;
 
-        parse_op_key(order->lh_action_task, &rsc_id, &op_type, &interval);
-        key = generate_op_key(lh_rsc->id, op_type, interval);
+        parse_op_key(order->lh_action_task, &rsc_id, &op_type, &interval_ms);
+        key = generate_op_key(lh_rsc->id, op_type, interval_ms);
 
         if (lh_rsc->fns->state(lh_rsc, TRUE) == RSC_ROLE_STOPPED && safe_str_eq(op_type, RSC_STOP)) {
             free(key);
@@ -1812,12 +1814,11 @@ extern void update_colo_start_chain(action_t * action);
 static int
 is_recurring_action(action_t *action) 
 {
-    const char *interval_s = g_hash_table_lookup(action->meta, XML_LRM_ATTR_INTERVAL);
-    int interval = crm_parse_int(interval_s, "0");
-    if(interval > 0) {
-        return TRUE;
-    }
-    return FALSE;
+    const char *interval_ms_s = g_hash_table_lookup(action->meta,
+                                                    XML_LRM_ATTR_INTERVAL_MS);
+    int interval_ms = crm_parse_int(interval_ms_s, "0");
+
+    return (interval_ms > 0);
 }
 
 static void

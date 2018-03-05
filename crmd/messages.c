@@ -617,7 +617,8 @@ handle_failcount_op(xmlNode * stored_msg)
     const char *rsc = NULL;
     const char *uname = NULL;
     const char *op = NULL;
-    const char *interval = NULL;
+    const char *interval_ms_s = NULL;
+    char *interval_spec = NULL;
     int interval_ms = 0;
     gboolean is_remote_node = FALSE;
     xmlNode *xml_op = get_message_xml(stored_msg, F_CRM_DATA);
@@ -632,9 +633,9 @@ handle_failcount_op(xmlNode * stored_msg)
         if (xml_attrs) {
             op = crm_element_value(xml_attrs,
                                    CRM_META "_" XML_RSC_ATTR_CLEAR_OP);
-            interval = crm_element_value(xml_attrs,
-                                         CRM_META "_" XML_RSC_ATTR_CLEAR_INTERVAL);
-            interval_ms = crm_parse_int(interval, "0");
+            interval_ms_s = crm_element_value(xml_attrs,
+                                              CRM_META "_" XML_RSC_ATTR_CLEAR_INTERVAL);
+            interval_ms = crm_parse_int(interval_ms_s, "0");
         }
     }
     uname = crm_element_value(xml_op, XML_LRM_ATTR_TARGET);
@@ -647,7 +648,13 @@ handle_failcount_op(xmlNode * stored_msg)
     if (crm_element_value(xml_op, XML_LRM_ATTR_ROUTER_NODE)) {
         is_remote_node = TRUE;
     }
-    update_attrd_clear_failures(uname, rsc, op, interval, is_remote_node);
+
+    if (interval_ms) {
+        interval_spec = crm_strdup_printf("%dms", interval_ms);
+    }
+    update_attrd_clear_failures(uname, rsc, op, interval_spec, is_remote_node);
+    free(interval_spec);
+
     lrm_clear_last_failure(rsc, uname, op, interval_ms);
 
     return I_NULL;

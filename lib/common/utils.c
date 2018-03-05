@@ -563,10 +563,10 @@ crm_get_interval(const char *input)
         }
 
     } else {
-        crm_time_t *interval = crm_time_parse_duration(input);
+        crm_time_t *period_s = crm_time_parse_duration(input);
 
-        msec = 1000 * crm_time_get_seconds(interval);
-        crm_time_free(interval);
+        msec = 1000 * crm_time_get_seconds(period_s);
+        crm_time_free(period_s);
     }
 
     return msec;

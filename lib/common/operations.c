@@ -25,25 +25,25 @@
 /*!
  * \brief Generate an operation key
  *
- * \param[in] rsc_id    ID of resource being operated on
- * \param[in] op_type   Operation name
- * \param[in] interval  Operation interval
+ * \param[in] rsc_id       ID of resource being operated on
+ * \param[in] op_type      Operation name
+ * \param[in] interval_ms  Operation interval
  *
  * \return Newly allocated memory containing operation key as string
  *
  * \note It is the caller's responsibility to free() the result.
  */
 char *
-generate_op_key(const char *rsc_id, const char *op_type, int interval)
+generate_op_key(const char *rsc_id, const char *op_type, int interval_ms)
 {
     CRM_ASSERT(rsc_id != NULL);
     CRM_ASSERT(op_type != NULL);
-    CRM_ASSERT(interval >= 0);
-    return crm_strdup_printf("%s_%s_%d", rsc_id, op_type, interval);
+    CRM_ASSERT(interval_ms >= 0);
+    return crm_strdup_printf("%s_%s_%d", rsc_id, op_type, interval_ms);
 }
 
 gboolean
-parse_op_key(const char *key, char **rsc_id, char **op_type, int *interval)
+parse_op_key(const char *key, char **rsc_id, char **op_type, int *interval_ms)
 {
     char *notify = NULL;
     char *mutable_key = NULL;
@@ -52,7 +52,7 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, int *interval)
 
     CRM_CHECK(key != NULL, return FALSE);
 
-    *interval = 0;
+    *interval_ms = 0;
     len = strlen(key);
     offset = len - 1;
 
@@ -68,11 +68,11 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, int *interval)
             digits--;
             ch = ch * 10;
         }
-        *interval += ch;
+        *interval_ms += ch;
         offset--;
     }
 
-    crm_trace("  Interval: %d", *interval);
+    crm_trace("  Interval: %d", *interval_ms);
     CRM_CHECK(key[offset] == '_', return FALSE);
 
     mutable_key = strdup(key);
@@ -196,7 +196,7 @@ filter_action_parameters(xmlNode * param_set, const char *version)
 {
     char *key = NULL;
     char *timeout = NULL;
-    char *interval = NULL;
+    char *interval_ms_s = NULL;
 
     const char *attr_filter[] = {
         XML_ATTR_ID,
@@ -223,8 +223,8 @@ filter_action_parameters(xmlNode * param_set, const char *version)
         xml_remove_prop(param_set, attr_filter[lpc]);
     }
 
-    key = crm_meta_name(XML_LRM_ATTR_INTERVAL);
-    interval = crm_element_value_copy(param_set, key);
+    key = crm_meta_name(XML_LRM_ATTR_INTERVAL_MS);
+    interval_ms_s = crm_element_value_copy(param_set, key);
     free(key);
 
     key = crm_meta_name(XML_ATTR_TIMEOUT);
@@ -248,14 +248,14 @@ filter_action_parameters(xmlNode * param_set, const char *version)
         }
     }
 
-    if (crm_get_msec(interval) > 0) {
+    if (crm_get_msec(interval_ms_s) > 0) {
         /* Re-instate the operation's timeout value */
         if (timeout != NULL) {
             crm_xml_add(param_set, key, timeout);
         }
     }
 
-    free(interval);
+    free(interval_ms_s);
     free(timeout);
     free(key);
 }
@@ -339,25 +339,25 @@ did_rsc_op_fail(lrmd_event_data_t * op, int target_rc)
 /*!
  * \brief Create a CIB XML element for an operation
  *
- * \param[in] parent    If not NULL, make new XML node a child of this one
- * \param[in] prefix    Generate an ID using this prefix
- * \param[in] task      Operation task to set
- * \param[in] interval  Operation interval to set
- * \param[in] timeout   If not NULL, operation timeout to set
+ * \param[in] parent         If not NULL, make new XML node a child of this one
+ * \param[in] prefix         Generate an ID using this prefix
+ * \param[in] task           Operation task to set
+ * \param[in] interval_spec  Operation interval to set
+ * \param[in] timeout        If not NULL, operation timeout to set
  *
  * \return New XML object on success, NULL otherwise
  */
 xmlNode *
 crm_create_op_xml(xmlNode *parent, const char *prefix, const char *task,
-                  const char *interval, const char *timeout)
+                  const char *interval_spec, const char *timeout)
 {
     xmlNode *xml_op;
 
-    CRM_CHECK(prefix && task && interval, return NULL);
+    CRM_CHECK(prefix && task && interval_spec, return NULL);
 
     xml_op = create_xml_node(parent, XML_ATTR_OP);
-    crm_xml_set_id(xml_op, "%s-%s-%s", prefix, task, interval);
-    crm_xml_add(xml_op, XML_LRM_ATTR_INTERVAL, interval);
+    crm_xml_set_id(xml_op, "%s-%s-%s", prefix, task, interval_spec);
+    crm_xml_add(xml_op, XML_LRM_ATTR_INTERVAL, interval_spec);
     crm_xml_add(xml_op, "name", task);
     if (timeout) {
         crm_xml_add(xml_op, XML_ATTR_TIMEOUT, timeout);
@@ -470,7 +470,7 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char * c
     crm_xml_add_int(xml_op, XML_LRM_ATTR_CALLID, op->call_id);
     crm_xml_add_int(xml_op, XML_LRM_ATTR_RC, op->rc);
     crm_xml_add_int(xml_op, XML_LRM_ATTR_OPSTATUS, op->op_status);
-    crm_xml_add_int(xml_op, XML_LRM_ATTR_INTERVAL, op->interval);
+    crm_xml_add_int(xml_op, XML_LRM_ATTR_INTERVAL_MS, op->interval);
 
     if (compare_version("2.1", caller_version) <= 0) {
         if (op->t_run || op->t_rcchange || op->exec_time || op->queue_time) {

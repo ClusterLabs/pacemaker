@@ -71,7 +71,7 @@ static struct {
     int verbose;
     int quiet;
     int print;
-    int interval;
+    int interval_ms;
     int timeout;
     int start_delay;
     int cancel_call_id;
@@ -224,7 +224,7 @@ start_test(gpointer user_data)
                                    options.rsc_id,
                                    options.action,
                                    NULL,
-                                   options.interval,
+                                   options.interval_ms,
                                    options.timeout,
                                    options.start_delay, exec_call_opts, options.params);
 
@@ -255,7 +255,8 @@ start_test(gpointer user_data)
     } else if (safe_str_eq(options.api_call, "unregister_rsc")) {
         rc = lrmd_conn->cmds->unregister_rsc(lrmd_conn, options.rsc_id, 0);
     } else if (safe_str_eq(options.api_call, "cancel")) {
-        rc = lrmd_conn->cmds->cancel(lrmd_conn, options.rsc_id, options.action, options.interval);
+        rc = lrmd_conn->cmds->cancel(lrmd_conn, options.rsc_id, options.action,
+                                     options.interval_ms);
     } else if (safe_str_eq(options.api_call, "metadata")) {
         char *output = NULL;
 
@@ -508,7 +509,7 @@ main(int argc, char **argv)
                 break;
             case 'i':
                 if(optarg) {
-                    options.interval = atoi(optarg);
+                    options.interval_ms = atoi(optarg);
                 }
                 break;
             case 't':
@@ -565,7 +566,7 @@ main(int argc, char **argv)
         if (!options.timeout) {
             options.timeout = 30000;
         }
-        options.interval = 0;
+        options.interval_ms = 0;
         if (!options.rsc_id) {
             crm_err("rsc-id must be given when is-running is used");
             test_exit(CRM_EX_ERROR);

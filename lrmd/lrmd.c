@@ -41,7 +41,7 @@ GHashTable *rsc_list = NULL;
 
 typedef struct lrmd_cmd_s {
     int timeout;
-    int interval;
+    int interval_ms;
     int start_delay;
     int timeout_orig;
 
@@ -172,7 +172,7 @@ create_lrmd_cmd(xmlNode * msg, crm_client_t * client)
     cmd->client_id = strdup(client->id);
 
     crm_element_value_int(msg, F_LRMD_CALLID, &cmd->call_id);
-    crm_element_value_int(rsc_xml, F_LRMD_RSC_INTERVAL, &cmd->interval);
+    crm_element_value_int(rsc_xml, F_LRMD_RSC_INTERVAL, &cmd->interval_ms);
     crm_element_value_int(rsc_xml, F_LRMD_TIMEOUT, &cmd->timeout);
     crm_element_value_int(rsc_xml, F_LRMD_RSC_START_DELAY, &cmd->start_delay);
     cmd->timeout_orig = cmd->timeout;
@@ -185,7 +185,8 @@ create_lrmd_cmd(xmlNode * msg, crm_client_t * client)
     cmd->params = xml2list(rsc_xml);
 
     if (safe_str_eq(g_hash_table_lookup(cmd->params, "CRM_meta_on_fail"), "block")) {
-        crm_debug("Setting flag to leave pid group on timeout and only kill action pid for %s_%s_%d", cmd->rsc_id, cmd->action, cmd->interval);
+        crm_debug("Setting flag to leave pid group on timeout and only kill action pid for %s_%s_%d",
+                  cmd->rsc_id, cmd->action, cmd->interval_ms);
         cmd->service_flags |= SVC_ACTION_LEAVE_GROUP;
     }
     return cmd;
@@ -267,13 +268,14 @@ merge_recurring_duplicate(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     lrmd_cmd_t * dup = NULL;
     gboolean dup_pending = FALSE;
 
-    if (cmd->interval == 0) {
+    if (cmd->interval_ms == 0) {
         return 0;
     }
 
     for (gIter = rsc->pending_ops; gIter != NULL; gIter = gIter->next) {
         dup = gIter->data;
-        if (safe_str_eq(cmd->action, dup->action) && cmd->interval == dup->interval) {
+        if (safe_str_eq(cmd->action, dup->action)
+            && (cmd->interval_ms == dup->interval_ms)) {
             dup_pending = TRUE;
             goto merge_dup;
         }
@@ -283,7 +285,8 @@ merge_recurring_duplicate(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
      * and is in the interval loop. we can't just remove it in this case. */
     for (gIter = rsc->recurring_ops; gIter != NULL; gIter = gIter->next) {
         dup = gIter->data;
-        if (safe_str_eq(cmd->action, dup->action) && cmd->interval == dup->interval) {
+        if (safe_str_eq(cmd->action, dup->action)
+            && (cmd->interval_ms == dup->interval_ms)) {
             goto merge_dup;
         }
     }
@@ -297,7 +300,7 @@ merge_dup:
     crm_warn("Duplicate recurring op entry detected (%s_%s_%d), merging with previous op entry",
             rsc->rsc_id,
             normalize_action_name(rsc, dup->action),
-            dup->interval);
+            dup->interval_ms);
 
     /* merge */
     dup->first_notify_sent = 0;
@@ -316,7 +319,9 @@ merge_dup:
 
     } else if (dup_pending == FALSE) {
         /* if we've already handed this to the service lib, kick off an early execution */
-        services_action_kick(rsc->rsc_id, normalize_action_name(rsc, dup->action), dup->interval);
+        services_action_kick(rsc->rsc_id,
+                             normalize_action_name(rsc, dup->action),
+                             dup->interval_ms);
     }
     free_lrmd_cmd(cmd);
 
@@ -488,7 +493,7 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
 
     crm_xml_add(notify, F_LRMD_ORIGIN, __FUNCTION__);
     crm_xml_add_int(notify, F_LRMD_TIMEOUT, cmd->timeout);
-    crm_xml_add_int(notify, F_LRMD_RSC_INTERVAL, cmd->interval);
+    crm_xml_add_int(notify, F_LRMD_RSC_INTERVAL, cmd->interval_ms);
     crm_xml_add_int(notify, F_LRMD_RSC_START_DELAY, cmd->start_delay);
     crm_xml_add_int(notify, F_LRMD_EXEC_RC, cmd->exec_rc);
     crm_xml_add_int(notify, F_LRMD_OP_STATUS, cmd->lrmd_op_status);
@@ -599,13 +604,13 @@ cmd_finalize(lrmd_cmd_t * cmd, lrmd_rsc_t * rsc)
 
     send_cmd_complete_notify(cmd);
 
-    if (cmd->interval && (cmd->lrmd_op_status == PCMK_LRM_OP_CANCELLED)) {
+    if (cmd->interval_ms && (cmd->lrmd_op_status == PCMK_LRM_OP_CANCELLED)) {
         if (rsc) {
             rsc->recurring_ops = g_list_remove(rsc->recurring_ops, cmd);
             rsc->pending_ops = g_list_remove(rsc->pending_ops, cmd);
         }
         free_lrmd_cmd(cmd);
-    } else if (cmd->interval == 0) {
+    } else if (cmd->interval_ms == 0) {
         if (rsc) {
             rsc->pending_ops = g_list_remove(rsc->pending_ops, cmd);
         }
@@ -850,7 +855,7 @@ action_complete(svc_action_t * action)
 #if SUPPORT_NAGIOS
     if (rsc && safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_NAGIOS)) {
         if (safe_str_eq(cmd->action, "monitor") &&
-            cmd->interval == 0 && cmd->exec_rc == PCMK_OCF_OK) {
+            (cmd->interval_ms == 0) && cmd->exec_rc == PCMK_OCF_OK) {
             /* Successfully executed --version for the nagios plugin */
             cmd->exec_rc = PCMK_OCF_NOT_RUNNING;
 
@@ -926,7 +931,7 @@ action_complete(svc_action_t * action)
 static void
 stonith_action_complete(lrmd_cmd_t * cmd, int rc)
 {
-    int recurring = cmd->interval;
+    int recurring = cmd->interval_ms;
     lrmd_rsc_t *rsc = NULL;
 
     cmd->exec_rc = get_uniform_rc(PCMK_RESOURCE_CLASS_STONITH, cmd->action, rc);
@@ -967,7 +972,9 @@ stonith_action_complete(lrmd_cmd_t * cmd, int rc)
         if (cmd->stonith_recurring_id) {
             g_source_remove(cmd->stonith_recurring_id);
         }
-        cmd->stonith_recurring_id = g_timeout_add(cmd->interval, stonith_recurring_op_helper, cmd);
+        cmd->stonith_recurring_id = g_timeout_add(cmd->interval_ms,
+                                                  stonith_recurring_op_helper,
+                                                  cmd);
     }
 
     cmd_finalize(cmd, rsc);
@@ -1063,7 +1070,7 @@ lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
         rc = stonith_api->cmds->remove_device(stonith_api, st_opt_sync_call, cmd->rsc_id);
         rsc->stonith_started = 0;
     } else if (safe_str_eq(cmd->action, "monitor")) {
-        if (cmd->interval) {
+        if (cmd->interval_ms) {
             do_monitor = 1;
         } else {
             rc = rsc->stonith_started ? 0 : -ENODEV;
@@ -1122,8 +1129,8 @@ lrmd_rsc_execute_service_lib(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     action = resources_action_create(rsc->rsc_id, rsc->class, rsc->provider,
                                      rsc->type,
                                      normalize_action_name(rsc, cmd->action),
-                                     cmd->interval, cmd->timeout, params_copy,
-                                     cmd->service_flags);
+                                     cmd->interval_ms, cmd->timeout,
+                                     params_copy, cmd->service_flags);
 
     if (!action) {
         crm_err("Failed to create action, action:%s on resource %s", cmd->action, rsc->rsc_id);
@@ -1196,7 +1203,7 @@ lrmd_rsc_execute(lrmd_rsc_t * rsc)
     }
 
     rsc->active = cmd;          /* only one op at a time for a rsc */
-    if (cmd->interval) {
+    if (cmd->interval_ms) {
         rsc->recurring_ops = g_list_append(rsc->recurring_ops, cmd);
     }
 
@@ -1257,7 +1264,9 @@ free_rsc(gpointer data)
              * let service library cancel it and tell us via the callback
              * when it is cancelled. The rsc can be safely destroyed
              * even if we are waiting for the cancel result */
-            services_action_cancel(rsc->rsc_id, normalize_action_name(rsc, cmd->action), cmd->interval);
+            services_action_cancel(rsc->rsc_id,
+                                   normalize_action_name(rsc, cmd->action),
+                                   cmd->interval_ms);
         }
 
         gIter = next;
@@ -1434,7 +1443,7 @@ process_lrmd_rsc_exec(crm_client_t * client, uint32_t id, xmlNode * request)
 }
 
 static int
-cancel_op(const char *rsc_id, const char *action, int interval)
+cancel_op(const char *rsc_id, const char *action, int interval_ms)
 {
     GListPtr gIter = NULL;
     lrmd_rsc_t *rsc = g_hash_table_lookup(rsc_list, rsc_id);
@@ -1457,7 +1466,9 @@ cancel_op(const char *rsc_id, const char *action, int interval)
     for (gIter = rsc->pending_ops; gIter != NULL; gIter = gIter->next) {
         lrmd_cmd_t *cmd = gIter->data;
 
-        if (safe_str_eq(cmd->action, action) && cmd->interval == interval) {
+        if (safe_str_eq(cmd->action, action)
+            && (cmd->interval_ms == interval_ms)) {
+
             cmd->lrmd_op_status = PCMK_LRM_OP_CANCELLED;
             cmd_finalize(cmd, rsc);
             return pcmk_ok;
@@ -1470,7 +1481,9 @@ cancel_op(const char *rsc_id, const char *action, int interval)
         for (gIter = rsc->recurring_ops; gIter != NULL; gIter = gIter->next) {
             lrmd_cmd_t *cmd = gIter->data;
 
-            if (safe_str_eq(cmd->action, action) && cmd->interval == interval) {
+            if (safe_str_eq(cmd->action, action)
+                && (cmd->interval_ms == interval_ms)) {
+
                 cmd->lrmd_op_status = PCMK_LRM_OP_CANCELLED;
                 if (rsc->active != cmd) {
                     cmd_finalize(cmd, rsc);
@@ -1478,7 +1491,9 @@ cancel_op(const char *rsc_id, const char *action, int interval)
                 return pcmk_ok;
             }
         }
-    } else if (services_action_cancel(rsc_id, normalize_action_name(rsc, action), interval) == TRUE) {
+    } else if (services_action_cancel(rsc_id,
+                                      normalize_action_name(rsc, action),
+                                      interval_ms) == TRUE) {
         /* The service library will tell the action_complete callback function
          * this action was cancelled, which will destroy the cmd and remove
          * it from the recurring_op list. Do not do that in this function
@@ -1514,7 +1529,7 @@ cancel_all_recurring(lrmd_rsc_t * rsc, const char *client_id)
     for (cmd_iter = cmd_list; cmd_iter; cmd_iter = cmd_iter->next) {
         lrmd_cmd_t *cmd = cmd_iter->data;
 
-        if (cmd->interval == 0) {
+        if (cmd->interval_ms == 0) {
             continue;
         }
 
@@ -1522,7 +1537,7 @@ cancel_all_recurring(lrmd_rsc_t * rsc, const char *client_id)
             continue;
         }
 
-        cancel_op(rsc->rsc_id, cmd->action, cmd->interval);
+        cancel_op(rsc->rsc_id, cmd->action, cmd->interval_ms);
     }
     /* frees only the copied list data, not the cmds */
     g_list_free(cmd_list);
@@ -1534,15 +1549,15 @@ process_lrmd_rsc_cancel(crm_client_t * client, uint32_t id, xmlNode * request)
     xmlNode *rsc_xml = get_xpath_object("//" F_LRMD_RSC, request, LOG_ERR);
     const char *rsc_id = crm_element_value(rsc_xml, F_LRMD_RSC_ID);
     const char *action = crm_element_value(rsc_xml, F_LRMD_RSC_ACTION);
-    int interval = 0;
+    int interval_ms = 0;
 
-    crm_element_value_int(rsc_xml, F_LRMD_RSC_INTERVAL, &interval);
+    crm_element_value_int(rsc_xml, F_LRMD_RSC_INTERVAL, &interval_ms);
 
     if (!rsc_id || !action) {
         return -EINVAL;
     }
 
-    return cancel_op(rsc_id, action, interval);
+    return cancel_op(rsc_id, action, interval_ms);
 }
 
 void

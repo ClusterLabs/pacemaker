@@ -322,7 +322,7 @@ attrd_client_clear_failure(xmlNode *xml)
 
     const char *rsc = crm_element_value(xml, F_ATTRD_RESOURCE);
     const char *op = crm_element_value(xml, F_ATTRD_OPERATION);
-    const char *interval_s = crm_element_value(xml, F_ATTRD_INTERVAL);
+    const char *interval_spec = crm_element_value(xml, F_ATTRD_INTERVAL);
 
     /* Map this to an update */
     crm_xml_add(xml, F_ATTRD_TASK, ATTRD_OP_UPDATE);
@@ -336,10 +336,10 @@ attrd_client_clear_failure(xmlNode *xml)
             pattern = crm_strdup_printf(ATTRD_RE_CLEAR_ONE, rsc);
 
         } else {
-            int interval = crm_get_interval(interval_s);
+            int interval_ms = crm_get_interval(interval_spec);
 
             pattern = crm_strdup_printf(ATTRD_RE_CLEAR_OP,
-                                        rsc, op, interval);
+                                        rsc, op, interval_ms);
         }
 
         crm_xml_add(xml, F_ATTRD_REGEX, pattern);
@@ -510,13 +510,13 @@ attrd_peer_clear_failure(crm_node_t *peer, xmlNode *xml)
     const char *rsc = crm_element_value(xml, F_ATTRD_RESOURCE);
     const char *host = crm_element_value(xml, F_ATTRD_HOST);
     const char *op = crm_element_value(xml, F_ATTRD_OPERATION);
-    const char *interval_s = crm_element_value(xml, F_ATTRD_INTERVAL);
-    int interval = crm_get_interval(interval_s);
+    const char *interval_spec = crm_element_value(xml, F_ATTRD_INTERVAL);
+    int interval_ms = crm_get_interval(interval_spec);
     char *attr = NULL;
     GHashTableIter iter;
     regex_t regex;
 
-    if (attrd_failure_regex(&regex, rsc, op, interval) != pcmk_ok) {
+    if (attrd_failure_regex(&regex, rsc, op, interval_ms) != pcmk_ok) {
         crm_info("Ignoring invalid request to clear failures for %s",
                  (rsc? rsc : "all resources"));
         return;

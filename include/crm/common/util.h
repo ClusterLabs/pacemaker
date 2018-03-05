@@ -109,7 +109,7 @@ char *score2char_stack(int score, char *buf, size_t len);
 
 /* public operation functions (from operations.c) */
 gboolean parse_op_key(const char *key, char **rsc_id, char **op_type,
-                      int *interval);
+                      int *interval_ms);
 gboolean decode_transition_key(const char *key, char **uuid, int *action,
                                int *transition_id, int *target_rc);
 gboolean decode_transition_magic(const char *magic, char **uuid,
@@ -119,7 +119,7 @@ int rsc_op_expected_rc(lrmd_event_data_t *event);
 gboolean did_rsc_op_fail(lrmd_event_data_t *event, int target_rc);
 bool crm_op_needs_metadata(const char *rsc_class, const char *op);
 xmlNode *crm_create_op_xml(xmlNode *parent, const char *prefix,
-                           const char *task, const char *interval,
+                           const char *task, const char *interval_spec,
                            const char *timeout);
 #define CRM_DEFAULT_OP_TIMEOUT_S "20s"
 

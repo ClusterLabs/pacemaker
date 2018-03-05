@@ -49,10 +49,11 @@ static GList *inflight_ops = NULL;
 static void handle_blocked_ops(void);
 
 svc_action_t *
-services_action_create(const char *name, const char *action, int interval, int timeout)
+services_action_create(const char *name, const char *action, int interval_ms,
+                       int timeout)
 {
     return resources_action_create(name, PCMK_RESOURCE_CLASS_LSB, NULL, name,
-                                   action, interval, timeout, NULL, 0);
+                                   action, interval_ms, timeout, NULL, 0);
 }
 
 /*!
@@ -176,9 +177,10 @@ dup_file_path(const char *filename, const char *dirname)
 }
 
 svc_action_t *
-resources_action_create(const char *name, const char *standard, const char *provider,
-                        const char *agent, const char *action, int interval, int timeout,
-                        GHashTable * params, enum svc_action_flags flags)
+resources_action_create(const char *name, const char *standard,
+                        const char *provider, const char *agent,
+                        const char *action, int interval_ms, int timeout,
+                        GHashTable *params, enum svc_action_flags flags)
 {
     svc_action_t *op = NULL;
 
@@ -219,13 +221,13 @@ resources_action_create(const char *name, const char *standard, const char *prov
     op = calloc(1, sizeof(svc_action_t));
     op->opaque = calloc(1, sizeof(svc_action_private_t));
     op->rsc = strdup(name);
-    op->interval = interval;
+    op->interval = interval_ms;
     op->timeout = timeout;
     op->standard = expand_resource_class(name, standard, agent);
     op->agent = strdup(agent);
     op->sequence = ++operations;
     op->flags = flags;
-    op->id = generate_op_key(name, action, interval);
+    op->id = generate_op_key(name, action, interval_ms);
 
     if (safe_str_eq(action, "monitor")
         && safe_str_eq(op->standard, PCMK_RESOURCE_CLASS_LSB)) {
@@ -577,17 +579,17 @@ cancel_recurring_action(svc_action_t * op)
 /*!
  * \brief Cancel a recurring action
  *
- * \param[in] name      Name of resource that operation is for
- * \param[in] action    Name of operation to cancel
- * \param[in] interval  Interval of operation to cancel
+ * \param[in] name         Name of resource that operation is for
+ * \param[in] action       Name of operation to cancel
+ * \param[in] interval_ms  Interval of operation to cancel
  *
  * \return TRUE if action was successfully cancelled, FALSE otherwise
  */
 gboolean
-services_action_cancel(const char *name, const char *action, int interval)
+services_action_cancel(const char *name, const char *action, int interval_ms)
 {
     gboolean cancelled = FALSE;
-    char *id = generate_op_key(name, action, interval);
+    char *id = generate_op_key(name, action, interval_ms);
     svc_action_t *op = NULL;
 
     /* We can only cancel a recurring action */
@@ -647,10 +649,10 @@ done:
 }
 
 gboolean
-services_action_kick(const char *name, const char *action, int interval /* ms */)
+services_action_kick(const char *name, const char *action, int interval_ms)
 {
     svc_action_t * op = NULL;
-    char *id = generate_op_key(name, action, interval);
+    char *id = generate_op_key(name, action, interval_ms);
 
     init_recurring_actions();
     op = g_hash_table_lookup(recurring_actions, id);

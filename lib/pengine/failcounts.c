@@ -23,9 +23,10 @@ is_matched_failure(const char *rsc_id, xmlNode *conf_op_xml,
 {
     gboolean matched = FALSE;
     const char *conf_op_name = NULL;
-    int conf_op_interval = 0;
+    int conf_op_interval_ms = 0;
     const char *lrm_op_task = NULL;
-    int lrm_op_interval = 0;
+    const char *conf_op_interval_spec = NULL;
+    int lrm_op_interval_ms = 0;
     const char *lrm_op_id = NULL;
     char *last_failure_key = NULL;
 
@@ -33,13 +34,19 @@ is_matched_failure(const char *rsc_id, xmlNode *conf_op_xml,
         return FALSE;
     }
 
+    // Get name and interval from configured op
     conf_op_name = crm_element_value(conf_op_xml, "name");
-    conf_op_interval = crm_get_msec(crm_element_value(conf_op_xml, "interval"));
-    lrm_op_task = crm_element_value(lrm_op_xml, XML_LRM_ATTR_TASK);
-    crm_element_value_int(lrm_op_xml, XML_LRM_ATTR_INTERVAL, &lrm_op_interval);
+    conf_op_interval_spec = crm_element_value(conf_op_xml,
+                                              XML_LRM_ATTR_INTERVAL);
+    conf_op_interval_ms = crm_get_msec(conf_op_interval_spec);
 
-    if (safe_str_eq(conf_op_name, lrm_op_task) == FALSE
-        || conf_op_interval != lrm_op_interval) {
+    // Get name and interval from op history entry
+    lrm_op_task = crm_element_value(lrm_op_xml, XML_LRM_ATTR_TASK);
+    crm_element_value_int(lrm_op_xml, XML_LRM_ATTR_INTERVAL_MS,
+                          &lrm_op_interval_ms);
+
+    if ((conf_op_interval_ms != lrm_op_interval_ms)
+        || safe_str_neq(conf_op_name, lrm_op_task)) {
         return FALSE;
     }
 
@@ -51,7 +58,7 @@ is_matched_failure(const char *rsc_id, xmlNode *conf_op_xml,
 
     } else {
         char *expected_op_key = generate_op_key(rsc_id, conf_op_name,
-                                                conf_op_interval);
+                                                conf_op_interval_ms);
 
         if (safe_str_eq(expected_op_key, lrm_op_id)) {
             int rc = 0;
@@ -104,18 +111,21 @@ block_failure(node_t *node, resource_t *rsc, xmlNode *xml_op,
 
             } else {
                 const char *conf_op_name = NULL;
-                int conf_op_interval = 0;
+                const char *conf_op_interval_spec = NULL;
+                int conf_op_interval_ms = 0;
                 char *lrm_op_xpath = NULL;
                 xmlXPathObject *lrm_op_xpathObj = NULL;
 
+                // Get name and interval from configured op
                 conf_op_name = crm_element_value(pref, "name");
-                conf_op_interval = crm_get_msec(crm_element_value(pref, "interval"));
+                conf_op_interval_spec = crm_element_value(pref, XML_LRM_ATTR_INTERVAL);
+                conf_op_interval_ms = crm_get_msec(conf_op_interval_spec);
 
                 lrm_op_xpath = crm_strdup_printf("//node_state[@uname='%s']"
                                                "//lrm_resource[@id='%s']"
                                                "/lrm_rsc_op[@operation='%s'][@interval='%d']",
                                                node->details->uname, xml_name,
-                                               conf_op_name, conf_op_interval);
+                                               conf_op_name, conf_op_interval_ms);
                 lrm_op_xpathObj = xpath_search(data_set->input, lrm_op_xpath);
 
                 free(lrm_op_xpath);

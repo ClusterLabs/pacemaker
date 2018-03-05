@@ -432,7 +432,7 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
         g_hash_table_iter_init(&gIter, lrm_state->pending_ops);
         while (g_hash_table_iter_next(&gIter, NULL, (void **)&pending)) {
             /* Ignore recurring actions in the shutdown calculations */
-            if (pending->interval == 0) {
+            if (pending->interval_ms == 0) {
                 counter++;
             }
         }
@@ -483,7 +483,7 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
             while (g_hash_table_iter_next(&hIter, (gpointer*)&key, (gpointer*)&pending)) {
                 if (crm_str_eq(entry->id, pending->rsc_id, TRUE)) {
                     crm_notice("%sction %s (%s) incomplete at %s",
-                               pending->interval == 0 ? "A" : "Recurring a",
+                               pending->interval_ms == 0 ? "A" : "Recurring a",
                                key, pending->op_key, when);
                 }
             }
@@ -1072,7 +1072,7 @@ erase_lrm_history_by_id(lrm_state_t *lrm_state, const char *rsc_id,
 }
 
 static inline gboolean
-last_failed_matches_op(rsc_history_t *entry, const char *op, int interval)
+last_failed_matches_op(rsc_history_t *entry, const char *op, int interval_ms)
 {
     if (entry == NULL) {
         return FALSE;
@@ -1081,7 +1081,7 @@ last_failed_matches_op(rsc_history_t *entry, const char *op, int interval)
         return TRUE;
     }
     return (safe_str_eq(op, entry->failed->op_type)
-            && (interval == entry->failed->interval));
+            && (interval_ms == entry->failed->interval));
 }
 
 /*!
@@ -1092,14 +1092,14 @@ last_failed_matches_op(rsc_history_t *entry, const char *op, int interval)
  * LRM resource history in the CIB, and the resource history remembered
  * for the LRM state.
  *
- * \param[in] rsc_id     Resource name
- * \param[in] node_name  Node name
- * \param[in] operation  If specified, only clear if matching this operation
- * \param[in] interval   If operation is specified, it has this interval in ms
+ * \param[in] rsc_id      Resource name
+ * \param[in] node_name   Node name
+ * \param[in] operation   If specified, only clear if matching this operation
+ * \param[in] interval_ms If operation is specified, it has this interval
  */
 void
 lrm_clear_last_failure(const char *rsc_id, const char *node_name,
-                       const char *operation, int interval)
+                       const char *operation, int interval_ms)
 {
     char *op_key = NULL;
     char *orig_op_key = NULL;
@@ -1113,7 +1113,7 @@ lrm_clear_last_failure(const char *rsc_id, const char *node_name,
     /* Erase from CIB */
     op_key = generate_op_key(rsc_id, "last_failure", 0);
     if (operation) {
-        orig_op_key = generate_op_key(rsc_id, operation, interval);
+        orig_op_key = generate_op_key(rsc_id, operation, interval_ms);
     }
     erase_lrm_history_by_id(lrm_state, rsc_id, op_key, orig_op_key, 0);
     free(op_key);
@@ -1124,7 +1124,7 @@ lrm_clear_last_failure(const char *rsc_id, const char *node_name,
         rsc_history_t *entry = g_hash_table_lookup(lrm_state->resource_history,
                                                    rsc_id);
 
-        if (last_failed_matches_op(entry, operation, interval)) {
+        if (last_failed_matches_op(entry, operation, interval_ms)) {
             lrmd_free_event(entry->failed);
             entry->failed = NULL;
         }
@@ -1168,7 +1168,8 @@ cancel_op(lrm_state_t * lrm_state, const char *rsc_id, const char *key, int op, 
     }
 
     crm_debug("Cancelling op %d for %s (%s)", op, rsc_id, key);
-    rc = lrm_state_cancel(lrm_state, pending->rsc_id, pending->op_type, pending->interval);
+    rc = lrm_state_cancel(lrm_state, pending->rsc_id, pending->op_type,
+                          pending->interval_ms);
     if (rc == pcmk_ok) {
         crm_debug("Op %d for %s (%s): cancelled", op, rsc_id, key);
         free(local_key);
@@ -1628,16 +1629,16 @@ static bool do_lrm_cancel(ha_msg_input_t *input, lrm_state_t *lrm_state,
     int call = 0;
     const char *call_id = NULL;
     const char *op_task = NULL;
-    const char *op_interval = NULL;
+    const char *interval_ms_s = NULL;
     gboolean in_progress = FALSE;
     xmlNode *params = find_xml_node(input->xml, XML_TAG_ATTRS, TRUE);
 
     CRM_CHECK(params != NULL, return FALSE);
 
-    meta_key = crm_meta_name(XML_LRM_ATTR_INTERVAL);
-    op_interval = crm_element_value(params, meta_key);
+    meta_key = crm_meta_name(XML_LRM_ATTR_INTERVAL_MS);
+    interval_ms_s = crm_element_value(params, meta_key);
     free(meta_key);
-    CRM_CHECK(op_interval != NULL, return FALSE);
+    CRM_CHECK(interval_ms_s != NULL, return FALSE);
 
     meta_key = crm_meta_name(XML_LRM_ATTR_TASK);
     op_task = crm_element_value(params, meta_key);
@@ -1648,7 +1649,7 @@ static bool do_lrm_cancel(ha_msg_input_t *input, lrm_state_t *lrm_state,
     call_id = crm_element_value(params, meta_key);
     free(meta_key);
 
-    op_key = generate_op_key(rsc->id, op_task, crm_parse_int(op_interval, "0"));
+    op_key = generate_op_key(rsc->id, op_task, crm_parse_int(interval_ms_s, "0"));
 
     crm_debug("PE requested op %s (call=%s) be cancelled",
               op_key, (call_id? call_id : "NA"));
@@ -1885,7 +1886,7 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
     lrmd_event_data_t *op = NULL;
     const char *op_delay = NULL;
     const char *op_timeout = NULL;
-    const char *op_interval = NULL;
+    const char *interval_ms_s = NULL;
     GHashTable *params = NULL;
 
     const char *transition = NULL;
@@ -1925,9 +1926,9 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
 
     op_delay = crm_meta_value(params, XML_OP_ATTR_START_DELAY);
     op_timeout = crm_meta_value(params, XML_ATTR_TIMEOUT);
-    op_interval = crm_meta_value(params, XML_LRM_ATTR_INTERVAL);
+    interval_ms_s = crm_meta_value(params, XML_LRM_ATTR_INTERVAL_MS);
 
-    op->interval = crm_parse_int(op_interval, "0");
+    op->interval = crm_parse_int(interval_ms_s, "0");
     op->timeout = crm_parse_int(op_timeout, "0");
     op->start_delay = crm_parse_int(op_delay, "0");
 
@@ -2119,7 +2120,9 @@ stop_recurring_action_by_rsc(gpointer key, gpointer value, gpointer user_data)
     struct stop_recurring_action_s *event = user_data;
     struct recurring_op_s *op = (struct recurring_op_s *)value;
 
-    if (op->interval != 0 && crm_str_eq(op->rsc_id, event->rsc->id, TRUE)) {
+    if ((op->interval_ms != 0)
+        && crm_str_eq(op->rsc_id, event->rsc->id, TRUE)) {
+
         crm_debug("Cancelling op %d for %s (%s)", op->call_id, op->rsc_id, (char*)key);
         remove = !cancel_op(event->lrm_state, event->rsc->id, key, op->call_id, FALSE);
     }
@@ -2134,7 +2137,7 @@ stop_recurring_actions(gpointer key, gpointer value, gpointer user_data)
     lrm_state_t *lrm_state = user_data;
     struct recurring_op_s *op = (struct recurring_op_s *)value;
 
-    if (op->interval != 0) {
+    if (op->interval_ms != 0) {
         crm_info("Cancelling op %d for %s (%s)", op->call_id, op->rsc_id, key);
         remove = !cancel_op(lrm_state, op->rsc_id, key, op->call_id, FALSE);
     }
@@ -2309,7 +2312,7 @@ do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operat
         crm_trace("Recording pending op: %d - %s %s", call_id, op_id, call_id_s);
 
         pending->call_id = call_id;
-        pending->interval = op->interval;
+        pending->interval_ms = op->interval;
         pending->op_type = strdup(operation);
         pending->op_key = strdup(op_id);
         pending->rsc_id = strdup(rsc->id);
