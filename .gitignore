@@ -152,6 +152,16 @@ lib/gnu/libgnu.a
 lib/gnu/stdalign.h
 *.coverity
 
+# Built only in 2.0 branch (makes switching branches easier)
+/cts/cts-coverage
+/cts/cts-lrmd
+/cts/cts-pengine
+/cts/cts-stonithd
+/cts/fence_dummy
+/cts/pengine/
+/doc/Pacemaker_Administration.build
+/doc/Pacemaker_Administration/
+
 #Other 
 mock
 HTML
