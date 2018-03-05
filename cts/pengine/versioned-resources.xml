@@ -117,7 +117,7 @@
         </primitive>
       </clone>
       <clone id="vtest7-master">
-        <meta_attributes id="vtest7-master">
+        <meta_attributes id="vtest7-master-meta">
           <nvpair id="vtest7-master-promotable" name="promotable" value="true"/>
         </meta_attributes>
         <primitive class="ocf" id="vtest7" provider="kgaillot" type="vstateful">
