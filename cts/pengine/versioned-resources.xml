@@ -1,4 +1,4 @@
-<cib crm_feature_set="3.0.10" validate-with="pacemaker-2.5" epoch="84" num_updates="165" admin_epoch="0" cib-last-written="Tue Jul 26 16:00:04 2016" update-origin="rhel7-1" update-client="cibadmin" update-user="root" have-quorum="1" dc-uuid="2">
+<cib crm_feature_set="3.0.10" validate-with="pacemaker-3.0" epoch="84" num_updates="165" admin_epoch="0" cib-last-written="Tue Jul 26 16:00:04 2016" update-origin="rhel7-1" update-client="cibadmin" update-user="root" have-quorum="1" dc-uuid="2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -9,7 +9,6 @@
         <nvpair id="cts-batch-limit" name="batch-limit" value="10"/>
         <nvpair id="cts-dc-deadtime" name="dc-deadtime" value="5s"/>
         <nvpair id="cts-no-quorum-policy" name="no-quorum-policy" value="stop"/>
-        <nvpair id="cts-expected-quorum-votes" name="expected-quorum-votes" value="5"/>
         <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.15-377.8cf6dfe.git.el7.centos-8cf6dfe"/>
         <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
@@ -36,7 +35,6 @@
         <instance_attributes id="Fencing-params">
           <nvpair id="Fencing-delay" name="delay" value="0"/>
           <nvpair id="Fencing-multicast_address" name="multicast_address" value="239.255.100.100"/>
-          <nvpair id="Fencing-pcmk_arg_map" name="pcmk_arg_map" value="domain:uname"/>
           <nvpair id="Fencing-pcmk_host_list" name="pcmk_host_list" value="rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5"/>
         </instance_attributes>
         <operations>

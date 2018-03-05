@@ -1,4 +1,4 @@
-<cib crm_feature_set="3.0.10" validate-with="pacemaker-2.3" epoch="10" num_updates="1" admin_epoch="0" cib-last-written="Mon Jun 22 11:56:24 2015" have-quorum="1" dc-uuid="1">
+<cib crm_feature_set="3.0.10" validate-with="pacemaker-3.0" epoch="10" num_updates="1" admin_epoch="0" cib-last-written="Mon Jun 22 11:56:24 2015" have-quorum="1" dc-uuid="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -15,7 +15,6 @@
     </nodes>
     <resources>
       <primitive class="stonith" id="shooter" type="fence_phd_kvm">
-        <instance_attributes id="shooter-instance_attributes"/>
         <operations>
           <op id="shooter-monitor-interval-60s" interval="60s" name="monitor"/>
         </operations>
@@ -66,7 +65,6 @@
       </clone>
       <group id="fake_group">
         <primitive class="ocf" id="fake_fs" provider="heartbeat" type="Dummy">
-          <instance_attributes id="fake_fs-instance_attributes"/>
           <operations>
             <op id="fake_fs-start-timeout-20" interval="0s" name="start" timeout="20"/>
             <op id="fake_fs-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -74,7 +72,6 @@
           </operations>
         </primitive>
         <primitive class="ocf" id="container" provider="heartbeat" type="Dummy">
-          <instance_attributes id="container-instance_attributes"/>
           <operations>
             <op id="container-start-timeout-20" interval="0s" name="start" timeout="20"/>
             <op id="container-stop-timeout-20" interval="0s" name="stop" timeout="20"/>

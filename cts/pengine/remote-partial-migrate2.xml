@@ -1,4 +1,4 @@
-<cib crm_feature_set="3.0.9" validate-with="pacemaker-2.2" epoch="328" num_updates="54336" admin_epoch="0" cib-last-written="Fri Dec 12 03:38:23 2014" have-quorum="1" dc-uuid="1">
+<cib crm_feature_set="3.0.9" validate-with="pacemaker-3.0" epoch="328" num_updates="54336" admin_epoch="0" cib-last-written="Fri Dec 12 03:38:23 2014" have-quorum="1" dc-uuid="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -17,7 +17,6 @@
     </nodes>
     <resources>
       <primitive class="stonith" id="shooter" type="fence_docker_cts">
-        <instance_attributes id="shooter-instance_attributes"/>
         <operations>
           <op id="shooter-monitor-interval-60s" interval="60s" name="monitor"/>
         </operations>
@@ -73,7 +72,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE1" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE1-instance_attributes"/>
         <operations>
           <op id="FAKE1-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE1-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -81,7 +79,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE2" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE2-instance_attributes"/>
         <operations>
           <op id="FAKE2-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE2-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -89,7 +86,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE3" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE3-instance_attributes"/>
         <operations>
           <op id="FAKE3-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE3-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -97,7 +93,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE4" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE4-instance_attributes"/>
         <operations>
           <op id="FAKE4-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE4-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -105,7 +100,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE5" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE5-instance_attributes"/>
         <operations>
           <op id="FAKE5-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE5-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -113,7 +107,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE6" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE6-instance_attributes"/>
         <operations>
           <op id="FAKE6-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE6-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -121,7 +114,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE7" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE7-instance_attributes"/>
         <operations>
           <op id="FAKE7-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE7-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -129,7 +121,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE8" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE8-instance_attributes"/>
         <operations>
           <op id="FAKE8-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE8-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -137,7 +128,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE9" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE9-instance_attributes"/>
         <operations>
           <op id="FAKE9-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE9-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -145,7 +135,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE10" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE10-instance_attributes"/>
         <operations>
           <op id="FAKE10-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE10-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -153,7 +142,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE11" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE11-instance_attributes"/>
         <operations>
           <op id="FAKE11-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE11-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -161,7 +149,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE12" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE12-instance_attributes"/>
         <operations>
           <op id="FAKE12-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE12-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -169,7 +156,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE13" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE13-instance_attributes"/>
         <operations>
           <op id="FAKE13-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE13-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -177,7 +163,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE14" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE14-instance_attributes"/>
         <operations>
           <op id="FAKE14-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE14-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -185,7 +170,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE15" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE15-instance_attributes"/>
         <operations>
           <op id="FAKE15-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE15-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -193,7 +177,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE16" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE16-instance_attributes"/>
         <operations>
           <op id="FAKE16-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE16-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -201,7 +184,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE17" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE17-instance_attributes"/>
         <operations>
           <op id="FAKE17-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE17-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -209,7 +191,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE18" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE18-instance_attributes"/>
         <operations>
           <op id="FAKE18-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE18-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -217,7 +198,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE19" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE19-instance_attributes"/>
         <operations>
           <op id="FAKE19-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE19-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -225,7 +205,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE20" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE20-instance_attributes"/>
         <operations>
           <op id="FAKE20-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE20-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -233,7 +212,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE21" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE21-instance_attributes"/>
         <operations>
           <op id="FAKE21-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE21-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -241,7 +219,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE22" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE22-instance_attributes"/>
         <operations>
           <op id="FAKE22-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE22-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -249,7 +226,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE23" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE23-instance_attributes"/>
         <operations>
           <op id="FAKE23-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE23-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -257,7 +233,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE24" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE24-instance_attributes"/>
         <operations>
           <op id="FAKE24-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE24-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -265,7 +240,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE25" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE25-instance_attributes"/>
         <operations>
           <op id="FAKE25-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE25-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -273,7 +247,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE26" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE26-instance_attributes"/>
         <operations>
           <op id="FAKE26-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE26-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -281,7 +254,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE27" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE27-instance_attributes"/>
         <operations>
           <op id="FAKE27-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE27-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -289,7 +261,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE28" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE28-instance_attributes"/>
         <operations>
           <op id="FAKE28-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE28-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -297,7 +268,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE29" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE29-instance_attributes"/>
         <operations>
           <op id="FAKE29-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE29-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -305,7 +275,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE30" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE30-instance_attributes"/>
         <operations>
           <op id="FAKE30-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE30-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -313,7 +282,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE31" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE31-instance_attributes"/>
         <operations>
           <op id="FAKE31-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE31-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -321,7 +289,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE32" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE32-instance_attributes"/>
         <operations>
           <op id="FAKE32-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE32-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -329,7 +296,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE33" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE33-instance_attributes"/>
         <operations>
           <op id="FAKE33-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE33-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -337,7 +303,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE34" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE34-instance_attributes"/>
         <operations>
           <op id="FAKE34-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE34-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -345,7 +310,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE35" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE35-instance_attributes"/>
         <operations>
           <op id="FAKE35-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE35-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -353,7 +317,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE36" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE36-instance_attributes"/>
         <operations>
           <op id="FAKE36-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE36-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -361,7 +324,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE37" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE37-instance_attributes"/>
         <operations>
           <op id="FAKE37-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE37-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -369,7 +331,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE38" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE38-instance_attributes"/>
         <operations>
           <op id="FAKE38-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE38-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -377,7 +338,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE39" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE39-instance_attributes"/>
         <operations>
           <op id="FAKE39-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE39-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -385,7 +345,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE40" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE40-instance_attributes"/>
         <operations>
           <op id="FAKE40-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE40-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -393,7 +352,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE41" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE41-instance_attributes"/>
         <operations>
           <op id="FAKE41-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE41-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -401,7 +359,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE42" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE42-instance_attributes"/>
         <operations>
           <op id="FAKE42-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE42-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -409,7 +366,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE43" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE43-instance_attributes"/>
         <operations>
           <op id="FAKE43-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE43-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -417,7 +373,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE44" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE44-instance_attributes"/>
         <operations>
           <op id="FAKE44-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE44-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -425,7 +380,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE45" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE45-instance_attributes"/>
         <operations>
           <op id="FAKE45-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE45-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -433,7 +387,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE46" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE46-instance_attributes"/>
         <operations>
           <op id="FAKE46-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE46-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -441,7 +394,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE47" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE47-instance_attributes"/>
         <operations>
           <op id="FAKE47-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE47-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -449,7 +401,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE48" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE48-instance_attributes"/>
         <operations>
           <op id="FAKE48-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE48-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -457,7 +408,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE49" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE49-instance_attributes"/>
         <operations>
           <op id="FAKE49-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE49-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -465,7 +415,6 @@
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE50" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE50-instance_attributes"/>
         <operations>
           <op id="FAKE50-start-timeout-20" interval="0s" name="start" timeout="20"/>
           <op id="FAKE50-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
