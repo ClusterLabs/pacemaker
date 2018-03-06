@@ -369,19 +369,27 @@ cts_pengine() {
 	</xsl:stylesheet>
 EOF
 )
+			_tcp_schema_t=${_tcp_validatewith}
 			case "${_tcp_validatewith}" in
 			1) _tcp_schema_o=1.3;;
 			2) _tcp_schema_o=2.10;;
+			# only for gradual refinement as upgrade-2.10.xsl under
+			# active development, move to 3.x when schema v4 emerges
+			3) _tcp_schema_o=2.10
+			   _tcp_schema_t=2;;
 			*) emit_error \
 			   "need to skip ${_tcp_origin} (schema: ${_tcp_validatewith})"
 			   continue;;
 			esac
 			_tcp_template="upgrade-${_tcp_schema_o}.xsl"
-			_tcp_schema_o="pacemaker-${_tcp_schema_o}.rng"
-			_tcp_schema_t="pacemaker-$((_tcp_validatewith + 1)).0.rng"
+			_tcp_schema_t="pacemaker-$((_tcp_schema_t + 1)).0.rng"
+			test "${_tcp_schema_o%%.*}" = "${_tcp_validatewith}" \
+			  && _tcp_schema_o="pacemaker-${_tcp_schema_o}.rng" \
+			  || _tcp_schema_o="${_tcp_schema_t}"
 
 			# pre-validate
-			if ! test_runner_validate "${_tcp_schema_o}" "${_tcp_origin}"; then
+			if test "${_tcp_schema_o}" != "${_tcp_schema_t}" \
+			  && ! test_runner_validate "${_tcp_schema_o}" "${_tcp_origin}"; then
 				_tcp_ret=$((_tcp_ret + 1)); echo "E:pre-validate"; continue
 			fi
 
