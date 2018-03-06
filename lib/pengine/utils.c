@@ -652,7 +652,7 @@ unpack_operation_on_fail(action_t * action)
                 continue;
             } else if (safe_str_neq(name, "monitor") || safe_str_neq(role, "Master")) {
                 continue;
-            } else if (crm_get_interval(interval_spec) <= 0) {
+            } else if (crm_parse_interval_spec(interval_spec) <= 0) {
                 continue;
             }
 
@@ -689,7 +689,7 @@ find_min_interval_mon(resource_t * rsc, gboolean include_disabled)
                 continue;
             }
 
-            interval_ms = crm_get_interval(interval_spec);
+            interval_ms = crm_parse_interval_spec(interval_spec);
             if (interval_ms < 0) {
                 continue;
             }
@@ -943,7 +943,7 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
     field = XML_LRM_ATTR_INTERVAL;
     value = g_hash_table_lookup(action->meta, field);
     if (value != NULL) {
-        interval_ms = crm_get_interval(value);
+        interval_ms = crm_parse_interval_spec(value);
         if (interval_ms > 0) {
             value_ms = crm_itoa(interval_ms);
             g_hash_table_replace(action->meta, strdup(field), value_ms);
@@ -1174,7 +1174,7 @@ find_rsc_op_entry_helper(resource_t * rsc, const char *key, gboolean include_dis
                 continue;
             }
 
-            interval_ms = crm_get_interval(interval_spec);
+            interval_ms = crm_parse_interval_spec(interval_spec);
             match_key = generate_op_key(rsc->id, name, interval_ms);
             if (safe_str_eq(key, match_key)) {
                 op = operation;

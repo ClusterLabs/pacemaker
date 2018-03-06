@@ -671,7 +671,7 @@ RecurringOp(resource_t * rsc, action_t * start, node_t * node,
     }
 
     interval_spec = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
-    interval_ms = crm_get_interval(interval_spec);
+    interval_ms = crm_parse_interval_spec(interval_spec);
 
     if (interval_ms == 0) {
         return;
@@ -885,7 +885,7 @@ RecurringOp_Stopped(resource_t * rsc, action_t * start, node_t * node,
     }
 
     interval_spec = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
-    interval_ms = crm_get_interval(interval_spec);
+    interval_ms = crm_parse_interval_spec(interval_spec);
 
     if (interval_ms == 0) {
         return;

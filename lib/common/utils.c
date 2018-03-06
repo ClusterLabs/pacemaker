@@ -548,7 +548,7 @@ gboolean do_stderr = FALSE;
 #endif
 
 unsigned long long
-crm_get_interval(const char *input)
+crm_parse_interval_spec(const char *input)
 {
     unsigned long long msec = 0;
 

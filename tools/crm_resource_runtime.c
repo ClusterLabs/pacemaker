@@ -582,7 +582,7 @@ clear_rsc_failures(crm_ipc_t *crmd_channel, const char *node_name,
     // Normalize interval to milliseconds for comparison to history entry
     if (operation) {
         interval_ms_s = crm_strdup_printf("%llu",
-                                          crm_get_interval(interval_spec));
+                                         crm_parse_interval_spec(interval_spec));
     }
 
     for (xmlNode *xml_op = __xml_first_child(data_set->failed); xml_op != NULL;
