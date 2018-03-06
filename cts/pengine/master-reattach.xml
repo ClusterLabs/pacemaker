@@ -1,4 +1,4 @@
-<cib admin_epoch="0" validate-with="pacemaker-1.0" have-quorum="1" crm_feature_set="3.0" epoch="119" num_updates="11" cib-last-written="Fri Jul 13 13:51:08 2012" dc-uuid="f430bc66-3388-4b7d-9e99-24fb02855f54">
+<cib admin_epoch="0" validate-with="pacemaker-3.0" have-quorum="1" crm_feature_set="3.0" epoch="119" num_updates="11" cib-last-written="Fri Jul 13 13:51:08 2012" dc-uuid="f430bc66-3388-4b7d-9e99-24fb02855f54">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -30,7 +30,7 @@
     <resources>
       <clone id="ms-drbd1">
         <meta_attributes id="ma-ms-drbd1">
-          <nvpair id="ma-ms-drbd1-0"  name="promotable" value="true"/>
+          <nvpair id="ma-ms-drbd1-0" name="promotable" value="true"/>
           <nvpair id="ma-ms-drbd1-1" name="clone-max" value="2"/>
           <nvpair id="ma-ms-drbd1-2" name="clone-node-max" value="1"/>
           <nvpair id="ma-ms-drbd1-3" name="promoted-max" value="1"/>

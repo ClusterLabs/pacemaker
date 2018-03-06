@@ -1,4 +1,4 @@
-<cib crm_feature_set="2.1" admin_epoch="0" epoch="38" num_updates="1" dc-uuid="06f7483d-273b-4c51-95a6-bccde94d7fdb" have-quorum="1" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:01 2012">
+<cib crm_feature_set="2.1" admin_epoch="0" epoch="38" num_updates="1" dc-uuid="06f7483d-273b-4c51-95a6-bccde94d7fdb" have-quorum="1" remote-tls-port="0" validate-with="pacemaker-3.0" cib-last-written="Fri Jul 13 13:51:01 2012">
   <configuration>
     <crm_config>
       <cluster_property_set id="no-stonith">

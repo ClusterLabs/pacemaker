@@ -1,4 +1,4 @@
-<cib admin_epoch="0" cib-last-written="Tue Jun  3 08:48:20 2014" crm_feature_set="3.0.7" epoch="729" have-quorum="1" num_updates="7" update-client="cibadmin" update-origin="lama2" validate-with="pacemaker-1.2" dc-uuid="1">
+<cib admin_epoch="0" cib-last-written="Tue Jun  3 08:48:20 2014" crm_feature_set="3.0.7" epoch="729" have-quorum="1" num_updates="7" update-client="cibadmin" update-origin="lama2" validate-with="pacemaker-3.0" dc-uuid="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -52,7 +52,6 @@
       </primitive>
       <clone id="dlm-clone">
         <primitive class="ocf" id="dlm" provider="pacemaker" type="controld">
-          <instance_attributes id="dlm-instance_attributes"/>
           <operations>
             <op id="dlm-start-timeout-90" interval="0s" name="start" timeout="90"/>
             <op id="dlm-stop-timeout-100" interval="0s" name="stop" timeout="100"/>
@@ -66,7 +65,6 @@
       </clone>
       <clone id="clvmd-clone">
         <primitive class="ocf" id="clvmd" provider="heartbeat" type="clvm">
-          <instance_attributes id="clvmd-instance_attributes"/>
           <operations>
             <op id="clvmd-start-timeout-90" interval="0s" name="start" timeout="90"/>
             <op id="clvmd-stop-timeout-90" interval="0s" name="stop" timeout="90"/>
@@ -163,7 +161,6 @@
           </operations>
         </primitive>
         <primitive class="ocf" id="res-rsyslog" provider="heartbeat" type="rsyslog.test">
-          <instance_attributes id="res-rsyslog-instance_attributes"/>
           <operations>
             <op id="res-rsyslog-monitor-interval-60" interval="60" name="monitor" on-fail="fence"/>
           </operations>

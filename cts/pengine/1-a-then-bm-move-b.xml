@@ -1,4 +1,4 @@
-<cib epoch="10" num_updates="9" admin_epoch="0" validate-with="pacemaker-1.2" cib-last-written="Wed Oct  2 13:07:16 2013" update-origin="18node1" update-client="cibadmin" crm_feature_set="3.0.7" have-quorum="1" dc-uuid="3">
+<cib epoch="10" num_updates="9" admin_epoch="0" validate-with="pacemaker-3.0" cib-last-written="Wed Oct  2 13:07:16 2013" update-origin="18node1" update-client="cibadmin" crm_feature_set="3.0.7" have-quorum="1" dc-uuid="3">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -15,7 +15,6 @@
     </nodes>
     <resources>
       <primitive class="ocf" id="A" provider="heartbeat" type="Dummy">
-        <instance_attributes id="A-instance_attributes"/>
         <operations>
           <op id="A-monitor-interval-60s" interval="60s" name="monitor"/>
         </operations>

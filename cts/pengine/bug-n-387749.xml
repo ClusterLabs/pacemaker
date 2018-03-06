@@ -1,4 +1,4 @@
-<cib crm_feature_set="2.0" admin_epoch="0" epoch="570" num_updates="44" dc-uuid="1a1ecd04-01a0-43bf-9392-11b89f7d6f10" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:03 2012">
+<cib crm_feature_set="2.0" admin_epoch="0" epoch="570" num_updates="44" dc-uuid="1a1ecd04-01a0-43bf-9392-11b89f7d6f10" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-3.0" cib-last-written="Fri Jul 13 13:51:03 2012">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -75,7 +75,6 @@
           </meta_attributes>
         </primitive>
         <primitive id="resource_nfsserver_single" class="lsb" type="nfsserver">
-          <instance_attributes id="instance_attributes.id22219"/>
           <operations>
             <op name="monitor" interval="15" id="op.auto-2" timeout="15" start-delay="15" on-fail="stop" enabled="true" role="Started"/>
           </operations>

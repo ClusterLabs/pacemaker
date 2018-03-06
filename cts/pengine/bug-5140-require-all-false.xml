@@ -1,10 +1,9 @@
-<cib epoch="89" num_updates="90" admin_epoch="0" validate-with="pacemaker-1.2" cib-last-written="Wed Feb 27 13:02:22 2013" update-origin="hex-2" update-client="crm_attribute" update-user="root" crm_feature_set="3.0.7" have-quorum="1" dc-uuid="hex-2">
+<cib epoch="89" num_updates="90" admin_epoch="0" validate-with="pacemaker-3.0" cib-last-written="Wed Feb 27 13:02:22 2013" update-origin="hex-2" update-client="crm_attribute" update-user="root" crm_feature_set="3.0.7" have-quorum="1" dc-uuid="hex-2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.8-5b6364d"/>
         <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
-        <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="3"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="freeze"/>
         <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1361962559"/>
         <nvpair id="cib-bootstrap-options-stop-all-resources" name="stop-all-resources" value="false"/>

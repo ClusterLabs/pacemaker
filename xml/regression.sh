@@ -370,6 +370,7 @@ cts_pengine() {
 EOF
 )
 			case "${_tcp_validatewith}" in
+			1) _tcp_schema_o=1.3;;
 			2) _tcp_schema_o=2.10;;
 			*) emit_error \
 			   "need to skip ${_tcp_origin} (schema: ${_tcp_validatewith})"

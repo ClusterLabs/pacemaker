@@ -1,10 +1,9 @@
-<cib epoch="466" num_updates="29" admin_epoch="0" validate-with="pacemaker-1.2" crm_feature_set="3.0.7" update-origin="sles11-1" update-client="cibadmin" update-user="root" cib-last-written="Fri Aug  9 09:17:14 2013" have-quorum="1" dc-uuid="sles11-1">
+<cib epoch="466" num_updates="29" admin_epoch="0" validate-with="pacemaker-3.0" crm_feature_set="3.0.7" update-origin="sles11-1" update-client="cibadmin" update-user="root" cib-last-written="Fri Aug  9 09:17:14 2013" have-quorum="1" dc-uuid="sles11-1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.10-6937a4e"/>
         <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
-        <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="2"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
         <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1376009809"/>
       </cluster_property_set>
