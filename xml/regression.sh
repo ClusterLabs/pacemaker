@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 set -eu
-# $1=reference, $2=investigated
+# $1=reference (can be '-' for stdin), $2=investigated
 # alt.: wdiff, colordiff, ...
 DIFF=${DIFF:-diff}
 DIFFOPTS=${DIFFOPTS:--u}
@@ -76,7 +76,9 @@ log2_or_0_add() {
 # stdin: input file per line
 test_cleaner() {
 	while read _tc_origin; do
-		rm -f ${_tc_origin%.*}.up ${_tc_origin%.*}.up.err
+		_tc_origin=${_tc_origin%.*}
+		rm -f "${_tc_origin}.up" "${_tc_origin}.up.err"
+		rm -f "$(dirname "${_tc_origin}")/.$(basename "${_tc_origin}").up"
 	done
 }
 
@@ -107,17 +109,51 @@ test_runner_upgrade() {
 	_tru_mode=${3:?}  # extra modes wrt. "referential" outcome, see below
 
 	_tru_ref="${_tru_source%.*}.ref"
-        { test "${_tru_mode}" -ne 0 || test -f "${_tru_ref}.err"; } \
-	  && _tru_ref_err="${_tru_ref}.err" \
-	  || _tru_ref_err=/dev/null
+        { test "$((_tru_mode & (1 << 0)))" -ne 0 \
+	  || test -f "${_tru_ref}.err"; } \
+	  && _tru_ref_err="${_tru_ref}.err" || _tru_ref_err=/dev/null
 	_tru_target="${_tru_source%.*}.up"
 	_tru_target_err="${_tru_target}.err"
 
-	xsltproc "${_tru_template}" "${_tru_source}" \
-	  > "${_tru_target}" 2> "${_tru_target_err}" \
-	  || { _tru_ref=$?; echo "${_tru_target_err}"; return ${_tru_ref}; }
+	if test $((_tru_mode & (1 << 2))) -eq 0; then
+		xsltproc "${_tru_template}" "${_tru_source}" \
+		  > "${_tru_target}" 2> "${_tru_target_err}" \
+		  || { _tru_ref=$?; echo "${_tru_target_err}"
+		       return ${_tru_ref}; }
+	else
+		# when -B (deblanked outcomes handling) requested, we:
+		# - drop blanks from the source XML
+		#   (effectively emulating pacemaker handling)
+		# - re-drop blanks from the XSLT outcome,
+		#   which is compared with referential outcome
+		#   processed with even greedier custom deblanking
+		#   (extraneous inter-element whitespace like blank
+		#   lines will not get removed otherwise, see lower)
+		xmllint --noblanks "${_tru_source}" \
+		  | xsltproc "${_tru_template}" - \
+		  > "${_tru_target}" 2> "${_tru_target_err}" \
+		  || { _tru_ref=$?; echo "${_tru_target_err}"
+		       return ${_tru_ref}; }
+		# reusing variable no longer needed
+		_tru_template="$(dirname "${_tru_target}")"
+		_tru_template="${_tru_template}/.$(basename "${_tru_target}")"
+		mv "${_tru_target}" "${_tru_template}"
+		xsltproc - "${_tru_template}" > "${_tru_target}" <<-EOF
+	<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+	<xsl:output method="xml" encoding="UTF-8" omit-xml-declaration="yes"/>
+	<xsl:template match="@*|*|comment()|processing-instruction()">
+	  <xsl:copy>
+	    <xsl:apply-templates select="@*|node()"/>
+	  </xsl:copy>
+	</xsl:template>
+	<xsl:template match="text()">
+	  <xsl:value-of select="normalize-space(.)"/>
+	</xsl:template>
+	</xsl:stylesheet>
+EOF
+	fi
 
-	if test "${_tru_mode}" -ne 0; then
+	if test "$((_tru_mode ^ (1 << 2)))" -ne $((1 << 2)); then
 		if test $((_tru_mode & (1 << 0))) -ne 0; then
 			mv "${_tru_target}" "${_tru_ref}"
 			mv "${_tru_target_err}" "${_tru_ref_err}"
@@ -141,8 +177,24 @@ test_runner_upgrade() {
 			fi
 		fi
 	elif test -f "${_tru_ref}" && test -e "${_tru_ref_err}"; then
-		"${DIFF}" ${DIFFOPTS} "${_tru_ref}" "${_tru_target}" >&2 \
-		  && "${DIFF}" ${DIFFOPTS} "${_tru_ref_err}" "${_tru_target_err}" >&2
+		{ test "$((_tru_mode & (1 << 2)))" -eq 0 && cat "${_tru_ref}" \
+		    || xsltproc - "${_tru_ref}" <<-EOF
+	<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+	<xsl:output method="xml" encoding="UTF-8" omit-xml-declaration="yes"/>
+	<xsl:template match="@*|*|comment()|processing-instruction()">
+	  <xsl:copy>
+	    <xsl:apply-templates select="@*|node()"/>
+	  </xsl:copy>
+	</xsl:template>
+	<xsl:template match="text()">
+	  <xsl:value-of select="normalize-space(.)"/>
+	</xsl:template>
+	</xsl:stylesheet>
+EOF
+		} \
+		  | "${DIFF}" ${DIFFOPTS} - "${_tru_target}" >&2 \
+		  && "${DIFF}" ${DIFFOPTS} "${_tru_ref_err}" \
+		       "${_tru_target_err}" >&2
 		if test $? -ne 0; then
 			emit_error "Outputs differ from referential ones"
 			echo "/dev/null"
@@ -169,6 +221,7 @@ test_runner_validate() {
 
 # -o= ... which conventional version to deem as the transform origin
 # -t= ... which conventional version to deem as the transform target
+# -B
 # -D
 # -G  ... see usage
 # stdin: input file per line
@@ -187,6 +240,7 @@ test_runner() {
 		-t=*) _tr_schema_t="pacemaker-${1#-t=}.rng";;
 		-G) _tr_mode=$((_tr_mode | (1 << 0)));;
 		-D) _tr_mode=$((_tr_mode | (1 << 1)));;
+		-B) _tr_mode=$((_tr_mode | (1 << 2)));;
 		esac
 		shift
 	done
@@ -289,9 +343,10 @@ test_suite() {
 # NOTE: big letters are dedicated for per-test-set behaviour,
 #       small ones for generic/global behaviour
 usage() {
-	printf '%s\n  %s\n  %s\n  %s\n  %s\n  %s\n' \
-	    "usage: $0 [-{C,G,S}]* [-|{${tests## }}*]" \
+	printf '%s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n' \
+	    "usage: $0 [-{B,C,D,G,S}]* [-|{${tests## }}*]" \
 	    "- with '-' suite specification the actual ones grabbed on stdin" \
+	    "- use '-B' to run validate-only check suppressing blanks first" \
 	    "- use '-C' to only cleanup ephemeral byproducts" \
 	    "- use '-D' to review originals vs. \"referential\" outcomes" \
 	    "- use '-G' to generate \"referential\" outcomes" \
