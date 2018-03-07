@@ -600,12 +600,13 @@ native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
 }
 
 static gboolean
-is_op_dup(resource_t *rsc, const char *name, const char *interval_spec)
+is_op_dup(resource_t *rsc, const char *name, guint interval_ms)
 {
     gboolean dup = FALSE;
     const char *id = NULL;
     const char *value = NULL;
     xmlNode *operation = NULL;
+    guint interval2_ms = 0;
 
     CRM_ASSERT(rsc);
     for (operation = __xml_first_child(rsc->ops_xml); operation != NULL;
@@ -617,11 +618,8 @@ is_op_dup(resource_t *rsc, const char *name, const char *interval_spec)
             }
 
             value = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
-            if (value == NULL) {
-                value = "0";
-            }
-
-            if (safe_str_neq(value, interval_spec)) {
+            interval2_ms = crm_parse_interval_spec(value);
+            if (interval_ms != interval2_ms) {
                 continue;
             }
 
@@ -678,7 +676,7 @@ RecurringOp(resource_t * rsc, action_t * start, node_t * node,
     }
 
     name = crm_element_value(operation, "name");
-    if (is_op_dup(rsc, name, interval_spec)) {
+    if (is_op_dup(rsc, name, interval_ms)) {
         return;
     }
 
@@ -893,7 +891,7 @@ RecurringOp_Stopped(resource_t * rsc, action_t * start, node_t * node,
     }
 
     name = crm_element_value(operation, "name");
-    if (is_op_dup(rsc, name, interval_spec)) {
+    if (is_op_dup(rsc, name, interval_ms)) {
         return;
     }
 
