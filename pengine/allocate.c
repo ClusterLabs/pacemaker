@@ -1956,7 +1956,7 @@ get_remote_node_state(pe_node_t *node)
         /* Connection resource is failed */
 
         if ((remote_rsc->next_role == RSC_ROLE_STOPPED)
-            && remote_rsc->remote_reconnect_interval
+            && remote_rsc->remote_reconnect_ms
             && node->details->remote_was_fenced) {
 
             /* We won't know whether the connection is recoverable until the

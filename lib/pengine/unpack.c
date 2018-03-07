@@ -1905,7 +1905,7 @@ process_rsc_state(resource_t * rsc, node_t * node,
 
             /* if reconnect delay is in use, prevent the connection from exiting the
              * "STOPPED" role until the failure is cleared by the delay timeout. */
-            if (rsc->remote_reconnect_interval) {
+            if (rsc->remote_reconnect_ms) {
                 rsc->next_role = RSC_ROLE_STOPPED;
             }
             break;
@@ -2741,8 +2741,8 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
          * node connection resources by not clearing a recurring monitor op failure
          * until after the node has been fenced. */
 
-        if (is_set(data_set->flags, pe_flag_stonith_enabled) &&
-            (rsc->remote_reconnect_interval)) {
+        if (is_set(data_set->flags, pe_flag_stonith_enabled)
+            && rsc->remote_reconnect_ms) {
 
             node_t *remote_node = pe_find_node(data_set->nodes, rsc->id);
             if (remote_node && remote_node->details->remote_was_fenced == 0) {
@@ -2780,7 +2780,8 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
                     expired = FALSE;
                 }
 
-            } else if (rsc->remote_reconnect_interval && strstr(ID(xml_op), "last_failure")) {
+            } else if (rsc->remote_reconnect_ms
+                       && strstr(ID(xml_op), "last_failure")) {
                 /* always clear last failure when reconnect interval is set */
                 clear_reason = "reconnect interval is set";
             }
@@ -2936,7 +2937,7 @@ update_resource_state(resource_t * rsc, node_t * node, xmlNode * xml_op, const c
                 rsc->next_role = RSC_ROLE_UNKNOWN;
                 break;
             case action_fail_reset_remote:
-                if (rsc->remote_reconnect_interval == 0) {
+                if (rsc->remote_reconnect_ms == 0) {
                     /* when reconnect delay is not in use, the connection is allowed
                      * to start again after the remote node is fenced and completely
                      * stopped. Otherwise, with reconnect delay we wait for the failure

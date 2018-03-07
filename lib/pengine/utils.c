@@ -1078,7 +1078,7 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
                 value = "recover baremetal remote node connection (default)";
             }
 
-            if (action->rsc->remote_reconnect_interval) {
+            if (action->rsc->remote_reconnect_ms) {
                 action->fail_role = RSC_ROLE_STOPPED;
             }
             action->on_fail = action_fail_reset_remote;

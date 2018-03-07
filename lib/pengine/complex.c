@@ -669,10 +669,10 @@ common_unpack(xmlNode * xml_obj, resource_t ** rsc,
         if (value) {
             /* reconnect delay works by setting failure_timeout and preventing the
              * connection from starting until the failure is cleared. */
-            (*rsc)->remote_reconnect_interval = (crm_get_msec(value) / 1000);
+            (*rsc)->remote_reconnect_ms = crm_parse_interval_spec(value);
             /* we want to override any default failure_timeout in use when remote
              * reconnect_interval is in use. */ 
-            (*rsc)->failure_timeout = (*rsc)->remote_reconnect_interval;
+            (*rsc)->failure_timeout = (*rsc)->remote_reconnect_ms / 1000;
         }
     }
 

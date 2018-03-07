@@ -302,7 +302,7 @@ struct pe_resource_s {
     char *pending_task;
 
     gboolean exclusive_discover;
-    int remote_reconnect_interval;
+    guint remote_reconnect_ms;
 
     pe_working_set_t *cluster;
 
