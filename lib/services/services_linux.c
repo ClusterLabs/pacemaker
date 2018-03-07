@@ -220,13 +220,13 @@ operation_finalize(svc_action_t * op)
 {
     int recurring = 0;
 
-    if (op->interval) {
+    if (op->interval_ms) {
         if (op->cancel) {
             op->status = PCMK_LRM_OP_CANCELLED;
             cancel_recurring_action(op);
         } else {
             recurring = 1;
-            op->opaque->repeat_timer = g_timeout_add(op->interval,
+            op->opaque->repeat_timer = g_timeout_add(op->interval_ms,
                                                      recurring_action_timer, (void *)op);
         }
     }

@@ -276,7 +276,7 @@ append_digest(lrmd_event_data_t * op, xmlNode * update, const char *version, con
 
 #if 0
     if (level < get_crm_log_level()
-        && op->interval == 0 && crm_str_eq(op->op_type, CRMD_ACTION_START, TRUE)) {
+        && op->interval_ms == 0 && crm_str_eq(op->op_type, CRMD_ACTION_START, TRUE)) {
         char *digest_source = dump_xml_unformatted(args_xml);
 
         do_crm_log(level, "Calculated digest %s for %s (%s). Source: %s\n",
@@ -373,9 +373,9 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char * c
     const char *task = NULL;
 
     CRM_CHECK(op != NULL, return NULL);
-    do_crm_log(level, "%s: Updating resource %s after %s op %s (interval=%d)",
+    do_crm_log(level, "%s: Updating resource %s after %s op %s (interval=%u)",
                origin, op->rsc_id, op->op_type, services_lrm_status_str(op->op_status),
-               op->interval);
+               op->interval_ms);
 
     crm_trace("DC version: %s", caller_version);
 
@@ -404,7 +404,7 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char * c
         task = CRMD_ACTION_START;
     }
 
-    key = generate_op_key(op->rsc_id, task, op->interval);
+    key = generate_op_key(op->rsc_id, task, op->interval_ms);
     if (crm_str_eq(task, CRMD_ACTION_NOTIFY, TRUE)) {
         const char *n_type = crm_meta_value(op->params, "notify_type");
         const char *n_task = crm_meta_value(op->params, "notify_operation");
@@ -419,13 +419,13 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char * c
 
     } else if (did_rsc_op_fail(op, target_rc)) {
         op_id = generate_op_key(op->rsc_id, "last_failure", 0);
-        if (op->interval == 0) {
+        if (op->interval_ms == 0) {
             /* Ensure 'last' gets updated too in case recording-pending="true" */
             op_id_additional = generate_op_key(op->rsc_id, "last", 0);
         }
         exit_reason = op->exit_reason;
 
-    } else if (op->interval > 0) {
+    } else if (op->interval_ms > 0) {
         op_id = strdup(key);
 
     } else {
@@ -439,9 +439,9 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char * c
     }
 
     if (op->user_data == NULL) {
-        crm_debug("Generating fake transition key for:"
-                  " %s_%s_%d %d from %s",
-                  op->rsc_id, op->op_type, op->interval, op->call_id, origin);
+        crm_debug("Generating fake transition key for: " CRM_OP_FMT " %d from %s",
+                  op->rsc_id, op->op_type, op->interval_ms,
+                  op->call_id, origin);
         local_user_data = generate_transition_key(-1, op->call_id, target_rc, FAKE_TE_ID);
         op->user_data = local_user_data;
     }
@@ -463,15 +463,15 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char * c
     crm_xml_add_int(xml_op, XML_LRM_ATTR_CALLID, op->call_id);
     crm_xml_add_int(xml_op, XML_LRM_ATTR_RC, op->rc);
     crm_xml_add_int(xml_op, XML_LRM_ATTR_OPSTATUS, op->op_status);
-    crm_xml_add_int(xml_op, XML_LRM_ATTR_INTERVAL_MS, op->interval);
+    crm_xml_add_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, op->interval_ms);
 
     if (compare_version("2.1", caller_version) <= 0) {
         if (op->t_run || op->t_rcchange || op->exec_time || op->queue_time) {
-            crm_trace("Timing data (%s_%s_%d): last=%u change=%u exec=%u queue=%u",
-                      op->rsc_id, op->op_type, op->interval,
+            crm_trace("Timing data (" CRM_OP_FMT "): last=%u change=%u exec=%u queue=%u",
+                      op->rsc_id, op->op_type, op->interval_ms,
                       op->t_run, op->t_rcchange, op->exec_time, op->queue_time);
 
-            if (op->interval == 0) {
+            if (op->interval_ms == 0) {
                 /* The values are the same for non-recurring ops */
                 crm_xml_add_int(xml_op, XML_RSC_OP_LAST_RUN, op->t_run);
                 crm_xml_add_int(xml_op, XML_RSC_OP_LAST_CHANGE, op->t_run);

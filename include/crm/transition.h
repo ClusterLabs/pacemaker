@@ -51,7 +51,7 @@ typedef struct synapse_s {
 typedef struct crm_action_s {
     int id;
     int timeout;
-    int interval;
+    guint interval_ms;
     GHashTable *params;
     action_type_e type;
 

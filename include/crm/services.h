@@ -158,7 +158,7 @@ typedef struct svc_action_s {
     char *id;
     char *rsc;
     char *action;
-    int interval;
+    guint interval_ms;
 
     char *standard;
     char *provider;

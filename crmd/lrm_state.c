@@ -86,7 +86,7 @@ fail_pending_op(gpointer key, gpointer value, gpointer user_data)
     event.op_type = op->op_type;
     event.user_data = op->user_data;
     event.timeout = 0;
-    event.interval = op->interval_ms;
+    event.interval_ms = op->interval_ms;
     event.rc = PCMK_OCF_CONNECTION_DIED;
     event.op_status = PCMK_LRM_OP_ERROR;
     event.t_run = op->start_time;

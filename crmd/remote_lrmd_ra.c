@@ -356,7 +356,7 @@ report_remote_ra_result(remote_ra_cmd_t * cmd)
     op.user_data = cmd->userdata;
     op.exit_reason = cmd->exit_reason;
     op.timeout = cmd->timeout;
-    op.interval = cmd->interval_ms;
+    op.interval_ms = cmd->interval_ms;
     op.rc = cmd->rc;
     op.op_status = cmd->op_status;
     op.t_run = cmd->start_time;

@@ -218,7 +218,7 @@ typedef struct lrmd_event_data_s {
     /*! The operation's timeout period in ms. */
     int timeout;
     /*! The operation's recurring interval in ms. */
-    int interval;
+    guint interval_ms;
     /*! The operation's start delay value in ms. */
     int start_delay;
     /*! This operation that just completed is on a deleted rsc. */

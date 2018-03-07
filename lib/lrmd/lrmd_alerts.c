@@ -61,6 +61,17 @@ alert_key2param_int(lrmd_key_value_t *head, enum crm_alert_keys_e name,
     return head;
 }
 
+static lrmd_key_value_t *
+alert_key2param_ms(lrmd_key_value_t *head, enum crm_alert_keys_e name,
+                   guint value)
+{
+    char *value_s = crm_strdup_printf("%u", value);
+
+    head = alert_key2param(head, name, value_s);
+    free(value_s);
+    return head;
+}
+
 static void
 set_ev_kv(gpointer key, gpointer value, gpointer user_data)
 {
@@ -336,7 +347,7 @@ lrmd_send_resource_alert(lrmd_t *lrmd, GList *alert_list,
     }
 
     target_rc = rsc_op_expected_rc(op);
-    if ((op->interval == 0) && (target_rc == op->rc)
+    if ((op->interval_ms == 0) && (target_rc == op->rc)
         && safe_str_eq(op->op_type, RSC_STATUS)) {
 
         /* Don't send alerts for probes with the expected result. Leave it up to
@@ -350,7 +361,7 @@ lrmd_send_resource_alert(lrmd_t *lrmd, GList *alert_list,
     params = alert_key2param(params, CRM_alert_node, node);
     params = alert_key2param(params, CRM_alert_rsc, op->rsc_id);
     params = alert_key2param(params, CRM_alert_task, op->op_type);
-    params = alert_key2param_int(params, CRM_alert_interval, op->interval);
+    params = alert_key2param_ms(params, CRM_alert_interval, op->interval_ms);
     params = alert_key2param_int(params, CRM_alert_target_rc, target_rc);
     params = alert_key2param_int(params, CRM_alert_status, op->op_status);
     params = alert_key2param_int(params, CRM_alert_rc, op->rc);

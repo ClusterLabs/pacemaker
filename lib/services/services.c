@@ -221,7 +221,7 @@ resources_action_create(const char *name, const char *standard,
     op = calloc(1, sizeof(svc_action_t));
     op->opaque = calloc(1, sizeof(svc_action_private_t));
     op->rsc = strdup(name);
-    op->interval = interval_ms;
+    op->interval_ms = interval_ms;
     op->timeout = timeout;
     op->standard = expand_resource_class(name, standard, agent);
     op->agent = strdup(agent);
@@ -266,7 +266,7 @@ resources_action_create(const char *name, const char *standard,
         op->opaque->args[0] = strdup(op->opaque->exec);
         index = 1;
 
-        if (safe_str_eq(op->action, "monitor") && op->interval == 0) {
+        if (safe_str_eq(op->action, "monitor") && (op->interval_ms == 0)) {
             /* Invoke --version for a nagios probe */
             op->opaque->args[index] = strdup("--version");
             index++;
@@ -779,7 +779,7 @@ services_action_async(svc_action_t * op, void (*action_callback) (svc_action_t *
         op->opaque->callback = action_callback;
     }
 
-    if (op->interval > 0) {
+    if (op->interval_ms > 0) {
         init_recurring_actions();
         if (handle_duplicate_recurring(op) == TRUE) {
             /* entry rescheduled, dup freed */
@@ -1190,8 +1190,8 @@ services_action_sync(svc_action_t * op)
     } else {
         rc = action_exec_helper(op);
     }
-    crm_trace(" > %s_%s_%d: %s = %d",
-              op->rsc, op->action, op->interval, op->opaque->exec, op->rc);
+    crm_trace(" > " CRM_OP_FMT ": %s = %d",
+              op->rsc, op->action, op->interval_ms, op->opaque->exec, op->rc);
     if (op->stdout_data) {
         crm_trace(" >  stdout: %s", op->stdout_data);
     }
