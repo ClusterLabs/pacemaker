@@ -893,36 +893,35 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
     char *value_ms = NULL;
     const char *value = NULL;
     const char *field = NULL;
+    char *default_timeout = NULL;
 #if ENABLE_VERSIONED_ATTRS
     pe_rsc_action_details_t *rsc_details = NULL;
 #endif
 
-    CRM_CHECK(action->rsc != NULL, return);
-
-    // Probe timeouts default to minimum-interval monitor's
-    if ((xml_obj == NULL) && action &&
-        safe_str_eq(action->task, RSC_STATUS) && (interval_ms == 0)) {
-
-        xmlNode *min_interval_mon = find_min_interval_mon(action->rsc, FALSE);
-
-        if (min_interval_mon) {
-            value = crm_element_value(min_interval_mon, XML_ATTR_TIMEOUT);
-            if (value) {
-                crm_trace("\t%s defaults to minimum-interval monitor's timeout '%s'",
-                          action->uuid, value);
-                g_hash_table_insert(action->meta, strdup(XML_ATTR_TIMEOUT),
-                                    strdup(value));
-            }
-        }
-    }
+    CRM_CHECK(action && action->rsc, return);
 
     // Cluster-wide <op_defaults> <meta_attributes>
     unpack_instance_attributes(data_set->input, data_set->op_defaults, XML_TAG_META_SETS, NULL,
                                action->meta, NULL, FALSE, data_set->now);
 
+    // Probe timeouts default differently, so handle timeout default later
+    default_timeout = g_hash_table_lookup(action->meta, XML_ATTR_TIMEOUT);
+    if (default_timeout) {
+        default_timeout = strdup(default_timeout);
+        g_hash_table_remove(action->meta, XML_ATTR_TIMEOUT);
+    }
+
     // <op> <meta_attributes> take precedence over defaults
     unpack_instance_attributes(data_set->input, xml_obj, XML_TAG_META_SETS,
                                NULL, action->meta, NULL, TRUE, data_set->now);
+
+#if ENABLE_VERSIONED_ATTRS
+    rsc_details = pe_rsc_action_details(action);
+    pe_unpack_versioned_attributes(data_set->input, xml_obj, XML_TAG_ATTR_SETS, NULL,
+                                   rsc_details->versioned_parameters, data_set->now);
+    pe_unpack_versioned_attributes(data_set->input, xml_obj, XML_TAG_META_SETS, NULL,
+                                   rsc_details->versioned_meta, data_set->now);
+#endif
 
     /* Anything set as an <op> XML property has highest precedence.
      * This ensures we use the name and interval from the <op> tag.
@@ -938,16 +937,9 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
         }
     }
 
-#if ENABLE_VERSIONED_ATTRS
-    rsc_details = pe_rsc_action_details(action);
-    pe_unpack_versioned_attributes(data_set->input, xml_obj, XML_TAG_ATTR_SETS, NULL,
-                                   rsc_details->versioned_parameters, data_set->now);
-    pe_unpack_versioned_attributes(data_set->input, xml_obj, XML_TAG_META_SETS, NULL,
-                                   rsc_details->versioned_meta, data_set->now);
-#endif
-
     g_hash_table_remove(action->meta, "id");
 
+    // Normalize interval to milliseconds
     field = XML_LRM_ATTR_INTERVAL;
     value = g_hash_table_lookup(action->meta, field);
     if (value != NULL) {
@@ -958,6 +950,33 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
 
         } else {
             g_hash_table_remove(action->meta, field);
+        }
+    }
+
+    // Handle timeout default, now that we know the interval
+    if (g_hash_table_lookup(action->meta, XML_ATTR_TIMEOUT)) {
+        free(default_timeout);
+
+    } else {
+        // Probe timeouts default to minimum-interval monitor's
+        if (safe_str_eq(action->task, RSC_STATUS) && (interval_ms == 0)) {
+
+            xmlNode *min_interval_mon = find_min_interval_mon(action->rsc, FALSE);
+
+            if (min_interval_mon) {
+                value = crm_element_value(min_interval_mon, XML_ATTR_TIMEOUT);
+                if (value) {
+                    crm_trace("\t%s defaults to minimum-interval monitor's timeout '%s'",
+                              action->uuid, value);
+                    free(default_timeout);
+                    default_timeout = strdup(value);
+                }
+            }
+        }
+
+        if (default_timeout) {
+            g_hash_table_insert(action->meta, strdup(XML_ATTR_TIMEOUT),
+                                default_timeout);
         }
     }
 
@@ -1112,7 +1131,6 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
     pe_rsc_trace(action->rsc, "\t%s failure results in: %s", action->task,
                  role2text(action->fail_role));
 
-    field = XML_OP_ATTR_START_DELAY;
     value = g_hash_table_lookup(action->meta, XML_OP_ATTR_START_DELAY);
     if (value) {
         unpack_start_delay(value, action->meta);
@@ -1122,8 +1140,7 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
                                data_set->now);
     }
 
-    field = XML_ATTR_TIMEOUT;
-    value = g_hash_table_lookup(action->meta, field);
+    value = g_hash_table_lookup(action->meta, XML_ATTR_TIMEOUT);
     timeout = unpack_timeout(value);
     g_hash_table_replace(action->meta, strdup(XML_ATTR_TIMEOUT), crm_itoa(timeout));
 
