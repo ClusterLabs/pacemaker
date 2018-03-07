@@ -791,17 +791,11 @@ unpack_interval_origin(const char *value, GHashTable *meta, xmlNode *xml_obj,
 static int
 unpack_timeout(const char *value)
 {
-    int timeout = 0;
+    int timeout = crm_get_msec(value);
 
-    if (value == NULL) {
-        value = CRM_DEFAULT_OP_TIMEOUT_S;
-    }
-
-    timeout = crm_get_msec(value);
     if (timeout < 0) {
-        timeout = 0;
+        timeout = crm_get_msec(CRM_DEFAULT_OP_TIMEOUT_S);
     }
-
     return timeout;
 }
 
@@ -827,15 +821,13 @@ pe_get_configured_timeout(resource_t *rsc, const char *action, pe_working_set_t 
         timeout = g_hash_table_lookup(action_meta, XML_ATTR_TIMEOUT);
     }
 
-    if (timeout == NULL) {
-        timeout = CRM_DEFAULT_OP_TIMEOUT_S;
-    }
+    // @TODO check meta-attributes (including versioned meta-attributes)
+    // @TODO maybe use min-interval monitor timeout as default for monitors
 
     timeout_ms = crm_get_msec(timeout);
     if (timeout_ms < 0) {
-        timeout_ms = 0;
+        timeout_ms = crm_get_msec(CRM_DEFAULT_OP_TIMEOUT_S);
     }
-
     return timeout_ms;
 }
 
