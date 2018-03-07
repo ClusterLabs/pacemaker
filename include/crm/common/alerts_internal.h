@@ -26,7 +26,7 @@
 #  define CRM_ALERT_DEFAULT_TIMEOUT_MS (30000)
 
 /* Default-Format-String used to pass timestamps to the alerts scripts */
-#  define CRM_ALERT_DEFAULT_TSTAMP_FORMAT "%H:%M:%S.%06N"
+#  define CRM_ALERT_DEFAULT_TSTAMP_FORMAT "%Y-%m-%d,%H:%M:%S.%01N"
 
 typedef struct {
     char *name;
