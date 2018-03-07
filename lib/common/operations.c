@@ -241,7 +241,7 @@ filter_action_parameters(xmlNode * param_set, const char *version)
         }
     }
 
-    if (crm_get_msec(interval_ms_s) > 0) {
+    if (interval_ms_s && strcmp(interval_ms_s, "0")) {
         /* Re-instate the operation's timeout value */
         if (timeout != NULL) {
             crm_xml_add(param_set, key, timeout);
