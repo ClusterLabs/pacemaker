@@ -509,7 +509,7 @@ main(int argc, char **argv)
                 break;
             case 'i':
                 if(optarg) {
-                    options.interval_ms = atoi(optarg);
+                    options.interval_ms = crm_parse_interval_spec(optarg);
                 }
                 break;
             case 't':
