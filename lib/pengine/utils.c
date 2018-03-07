@@ -652,7 +652,7 @@ unpack_operation_on_fail(action_t * action)
                 continue;
             } else if (safe_str_neq(name, "monitor") || safe_str_neq(role, "Master")) {
                 continue;
-            } else if (crm_parse_interval_spec(interval_spec) <= 0) {
+            } else if (crm_parse_interval_spec(interval_spec) == 0) {
                 continue;
             }
 
@@ -666,8 +666,8 @@ unpack_operation_on_fail(action_t * action)
 static xmlNode *
 find_min_interval_mon(resource_t * rsc, gboolean include_disabled)
 {
-    int interval_ms = 0;
-    int min_interval_ms = -1;
+    guint interval_ms = 0;
+    guint min_interval_ms = G_MAXUINT;
     const char *name = NULL;
     const char *value = NULL;
     const char *interval_spec = NULL;
@@ -726,7 +726,7 @@ unpack_start_delay(const char *value, GHashTable *meta)
 
 static int
 unpack_interval_origin(const char *value, GHashTable *meta, xmlNode *xml_obj,
-                       unsigned long long interval_ms, crm_time_t *now)
+                       guint interval_ms, crm_time_t *now)
 {
     int start_delay = 0;
 
@@ -842,7 +842,7 @@ pe_get_configured_timeout(resource_t *rsc, const char *action, pe_working_set_t 
 #if ENABLE_VERSIONED_ATTRS
 static void
 unpack_versioned_meta(xmlNode *versioned_meta, xmlNode *xml_obj,
-                      unsigned long long interval_ms, crm_time_t *now)
+                      guint interval_ms, crm_time_t *now)
 {
     xmlNode *attrs = NULL;
     xmlNode *attr = NULL;
@@ -888,7 +888,7 @@ void
 unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
                  pe_working_set_t * data_set)
 {
-    unsigned long long interval_ms = 0;
+    guint interval_ms = 0;
     int timeout = 0;
     char *value_ms = NULL;
     const char *value = NULL;
@@ -945,7 +945,7 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
     if (value != NULL) {
         interval_ms = crm_parse_interval_spec(value);
         if (interval_ms > 0) {
-            value_ms = crm_itoa(interval_ms);
+            value_ms = crm_strdup_printf("%u", interval_ms);
             g_hash_table_replace(action->meta, strdup(field), value_ms);
 
         } else {
@@ -1153,7 +1153,7 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
 static xmlNode *
 find_rsc_op_entry_helper(resource_t * rsc, const char *key, gboolean include_disabled)
 {
-    unsigned long long interval_ms = 0;
+    guint interval_ms = 0;
     gboolean do_retry = TRUE;
     char *local_key = NULL;
     const char *name = NULL;
@@ -1970,7 +1970,7 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
     op_digest_cache_t *data = NULL;
 
     char *key = NULL;
-    int interval_ms = 0;
+    guint interval_ms = 0;
 
     const char *op_version;
     const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
@@ -1985,7 +1985,7 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
     digest_all = crm_element_value(xml_op, XML_LRM_ATTR_OP_DIGEST);
     digest_restart = crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST);
 
-    interval_ms = crm_parse_int(interval_ms_s, "0");
+    interval_ms = crm_parse_ms(interval_ms_s);
     key = generate_op_key(rsc->id, task, interval_ms);
     data = rsc_action_digest(rsc, task, key, node, xml_op, data_set);
 

@@ -650,7 +650,7 @@ RecurringOp(resource_t * rsc, action_t * start, node_t * node,
     const char *interval_spec = NULL;
     const char *node_uname = NULL;
 
-    unsigned long long interval_ms = 0;
+    guint interval_ms = 0;
     action_t *mon = NULL;
     gboolean is_optional = TRUE;
     GListPtr possible_matches = NULL;
@@ -802,8 +802,9 @@ RecurringOp(resource_t * rsc, action_t * start, node_t * node,
         update_action_flags(mon, pe_action_runnable | pe_action_clear, __FUNCTION__, __LINE__);
 
     } else if (is_set(mon->flags, pe_action_optional) == FALSE) {
-        pe_rsc_info(rsc, " Start recurring %s (%llus) for %s on %s", mon->task, interval_ms / 1000,
-                    rsc->id, crm_str(node_uname));
+        pe_rsc_info(rsc, " Start recurring %s (%us) for %s on %s",
+                    mon->task, interval_ms / 1000, rsc->id,
+                    crm_str(node_uname));
     }
 
     if (rsc->next_role == RSC_ROLE_MASTER) {
@@ -861,7 +862,7 @@ RecurringOp_Stopped(resource_t * rsc, action_t * start, node_t * node,
     const char *interval_spec = NULL;
     const char *node_uname = NULL;
 
-    unsigned long long interval_ms = 0;
+    guint interval_ms = 0;
     GListPtr possible_matches = NULL;
     GListPtr gIter = NULL;
 
@@ -1051,7 +1052,7 @@ RecurringOp_Stopped(resource_t * rsc, action_t * start, node_t * node,
 
         if (is_set(stopped_mon->flags, pe_action_runnable)
             && is_set(stopped_mon->flags, pe_action_optional) == FALSE) {
-            crm_notice(" Start recurring %s (%llus) for %s on %s", stopped_mon->task,
+            crm_notice(" Start recurring %s (%us) for %s on %s", stopped_mon->task,
                        interval_ms / 1000, rsc->id, crm_str(stop_node_uname));
         }
     }

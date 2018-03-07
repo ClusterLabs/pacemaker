@@ -41,7 +41,7 @@ GHashTable *rsc_list = NULL;
 
 typedef struct lrmd_cmd_s {
     int timeout;
-    int interval_ms;
+    guint interval_ms;
     int start_delay;
     int timeout_orig;
 
@@ -172,7 +172,7 @@ create_lrmd_cmd(xmlNode * msg, crm_client_t * client)
     cmd->client_id = strdup(client->id);
 
     crm_element_value_int(msg, F_LRMD_CALLID, &cmd->call_id);
-    crm_element_value_int(rsc_xml, F_LRMD_RSC_INTERVAL, &cmd->interval_ms);
+    crm_element_value_ms(rsc_xml, F_LRMD_RSC_INTERVAL, &cmd->interval_ms);
     crm_element_value_int(rsc_xml, F_LRMD_TIMEOUT, &cmd->timeout);
     crm_element_value_int(rsc_xml, F_LRMD_RSC_START_DELAY, &cmd->start_delay);
     cmd->timeout_orig = cmd->timeout;
@@ -185,7 +185,7 @@ create_lrmd_cmd(xmlNode * msg, crm_client_t * client)
     cmd->params = xml2list(rsc_xml);
 
     if (safe_str_eq(g_hash_table_lookup(cmd->params, "CRM_meta_on_fail"), "block")) {
-        crm_debug("Setting flag to leave pid group on timeout and only kill action pid for %s_%s_%d",
+        crm_debug("Setting flag to leave pid group on timeout and only kill action pid for " CRM_OP_FMT,
                   cmd->rsc_id, cmd->action, cmd->interval_ms);
         cmd->service_flags |= SVC_ACTION_LEAVE_GROUP;
     }
@@ -297,7 +297,7 @@ merge_dup:
 
     /* This should not occur, if it does we need to investigate in the crmd
      * how something like this is possible */
-    crm_warn("Duplicate recurring op entry detected (%s_%s_%d), merging with previous op entry",
+    crm_warn("Duplicate recurring op entry detected (" CRM_OP_FMT "), merging with previous op entry",
             rsc->rsc_id,
             normalize_action_name(rsc, dup->action),
             dup->interval_ms);
@@ -493,7 +493,7 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
 
     crm_xml_add(notify, F_LRMD_ORIGIN, __FUNCTION__);
     crm_xml_add_int(notify, F_LRMD_TIMEOUT, cmd->timeout);
-    crm_xml_add_int(notify, F_LRMD_RSC_INTERVAL, cmd->interval_ms);
+    crm_xml_add_ms(notify, F_LRMD_RSC_INTERVAL, cmd->interval_ms);
     crm_xml_add_int(notify, F_LRMD_RSC_START_DELAY, cmd->start_delay);
     crm_xml_add_int(notify, F_LRMD_EXEC_RC, cmd->exec_rc);
     crm_xml_add_int(notify, F_LRMD_OP_STATUS, cmd->lrmd_op_status);
@@ -931,7 +931,7 @@ action_complete(svc_action_t * action)
 static void
 stonith_action_complete(lrmd_cmd_t * cmd, int rc)
 {
-    int recurring = cmd->interval_ms;
+    bool recurring = (cmd->interval_ms > 0);
     lrmd_rsc_t *rsc = NULL;
 
     cmd->exec_rc = get_uniform_rc(PCMK_RESOURCE_CLASS_STONITH, cmd->action, rc);
@@ -939,7 +939,7 @@ stonith_action_complete(lrmd_cmd_t * cmd, int rc)
     rsc = g_hash_table_lookup(rsc_list, cmd->rsc_id);
 
     if (cmd->lrmd_op_status == PCMK_LRM_OP_CANCELLED) {
-        recurring = 0;
+        recurring = FALSE;
         /* do nothing */
 
     } else if (rc == -ENODEV && safe_str_eq(cmd->action, "monitor")) {
@@ -1070,7 +1070,7 @@ lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
         rc = stonith_api->cmds->remove_device(stonith_api, st_opt_sync_call, cmd->rsc_id);
         rsc->stonith_started = 0;
     } else if (safe_str_eq(cmd->action, "monitor")) {
-        if (cmd->interval_ms) {
+        if (cmd->interval_ms > 0) {
             do_monitor = 1;
         } else {
             rc = rsc->stonith_started ? 0 : -ENODEV;
@@ -1443,7 +1443,7 @@ process_lrmd_rsc_exec(crm_client_t * client, uint32_t id, xmlNode * request)
 }
 
 static int
-cancel_op(const char *rsc_id, const char *action, int interval_ms)
+cancel_op(const char *rsc_id, const char *action, guint interval_ms)
 {
     GListPtr gIter = NULL;
     lrmd_rsc_t *rsc = g_hash_table_lookup(rsc_list, rsc_id);
@@ -1549,9 +1549,9 @@ process_lrmd_rsc_cancel(crm_client_t * client, uint32_t id, xmlNode * request)
     xmlNode *rsc_xml = get_xpath_object("//" F_LRMD_RSC, request, LOG_ERR);
     const char *rsc_id = crm_element_value(rsc_xml, F_LRMD_RSC_ID);
     const char *action = crm_element_value(rsc_xml, F_LRMD_RSC_ACTION);
-    int interval_ms = 0;
+    guint interval_ms = 0;
 
-    crm_element_value_int(rsc_xml, F_LRMD_RSC_INTERVAL, &interval_ms);
+    crm_element_value_ms(rsc_xml, F_LRMD_RSC_INTERVAL, &interval_ms);
 
     if (!rsc_id || !action) {
         return -EINVAL;

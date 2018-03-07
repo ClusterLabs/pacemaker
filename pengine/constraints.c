@@ -1357,7 +1357,7 @@ task_from_action_or_key(action_t *action, const char *key)
     char *res = NULL;
     char *rsc_id = NULL;
     char *op_type = NULL;
-    int interval_ms = 0;
+    guint interval_ms = 0;
 
     if (action) {
         res = strdup(action->task);

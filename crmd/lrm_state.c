@@ -77,7 +77,7 @@ fail_pending_op(gpointer key, gpointer value, gpointer user_data)
     lrm_state_t *lrm_state = user_data;
     struct recurring_op_s *op = (struct recurring_op_s *)value;
 
-    crm_trace("Pre-emptively failing %s_%s_%d on %s (call=%s, %s)",
+    crm_trace("Pre-emptively failing " CRM_OP_FMT " on %s (call=%s, %s)",
               op->rsc_id, op->op_type, op->interval_ms,
               lrm_state->node_name, (char*)key, op->user_data);
 
@@ -611,7 +611,7 @@ lrm_state_get_metadata(lrm_state_t * lrm_state,
 
 int
 lrm_state_cancel(lrm_state_t *lrm_state, const char *rsc_id, const char *action,
-                 int interval_ms)
+                 guint interval_ms)
 {
     if (!lrm_state->conn) {
         return -ENOTCONN;
@@ -655,7 +655,7 @@ lrm_state_get_rsc_info(lrm_state_t * lrm_state, const char *rsc_id, enum lrmd_ca
 
 int
 lrm_state_exec(lrm_state_t *lrm_state, const char *rsc_id, const char *action,
-               const char *userdata, int interval_ms,
+               const char *userdata, guint interval_ms,
                int timeout,     /* ms */
                int start_delay, /* ms */
                lrmd_key_value_t * params)

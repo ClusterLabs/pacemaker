@@ -1640,7 +1640,7 @@ lrmd_api_get_metadata(lrmd_t * lrmd,
 
 static int
 lrmd_api_exec(lrmd_t *lrmd, const char *rsc_id, const char *action,
-              const char *userdata, int interval_ms,
+              const char *userdata, guint interval_ms,
               int timeout,      /* ms */
               int start_delay,  /* ms */
               enum lrmd_call_options options, lrmd_key_value_t * params)
@@ -1654,7 +1654,7 @@ lrmd_api_exec(lrmd_t *lrmd, const char *rsc_id, const char *action,
     crm_xml_add(data, F_LRMD_RSC_ID, rsc_id);
     crm_xml_add(data, F_LRMD_RSC_ACTION, action);
     crm_xml_add(data, F_LRMD_RSC_USERDATA_STR, userdata);
-    crm_xml_add_int(data, F_LRMD_RSC_INTERVAL, interval_ms);
+    crm_xml_add_ms(data, F_LRMD_RSC_INTERVAL, interval_ms);
     crm_xml_add_int(data, F_LRMD_TIMEOUT, timeout);
     crm_xml_add_int(data, F_LRMD_RSC_START_DELAY, start_delay);
 
@@ -1698,7 +1698,7 @@ lrmd_api_exec_alert(lrmd_t *lrmd, const char *alert_id, const char *alert_path,
 
 static int
 lrmd_api_cancel(lrmd_t *lrmd, const char *rsc_id, const char *action,
-                int interval_ms)
+                guint interval_ms)
 {
     int rc = pcmk_ok;
     xmlNode *data = create_xml_node(NULL, F_LRMD_RSC);
@@ -1706,7 +1706,7 @@ lrmd_api_cancel(lrmd_t *lrmd, const char *rsc_id, const char *action,
     crm_xml_add(data, F_LRMD_ORIGIN, __FUNCTION__);
     crm_xml_add(data, F_LRMD_RSC_ACTION, action);
     crm_xml_add(data, F_LRMD_RSC_ID, rsc_id);
-    crm_xml_add_int(data, F_LRMD_RSC_INTERVAL, interval_ms);
+    crm_xml_add_ms(data, F_LRMD_RSC_INTERVAL, interval_ms);
     rc = lrmd_send_command(lrmd, LRMD_OP_RSC_CANCEL, data, NULL, 0, 0, TRUE);
     free_xml(data);
     return rc;

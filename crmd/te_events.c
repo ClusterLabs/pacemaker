@@ -122,7 +122,7 @@ static gboolean
 update_failcount(xmlNode * event, const char *event_node_uuid, int rc,
                  int target_rc, gboolean do_update, gboolean ignore_failures)
 {
-    int interval_ms = 0;
+    guint interval_ms = 0;
 
     char *task = NULL;
     char *rsc_id = NULL;

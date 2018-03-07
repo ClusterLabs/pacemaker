@@ -89,7 +89,7 @@ inject_transient_attr(xmlNode * cib_node, const char *name, const char *value)
 
 static void
 update_failcounts(xmlNode * cib_node, const char *resource, const char *task,
-                  int interval_ms, int rc)
+                  guint interval_ms, int rc)
 {
     if (rc == 0) {
         return;
@@ -137,7 +137,8 @@ create_node_entry(cib_t * cib_conn, const char *node)
 }
 
 static lrmd_event_data_t *
-create_op(xmlNode *cib_resource, const char *task, int interval_ms, int outcome)
+create_op(xmlNode *cib_resource, const char *task, guint interval_ms,
+          int outcome)
 {
     lrmd_event_data_t *op = NULL;
     xmlNode *xop = NULL;
@@ -533,7 +534,7 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib,
 
         int rc = 0;
         int outcome = 0;
-        int interval_ms = 0;
+        guint interval_ms = 0;
 
         char *key = NULL;
         char *node = NULL;

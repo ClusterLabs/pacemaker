@@ -205,7 +205,7 @@ static void
 CancelXmlOp(resource_t * rsc, xmlNode * xml_op, node_t * active_node,
             const char *reason, pe_working_set_t * data_set)
 {
-    int interval_ms = 0;
+    guint interval_ms = 0;
     action_t *cancel = NULL;
 
     char *key = NULL;
@@ -220,7 +220,7 @@ CancelXmlOp(resource_t * rsc, xmlNode * xml_op, node_t * active_node,
     call_id = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
     interval_ms_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL_MS);
 
-    interval_ms = crm_parse_int(interval_ms_s, "0");
+    interval_ms = crm_parse_ms(interval_ms_s);
 
     /* we need to reconstruct the key because of the way we used to construct resource IDs */
     key = generate_op_key(rsc->id, task, interval_ms);
@@ -250,7 +250,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
                         pe_working_set_t * data_set)
 {
     char *key = NULL;
-    int interval_ms = 0;
+    guint interval_ms = 0;
     const char *interval_ms_s = NULL;
     const op_digest_cache_t *digest_data = NULL;
     gboolean did_change = FALSE;
@@ -264,7 +264,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
     }
 
     interval_ms_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL_MS);
-    interval_ms = crm_parse_int(interval_ms_s, "0");
+    interval_ms = crm_parse_ms(interval_ms_s);
 
     if (interval_ms > 0) {
         xmlNode *op_match = NULL;
@@ -289,7 +289,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
         key = NULL;
     }
 
-    crm_trace("Testing %s_%s_%d on %s",
+    crm_trace("Testing " CRM_OP_FMT " on %s",
               rsc->id, task, interval_ms, active_node->details->uname);
     if ((interval_ms == 0) && safe_str_eq(task, RSC_STATUS)) {
         /* Reload based on the start action not a probe */
@@ -314,7 +314,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
        && digest_data->digest_secure_calc
        && strcmp(digest_data->digest_secure_calc, digest_secure) == 0) {
         if (is_set(data_set->flags, pe_flag_sanitized)) {
-            printf("Only 'private' parameters to %s_%s_%d on %s changed: %s\n",
+            printf("Only 'private' parameters to " CRM_OP_FMT " on %s changed: %s\n",
                    rsc->id, task, interval_ms, active_node->details->uname,
                    crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
         }
@@ -382,7 +382,7 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
 {
     GListPtr gIter = NULL;
     int offset = -1;
-    int interval_ms = 0;
+    guint interval_ms = 0;
     int stop_index = 0;
     int start_index = 0;
 
@@ -451,7 +451,7 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
         task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
 
         interval_ms_s = crm_element_value(rsc_op, XML_LRM_ATTR_INTERVAL_MS);
-        interval_ms = crm_parse_int(interval_ms_s, "0");
+        interval_ms = crm_parse_ms(interval_ms_s);
 
         if ((interval_ms == 0) && safe_str_eq(task, RSC_STATUS)) {
             is_probe = TRUE;
@@ -1667,7 +1667,7 @@ find_actions_by_task(GListPtr actions, resource_t * rsc, const char *original_ke
         char *key = NULL;
         char *tmp = NULL;
         char *task = NULL;
-        int interval_ms = 0;
+        guint interval_ms = 0;
 
         if (parse_op_key(original_key, &tmp, &task, &interval_ms)) {
             key = generate_op_key(rsc->id, task, interval_ms);
@@ -1764,7 +1764,7 @@ rsc_order_first(resource_t * lh_rsc, order_constraint_t * order, pe_working_set_
         char *key = NULL;
         char *rsc_id = NULL;
         char *op_type = NULL;
-        int interval_ms = 0;
+        guint interval_ms = 0;
 
         parse_op_key(order->lh_action_task, &rsc_id, &op_type, &interval_ms);
         key = generate_op_key(lh_rsc->id, op_type, interval_ms);
@@ -1816,7 +1816,7 @@ is_recurring_action(action_t *action)
 {
     const char *interval_ms_s = g_hash_table_lookup(action->meta,
                                                     XML_LRM_ATTR_INTERVAL_MS);
-    int interval_ms = crm_parse_int(interval_ms_s, "0");
+    guint interval_ms = crm_parse_ms(interval_ms_s);
 
     return (interval_ms > 0);
 }

@@ -239,8 +239,8 @@ typedef struct svc_action_s {
  */
     GList *resources_list_standards(void);
 
-    svc_action_t *services_action_create(const char *name, const char *action,
-                                         int interval_ms, int timeout /* ms */ );
+svc_action_t *services_action_create(const char *name, const char *action,
+                                     guint interval_ms, int timeout /* ms */);
 
 /**
  * \brief Create a new resource action
@@ -260,17 +260,17 @@ typedef struct svc_action_s {
  * \note The caller is responsible for freeing the return value using
  *       services_action_free().
  */
-    svc_action_t *resources_action_create(const char *name, const char *standard,
-                                          const char *provider, const char *agent,
-                                          const char *action, int interval_ms,
-                                          int timeout /* ms */ , GHashTable * params,
-                                          enum svc_action_flags flags);
+svc_action_t *resources_action_create(const char *name, const char *standard,
+                                      const char *provider, const char *agent,
+                                      const char *action, guint interval_ms,
+                                      int timeout /* ms */, GHashTable *params,
+                                      enum svc_action_flags flags);
 
 /**
  * Kick a recurring action so it is scheduled immediately for re-execution
  */
-    gboolean services_action_kick(const char *name, const char *action,
-                                  int interval_ms);
+gboolean services_action_kick(const char *name, const char *action,
+                              guint interval_ms);
 
     const char *resources_find_service_class(const char *agent);
 
@@ -306,8 +306,8 @@ typedef struct svc_action_s {
  */
     gboolean services_action_async(svc_action_t * op, void (*action_callback) (svc_action_t *));
 
-    gboolean services_action_cancel(const char *name, const char *action,
-                                    int interval_ms);
+gboolean services_action_cancel(const char *name, const char *action,
+                                guint interval_ms);
 
 /* functions for alert agents */
 svc_action_t *services_alert_create(const char *id, const char *exec,

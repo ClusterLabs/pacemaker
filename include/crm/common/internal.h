@@ -114,20 +114,20 @@ crm_getpid_s()
  */
 static inline char *
 crm_fail_attr_name(const char *prefix, const char *rsc_id, const char *op,
-                   int interval_ms)
+                   guint interval_ms)
 {
     CRM_CHECK(prefix && rsc_id && op, return NULL);
-    return crm_strdup_printf("%s-%s#%s_%d", prefix, rsc_id, op, interval_ms);
+    return crm_strdup_printf("%s-%s#%s_%u", prefix, rsc_id, op, interval_ms);
 }
 
 static inline char *
-crm_failcount_name(const char *rsc_id, const char *op, int interval_ms)
+crm_failcount_name(const char *rsc_id, const char *op, guint interval_ms)
 {
     return crm_fail_attr_name(CRM_FAIL_COUNT_PREFIX, rsc_id, op, interval_ms);
 }
 
 static inline char *
-crm_lastfailure_name(const char *rsc_id, const char *op, int interval_ms)
+crm_lastfailure_name(const char *rsc_id, const char *op, guint interval_ms)
 {
     return crm_fail_attr_name(CRM_LAST_FAILURE_PREFIX, rsc_id, op, interval_ms);
 }

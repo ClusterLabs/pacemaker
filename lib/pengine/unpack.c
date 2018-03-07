@@ -1980,7 +1980,7 @@ process_recurring(node_t * node, resource_t * rsc,
     for (; gIter != NULL; gIter = gIter->next) {
         xmlNode *rsc_op = (xmlNode *) gIter->data;
 
-        int interval_ms = 0;
+        guint interval_ms = 0;
         char *key = NULL;
         const char *id = ID(rsc_op);
         const char *interval_ms_s = NULL;
@@ -2002,7 +2002,7 @@ process_recurring(node_t * node, resource_t * rsc,
         }
 
         interval_ms_s = crm_element_value(rsc_op, XML_LRM_ATTR_INTERVAL_MS);
-        interval_ms = crm_parse_int(interval_ms_s, "0");
+        interval_ms = crm_parse_ms(interval_ms_s);
         if (interval_ms == 0) {
             pe_rsc_trace(rsc, "Skipping %s/%s: non-recurring", id, node->details->uname);
             continue;
@@ -2496,7 +2496,7 @@ static void
 unpack_rsc_op_failure(resource_t * rsc, node_t * node, int rc, xmlNode * xml_op, xmlNode ** last_failure,
                       enum action_fail_response * on_fail, pe_working_set_t * data_set)
 {
-    int interval_ms = 0;
+    guint interval_ms = 0;
     bool is_probe = FALSE;
     action_t *action = NULL;
 
@@ -2507,7 +2507,7 @@ unpack_rsc_op_failure(resource_t * rsc, node_t * node, int rc, xmlNode * xml_op,
 
     *last_failure = xml_op;
 
-    crm_element_value_int(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
+    crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
     if ((interval_ms == 0) && safe_str_eq(task, CRMD_ACTION_STATUS)) {
         is_probe = TRUE;
         pe_rsc_trace(rsc, "is a probe: %s", key);
@@ -2613,7 +2613,7 @@ static int
 determine_op_status(
     resource_t *rsc, int rc, int target_rc, node_t * node, xmlNode * xml_op, enum action_fail_response * on_fail, pe_working_set_t * data_set) 
 {
-    int interval_ms = 0;
+    guint interval_ms = 0;
     int result = PCMK_LRM_OP_DONE;
 
     const char *key = get_op_key(xml_op);
@@ -2622,7 +2622,7 @@ determine_op_status(
     bool is_probe = FALSE;
 
     CRM_ASSERT(rsc);
-    crm_element_value_int(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
+    crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
     if ((interval_ms == 0) && safe_str_eq(task, CRMD_ACTION_STATUS)) {
         is_probe = TRUE;
     }
@@ -2720,13 +2720,13 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
 {
     bool expired = FALSE;
     time_t last_failure = 0;
-    int interval_ms = 0;
+    guint interval_ms = 0;
     int failure_timeout = rsc->failure_timeout;
     const char *key = get_op_key(xml_op);
     const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
     const char *clear_reason = NULL;
 
-    crm_element_value_int(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
+    crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
 
     /* clearing recurring monitor operation failures automatically
      * needs to be carefully considered */
@@ -2963,7 +2963,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
     int rc = 0;
     int status = PCMK_LRM_OP_UNKNOWN;
     int target_rc = get_target_rc(xml_op);
-    int interval_ms = 0;
+    guint interval_ms = 0;
 
     gboolean expired = FALSE;
     resource_t *parent = rsc;
@@ -2981,7 +2981,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
     crm_element_value_int(xml_op, XML_LRM_ATTR_RC, &rc);
     crm_element_value_int(xml_op, XML_LRM_ATTR_CALLID, &task_id);
     crm_element_value_int(xml_op, XML_LRM_ATTR_OPSTATUS, &status);
-    crm_element_value_int(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
+    crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
 
     CRM_CHECK(task != NULL, return FALSE);
     CRM_CHECK(status <= PCMK_LRM_OP_NOT_INSTALLED, return FALSE);

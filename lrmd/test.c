@@ -71,7 +71,7 @@ static struct {
     int verbose;
     int quiet;
     int print;
-    int interval_ms;
+    guint interval_ms;
     int timeout;
     int start_delay;
     int cancel_call_id;

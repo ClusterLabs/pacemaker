@@ -49,8 +49,8 @@ static GList *inflight_ops = NULL;
 static void handle_blocked_ops(void);
 
 svc_action_t *
-services_action_create(const char *name, const char *action, int interval_ms,
-                       int timeout)
+services_action_create(const char *name, const char *action,
+                       guint interval_ms, int timeout)
 {
     return resources_action_create(name, PCMK_RESOURCE_CLASS_LSB, NULL, name,
                                    action, interval_ms, timeout, NULL, 0);
@@ -179,7 +179,7 @@ dup_file_path(const char *filename, const char *dirname)
 svc_action_t *
 resources_action_create(const char *name, const char *standard,
                         const char *provider, const char *agent,
-                        const char *action, int interval_ms, int timeout,
+                        const char *action, guint interval_ms, int timeout,
                         GHashTable *params, enum svc_action_flags flags)
 {
     svc_action_t *op = NULL;
@@ -586,7 +586,7 @@ cancel_recurring_action(svc_action_t * op)
  * \return TRUE if action was successfully cancelled, FALSE otherwise
  */
 gboolean
-services_action_cancel(const char *name, const char *action, int interval_ms)
+services_action_cancel(const char *name, const char *action, guint interval_ms)
 {
     gboolean cancelled = FALSE;
     char *id = generate_op_key(name, action, interval_ms);
@@ -649,7 +649,7 @@ done:
 }
 
 gboolean
-services_action_kick(const char *name, const char *action, int interval_ms)
+services_action_kick(const char *name, const char *action, guint interval_ms)
 {
     svc_action_t * op = NULL;
     char *id = generate_op_key(name, action, interval_ms);

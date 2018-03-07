@@ -547,13 +547,13 @@ gboolean do_stderr = FALSE;
 #  define	WHITESPACE	" \t\n\r\f"
 #endif
 
-unsigned long long
+guint
 crm_parse_interval_spec(const char *input)
 {
-    unsigned long long msec = 0;
+    long long msec = 0;
 
     if (input == NULL) {
-        return msec;
+        return 0;
 
     } else if (input[0] != 'P') {
         long long tmp = crm_get_msec(input);
@@ -569,7 +569,7 @@ crm_parse_interval_spec(const char *input)
         crm_time_free(period_s);
     }
 
-    return msec;
+    return (guint) msec;
 }
 
 long long

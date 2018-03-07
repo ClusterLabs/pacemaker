@@ -51,7 +51,7 @@ typedef struct remote_ra_cmd_s {
     int timeout;
     int remaining_timeout;
     /*! recurring interval in ms */
-    int interval_ms;
+    guint interval_ms;
     /*! interval timer id */
     int interval_id;
     int reported_success;
@@ -648,8 +648,8 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
         /* success, keep rescheduling if interval is present. */
         if (cmd->interval_ms && (cmd->cancel == FALSE)) {
             ra_data->recurring_cmds = g_list_append(ra_data->recurring_cmds, cmd);
-            cmd->interval_id = g_timeout_add(cmd->interval_ms, recurring_helper,
-                                             cmd);
+            cmd->interval_id = g_timeout_add(cmd->interval_ms,
+                                             recurring_helper, cmd);
             cmd = NULL;         /* prevent free */
         }
         cmd_handled = TRUE;
@@ -935,7 +935,7 @@ fail_all_monitor_cmds(GList * list)
 
         cmd->rc = PCMK_OCF_UNKNOWN_ERROR;
         cmd->op_status = PCMK_LRM_OP_ERROR;
-        crm_trace("Pre-emptively failing %s %s (interval=%d, %s)",
+        crm_trace("Pre-emptively failing %s %s (interval=%u, %s)",
                   cmd->action, cmd->rsc_id, cmd->interval_ms, cmd->userdata);
         report_remote_ra_result(cmd);
 
@@ -949,7 +949,7 @@ fail_all_monitor_cmds(GList * list)
 }
 
 static GList *
-remove_cmd(GList * list, const char *action, int interval_ms)
+remove_cmd(GList * list, const char *action, guint interval_ms)
 {
     remote_ra_cmd_t *cmd = NULL;
     GListPtr gIter = NULL;
@@ -971,7 +971,7 @@ remove_cmd(GList * list, const char *action, int interval_ms)
 
 int
 remote_ra_cancel(lrm_state_t *lrm_state, const char *rsc_id,
-                 const char *action, int interval_ms)
+                 const char *action, guint interval_ms)
 {
     lrm_state_t *connection_rsc = NULL;
     remote_ra_data_t *ra_data = NULL;
@@ -996,7 +996,7 @@ remote_ra_cancel(lrm_state_t *lrm_state, const char *rsc_id,
 }
 
 static remote_ra_cmd_t *
-handle_dup_monitor(remote_ra_data_t *ra_data, int interval_ms,
+handle_dup_monitor(remote_ra_data_t *ra_data, guint interval_ms,
                    const char *userdata)
 {
     GList *gIter = NULL;
@@ -1041,8 +1041,8 @@ handle_dup_monitor(remote_ra_data_t *ra_data, int interval_ms,
 
 handle_dup:
 
-    crm_trace("merging duplicate monitor cmd %s_monitor_%d",
-              cmd->rsc_id, interval_ms);
+    crm_trace("merging duplicate monitor cmd " CRM_OP_FMT,
+              cmd->rsc_id, "monitor", interval_ms);
 
     /* update the userdata */
     if (userdata) {
@@ -1071,7 +1071,7 @@ handle_dup:
 
 int
 remote_ra_exec(lrm_state_t *lrm_state, const char *rsc_id, const char *action,
-               const char *userdata, int interval_ms,
+               const char *userdata, guint interval_ms,
                int timeout,     /* ms */
                int start_delay, /* ms */
                lrmd_key_value_t * params)

@@ -70,7 +70,7 @@ static char *
 convert_non_atomic_uuid(char *old_uuid, resource_t * rsc, gboolean allow_notify,
                         gboolean free_original)
 {
-    int interval_ms = 0;
+    guint interval_ms = 0;
     char *uuid = NULL;
     char *rid = NULL;
     char *raw_task = NULL;
@@ -1039,7 +1039,7 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
         char *clone_key = NULL;
         const char *interval_ms_s = g_hash_table_lookup(action->meta,
                                                         XML_LRM_ATTR_INTERVAL_MS);
-        int interval_ms = crm_parse_int(interval_ms_s, "0");
+        guint interval_ms = crm_parse_ms(interval_ms_s);
 
         if (safe_str_eq(action->task, RSC_NOTIFY)) {
             const char *n_type = g_hash_table_lookup(action->meta, "notify_type");

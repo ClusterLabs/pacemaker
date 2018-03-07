@@ -336,7 +336,7 @@ attrd_client_clear_failure(xmlNode *xml)
             pattern = crm_strdup_printf(ATTRD_RE_CLEAR_ONE, rsc);
 
         } else {
-            int interval_ms = crm_parse_interval_spec(interval_spec);
+            guint interval_ms = crm_parse_interval_spec(interval_spec);
 
             pattern = crm_strdup_printf(ATTRD_RE_CLEAR_OP,
                                         rsc, op, interval_ms);
@@ -511,7 +511,7 @@ attrd_peer_clear_failure(crm_node_t *peer, xmlNode *xml)
     const char *host = crm_element_value(xml, F_ATTRD_HOST);
     const char *op = crm_element_value(xml, F_ATTRD_OPERATION);
     const char *interval_spec = crm_element_value(xml, F_ATTRD_INTERVAL);
-    int interval_ms = crm_parse_interval_spec(interval_spec);
+    guint interval_ms = crm_parse_interval_spec(interval_spec);
     char *attr = NULL;
     GHashTableIter iter;
     regex_t regex;

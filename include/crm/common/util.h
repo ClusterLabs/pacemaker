@@ -102,7 +102,7 @@ GHashTable *crm_str_table_dup(GHashTable *old_table);
 void crm_build_path(const char *path_c, mode_t mode);
 
 long long crm_get_msec(const char *input);
-unsigned long long crm_parse_interval_spec(const char *input);
+guint crm_parse_interval_spec(const char *input);
 int char2score(const char *score);
 char *score2char(int score);
 char *score2char_stack(int score, char *buf, size_t len);
@@ -112,7 +112,7 @@ char *score2char_stack(int score, char *buf, size_t len);
 
 /* public operation functions (from operations.c) */
 gboolean parse_op_key(const char *key, char **rsc_id, char **op_type,
-                      int *interval_ms);
+                      guint *interval_ms);
 gboolean decode_transition_key(const char *key, char **uuid, int *action,
                                int *transition_id, int *target_rc);
 gboolean decode_transition_magic(const char *magic, char **uuid,

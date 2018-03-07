@@ -227,11 +227,11 @@ create_action_name(action_t * action)
         char *key = NULL;
         const char *name = action->rsc->clone_name;
         const char *interval_ms_s = NULL;
-        int interval_ms = 0;
+        guint interval_ms = 0;
 
         interval_ms_s = g_hash_table_lookup(action->meta,
                                             XML_LRM_ATTR_INTERVAL_MS);
-        interval_ms = crm_parse_int(interval_ms_s, "0");
+        interval_ms = crm_parse_ms(interval_ms_s);
 
         if (safe_str_eq(action->task, RSC_NOTIFY)
             || safe_str_eq(action->task, RSC_NOTIFIED)) {

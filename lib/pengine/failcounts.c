@@ -23,10 +23,10 @@ is_matched_failure(const char *rsc_id, xmlNode *conf_op_xml,
 {
     gboolean matched = FALSE;
     const char *conf_op_name = NULL;
-    int conf_op_interval_ms = 0;
     const char *lrm_op_task = NULL;
     const char *conf_op_interval_spec = NULL;
-    int lrm_op_interval_ms = 0;
+    guint conf_op_interval_ms = 0;
+    guint lrm_op_interval_ms = 0;
     const char *lrm_op_id = NULL;
     char *last_failure_key = NULL;
 
@@ -42,8 +42,8 @@ is_matched_failure(const char *rsc_id, xmlNode *conf_op_xml,
 
     // Get name and interval from op history entry
     lrm_op_task = crm_element_value(lrm_op_xml, XML_LRM_ATTR_TASK);
-    crm_element_value_int(lrm_op_xml, XML_LRM_ATTR_INTERVAL_MS,
-                          &lrm_op_interval_ms);
+    crm_element_value_ms(lrm_op_xml, XML_LRM_ATTR_INTERVAL_MS,
+                         &lrm_op_interval_ms);
 
     if ((conf_op_interval_ms != lrm_op_interval_ms)
         || safe_str_neq(conf_op_name, lrm_op_task)) {
@@ -112,7 +112,7 @@ block_failure(node_t *node, resource_t *rsc, xmlNode *xml_op,
             } else {
                 const char *conf_op_name = NULL;
                 const char *conf_op_interval_spec = NULL;
-                int conf_op_interval_ms = 0;
+                guint conf_op_interval_ms = 0;
                 char *lrm_op_xpath = NULL;
                 xmlXPathObject *lrm_op_xpathObj = NULL;
 
@@ -123,7 +123,7 @@ block_failure(node_t *node, resource_t *rsc, xmlNode *xml_op,
 
                 lrm_op_xpath = crm_strdup_printf("//node_state[@uname='%s']"
                                                "//lrm_resource[@id='%s']"
-                                               "/lrm_rsc_op[@operation='%s'][@interval='%d']",
+                                               "/lrm_rsc_op[@operation='%s'][@interval='%u']",
                                                node->details->uname, xml_name,
                                                conf_op_name, conf_op_interval_ms);
                 lrm_op_xpathObj = xpath_search(data_set->input, lrm_op_xpath);

@@ -1072,7 +1072,7 @@ erase_lrm_history_by_id(lrm_state_t *lrm_state, const char *rsc_id,
 }
 
 static inline gboolean
-last_failed_matches_op(rsc_history_t *entry, const char *op, int interval_ms)
+last_failed_matches_op(rsc_history_t *entry, const char *op, guint interval_ms)
 {
     if (entry == NULL) {
         return FALSE;
@@ -1099,7 +1099,7 @@ last_failed_matches_op(rsc_history_t *entry, const char *op, int interval_ms)
  */
 void
 lrm_clear_last_failure(const char *rsc_id, const char *node_name,
-                       const char *operation, int interval_ms)
+                       const char *operation, guint interval_ms)
 {
     char *op_key = NULL;
     char *orig_op_key = NULL;
@@ -1451,7 +1451,7 @@ synthesize_lrmd_failure(lrm_state_t *lrm_state, xmlNode *action, int rc)
         fake_op_status(lrm_state, op, PCMK_LRM_OP_ERROR, rc);
     }
 
-    crm_info("Faking %s_%s_%d result (%d) on %s",
+    crm_info("Faking " CRM_OP_FMT " result (%d) on %s",
              op->rsc_id, op->op_type, op->interval, op->rc, target_node);
 
     /* Process the result as if it came from the LRM, if possible
@@ -1649,7 +1649,7 @@ static bool do_lrm_cancel(ha_msg_input_t *input, lrm_state_t *lrm_state,
     call_id = crm_element_value(params, meta_key);
     free(meta_key);
 
-    op_key = generate_op_key(rsc->id, op_task, crm_parse_int(interval_ms_s, "0"));
+    op_key = generate_op_key(rsc->id, op_task, crm_parse_ms(interval_ms_s));
 
     crm_debug("PE requested op %s (call=%s) be cancelled",
               op_key, (call_id? call_id : "NA"));

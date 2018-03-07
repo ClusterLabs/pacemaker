@@ -21,7 +21,7 @@
 
 extern gboolean verify_stopped(enum crmd_fsa_state cur_state, int log_level);
 void lrm_clear_last_failure(const char *rsc_id, const char *node_name,
-                            const char *operation, int interval_ms);
+                            const char *operation, guint interval_ms);
 void lrm_op_callback(lrmd_event_data_t * op);
 lrmd_t *crmd_local_lrmd_conn(void);
 
@@ -44,8 +44,8 @@ void history_free(gpointer data);
 
 /* TODO - Replace this with lrmd_event_data_t */
 struct recurring_op_s {
+    guint interval_ms;
     int call_id;
-    int interval_ms;
     gboolean remove;
     gboolean cancelled;
     unsigned int start_time;
@@ -141,9 +141,9 @@ int lrm_state_get_metadata(lrm_state_t * lrm_state,
                            const char *provider,
                            const char *agent, char **output, enum lrmd_call_options options);
 int lrm_state_cancel(lrm_state_t *lrm_state, const char *rsc_id,
-                     const char *action, int interval_ms);
+                     const char *action, guint interval_ms);
 int lrm_state_exec(lrm_state_t *lrm_state, const char *rsc_id,
-                   const char *action, const char *userdata, int interval_ms,
+                   const char *action, const char *userdata, guint interval_ms,
                    int timeout, /* ms */
                    int start_delay,     /* ms */
                    lrmd_key_value_t * params);
@@ -161,9 +161,9 @@ void remote_lrm_op_callback(lrmd_event_data_t * op);
 gboolean is_remote_lrmd_ra(const char *agent, const char *provider, const char *id);
 lrmd_rsc_info_t *remote_ra_get_rsc_info(lrm_state_t * lrm_state, const char *rsc_id);
 int remote_ra_cancel(lrm_state_t *lrm_state, const char *rsc_id,
-                     const char *action, int interval_ms);
+                     const char *action, guint interval_ms);
 int remote_ra_exec(lrm_state_t *lrm_state, const char *rsc_id,
-                   const char *action, const char *userdata, int interval_ms,
+                   const char *action, const char *userdata, guint interval_ms,
                    int timeout, /* ms */
                    int start_delay,     /* ms */
                    lrmd_key_value_t * params);

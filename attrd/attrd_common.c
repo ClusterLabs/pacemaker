@@ -267,7 +267,7 @@ attrd_expand_value(const char *value, const char *old_value)
  */
 int
 attrd_failure_regex(regex_t *regex, const char *rsc, const char *op,
-                    int interval_ms)
+                    guint interval_ms)
 {
     char *pattern = NULL;
     int rc;
@@ -279,8 +279,7 @@ attrd_failure_regex(regex_t *regex, const char *rsc, const char *op,
     } else if (op == NULL) {
         pattern = crm_strdup_printf(ATTRD_RE_CLEAR_ONE, rsc);
     } else {
-        pattern = crm_strdup_printf(ATTRD_RE_CLEAR_OP,
-                                    rsc, op, interval_ms);
+        pattern = crm_strdup_printf(ATTRD_RE_CLEAR_OP, rsc, op, interval_ms);
     }
 
     /* Compile pattern into regular expression */

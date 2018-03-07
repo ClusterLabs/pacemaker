@@ -34,45 +34,38 @@
  * \note It is the caller's responsibility to free() the result.
  */
 char *
-generate_op_key(const char *rsc_id, const char *op_type, int interval_ms)
+generate_op_key(const char *rsc_id, const char *op_type, guint interval_ms)
 {
     CRM_ASSERT(rsc_id != NULL);
     CRM_ASSERT(op_type != NULL);
-    CRM_ASSERT(interval_ms >= 0);
-    return crm_strdup_printf("%s_%s_%d", rsc_id, op_type, interval_ms);
+    return crm_strdup_printf(CRM_OP_FMT, rsc_id, op_type, interval_ms);
 }
 
 gboolean
-parse_op_key(const char *key, char **rsc_id, char **op_type, int *interval_ms)
+parse_op_key(const char *key, char **rsc_id, char **op_type, guint *interval_ms)
 {
     char *notify = NULL;
     char *mutable_key = NULL;
     char *mutable_key_ptr = NULL;
-    int len = 0, offset = 0, ch = 0;
+    size_t len = 0, offset = 0;
+    unsigned long long ch = 0;
 
     CRM_CHECK(key != NULL, return FALSE);
 
+    // Parse interval at end of string
     *interval_ms = 0;
     len = strlen(key);
     offset = len - 1;
-
-    crm_trace("Source: %s", key);
-
-    while (offset > 0 && isdigit(key[offset])) {
-        int digits = len - offset;
-
+    while ((offset > 0) && isdigit(key[offset])) {
         ch = key[offset] - '0';
-        CRM_CHECK(ch < 10, return FALSE);
-        CRM_CHECK(ch >= 0, return FALSE);
-        while (digits > 1) {
-            digits--;
+        for (int digits = len - offset; digits > 1; --digits) {
             ch = ch * 10;
         }
         *interval_ms += ch;
         offset--;
     }
+    crm_trace("Operation key '%s' has interval %ums", key, *interval_ms);
 
-    crm_trace("  Interval: %d", *interval_ms);
     CRM_CHECK(key[offset] == '_', return FALSE);
 
     mutable_key = strdup(key);

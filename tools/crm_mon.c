@@ -2750,11 +2750,11 @@ print_failed_action(FILE *stream, xmlNode *xml_op)
 
             case mon_output_xml:
                 fprintf(stream,
-                        " last-rc-change=\"%s\" queued=\"%s\" exec=\"%s\" interval=\"%d\" task=\"%s\"",
+                        " last-rc-change=\"%s\" queued=\"%s\" exec=\"%s\" interval=\"%u\" task=\"%s\"",
                         run_at_s? run_at_s : "",
                         crm_element_value(xml_op, XML_RSC_OP_T_QUEUE),
                         crm_element_value(xml_op, XML_RSC_OP_T_EXEC),
-                        crm_parse_int(crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL_MS), "0"),
+                        crm_parse_ms(crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL_MS)),
                         crm_element_value(xml_op, XML_LRM_ATTR_TASK));
                 break;
 
@@ -3312,7 +3312,7 @@ handle_rsc_op(xmlNode * xml, const char *node_id)
     int rc = -1;
     int status = -1;
     int action = -1;
-    int interval_ms = 0;
+    guint interval_ms = 0;
     int target_rc = -1;
     int transition_num = -1;
     gboolean notify = TRUE;
