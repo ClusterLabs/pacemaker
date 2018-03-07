@@ -736,47 +736,36 @@ RecurringOp(resource_t * rsc, action_t * start, node_t * node,
         const char *result = "Ignoring";
 
         if (is_optional) {
-            char *local_key = strdup(key);
+            char *after_key = NULL;
+            action_t *cancel_op = NULL;
 
+            // It's running, so cancel it
             log_level = LOG_INFO;
             result = "Cancelling";
-            /* it's running : cancel it */
-
-            mon = custom_action(rsc, local_key, RSC_CANCEL, node, FALSE, TRUE, data_set);
-
-            free(mon->task);
-            free(mon->cancel_task);
-            mon->task = strdup(RSC_CANCEL);
-            mon->cancel_task = strdup(name);
-            add_hash_param(mon->meta, XML_LRM_ATTR_INTERVAL, interval_spec);
-            add_hash_param(mon->meta, XML_LRM_ATTR_TASK, name);
-
-            local_key = NULL;
+            cancel_op = pe_cancel_op(rsc, name, interval_ms, node, data_set);
 
             switch (rsc->role) {
                 case RSC_ROLE_SLAVE:
                 case RSC_ROLE_STARTED:
                     if (rsc->next_role == RSC_ROLE_MASTER) {
-                        local_key = promote_key(rsc);
+                        after_key = promote_key(rsc);
 
                     } else if (rsc->next_role == RSC_ROLE_STOPPED) {
-                        local_key = stop_key(rsc);
+                        after_key = stop_key(rsc);
                     }
 
                     break;
                 case RSC_ROLE_MASTER:
-                    local_key = demote_key(rsc);
+                    after_key = demote_key(rsc);
                     break;
                 default:
                     break;
             }
 
-            if (local_key) {
-                custom_action_order(rsc, NULL, mon, rsc, local_key, NULL,
+            if (after_key) {
+                custom_action_order(rsc, NULL, cancel_op, rsc, after_key, NULL,
                                     pe_order_runnable_left, data_set);
             }
-
-            mon = NULL;
         }
 
         do_crm_log(log_level, "%s action %s (%s vs. %s)",
@@ -915,20 +904,10 @@ RecurringOp_Stopped(resource_t * rsc, action_t * start, node_t * node,
         possible_matches = find_actions_exact(rsc->actions, key, node);
         if (possible_matches) {
             action_t *cancel_op = NULL;
-            char *local_key = strdup(key);
 
             g_list_free(possible_matches);
 
-            cancel_op = custom_action(rsc, local_key, RSC_CANCEL, node, FALSE, TRUE, data_set);
-
-            free(cancel_op->task);
-            free(cancel_op->cancel_task);
-            cancel_op->task = strdup(RSC_CANCEL);
-            cancel_op->cancel_task = strdup(name);
-            add_hash_param(cancel_op->meta, XML_LRM_ATTR_INTERVAL, interval_spec);
-            add_hash_param(cancel_op->meta, XML_LRM_ATTR_TASK, name);
-
-            local_key = NULL;
+            cancel_op = pe_cancel_op(rsc, name, interval_ms, node, data_set);
 
             if (rsc->next_role == RSC_ROLE_STARTED || rsc->next_role == RSC_ROLE_SLAVE) {
                 /* rsc->role == RSC_ROLE_STOPPED: cancel the monitor before start */

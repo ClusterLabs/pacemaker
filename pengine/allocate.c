@@ -208,7 +208,6 @@ CancelXmlOp(resource_t * rsc, xmlNode * xml_op, node_t * active_node,
     guint interval_ms = 0;
     action_t *cancel = NULL;
 
-    char *key = NULL;
     const char *task = NULL;
     const char *call_id = NULL;
     const char *interval_ms_s = NULL;
@@ -222,27 +221,13 @@ CancelXmlOp(resource_t * rsc, xmlNode * xml_op, node_t * active_node,
 
     interval_ms = crm_parse_ms(interval_ms_s);
 
-    /* we need to reconstruct the key because of the way we used to construct resource IDs */
-    key = generate_op_key(rsc->id, task, interval_ms);
+    crm_info("Action " CRM_OP_FMT " on %s will be stopped: %s",
+             rsc->id, task, interval_ms,
+             active_node->details->uname, (reason? reason : "unknown"));
 
-    crm_info("Action %s on %s will be stopped: %s",
-             key, active_node->details->uname, reason ? reason : "unknown");
-
-    /* TODO: This looks highly dangerous if we ever try to schedule 'key' too */
-    cancel = custom_action(rsc, strdup(key), RSC_CANCEL, active_node, FALSE, TRUE, data_set);
-
-    free(cancel->task);
-    free(cancel->cancel_task);
-    cancel->task = strdup(RSC_CANCEL);
-    cancel->cancel_task = strdup(task);
-
-    add_hash_param(cancel->meta, XML_LRM_ATTR_TASK, task);
+    cancel = pe_cancel_op(rsc, task, interval_ms, active_node, data_set);
     add_hash_param(cancel->meta, XML_LRM_ATTR_CALLID, call_id);
-    add_hash_param(cancel->meta, XML_LRM_ATTR_INTERVAL_MS, interval_ms_s);
-
     custom_action_order(rsc, stop_key(rsc), NULL, rsc, NULL, cancel, pe_order_optional, data_set);
-    free(key);
-    key = NULL;
 }
 
 static gboolean
