@@ -222,7 +222,7 @@ BuildRequires: resource-agents
 
 # Enables optional functionality
 BuildRequires: ncurses-devel docbook-style-xsl
-BuildRequires: bison byacc flex help2man gnutls-devel pkgconfig(dbus-1)
+BuildRequires: help2man gnutls-devel pkgconfig(dbus-1)
 
 %if %{systemd_native}
 BuildRequires: pkgconfig(systemd)
