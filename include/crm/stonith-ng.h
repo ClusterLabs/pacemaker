@@ -59,6 +59,7 @@ enum stonith_call_options {
     st_opt_timeout_updates = 0x00002000,
     /*! Only report back if operation is a success in callback */
     st_opt_report_only_success = 0x00004000,
+    st_opt_check_watchdog  = 0x00008000,
 };
 
 /*! Order matters here, do not change values */

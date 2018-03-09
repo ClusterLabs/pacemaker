@@ -221,7 +221,7 @@ int stonith_manual_ack(xmlNode * msg, remote_fencing_op_t * op);
 
 void unfence_cb(GPid pid, int rc, const char *output, gpointer user_data);
 
-gboolean string_in_list(GListPtr list, const char *item);
+char *list_to_string(GListPtr list, const char *delim, gboolean terminate_with_delim);
 
 gboolean node_has_attr(const char *node, const char *name, const char *value);
 
@@ -242,5 +242,6 @@ extern gboolean stand_alone;
 extern GHashTable *device_list;
 extern GHashTable *topology;
 extern long stonith_watchdog_timeout_ms;
+extern GListPtr stonith_watchdog_targets;
 
 extern GHashTable *known_peer_names;

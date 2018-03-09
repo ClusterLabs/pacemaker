@@ -1629,13 +1629,8 @@ get_stonith_provider(const char *agent, const char *provider)
 #endif
     }
 
-    if (safe_str_eq(provider, "internal")) {
-        return provider;
-
-    } else {
-        crm_err("No such device: %s", agent);
-        return NULL;
-    }
+    crm_err("No such device: %s", agent);
+    return NULL;
 }
 
 static gint
@@ -2677,3 +2672,152 @@ i_hate_pils(int rc)
     return PIL_strerror(rc);
 }
 #endif
+
+static void
+parse_host_line(const char *line, int max, GListPtr * output)
+{
+    int lpc = 0;
+    int last = 0;
+
+    if (max <= 0) {
+        return;
+    }
+
+    /* Check for any complaints about additional parameters that the device doesn't understand */
+    if (strstr(line, "invalid") || strstr(line, "variable")) {
+        crm_debug("Skipping: %s", line);
+        return;
+    }
+
+    crm_trace("Processing %d bytes: [%s]", max, line);
+    /* Skip initial whitespace */
+    for (lpc = 0; lpc <= max && isspace(line[lpc]); lpc++) {
+        last = lpc + 1;
+    }
+
+    /* Now the actual content */
+    for (lpc = 0; lpc <= max; lpc++) {
+        gboolean a_space = isspace(line[lpc]);
+
+        if (a_space && lpc < max && isspace(line[lpc + 1])) {
+            /* fast-forward to the end of the spaces */
+
+        } else if (a_space || line[lpc] == ',' || line[lpc] == ';' || line[lpc] == 0) {
+            int rc = 1;
+            char *entry = NULL;
+
+            if (lpc != last) {
+                entry = calloc(1, 1 + lpc - last);
+                rc = sscanf(line + last, "%[a-zA-Z0-9_-.]", entry);
+            }
+
+            if (entry == NULL) {
+                /* Skip */
+            } else if (rc != 1) {
+                crm_warn("Could not parse (%d %d): %s", last, lpc, line + last);
+            } else if (safe_str_neq(entry, "on") && safe_str_neq(entry, "off")) {
+                crm_trace("Adding '%s'", entry);
+                *output = g_list_append(*output, entry);
+                entry = NULL;
+            }
+
+            free(entry);
+            last = lpc + 1;
+        }
+    }
+}
+
+GListPtr
+parse_host_list(const char *hosts)
+{
+    int lpc = 0;
+    int max = 0;
+    int last = 0;
+    GListPtr output = NULL;
+
+    if (hosts == NULL) {
+        return output;
+    }
+
+    max = strlen(hosts);
+    for (lpc = 0; lpc <= max; lpc++) {
+        if (hosts[lpc] == '\n' || hosts[lpc] == 0) {
+            char *line = NULL;
+            int len = lpc - last;
+
+            if(len > 1) {
+                line = malloc(1 + len);
+            }
+
+            if(line) {
+                snprintf(line, 1 + len, "%s", hosts + last);
+                line[len] = 0; /* Because it might be '\n' */
+                parse_host_line(line, len, &output);
+                free(line);
+            }
+
+            last = lpc + 1;
+        }
+    }
+
+    crm_trace("Parsed %d entries from '%s'", g_list_length(output), hosts);
+    return output;
+}
+
+gboolean
+string_in_list(GListPtr list, const char *item)
+{
+    int lpc = 0;
+    int max = g_list_length(list);
+
+    for (lpc = 0; lpc < max; lpc++) {
+        const char *value = g_list_nth_data(list, lpc);
+
+        if (safe_str_eq(item, value)) {
+            return TRUE;
+        } else {
+            crm_trace("%d: '%s' != '%s'", lpc, item, value);
+        }
+    }
+    return FALSE;
+}
+
+gboolean
+watchdog_fencing_enabled_for_node(const char *node)
+{
+    gboolean rv = FALSE;
+    stonith_t *stonith_api = stonith_api_new();
+    char *list = NULL;
+
+    if(stonith_api) {
+        int rc = stonith_api->cmds->connect(stonith_api, "stonith-api", NULL);
+        if (rc == pcmk_ok) {
+            /* caveat!!!
+             * this might fail when when stonithd is just updating the device-list
+             * probably something we should fix as well for other api-calls */
+            rc = stonith_api->cmds->list(stonith_api, st_opt_sync_call, STONITH_WATCHDOG_ID, &list, 0);
+            if ((rc != pcmk_ok) || (list == NULL)) {
+                /* due to the race described above it can happen that
+                 * we drop in here - so as not to make remote nodes
+                 * panic on that answer
+                 */
+            } else if (list[0] == '\0') {
+                rv = TRUE;
+            } else {
+                GListPtr targets = parse_host_list(list);
+                rv = string_in_list(targets, node);
+                g_list_free_full(targets, free);
+            }
+            free(list);
+            stonith_api->cmds->disconnect(stonith_api);
+        } else {
+            crm_err("Stonith-API for watchdog-fencing-query failed to connect.");
+        }
+        stonith_api_delete(stonith_api);
+    } else {
+        crm_err("Stonith-API for watchdog-fencing-query couldn't be created.");
+    }
+    crm_trace("Pacemaker assumes node %s %sto do watchdog-fencing.",
+              node, rv?"":"not ");
+    return rv;
+}

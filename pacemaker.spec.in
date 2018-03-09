@@ -614,6 +614,7 @@ exit 0
 %if %{with cman}
 %{_sbindir}/fence_pcmk
 %endif
+%{_sbindir}/fence_watchdog
 %{_sbindir}/stonith_admin
 
 %doc %{_mandir}/man7/crmd.*
@@ -631,6 +632,7 @@ exit 0
 %doc %{_mandir}/man8/fence_pcmk.*
 %endif
 %doc %{_mandir}/man8/fence_legacy.*
+%doc %{_mandir}/man8/fence_watchdog.*
 %doc %{_mandir}/man8/pacemakerd.*
 %doc %{_mandir}/man8/stonith_admin.*
 
@@ -715,6 +717,7 @@ exit 0
 %exclude %{_mandir}/man8/crm_master.*
 %exclude %{_mandir}/man8/fence_pcmk.*
 %exclude %{_mandir}/man8/fence_legacy.*
+%exclude %{_mandir}/man8/fence_watchdog.*
 %exclude %{_mandir}/man8/pacemakerd.*
 %exclude %{_mandir}/man8/pacemaker_remoted.*
 %exclude %{_mandir}/man8/stonith_admin.*

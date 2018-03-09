@@ -25,7 +25,7 @@ halibdir	= $(CRM_DAEMON_DIR)
 halib_PROGRAMS	= stonithd stonith-test
 
 sbin_PROGRAMS	= stonith_admin
-sbin_SCRIPTS	= fence_legacy fence_pcmk
+sbin_SCRIPTS	= fence_legacy fence_pcmk fence_watchdog
 
 noinst_HEADERS	= internal.h standalone_config.h
 

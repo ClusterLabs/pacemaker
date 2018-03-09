@@ -388,4 +388,6 @@ void remote_proxy_free(gpointer data);
 void remote_proxy_relay_event(remote_proxy_t *proxy, xmlNode *msg);
 void remote_proxy_relay_response(remote_proxy_t *proxy, xmlNode *msg, int msg_id);
 
+gboolean watchdog_fencing_enabled_for_node(const char *node);
+
 #endif                          /* CRM_INTERNAL__H */

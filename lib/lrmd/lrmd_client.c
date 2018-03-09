@@ -883,7 +883,9 @@ remote_proxy_check(lrmd_t * lrmd, GHashTable *hash)
     crm_xml_add(data, F_LRMD_ORIGIN, __FUNCTION__);
 
     value = g_hash_table_lookup(hash, "stonith-watchdog-timeout");
-    crm_xml_add(data, F_LRMD_WATCHDOG, value);
+    if ((value) && (watchdog_fencing_enabled_for_node(native->remote_nodename))) {
+        crm_xml_add(data, F_LRMD_WATCHDOG, value);
+    }
 
     rc = lrmd_send_command(lrmd, LRMD_OP_CHECK, data, NULL, 0, 0, native->type == CRM_CLIENT_IPC ? TRUE : FALSE);
     free_xml(data);

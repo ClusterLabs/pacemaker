@@ -592,97 +592,6 @@ build_port_aliases(const char *hostmap, GListPtr * targets)
     return aliases;
 }
 
-static void
-parse_host_line(const char *line, int max, GListPtr * output)
-{
-    int lpc = 0;
-    int last = 0;
-
-    if (max <= 0) {
-        return;
-    }
-
-    /* Check for any complaints about additional parameters that the device doesn't understand */
-    if (strstr(line, "invalid") || strstr(line, "variable")) {
-        crm_debug("Skipping: %s", line);
-        return;
-    }
-
-    crm_trace("Processing %d bytes: [%s]", max, line);
-    /* Skip initial whitespace */
-    for (lpc = 0; lpc <= max && isspace(line[lpc]); lpc++) {
-        last = lpc + 1;
-    }
-
-    /* Now the actual content */
-    for (lpc = 0; lpc <= max; lpc++) {
-        gboolean a_space = isspace(line[lpc]);
-
-        if (a_space && lpc < max && isspace(line[lpc + 1])) {
-            /* fast-forward to the end of the spaces */
-
-        } else if (a_space || line[lpc] == ',' || line[lpc] == ';' || line[lpc] == 0) {
-            int rc = 1;
-            char *entry = NULL;
-
-            if (lpc != last) {
-                entry = calloc(1, 1 + lpc - last);
-                rc = sscanf(line + last, "%[a-zA-Z0-9_-.]", entry);
-            }
-
-            if (entry == NULL) {
-                /* Skip */
-            } else if (rc != 1) {
-                crm_warn("Could not parse (%d %d): %s", last, lpc, line + last);
-            } else if (safe_str_neq(entry, "on") && safe_str_neq(entry, "off")) {
-                crm_trace("Adding '%s'", entry);
-                *output = g_list_append(*output, entry);
-                entry = NULL;
-            }
-
-            free(entry);
-            last = lpc + 1;
-        }
-    }
-}
-
-static GListPtr
-parse_host_list(const char *hosts)
-{
-    int lpc = 0;
-    int max = 0;
-    int last = 0;
-    GListPtr output = NULL;
-
-    if (hosts == NULL) {
-        return output;
-    }
-
-    max = strlen(hosts);
-    for (lpc = 0; lpc <= max; lpc++) {
-        if (hosts[lpc] == '\n' || hosts[lpc] == 0) {
-            char *line = NULL;
-            int len = lpc - last;
-
-            if(len > 1) {
-                line = malloc(1 + len);
-            }
-
-            if(line) {
-                snprintf(line, 1 + len, "%s", hosts + last);
-                line[len] = 0; /* Because it might be '\n' */
-                parse_host_line(line, len, &output);
-                free(line);
-            }
-
-            last = lpc + 1;
-        }
-    }
-
-    crm_trace("Parsed %d entries from '%s'", g_list_length(output), hosts);
-    return output;
-}
-
 GHashTable *metadata_cache = NULL;
 
 static xmlNode *
@@ -696,10 +605,7 @@ get_agent_metadata(const char *agent)
     }
 
     buffer = g_hash_table_lookup(metadata_cache, agent);
-    if(safe_str_eq(agent, STONITH_WATCHDOG_AGENT)) {
-        return NULL;
-
-    } else if(buffer == NULL) {
+    if(buffer == NULL) {
         stonith_t *st = stonith_api_new();
         int rc = st->cmds->metadata(st, st_opt_sync_call, agent, NULL, &buffer, 10);
 
@@ -987,22 +893,35 @@ schedule_internal_command(const char *origin,
     schedule_stonith_command(cmd, device);
 }
 
-gboolean
-string_in_list(GListPtr list, const char *item)
+/* very inefficient - would need improvement when used more often */
+char *
+list_to_string(GListPtr list, const char *delim, gboolean terminate_with_delim)
 {
     int lpc = 0;
     int max = g_list_length(list);
+    int delim_len = delim?strlen(delim):0;
+    int alloc_size = 1 + (max?((max-1+(terminate_with_delim?1:0))*delim_len):0);
+    char *rv;
 
     for (lpc = 0; lpc < max; lpc++) {
         const char *value = g_list_nth_data(list, lpc);
 
-        if (safe_str_eq(item, value)) {
-            return TRUE;
-        } else {
-            crm_trace("%d: '%s' != '%s'", lpc, item, value);
+        alloc_size += strlen(value);
+    }
+    rv = calloc(1, alloc_size);
+    if (rv) {
+        char *pos = rv;
+
+        for (lpc = 0; lpc < max; lpc++) {
+            const char *value = g_list_nth_data(list, lpc);
+
+            pos = &pos[sprintf(pos, "%s%s", lpc?delim:"", value)];
+        }
+        if (max && terminate_with_delim) {
+            sprintf(pos, "%s", delim);
         }
     }
-    return FALSE;
+    return rv;
 }
 
 static void
@@ -1149,6 +1068,35 @@ stonith_device_register(xmlNode * msg, const char **desc, gboolean from_cib)
 {
     stonith_device_t *dup = NULL;
     stonith_device_t *device = build_device_from_xml(msg);
+
+    /* do we have a watchdog-device? */
+    if (safe_str_eq(device->id, STONITH_WATCHDOG_ID)) do {
+        if (stonith_watchdog_timeout_ms <= 0) {
+            crm_err("Ignoring watchdog fence device without stonith-watchdog-timeout set.");
+        } else if (!safe_str_eq(device->agent, STONITH_WATCHDOG_AGENT)) {
+            crm_err("Ignoring watchdog fence device with agent '%s'!='"STONITH_WATCHDOG_AGENT"'.",
+                    device->agent?device->agent:"");
+        } else {
+            g_list_free_full(stonith_watchdog_targets, free);
+            stonith_watchdog_targets = device->targets;
+            if ((stonith_watchdog_targets == NULL) ||
+                string_in_list(stonith_watchdog_targets, stonith_our_uname)) {
+                device->targets = parse_host_list(stonith_our_uname);
+                g_hash_table_replace(device->params,
+                                     strdup(STONITH_ATTR_HOSTLIST),
+                                     strdup(stonith_our_uname));
+            } else {
+                device->targets = NULL;
+                crm_debug("Skip registration of watchdog fence device on node not in host-list.");
+                stonith_device_remove(device->id, from_cib);
+                free_device(device);
+                return pcmk_ok;
+            }
+            break;
+        }
+        free_device(device);
+        return pcmk_err_generic;
+    } while (0);
 
     dup = device_has_duplicate(device);
     if (dup) {
@@ -1487,6 +1435,21 @@ stonith_device_action(xmlNode * msg, char **output)
 
     if (id) {
         crm_trace("Looking for '%s'", id);
+        if (safe_str_eq(id, STONITH_WATCHDOG_ID)) {
+            if (stonith_watchdog_timeout_ms <= 0) {
+                return -ENODEV;
+            } else {
+                xmlNode *op = get_xpath_object("//@" F_STONITH_ACTION, msg, LOG_ERR);
+                const char *action = crm_element_value(op, F_STONITH_ACTION);
+
+                if (safe_str_eq(action, "list")) {
+                    *output = list_to_string(stonith_watchdog_targets, "\n", TRUE);
+                    return rc;
+                } else if (safe_str_eq(action, "monitor")) {
+                    return rc;
+                }
+            }
+        }
         device = g_hash_table_lookup(device_list, id);
     }
 

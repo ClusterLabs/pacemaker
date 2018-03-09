@@ -50,6 +50,10 @@ xmlNode *create_level_registration_xml(const char *node, const char *pattern,
 xmlNode *create_device_registration_xml(const char *id, const char *namespace, const char *agent,
                                         stonith_key_value_t * params, const char *rsc_provides);
 
+gboolean string_in_list(GListPtr list, const char *item);
+
+GListPtr parse_host_list(const char *hosts);
+
 #  define ST_LEVEL_MAX 10
 
 #  define F_STONITH_CLIENTID      "st_clientid"
@@ -134,6 +138,7 @@ xmlNode *create_device_registration_xml(const char *id, const char *namespace, c
 #  define stonith_channel            "st_command"
 #  define stonith_channel_callback   "st_callback"
 
-#  define STONITH_WATCHDOG_AGENT  "#watchdog"
+#  define STONITH_WATCHDOG_AGENT  "fence_watchdog"
+#  define STONITH_WATCHDOG_ID     "watchdog"
 
 #endif

@@ -52,6 +52,7 @@
 char *stonith_our_uname = NULL;
 char *stonith_our_uuid = NULL;
 long stonith_watchdog_timeout_ms = 0;
+GListPtr stonith_watchdog_targets = NULL;
 
 GMainLoop *mainloop = NULL;
 
@@ -743,6 +744,19 @@ cib_devices_update(void)
 }
 
 static void
+st_update_watchdog_device(void)
+{
+    if(stonith_watchdog_timeout_ms > 0) {
+        xmlNode *xml;
+
+        xml = create_device_registration_xml(STONITH_WATCHDOG_ID, "redhat", STONITH_WATCHDOG_AGENT, NULL, NULL);
+        stonith_device_register(xml, NULL, FALSE);
+
+        free_xml(xml);
+    }
+}
+
+static void
 update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
 {
     xmlNode *change = NULL;
@@ -776,6 +790,10 @@ update_cib_stonith_devices_v2(const char *event, xmlNode * msg)
             if (search != NULL) {
                 *search = 0;
                 stonith_device_remove(rsc_id, TRUE);
+                if (safe_str_eq(rsc_id, STONITH_WATCHDOG_ID)) {
+                    /* falling back to implicit definition */
+                    st_update_watchdog_device();
+                }
             } else {
                 crm_warn("Ignoring malformed CIB update (resource deletion)");
             }
@@ -1519,18 +1537,7 @@ main(int argc, char **argv)
 
     topology = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free_topology_entry);
 
-    if(stonith_watchdog_timeout_ms > 0) {
-        xmlNode *xml;
-        stonith_key_value_t *params = NULL;
-
-        params = stonith_key_value_add(params, STONITH_ATTR_HOSTLIST, stonith_our_uname);
-
-        xml = create_device_registration_xml("watchdog", "internal", STONITH_WATCHDOG_AGENT, params, NULL);
-        stonith_device_register(xml, NULL, FALSE);
-
-        stonith_key_value_freeall(params, 1, 1);
-        free_xml(xml);
-    }
+    st_update_watchdog_device();
 
     stonith_ipc_server_init(&ipcs, &ipc_callbacks);
 

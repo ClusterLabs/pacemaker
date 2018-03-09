@@ -894,6 +894,17 @@ do_recover(long long action,
     register_fsa_input(C_FSA_INTERNAL, I_TERMINATE, NULL);
 }
 
+static gboolean
+verify_stonith_watchdog_timeout(const char *value)
+{
+    gboolean rv = TRUE;
+
+    if (watchdog_fencing_enabled_for_node(fsa_our_uname)) {
+        rv = check_sbd_timeout(value);
+    }
+    return rv;
+}
+
 /* *INDENT-OFF* */
 pe_cluster_option crmd_opts[] = {
 	/* name, old-name, validate, values, default, short description, long description */
@@ -957,7 +968,7 @@ pe_cluster_option crmd_opts[] = {
           "Delay cluster recovery for the configured interval to allow for additional/related events to occur.\n"
           "Useful if your configuration is sensitive to the order in which ping updates arrive."
         },
-	{ "stonith-watchdog-timeout", NULL, "time", NULL, NULL, &check_sbd_timeout,
+	{ "stonith-watchdog-timeout", NULL, "time", NULL, NULL, &verify_stonith_watchdog_timeout,
 	  "How long to wait before we can assume nodes are safely down", NULL
         },
         { "stonith-max-attempts",NULL,"integer",NULL,"10",&check_positive_number,
