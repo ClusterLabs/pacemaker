@@ -341,11 +341,11 @@ lrmd_tls_dispatch(gpointer userdata)
     int disconnected = 0;
 
     if (lrmd_tls_connected(lrmd) == FALSE) {
-        crm_trace("tls dispatch triggered after disconnect");
+        crm_trace("TLS dispatch triggered after disconnect");
         return 0;
     }
 
-    crm_trace("tls_dispatch triggered");
+    crm_trace("TLS dispatch triggered");
 
     /* First check if there are any pending notifies to process that came
      * while we were waiting for replies earlier. */
@@ -382,7 +382,7 @@ lrmd_tls_dispatch(gpointer userdata)
                 int reply_id = 0;
                 crm_element_value_int(xml, F_LRMD_CALLID, &reply_id);
                 /* if this happens, we want to know about it */
-                crm_err("Got outdated reply %d", reply_id);
+                crm_err("Got outdated remote LRM reply %d", reply_id);
             }
         }
         free_xml(xml);
@@ -390,7 +390,8 @@ lrmd_tls_dispatch(gpointer userdata)
     }
 
     if (disconnected) {
-        crm_info("Server disconnected while reading remote server msg.");
+        crm_info("Lost %s LRM connection while reading data",
+                 (native->remote_nodename? native->remote_nodename : "local"));
         lrmd_tls_disconnect(lrmd);
         return 0;
     }
@@ -1389,7 +1390,9 @@ lrmd_api_disconnect(lrmd_t * lrmd)
 {
     lrmd_private_t *native = lrmd->lrmd_private;
 
-    crm_info("Disconnecting from %d lrmd service", native->type);
+    crm_info("Disconnecting %s LRM connection to %s",
+             crm_client_type_text(native->type),
+             (native->remote_nodename? native->remote_nodename : "local"));
     switch (native->type) {
         case CRM_CLIENT_IPC:
             lrmd_ipc_disconnect(lrmd);
@@ -1455,20 +1458,36 @@ lrmd_api_unregister_rsc(lrmd_t * lrmd, const char *rsc_id, enum lrmd_call_option
 }
 
 lrmd_rsc_info_t *
+lrmd_new_rsc_info(const char *rsc_id, const char *standard,
+                  const char *provider, const char *type)
+{
+    lrmd_rsc_info_t *rsc_info = calloc(1, sizeof(lrmd_rsc_info_t));
+
+    CRM_ASSERT(rsc_info);
+    if (rsc_id) {
+        rsc_info->id = strdup(rsc_id);
+        CRM_ASSERT(rsc_info->id);
+    }
+    if (standard) {
+        rsc_info->standard = strdup(standard);
+        CRM_ASSERT(rsc_info->standard);
+    }
+    if (provider) {
+        rsc_info->provider = strdup(provider);
+        CRM_ASSERT(rsc_info->provider);
+    }
+    if (type) {
+        rsc_info->type = strdup(type);
+        CRM_ASSERT(rsc_info->type);
+    }
+    return rsc_info;
+}
+
+lrmd_rsc_info_t *
 lrmd_copy_rsc_info(lrmd_rsc_info_t * rsc_info)
 {
-    lrmd_rsc_info_t *copy = NULL;
-
-    copy = calloc(1, sizeof(lrmd_rsc_info_t));
-
-    copy->id = strdup(rsc_info->id);
-    copy->type = strdup(rsc_info->type);
-    copy->standard = strdup(rsc_info->standard);
-    if (rsc_info->provider) {
-        copy->provider = strdup(rsc_info->provider);
-    }
-
-    return copy;
+    return lrmd_new_rsc_info(rsc_info->id, rsc_info->standard,
+                             rsc_info->provider, rsc_info->type);
 }
 
 void
@@ -1515,14 +1534,7 @@ lrmd_api_get_rsc_info(lrmd_t * lrmd, const char *rsc_id, enum lrmd_call_options 
         return NULL;
     }
 
-    rsc_info = calloc(1, sizeof(lrmd_rsc_info_t));
-    rsc_info->id = strdup(rsc_id);
-    rsc_info->standard = strdup(class);
-    if (provider) {
-        rsc_info->provider = strdup(provider);
-    }
-    rsc_info->type = strdup(type);
-
+    rsc_info = lrmd_new_rsc_info(rsc_id, class, provider, type);
     free_xml(output);
     return rsc_info;
 }

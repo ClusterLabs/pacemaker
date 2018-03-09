@@ -227,6 +227,23 @@ crm_client_name(crm_client_t * c)
     }
 }
 
+const char *
+crm_client_type_text(enum client_type client_type)
+{
+    switch (client_type) {
+        case CRM_CLIENT_IPC:
+            return "IPC";
+        case CRM_CLIENT_TCP:
+            return "TCP";
+#ifdef HAVE_GNUTLS_GNUTLS_H
+        case CRM_CLIENT_TLS:
+            return "TLS";
+#endif
+        default:
+            return "unknown";
+    }
+}
+
 void
 crm_client_init(void)
 {

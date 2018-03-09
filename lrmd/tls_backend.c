@@ -91,7 +91,7 @@ lrmd_remote_client_msg(gpointer data)
         /* no msg to read */
         return 0;
     } else if (rc < 0) {
-        crm_info("Client disconnected during remote client read");
+        crm_info("Client disconnected while polling it");
         return -1;
     }
 
@@ -126,7 +126,7 @@ lrmd_remote_client_msg(gpointer data)
     }
 
     if (disconnected) {
-        crm_info("Client disconnect detected in tls msg dispatcher.");
+        crm_info("Client disconnected while reading from it");
         return -1;
     }
 
@@ -142,6 +142,10 @@ lrmd_remote_client_destroy(gpointer user_data)
         return;
     }
 
+    crm_notice("Cleaning up after remote client %s disconnected "
+               CRM_XS " id=%s",
+               (client->name? client->name : ""), client->id);
+
     ipc_proxy_remove_provider(client);
 
     /* if this is the last remote connection, stop recurring
@@ -149,9 +153,6 @@ lrmd_remote_client_destroy(gpointer user_data)
     if (crm_hash_table_size(client_connections) == 1) {
         client_disconnect_cleanup(NULL);
     }
-
-    crm_notice("LRMD client disconnecting remote client - name: %s id: %s",
-               client->name ? client->name : "<unknown>", client->id);
 
     if (client->remote->tls_session) {
         void *sock_ptr;
