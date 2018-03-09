@@ -929,14 +929,6 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
         from_peer = FALSE;
     }
 
-    cib_num_ops++;
-    if (cib_num_ops == 0) {
-        cib_num_fail = 0;
-        cib_num_local = 0;
-        cib_num_updates = 0;
-        crm_info("Stats wrapped around");
-    }
-
     crm_element_value_int(request, F_CIB_CALLOPTS, &call_options);
     if (force_synchronous) {
         call_options |= cib_sync_call;
@@ -981,9 +973,6 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
     }
 
     is_update = cib_op_modifies(call_type);
-    if (is_update) {
-        cib_num_updates++;
-    }
 
     if (call_options & cib_discard_reply) {
         needs_reply = is_update;
@@ -1038,7 +1027,6 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
         int level = LOG_INFO;
         const char *section = crm_element_value(request, F_CIB_SECTION);
 
-        cib_num_local++;
         rc = cib_process_command(request, &op_reply, &result_diff, privileged);
 
         if (is_update == FALSE) {
@@ -1059,7 +1047,6 @@ cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean priv
             }
 
         } else if (rc != pcmk_ok && is_update) {
-            cib_num_fail++;
             level = LOG_WARNING;
         }
 
