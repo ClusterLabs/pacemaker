@@ -145,12 +145,19 @@ crmd_cman_dispatch(unsigned long long seq, gboolean quorate)
     return TRUE;
 }
 
+// OpenBSD doesn't have ENOLINK
+#ifdef ENOLINK
+#define CRM_EX_NOLINK ENOLINK
+#else
+#define CRM_EX_NOLINK ENOTCONN
+#endif
+
 static void
 crmd_quorum_destroy(gpointer user_data)
 {
     if (is_not_set(fsa_input_register, R_HA_DISCONNECTED)) {
         crm_err("connection terminated");
-        crmd_exit(ENOLINK);
+        crmd_exit(CRM_EX_NOLINK);
 
     } else {
         crm_info("connection closed");
@@ -162,7 +169,7 @@ crmd_cs_destroy(gpointer user_data)
 {
     if (is_not_set(fsa_input_register, R_HA_DISCONNECTED)) {
         crm_err("connection terminated");
-        crmd_exit(ENOLINK);
+        crmd_exit(CRM_EX_NOLINK);
 
     } else {
         crm_info("connection closed");
@@ -175,7 +182,7 @@ crmd_cman_destroy(gpointer user_data)
 {
     if (is_not_set(fsa_input_register, R_HA_DISCONNECTED)) {
         crm_err("connection terminated");
-        crmd_exit(ENOLINK);
+        crmd_exit(CRM_EX_NOLINK);
 
     } else {
         crm_info("connection closed");
