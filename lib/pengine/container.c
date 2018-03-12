@@ -1173,34 +1173,32 @@ container_active(resource_t * rsc, gboolean all)
     return all;
 }
 
+/*!
+ * \internal
+ * \brief Find the container child corresponding to a given node
+ *
+ * \param[in] bundle  Top-level bundle resource
+ * \param[in] node    Node to search for
+ *
+ * \return Container child if found, NULL otherwise
+ */
 resource_t *
-find_container_child(const char *stem, resource_t * rsc, node_t *node) 
+find_container_child(const resource_t *bundle, const node_t *node)
 {
     container_variant_data_t *container_data = NULL;
-    resource_t *parent = uber_parent(rsc);
-    CRM_ASSERT(parent->parent);
+    CRM_ASSERT(bundle && node);
 
-    parent = parent->parent;
-    get_container_variant_data(container_data, parent);
+    get_container_variant_data(container_data, bundle);
+    for (GListPtr gIter = container_data->tuples; gIter != NULL;
+         gIter = gIter->next) {
+        container_grouping_t *tuple = (container_grouping_t *)gIter->data;
 
-    if (is_not_set(rsc->flags, pe_rsc_unique)) {
-        for (GListPtr gIter = container_data->tuples; gIter != NULL; gIter = gIter->next) {
-            container_grouping_t *tuple = (container_grouping_t *)gIter->data;
-
-            CRM_ASSERT(tuple);
-            if(tuple->node->details == node->details) {
-                rsc = tuple->child;
-                break;
-            }
+        CRM_ASSERT(tuple && tuple->node);
+        if (tuple->node->details == node->details) {
+            return tuple->child;
         }
     }
-
-    if (rsc && safe_str_neq(stem, rsc->id)) {
-        free(rsc->clone_name);
-        rsc->clone_name = strdup(stem);
-    }
-
-    return rsc;
+    return NULL;
 }
 
 static void
