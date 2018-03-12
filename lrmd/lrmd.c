@@ -568,8 +568,10 @@ cmd_reset(lrmd_cmd_t * cmd)
 {
     cmd->lrmd_op_status = 0;
     cmd->last_pid = 0;
+#ifdef HAVE_SYS_TIMEB_H
     memset(&cmd->t_run, 0, sizeof(cmd->t_run));
     memset(&cmd->t_queue, 0, sizeof(cmd->t_queue));
+#endif
     free(cmd->exit_reason);
     cmd->exit_reason = NULL;
     free(cmd->output);

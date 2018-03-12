@@ -217,12 +217,9 @@ BuildRequires: pkgconfig(glib-2.0) >= 2.16
 BuildRequires: libxml2-devel libxslt-devel libuuid-devel
 BuildRequires: bzip2-devel pam-devel
 
-# Required for agent_config.h which specifies the correct scratch directory
-BuildRequires: resource-agents
-
 # Enables optional functionality
 BuildRequires: ncurses-devel docbook-style-xsl
-BuildRequires: bison byacc flex help2man gnutls-devel pkgconfig(dbus-1)
+BuildRequires: help2man gnutls-devel pkgconfig(dbus-1)
 
 %if %{systemd_native}
 BuildRequires: pkgconfig(systemd)
@@ -276,6 +273,7 @@ be part of the cluster.
 License:       GPLv2+ and LGPLv2+
 Summary:       Core Pacemaker libraries
 Group:         System Environment/Daemons
+Requires:      shadow-utils
 
 %description -n %{name}-libs
 Pacemaker is an advanced, scalable High-Availability cluster resource

@@ -42,6 +42,3 @@ extern const char *cib_root;
 extern char *cib_our_uname;
 
 extern int cib_status;
-extern unsigned long cib_num_ops, cib_num_local, cib_num_updates, cib_num_fail;
-extern unsigned long cib_bad_connects, cib_num_timeouts;
-

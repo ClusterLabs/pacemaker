@@ -18,39 +18,24 @@
 
 #include <crm_internal.h>
 
-#include <sys/param.h>
 #include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <sys/utsname.h>
-
 #include <stdlib.h>
-#include <errno.h>
-#include <fcntl.h>
+#include <pwd.h>
+#include <grp.h>
+#include <sys/types.h>
+
+#include <libxml/parser.h>
 
 #include <crm/crm.h>
 #include <crm/cib/internal.h>
 #include <crm/msg_xml.h>
 #include <crm/cluster/internal.h>
-
 #include <crm/common/xml.h>
-
 #include <crm/common/mainloop.h>
 
 #include <cibio.h>
 #include <callbacks.h>
-#include <pwd.h>
-#include <grp.h>
 #include "common.h"
-
-#if HAVE_LIBXML2
-#  include <libxml/parser.h>
-#endif
-
-#ifdef HAVE_GETOPT_H
-#  include <getopt.h>
-#endif
 
 #if HAVE_BZLIB_H
 #  include <bzlib.h>
@@ -73,21 +58,13 @@ volatile gboolean cib_writes_enabled = TRUE;
 int remote_fd = 0;
 int remote_tls_fd = 0;
 
+GHashTable *config_hash = NULL;
+GHashTable *local_notify_queue = NULL;
+
 int cib_init(void);
 void cib_shutdown(int nsig);
 static bool startCib(const char *filename);
 extern int write_cib_contents(gpointer p);
-
-GHashTable *config_hash = NULL;
-GHashTable *local_notify_queue = NULL;
-
-char *channel1 = NULL;
-char *channel2 = NULL;
-char *channel3 = NULL;
-char *channel4 = NULL;
-char *channel5 = NULL;
-
-#define OPTARGS	"maswr:V?"
 void cib_cleanup(void);
 
 static void
@@ -243,17 +220,7 @@ cib_cleanup(void)
     crm_client_cleanup();
     g_hash_table_destroy(config_hash);
     free(cib_our_uname);
-    free(channel1);
-    free(channel2);
-    free(channel3);
-    free(channel4);
-    free(channel5);
 }
-
-unsigned long cib_num_ops = 0;
-const char *cib_stat_interval = "10min";
-unsigned long cib_num_local = 0, cib_num_updates = 0, cib_num_fail = 0;
-unsigned long cib_bad_connects = 0, cib_num_timeouts = 0;
 
 #if SUPPORT_COROSYNC
 static void

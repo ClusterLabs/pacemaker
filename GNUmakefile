@@ -165,6 +165,7 @@ $(PACKAGE)-suse.spec: $(PACKAGE).spec.in GNUmakefile
 	    -e 's:gnutls-devel:libgnutls-devel:g'				\
 	    -e 's:corosynclib:libcorosync:g'					\
 	    -e 's:cluster-glue-libs:libglue:g'					\
+	    -e 's:shadow-utils:shadow:g'					\
 	    -e 's: publican::g'							\
 	    -e 's: 189: 90:g'							\
 	    -e 's:%{_libexecdir}/lcrso:%{_libdir}/lcrso:g'			\
