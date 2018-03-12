@@ -17,6 +17,7 @@
 #include <unistd.h>
 #include <ctype.h>
 #include <dirent.h>
+#include <signal.h>
 
 #ifdef _POSIX_MEMLOCK
 #  include <sys/mman.h>
