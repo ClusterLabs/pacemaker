@@ -1,19 +1,8 @@
 /*
- * Copyright (C) 2013 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2013-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -292,14 +281,11 @@ throttle_handle_load(float load, const char *desc, int cores)
 static enum throttle_state_e
 throttle_mode(void)
 {
+#if SUPPORT_PROCFS
     unsigned int cores;
     float load;
     float thresholds[4];
     enum throttle_state_e mode = throttle_none;
-
-#if defined(ON_BSD) || defined(ON_SOLARIS)
-    return throttle_none;
-#endif
 
     cores = crm_procfs_num_cores();
     if(throttle_cib_load(&load)) {
@@ -351,6 +337,7 @@ throttle_mode(void)
     } else if(mode & throttle_low) {
         return throttle_low;
     }
+#endif // SUPPORT_PROCFS
     return throttle_none;
 }
 
