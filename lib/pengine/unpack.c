@@ -1651,13 +1651,6 @@ find_anonymous_clone(pe_working_set_t * data_set, node_t * node, resource_t * pa
         pe_rsc_debug(parent, "Created orphan %s for %s: %s on %s", top->id, parent->id, rsc_id,
                      node->details->uname);
     }
-
-    if (safe_str_neq(rsc_id, rsc->id)) {
-        pe_rsc_debug(rsc, "Internally renamed %s on %s to %s%s",
-                    rsc_id, node->details->uname, rsc->id,
-                    is_set(rsc->flags, pe_rsc_orphan) ? " (ORPHAN)" : "");
-    }
-
     return rsc;
 }
 
@@ -1671,20 +1664,25 @@ unpack_find_resource(pe_working_set_t * data_set, node_t * node, const char *rsc
     crm_trace("looking for %s", rsc_id);
     rsc = pe_find_resource(data_set->resources, rsc_id);
 
-    /* no match */
     if (rsc == NULL) {
-        /* Even when clone-max=0, we still create a single :0 orphan to match against */
-        char *tmp = clone_zero(rsc_id);
-        resource_t *clone0 = pe_find_resource(data_set->resources, tmp);
+        /* If we didn't find the resource by its name in the operation history,
+         * check it again as a clone instance. Even when clone-max=0, we create
+         * a single :0 orphan to match against here.
+         */
+        char *clone0_id = clone_zero(rsc_id);
+        resource_t *clone0 = pe_find_resource(data_set->resources, clone0_id);
 
         if (clone0 && is_not_set(clone0->flags, pe_rsc_unique)) {
             rsc = clone0;
         } else {
-            crm_trace("%s is not known as %s either", rsc_id, tmp);
+            crm_trace("%s is not known as %s either", rsc_id, clone0_id);
         }
 
+        /* Grab the parent clone even if this a different unique instance,
+         * so we can remember the clone name, which will be the same.
+         */
         parent = uber_parent(clone0);
-        free(tmp);
+        free(clone0_id);
 
         crm_trace("%s not found: %s", rsc_id, parent ? parent->id : "orphan");
 
@@ -1697,24 +1695,28 @@ unpack_find_resource(pe_working_set_t * data_set, node_t * node, const char *rsc
         parent = uber_parent(rsc);
     }
 
-    if(parent && parent->parent) {
-        rsc = find_container_child(rsc_id, rsc, node);
+    if (pe_rsc_is_anon_clone(parent)) {
 
-    } else if (pe_rsc_is_clone(parent)) {
-        if (is_not_set(parent->flags, pe_rsc_unique)) {
+        if (parent && parent->parent) {
+            rsc = find_container_child(parent->parent, node);
+        } else {
             char *base = clone_strip(rsc_id);
 
             rsc = find_anonymous_clone(data_set, node, parent, base);
-            CRM_ASSERT(rsc != NULL);
             free(base);
-        }
-
-        if (rsc && safe_str_neq(rsc_id, rsc->id)) {
-            free(rsc->clone_name);
-            rsc->clone_name = strdup(rsc_id);
+            CRM_ASSERT(rsc != NULL);
         }
     }
 
+    if (rsc && safe_str_neq(rsc_id, rsc->id)
+        && safe_str_neq(rsc_id, rsc->clone_name)) {
+
+        free(rsc->clone_name);
+        rsc->clone_name = strdup(rsc_id);
+        pe_rsc_debug(rsc, "Internally renamed %s on %s to %s%s",
+                     rsc_id, node->details->uname, rsc->id,
+                     (is_set(rsc->flags, pe_rsc_orphan)? " (ORPHAN)" : ""));
+    }
     return rsc;
 }
 

@@ -1192,6 +1192,7 @@ do_test bundle-probe-order-1 "order 1"
 do_test bundle-probe-order-2 "order 2"
 do_test bundle-probe-order-3 "order 3"
 do_test bundle-probe-remotes "Ensure remotes get probed too"
+do_test bundle-replicas-change "Change bundle from 1 replica to multiple"
 
 echo ""
 do_test whitebox-fail1 "Fail whitebox container rsc."
