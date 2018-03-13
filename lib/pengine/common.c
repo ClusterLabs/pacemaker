@@ -105,8 +105,8 @@ pe_cluster_option pe_opts[] = {
 	/* Stonith Options */
 	{ "stonith-enabled", "stonith_enabled", "boolean", NULL, "true", &check_boolean,
 	  "Failed nodes are STONITH'd", NULL },
-	{ "stonith-action", "stonith_action", "enum", "reboot, poweroff, off", "reboot", &check_stonith_action,
-	  "Action to send to STONITH device", NULL },
+	{ "stonith-action", "stonith_action", "enum", "reboot, off, poweroff", "reboot", &check_stonith_action,
+	  "Action to send to STONITH device ('poweroff' is a deprecated alias for 'off')", NULL },
 	{ "stonith-timeout", NULL, "time", NULL, "60s", &check_timer,
 	  "How long to wait for the STONITH action (reboot,on,off) to complete", NULL },
 	{ XML_ATTR_HAVE_WATCHDOG, NULL, "boolean", NULL, "false", &check_boolean,

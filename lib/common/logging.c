@@ -1021,7 +1021,9 @@ pcmk_errorname(int rc)
         case EMFILE: return "EMFILE";
         case EMLINK: return "EMLINK";
         case EMSGSIZE: return "EMSGSIZE";
+#ifdef EMULTIHOP // Not available on OpenBSD
         case EMULTIHOP: return "EMULTIHOP";
+#endif
         case ENAMETOOLONG: return "ENAMETOOLONG";
         case ENETDOWN: return "ENETDOWN";
         case ENETRESET: return "ENETRESET";
@@ -1034,7 +1036,9 @@ pcmk_errorname(int rc)
         case ENOEXEC: return "ENOEXEC";
         case ENOKEY: return "ENOKEY";
         case ENOLCK: return "ENOLCK";
+#ifdef ENOLINK // Not available on OpenBSD
         case ENOLINK: return "ENOLINK";
+#endif
         case ENOMEM: return "ENOMEM";
         case ENOMSG: return "ENOMSG";
         case ENOPROTOOPT: return "ENOPROTOOPT";

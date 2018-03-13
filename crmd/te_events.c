@@ -414,11 +414,16 @@ match_down_event(const char *target, bool quiet)
              gIter2 = gIter2->next) {
 
             match = (crm_action_t*)gIter2->data;
-            xpath_ret = xpath_search(match->xml, xpath);
-            if (numXpathResults(xpath_ret) < 1) {
+            if (match->executed) {
+                xpath_ret = xpath_search(match->xml, xpath);
+                if (numXpathResults(xpath_ret) < 1) {
+                    match = NULL;
+                }
+                freeXpathObject(xpath_ret);
+            } else {
+                // Only actions that were actually started can match
                 match = NULL;
             }
-            freeXpathObject(xpath_ret);
         }
     }
 
@@ -436,8 +441,8 @@ match_down_event(const char *target, bool quiet)
     return match;
 }
 
-gboolean
-process_graph_event(xmlNode * event, const char *event_node)
+void
+process_graph_event(xmlNode *event, const char *event_node)
 {
     int rc = -1;
     int status = -1;
@@ -450,7 +455,6 @@ process_graph_event(xmlNode * event, const char *event_node)
     int transition_num = -1;
     char *update_te_uuid = NULL;
 
-    gboolean stop_early = FALSE;
     gboolean ignore_failures = FALSE;
     const char *id = NULL;
     const char *desc = NULL;
@@ -470,14 +474,14 @@ process_graph_event(xmlNode * event, const char *event_node)
     magic = crm_element_value(event, XML_ATTR_TRANSITION_KEY);
     if (magic == NULL) {
         /* non-change */
-        return FALSE;
+        return;
     }
 
     if (decode_transition_key(magic, &update_te_uuid, &transition_num,
                               &action_num, &target_rc) == FALSE) {
         crm_err("Invalid event %s.%d detected: %s", id, callid, magic);
         abort_transition(INFINITY, tg_restart, "Bad event", event);
-        return FALSE;
+        return;
     }
 
     if (status == PCMK_LRM_OP_PENDING) {
@@ -491,12 +495,10 @@ process_graph_event(xmlNode * event, const char *event_node)
     } else if ((action_num < 0) || (crm_str_eq(update_te_uuid, te_uuid, TRUE) == FALSE)) {
         desc = "initiated by a different node";
         abort_transition(INFINITY, tg_restart, "Foreign event", event);
-        stop_early = TRUE;      /* This could be an lrm status refresh */
 
     } else if (transition_graph->id != transition_num) {
         desc = "arrived really late";
         abort_transition(INFINITY, tg_restart, "Old event", event);
-        stop_early = TRUE;      /* This could be an lrm status refresh */
 
     } else if (transition_graph->complete) {
         desc = "arrived late";
@@ -521,8 +523,6 @@ process_graph_event(xmlNode * event, const char *event_node)
     } else {
         if (update_failcount(event, event_node, rc, target_rc,
                              (transition_num == -1), ignore_failures)) {
-            /* Turns out this wasn't an lrm status refresh update afterall */
-            stop_early = FALSE;
             desc = "failed";
         }
         crm_info("Detected action (%d.%d) %s.%d=%s: %s", transition_num,
@@ -531,5 +531,4 @@ process_graph_event(xmlNode * event, const char *event_node)
 
   bail:
     free(update_te_uuid);
-    return stop_early;
 }

@@ -210,6 +210,12 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
               is_set(data_set->flags, pe_flag_stonith_enabled) ? "enabled" : "disabled");
 
     data_set->stonith_action = pe_pref(data_set->config_hash, "stonith-action");
+    if (!strcmp(data_set->stonith_action, "poweroff")) {
+        pe_warn_once(pe_wo_poweroff_off,
+                     "Support for stonith-action of 'poweroff' is deprecated "
+                     "and will be removed in a future release (use 'off' instead)");
+        data_set->stonith_action = "off";
+    }
     crm_trace("STONITH will %s nodes", data_set->stonith_action);
 
     set_config_flag(data_set, "concurrent-fencing", pe_flag_concurrent_fencing);
@@ -2662,11 +2668,6 @@ unpack_rsc_op_failure(resource_t * rsc, node_t * node, int rc, xmlNode * xml_op,
         rsc->role = RSC_ROLE_MASTER;
 
     } else if (safe_str_eq(task, CRMD_ACTION_DEMOTE)) {
-        /*
-         * staying in role=master ends up putting the PE/TE into a loop
-         * setting role=slave is not dangerous because no master will be
-         * promoted until the failed resource has been fully stopped
-         */
         if (action->on_fail == action_fail_block) {
             rsc->role = RSC_ROLE_MASTER;
             rsc->next_role = RSC_ROLE_STOPPED;
@@ -2675,9 +2676,13 @@ unpack_rsc_op_failure(resource_t * rsc, node_t * node, int rc, xmlNode * xml_op,
             rsc->role = RSC_ROLE_STOPPED;
 
         } else {
-            crm_warn("Forcing %s to stop after a failed demote action", rsc->id);
+            /*
+             * Staying in master role would put the PE/TE into a loop. Setting
+             * slave role is not dangerous because the resource will be stopped
+             * as part of recovery, and any master promotion will be ordered
+             * after that stop.
+             */
             rsc->role = RSC_ROLE_SLAVE;
-            rsc->next_role = RSC_ROLE_STOPPED;
         }
 
     } else if (compare_version("2.0", op_version) > 0 && safe_str_eq(task, CRMD_ACTION_START)) {
