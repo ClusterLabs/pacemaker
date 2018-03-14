@@ -362,7 +362,7 @@ Requires:      systemd-python
 Test framework for cluster-related technologies like Pacemaker
 
 %package       doc
-License:       CC-BY-SA
+License:       CC-BY-SA-4.0
 Summary:       Documentation for Pacemaker
 Group:         Documentation
 
