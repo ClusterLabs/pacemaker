@@ -201,10 +201,6 @@ pe_unpack_alerts(xmlNode *alerts)
 
         unpack_alert(alert, entry, &max_timeout);
 
-        if (entry->tstamp_format == NULL) {
-            entry->tstamp_format = strdup(CRM_ALERT_DEFAULT_TSTAMP_FORMAT);
-        }
-
         crm_debug("Alert %s: path=%s timeout=%dms tstamp-format='%s' %u vars",
                   entry->id, entry->path, entry->timeout, entry->tstamp_format,
                   (entry->envvars? g_hash_table_size(entry->envvars) : 0));

@@ -27,6 +27,8 @@
 
 /* Default-Format-String used to pass timestamps to the alerts scripts */
 #  define CRM_ALERT_DEFAULT_TSTAMP_FORMAT "%H:%M:%S.%06N"
+/* Default-Format-String used to pass timestamps to the alerts scripts.(snmp) */
+#  define CRM_ALERT_DEFAULT_TSTAMP_FORMAT_SNMP "%Y-%m-%d,%H:%M:%S.%01N"
 
 typedef struct {
     char *name;
@@ -70,11 +72,12 @@ enum crm_alert_keys_e {
     CRM_alert_timestamp,
     CRM_alert_attribute_name,
     CRM_alert_attribute_value,
+    CRM_alert_timestamp_snmp,
     CRM_alert_select_kind,
     CRM_alert_select_attribute_name
 };
 
-#define CRM_ALERT_INTERNAL_KEY_MAX 16
+#define CRM_ALERT_INTERNAL_KEY_MAX 17
 #define CRM_ALERT_NODE_SEQUENCE "CRM_alert_node_sequence"
 
 extern const char *crm_alert_keys[CRM_ALERT_INTERNAL_KEY_MAX][3];

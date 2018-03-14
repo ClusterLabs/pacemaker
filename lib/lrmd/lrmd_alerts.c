@@ -169,12 +169,25 @@ exec_alert_list(lrmd_t *lrmd, GList *alert_list, enum crm_alert_flags kind,
                                       entry->recipient);
 
         if (now) {
-            char *timestamp = crm_time_format_hr(entry->tstamp_format, now);
+            char *timestamp = crm_time_format_hr(entry->tstamp_format == NULL ? CRM_ALERT_DEFAULT_TSTAMP_FORMAT : entry->tstamp_format, now);
+            char *timestamp_snmp = NULL;
+
+            if (entry->tstamp_format == NULL) {
+                timestamp_snmp = crm_time_format_hr(CRM_ALERT_DEFAULT_TSTAMP_FORMAT_SNMP, now); 
+            } else if (timestamp != NULL) {
+                timestamp_snmp = strdup(timestamp);
+            }
 
             if (timestamp) {
                 copy_params = alert_key2param(copy_params, CRM_alert_timestamp,
                                               timestamp);
                 free(timestamp);
+            }
+
+            if (timestamp_snmp) {
+                copy_params = alert_key2param(copy_params, CRM_alert_timestamp_snmp,
+                                              timestamp_snmp);
+                free(timestamp_snmp);
             }
         }
 
