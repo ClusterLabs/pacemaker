@@ -38,7 +38,7 @@ is_matched_failure(const char *rsc_id, xmlNode *conf_op_xml,
     conf_op_name = crm_element_value(conf_op_xml, "name");
     conf_op_interval_spec = crm_element_value(conf_op_xml,
                                               XML_LRM_ATTR_INTERVAL);
-    conf_op_interval_ms = crm_get_msec(conf_op_interval_spec);
+    conf_op_interval_ms = crm_parse_interval_spec(conf_op_interval_spec);
 
     // Get name and interval from op history entry
     lrm_op_task = crm_element_value(lrm_op_xml, XML_LRM_ATTR_TASK);
@@ -81,20 +81,24 @@ block_failure(node_t *node, resource_t *rsc, xmlNode *xml_op,
               pe_working_set_t *data_set)
 {
     char *xml_name = clone_strip(rsc->id);
+
+    /* @TODO This xpath search occurs after template expansion, but it is unable
+     * to properly detect on-fail in id-ref, operation meta-attributes, or
+     * op_defaults, or evaluate rules.
+     *
+     * Also, on-fail defaults to block (in unpack_operation()) for stop actions
+     * when stonith is disabled.
+     *
+     * Ideally, we'd unpack the operation before this point, and pass in a
+     * meta-attributes table that takes all that into consideration.
+     */
     char *xpath = crm_strdup_printf("//primitive[@id='%s']//op[@on-fail='block']",
                                     xml_name);
+
     xmlXPathObject *xpathObj = xpath_search(rsc->xml, xpath);
     gboolean should_block = FALSE;
 
     free(xpath);
-
-#if 0
-    /* A good idea? */
-    if (rsc->container == NULL && is_not_set(data_set->flags, pe_flag_stonith_enabled)) {
-        /* In this case, stop on-fail defaults to block in unpack_operation() */
-        return TRUE;
-    }
-#endif
 
     if (xpathObj) {
         int max = numXpathResults(xpathObj);
@@ -119,7 +123,7 @@ block_failure(node_t *node, resource_t *rsc, xmlNode *xml_op,
                 // Get name and interval from configured op
                 conf_op_name = crm_element_value(pref, "name");
                 conf_op_interval_spec = crm_element_value(pref, XML_LRM_ATTR_INTERVAL);
-                conf_op_interval_ms = crm_get_msec(conf_op_interval_spec);
+                conf_op_interval_ms = crm_parse_interval_spec(conf_op_interval_spec);
 
                 lrm_op_xpath = crm_strdup_printf("//node_state[@uname='%s']"
                                                "//lrm_resource[@id='%s']"
