@@ -1005,6 +1005,15 @@ do_test stopped-monitor-27 "Stopped Monitor - unmanaged stopped multi-up (target
 do_test stopped-monitor-30 "Stopped Monitor - new node started"
 do_test stopped-monitor-31 "Stopped Monitor - new node stopped"
 
+echo ""
+# This is a combo test to check:
+# - probe timeout defaults to the minimum-interval monitor's
+# - duplicate recurring operations are ignored
+# - if timeout spec is bad, the default timeout is used
+# - failure is blocked with on-fail=block even if ISO8601 interval is specified
+# - started/stopped role monitors are started/stopped on right nodes
+do_test intervals "Recurring monitor interval handling"
+
 echo""
 do_test ticket-primitive-1 "Ticket - Primitive (loss-policy=stop, initial)"
 do_test ticket-primitive-2 "Ticket - Primitive (loss-policy=stop, granted)"
