@@ -1,20 +1,8 @@
-
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_resource.h>
@@ -68,24 +56,9 @@ cli_resource_print_cts(resource_t * rsc)
     const char *rclass = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
 
     if (safe_str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH)) {
-        xmlNode *op = NULL;
-
         needs_quorum = FALSE;
-
-        for (op = __xml_first_child(rsc->ops_xml); op != NULL; op = __xml_next(op)) {
-            if (crm_str_eq((const char *)op->name, "op", TRUE)) {
-                const char *name = crm_element_value(op, "name");
-
-                if (safe_str_neq(name, CRMD_ACTION_START)) {
-                    const char *value = crm_element_value(op, "requires");
-
-                    if (safe_str_eq(value, "nothing")) {
-                        needs_quorum = FALSE;
-                    }
-                    break;
-                }
-            }
-        }
+    } else {
+        // @TODO check requires in resource meta-data and rsc_defaults
     }
 
     if (rsc->running_on != NULL && g_list_length(rsc->running_on) == 1) {
