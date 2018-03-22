@@ -49,7 +49,7 @@ man7_MANS = $(ocf_SCRIPTS:%=ocf_pacemaker_%.7)
 DBOOK_OPTS = --stringparam command.prefix ocf_pacemaker_ --stringparam variable.prefix OCF_RESKEY_ --param man.vol 7
 
 ocf_pacemaker_%.xml:  %
-	$(AM_V_GEN)OCF_FUNCTIONS=/dev/null OCF_ROOT=$(OCF_ROOT_DIR) sh $(abs_builddir)/$< meta-data > $@
+	$(AM_V_GEN)OCF_FUNCTIONS=/dev/null OCF_ROOT=$(OCF_ROOT_DIR) $(abs_builddir)/$< meta-data > $@
 
 endif
 
