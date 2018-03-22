@@ -11,7 +11,9 @@
 <xsl:param name="cib-min-ver" select="'3.0'"/>
 
 <!--
- helper definitions
+
+ HELPER DEFINITIONS
+
  -->
 
 <cibtr:map>
@@ -37,6 +39,31 @@
                           @for = 'constraints-colocation'
                         ]"/>
 
+<!--
+
+ GENERIC UTILITIES
+
+ -->
+
+<!--
+ Plain identity template
+
+ Merely implicit-context-driven, no arguments.
+ -->
+<xsl:template name="HelperIdentity">
+  <xsl:copy>
+    <xsl:apply-templates select="@*|node()"/>
+  </xsl:copy>
+</xsl:template>
+
+<!--
+ Emit an message about the replacement, sanity checking the source definitions
+
+ Merely parameter driven, no implicit context taken into account:
+ - Context: optional message prefix
+ - Replacement: selected subset of cibtr:map's leaves
+                (it's considered a hard error if consists of more than 1 item)
+ -->
 <xsl:template name="MapMsg">
   <xsl:param name="Context" select="''"/>
   <xsl:param name="Replacement"/>
@@ -82,7 +109,9 @@
 </xsl:template>
 
 <!--
- actual transformation
+
+ ACTUAL TRANSFORMATION
+
  -->
 
 <xsl:template match="cib">
@@ -128,9 +157,7 @@
 </xsl:template>
 
 <xsl:template match="@*|node()">
-  <xsl:copy>
-    <xsl:apply-templates select="@*|node()"/>
-  </xsl:copy>
+  <xsl:call-template name="HelperIdentity"/>
 </xsl:template>
 
 </xsl:stylesheet>
