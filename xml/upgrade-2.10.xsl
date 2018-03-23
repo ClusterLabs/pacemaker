@@ -252,7 +252,13 @@
     denormalized whitespace is forcefully removed in this mode),
     and if positive, all such inner pre-existing whitespace is
     then preserved in this outer=main invocation
- C. not only to honour DRY principle and to avoid inner entropy, it's
+ C. [extension over B.] when checking the non-void production
+    (via InnerSimulation), beside the injected denormalized whitespace,
+    we can also inject particular strings, which the callsite of such
+    simulation can, in addition, inspect for paricular string
+    occurrences, e.g. to prevent clashes on the production coming
+    from multiple sources
+ D. not only to honour DRY principle and to avoid inner entropy, it's
     often useful to make callable template bimodal, e.g., when the
     production is generated in the "what's to stay in place" vs.
     "what's to be propagated (combined with previous, effectively
@@ -272,6 +278,8 @@
   <xsl:param name="Source"/>
   <xsl:param name="InverseMode" select="false()"/>
   <xsl:param name="InnerSimulation" select="false()"/>
+
+  <xsl:variable name="EnclosingTag" select="../../.."/>
 
   <xsl:variable name="InnerPass">
     <xsl:choose>
@@ -356,14 +364,66 @@
                             $Replacement/@where
                           )">
             <!-- drop (possibly just move over) -->
+            <xsl:variable name="SimulateAttrOverrides">
+              <xsl:for-each select="../../../op">
+                <xsl:call-template name="ProcessAttrOpMetaAttributes">
+                  <xsl:with-param name="Source" select="."/>
+                  <xsl:with-param name="InverseMode" select="true()"/>
+                  <xsl:with-param name="InnerSimulation" select="true()"/>
+                </xsl:call-template>
+              </xsl:for-each>
+            </xsl:variable>
             <xsl:if test="$InverseMode
                           and
-                          $Replacement/@where = 'meta_attributes'">
-              <!-- cf. trick A. (indicate for inverse mode) -->
-              <xsl:text> </xsl:text>
-              <xsl:copy>
-                <xsl:apply-templates select="@*"/>
-              </xsl:copy>
+                          not(
+                            contains($SimulateAttrOverrides,
+                                     concat(@name, ' '))
+                          )">
+              <!-- do not override; do not collide with:
+                   - newly added from op/@* (see last condition above)
+                   - existing - actually subsumed with the previous point
+                   - successors sourced like this (see below) -->
+              <xsl:variable name="SimulateFollowingSiblings">
+                <!-- cf. similar handling in ProcessAttrOpMetaAttributes,
+                     but this is more convoluted -->
+                <xsl:for-each select="(../following-sibling::meta_attributes
+                                       |../../following-sibling::op/meta_attributes)[
+                                        not(rule)
+                                      ]">
+                  <xsl:call-template name="ProcessNonattrOpMetaAttributes">
+                    <xsl:with-param name="Source" select="."/>
+                    <xsl:with-param name="InverseMode" select="true()"/>
+                    <xsl:with-param name="InnerSimulation" select="true()"/>
+                  </xsl:call-template>
+                </xsl:for-each>
+              </xsl:variable>
+              <xsl:if test="$Replacement/@where = 'meta_attributes'
+                            and
+                            not(
+                              $EnclosingTag/meta_attributes[
+                                not(rule)
+                                and
+                                nvpair/@name = $Replacement/@with
+                              ]
+                            )
+                            and
+                            not(
+                              contains($SimulateFollowingSiblings,
+                                       concat(@name, ' '))
+                            )">
+                <!-- cf. trick C. (indicate for inverse mode) -->
+                <xsl:choose>
+                  <xsl:when test="$InnerSimulation">
+                    <xsl:value-of select="concat(@name, ' ')"/>
+                  </xsl:when>
+                  <xsl:otherwise>
+                    <xsl:text> </xsl:text>
+                    <xsl:copy>
+                      <xsl:apply-templates select="@*"/>
+                    </xsl:copy>
+                  </xsl:otherwise>
+                </xsl:choose>
+              </xsl:if>
             </xsl:if>
           </xsl:when>
           <xsl:when test="$Replacement">
@@ -406,6 +466,8 @@
   <xsl:param name="Source"/>
   <xsl:param name="InverseMode" select="false()"/>
   <xsl:param name="InnerSimulation" select="false()"/>
+
+  <xsl:variable name="EnclosingTag" select="../.."/>
 
   <xsl:variable name="InnerPass">
     <xsl:choose>
@@ -498,25 +560,50 @@
              then emit also extra denormalized space -->
         <xsl:when test="$InverseMode
                         and
-                        $Replacement/@where = 'meta_attributes'">
-          <xsl:choose>
-            <xsl:when test="$InnerSimulation">
-              <!-- cf. trick A. (indicate for inverse mode) -->
-              <xsl:text> </xsl:text>
-            </xsl:when>
-            <xsl:otherwise>
-              <xsl:attribute name="id">
-                <xsl:value-of select="concat('_2TO3_', ../@id, '-meta-',
-                                             $Replacement/@with)"/>
-              </xsl:attribute>
-              <xsl:attribute name="name">
-                <xsl:value-of select="$Replacement/@with"/>
-              </xsl:attribute>
-              <xsl:attribute name="value">
-                <xsl:value-of select="."/>
-              </xsl:attribute>
-            </xsl:otherwise>
-          </xsl:choose>
+                        $Replacement/@where = 'meta_attributes'
+                        and
+                        not(
+                          $EnclosingTag/meta_attributes[
+                            not(rule)
+                            and
+                            nvpair/@name = $Replacement/@with
+                          ]
+                        )">
+          <!-- do not override; do not collide with:
+               - existing (see last condition above)
+               - successors sourced like this (see below) -->
+          <xsl:variable name="SimulateFollowingSiblings">
+            <xsl:for-each select="../following-sibling::op">
+              <xsl:call-template name="ProcessAttrOpMetaAttributes">
+                <xsl:with-param name="Source" select="."/>
+                <xsl:with-param name="InverseMode" select="true()"/>
+                <xsl:with-param name="InnerSimulation" select="true()"/>
+              </xsl:call-template>
+            </xsl:for-each>
+          </xsl:variable>
+          <xsl:if test="not(contains($SimulateFollowingSiblings,
+                                     concat(name(), ' ')))">
+            <!-- fix concurrent op/@* sources (these themselves are winning
+                 over sources from meta_attributes -->
+            <xsl:choose>
+              <xsl:when test="$InnerSimulation">
+                <!-- cf. trick C. (indicate for inverse mode) -->
+                <xsl:value-of select="concat(name(), ' ')"/>
+              </xsl:when>
+              <xsl:otherwise>
+                <xsl:attribute name="id">
+                  <xsl:value-of select="concat('_2TO3_', ../@id, '-meta-',
+                                               $Replacement/@with)"/>
+                </xsl:attribute>
+                <xsl:attribute name="name">
+                  <xsl:value-of select="$Replacement/@with"/>
+                </xsl:attribute>
+                <xsl:attribute name="value">
+                  <xsl:value-of select="."/>
+                </xsl:attribute>
+              </xsl:otherwise>
+            </xsl:choose>
+          </xsl:if>
         </xsl:when>
         <xsl:when test="$InverseMode"/>
         <xsl:when test="$Replacement
