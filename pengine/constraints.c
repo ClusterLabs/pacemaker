@@ -269,19 +269,22 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     const char *instance_then = NULL;
     const char *instance_first = NULL;
 
-    const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
-    const char *invert = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
-
-    crm_str_to_boolean(invert, &invert_bool);
+    const char *id = NULL;
+    const char *invert = NULL;
 
     if (xml_obj == NULL) {
         crm_config_err("No constraint object to process.");
         return FALSE;
+    }
 
-    } else if (id == NULL) {
+    id = crm_element_value(xml_obj, XML_ATTR_ID);
+    if (id == NULL) {
         crm_config_err("%s constraint must have an id", crm_element_name(xml_obj));
         return FALSE;
     }
+
+    invert = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
+    crm_str_to_boolean(invert, &invert_bool);
 
     id_then = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN);
     id_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST);
