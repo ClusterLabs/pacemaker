@@ -252,6 +252,46 @@ valid_resource_or_tag(pe_working_set_t * data_set, const char * id,
 }
 
 static gboolean
+order_is_symmetrical(xmlNode * xml_obj,
+                     enum pe_order_kind parent_kind, const char * parent_symmetrical_s)
+{
+    const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
+    const char *kind_s = crm_element_value(xml_obj, XML_ORDER_ATTR_KIND);
+    const char *score_s = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
+    const char *symmetrical_s = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
+    enum pe_order_kind kind = parent_kind;
+
+    if (kind_s || score_s) {
+        kind = get_ordering_type(xml_obj);
+    }
+
+    if (symmetrical_s == NULL) {
+        symmetrical_s = parent_symmetrical_s;
+    }
+
+    if (symmetrical_s) {
+        gboolean symmetrical = crm_is_true(symmetrical_s);
+
+        if (symmetrical && kind == pe_order_kind_serialize) {
+            crm_config_warn("Cannot invert serialized order %s."
+                            " Ignoring symmetrical=\"%s\"",
+                            id, symmetrical_s);
+            return FALSE;
+        }
+
+        return symmetrical;
+
+    } else {
+        if (kind == pe_order_kind_serialize) {
+            return FALSE;
+
+        } else {
+            return TRUE;
+        }
+    }
+}
+
+static gboolean
 unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
 {
     int order_id = 0;
@@ -270,7 +310,6 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     const char *instance_first = NULL;
 
     const char *id = NULL;
-    const char *invert = NULL;
 
     if (xml_obj == NULL) {
         crm_config_err("No constraint object to process.");
@@ -283,8 +322,7 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
         return FALSE;
     }
 
-    invert = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
-    crm_str_to_boolean(invert, &invert_bool);
+    invert_bool = order_is_symmetrical(xml_obj, kind, NULL);
 
     id_then = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN);
     id_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST);
@@ -425,13 +463,6 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
                  order_id, id, rsc_first->id, action_first, rsc_then->id, action_then, cons_weight);
 
     if (invert_bool == FALSE) {
-        return TRUE;
-
-    } else if (invert && kind == pe_order_kind_serialize) {
-        crm_config_warn("Cannot invert serialized constraint set %s", id);
-        return TRUE;
-
-    } else if (kind == pe_order_kind_serialize) {
         return TRUE;
     }
 
@@ -1604,9 +1635,9 @@ get_flags(const char *id, enum pe_order_kind kind,
 }
 
 static gboolean
-unpack_order_set(xmlNode * set, enum pe_order_kind kind, resource_t ** rsc,
+unpack_order_set(xmlNode * set, enum pe_order_kind parent_kind, resource_t ** rsc,
                  action_t ** begin, action_t ** end, action_t ** inv_begin, action_t ** inv_end,
-                 const char *symmetrical, pe_working_set_t * data_set)
+                 const char *parent_symmetrical_s, pe_working_set_t * data_set)
 {
     xmlNode *xml_rsc = NULL;
     GListPtr set_iter = NULL;
@@ -1615,9 +1646,10 @@ unpack_order_set(xmlNode * set, enum pe_order_kind kind, resource_t ** rsc,
     resource_t *last = NULL;
     resource_t *resource = NULL;
 
-    int local_kind = kind;
+    int local_kind = parent_kind;
     gboolean sequential = FALSE;
     enum pe_ordering flags = pe_order_optional;
+    gboolean symmetrical = TRUE;
 
     char *key = NULL;
     const char *id = ID(set);
@@ -1643,7 +1675,9 @@ unpack_order_set(xmlNode * set, enum pe_order_kind kind, resource_t ** rsc,
     }
 
     sequential = crm_is_true(sequential_s);
-    if (crm_is_true(symmetrical)) {
+
+    symmetrical = order_is_symmetrical(set, parent_kind, parent_symmetrical_s);
+    if (symmetrical) {
         flags = get_flags(id, local_kind, action, action, FALSE);
     } else {
         flags = get_asymmetrical_flags(local_kind);
@@ -1719,14 +1753,7 @@ unpack_order_set(xmlNode * set, enum pe_order_kind kind, resource_t ** rsc,
         free(key);
     }
 
-    if (crm_is_true(symmetrical) == FALSE) {
-        goto done;
-
-    } else if (symmetrical && local_kind == pe_order_kind_serialize) {
-        crm_config_warn("Cannot invert serialized constraint set %s", id);
-        goto done;
-
-    } else if (local_kind == pe_order_kind_serialize) {
+    if (symmetrical == FALSE) {
         goto done;
     }
 
@@ -2094,14 +2121,8 @@ unpack_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     const char *invert = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
     enum pe_order_kind kind = get_ordering_type(xml_obj);
 
-    gboolean invert_bool = TRUE;
+    gboolean invert_bool = order_is_symmetrical(xml_obj, kind, NULL);
     gboolean rc = TRUE;
-
-    if (invert == NULL) {
-        invert = "true";
-    }
-
-    invert_bool = crm_is_true(invert);
 
     rc = unpack_order_tags(xml_obj, &expanded_xml, data_set);
     if (expanded_xml) {
