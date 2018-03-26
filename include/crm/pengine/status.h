@@ -1,20 +1,10 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+
 #ifndef PENGINE_STATUS__H
 #  define PENGINE_STATUS__H
 
@@ -138,8 +128,9 @@ struct pe_working_set_s {
 struct pe_node_shared_s {
     const char *id;
     const char *uname;
+    enum node_type type;
 
-    /* @TODO convert these flags (and the ones at the end) into a bitfield */
+    /* @TODO convert these flags into a bitfield */
     gboolean online;
     gboolean standby;
     gboolean standby_onfail;
@@ -149,27 +140,21 @@ struct pe_node_shared_s {
     gboolean shutdown;
     gboolean expected_up;
     gboolean is_dc;
-
-    int num_resources;
-    GListPtr running_rsc;       /* pe_resource_t* */
-    GListPtr allocated_rsc;     /* pe_resource_t* */
-
-    pe_resource_t *remote_rsc;
-
-    GHashTable *attrs;          /* char* => char* */
-    enum node_type type;
-
-    GHashTable *utilization;
-
-    /*! cache of calculated rsc digests for this node. */
-    GHashTable *digest_cache;
-
     gboolean maintenance;
     gboolean rsc_discovery_enabled;
     gboolean remote_requires_reset;
     gboolean remote_was_fenced;
     gboolean remote_maintenance; /* what the remote-rsc is thinking */
     gboolean unpacked;
+
+    int num_resources;
+    pe_resource_t *remote_rsc;
+    GListPtr running_rsc;       /* pe_resource_t* */
+    GListPtr allocated_rsc;     /* pe_resource_t* */
+
+    GHashTable *attrs;          /* char* => char* */
+    GHashTable *utilization;
+    GHashTable *digest_cache;   /*! cache of calculated resource digests */
 };
 
 struct pe_node_s {
@@ -253,9 +238,11 @@ struct pe_resource_s {
     xmlNode *orig_xml;
     xmlNode *ops_xml;
 
+    pe_working_set_t *cluster;
     pe_resource_t *parent;
-    void *variant_opaque;
+
     enum pe_obj_types variant;
+    void *variant_opaque;
     resource_object_functions_t *fns;
     resource_alloc_functions_t *cmds;
 
@@ -267,10 +254,14 @@ struct pe_resource_s {
     int sort_index;
     int failure_timeout;
     int migration_threshold;
-
-    gboolean is_remote_node;
+    guint remote_reconnect_ms;
+    char *pending_task;
 
     unsigned long long flags;
+
+    // @TODO merge these into flags
+    gboolean is_remote_node;
+    gboolean exclusive_discover;
 
     GListPtr rsc_cons_lhs;      /* rsc_colocation_t* */
     GListPtr rsc_cons;          /* rsc_colocation_t* */
@@ -279,6 +270,8 @@ struct pe_resource_s {
     GListPtr rsc_tickets;       /* rsc_ticket*       */
 
     pe_node_t *allocated_to;
+    pe_node_t *partial_migration_target;
+    pe_node_t *partial_migration_source;
     GListPtr running_on;        /* pe_node_t*   */
     GHashTable *known_on;       /* pe_node_t*   */
     GHashTable *allowed_nodes;  /* pe_node_t*   */
@@ -293,18 +286,8 @@ struct pe_resource_s {
     GListPtr children;          /* pe_resource_t*   */
     GListPtr dangling_migrations;       /* pe_node_t*       */
 
-    pe_node_t *partial_migration_target;
-    pe_node_t *partial_migration_source;
-
     pe_resource_t *container;
     GListPtr fillers;
-
-    char *pending_task;
-
-    gboolean exclusive_discover;
-    guint remote_reconnect_ms;
-
-    pe_working_set_t *cluster;
 
 #if ENABLE_VERSIONED_ATTRS
     xmlNode *versioned_parameters;
@@ -330,6 +313,7 @@ struct pe_action_s {
     char *task;
     char *uuid;
     char *cancel_task;
+    char *reason;
 
     enum pe_action_flags flags;
     enum rsc_start_requirement needs;
@@ -373,8 +357,6 @@ struct pe_action_s {
      * except for API backward compatibility.
      */
     void *action_details; // varies by type of action
-
-    char *reason;
 };
 
 typedef struct pe_ticket_s {
