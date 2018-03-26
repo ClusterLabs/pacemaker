@@ -50,9 +50,6 @@
 ## less likely to have working versions of the documentation tools
 %define bleeding %(test ! -e /etc/yum.repos.d/fedora-rawhide.repo; echo $?)
 
-## Corosync version
-%define cs_version %(pkg-config corosync --modversion 2>/dev/null | awk -F . '{print $1}')
-
 ## Whether this platform defaults to using systemd as an init system
 ## (needs to be evaluated prior to BuildRequires being enumerated and
 ## installed as it's intended to conditionally select some of these, and
@@ -225,8 +222,8 @@ BuildRequires: help2man gnutls-devel pkgconfig(dbus-1)
 BuildRequires: pkgconfig(systemd)
 %endif
 
-Requires:      corosync
-BuildRequires: corosynclib-devel
+Requires:      corosync >= 2.0.0
+BuildRequires: corosynclib-devel >= 2.0.0
 
 %if %{with stonithd}
 BuildRequires: cluster-glue-libs-devel
@@ -329,7 +326,8 @@ Requires:      %{name}-cluster-libs%{?_isa} = %{version}-%{release}
 Requires:      libuuid-devel%{?_isa} libtool-ltdl-devel%{?_isa}
 Requires:      libxml2-devel%{?_isa} libxslt-devel%{?_isa}
 Requires:      bzip2-devel%{?_isa} glib2-devel%{?_isa}
-Requires:      libqb-devel%{?_isa} corosynclib-devel%{?_isa}
+Requires:      libqb-devel%{?_isa}
+Requires:      corosynclib-devel%{?_isa} >= 2.0.0
 
 %description -n %{name}-libs-devel
 Pacemaker is an advanced, scalable High-Availability cluster resource
@@ -629,12 +627,6 @@ exit 0
 /usr/lib/ocf/resource.d/pacemaker/controld
 /usr/lib/ocf/resource.d/pacemaker/o2cb
 /usr/lib/ocf/resource.d/pacemaker/remote
-
-%if "%{?cs_version}" != "UNKNOWN"
-%if 0%{?cs_version} < 2
-%{_libexecdir}/lcrso/pacemaker.lcrso
-%endif
-%endif
 
 %if %{with upstart_job}
 %config(noreplace) %{_sysconfdir}/init/pacemaker.conf
