@@ -267,10 +267,18 @@ typedef struct lrmd_rsc_info_s {
     char *provider;
 } lrmd_rsc_info_t;
 
+typedef struct lrmd_op_info_s {
+    char *rsc_id;
+    char *action;
+    char *interval_ms_s;
+    char *timeout_ms_s;
+} lrmd_op_info_t;
+
 lrmd_rsc_info_t *lrmd_new_rsc_info(const char *rsc_id, const char *standard,
                                    const char *provider, const char *type);
 lrmd_rsc_info_t *lrmd_copy_rsc_info(lrmd_rsc_info_t * rsc_info);
 void lrmd_free_rsc_info(lrmd_rsc_info_t * rsc_info);
+void lrmd_free_op_info(lrmd_op_info_t *op_info);
 
 typedef void (*lrmd_event_callback) (lrmd_event_data_t * event);
 
@@ -349,6 +357,14 @@ typedef struct lrmd_api_operations_s {
      */
     lrmd_rsc_info_t *(*get_rsc_info) (lrmd_t * lrmd,
                                       const char *rsc_id, enum lrmd_call_options options);
+
+    /*!
+     * \brief Retrieve registered recurring operations
+     *
+     * \return pcmk_ok on success, -errno otherwise
+     */
+    int (*get_recurring_ops) (lrmd_t *lrmd, const char *rsc_id, int timeout_ms,
+                              enum lrmd_call_options options, GList **output);
 
     /*!
      * \brief Unregister a resource from the lrmd.
