@@ -467,7 +467,6 @@ AC_PATH_PROGS(TAR, tar)
 AC_PATH_PROGS(MD5, md5)
 AC_PATH_PROGS(TEST, test)
 PKG_PROG_PKG_CONFIG
-AC_PATH_PROGS(XML2CONFIG, xml2-config)
 AC_PATH_PROGS(VALGRIND_BIN, valgrind, /usr/bin/valgrind)
 AC_DEFINE_UNQUOTED(VALGRIND_BIN, "$VALGRIND_BIN", Valgrind command)
 
@@ -687,25 +686,19 @@ AC_CHECK_HEADERS(unistd.h)
 dnl These headers need prerequisites before the tests will pass
 dnl AC_CHECK_HEADERS(net/if.h)
 
-AC_MSG_CHECKING(for special libxml2 includes)
-if test "x$XML2CONFIG" = "x"; then
-    AC_MSG_ERROR(libxml2 config not found)
-else
-    XML2HEAD="`$XML2CONFIG --cflags`"
-    AC_MSG_RESULT($XML2HEAD)
-    AC_CHECK_LIB(xml2, xmlReadMemory)
-    AC_CHECK_LIB(xslt, xsltApplyStylesheet)
-fi
-
-CPPFLAGS="$CPPFLAGS $XML2HEAD"
-
+PKG_CHECK_MODULES(LIBXML2, [libxml-2.0],
+                  [CPPFLAGS="${CPPFLAGS} ${LIBXML2_CFLAGS}"
+                   LIBS="${LIBS} ${LIBXML2_LIBS}"])
 AC_CHECK_HEADERS(libxml/xpath.h)
-AC_CHECK_HEADERS(libxslt/xslt.h)
 if test "$ac_cv_header_libxml_xpath_h" != "yes"; then
-    AC_MSG_ERROR(The libxml developement headers were not found)
+    AC_MSG_ERROR(libxml development headers not found)
 fi
+
+AC_CHECK_LIB(xslt, xsltApplyStylesheet, [],
+             AC_MSG_ERROR(Unsupported libxslt library version))
+AC_CHECK_HEADERS(libxslt/xslt.h)
 if test "$ac_cv_header_libxslt_xslt_h" != "yes"; then
-    AC_MSG_ERROR(The libxslt developement headers were not found)
+    AC_MSG_ERROR(libxslt development headers not found)
 fi
 
 AC_CACHE_CHECK(whether __progname and __progname_full are available,
