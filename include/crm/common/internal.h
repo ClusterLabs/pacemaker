@@ -62,6 +62,7 @@ void crm_schema_cleanup(void);
 /* internal generic string functions (from strings.c) */
 
 long long crm_int_helper(const char *text, char **end_text);
+guint crm_parse_ms(const char *text);
 bool crm_starts_with(const char *str, const char *prefix);
 gboolean crm_ends_with(const char *s, const char *match);
 gboolean crm_ends_with_ext(const char *s, const char *match);
@@ -98,10 +99,10 @@ crm_getpid_s()
  * \internal
  * \brief Generate a failure-related node attribute name for a resource
  *
- * \param[in] prefix    Start of attribute name
- * \param[in] rsc_id    Resource name
- * \param[in] op        Operation name
- * \param[in] interval  Operation interval
+ * \param[in] prefix       Start of attribute name
+ * \param[in] rsc_id       Resource name
+ * \param[in] op           Operation name
+ * \param[in] interval_ms  Operation interval
  *
  * \return Newly allocated string with attribute name
  *
@@ -113,22 +114,22 @@ crm_getpid_s()
  */
 static inline char *
 crm_fail_attr_name(const char *prefix, const char *rsc_id, const char *op,
-                   int interval)
+                   guint interval_ms)
 {
     CRM_CHECK(prefix && rsc_id && op, return NULL);
-    return crm_strdup_printf("%s-%s#%s_%d", prefix, rsc_id, op, interval);
+    return crm_strdup_printf("%s-%s#%s_%u", prefix, rsc_id, op, interval_ms);
 }
 
 static inline char *
-crm_failcount_name(const char *rsc_id, const char *op, int interval)
+crm_failcount_name(const char *rsc_id, const char *op, guint interval_ms)
 {
-    return crm_fail_attr_name(CRM_FAIL_COUNT_PREFIX, rsc_id, op, interval);
+    return crm_fail_attr_name(CRM_FAIL_COUNT_PREFIX, rsc_id, op, interval_ms);
 }
 
 static inline char *
-crm_lastfailure_name(const char *rsc_id, const char *op, int interval)
+crm_lastfailure_name(const char *rsc_id, const char *op, guint interval_ms)
 {
-    return crm_fail_attr_name(CRM_LAST_FAILURE_PREFIX, rsc_id, op, interval);
+    return crm_fail_attr_name(CRM_LAST_FAILURE_PREFIX, rsc_id, op, interval_ms);
 }
 
 #endif /* CRM_COMMON_INTERNAL__H */

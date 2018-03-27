@@ -122,7 +122,7 @@ static gboolean
 update_failcount(xmlNode * event, const char *event_node_uuid, int rc,
                  int target_rc, gboolean do_update, gboolean ignore_failures)
 {
-    int interval = 0;
+    guint interval_ms = 0;
 
     char *task = NULL;
     char *rsc_id = NULL;
@@ -145,13 +145,13 @@ update_failcount(xmlNode * event, const char *event_node_uuid, int rc,
 
     /* Sanity check */
     CRM_CHECK(on_uname != NULL, return TRUE);
-    CRM_CHECK(parse_op_key(id, &rsc_id, &task, &interval),
+    CRM_CHECK(parse_op_key(id, &rsc_id, &task, &interval_ms),
               crm_err("Couldn't parse: %s", ID(event)); goto bail);
     CRM_CHECK(task != NULL, goto bail);
     CRM_CHECK(rsc_id != NULL, goto bail);
 
     /* Decide whether update is necessary and what value to use */
-    if ((interval > 0) || safe_str_eq(task, CRMD_ACTION_PROMOTE)
+    if ((interval_ms > 0) || safe_str_eq(task, CRMD_ACTION_PROMOTE)
         || safe_str_eq(task, CRMD_ACTION_DEMOTE)) {
         do_update = TRUE;
 
@@ -190,7 +190,7 @@ update_failcount(xmlNode * event, const char *event_node_uuid, int rc,
 
         /* Update the fail count, if we're not ignoring failures */
         if (!ignore_failures) {
-            attr_name = crm_failcount_name(rsc_id, task, interval);
+            attr_name = crm_failcount_name(rsc_id, task, interval_ms);
             update_attrd(on_uname, attr_name, value, NULL, is_remote_node);
             free(attr_name);
         }
@@ -198,7 +198,7 @@ update_failcount(xmlNode * event, const char *event_node_uuid, int rc,
         /* Update the last failure time (even if we're ignoring failures,
          * so that failure can still be detected and shown, e.g. by crm_mon)
          */
-        attr_name = crm_lastfailure_name(rsc_id, task, interval);
+        attr_name = crm_lastfailure_name(rsc_id, task, interval_ms);
         update_attrd(on_uname, attr_name, now, NULL, is_remote_node);
         free(attr_name);
 

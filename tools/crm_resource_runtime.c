@@ -492,7 +492,7 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
     params = create_xml_node(msg_data, XML_TAG_ATTRS);
     crm_xml_add(params, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
 
-    key = crm_meta_name(XML_LRM_ATTR_INTERVAL);
+    key = crm_meta_name(XML_LRM_ATTR_INTERVAL_MS);
     crm_xml_add(params, key, "60000");  /* 1 minute */
     free(key);
 
@@ -564,12 +564,12 @@ clear_rsc_history(crm_ipc_t *crmd_channel, const char *host_uname,
 static int
 clear_rsc_failures(crm_ipc_t *crmd_channel, const char *node_name,
                    const char *rsc_id, const char *operation,
-                   const char *interval, pe_working_set_t *data_set)
+                   const char *interval_spec, pe_working_set_t *data_set)
 {
     int rc = pcmk_ok;
     const char *failed_value = NULL;
     const char *failed_id = NULL;
-    const char *interval_ms_str = NULL;
+    const char *interval_ms_s = NULL;
     GHashTable *rscs = NULL;
     GHashTableIter iter;
 
@@ -581,7 +581,8 @@ clear_rsc_failures(crm_ipc_t *crmd_channel, const char *node_name,
 
     // Normalize interval to milliseconds for comparison to history entry
     if (operation) {
-        interval_ms_str = crm_strdup_printf("%llu", crm_get_interval(interval));
+        interval_ms_s = crm_strdup_printf("%u",
+                                          crm_parse_interval_spec(interval_spec));
     }
 
     for (xmlNode *xml_op = __xml_first_child(data_set->failed); xml_op != NULL;
@@ -618,8 +619,8 @@ clear_rsc_failures(crm_ipc_t *crmd_channel, const char *node_name,
             }
 
             // Interval (if operation was specified) defaults to 0 (not all)
-            failed_value = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
-            if (safe_str_neq(interval_ms_str, failed_value)) {
+            failed_value = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL_MS);
+            if (safe_str_neq(interval_ms_s, failed_value)) {
                 continue;
             }
         }
@@ -641,7 +642,7 @@ clear_rsc_failures(crm_ipc_t *crmd_channel, const char *node_name,
 
 static int
 clear_rsc_fail_attrs(resource_t *rsc, const char *operation,
-                     const char *interval, node_t *node)
+                     const char *interval_spec, node_t *node)
 {
     int rc = pcmk_ok;
     int attr_options = attrd_opt_none;
@@ -651,7 +652,7 @@ clear_rsc_fail_attrs(resource_t *rsc, const char *operation,
         attr_options |= attrd_opt_remote;
     }
     rc = attrd_clear_delegate(NULL, node->details->uname, rsc_name, operation,
-                              interval, NULL, attr_options);
+                              interval_spec, NULL, attr_options);
     free(rsc_name);
     return rc;
 }
@@ -659,7 +660,7 @@ clear_rsc_fail_attrs(resource_t *rsc, const char *operation,
 int
 cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
                     resource_t *rsc, const char *operation,
-                    const char *interval, bool just_failures,
+                    const char *interval_spec, bool just_failures,
                     pe_working_set_t *data_set)
 {
     int rc = pcmk_ok;
@@ -675,7 +676,7 @@ cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
             resource_t *child = (resource_t *) lpc->data;
 
             rc = cli_resource_delete(crmd_channel, host_uname, child, operation,
-                                     interval, just_failures, data_set);
+                                     interval_spec, just_failures, data_set);
             if (rc != pcmk_ok) {
                 return rc;
             }
@@ -709,7 +710,7 @@ cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
 
             if (node->details->online) {
                 rc = cli_resource_delete(crmd_channel, node->details->uname,
-                                         rsc, operation, interval,
+                                         rsc, operation, interval_spec,
                                          just_failures, data_set);
             }
             if (rc != pcmk_ok) {
@@ -742,7 +743,7 @@ cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
         return pcmk_ok;
     }
 
-    rc = clear_rsc_fail_attrs(rsc, operation, interval, node);
+    rc = clear_rsc_fail_attrs(rsc, operation, interval_spec, node);
     if (rc != pcmk_ok) {
         printf("Unable to clean up %s failures on %s: %s\n",
                 rsc->id, host_uname, pcmk_strerror(rc));
@@ -751,7 +752,7 @@ cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
 
     if (just_failures) {
         rc = clear_rsc_failures(crmd_channel, host_uname, rsc->id, operation,
-                                interval, data_set);
+                                interval_spec, data_set);
     } else {
         rc = clear_rsc_history(crmd_channel, host_uname, rsc->id, data_set);
     }
@@ -766,7 +767,7 @@ cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
 
 int
 cli_cleanup_all(crm_ipc_t *crmd_channel, const char *node_name,
-                const char *operation, const char *interval,
+                const char *operation, const char *interval_spec,
                 pe_working_set_t *data_set)
 {
     int rc = pcmk_ok;
@@ -792,7 +793,7 @@ cli_cleanup_all(crm_ipc_t *crmd_channel, const char *node_name,
         }
     }
 
-    rc = attrd_clear_delegate(NULL, node_name, NULL, operation, interval,
+    rc = attrd_clear_delegate(NULL, node_name, NULL, operation, interval_spec,
                               NULL, attr_options);
     if (rc != pcmk_ok) {
         printf("Unable to clean up all failures on %s: %s\n",
@@ -802,7 +803,7 @@ cli_cleanup_all(crm_ipc_t *crmd_channel, const char *node_name,
 
     if (node_name) {
         rc = clear_rsc_failures(crmd_channel, node_name, NULL,
-                                operation, interval, data_set);
+                                operation, interval_spec, data_set);
         if (rc != pcmk_ok) {
             printf("Cleaned all resource failures on %s, but unable to clean history: %s\n",
                    node_name, pcmk_strerror(rc));
@@ -813,7 +814,7 @@ cli_cleanup_all(crm_ipc_t *crmd_channel, const char *node_name,
             pe_node_t *node = (pe_node_t *) iter->data;
 
             rc = clear_rsc_failures(crmd_channel, node->details->uname, NULL,
-                                    operation, interval, data_set);
+                                    operation, interval_spec, data_set);
             if (rc != pcmk_ok) {
                 printf("Cleaned all resource failures on all nodes, but unable to clean history: %s\n",
                        pcmk_strerror(rc));

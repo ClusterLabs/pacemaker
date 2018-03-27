@@ -226,9 +226,12 @@ create_action_name(action_t * action)
     if (action->rsc && action->rsc->clone_name) {
         char *key = NULL;
         const char *name = action->rsc->clone_name;
-        const char *interval_s = g_hash_table_lookup(action->meta, XML_LRM_ATTR_INTERVAL);
+        const char *interval_ms_s = NULL;
+        guint interval_ms = 0;
 
-        int interval = crm_parse_int(interval_s, "0");
+        interval_ms_s = g_hash_table_lookup(action->meta,
+                                            XML_LRM_ATTR_INTERVAL_MS);
+        interval_ms = crm_parse_ms(interval_ms_s);
 
         if (safe_str_eq(action->task, RSC_NOTIFY)
             || safe_str_eq(action->task, RSC_NOTIFIED)) {
@@ -240,7 +243,7 @@ create_action_name(action_t * action)
             key = generate_notify_key(name, n_type, n_task);
 
         } else {
-            key = generate_op_key(name, task, interval);
+            key = generate_op_key(name, task, interval_ms);
         }
 
         if (action_host) {
@@ -476,11 +479,11 @@ static struct crm_option long_options[] = {
     {"node-down",    1, 0, 'd', "\tTake a node offline"},
     {"node-fail",    1, 0, 'f', "\tMark a node as failed"},
     {"op-inject",    1, 0, 'i', "\tGenerate a failure for the cluster to react to in the simulation"},
-    {"-spacer-",     0, 0, '-', "\t\tValue is of the form ${resource}_${task}_${interval}@${node}=${rc}."},
+    {"-spacer-",     0, 0, '-', "\t\tValue is of the form ${resource}_${task}_${interval_in_ms}@${node}=${rc}."},
     {"-spacer-",     0, 0, '-', "\t\tEg. memcached_monitor_20000@bart.example.com=7"},
     {"-spacer-",     0, 0, '-', "\t\tFor more information on OCF return codes, refer to: http://www.clusterlabs.org/doc/en-US/Pacemaker/1.1/html/Pacemaker_Explained/s-ocf-return-codes.html"},
     {"op-fail",      1, 0, 'F', "\tIf the specified task occurs during the simulation, have it fail with return code ${rc}"},
-    {"-spacer-",     0, 0, '-', "\t\tValue is of the form ${resource}_${task}_${interval}@${node}=${rc}."},
+    {"-spacer-",     0, 0, '-', "\t\tValue is of the form ${resource}_${task}_${interval_in_ms}@${node}=${rc}."},
     {"-spacer-",     0, 0, '-', "\t\tEg. memcached_stop_0@bart.example.com=1\n"},
     {"-spacer-",     0, 0, '-', "\t\tThe transition will normally stop at the failed action.  Save the result with --save-output and re-run with --xml-file"},
     {"set-datetime", 1, 0, 't', "Set date/time"},

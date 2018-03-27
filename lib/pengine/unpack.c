@@ -1905,7 +1905,7 @@ process_rsc_state(resource_t * rsc, node_t * node,
 
             /* if reconnect delay is in use, prevent the connection from exiting the
              * "STOPPED" role until the failure is cleared by the delay timeout. */
-            if (rsc->remote_reconnect_interval) {
+            if (rsc->remote_reconnect_ms) {
                 rsc->next_role = RSC_ROLE_STOPPED;
             }
             break;
@@ -1980,10 +1980,10 @@ process_recurring(node_t * node, resource_t * rsc,
     for (; gIter != NULL; gIter = gIter->next) {
         xmlNode *rsc_op = (xmlNode *) gIter->data;
 
-        int interval = 0;
+        guint interval_ms = 0;
         char *key = NULL;
         const char *id = ID(rsc_op);
-        const char *interval_s = NULL;
+        const char *interval_ms_s = NULL;
 
         counter++;
 
@@ -2001,9 +2001,9 @@ process_recurring(node_t * node, resource_t * rsc,
             continue;
         }
 
-        interval_s = crm_element_value(rsc_op, XML_LRM_ATTR_INTERVAL);
-        interval = crm_parse_int(interval_s, "0");
-        if (interval == 0) {
+        interval_ms_s = crm_element_value(rsc_op, XML_LRM_ATTR_INTERVAL_MS);
+        interval_ms = crm_parse_ms(interval_ms_s);
+        if (interval_ms == 0) {
             pe_rsc_trace(rsc, "Skipping %s/%s: non-recurring", id, node->details->uname);
             continue;
         }
@@ -2015,7 +2015,7 @@ process_recurring(node_t * node, resource_t * rsc,
         }
         task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
         /* create the action */
-        key = generate_op_key(rsc->id, task, interval);
+        key = generate_op_key(rsc->id, task, interval_ms);
         pe_rsc_trace(rsc, "Creating %s/%s", key, node->details->uname);
         custom_action(rsc, key, task, node, TRUE, TRUE, data_set);
     }
@@ -2496,7 +2496,7 @@ static void
 unpack_rsc_op_failure(resource_t * rsc, node_t * node, int rc, xmlNode * xml_op, xmlNode ** last_failure,
                       enum action_fail_response * on_fail, pe_working_set_t * data_set)
 {
-    int interval = 0;
+    guint interval_ms = 0;
     bool is_probe = FALSE;
     action_t *action = NULL;
 
@@ -2507,8 +2507,8 @@ unpack_rsc_op_failure(resource_t * rsc, node_t * node, int rc, xmlNode * xml_op,
 
     *last_failure = xml_op;
 
-    crm_element_value_int(xml_op, XML_LRM_ATTR_INTERVAL, &interval);
-    if(interval == 0 && safe_str_eq(task, CRMD_ACTION_STATUS)) {
+    crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
+    if ((interval_ms == 0) && safe_str_eq(task, CRMD_ACTION_STATUS)) {
         is_probe = TRUE;
         pe_rsc_trace(rsc, "is a probe: %s", key);
     }
@@ -2613,7 +2613,7 @@ static int
 determine_op_status(
     resource_t *rsc, int rc, int target_rc, node_t * node, xmlNode * xml_op, enum action_fail_response * on_fail, pe_working_set_t * data_set) 
 {
-    int interval = 0;
+    guint interval_ms = 0;
     int result = PCMK_LRM_OP_DONE;
 
     const char *key = get_op_key(xml_op);
@@ -2622,8 +2622,8 @@ determine_op_status(
     bool is_probe = FALSE;
 
     CRM_ASSERT(rsc);
-    crm_element_value_int(xml_op, XML_LRM_ATTR_INTERVAL, &interval);
-    if (interval == 0 && safe_str_eq(task, CRMD_ACTION_STATUS)) {
+    crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
+    if ((interval_ms == 0) && safe_str_eq(task, CRMD_ACTION_STATUS)) {
         is_probe = TRUE;
     }
 
@@ -2690,7 +2690,7 @@ determine_op_status(
         case PCMK_OCF_INVALID_PARAM:
         case PCMK_OCF_INSUFFICIENT_PRIV:
         case PCMK_OCF_UNIMPLEMENT_FEATURE:
-            if (rc == PCMK_OCF_UNIMPLEMENT_FEATURE && interval > 0) {
+            if (rc == PCMK_OCF_UNIMPLEMENT_FEATURE && (interval_ms > 0)) {
                 result = PCMK_LRM_OP_NOTSUPPORTED;
                 break;
 
@@ -2720,16 +2720,17 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
 {
     bool expired = FALSE;
     time_t last_failure = 0;
-    int interval = 0;
+    guint interval_ms = 0;
     int failure_timeout = rsc->failure_timeout;
     const char *key = get_op_key(xml_op);
     const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
     const char *clear_reason = NULL;
 
+    crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
+
     /* clearing recurring monitor operation failures automatically
      * needs to be carefully considered */
-    if (safe_str_eq(crm_element_value(xml_op, XML_LRM_ATTR_TASK), "monitor") &&
-        safe_str_neq(crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL), "0")) {
+    if ((interval_ms != 0) && safe_str_eq(task, "monitor")) {
 
         /* TODO, in the future we should consider not clearing recurring monitor
          * op failures unless the last action for a resource was a "stop" action.
@@ -2740,8 +2741,8 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
          * node connection resources by not clearing a recurring monitor op failure
          * until after the node has been fenced. */
 
-        if (is_set(data_set->flags, pe_flag_stonith_enabled) &&
-            (rsc->remote_reconnect_interval)) {
+        if (is_set(data_set->flags, pe_flag_stonith_enabled)
+            && rsc->remote_reconnect_ms) {
 
             node_t *remote_node = pe_find_node(data_set->nodes, rsc->id);
             if (remote_node && remote_node->details->remote_was_fenced == 0) {
@@ -2779,7 +2780,8 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
                     expired = FALSE;
                 }
 
-            } else if (rsc->remote_reconnect_interval && strstr(ID(xml_op), "last_failure")) {
+            } else if (rsc->remote_reconnect_ms
+                       && strstr(ID(xml_op), "last_failure")) {
                 /* always clear last failure when reconnect interval is set */
                 clear_reason = "reconnect interval is set";
             }
@@ -2815,8 +2817,7 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
                    rsc->id, node->details->uname, clear_reason, clear_op->uuid);
     }
 
-    crm_element_value_int(xml_op, XML_LRM_ATTR_INTERVAL, &interval);
-    if(expired && interval == 0 && safe_str_eq(task, CRMD_ACTION_STATUS)) {
+    if (expired && (interval_ms == 0) && safe_str_eq(task, CRMD_ACTION_STATUS)) {
         switch(rc) {
             case PCMK_OCF_OK:
             case PCMK_OCF_NOT_RUNNING:
@@ -2936,7 +2937,7 @@ update_resource_state(resource_t * rsc, node_t * node, xmlNode * xml_op, const c
                 rsc->next_role = RSC_ROLE_UNKNOWN;
                 break;
             case action_fail_reset_remote:
-                if (rsc->remote_reconnect_interval == 0) {
+                if (rsc->remote_reconnect_ms == 0) {
                     /* when reconnect delay is not in use, the connection is allowed
                      * to start again after the remote node is fenced and completely
                      * stopped. Otherwise, with reconnect delay we wait for the failure
@@ -2963,7 +2964,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
     int rc = 0;
     int status = PCMK_LRM_OP_UNKNOWN;
     int target_rc = get_target_rc(xml_op);
-    int interval = 0;
+    guint interval_ms = 0;
 
     gboolean expired = FALSE;
     resource_t *parent = rsc;
@@ -2981,7 +2982,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
     crm_element_value_int(xml_op, XML_LRM_ATTR_RC, &rc);
     crm_element_value_int(xml_op, XML_LRM_ATTR_CALLID, &task_id);
     crm_element_value_int(xml_op, XML_LRM_ATTR_OPSTATUS, &status);
-    crm_element_value_int(xml_op, XML_LRM_ATTR_INTERVAL, &interval);
+    crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
 
     CRM_CHECK(task != NULL, return FALSE);
     CRM_CHECK(status <= PCMK_LRM_OP_NOT_INSTALLED, return FALSE);
@@ -3043,7 +3044,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
                      services_ocf_exitcode_str(rc), rc,
                      services_ocf_exitcode_str(target_rc), target_rc);
 
-        if(interval == 0) {
+        if (interval_ms == 0) {
             crm_notice("Ignoring expired calculated failure %s (rc=%d, magic=%s) on %s",
                        task_key, rc, magic, node->details->uname);
             goto done;
@@ -3087,7 +3088,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
             }
 
             if (rsc->pending_task == NULL) {
-                if (safe_str_eq(task, CRMD_ACTION_STATUS) && interval == 0) {
+                if (safe_str_eq(task, CRMD_ACTION_STATUS) && (interval_ms == 0)) {
                     /* Pending probes are not printed, even if pending
                      * operations are requested. If someone ever requests that
                      * behavior, uncomment this and the corresponding part of

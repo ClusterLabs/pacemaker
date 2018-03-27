@@ -201,8 +201,9 @@ typedef GList *GListPtr;
 #  include <crm/common/logging.h>
 #  include <crm/common/util.h>
 
-static inline const char *crm_action_str(const char *task, int interval) {
-    if(safe_str_eq(task, RSC_STATUS) && !interval) {
+static inline const char *
+crm_action_str(const char *task, guint interval_ms) {
+    if(safe_str_eq(task, RSC_STATUS) && !interval_ms) {
         return "probe";
     }
     return task;

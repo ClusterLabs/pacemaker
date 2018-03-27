@@ -300,9 +300,10 @@ pe_post_notify(resource_t * rsc, node_t * node, notify_data_t * n_data, pe_worki
 
         for (; gIter != NULL; gIter = gIter->next) {
             action_t *mon = (action_t *) gIter->data;
-            const char *interval = g_hash_table_lookup(mon->meta, "interval");
+            const char *interval_ms_s = g_hash_table_lookup(mon->meta,
+                                                            XML_LRM_ATTR_INTERVAL_MS);
 
-            if (interval == NULL || safe_str_eq(interval, "0")) {
+            if ((interval_ms_s == NULL) || safe_str_eq(interval_ms_s, "0")) {
                 pe_rsc_trace(rsc, "Skipping %s: interval", mon->uuid);
                 continue;
             } else if (safe_str_eq(mon->task, RSC_CANCEL)) {

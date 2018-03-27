@@ -2565,6 +2565,16 @@ crm_xml_add_int(xmlNode * node, const char *name, int value)
     return added;
 }
 
+const char *
+crm_xml_add_ms(xmlNode *node, const char *name, guint ms)
+{
+    char *number = crm_strdup_printf("%u", ms);
+    const char *added = crm_xml_add(node, name, number);
+
+    free(number);
+    return added;
+}
+
 xmlNode *
 create_xml_node(xmlNode * parent, const char *name)
 {
@@ -3873,6 +3883,16 @@ crm_element_value_int(const xmlNode *data, const char *name, int *dest)
         return 0;
     }
     return -1;
+}
+
+int
+crm_element_value_ms(const xmlNode *data, const char *name, guint *dest)
+{
+    const char *value = crm_element_value(data, name);
+
+    CRM_CHECK(dest != NULL, return -1);
+    *dest = crm_parse_ms(value);
+    return errno? -1 : 0;
 }
 
 char *

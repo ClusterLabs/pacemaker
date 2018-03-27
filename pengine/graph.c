@@ -70,7 +70,7 @@ static char *
 convert_non_atomic_uuid(char *old_uuid, resource_t * rsc, gboolean allow_notify,
                         gboolean free_original)
 {
-    int interval = 0;
+    guint interval_ms = 0;
     char *uuid = NULL;
     char *rid = NULL;
     char *raw_task = NULL;
@@ -88,8 +88,8 @@ convert_non_atomic_uuid(char *old_uuid, resource_t * rsc, gboolean allow_notify,
         goto done;              /* no conversion */
     }
 
-    CRM_ASSERT(parse_op_key(old_uuid, &rid, &raw_task, &interval));
-    if (interval > 0) {
+    CRM_ASSERT(parse_op_key(old_uuid, &rid, &raw_task, &interval_ms));
+    if (interval_ms > 0) {
         goto done;              /* no conversion */
     }
 
@@ -1037,8 +1037,9 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
     crm_xml_add(action_xml, XML_LRM_ATTR_TASK, action->task);
     if (action->rsc != NULL && action->rsc->clone_name != NULL) {
         char *clone_key = NULL;
-        const char *interval_s = g_hash_table_lookup(action->meta, XML_LRM_ATTR_INTERVAL);
-        int interval = crm_parse_int(interval_s, "0");
+        const char *interval_ms_s = g_hash_table_lookup(action->meta,
+                                                        XML_LRM_ATTR_INTERVAL_MS);
+        guint interval_ms = crm_parse_ms(interval_ms_s);
 
         if (safe_str_eq(action->task, RSC_NOTIFY)) {
             const char *n_type = g_hash_table_lookup(action->meta, "notify_type");
@@ -1050,9 +1051,11 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
             clone_key = generate_notify_key(action->rsc->clone_name, n_type, n_task);
 
         } else if(action->cancel_task) {
-            clone_key = generate_op_key(action->rsc->clone_name, action->cancel_task, interval);
+            clone_key = generate_op_key(action->rsc->clone_name,
+                                        action->cancel_task, interval_ms);
         } else {
-            clone_key = generate_op_key(action->rsc->clone_name, action->task, interval);
+            clone_key = generate_op_key(action->rsc->clone_name,
+                                        action->task, interval_ms);
         }
 
         CRM_CHECK(clone_key != NULL, crm_err("Could not generate a key for %s", action->uuid));
@@ -1332,13 +1335,15 @@ should_dump_action(action_t * action)
         crm_trace("action %d (%s) was optional", action->id, action->uuid);
         return FALSE;
 
-    } else if (action->rsc != NULL && is_not_set(action->rsc->flags, pe_rsc_managed)) {
-        const char *interval = NULL;
+    // Monitors should be dumped even for unmanaged resources
+    } else if (action->rsc && is_not_set(action->rsc->flags, pe_rsc_managed)
+               && safe_str_neq(action->task, RSC_STATUS)) {
 
-        interval = g_hash_table_lookup(action->meta, XML_LRM_ATTR_INTERVAL);
+        const char *interval_ms_s = g_hash_table_lookup(action->meta,
+                                                        XML_LRM_ATTR_INTERVAL_MS);
 
-        /* make sure probes and recurring monitors go through */
-        if (safe_str_neq(action->task, RSC_STATUS) && interval == NULL) {
+        // Cancellation of recurring monitors should still be dumped
+        if ((interval_ms_s == NULL) || !strcmp(interval_ms_s, "0")) {
             crm_trace("action %d (%s) was for an unmanaged resource (%s)",
                       action->id, action->uuid, action->rsc->id);
             return FALSE;

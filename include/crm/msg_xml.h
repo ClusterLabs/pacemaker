@@ -252,7 +252,14 @@ extern "C" {
 /* LRM is a bit of a misnomer here; the crmd and pengine use these to track
  * actions, which usually but not always are LRM operations
  */
+
+// XML attribute that takes interval specification (user-facing configuration)
 #  define XML_LRM_ATTR_INTERVAL		"interval"
+
+// XML attribute that takes interval in milliseconds (daemon APIs)
+// (identical value as above, but different constant allows clearer code intent)
+#  define XML_LRM_ATTR_INTERVAL_MS  XML_LRM_ATTR_INTERVAL
+
 #  define XML_LRM_ATTR_TASK		"operation"
 #  define XML_LRM_ATTR_TASK_KEY		"operation_key"
 #  define XML_LRM_ATTR_TARGET		"on_node"

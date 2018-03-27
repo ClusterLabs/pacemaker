@@ -89,23 +89,23 @@ inject_transient_attr(xmlNode * cib_node, const char *name, const char *value)
 
 static void
 update_failcounts(xmlNode * cib_node, const char *resource, const char *task,
-                  int interval, int rc)
+                  guint interval_ms, int rc)
 {
     if (rc == 0) {
         return;
 
-    } else if (rc == 7 && interval == 0) {
+    } else if ((rc == 7) && (interval_ms == 0)) {
         return;
 
     } else {
         char *name = NULL;
         char *now = crm_itoa(time(NULL));
 
-        name = crm_failcount_name(resource, task, interval);
+        name = crm_failcount_name(resource, task, interval_ms);
         inject_transient_attr(cib_node, name, "value++");
         free(name);
 
-        name = crm_lastfailure_name(resource, task, interval);
+        name = crm_lastfailure_name(resource, task, interval_ms);
         inject_transient_attr(cib_node, name, now);
         free(name);
         free(now);
@@ -137,7 +137,8 @@ create_node_entry(cib_t * cib_conn, const char *node)
 }
 
 static lrmd_event_data_t *
-create_op(xmlNode * cib_resource, const char *task, int interval, int outcome)
+create_op(xmlNode *cib_resource, const char *task, guint interval_ms,
+          int outcome)
 {
     lrmd_event_data_t *op = NULL;
     xmlNode *xop = NULL;
@@ -145,7 +146,7 @@ create_op(xmlNode * cib_resource, const char *task, int interval, int outcome)
     op = calloc(1, sizeof(lrmd_event_data_t));
 
     op->rsc_id = strdup(ID(cib_resource));
-    op->interval = interval;
+    op->interval_ms = interval_ms;
     op->op_type = strdup(task);
 
     op->rc = outcome;
@@ -533,7 +534,7 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib,
 
         int rc = 0;
         int outcome = 0;
-        int interval = 0;
+        guint interval_ms = 0;
 
         char *key = NULL;
         char *node = NULL;
@@ -558,7 +559,7 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib,
             continue;
         }
 
-        parse_op_key(key, &resource, &task, &interval);
+        parse_op_key(key, &resource, &task, &interval_ms);
 
         rsc = pe_find_resource(data_set->resources, resource);
         if (rsc == NULL) {
@@ -571,12 +572,12 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib,
             cib_node = inject_node_state(cib, node, NULL);
             CRM_ASSERT(cib_node != NULL);
 
-            update_failcounts(cib_node, resource, task, interval, outcome);
+            update_failcounts(cib_node, resource, task, interval_ms, outcome);
 
             cib_resource = inject_resource(cib_node, resource, rclass, rtype, rprovider);
             CRM_ASSERT(cib_resource != NULL);
 
-            op = create_op(cib_resource, task, interval, outcome);
+            op = create_op(cib_resource, task, interval_ms, outcome);
             CRM_ASSERT(op != NULL);
 
             cib_op = inject_op(cib_resource, op, 0);
@@ -680,21 +681,21 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
     }
 
     op = convert_graph_action(cib_resource, action, 0, target_outcome);
-    if (op->interval) {
-        quiet_log(" * Resource action: %-15s %s=%d on %s\n", resource, op->op_type, op->interval,
-                  node);
+    if (op->interval_ms) {
+        quiet_log(" * Resource action: %-15s %s=%u on %s\n",
+                  resource, op->op_type, op->interval_ms, node);
     } else {
         quiet_log(" * Resource action: %-15s %s on %s\n", resource, op->op_type, node);
     }
 
     for (gIter = fake_op_fail_list; gIter != NULL; gIter = gIter->next) {
         char *spec = (char *)gIter->data;
-        char *key = crm_strdup_printf("%s_%s_%d@%s=", resource, op->op_type,
-                                      op->interval, node);
+        char *key = crm_strdup_printf(CRM_OP_FMT "@%s=", resource, op->op_type,
+                                      op->interval_ms, node);
 
         if (strncasecmp(key, spec, strlen(key)) == 0) {
             rc = sscanf(spec, "%*[^=]=%d", (int *) &op->rc);
-            // ${resource}_${task}_${interval}@${node}=${rc}
+            // ${resource}_${task}_${interval_in_ms}@${node}=${rc}
 
             if (rc != 1) {
                 fprintf(stderr,
@@ -706,7 +707,8 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
             action->failed = TRUE;
             graph->abort_priority = INFINITY;
             printf("\tPretending action %d failed with rc=%d\n", action->id, op->rc);
-            update_failcounts(cib_node, resource, op->op_type, op->interval, op->rc);
+            update_failcounts(cib_node, resource, op->op_type, op->interval_ms,
+                              op->rc);
             free(key);
             break;
         }

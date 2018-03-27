@@ -284,7 +284,7 @@ native_assign_node(resource_t * rsc, GListPtr nodes, node_t * chosen, gboolean f
 
         for (gIter = rsc->actions; gIter != NULL; gIter = gIter->next) {
             action_t *op = (action_t *) gIter->data;
-            const char *interval = g_hash_table_lookup(op->meta, XML_LRM_ATTR_INTERVAL);
+            const char *interval_ms_s = g_hash_table_lookup(op->meta, XML_LRM_ATTR_INTERVAL_MS);
 
             crm_debug("Processing %s", op->uuid);
             if(safe_str_eq(RSC_STOP, op->task)) {
@@ -294,7 +294,7 @@ native_assign_node(resource_t * rsc, GListPtr nodes, node_t * chosen, gboolean f
                 update_action_flags(op, pe_action_runnable | pe_action_clear, __FUNCTION__, __LINE__);
                 /* set_bit(rsc->flags, pe_rsc_block); */
 
-            } else if(interval && safe_str_neq(interval, "0")) {
+            } else if (interval_ms_s && safe_str_neq(interval_ms_s, "0")) {
                 if(safe_str_eq(rc_inactive, g_hash_table_lookup(op->meta, XML_ATTR_TE_TARGET_RC))) {
                     /* This is a recurring monitor for the stopped state, leave it alone */
 
@@ -439,4 +439,42 @@ create_pseudo_resource_op(resource_t * rsc, const char *task, bool optional, boo
         update_action_flags(action, pe_action_runnable, __FUNCTION__, __LINE__);
     }
     return action;
+}
+
+/*!
+ * \internal
+ * \brief Create a LRMD cancel op
+ *
+ * \param[in] rsc          Resource of action to cancel
+ * \param[in] task         Name of action to cancel
+ * \param[in] interval_ms  Interval of action to cancel
+ * \param[in] node         Node of action to cancel
+ * \param[in] data_set     Working set of cluster
+ *
+ * \return Created op
+ */
+pe_action_t *
+pe_cancel_op(pe_resource_t *rsc, const char *task, guint interval_ms,
+             pe_node_t *node, pe_working_set_t *data_set)
+{
+    pe_action_t *cancel_op;
+    char *interval_ms_s = crm_strdup_printf("%u", interval_ms);
+
+    // @TODO dangerous if possible to schedule another action with this key
+    char *key = generate_op_key(rsc->id, task, interval_ms);
+
+    cancel_op = custom_action(rsc, key, RSC_CANCEL, node, FALSE, TRUE,
+                              data_set);
+
+    free(cancel_op->task);
+    cancel_op->task = strdup(RSC_CANCEL);
+
+    free(cancel_op->cancel_task);
+    cancel_op->cancel_task = strdup(task);
+
+    add_hash_param(cancel_op->meta, XML_LRM_ATTR_TASK, task);
+    add_hash_param(cancel_op->meta, XML_LRM_ATTR_INTERVAL_MS, interval_ms_s);
+    free(interval_ms_s);
+
+    return cancel_op;
 }

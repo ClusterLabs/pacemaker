@@ -107,6 +107,8 @@ const char *crm_xml_add(xmlNode * node, const char *name, const char *value);
 const char *crm_xml_replace(xmlNode * node, const char *name, const char *value);
 
 const char *crm_xml_add_int(xmlNode * node, const char *name, int value);
+const char *crm_xml_add_ms(xmlNode *node, const char *name, guint ms);
+
 
 /*!
  * \brief Add a boolean attribute to an XML object
@@ -195,6 +197,7 @@ int find_xml_children(xmlNode ** children, xmlNode * root,
                       gboolean search_matches);
 
 int crm_element_value_int(const xmlNode *data, const char *name, int *dest);
+int crm_element_value_ms(const xmlNode *data, const char *name, guint *dest);
 char *crm_element_value_copy(const xmlNode *data, const char *name);
 xmlNode *get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level);
 xmlNode *get_xpath_object_relative(const char *xpath, xmlNode * xml_obj, int error_level);

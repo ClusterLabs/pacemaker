@@ -77,8 +77,8 @@ fail_pending_op(gpointer key, gpointer value, gpointer user_data)
     lrm_state_t *lrm_state = user_data;
     struct recurring_op_s *op = (struct recurring_op_s *)value;
 
-    crm_trace("Pre-emptively failing %s_%s_%d on %s (call=%s, %s)",
-              op->rsc_id, op->op_type, op->interval,
+    crm_trace("Pre-emptively failing " CRM_OP_FMT " on %s (call=%s, %s)",
+              op->rsc_id, op->op_type, op->interval_ms,
               lrm_state->node_name, (char*)key, op->user_data);
 
     event.type = lrmd_event_exec_complete;
@@ -86,7 +86,7 @@ fail_pending_op(gpointer key, gpointer value, gpointer user_data)
     event.op_type = op->op_type;
     event.user_data = op->user_data;
     event.timeout = 0;
-    event.interval = op->interval;
+    event.interval_ms = op->interval_ms;
     event.rc = PCMK_OCF_CONNECTION_DIED;
     event.op_status = PCMK_LRM_OP_ERROR;
     event.t_run = op->start_time;
@@ -610,7 +610,8 @@ lrm_state_get_metadata(lrm_state_t * lrm_state,
 }
 
 int
-lrm_state_cancel(lrm_state_t * lrm_state, const char *rsc_id, const char *action, int interval)
+lrm_state_cancel(lrm_state_t *lrm_state, const char *rsc_id, const char *action,
+                 guint interval_ms)
 {
     if (!lrm_state->conn) {
         return -ENOTCONN;
@@ -619,9 +620,10 @@ lrm_state_cancel(lrm_state_t * lrm_state, const char *rsc_id, const char *action
     /* Figure out a way to make this async?
      * NOTICE: Currently it's synced and directly acknowledged in do_lrm_invoke(). */
     if (is_remote_lrmd_ra(NULL, NULL, rsc_id)) {
-        return remote_ra_cancel(lrm_state, rsc_id, action, interval);
+        return remote_ra_cancel(lrm_state, rsc_id, action, interval_ms);
     }
-    return ((lrmd_t *) lrm_state->conn)->cmds->cancel(lrm_state->conn, rsc_id, action, interval);
+    return ((lrmd_t *) lrm_state->conn)->cmds->cancel(lrm_state->conn, rsc_id,
+                                                      action, interval_ms);
 }
 
 lrmd_rsc_info_t *
@@ -652,7 +654,8 @@ lrm_state_get_rsc_info(lrm_state_t * lrm_state, const char *rsc_id, enum lrmd_ca
 }
 
 int
-lrm_state_exec(lrm_state_t * lrm_state, const char *rsc_id, const char *action, const char *userdata, int interval,     /* ms */
+lrm_state_exec(lrm_state_t *lrm_state, const char *rsc_id, const char *action,
+               const char *userdata, guint interval_ms,
                int timeout,     /* ms */
                int start_delay, /* ms */
                lrmd_key_value_t * params)
@@ -664,15 +667,15 @@ lrm_state_exec(lrm_state_t * lrm_state, const char *rsc_id, const char *action, 
     }
 
     if (is_remote_lrmd_ra(NULL, NULL, rsc_id)) {
-        return remote_ra_exec(lrm_state,
-                              rsc_id, action, userdata, interval, timeout, start_delay, params);
+        return remote_ra_exec(lrm_state, rsc_id, action, userdata, interval_ms,
+                              timeout, start_delay, params);
     }
 
     return ((lrmd_t *) lrm_state->conn)->cmds->exec(lrm_state->conn,
                                                     rsc_id,
                                                     action,
                                                     userdata,
-                                                    interval,
+                                                    interval_ms,
                                                     timeout,
                                                     start_delay,
                                                     lrmd_opt_notify_changes_only, params);

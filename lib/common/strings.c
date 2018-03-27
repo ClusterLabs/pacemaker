@@ -108,6 +108,28 @@ crm_parse_int(const char *text, const char *default_text)
     return -1;
 }
 
+/*!
+ * \internal
+ * \brief Parse a milliseconds value (without units) from a string
+ *
+ * \param[in] text  String to parse
+ *
+ * \return Milliseconds on success, 0 otherwise (and errno will be set)
+ */
+guint
+crm_parse_ms(const char *text)
+{
+    if (text) {
+        long long ms = crm_int_helper(text, NULL);
+
+        if ((ms < 0) || (ms > G_MAXUINT)) {
+            errno = ERANGE;
+        }
+        return errno? 0 : (guint) ms;
+    }
+    return 0;
+}
+
 gboolean
 safe_str_neq(const char *a, const char *b)
 {

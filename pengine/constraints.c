@@ -1357,13 +1357,13 @@ task_from_action_or_key(action_t *action, const char *key)
     char *res = NULL;
     char *rsc_id = NULL;
     char *op_type = NULL;
-    int interval = 0;
+    guint interval_ms = 0;
 
     if (action) {
         res = strdup(action->task);
     } else if (key) {
         int rc = 0;
-        rc = parse_op_key(key, &rsc_id, &op_type, &interval);
+        rc = parse_op_key(key, &rsc_id, &op_type, &interval_ms);
         if (rc == TRUE) {
             res = op_type;
             op_type = NULL;

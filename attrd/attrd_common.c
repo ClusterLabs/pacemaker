@@ -259,7 +259,7 @@ attrd_expand_value(const char *value, const char *old_value)
  * \param[out] regex  Where to store created regular expression
  * \param[in]  rsc    Name of resource to clear (or NULL for all)
  * \param[in]  op     Operation to clear if rsc is specified (or NULL for all)
- * \param[in]  interval  Interval of operation to clear if op is specified
+ * \param[in]  interval_ms  Interval of operation to clear if op is specified
  *
  * \return pcmk_ok on success, -EINVAL if arguments are invalid
  *
@@ -267,7 +267,7 @@ attrd_expand_value(const char *value, const char *old_value)
  */
 int
 attrd_failure_regex(regex_t *regex, const char *rsc, const char *op,
-                    int interval)
+                    guint interval_ms)
 {
     char *pattern = NULL;
     int rc;
@@ -279,8 +279,7 @@ attrd_failure_regex(regex_t *regex, const char *rsc, const char *op,
     } else if (op == NULL) {
         pattern = crm_strdup_printf(ATTRD_RE_CLEAR_ONE, rsc);
     } else {
-        pattern = crm_strdup_printf(ATTRD_RE_CLEAR_OP,
-                                    rsc, op, interval);
+        pattern = crm_strdup_printf(ATTRD_RE_CLEAR_OP, rsc, op, interval_ms);
     }
 
     /* Compile pattern into regular expression */

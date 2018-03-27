@@ -23,9 +23,10 @@ is_matched_failure(const char *rsc_id, xmlNode *conf_op_xml,
 {
     gboolean matched = FALSE;
     const char *conf_op_name = NULL;
-    int conf_op_interval = 0;
     const char *lrm_op_task = NULL;
-    int lrm_op_interval = 0;
+    const char *conf_op_interval_spec = NULL;
+    guint conf_op_interval_ms = 0;
+    guint lrm_op_interval_ms = 0;
     const char *lrm_op_id = NULL;
     char *last_failure_key = NULL;
 
@@ -33,13 +34,19 @@ is_matched_failure(const char *rsc_id, xmlNode *conf_op_xml,
         return FALSE;
     }
 
+    // Get name and interval from configured op
     conf_op_name = crm_element_value(conf_op_xml, "name");
-    conf_op_interval = crm_get_msec(crm_element_value(conf_op_xml, "interval"));
-    lrm_op_task = crm_element_value(lrm_op_xml, XML_LRM_ATTR_TASK);
-    crm_element_value_int(lrm_op_xml, XML_LRM_ATTR_INTERVAL, &lrm_op_interval);
+    conf_op_interval_spec = crm_element_value(conf_op_xml,
+                                              XML_LRM_ATTR_INTERVAL);
+    conf_op_interval_ms = crm_parse_interval_spec(conf_op_interval_spec);
 
-    if (safe_str_eq(conf_op_name, lrm_op_task) == FALSE
-        || conf_op_interval != lrm_op_interval) {
+    // Get name and interval from op history entry
+    lrm_op_task = crm_element_value(lrm_op_xml, XML_LRM_ATTR_TASK);
+    crm_element_value_ms(lrm_op_xml, XML_LRM_ATTR_INTERVAL_MS,
+                         &lrm_op_interval_ms);
+
+    if ((conf_op_interval_ms != lrm_op_interval_ms)
+        || safe_str_neq(conf_op_name, lrm_op_task)) {
         return FALSE;
     }
 
@@ -51,7 +58,7 @@ is_matched_failure(const char *rsc_id, xmlNode *conf_op_xml,
 
     } else {
         char *expected_op_key = generate_op_key(rsc_id, conf_op_name,
-                                                conf_op_interval);
+                                                conf_op_interval_ms);
 
         if (safe_str_eq(expected_op_key, lrm_op_id)) {
             int rc = 0;
@@ -74,20 +81,24 @@ block_failure(node_t *node, resource_t *rsc, xmlNode *xml_op,
               pe_working_set_t *data_set)
 {
     char *xml_name = clone_strip(rsc->id);
+
+    /* @TODO This xpath search occurs after template expansion, but it is unable
+     * to properly detect on-fail in id-ref, operation meta-attributes, or
+     * op_defaults, or evaluate rules.
+     *
+     * Also, on-fail defaults to block (in unpack_operation()) for stop actions
+     * when stonith is disabled.
+     *
+     * Ideally, we'd unpack the operation before this point, and pass in a
+     * meta-attributes table that takes all that into consideration.
+     */
     char *xpath = crm_strdup_printf("//primitive[@id='%s']//op[@on-fail='block']",
                                     xml_name);
+
     xmlXPathObject *xpathObj = xpath_search(rsc->xml, xpath);
     gboolean should_block = FALSE;
 
     free(xpath);
-
-#if 0
-    /* A good idea? */
-    if (rsc->container == NULL && is_not_set(data_set->flags, pe_flag_stonith_enabled)) {
-        /* In this case, stop on-fail defaults to block in unpack_operation() */
-        return TRUE;
-    }
-#endif
 
     if (xpathObj) {
         int max = numXpathResults(xpathObj);
@@ -104,18 +115,21 @@ block_failure(node_t *node, resource_t *rsc, xmlNode *xml_op,
 
             } else {
                 const char *conf_op_name = NULL;
-                int conf_op_interval = 0;
+                const char *conf_op_interval_spec = NULL;
+                guint conf_op_interval_ms = 0;
                 char *lrm_op_xpath = NULL;
                 xmlXPathObject *lrm_op_xpathObj = NULL;
 
+                // Get name and interval from configured op
                 conf_op_name = crm_element_value(pref, "name");
-                conf_op_interval = crm_get_msec(crm_element_value(pref, "interval"));
+                conf_op_interval_spec = crm_element_value(pref, XML_LRM_ATTR_INTERVAL);
+                conf_op_interval_ms = crm_parse_interval_spec(conf_op_interval_spec);
 
                 lrm_op_xpath = crm_strdup_printf("//node_state[@uname='%s']"
                                                "//lrm_resource[@id='%s']"
-                                               "/lrm_rsc_op[@operation='%s'][@interval='%d']",
+                                               "/lrm_rsc_op[@operation='%s'][@interval='%u']",
                                                node->details->uname, xml_name,
-                                               conf_op_name, conf_op_interval);
+                                               conf_op_name, conf_op_interval_ms);
                 lrm_op_xpathObj = xpath_search(data_set->input, lrm_op_xpath);
 
                 free(lrm_op_xpath);
