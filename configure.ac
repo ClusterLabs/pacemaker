@@ -1181,11 +1181,11 @@ else
     PKG_CHECK_MODULES(cfg,    libcfg) dnl Fatal
     PKG_CHECK_MODULES(cmap,   libcmap) dnl Fatal
     PKG_CHECK_MODULES(quorum, libquorum) dnl Fatal
+    PKG_CHECK_MODULES(libcorosync_common, libcorosync_common) dnl Fatal
 
-    CFLAGS="$CFLAGS $libqb_FLAGS $cpg_FLAGS $cfg_FLAGS $cmap_CFLAGS $quorum_CFLAGS"
-    COROSYNC_LIBS="$COROSYNC_LIBS $libqb_LIBS $cpg_LIBS $cfg_LIBS $cmap_LIBS $quorum_LIBS"
+    CFLAGS="$CFLAGS $libqb_FLAGS $cpg_FLAGS $cfg_FLAGS $cmap_CFLAGS $quorum_CFLAGS $libcorosync_common_CFLAGS"
+    COROSYNC_LIBS="$COROSYNC_LIBS $libqb_LIBS $cpg_LIBS $cfg_LIBS $cmap_LIBS $quorum_LIBS $libcorosync_common_LIBS"
     CLUSTERLIBS="$CLUSTERLIBS $COROSYNC_LIBS"
-    AC_CHECK_LIB(corosync_common, cs_strerror)
     STACKS="$STACKS corosync-native"
 fi
 
