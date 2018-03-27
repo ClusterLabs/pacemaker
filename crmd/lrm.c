@@ -2018,9 +2018,6 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
     }
 
     /* sanity */
-    if (op->interval_ms < 0) {
-        op->interval_ms = 0;
-    }
     if (op->timeout <= 0) {
         op->timeout = op->interval_ms;
     }

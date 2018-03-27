@@ -690,11 +690,8 @@ find_min_interval_mon(resource_t * rsc, gboolean include_disabled)
             }
 
             interval_ms = crm_parse_interval_spec(interval_spec);
-            if (interval_ms < 0) {
-                continue;
-            }
 
-            if (min_interval_ms < 0 || interval_ms < min_interval_ms) {
+            if (interval_ms && (interval_ms < min_interval_ms)) {
                 min_interval_ms = interval_ms;
                 op = operation;
             }

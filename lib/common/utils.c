@@ -569,7 +569,7 @@ crm_parse_interval_spec(const char *input)
         crm_time_free(period_s);
     }
 
-    return (guint) msec;
+    return (msec <= 0)? 0 : ((msec >= G_MAXUINT)? G_MAXUINT : (guint) msec);
 }
 
 long long
