@@ -1520,6 +1520,69 @@ process_lrmd_rsc_cancel(crm_client_t * client, uint32_t id, xmlNode * request)
     return cancel_op(rsc_id, action, interval_ms);
 }
 
+static void
+add_recurring_op_xml(xmlNode *reply, lrmd_rsc_t *rsc)
+{
+    xmlNode *rsc_xml = create_xml_node(reply, F_LRMD_RSC);
+
+    crm_xml_add(rsc_xml, F_LRMD_RSC_ID, rsc->rsc_id);
+    for (GList *item = rsc->recurring_ops; item != NULL; item = item->next) {
+        lrmd_cmd_t *cmd = item->data;
+        xmlNode *op_xml = create_xml_node(rsc_xml, T_LRMD_RSC_OP);
+
+        crm_xml_add(op_xml, F_LRMD_RSC_ACTION,
+                    (cmd->real_action? cmd->real_action : cmd->action));
+        crm_xml_add_ms(op_xml, F_LRMD_RSC_INTERVAL, cmd->interval_ms);
+        crm_xml_add_int(op_xml, F_LRMD_TIMEOUT, cmd->timeout_orig);
+    }
+}
+
+static xmlNode *
+process_lrmd_get_recurring(xmlNode *request, int call_id)
+{
+    int rc = pcmk_ok;
+    const char *rsc_id = NULL;
+    lrmd_rsc_t *rsc = NULL;
+    xmlNode *reply = NULL;
+    xmlNode *rsc_xml = NULL;
+
+    // Resource ID is optional
+    rsc_xml = first_named_child(request, F_LRMD_CALLDATA);
+    if (rsc_xml) {
+        rsc_xml = first_named_child(rsc_xml, F_LRMD_RSC);
+    }
+    if (rsc_xml) {
+        rsc_id = crm_element_value(rsc_xml, F_LRMD_RSC_ID);
+    }
+
+    // If resource ID is specified, resource must exist
+    if (rsc_id != NULL) {
+        rsc = g_hash_table_lookup(rsc_list, rsc_id);
+        if (rsc == NULL) {
+            crm_info("Resource '%s' not found (%d active resources)",
+                     rsc_id, g_hash_table_size(rsc_list));
+            rc = -ENODEV;
+        }
+    }
+
+    reply = create_lrmd_reply(__FUNCTION__, rc, call_id);
+
+    // If resource ID is not specified, check all resources
+    if (rsc_id == NULL) {
+        GHashTableIter iter;
+        char *key = NULL;
+
+        g_hash_table_iter_init(&iter, rsc_list);
+        while (g_hash_table_iter_next(&iter, (gpointer *) &key,
+                                      (gpointer *) &rsc)) {
+            add_recurring_op_xml(reply, rsc);
+        }
+    } else if (rsc) {
+        add_recurring_op_xml(reply, rsc);
+    }
+    return reply;
+}
+
 void
 process_lrmd_message(crm_client_t * client, uint32_t id, xmlNode * request)
 {
@@ -1571,6 +1634,9 @@ process_lrmd_message(crm_client_t * client, uint32_t id, xmlNode * request)
         check_sbd_timeout(timeout);
     } else if (crm_str_eq(op, LRMD_OP_ALERT_EXEC, TRUE)) {
         rc = process_lrmd_alert_exec(client, id, request);
+        do_reply = 1;
+    } else if (crm_str_eq(op, LRMD_OP_GET_RECURRING, TRUE)) {
+        reply = process_lrmd_get_recurring(request, call_id);
         do_reply = 1;
     } else {
         rc = -EOPNOTSUPP;
