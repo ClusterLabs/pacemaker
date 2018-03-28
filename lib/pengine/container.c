@@ -78,6 +78,9 @@ allocate_ip(container_variant_data_t *data, container_grouping_t *tuple, char *b
                     data->prefix, tuple->offset, data->prefix, tuple->offset);
 #else
     if (data->type == PE_CONTAINER_TYPE_DOCKER) {
+        if (!crm_is_true(data->add_host)) {
+            return 0;
+        }
         return snprintf(buffer, max, " --add-host=%s-%d:%s",
                         data->prefix, tuple->offset, tuple->ipaddr);
     } else if (data->type == PE_CONTAINER_TYPE_RKT) {
@@ -904,6 +907,10 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         container_data->host_netmask = crm_element_value_copy(xml_obj, "host-netmask");
         container_data->host_network = crm_element_value_copy(xml_obj, "host-interface");
         container_data->control_port = crm_element_value_copy(xml_obj, "control-port");
+        container_data->add_host = crm_element_value_copy(xml_obj, "add-host");
+        if (container_data->add_host == NULL) {
+            container_data->add_host = strdup("true");
+        }
 
         for (xmlNode *xml_child = __xml_first_child_element(xml_obj); xml_child != NULL;
              xml_child = __xml_next_element(xml_child)) {
@@ -1417,6 +1424,7 @@ container_free(resource_t * rsc)
     free(container_data->host_network);
     free(container_data->host_netmask);
     free(container_data->ip_range_start);
+    free(container_data->add_host);
     free(container_data->docker_network);
     free(container_data->docker_run_options);
     free(container_data->docker_run_command);
