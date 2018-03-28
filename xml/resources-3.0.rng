@@ -29,6 +29,7 @@
       <data type="string">
         <except>
           <choice>
+            <value>pcmk_arg_map</value>
             <value>pcmk_list_cmd</value>
             <value>pcmk_monitor_cmd</value>
             <value>pcmk_off_cmd</value>

@@ -79,6 +79,12 @@
           <xsl:when test="$Replacement/@in-case-of">
             <xsl:value-of select="' for matching &quot;empty string&quot;'"/>
           </xsl:when>
+          <xsl:when test="$Replacement/@in-case-of-droppable-prefix">
+            <xsl:value-of select="concat(' for matching ',
+                                    $Replacement/@in-case-of-droppable-prefix,
+                                    ' prefix that will, meanwhile, get dropped'
+                                  )"/>
+          </xsl:when>
 	</xsl:choose>
       </cibtr-2:noop>
       <xsl:if test="$Replacement/@msg-extra">

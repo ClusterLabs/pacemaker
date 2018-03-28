@@ -138,6 +138,15 @@
    Move ctxt:      N/A
    -->
   <cibtr:table for="resource-instance-attributes" msg-prefix="Resource instance_attributes">
+    <cibtr:replace what="pcmk_arg_map"
+                   with=""/>
+    <!-- simplified as pcmk_arg_map can encode multiple
+         comma-separated pairs (everything would be dropped then,
+         except for a single dangling case: "port" coming first) -->
+    <cibtr:replace what="pcmk_arg_map"
+                   with="pcmk_host_argument"
+                   in-case-of-droppable-prefix="port:"/>
+
     <cibtr:replace what="pcmk_list_cmd"
                    with="pcmk_list_action"/>
     <cibtr:replace what="pcmk_monitor_cmd"
@@ -312,7 +321,7 @@
             <xsl:value-of select="','"/>
           </xsl:if>
         </xsl:if>
-	<xsl:choose>
+        <xsl:choose>
           <xsl:when test="string($Replacement/@in-case-of)">
             <xsl:value-of select="concat(' for matching ',
                                          $Replacement/@in-case-of)"/>
@@ -320,7 +329,13 @@
           <xsl:when test="$Replacement/@in-case-of">
             <xsl:value-of select="' for matching &quot;empty string&quot;'"/>
           </xsl:when>
-	</xsl:choose>
+          <xsl:when test="$Replacement/@in-case-of-droppable-prefix">
+            <xsl:value-of select="concat(' for matching ',
+                                    $Replacement/@in-case-of-droppable-prefix,
+                                    ' prefix that will, meanwhile, get dropped'
+                                  )"/>
+          </xsl:when>
+        </xsl:choose>
       </xsl:message>
       <xsl:if test="$Replacement/@msg-extra">
         <xsl:message>
@@ -679,16 +694,44 @@
                                   )
                                   or
                                   (
+                                    @in-case-of-droppable-prefix
+                                    and
+                                    starts-with(current()/@value,
+                                                @in-case-of-droppable-prefix)
+                                    and
+                                    not(
+                                      contains(current()/@value, ',')
+                                    )
+                                  )
+                                  or
+                                  (
                                     not(@in-case-of)
+                                    and
+                                    not(@in-case-of-droppable-prefix)
                                     and
                                     not(
                                       $MapResourceInstanceAttributes/cibtr:replace[
                                         @what = current()/@name
                                         and
-                                        @in-case-of
-                                        and
-                                        contains(concat('|', @in-case-of, '|'),
-                                                 concat('|', current()/@value, '|'))
+                                        (
+                                          (
+                                            @in-case-of
+                                            and
+                                            contains(concat('|', @in-case-of, '|'),
+                                                     concat('|', current()/@value, '|'))
+                                          )
+                                          or
+                                          (
+                                            @in-case-of-droppable-prefix
+                                            and
+                                            starts-with(current()/@value,
+                                                        @in-case-of-droppable-prefix)
+                                            and
+                                            not(
+                                              contains(current()/@value, ',')
+                                            )
+                                          )
+                                        )
                                       ]
                                     )
                                   )
@@ -729,6 +772,15 @@
                                   name() = 'value'">
                     <xsl:attribute name="{name()}">
                       <xsl:value-of select="$Replacement/@redefined-as"/>
+                    </xsl:attribute>
+                  </xsl:when>
+                  <xsl:when test="string($Replacement/@in-case-of-droppable-prefix)
+                                  and
+                                  name() = 'value'">
+                    <xsl:attribute name="{name()}">
+                      <xsl:value-of select="substring-after(
+                                              ., $Replacement/@in-case-of-droppable-prefix
+                                            )"/>
                     </xsl:attribute>
                   </xsl:when>
                   <xsl:otherwise>

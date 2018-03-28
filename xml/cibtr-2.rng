@@ -59,6 +59,15 @@
     </attribute>
   </define>
 
+  <define name="cibtr-2.replace.attr-in-case-of-droppable-prefix">
+    <attribute name="in-case-of-droppable-prefix">
+      <!-- just a single argument taken verbatim -->
+      <data type="string">
+        <param name="minLength">1</param>
+      </data>
+    </attribute>
+  </define>
+
   <define name="cibtr-2.replace.attr-msg-extra">
     <attribute name="msg-extra">
       <data type="string">
@@ -125,13 +134,27 @@
   <define name="cibtr-2.replace.nonwhereaware">
     <element name="cibtr:replace">
       <ref name="cibtr-2.replace.attrs-common"/>
-      <ref name="cibtr-2.replace.attr-with-possibly"/>
-      <optional>
-        <choice>
-          <ref name="cibtr-2.replace.attrs-redefined-as-in-case-of"/>
-          <ref name="cibtr-2.replace.attr-in-case-of"/>
-        </choice>
-      </optional>
+      <choice>
+        <group>
+          <ref name="cibtr-2.replace.attr-with-possibly"/>
+          <optional>
+            <choice>
+              <ref name="cibtr-2.replace.attrs-redefined-as-in-case-of"/>
+              <ref name="cibtr-2.replace.attr-in-case-of"/>
+            </choice>
+          </optional>
+        </group>
+        <group>
+          <ref name="cibtr-2.replace.attr-with-surely"/>
+          <optional>
+            <choice>
+              <ref name="cibtr-2.replace.attrs-redefined-as-in-case-of"/>
+              <ref name="cibtr-2.replace.attr-in-case-of"/>
+              <ref name="cibtr-2.replace.attr-in-case-of-droppable-prefix"/>
+            </choice>
+          </optional>
+        </group>
+      </choice>
     </element>
   </define>
 
@@ -147,6 +170,7 @@
             <choice>
               <ref name="cibtr-2.replace.attrs-redefined-as-in-case-of"/>
               <ref name="cibtr-2.replace.attr-in-case-of"/>
+              <ref name="cibtr-2.replace.attr-in-case-of-droppable-prefix"/>
             </choice>
           </optional>
         </group>
@@ -158,6 +182,7 @@
           <choice>
             <ref name="cibtr-2.replace.attrs-redefined-as-in-case-of"/>
             <ref name="cibtr-2.replace.attr-in-case-of"/>
+            <ref name="cibtr-2.replace.attr-in-case-of-droppable-prefix"/>
           </choice>
         </group>
         <group>
