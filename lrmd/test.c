@@ -1,20 +1,8 @@
 /*
- * Copyright (c) 2012 David Vossel <davidvossel@gmail.com>
+ * Copyright 2012-2018 David Vossel <davidvossel@gmail.com>
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -319,6 +307,22 @@ start_test(gpointer user_data)
             print_result(printf("API_CALL FAILURE - no providers found\n"));
             rc = -1;
         }
+
+    } else if (safe_str_eq(options.api_call, "get_recurring_ops")) {
+        GList *op_list = NULL;
+        GList *op_item = NULL;
+        rc = lrmd_conn->cmds->get_recurring_ops(lrmd_conn, options.rsc_id, 0, 0,
+                                                &op_list);
+
+        for (op_item = op_list; op_item != NULL; op_item = op_item->next) {
+            lrmd_op_info_t *op_info = op_item->data;
+
+            print_result(printf("RECURRING_OP: %s_%s_%s timeout=%sms\n",
+                                op_info->rsc_id, op_info->action,
+                                op_info->interval_ms_s, op_info->timeout_ms_s));
+            lrmd_free_op_info(op_info);
+        }
+        g_list_free(op_list);
 
     } else if (options.api_call) {
         print_result(printf("API-CALL FAILURE unknown action '%s'\n", options.action));

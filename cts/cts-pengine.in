@@ -22,6 +22,7 @@ Options:
  --help                 Display this text, then exit
  -V, --verbose          Display any differences from expected output
  --run TEST             Run only single specified test
+ --update               Update expected results with actual results
  -b, --binary PATH      Specify path to crm_simulate
  -i, --io-dir PATH      Specify path to regression test data directory
  -v, --valgrind         Run all commands under valgrind
@@ -87,6 +88,7 @@ function show_test() {
 
 info "Test home is:\t$test_home"
 
+create_mode="false"
 while [ $# -gt 0 ] ; do
     case "$1" in
         -V|--verbose)
@@ -104,6 +106,10 @@ while [ $# -gt 0 ] ; do
             ;;
         --valgrind-skip-output)
             VALGRIND_SKIP_OUTPUT=1
+            shift
+            ;;
+        --update)
+            create_mode="true"
             shift
             ;;
         --run)
@@ -301,7 +307,7 @@ do_test() {
         cp "$dot_output" "$dot_expected"
         cp "$score_output" "$scores"
         cp "$summary_output" "$summary"
-        info "  Created expected outputs"
+        info "  Updated expected outputs"
     fi
 
     diff $diff_opts $summary $summary_output >/dev/null
@@ -380,14 +386,7 @@ fi
 
 DO_VERSIONED_TESTS=0
 
-create_mode="true"
-info Generating test outputs for these tests...
-# do_test file description
-info Done.
-echo ""
-
 info Performing the following tests from $io_dir
-create_mode="false"
 echo ""
 
 do_test simple1 "Offline     "

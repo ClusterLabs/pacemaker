@@ -163,6 +163,7 @@ cts/pengine/shadow.*
 
 # Formerly built files (helps when jumping back and forth in checkout)
 /coverage.sh
+/cts/HBDummy
 /fencing/regression.py
 /lrmd/regression.py
 /pengine/.regression.failed.diff

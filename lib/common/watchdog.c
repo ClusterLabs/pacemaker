@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2013 Lars Marowsky-Bree <lmb@suse.com>
- *               2014 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2013 Lars Marowsky-Bree <lmb@suse.com>
+ *           2014-2018 Andrew Beekhof <andrew@beekhof.net>
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -38,6 +38,7 @@ enum pcmk_panic_flags
 void
 sysrq_init(void)
 {
+#if SUPPORT_PROCFS
     static bool need_init = true;
     FILE* procf;
     int c;
@@ -50,7 +51,7 @@ sysrq_init(void)
 
     procf = fopen(SYSRQ, "r");
     if (!procf) {
-        crm_perror(LOG_ERR, "Cannot open "SYSRQ" for read");
+        crm_perror(LOG_WARNING, "Cannot open "SYSRQ" for read");
         return;
     }
     if (fscanf(procf, "%d", &c) != 1) {
@@ -70,24 +71,27 @@ sysrq_init(void)
     }
     fprintf(procf, "%d", c);
     fclose(procf);
+#endif // SUPPORT_PROCFS
     return;
 }
 
 static void
 sysrq_trigger(char t)
 {
+#if SUPPORT_PROCFS
     FILE *procf;
 
     sysrq_init();
 
     procf = fopen("/proc/sysrq-trigger", "a");
     if (!procf) {
-        crm_perror(LOG_ERR, "Opening sysrq-trigger failed");
+        crm_perror(LOG_WARNING, "Opening sysrq-trigger failed");
         return;
     }
     crm_info("sysrq-trigger: %c", t);
     fprintf(procf, "%c\n", t);
     fclose(procf);
+#endif // SUPPORT_PROCFS
     return;
 }
 
@@ -110,9 +114,10 @@ pcmk_panic_local(void)
         return;
 
     } else if (uid != 0) {
+#if SUPPORT_PROCFS
         /*
-         * No permissions and no pacemakerd parent to escalate to
-         * Track down the new pacakerd process and send a signal instead
+         * No permissions, and no pacemakerd parent to escalate to.
+         * Track down the new pacemakerd process and send a signal instead.
          */
         union sigval signal_value;
 
@@ -123,6 +128,8 @@ pcmk_panic_local(void)
         if(ppid > 1 && sigqueue(ppid, SIGQUIT, signal_value) < 0) {
             crm_perror(LOG_EMERG, "Cannot signal pacemakerd(%d) to panic", ppid);
         }
+#endif // SUPPORT_PROCFS
+
         /* The best we can do now is die */
         crm_exit(CRM_EX_PANIC);
         return;
@@ -226,10 +233,12 @@ pcmk_locate_sbd(void)
     if(sbd_pid > 0) {
         crm_trace("SBD detected at pid=%d (file)", sbd_pid);
 
+#if SUPPORT_PROCFS
     } else {
         /* Fall back to /proc for systems that support it */
         sbd_pid = crm_procfs_pid_of("sbd");
         crm_trace("SBD detected at pid=%d (proc)", sbd_pid);
+#endif // SUPPORT_PROCFS
     }
 
     if(sbd_pid < 0) {
