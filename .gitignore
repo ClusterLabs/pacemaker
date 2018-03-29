@@ -68,6 +68,7 @@ cts/cts-stonithd
 cts/fence_dummy
 cts/lxc_autogen.sh
 extra/logrotate/pacemaker
+/fencing/fence_legacy
 include/config.h
 include/config.h.in
 include/crm_config.h
