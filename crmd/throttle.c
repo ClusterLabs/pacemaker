@@ -46,6 +46,7 @@ static float throttle_load_target = 0.0;
 static GHashTable *throttle_records = NULL;
 static mainloop_timer_t *throttle_timer = NULL;
 
+#if SUPPORT_PROCFS
 /*!
  * \internal
  * \brief Return name of /proc file containing the CIB deamon's load statistics
@@ -277,6 +278,7 @@ throttle_handle_load(float load, const char *desc, int cores)
 
     return throttle_check_thresholds(load, desc, thresholds);
 }
+#endif
 
 static enum throttle_state_e
 throttle_mode(void)
