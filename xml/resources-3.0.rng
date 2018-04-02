@@ -137,6 +137,9 @@
             <optional>
               <attribute name="host-netmask"><data type="integer"/></attribute>
             </optional>
+            <optional>
+              <attribute name="add-host"><data type="boolean"/></attribute>
+            </optional>
             <zeroOrMore>
               <element name="port-mapping">
                 <attribute name="id"><data type="ID"/></attribute>
