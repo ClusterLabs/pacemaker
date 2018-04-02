@@ -23,8 +23,8 @@ $extra_args = '-E';
 
 sub usage
 {
-    print "Helper that presents a RHCS-style interface for Linux-HA stonith plugins\n\n";
-    print "Should never need to use invoked by the user directly\n\n";
+    print "Helper that presents a Pacemaker-style interface for Linux-HA stonith plugins\n\n";
+    print "Should never be invoked by the user directly\n\n";
     print "\n";
     print "Usage: $pname [options]\n";
     print "\n";
@@ -43,12 +43,11 @@ sub usage
 sub print_metadata
 {
 print '<?xml version="1.0" ?>
-<resource-agent name="fence_pcmk" shortdesc="Helper that presents a RHCS-style interface for Linux-HA stonith plugins" >
+<resource-agent name="fence_pcmk" shortdesc="Helper that presents a Pacemaker-style interface for Linux-HA stonith plugins" >
 <longdesc>
-Should never need to use invoked by the user directly and should only
-be configured in cluster.conf, not directly in Pacemaker.
+This agent should never be invoked by the user directly.
 </longdesc>
-<vendor-url>http://www.clusterlabs.org</vendor-url>
+<vendor-url>https://www.clusterlabs.org/</vendor-url>
 <parameters>
         <parameter name="action" unique="1" required="1">
                 <getopt mixed="-o &lt;action&gt;" />
@@ -219,12 +218,12 @@ if ( $pid=fork() == 0 )
    }
    elsif ( $opt_o eq "monitor" || $opt_o eq "stat" || $opt_o eq "status" ) 
    {
-       print "Performing: $opt_s -t $opt_t -S\n" unless defined $opt_q;
+       print "Performing: $opt_s -t $opt_t $extra_args -S\n" unless defined $opt_q;
        exec "$opt_s -t $opt_t $extra_args -S" or die "failed to exec \"$opt_s\"\n";
    }
    else
    {
-       print "Performing: $opt_s -t $opt_t -T $opt_o $opt_n\n" unless defined $opt_q;
+       print "Performing: $opt_s -t $opt_t $extra_args -T $opt_o $opt_n\n" unless defined $opt_q;
        fail "failed: no plug number" unless defined $opt_n;
        exec "$opt_s -t $opt_t $extra_args -T $opt_o $opt_n" or die "failed to exec \"$opt_s\"\n";
    }
