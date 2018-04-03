@@ -116,6 +116,17 @@ cc_supports_flag() {
     return $RC
 }
 
+# Some tests need to use their own CFLAGS
+
+cc_temp_flags() {
+    ac_save_CFLAGS="$CFLAGS"
+    CFLAGS="$*"
+}
+
+cc_restore_flags() {
+    CFLAGS=$ac_save_CFLAGS
+}
+
 dnl ===============================================
 dnl Configure Options
 dnl ===============================================
@@ -233,6 +244,12 @@ AC_ARG_WITH(bundledir,
 dnl ===============================================
 dnl General Processing
 dnl ===============================================
+
+if cc_supports_flag -Werror; then
+    WERROR="-Werror"
+else
+    WERROR=""
+fi
 
 INIT_EXT=""
 echo Our Host OS: $host_os/$host
@@ -397,8 +414,7 @@ esac
 
 AC_MSG_CHECKING(which format is needed to print uint64_t)
 
-ac_save_CFLAGS=$CFLAGS
-CFLAGS="-Wall -Werror"
+cc_temp_flags "-Wall $WERROR"
 
 AC_COMPILE_IFELSE(
     [AC_LANG_PROGRAM(
@@ -419,7 +435,7 @@ fprintf(stderr, "Result: %s\n", buffer);
     [U64T="%lu"],
     [U64T="%llu"]
 )
-CFLAGS=$ac_save_CFLAGS
+cc_restore_flags
 
 AC_MSG_RESULT($U64T)
 AC_DEFINE_UNQUOTED(U64T, "$U64T", Correct printf format for logging uint64_t)
@@ -801,11 +817,10 @@ if test "x$CURSESLIBS" != "x"; then
 fi
 
 dnl Check for printw() prototype compatibility
-if test X"$CURSESLIBS" != X"" && cc_supports_flag -Wcast-qual && cc_supports_flag -Werror; then
+if test X"$CURSESLIBS" != X"" && cc_supports_flag -Wcast-qual; then
     ac_save_LIBS=$LIBS
     LIBS="$CURSESLIBS"
-    ac_save_CFLAGS=$CFLAGS
-    CFLAGS="-Wcast-qual -Werror"
+    cc_temp_flags "-Wcast-qual $WERROR"
     # avoid broken test because of hardened build environment in Fedora 23+
     # - https://fedoraproject.org/wiki/Changes/Harden_All_Packages
     # - https://bugzilla.redhat.com/1297985
@@ -831,7 +846,7 @@ if test X"$CURSESLIBS" != X"" && cc_supports_flag -Wcast-qual && cc_supports_fla
     )
 
     LIBS=$ac_save_LIBS
-    CFLAGS=$ac_save_CFLAGS
+    cc_restore_flags
 
     AC_MSG_RESULT([$ac_cv_compatible_printw])
 
@@ -1378,8 +1393,7 @@ dnl if we don't have push/pull but -Wformat-nonliteral we can enable -Wformat=2
 dnl otherwise none of both
 
     gcc_diagnostic_push_pull=no
-    SAVED_CFLAGS="$CFLAGS"
-    CFLAGS="$CFLAGS -Werror"
+    cc_temp_flags "$CFLAGS $WERROR"
     AC_MSG_CHECKING([for gcc diagnostic push / pull])
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #pragma GCC diagnostic push
@@ -1389,7 +1403,7 @@ dnl otherwise none of both
                           AC_MSG_RESULT([yes])
                           gcc_diagnostic_push_pull=yes
                       ], AC_MSG_RESULT([no]))
-    CFLAGS="$SAVED_CFLAGS"
+    cc_restore_flags
 
     if cc_supports_flag "-Wformat-nonliteral"; then
         gcc_format_nonliteral=yes
@@ -1454,7 +1468,7 @@ dnl System specific options
             ;;
     esac
 
-    if test "x${enable_fatal_warnings}" != xno && cc_supports_flag -Werror ; then
+    if test "x${enable_fatal_warnings}" != xno && test "x${WERROR}" != "x" ; then
         enable_fatal_warnings=yes
     else
         enable_fatal_warnings=no
@@ -1599,7 +1613,7 @@ dnl
 dnl
 if test "x${enable_fatal_warnings}" = xyes ; then
     AC_MSG_NOTICE(Enabling Fatal Warnings)
-    CFLAGS="$CFLAGS -Werror"
+    CFLAGS="$CFLAGS $WERROR"
 fi
 AC_SUBST(CFLAGS)
 
