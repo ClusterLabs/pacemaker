@@ -643,7 +643,6 @@ dnl ========================================================================
 dnl Headers
 dnl ========================================================================
 
-AC_HEADER_STDC
 AC_CHECK_HEADERS(arpa/inet.h)
 AC_CHECK_HEADERS(ctype.h)
 AC_CHECK_HEADERS(dirent.h)
