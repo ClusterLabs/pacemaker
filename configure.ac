@@ -669,6 +669,14 @@ dnl ========================================================================
 dnl Headers
 dnl ========================================================================
 
+dnl Some distributions insert #warnings into deprecated headers such as
+dnl timeb.h. If we will enable fatal warnings for the build, then enable
+dnl them for the header checks as well, otherwise the build could fail
+dnl even though the header check succeeds. (We should probably be doing
+dnl this in more places.)
+if test "x${enable_fatal_warnings}" = xyes ; then
+    cc_temp_flags "$CFLAGS $WERROR"
+fi
 AC_CHECK_HEADERS(arpa/inet.h)
 AC_CHECK_HEADERS(ctype.h)
 AC_CHECK_HEADERS(dirent.h)
@@ -707,6 +715,9 @@ AC_CHECK_HEADERS(sys/utsname.h)
 AC_CHECK_HEADERS(sys/wait.h)
 AC_CHECK_HEADERS(time.h)
 AC_CHECK_HEADERS(unistd.h)
+if test "x${enable_fatal_warnings}" = xyes ; then
+    cc_restore_flags
+fi
 
 dnl These headers need prerequisites before the tests will pass
 dnl AC_CHECK_HEADERS(net/if.h)
