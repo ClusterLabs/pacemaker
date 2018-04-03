@@ -78,6 +78,9 @@ allocate_ip(container_variant_data_t *data, container_grouping_t *tuple, char *b
                     data->prefix, tuple->offset, data->prefix, tuple->offset);
 #else
     if (data->type == PE_CONTAINER_TYPE_DOCKER) {
+        if (data->add_host == FALSE) {
+            return 0;
+        }
         return snprintf(buffer, max, " --add-host=%s-%d:%s",
                         data->prefix, tuple->offset, tuple->ipaddr);
     } else if (data->type == PE_CONTAINER_TYPE_RKT) {
@@ -904,6 +907,12 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         container_data->host_netmask = crm_element_value_copy(xml_obj, "host-netmask");
         container_data->host_network = crm_element_value_copy(xml_obj, "host-interface");
         container_data->control_port = crm_element_value_copy(xml_obj, "control-port");
+        value = crm_element_value(xml_obj, "add-host");
+        if (check_boolean(value) == FALSE) {
+            container_data->add_host = TRUE;
+        } else {
+            crm_str_to_boolean(value, &container_data->add_host);
+        }
 
         for (xmlNode *xml_child = __xml_first_child_element(xml_obj); xml_child != NULL;
              xml_child = __xml_next_element(xml_child)) {
