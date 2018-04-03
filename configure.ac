@@ -251,6 +251,16 @@ else
     WERROR=""
 fi
 
+# Normalize enable_fatal_warnings (defaulting to yes, when compiler supports it)
+if test "x${enable_fatal_warnings}" != "xno" ; then
+    if test "$GCC" = "yes" && test "x${WERROR}" != "x" ; then
+        enable_fatal_warnings=yes
+    else
+        AC_MSG_NOTICE(Compiler does not support fatal warnings)
+        enable_fatal_warnings=no
+    fi
+fi
+
 INIT_EXT=""
 echo Our Host OS: $host_os/$host
 
@@ -1377,7 +1387,6 @@ CC_EXTRAS=""
 
 if test "$GCC" != yes; then
     CFLAGS="$CFLAGS -g"
-    enable_fatal_warnings=no
 else
     CFLAGS="$CFLAGS -ggdb"
 
@@ -1457,22 +1466,6 @@ dnl otherwise none of both
             CC_EXTRAS="$CC_EXTRAS $j"
         fi
     done
-
-dnl System specific options
-
-    case "$host_os" in
-        *linux*|*bsd*)
-            if test "${enable_fatal_warnings}" = "unknown"; then
-                enable_fatal_warnings=yes
-            fi
-            ;;
-    esac
-
-    if test "x${enable_fatal_warnings}" != xno && test "x${WERROR}" != "x" ; then
-        enable_fatal_warnings=yes
-    else
-        enable_fatal_warnings=no
-    fi
 
     if test "x${enable_ansi}" = xyes && cc_supports_flag -std=iso9899:199409 ; then
         AC_MSG_NOTICE(Enabling ANSI Compatibility)
