@@ -499,12 +499,18 @@ collect_notification_data(resource_t * rsc, gboolean state, gboolean activity,
             action_t *op = (action_t *) gIter->data;
 
             if (is_set(op->flags, pe_action_optional) == FALSE && op->node != NULL) {
+                task = text2task(op->task);
+
+                if(task == stop_rsc && op->node->details->unclean) {
+                    /* Create one anyway,, some additional noise if op->node cannot be fenced */
+                } else if(is_not_set(op->flags, pe_action_runnable)) {
+                    continue;
+                }
 
                 entry = calloc(1, sizeof(notify_entry_t));
                 entry->node = op->node;
                 entry->rsc = rsc;
 
-                task = text2task(op->task);
                 switch (task) {
                     case start_rsc:
                         n_data->start = g_list_prepend(n_data->start, entry);
@@ -657,8 +663,7 @@ create_notifications(resource_t * rsc, notify_data_t * n_data, pe_working_set_t 
 
     /* Copy notification details into standard ops */
 
-    gIter = rsc->actions;
-    for (; gIter != NULL; gIter = gIter->next) {
+    for (gIter = rsc->actions; gIter != NULL; gIter = gIter->next) {
         action_t *op = (action_t *) gIter->data;
 
         if (is_set(op->flags, pe_action_optional) == FALSE && op->node != NULL) {
@@ -675,6 +680,35 @@ create_notifications(resource_t * rsc, notify_data_t * n_data, pe_working_set_t 
                     break;
             }
         }
+    }
+
+    switch (task) {
+        case start_rsc:
+            if(g_list_length(n_data->start) == 0) {
+                pe_rsc_trace(rsc, "Skipping empty notification for: %s.%s (%s->%s)",
+                             n_data->action, rsc->id, role2text(rsc->role), role2text(rsc->next_role));
+                return;
+            }
+            break;
+        case action_promote:
+            if(g_list_length(n_data->promote) == 0) {
+                pe_rsc_trace(rsc, "Skipping empty notification for: %s.%s (%s->%s)",
+                             n_data->action, rsc->id, role2text(rsc->role), role2text(rsc->next_role));
+                return;
+            }
+            break;
+        case action_demote:
+            if(g_list_length(n_data->demote) == 0) {
+                pe_rsc_trace(rsc, "Skipping empty notification for: %s.%s (%s->%s)",
+                             n_data->action, rsc->id, role2text(rsc->role), role2text(rsc->next_role));
+                return;
+            }
+            break;
+        default:
+            /* We cannot do the same for stop_rsc/n_data->stop at it
+             * might be implied by fencing
+             */
+            break;
     }
 
     pe_rsc_trace(rsc, "Creating notifications for: %s.%s (%s->%s)",
