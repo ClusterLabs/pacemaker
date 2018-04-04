@@ -1,4 +1,4 @@
-#!/bin/bash
+#!@BASH_PATH@
 
 containers="2"
 download=0
@@ -317,7 +317,7 @@ END
 		# Create container init
 		rm -f lxc$c-filesystem/launch-helper
 		cat << END >> lxc$c-filesystem/launch-helper
-#!/bin/bash
+#!@BASH_PATH@
 ip -f inet addr add $cip/24 dev eth0
 ip link set eth0 up
 ip route add default via $addr.1
