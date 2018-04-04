@@ -80,13 +80,16 @@ mcp/pacemaker.combined.upstart
 mcp/pacemaker.service
 mcp/pacemaker.upstart
 publican.cfg
-tools/cibsecret
-tools/crm_error
-tools/crm_mon.service
-tools/crm_mon.upstart
-tools/crm_report
-tools/report.collector
-tools/report.common
+/tools/cibsecret
+/tools/crm_error
+/tools/crm_failcount
+/tools/crm_master
+/tools/crm_mon.service
+/tools/crm_mon.upstart
+/tools/crm_report
+/tools/crm_standby
+/tools/report.collector
+/tools/report.common
 
 # Build targets
 *.7

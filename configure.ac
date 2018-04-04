@@ -1671,7 +1671,10 @@ AC_CONFIG_FILES([cts/lxc_autogen.sh], [chmod +x cts/lxc_autogen.sh])
 AC_CONFIG_FILES([cts/benchmark/clubench], [chmod +x cts/benchmark/clubench])
 AC_CONFIG_FILES([cts/fence_dummy], [chmod +x cts/fence_dummy])
 AC_CONFIG_FILES([fencing/fence_legacy], [chmod +x fencing/fence_legacy])
+AC_CONFIG_FILES([tools/crm_failcount], [chmod +x tools/crm_failcount])
+AC_CONFIG_FILES([tools/crm_master], [chmod +x tools/crm_master])
 AC_CONFIG_FILES([tools/crm_report], [chmod +x tools/crm_report])
+AC_CONFIG_FILES([tools/crm_standby], [chmod +x tools/crm_standby])
 AC_CONFIG_FILES([tools/cibsecret], [chmod +x tools/cibsecret])
 
 dnl Other files we output

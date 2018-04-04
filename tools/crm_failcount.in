@@ -1,4 +1,4 @@
-#!/bin/bash
+#!@BASH_PATH@
 
 USAGE_TEXT="Usage: crm_failcount <command> [<options>]
 Common options:
