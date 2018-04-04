@@ -3098,10 +3098,10 @@ write_xml_stream(xmlNode * xml_node, const char *filename, FILE * stream, gboole
                 crm_warn("Not compressing %s: could not write compressed data: %s "
                          CRM_XS " bzerror=%d errno=%d",
                          filename, bz2_strerror(rc), rc, errno);
-                out = -1; // retry without compression
+                out = 0; // retry without compression
             } else {
                 res = (int) out;
-                crm_trace("Compressed XML for %s from %d bytes to %d",
+                crm_trace("Compressed XML for %s from %u bytes to %u",
                           filename, in, out);
             }
         }
@@ -3110,7 +3110,7 @@ write_xml_stream(xmlNode * xml_node, const char *filename, FILE * stream, gboole
 #endif
     }
 
-    if (out <= 0) {
+    if (out == 0) {
         res = fprintf(stream, "%s", buffer);
         if (res < 0) {
             res = -errno;
