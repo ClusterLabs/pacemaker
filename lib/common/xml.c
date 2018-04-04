@@ -2815,17 +2815,10 @@ stdin2xml(void)
     xmlNode *xml_obj = NULL;
 
     do {
-        size_t next = XML_BUFFER_SIZE + data_length + 1;
-
-        if(next <= 0) {
-            crm_err("Buffer size exceeded at: %zu + %d", data_length, XML_BUFFER_SIZE);
-            break;
-        }
-
-        xml_buffer = realloc_safe(xml_buffer, next);
+        xml_buffer = realloc_safe(xml_buffer, data_length + XML_BUFFER_SIZE);
         read_chars = fread(xml_buffer + data_length, 1, XML_BUFFER_SIZE, stdin);
         data_length += read_chars;
-    } while (read_chars > 0);
+    } while (read_chars == XML_BUFFER_SIZE);
 
     if (data_length == 0) {
         crm_warn("No XML supplied on stdin");
@@ -2834,7 +2827,6 @@ stdin2xml(void)
     }
 
     xml_buffer[data_length] = '\0';
-
     xml_obj = string2xml(xml_buffer);
     free(xml_buffer);
 
