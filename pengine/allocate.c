@@ -1,19 +1,8 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -1706,11 +1695,12 @@ rsc_order_then(action_t * lh_action, resource_t * rsc, order_constraint_t * orde
     GListPtr gIter = NULL;
     GListPtr rh_actions = NULL;
     action_t *rh_action = NULL;
-    enum pe_ordering type = order->type;
+    enum pe_ordering type;
 
     CRM_CHECK(rsc != NULL, return);
     CRM_CHECK(order != NULL, return);
 
+    type = order->type;
     rh_action = order->rh_action;
     crm_trace("Processing RH of ordering constraint %d", order->id);
 
