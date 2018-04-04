@@ -118,7 +118,9 @@ crm_remote_header(crm_remote_t * remote)
 
         CRM_LOG_ASSERT(endian == ENDIAN_LOCAL);
         if(endian != ENDIAN_LOCAL) {
-            crm_err("Invalid message detected, endian mismatch: %lx is neither %lx nor the swab'd %lx",
+            /* XXX preprocessor conditionalizing based on, e.g., sizeof and/or
+                   inttypes.h/stdint.h to get character string literals fit */
+            crm_err("Invalid message detected, endian mismatch: %x is neither %x nor the swab'd %x",
                     ENDIAN_LOCAL, header->endian, endian);
             return NULL;
         }

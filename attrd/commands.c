@@ -491,7 +491,7 @@ attrd_client_query(crm_client_t *client, uint32_t id, uint32_t flags, xmlNode *q
     /* Send the reply to the client */
     client->request_id = 0;
     if ((rc = crm_ipcs_send(client, id, reply, flags)) < 0) {
-        crm_err("Could not respond to query from %s: %s (%d)",
+        crm_err("Could not respond to query from %s: %s (%zd)",
                 origin, pcmk_strerror(-rc), -rc);
     }
     free_xml(reply);
@@ -1209,7 +1209,7 @@ write_attribute(attribute_t *a)
         if (peer->uuid == NULL) {
             a->unknown_peer_uuids = TRUE;
             crm_notice("Update %s[%s]=%s postponed: unknown peer UUID, will retry if UUID is learned",
-                       a->id, v->nodename, v->current, peer);
+                       a->id, v->nodename, v->current);
             continue;
         }
 

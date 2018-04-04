@@ -487,7 +487,7 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
         cmd->start_delay =
             ((delay_max != delay_base)?(rand() % (delay_max - delay_base)):0)
             + delay_base;
-        crm_notice("Delaying %s on %s for %lldms (timeout=%ds, base=%dms, "
+        crm_notice("Delaying %s on %s for %dms (timeout=%ds, base=%dms, "
                    "max=%dms)",
                     cmd->action, device->id, cmd->start_delay, cmd->timeout,
                     delay_base, delay_max);
