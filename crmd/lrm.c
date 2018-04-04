@@ -2141,7 +2141,8 @@ stop_recurring_actions(gpointer key, gpointer value, gpointer user_data)
     struct recurring_op_s *op = (struct recurring_op_s *)value;
 
     if (op->interval_ms != 0) {
-        crm_info("Cancelling op %d for %s (%s)", op->call_id, op->rsc_id, key);
+        crm_info("Cancelling op %d for %s (%s)", op->call_id, op->rsc_id,
+                 (const char *) key);
         remove = !cancel_op(lrm_state, op->rsc_id, key, op->call_id, FALSE);
     }
 

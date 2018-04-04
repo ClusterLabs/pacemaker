@@ -1001,7 +1001,8 @@ subtract_lists(GList *from, GList *items)
     for (item = items; item != NULL; item = item->next) {
         GList *candidate = NULL;
         for (candidate = from; candidate != NULL; candidate = candidate->next) {
-            crm_info("Comparing %s with %s", candidate->data, item->data);
+            crm_info("Comparing %s with %s", (const char *) candidate->data,
+                     (const char *) item->data);
             if(strcmp(candidate->data, item->data) == 0) {
                 result = g_list_remove(result, candidate->data);
                 break;
@@ -1590,7 +1591,7 @@ wait_till_stable(int timeout_ms, cib_t * cib)
         /* Abort if timeout is reached */
         time_diff = expire_time - time(NULL);
         if (time_diff > 0) {
-            crm_info("Waiting up to %d seconds for cluster actions to complete", time_diff);
+            crm_info("Waiting up to %ld seconds for cluster actions to complete", time_diff);
         } else {
             print_pending_actions(data_set.actions);
             cleanup_alloc_calculations(&data_set);

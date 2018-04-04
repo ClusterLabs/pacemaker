@@ -151,7 +151,7 @@ cib_notify_send(xmlNode * xml)
         g_hash_table_foreach_remove(client_connections, cib_notify_send_one, &update);
 
     } else {
-        crm_notice("Notification failed: %s (%d)", pcmk_strerror(rc), rc);
+        crm_notice("Notification failed: %s (%zd)", pcmk_strerror(rc), rc);
     }
 
     if (iov) {
