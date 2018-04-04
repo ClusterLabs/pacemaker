@@ -1913,38 +1913,67 @@ __first_xml_child_match(xmlNode *parent, const char *name, const char *id, int p
     return NULL;
 }
 
+/*!
+ * \internal
+ * \brief Simplified, more efficient alternative to get_xpath_object()
+ *
+ * \param[in] top              Root of XML to search
+ * \param[in] key              Search xpath
+ * \param[in] target_position  If deleting, where to delete
+ *
+ * \return XML child matching xpath if found, NULL otherwise
+ *
+ * \note This only works on simplified xpaths found in v2 patchset diffs,
+ *       i.e. the only allowed search predicate is [@id='XXX'].
+ */
 static xmlNode *
 __xml_find_path(xmlNode *top, const char *key, int target_position)
 {
-    xmlNode *target = (xmlNode*)top->doc;
-    char *id = malloc(XML_BUFFER_SIZE);
-    char *tag = malloc(XML_BUFFER_SIZE);
-    char *section = malloc(XML_BUFFER_SIZE);
-    char *current = strdup(key);
-    char *remainder = malloc(XML_BUFFER_SIZE);
-    int rc = 0;
+    xmlNode *target = (xmlNode*) top->doc;
+    const char *current = key;
+    char *section;
+    char *remainder;
+    char *id;
+    char *tag;
+    char *path = NULL;
+    int rc;
+    size_t key_len;
 
-    while(current) {
-        rc = sscanf (current, "/%[^/]%s", section, remainder);
-        if(rc <= 0) {
-            crm_trace("Done");
-            break;
+    CRM_CHECK(key != NULL, return NULL);
+    key_len = strlen(key);
 
-        } else if(rc > 2) {
-            crm_trace("Aborting on %s", current);
-            target = NULL;
-            break;
+    /* These are scanned from key after a slash, so they can't be bigger
+     * than key_len - 1 characters plus a null terminator.
+     */
 
-        } else if(tag && section) {
-            int f = sscanf (section, "%[^[][@id='%[^']", tag, id);
+    remainder = calloc(key_len, sizeof(char));
+    CRM_ASSERT(remainder != NULL);
+
+    section = calloc(key_len, sizeof(char));
+    CRM_ASSERT(section != NULL);
+
+    id = calloc(key_len, sizeof(char));
+    CRM_ASSERT(id != NULL);
+
+    tag = calloc(key_len, sizeof(char));
+    CRM_ASSERT(tag != NULL);
+
+    do {
+        // Look for /NEXT_COMPONENT/REMAINING_COMPONENTS
+        rc = sscanf(current, "/%[^/]%s", section, remainder);
+        if (rc > 0) {
+            // Separate FIRST_COMPONENT into TAG[@id='ID']
+            int f = sscanf(section, "%[^[][@id='%[^']", tag, id);
             int current_position = -1;
 
-            /* The "target_position" is for the target tag */
-            if (rc == 1 && target_position >= 0) {
+            /* The target position is for the final component tag, so only use
+             * it if there is nothing left to search after this component.
+             */
+            if ((rc == 1) && (target_position >= 0)) {
                 current_position = target_position;
             }
 
-            switch(f) {
+            switch (f) {
                 case 1:
                     target = __first_xml_child_match(target, tag, NULL, current_position);
                     break;
@@ -1952,34 +1981,25 @@ __xml_find_path(xmlNode *top, const char *key, int target_position)
                     target = __first_xml_child_match(target, tag, id, current_position);
                     break;
                 default:
-                    crm_trace("Aborting on %s", section);
+                    // This should not be possible
                     target = NULL;
                     break;
             }
-
-            if(rc == 1 || target == NULL) {
-                crm_trace("Done");
-                break;
-
-            } else {
-                char *tmp = current;
-                current = remainder;
-                remainder = tmp;
-            }
+            current = remainder;
         }
-    }
 
-    if(target) {
-        char *path = (char *)xmlGetNodePath(target);
+    // Continue if something remains to search, and we've matched so far
+    } while ((rc == 2) && target);
 
-        crm_trace("Found %s for %s", path, key);
+    if (target) {
+        crm_trace("Found %s for %s",
+                  (path = (char *) xmlGetNodePath(target)), key);
         free(path);
     } else {
         crm_debug("No match for %s", key);
     }
 
     free(remainder);
-    free(current);
     free(section);
     free(tag);
     free(id);
@@ -2005,11 +2025,7 @@ xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset)
         if(strcmp(op, "delete") == 0) {
             crm_element_value_int(change, XML_DIFF_POSITION, &position);
         }
-#if 0
-        match = get_xpath_object(xpath, xml, LOG_TRACE);
-#else
         match = __xml_find_path(xml, xpath, position);
-#endif
         crm_trace("Performing %s on %s with %p", op, xpath, match);
 
         if(match == NULL && strcmp(op, "delete") == 0) {
