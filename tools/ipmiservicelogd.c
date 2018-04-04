@@ -423,13 +423,13 @@ sensor_discrete_event_handler(ipmi_sensor_t * sensor,
     instance = ipmi_entity_get_entity_instance(ent);
     ipmi_sensor_get_id(sensor, name, sizeof(name));
 
+    ipmi_sensor_get_num(sensor, &sensor_lun, &sensor_number);
+
     sel_id = ipmi_entity_get_entity_id(ent);
     sel_type = ipmi_entity_get_type(ent);
     generator = ipmi_entity_get_slave_address(ent) | (sensor_lun << 5); /* LUN (2 bits) | SLAVE ADDRESS (5 bits) */
     version = 0x04;
     sensor_type = ipmi_sensor_get_sensor_type(sensor);
-
-    ipmi_sensor_get_num(sensor, &sensor_lun, &sensor_number);
 
     event_class = 0;            /* @TBD - where does this come from? */
     event_type = ipmi_event_get_type(event);
