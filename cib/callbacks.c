@@ -60,8 +60,8 @@ qb_ipcs_service_t *ipcs_shm = NULL;
 gint cib_GCompareFunc(gconstpointer a, gconstpointer b);
 gboolean can_write(int flags);
 void send_cib_replace(const xmlNode * sync_request, const char *host);
-void cib_process_request(xmlNode * request, gboolean privileged, gboolean force_synchronous,
-                         gboolean from_peer, crm_client_t * cib_client);
+static void cib_process_request(xmlNode* request, gboolean force_synchronous,
+                                gboolean privileged, crm_client_t *cib_client);
 
 
 int cib_process_command(xmlNode * request, xmlNode ** reply,
@@ -213,7 +213,7 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
         return;
     }
 
-    cib_process_request(op_request, FALSE, privileged, FALSE, cib_client);
+    cib_process_request(op_request, FALSE, privileged, cib_client);
 }
 
 int32_t
@@ -897,9 +897,9 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
     return FALSE;
 }
 
-void
-cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean privileged,
-                    gboolean unused, crm_client_t * cib_client)
+static void
+cib_process_request(xmlNode *request, gboolean force_synchronous,
+                    gboolean privileged, crm_client_t *cib_client)
 {
     int call_type = 0;
     int call_options = 0;
@@ -1409,7 +1409,7 @@ cib_peer_callback(xmlNode * msg, void *private_data)
     }
 
     /* crm_log_xml_trace("Peer[inbound]", msg); */
-    cib_process_request(msg, FALSE, TRUE, TRUE, NULL);
+    cib_process_request(msg, FALSE, TRUE, NULL);
     return;
 
   bail:
