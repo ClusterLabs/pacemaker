@@ -70,8 +70,10 @@ read_local_file(char *local_file)
 
     if (!fgets(buf, MAX_VALUE_LEN, fp)) {
         crm_perror(LOG_ERR, "cannot read %s", local_file);
+        fclose(fp);
         return NULL;
     }
+    fclose(fp);
 
     /* strip white space */
     for (p = buf+strlen(buf)-1; p >= buf && isspace(*p); p--)
