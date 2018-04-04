@@ -1,19 +1,8 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -685,7 +674,7 @@ build_operation_update(xmlNode * parent, lrmd_rsc_info_t * rsc, lrmd_event_data_
         return TRUE;
     }
 
-    if ((rsc == NULL) || (op == NULL) || (op->params == NULL)
+    if ((rsc == NULL) || (op->params == NULL)
         || !crm_op_needs_metadata(rsc->standard, op->op_type)) {
 
         crm_trace("No digests needed for %s action on %s (params=%p rsc=%p)",
@@ -2570,7 +2559,7 @@ process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op, struct recurr
         /* The tengine canceled this op, we have been waiting for the cancel to finish. */
         erase_lrm_history_by_op(lrm_state, op);
 
-    } else if (pending && op->rsc_deleted) {
+    } else if (op->rsc_deleted) {
         /* The tengine initiated this op, but it was cancelled outside of the
          * tengine's control during a resource cleanup/re-probe request. The tengine
          * must be alerted that this operation completed, otherwise the tengine
