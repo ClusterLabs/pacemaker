@@ -491,6 +491,8 @@ AC_PATH_PROGS(SSH, ssh, /usr/bin/ssh)
 AC_PATH_PROGS(SCP, scp, /usr/bin/scp)
 AC_PATH_PROGS(TAR, tar)
 AC_PATH_PROGS(MD5, md5)
+dnl BASH is already an environment variable, so use something else
+AC_PATH_PROG([BASH_PATH], [bash])
 AC_PATH_PROGS(TEST, test)
 PKG_PROG_PKG_CONFIG
 AC_PATH_PROGS(VALGRIND_BIN, valgrind, /usr/bin/valgrind)
@@ -501,6 +503,11 @@ if test x"${LIBTOOL}" = x""; then
 fi
 if test x"${MAKE}" = x""; then
     AC_MSG_ERROR(You need (g)make installed in order to build ${PACKAGE})
+fi
+
+dnl Bash is needed for building man pages and running regression tests
+if test x"${BASH_PATH}" = x""; then
+    AC_MSG_ERROR(bash must be installed in order to build ${PACKAGE})
 fi
 
 AM_CONDITIONAL(BUILD_HELP, test x"${HELP2MAN}" != x"")
