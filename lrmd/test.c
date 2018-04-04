@@ -58,7 +58,6 @@ static void try_connect(void);
 static struct {
     int verbose;
     int quiet;
-    int print;
     guint interval_ms;
     int timeout;
     int start_delay;

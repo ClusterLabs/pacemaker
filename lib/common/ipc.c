@@ -819,7 +819,6 @@ struct crm_ipc_s {
     int need_reply;
     char *buffer;
     char *name;
-    uint32_t buffer_flags;
 
     qb_ipcc_connection_t *ipc;
 
