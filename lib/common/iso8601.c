@@ -784,7 +784,7 @@ parse_int(const char *str, int field_width, int uppper_bound, int *result)
 
     *result = 0;
 
-    if (strlen(str) <= 0) {
+    if (*str == '\0') {
         return FALSE;
     }
 
