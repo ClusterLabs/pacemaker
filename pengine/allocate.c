@@ -1731,7 +1731,7 @@ rsc_order_first(resource_t * lh_rsc, order_constraint_t * order, pe_working_set_
     if (lh_action != NULL) {
         lh_actions = g_list_prepend(NULL, lh_action);
 
-    } else if (lh_action == NULL) {
+    } else {
         lh_actions = find_actions_by_task(lh_rsc->actions, lh_rsc, order->lh_action_task);
     }
 
