@@ -1,7 +1,10 @@
 dnl
 dnl autoconf for Pacemaker
 dnl
-dnl License: GNU General Public License (GPL)
+dnl Copyright 2009-2018 Andrew Beekhof <andrew@beekhof.net>
+dnl
+dnl This source code is licensed under the GNU General Public License version 2
+dnl or later (GPLv2+) WITHOUT ANY WARRANTY.
 
 dnl ===============================================
 dnl Bootstrap
