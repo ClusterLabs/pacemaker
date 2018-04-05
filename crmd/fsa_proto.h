@@ -138,14 +138,6 @@ do_election_check(long long action,
                   enum crmd_fsa_state cur_state,
                   enum crmd_fsa_input cur_input, fsa_data_t * msg_data);
 
-/*	A_ELECT_TIMER_START, A_ELECTION_TIMEOUT	*/
-void
-
-do_election_timer_ctrl(long long action,
-                       enum crmd_fsa_cause cause,
-                       enum crmd_fsa_state cur_state,
-                       enum crmd_fsa_input cur_input, fsa_data_t * msg_data);
-
 /*	A_DC_TIMER_STOP	*/
 void
 

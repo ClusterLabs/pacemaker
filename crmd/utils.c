@@ -50,9 +50,6 @@ do_timer_control(long long action,
 
     } else if (action & A_INTEGRATE_TIMER_STOP) {
         timer_op_ok = crm_timer_stop(integration_timer);
-
-/* 	} else if(action & A_ELECTION_TIMEOUT_STOP) { */
-/* 		timer_op_ok = crm_timer_stop(election_timeout); */
     }
 
     /* don't start a timer that wasn't already running */
@@ -68,9 +65,6 @@ do_timer_control(long long action,
 
     } else if (action & A_INTEGRATE_TIMER_START) {
         crm_timer_start(integration_timer);
-
-/* 	} else if(action & A_ELECTION_TIMEOUT_START) { */
-/* 		crm_timer_start(election_timeout); */
     }
 }
 
