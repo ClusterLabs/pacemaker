@@ -1,19 +1,8 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -58,7 +47,8 @@ cib_rename(const char *old)
 
     crm_err("Archiving unusable file %s as %s", old, new);
     umask(S_IWGRP | S_IWOTH | S_IROTH);
-    if ((new_fd = mkstemp(new) < 0) || (rename(old, new) < 0)) {
+    new_fd = mkstemp(new);
+    if ((new_fd < 0) || (rename(old, new) < 0)) {
         crm_perror(LOG_ERR, "Couldn't rename %s as %s", old, new);
         crm_err("Disabling disk writes and continuing");
         cib_writes_enabled = FALSE;
