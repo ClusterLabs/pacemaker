@@ -1,3 +1,10 @@
+/*
+ * Copyright 2009-2018 Andrew Beekhof <andrew@beekhof.net>
+ *
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
+ */
+
 #include <crm/common/mainloop.h>
 
 /*!
@@ -218,8 +225,6 @@ void free_topology_entry(gpointer data);
 bool fencing_peer_active(crm_node_t *peer);
 
 int stonith_manual_ack(xmlNode * msg, remote_fencing_op_t * op);
-
-void unfence_cb(GPid pid, int rc, const char *output, gpointer user_data);
 
 gboolean string_in_list(GListPtr list, const char *item);
 

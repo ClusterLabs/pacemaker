@@ -2042,27 +2042,6 @@ stonith_send_async_reply(async_command_t * cmd, const char *output, int rc, GPid
     free_xml(reply);
 }
 
-void
-unfence_cb(GPid pid, int rc, const char *output, gpointer user_data)
-{
-    async_command_t * cmd = user_data;
-    stonith_device_t *dev = g_hash_table_lookup(device_list, cmd->device);
-
-    log_operation(cmd, rc, pid, NULL, output);
-
-    cmd->active_on = NULL;
-
-    if(dev) {
-        mainloop_set_trigger(dev->work);
-    } else {
-        crm_trace("Device %s does not exist", cmd->device);
-    }
-
-    if(rc != 0) {
-        crm_exit(CRM_EX_FATAL);
-    }
-}
-
 static void
 cancel_stonith_command(async_command_t * cmd)
 {
