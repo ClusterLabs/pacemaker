@@ -2287,8 +2287,8 @@ void pe_action_set_flag_reason(const char *function, long line,
     } else if(is_set(flags, pe_action_requires_any)) {
         change = "required";
     } else {
-        crm_err("Unknown flag change to %s by %s: 0x%.16x",
-                flags, action->uuid, (reason? reason->uuid : 0));
+        crm_err("Unknown flag change to %x by %s: 0x%s",
+                flags, action->uuid, (reason? reason->uuid : "0"));
     }
 
     if(unset) {

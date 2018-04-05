@@ -1,4 +1,4 @@
-<cib crm_feature_set="3.0.9" validate-with="pacemaker-2.3" epoch="7" num_updates="9" admin_epoch="0" cib-last-written="Fri Mar  6 15:33:55 2015" have-quorum="1" dc-uuid="1">
+<cib crm_feature_set="3.0.9" validate-with="pacemaker-3.0" epoch="7" num_updates="9" admin_epoch="0" cib-last-written="Fri Mar  6 15:33:55 2015" have-quorum="1" dc-uuid="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -15,14 +15,12 @@
     </nodes>
     <resources>
       <primitive class="stonith" id="shooter" type="fence_xvm">
-        <instance_attributes id="shooter-instance_attributes"/>
         <operations>
           <op id="shooter-monitor-interval-60s" interval="60s" name="monitor"/>
         </operations>
       </primitive>
       <clone id="fake-master">
         <primitive class="ocf" id="fake" provider="pacemaker" type="Stateful">
-          <instance_attributes id="fake-instance_attributes"/>
           <operations>
             <op id="fake-start-timeout-20" interval="0s" name="start" timeout="20"/>
             <op id="fake-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -31,7 +29,7 @@
           </operations>
         </primitive>
         <meta_attributes id="fake-master-meta_attributes">
-          <nvpair id="fake-master-meta_attributes-promotable"  name="promotable" value="true"/>
+          <nvpair id="fake-master-meta_attributes-promotable" name="promotable" value="true"/>
           <nvpair id="fake-master-meta_attributes-notify" name="notify" value="true"/>
         </meta_attributes>
       </clone>

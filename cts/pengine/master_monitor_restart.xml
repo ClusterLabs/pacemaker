@@ -1,4 +1,4 @@
-<cib epoch="89" num_updates="8" admin_epoch="0" validate-with="pacemaker-1.2" crm_feature_set="3.0.6" update-origin="node2" update-client="crm_attribute" cib-last-written="Fri Jul 13 13:51:08 2012" have-quorum="1" dc-uuid="1031448768">
+<cib epoch="89" num_updates="8" admin_epoch="0" validate-with="pacemaker-3.0" crm_feature_set="3.0.6" update-origin="node2" update-client="crm_attribute" cib-last-written="Fri Jul 13 13:51:08 2012" have-quorum="1" dc-uuid="1031448768">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -24,7 +24,7 @@
     <resources>
       <clone id="MS_RSC">
         <meta_attributes id="MS_RSC-meta_attributes">
-          <nvpair id="MS_RSC-meta_attributes-promotable"  name="promotable" value="true"/>
+          <nvpair id="MS_RSC-meta_attributes-promotable" name="promotable" value="true"/>
           <nvpair id="MS_RSC-meta_attributes-promoted-max" name="promoted-max" value="1"/>
           <nvpair id="MS_RSC-meta_attributes-promoted-node-max" name="promoted-node-max" value="1"/>
           <nvpair id="MS_RSC-meta_attributes-clone-max" name="clone-max" value="2"/>

@@ -1,10 +1,9 @@
-<cib epoch="1503" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" crm_feature_set="3.0.9" update-origin="xfc0" update-client="crm_attribute" cib-last-written="Tue Dec 16 14:35:07 2014" have-quorum="1" dc-uuid="16843011">
+<cib epoch="1503" num_updates="1" admin_epoch="0" validate-with="pacemaker-3.0" crm_feature_set="3.0.9" update-origin="xfc0" update-client="crm_attribute" cib-last-written="Tue Dec 16 14:35:07 2014" have-quorum="1" dc-uuid="16843011">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair name="dc-version" value="1.1.12-561c4cf" id="cib-bootstrap-options-dc-version"/>
         <nvpair name="cluster-infrastructure" value="corosync" id="cib-bootstrap-options-cluster-infrastructure"/>
-        <nvpair name="expected-quorum-votes" value="4" id="cib-bootstrap-options-expected-quorum-votes"/>
         <nvpair name="stonith-enabled" value="false" id="cib-bootstrap-options-stonith-enabled"/>
         <nvpair name="placement-strategy" value="balanced" id="cib-bootstrap-options-placement-strategy"/>
         <nvpair name="last-lrm-refresh" value="1418736429" id="cib-bootstrap-options-last-lrm-refresh"/>

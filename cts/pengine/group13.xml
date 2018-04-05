@@ -1,4 +1,4 @@
-<cib admin_epoch="0" epoch="4" num_updates="637" dc-uuid="cd13842c-3f58-4e7d-8126-685259527532" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:04 2012">
+<cib admin_epoch="0" epoch="4" num_updates="637" dc-uuid="cd13842c-3f58-4e7d-8126-685259527532" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-3.0" cib-last-written="Fri Jul 13 13:51:04 2012">
   <configuration>
     <crm_config>
       <cluster_property_set id="no-stonith">
@@ -11,7 +11,6 @@
     <resources>
       <group id="nfs">
         <primitive id="resource_nfs" class="lsb" type="nfs">
-          <instance_attributes id="instance_attributes.id21871"/>
           <meta_attributes id="primitive-resource_nfs.meta"/>
         </primitive>
         <meta_attributes id="group-nfs.meta"/>

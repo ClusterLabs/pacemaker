@@ -1,4 +1,4 @@
-<cib epoch="94" num_updates="9" admin_epoch="0" validate-with="pacemaker-1.2" cib-last-written="Tue Jul 30 14:22:13 2013" crm_feature_set="3.0.7" update-origin="c7" update-client="crm_resource" have-quorum="1" dc-uuid="168822235">
+<cib epoch="94" num_updates="9" admin_epoch="0" validate-with="pacemaker-3.0" cib-last-written="Tue Jul 30 14:22:13 2013" crm_feature_set="3.0.7" update-origin="c7" update-client="crm_resource" have-quorum="1" dc-uuid="168822235">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">

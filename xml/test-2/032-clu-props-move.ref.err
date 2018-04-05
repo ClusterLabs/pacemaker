@@ -1,0 +1,3 @@
+Cluster properties: cluster-opts-default-action-timeout: moving default-action-timeout under op_defaults as timeout unless already defined there
+Cluster properties: cluster-opts-default-resource-stickiness: moving default-resource-stickiness under rsc_defaults as resource-stickiness unless already defined there
+Cluster properties: cluster-opts-is-managed-default: moving is-managed-default under rsc_defaults as is-managed unless already defined there

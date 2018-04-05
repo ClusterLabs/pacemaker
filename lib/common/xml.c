@@ -2085,7 +2085,7 @@ xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset)
             }
 
             if(position != __xml_offset(match)) {
-                crm_err("Moved %s.%d to position %d instead of %d (%p)",
+                crm_err("Moved %s.%s to position %d instead of %d (%p)",
                         match->name, ID(match), __xml_offset(match), position, match->prev);
                 rc = -pcmk_err_diff_failed;
             }
@@ -2802,7 +2802,7 @@ stdin2xml(void)
         size_t next = XML_BUFFER_SIZE + data_length + 1;
 
         if(next <= 0) {
-            crm_err("Buffer size exceeded at: %l + %d", data_length, XML_BUFFER_SIZE);
+            crm_err("Buffer size exceeded at: %zu + %d", data_length, XML_BUFFER_SIZE);
             break;
         }
 

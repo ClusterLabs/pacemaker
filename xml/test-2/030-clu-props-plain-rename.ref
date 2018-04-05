@@ -1,0 +1,25 @@
+<cib validate-with="pacemaker-3.0" admin_epoch="0" epoch="0" num_updates="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cluster-opts">
+        <nvpair id="cluster-opts-cluster_recheck_interval" name="cluster-recheck-interval" value="10min"/>
+        <nvpair id="cluster-opts-dc_deadtime" name="dc-deadtime" value="15s"/>
+        <nvpair id="cluster-opts-election_timeout" name="election-timeout" value="90s"/>
+        <nvpair id="cluster-opts-no_quorum_policy" name="no-quorum-policy" value="freeze"/>
+        <nvpair id="cluster-opts-remove_after_stop" name="remove-after-stop" value="false"/>
+        <nvpair id="cluster-opts-shutdown_escalation" name="shutdown-escalation" value="15min"/>
+        <nvpair id="cluster-opts-startup_fencing" name="startup-fencing" value="true"/>
+        <nvpair id="cluster-opts-stonith_action" name="stonith-action" value="off"/>
+        <nvpair id="cluster-opts-stonith_enabled" name="stonith-enabled" value="off"/>
+        <nvpair id="cluster-opts-stop_orphan_actions" name="stop-orphan-actions" value="true"/>
+        <nvpair id="cluster-opts-stop_orphan_resources" name="stop-orphan-resources" value="true"/>
+        <nvpair id="cluster-opts-symmetric_cluster" name="symmetric-cluster" value="true"/>
+        <nvpair id="cluster-opts-transition_idle_timeout" name="cluster-delay" value="50s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>

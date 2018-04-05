@@ -1,4 +1,4 @@
-<cib admin_epoch="0" epoch="16" num_updates="6210" dc-uuid="bfbe2e3b-51c2-4419-b99e-eb85f9dd0426" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:05 2012">
+<cib admin_epoch="0" epoch="16" num_updates="6210" dc-uuid="bfbe2e3b-51c2-4419-b99e-eb85f9dd0426" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-3.0" cib-last-written="Fri Jul 13 13:51:05 2012">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">

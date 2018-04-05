@@ -1,4 +1,4 @@
-<cib crm_feature_set="3.0.7" validate-with="pacemaker-1.2" epoch="79" num_updates="0" admin_epoch="0" cib-last-written="Mon Dec 12 20:28:26 2016" update-origin="node1" update-client="cibadmin" update-user="root" have-quorum="1" dc-uuid="1" execution-date="1481574506">
+<cib crm_feature_set="3.0.7" validate-with="pacemaker-3.0" epoch="79" num_updates="0" admin_epoch="0" cib-last-written="Mon Dec 12 20:28:26 2016" update-origin="node1" update-client="cibadmin" update-user="root" have-quorum="1" dc-uuid="1" execution-date="1481574506">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -10,8 +10,8 @@
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="1" uname="node1" />
-      <node id="2" uname="node2" />
+      <node id="1" uname="node1"/>
+      <node id="2" uname="node2"/>
     </nodes>
     <resources>
       <primitive id="Fencing" class="stonith" type="fence_xvm">
@@ -27,8 +27,7 @@
       </primitive>
       <clone id="cl-rsc1">
         <primitive id="rsc1" class="ocf" provider="pacemaker" type="Dummy">
-          <meta_attributes id="rsc1-meta" />
-          <instance_attributes id="rsc1-instance" />
+          <meta_attributes id="rsc1-meta"/>
           <operations>
             <op name="monitor" interval="120" timeout="60" id="rsc1-monitor-120"/>
           </operations>

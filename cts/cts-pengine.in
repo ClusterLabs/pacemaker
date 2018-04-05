@@ -27,7 +27,8 @@ Options:
  -i, --io-dir PATH      Specify path to regression test data directory
  -v, --valgrind         Run all commands under valgrind
  --valgrind-dhat        Run all commands under valgrind with heap analyzer
- --valgrind-skip-output If running under valgrind, don't display output"
+ --valgrind-skip-output If running under valgrind, don't display output
+ --testcmd-options      Additional options for command under test"
 
 SBINDIR="@sbindir@"
 BUILDDIR="@abs_top_builddir@"
@@ -37,6 +38,7 @@ test_home=$(dirname $(readlink -e $0))
 io_dir="$test_home/pengine"
 failed="$test_home/.regression.failed.diff"
 test_binary=
+testcmd_options=
 
 single_test=
 verbose=0
@@ -128,6 +130,10 @@ while [ $# -gt 0 ] ; do
             echo "$USAGE_TEXT"
             exit $CRM_EX_OK
             ;;
+        --testcmd-options)
+            testcmd_options=$2
+            shift 2
+            ;;
         *)
             error "unknown option: $1"
             exit $CRM_EX_USAGE
@@ -165,7 +171,7 @@ fi
 
 info " "
 
-test_cmd="$VALGRIND_CMD $test_binary"
+test_cmd="$VALGRIND_CMD $test_binary $testcmd_options"
 #echo $test_cmd
 
 if [ `whoami` != root ]; then
