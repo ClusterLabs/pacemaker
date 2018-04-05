@@ -38,7 +38,7 @@ LONGOPTS_DEPRECATED="uname:,get-value,delete-attr,attr-value:,attr-id:"
 SHORTOPTS="VqGv:DN:l:i:r:"
 LONGOPTS="help,version,verbose,quiet,query,update:,delete,node:,lifetime:,id:,resource:"
 
-TEMP=$(getopt -o ${SHORTOPTS}${SHORTOPTS_DEPRECATED} \
+TEMP=$(@GETOPT_PATH@ -o ${SHORTOPTS}${SHORTOPTS_DEPRECATED} \
 	--long ${LONGOPTS},${LONGOPTS_DEPRECATED} \
 	-n crm_master -- "$@")
 if [ $? -ne 0 ]; then

@@ -190,7 +190,7 @@ LONGOPTS_COMPAT="delete-attr,get-value,resource-id:,uname:,lifetime:,attr-value:
 
 LONGOPTS="$LONGOPTS_COMMON,$LONGOPTS_COMMANDS,$LONGOPTS_OTHER,$LONGOPTS_COMPAT"
 
-TEMP=$(getopt -o $SHORTOPTS --long $LONGOPTS -n crm_failcount -- "$@")
+TEMP=$(@GETOPT_PATH@ -o $SHORTOPTS --long $LONGOPTS -n crm_failcount -- "$@")
 if [ $? -ne 0 ]; then
 	exit_usage
 fi

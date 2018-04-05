@@ -18,7 +18,7 @@
  #
 
 
-TEMP=`getopt				\
+TEMP=`@GETOPT_PATH@			\
     -o hv?xl:f:t:n:T:L:p:c:dSCu:D:MVse:	\
     --long help,cts:,cts-log:,dest:,node:,nodes:,from:,to:,sos-mode,logfile:,as-directory,single-node,cluster:,user:,max-depth:,version,features,rsh:	\
     -n 'crm_report' -- "$@"`
