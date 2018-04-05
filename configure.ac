@@ -586,6 +586,30 @@ AM_CONDITIONAL([BUILD_DOCBOOK],
 AM_CONDITIONAL([PUBLICAN_INTREE_BRAND],
                [test x"${publican_intree_brand}" = x"yes"])
 
+dnl Pacemaker's shell scripts (and thus man page builders) rely on GNU getopt
+AC_MSG_CHECKING([for GNU-compatible getopt])
+IFS_orig=$IFS
+IFS=:
+for PATH_DIR in $PATH; do
+    IFS=$IFS_orig
+    GETOPT_PATH="${PATH_DIR}/getopt"
+    if test -f "$GETOPT_PATH" && test -x "$GETOPT_PATH" ; then
+        $GETOPT_PATH -T >/dev/null 2>/dev/null
+        if test $? -eq 4; then
+            break
+        fi
+    fi
+    GETOPT_PATH=""
+done
+IFS=$IFS_orig
+if test -n "$GETOPT_PATH"; then
+  AC_MSG_RESULT([$GETOPT_PATH])
+else
+  AC_MSG_RESULT([no])
+  AC_MSG_ERROR(Pacemaker build requires a GNU-compatible getopt)
+fi
+AC_SUBST([GETOPT_PATH])
+
 dnl ========================================================================
 dnl checks for library functions to replace them
 dnl
