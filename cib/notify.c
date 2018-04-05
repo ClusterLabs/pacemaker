@@ -51,30 +51,6 @@ void attach_cib_generation(xmlNode * msg, const char *field, xmlNode * a_cib);
 void do_cib_notify(int options, const char *op, xmlNode * update,
                    int result, xmlNode * result_data, const char *msg_type);
 
-static void
-need_pre_notify(gpointer key, gpointer value, gpointer user_data)
-{
-    crm_client_t *client = value;
-
-    if (is_set(client->options, cib_notify_pre)) {
-        gboolean *needed = user_data;
-
-        *needed = TRUE;
-    }
-}
-
-static void
-need_post_notify(gpointer key, gpointer value, gpointer user_data)
-{
-    crm_client_t *client = value;
-
-    if (is_set(client->options, cib_notify_post)) {
-        gboolean *needed = user_data;
-
-        *needed = TRUE;
-    }
-}
-
 static gboolean
 cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
 {
@@ -161,75 +137,6 @@ cib_notify_send(xmlNode * xml)
     }
 
     crm_trace("Notify complete");
-}
-
-void
-cib_pre_notify(int options, const char *op, xmlNode * existing, xmlNode * update)
-{
-    xmlNode *update_msg = NULL;
-    const char *type = NULL;
-    const char *id = NULL;
-    gboolean needed = FALSE;
-
-    g_hash_table_foreach(client_connections, need_pre_notify, &needed);
-    if (needed == FALSE) {
-        return;
-    }
-
-    /* TODO: consider pre-notification for removal */
-    update_msg = create_xml_node(NULL, "pre-notify");
-
-    if (update != NULL) {
-        id = crm_element_value(update, XML_ATTR_ID);
-    }
-
-    crm_xml_add(update_msg, F_TYPE, T_CIB_NOTIFY);
-    crm_xml_add(update_msg, F_SUBTYPE, T_CIB_PRE_NOTIFY);
-    crm_xml_add(update_msg, F_CIB_OPERATION, op);
-
-    if (id != NULL) {
-        crm_xml_add(update_msg, F_CIB_OBJID, id);
-    }
-
-    if (update != NULL) {
-        crm_xml_add(update_msg, F_CIB_OBJTYPE, crm_element_name(update));
-    } else if (existing != NULL) {
-        crm_xml_add(update_msg, F_CIB_OBJTYPE, crm_element_name(existing));
-    }
-
-    type = crm_element_value(update_msg, F_CIB_OBJTYPE);
-    attach_cib_generation(update_msg, "cib_generation", the_cib);
-
-    if (existing != NULL) {
-        add_message_xml(update_msg, F_CIB_EXISTING, existing);
-    }
-    if (update != NULL) {
-        add_message_xml(update_msg, F_CIB_UPDATE, update);
-    }
-
-    cib_notify_send(update_msg);
-
-    if (update == NULL) {
-        crm_trace("Performing operation %s (on section=%s)", op, type);
-
-    } else {
-        crm_trace("Performing %s on <%s%s%s>", op, type, id ? " id=" : "", id ? id : "");
-    }
-
-    free_xml(update_msg);
-}
-
-void
-cib_post_notify(int options, const char *op, xmlNode * update, int result, xmlNode * new_obj)
-{
-    gboolean needed = FALSE;
-
-    g_hash_table_foreach(client_connections, need_post_notify, &needed);
-    if (needed == FALSE) {
-        return;
-    }
-
-    do_cib_notify(options, op, update, result, new_obj, T_CIB_UPDATE_CONFIRM);
 }
 
 void

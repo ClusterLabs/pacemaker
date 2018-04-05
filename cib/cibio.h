@@ -32,8 +32,6 @@
 
 extern xmlNode *the_cib;
 
-extern xmlNode *get_the_CIB(void);
-
 extern gboolean uninitializeCib(void);
 extern gboolean verifyCibXml(xmlNode * cib);
 extern xmlNode *readCibXml(char *buffer);

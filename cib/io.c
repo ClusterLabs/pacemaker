@@ -314,15 +314,6 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
     return root;
 }
 
-/*
- * The caller should never free the return value
- */
-xmlNode *
-get_the_CIB(void)
-{
-    return the_cib;
-}
-
 gboolean
 uninitializeCib(void)
 {

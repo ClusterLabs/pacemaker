@@ -42,8 +42,6 @@ int get_revision(xmlNode * xml_obj, int cur_revision);
 int updateList(xmlNode * local_cib, xmlNode * update_command, xmlNode * failed,
                int operation, const char *section);
 
-gboolean check_generation(xmlNode * newCib, xmlNode * oldCib);
-
 gboolean update_results(xmlNode * failed, xmlNode * target, const char *operation, int return_code);
 
 int cib_update_counter(xmlNode * xml_obj, const char *field, gboolean reset);
@@ -457,17 +455,6 @@ cib_process_delete_absolute(const char *op, int options, const char *section, xm
     }
 
     return result;
-}
-
-gboolean
-check_generation(xmlNode * newCib, xmlNode * oldCib)
-{
-    if (cib_compare_generation(newCib, oldCib) >= 0) {
-        return TRUE;
-    }
-
-    crm_warn("Generation from update is older than the existing one");
-    return FALSE;
 }
 
 int

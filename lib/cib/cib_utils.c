@@ -62,50 +62,6 @@ struct config_root_s known_paths[] = {
 };
 /* *INDENT-ON* */
 
-int
-cib_compare_generation(xmlNode * left, xmlNode * right)
-{
-    int lpc = 0;
-
-    const char *attributes[] = {
-        XML_ATTR_GENERATION_ADMIN,
-        XML_ATTR_GENERATION,
-        XML_ATTR_NUMUPDATES,
-    };
-
-    crm_log_xml_trace(left, "left");
-    crm_log_xml_trace(right, "right");
-
-    for (lpc = 0; lpc < DIMOF(attributes); lpc++) {
-        int int_elem_l = -1;
-        int int_elem_r = -1;
-        const char *elem_r = NULL;
-        const char *elem_l = crm_element_value(left, attributes[lpc]);
-
-        if (right != NULL) {
-            elem_r = crm_element_value(right, attributes[lpc]);
-        }
-
-        if (elem_l != NULL) {
-            int_elem_l = crm_parse_int(elem_l, NULL);
-        }
-        if (elem_r != NULL) {
-            int_elem_r = crm_parse_int(elem_r, NULL);
-        }
-
-        if (int_elem_l < int_elem_r) {
-            crm_trace("%s (%s < %s)", attributes[lpc], crm_str(elem_l), crm_str(elem_r));
-            return -1;
-
-        } else if (int_elem_l > int_elem_r) {
-            crm_trace("%s (%s > %s)", attributes[lpc], crm_str(elem_l), crm_str(elem_r));
-            return 1;
-        }
-    }
-
-    return 0;
-}
-
 xmlNode *
 cib_get_generation(cib_t * cib)
 {
