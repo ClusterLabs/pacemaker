@@ -466,6 +466,16 @@ dnl configure's PYTHON variable. If not specified, AM_PATH_PYTHON will check a
 dnl built-in list with (unversioned) "python" having precedence. To configure
 dnl Pacemaker to use a specific python interpreter version, define PYTHON
 dnl when calling configure, for example: ./configure PYTHON=/usr/bin/python3.6
+
+dnl PYTHON must be a full path
+case "x$PYTHON" in
+    /*)
+        ;;
+    *)
+        AC_PATH_PROG([PYTHON], [$PYTHON])
+        ;;
+esac
+
 case "x$PYTHON" in
     x*python3*)
         dnl When used with Python 3, Pacemaker requires a minimum of 3.2
