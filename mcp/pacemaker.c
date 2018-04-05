@@ -70,16 +70,6 @@ static gboolean update_node_processes(uint32_t id, const char *uname,
                                       uint32_t procs);
 void update_process_clients(crm_client_t *client);
 
-void
-enable_crmd_as_root(gboolean enable)
-{
-    if (enable) {
-        pcmk_children[pcmk_child_crmd].uid = NULL;
-    } else {
-        pcmk_children[pcmk_child_crmd].uid = CRM_DAEMON_USER;
-    }
-}
-
 static uint32_t
 get_process_list(void)
 {
