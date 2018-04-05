@@ -1477,9 +1477,9 @@ synthesize_lrmd_failure(lrm_state_t *lrm_state, xmlNode *action, int rc)
         /* If we can't process the result normally, at least write it to the CIB
          * if possible, so the PE can act on it.
          */
-        char *standard = crm_element_value_copy(xml_rsc, XML_AGENT_ATTR_CLASS);
-        char *provider = crm_element_value_copy(xml_rsc, XML_AGENT_ATTR_PROVIDER);
-        char *type = crm_element_value_copy(xml_rsc, XML_ATTR_TYPE);
+        const char *standard = crm_element_value(xml_rsc, XML_AGENT_ATTR_CLASS);
+        const char *provider = crm_element_value(xml_rsc, XML_AGENT_ATTR_PROVIDER);
+        const char *type = crm_element_value(xml_rsc, XML_ATTR_TYPE);
 
         if (standard && type) {
             rsc_info = lrmd_new_rsc_info(op->rsc_id, standard, provider, type);
