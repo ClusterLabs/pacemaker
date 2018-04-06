@@ -1,0 +1,77 @@
+
+Current cluster status:
+Online: [ rh74-test ]
+Containers: [ httpd-bundle-0:httpd-bundle-docker-0 ]
+
+ Docker container set: httpd-bundle [pcmktest:http] (unique)
+   httpd-bundle-0 (192.168.20.188)	(ocf::heartbeat:apache):	Stopped rh74-test
+   httpd-bundle-1 (192.168.20.189)	(ocf::heartbeat:apache):	Stopped
+   httpd-bundle-2 (192.168.20.190)	(ocf::heartbeat:apache):	Stopped
+ httpd	(ocf::heartbeat:apache):	 ORPHANED Started httpd-bundle-0
+
+Transition Summary:
+ * Restart    httpd-bundle-docker-0              (      rh74-test )  
+ * Restart    httpd-bundle-0                     (      rh74-test )   due to required httpd-bundle-docker-0 start
+ * Start      httpd:0                            ( httpd-bundle-0 )  
+ * Start      httpd-bundle-ip-192.168.20.189     (      rh74-test )  
+ * Start      httpd-bundle-docker-1              (      rh74-test )  
+ * Start      httpd-bundle-1                     (      rh74-test )  
+ * Start      httpd:1                            ( httpd-bundle-1 )  
+ * Start      httpd-bundle-ip-192.168.20.190     (      rh74-test )  
+ * Start      httpd-bundle-docker-2              (      rh74-test )  
+ * Start      httpd-bundle-2                     (      rh74-test )  
+ * Start      httpd:2                            ( httpd-bundle-2 )  
+ * Stop       httpd                              ( httpd-bundle-0 )   due to node availability
+
+Executing cluster transition:
+ * Resource action: httpd-bundle-ip-192.168.20.189 monitor on rh74-test
+ * Resource action: httpd-bundle-docker-1 monitor on rh74-test
+ * Resource action: httpd-bundle-ip-192.168.20.190 monitor on rh74-test
+ * Resource action: httpd-bundle-docker-2 monitor on rh74-test
+ * Resource action: httpd           stop on httpd-bundle-0
+ * Pseudo action:   httpd-bundle_stop_0
+ * Pseudo action:   httpd-bundle_start_0
+ * Resource action: httpd-bundle-0  stop on rh74-test
+ * Resource action: httpd-bundle-0  cancel=30000 on rh74-test
+ * Resource action: httpd-bundle-ip-192.168.20.189 start on rh74-test
+ * Resource action: httpd-bundle-docker-1 start on rh74-test
+ * Resource action: httpd-bundle-1  monitor on rh74-test
+ * Resource action: httpd-bundle-ip-192.168.20.190 start on rh74-test
+ * Resource action: httpd-bundle-docker-2 start on rh74-test
+ * Resource action: httpd-bundle-2  monitor on rh74-test
+ * Resource action: httpd-bundle-docker-0 stop on rh74-test
+ * Resource action: httpd-bundle-docker-0 start on rh74-test
+ * Resource action: httpd-bundle-docker-0 monitor=60000 on rh74-test
+ * Resource action: httpd-bundle-0  start on rh74-test
+ * Resource action: httpd-bundle-ip-192.168.20.189 monitor=60000 on rh74-test
+ * Resource action: httpd-bundle-docker-1 monitor=60000 on rh74-test
+ * Resource action: httpd-bundle-1  start on rh74-test
+ * Resource action: httpd-bundle-ip-192.168.20.190 monitor=60000 on rh74-test
+ * Resource action: httpd-bundle-docker-2 monitor=60000 on rh74-test
+ * Resource action: httpd-bundle-2  start on rh74-test
+ * Resource action: httpd           delete on httpd-bundle-0
+ * Pseudo action:   httpd-bundle_stopped_0
+ * Pseudo action:   all_stopped
+ * Resource action: httpd:0         monitor on httpd-bundle-0
+ * Pseudo action:   httpd-bundle-clone_start_0
+ * Resource action: httpd-bundle-0  monitor=60000 on rh74-test
+ * Resource action: httpd-bundle-1  monitor=60000 on rh74-test
+ * Resource action: httpd-bundle-2  monitor=60000 on rh74-test
+ * Resource action: httpd:0         start on httpd-bundle-0
+ * Resource action: httpd:1         start on httpd-bundle-1
+ * Resource action: httpd:2         start on httpd-bundle-2
+ * Pseudo action:   httpd-bundle-clone_running_0
+ * Pseudo action:   httpd-bundle_running_0
+ * Resource action: httpd:0         monitor=10000 on httpd-bundle-0
+ * Resource action: httpd:1         monitor=10000 on httpd-bundle-1
+ * Resource action: httpd:2         monitor=10000 on httpd-bundle-2
+
+Revised cluster status:
+Online: [ rh74-test ]
+Containers: [ httpd-bundle-0:httpd-bundle-docker-0 httpd-bundle-1:httpd-bundle-docker-1 httpd-bundle-2:httpd-bundle-docker-2 ]
+
+ Docker container set: httpd-bundle [pcmktest:http] (unique)
+   httpd-bundle-0 (192.168.20.188)	(ocf::heartbeat:apache):	Started rh74-test
+   httpd-bundle-1 (192.168.20.189)	(ocf::heartbeat:apache):	Started rh74-test
+   httpd-bundle-2 (192.168.20.190)	(ocf::heartbeat:apache):	Started rh74-test
+

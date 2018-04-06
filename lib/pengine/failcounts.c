@@ -268,7 +268,7 @@ pe_get_failcount(node_t *node, resource_t *rsc, time_t *last_failure,
         && block_failure(node, rsc, xml_op, data_set)) {
 
         pe_warn("Ignoring failure timeout %d for %s because it conflicts with on-fail=block",
-                rsc->id, rsc->failure_timeout);
+                rsc->failure_timeout, rsc->id);
         rsc->failure_timeout = 0;
     }
 

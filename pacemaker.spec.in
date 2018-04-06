@@ -265,7 +265,7 @@ be part of the cluster.
 License:       GPLv2+ and LGPLv2+
 Summary:       Core Pacemaker libraries
 Group:         System Environment/Daemons
-Requires:      shadow-utils
+Requires(pre): shadow-utils
 
 %description -n %{name}-libs
 Pacemaker is an advanced, scalable High-Availability cluster resource
@@ -354,7 +354,7 @@ Requires:      systemd-python
 Test framework for cluster-related technologies like Pacemaker
 
 %package       doc
-License:       CC-BY-SA
+License:       CC-BY-SA-4.0
 Summary:       Documentation for Pacemaker
 Group:         Documentation
 

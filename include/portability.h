@@ -1,25 +1,11 @@
+/*
+ * Copyright 2001-2018 Alan Robertson <alanr@unix.sh>
+ *
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
+ */
 #ifndef PORTABILITY_H
 #  define PORTABILITY_H
-
-/*
- * Copyright (C) 2001 Alan Robertson <alanr@unix.sh>
- * This software licensed under the GNU LGPL.
- *
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- */
 
 #  define	EOS			'\0'
 #  define	DIMOF(a)		((int) (sizeof(a)/sizeof(a[0])) )
@@ -72,6 +58,13 @@ size_t strnlen(const char *s, size_t maxlen);
 char *strndup(const char *str, size_t len);
 #  else
 #    	define USE_GNU
+#  endif
+
+// This test could be better, but it covers platforms of interest
+#  if defined(ON_BSD) || defined(ON_SOLARIS)
+#    define SUPPORT_PROCFS 0
+#  else
+#    define SUPPORT_PROCFS 1
 #  endif
 
 #  include <glib.h>
