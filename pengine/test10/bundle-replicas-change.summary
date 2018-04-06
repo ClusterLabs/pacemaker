@@ -32,6 +32,7 @@ Executing cluster transition:
  * Pseudo action:   httpd-bundle_stop_0
  * Pseudo action:   httpd-bundle_start_0
  * Resource action: httpd-bundle-0  stop on rh74-test
+ * Resource action: httpd-bundle-0  cancel=30000 on rh74-test
  * Resource action: httpd-bundle-ip-192.168.20.189 start on rh74-test
  * Resource action: httpd-bundle-docker-1 start on rh74-test
  * Resource action: httpd-bundle-1  monitor on rh74-test
@@ -42,7 +43,6 @@ Executing cluster transition:
  * Resource action: httpd-bundle-docker-0 start on rh74-test
  * Resource action: httpd-bundle-docker-0 monitor=60000 on rh74-test
  * Resource action: httpd-bundle-0  start on rh74-test
- * Resource action: httpd-bundle-0  monitor=30000 on rh74-test
  * Resource action: httpd-bundle-ip-192.168.20.189 monitor=60000 on rh74-test
  * Resource action: httpd-bundle-docker-1 monitor=60000 on rh74-test
  * Resource action: httpd-bundle-1  start on rh74-test
@@ -54,8 +54,9 @@ Executing cluster transition:
  * Pseudo action:   all_stopped
  * Resource action: httpd:0         monitor on httpd-bundle-0
  * Pseudo action:   httpd-bundle-clone_start_0
- * Resource action: httpd-bundle-1  monitor=30000 on rh74-test
- * Resource action: httpd-bundle-2  monitor=30000 on rh74-test
+ * Resource action: httpd-bundle-0  monitor=60000 on rh74-test
+ * Resource action: httpd-bundle-1  monitor=60000 on rh74-test
+ * Resource action: httpd-bundle-2  monitor=60000 on rh74-test
  * Resource action: httpd:0         start on httpd-bundle-0
  * Resource action: httpd:1         start on httpd-bundle-1
  * Resource action: httpd:2         start on httpd-bundle-2

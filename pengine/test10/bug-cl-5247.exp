@@ -451,7 +451,7 @@
   </synapse>
   <synapse id="31" priority="1000000">
     <action_set>
-      <rsc_op id="85" operation="notify" operation_key="pgsql_post_notify_demote_0" internal_operation_key="pgsql:1_post_notify_demote_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3">
+      <rsc_op id="81" operation="notify" operation_key="pgsql_post_notify_demote_0" internal_operation_key="pgsql:1_post_notify_demote_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3">
         <primitive id="pgsql" long-id="pgsql:1" class="ocf" provider="heartbeat" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_active_resource="pgsql:0 pgsql:1" CRM_meta_notify_active_uname="pgsr02 pgsr01" CRM_meta_notify_all_uname="bl460g8n3 bl460g8n4 pgsr01 pgsr02" CRM_meta_notify_available_uname="bl460g8n4 bl460g8n3 pgsr01 pgsr02" CRM_meta_notify_demote_resource="pgsql:0" CRM_meta_notify_demote_uname="pgsr02" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="demoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="pgsql:0 pgsql:1" CRM_meta_notify_master_uname="pgsr02 pgsr01" CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="pgsql:0" CRM_meta_notify_stop_uname="pgsr02" CRM_meta_notify_type="post" CRM_meta_on_node="pgsr01" CRM_meta_on_node_uuid="pgsr01" CRM_meta_physical_host="bl460g8n3" CRM_meta_timeout="60000" />
       </rsc_op>
@@ -464,7 +464,7 @@
   </synapse>
   <synapse id="32">
     <action_set>
-      <rsc_op id="84" operation="notify" operation_key="pgsql_pre_notify_demote_0" internal_operation_key="pgsql:1_pre_notify_demote_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3">
+      <rsc_op id="80" operation="notify" operation_key="pgsql_pre_notify_demote_0" internal_operation_key="pgsql:1_pre_notify_demote_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3">
         <primitive id="pgsql" long-id="pgsql:1" class="ocf" provider="heartbeat" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_active_resource="pgsql:0 pgsql:1" CRM_meta_notify_active_uname="pgsr02 pgsr01" CRM_meta_notify_all_uname="bl460g8n3 bl460g8n4 pgsr01 pgsr02" CRM_meta_notify_available_uname="bl460g8n4 bl460g8n3 pgsr01 pgsr02" CRM_meta_notify_demote_resource="pgsql:0" CRM_meta_notify_demote_uname="pgsr02" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="demote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="pgsql:0 pgsql:1" CRM_meta_notify_master_uname="pgsr02 pgsr01" CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="pgsql:0" CRM_meta_notify_stop_uname="pgsr02" CRM_meta_notify_type="pre" CRM_meta_on_node="pgsr01" CRM_meta_on_node_uuid="pgsr01" CRM_meta_physical_host="bl460g8n3" CRM_meta_timeout="60000" />
       </rsc_op>
@@ -477,7 +477,7 @@
   </synapse>
   <synapse id="33">
     <action_set>
-      <rsc_op id="81" operation="notify" operation_key="pgsql_pre_notify_stop_0" internal_operation_key="pgsql:1_pre_notify_stop_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3">
+      <rsc_op id="79" operation="notify" operation_key="pgsql_pre_notify_stop_0" internal_operation_key="pgsql:1_pre_notify_stop_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3">
         <primitive id="pgsql" long-id="pgsql:1" class="ocf" provider="heartbeat" type="Stateful"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="notify" CRM_meta_notify="true" CRM_meta_notify_active_resource="pgsql:0 pgsql:1" CRM_meta_notify_active_uname="pgsr02 pgsr01" CRM_meta_notify_all_uname="bl460g8n3 bl460g8n4 pgsr01 pgsr02" CRM_meta_notify_available_uname="bl460g8n4 bl460g8n3 pgsr01 pgsr02" CRM_meta_notify_demote_resource="pgsql:0" CRM_meta_notify_demote_uname="pgsr02" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="stop" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="pgsql:0 pgsql:1" CRM_meta_notify_master_uname="pgsr02 pgsr01" CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="pgsql:0" CRM_meta_notify_stop_uname="pgsr02" CRM_meta_notify_type="pre" CRM_meta_on_node="pgsr01" CRM_meta_on_node_uuid="pgsr01" CRM_meta_physical_host="bl460g8n3" CRM_meta_timeout="60000" />
       </rsc_op>
@@ -534,7 +534,7 @@
         <pseudo_event id="66" operation="notify" operation_key="msPostgresql_post_notify_demoted_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="85" operation="notify" operation_key="pgsql_post_notify_demote_0" internal_operation_key="pgsql:1_post_notify_demote_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3"/>
+        <rsc_op id="81" operation="notify" operation_key="pgsql_post_notify_demote_0" internal_operation_key="pgsql:1_post_notify_demote_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3"/>
       </trigger>
     </inputs>
   </synapse>
@@ -564,7 +564,7 @@
         <pseudo_event id="64" operation="notify" operation_key="msPostgresql_pre_notify_demote_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="84" operation="notify" operation_key="pgsql_pre_notify_demote_0" internal_operation_key="pgsql:1_pre_notify_demote_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3"/>
+        <rsc_op id="80" operation="notify" operation_key="pgsql_pre_notify_demote_0" internal_operation_key="pgsql:1_pre_notify_demote_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3"/>
       </trigger>
     </inputs>
   </synapse>
@@ -644,7 +644,7 @@
         <pseudo_event id="52" operation="notify" operation_key="msPostgresql_pre_notify_stop_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="81" operation="notify" operation_key="pgsql_pre_notify_stop_0" internal_operation_key="pgsql:1_pre_notify_stop_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3"/>
+        <rsc_op id="79" operation="notify" operation_key="pgsql_pre_notify_stop_0" internal_operation_key="pgsql:1_pre_notify_stop_0" on_node="pgsr01" on_node_uuid="pgsr01" router_node="bl460g8n3"/>
       </trigger>
     </inputs>
   </synapse>
