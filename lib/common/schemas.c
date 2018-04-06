@@ -625,6 +625,25 @@ cib_upgrade_err(void *ctx, const char *fmt, ...)
     va_end(ap);
 }
 
+
+/* Denotes temporary emergency fix for "xmldiff'ing not text-node-ready";
+   proper fix is most likely to teach __xml_diff_object and friends to
+   deal with XML_TEXT_NODE (and more?), i.e., those nodes currently
+   missing "_private" field (implicitly as NULL) which clashes with
+   unchecked accesses (e.g. in __xml_offset) -- the outcome may be that
+   those unexpected XML nodes will simply be ignored for the purpose of
+   diff'ing, or it may be made more robust, or per the user's preference
+   (which then may be exposed as crm_diff switch).
+
+   Said XML_TEXT_NODE may appear unexpectedly due to how upgrade-2.10.xsl
+   is arranged.
+
+   The emergency fix is simple: reparse XSLT output with blank-ignoring
+   parser. */
+#ifndef PCMK_SCHEMAS_EMERGENCY_XSLT
+#define PCMK_SCHEMAS_EMERGENCY_XSLT 1
+#endif
+
 static xmlNode *
 apply_transformation(xmlNode *xml, const char *transform, gboolean to_logs)
 {
@@ -633,6 +652,11 @@ apply_transformation(xmlNode *xml, const char *transform, gboolean to_logs)
     xmlDocPtr res = NULL;
     xmlDocPtr doc = NULL;
     xsltStylesheet *xslt = NULL;
+#if PCMK_SCHEMAS_EMERGENCY_XSLT != 0
+    xmlChar *emergency_result;
+    int emergency_txt_len;
+    int emergency_res;
+#endif
 
     CRM_CHECK(xml != NULL, return FALSE);
     doc = getDocPtr(xml);
@@ -656,7 +680,17 @@ apply_transformation(xmlNode *xml, const char *transform, gboolean to_logs)
 
     xsltSetGenericErrorFunc(NULL, NULL);  /* restore default one */
 
+
+#if PCMK_SCHEMAS_EMERGENCY_XSLT != 0
+    emergency_res = xsltSaveResultToString(&emergency_result,
+                                           &emergency_txt_len, res, xslt);
+    free(res);
+    CRM_CHECK(emergency_res == 0, goto cleanup);
+    out = string2xml((const char *) emergency_result);
+    free(emergency_result);
+#else
     out = xmlDocGetRootElement(res);
+#endif
 
   cleanup:
     if (xslt) {
