@@ -1,4 +1,4 @@
-#!/bin/bash
+#!@BASH_PATH@
 
 # Authors:
 #  Andrew Beekhof <abeekhof@redhat.com>

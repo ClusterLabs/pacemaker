@@ -849,8 +849,8 @@ action_complete(svc_action_t * action)
      * obsolete, we should eventually prefer a clock_gettime() implementation
      * (wrapped in its own ifdef) with timeb as a fallback.
      */
-#ifdef HAVE_SYS_TIMEB_H
     if(goagain) {
+#ifdef HAVE_SYS_TIMEB_H
         int time_sum = time_diff_ms(NULL, &cmd->t_first_run);
         int timeout_left = cmd->timeout_orig - time_sum;
         int delay = cmd->timeout_orig / 10;
@@ -893,8 +893,8 @@ action_complete(svc_action_t * action)
             cmd->exec_rc = PCMK_OCF_TIMEOUT;
             cmd_original_times(cmd);
         }
-    }
 #endif
+    }
 
     if (action->stderr_data) {
         cmd->output = strdup(action->stderr_data);
