@@ -1262,7 +1262,7 @@
   </synapse>
   <synapse id="85" priority="1000000">
     <action_set>
-      <rsc_op id="163" operation="notify" operation_key="drbd:0_post_notify_demote_0" on_node="asttest1" on_node_uuid="asttest1">
+      <rsc_op id="159" operation="notify" operation_key="drbd:0_post_notify_demote_0" on_node="asttest1" on_node_uuid="asttest1">
         <primitive id="drbd" long-id="drbd:0" class="ocf" provider="linbit" type="drbd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="drbd:0 drbd:1" CRM_meta_notify_active_uname="asttest1 asttest2" CRM_meta_notify_all_uname="asttest1 asttest2" CRM_meta_notify_available_uname="asttest2 asttest1" CRM_meta_notify_demote_resource="drbd:0" CRM_meta_notify_demote_uname="asttest1" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="demoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="drbd:0" CRM_meta_notify_master_uname="asttest1" CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource="drbd:1" CRM_meta_notify_promote_uname="asttest2" CRM_meta_notify_slave_resource="drbd:1" CRM_meta_notify_slave_uname="asttest2" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_on_node="asttest1" CRM_meta_on_node_uuid="asttest1" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  drbd_resource="r0"/>
       </rsc_op>
@@ -1275,7 +1275,7 @@
   </synapse>
   <synapse id="86">
     <action_set>
-      <rsc_op id="162" operation="notify" operation_key="drbd:0_pre_notify_demote_0" on_node="asttest1" on_node_uuid="asttest1">
+      <rsc_op id="158" operation="notify" operation_key="drbd:0_pre_notify_demote_0" on_node="asttest1" on_node_uuid="asttest1">
         <primitive id="drbd" long-id="drbd:0" class="ocf" provider="linbit" type="drbd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="drbd:0 drbd:1" CRM_meta_notify_active_uname="asttest1 asttest2" CRM_meta_notify_all_uname="asttest1 asttest2" CRM_meta_notify_available_uname="asttest2 asttest1" CRM_meta_notify_demote_resource="drbd:0" CRM_meta_notify_demote_uname="asttest1" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="demote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="drbd:0" CRM_meta_notify_master_uname="asttest1" CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource="drbd:1" CRM_meta_notify_promote_uname="asttest2" CRM_meta_notify_slave_resource="drbd:1" CRM_meta_notify_slave_uname="asttest2" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_on_node="asttest1" CRM_meta_on_node_uuid="asttest1" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  drbd_resource="r0"/>
       </rsc_op>
@@ -1288,7 +1288,7 @@
   </synapse>
   <synapse id="87" priority="1000000">
     <action_set>
-      <rsc_op id="159" operation="notify" operation_key="drbd:0_post_notify_promote_0" on_node="asttest1" on_node_uuid="asttest1">
+      <rsc_op id="155" operation="notify" operation_key="drbd:0_post_notify_promote_0" on_node="asttest1" on_node_uuid="asttest1">
         <primitive id="drbd" long-id="drbd:0" class="ocf" provider="linbit" type="drbd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="drbd:0 drbd:1" CRM_meta_notify_active_uname="asttest1 asttest2" CRM_meta_notify_all_uname="asttest1 asttest2" CRM_meta_notify_available_uname="asttest2 asttest1" CRM_meta_notify_demote_resource="drbd:0" CRM_meta_notify_demote_uname="asttest1" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="drbd:0" CRM_meta_notify_master_uname="asttest1" CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="drbd:1" CRM_meta_notify_promote_uname="asttest2" CRM_meta_notify_slave_resource="drbd:1" CRM_meta_notify_slave_uname="asttest2" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_on_node="asttest1" CRM_meta_on_node_uuid="asttest1" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  drbd_resource="r0"/>
       </rsc_op>
@@ -1301,7 +1301,7 @@
   </synapse>
   <synapse id="88">
     <action_set>
-      <rsc_op id="158" operation="notify" operation_key="drbd:0_pre_notify_promote_0" on_node="asttest1" on_node_uuid="asttest1">
+      <rsc_op id="154" operation="notify" operation_key="drbd:0_pre_notify_promote_0" on_node="asttest1" on_node_uuid="asttest1">
         <primitive id="drbd" long-id="drbd:0" class="ocf" provider="linbit" type="drbd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="drbd:0 drbd:1" CRM_meta_notify_active_uname="asttest1 asttest2" CRM_meta_notify_all_uname="asttest1 asttest2" CRM_meta_notify_available_uname="asttest2 asttest1" CRM_meta_notify_demote_resource="drbd:0" CRM_meta_notify_demote_uname="asttest1" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="drbd:0" CRM_meta_notify_master_uname="asttest1" CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="drbd:1" CRM_meta_notify_promote_uname="asttest2" CRM_meta_notify_slave_resource="drbd:1" CRM_meta_notify_slave_uname="asttest2" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_on_node="asttest1" CRM_meta_on_node_uuid="asttest1" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  drbd_resource="r0"/>
       </rsc_op>
@@ -1346,7 +1346,7 @@
   </synapse>
   <synapse id="91" priority="1000000">
     <action_set>
-      <rsc_op id="165" operation="notify" operation_key="drbd:1_post_notify_demote_0" on_node="asttest2" on_node_uuid="asttest2">
+      <rsc_op id="161" operation="notify" operation_key="drbd:1_post_notify_demote_0" on_node="asttest2" on_node_uuid="asttest2">
         <primitive id="drbd" long-id="drbd:1" class="ocf" provider="linbit" type="drbd"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="drbd:0 drbd:1" CRM_meta_notify_active_uname="asttest1 asttest2" CRM_meta_notify_all_uname="asttest1 asttest2" CRM_meta_notify_available_uname="asttest2 asttest1" CRM_meta_notify_demote_resource="drbd:0" CRM_meta_notify_demote_uname="asttest1" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="demoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="drbd:0" CRM_meta_notify_master_uname="asttest1" CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource="drbd:1" CRM_meta_notify_promote_uname="asttest2" CRM_meta_notify_slave_resource="drbd:1" CRM_meta_notify_slave_uname="asttest2" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_on_node="asttest2" CRM_meta_on_node_uuid="asttest2" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  drbd_resource="r0"/>
       </rsc_op>
@@ -1359,7 +1359,7 @@
   </synapse>
   <synapse id="92">
     <action_set>
-      <rsc_op id="164" operation="notify" operation_key="drbd:1_pre_notify_demote_0" on_node="asttest2" on_node_uuid="asttest2">
+      <rsc_op id="160" operation="notify" operation_key="drbd:1_pre_notify_demote_0" on_node="asttest2" on_node_uuid="asttest2">
         <primitive id="drbd" long-id="drbd:1" class="ocf" provider="linbit" type="drbd"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="drbd:0 drbd:1" CRM_meta_notify_active_uname="asttest1 asttest2" CRM_meta_notify_all_uname="asttest1 asttest2" CRM_meta_notify_available_uname="asttest2 asttest1" CRM_meta_notify_demote_resource="drbd:0" CRM_meta_notify_demote_uname="asttest1" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="demote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="drbd:0" CRM_meta_notify_master_uname="asttest1" CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource="drbd:1" CRM_meta_notify_promote_uname="asttest2" CRM_meta_notify_slave_resource="drbd:1" CRM_meta_notify_slave_uname="asttest2" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_on_node="asttest2" CRM_meta_on_node_uuid="asttest2" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  drbd_resource="r0"/>
       </rsc_op>
@@ -1372,7 +1372,7 @@
   </synapse>
   <synapse id="93" priority="1000000">
     <action_set>
-      <rsc_op id="161" operation="notify" operation_key="drbd:1_post_notify_promote_0" on_node="asttest2" on_node_uuid="asttest2">
+      <rsc_op id="157" operation="notify" operation_key="drbd:1_post_notify_promote_0" on_node="asttest2" on_node_uuid="asttest2">
         <primitive id="drbd" long-id="drbd:1" class="ocf" provider="linbit" type="drbd"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="drbd:0 drbd:1" CRM_meta_notify_active_uname="asttest1 asttest2" CRM_meta_notify_all_uname="asttest1 asttest2" CRM_meta_notify_available_uname="asttest2 asttest1" CRM_meta_notify_demote_resource="drbd:0" CRM_meta_notify_demote_uname="asttest1" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="promoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="drbd:0" CRM_meta_notify_master_uname="asttest1" CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="drbd:1" CRM_meta_notify_promote_uname="asttest2" CRM_meta_notify_slave_resource="drbd:1" CRM_meta_notify_slave_uname="asttest2" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_on_node="asttest2" CRM_meta_on_node_uuid="asttest2" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  drbd_resource="r0"/>
       </rsc_op>
@@ -1385,7 +1385,7 @@
   </synapse>
   <synapse id="94">
     <action_set>
-      <rsc_op id="160" operation="notify" operation_key="drbd:1_pre_notify_promote_0" on_node="asttest2" on_node_uuid="asttest2">
+      <rsc_op id="156" operation="notify" operation_key="drbd:1_pre_notify_promote_0" on_node="asttest2" on_node_uuid="asttest2">
         <primitive id="drbd" long-id="drbd:1" class="ocf" provider="linbit" type="drbd"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="drbd:0 drbd:1" CRM_meta_notify_active_uname="asttest1 asttest2" CRM_meta_notify_all_uname="asttest1 asttest2" CRM_meta_notify_available_uname="asttest2 asttest1" CRM_meta_notify_demote_resource="drbd:0" CRM_meta_notify_demote_uname="asttest1" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="promote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="drbd:0" CRM_meta_notify_master_uname="asttest1" CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="drbd:1" CRM_meta_notify_promote_uname="asttest2" CRM_meta_notify_slave_resource="drbd:1" CRM_meta_notify_slave_uname="asttest2" CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_on_node="asttest2" CRM_meta_on_node_uuid="asttest2" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  drbd_resource="r0"/>
       </rsc_op>
@@ -1432,10 +1432,10 @@
         <pseudo_event id="140" operation="notify" operation_key="ms_drbd_post_notify_demoted_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="163" operation="notify" operation_key="drbd:0_post_notify_demote_0" on_node="asttest1" on_node_uuid="asttest1"/>
+        <rsc_op id="159" operation="notify" operation_key="drbd:0_post_notify_demote_0" on_node="asttest1" on_node_uuid="asttest1"/>
       </trigger>
       <trigger>
-        <rsc_op id="165" operation="notify" operation_key="drbd:1_post_notify_demote_0" on_node="asttest2" on_node_uuid="asttest2"/>
+        <rsc_op id="161" operation="notify" operation_key="drbd:1_post_notify_demote_0" on_node="asttest2" on_node_uuid="asttest2"/>
       </trigger>
     </inputs>
   </synapse>
@@ -1465,10 +1465,10 @@
         <pseudo_event id="138" operation="notify" operation_key="ms_drbd_pre_notify_demote_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="162" operation="notify" operation_key="drbd:0_pre_notify_demote_0" on_node="asttest1" on_node_uuid="asttest1"/>
+        <rsc_op id="158" operation="notify" operation_key="drbd:0_pre_notify_demote_0" on_node="asttest1" on_node_uuid="asttest1"/>
       </trigger>
       <trigger>
-        <rsc_op id="164" operation="notify" operation_key="drbd:1_pre_notify_demote_0" on_node="asttest2" on_node_uuid="asttest2"/>
+        <rsc_op id="160" operation="notify" operation_key="drbd:1_pre_notify_demote_0" on_node="asttest2" on_node_uuid="asttest2"/>
       </trigger>
     </inputs>
   </synapse>
@@ -1521,10 +1521,10 @@
         <pseudo_event id="134" operation="notify" operation_key="ms_drbd_post_notify_promoted_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="159" operation="notify" operation_key="drbd:0_post_notify_promote_0" on_node="asttest1" on_node_uuid="asttest1"/>
+        <rsc_op id="155" operation="notify" operation_key="drbd:0_post_notify_promote_0" on_node="asttest1" on_node_uuid="asttest1"/>
       </trigger>
       <trigger>
-        <rsc_op id="161" operation="notify" operation_key="drbd:1_post_notify_promote_0" on_node="asttest2" on_node_uuid="asttest2"/>
+        <rsc_op id="157" operation="notify" operation_key="drbd:1_post_notify_promote_0" on_node="asttest2" on_node_uuid="asttest2"/>
       </trigger>
     </inputs>
   </synapse>
@@ -1554,10 +1554,10 @@
         <pseudo_event id="132" operation="notify" operation_key="ms_drbd_pre_notify_promote_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="158" operation="notify" operation_key="drbd:0_pre_notify_promote_0" on_node="asttest1" on_node_uuid="asttest1"/>
+        <rsc_op id="154" operation="notify" operation_key="drbd:0_pre_notify_promote_0" on_node="asttest1" on_node_uuid="asttest1"/>
       </trigger>
       <trigger>
-        <rsc_op id="160" operation="notify" operation_key="drbd:1_pre_notify_promote_0" on_node="asttest2" on_node_uuid="asttest2"/>
+        <rsc_op id="156" operation="notify" operation_key="drbd:1_pre_notify_promote_0" on_node="asttest2" on_node_uuid="asttest2"/>
       </trigger>
     </inputs>
   </synapse>
