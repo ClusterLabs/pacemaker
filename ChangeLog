@@ -1,3 +1,26 @@
+* Fri Apr 06 2018 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.0-rc2
+- Update source tarball to revision: 40519e2
+- Changesets: 192
+- Diff:       215 files changed, 7617 insertions(+), 4135 deletions(-)
+
+- Features added since Pacemaker-2.0.0-rc1
+  + libcrmcluster: prefer corosync name over ring0_addr
+  + libpe_status: deprecate stonith-action=poweroff
+  + pengine: deprecate require-all in rsc_order
+  + xml: allow local "kind" in resource_set within rsc_order
+  + xml: add transform for automatic upgrades to latest schema
+  + build: create /etc/pacemaker directory when installing
+
+- Changes since Pacemaker-2.0.0-rc1
+  + crmd: always write faked failures to CIB whenever possible
+  + libpe_status: handle unique bundle children correctly
+  + libpe_status: use correct default timeout for monitors
+  + pengine: "symmetrical" defaults to "false" for serialize orders
+  + pengine: avoid potential use-of-NULL in unpack_simple_rsc_order()
+  + pengine: fix swapped warning message arguments leading to segfault
+  + pengine: properly cancel recurring monitors
+  + pengine: do not schedule notifications for unrunnable actions
+
 * Fri Feb 16 2018 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.0-rc1
 - Update source tarball to revision: 8eec81f
 - Changesets: 267
