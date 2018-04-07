@@ -1,4 +1,4 @@
-<cib admin_epoch="0" epoch="1" num_updates="21" dc-uuid="0" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Thu Oct 11 16:15:31 2012">
+<cib admin_epoch="0" epoch="1" num_updates="21" dc-uuid="0" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-3.0" cib-last-written="Thu Oct 11 16:15:31 2012">
   <configuration>
     <crm_config>
       <cluster_property_set id="no-stonith">

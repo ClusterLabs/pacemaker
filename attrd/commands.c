@@ -1,20 +1,10 @@
 /*
- * Copyright (C) 2013 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2013-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
+
 #include <crm_internal.h>
 
 #include <sys/types.h>
@@ -56,6 +46,7 @@ GHashTable *attributes = NULL;
 
 void write_attribute(attribute_t *a);
 void write_or_elect_attribute(attribute_t *a);
+void attrd_current_only_attribute_update(crm_node_t *peer, xmlNode *xml);
 void attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter);
 void attrd_peer_sync(crm_node_t *peer, xmlNode *xml);
 void attrd_peer_remove(const char *host, gboolean uncache, const char *source);
@@ -125,6 +116,24 @@ build_attribute_xml(
     crm_xml_add_int(xml, F_ATTRD_IS_PRIVATE, is_private);
 
     return xml;
+}
+
+static void
+clear_attribute_value_seen(void)
+{
+    GHashTableIter aIter;
+    GHashTableIter vIter;
+    attribute_t *a;
+    attribute_value_t *v = NULL;
+
+    g_hash_table_iter_init(&aIter, attributes);
+    while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
+        g_hash_table_iter_init(&vIter, a->values);
+        while (g_hash_table_iter_next(&vIter, NULL, (gpointer *) & v)) {
+            v->seen = FALSE;
+            crm_trace("Clear seen flag %s[%s] = %s.", a->id, v->nodename, v->current);
+        }
+    }
 }
 
 static attribute_t *
@@ -303,7 +312,7 @@ attrd_client_clear_failure(xmlNode *xml)
 
     const char *rsc = crm_element_value(xml, F_ATTRD_RESOURCE);
     const char *op = crm_element_value(xml, F_ATTRD_OPERATION);
-    const char *interval_s = crm_element_value(xml, F_ATTRD_INTERVAL);
+    const char *interval_spec = crm_element_value(xml, F_ATTRD_INTERVAL);
 
     /* Map this to an update */
     crm_xml_add(xml, F_ATTRD_TASK, ATTRD_OP_UPDATE);
@@ -317,10 +326,10 @@ attrd_client_clear_failure(xmlNode *xml)
             pattern = crm_strdup_printf(ATTRD_RE_CLEAR_ONE, rsc);
 
         } else {
-            int interval = crm_get_interval(interval_s);
+            guint interval_ms = crm_parse_interval_spec(interval_spec);
 
             pattern = crm_strdup_printf(ATTRD_RE_CLEAR_OP,
-                                        rsc, op, interval);
+                                        rsc, op, interval_ms);
         }
 
         crm_xml_add(xml, F_ATTRD_REGEX, pattern);
@@ -472,8 +481,8 @@ attrd_client_query(crm_client_t *client, uint32_t id, uint32_t flags, xmlNode *q
     /* Send the reply to the client */
     client->request_id = 0;
     if ((rc = crm_ipcs_send(client, id, reply, flags)) < 0) {
-        crm_err("Could not respond to query from %s: %s (%d)",
-                origin, pcmk_strerror(-rc), -rc);
+        crm_err("Could not respond to query from %s: %s (%lld)",
+                origin, pcmk_strerror(-rc), (long long) -rc);
     }
     free_xml(reply);
 }
@@ -491,13 +500,13 @@ attrd_peer_clear_failure(crm_node_t *peer, xmlNode *xml)
     const char *rsc = crm_element_value(xml, F_ATTRD_RESOURCE);
     const char *host = crm_element_value(xml, F_ATTRD_HOST);
     const char *op = crm_element_value(xml, F_ATTRD_OPERATION);
-    const char *interval_s = crm_element_value(xml, F_ATTRD_INTERVAL);
-    int interval = crm_get_interval(interval_s);
+    const char *interval_spec = crm_element_value(xml, F_ATTRD_INTERVAL);
+    guint interval_ms = crm_parse_interval_spec(interval_spec);
     char *attr = NULL;
     GHashTableIter iter;
     regex_t regex;
 
-    if (attrd_failure_regex(&regex, rsc, op, interval) != pcmk_ok) {
+    if (attrd_failure_regex(&regex, rsc, op, interval_ms) != pcmk_ok) {
         crm_info("Ignoring invalid request to clear failures for %s",
                  (rsc? rsc : "all resources"));
         return;
@@ -610,9 +619,20 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
         xmlNode *child = NULL;
 
         crm_info("Processing %s from %s", op, peer->uname);
+
+        /* Clear the seen flag for attribute processing held only in the own node. */
+        if (peer_state == election_won) {
+            clear_attribute_value_seen();
+        }
+
         for (child = __xml_first_child(xml); child != NULL; child = __xml_next(child)) {
             host = crm_element_value(child, F_ATTRD_HOST);
             attrd_peer_update(peer, child, host, TRUE);
+        }
+
+        if (peer_state == election_won) {
+            /* Synchronize if there is an attribute held only by own node that Writer does not have. */
+            attrd_current_only_attribute_update(peer, xml);
         }
     }
 }
@@ -702,7 +722,7 @@ attrd_lookup_or_create_value(GHashTable *values, const char *host, xmlNode *xml)
         }
 
         /* Ensure this host is in the remote peer cache */
-        crm_remote_peer_cache_add(host);
+        CRM_ASSERT(crm_remote_peer_get(host) != NULL);
     }
 
     if (v == NULL) {
@@ -716,6 +736,42 @@ attrd_lookup_or_create_value(GHashTable *values, const char *host, xmlNode *xml)
         g_hash_table_replace(values, v->nodename, v);
     }
     return(v);
+}
+
+void 
+attrd_current_only_attribute_update(crm_node_t *peer, xmlNode *xml)
+{
+    GHashTableIter aIter;
+    GHashTableIter vIter;
+    attribute_t *a;
+    attribute_value_t *v = NULL;
+    xmlNode *sync = create_xml_node(NULL, __FUNCTION__);
+    gboolean build = FALSE;    
+
+    crm_xml_add(sync, F_ATTRD_TASK, ATTRD_OP_SYNC_RESPONSE);
+
+    g_hash_table_iter_init(&aIter, attributes);
+    while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
+        g_hash_table_iter_init(&vIter, a->values);
+        while (g_hash_table_iter_next(&vIter, NULL, (gpointer *) & v)) {
+            if (safe_str_eq(v->nodename, attrd_cluster->uname) && v->seen == FALSE) {
+                crm_trace("Syncing %s[%s] = %s to everyone.(from local only attributes)", a->id, v->nodename, v->current);
+
+                build = TRUE;
+                build_attribute_xml(sync, a->id, a->set, a->uuid, a->timeout_ms, a->user, a->is_private,
+                            v->nodename, v->nodeid, v->current);
+            } else {
+                crm_trace("Local attribute(%s[%s] = %s) was ignore.(another host) : [%s]", a->id, v->nodename, v->current, attrd_cluster->uname);
+                continue;
+            }
+        }
+    }
+
+    if (build) {
+        crm_debug("Syncing values to everyone.(from local only attributes)");
+        send_attrd_message(NULL, sync);
+    }
+    free_xml(sync);
 }
 
 void
@@ -846,6 +902,9 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
         crm_trace("Unchanged %s[%s] from %s is %s", attr, host, peer->uname, value);
     }
 
+    /* Set the seen flag for attribute processing held only in the own node. */
+    v->seen = TRUE;
+
     /* If this is a cluster node whose node ID we are learning, remember it */
     if ((v->nodeid == 0) && (v->is_remote == FALSE)
         && (crm_element_value_int(xml, F_ATTRD_HOST_ID, (int*)&v->nodeid) == 0)) {
@@ -897,7 +956,7 @@ attrd_election_cb(gpointer user_data)
 void
 attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *data)
 {
-    if ((kind == crm_status_nstate) || (kind == crm_status_rstate)) {
+    if (kind == crm_status_nstate) {
         if (safe_str_eq(peer->state, CRM_NODE_MEMBER)) {
             /* If we're the writer, send new peers a list of all attributes
              * (unless it's a remote node, which doesn't run its own attrd)
@@ -1140,7 +1199,7 @@ write_attribute(attribute_t *a)
         if (peer->uuid == NULL) {
             a->unknown_peer_uuids = TRUE;
             crm_notice("Update %s[%s]=%s postponed: unknown peer UUID, will retry if UUID is learned",
-                       a->id, v->nodename, v->current, peer);
+                       a->id, v->nodename, v->current);
             continue;
         }
 

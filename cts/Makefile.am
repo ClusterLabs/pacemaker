@@ -68,7 +68,7 @@ pe_DATA		= $(PE_TESTS) \
 		  $(PE_TESTS:%.scores=%.summary) \
 		  $(wildcard pengine/*.stderr)
 
-# For "make test", run a single pengine test
+# For "make check", run a single pengine test
 TESTS = pengine/bug-rh-1097457.xml
 TEST_EXTENSIONS = .xml
 XML_LOG_COMPILER = ./cts-pengine

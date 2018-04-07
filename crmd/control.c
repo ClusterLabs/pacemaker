@@ -166,16 +166,6 @@ extern GHashTable *resource_history;
 extern GHashTable *voted;
 extern char *te_client_id;
 
-void log_connected_client(gpointer key, gpointer value, gpointer user_data);
-
-void
-log_connected_client(gpointer key, gpointer value, gpointer user_data)
-{
-    crm_client_t *client = value;
-
-    crm_err("%s is still connected at exit", crm_client_name(client));
-}
-
 crm_exit_t
 crmd_fast_exit(crm_exit_t exit_code)
 {

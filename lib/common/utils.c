@@ -1,19 +1,8 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -72,7 +61,6 @@ char *crm_system_name = NULL;
 int node_score_red = 0;
 int node_score_green = 0;
 int node_score_yellow = 0;
-int node_score_infinity = INFINITY;
 
 static struct crm_option *crm_long_options = NULL;
 static const char *crm_app_description = NULL;
@@ -115,9 +103,9 @@ check_number(const char *value)
     if (value == NULL) {
         return FALSE;
 
-    } else if (safe_str_eq(value, MINUS_INFINITY_S)) {
+    } else if (safe_str_eq(value, CRM_MINUS_INFINITY_S)) {
 
-    } else if (safe_str_eq(value, INFINITY_S)) {
+    } else if (safe_str_eq(value, CRM_INFINITY_S)) {
 
     } else {
         crm_int_helper(value, NULL);
@@ -132,7 +120,7 @@ check_number(const char *value)
 gboolean
 check_positive_number(const char* value)
 {
-    if (safe_str_eq(value, INFINITY_S) || (crm_int_helper(value, NULL))) {
+    if (safe_str_eq(value, CRM_INFINITY_S) || (crm_int_helper(value, NULL))) {
         return TRUE;
     }
     return FALSE;
@@ -212,14 +200,14 @@ char2score(const char *score)
 
     if (score == NULL) {
 
-    } else if (safe_str_eq(score, MINUS_INFINITY_S)) {
-        score_f = -node_score_infinity;
+    } else if (safe_str_eq(score, CRM_MINUS_INFINITY_S)) {
+        score_f = -CRM_SCORE_INFINITY;
 
-    } else if (safe_str_eq(score, INFINITY_S)) {
-        score_f = node_score_infinity;
+    } else if (safe_str_eq(score, CRM_INFINITY_S)) {
+        score_f = CRM_SCORE_INFINITY;
 
-    } else if (safe_str_eq(score, "+" INFINITY_S)) {
-        score_f = node_score_infinity;
+    } else if (safe_str_eq(score, CRM_PLUS_INFINITY_S)) {
+        score_f = CRM_SCORE_INFINITY;
 
     } else if (safe_str_eq(score, "red")) {
         score_f = node_score_red;
@@ -232,11 +220,11 @@ char2score(const char *score)
 
     } else {
         score_f = crm_parse_int(score, NULL);
-        if (score_f > 0 && score_f > node_score_infinity) {
-            score_f = node_score_infinity;
+        if (score_f > 0 && score_f > CRM_SCORE_INFINITY) {
+            score_f = CRM_SCORE_INFINITY;
 
-        } else if (score_f < 0 && score_f < -node_score_infinity) {
-            score_f = -node_score_infinity;
+        } else if (score_f < 0 && score_f < -CRM_SCORE_INFINITY) {
+            score_f = -CRM_SCORE_INFINITY;
         }
     }
 
@@ -246,10 +234,10 @@ char2score(const char *score)
 char *
 score2char_stack(int score, char *buf, size_t len)
 {
-    if (score >= node_score_infinity) {
-        strncpy(buf, INFINITY_S, 9);
-    } else if (score <= -node_score_infinity) {
-        strncpy(buf, MINUS_INFINITY_S , 10);
+    if (score >= CRM_SCORE_INFINITY) {
+        strncpy(buf, CRM_INFINITY_S, 9);
+    } else if (score <= -CRM_SCORE_INFINITY) {
+        strncpy(buf, CRM_MINUS_INFINITY_S , 10);
     } else {
         return crm_itoa_stack(score, buf, len);
     }
@@ -260,11 +248,11 @@ score2char_stack(int score, char *buf, size_t len)
 char *
 score2char(int score)
 {
-    if (score >= node_score_infinity) {
-        return strdup(INFINITY_S);
+    if (score >= CRM_SCORE_INFINITY) {
+        return strdup(CRM_INFINITY_S);
 
-    } else if (score <= -node_score_infinity) {
-        return strdup("-" INFINITY_S);
+    } else if (score <= -CRM_SCORE_INFINITY) {
+        return strdup(CRM_MINUS_INFINITY_S);
     }
     return crm_itoa(score);
 }
@@ -548,13 +536,13 @@ gboolean do_stderr = FALSE;
 #  define	WHITESPACE	" \t\n\r\f"
 #endif
 
-unsigned long long
-crm_get_interval(const char *input)
+guint
+crm_parse_interval_spec(const char *input)
 {
-    unsigned long long msec = 0;
+    long long msec = 0;
 
     if (input == NULL) {
-        return msec;
+        return 0;
 
     } else if (input[0] != 'P') {
         long long tmp = crm_get_msec(input);
@@ -564,13 +552,13 @@ crm_get_interval(const char *input)
         }
 
     } else {
-        crm_time_t *interval = crm_time_parse_duration(input);
+        crm_time_t *period_s = crm_time_parse_duration(input);
 
-        msec = 1000 * crm_time_get_seconds(interval);
-        crm_time_free(interval);
+        msec = 1000 * crm_time_get_seconds(period_s);
+        crm_time_free(period_s);
     }
 
-    return msec;
+    return (msec <= 0)? 0 : ((msec >= G_MAXUINT)? G_MAXUINT : (guint) msec);
 }
 
 long long
@@ -724,7 +712,7 @@ crm_pid_active(long pid, const char *daemon)
         char proc_path[PATH_MAX], exe_path[PATH_MAX], myexe_path[PATH_MAX];
 
         /* check to make sure pid hasn't been reused by another process */
-        snprintf(proc_path, sizeof(proc_path), "/proc/%lu/exe", pid);
+        snprintf(proc_path, sizeof(proc_path), "/proc/%ld/exe", pid);
 
         rc = readlink(proc_path, exe_path, PATH_MAX - 1);
         if (rc < 0 && errno == EACCES) {
@@ -778,7 +766,7 @@ crm_read_pidfile(const char *filename)
         goto bail;
     }
 
-    if (sscanf(buf, "%lu", &pid) > 0) {
+    if (sscanf(buf, "%ld", &pid) > 0) {
         if (pid <= 0) {
             pid = -ESRCH;
         } else {
@@ -825,7 +813,7 @@ crm_lock_pidfile(const char *filename, const char *name)
 {
     long mypid = 0;
     int fd = 0, rc = 0;
-    char buf[LOCKSTRLEN + 1];
+    char buf[LOCKSTRLEN + 2];
 
     mypid = (unsigned long)getpid();
 
@@ -843,7 +831,7 @@ crm_lock_pidfile(const char *filename, const char *name)
         return -errno;
     }
 
-    snprintf(buf, sizeof(buf), "%*lu\n", LOCKSTRLEN - 1, mypid);
+    snprintf(buf, sizeof(buf), "%*ld\n", LOCKSTRLEN - 1, mypid);
     rc = write(fd, buf, LOCKSTRLEN);
     close(fd);
 
@@ -1437,14 +1425,14 @@ crm_gnutls_global_init(void)
 #endif
 
 char *
-crm_generate_ra_key(const char *class, const char *provider, const char *type)
+crm_generate_ra_key(const char *standard, const char *provider, const char *type)
 {
-    if (!class && !provider && !type) {
+    if (!standard && !provider && !type) {
         return NULL;
     }
 
     return crm_strdup_printf("%s%s%s:%s",
-                             (class? class : ""),
+                             (standard? standard : ""),
                              (provider? ":" : ""), (provider? provider : ""),
                              (type? type : ""));
 }

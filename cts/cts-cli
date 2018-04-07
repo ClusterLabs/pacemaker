@@ -71,6 +71,9 @@ function test_assert() {
 }
 
 function test_tools() {
+    local TMPXML=$(mktemp --tmpdir cts-cli.tools.xml.XXXXXXXXXX)
+    local TMPORIG=$(mktemp --tmpdir cts-cli.tools.existing.xml.XXXXXXXXXX)
+
     $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow  2>&1
     export CIB_shadow=$shadow
 
@@ -91,7 +94,7 @@ function test_tools() {
     test_assert $CRM_EX_OK
 
     desc="Query CIB"
-    cmd="cibadmin -Q > /tmp/$$.existing.xml"
+    cmd="cibadmin -Q > $TMPORIG"
     test_assert $CRM_EX_OK
 
     desc="Set cluster option"
@@ -103,7 +106,7 @@ function test_tools() {
     test_assert $CRM_EX_OK
 
     desc="Query cluster options"
-    cmd="cibadmin -Q -o crm_config > /tmp/$$.opt.xml"
+    cmd="cibadmin -Q -o crm_config > $TMPXML"
     test_assert $CRM_EX_OK
 
     desc="Set no-quorum policy"
@@ -115,11 +118,11 @@ function test_tools() {
     test_assert $CRM_EX_OK
 
     desc="Create operation should fail"
-    cmd="cibadmin -C -o crm_config --xml-file /tmp/$$.opt.xml"
+    cmd="cibadmin -C -o crm_config --xml-file $TMPXML"
     test_assert $CRM_EX_EXISTS
 
     desc="Modify cluster options section"
-    cmd="cibadmin -M -o crm_config --xml-file /tmp/$$.opt.xml"
+    cmd="cibadmin -M -o crm_config --xml-file $TMPXML"
     test_assert $CRM_EX_OK
 
     desc="Query updated cluster option"
@@ -172,7 +175,7 @@ function test_tools() {
 
     # This update will fail because it has version numbers
     desc="Replace operation should fail"
-    cmd="cibadmin -R --xml-file /tmp/$$.existing.xml"
+    cmd="cibadmin -R --xml-file $TMPORIG"
     test_assert $CRM_EX_OLD
 
     desc="Default standby value"
@@ -352,7 +355,7 @@ function test_tools() {
     test_assert $CRM_EX_OK
 
     desc="Copy resources"
-    cmd="cibadmin -Q -o resources > /tmp/$$.resources.xml"
+    cmd="cibadmin -Q -o resources > $TMPXML"
     test_assert $CRM_EX_OK 0
 
     desc="Delete resource paremt meta attribute (force)"
@@ -360,14 +363,14 @@ function test_tools() {
     test_assert $CRM_EX_OK
 
     desc="Restore duplicates"
-    cmd="cibadmin -R -o resources --xml-file /tmp/$$.resources.xml"
+    cmd="cibadmin -R -o resources --xml-file $TMPXML"
     test_assert $CRM_EX_OK
 
     desc="Delete resource child meta attribute"
     cmd="crm_resource -r test-primitive --meta -d is-managed"
     test_assert $CRM_EX_OK
 
-    rm -f /tmp/$$.existing.xml /tmp/$$.resources.xml
+    rm -f "$TMPXML" "$TMPORIG"
 }
 
 function test_dates() {
@@ -427,6 +430,8 @@ function restore_epoch() {
 }
 
 function test_acl_loop() {
+    local TMPXML="$1"
+
     # Make sure we're rejecting things for the right reasons
     export PCMK_trace_functions=__xml_acl_check,__xml_acl_post_process
     export PCMK_stderr=1
@@ -539,82 +544,82 @@ function test_acl_loop() {
     cmd="cibadmin -Q"
     test_assert $CRM_EX_OK 0
 
-    CIB_user=root cibadmin -Q > /tmp/$$.haxor.xml
-    CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin --delete --xml-text '<acls/>'
-    CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin -Ql
+    CIB_user=root cibadmin -Q > "$TMPXML"
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin --delete --xml-text '<acls/>'
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
 
     export CIB_user=niceguy
     desc="$CIB_user: Replace - remove acls"
-    cmd="cibadmin --replace --xml-file /tmp/$$.haxor.xml"
+    cmd="cibadmin --replace --xml-file $TMPXML"
     test_assert $CRM_EX_INSUFFICIENT_PRIV 0
 
-    CIB_user=root cibadmin -Q > /tmp/$$.haxor.xml
-    CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin -C -o resources --xml-text '<primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>'
-    CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin -Ql
+    CIB_user=root cibadmin -Q > "$TMPXML"
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -C -o resources --xml-text '<primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>'
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
 
     desc="$CIB_user: Replace - create resource"
-    cmd="cibadmin --replace --xml-file /tmp/$$.haxor.xml"
+    cmd="cibadmin --replace --xml-file $TMPXML"
     test_assert $CRM_EX_INSUFFICIENT_PRIV 0
 
-    CIB_user=root cibadmin -Q > /tmp/$$.haxor.xml
-    CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" crm_attribute -n enable-acl -v false
-    CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin -Ql
+    CIB_user=root cibadmin -Q > "$TMPXML"
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" crm_attribute -n enable-acl -v false
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
 
     desc="$CIB_user: Replace - modify attribute (deny)"
-    cmd="cibadmin --replace --xml-file /tmp/$$.haxor.xml"
+    cmd="cibadmin --replace --xml-file $TMPXML"
     test_assert $CRM_EX_INSUFFICIENT_PRIV 0
 
-    CIB_user=root cibadmin -Q > /tmp/$$.haxor.xml
-    CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin --replace --xml-text '<nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl"/>'
-    CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin -Ql
+    CIB_user=root cibadmin -Q > "$TMPXML"
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin --replace --xml-text '<nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl"/>'
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
 
     desc="$CIB_user: Replace - delete attribute (deny)"
-    cmd="cibadmin --replace --xml-file /tmp/$$.haxor.xml"
+    cmd="cibadmin --replace --xml-file $TMPXML"
     test_assert $CRM_EX_INSUFFICIENT_PRIV 0
 
-    CIB_user=root cibadmin -Q > /tmp/$$.haxor.xml
-    CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin --modify --xml-text '<primitive id="dummy" description="nothing interesting"/>'
-    CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin -Ql
+    CIB_user=root cibadmin -Q > "$TMPXML"
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin --modify --xml-text '<primitive id="dummy" description="nothing interesting"/>'
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
 
     desc="$CIB_user: Replace - create attribute (deny)"
-    cmd="cibadmin --replace --xml-file /tmp/$$.haxor.xml"
+    cmd="cibadmin --replace --xml-file $TMPXML"
     test_assert $CRM_EX_INSUFFICIENT_PRIV 0
-    rm -rf /tmp/$$.haxor.xml
-
 
     CIB_user=bob
-    CIB_user=root cibadmin -Q > /tmp/$$.haxor.xml
-    CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin --modify --xml-text '<primitive id="dummy" description="nothing interesting"/>'
-    CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin -Ql
+    CIB_user=root cibadmin -Q > "$TMPXML"
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin --modify --xml-text '<primitive id="dummy" description="nothing interesting"/>'
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
 
     desc="$CIB_user: Replace - create attribute (allow)"
-    cmd="cibadmin --replace -o resources --xml-file /tmp/$$.haxor.xml"
+    cmd="cibadmin --replace -o resources --xml-file $TMPXML"
     test_assert $CRM_EX_OK 0
 
-    CIB_user=root cibadmin -Q > /tmp/$$.haxor.xml
-    CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin --modify --xml-text '<primitive id="dummy" description="something interesting"/>'
-    CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin -Ql
+    CIB_user=root cibadmin -Q > "$TMPXML"
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin --modify --xml-text '<primitive id="dummy" description="something interesting"/>'
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
 
     desc="$CIB_user: Replace - modify attribute (allow)"
-    cmd="cibadmin --replace -o resources --xml-file /tmp/$$.haxor.xml"
+    cmd="cibadmin --replace -o resources --xml-file $TMPXML"
     test_assert $CRM_EX_OK 0
 
-    CIB_user=root cibadmin -Q > /tmp/$$.haxor.xml
-    CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin --replace -o resources --xml-text '<primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>'
-    CIB_user=root CIB_file=/tmp/$$.haxor.xml CIB_shadow="" cibadmin -Ql
+    CIB_user=root cibadmin -Q > "$TMPXML"
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin --replace -o resources --xml-text '<primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>'
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
 
     desc="$CIB_user: Replace - delete attribute (allow)"
-    cmd="cibadmin --replace -o resources --xml-file /tmp/$$.haxor.xml"
+    cmd="cibadmin --replace -o resources --xml-file $TMPXML"
     test_assert $CRM_EX_OK 0
 }
 
 function test_acls() {
     local SHADOWPATH
+    local TMPXML=$(mktemp --tmpdir cts-cli.acls.xml.XXXXXXXXXX)
+
 
     $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow --validate-with pacemaker-1.3 2>&1
     export CIB_shadow=$shadow
 
-    cat <<EOF >/tmp/$$.acls.xml
+    cat <<EOF > "$TMPXML"
     <acls>
       <acl_user id="l33t-haxor">
         <deny id="crook-nothing" xpath="/cib"/>
@@ -638,7 +643,7 @@ function test_acls() {
 EOF
 
     desc="Configure some ACLs"
-    cmd="cibadmin -M -o acls --xml-file /tmp/$$.acls.xml"
+    cmd="cibadmin -M -o acls --xml-file $TMPXML"
     test_assert $CRM_EX_OK
 
     desc="Enable ACLs"
@@ -661,13 +666,13 @@ EOF
     cmd="cibadmin --replace -o acls --xml-text '<acl_user id=\"betteridea\"><deny id=\"betteridea-nothing\" xpath=\"/cib\"/><read id=\"betteridea-resources\" xpath=\"//meta_attributes\"/></acl_user>'"
     test_assert $CRM_EX_OK
 
-    test_acl_loop
+    test_acl_loop "$TMPXML"
 
-    printf "\n\n    !#!#!#!#! Upgrading to pacemaker-2.0 and retesting !#!#!#!#!\n"
-    printf "\nUpgrading to pacemaker-2.0 and re-testing\n" 1>&2
+    printf "\n\n    !#!#!#!#! Upgrading to latest CIB schema and re-testing !#!#!#!#!\n"
+    printf "\nUpgrading to latest CIB schema and re-testing\n" 1>&2
 
     export CIB_user=root
-    desc="$CIB_user: Upgrade to pacemaker-2.0"
+    desc="$CIB_user: Upgrade to latest CIB schema"
     cmd="cibadmin --upgrade --force -V"
     test_assert $CRM_EX_OK
 
@@ -675,10 +680,13 @@ EOF
     sed -i 's/epoch=.2/epoch=\"6/g' "$SHADOWPATH"
     sed -i 's/admin_epoch=.1/admin_epoch=\"0/g' "$SHADOWPATH"
 
-    test_acl_loop
+    test_acl_loop "$TMPXML"
+    rm -f "$TMPXML"
 }
 
 function test_validity() {
+    local TMPGOOD=$(mktemp --tmpdir cts-cli.validity.good.xml.XXXXXXXXXX)
+    local TMPBAD=$(mktemp --tmpdir cts-cli.validity.bad.xml.XXXXXXXXXX)
 
     $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow --validate-with pacemaker-1.2 2>&1
     export CIB_shadow=$shadow
@@ -688,16 +696,16 @@ function test_validity() {
     cibadmin -C -o resources --xml-text '<primitive id="dummy1" class="ocf" provider="pacemaker" type="Dummy"/>'
     cibadmin -C -o resources --xml-text '<primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>'
     cibadmin -C -o constraints --xml-text '<rsc_order id="ord_1-2" first="dummy1" first-action="start" then="dummy2"/>'
-    cibadmin -Q > /tmp/$$.good-1.2.xml
+    cibadmin -Q > "$TMPGOOD"
 
 
     desc="Try to make resulting CIB invalid (enum violation)"
     cmd="cibadmin -M -o constraints --xml-text '<rsc_order id=\"ord_1-2\" first=\"dummy1\" first-action=\"break\" then=\"dummy2\"/>'"
     test_assert $CRM_EX_CONFIG
 
-    sed 's|"start"|"break"|' /tmp/$$.good-1.2.xml > /tmp/$$.bad-1.2.xml
+    sed 's|"start"|"break"|' "$TMPGOOD" > "$TMPBAD"
     desc="Run crm_simulate with invalid CIB (enum violation)"
-    cmd="crm_simulate -x /tmp/$$.bad-1.2.xml -S"
+    cmd="crm_simulate -x $TMPBAD -S"
     test_assert $CRM_EX_CONFIG 0
 
 
@@ -705,9 +713,9 @@ function test_validity() {
     cmd="cibadmin -M --xml-text '<cib validate-with=\"pacemaker-9999.0\"/>'"
     test_assert $CRM_EX_CONFIG
 
-    sed 's|"pacemaker-1.2"|"pacemaker-9999.0"|' /tmp/$$.good-1.2.xml > /tmp/$$.bad-1.2.xml
+    sed 's|"pacemaker-1.2"|"pacemaker-9999.0"|' "$TMPGOOD" > "$TMPBAD"
     desc="Run crm_simulate with invalid CIB (unrecognized validate-with)"
-    cmd="crm_simulate -x /tmp/$$.bad-1.2.xml -S"
+    cmd="crm_simulate -x $TMPBAD -S"
     test_assert $CRM_EX_CONFIG 0
 
 
@@ -715,19 +723,19 @@ function test_validity() {
     cmd="cibadmin -C -o configuration --xml-text '<tags/>'"
     test_assert $CRM_EX_CONFIG
 
-    sed 's|</configuration>|<tags/>\0|' /tmp/$$.good-1.2.xml > /tmp/$$.bad-1.2.xml
+    sed 's|</configuration>|<tags/>\0|' "$TMPGOOD" > "$TMPBAD"
     desc="Run crm_simulate with invalid, but possibly recoverable CIB (valid with X.Y+1)"
-    cmd="crm_simulate -x /tmp/$$.bad-1.2.xml -S"
+    cmd="crm_simulate -x $TMPBAD -S"
     test_assert $CRM_EX_OK 0
 
 
-    sed 's|\s\s*validate-with="[^"]*"||' /tmp/$$.good-1.2.xml > /tmp/$$.bad-1.2.xml
+    sed 's|\s\s*validate-with="[^"]*"||' "$TMPGOOD" > "$TMPBAD"
     desc="Make resulting CIB valid, although without validate-with attribute"
-    cmd="cibadmin -R --xml-file /tmp/$$.bad-1.2.xml"
+    cmd="cibadmin -R --xml-file $TMPBAD"
     test_assert $CRM_EX_OK
 
     desc="Run crm_simulate with valid CIB, but without validate-with attribute"
-    cmd="crm_simulate -x /tmp/$$.bad-1.2.xml -S"
+    cmd="crm_simulate -x $TMPBAD -S"
     test_assert $CRM_EX_OK 0
 
 
@@ -735,17 +743,16 @@ function test_validity() {
     # validation errors
     sed -e 's|\s\s*validate-with="[^"]*"||' \
         -e 's|\(\s\s*epoch="[^"]*\)"|\10"|' -e 's|"start"|"break"|' \
-        /tmp/$$.good-1.2.xml > /tmp/$$.bad-1.2.xml
+        "$TMPGOOD" > "$TMPBAD"
     desc="Make resulting CIB invalid, and without validate-with attribute"
-    cmd="cibadmin -R --xml-file /tmp/$$.bad-1.2.xml"
+    cmd="cibadmin -R --xml-file $TMPBAD"
     test_assert $CRM_EX_OK
 
     desc="Run crm_simulate with invalid CIB, also without validate-with attribute"
-    cmd="crm_simulate -x /tmp/$$.bad-1.2.xml -S"
+    cmd="crm_simulate -x $TMPBAD -S"
     test_assert $CRM_EX_OK 0
 
-
-    rm -f /tmp/$$.good-1.2.xml /tmp/$$.bad-1.2.xml
+    rm -f "$TMPGOOD" "$TMPBAD"
 }
 
 # Process command-line arguments
@@ -827,7 +834,7 @@ for t in $tests; do
         -e 's/.*__xml_acl_post_process/__xml_acl_post_process/g'\
         -e 's/.*error: unpack_resources:/error: unpack_resources:/g'\
         -e 's/ last-rc-change=\"[0-9]*\"//'\
-        -e 's|^/tmp/[0-9][0-9]*\.||'\
+        -e 's|^/tmp/cts-cli\.validity\.bad.xml\.[^:]*:|validity.bad.xml:|'\
         -e 's/^Entity: line [0-9][0-9]*: //'\
         -e 's/schemas\.c:\([0-9][0-9]*\)/schemas.c:NNN/' \
         -e 's/constraints\.:\([0-9][0-9]*\)/constraints.:NNN/' \

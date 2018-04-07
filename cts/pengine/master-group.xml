@@ -1,4 +1,4 @@
-<cib admin_epoch="0" epoch="80" num_updates="23" dc-uuid="782b1222-d1b9-4993-8f0d-b8b67801a2c8" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:07 2012">
+<cib admin_epoch="0" epoch="80" num_updates="23" dc-uuid="782b1222-d1b9-4993-8f0d-b8b67801a2c8" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-3.0" cib-last-written="Fri Jul 13 13:51:07 2012">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -57,7 +57,7 @@
       </group>
       <clone id="ms-sf">
         <meta_attributes id="meta_attributes.id22211">
-          <nvpair id="nvpair.id22216"  name="promotable" value="true"/>
+          <nvpair id="nvpair.id22216" name="promotable" value="true"/>
           <nvpair id="nvpair.id22217" name="clone-max" value="2"/>
           <nvpair id="nvpair.id22226" name="clone-node-max" value="1"/>
           <nvpair id="nvpair.id22234" name="promoted-max" value="1"/>
@@ -69,7 +69,6 @@
               <op name="monitor" interval="5s" id="ms-sf_monitor" timeout="30s"/>
               <op name="monitor" interval="6s" id="ms-sf_monitor_master" timeout="30s" role="Master"/>
             </operations>
-            <instance_attributes id="instance_attributes.id22294"/>
             <meta_attributes id="primitive-master_slave_Stateful.meta"/>
           </primitive>
           <meta_attributes id="group-grp_ms_sf.meta"/>

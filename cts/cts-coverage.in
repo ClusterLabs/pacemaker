@@ -1,4 +1,4 @@
-#!/bin/bash
+#!@BASH_PATH@
 
 start=$PWD
 test_home=`dirname $0`

@@ -139,16 +139,14 @@ void crm_args_fini(void);
 extern int node_score_red;
 extern int node_score_green;
 extern int node_score_yellow;
-extern int node_score_infinity;
 
 /* Assorted convenience functions */
 int crm_pid_active(long pid, const char *daemon);
 void crm_make_daemon(const char *name, gboolean daemonize, const char *pidfile);
 
 /* from operations.c */
-char *generate_op_key(const char *rsc_id, const char *op_type, int interval);
+char *generate_op_key(const char *rsc_id, const char *op_type, guint interval_ms);
 char *generate_notify_key(const char *rsc_id, const char *notify_type, const char *op_type);
-char *generate_transition_magic_v202(const char *transition_key, int op_status);
 char *generate_transition_magic(const char *transition_key, int op_status, int op_rc);
 char *generate_transition_key(int action, int transition_id, int target_rc, const char *node);
 void filter_action_parameters(xmlNode *param_set, const char *version);
@@ -156,6 +154,9 @@ xmlNode *create_operation_update(xmlNode *parent, lrmd_event_data_t *event,
                                  const char *caller_version, int target_rc,
                                  const char *node, const char *origin,
                                  int level);
+
+// printf-style format to create operation ID from resource, action, interval
+#define CRM_OP_FMT "%s_%s_%u"
 
 static inline long long
 crm_clear_bit(const char *function, int line, const char *target, long long word, long long bit)

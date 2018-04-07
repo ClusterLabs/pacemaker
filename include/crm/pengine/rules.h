@@ -18,6 +18,10 @@
 #ifndef PENGINE_RULES__H
 #  define PENGINE_RULES__H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #  include <glib.h>
 #  include <regex.h>
 
@@ -80,5 +84,8 @@ GHashTable *pe_unpack_versioned_parameters(xmlNode *versioned_params, const char
 
 char *pe_expand_re_matches(const char *string, pe_re_match_data_t * match_data);
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -16,18 +16,18 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#ifndef __PCMK_SERVICES__
+#  define __PCMK_SERVICES__
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * \file
  * \brief Services API
  * \ingroup core
  */
-
-#ifndef __PCMK_SERVICES__
-#  define __PCMK_SERVICES__
-
-#  ifdef __cplusplus
-extern "C" {
-#  endif
 
 #  include <glib.h>
 #  include <stdio.h>
@@ -46,11 +46,6 @@ extern "C" {
 /* TODO: Autodetect these two ?*/
 #  ifndef SYSTEMCTL
 #    define SYSTEMCTL "/bin/systemctl"
-#  endif
-
-/* Deprecated and unused by Pacemaker, kept for API backward compatibility */
-#  ifndef SERVICE_SCRIPT
-#    define SERVICE_SCRIPT "/sbin/service"
 #  endif
 
 /* Known resource classes */
@@ -130,6 +125,7 @@ enum ocf_exitcode {
 };
 
 enum op_status {
+    PCMK_LRM_OP_UNKNOWN = -2,
     PCMK_LRM_OP_PENDING = -1,
     PCMK_LRM_OP_DONE,
     PCMK_LRM_OP_CANCELLED,
@@ -162,7 +158,7 @@ typedef struct svc_action_s {
     char *id;
     char *rsc;
     char *action;
-    int interval;
+    guint interval_ms;
 
     char *standard;
     char *provider;
@@ -243,20 +239,20 @@ typedef struct svc_action_s {
  */
     GList *resources_list_standards(void);
 
-    svc_action_t *services_action_create(const char *name, const char *action,
-                                         int interval /* ms */ , int timeout /* ms */ );
+svc_action_t *services_action_create(const char *name, const char *action,
+                                     guint interval_ms, int timeout /* ms */);
 
 /**
  * \brief Create a new resource action
  *
- * \param[in] name     name of resource
- * \param[in] standard resource agent standard (ocf, lsb, etc.)
- * \param[in] provider resource agent provider
- * \param[in] agent    resource agent name
- * \param[in] action   action (start, stop, monitor, etc.)
- * \param[in] interval how often to repeat this action, in milliseconds (if 0, execute only once)
- * \param[in] timeout  consider action failed if it does not complete in this many milliseconds
- * \param[in] params   action parameters
+ * \param[in] name        Name of resource
+ * \param[in] standard    Resource agent standard (ocf, lsb, etc.)
+ * \param[in] provider    Resource agent provider
+ * \param[in] agent       Resource agent name
+ * \param[in] action      action (start, stop, monitor, etc.)
+ * \param[in] interval_ms How often to repeat this action (if 0, execute once)
+ * \param[in] timeout     Consider action failed if it does not complete in this many milliseconds
+ * \param[in] params      Action parameters
  *
  * \return newly allocated action instance
  *
@@ -264,16 +260,17 @@ typedef struct svc_action_s {
  * \note The caller is responsible for freeing the return value using
  *       services_action_free().
  */
-    svc_action_t *resources_action_create(const char *name, const char *standard,
-                                          const char *provider, const char *agent,
-                                          const char *action, int interval /* ms */ ,
-                                          int timeout /* ms */ , GHashTable * params,
-                                          enum svc_action_flags flags);
+svc_action_t *resources_action_create(const char *name, const char *standard,
+                                      const char *provider, const char *agent,
+                                      const char *action, guint interval_ms,
+                                      int timeout /* ms */, GHashTable *params,
+                                      enum svc_action_flags flags);
 
 /**
  * Kick a recurring action so it is scheduled immediately for re-execution
  */
-    gboolean services_action_kick(const char *name, const char *action, int interval /* ms */);
+gboolean services_action_kick(const char *name, const char *action,
+                              guint interval_ms);
 
     const char *resources_find_service_class(const char *agent);
 
@@ -309,7 +306,8 @@ typedef struct svc_action_s {
  */
     gboolean services_action_async(svc_action_t * op, void (*action_callback) (svc_action_t *));
 
-    gboolean services_action_cancel(const char *name, const char *action, int interval);
+gboolean services_action_cancel(const char *name, const char *action,
+                                guint interval_ms);
 
 /* functions for alert agents */
 svc_action_t *services_alert_create(const char *id, const char *exec,

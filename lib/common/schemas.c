@@ -1,19 +1,8 @@
 /*
- * Copyright (C) 2004-2016 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -25,9 +14,7 @@
 #include <sys/stat.h>
 #include <stdarg.h>
 
-#if HAVE_LIBXML2
-#  include <libxml/relaxng.h>
-#endif
+#include <libxml/relaxng.h>
 
 #if HAVE_LIBXSLT
 #  include <libxslt/xslt.h>
@@ -286,7 +273,6 @@ crm_schema_init(void)
                 // Shouldn't be possible, but makes static analysis happy
                 crm_err("Skipping schema '%s': could not parse version",
                         namelist[lpc]->d_name);
-                free(namelist[lpc]);
                 continue;
             }
             if ((lpc + 1) < max) {
@@ -316,9 +302,13 @@ crm_schema_init(void)
             }
             add_schema(schema_validator_rng, &version, NULL, NULL, transform,
                        next);
-            free(namelist[lpc]);
             free(transform);
         }
+
+        for (lpc = 0; lpc < max; lpc++) {
+            free(namelist[lpc]);
+        }
+        free(namelist);
     }
 
     add_schema(schema_validator_rng, &zero, "pacemaker-next",
@@ -326,7 +316,6 @@ crm_schema_init(void)
 
     add_schema(schema_validator_none, &zero, "none",
                "N/A", NULL, -1);
-    free(namelist);
 }
 
 #if 0
@@ -560,13 +549,9 @@ validate_xml_verbose(xmlNode *xml_blob)
     xmlDoc *doc = NULL;
     xmlNode *xml = NULL;
     gboolean rc = FALSE;
-    const char *tmpdir = getenv("TMPDIR");
     char *filename = NULL;
 
-    if ((tmpdir == NULL) || (*tmpdir != '/')) {
-        tmpdir = "/tmp";
-    }
-    filename = crm_strdup_printf("%s/cib-invalid.XXXXXX", tmpdir);
+    filename = crm_strdup_printf("%s/cib-invalid.XXXXXX", crm_get_tmpdir());
 
     umask(S_IWGRP | S_IWOTH | S_IROTH);
     fd = mkstemp(filename);
@@ -640,6 +625,25 @@ cib_upgrade_err(void *ctx, const char *fmt, ...)
     va_end(ap);
 }
 
+
+/* Denotes temporary emergency fix for "xmldiff'ing not text-node-ready";
+   proper fix is most likely to teach __xml_diff_object and friends to
+   deal with XML_TEXT_NODE (and more?), i.e., those nodes currently
+   missing "_private" field (implicitly as NULL) which clashes with
+   unchecked accesses (e.g. in __xml_offset) -- the outcome may be that
+   those unexpected XML nodes will simply be ignored for the purpose of
+   diff'ing, or it may be made more robust, or per the user's preference
+   (which then may be exposed as crm_diff switch).
+
+   Said XML_TEXT_NODE may appear unexpectedly due to how upgrade-2.10.xsl
+   is arranged.
+
+   The emergency fix is simple: reparse XSLT output with blank-ignoring
+   parser. */
+#ifndef PCMK_SCHEMAS_EMERGENCY_XSLT
+#define PCMK_SCHEMAS_EMERGENCY_XSLT 1
+#endif
+
 static xmlNode *
 apply_transformation(xmlNode *xml, const char *transform, gboolean to_logs)
 {
@@ -648,6 +652,11 @@ apply_transformation(xmlNode *xml, const char *transform, gboolean to_logs)
     xmlDocPtr res = NULL;
     xmlDocPtr doc = NULL;
     xsltStylesheet *xslt = NULL;
+#if PCMK_SCHEMAS_EMERGENCY_XSLT != 0
+    xmlChar *emergency_result;
+    int emergency_txt_len;
+    int emergency_res;
+#endif
 
     CRM_CHECK(xml != NULL, return FALSE);
     doc = getDocPtr(xml);
@@ -671,7 +680,17 @@ apply_transformation(xmlNode *xml, const char *transform, gboolean to_logs)
 
     xsltSetGenericErrorFunc(NULL, NULL);  /* restore default one */
 
+
+#if PCMK_SCHEMAS_EMERGENCY_XSLT != 0
+    emergency_res = xsltSaveResultToString(&emergency_result,
+                                           &emergency_txt_len, res, xslt);
+    free(res);
+    CRM_CHECK(emergency_res == 0, goto cleanup);
+    out = string2xml((const char *) emergency_result);
+    free(emergency_result);
+#else
     out = xmlDocGetRootElement(res);
+#endif
 
   cleanup:
     if (xslt) {

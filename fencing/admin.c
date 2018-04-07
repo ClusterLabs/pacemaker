@@ -380,8 +380,9 @@ show_history(stonith_t *st, const char *target, int timeout, int quiet,
              * that don't report stateful_merge_wait
              */
             action_s = fence_action_str(hp->action);
-            printf("%s at %s wishes to %s node %s - %d %d\n",
-                   hp->client, hp->origin, action_s, hp->target, hp->state, hp->completed);
+            printf("%s at %s wishes to %s node %s - %d %lld\n",
+                   hp->client, hp->origin, action_s, hp->target, hp->state,
+                   (long long) complete);
         }
 
         free(action_s);
@@ -389,7 +390,7 @@ show_history(stonith_t *st, const char *target, int timeout, int quiet,
 
     if (latest) {
         if (quiet) {
-            printf("%d\n", latest->completed);
+            printf("%lld\n", (long long) latest->completed);
         } else if (!verbose) { // already printed if verbose
             print_fence_event(latest);
         }

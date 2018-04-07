@@ -382,10 +382,9 @@ pcmk_cpg_membership(cpg_handle_t handle,
                 peer->votes = now;
 
             } else if(now > (60 + peer->votes)) {
-                /* On the otherhand, if we're still getting messages, at a certain point
-                 * we need to acknowledge our internal cache is probably wrong
-                 *
-                 * Set the threshold to 1 minute
+                /* On the other hand, if we're still getting messages, at a
+                 * certain point we need to acknowledge our internal cache is
+                 * probably wrong. Use 1 minute.
                  */
                 crm_err("Node %s[%u] appears to be online even though we think it is dead", peer->uname, peer->id);
                 if (crm_update_peer_state(__FUNCTION__, peer, CRM_NODE_MEMBER, 0)) {
@@ -493,8 +492,8 @@ send_cluster_message_cs(xmlNode * msg, gboolean local, crm_node_t * node, enum c
 }
 
 gboolean
-send_cluster_text(int class, const char *data,
-              gboolean local, crm_node_t * node, enum crm_ais_msg_types dest)
+send_cluster_text(enum crm_ais_msg_class msg_class, const char *data,
+                  gboolean local, crm_node_t *node, enum crm_ais_msg_types dest)
 {
     static int msg_id = 0;
     static int local_pid = 0;
@@ -506,11 +505,11 @@ send_cluster_text(int class, const char *data,
     AIS_Message *msg = NULL;
     enum crm_ais_msg_types sender = text2msg_type(crm_system_name);
 
-    switch (class) {
+    switch (msg_class) {
         case crm_class_cluster:
             break;
         default:
-            crm_err("Invalid message class: %d", class);
+            crm_err("Invalid message class: %d", msg_class);
             return FALSE;
     }
 
@@ -539,7 +538,7 @@ send_cluster_text(int class, const char *data,
 
     msg_id++;
     msg->id = msg_id;
-    msg->header.id = class;
+    msg->header.id = msg_class;
     msg->header.error = CS_OK;
 
     msg->host.type = dest;

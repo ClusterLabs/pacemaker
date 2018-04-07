@@ -1,4 +1,4 @@
-<cib epoch="84" num_updates="8" admin_epoch="0" validate-with="pacemaker-1.2" cib-last-written="Mon Dec  2 06:37:23 2013" update-origin="rhos4-node3" update-client="crmd" crm_feature_set="3.0.7" have-quorum="1" dc-uuid="rhos4-node4">
+<cib epoch="84" num_updates="8" admin_epoch="0" validate-with="pacemaker-3.0" cib-last-written="Mon Dec  2 06:37:23 2013" update-origin="rhos4-node3" update-client="crmd" crm_feature_set="3.0.7" have-quorum="1" dc-uuid="rhos4-node4">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -13,7 +13,6 @@
     </nodes>
     <resources>
       <primitive class="stonith" id="virt-fencing" type="fence_xvm">
-        <instance_attributes id="virt-fencing-instance_attributes"/>
         <operations>
           <op id="virt-fencing-monitor-interval-60s" interval="60s" name="monitor"/>
         </operations>
@@ -52,7 +51,6 @@
       </group>
       <clone id="qpidd-clone">
         <primitive class="lsb" id="qpidd" type="qpidd">
-          <instance_attributes id="qpidd-instance_attributes"/>
           <operations>
             <op id="qpidd-monitor-interval-60s" interval="60s" name="monitor"/>
           </operations>
@@ -64,7 +62,6 @@
       </clone>
       <clone id="keystone-clone">
         <primitive class="lsb" id="keystone" type="openstack-keystone">
-          <instance_attributes id="keystone-instance_attributes"/>
           <operations>
             <op id="keystone-monitor-interval-60s" interval="60s" name="monitor"/>
           </operations>
@@ -86,13 +83,11 @@
             </operations>
           </primitive>
           <primitive class="lsb" id="glance-registry" type="openstack-glance-registry">
-            <instance_attributes id="glance-registry-instance_attributes"/>
             <operations>
               <op id="glance-registry-monitor-interval-60s" interval="60s" name="monitor"/>
             </operations>
           </primitive>
           <primitive class="lsb" id="glance-api" type="openstack-glance-api">
-            <instance_attributes id="glance-api-instance_attributes"/>
             <operations>
               <op id="glance-api-monitor-interval-60s" interval="60s" name="monitor"/>
             </operations>
@@ -103,19 +98,16 @@
       <clone id="cinder-clone">
         <group id="cinder">
           <primitive class="lsb" id="cinder-api" type="openstack-cinder-api">
-            <instance_attributes id="cinder-api-instance_attributes"/>
             <operations>
               <op id="cinder-api-monitor-interval-60s" interval="60s" name="monitor"/>
             </operations>
           </primitive>
           <primitive class="lsb" id="cinder-scheduler" type="openstack-cinder-scheduler">
-            <instance_attributes id="cinder-scheduler-instance_attributes"/>
             <operations>
               <op id="cinder-scheduler-monitor-interval-60s" interval="60s" name="monitor"/>
             </operations>
           </primitive>
           <primitive class="lsb" id="cinder-volume" type="openstack-cinder-volume">
-            <instance_attributes id="cinder-volume-instance_attributes"/>
             <operations>
               <op id="cinder-volume-monitor-interval-60s" interval="60s" name="monitor"/>
             </operations>

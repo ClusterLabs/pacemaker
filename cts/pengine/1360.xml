@@ -1,4 +1,4 @@
-<cib admin_epoch="0" epoch="4" num_updates="91" dc-uuid="c728b2aa-1e73-491f-a03c-8f0598bab169" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:50:59 2012">
+<cib admin_epoch="0" epoch="4" num_updates="91" dc-uuid="c728b2aa-1e73-491f-a03c-8f0598bab169" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-3.0" cib-last-written="Fri Jul 13 13:50:59 2012">
   <configuration>
     <crm_config>
       <cluster_property_set id="no-stonith">
@@ -23,7 +23,6 @@
       </group>
       <clone id="dolly">
         <primitive id="dollies" class="ocf" type="clone_server" provider="gn1">
-          <instance_attributes id="instance_attributes.id21968"/>
           <meta_attributes id="primitive-dollies.meta"/>
         </primitive>
         <meta_attributes id="clone-dolly.meta">

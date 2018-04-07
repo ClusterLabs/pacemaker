@@ -20,12 +20,17 @@
 #ifndef LRMD__H
 #  define LRMD__H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * \file
  * \brief Local Resource Manager
  * \ingroup lrmd
  */
 #include <stdbool.h>
+#include <crm_config.h>
 #include <crm/services.h>
 
 typedef struct lrmd_s lrmd_t;
@@ -49,7 +54,7 @@ typedef struct lrmd_key_value_s {
 #define LRMD_MIN_PROTOCOL_VERSION "1.0"
 
 /* *INDENT-OFF* */
-#define DEFAULT_REMOTE_KEY_LOCATION "/etc/pacemaker/authkey"
+#define DEFAULT_REMOTE_KEY_LOCATION PACEMAKER_CONFIG_DIR "/authkey"
 #define ALT_REMOTE_KEY_LOCATION "/etc/corosync/authkey"
 #define DEFAULT_REMOTE_PORT 3121
 #define DEFAULT_REMOTE_USERNAME "lrmd"
@@ -104,6 +109,7 @@ typedef struct lrmd_key_value_s {
 #define LRMD_OP_NEW_CLIENT        "lrmd_rsc_new_client"
 #define LRMD_OP_CHECK             "lrmd_check"
 #define LRMD_OP_ALERT_EXEC        "lrmd_alert_exec"
+#define LRMD_OP_GET_RECURRING     "lrmd_get_recurring"
 
 #define LRMD_IPC_OP_NEW           "new"
 #define LRMD_IPC_OP_DESTROY       "destroy"
@@ -127,6 +133,7 @@ typedef struct lrmd_key_value_s {
 #define T_LRMD_REPLY     "lrmd_reply"
 #define T_LRMD_NOTIFY    "lrmd_notify"
 #define T_LRMD_IPC_PROXY "lrmd_ipc_proxy"
+#define T_LRMD_RSC_OP    "lrmd_rsc_op"
 /* *INDENT-ON* */
 
 /*!
@@ -213,7 +220,7 @@ typedef struct lrmd_event_data_s {
     /*! The operation's timeout period in ms. */
     int timeout;
     /*! The operation's recurring interval in ms. */
-    int interval;
+    guint interval_ms;
     /*! The operation's start delay value in ms. */
     int start_delay;
     /*! This operation that just completed is on a deleted rsc. */
@@ -256,12 +263,22 @@ void lrmd_free_event(lrmd_event_data_t * event);
 typedef struct lrmd_rsc_info_s {
     char *id;
     char *type;
-    char *class;
+    char *standard;
     char *provider;
 } lrmd_rsc_info_t;
 
+typedef struct lrmd_op_info_s {
+    char *rsc_id;
+    char *action;
+    char *interval_ms_s;
+    char *timeout_ms_s;
+} lrmd_op_info_t;
+
+lrmd_rsc_info_t *lrmd_new_rsc_info(const char *rsc_id, const char *standard,
+                                   const char *provider, const char *type);
 lrmd_rsc_info_t *lrmd_copy_rsc_info(lrmd_rsc_info_t * rsc_info);
 void lrmd_free_rsc_info(lrmd_rsc_info_t * rsc_info);
+void lrmd_free_op_info(lrmd_op_info_t *op_info);
 
 typedef void (*lrmd_event_callback) (lrmd_event_data_t * event);
 
@@ -329,7 +346,7 @@ typedef struct lrmd_api_operations_s {
      */
     int (*register_rsc) (lrmd_t * lrmd,
                          const char *rsc_id,
-                         const char *class,
+                         const char *standard,
                          const char *provider, const char *agent, enum lrmd_call_options options);
 
     /*!
@@ -340,6 +357,14 @@ typedef struct lrmd_api_operations_s {
      */
     lrmd_rsc_info_t *(*get_rsc_info) (lrmd_t * lrmd,
                                       const char *rsc_id, enum lrmd_call_options options);
+
+    /*!
+     * \brief Retrieve registered recurring operations
+     *
+     * \return pcmk_ok on success, -errno otherwise
+     */
+    int (*get_recurring_ops) (lrmd_t *lrmd, const char *rsc_id, int timeout_ms,
+                              enum lrmd_call_options options, GList **output);
 
     /*!
      * \brief Unregister a resource from the lrmd.
@@ -378,7 +403,7 @@ typedef struct lrmd_api_operations_s {
      * \retval negative error code on failure
      */
     int (*exec) (lrmd_t * lrmd, const char *rsc_id, const char *action, const char *userdata,   /* userdata string given back in event notification */
-                 int interval,  /* ms */
+                 guint interval_ms,
                  int timeout,   /* ms */
                  int start_delay,       /* ms */
                  enum lrmd_call_options options, lrmd_key_value_t * params);    /* ownership of params is given up to api here */
@@ -406,7 +431,8 @@ typedef struct lrmd_api_operations_s {
      * \retval 0, cancel command sent.
      * \retval negative error code on failure
      */
-    int (*cancel) (lrmd_t * lrmd, const char *rsc_id, const char *action, int interval);
+    int (*cancel) (lrmd_t *lrmd, const char *rsc_id, const char *action,
+                   guint interval_ms);
 
     /*!
      * \brief Get resource metadata for a specified resource agent
@@ -432,7 +458,7 @@ typedef struct lrmd_api_operations_s {
      * \retval negative error code on failure
      */
     int (*get_metadata) (lrmd_t * lrmd,
-                         const char *class,
+                         const char *standard,
                          const char *provider,
                          const char *agent, char **output, enum lrmd_call_options options);
 
@@ -445,8 +471,8 @@ typedef struct lrmd_api_operations_s {
      * \retval num items in list on success
      * \retval negative error code on failure
      */
-    int (*list_agents) (lrmd_t * lrmd, lrmd_list_t ** agents, const char *class,
-                        const char *provider);
+    int (*list_agents) (lrmd_t * lrmd, lrmd_list_t ** agents,
+                        const char *standard, const char *provider);
 
     /*!
      * \brief Retrieve a list of resource agent providers
@@ -493,7 +519,7 @@ typedef struct lrmd_api_operations_s {
 
 struct lrmd_s {
     lrmd_api_operations_t *cmds;
-    void *private;
+    void *lrmd_private;
 };
 
 static inline const char *
@@ -517,5 +543,9 @@ lrmd_event_type2str(enum lrmd_callback_event type)
     }
     return "unknown";
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

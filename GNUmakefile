@@ -154,20 +154,22 @@ $(PACKAGE)-suse.spec: $(PACKAGE).spec.in GNUmakefile
 	    git show $(TAG):$(PACKAGE).spec.in >> $@;				\
 	    echo "Rebuilt $@ from $(TAG)";					\
 	fi
-	sed -i s:%{_docdir}/%{name}:%{_docdir}/%{name}-%{version}:g $@
-	sed -i s:corosynclib:libcorosync:g $@
-	sed -i s:libexecdir}/lcrso:libdir}/lcrso:g $@
-	sed -i 's:%{name}-libs:lib%{name}3:g' $@
-	sed -i s:cluster-glue-libs:libglue:g $@
-	sed -i s:bzip2-devel:libbz2-devel:g $@
-	sed -i s:docbook-style-xsl:docbook-xsl-stylesheets:g $@
-	sed -i s:libtool-ltdl-devel::g $@
-	sed -i s:publican::g $@
-	sed -i s:byacc::g $@
-	sed -i s:gnutls-devel:libgnutls-devel:g $@
-	sed -i s:189:90:g $@
-	sed -i 's:python-devel:python-curses python-xml python-devel:' $@
-	sed -i 's@Requires:      python@Requires:      python-curses python-xml python@' $@
+	sed -i									\
+	    -e 's:%{_docdir}/%{name}:%{_docdir}/%{name}-%{version}:g'		\
+	    -e 's:%{name}-libs:lib%{name}3:g'					\
+	    -e 's@Requires:\( *\)%{python_pkg}\(-devel\)\? @Requires:\1python-curses python-xml %{python_pkg}\2 @' \
+	    -e 's: libtool-ltdl-devel\(%{?_isa}\)\?::g'				\
+	    -e 's:bzip2-devel:libbz2-devel:g'					\
+	    -e 's:docbook-style-xsl:docbook-xsl-stylesheets:g'			\
+	    -e 's: byacc::g'							\
+	    -e 's:gnutls-devel:libgnutls-devel:g'				\
+	    -e 's:corosynclib:libcorosync:g'					\
+	    -e 's:cluster-glue-libs:libglue:g'					\
+	    -e 's:shadow-utils:shadow:g'					\
+	    -e 's: publican::g'							\
+	    -e 's: 189: 90:g'							\
+	    -e 's:%{_libexecdir}/lcrso:%{_libdir}/lcrso:g'			\
+	    $@
 	@echo "Applied SUSE-specific modifications"
 
 
@@ -362,11 +364,14 @@ rel-tags: tags
 CLANG_analyzer = $(shell which scan-build)
 CLANG_checkers = 
 
-check: clang cppcheck
-
-# Extra cppcheck options:  --enable=all --inconclusive --std=posix
+# Use CPPCHECK_ARGS to pass extra cppcheck options, e.g.:
+# --enable={warning,style,performance,portability,information,all}
+# --inconclusive --std=posix
+CPPCHECK_ARGS ?=
 cppcheck:
-	for d in replace lib mcp attrd pengine cib crmd fencing lrmd tools; do cppcheck -q $$d; done
+	for d in replace lib mcp attrd pengine cib crmd fencing lrmd tools; \
+		do cppcheck $(CPPCHECK_ARGS) -q $$d; \
+	done
 
 clang:
 	test -e $(CLANG_analyzer)

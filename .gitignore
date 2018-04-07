@@ -68,6 +68,7 @@ cts/cts-stonithd
 cts/fence_dummy
 cts/lxc_autogen.sh
 extra/logrotate/pacemaker
+/fencing/fence_legacy
 include/config.h
 include/config.h.in
 include/crm_config.h
@@ -79,13 +80,16 @@ mcp/pacemaker.combined.upstart
 mcp/pacemaker.service
 mcp/pacemaker.upstart
 publican.cfg
-tools/cibsecret
-tools/crm_error
-tools/crm_mon.service
-tools/crm_mon.upstart
-tools/crm_report
-tools/report.collector
-tools/report.common
+/tools/cibsecret
+/tools/crm_error
+/tools/crm_failcount
+/tools/crm_master
+/tools/crm_mon.service
+/tools/crm_mon.upstart
+/tools/crm_report
+/tools/crm_standby
+/tools/report.collector
+/tools/report.common
 
 # Build targets
 *.7
@@ -156,13 +160,20 @@ lib/gnu/stdalign.h
 *.coverity
 
 # Test detritus
-cts/.regression.failed.diff
-cts/pengine/shadow.*
+/cts/.regression.failed.diff
+/cts/pengine/*.ref
+/cts/pengine/*.up
+/cts/pengine/*.up.err
+/cts/pengine/bug-rh-1097457.log
+/cts/pengine/bug-rh-1097457.trs
+/cts/pengine/shadow.*
+/cts/test-suite.log
 /xml/test-2/*.up
 /xml/test-2/*.up.err
 
 # Formerly built files (helps when jumping back and forth in checkout)
 /coverage.sh
+/cts/HBDummy
 /fencing/regression.py
 /lrmd/regression.py
 /pengine/.regression.failed.diff

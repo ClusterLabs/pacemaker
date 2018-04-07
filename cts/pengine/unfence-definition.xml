@@ -1,4 +1,4 @@
-<cib epoch="17" num_updates="25" admin_epoch="0" validate-with="pacemaker-1.2" cib-last-written="Wed Mar 19 19:51:25 2014" update-origin="virt-009.cluster-qe.lab.eng.brq.redhat.com" update-client="crm_resource" crm_feature_set="3.0.7" have-quorum="1" dc-uuid="8">
+<cib epoch="17" num_updates="25" admin_epoch="0" validate-with="pacemaker-3.0" cib-last-written="Wed Mar 19 19:51:25 2014" update-origin="virt-009.cluster-qe.lab.eng.brq.redhat.com" update-client="crm_resource" crm_feature_set="3.0.7" have-quorum="1" dc-uuid="8">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -80,4 +80,3 @@
     <node_state id="3" uname="virt-3" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member"/>
   </status>
 </cib>
-

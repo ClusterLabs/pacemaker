@@ -1,19 +1,8 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -227,6 +216,23 @@ crm_client_name(crm_client_t * c)
     }
 }
 
+const char *
+crm_client_type_text(enum client_type client_type)
+{
+    switch (client_type) {
+        case CRM_CLIENT_IPC:
+            return "IPC";
+        case CRM_CLIENT_TCP:
+            return "TCP";
+#ifdef HAVE_GNUTLS_GNUTLS_H
+        case CRM_CLIENT_TLS:
+            return "TLS";
+#endif
+        default:
+            return "unknown";
+    }
+}
+
 void
 crm_client_init(void)
 {
@@ -341,6 +347,25 @@ crm_client_new(qb_ipcs_connection_t * c, uid_t uid_client, gid_t gid_client)
     return client;
 }
 
+static void
+free_event(gpointer data)
+{
+    struct iovec *event = data;
+
+    free(event[0].iov_base);
+    free(event[1].iov_base);
+    free(event);
+}
+
+static void
+add_event(crm_client_t *c, struct iovec *iov)
+{
+    if (c->event_queue == NULL) {
+        c->event_queue = g_queue_new();
+    }
+    g_queue_push_tail(c->event_queue, iov);
+}
+
 void
 crm_client_destroy(crm_client_t * c)
 {
@@ -365,14 +390,9 @@ crm_client_destroy(crm_client_t * c)
         g_source_remove(c->event_timer);
     }
 
-    crm_debug("Destroying %d events", g_list_length(c->event_queue));
-    while (c->event_queue) {
-        struct iovec *event = c->event_queue->data;
-
-        c->event_queue = g_list_remove(c->event_queue, event);
-        free(event[0].iov_base);
-        free(event[1].iov_base);
-        free(event);
+    if (c->event_queue) {
+        crm_debug("Destroying %d events", g_queue_get_length(c->event_queue));
+        g_queue_free_full(c->event_queue, free_event);
     }
 
     free(c->id);
@@ -520,10 +540,19 @@ crm_ipcs_flush_events(crm_client_t * c)
         return pcmk_ok;
     }
 
-    queue_len = g_list_length(c->event_queue);
-    while (c->event_queue && sent < 100) {
+    if (c->event_queue) {
+        queue_len = g_queue_get_length(c->event_queue);
+    }
+    while (sent < 100) {
         struct crm_ipc_response_header *header = NULL;
-        struct iovec *event = c->event_queue->data;
+        struct iovec *event = NULL;
+
+        if (c->event_queue) {
+            event = g_queue_pop_head(c->event_queue);
+        }
+        if (event == NULL) { // Queue is empty
+            break;
+        }
 
         rc = qb_ipcs_event_sendv(c->ipcs, event, 2);
         if (rc < 0) {
@@ -540,11 +569,7 @@ crm_ipcs_flush_events(crm_client_t * c)
                       header->qb.id, c->ipcs, c->pid, (long long) rc,
                       (char *) (event[1].iov_base));
         }
-
-        c->event_queue = g_list_remove(c->event_queue, event);
-        free(event[0].iov_base);
-        free(event[1].iov_base);
-        free(event);
+        free_event((gpointer) event);
     }
 
     queue_len -= sent;
@@ -687,7 +712,7 @@ crm_ipcs_sendv(crm_client_t * c, struct iovec * iov, enum crm_ipc_flags flags)
 
         if (flags & crm_ipc_server_free) {
             crm_trace("Sending the original to %p[%d]", c->ipcs, c->pid);
-            c->event_queue = g_list_append(c->event_queue, iov);
+            add_event(c, iov);
 
         } else {
             struct iovec *iov_copy = calloc(2, sizeof(struct iovec));
@@ -701,7 +726,7 @@ crm_ipcs_sendv(crm_client_t * c, struct iovec * iov, enum crm_ipc_flags flags)
             iov_copy[1].iov_base = malloc(iov[1].iov_len);
             memcpy(iov_copy[1].iov_base, iov[1].iov_base, iov[1].iov_len);
 
-            c->event_queue = g_list_append(c->event_queue, iov_copy);
+            add_event(c, iov_copy);
         }
 
     } else {
@@ -709,8 +734,10 @@ crm_ipcs_sendv(crm_client_t * c, struct iovec * iov, enum crm_ipc_flags flags)
 
         rc = qb_ipcs_response_sendv(c->ipcs, iov, 2);
         if (rc < header->qb.size) {
-            crm_notice("Response %d to %p[%d] (%u bytes) failed: %s (%d)",
-                       header->qb.id, c->ipcs, c->pid, header->qb.size, pcmk_strerror(rc), rc);
+            crm_notice("Response %d to pid %d failed: %s "
+                       CRM_XS " bytes=%u rc=%lld ipcs=%p",
+                       header->qb.id, c->pid, pcmk_strerror(rc),
+                       header->qb.size, (long long) rc, c->ipcs);
 
         } else {
             crm_trace("Response %d sent, %lld bytes to %p[%d]",
@@ -755,8 +782,8 @@ crm_ipcs_send(crm_client_t * c, uint32_t request, xmlNode * message,
 
     } else {
         free(iov);
-        crm_notice("Message to %p[%d] failed: %s (%d)",
-                   c->ipcs, c->pid, pcmk_strerror(rc), rc);
+        crm_notice("Message to pid %d failed: %s " CRM_XS " rc=%lld ipcs=%p",
+                   c->pid, pcmk_strerror(rc), (long long) rc, c->ipcs);
     }
 
     return rc;
@@ -794,7 +821,6 @@ struct crm_ipc_s {
     int need_reply;
     char *buffer;
     char *name;
-    uint32_t buffer_flags;
 
     qb_ipcc_connection_t *ipc;
 

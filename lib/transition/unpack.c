@@ -77,7 +77,7 @@ unpack_action(synapse_t * parent, xmlNode * xml_action)
 
     value = g_hash_table_lookup(action->params, "CRM_meta_interval");
     if (value != NULL) {
-        action->interval = crm_parse_int(value, NULL);
+        action->interval_ms = crm_parse_ms(value);
     }
 
     value = g_hash_table_lookup(action->params, "CRM_meta_can_fail");
@@ -313,7 +313,7 @@ convert_graph_action(xmlNode * resource, crm_action_t * action, int status, int 
     op = calloc(1, sizeof(lrmd_event_data_t));
 
     op->rsc_id = strdup(ID(action_resource));
-    op->interval = action->interval;
+    op->interval_ms = action->interval_ms;
     op->op_type = strdup(crm_element_value(action->xml, XML_LRM_ATTR_TASK));
 
     op->rc = rc;
@@ -321,8 +321,7 @@ convert_graph_action(xmlNode * resource, crm_action_t * action, int status, int 
     op->t_run = time(NULL);
     op->t_rcchange = op->t_run;
 
-    op->params = g_hash_table_new_full(crm_str_hash, g_str_equal,
-                                       g_hash_destroy_str, g_hash_destroy_str);
+    op->params = g_hash_table_new_full(crm_str_hash, g_str_equal, free, free);
 
     g_hash_table_iter_init(&iter, action->params);
     while (g_hash_table_iter_next(&iter, (void **)&name, (void **)&value)) {

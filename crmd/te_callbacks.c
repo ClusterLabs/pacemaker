@@ -58,15 +58,15 @@ get_node_id(xmlNode * rsc_op)
 void
 update_stonith_max_attempts(const char* value)
 {
-    if (safe_str_eq(value, INFINITY_S)) {
-       stonith_max_attempts = node_score_infinity;
+    if (safe_str_eq(value, CRM_INFINITY_S)) {
+       stonith_max_attempts = CRM_SCORE_INFINITY;
     }
     else {
        stonith_max_attempts = crm_int_helper(value, NULL);
     }
 }
 static void
-te_legacy_update_diff(const char *event, xmlNode * diff)
+te_update_diff_v1(const char *event, xmlNode *diff)
 {
     int lpc, max;
     xmlXPathObject *xpathObj = NULL;
@@ -144,46 +144,40 @@ te_legacy_update_diff(const char *event, xmlNode * diff)
     freeXpathObject(xpathObj);
 
     /*
-     * Check for and fast-track the processing of LRM refreshes
-     * In large clusters this can result in _huge_ speedups
+     * Updates by, or in response to, TE actions will never contain updates
+     * for more than one resource at a time, so such updates indicate an
+     * LRM refresh.
      *
-     * Unfortunately we can only do so when there are no pending actions
-     * Otherwise we could miss updates we're waiting for and stall
+     * In that case, start a new transition rather than check each result
+     * individually, which can result in _huge_ speedups in large clusters.
      *
+     * Unfortunately, we can only do so when there are no pending actions.
+     * Otherwise, we could mistakenly throw away those results here, and
+     * the cluster will stall waiting for them and time out the operation.
      */
-    xpathObj = NULL;
     if (transition_graph->pending == 0) {
-        xpathObj =
-            xpath_search(diff,
-                         "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//"
-                         XML_LRM_TAG_RESOURCE);
+        xpathObj = xpath_search(diff,
+                                "//" F_CIB_UPDATE_RESULT
+                                "//" XML_TAG_DIFF_ADDED
+                                "//" XML_LRM_TAG_RESOURCE);
+        max = numXpathResults(xpathObj);
+        if (max > 1) {
+            crm_debug("Ignoring resource operation updates due to LRM refresh of %d resources",
+                      max);
+            crm_log_xml_trace(diff, "lrm-refresh");
+            abort_transition(INFINITY, tg_restart, "LRM Refresh", NULL);
+            goto bail;
+        }
+        freeXpathObject(xpathObj);
     }
-
-    max = numXpathResults(xpathObj);
-    if (max > 1) {
-        /* Updates by, or in response to, TE actions will never contain updates
-         * for more than one resource at a time
-         */
-        crm_debug("Detected LRM refresh - %d resources updated: Skipping all resource events", max);
-        crm_log_xml_trace(diff, "lrm-refresh");
-        abort_transition(INFINITY, tg_restart, "LRM Refresh", NULL);
-        goto bail;
-    }
-    freeXpathObject(xpathObj);
 
     /* Process operation updates */
     xpathObj =
         xpath_search(diff,
                      "//" F_CIB_UPDATE_RESULT "//" XML_TAG_DIFF_ADDED "//" XML_LRM_TAG_RSC_OP);
-    if (numXpathResults(xpathObj)) {
-/*
-    <status>
-       <node_state id="node1" state=CRMD_JOINSTATE_MEMBER exp_state="active">
-          <lrm>
-             <lrm_resources>
-        	<rsc_state id="" rsc_id="rsc4" node_id="node1" rsc_state="stopped"/>
-*/
-        int lpc = 0, max = numXpathResults(xpathObj);
+    max = numXpathResults(xpathObj);
+    if (max > 0) {
+        int lpc = 0;
 
         for (lpc = 0; lpc < max; lpc++) {
             xmlNode *rsc_op = getXpathResult(xpathObj, lpc);
@@ -241,39 +235,46 @@ te_legacy_update_diff(const char *event, xmlNode * diff)
     freeXpathObject(xpathObj);
 }
 
-static void process_resource_updates(
-    const char *node, xmlNode *xml, xmlNode *change, const char *op, const char *xpath) 
+static void
+process_lrm_resource_diff(xmlNode *lrm_resource, const char *node)
 {
-    xmlNode *cIter = NULL;
-    xmlNode *rsc = NULL;
-    xmlNode *rsc_op = NULL;
-    int num_resources = 0;
+    for (xmlNode *rsc_op = __xml_first_child(lrm_resource); rsc_op != NULL;
+         rsc_op = __xml_next(rsc_op)) {
+        process_graph_event(rsc_op, node);
+    }
+}
 
-    if(xml == NULL) {
+static void
+process_resource_updates(const char *node, xmlNode *xml, xmlNode *change,
+                         const char *op, const char *xpath)
+{
+    xmlNode *rsc = NULL;
+
+    if (xml == NULL) {
         return;
 
-    } else if(strcmp((const char*)xml->name, XML_CIB_TAG_LRM) == 0) {
+    } else if (strcmp((const char*)xml->name, XML_CIB_TAG_LRM) == 0) {
         xml = first_named_child(xml, XML_LRM_TAG_RESOURCES);
         crm_trace("Got %p in %s", xml, XML_CIB_TAG_LRM);
     }
 
     CRM_ASSERT(strcmp((const char*)xml->name, XML_LRM_TAG_RESOURCES) == 0);
 
-    for(cIter = xml->children; cIter; cIter = cIter->next) {
-        num_resources++;
-    }
+    /*
+     * Updates by, or in response to, TE actions will never contain updates
+     * for more than one resource at a time, so such updates indicate an
+     * LRM refresh.
+     *
+     * In that case, start a new transition rather than check each result
+     * individually, which can result in _huge_ speedups in large clusters.
+     *
+     * Unfortunately, we can only do so when there are no pending actions.
+     * Otherwise, we could mistakenly throw away those results here, and
+     * the cluster will stall waiting for them and time out the operation.
+     */
+    if ((transition_graph->pending == 0)
+        && xml->children && xml->children->next) {
 
-    if(num_resources > 1) {
-        /*
-         * Check for and fast-track the processing of LRM refreshes
-         * In large clusters this can result in _huge_ speedups
-         *
-         * Unfortunately we can only do so when there are no pending actions
-         * Otherwise we could miss updates we're waiting for and stall
-         *
-         */
-
-        crm_debug("Detected LRM refresh - %d resources updated", num_resources);
         crm_log_xml_trace(change, "lrm-refresh");
         abort_transition(INFINITY, tg_restart, "LRM Refresh", NULL);
         return;
@@ -281,10 +282,7 @@ static void process_resource_updates(
 
     for (rsc = __xml_first_child(xml); rsc != NULL; rsc = __xml_next(rsc)) {
         crm_trace("Processing %s", ID(rsc));
-        for (rsc_op = __xml_first_child(rsc); rsc_op != NULL; rsc_op = __xml_next(rsc_op)) {
-            crm_trace("Processing %s", ID(rsc_op));
-            process_graph_event(rsc_op, node);
-        }
+        process_lrm_resource_diff(rsc, node);
     }
 }
 
@@ -352,7 +350,7 @@ abort_unless_down(const char *xpath, const char *op, xmlNode *change,
     }
 
     down = match_down_event(node_uuid, TRUE);
-    if(down == NULL || down->executed == false) {
+    if (down == NULL) {
         crm_trace("Not expecting %s to be down (%s)", node_uuid, xpath);
         abort_transition(INFINITY, tg_restart, reason, change);
     } else {
@@ -361,16 +359,219 @@ abort_unless_down(const char *xpath, const char *op, xmlNode *change,
     free(node_uuid);
 }
 
+static void
+process_op_deletion(const char *xpath, xmlNode *change)
+{
+    char *mutable_key = strdup(xpath);
+    char *key;
+    char *node_uuid;
+    crm_action_t *cancel = NULL;
+
+    // Extract the part of xpath between last pair of single quotes
+    key = strrchr(mutable_key, '\'');
+    if (key != NULL) {
+        *key = '\0';
+        key = strrchr(mutable_key, '\'');
+    }
+    if (key == NULL) {
+        crm_warn("Ignoring malformed CIB update (resource deletion of %s)",
+                 xpath);
+        free(mutable_key);
+        return;
+    }
+    ++key;
+
+    node_uuid = extract_node_uuid(xpath);
+    cancel = get_cancel_action(key, node_uuid);
+    if (cancel) {
+        crm_info("Cancellation of %s on %s confirmed (%d)",
+                 key, node_uuid, cancel->id);
+        stop_te_timer(cancel->timer);
+        te_action_confirmed(cancel);
+        update_graph(transition_graph, cancel);
+        trigger_graph();
+    } else {
+        abort_transition(INFINITY, tg_restart, "Resource operation removal",
+                         change);
+    }
+    free(mutable_key);
+    free(node_uuid);
+}
+
+static void
+process_delete_diff(const char *xpath, const char *op, xmlNode *change)
+{
+    if (strstr(xpath, "/" XML_LRM_TAG_RSC_OP "[")) {
+        process_op_deletion(xpath, change);
+
+    } else if (strstr(xpath, "/" XML_CIB_TAG_LRM "[")) {
+        abort_unless_down(xpath, op, change, "Resource state removal");
+
+    } else if (strstr(xpath, "/" XML_CIB_TAG_STATE "[")) {
+        abort_unless_down(xpath, op, change, "Node state removal");
+
+    } else {
+        crm_trace("Ignoring delete of %s", xpath);
+    }
+}
+
+static void
+process_node_state_diff(xmlNode *state, xmlNode *change, const char *op,
+                        const char *xpath)
+{
+    xmlNode *lrm = first_named_child(state, XML_CIB_TAG_LRM);
+
+    process_resource_updates(ID(state), lrm, change, op, xpath);
+}
+
+static void
+process_status_diff(xmlNode *status, xmlNode *change, const char *op,
+                    const char *xpath)
+{
+    for (xmlNode *state = __xml_first_child(status); state != NULL;
+         state = __xml_next(state)) {
+        process_node_state_diff(state, change, op, xpath);
+    }
+}
+
+static void
+process_cib_diff(xmlNode *cib, xmlNode *change, const char *op,
+                 const char *xpath)
+{
+    xmlNode *status = first_named_child(cib, XML_CIB_TAG_STATUS);
+    xmlNode *config = first_named_child(cib, XML_CIB_TAG_CONFIGURATION);
+
+    if (status) {
+        process_status_diff(status, change, op, xpath);
+    }
+    if (config) {
+        abort_transition(INFINITY, tg_restart,
+                         "Non-status-only change", change);
+    }
+}
+
+static void
+te_update_diff_v2(xmlNode *diff)
+{
+    crm_log_xml_trace(diff, "Patch:Raw");
+
+    for (xmlNode *change = __xml_first_child(diff); change != NULL;
+         change = __xml_next(change)) {
+
+        xmlNode *match = NULL;
+        const char *name = NULL;
+        const char *xpath = crm_element_value(change, XML_DIFF_PATH);
+
+        // Possible ops: create, modify, delete, move
+        const char *op = crm_element_value(change, XML_DIFF_OP);
+
+        // Ignore uninteresting updates
+        if (op == NULL) {
+            continue;
+
+        } else if (xpath == NULL) {
+            crm_trace("Ignoring %s change for version field", op);
+            continue;
+
+        } else if (strcmp(op, "move") == 0) {
+            crm_trace("Ignoring move change at %s", xpath);
+            continue;
+        }
+
+        // Find the result of create/modify ops
+        if (strcmp(op, "create") == 0) {
+            match = change->children;
+
+        } else if (strcmp(op, "modify") == 0) {
+            match = first_named_child(change, XML_DIFF_RESULT);
+            if(match) {
+                match = match->children;
+            }
+
+        } else if (strcmp(op, "delete") != 0) {
+            crm_warn("Ignoring malformed CIB update (%s operation on %s is unrecognized)",
+                     op, xpath);
+            continue;
+        }
+
+        if (match) {
+            if (match->type == XML_COMMENT_NODE) {
+                crm_trace("Ignoring %s operation for comment at %s", op, xpath);
+                continue;
+            }
+            name = (const char *)match->name;
+        }
+
+        crm_trace("Handling %s operation for %s%s%s",
+                  op, (xpath? xpath : "CIB"),
+                  (name? " matched by " : ""), (name? name : ""));
+
+        if (strstr(xpath, "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION)) {
+            abort_transition(INFINITY, tg_restart, "Configuration change",
+                             change);
+            break; // Won't be packaged with operation results we may be waiting for
+
+        } else if (strstr(xpath, "/" XML_CIB_TAG_TICKETS)
+                   || safe_str_eq(name, XML_CIB_TAG_TICKETS)) {
+            abort_transition(INFINITY, tg_restart, "Ticket attribute change", change);
+            break; // Won't be packaged with operation results we may be waiting for
+
+        } else if (strstr(xpath, "/" XML_TAG_TRANSIENT_NODEATTRS "[")
+                   || safe_str_eq(name, XML_TAG_TRANSIENT_NODEATTRS)) {
+            abort_unless_down(xpath, op, change, "Transient attribute change");
+            break; // Won't be packaged with operation results we may be waiting for
+
+        } else if (strcmp(op, "delete") == 0) {
+            process_delete_diff(xpath, op, change);
+
+        } else if (name == NULL) {
+            crm_warn("Ignoring malformed CIB update (%s at %s has no result)",
+                     op, xpath);
+
+        } else if (strcmp(name, XML_TAG_CIB) == 0) {
+            process_cib_diff(match, change, op, xpath);
+
+        } else if (strcmp(name, XML_CIB_TAG_STATUS) == 0) {
+            process_status_diff(match, change, op, xpath);
+
+        } else if (strcmp(name, XML_CIB_TAG_STATE) == 0) {
+            process_node_state_diff(match, change, op, xpath);
+
+        } else if (strcmp(name, XML_CIB_TAG_LRM) == 0) {
+            process_resource_updates(ID(match), match, change, op, xpath);
+
+        } else if (strcmp(name, XML_LRM_TAG_RESOURCES) == 0) {
+            char *local_node = get_node_from_xpath(xpath);
+
+            process_resource_updates(local_node, match, change, op, xpath);
+            free(local_node);
+
+        } else if (strcmp(name, XML_LRM_TAG_RESOURCE) == 0) {
+            char *local_node = get_node_from_xpath(xpath);
+
+            process_lrm_resource_diff(match, local_node);
+            free(local_node);
+
+        } else if (strcmp(name, XML_LRM_TAG_RSC_OP) == 0) {
+            char *local_node = get_node_from_xpath(xpath);
+
+            process_graph_event(match, local_node);
+            free(local_node);
+
+        } else {
+            crm_warn("Ignoring malformed CIB update (%s at %s has unrecognized result %s)",
+                     op, xpath, name);
+        }
+    }
+}
+
 void
 te_update_diff(const char *event, xmlNode * msg)
 {
+    xmlNode *diff = NULL;
+    const char *op = NULL;
     int rc = -EINVAL;
     int format = 1;
-    xmlNode *change = NULL;
-    const char *op = NULL;
-
-    xmlNode *diff = NULL;
-
     int p_add[] = { 0, 0, 0 };
     int p_del[] = { 0, 0, 0 };
 
@@ -385,9 +586,10 @@ te_update_diff(const char *event, xmlNode * msg)
         crm_trace("Filter rc=%d (%s)", rc, pcmk_strerror(rc));
         return;
 
-    } else if (transition_graph->complete == TRUE
+    } else if (transition_graph->complete
                && fsa_state != S_IDLE
-               && fsa_state != S_TRANSITION_ENGINE && fsa_state != S_POLICY_ENGINE) {
+               && fsa_state != S_TRANSITION_ENGINE
+               && fsa_state != S_POLICY_ENGINE) {
         crm_trace("Filter state=%s, complete=%d", fsa_state2string(fsa_state),
                   transition_graph->complete);
         return;
@@ -402,177 +604,18 @@ te_update_diff(const char *event, xmlNode * msg)
               fsa_state2string(fsa_state));
 
     crm_element_value_int(diff, "format", &format);
-    switch(format) {
+    switch (format) {
         case 1:
-            te_legacy_update_diff(event, diff);
-            return;
+            te_update_diff_v1(event, diff);
+            break;
         case 2:
-            /* Cool, we know what to do here */
-            crm_log_xml_trace(diff, "Patch:Raw");
+            te_update_diff_v2(diff);
             break;
         default:
-            crm_warn("Unknown patch format: %d", format);
-            return;
-    }
-
-    for (change = __xml_first_child(diff); change != NULL; change = __xml_next(change)) {
-        const char *name = NULL;
-        const char *op = crm_element_value(change, XML_DIFF_OP);
-        const char *xpath = crm_element_value(change, XML_DIFF_PATH);
-        xmlNode *match = NULL;
-        const char *node = NULL;
-
-        if(op == NULL) {
-            continue;
-
-        } else if(strcmp(op, "create") == 0) {
-            match = change->children;
-
-        } else if(strcmp(op, "move") == 0) {
-            continue;
-
-        } else if(strcmp(op, "modify") == 0) {
-            match = first_named_child(change, XML_DIFF_RESULT);
-            if(match) {
-                match = match->children;
-            }
-        }
-
-        if(match) {
-            if (match->type == XML_COMMENT_NODE) {
-                crm_trace("Ignoring %s operation for comment at %s", op, xpath);
-                continue;
-            }
-            name = (const char *)match->name;
-        }
-
-        crm_trace("Handling %s operation for %s%s%s",
-                  op, (xpath? xpath : "CIB"),
-                  (name? " matched by " : ""), (name? name : ""));
-        if(xpath == NULL) {
-            /* Version field, ignore */
-
-        } else if(strstr(xpath, "/cib/configuration")) {
-            abort_transition(INFINITY, tg_restart, "Configuration change", change);
-            break; /* Won't be packaged with any resource operations we may be waiting for */
-
-        } else if(strstr(xpath, "/"XML_CIB_TAG_TICKETS) || safe_str_eq(name, XML_CIB_TAG_TICKETS)) {
-            abort_transition(INFINITY, tg_restart, "Ticket attribute change", change);
-            break; /* Won't be packaged with any resource operations we may be waiting for */
-
-        } else if(strstr(xpath, "/"XML_TAG_TRANSIENT_NODEATTRS"[") || safe_str_eq(name, XML_TAG_TRANSIENT_NODEATTRS)) {
-            abort_unless_down(xpath, op, change, "Transient attribute change");
-            break; /* Won't be packaged with any resource operations we may be waiting for */
-
-        } else if(strstr(xpath, "/"XML_LRM_TAG_RSC_OP"[") && safe_str_eq(op, "delete")) {
-            crm_action_t *cancel = NULL;
-            char *mutable_key = strdup(xpath);
-            char *key, *node_uuid;
-
-            /* Extract the part of xpath between last pair of single quotes */
-            key = strrchr(mutable_key, '\'');
-            if (key != NULL) {
-                *key = '\0';
-                key = strrchr(mutable_key, '\'');
-            }
-            if (key == NULL) {
-                crm_warn("Ignoring malformed CIB update (resource deletion)");
-                free(mutable_key);
-                continue;
-            }
-            ++key;
-
-            node_uuid = extract_node_uuid(xpath);
-            cancel = get_cancel_action(key, node_uuid);
-            if (cancel == NULL) {
-                abort_transition(INFINITY, tg_restart, "Resource operation removal", change);
-
-            } else {
-                crm_info("Cancellation of %s on %s confirmed (%d)", key, node_uuid, cancel->id);
-                stop_te_timer(cancel->timer);
-                te_action_confirmed(cancel);
-
-                update_graph(transition_graph, cancel);
-                trigger_graph();
-
-            }
-            free(mutable_key);
-            free(node_uuid);
-
-        } else if(strstr(xpath, "/"XML_CIB_TAG_LRM"[") && safe_str_eq(op, "delete")) {
-            abort_unless_down(xpath, op, change, "Resource state removal");
-
-        } else if(strstr(xpath, "/"XML_CIB_TAG_STATE"[") && safe_str_eq(op, "delete")) {
-            abort_unless_down(xpath, op, change, "Node state removal");
-
-        } else if(name == NULL) {
-            crm_debug("No result for %s operation to %s", op, xpath);
-            CRM_ASSERT(strcmp(op, "delete") == 0 || strcmp(op, "move") == 0);
-
-        } else if(strcmp(name, XML_TAG_CIB) == 0) {
-            xmlNode *state = NULL;
-            xmlNode *status = first_named_child(match, XML_CIB_TAG_STATUS);
-            xmlNode *config = first_named_child(match, XML_CIB_TAG_CONFIGURATION);
-
-            for (state = __xml_first_child(status); state != NULL; state = __xml_next(state)) {
-                xmlNode *lrm = first_named_child(state, XML_CIB_TAG_LRM);
-
-                node = ID(state);
-                process_resource_updates(node, lrm, change, op, xpath);
-            }
-
-            if(config) {
-                abort_transition(INFINITY, tg_restart, "Non-status-only change", change);
-            }
-
-        } else if(strcmp(name, XML_CIB_TAG_STATUS) == 0) {
-            xmlNode *state = NULL;
-
-            for (state = __xml_first_child(match); state != NULL; state = __xml_next(state)) {
-                xmlNode *lrm = first_named_child(state, XML_CIB_TAG_LRM);
-
-                node = ID(state);
-                process_resource_updates(node, lrm, change, op, xpath);
-            }
-
-        } else if(strcmp(name, XML_CIB_TAG_STATE) == 0) {
-            xmlNode *lrm = first_named_child(match, XML_CIB_TAG_LRM);
-
-            node = ID(match);
-            process_resource_updates(node, lrm, change, op, xpath);
-
-        } else if(strcmp(name, XML_CIB_TAG_LRM) == 0) {
-            node = ID(match);
-            process_resource_updates(node, match, change, op, xpath);
-
-        } else if(strcmp(name, XML_LRM_TAG_RESOURCES) == 0) {
-            char *local_node = get_node_from_xpath(xpath);
-
-            process_resource_updates(local_node, match, change, op, xpath);
-            free(local_node);
-
-        } else if(strcmp(name, XML_LRM_TAG_RESOURCE) == 0) {
-
-            xmlNode *rsc_op;
-            char *local_node = get_node_from_xpath(xpath);
-
-            for (rsc_op = __xml_first_child(match); rsc_op != NULL; rsc_op = __xml_next(rsc_op)) {
-                process_graph_event(rsc_op, local_node);
-            }
-            free(local_node);
-
-        } else if(strcmp(name, XML_LRM_TAG_RSC_OP) == 0) {
-            char *local_node = get_node_from_xpath(xpath);
-
-            process_graph_event(match, local_node);
-            free(local_node);
-
-        } else {
-            crm_err("Ignoring %s operation for %s %p, %s", op, xpath, match, name);
-        }
+            crm_warn("Ignoring malformed CIB update (unknown patch format %d)",
+                     format);
     }
 }
-
 
 gboolean
 process_te_message(xmlNode * msg, xmlNode * xml_data)
@@ -817,7 +860,7 @@ tengine_stonith_callback(stonith_t * stonith, stonith_callback_data_t * data)
         st_fail_count_reset(target);
 
     } else {
-        const char *target = crm_element_value_const(action->xml, XML_LRM_ATTR_TARGET);
+        const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
         enum transition_action abort_action = tg_restart;
 
         action->failed = TRUE;

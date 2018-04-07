@@ -308,9 +308,10 @@ indexterm:[kind,Ordering Constraints]
 indexterm:[Constraints,Ordering,kind]
 
 |symmetrical
-|TRUE
+|TRUE for +Mandatory+ and +Optional+ kinds. FALSE for +Serialize+ kind.
 |If true, the reverse of the constraint applies for the opposite action (for
  example, if B starts after A starts, then B stops before A stops).
+ +Serialize+ orders cannot be symmetrical.
 indexterm:[symmetrical,Ordering Constraints]
 indexterm:[Ordering Constraints,symmetrical]
 

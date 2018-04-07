@@ -1,4 +1,4 @@
-<cib admin_epoch="0" epoch="300" num_updates="42019" dc-uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:04 2012">
+<cib admin_epoch="0" epoch="300" num_updates="42019" dc-uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-3.0" cib-last-written="Fri Jul 13 13:51:04 2012">
   <configuration>
     <crm_config>
       <cluster_property_set id="default">

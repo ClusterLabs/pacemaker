@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010-2016 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2010-2018 Andrew Beekhof <andrew@beekhof.net>
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -49,10 +49,11 @@ static GList *inflight_ops = NULL;
 static void handle_blocked_ops(void);
 
 svc_action_t *
-services_action_create(const char *name, const char *action, int interval, int timeout)
+services_action_create(const char *name, const char *action,
+                       guint interval_ms, int timeout)
 {
     return resources_action_create(name, PCMK_RESOURCE_CLASS_LSB, NULL, name,
-                                   action, interval, timeout, NULL, 0);
+                                   action, interval_ms, timeout, NULL, 0);
 }
 
 /*!
@@ -74,10 +75,11 @@ resources_find_service_class(const char *agent)
      * - systemd
      * - upstart
      */
-    struct stat st;
     char *path = NULL;
 
 #ifdef LSB_ROOT_DIR
+    struct stat st;
+
     path = crm_strdup_printf("%s/%s", LSB_ROOT_DIR, agent);
     if (stat(path, &st) == 0) {
         free(path);
@@ -176,9 +178,10 @@ dup_file_path(const char *filename, const char *dirname)
 }
 
 svc_action_t *
-resources_action_create(const char *name, const char *standard, const char *provider,
-                        const char *agent, const char *action, int interval, int timeout,
-                        GHashTable * params, enum svc_action_flags flags)
+resources_action_create(const char *name, const char *standard,
+                        const char *provider, const char *agent,
+                        const char *action, guint interval_ms, int timeout,
+                        GHashTable *params, enum svc_action_flags flags)
 {
     svc_action_t *op = NULL;
 
@@ -219,13 +222,13 @@ resources_action_create(const char *name, const char *standard, const char *prov
     op = calloc(1, sizeof(svc_action_t));
     op->opaque = calloc(1, sizeof(svc_action_private_t));
     op->rsc = strdup(name);
-    op->interval = interval;
+    op->interval_ms = interval_ms;
     op->timeout = timeout;
     op->standard = expand_resource_class(name, standard, agent);
     op->agent = strdup(agent);
     op->sequence = ++operations;
     op->flags = flags;
-    op->id = generate_op_key(name, action, interval);
+    op->id = generate_op_key(name, action, interval_ms);
 
     if (safe_str_eq(action, "monitor")
         && safe_str_eq(op->standard, PCMK_RESOURCE_CLASS_LSB)) {
@@ -264,7 +267,7 @@ resources_action_create(const char *name, const char *standard, const char *prov
         op->opaque->args[0] = strdup(op->opaque->exec);
         index = 1;
 
-        if (safe_str_eq(op->action, "monitor") && op->interval == 0) {
+        if (safe_str_eq(op->action, "monitor") && (op->interval_ms == 0)) {
             /* Invoke --version for a nagios probe */
             op->opaque->args[index] = strdup("--version");
             index++;
@@ -577,17 +580,17 @@ cancel_recurring_action(svc_action_t * op)
 /*!
  * \brief Cancel a recurring action
  *
- * \param[in] name      Name of resource that operation is for
- * \param[in] action    Name of operation to cancel
- * \param[in] interval  Interval of operation to cancel
+ * \param[in] name         Name of resource that operation is for
+ * \param[in] action       Name of operation to cancel
+ * \param[in] interval_ms  Interval of operation to cancel
  *
  * \return TRUE if action was successfully cancelled, FALSE otherwise
  */
 gboolean
-services_action_cancel(const char *name, const char *action, int interval)
+services_action_cancel(const char *name, const char *action, guint interval_ms)
 {
     gboolean cancelled = FALSE;
-    char *id = generate_op_key(name, action, interval);
+    char *id = generate_op_key(name, action, interval_ms);
     svc_action_t *op = NULL;
 
     /* We can only cancel a recurring action */
@@ -647,10 +650,10 @@ done:
 }
 
 gboolean
-services_action_kick(const char *name, const char *action, int interval /* ms */)
+services_action_kick(const char *name, const char *action, guint interval_ms)
 {
     svc_action_t * op = NULL;
-    char *id = generate_op_key(name, action, interval);
+    char *id = generate_op_key(name, action, interval_ms);
 
     init_recurring_actions();
     op = g_hash_table_lookup(recurring_actions, id);
@@ -777,7 +780,7 @@ services_action_async(svc_action_t * op, void (*action_callback) (svc_action_t *
         op->opaque->callback = action_callback;
     }
 
-    if (op->interval > 0) {
+    if (op->interval_ms > 0) {
         init_recurring_actions();
         if (handle_duplicate_recurring(op) == TRUE) {
             /* entry rescheduled, dup freed */
@@ -1188,8 +1191,8 @@ services_action_sync(svc_action_t * op)
     } else {
         rc = action_exec_helper(op);
     }
-    crm_trace(" > %s_%s_%d: %s = %d",
-              op->rsc, op->action, op->interval, op->opaque->exec, op->rc);
+    crm_trace(" > " CRM_OP_FMT ": %s = %d",
+              op->rsc, op->action, op->interval_ms, op->opaque->exec, op->rc);
     if (op->stdout_data) {
         crm_trace(" >  stdout: %s", op->stdout_data);
     }

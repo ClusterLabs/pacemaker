@@ -415,7 +415,7 @@ main(int argc, char **argv)
     const char *rsc_long_cmd = NULL;
     const char *longname = NULL;
     const char *operation = NULL;
-    const char *interval = NULL;
+    const char *interval_spec = NULL;
     const char *cib_file = getenv("CIB_file");
     GHashTable *override_params = NULL;
 
@@ -631,7 +631,7 @@ main(int argc, char **argv)
                 break;
 
             case 'I':
-                interval = optarg;
+                interval_spec = optarg;
                 break;
 
             case 'D':
@@ -1080,7 +1080,7 @@ main(int argc, char **argv)
         crm_debug("Erasing failures of %s (%s requested) on %s",
                   rsc->id, rsc_id, (host_uname? host_uname: "all nodes"));
         rc = cli_resource_delete(crmd_channel, host_uname, rsc,
-                                 operation, interval, TRUE, &data_set);
+                                 operation, interval_spec, TRUE, &data_set);
 
         if ((rc == pcmk_ok) && !BE_QUIET) {
             // Show any reasons why resource might stay stopped
@@ -1092,7 +1092,7 @@ main(int argc, char **argv)
         }
 
     } else if (rsc_cmd == 'C') {
-        rc = cli_cleanup_all(crmd_channel, host_uname, operation, interval,
+        rc = cli_cleanup_all(crmd_channel, host_uname, operation, interval_spec,
                              &data_set);
 
     } else if ((rsc_cmd == 'R') && rsc) {
@@ -1176,7 +1176,7 @@ main(int argc, char **argv)
         msg_data = create_xml_node(NULL, rsc_type);
         crm_xml_add(msg_data, XML_ATTR_ID, rsc_id);
 
-        rc = cib_conn->cmds->delete(cib_conn, XML_CIB_TAG_RESOURCES, msg_data, cib_options);
+        rc = cib_conn->cmds->remove(cib_conn, XML_CIB_TAG_RESOURCES, msg_data, cib_options);
         free_xml(msg_data);
 
     } else {

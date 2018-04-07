@@ -25,6 +25,10 @@
 #ifndef CIB__H
 #  define CIB__H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #  include <crm/common/ipc.h>
 #  include <crm/common/xml.h>
 
@@ -122,7 +126,7 @@ typedef struct cib_api_operations_s {
     int (*modify) (cib_t * cib, const char *section, xmlNode * data, int call_options);
     int (*update) (cib_t * cib, const char *section, xmlNode * data, int call_options);
     int (*replace) (cib_t * cib, const char *section, xmlNode * data, int call_options);
-    int (*delete) (cib_t * cib, const char *section, xmlNode * data, int call_options);
+    int (*remove) (cib_t * cib, const char *section, xmlNode * data, int call_options);
 
     int (*erase) (cib_t * cib, xmlNode ** output_data, int call_options);
     int (*delete_absolute) (cib_t * cib, const char *section, xmlNode * data, int call_options);
@@ -180,6 +184,10 @@ void remove_cib_op_callback(int call_id, gboolean all_callbacks);
 
 #  include <crm/cib/util.h>
 
-#  define CIB_LIBRARY "libcib.so.6"
+#  define CIB_LIBRARY "libcib.so.7"
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

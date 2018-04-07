@@ -1,4 +1,4 @@
-<cib crm_feature_set="3.0.5" admin_epoch="1" epoch="37" num_updates="90" validate-with="pacemaker-1.0" remote-tls-port="9898" remote-clear-port="9999" cib-last-written="Fri Jul 13 13:51:08 2012" have-quorum="1" dc-uuid="pcmk-3">
+<cib crm_feature_set="3.0.5" admin_epoch="1" epoch="37" num_updates="90" validate-with="pacemaker-3.0" remote-tls-port="9898" remote-clear-port="9999" cib-last-written="Fri Jul 13 13:51:08 2012" have-quorum="1" dc-uuid="pcmk-3">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -9,7 +9,6 @@
         <nvpair id="cib-bootstrap-options-batch-limit" name="batch-limit" value="10"/>
         <nvpair id="cib-bootstrap-options-dc-deadtime" name="dc-deadtime" value="5s"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="stop"/>
-        <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="4"/>
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.6-0.65.892f17e3b2a2.hg.fc15-892f17e3b2a2ba680f2081d840809938ddf61113"/>
         <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
       </cluster_property_set>
@@ -37,7 +36,6 @@
           <nvpair id="Fencing-meta_attributes-migration-threshold" name="migration-threshold" value="5"/>
         </meta_attributes>
         <primitive class="stonith" id="FencingChild" type="fence_xvm">
-          <instance_attributes id="FencingChild-instance_attributes"/>
           <operations>
             <op id="FencingChild-monitor-120s" interval="120s" name="monitor" timeout="300"/>
             <op id="FencingChild-start-0" interval="0" name="start" timeout="180s"/>
@@ -140,7 +138,7 @@
       </clone>
       <clone id="master-1">
         <meta_attributes id="master-1-meta_attributes">
-          <nvpair id="master-1-meta_attributes-promotable"  name="promotable" value="true"/>
+          <nvpair id="master-1-meta_attributes-promotable" name="promotable" value="true"/>
           <nvpair id="master-1-meta_attributes-clone-max" name="clone-max" value="4"/>
           <nvpair id="master-1-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
           <nvpair id="master-1-meta_attributes-promoted-max" name="promoted-max" value="1"/>

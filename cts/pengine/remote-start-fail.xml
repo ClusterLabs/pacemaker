@@ -1,4 +1,4 @@
-<cib crm_feature_set="3.0.9" validate-with="pacemaker-2.2" epoch="9" num_updates="10" admin_epoch="0" cib-last-written="Wed Dec 10 13:47:05 2014" have-quorum="1" dc-uuid="1">
+<cib crm_feature_set="3.0.9" validate-with="pacemaker-3.0" epoch="9" num_updates="10" admin_epoch="0" cib-last-written="Wed Dec 10 13:47:05 2014" have-quorum="1" dc-uuid="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -15,13 +15,11 @@
     </nodes>
     <resources>
       <primitive class="stonith" id="shooter" type="fence_xvm">
-        <instance_attributes id="shooter-instance_attributes"/>
         <operations>
           <op id="shooter-monitor-interval-60s" interval="60s" name="monitor"/>
         </operations>
       </primitive>
       <primitive class="ocf" id="rhel7-auto4" provider="pacemaker" type="remote">
-        <instance_attributes id="rhel7-auto4-instance_attributes"/>
         <operations>
           <op id="rhel7-auto4-start-timeout-60" interval="0s" name="start" timeout="60"/>
           <op id="rhel7-auto4-stop-timeout-60" interval="0s" name="stop" timeout="60"/>

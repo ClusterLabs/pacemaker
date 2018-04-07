@@ -1,4 +1,4 @@
-#!/bin/bash
+#!@BASH_PATH@
 
  # Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  #
@@ -22,11 +22,13 @@ Options:
  --help                 Display this text, then exit
  -V, --verbose          Display any differences from expected output
  --run TEST             Run only single specified test
+ --update               Update expected results with actual results
  -b, --binary PATH      Specify path to crm_simulate
  -i, --io-dir PATH      Specify path to regression test data directory
  -v, --valgrind         Run all commands under valgrind
  --valgrind-dhat        Run all commands under valgrind with heap analyzer
- --valgrind-skip-output If running under valgrind, don't display output"
+ --valgrind-skip-output If running under valgrind, don't display output
+ --testcmd-options      Additional options for command under test"
 
 SBINDIR="@sbindir@"
 BUILDDIR="@abs_top_builddir@"
@@ -36,6 +38,7 @@ test_home=$(dirname $(readlink -e $0))
 io_dir="$test_home/pengine"
 failed="$test_home/.regression.failed.diff"
 test_binary=
+testcmd_options=
 
 single_test=
 verbose=0
@@ -87,6 +90,7 @@ function show_test() {
 
 info "Test home is:\t$test_home"
 
+create_mode="false"
 while [ $# -gt 0 ] ; do
     case "$1" in
         -V|--verbose)
@@ -106,8 +110,12 @@ while [ $# -gt 0 ] ; do
             VALGRIND_SKIP_OUTPUT=1
             shift
             ;;
+        --update)
+            create_mode="true"
+            shift
+            ;;
         --run)
-            single_test="$2"
+            single_test=$(basename "$2" ".xml")
             shift 2
             ;;
         -b|--binary)
@@ -121,6 +129,10 @@ while [ $# -gt 0 ] ; do
         --help)
             echo "$USAGE_TEXT"
             exit $CRM_EX_OK
+            ;;
+        --testcmd-options)
+            testcmd_options=$2
+            shift 2
             ;;
         *)
             error "unknown option: $1"
@@ -159,7 +171,7 @@ fi
 
 info " "
 
-test_cmd="$VALGRIND_CMD $test_binary"
+test_cmd="$VALGRIND_CMD $test_binary $testcmd_options"
 #echo $test_cmd
 
 if [ `whoami` != root ]; then
@@ -301,7 +313,7 @@ do_test() {
         cp "$dot_output" "$dot_expected"
         cp "$score_output" "$scores"
         cp "$summary_output" "$summary"
-        info "  Created expected outputs"
+        info "  Updated expected outputs"
     fi
 
     diff $diff_opts $summary $summary_output >/dev/null
@@ -380,14 +392,7 @@ fi
 
 DO_VERSIONED_TESTS=0
 
-create_mode="true"
-info Generating test outputs for these tests...
-# do_test file description
-info Done.
-echo ""
-
 info Performing the following tests from $io_dir
-create_mode="false"
 echo ""
 
 do_test simple1 "Offline     "
@@ -841,6 +846,7 @@ do_test notify-2 "Notify simple, confirm"
 do_test notify-3 "Notify move, confirm"
 do_test novell-239079 "Notification priority"
 #do_test notify-2 "Notify - 764"
+do_test notifs-for-unrunnable "Don't schedule notifications for an unrunnable action"
 
 echo ""
 do_test 594 "OSDL #594 - Unrunnable actions scheduled in transition"
@@ -955,7 +961,7 @@ echo ""
 do_test utilization-order1 "Utilization Order - Simple"
 do_test utilization-order2 "Utilization Order - Complex"
 do_test utilization-order3 "Utilization Order - Migrate"
-do_test utilization-order4 "Utilization Order - Live Mirgration (bnc#695440)"
+do_test utilization-order4 "Utilization Order - Live Migration (bnc#695440)"
 do_test utilization-shuffle "Don't displace prmExPostgreSQLDB2 on act2, Start prmExPostgreSQLDB1 on act3"
 do_test load-stopped-loop "Avoid transition loop due to load_stopped (cl#5044)"
 do_test load-stopped-loop-2 "cl#5235 - Prevent graph loops that can be introduced by load_stopped -> migrate_to ordering"
@@ -1004,6 +1010,15 @@ do_test stopped-monitor-26 "Stopped Monitor - start unmanaged stopped"
 do_test stopped-monitor-27 "Stopped Monitor - unmanaged stopped multi-up (target-role="Started")"
 do_test stopped-monitor-30 "Stopped Monitor - new node started"
 do_test stopped-monitor-31 "Stopped Monitor - new node stopped"
+
+echo ""
+# This is a combo test to check:
+# - probe timeout defaults to the minimum-interval monitor's
+# - duplicate recurring operations are ignored
+# - if timeout spec is bad, the default timeout is used
+# - failure is blocked with on-fail=block even if ISO8601 interval is specified
+# - started/stopped role monitors are started/stopped on right nodes
+do_test intervals "Recurring monitor interval handling"
 
 echo""
 do_test ticket-primitive-1 "Ticket - Primitive (loss-policy=stop, initial)"
@@ -1192,6 +1207,7 @@ do_test bundle-probe-order-1 "order 1"
 do_test bundle-probe-order-2 "order 2"
 do_test bundle-probe-order-3 "order 3"
 do_test bundle-probe-remotes "Ensure remotes get probed too"
+do_test bundle-replicas-change "Change bundle from 1 replica to multiple"
 
 echo ""
 do_test whitebox-fail1 "Fail whitebox container rsc."

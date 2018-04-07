@@ -468,13 +468,13 @@ crm_time_as_string(crm_time_t * date_time, int flags)
             goto done;
 
         } else if (flags & crm_time_seconds) {
-            unsigned long long s = crm_time_get_seconds(date_time);
+            long long s = crm_time_get_seconds(date_time);
 
             snprintf(date_s, 32, "%lld", s); /* Durations may not be +ve */
             goto done;
 
         } else if (flags & crm_time_epoch) {
-            unsigned long long s = crm_time_get_seconds_since_epoch(date_time);
+            long long s = crm_time_get_seconds_since_epoch(date_time);
 
             snprintf(date_s, 32, "%lld", s); /* Durations may not be +ve */
             goto done;
@@ -784,7 +784,7 @@ parse_int(const char *str, int field_width, int uppper_bound, int *result)
 
     *result = 0;
 
-    if (strlen(str) <= 0) {
+    if (*str == '\0') {
         return FALSE;
     }
 
@@ -830,35 +830,35 @@ parse_int(const char *str, int field_width, int uppper_bound, int *result)
 }
 
 crm_time_t *
-crm_time_parse_duration(const char *interval_str)
+crm_time_parse_duration(const char *period_s)
 {
     gboolean is_time = FALSE;
     crm_time_t *diff = NULL;
 
-    CRM_CHECK(interval_str != NULL, goto bail);
-    CRM_CHECK(strlen(interval_str) > 0, goto bail);
-    CRM_CHECK(interval_str[0] == 'P', goto bail);
-    interval_str++;
+    CRM_CHECK(period_s != NULL, goto bail);
+    CRM_CHECK(strlen(period_s) > 0, goto bail);
+    CRM_CHECK(period_s[0] == 'P', goto bail);
+    period_s++;
 
     diff = calloc(1, sizeof(crm_time_t));
 
-    while (isspace((int)interval_str[0]) == FALSE) {
+    while (isspace((int)period_s[0]) == FALSE) {
         int an_int = 0, rc;
         char ch = 0;
 
-        if (interval_str[0] == 'T') {
+        if (period_s[0] == 'T') {
             is_time = TRUE;
-            interval_str++;
+            period_s++;
         }
 
-        rc = parse_int(interval_str, 10, 0, &an_int);
+        rc = parse_int(period_s, 10, 0, &an_int);
         if (rc == 0) {
             break;
         }
-        interval_str += rc;
+        period_s += rc;
 
-        ch = interval_str[0];
-        interval_str++;
+        ch = period_s[0];
+        period_s++;
 
         crm_trace("Testing %c=%d, rc=%d", ch, an_int, rc);
 

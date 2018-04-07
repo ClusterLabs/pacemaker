@@ -1,19 +1,8 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -28,6 +17,9 @@
 #include <ctype.h>
 #include <stdarg.h>
 
+#include <libxml/parser.h>
+#include <libxml/tree.h>
+
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
@@ -35,11 +27,6 @@
 
 #if HAVE_BZLIB_H
 #  include <bzlib.h>
-#endif
-
-#if HAVE_LIBXML2
-#  include <libxml/parser.h>
-#  include <libxml/tree.h>
 #endif
 
 #define XML_BUFFER_SIZE	4096
@@ -74,8 +61,7 @@ enum xml_private_flags {
      xpf_acl_denied  = 0x2000,
 };
 
-typedef struct xml_private_s 
-{
+typedef struct xml_private_s {
         long check;
         uint32_t flags;
         char *user;
@@ -252,16 +238,16 @@ int in_upper_context(int depth, int context, xmlNode * xml_node);
 int add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * update, gboolean as_diff);
 
 static inline const char *
-crm_attr_value(xmlAttr * attr)
+crm_attr_value(const xmlAttr *attr)
 {
     if (attr == NULL || attr->children == NULL) {
         return NULL;
     }
-    return (const char *)attr->children->content;
+    return (const char *) attr->children->content;
 }
 
 static inline xmlAttr *
-crm_first_attr(xmlNode * xml)
+crm_first_attr(const xmlNode *xml)
 {
     if (xml == NULL) {
         return NULL;
@@ -1927,38 +1913,67 @@ __first_xml_child_match(xmlNode *parent, const char *name, const char *id, int p
     return NULL;
 }
 
+/*!
+ * \internal
+ * \brief Simplified, more efficient alternative to get_xpath_object()
+ *
+ * \param[in] top              Root of XML to search
+ * \param[in] key              Search xpath
+ * \param[in] target_position  If deleting, where to delete
+ *
+ * \return XML child matching xpath if found, NULL otherwise
+ *
+ * \note This only works on simplified xpaths found in v2 patchset diffs,
+ *       i.e. the only allowed search predicate is [@id='XXX'].
+ */
 static xmlNode *
 __xml_find_path(xmlNode *top, const char *key, int target_position)
 {
-    xmlNode *target = (xmlNode*)top->doc;
-    char *id = malloc(XML_BUFFER_SIZE);
-    char *tag = malloc(XML_BUFFER_SIZE);
-    char *section = malloc(XML_BUFFER_SIZE);
-    char *current = strdup(key);
-    char *remainder = malloc(XML_BUFFER_SIZE);
-    int rc = 0;
+    xmlNode *target = (xmlNode*) top->doc;
+    const char *current = key;
+    char *section;
+    char *remainder;
+    char *id;
+    char *tag;
+    char *path = NULL;
+    int rc;
+    size_t key_len;
 
-    while(current) {
-        rc = sscanf (current, "/%[^/]%s", section, remainder);
-        if(rc <= 0) {
-            crm_trace("Done");
-            break;
+    CRM_CHECK(key != NULL, return NULL);
+    key_len = strlen(key);
 
-        } else if(rc > 2) {
-            crm_trace("Aborting on %s", current);
-            target = NULL;
-            break;
+    /* These are scanned from key after a slash, so they can't be bigger
+     * than key_len - 1 characters plus a null terminator.
+     */
 
-        } else if(tag && section) {
-            int f = sscanf (section, "%[^[][@id='%[^']", tag, id);
+    remainder = calloc(key_len, sizeof(char));
+    CRM_ASSERT(remainder != NULL);
+
+    section = calloc(key_len, sizeof(char));
+    CRM_ASSERT(section != NULL);
+
+    id = calloc(key_len, sizeof(char));
+    CRM_ASSERT(id != NULL);
+
+    tag = calloc(key_len, sizeof(char));
+    CRM_ASSERT(tag != NULL);
+
+    do {
+        // Look for /NEXT_COMPONENT/REMAINING_COMPONENTS
+        rc = sscanf(current, "/%[^/]%s", section, remainder);
+        if (rc > 0) {
+            // Separate FIRST_COMPONENT into TAG[@id='ID']
+            int f = sscanf(section, "%[^[][@id='%[^']", tag, id);
             int current_position = -1;
 
-            /* The "target_position" is for the target tag */
-            if (rc == 1 && target_position >= 0) {
+            /* The target position is for the final component tag, so only use
+             * it if there is nothing left to search after this component.
+             */
+            if ((rc == 1) && (target_position >= 0)) {
                 current_position = target_position;
             }
 
-            switch(f) {
+            switch (f) {
                 case 1:
                     target = __first_xml_child_match(target, tag, NULL, current_position);
                     break;
@@ -1966,34 +1981,25 @@ __xml_find_path(xmlNode *top, const char *key, int target_position)
                     target = __first_xml_child_match(target, tag, id, current_position);
                     break;
                 default:
-                    crm_trace("Aborting on %s", section);
+                    // This should not be possible
                     target = NULL;
                     break;
             }
-
-            if(rc == 1 || target == NULL) {
-                crm_trace("Done");
-                break;
-
-            } else {
-                char *tmp = current;
-                current = remainder;
-                remainder = tmp;
-            }
+            current = remainder;
         }
-    }
 
-    if(target) {
-        char *path = (char *)xmlGetNodePath(target);
+    // Continue if something remains to search, and we've matched so far
+    } while ((rc == 2) && target);
 
-        crm_trace("Found %s for %s", path, key);
+    if (target) {
+        crm_trace("Found %s for %s",
+                  (path = (char *) xmlGetNodePath(target)), key);
         free(path);
     } else {
         crm_debug("No match for %s", key);
     }
 
     free(remainder);
-    free(current);
     free(section);
     free(tag);
     free(id);
@@ -2019,11 +2025,7 @@ xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset)
         if(strcmp(op, "delete") == 0) {
             crm_element_value_int(change, XML_DIFF_POSITION, &position);
         }
-#if 0
-        match = get_xpath_object(xpath, xml, LOG_TRACE);
-#else
         match = __xml_find_path(xml, xpath, position);
-#endif
         crm_trace("Performing %s on %s with %p", op, xpath, match);
 
         if(match == NULL && strcmp(op, "delete") == 0) {
@@ -2099,7 +2101,7 @@ xml_apply_patchset_v2(xmlNode *xml, xmlNode *patchset)
             }
 
             if(position != __xml_offset(match)) {
-                crm_err("Moved %s.%d to position %d instead of %d (%p)",
+                crm_err("Moved %s.%s to position %d instead of %d (%p)",
                         match->name, ID(match), __xml_offset(match), position, match->prev);
                 rc = -pcmk_err_diff_failed;
             }
@@ -2566,6 +2568,16 @@ crm_xml_add_int(xmlNode * node, const char *name, int value)
     return added;
 }
 
+const char *
+crm_xml_add_ms(xmlNode *node, const char *name, guint ms)
+{
+    char *number = crm_strdup_printf("%u", ms);
+    const char *added = crm_xml_add(node, name, number);
+
+    free(number);
+    return added;
+}
+
 xmlNode *
 create_xml_node(xmlNode * parent, const char *name)
 {
@@ -2803,17 +2815,10 @@ stdin2xml(void)
     xmlNode *xml_obj = NULL;
 
     do {
-        size_t next = XML_BUFFER_SIZE + data_length + 1;
-
-        if(next <= 0) {
-            crm_err("Buffer size exceeded at: %l + %d", data_length, XML_BUFFER_SIZE);
-            break;
-        }
-
-        xml_buffer = realloc_safe(xml_buffer, next);
+        xml_buffer = realloc_safe(xml_buffer, data_length + XML_BUFFER_SIZE);
         read_chars = fread(xml_buffer + data_length, 1, XML_BUFFER_SIZE, stdin);
         data_length += read_chars;
-    } while (read_chars > 0);
+    } while (read_chars == XML_BUFFER_SIZE);
 
     if (data_length == 0) {
         crm_warn("No XML supplied on stdin");
@@ -2822,7 +2827,6 @@ stdin2xml(void)
     }
 
     xml_buffer[data_length] = '\0';
-
     xml_obj = string2xml(xml_buffer);
     free(xml_buffer);
 
@@ -3094,10 +3098,10 @@ write_xml_stream(xmlNode * xml_node, const char *filename, FILE * stream, gboole
                 crm_warn("Not compressing %s: could not write compressed data: %s "
                          CRM_XS " bzerror=%d errno=%d",
                          filename, bz2_strerror(rc), rc, errno);
-                out = -1; // retry without compression
+                out = 0; // retry without compression
             } else {
                 res = (int) out;
-                crm_trace("Compressed XML for %s from %d bytes to %d",
+                crm_trace("Compressed XML for %s from %u bytes to %u",
                           filename, in, out);
             }
         }
@@ -3106,7 +3110,7 @@ write_xml_stream(xmlNode * xml_node, const char *filename, FILE * stream, gboole
 #endif
     }
 
-    if (out <= 0) {
+    if (out == 0) {
         res = fprintf(stream, "%s", buffer);
         if (res < 0) {
             res = -errno;
@@ -3864,7 +3868,7 @@ xml_has_children(const xmlNode * xml_root)
 }
 
 int
-crm_element_value_int(xmlNode * data, const char *name, int *dest)
+crm_element_value_int(const xmlNode *data, const char *name, int *dest)
 {
     const char *value = crm_element_value(data, name);
 
@@ -3877,19 +3881,17 @@ crm_element_value_int(xmlNode * data, const char *name, int *dest)
 }
 
 int
-crm_element_value_const_int(const xmlNode * data, const char *name, int *dest)
+crm_element_value_ms(const xmlNode *data, const char *name, guint *dest)
 {
-    return crm_element_value_int((xmlNode *) data, name, dest);
-}
+    const char *value = crm_element_value(data, name);
 
-const char *
-crm_element_value_const(const xmlNode * data, const char *name)
-{
-    return crm_element_value((xmlNode *) data, name);
+    CRM_CHECK(dest != NULL, return -1);
+    *dest = crm_parse_ms(value);
+    return errno? -1 : 0;
 }
 
 char *
-crm_element_value_copy(xmlNode * data, const char *name)
+crm_element_value_copy(const xmlNode *data, const char *name)
 {
     char *value_copy = NULL;
     const char *value = crm_element_value(data, name);
@@ -3942,7 +3944,7 @@ save_xml_to_file(xmlNode * xml, const char *desc, const char *filename)
     if (filename == NULL) {
         char *uuid = crm_generate_uuid();
 
-        f = crm_strdup_printf("/tmp/%s", uuid);
+        f = crm_strdup_printf("%s/%s", crm_get_tmpdir(), uuid);
         filename = f;
         free(uuid);
     }
@@ -3953,7 +3955,7 @@ save_xml_to_file(xmlNode * xml, const char *desc, const char *filename)
 }
 
 gboolean
-apply_xml_diff(xmlNode * old, xmlNode * diff, xmlNode ** new)
+apply_xml_diff(xmlNode *old_xml, xmlNode * diff, xmlNode **new_xml)
 {
     gboolean result = TRUE;
     int root_nodes_seen = 0;
@@ -3965,7 +3967,7 @@ apply_xml_diff(xmlNode * old, xmlNode * diff, xmlNode ** new)
     xmlNode *added = find_xml_node(diff, "diff-added", FALSE);
     xmlNode *removed = find_xml_node(diff, "diff-removed", FALSE);
 
-    CRM_CHECK(new != NULL, return FALSE);
+    CRM_CHECK(new_xml != NULL, return FALSE);
     if (digest_cs == NULL) {
         digest_cs =
             qb_log_callsite_get(__func__, __FILE__, "diff-digest", LOG_TRACE, __LINE__,
@@ -3977,13 +3979,13 @@ apply_xml_diff(xmlNode * old, xmlNode * diff, xmlNode ** new)
          child_diff = __xml_next(child_diff)) {
         CRM_CHECK(root_nodes_seen == 0, result = FALSE);
         if (root_nodes_seen == 0) {
-            *new = subtract_xml_object(NULL, old, child_diff, FALSE, NULL, NULL);
+            *new_xml = subtract_xml_object(NULL, old_xml, child_diff, FALSE, NULL, NULL);
         }
         root_nodes_seen++;
     }
 
     if (root_nodes_seen == 0) {
-        *new = copy_xml(old);
+        *new_xml = copy_xml(old_xml);
 
     } else if (root_nodes_seen > 1) {
         crm_err("(-) Diffs cannot contain more than one change set..." " saw %d", root_nodes_seen);
@@ -3999,7 +4001,7 @@ apply_xml_diff(xmlNode * old, xmlNode * diff, xmlNode ** new)
              child_diff = __xml_next(child_diff)) {
             CRM_CHECK(root_nodes_seen == 0, result = FALSE);
             if (root_nodes_seen == 0) {
-                add_xml_object(NULL, *new, child_diff, TRUE);
+                add_xml_object(NULL, *new_xml, child_diff, TRUE);
             }
             root_nodes_seen++;
         }
@@ -4012,17 +4014,17 @@ apply_xml_diff(xmlNode * old, xmlNode * diff, xmlNode ** new)
     } else if (result && digest) {
         char *new_digest = NULL;
 
-        purge_diff_markers(*new);       /* Purge now so the diff is ok */
-        new_digest = calculate_xml_versioned_digest(*new, FALSE, TRUE, version);
+        purge_diff_markers(*new_xml);       /* Purge now so the diff is ok */
+        new_digest = calculate_xml_versioned_digest(*new_xml, FALSE, TRUE, version);
         if (safe_str_neq(new_digest, digest)) {
             crm_info("Digest mis-match: expected %s, calculated %s", digest, new_digest);
             result = FALSE;
 
             crm_trace("%p %.6x", digest_cs, digest_cs ? digest_cs->targets : 0);
             if (digest_cs && digest_cs->targets) {
-                save_xml_to_file(old, "diff:original", NULL);
+                save_xml_to_file(old_xml, "diff:original", NULL);
                 save_xml_to_file(diff, "diff:input", NULL);
-                save_xml_to_file(*new, "diff:new", NULL);
+                save_xml_to_file(*new_xml, "diff:new", NULL);
             }
 
         } else {
@@ -4031,7 +4033,7 @@ apply_xml_diff(xmlNode * old, xmlNode * diff, xmlNode ** new)
         free(new_digest);
 
     } else if (result) {
-        purge_diff_markers(*new);       /* Purge now so the diff is ok */
+        purge_diff_markers(*new_xml);       /* Purge now so the diff is ok */
     }
 
     return result;
@@ -4207,16 +4209,18 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
 }
 
 void
-xml_calculate_changes(xmlNode * old, xmlNode * new)
+xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml)
 {
-    CRM_CHECK(safe_str_eq(crm_element_name(old), crm_element_name(new)), return);
-    CRM_CHECK(safe_str_eq(ID(old), ID(new)), return);
+    CRM_CHECK(safe_str_eq(crm_element_name(old_xml),
+                          crm_element_name(new_xml)),
+              return);
+    CRM_CHECK(safe_str_eq(ID(old_xml), ID(new_xml)), return);
 
-    if(xml_tracking_changes(new) == FALSE) {
-        xml_track_changes(new, NULL, NULL, FALSE);
+    if(xml_tracking_changes(new_xml) == FALSE) {
+        xml_track_changes(new_xml, NULL, NULL, FALSE);
     }
 
-    __xml_diff_object(old, new);
+    __xml_diff_object(old_xml, new_xml);
 }
 
 xmlNode *
@@ -5073,7 +5077,7 @@ sorted_xml(xmlNode * input, xmlNode * parent, gboolean recursive)
 }
 
 xmlNode *
-first_named_child(xmlNode * parent, const char *name)
+first_named_child(const xmlNode *parent, const char *name)
 {
     xmlNode *match = NULL;
 
@@ -5098,7 +5102,7 @@ first_named_child(xmlNode * parent, const char *name)
  * \return Next sibling XML tag with same name
  */
 xmlNode *
-crm_next_same_xml(xmlNode *sibling)
+crm_next_same_xml(const xmlNode *sibling)
 {
     xmlNode *match = __xml_next(sibling);
     const char *name = crm_element_name(sibling);
@@ -5178,7 +5182,7 @@ expand_idref(xmlNode * input, xmlNode * top)
 }
 
 const char *
-crm_element_value(xmlNode * data, const char *name)
+crm_element_value(const xmlNode *data, const char *name)
 {
     xmlAttr *attr = NULL;
 
@@ -5192,7 +5196,10 @@ crm_element_value(xmlNode * data, const char *name)
         return NULL;
     }
 
-    attr = xmlHasProp(data, (const xmlChar *)name);
+    /* The first argument to xmlHasProp() has always been const,
+     * but libxml2 <2.9.2 didn't declare that, so cast it
+     */
+    attr = xmlHasProp((xmlNode *) data, (const xmlChar *)name);
     if (attr == NULL || attr->children == NULL) {
         return NULL;
     }

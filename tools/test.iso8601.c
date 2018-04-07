@@ -79,7 +79,7 @@ main(int argc, char **argv)
     int print_options = 0;
     crm_time_t *duration = NULL;
     crm_time_t *date_time = NULL;
-    crm_time_period_t *interval = NULL;
+    crm_time_period_t *period = NULL;
 
     const char *period_s = NULL;
     const char *duration_s = NULL;
@@ -178,15 +178,16 @@ main(int argc, char **argv)
     }
 
     if (period_s) {
-        interval = crm_time_parse_period(period_s);
+        period = crm_time_parse_period(period_s);
 
-        if (interval == NULL) {
+        if (period == NULL) {
             fprintf(stderr, "Invalid interval specified: %s\n", optarg);
             crm_help('?', CRM_EX_USAGE);
         }
-        log_time_period(LOG_TRACE, interval,
+        log_time_period(LOG_TRACE, period,
                         print_options | crm_time_log_date | crm_time_log_timeofday);
-        log_time_period(-1, interval, print_options | crm_time_log_date | crm_time_log_timeofday);
+        log_time_period(-1, period,
+                        print_options | crm_time_log_date | crm_time_log_timeofday);
     }
 
     if (date_time && duration) {
@@ -218,16 +219,13 @@ main(int argc, char **argv)
         free(dt_s);
     }
 
-    /* if(date_time && interval) { */
-    /* } */
-
     crm_time_free(date_time);
     crm_time_free(duration);
-    if (interval) {
-        crm_time_free(interval->start);
-        crm_time_free(interval->end);
-        crm_time_free(interval->diff);
-        free(interval);
+    if (period) {
+        crm_time_free(period->start);
+        crm_time_free(period->end);
+        crm_time_free(period->diff);
+        free(period);
     }
 
     return crm_exit(exit_code);

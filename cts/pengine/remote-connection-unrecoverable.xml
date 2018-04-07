@@ -1,4 +1,4 @@
-<cib crm_feature_set="3.0.10" validate-with="pacemaker-2.3" epoch="34" num_updates="1" admin_epoch="0" cib-last-written="Mon Apr  4 11:58:30 2016" update-origin="node1" update-client="crmd" update-user="hacluster" have-quorum="1" dc-uuid="2">
+<cib crm_feature_set="3.0.10" validate-with="pacemaker-3.0" epoch="34" num_updates="1" admin_epoch="0" cib-last-written="Mon Apr  4 11:58:30 2016" update-origin="node1" update-client="crmd" update-user="hacluster" have-quorum="1" dc-uuid="2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -24,27 +24,24 @@
         </operations>
       </primitive>
       <primitive class="stonith" id="killer" type="fence_xvm">
-	<instance_attributes id="killer-instance_attributes"/>
         <operations>
           <op id="killer-monitor-interval-60s" interval="60s" name="monitor"/>
         </operations>
       </primitive>
       <primitive id="rsc1" class="ocf" provider="pacemaker" type="Dummy">
-        <instance_attributes id="rsc1-instance_attributes"/>
         <operations>
           <op id="rsc1-monitor-interval-10" interval="10" name="monitor" timeout="20"/>
         </operations>
       </primitive>
       <clone id="rsc2-master">
         <primitive id="rsc2" class="ocf" provider="pacemaker" type="Stateful">
-          <instance_attributes id="rsc2-instance_attributes"/>
           <operations>
             <op id="rsc2-monitor-interval-10" interval="10" name="monitor" role="Master" timeout="20"/>
             <op id="rsc2-monitor-interval-11" interval="11" name="monitor" role="Slave" timeout="20"/>
           </operations>
         </primitive>
         <meta_attributes id="rsc2-master-meta_attributes">
-          <nvpair id="rsc2-master-meta_attributes-promotable"  name="promotable" value="true"/>
+          <nvpair id="rsc2-master-meta_attributes-promotable" name="promotable" value="true"/>
           <nvpair id="rsc2-master-meta_attributes-promoted-max" name="promoted-max" value="2"/>
         </meta_attributes>
       </clone>

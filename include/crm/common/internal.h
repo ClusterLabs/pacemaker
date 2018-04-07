@@ -43,6 +43,7 @@ void crm_sync_directory(const char *name);
 char *crm_read_contents(const char *filename);
 int crm_write_sync(int fd, const char *contents);
 int crm_set_nonblocking(int fd);
+const char *crm_get_tmpdir(void);
 
 
 /* internal procfs utilities (from procfs.c) */
@@ -60,9 +61,8 @@ void crm_schema_cleanup(void);
 
 /* internal generic string functions (from strings.c) */
 
-char *crm_concat(const char *prefix, const char *suffix, char join);
-void g_hash_destroy_str(gpointer data);
 long long crm_int_helper(const char *text, char **end_text);
+guint crm_parse_ms(const char *text);
 bool crm_starts_with(const char *str, const char *prefix);
 gboolean crm_ends_with(const char *s, const char *match);
 gboolean crm_ends_with_ext(const char *s, const char *match);
@@ -70,6 +70,13 @@ char *add_list_element(char *list, const char *value);
 bool crm_compress_string(const char *data, int length, int max, char **result,
                          unsigned int *result_len);
 gint crm_alpha_sort(gconstpointer a, gconstpointer b);
+
+static inline char *
+crm_concat(const char *prefix, const char *suffix, char join)
+{
+    CRM_ASSERT(prefix && suffix);
+    return crm_strdup_printf("%s%c%s", prefix, join, suffix);
+}
 
 static inline int
 crm_strlen_zero(const char *s)
@@ -92,10 +99,10 @@ crm_getpid_s()
  * \internal
  * \brief Generate a failure-related node attribute name for a resource
  *
- * \param[in] prefix    Start of attribute name
- * \param[in] rsc_id    Resource name
- * \param[in] op        Operation name
- * \param[in] interval  Operation interval
+ * \param[in] prefix       Start of attribute name
+ * \param[in] rsc_id       Resource name
+ * \param[in] op           Operation name
+ * \param[in] interval_ms  Operation interval
  *
  * \return Newly allocated string with attribute name
  *
@@ -107,22 +114,22 @@ crm_getpid_s()
  */
 static inline char *
 crm_fail_attr_name(const char *prefix, const char *rsc_id, const char *op,
-                   int interval)
+                   guint interval_ms)
 {
     CRM_CHECK(prefix && rsc_id && op, return NULL);
-    return crm_strdup_printf("%s-%s#%s_%d", prefix, rsc_id, op, interval);
+    return crm_strdup_printf("%s-%s#%s_%u", prefix, rsc_id, op, interval_ms);
 }
 
 static inline char *
-crm_failcount_name(const char *rsc_id, const char *op, int interval)
+crm_failcount_name(const char *rsc_id, const char *op, guint interval_ms)
 {
-    return crm_fail_attr_name(CRM_FAIL_COUNT_PREFIX, rsc_id, op, interval);
+    return crm_fail_attr_name(CRM_FAIL_COUNT_PREFIX, rsc_id, op, interval_ms);
 }
 
 static inline char *
-crm_lastfailure_name(const char *rsc_id, const char *op, int interval)
+crm_lastfailure_name(const char *rsc_id, const char *op, guint interval_ms)
 {
-    return crm_fail_attr_name(CRM_LAST_FAILURE_PREFIX, rsc_id, op, interval);
+    return crm_fail_attr_name(CRM_LAST_FAILURE_PREFIX, rsc_id, op, interval_ms);
 }
 
 #endif /* CRM_COMMON_INTERNAL__H */

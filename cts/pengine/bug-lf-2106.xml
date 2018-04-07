@@ -1,9 +1,8 @@
-<cib validate-with="pacemaker-1.0" crm_feature_set="3.0.1" have-quorum="1" admin_epoch="0" epoch="24" num_updates="1" cib-last-written="Fri Jul 13 13:51:01 2012" dc-uuid="cl-virt-1">
+<cib validate-with="pacemaker-3.0" crm_feature_set="3.0.1" have-quorum="1" admin_epoch="0" epoch="24" num_updates="1" cib-last-written="Fri Jul 13 13:51:01 2012" dc-uuid="cl-virt-1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.0.3-dadaf305c879 stable-1.0 tip"/>
-        <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="2"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
         <nvpair id="cib-bootstrap-options-cluster-recheck-interval" name="cluster-recheck-interval" value="300"/>
         <nvpair id="cib-bootstrap-options-maintenance-mode" name="maintenance-mode" value="false"/>

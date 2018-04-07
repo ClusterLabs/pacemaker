@@ -1,8 +1,7 @@
-<cib validate-with="pacemaker-1.0" crm_feature_set="3.0.6" have-quorum="1" admin_epoch="0" epoch="1456" num_updates="28" cib-last-written="Thu Aug  1 14:47:54 2013" dc-uuid="asttest1">
+<cib validate-with="pacemaker-3.0" crm_feature_set="3.0.6" have-quorum="1" admin_epoch="0" epoch="1456" num_updates="28" cib-last-written="Thu Aug  1 14:47:54 2013" dc-uuid="asttest1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
-        <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="2"/>
         <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.7-ee0730e13d124c3d58f00016c3376a1de5323cff"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>

@@ -1,4 +1,4 @@
-<cib admin_epoch="0" epoch="125" num_updates="9368" dc-uuid="9e080e6d-7a25-4dac-be89-f6f4f128623d" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:12 2012">
+<cib admin_epoch="0" epoch="125" num_updates="9368" dc-uuid="9e080e6d-7a25-4dac-be89-f6f4f128623d" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-3.0" cib-last-written="Fri Jul 13 13:51:12 2012">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -184,7 +184,7 @@
           <meta_attributes id="primitive-ocf_msdummy.meta"/>
         </primitive>
         <meta_attributes id="clone-master_rsc_1.meta">
-          <nvpair id="nvpair.meta.auto-304"  name="promotable" value="true"/>
+          <nvpair id="nvpair.meta.auto-304" name="promotable" value="true"/>
           <nvpair id="nvpair.meta.auto-305" name="resource-stickiness" value="1"/>
           <nvpair id="nvpair.meta.auto-297" name="clone-max" value="12"/>
           <nvpair id="nvpair.meta.auto-299" name="clone-node-max" value="2"/>

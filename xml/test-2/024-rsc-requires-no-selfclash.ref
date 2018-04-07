@@ -1,0 +1,111 @@
+<cib validate-with="pacemaker-3.0" admin_epoch="0" epoch="0" num_updates="0">
+  <configuration>
+    <crm_config/>
+    <nodes>
+
+      <node id="virt-063" uname="virt-063"/>
+      <node id="virt-064" uname="virt-064"/>
+      <node id="virt-069" uname="virt-069"/>
+
+    </nodes>
+    <resources>
+
+      <!-- potential clash between pre-existing
+           meta_attributes/nvpair[@name = 'requires'] vs.
+           op[@name = 'start'
+              or
+              @name = 'promote']/@requires
+           and/or
+           op[@name = 'start'
+           or
+           @name = 'promote']/meta_attributes/nvpair[@name = 'requires'] -->
+      <primitive id="myAddr1" class="ocf" provider="heartbeat" type="IPaddr2">
+        <operations>
+          <op id="myAddr1-monitor" name="monitor" interval="30s"/>
+          <op id="myAddr1-start" name="start" interval="0" timeout="40s"/>
+        </operations>
+        <instance_attributes id="myAddr1-params">
+          <nvpair id="myAddr1-ip" name="ip" value="192.0.2.10"/>
+        </instance_attributes>
+        <meta_attributes id="myAddr1-meta">
+          <nvpair id="myAddr1-requires" name="requires" value="quorum"/>
+        </meta_attributes>
+      </primitive>
+
+      <!-- potential clash between op[@name = 'start'
+                                      or
+                                      @name = 'promote']/@requires
+           and op[@name = 'start'
+                  or
+                  @name = 'promote']/meta_attributes/nvpair[@name = 'requires']
+           (would-eliminate-override-meta-attribute is missing,
+           allowing for direct clash in the propagation logic) -->
+      <primitive id="myAddr2" class="ocf" provider="heartbeat" type="IPaddr2">
+        <operations>
+          <op id="myAddr2-monitor" name="monitor" interval="30s"/>
+          <op id="myAddr2-start" name="start" interval="0" timeout="40s"/>
+        </operations>
+        <instance_attributes id="myAddr2-params">
+          <nvpair id="myAddr2-ip" name="ip" value="192.0.2.10"/>
+        </instance_attributes>
+      <meta_attributes id="_2TO3_myAddr2-meta"> <nvpair id="_2TO3_myAddr2-start-meta-requires" name="requires" value="nothing"/></meta_attributes></primitive>
+
+      <!-- potential clash between multiple op[@name = 'start'
+                                               or
+                                               @name = 'promote']/@requires
+           (would-eliminate-override-meta-attribute is missing,
+           allowing for direct clash in the propagation logic) -->
+      <clone id="master1">
+        <meta_attributes id="master1-meta">
+          <nvpair id="master1-promotable" name="promotable" value="true"/>
+          <nvpair id="master1-promoted-node-max" name="promoted-node-max" value="1"/>
+          <nvpair id="master1-clone-max" name="clone-max" value="3"/>
+          <nvpair id="master1-promoted-max" name="promoted-max" value="1"/>
+          <nvpair id="master1-clone-node-max" name="clone-node-max" value="1"/>
+        </meta_attributes>
+        <primitive id="stateful1" class="ocf" type="Stateful" provider="pacemaker">
+          <operations>
+            <op id="stateful1-monitor-15s" interval="15s" name="monitor" timeout="60s"/>
+            <op id="stateful1-monitor-16s" interval="16s" name="monitor" timeout="60s" role="Master"/>
+            <op id="stateful1-promote" interval="0" name="promote" timeout="40s"/>
+            <op id="stateful1-start" interval="0" name="start" timeout="40s"/>
+            <!-- demote != promote -->
+            <op id="stateful1-demote" interval="0" name="demote" timeout="40s"/>
+          </operations>
+        <meta_attributes id="_2TO3_stateful1-meta"> <nvpair id="_2TO3_stateful1-start-meta-requires" name="requires" value="fencing"/></meta_attributes></primitive>
+      </clone>
+
+      <!-- potential clash between multiple
+           op[@name = 'start'
+              or
+              @name = 'promote']/meta_attributes/nvpair[@name = 'requires']
+           (would-eliminate-override-meta-attribute is missing,
+           allowing for direct clash in the propagation logic) -->
+      <clone id="master2">
+        <meta_attributes id="master2-meta">
+          <nvpair id="master2-promotable" name="promotable" value="true"/>
+          <nvpair id="master2-promoted-node-max" name="promoted-node-max" value="1"/>
+          <nvpair id="master2-clone-max" name="clone-max" value="3"/>
+          <nvpair id="master2-promoted-max" name="promoted-max" value="1"/>
+          <nvpair id="master2-clone-node-max" name="clone-node-max" value="1"/>
+        </meta_attributes>
+        <primitive id="stateful2" class="ocf" type="Stateful" provider="pacemaker">
+          <operations>
+            <op id="stateful2-monitor-15s" interval="15s" name="monitor" timeout="60s"/>
+            <op id="stateful2-monitor-16s" interval="16s" name="monitor" timeout="60s" role="Master"/>
+	    <op id="stateful2-promote" interval="0" name="promote" timeout="40s"/>
+            <op id="stateful2-start" interval="0" name="start" timeout="40s"/>
+            <!-- demote != promote -->
+            <op id="stateful2-demote" interval="0" name="demote" timeout="40s"/>
+          </operations>
+        <meta_attributes id="_2TO3_stateful2-promote-meta3">
+                
+               <nvpair id="stateful2-promote-requires3-1" name="requires" value="fencing"/>
+              </meta_attributes></primitive>
+      </clone>
+
+    </resources>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>

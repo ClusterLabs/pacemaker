@@ -472,7 +472,7 @@ delete_ticket_state(const char *ticket_id, cib_t * cib)
 
     crm_log_xml_debug(ticket_state_xml, "Delete");
 
-    rc = cib->cmds->delete(cib, XML_CIB_TAG_STATUS, ticket_state_xml, cib_options);
+    rc = cib->cmds->remove(cib, XML_CIB_TAG_STATUS, ticket_state_xml, cib_options);
 
     if (rc == pcmk_ok) {
         fprintf(stdout, "Cleaned up %s\n", ticket_id);

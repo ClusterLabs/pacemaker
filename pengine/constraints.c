@@ -1,19 +1,8 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -34,6 +23,8 @@
 #include <allocate.h>
 #include <utils.h>
 #include <crm/pengine/rules.h>
+
+#include <../lib/pengine/unpack.h>
 
 enum pe_order_kind {
     pe_order_kind_optional,
@@ -250,6 +241,46 @@ valid_resource_or_tag(pe_working_set_t * data_set, const char * id,
 }
 
 static gboolean
+order_is_symmetrical(xmlNode * xml_obj,
+                     enum pe_order_kind parent_kind, const char * parent_symmetrical_s)
+{
+    const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
+    const char *kind_s = crm_element_value(xml_obj, XML_ORDER_ATTR_KIND);
+    const char *score_s = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
+    const char *symmetrical_s = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
+    enum pe_order_kind kind = parent_kind;
+
+    if (kind_s || score_s) {
+        kind = get_ordering_type(xml_obj);
+    }
+
+    if (symmetrical_s == NULL) {
+        symmetrical_s = parent_symmetrical_s;
+    }
+
+    if (symmetrical_s) {
+        gboolean symmetrical = crm_is_true(symmetrical_s);
+
+        if (symmetrical && kind == pe_order_kind_serialize) {
+            crm_config_warn("Cannot invert serialized order %s."
+                            " Ignoring symmetrical=\"%s\"",
+                            id, symmetrical_s);
+            return FALSE;
+        }
+
+        return symmetrical;
+
+    } else {
+        if (kind == pe_order_kind_serialize) {
+            return FALSE;
+
+        } else {
+            return TRUE;
+        }
+    }
+}
+
+static gboolean
 unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
 {
     int order_id = 0;
@@ -266,21 +297,21 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     const char *action_first = NULL;
     const char *instance_then = NULL;
     const char *instance_first = NULL;
-    const char *require_all_s = NULL;
 
-    const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
-    const char *invert = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
-
-    crm_str_to_boolean(invert, &invert_bool);
+    const char *id = NULL;
 
     if (xml_obj == NULL) {
         crm_config_err("No constraint object to process.");
         return FALSE;
+    }
 
-    } else if (id == NULL) {
+    id = crm_element_value(xml_obj, XML_ATTR_ID);
+    if (id == NULL) {
         crm_config_err("%s constraint must have an id", crm_element_name(xml_obj));
         return FALSE;
     }
+
+    invert_bool = order_is_symmetrical(xml_obj, kind, NULL);
 
     id_then = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN);
     id_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST);
@@ -346,22 +377,6 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
         }
     }
 
-    require_all_s = crm_element_value(xml_obj, "require-all");
-    if (require_all_s
-        && crm_is_true(require_all_s) == FALSE
-        && pe_rsc_is_clone(rsc_first)) {
-
-        /* require-all=false means only one instance of the clone is required */
-        min_required_before = 1;
-    } else if (pe_rsc_is_clone(rsc_first)) {
-        const char *min_clones_s = g_hash_table_lookup(rsc_first->meta, XML_RSC_ATTR_INCARNATION_MIN);
-        if (min_clones_s) {
-            /* if clone min is set, we require at a minimum X number of instances
-             * to be runnable before allowing dependencies to be runnable. */
-            min_required_before = crm_parse_int(min_clones_s, "0");
-        }
-    }
-
     cons_weight = pe_order_optional;
     kind = get_ordering_type(xml_obj);
 
@@ -374,6 +389,31 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
         cons_weight |= get_asymmetrical_flags(kind);
     } else {
         cons_weight |= get_flags(id, kind, action_first, action_then, FALSE);
+    }
+
+    if (pe_rsc_is_clone(rsc_first)) {
+        /* If clone-min is set, require at least that number of instances to be
+         * runnable before allowing dependencies to be runnable.
+         */
+        const char *min_clones_s = g_hash_table_lookup(rsc_first->meta,
+                                                       XML_RSC_ATTR_INCARNATION_MIN);
+
+        // @COMPAT 1.1.13: deprecated
+        const char *require_all_s = crm_element_value(xml_obj, "require-all");
+
+        if (min_clones_s) {
+            min_required_before = crm_parse_int(min_clones_s, "0");
+
+        } else if (require_all_s) {
+            pe_warn_once(pe_wo_require_all,
+                        "Support for require-all in ordering constraints "
+                        "is deprecated and will be removed in a future release"
+                        " (use clone-min clone meta-attribute instead)");
+            if (crm_is_true(require_all_s) == FALSE) {
+                // require-all=false is deprecated equivalent of clone-min=1
+                min_required_before = 1;
+            }
+        }
     }
 
     /* If there is a minimum number of instances that must be runnable before
@@ -412,13 +452,6 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
                  order_id, id, rsc_first->id, action_first, rsc_then->id, action_then, cons_weight);
 
     if (invert_bool == FALSE) {
-        return TRUE;
-
-    } else if (invert && kind == pe_order_kind_serialize) {
-        crm_config_warn("Cannot invert serialized constraint set %s", id);
-        return TRUE;
-
-    } else if (kind == pe_order_kind_serialize) {
         return TRUE;
     }
 
@@ -1347,13 +1380,13 @@ task_from_action_or_key(action_t *action, const char *key)
     char *res = NULL;
     char *rsc_id = NULL;
     char *op_type = NULL;
-    int interval = 0;
+    guint interval_ms = 0;
 
     if (action) {
         res = strdup(action->task);
     } else if (key) {
         int rc = 0;
-        rc = parse_op_key(key, &rsc_id, &op_type, &interval);
+        rc = parse_op_key(key, &rsc_id, &op_type, &interval_ms);
         if (rc == TRUE) {
             res = op_type;
             op_type = NULL;
@@ -1591,9 +1624,9 @@ get_flags(const char *id, enum pe_order_kind kind,
 }
 
 static gboolean
-unpack_order_set(xmlNode * set, enum pe_order_kind kind, resource_t ** rsc,
+unpack_order_set(xmlNode * set, enum pe_order_kind parent_kind, resource_t ** rsc,
                  action_t ** begin, action_t ** end, action_t ** inv_begin, action_t ** inv_end,
-                 const char *symmetrical, pe_working_set_t * data_set)
+                 const char *parent_symmetrical_s, pe_working_set_t * data_set)
 {
     xmlNode *xml_rsc = NULL;
     GListPtr set_iter = NULL;
@@ -1602,9 +1635,10 @@ unpack_order_set(xmlNode * set, enum pe_order_kind kind, resource_t ** rsc,
     resource_t *last = NULL;
     resource_t *resource = NULL;
 
-    int local_kind = kind;
+    int local_kind = parent_kind;
     gboolean sequential = FALSE;
     enum pe_ordering flags = pe_order_optional;
+    gboolean symmetrical = TRUE;
 
     char *key = NULL;
     const char *id = ID(set);
@@ -1630,7 +1664,9 @@ unpack_order_set(xmlNode * set, enum pe_order_kind kind, resource_t ** rsc,
     }
 
     sequential = crm_is_true(sequential_s);
-    if (crm_is_true(symmetrical)) {
+
+    symmetrical = order_is_symmetrical(set, parent_kind, parent_symmetrical_s);
+    if (symmetrical) {
         flags = get_flags(id, local_kind, action, action, FALSE);
     } else {
         flags = get_asymmetrical_flags(local_kind);
@@ -1706,14 +1742,7 @@ unpack_order_set(xmlNode * set, enum pe_order_kind kind, resource_t ** rsc,
         free(key);
     }
 
-    if (crm_is_true(symmetrical) == FALSE) {
-        goto done;
-
-    } else if (symmetrical && local_kind == pe_order_kind_serialize) {
-        crm_config_warn("Cannot invert serialized constraint set %s", id);
-        goto done;
-
-    } else if (local_kind == pe_order_kind_serialize) {
+    if (symmetrical == FALSE) {
         goto done;
     }
 
@@ -2081,14 +2110,8 @@ unpack_rsc_order(xmlNode * xml_obj, pe_working_set_t * data_set)
     const char *invert = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
     enum pe_order_kind kind = get_ordering_type(xml_obj);
 
-    gboolean invert_bool = TRUE;
+    gboolean invert_bool = order_is_symmetrical(xml_obj, kind, NULL);
     gboolean rc = TRUE;
-
-    if (invert == NULL) {
-        invert = "true";
-    }
-
-    invert_bool = crm_is_true(invert);
 
     rc = unpack_order_tags(xml_obj, &expanded_xml, data_set);
     if (expanded_xml) {
@@ -2248,10 +2271,6 @@ unpack_colocation_set(xmlNode * set, int score, pe_working_set_t * data_set)
                     if (crm_str_eq((const char *)xml_rsc_with->name, XML_TAG_RESOURCE_REF, TRUE)) {
                         if (safe_str_eq(resource->id, ID(xml_rsc_with))) {
                             break;
-                        } else if (resource == NULL) {
-                            crm_config_err("%s: No resource found for %s", set_id,
-                                           ID(xml_rsc_with));
-                            return FALSE;
                         }
                         EXPAND_CONSTRAINT_IDREF(set_id, with, ID(xml_rsc_with));
                         pe_rsc_trace(resource, "Anti-Colocating %s with %s", resource->id,
@@ -2887,7 +2906,7 @@ unpack_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
 
     if (data_set->tickets == NULL) {
         data_set->tickets =
-            g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, destroy_ticket);
+            g_hash_table_new_full(crm_str_hash, g_str_equal, free, destroy_ticket);
     }
 
     if (ticket_str == NULL) {

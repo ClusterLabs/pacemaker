@@ -1,0 +1,15 @@
+<cib validate-with="pacemaker-2.0" admin_epoch="0" epoch="0" num_updates="0">
+  <configuration>
+    <crm_config/>
+    <nodes>
+
+      <node id="virt-063" uname="virt-063" type="normal"/>
+      <node id="virt-064" uname="virt-064" type="normal"/>
+      <node id="virt-069" uname="virt-069" type="member"/>
+
+    </nodes>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>

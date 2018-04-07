@@ -863,7 +863,7 @@ merge_duplicates(remote_fencing_op_t * op)
             continue;
 
         } else if(other->total_timeout > 0 && now > (other->total_timeout + other->created)) {
-            crm_info("Stonith action %s for node %s originating from %s@%s.%.8s is too old: %d vs. %d + %d",
+            crm_info("Stonith action %s for node %s originating from %s@%s.%.8s is too old: %ld vs. %ld + %d",
                      other->action, other->target, other->client_name, other->originator, other->id,
                      now, other->created, other->total_timeout);
             continue;
@@ -1487,7 +1487,7 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
 
         } else {
             timeout_one = TIMEOUT_MULTIPLY_FACTOR * get_peer_timeout(op, peer);
-            crm_info("Requesting that '%s' perform op '%s %s' for %s (%ds, %ds)",
+            crm_info("Requesting that '%s' perform op '%s %s' for %s (%ds, %lds)",
                      peer->host, op->target, op->action, op->client_name, timeout_one, stonith_watchdog_timeout_ms);
             crm_xml_add(remote_op, F_STONITH_MODE, "smart");
 
@@ -1499,7 +1499,7 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
         }
 
         if(stonith_watchdog_timeout_ms > 0 && device && safe_str_eq(device, "watchdog")) {
-            crm_notice("Waiting %ds for %s to self-fence (%s) for %s.%.8s (%p)",
+            crm_notice("Waiting %lds for %s to self-fence (%s) for %s.%.8s (%p)",
                        stonith_watchdog_timeout_ms/1000, op->target,
                        op->action, op->client_name, op->id, device);
             op->op_timer_one = g_timeout_add(stonith_watchdog_timeout_ms, remote_op_watchdog_done, op);
@@ -1508,7 +1508,7 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
         } else if(stonith_watchdog_timeout_ms > 0
                   && safe_str_eq(peer->host, op->target)
                   && safe_str_neq(op->action, "on")) {
-            crm_notice("Waiting %ds for %s to self-fence (%s) for %s.%.8s (%p)",
+            crm_notice("Waiting %lds for %s to self-fence (%s) for %s.%.8s (%p)",
                        stonith_watchdog_timeout_ms/1000, op->target,
                        op->action, op->client_name, op->id, device);
             op->op_timer_one = g_timeout_add(stonith_watchdog_timeout_ms, remote_op_watchdog_done, op);
@@ -1551,7 +1551,7 @@ call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer)
          * are available to execute the fencing operation. */
 
         if(stonith_watchdog_timeout_ms && (device == NULL || safe_str_eq(device, "watchdog"))) {
-            crm_notice("Waiting %ds for %s to self-fence (%s) for %s.%.8s (%p)",
+            crm_notice("Waiting %lds for %s to self-fence (%s) for %s.%.8s (%p)",
                      stonith_watchdog_timeout_ms/1000, op->target,
                      op->action, op->client_name, op->id, device);
 
@@ -1945,7 +1945,7 @@ process_remote_stonith_exec(xmlNode * msg)
     if (op->devices && device && safe_str_neq(op->devices->data, device)) {
         crm_err("Received outdated reply for device %s (instead of %s) to "
                 "fence (%s) %s. Operation already timed out at peer level.",
-                device, op->devices->data, op->action, op->target);
+                device, (const char *) op->devices->data, op->action, op->target);
         return rc;
     }
 
@@ -2074,7 +2074,7 @@ stonith_fence_history(xmlNode * msg, xmlNode ** output)
             crm_xml_add(entry, F_STONITH_ORIGIN, op->originator);
             crm_xml_add(entry, F_STONITH_DELEGATE, op->delegate);
             crm_xml_add(entry, F_STONITH_CLIENTNAME, op->client_name);
-            crm_xml_add_int(entry, F_STONITH_DATE, op->completed);
+            crm_xml_add_int(entry, F_STONITH_DATE, (int) op->completed);
             crm_xml_add_int(entry, F_STONITH_STATE, op->state);
         }
     }

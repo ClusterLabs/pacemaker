@@ -235,9 +235,10 @@ to manage entering and exiting the special role.
  indexterm:[Clone,Option,clone-node-max]
   
 |clone-min
-|1
+|0
 |Require at least this number of clone instances to be runnable before allowing
- resources depending on the clone to be runnable
+ resources depending on the clone to be runnable. A value of 0 means require
+ all clone instances to be runnable.
  indexterm:[clone-min,Clone Option]
  indexterm:[Clone,Option,clone-min]
 
@@ -1170,6 +1171,14 @@ indexterm:[bundle,network]
 |Default
 |Description
 
+|add-host
+|TRUE
+|If TRUE, and +ip-range-start+ is used, Pacemaker will automatically ensure
+ that +/etc/hosts+ inside the containers has entries for each
+ <<s-resource-bundle-note-replica-names,replica name>> and its assigned IP.
+ indexterm:[add-host,network]
+ indexterm:[network,Property,add-host]
+
 |ip-range-start
 |
 |If specified, Pacemaker will create an implicit +ocf:heartbeat:IPaddr2+
@@ -1213,12 +1222,9 @@ indexterm:[bundle,network]
 [[s-resource-bundle-note-replica-names]]
 [NOTE]
 ====
-If +ip-range-start+ is used, Pacemaker will automatically ensure that
-+/etc/hosts+ inside the containers has entries for each replica and its
-assigned IP. Replicas are named by the bundle id plus a dash and an integer
-counter starting with zero. For example, if a bundle named +httpd-bundle+ has
-+replicas=2+, its containers will be named +httpd-bundle-0+ and
-+httpd-bundle-1+.
+Replicas are named by the bundle id plus a dash and an integer counter starting
+with zero. For example, if a bundle named +httpd-bundle+ has +replicas=2+, its
+containers will be named +httpd-bundle-0+ and +httpd-bundle-1+.
 ====
 
 Additionally, a +<network>+ element may optionally contain one or more
@@ -1307,9 +1313,8 @@ indexterm:[bundle,storage,storage-mapping]
 |
 |The start of a path on the host's filesystem that will be mapped into the
  container, using a different subdirectory on the host for each container
- instance. The subdirectory will be named the same as the bundle host name,
- as described in
- <<s-resource-bundle-note-replica-names,the note for +ip-range-start+>>.
+ instance. The subdirectory will be named the same as the
+ <<s-resource-bundle-note-replica-names,replica name>>.
  Exactly one of +source-dir+ and +source-dir-root+ must be specified in a
  +storage-mapping+.
  indexterm:[source-dir-root,storage-mapping]
