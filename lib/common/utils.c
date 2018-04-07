@@ -813,7 +813,7 @@ crm_lock_pidfile(const char *filename, const char *name)
 {
     long mypid = 0;
     int fd = 0, rc = 0;
-    char buf[LOCKSTRLEN + 1];
+    char buf[LOCKSTRLEN + 2];
 
     mypid = (unsigned long)getpid();
 
