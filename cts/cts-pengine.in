@@ -115,7 +115,7 @@ while [ $# -gt 0 ] ; do
             shift
             ;;
         --run)
-            single_test="$2"
+            single_test=$(basename "$2" ".xml")
             shift 2
             ;;
         -b|--binary)

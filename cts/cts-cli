@@ -668,11 +668,11 @@ EOF
 
     test_acl_loop "$TMPXML"
 
-    printf "\n\n    !#!#!#!#! Upgrading to pacemaker-2.0 and retesting !#!#!#!#!\n"
-    printf "\nUpgrading to pacemaker-2.0 and re-testing\n" 1>&2
+    printf "\n\n    !#!#!#!#! Upgrading to latest CIB schema and re-testing !#!#!#!#!\n"
+    printf "\nUpgrading to latest CIB schema and re-testing\n" 1>&2
 
     export CIB_user=root
-    desc="$CIB_user: Upgrade to pacemaker-2.0"
+    desc="$CIB_user: Upgrade to latest CIB schema"
     cmd="cibadmin --upgrade --force -V"
     test_assert $CRM_EX_OK
 

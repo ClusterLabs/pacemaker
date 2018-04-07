@@ -57,11 +57,9 @@ qb_ipcs_service_t *ipcs_ro = NULL;
 qb_ipcs_service_t *ipcs_rw = NULL;
 qb_ipcs_service_t *ipcs_shm = NULL;
 
-gint cib_GCompareFunc(gconstpointer a, gconstpointer b);
-gboolean can_write(int flags);
 void send_cib_replace(const xmlNode * sync_request, const char *host);
-void cib_process_request(xmlNode * request, gboolean privileged, gboolean force_synchronous,
-                         gboolean from_peer, crm_client_t * cib_client);
+static void cib_process_request(xmlNode* request, gboolean force_synchronous,
+                                gboolean privileged, crm_client_t *cib_client);
 
 
 int cib_process_command(xmlNode * request, xmlNode ** reply,
@@ -213,7 +211,7 @@ cib_common_callback_worker(uint32_t id, uint32_t flags, xmlNode * op_request,
         return;
     }
 
-    cib_process_request(op_request, FALSE, privileged, FALSE, cib_client);
+    cib_process_request(op_request, FALSE, privileged, cib_client);
 }
 
 int32_t
@@ -897,9 +895,9 @@ send_peer_reply(xmlNode * msg, xmlNode * result_diff, const char *originator, gb
     return FALSE;
 }
 
-void
-cib_process_request(xmlNode * request, gboolean force_synchronous, gboolean privileged,
-                    gboolean unused, crm_client_t * cib_client)
+static void
+cib_process_request(xmlNode *request, gboolean force_synchronous,
+                    gboolean privileged, crm_client_t *cib_client)
 {
     int call_type = 0;
     int call_options = 0;
@@ -1360,30 +1358,6 @@ cib_process_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff, gb
     return rc;
 }
 
-gint
-cib_GCompareFunc(gconstpointer a, gconstpointer b)
-{
-    const xmlNode *a_msg = a;
-    const xmlNode *b_msg = b;
-
-    int msg_a_id = 0;
-    int msg_b_id = 0;
-    const char *value = NULL;
-
-    value = crm_element_value(a_msg, F_CIB_CALLID);
-    msg_a_id = crm_parse_int(value, NULL);
-
-    value = crm_element_value(b_msg, F_CIB_CALLID);
-    msg_b_id = crm_parse_int(value, NULL);
-
-    if (msg_a_id == msg_b_id) {
-        return 0;
-    } else if (msg_a_id < msg_b_id) {
-        return -1;
-    }
-    return 1;
-}
-
 void
 cib_peer_callback(xmlNode * msg, void *private_data)
 {
@@ -1409,7 +1383,7 @@ cib_peer_callback(xmlNode * msg, void *private_data)
     }
 
     /* crm_log_xml_trace("Peer[inbound]", msg); */
-    cib_process_request(msg, FALSE, TRUE, TRUE, NULL);
+    cib_process_request(msg, FALSE, TRUE, NULL);
     return;
 
   bail:
@@ -1419,12 +1393,6 @@ cib_peer_callback(xmlNode * msg, void *private_data)
 
         crm_warn("Discarding %s message (%s) from %s: %s", op, seq, originator, reason);
     }
-}
-
-gboolean
-can_write(int flags)
-{
-    return TRUE;
 }
 
 static gboolean

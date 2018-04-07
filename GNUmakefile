@@ -364,11 +364,14 @@ rel-tags: tags
 CLANG_analyzer = $(shell which scan-build)
 CLANG_checkers = 
 
-check: clang cppcheck
-
-# Extra cppcheck options:  --enable=all --inconclusive --std=posix
+# Use CPPCHECK_ARGS to pass extra cppcheck options, e.g.:
+# --enable={warning,style,performance,portability,information,all}
+# --inconclusive --std=posix
+CPPCHECK_ARGS ?=
 cppcheck:
-	for d in replace lib mcp attrd pengine cib crmd fencing lrmd tools; do cppcheck -q $$d; done
+	for d in replace lib mcp attrd pengine cib crmd fencing lrmd tools; \
+		do cppcheck $(CPPCHECK_ARGS) -q $$d; \
+	done
 
 clang:
 	test -e $(CLANG_analyzer)

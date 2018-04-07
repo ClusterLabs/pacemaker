@@ -155,7 +155,7 @@ scandir(const char *directory_name,
     if (directory = opendir(directory_name), directory == NULL)
         return -1;
 
-    if (array = (struct dirent **)malloc(allocated * sizeof(struct dirent *)), array == NULL)
+    if ((array = (struct dirent **)malloc(allocated * sizeof(struct dirent *))) == NULL)
         return -1;
 
     /* Read entries in the directory.  */
@@ -188,7 +188,7 @@ scandir(const char *directory_name,
                 extra += namelength - sizeof(entry->d_name);
             }
 
-            if (copy = (struct dirent *)malloc(sizeof(struct dirent) + extra), copy == NULL) {
+            if ((copy = (struct dirent *)malloc(sizeof(struct dirent) + extra)) == NULL) {
                 closedir(directory);
                 free(array);
                 return -1;

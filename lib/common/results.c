@@ -1,8 +1,8 @@
 /*
- * Copyright (C) 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
  * This source code is licensed under the GNU Lesser General Public License
- * version 2.1 or later (LGPLv2.1+)WITHOUT ANY WARRANTY.
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -446,7 +446,12 @@ bz2_strerror(int rc)
 crm_exit_t
 crm_exit(crm_exit_t rc)
 {
-    CRM_CHECK((rc >= 0) && (rc <= 255), rc = CRM_EX_ERROR);
+    /* A compiler could theoretically use any type for crm_exit_t, but an int
+     * should always hold it, so cast to int to keep static analysis happy.
+     */
+    if ((((int) rc) < 0) || (((int) rc) > CRM_EX_MAX)) {
+        rc = CRM_EX_ERROR;
+    }
 
     mainloop_cleanup();
     crm_xml_cleanup();

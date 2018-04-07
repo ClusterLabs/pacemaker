@@ -161,10 +161,13 @@ lib/gnu/stdalign.h
 
 # Test detritus
 /cts/.regression.failed.diff
-/cts/pengine/shadow.*
 /cts/pengine/*.ref
 /cts/pengine/*.up
 /cts/pengine/*.up.err
+/cts/pengine/bug-rh-1097457.log
+/cts/pengine/bug-rh-1097457.trs
+/cts/pengine/shadow.*
+/cts/test-suite.log
 /xml/test-2/*.up
 /xml/test-2/*.up.err
 

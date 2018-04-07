@@ -1,21 +1,10 @@
 /*
- * Copyright (c) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+
 #include <crm_internal.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -1124,6 +1113,7 @@ stonith_plugin(int priority, const char *format, ...)
     va_start(ap, format);
 
     len = vasprintf (&string, format, ap);
+    va_end(ap);
     CRM_ASSERT(len > 0);
 
     do_crm_log_alias(priority, __FILE__, __func__, __LINE__, "%s", string);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010-2016 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2010-2018 Andrew Beekhof <andrew@beekhof.net>
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -75,10 +75,11 @@ resources_find_service_class(const char *agent)
      * - systemd
      * - upstart
      */
-    struct stat st;
     char *path = NULL;
 
 #ifdef LSB_ROOT_DIR
+    struct stat st;
+
     path = crm_strdup_printf("%s/%s", LSB_ROOT_DIR, agent);
     if (stat(path, &st) == 0) {
         free(path);

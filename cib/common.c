@@ -44,7 +44,6 @@ extern gboolean cib_is_master;
 extern const char *cib_root;
 gboolean stand_alone = FALSE;
 extern int cib_status;
-extern gboolean can_write(int flags);
 extern int cib_perform_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff,
                                gboolean privileged);
 

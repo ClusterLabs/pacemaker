@@ -1,20 +1,10 @@
 /*
- * Copyright (C) 2013 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2013-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
+
 #include <crm_internal.h>
 
 #include <sys/types.h>
@@ -491,8 +481,8 @@ attrd_client_query(crm_client_t *client, uint32_t id, uint32_t flags, xmlNode *q
     /* Send the reply to the client */
     client->request_id = 0;
     if ((rc = crm_ipcs_send(client, id, reply, flags)) < 0) {
-        crm_err("Could not respond to query from %s: %s (%zd)",
-                origin, pcmk_strerror(-rc), -rc);
+        crm_err("Could not respond to query from %s: %s (%lld)",
+                origin, pcmk_strerror(-rc), (long long) -rc);
     }
     free_xml(reply);
 }

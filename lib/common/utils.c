@@ -1,19 +1,8 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -723,7 +712,7 @@ crm_pid_active(long pid, const char *daemon)
         char proc_path[PATH_MAX], exe_path[PATH_MAX], myexe_path[PATH_MAX];
 
         /* check to make sure pid hasn't been reused by another process */
-        snprintf(proc_path, sizeof(proc_path), "/proc/%lu/exe", pid);
+        snprintf(proc_path, sizeof(proc_path), "/proc/%ld/exe", pid);
 
         rc = readlink(proc_path, exe_path, PATH_MAX - 1);
         if (rc < 0 && errno == EACCES) {
@@ -777,7 +766,7 @@ crm_read_pidfile(const char *filename)
         goto bail;
     }
 
-    if (sscanf(buf, "%lu", &pid) > 0) {
+    if (sscanf(buf, "%ld", &pid) > 0) {
         if (pid <= 0) {
             pid = -ESRCH;
         } else {
@@ -824,7 +813,7 @@ crm_lock_pidfile(const char *filename, const char *name)
 {
     long mypid = 0;
     int fd = 0, rc = 0;
-    char buf[LOCKSTRLEN + 1];
+    char buf[LOCKSTRLEN + 2];
 
     mypid = (unsigned long)getpid();
 
@@ -842,7 +831,7 @@ crm_lock_pidfile(const char *filename, const char *name)
         return -errno;
     }
 
-    snprintf(buf, sizeof(buf), "%*lu\n", LOCKSTRLEN - 1, mypid);
+    snprintf(buf, sizeof(buf), "%*ld\n", LOCKSTRLEN - 1, mypid);
     rc = write(fd, buf, LOCKSTRLEN);
     close(fd);
 

@@ -734,8 +734,10 @@ crm_ipcs_sendv(crm_client_t * c, struct iovec * iov, enum crm_ipc_flags flags)
 
         rc = qb_ipcs_response_sendv(c->ipcs, iov, 2);
         if (rc < header->qb.size) {
-            crm_notice("Response %d to %p[%d] (%u bytes) failed: %s (%zd)",
-                       header->qb.id, c->ipcs, c->pid, header->qb.size, pcmk_strerror(rc), rc);
+            crm_notice("Response %d to pid %d failed: %s "
+                       CRM_XS " bytes=%u rc=%lld ipcs=%p",
+                       header->qb.id, c->pid, pcmk_strerror(rc),
+                       header->qb.size, (long long) rc, c->ipcs);
 
         } else {
             crm_trace("Response %d sent, %lld bytes to %p[%d]",
@@ -780,8 +782,8 @@ crm_ipcs_send(crm_client_t * c, uint32_t request, xmlNode * message,
 
     } else {
         free(iov);
-        crm_notice("Message to %p[%d] failed: %s (%zd)",
-                   c->ipcs, c->pid, pcmk_strerror(rc), rc);
+        crm_notice("Message to pid %d failed: %s " CRM_XS " rc=%lld ipcs=%p",
+                   c->pid, pcmk_strerror(rc), (long long) rc, c->ipcs);
     }
 
     return rc;
@@ -819,7 +821,6 @@ struct crm_ipc_s {
     int need_reply;
     char *buffer;
     char *name;
-    uint32_t buffer_flags;
 
     qb_ipcc_connection_t *ipc;
 

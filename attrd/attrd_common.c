@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004-2017 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -71,28 +71,6 @@ void
 attrd_run_mainloop()
 {
     g_main_loop_run(mloop);
-}
-
-/*!
- * \internal
- * \brief Check whether attrd main loop is running
- *
- * \return TRUE if main loop is running, FALSE otherwise
- */
-gboolean
-attrd_mainloop_running()
-{
-    return (mloop != NULL) && g_main_is_running(mloop);
-}
-
-/*!
- * \internal
- * \brief Quit attrd mainloop
- */
-void
-attrd_quit_mainloop()
-{
-    g_main_loop_quit(mloop);
 }
 
 /*!

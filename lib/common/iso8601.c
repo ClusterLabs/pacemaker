@@ -468,13 +468,13 @@ crm_time_as_string(crm_time_t * date_time, int flags)
             goto done;
 
         } else if (flags & crm_time_seconds) {
-            unsigned long long s = crm_time_get_seconds(date_time);
+            long long s = crm_time_get_seconds(date_time);
 
             snprintf(date_s, 32, "%lld", s); /* Durations may not be +ve */
             goto done;
 
         } else if (flags & crm_time_epoch) {
-            unsigned long long s = crm_time_get_seconds_since_epoch(date_time);
+            long long s = crm_time_get_seconds_since_epoch(date_time);
 
             snprintf(date_s, 32, "%lld", s); /* Durations may not be +ve */
             goto done;
@@ -784,7 +784,7 @@ parse_int(const char *str, int field_width, int uppper_bound, int *result)
 
     *result = 0;
 
-    if (strlen(str) <= 0) {
+    if (*str == '\0') {
         return FALSE;
     }
 

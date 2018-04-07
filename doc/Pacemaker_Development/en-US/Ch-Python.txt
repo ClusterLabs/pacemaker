@@ -20,7 +20,8 @@ have a +.in+ extension, and its first line should be:
 ----
 ====
 which will be replaced with the appropriate python executable when Pacemaker is
-built.
+built. To make that happen, add an AC_CONFIG_FILES() line to configure.ac, and
+add the file name without .in to .gitignore (see existing examples).
 
 After the above line if any, every Python file should start like this:
 

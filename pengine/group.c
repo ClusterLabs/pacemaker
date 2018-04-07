@@ -1,19 +1,8 @@
-/* 
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+/*
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ *
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -465,14 +454,12 @@ group_rsc_location(resource_t * rsc, rsc_to_node_t * constraint)
 void
 group_expand(resource_t * rsc, pe_working_set_t * data_set)
 {
-    GListPtr gIter = rsc->children;
+    CRM_CHECK(rsc != NULL, return);
 
     pe_rsc_trace(rsc, "Processing actions from %s", rsc->id);
-
-    CRM_CHECK(rsc != NULL, return);
     native_expand(rsc, data_set);
 
-    for (; gIter != NULL; gIter = gIter->next) {
+    for (GListPtr gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
         resource_t *child_rsc = (resource_t *) gIter->data;
 
         child_rsc->cmds->expand(child_rsc, data_set);

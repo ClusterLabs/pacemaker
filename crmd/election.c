@@ -139,16 +139,6 @@ do_election_count_vote(long long action,
     }
 }
 
-/*	A_ELECT_TIMER_START, A_ELECTION_TIMEOUT 	*/
-/* we won */
-void
-do_election_timer_ctrl(long long action,
-                       enum crmd_fsa_cause cause,
-                       enum crmd_fsa_state cur_state,
-                       enum crmd_fsa_input current_input, fsa_data_t * msg_data)
-{
-}
-
 static void
 feature_update_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {

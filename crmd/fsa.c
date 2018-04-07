@@ -73,12 +73,6 @@ long long do_state_transition(long long actions,
                               enum crmd_fsa_state cur_state,
                               enum crmd_fsa_state next_state, fsa_data_t * msg_data);
 
-void dump_rsc_info(void);
-void dump_rsc_info_callback(const xmlNode * msg, int call_id, int rc,
-                            xmlNode * output, void *user_data);
-
-void ghash_print_node(gpointer key, gpointer value, gpointer user_data);
-
 void s_crmd_fsa_actions(fsa_data_t * fsa_data);
 void log_fsa_input(fsa_data_t * stored_msg);
 void init_dotfile(void);
@@ -610,7 +604,6 @@ do_state_transition(long long actions,
 
         case S_IDLE:
             CRM_LOG_ASSERT(AM_I_DC);
-            dump_rsc_info();
             if (is_set(fsa_input_register, R_SHUTDOWN)) {
                 crm_info("(Re)Issuing shutdown request now" " that we are the DC");
                 set_bit(tmp, A_SHUTDOWN_REQ);
@@ -637,19 +630,4 @@ do_state_transition(long long actions,
     }
 
     return actions;
-}
-
-void
-dump_rsc_info(void)
-{
-}
-
-void
-ghash_print_node(gpointer key, gpointer value, gpointer user_data)
-{
-    const char *text = user_data;
-    const char *uname = key;
-    const char *value_s = value;
-
-    crm_info("%s: %s %s", text, uname, value_s);
 }

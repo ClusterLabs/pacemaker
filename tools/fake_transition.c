@@ -677,6 +677,8 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
     cib_resource = inject_resource(cib_node, resource, rclass, rtype, rprovider);
     if (cib_resource == NULL) {
         crm_err("invalid resource in transition");
+        free(node); free(uuid);
+        free_xml(cib_node);
         return FALSE;
     }
 
