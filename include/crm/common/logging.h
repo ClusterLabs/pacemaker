@@ -16,6 +16,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * \file
  * \brief Wrappers for and extensions to libqb logging
@@ -269,5 +273,9 @@ unsigned int get_crm_log_level(void);
     } while(0)
 
 #  define crm_str(x)    (const char*)(x?x:"<null>")
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

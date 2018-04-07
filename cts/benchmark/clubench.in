@@ -60,7 +60,7 @@ CTSOPTS="$CTSOPTS --facility $CTS_logfacility --logfile $CTS_logfile"
 if [ "x$CTS_stonith" != "x" ]; then
 	CTSOPTS="$CTSOPTS --stonith-type $CTS_stonith"
 	[ "x$CTS_stonith_args" != "x" ] &&
-		CTSOPTS="$CTSOPTS --stonitha-params \"$CTS_stonith_args\""
+		CTSOPTS="$CTSOPTS --stonith-params \"$CTS_stonith_args\""
 else
 	CTSOPTS="$CTSOPTS --stonith 0"
 fi

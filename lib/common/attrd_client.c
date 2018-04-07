@@ -224,36 +224,45 @@ done:
 /*!
  * \brief Send a request to attrd to clear resource failure
  *
- * \param[in] ipc       Connection to attrd (or NULL to use a local connection)
- * \param[in] host      Affect only this host (or NULL for all hosts)
- * \param[in] name      Name of resource to clear
- * \param[in] user_name ACL user to pass to attrd
- * \param[in] options   attrd_opt_remote if host is a Pacemaker Remote node
+ * \param[in] ipc           Connection to attrd (NULL to use local connection)
+ * \param[in] host          Affect only this host (or NULL for all hosts)
+ * \param[in] resource      Name of resource to clear (or NULL for all)
+ * \param[in] operation     Name of operation to clear (or NULL for all)
+ * \param[in] interval_spec If operation is not NULL, its interval
+ * \param[in] user_name     ACL user to pass to attrd
+ * \param[in] options       attrd_opt_remote if host is a Pacemaker Remote node
  *
  * \return pcmk_ok if request was successfully submitted to attrd, else -errno
  */
 int
 attrd_clear_delegate(crm_ipc_t *ipc, const char *host, const char *resource,
-                     const char *operation, const char *interval,
+                     const char *operation, const char *interval_spec,
                      const char *user_name, int options)
 {
     int rc = pcmk_ok;
     xmlNode *clear_op = create_attrd_op(user_name);
+    const char *interval_desc = NULL;
+    const char *op_desc = NULL;
 
     crm_xml_add(clear_op, F_ATTRD_TASK, ATTRD_OP_CLEAR_FAILURE);
     crm_xml_add(clear_op, F_ATTRD_HOST, host);
     crm_xml_add(clear_op, F_ATTRD_RESOURCE, resource);
     crm_xml_add(clear_op, F_ATTRD_OPERATION, operation);
-    crm_xml_add(clear_op, F_ATTRD_INTERVAL, interval);
+    crm_xml_add(clear_op, F_ATTRD_INTERVAL, interval_spec);
     crm_xml_add_int(clear_op, F_ATTRD_IS_REMOTE, is_set(options, attrd_opt_remote));
 
     rc = send_attrd_op(ipc, clear_op);
     free_xml(clear_op);
 
-    crm_debug("Asked attrd to clear failure of %s (interval %s) for %s on %s: %s (%d)",
-              (operation? operation : "all operations"),
-              (interval? interval : "0"),
-              (resource? resource : "all resources"),
+    if (operation) {
+        interval_desc = interval_spec? interval_spec : "nonrecurring";
+        op_desc = operation;
+    } else {
+        interval_desc = "all";
+        op_desc = "operations";
+    }
+    crm_debug("Asked attrd to clear failure of %s %s for %s on %s: %s (%d)",
+              interval_desc, op_desc, (resource? resource : "all resources"),
               (host? host : "all nodes"), pcmk_strerror(rc), rc);
     return rc;
 }

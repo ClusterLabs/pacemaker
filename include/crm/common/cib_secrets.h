@@ -19,7 +19,20 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#ifndef CIB_SECRETS__H
+#define CIB_SECRETS__H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * load parameters from an ini file (cib_secrets.c)
  */
 int replace_secret_params(char * rsc_id, GHashTable * params);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

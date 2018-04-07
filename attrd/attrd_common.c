@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004-2017 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -71,28 +71,6 @@ void
 attrd_run_mainloop()
 {
     g_main_loop_run(mloop);
-}
-
-/*!
- * \internal
- * \brief Check whether attrd main loop is running
- *
- * \return TRUE if main loop is running, FALSE otherwise
- */
-gboolean
-attrd_mainloop_running()
-{
-    return (mloop != NULL) && g_main_is_running(mloop);
-}
-
-/*!
- * \internal
- * \brief Quit attrd mainloop
- */
-void
-attrd_quit_mainloop()
-{
-    g_main_loop_quit(mloop);
 }
 
 /*!
@@ -259,7 +237,7 @@ attrd_expand_value(const char *value, const char *old_value)
  * \param[out] regex  Where to store created regular expression
  * \param[in]  rsc    Name of resource to clear (or NULL for all)
  * \param[in]  op     Operation to clear if rsc is specified (or NULL for all)
- * \param[in]  interval  Interval of operation to clear if op is specified
+ * \param[in]  interval_ms  Interval of operation to clear if op is specified
  *
  * \return pcmk_ok on success, -EINVAL if arguments are invalid
  *
@@ -267,7 +245,7 @@ attrd_expand_value(const char *value, const char *old_value)
  */
 int
 attrd_failure_regex(regex_t *regex, const char *rsc, const char *op,
-                    int interval)
+                    guint interval_ms)
 {
     char *pattern = NULL;
     int rc;
@@ -279,8 +257,7 @@ attrd_failure_regex(regex_t *regex, const char *rsc, const char *op,
     } else if (op == NULL) {
         pattern = crm_strdup_printf(ATTRD_RE_CLEAR_ONE, rsc);
     } else {
-        pattern = crm_strdup_printf(ATTRD_RE_CLEAR_OP,
-                                    rsc, op, interval);
+        pattern = crm_strdup_printf(ATTRD_RE_CLEAR_OP, rsc, op, interval_ms);
     }
 
     /* Compile pattern into regular expression */

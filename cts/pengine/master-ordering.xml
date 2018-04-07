@@ -1,4 +1,4 @@
-<cib admin_epoch="0" epoch="340" num_updates="42004" dc-uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:08 2012">
+<cib admin_epoch="0" epoch="340" num_updates="42004" dc-uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-3.0" cib-last-written="Fri Jul 13 13:51:08 2012">
   <configuration>
     <crm_config>
       <cluster_property_set id="default">
@@ -93,7 +93,7 @@
       </primitive>
       <clone id="ms_drbd_www">
         <meta_attributes id="meta_attributes.id22319">
-          <nvpair id="nvpair.id22324"  name="promotable" value="true"/>
+          <nvpair id="nvpair.id22324" name="promotable" value="true"/>
           <nvpair id="nvpair.id22325" name="promoted-max" value="2"/>
           <nvpair id="nvpair.id22334" name="promoted-node-max" value="1"/>
           <nvpair id="nvpair.id22342" name="clone-max" value="2"/>
@@ -174,7 +174,7 @@
       </clone>
       <clone id="ms_drbd_mysql">
         <meta_attributes id="meta_attributes.id22714">
-          <nvpair id="nvpair.id22719"  name="promotable" value="true"/>
+          <nvpair id="nvpair.id22719" name="promotable" value="true"/>
           <nvpair id="nvpair.id22720" name="promoted-max" value="1"/>
           <nvpair id="nvpair.id22729" name="promoted-node-max" value="1"/>
           <nvpair id="nvpair.id22737" name="clone-max" value="2"/>

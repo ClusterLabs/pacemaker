@@ -1,19 +1,8 @@
 /*
- * Copyright (C) 2009 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2009-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -487,7 +476,7 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
         cmd->start_delay =
             ((delay_max != delay_base)?(rand() % (delay_max - delay_base)):0)
             + delay_base;
-        crm_notice("Delaying %s on %s for %lldms (timeout=%ds, base=%dms, "
+        crm_notice("Delaying %s on %s for %dms (timeout=%ds, base=%dms, "
                    "max=%dms)",
                     cmd->action, device->id, cmd->start_delay, cmd->timeout,
                     delay_base, delay_max);
@@ -1620,7 +1609,7 @@ can_fence_host_with_device(stonith_device_t * dev, struct device_search_s *searc
 
         if (dev->targets == NULL || dev->targets_age + 60 < now) {
             crm_trace("Running %s command to see if %s can fence %s (%s)",
-                      check_type, dev?dev->id:"N/A", search->host, search->action);
+                      check_type, dev->id, search->host, search->action);
 
             schedule_internal_command(__FUNCTION__, dev, "list", NULL,
                                       search->per_device_timeout, search, dynamic_list_search_cb);
@@ -1635,7 +1624,7 @@ can_fence_host_with_device(stonith_device_t * dev, struct device_search_s *searc
 
     } else if (safe_str_eq(check_type, "status")) {
         crm_trace("Running %s command to see if %s can fence %s (%s)",
-                  check_type, dev?dev->id:"N/A", search->host, search->action);
+                  check_type, dev->id, search->host, search->action);
         schedule_internal_command(__FUNCTION__, dev, "status", search->host,
                                   search->per_device_timeout, search, status_search_cb);
         /* we'll respond to this search request async in the cb */
@@ -2051,27 +2040,6 @@ stonith_send_async_reply(async_command_t * cmd, const char *output, int rc, GPid
     }
 
     free_xml(reply);
-}
-
-void
-unfence_cb(GPid pid, int rc, const char *output, gpointer user_data)
-{
-    async_command_t * cmd = user_data;
-    stonith_device_t *dev = g_hash_table_lookup(device_list, cmd->device);
-
-    log_operation(cmd, rc, pid, NULL, output);
-
-    cmd->active_on = NULL;
-
-    if(dev) {
-        mainloop_set_trigger(dev->work);
-    } else {
-        crm_trace("Device %s does not exist", cmd->device);
-    }
-
-    if(rc != 0) {
-        crm_exit(CRM_EX_FATAL);
-    }
 }
 
 static void
@@ -2616,17 +2584,6 @@ handle_request(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * req
 
         rc = stonith_level_remove(request, &device_id);
         do_stonith_notify_level(call_options, op, rc, device_id);
-
-    } else if (crm_str_eq(op, STONITH_OP_CONFIRM, TRUE)) {
-        async_command_t *cmd = create_async_command(request);
-        xmlNode *reply = stonith_construct_async_reply(cmd, NULL, NULL, 0);
-
-        crm_xml_add(reply, F_STONITH_OPERATION, T_STONITH_NOTIFY);
-        crm_notice("Broadcasting manual fencing confirmation for node %s", cmd->victim);
-        send_cluster_message(NULL, crm_msg_stonith_ng, reply, FALSE);
-
-        free_async_command(cmd);
-        free_xml(reply);
 
     } else if(safe_str_eq(op, CRM_OP_RM_NODE_CACHE)) {
         int node_id = 0;

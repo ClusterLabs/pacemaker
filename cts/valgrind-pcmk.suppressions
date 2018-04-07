@@ -7,51 +7,6 @@
 }
 
 {
-   Bash leak
-   Memcheck:Leak
-   fun:malloc
-   fun:xmalloc
-   fun:*
-   fun:yyparse
-   fun:parse_command
-   fun:read_command
-   fun:reader_loop
-   fun:main
-}
-
-{
-   Another bash leak
-   Memcheck:Leak
-   fun:malloc
-   fun:xmalloc
-   fun:set_default_locale
-   fun:main
-}
-
-{
-   Bash leak in cli regression testing on epel-6-i386
-   Memcheck:Leak
-   fun:malloc
-   fun:xmalloc
-   obj:*/bash
-   fun:execute_command_internal
-   ...
-   fun:execute_command_internal
-   fun:parse_and_execute
-   fun:command_substitute
-   obj:*/bash
-   obj:*/bash
-   obj:*/bash
-   fun:expand_string_assignment
-   obj:*/bash
-   obj:*/bash
-   obj:*/bash
-   obj:*/bash
-   fun:execute_command_internal
-   ...
-}
-
-{
    Ignore option parsing
    Memcheck:Leak
    fun:realloc
@@ -69,6 +24,41 @@
    fun:dl_iterate_phdr
    fun:qb_log_init
 }
+
+# Numerous leaks in bash
+
+{
+   Bash reader_loop leaks
+   Memcheck:Leak
+   fun:malloc
+   fun:xmalloc
+   ...
+   fun:reader_loop
+   fun:main
+}
+
+{
+   Bash set_default_locale leaks
+   Memcheck:Leak
+   fun:malloc
+   fun:xmalloc
+   fun:set_default_locale
+   fun:main
+}
+
+{
+   Bash execute_command leaks
+   Memcheck:Leak
+   fun:malloc
+   fun:xmalloc
+   obj:*/bash
+   ...
+   fun:execute_command_internal
+   fun:execute_command
+   ...
+}
+
+# Numerous leaks in glib
 
 {
    quarks - hashtable

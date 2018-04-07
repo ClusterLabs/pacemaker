@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2017-2018 Andrew Beekhof <andrew@beekhof.net>
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -15,8 +15,6 @@
 
 void attrd_init_mainloop(void);
 void attrd_run_mainloop(void);
-gboolean attrd_mainloop_running(void);
-void attrd_quit_mainloop(void);
 
 gboolean attrd_shutting_down(void);
 void attrd_shutdown(int nsig);
@@ -46,10 +44,10 @@ int attrd_expand_value(const char *value, const char *old_value);
  * @COMPAT attributes set < 1.1.17:
  * also match older attributes that do not have the operation part
  */
-#define ATTRD_RE_CLEAR_OP ATTRD_RE_CLEAR_ALL "%s(#%s_%d)?$"
+#define ATTRD_RE_CLEAR_OP ATTRD_RE_CLEAR_ALL "%s(#%s_%u)?$"
 
 int attrd_failure_regex(regex_t *regex, const char *rsc, const char *op,
-                        int interval);
+                        guint interval_ms);
 
 extern cib_t *the_cib;
 

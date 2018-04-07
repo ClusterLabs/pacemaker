@@ -122,7 +122,7 @@ static gboolean
 update_failcount(xmlNode * event, const char *event_node_uuid, int rc,
                  int target_rc, gboolean do_update, gboolean ignore_failures)
 {
-    int interval = 0;
+    guint interval_ms = 0;
 
     char *task = NULL;
     char *rsc_id = NULL;
@@ -145,33 +145,33 @@ update_failcount(xmlNode * event, const char *event_node_uuid, int rc,
 
     /* Sanity check */
     CRM_CHECK(on_uname != NULL, return TRUE);
-    CRM_CHECK(parse_op_key(id, &rsc_id, &task, &interval),
+    CRM_CHECK(parse_op_key(id, &rsc_id, &task, &interval_ms),
               crm_err("Couldn't parse: %s", ID(event)); goto bail);
     CRM_CHECK(task != NULL, goto bail);
     CRM_CHECK(rsc_id != NULL, goto bail);
 
     /* Decide whether update is necessary and what value to use */
-    if ((interval > 0) || safe_str_eq(task, CRMD_ACTION_PROMOTE)
+    if ((interval_ms > 0) || safe_str_eq(task, CRMD_ACTION_PROMOTE)
         || safe_str_eq(task, CRMD_ACTION_DEMOTE)) {
         do_update = TRUE;
 
     } else if (safe_str_eq(task, CRMD_ACTION_START)) {
         do_update = TRUE;
         if (failed_start_offset == NULL) {
-            failed_start_offset = strdup(INFINITY_S);
+            failed_start_offset = strdup(CRM_INFINITY_S);
         }
         value = failed_start_offset;
 
     } else if (safe_str_eq(task, CRMD_ACTION_STOP)) {
         do_update = TRUE;
         if (failed_stop_offset == NULL) {
-            failed_stop_offset = strdup(INFINITY_S);
+            failed_stop_offset = strdup(CRM_INFINITY_S);
         }
         value = failed_stop_offset;
     }
 
     /* Fail count will be either incremented or set to infinity */
-    if (value == NULL || safe_str_neq(value, INFINITY_S)) {
+    if (value == NULL || safe_str_neq(value, CRM_INFINITY_S)) {
         value = XML_NVPAIR_ATTR_VALUE "++";
     }
 
@@ -190,7 +190,7 @@ update_failcount(xmlNode * event, const char *event_node_uuid, int rc,
 
         /* Update the fail count, if we're not ignoring failures */
         if (!ignore_failures) {
-            attr_name = crm_failcount_name(rsc_id, task, interval);
+            attr_name = crm_failcount_name(rsc_id, task, interval_ms);
             update_attrd(on_uname, attr_name, value, NULL, is_remote_node);
             free(attr_name);
         }
@@ -198,7 +198,7 @@ update_failcount(xmlNode * event, const char *event_node_uuid, int rc,
         /* Update the last failure time (even if we're ignoring failures,
          * so that failure can still be detected and shown, e.g. by crm_mon)
          */
-        attr_name = crm_lastfailure_name(rsc_id, task, interval);
+        attr_name = crm_lastfailure_name(rsc_id, task, interval_ms);
         update_attrd(on_uname, attr_name, now, NULL, is_remote_node);
         free(attr_name);
 
@@ -414,11 +414,16 @@ match_down_event(const char *target, bool quiet)
              gIter2 = gIter2->next) {
 
             match = (crm_action_t*)gIter2->data;
-            xpath_ret = xpath_search(match->xml, xpath);
-            if (numXpathResults(xpath_ret) < 1) {
+            if (match->executed) {
+                xpath_ret = xpath_search(match->xml, xpath);
+                if (numXpathResults(xpath_ret) < 1) {
+                    match = NULL;
+                }
+                freeXpathObject(xpath_ret);
+            } else {
+                // Only actions that were actually started can match
                 match = NULL;
             }
-            freeXpathObject(xpath_ret);
         }
     }
 
@@ -429,15 +434,16 @@ match_down_event(const char *target, bool quiet)
                   target, match->id,
                   crm_element_value(match->xml, XML_LRM_ATTR_TASK_KEY));
 
-    } else if(quiet == FALSE) {
-        crm_warn("No reason to expect node %s to be down", target);
+    } else {
+        do_crm_log((quiet? LOG_DEBUG : LOG_WARNING),
+                   "No reason to expect node %s to be down", target);
     }
 
     return match;
 }
 
-gboolean
-process_graph_event(xmlNode * event, const char *event_node)
+void
+process_graph_event(xmlNode *event, const char *event_node)
 {
     int rc = -1;
     int status = -1;
@@ -450,7 +456,6 @@ process_graph_event(xmlNode * event, const char *event_node)
     int transition_num = -1;
     char *update_te_uuid = NULL;
 
-    gboolean stop_early = FALSE;
     gboolean ignore_failures = FALSE;
     const char *id = NULL;
     const char *desc = NULL;
@@ -470,14 +475,14 @@ process_graph_event(xmlNode * event, const char *event_node)
     magic = crm_element_value(event, XML_ATTR_TRANSITION_KEY);
     if (magic == NULL) {
         /* non-change */
-        return FALSE;
+        return;
     }
 
     if (decode_transition_key(magic, &update_te_uuid, &transition_num,
                               &action_num, &target_rc) == FALSE) {
         crm_err("Invalid event %s.%d detected: %s", id, callid, magic);
         abort_transition(INFINITY, tg_restart, "Bad event", event);
-        return FALSE;
+        return;
     }
 
     if (status == PCMK_LRM_OP_PENDING) {
@@ -491,12 +496,10 @@ process_graph_event(xmlNode * event, const char *event_node)
     } else if ((action_num < 0) || (crm_str_eq(update_te_uuid, te_uuid, TRUE) == FALSE)) {
         desc = "initiated by a different node";
         abort_transition(INFINITY, tg_restart, "Foreign event", event);
-        stop_early = TRUE;      /* This could be an lrm status refresh */
 
     } else if (transition_graph->id != transition_num) {
         desc = "arrived really late";
         abort_transition(INFINITY, tg_restart, "Old event", event);
-        stop_early = TRUE;      /* This could be an lrm status refresh */
 
     } else if (transition_graph->complete) {
         desc = "arrived late";
@@ -521,8 +524,6 @@ process_graph_event(xmlNode * event, const char *event_node)
     } else {
         if (update_failcount(event, event_node, rc, target_rc,
                              (transition_num == -1), ignore_failures)) {
-            /* Turns out this wasn't an lrm status refresh update afterall */
-            stop_early = FALSE;
             desc = "failed";
         }
         crm_info("Detected action (%d.%d) %s.%d=%s: %s", transition_num,
@@ -531,5 +532,4 @@ process_graph_event(xmlNode * event, const char *event_node)
 
   bail:
     free(update_te_uuid);
-    return stop_early;
 }

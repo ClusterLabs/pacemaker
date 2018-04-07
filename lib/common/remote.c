@@ -118,7 +118,9 @@ crm_remote_header(crm_remote_t * remote)
 
         CRM_LOG_ASSERT(endian == ENDIAN_LOCAL);
         if(endian != ENDIAN_LOCAL) {
-            crm_err("Invalid message detected, endian mismatch: %lx is neither %lx nor the swab'd %lx",
+            /* XXX preprocessor conditionalizing based on, e.g., sizeof and/or
+                   inttypes.h/stdint.h to get character string literals fit */
+            crm_err("Invalid message detected, endian mismatch: %x is neither %x nor the swab'd %x",
                     ENDIAN_LOCAL, header->endian, endian);
             return NULL;
         }
@@ -244,8 +246,9 @@ crm_send_tls(gnutls_session_t * session, const char *buf, size_t len)
                       (unsigned long long) len);
 
         } else if (rc < 0) {
-            crm_err("Connection terminated: %s " CRM_XS " rc=%d",
-                    gnutls_strerror(rc), rc);
+            // Caller can log as error if necessary
+            crm_info("TLS connection terminated: %s " CRM_XS " rc=%d",
+                     gnutls_strerror(rc), rc);
             rc = -ECONNABORTED;
             break;
 
@@ -288,7 +291,9 @@ crm_send_plaintext(int sock, const char *buf, size_t len)
                 crm_trace("Retry");
                 goto retry;
             default:
-                crm_perror(LOG_ERR, "Could only write %d of the remaining %d bytes", rc, (int)len);
+                crm_perror(LOG_INFO,
+                           "Could only write %d of the remaining %llu bytes",
+                           rc, (unsigned long long) len);
                 break;
         }
 
@@ -310,22 +315,19 @@ crm_send_plaintext(int sock, const char *buf, size_t len)
 static int
 crm_remote_sendv(crm_remote_t * remote, struct iovec * iov, int iovs)
 {
-    int lpc = 0;
-    int rc = -ESOCKTNOSUPPORT;
+    int rc = 0;
 
-    for(; lpc < iovs; lpc++) {
-
+    for (int lpc = 0; (lpc < iovs) && (rc >= 0); lpc++) {
 #ifdef HAVE_GNUTLS_GNUTLS_H
         if (remote->tls_session) {
             rc = crm_send_tls(remote->tls_session, iov[lpc].iov_base, iov[lpc].iov_len);
-        } else if (remote->tcp_socket) {
-#else
-        if (remote->tcp_socket) {
+            continue;
+        }
 #endif
+        if (remote->tcp_socket) {
             rc = crm_send_plaintext(remote->tcp_socket, iov[lpc].iov_base, iov[lpc].iov_len);
-
         } else {
-            crm_err("Unsupported connection type");
+            rc = -ESOCKTNOSUPPORT;
         }
     }
     return rc;

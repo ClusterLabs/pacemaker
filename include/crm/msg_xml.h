@@ -18,6 +18,10 @@
 #ifndef XML_TAGS__H
 #  define XML_TAGS__H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #  ifndef F_ORIG
 #    define F_ORIG    "src"
 #  endif
@@ -248,7 +252,14 @@
 /* LRM is a bit of a misnomer here; the crmd and pengine use these to track
  * actions, which usually but not always are LRM operations
  */
+
+// XML attribute that takes interval specification (user-facing configuration)
 #  define XML_LRM_ATTR_INTERVAL		"interval"
+
+// XML attribute that takes interval in milliseconds (daemon APIs)
+// (identical value as above, but different constant allows clearer code intent)
+#  define XML_LRM_ATTR_INTERVAL_MS  XML_LRM_ATTR_INTERVAL
+
 #  define XML_LRM_ATTR_TASK		"operation"
 #  define XML_LRM_ATTR_TASK_KEY		"operation_key"
 #  define XML_LRM_ATTR_TARGET		"on_node"
@@ -404,10 +415,10 @@
 #  include <crm/common/xml.h>
 
 #  define ID(x) crm_element_value(x, XML_ATTR_ID)
-#  define INSTANCE(x) crm_element_value(x, XML_CIB_ATTR_INSTANCE)
-#  define TSTAMP(x) crm_element_value(x, XML_ATTR_TSTAMP)
 #  define TYPE(x) crm_element_name(x)
-#  define NAME(x) crm_element_value(x, XML_NVPAIR_ATTR_NAME)
-#  define VALUE(x) crm_element_value(x, XML_NVPAIR_ATTR_VALUE)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

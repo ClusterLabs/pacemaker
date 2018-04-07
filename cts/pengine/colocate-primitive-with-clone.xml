@@ -1,4 +1,4 @@
-<cib validate-with="pacemaker-1.0" crm_feature_set="3.0.1" have-quorum="1" dc-uuid="srv02" admin_epoch="0" epoch="130" num_updates="5" cib-last-written="Fri Jul 13 13:51:04 2012">
+<cib validate-with="pacemaker-3.0" crm_feature_set="3.0.1" have-quorum="1" dc-uuid="srv02" admin_epoch="0" epoch="130" num_updates="5" cib-last-written="Fri Jul 13 13:51:04 2012">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -9,7 +9,6 @@
         <nvpair id="cib-bootstrap-options-dc-deadtime" name="dc-deadtime" value="48s"/>
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.0.7-0bf7d14dd5541b31f7dee605e5041bb44d78b336"/>
         <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
-        <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="4"/>
       </cluster_property_set>
     </crm_config>
     <rsc_defaults>

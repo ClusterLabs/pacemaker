@@ -18,6 +18,10 @@
 #ifndef PE_REMOTE__H
 #  define PE_REMOTE__H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 gboolean xml_contains_remote_node(xmlNode *xml);
 gboolean is_baremetal_remote_node(node_t *node);
 gboolean is_container_remote_node(node_t *node);
@@ -30,5 +34,9 @@ xmlNode *pe_create_remote_xml(xmlNode *parent, const char *uname,
                               const char *container_id, const char *migrateable,
                               const char *is_managed, const char *start_timeout,
                               const char *server, const char *port);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

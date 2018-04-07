@@ -76,6 +76,9 @@ extern void calculate_utilization(GHashTable * current_utilization,
 
 extern void process_utilization(resource_t * rsc, node_t ** prefer, pe_working_set_t * data_set);
 pe_action_t *create_pseudo_resource_op(resource_t * rsc, const char *task, bool optional, bool runnable, pe_working_set_t *data_set);
+pe_action_t *pe_cancel_op(pe_resource_t *rsc, const char *name,
+                          guint interval_ms, pe_node_t *node,
+                          pe_working_set_t *data_set);
 
 #  define STONITH_DONE "stonith_complete"
 #  define ALL_STOPPED "all_stopped"

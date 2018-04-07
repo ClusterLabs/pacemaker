@@ -7,6 +7,10 @@
 #ifndef CRM_COMPATIBILITY__H
 #  define CRM_COMPATIBILITY__H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <crm/msg_xml.h>
 
 /* Heartbeat-specific definitions. Support for heartbeat has been removed
@@ -102,6 +106,7 @@ static int ais_fd_sync = -1;
 #define F_LRMD_CANCEL_CALLID        "lrmd_cancel_callid"
 #define F_LRMD_RSC_METADATA         "lrmd_rsc_metadata_res"
 #define F_LRMD_IPC_PROXY_NODE       "lrmd_ipc_proxy_node"
+#define INSTANCE(x)                 crm_element_value(x, XML_CIB_ATTR_INSTANCE)
 #define LOG_DEBUG_2  LOG_TRACE
 #define LOG_DEBUG_3  LOG_TRACE
 #define LOG_DEBUG_4  LOG_TRACE
@@ -109,12 +114,15 @@ static int ais_fd_sync = -1;
 #define LOG_DEBUG_6  LOG_TRACE
 #define LRMD_OP_RSC_CHK_REG         "lrmd_rsc_check_register"
 #define MAX_IPC_FAIL                5
+#define NAME(x)                     crm_element_value(x, XML_NVPAIR_ATTR_NAME)
 #define MSG_LOG                     1
 #define PE_OBJ_T_NATIVE             "native"
 #define PE_OBJ_T_GROUP              "group"
 #define PE_OBJ_T_INCARNATION        "clone"
 #define PE_OBJ_T_MASTER             "master"
+#define SERVICE_SCRIPT              "/sbin/service"
 #define SOCKET_LEN                  1024
+#define TSTAMP(x)                   crm_element_value(x, XML_ATTR_TSTAMP)
 #define XML_ATTR_TAGNAME            F_XML_TAGNAME
 #define XML_ATTR_FILTER_TYPE        "type-filter"
 #define XML_ATTR_FILTER_ID          "id-filter"
@@ -146,17 +154,31 @@ static int ais_fd_sync = -1;
 #define XML_NODE_ATTR_STATE         "state"
 #define XML_ATTR_LRM_PROBE          "lrm-is-probe"
 #define XML_ATTR_TE_ALLOWFAIL       "op_allow_fail"
+#define VALUE(x)                    crm_element_value(x, XML_NVPAIR_ATTR_VALUE)
+#define action_wrapper_s            pe_action_wrapper_s
 #define add_cib_op_callback(cib, id, flag, data, fn) do {                \
         cib->cmds->register_callback(cib, id, 120, flag, data, #fn, fn); \
     } while(0)
 #define cib_default_options = cib_none
-#define n_object_classes 3
+#define crm_remote_baremetal              0x0004
+#define crm_remote_container              0x0002
+#define crm_element_value_const           crm_element_value
+#define crm_element_value_const_int       crm_element_value_int
+#define n_object_classes                  3
+#define no_quorum_policy_e                pe_quorum_policy
+#define node_s                            pe_node_s
+#define node_shared_s                     pe_node_shared_s
+#define pe_action_failure_is_fatal        0x00020
 #define pe_rsc_munging                    0x00000800ULL
 #define pe_rsc_try_reload                 0x00001000ULL
 #define pe_rsc_shutdown                   0x00020000ULL
 #define pe_rsc_migrating                  0x00400000ULL
 #define pe_rsc_unexpectedly_running       0x02000000ULL
 #define pe_rsc_have_unfencing             0x80000000ULL
+#define resource_s                        pe_resource_s
+#define ticket_s                          pe_ticket_s
+
+static int node_score_infinity = 1000000;
 
 /* Clone terminology definitions */
 
@@ -200,5 +222,9 @@ get_resource_typename(enum pe_obj_types type)
     }
     return "<unknown>";
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

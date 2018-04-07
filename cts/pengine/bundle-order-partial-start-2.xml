@@ -292,9 +292,9 @@
       <rsc_order first="ip-192.168.122.248" first-action="start" id="order-ip-192.168.122.248-haproxy-bundle-Optional" kind="Optional" then="haproxy-bundle" then-action="start"/>
       <rsc_colocation id="colocation-ip-192.168.122.248-haproxy-bundle-INFINITY" rsc="ip-192.168.122.248" score="INFINITY" with-rsc="haproxy-bundle"/>
       <rsc_colocation id="colocation-rabbit-with-haproxy-bundle-INFINITY" rsc="rabbitmq-bundle" score="INFINITY" with-rsc="haproxy-bundle"/>
-      <rsc_order first="haproxy-bundle" first-action="start"  id="order-1" kind="Mandatory" then="galera-bundle" then-action="start"/>
+      <rsc_order first="haproxy-bundle" first-action="start" id="order-1" kind="Mandatory" then="galera-bundle" then-action="start"/>
       <rsc_order first="rabbitmq-bundle" first-action="start" id="order-2" kind="Mandatory" then="galera-bundle" then-action="start"/>
-      <rsc_order first="redis-bundle" first-action="promote"  id="order-3" kind="Mandatory" then="galera-bundle" then-action="start"/>
+      <rsc_order first="redis-bundle" first-action="promote" id="order-3" kind="Mandatory" then="galera-bundle" then-action="start"/>
     </constraints>
     <rsc_defaults>
       <meta_attributes id="rsc_defaults-options">

@@ -635,8 +635,6 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
     return;
 }
 
-void ghash_print_node(gpointer key, gpointer value, gpointer user_data);
-
 gboolean
 check_join_state(enum crmd_fsa_state cur_state, const char *source)
 {

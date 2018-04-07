@@ -80,7 +80,6 @@
 gboolean cib_diff_version_details(xmlNode * diff, int *admin_epoch, int *epoch, int *updates,
                                   int *_admin_epoch, int *_epoch, int *_updates);
 
-int cib_compare_generation(xmlNode * left, xmlNode * right);
 gboolean cib_read_config(GHashTable * options, xmlNode * current_cib);
 void verify_cib_options(GHashTable * options);
 gboolean cib_internal_config_changed(xmlNode * diff);

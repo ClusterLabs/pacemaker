@@ -1,8 +1,7 @@
-<cib crm_feature_set="3.0.14" validate-with="pacemaker-2.5" epoch="49" num_updates="13" admin_epoch="0" cib-last-written="Mon Aug 21 12:12:00 2017" update-origin="node1" update-client="crm_resource" update-user="remote1" have-quorum="1" dc-uuid="2" execution-date="1503335574">
+<cib crm_feature_set="3.0.14" validate-with="pacemaker-3.0" epoch="49" num_updates="13" admin_epoch="0" cib-last-written="Mon Aug 21 12:12:00 2017" update-origin="node1" update-client="crm_resource" update-user="remote1" have-quorum="1" dc-uuid="2" execution-date="1503335574">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
-        <nvpair id="cts-expected-quorum-votes" name="expected-quorum-votes" value="2"/>
         <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.17-553.368fb3e.git.el7.centos-368fb3e"/>
         <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
@@ -31,22 +30,16 @@
           <nvpair id="rsc1-allow-migrate" name="allow-migrate" value="1"/>
           <nvpair id="rsc1-resource-stickiness" name="resource-stickiness" value="1"/>
         </meta_attributes>
-        <instance_attributes id="rsc1-params">
-        </instance_attributes>
         <operations>
           <op id="rsc1-monitor-P10S" interval="P10S" name="monitor"/>
         </operations>
       </primitive>
       <primitive class="ocf" id="remote1" provider="pacemaker" type="remote">
-        <instance_attributes id="remote1-instance_attributes">
-        </instance_attributes>
         <operations>
           <op id="remote1-monitor-interval-60s" interval="60s" name="monitor"/>
         </operations>
       </primitive>
       <primitive class="ocf" id="remote2" provider="pacemaker" type="remote">
-        <instance_attributes id="remote2-instance_attributes">
-        </instance_attributes>
         <operations>
           <op id="remote2-monitor-interval-60s" interval="60s" name="monitor"/>
         </operations>

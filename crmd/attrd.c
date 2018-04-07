@@ -53,7 +53,7 @@ log_attrd_error(const char *host, const char *name, const char *value,
 
 static void
 update_attrd_helper(const char *host, const char *name, const char *value,
-                    const char *interval, const char *user_name,
+                    const char *interval_spec, const char *user_name,
                     gboolean is_remote_node, char command)
 {
     int rc;
@@ -84,8 +84,8 @@ update_attrd_helper(const char *host, const char *name, const char *value,
                                        user_name, attrd_opts);
         } else {
             /* (ab)using name/value as resource/operation */
-            rc = attrd_clear_delegate(attrd_ipc, host, name, value, interval,
-                                      user_name, attrd_opts);
+            rc = attrd_clear_delegate(attrd_ipc, host, name, value,
+                                      interval_spec, user_name, attrd_opts);
         }
 
         if (rc == pcmk_ok) {
@@ -123,11 +123,20 @@ update_attrd_remote_node_removed(const char *host, const char *user_name)
 
 void
 update_attrd_clear_failures(const char *host, const char *rsc, const char *op,
-                            const char *interval, gboolean is_remote_node)
+                            const char *interval_spec, gboolean is_remote_node)
 {
+    const char *op_desc = NULL;
+    const char *interval_desc = NULL;
+    const char *node_type = is_remote_node? "Pacemaker Remote" : "cluster";
+
+    if (op) {
+        interval_desc = interval_spec? interval_spec : "nonrecurring";
+        op_desc = op;
+    } else {
+        interval_desc = "all";
+        op_desc = "operations";
+    }
     crm_info("Asking attrd to clear failure of %s %s for %s on %s node %s",
-             (op? op : "all operations"),
-             (interval? interval : "at all intervals"),
-             rsc, (is_remote_node? "Pacemaker Remote" : "cluster"), host);
-    update_attrd_helper(host, rsc, op, interval, NULL, is_remote_node, 0);
+             interval_desc, op_desc, rsc, node_type, host);
+    update_attrd_helper(host, rsc, op, interval_spec, NULL, is_remote_node, 0);
 }

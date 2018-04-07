@@ -1,21 +1,10 @@
 /*
- * Copyright (c) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+
 #include <crm_internal.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -187,7 +176,7 @@ stonith_connection_destroy(gpointer user_data)
     blob.stonith = stonith;
     blob.xml = create_xml_node(NULL, "notify");
 
-    native = stonith->private;
+    native = stonith->st_private;
     native->ipc = NULL;
     native->source = NULL;
 
@@ -1124,6 +1113,7 @@ stonith_plugin(int priority, const char *format, ...)
     va_start(ap, format);
 
     len = vasprintf (&string, format, ap);
+    va_end(ap);
     CRM_ASSERT(len > 0);
 
     do_crm_log_alias(priority, __FILE__, __func__, __LINE__, "%s", string);
@@ -1457,6 +1447,7 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
 
         for (op = __xml_first_child(reply); op != NULL; op = __xml_next(op)) {
             stonith_history_t *kvp;
+            int completed;
 
             kvp = calloc(1, sizeof(stonith_history_t));
             kvp->target = crm_element_value_copy(op, F_STONITH_TARGET);
@@ -1464,7 +1455,8 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
             kvp->origin = crm_element_value_copy(op, F_STONITH_ORIGIN);
             kvp->delegate = crm_element_value_copy(op, F_STONITH_DELEGATE);
             kvp->client = crm_element_value_copy(op, F_STONITH_CLIENTNAME);
-            crm_element_value_int(op, F_STONITH_DATE, &kvp->completed);
+            crm_element_value_int(op, F_STONITH_DATE, &completed);
+            kvp->completed = (time_t) completed;
             crm_element_value_int(op, F_STONITH_STATE, &kvp->state);
 
             if (last) {
@@ -1603,7 +1595,7 @@ stonith_destroy_op_callback(gpointer data)
 static int
 stonith_api_signoff(stonith_t * stonith)
 {
-    stonith_private_t *native = stonith->private;
+    stonith_private_t *native = stonith->st_private;
 
     crm_debug("Signing out of the STONITH Service");
 
@@ -1630,7 +1622,7 @@ stonith_api_signoff(stonith_t * stonith)
 static int
 stonith_api_del_callback(stonith_t * stonith, int call_id, bool all_callbacks)
 {
-    stonith_private_t *private = stonith->private;
+    stonith_private_t *private = stonith->st_private;
 
     if (all_callbacks) {
         private->op_callback = NULL;
@@ -1669,9 +1661,9 @@ stonith_perform_callback(stonith_t * stonith, xmlNode * msg, int call_id, int rc
     stonith_callback_client_t local_blob;
 
     CRM_CHECK(stonith != NULL, return);
-    CRM_CHECK(stonith->private != NULL, return);
+    CRM_CHECK(stonith->st_private != NULL, return);
 
-    private = stonith->private;
+    private = stonith->st_private;
 
     local_blob.id = NULL;
     local_blob.callback = NULL;
@@ -1760,7 +1752,7 @@ static void
 update_callback_timeout(int call_id, int timeout, stonith_t * st)
 {
     stonith_callback_client_t *callback = NULL;
-    stonith_private_t *private = st->private;
+    stonith_private_t *private = st->st_private;
 
     callback = g_hash_table_lookup(private->stonith_op_callback_table, GINT_TO_POINTER(call_id));
     if (!callback || !callback->allow_timeout_updates) {
@@ -1780,7 +1772,7 @@ stonith_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata)
     stonith_private_t *private = NULL;
 
     CRM_ASSERT(st != NULL);
-    private = st->private;
+    private = st->st_private;
 
     blob.stonith = st;
     blob.xml = string2xml(buffer);
@@ -1819,7 +1811,7 @@ static int
 stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
 {
     int rc = pcmk_ok;
-    stonith_private_t *native = stonith->private;
+    stonith_private_t *native = stonith->st_private;
 
     static struct ipc_client_callbacks st_callbacks = {
         .dispatch = stonith_dispatch_internal,
@@ -1912,7 +1904,7 @@ stonith_set_notification(stonith_t * stonith, const char *callback, int enabled)
 {
     int rc = pcmk_ok;
     xmlNode *notify_msg = create_xml_node(NULL, __FUNCTION__);
-    stonith_private_t *native = stonith->private;
+    stonith_private_t *native = stonith->st_private;
 
     if (stonith->state != stonith_disconnected) {
 
@@ -1944,7 +1936,7 @@ stonith_api_add_notification(stonith_t * stonith, const char *event,
     stonith_notify_client_t *new_client = NULL;
     stonith_private_t *private = NULL;
 
-    private = stonith->private;
+    private = stonith->st_private;
     crm_trace("Adding callback for %s events (%d)", event, g_list_length(private->notify_list));
 
     new_client = calloc(1, sizeof(stonith_notify_client_t));
@@ -1977,7 +1969,7 @@ stonith_api_del_notification(stonith_t * stonith, const char *event)
 
     crm_debug("Removing callback for %s events", event);
 
-    private = stonith->private;
+    private = stonith->st_private;
     new_client = calloc(1, sizeof(stonith_notify_client_t));
     new_client->event = event;
     new_client->notify = NULL;
@@ -2010,8 +2002,8 @@ stonith_api_add_callback(stonith_t * stonith, int call_id, int timeout, int opti
     stonith_private_t *private = NULL;
 
     CRM_CHECK(stonith != NULL, return -EINVAL);
-    CRM_CHECK(stonith->private != NULL, return -EINVAL);
-    private = stonith->private;
+    CRM_CHECK(stonith->st_private != NULL, return -EINVAL);
+    private = stonith->st_private;
 
     if (call_id == 0) {
         private->op_callback = callback;
@@ -2055,7 +2047,7 @@ stonith_dump_pending_op(gpointer key, gpointer value, gpointer user_data)
 void
 stonith_dump_pending_callbacks(stonith_t * stonith)
 {
-    stonith_private_t *private = stonith->private;
+    stonith_private_t *private = stonith->st_private;
 
     if (private->stonith_op_callback_table == NULL) {
         return;
@@ -2180,7 +2172,7 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
     xmlNode *op_msg = NULL;
     xmlNode *op_reply = NULL;
 
-    stonith_private_t *native = stonith->private;
+    stonith_private_t *native = stonith->st_private;
 
     if (stonith->state == stonith_disconnected) {
         return -ENOTCONN;
@@ -2286,7 +2278,7 @@ stonith_dispatch(stonith_t * st)
     stonith_private_t *private = NULL;
 
     CRM_ASSERT(st != NULL);
-    private = st->private;
+    private = st->st_private;
 
     while (crm_ipc_ready(private->ipc)) {
 
@@ -2318,7 +2310,7 @@ stonith_api_free(stonith_t * stonith)
     }
 
     if (stonith->state == stonith_disconnected) {
-        stonith_private_t *private = stonith->private;
+        stonith_private_t *private = stonith->st_private;
 
         crm_trace("Removing %d callbacks", g_hash_table_size(private->stonith_op_callback_table));
         g_hash_table_destroy(private->stonith_op_callback_table);
@@ -2326,7 +2318,7 @@ stonith_api_free(stonith_t * stonith)
         crm_trace("Destroying %d notification clients", g_list_length(private->notify_list));
         g_list_free_full(private->notify_list, free);
 
-        free(stonith->private);
+        free(stonith->st_private);
         free(stonith->cmds);
         free(stonith);
 
@@ -2354,7 +2346,7 @@ stonith_api_new(void)
 
     new_stonith = calloc(1, sizeof(stonith_t));
     private = calloc(1, sizeof(stonith_private_t));
-    new_stonith->private = private;
+    new_stonith->st_private = private;
 
     private->stonith_op_callback_table = g_hash_table_new_full(g_direct_hash, g_direct_equal,
                                                                NULL, stonith_destroy_op_callback);

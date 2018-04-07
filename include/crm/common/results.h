@@ -7,6 +7,10 @@
 #ifndef CRM_RESULTS__H
 #  define CRM_RESULTS__H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*!
  * \file
  * \brief Function and executable result codes
@@ -123,5 +127,9 @@ crm_exit_t crm_errno2exit(int rc);
 const char *crm_exit_name(crm_exit_t exit_code);
 const char *crm_exit_str(crm_exit_t exit_code);
 crm_exit_t crm_exit(crm_exit_t rc);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

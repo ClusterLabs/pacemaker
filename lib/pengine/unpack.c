@@ -210,6 +210,12 @@ unpack_config(xmlNode * config, pe_working_set_t * data_set)
               is_set(data_set->flags, pe_flag_stonith_enabled) ? "enabled" : "disabled");
 
     data_set->stonith_action = pe_pref(data_set->config_hash, "stonith-action");
+    if (!strcmp(data_set->stonith_action, "poweroff")) {
+        pe_warn_once(pe_wo_poweroff,
+                     "Support for stonith-action of 'poweroff' is deprecated "
+                     "and will be removed in a future release (use 'off' instead)");
+        data_set->stonith_action = "off";
+    }
     crm_trace("STONITH will %s nodes", data_set->stonith_action);
 
     set_config_flag(data_set, "concurrent-fencing", pe_flag_concurrent_fencing);
@@ -348,7 +354,7 @@ pe_create_node(const char *id, const char *uname, const char *type,
 
     new_node->weight = char2score(score);
     new_node->fixed = FALSE;
-    new_node->details = calloc(1, sizeof(struct node_shared_s));
+    new_node->details = calloc(1, sizeof(struct pe_node_shared_s));
 
     if (new_node->details == NULL) {
         free(new_node);
@@ -383,9 +389,9 @@ pe_create_node(const char *id, const char *uname, const char *type,
 
     new_node->details->utilization = crm_str_table_new();
 
-    new_node->details->digest_cache =
-        g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str,
-                              destroy_digest_cache);
+    new_node->details->digest_cache = g_hash_table_new_full(crm_str_hash,
+                                                            g_str_equal, free,
+                                                            destroy_digest_cache);
 
     data_set->nodes = g_list_insert_sorted(data_set->nodes, new_node, sort_node_uname);
     return new_node;
@@ -716,9 +722,9 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t * data_set)
     xmlNode *xml_obj = NULL;
     GListPtr gIter = NULL;
 
-    data_set->template_rsc_sets =
-        g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str,
-                              destroy_tag);
+    data_set->template_rsc_sets = g_hash_table_new_full(crm_str_hash,
+                                                        g_str_equal, free,
+                                                        destroy_tag);
 
     for (xml_obj = __xml_first_child(xml_resources); xml_obj != NULL; xml_obj = __xml_next_element(xml_obj)) {
         resource_t *new_rsc = NULL;
@@ -775,8 +781,8 @@ unpack_tags(xmlNode * xml_tags, pe_working_set_t * data_set)
 {
     xmlNode *xml_tag = NULL;
 
-    data_set->tags =
-        g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, destroy_tag);
+    data_set->tags = g_hash_table_new_full(crm_str_hash, g_str_equal, free,
+                                           destroy_tag);
 
     for (xml_tag = __xml_first_child(xml_tags); xml_tag != NULL; xml_tag = __xml_next_element(xml_tag)) {
         xmlNode *xml_obj_ref = NULL;
@@ -1061,8 +1067,8 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
     crm_trace("Beginning unpack");
 
     if (data_set->tickets == NULL) {
-        data_set->tickets =
-            g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, destroy_ticket);
+        data_set->tickets = g_hash_table_new_full(crm_str_hash, g_str_equal,
+                                                  free, destroy_ticket);
     }
 
     for (state = __xml_first_child(status); state != NULL; state = __xml_next_element(state)) {
@@ -1645,13 +1651,6 @@ find_anonymous_clone(pe_working_set_t * data_set, node_t * node, resource_t * pa
         pe_rsc_debug(parent, "Created orphan %s for %s: %s on %s", top->id, parent->id, rsc_id,
                      node->details->uname);
     }
-
-    if (safe_str_neq(rsc_id, rsc->id)) {
-        pe_rsc_debug(rsc, "Internally renamed %s on %s to %s%s",
-                    rsc_id, node->details->uname, rsc->id,
-                    is_set(rsc->flags, pe_rsc_orphan) ? " (ORPHAN)" : "");
-    }
-
     return rsc;
 }
 
@@ -1665,20 +1664,25 @@ unpack_find_resource(pe_working_set_t * data_set, node_t * node, const char *rsc
     crm_trace("looking for %s", rsc_id);
     rsc = pe_find_resource(data_set->resources, rsc_id);
 
-    /* no match */
     if (rsc == NULL) {
-        /* Even when clone-max=0, we still create a single :0 orphan to match against */
-        char *tmp = clone_zero(rsc_id);
-        resource_t *clone0 = pe_find_resource(data_set->resources, tmp);
+        /* If we didn't find the resource by its name in the operation history,
+         * check it again as a clone instance. Even when clone-max=0, we create
+         * a single :0 orphan to match against here.
+         */
+        char *clone0_id = clone_zero(rsc_id);
+        resource_t *clone0 = pe_find_resource(data_set->resources, clone0_id);
 
         if (clone0 && is_not_set(clone0->flags, pe_rsc_unique)) {
             rsc = clone0;
         } else {
-            crm_trace("%s is not known as %s either", rsc_id, tmp);
+            crm_trace("%s is not known as %s either", rsc_id, clone0_id);
         }
 
+        /* Grab the parent clone even if this a different unique instance,
+         * so we can remember the clone name, which will be the same.
+         */
         parent = uber_parent(clone0);
-        free(tmp);
+        free(clone0_id);
 
         crm_trace("%s not found: %s", rsc_id, parent ? parent->id : "orphan");
 
@@ -1691,24 +1695,28 @@ unpack_find_resource(pe_working_set_t * data_set, node_t * node, const char *rsc
         parent = uber_parent(rsc);
     }
 
-    if(parent && parent->parent) {
-        rsc = find_container_child(rsc_id, rsc, node);
+    if (pe_rsc_is_anon_clone(parent)) {
 
-    } else if (pe_rsc_is_clone(parent)) {
-        if (is_not_set(parent->flags, pe_rsc_unique)) {
+        if (parent && parent->parent) {
+            rsc = find_container_child(parent->parent, node);
+        } else {
             char *base = clone_strip(rsc_id);
 
             rsc = find_anonymous_clone(data_set, node, parent, base);
-            CRM_ASSERT(rsc != NULL);
             free(base);
-        }
-
-        if (rsc && safe_str_neq(rsc_id, rsc->id)) {
-            free(rsc->clone_name);
-            rsc->clone_name = strdup(rsc_id);
+            CRM_ASSERT(rsc != NULL);
         }
     }
 
+    if (rsc && safe_str_neq(rsc_id, rsc->id)
+        && safe_str_neq(rsc_id, rsc->clone_name)) {
+
+        free(rsc->clone_name);
+        rsc->clone_name = strdup(rsc_id);
+        pe_rsc_debug(rsc, "Internally renamed %s on %s to %s%s",
+                     rsc_id, node->details->uname, rsc->id,
+                     (is_set(rsc->flags, pe_rsc_orphan)? " (ORPHAN)" : ""));
+    }
     return rsc;
 }
 
@@ -1897,7 +1905,7 @@ process_rsc_state(resource_t * rsc, node_t * node,
 
             /* if reconnect delay is in use, prevent the connection from exiting the
              * "STOPPED" role until the failure is cleared by the delay timeout. */
-            if (rsc->remote_reconnect_interval) {
+            if (rsc->remote_reconnect_ms) {
                 rsc->next_role = RSC_ROLE_STOPPED;
             }
             break;
@@ -1972,10 +1980,10 @@ process_recurring(node_t * node, resource_t * rsc,
     for (; gIter != NULL; gIter = gIter->next) {
         xmlNode *rsc_op = (xmlNode *) gIter->data;
 
-        int interval = 0;
+        guint interval_ms = 0;
         char *key = NULL;
         const char *id = ID(rsc_op);
-        const char *interval_s = NULL;
+        const char *interval_ms_s = NULL;
 
         counter++;
 
@@ -1993,9 +2001,9 @@ process_recurring(node_t * node, resource_t * rsc,
             continue;
         }
 
-        interval_s = crm_element_value(rsc_op, XML_LRM_ATTR_INTERVAL);
-        interval = crm_parse_int(interval_s, "0");
-        if (interval == 0) {
+        interval_ms_s = crm_element_value(rsc_op, XML_LRM_ATTR_INTERVAL_MS);
+        interval_ms = crm_parse_ms(interval_ms_s);
+        if (interval_ms == 0) {
             pe_rsc_trace(rsc, "Skipping %s/%s: non-recurring", id, node->details->uname);
             continue;
         }
@@ -2007,7 +2015,7 @@ process_recurring(node_t * node, resource_t * rsc,
         }
         task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
         /* create the action */
-        key = generate_op_key(rsc->id, task, interval);
+        key = generate_op_key(rsc->id, task, interval_ms);
         pe_rsc_trace(rsc, "Creating %s/%s", key, node->details->uname);
         custom_action(rsc, key, task, node, TRUE, TRUE, data_set);
     }
@@ -2488,7 +2496,7 @@ static void
 unpack_rsc_op_failure(resource_t * rsc, node_t * node, int rc, xmlNode * xml_op, xmlNode ** last_failure,
                       enum action_fail_response * on_fail, pe_working_set_t * data_set)
 {
-    int interval = 0;
+    guint interval_ms = 0;
     bool is_probe = FALSE;
     action_t *action = NULL;
 
@@ -2499,8 +2507,8 @@ unpack_rsc_op_failure(resource_t * rsc, node_t * node, int rc, xmlNode * xml_op,
 
     *last_failure = xml_op;
 
-    crm_element_value_int(xml_op, XML_LRM_ATTR_INTERVAL, &interval);
-    if(interval == 0 && safe_str_eq(task, CRMD_ACTION_STATUS)) {
+    crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
+    if ((interval_ms == 0) && safe_str_eq(task, CRMD_ACTION_STATUS)) {
         is_probe = TRUE;
         pe_rsc_trace(rsc, "is a probe: %s", key);
     }
@@ -2605,7 +2613,7 @@ static int
 determine_op_status(
     resource_t *rsc, int rc, int target_rc, node_t * node, xmlNode * xml_op, enum action_fail_response * on_fail, pe_working_set_t * data_set) 
 {
-    int interval = 0;
+    guint interval_ms = 0;
     int result = PCMK_LRM_OP_DONE;
 
     const char *key = get_op_key(xml_op);
@@ -2614,8 +2622,8 @@ determine_op_status(
     bool is_probe = FALSE;
 
     CRM_ASSERT(rsc);
-    crm_element_value_int(xml_op, XML_LRM_ATTR_INTERVAL, &interval);
-    if (interval == 0 && safe_str_eq(task, CRMD_ACTION_STATUS)) {
+    crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
+    if ((interval_ms == 0) && safe_str_eq(task, CRMD_ACTION_STATUS)) {
         is_probe = TRUE;
     }
 
@@ -2682,7 +2690,7 @@ determine_op_status(
         case PCMK_OCF_INVALID_PARAM:
         case PCMK_OCF_INSUFFICIENT_PRIV:
         case PCMK_OCF_UNIMPLEMENT_FEATURE:
-            if (rc == PCMK_OCF_UNIMPLEMENT_FEATURE && interval > 0) {
+            if (rc == PCMK_OCF_UNIMPLEMENT_FEATURE && (interval_ms > 0)) {
                 result = PCMK_LRM_OP_NOTSUPPORTED;
                 break;
 
@@ -2712,16 +2720,17 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
 {
     bool expired = FALSE;
     time_t last_failure = 0;
-    int interval = 0;
+    guint interval_ms = 0;
     int failure_timeout = rsc->failure_timeout;
     const char *key = get_op_key(xml_op);
     const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
     const char *clear_reason = NULL;
 
+    crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
+
     /* clearing recurring monitor operation failures automatically
      * needs to be carefully considered */
-    if (safe_str_eq(crm_element_value(xml_op, XML_LRM_ATTR_TASK), "monitor") &&
-        safe_str_neq(crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL), "0")) {
+    if ((interval_ms != 0) && safe_str_eq(task, "monitor")) {
 
         /* TODO, in the future we should consider not clearing recurring monitor
          * op failures unless the last action for a resource was a "stop" action.
@@ -2732,8 +2741,8 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
          * node connection resources by not clearing a recurring monitor op failure
          * until after the node has been fenced. */
 
-        if (is_set(data_set->flags, pe_flag_stonith_enabled) &&
-            (rsc->remote_reconnect_interval)) {
+        if (is_set(data_set->flags, pe_flag_stonith_enabled)
+            && rsc->remote_reconnect_ms) {
 
             node_t *remote_node = pe_find_node(data_set->nodes, rsc->id);
             if (remote_node && remote_node->details->remote_was_fenced == 0) {
@@ -2771,7 +2780,8 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
                     expired = FALSE;
                 }
 
-            } else if (rsc->remote_reconnect_interval && strstr(ID(xml_op), "last_failure")) {
+            } else if (rsc->remote_reconnect_ms
+                       && strstr(ID(xml_op), "last_failure")) {
                 /* always clear last failure when reconnect interval is set */
                 clear_reason = "reconnect interval is set";
             }
@@ -2807,8 +2817,7 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
                    rsc->id, node->details->uname, clear_reason, clear_op->uuid);
     }
 
-    crm_element_value_int(xml_op, XML_LRM_ATTR_INTERVAL, &interval);
-    if(expired && interval == 0 && safe_str_eq(task, CRMD_ACTION_STATUS)) {
+    if (expired && (interval_ms == 0) && safe_str_eq(task, CRMD_ACTION_STATUS)) {
         switch(rc) {
             case PCMK_OCF_OK:
             case PCMK_OCF_NOT_RUNNING:
@@ -2928,7 +2937,7 @@ update_resource_state(resource_t * rsc, node_t * node, xmlNode * xml_op, const c
                 rsc->next_role = RSC_ROLE_UNKNOWN;
                 break;
             case action_fail_reset_remote:
-                if (rsc->remote_reconnect_interval == 0) {
+                if (rsc->remote_reconnect_ms == 0) {
                     /* when reconnect delay is not in use, the connection is allowed
                      * to start again after the remote node is fenced and completely
                      * stopped. Otherwise, with reconnect delay we wait for the failure
@@ -2953,9 +2962,9 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
     const char *task_key = NULL;
 
     int rc = 0;
-    int status = PCMK_LRM_OP_PENDING-1;
+    int status = PCMK_LRM_OP_UNKNOWN;
     int target_rc = get_target_rc(xml_op);
-    int interval = 0;
+    guint interval_ms = 0;
 
     gboolean expired = FALSE;
     resource_t *parent = rsc;
@@ -2973,7 +2982,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
     crm_element_value_int(xml_op, XML_LRM_ATTR_RC, &rc);
     crm_element_value_int(xml_op, XML_LRM_ATTR_CALLID, &task_id);
     crm_element_value_int(xml_op, XML_LRM_ATTR_OPSTATUS, &status);
-    crm_element_value_int(xml_op, XML_LRM_ATTR_INTERVAL, &interval);
+    crm_element_value_ms(xml_op, XML_LRM_ATTR_INTERVAL_MS, &interval_ms);
 
     CRM_CHECK(task != NULL, return FALSE);
     CRM_CHECK(status <= PCMK_LRM_OP_NOT_INSTALLED, return FALSE);
@@ -3035,7 +3044,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
                      services_ocf_exitcode_str(rc), rc,
                      services_ocf_exitcode_str(target_rc), target_rc);
 
-        if(interval == 0) {
+        if (interval_ms == 0) {
             crm_notice("Ignoring expired calculated failure %s (rc=%d, magic=%s) on %s",
                        task_key, rc, magic, node->details->uname);
             goto done;
@@ -3079,7 +3088,7 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
             }
 
             if (rsc->pending_task == NULL) {
-                if (safe_str_eq(task, CRMD_ACTION_STATUS) && interval == 0) {
+                if (safe_str_eq(task, CRMD_ACTION_STATUS) && (interval_ms == 0)) {
                     /* Pending probes are not printed, even if pending
                      * operations are requested. If someone ever requests that
                      * behavior, uncomment this and the corresponding part of

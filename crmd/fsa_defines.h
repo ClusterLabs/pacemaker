@@ -472,13 +472,9 @@ enum crmd_fsa_cause {
     C_HA_MESSAGE,
     C_CRMD_STATUS_CALLBACK,
     C_LRM_OP_CALLBACK,
-    C_LRM_MONITOR_CALLBACK,
     C_TIMER_POPPED,
     C_SHUTDOWN,
-    C_HEARTBEAT_FAILED,
-    C_SUBSYSTEM_CONNECT,
     C_FSA_INTERNAL,
-    C_ILLEGAL
 };
 
 extern const char *fsa_input2string(enum crmd_fsa_input input);

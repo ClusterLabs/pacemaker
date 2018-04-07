@@ -1,4 +1,4 @@
-<cib crm_feature_set="3.0.7" validate-with="pacemaker-1.2" admin_epoch="1" epoch="43" num_updates="9" cib-last-written="Fri Sep  6 18:43:56 2013" update-origin="18node1" update-client="cibadmin" have-quorum="1" dc-uuid="1">
+<cib crm_feature_set="3.0.7" validate-with="pacemaker-3.0" admin_epoch="1" epoch="43" num_updates="9" cib-last-written="Fri Sep  6 18:43:56 2013" update-origin="18node1" update-client="cibadmin" have-quorum="1" dc-uuid="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -9,7 +9,6 @@
         <nvpair id="cts-batch-limit" name="batch-limit" value="10"/>
         <nvpair id="cts-dc-deadtime" name="dc-deadtime" value="5s"/>
         <nvpair id="cts-no-quorum-policy" name="no-quorum-policy" value="stop"/>
-        <nvpair id="cts-expected-quorum-votes" name="expected-quorum-votes" value="3"/>
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.11-1.fc18-fe384ed"/>
         <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
       </cluster_property_set>
@@ -31,7 +30,6 @@
         </meta_attributes>
         <instance_attributes id="Fencing-params">
           <nvpair id="Fencing-delay" name="delay" value="0"/>
-          <nvpair id="Fencing-pcmk_arg_map" name="pcmk_arg_map" value="domain:uname"/>
         </instance_attributes>
         <operations>
           <op id="Fencing-monitor-120s" interval="120s" name="monitor" timeout="120s"/>
@@ -216,7 +214,7 @@
             <lrm_rsc_op id="FencingPass_last_0" operation_key="FencingPass_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="5:0:7:51d73458-5462-43a1-85f4-32a4324f2e57" transition-magic="0:7;5:0:7:51d73458-5462-43a1-85f4-32a4324f2e57" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1378510873" last-rc-change="1378510873" exec-time="0" queue-time="0" op-digest="d61011437d4d28d16fbcbaa519c4c826"/>
           </lrm_resource>
           <lrm_resource id="Fencing" type="fence_xvm" class="stonith">
-            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="37:5:0:51d73458-5462-43a1-85f4-32a4324f2e57" transition-magic="0:0;37:5:0:51d73458-5462-43a1-85f4-32a4324f2e57" call-id="144" rc-code="0" op-status="0" interval="0" last-run="1378510938" last-rc-change="1378510938" exec-time="1" queue-time="0" op-digest="5452662a298cbcea2ffe496142e0789d"/>
+            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="37:5:0:51d73458-5462-43a1-85f4-32a4324f2e57" transition-magic="0:0;37:5:0:51d73458-5462-43a1-85f4-32a4324f2e57" call-id="144" rc-code="0" op-status="0" interval="0" last-run="1378510938" last-rc-change="1378510938" exec-time="1" queue-time="0" op-digest="208febaab0d91bc529d468f4bec44d73"/>
           </lrm_resource>
           <lrm_resource id="r192.168.122.87" type="IPaddr2" class="ocf" provider="heartbeat">
             <lrm_rsc_op id="r192.168.122.87_last_0" operation_key="r192.168.122.87_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="56:3:0:51d73458-5462-43a1-85f4-32a4324f2e57" transition-magic="0:0;56:3:0:51d73458-5462-43a1-85f4-32a4324f2e57" call-id="102" rc-code="0" op-status="0" interval="0" last-run="1378510922" last-rc-change="1378510922" exec-time="92" queue-time="0" op-digest="1f9cf34fdfbf3f26a102a160cbc32cee"/>
@@ -292,8 +290,8 @@
             <lrm_rsc_op id="FencingPass_last_0" operation_key="FencingPass_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="40:5:0:51d73458-5462-43a1-85f4-32a4324f2e57" transition-magic="0:0;40:5:0:51d73458-5462-43a1-85f4-32a4324f2e57" call-id="107" rc-code="0" op-status="0" interval="0" last-run="1378510940" last-rc-change="1378510940" exec-time="2" queue-time="0" op-digest="d61011437d4d28d16fbcbaa519c4c826"/>
           </lrm_resource>
           <lrm_resource id="Fencing" type="fence_xvm" class="stonith">
-            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="38:5:0:51d73458-5462-43a1-85f4-32a4324f2e57" transition-magic="0:0;38:5:0:51d73458-5462-43a1-85f4-32a4324f2e57" call-id="110" rc-code="0" op-status="0" interval="0" last-run="1378510940" last-rc-change="1378510940" exec-time="44" queue-time="0" op-digest="5452662a298cbcea2ffe496142e0789d"/>
-            <lrm_rsc_op id="Fencing_monitor_120000" operation_key="Fencing_monitor_120000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="39:5:0:51d73458-5462-43a1-85f4-32a4324f2e57" transition-magic="0:0;39:5:0:51d73458-5462-43a1-85f4-32a4324f2e57" call-id="115" rc-code="0" op-status="0" interval="120000" last-rc-change="1378510941" exec-time="22" queue-time="0" op-digest="dafcde691dfb68f35200a465fa339ecc"/>
+            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="38:5:0:51d73458-5462-43a1-85f4-32a4324f2e57" transition-magic="0:0;38:5:0:51d73458-5462-43a1-85f4-32a4324f2e57" call-id="110" rc-code="0" op-status="0" interval="0" last-run="1378510940" last-rc-change="1378510940" exec-time="44" queue-time="0" op-digest="208febaab0d91bc529d468f4bec44d73"/>
+            <lrm_rsc_op id="Fencing_monitor_120000" operation_key="Fencing_monitor_120000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="39:5:0:51d73458-5462-43a1-85f4-32a4324f2e57" transition-magic="0:0;39:5:0:51d73458-5462-43a1-85f4-32a4324f2e57" call-id="115" rc-code="0" op-status="0" interval="120000" last-rc-change="1378510941" exec-time="22" queue-time="0" op-digest="9731ce90bfa3793cc401111d1df271d2"/>
           </lrm_resource>
           <lrm_resource id="r192.168.122.87" type="IPaddr2" class="ocf" provider="heartbeat">
             <lrm_rsc_op id="r192.168.122.87_last_0" operation_key="r192.168.122.87_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="14:1:7:51d73458-5462-43a1-85f4-32a4324f2e57" transition-magic="0:7;14:1:7:51d73458-5462-43a1-85f4-32a4324f2e57" call-id="52" rc-code="7" op-status="0" interval="0" last-run="1378510888" last-rc-change="1378510888" exec-time="124" queue-time="0" op-digest="1f9cf34fdfbf3f26a102a160cbc32cee"/>
@@ -363,7 +361,7 @@
             <lrm_rsc_op id="FencingPass_last_0" operation_key="FencingPass_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="41:5:0:51d73458-5462-43a1-85f4-32a4324f2e57" transition-magic="0:0;41:5:0:51d73458-5462-43a1-85f4-32a4324f2e57" call-id="107" rc-code="0" op-status="0" interval="0" last-run="1378492938" last-rc-change="1378492938" exec-time="22340" queue-time="0" op-digest="d61011437d4d28d16fbcbaa519c4c826"/>
           </lrm_resource>
           <lrm_resource id="Fencing" type="fence_xvm" class="stonith">
-            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="19:1:7:51d73458-5462-43a1-85f4-32a4324f2e57" transition-magic="0:7;19:1:7:51d73458-5462-43a1-85f4-32a4324f2e57" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1378492885" last-rc-change="1378492885" exec-time="6" queue-time="0" op-digest="5452662a298cbcea2ffe496142e0789d"/>
+            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="19:1:7:51d73458-5462-43a1-85f4-32a4324f2e57" transition-magic="0:7;19:1:7:51d73458-5462-43a1-85f4-32a4324f2e57" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1378492885" last-rc-change="1378492885" exec-time="6" queue-time="0" op-digest="208febaab0d91bc529d468f4bec44d73"/>
           </lrm_resource>
           <lrm_resource id="r192.168.122.87" type="IPaddr2" class="ocf" provider="heartbeat">
             <lrm_rsc_op id="r192.168.122.87_last_0" operation_key="r192.168.122.87_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.7" transition-key="28:1:7:51d73458-5462-43a1-85f4-32a4324f2e57" transition-magic="0:7;28:1:7:51d73458-5462-43a1-85f4-32a4324f2e57" call-id="51" rc-code="7" op-status="0" interval="0" last-run="1378492887" last-rc-change="1378492887" exec-time="102" queue-time="0" op-digest="1f9cf34fdfbf3f26a102a160cbc32cee"/>

@@ -3,6 +3,7 @@
 ## Build Dependencies
 * automake 1.11 or later
 * autoconf 2.64 or later
+* bash
 * libtool
 * libtool-ltdl-devel
 * libuuid-devel

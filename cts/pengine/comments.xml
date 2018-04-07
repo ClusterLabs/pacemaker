@@ -1,4 +1,4 @@
-<cib admin_epoch="0" epoch="1" num_updates="1" dc-uuid="0" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-1.0" cib-last-written="Fri Jul 13 13:51:04 2012">
+<cib admin_epoch="0" epoch="1" num_updates="1" dc-uuid="0" have-quorum="false" remote-tls-port="0" validate-with="pacemaker-3.0" cib-last-written="Fri Jul 13 13:51:04 2012">
   <configuration>
     <crm_config>
       <cluster_property_set id="no-stonith">
@@ -14,13 +14,11 @@
     </nodes>
     <resources>
       <primitive id="rsc1" class="ocf" provider="heartbeat" type="apache">
-        <instance_attributes id="instance_attributes.id21885"/>
         <meta_attributes id="primitive-rsc1.meta">
           <nvpair id="nvpair.id21892" name="priority" value="1.0"/>
         </meta_attributes>
       </primitive>
       <primitive id="rsc2" class="ocf" provider="heartbeat" type="apache">
-        <instance_attributes id="instance_attributes.id21911"/>
         <meta_attributes id="primitive-rsc2.meta">
           <nvpair id="nvpair.id21917" name="priority" value="1.0"/>
         </meta_attributes>

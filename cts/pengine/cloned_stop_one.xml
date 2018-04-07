@@ -1,4 +1,4 @@
-<cib crm_feature_set="3.0.10" validate-with="pacemaker-2.3" epoch="29" num_updates="0" admin_epoch="0" cib-last-written="Thu Jul 16 18:03:09 2015" update-origin="c7auto1" update-client="cibadmin" update-user="root" have-quorum="1" dc-uuid="2">
+<cib crm_feature_set="3.0.10" validate-with="pacemaker-3.0" epoch="29" num_updates="0" admin_epoch="0" cib-last-written="Thu Jul 16 18:03:09 2015" update-origin="c7auto1" update-client="cibadmin" update-user="root" have-quorum="1" dc-uuid="2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -20,14 +20,12 @@
     </nodes>
     <resources>
       <primitive class="stonith" id="shooter" type="fence_phd_kvm">
-        <instance_attributes id="shooter-instance_attributes"/>
         <operations>
           <op id="shooter-monitor-interval-60s" interval="60s" name="monitor"/>
         </operations>
       </primitive>
       <clone id="FAKECLONE-clone">
         <primitive class="ocf" id="FAKECLONE" provider="heartbeat" type="Dummy">
-          <instance_attributes id="FAKECLONE-instance_attributes"/>
           <operations>
             <op id="FAKECLONE-start-timeout-20" interval="0s" name="start" timeout="20"/>
             <op id="FAKECLONE-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -41,7 +39,6 @@
       </clone>
       <clone id="FAKECLONE2-clone">
         <primitive class="ocf" id="FAKECLONE2" provider="heartbeat" type="Dummy">
-          <instance_attributes id="FAKECLONE2-instance_attributes"/>
           <operations>
             <op id="FAKECLONE2-start-timeout-20" interval="0s" name="start" timeout="20"/>
             <op id="FAKECLONE2-stop-timeout-20" interval="0s" name="stop" timeout="20"/>

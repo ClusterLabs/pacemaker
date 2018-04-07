@@ -1,19 +1,8 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -29,14 +18,6 @@
 #include <sys/types.h>
 
 char *
-crm_concat(const char *prefix, const char *suffix, char join)
-{
-    CRM_ASSERT(prefix != NULL);
-    CRM_ASSERT(suffix != NULL);
-    return crm_strdup_printf("%s%c%s", prefix, join, suffix);
-}
-
-char *
 crm_itoa_stack(int an_int, char *buffer, size_t len)
 {
     if (buffer != NULL) {
@@ -44,18 +25,6 @@ crm_itoa_stack(int an_int, char *buffer, size_t len)
     }
 
     return buffer;
-}
-
-char *
-crm_itoa(int an_int)
-{
-    return crm_strdup_printf("%d", an_int);
-}
-
-void
-g_hash_destroy_str(gpointer data)
-{
-    free(data);
 }
 
 long long
@@ -126,6 +95,28 @@ crm_parse_int(const char *text, const char *default_text)
     }
 
     return -1;
+}
+
+/*!
+ * \internal
+ * \brief Parse a milliseconds value (without units) from a string
+ *
+ * \param[in] text  String to parse
+ *
+ * \return Milliseconds on success, 0 otherwise (and errno will be set)
+ */
+guint
+crm_parse_ms(const char *text)
+{
+    if (text) {
+        long long ms = crm_int_helper(text, NULL);
+
+        if ((ms < 0) || (ms > G_MAXUINT)) {
+            errno = ERANGE;
+        }
+        return errno? 0 : (guint) ms;
+    }
+    return 0;
 }
 
 gboolean
@@ -340,6 +331,13 @@ g_str_hash_traditional(gconstpointer v)
     return h;
 }
 
+/* used with hash tables where case does not matter */
+gboolean
+crm_strcase_equal(gconstpointer a, gconstpointer b)
+{
+    return crm_str_eq((const char *) a, (const char *) b, FALSE);
+}
+
 guint
 crm_strcase_hash(gconstpointer v)
 {
@@ -397,8 +395,10 @@ crm_compress_string(const char *data, int length, int max, char **result, unsign
     int rc;
     char *compressed = NULL;
     char *uncompressed = strdup(data);
+#ifdef CLOCK_MONOTONIC
     struct timespec after_t;
     struct timespec before_t;
+#endif
 
     if(max == 0) {
         max = (length * 1.1) + 600; /* recommended size */

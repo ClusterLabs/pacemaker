@@ -1,19 +1,8 @@
 /*
- * Copyright (C) 2009 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2009-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -226,9 +215,12 @@ create_action_name(action_t * action)
     if (action->rsc && action->rsc->clone_name) {
         char *key = NULL;
         const char *name = action->rsc->clone_name;
-        const char *interval_s = g_hash_table_lookup(action->meta, XML_LRM_ATTR_INTERVAL);
+        const char *interval_ms_s = NULL;
+        guint interval_ms = 0;
 
-        int interval = crm_parse_int(interval_s, "0");
+        interval_ms_s = g_hash_table_lookup(action->meta,
+                                            XML_LRM_ATTR_INTERVAL_MS);
+        interval_ms = crm_parse_ms(interval_ms_s);
 
         if (safe_str_eq(action->task, RSC_NOTIFY)
             || safe_str_eq(action->task, RSC_NOTIFIED)) {
@@ -240,7 +232,7 @@ create_action_name(action_t * action)
             key = generate_notify_key(name, n_type, n_task);
 
         } else {
-            key = generate_op_key(name, task, interval);
+            key = generate_op_key(name, task, interval_ms);
         }
 
         if (action_host) {
@@ -374,10 +366,8 @@ create_dotfile(pe_working_set_t * data_set, const char *dot_file, gboolean all_a
     }
 
     fprintf(dot_strm, "}\n");
-    if (dot_strm != NULL) {
-        fflush(dot_strm);
-        fclose(dot_strm);
-    }
+    fflush(dot_strm);
+    fclose(dot_strm);
 }
 
 static void
@@ -476,11 +466,11 @@ static struct crm_option long_options[] = {
     {"node-down",    1, 0, 'd', "\tTake a node offline"},
     {"node-fail",    1, 0, 'f', "\tMark a node as failed"},
     {"op-inject",    1, 0, 'i', "\tGenerate a failure for the cluster to react to in the simulation"},
-    {"-spacer-",     0, 0, '-', "\t\tValue is of the form ${resource}_${task}_${interval}@${node}=${rc}."},
+    {"-spacer-",     0, 0, '-', "\t\tValue is of the form ${resource}_${task}_${interval_in_ms}@${node}=${rc}."},
     {"-spacer-",     0, 0, '-', "\t\tEg. memcached_monitor_20000@bart.example.com=7"},
     {"-spacer-",     0, 0, '-', "\t\tFor more information on OCF return codes, refer to: http://www.clusterlabs.org/doc/en-US/Pacemaker/1.1/html/Pacemaker_Explained/s-ocf-return-codes.html"},
     {"op-fail",      1, 0, 'F', "\tIf the specified task occurs during the simulation, have it fail with return code ${rc}"},
-    {"-spacer-",     0, 0, '-', "\t\tValue is of the form ${resource}_${task}_${interval}@${node}=${rc}."},
+    {"-spacer-",     0, 0, '-', "\t\tValue is of the form ${resource}_${task}_${interval_in_ms}@${node}=${rc}."},
     {"-spacer-",     0, 0, '-', "\t\tEg. memcached_stop_0@bart.example.com=1\n"},
     {"-spacer-",     0, 0, '-', "\t\tThe transition will normally stop at the failed action.  Save the result with --save-output and re-run with --xml-file"},
     {"set-datetime", 1, 0, 't', "Set date/time"},

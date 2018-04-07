@@ -1,4 +1,4 @@
-<cib crm_feature_set="3.0.10" validate-with="pacemaker-2.5" epoch="183" num_updates="0" admin_epoch="0" cib-last-written="Wed May  3 13:24:28 2017" update-origin="controller-0" update-client="crm_attribute" update-user="root" have-quorum="1" dc-uuid="1" execution-date="1493818404">
+<cib crm_feature_set="3.0.10" validate-with="pacemaker-3.0" epoch="183" num_updates="0" admin_epoch="0" cib-last-written="Wed May  3 13:24:28 2017" update-origin="controller-0" update-client="crm_attribute" update-user="root" have-quorum="1" dc-uuid="1" execution-date="1493818404">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -270,7 +270,6 @@
       </primitive>
       <clone id="haproxy-clone">
         <primitive class="systemd" id="haproxy" type="haproxy">
-          <instance_attributes id="haproxy-instance_attributes"/>
           <meta_attributes id="haproxy-meta_attributes"/>
           <operations>
             <op id="haproxy-start-interval-0s" interval="0s" name="start" timeout="200s"/>
@@ -281,7 +280,6 @@
         <meta_attributes id="haproxy-clone-meta_attributes"/>
       </clone>
       <primitive class="systemd" id="openstack-cinder-volume" type="openstack-cinder-volume">
-        <instance_attributes id="openstack-cinder-volume-instance_attributes"/>
         <meta_attributes id="openstack-cinder-volume-meta_attributes"/>
         <operations>
           <op id="openstack-cinder-volume-start-interval-0s" interval="0s" name="start" timeout="200s"/>

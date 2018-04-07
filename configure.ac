@@ -1,7 +1,10 @@
 dnl
 dnl autoconf for Pacemaker
 dnl
-dnl License: GNU General Public License (GPL)
+dnl Copyright 2009-2018 Andrew Beekhof <andrew@beekhof.net>
+dnl
+dnl This source code is licensed under the GNU General Public License version 2
+dnl or later (GPLv2+) WITHOUT ANY WARRANTY.
 
 dnl ===============================================
 dnl Bootstrap
@@ -114,6 +117,17 @@ cc_supports_flag() {
                       [RC=0; AC_MSG_RESULT(yes)],
                       [RC=1; AC_MSG_RESULT(no)])
     return $RC
+}
+
+# Some tests need to use their own CFLAGS
+
+cc_temp_flags() {
+    ac_save_CFLAGS="$CFLAGS"
+    CFLAGS="$*"
+}
+
+cc_restore_flags() {
+    CFLAGS=$ac_save_CFLAGS
 }
 
 dnl ===============================================
@@ -233,6 +247,22 @@ AC_ARG_WITH(bundledir,
 dnl ===============================================
 dnl General Processing
 dnl ===============================================
+
+if cc_supports_flag -Werror; then
+    WERROR="-Werror"
+else
+    WERROR=""
+fi
+
+# Normalize enable_fatal_warnings (defaulting to yes, when compiler supports it)
+if test "x${enable_fatal_warnings}" != "xno" ; then
+    if test "$GCC" = "yes" && test "x${WERROR}" != "x" ; then
+        enable_fatal_warnings=yes
+    else
+        AC_MSG_NOTICE(Compiler does not support fatal warnings)
+        enable_fatal_warnings=no
+    fi
+fi
 
 INIT_EXT=""
 echo Our Host OS: $host_os/$host
@@ -397,8 +427,7 @@ esac
 
 AC_MSG_CHECKING(which format is needed to print uint64_t)
 
-ac_save_CFLAGS=$CFLAGS
-CFLAGS="-Wall -Werror"
+cc_temp_flags "-Wall $WERROR"
 
 AC_COMPILE_IFELSE(
     [AC_LANG_PROGRAM(
@@ -419,7 +448,7 @@ fprintf(stderr, "Result: %s\n", buffer);
     [U64T="%lu"],
     [U64T="%llu"]
 )
-CFLAGS=$ac_save_CFLAGS
+cc_restore_flags
 
 AC_MSG_RESULT($U64T)
 AC_DEFINE_UNQUOTED(U64T, "$U64T", Correct printf format for logging uint64_t)
@@ -440,6 +469,16 @@ dnl configure's PYTHON variable. If not specified, AM_PATH_PYTHON will check a
 dnl built-in list with (unversioned) "python" having precedence. To configure
 dnl Pacemaker to use a specific python interpreter version, define PYTHON
 dnl when calling configure, for example: ./configure PYTHON=/usr/bin/python3.6
+
+dnl PYTHON must be a full path
+case "x$PYTHON" in
+    /*)
+        ;;
+    *)
+        AC_PATH_PROG([PYTHON], [$PYTHON])
+        ;;
+esac
+
 case "x$PYTHON" in
     x*python3*)
         dnl When used with Python 3, Pacemaker requires a minimum of 3.2
@@ -465,9 +504,10 @@ AC_PATH_PROGS(SSH, ssh, /usr/bin/ssh)
 AC_PATH_PROGS(SCP, scp, /usr/bin/scp)
 AC_PATH_PROGS(TAR, tar)
 AC_PATH_PROGS(MD5, md5)
+dnl BASH is already an environment variable, so use something else
+AC_PATH_PROG([BASH_PATH], [bash])
 AC_PATH_PROGS(TEST, test)
 PKG_PROG_PKG_CONFIG
-AC_PATH_PROGS(XML2CONFIG, xml2-config)
 AC_PATH_PROGS(VALGRIND_BIN, valgrind, /usr/bin/valgrind)
 AC_DEFINE_UNQUOTED(VALGRIND_BIN, "$VALGRIND_BIN", Valgrind command)
 
@@ -476,6 +516,11 @@ if test x"${LIBTOOL}" = x""; then
 fi
 if test x"${MAKE}" = x""; then
     AC_MSG_ERROR(You need (g)make installed in order to build ${PACKAGE})
+fi
+
+dnl Bash is needed for building man pages and running regression tests
+if test x"${BASH_PATH}" = x""; then
+    AC_MSG_ERROR(bash must be installed in order to build ${PACKAGE})
 fi
 
 AM_CONDITIONAL(BUILD_HELP, test x"${HELP2MAN}" != x"")
@@ -543,6 +588,30 @@ AM_CONDITIONAL([BUILD_DOCBOOK],
                 && test x"${INKSCAPE}" != x""])
 AM_CONDITIONAL([PUBLICAN_INTREE_BRAND],
                [test x"${publican_intree_brand}" = x"yes"])
+
+dnl Pacemaker's shell scripts (and thus man page builders) rely on GNU getopt
+AC_MSG_CHECKING([for GNU-compatible getopt])
+IFS_orig=$IFS
+IFS=:
+for PATH_DIR in $PATH; do
+    IFS=$IFS_orig
+    GETOPT_PATH="${PATH_DIR}/getopt"
+    if test -f "$GETOPT_PATH" && test -x "$GETOPT_PATH" ; then
+        $GETOPT_PATH -T >/dev/null 2>/dev/null
+        if test $? -eq 4; then
+            break
+        fi
+    fi
+    GETOPT_PATH=""
+done
+IFS=$IFS_orig
+if test -n "$GETOPT_PATH"; then
+  AC_MSG_RESULT([$GETOPT_PATH])
+else
+  AC_MSG_RESULT([no])
+  AC_MSG_ERROR(Pacemaker build requires a GNU-compatible getopt)
+fi
+AC_SUBST([GETOPT_PATH])
 
 dnl ========================================================================
 dnl checks for library functions to replace them
@@ -644,7 +713,14 @@ dnl ========================================================================
 dnl Headers
 dnl ========================================================================
 
-AC_HEADER_STDC
+dnl Some distributions insert #warnings into deprecated headers such as
+dnl timeb.h. If we will enable fatal warnings for the build, then enable
+dnl them for the header checks as well, otherwise the build could fail
+dnl even though the header check succeeds. (We should probably be doing
+dnl this in more places.)
+if test "x${enable_fatal_warnings}" = xyes ; then
+    cc_temp_flags "$CFLAGS $WERROR"
+fi
 AC_CHECK_HEADERS(arpa/inet.h)
 AC_CHECK_HEADERS(ctype.h)
 AC_CHECK_HEADERS(dirent.h)
@@ -683,29 +759,26 @@ AC_CHECK_HEADERS(sys/utsname.h)
 AC_CHECK_HEADERS(sys/wait.h)
 AC_CHECK_HEADERS(time.h)
 AC_CHECK_HEADERS(unistd.h)
+if test "x${enable_fatal_warnings}" = xyes ; then
+    cc_restore_flags
+fi
 
 dnl These headers need prerequisites before the tests will pass
 dnl AC_CHECK_HEADERS(net/if.h)
 
-AC_MSG_CHECKING(for special libxml2 includes)
-if test "x$XML2CONFIG" = "x"; then
-    AC_MSG_ERROR(libxml2 config not found)
-else
-    XML2HEAD="`$XML2CONFIG --cflags`"
-    AC_MSG_RESULT($XML2HEAD)
-    AC_CHECK_LIB(xml2, xmlReadMemory)
-    AC_CHECK_LIB(xslt, xsltApplyStylesheet)
-fi
-
-CPPFLAGS="$CPPFLAGS $XML2HEAD"
-
+PKG_CHECK_MODULES(LIBXML2, [libxml-2.0],
+                  [CPPFLAGS="${CPPFLAGS} ${LIBXML2_CFLAGS}"
+                   LIBS="${LIBS} ${LIBXML2_LIBS}"])
 AC_CHECK_HEADERS(libxml/xpath.h)
-AC_CHECK_HEADERS(libxslt/xslt.h)
 if test "$ac_cv_header_libxml_xpath_h" != "yes"; then
-    AC_MSG_ERROR(The libxml developement headers were not found)
+    AC_MSG_ERROR(libxml development headers not found)
 fi
+
+AC_CHECK_LIB(xslt, xsltApplyStylesheet, [],
+             AC_MSG_ERROR(Unsupported libxslt library version))
+AC_CHECK_HEADERS(libxslt/xslt.h)
 if test "$ac_cv_header_libxslt_xslt_h" != "yes"; then
-    AC_MSG_ERROR(The libxslt developement headers were not found)
+    AC_MSG_ERROR(libxslt development headers not found)
 fi
 
 AC_CACHE_CHECK(whether __progname and __progname_full are available,
@@ -809,11 +882,10 @@ if test "x$CURSESLIBS" != "x"; then
 fi
 
 dnl Check for printw() prototype compatibility
-if test X"$CURSESLIBS" != X"" && cc_supports_flag -Wcast-qual && cc_supports_flag -Werror; then
+if test X"$CURSESLIBS" != X"" && cc_supports_flag -Wcast-qual; then
     ac_save_LIBS=$LIBS
     LIBS="$CURSESLIBS"
-    ac_save_CFLAGS=$CFLAGS
-    CFLAGS="-Wcast-qual -Werror"
+    cc_temp_flags "-Wcast-qual $WERROR"
     # avoid broken test because of hardened build environment in Fedora 23+
     # - https://fedoraproject.org/wiki/Changes/Harden_All_Packages
     # - https://bugzilla.redhat.com/1297985
@@ -839,7 +911,7 @@ if test X"$CURSESLIBS" != X"" && cc_supports_flag -Wcast-qual && cc_supports_fla
     )
 
     LIBS=$ac_save_LIBS
-    CFLAGS=$ac_save_CFLAGS
+    cc_restore_flags
 
     AC_MSG_RESULT([$ac_cv_compatible_printw])
 
@@ -977,6 +1049,10 @@ AC_SUBST(HA_STATE_DIR)
 CRM_RSCTMP_DIR="${localstatedir}/run/resource-agents"
 AC_DEFINE_UNQUOTED(CRM_RSCTMP_DIR,"$CRM_RSCTMP_DIR", Where resource agents should keep state files)
 AC_SUBST(CRM_RSCTMP_DIR)
+
+PACEMAKER_CONFIG_DIR="${sysconfdir}/pacemaker"
+AC_DEFINE_UNQUOTED(PACEMAKER_CONFIG_DIR,"$PACEMAKER_CONFIG_DIR", Where to keep configuration files like authkey)
+AC_SUBST(PACEMAKER_CONFIG_DIR)
 
 OCF_ROOT_DIR="/usr/lib/ocf"
 if test "X$OCF_ROOT_DIR" = X; then
@@ -1184,11 +1260,11 @@ else
     PKG_CHECK_MODULES(cfg,    libcfg) dnl Fatal
     PKG_CHECK_MODULES(cmap,   libcmap) dnl Fatal
     PKG_CHECK_MODULES(quorum, libquorum) dnl Fatal
+    PKG_CHECK_MODULES(libcorosync_common, libcorosync_common) dnl Fatal
 
-    CFLAGS="$CFLAGS $libqb_FLAGS $cpg_FLAGS $cfg_FLAGS $cmap_CFLAGS $quorum_CFLAGS"
-    COROSYNC_LIBS="$COROSYNC_LIBS $libqb_LIBS $cpg_LIBS $cfg_LIBS $cmap_LIBS $quorum_LIBS"
+    CFLAGS="$CFLAGS $libqb_FLAGS $cpg_FLAGS $cfg_FLAGS $cmap_CFLAGS $quorum_CFLAGS $libcorosync_common_CFLAGS"
+    COROSYNC_LIBS="$COROSYNC_LIBS $libqb_LIBS $cpg_LIBS $cfg_LIBS $cmap_LIBS $quorum_LIBS $libcorosync_common_LIBS"
     CLUSTERLIBS="$CLUSTERLIBS $COROSYNC_LIBS"
-    AC_CHECK_LIB(corosync_common, cs_strerror)
     STACKS="$STACKS corosync-native"
 fi
 
@@ -1366,7 +1442,6 @@ CC_EXTRAS=""
 
 if test "$GCC" != yes; then
     CFLAGS="$CFLAGS -g"
-    enable_fatal_warnings=no
 else
     CFLAGS="$CFLAGS -ggdb"
 
@@ -1382,8 +1457,7 @@ dnl if we don't have push/pull but -Wformat-nonliteral we can enable -Wformat=2
 dnl otherwise none of both
 
     gcc_diagnostic_push_pull=no
-    SAVED_CFLAGS="$CFLAGS"
-    CFLAGS="$CFLAGS -Werror"
+    cc_temp_flags "$CFLAGS $WERROR"
     AC_MSG_CHECKING([for gcc diagnostic push / pull])
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #pragma GCC diagnostic push
@@ -1393,7 +1467,7 @@ dnl otherwise none of both
                           AC_MSG_RESULT([yes])
                           gcc_diagnostic_push_pull=yes
                       ], AC_MSG_RESULT([no]))
-    CFLAGS="$SAVED_CFLAGS"
+    cc_restore_flags
 
     if cc_supports_flag "-Wformat-nonliteral"; then
         gcc_format_nonliteral=yes
@@ -1447,22 +1521,6 @@ dnl otherwise none of both
             CC_EXTRAS="$CC_EXTRAS $j"
         fi
     done
-
-dnl System specific options
-
-    case "$host_os" in
-        *linux*|*bsd*)
-            if test "${enable_fatal_warnings}" = "unknown"; then
-                enable_fatal_warnings=yes
-            fi
-            ;;
-    esac
-
-    if test "x${enable_fatal_warnings}" != xno && cc_supports_flag -Werror ; then
-        enable_fatal_warnings=yes
-    else
-        enable_fatal_warnings=no
-    fi
 
     if test "x${enable_ansi}" = xyes && cc_supports_flag -std=iso9899:199409 ; then
         AC_MSG_NOTICE(Enabling ANSI Compatibility)
@@ -1603,7 +1661,7 @@ dnl
 dnl
 if test "x${enable_fatal_warnings}" = xyes ; then
     AC_MSG_NOTICE(Enabling Fatal Warnings)
-    CFLAGS="$CFLAGS -Werror"
+    CFLAGS="$CFLAGS $WERROR"
 fi
 AC_SUBST(CFLAGS)
 
@@ -1649,7 +1707,11 @@ AC_CONFIG_FILES([cts/cts-stonithd], [chmod +x cts/cts-stonithd])
 AC_CONFIG_FILES([cts/lxc_autogen.sh], [chmod +x cts/lxc_autogen.sh])
 AC_CONFIG_FILES([cts/benchmark/clubench], [chmod +x cts/benchmark/clubench])
 AC_CONFIG_FILES([cts/fence_dummy], [chmod +x cts/fence_dummy])
+AC_CONFIG_FILES([fencing/fence_legacy], [chmod +x fencing/fence_legacy])
+AC_CONFIG_FILES([tools/crm_failcount], [chmod +x tools/crm_failcount])
+AC_CONFIG_FILES([tools/crm_master], [chmod +x tools/crm_master])
 AC_CONFIG_FILES([tools/crm_report], [chmod +x tools/crm_report])
+AC_CONFIG_FILES([tools/crm_standby], [chmod +x tools/crm_standby])
 AC_CONFIG_FILES([tools/cibsecret], [chmod +x tools/cibsecret])
 
 dnl Other files we output

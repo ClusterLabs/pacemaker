@@ -1347,17 +1347,18 @@ print_rsc_history_end(FILE *stream)
  * \internal
  * \brief Print operation history
  *
- * \param[in] stream      File stream to display output to
- * \param[in] data_set    Current state of CIB
- * \param[in] node        Node this operation is for
- * \param[in] xml_op      Root of XML tree describing this operation
- * \param[in] task        Task parsed from this operation's XML
- * \param[in] interval    Interval parsed from this operation's XML
- * \param[in] rc          Return code parsed from this operation's XML
+ * \param[in] stream        File stream to display output to
+ * \param[in] data_set      Current state of CIB
+ * \param[in] node          Node this operation is for
+ * \param[in] xml_op        Root of XML tree describing this operation
+ * \param[in] task          Task parsed from this operation's XML
+ * \param[in] interval_ms_s Interval parsed from this operation's XML
+ * \param[in] rc            Return code parsed from this operation's XML
  */
 static void
 print_op_history(FILE *stream, pe_working_set_t *data_set, node_t *node,
-                 xmlNode *xml_op, const char *task, const char *interval, int rc)
+                 xmlNode *xml_op, const char *task, const char *interval_ms_s,
+                 int rc)
 {
     const char *value = NULL;
     const char *call = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
@@ -1384,8 +1385,8 @@ print_op_history(FILE *stream, pe_working_set_t *data_set, node_t *node,
     }
 
     /* Add name=value pairs as appropriate */
-    if (safe_str_neq(interval, "0")) {
-        print_nvpair(stream, "interval", interval, "ms", 0);
+    if (interval_ms_s && safe_str_neq(interval_ms_s, "0")) {
+        print_nvpair(stream, "interval", interval_ms_s, "ms", 0);
     }
     if (print_timing) {
         int int_value;
@@ -1483,12 +1484,14 @@ print_rsc_history(FILE *stream, pe_working_set_t *data_set, node_t *node,
     for (gIter = op_list; gIter != NULL; gIter = gIter->next) {
         xmlNode *xml_op = (xmlNode *) gIter->data;
         const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
-        const char *interval = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
+        const char *interval_ms_s = crm_element_value(xml_op,
+                                                      XML_LRM_ATTR_INTERVAL_MS);
         const char *op_rc = crm_element_value(xml_op, XML_LRM_ATTR_RC);
         int rc = crm_parse_int(op_rc, "0");
 
         /* Display 0-interval monitors as "probe" */
-        if (safe_str_eq(task, CRMD_ACTION_STATUS) && safe_str_eq(interval, "0")) {
+        if (safe_str_eq(task, CRMD_ACTION_STATUS)
+            && ((interval_ms_s == NULL) || safe_str_eq(interval_ms_s, "0"))) {
             task = "probe";
         }
 
@@ -1504,7 +1507,8 @@ print_rsc_history(FILE *stream, pe_working_set_t *data_set, node_t *node,
         }
 
         /* Print the operation */
-        print_op_history(stream, data_set, node, xml_op, task, interval, rc);
+        print_op_history(stream, data_set, node, xml_op, task, interval_ms_s,
+                         rc);
     }
 
     /* Free the list we created (no need to free the individual items) */
@@ -2746,11 +2750,11 @@ print_failed_action(FILE *stream, xmlNode *xml_op)
 
             case mon_output_xml:
                 fprintf(stream,
-                        " last-rc-change=\"%s\" queued=\"%s\" exec=\"%s\" interval=\"%d\" task=\"%s\"",
+                        " last-rc-change=\"%s\" queued=\"%s\" exec=\"%s\" interval=\"%u\" task=\"%s\"",
                         run_at_s? run_at_s : "",
                         crm_element_value(xml_op, XML_RSC_OP_T_QUEUE),
                         crm_element_value(xml_op, XML_RSC_OP_T_EXEC),
-                        crm_parse_int(crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL), "0"),
+                        crm_parse_ms(crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL_MS)),
                         crm_element_value(xml_op, XML_LRM_ATTR_TASK));
                 break;
 
@@ -3308,7 +3312,7 @@ handle_rsc_op(xmlNode * xml, const char *node_id)
     int rc = -1;
     int status = -1;
     int action = -1;
-    int interval = 0;
+    guint interval_ms = 0;
     int target_rc = -1;
     int transition_num = -1;
     gboolean notify = TRUE;
@@ -3352,7 +3356,7 @@ handle_rsc_op(xmlNode * xml, const char *node_id)
         return;
     }
 
-    if (parse_op_key(id, &rsc, &task, &interval) == FALSE) {
+    if (parse_op_key(id, &rsc, &task, &interval_ms) == FALSE) {
         crm_err("Invalid event detected for %s", id);
         goto bail;
     }

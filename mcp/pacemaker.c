@@ -1,19 +1,8 @@
 /*
- * Copyright (C) 2010 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2010-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -80,16 +69,6 @@ static gboolean check_active_before_startup_processes(gpointer user_data);
 static gboolean update_node_processes(uint32_t id, const char *uname,
                                       uint32_t procs);
 void update_process_clients(crm_client_t *client);
-
-void
-enable_crmd_as_root(gboolean enable)
-{
-    if (enable) {
-        pcmk_children[pcmk_child_crmd].uid = NULL;
-    } else {
-        pcmk_children[pcmk_child_crmd].uid = CRM_DAEMON_USER;
-    }
-}
 
 static uint32_t
 get_process_list(void)
@@ -717,19 +696,20 @@ check_active_before_startup_processes(gpointer user_data)
     return keep_tracking;
 }
 
-static bool
+static void
 find_and_track_existing_processes(void)
 {
+#if SUPPORT_PROCFS
     DIR *dp;
     struct dirent *entry;
-    int start_tracker = 0;
+    bool start_tracker = FALSE;
     char entry_name[64];
 
     dp = opendir("/proc");
     if (!dp) {
         /* no proc directory to search through */
         crm_notice("Can not read /proc directory to track existing components");
-        return FALSE;
+        return;
     }
 
     while ((entry = readdir(dp)) != NULL) {
@@ -753,7 +733,7 @@ find_and_track_existing_processes(void)
                 crm_notice("Tracking existing %s process (pid=%d)", name, pid);
                 pcmk_children[i].pid = pid;
                 pcmk_children[i].active_before_startup = TRUE;
-                start_tracker = 1;
+                start_tracker = TRUE;
                 break;
             }
         }
@@ -764,8 +744,9 @@ find_and_track_existing_processes(void)
                               NULL);
     }
     closedir(dp);
-
-    return start_tracker;
+#else
+    crm_notice("No procfs support, so skipping check for existing components");
+#endif // SUPPORT_PROCFS
 }
 
 static void
@@ -1024,14 +1005,6 @@ main(int argc, char **argv)
                        " Core files are an important diagnositic tool,"
                        " please consider enabling them by default.");
         }
-#if 0
-        /* system() is not thread-safe, can't call from here
-         * Actually, it's a pretty hacky way to try and achieve this anyway
-         */
-        if (system("echo 1 > /proc/sys/kernel/core_uses_pid") != 0) {
-            crm_perror(LOG_ERR, "Could not enable /proc/sys/kernel/core_uses_pid");
-        }
-#endif
     }
 
     if (crm_user_lookup(CRM_DAEMON_USER, &pcmk_uid, &pcmk_gid) < 0) {

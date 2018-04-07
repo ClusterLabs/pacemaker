@@ -1,11 +1,10 @@
-<cib epoch="8" num_updates="18" admin_epoch="0" validate-with="pacemaker-1.2" cib-last-written="Wed Mar 30 15:44:19 2016" update-origin="dhcp180" update-client="cibadmin" update-user="root" crm_feature_set="3.0.8" have-quorum="1" dc-uuid="dhcp180">
+<cib epoch="8" num_updates="18" admin_epoch="0" validate-with="pacemaker-3.0" cib-last-written="Wed Mar 30 15:44:19 2016" update-origin="dhcp180" update-client="cibadmin" update-user="root" crm_feature_set="3.0.8" have-quorum="1" dc-uuid="dhcp180">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair name="dc-version" value="1.1.11-3ca8c3b" id="cib-bootstrap-options-dc-version"/>
         <nvpair name="cluster-infrastructure" value="corosync" id="cib-bootstrap-options-cluster-infrastructure"/>
         <nvpair name="stonith-enabled" value="0" id="cib-bootstrap-options-stonith-enabled"/>
-        <nvpair name="expected-quorum-votes" value="2" id="cib-bootstrap-options-expected-quorum-votes"/>
       </cluster_property_set>
     </crm_config>
     <nodes>

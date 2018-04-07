@@ -1,4 +1,4 @@
-<cib admin_epoch="0" cib-last-written="Tue Sep  3 17:59:24 2013" crm_feature_set="3.0.7" dc-uuid="5" epoch="13" have-quorum="1" num_updates="0" update-client="crm_resource" update-origin="18builder" validate-with="pacemaker-next">
+<cib admin_epoch="0" cib-last-written="Tue Sep  3 17:59:24 2013" crm_feature_set="3.0.7" dc-uuid="5" epoch="13" have-quorum="1" num_updates="0" update-client="crm_resource" update-origin="18builder" validate-with="pacemaker-3.0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -14,53 +14,45 @@
     </nodes>
     <resources>
       <primitive class="stonith" id="shooter" type="fence_xvm">
-        <instance_attributes id="shooter-instance_attributes"/>
         <operations>
           <op id="shooter-monitor-interval-60s" interval="60s" name="monitor"/>
         </operations>
       </primitive>
       <primitive class="ocf" id="remote1" provider="pacemaker" type="remote">
-        <instance_attributes id="remote1-instance_attributes"/>
         <operations>
           <op id="remote1-monitor-interval-60s" interval="60s" name="monitor"/>
         </operations>
         <meta_attributes id="remote1-meta_attributes"/>
       </primitive>
       <primitive class="ocf" id="FAKE1" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE1-instance_attributes"/>
         <meta_attributes id="FAKE1-meta_attributes"/>
         <operations>
           <op id="FAKE1-monitor-interval-60s" interval="60s" name="monitor"/>
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE2" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE2-instance_attributes"/>
         <meta_attributes id="FAKE2-meta_attributes"/>
         <operations>
           <op id="FAKE2-monitor-interval-60s" interval="60s" name="monitor"/>
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE3" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE3-instance_attributes"/>
         <operations>
           <op id="FAKE3-monitor-interval-60s" interval="60s" name="monitor"/>
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE4" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE4-instance_attributes"/>
         <operations>
           <op id="FAKE4-monitor-interval-60s" interval="60s" name="monitor"/>
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE5" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE5-instance_attributes"/>
         <operations>
           <op id="FAKE5-monitor-interval-60s" interval="60s" name="monitor"/>
         </operations>
       </primitive>
       <clone id="FAKECLONE1-clone">
         <primitive class="ocf" id="FAKECLONE1" provider="heartbeat" type="Dummy">
-          <instance_attributes id="FAKECLONE1-instance_attributes"/>
           <operations>
             <op id="FAKECLONE1-monitor-interval-60s" interval="60s" name="monitor"/>
           </operations>
@@ -68,7 +60,6 @@
       </clone>
       <clone id="FAKECLONE2-clone">
         <primitive class="ocf" id="FAKECLONE2" provider="heartbeat" type="Dummy">
-          <instance_attributes id="FAKECLONE2-instance_attributes"/>
           <operations>
             <op id="FAKECLONE2-monitor-interval-60s" interval="60s" name="monitor"/>
           </operations>
@@ -76,7 +67,6 @@
       </clone>
       <group id="FAKEGROUP">
         <primitive class="ocf" id="FAKE6" provider="heartbeat" type="Dummy">
-          <instance_attributes id="FAKE6-instance_attributes"/>
           <operations>
             <op id="FAKE6-start-timeout-20" interval="0s" name="start" timeout="20"/>
             <op id="FAKE6-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -84,7 +74,6 @@
           </operations>
         </primitive>
         <primitive class="ocf" id="FAKE7" provider="heartbeat" type="Dummy">
-          <instance_attributes id="FAKE7-instance_attributes"/>
           <operations>
             <op id="FAKE7-start-timeout-20" interval="0s" name="start" timeout="20"/>
             <op id="FAKE7-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
@@ -98,7 +87,7 @@
       <rsc_location id="location-FAKE1-18node1" node="18node1" resource-discovery="never" rsc="FAKE1" score="-INFINITY"/>
       <rsc_location id="location-FAKE1-18node2" node="18node2" resource-discovery="never" rsc="FAKE1" score="-INFINITY"/>
 
-      <rsc_location id="location-FAKE1-18node3" resource-discovery="never" rsc="FAKE1" >
+      <rsc_location id="location-FAKE1-18node3" resource-discovery="never" rsc="FAKE1">
         <rule score="-INFINITY" id="vlan003-on-cluster-nodes-rule">
             <expression attribute="#uname" operation="eq" value="18node3" id="vlan003-on-cluster-nodes-rule-expression"/>
         </rule>

@@ -50,9 +50,6 @@ do_timer_control(long long action,
 
     } else if (action & A_INTEGRATE_TIMER_STOP) {
         timer_op_ok = crm_timer_stop(integration_timer);
-
-/* 	} else if(action & A_ELECTION_TIMEOUT_STOP) { */
-/* 		timer_op_ok = crm_timer_stop(election_timeout); */
     }
 
     /* don't start a timer that wasn't already running */
@@ -68,9 +65,6 @@ do_timer_control(long long action,
 
     } else if (action & A_INTEGRATE_TIMER_START) {
         crm_timer_start(integration_timer);
-
-/* 	} else if(action & A_ELECTION_TIMEOUT_START) { */
-/* 		crm_timer_start(election_timeout); */
     }
 }
 
@@ -425,26 +419,14 @@ fsa_cause2string(enum crmd_fsa_cause cause)
         case C_SHUTDOWN:
             causeAsText = "C_SHUTDOWN";
             break;
-        case C_HEARTBEAT_FAILED:
-            causeAsText = "C_HEARTBEAT_FAILED";
-            break;
-        case C_SUBSYSTEM_CONNECT:
-            causeAsText = "C_SUBSYSTEM_CONNECT";
-            break;
         case C_LRM_OP_CALLBACK:
             causeAsText = "C_LRM_OP_CALLBACK";
-            break;
-        case C_LRM_MONITOR_CALLBACK:
-            causeAsText = "C_LRM_MONITOR_CALLBACK";
             break;
         case C_CRMD_STATUS_CALLBACK:
             causeAsText = "C_CRMD_STATUS_CALLBACK";
             break;
         case C_FSA_INTERNAL:
             causeAsText = "C_FSA_INTERNAL";
-            break;
-        case C_ILLEGAL:
-            causeAsText = "C_ILLEGAL";
             break;
     }
 
@@ -988,7 +970,7 @@ erase_status_tag(const char *uname, const char *tag, int options)
 
         crm_info("Deleting %s status entries for %s " CRM_XS " xpath=%s",
                  tag, uname, xpath);
-        call_id = fsa_cib_conn->cmds->delete(fsa_cib_conn, xpath, NULL,
+        call_id = fsa_cib_conn->cmds->remove(fsa_cib_conn, xpath, NULL,
                                              cib_quorum_override | cib_xpath | options);
         fsa_register_cib_callback(call_id, FALSE, xpath, erase_xpath_callback);
         // CIB library handles freeing xpath

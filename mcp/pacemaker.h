@@ -38,8 +38,6 @@ gboolean mcp_read_config(void);
 gboolean cluster_connect_cfg(uint32_t * nodeid);
 gboolean cluster_disconnect_cfg(void);
 
-void enable_crmd_as_root(gboolean enable);
-
 void pcmk_shutdown(int nsig);
 
 void sysrq_init(void);

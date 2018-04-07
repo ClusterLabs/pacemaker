@@ -18,6 +18,10 @@
 #ifndef CRM_COMMON_IPC__H
 #  define CRM_COMMON_IPC__H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * \file
  * \brief Wrappers for and extensions to libqb IPC
@@ -80,5 +84,9 @@ unsigned int crm_ipc_default_buffer_size(void);
 /* Utils */
 xmlNode *create_hello_message(const char *uuid, const char *client_name,
                               const char *major_version, const char *minor_version);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

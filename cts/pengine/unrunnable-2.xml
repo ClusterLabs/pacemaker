@@ -1,4 +1,4 @@
-<cib crm_feature_set="3.0.10" validate-with="pacemaker-2.3" epoch="118" num_updates="79" admin_epoch="0" cib-last-written="Tue Apr 12 16:16:51 2016" update-origin="overcloud-controller-0" update-client="crm_resource" update-user="root" have-quorum="1" dc-uuid="2">
+<cib crm_feature_set="3.0.10" validate-with="pacemaker-3.0" epoch="118" num_updates="79" admin_epoch="0" cib-last-written="Tue Apr 12 16:16:51 2016" update-origin="overcloud-controller-0" update-client="crm_resource" update-user="root" have-quorum="1" dc-uuid="2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -44,7 +44,6 @@
       </primitive>
       <clone id="haproxy-clone">
         <primitive class="systemd" id="haproxy" type="haproxy">
-          <instance_attributes id="haproxy-instance_attributes"/>
           <operations>
             <op id="haproxy-start-interval-0s" interval="0s" name="start" timeout="200s"/>
             <op id="haproxy-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
@@ -78,7 +77,6 @@
       </clone>
       <clone id="memcached-clone">
         <primitive class="systemd" id="memcached" type="memcached">
-          <instance_attributes id="memcached-instance_attributes"/>
           <operations>
             <op id="memcached-start-interval-0s" interval="0s" name="start" timeout="200s"/>
             <op id="memcached-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
@@ -110,7 +108,6 @@
       </clone>
       <clone id="openstack-core-clone">
         <primitive class="ocf" id="openstack-core" provider="heartbeat" type="Dummy">
-          <instance_attributes id="openstack-core-instance_attributes"/>
           <operations>
             <op id="openstack-core-start-interval-0s" interval="0s" name="start" timeout="20"/>
             <op id="openstack-core-stop-interval-0s" interval="0s" name="stop" timeout="20"/>
@@ -156,7 +153,6 @@
       </primitive>
       <clone id="mongod-clone">
         <primitive class="systemd" id="mongod" type="mongod">
-          <instance_attributes id="mongod-instance_attributes"/>
           <operations>
             <op id="mongod-start-interval-0s" interval="0s" name="start" timeout="370s"/>
             <op id="mongod-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
@@ -167,7 +163,6 @@
       </clone>
       <clone id="openstack-aodh-evaluator-clone">
         <primitive class="systemd" id="openstack-aodh-evaluator" type="openstack-aodh-evaluator">
-          <instance_attributes id="openstack-aodh-evaluator-instance_attributes"/>
           <operations>
             <op id="openstack-aodh-evaluator-start-interval-0s" interval="0s" name="start" timeout="200s"/>
             <op id="openstack-aodh-evaluator-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
@@ -180,7 +175,6 @@
       </clone>
       <clone id="openstack-nova-scheduler-clone">
         <primitive class="systemd" id="openstack-nova-scheduler" type="openstack-nova-scheduler">
-          <instance_attributes id="openstack-nova-scheduler-instance_attributes"/>
           <operations>
             <op id="openstack-nova-scheduler-start-interval-0s" interval="0s" name="start" timeout="200s"/>
             <op id="openstack-nova-scheduler-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
@@ -193,7 +187,6 @@
       </clone>
       <clone id="neutron-l3-agent-clone">
         <primitive class="systemd" id="neutron-l3-agent" type="neutron-l3-agent">
-          <instance_attributes id="neutron-l3-agent-instance_attributes"/>
           <operations>
             <op id="neutron-l3-agent-start-interval-0s" interval="0s" name="start" timeout="200s"/>
             <op id="neutron-l3-agent-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
@@ -206,7 +199,6 @@
       </clone>
       <clone id="neutron-netns-cleanup-clone">
         <primitive class="ocf" id="neutron-netns-cleanup" provider="neutron" type="NetnsCleanup">
-          <instance_attributes id="neutron-netns-cleanup-instance_attributes"/>
           <operations>
             <op id="neutron-netns-cleanup-start-interval-0s" interval="0s" name="start" timeout="40"/>
             <op id="neutron-netns-cleanup-stop-interval-0s" interval="0s" name="stop" timeout="300"/>
@@ -219,7 +211,6 @@
       </clone>
       <clone id="neutron-ovs-cleanup-clone">
         <primitive class="ocf" id="neutron-ovs-cleanup" provider="neutron" type="OVSCleanup">
-          <instance_attributes id="neutron-ovs-cleanup-instance_attributes"/>
           <operations>
             <op id="neutron-ovs-cleanup-start-interval-0s" interval="0s" name="start" timeout="40"/>
             <op id="neutron-ovs-cleanup-stop-interval-0s" interval="0s" name="stop" timeout="300"/>
@@ -231,7 +222,6 @@
         </meta_attributes>
       </clone>
       <primitive class="systemd" id="openstack-cinder-volume" type="openstack-cinder-volume">
-        <instance_attributes id="openstack-cinder-volume-instance_attributes"/>
         <operations>
           <op id="openstack-cinder-volume-start-interval-0s" interval="0s" name="start" timeout="200s"/>
           <op id="openstack-cinder-volume-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
@@ -240,7 +230,6 @@
       </primitive>
       <clone id="openstack-heat-engine-clone">
         <primitive class="systemd" id="openstack-heat-engine" type="openstack-heat-engine">
-          <instance_attributes id="openstack-heat-engine-instance_attributes"/>
           <operations>
             <op id="openstack-heat-engine-start-interval-0s" interval="0s" name="start" timeout="200s"/>
             <op id="openstack-heat-engine-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
@@ -253,7 +242,6 @@
       </clone>
       <clone id="openstack-ceilometer-api-clone">
         <primitive class="systemd" id="openstack-ceilometer-api" type="openstack-ceilometer-api">
-          <instance_attributes id="openstack-ceilometer-api-instance_attributes"/>
           <operations>
             <op id="openstack-ceilometer-api-start-interval-0s" interval="0s" name="start" timeout="200s"/>
             <op id="openstack-ceilometer-api-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
@@ -266,7 +254,6 @@
       </clone>
       <clone id="openstack-aodh-listener-clone">
         <primitive class="systemd" id="openstack-aodh-listener" type="openstack-aodh-listener">
-          <instance_attributes id="openstack-aodh-listener-instance_attributes"/>
           <operations>
             <op id="openstack-aodh-listener-start-interval-0s" interval="0s" name="start" timeout="200s"/>
             <op id="openstack-aodh-listener-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
@@ -279,7 +266,6 @@
       </clone>
       <clone id="neutron-metadata-agent-clone">
         <primitive class="systemd" id="neutron-metadata-agent" type="neutron-metadata-agent">
-          <instance_attributes id="neutron-metadata-agent-instance_attributes"/>
           <operations>
             <op id="neutron-metadata-agent-start-interval-0s" interval="0s" name="start" timeout="200s"/>
             <op id="neutron-metadata-agent-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
@@ -292,7 +278,6 @@
       </clone>
       <clone id="openstack-aodh-notifier-clone">
         <primitive class="systemd" id="openstack-aodh-notifier" type="openstack-aodh-notifier">
-          <instance_attributes id="openstack-aodh-notifier-instance_attributes"/>
           <operations>
             <op id="openstack-aodh-notifier-start-interval-0s" interval="0s" name="start" timeout="200s"/>
             <op id="openstack-aodh-notifier-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
@@ -305,7 +290,6 @@
       </clone>
       <clone id="openstack-heat-api-clone">
         <primitive class="systemd" id="openstack-heat-api" type="openstack-heat-api">
-          <instance_attributes id="openstack-heat-api-instance_attributes"/>
           <operations>
             <op id="openstack-heat-api-start-interval-0s" interval="0s" name="start" timeout="200s"/>
             <op id="openstack-heat-api-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
@@ -318,7 +302,6 @@
       </clone>
       <clone id="openstack-ceilometer-collector-clone">
         <primitive class="systemd" id="openstack-ceilometer-collector" type="openstack-ceilometer-collector">
-          <instance_attributes id="openstack-ceilometer-collector-instance_attributes"/>
           <operations>
             <op id="openstack-ceilometer-collector-start-interval-0s" interval="0s" name="start" timeout="200s"/>
             <op id="openstack-ceilometer-collector-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
@@ -331,7 +314,6 @@
       </clone>
       <clone id="openstack-glance-api-clone">
         <primitive class="systemd" id="openstack-glance-api" type="openstack-glance-api">
-          <instance_attributes id="openstack-glance-api-instance_attributes"/>
           <operations>
             <op id="openstack-glance-api-start-interval-0s" interval="0s" name="start" timeout="200s"/>
             <op id="openstack-glance-api-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
@@ -344,7 +326,6 @@
       </clone>
       <clone id="openstack-cinder-scheduler-clone">
         <primitive class="systemd" id="openstack-cinder-scheduler" type="openstack-cinder-scheduler">
-          <instance_attributes id="openstack-cinder-scheduler-instance_attributes"/>
           <operations>
             <op id="openstack-cinder-scheduler-start-interval-0s" interval="0s" name="start" timeout="200s"/>
             <op id="openstack-cinder-scheduler-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
@@ -357,7 +338,6 @@
       </clone>
       <clone id="openstack-nova-api-clone">
         <primitive class="systemd" id="openstack-nova-api" type="openstack-nova-api">
-          <instance_attributes id="openstack-nova-api-instance_attributes"/>
           <operations>
             <op id="openstack-nova-api-start-interval-0s" interval="0s" name="start" timeout="200s"/>
             <op id="openstack-nova-api-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
@@ -370,7 +350,6 @@
       </clone>
       <clone id="openstack-nova-consoleauth-clone">
         <primitive class="systemd" id="openstack-nova-consoleauth" type="openstack-nova-consoleauth">
-          <instance_attributes id="openstack-nova-consoleauth-instance_attributes"/>
           <operations>
             <op id="openstack-nova-consoleauth-start-interval-0s" interval="0s" name="start" timeout="200s"/>
             <op id="openstack-nova-consoleauth-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
@@ -383,7 +362,6 @@
       </clone>
       <clone id="openstack-sahara-api-clone">
         <primitive class="systemd" id="openstack-sahara-api" type="openstack-sahara-api">
-          <instance_attributes id="openstack-sahara-api-instance_attributes"/>
           <operations>
             <op id="openstack-sahara-api-start-interval-0s" interval="0s" name="start" timeout="200s"/>
             <op id="openstack-sahara-api-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
@@ -396,7 +374,6 @@
       </clone>
       <clone id="openstack-heat-api-cloudwatch-clone">
         <primitive class="systemd" id="openstack-heat-api-cloudwatch" type="openstack-heat-api-cloudwatch">
-          <instance_attributes id="openstack-heat-api-cloudwatch-instance_attributes"/>
           <operations>
             <op id="openstack-heat-api-cloudwatch-start-interval-0s" interval="0s" name="start" timeout="200s"/>
             <op id="openstack-heat-api-cloudwatch-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
@@ -409,7 +386,6 @@
       </clone>
       <clone id="openstack-sahara-engine-clone">
         <primitive class="systemd" id="openstack-sahara-engine" type="openstack-sahara-engine">
-          <instance_attributes id="openstack-sahara-engine-instance_attributes"/>
           <operations>
             <op id="openstack-sahara-engine-start-interval-0s" interval="0s" name="start" timeout="200s"/>
             <op id="openstack-sahara-engine-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
@@ -422,7 +398,6 @@
       </clone>
       <clone id="openstack-glance-registry-clone">
         <primitive class="systemd" id="openstack-glance-registry" type="openstack-glance-registry">
-          <instance_attributes id="openstack-glance-registry-instance_attributes"/>
           <operations>
             <op id="openstack-glance-registry-start-interval-0s" interval="0s" name="start" timeout="200s"/>
             <op id="openstack-glance-registry-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
@@ -435,7 +410,6 @@
       </clone>
       <clone id="openstack-ceilometer-notification-clone">
         <primitive class="systemd" id="openstack-ceilometer-notification" type="openstack-ceilometer-notification">
-          <instance_attributes id="openstack-ceilometer-notification-instance_attributes"/>
           <operations>
             <op id="openstack-ceilometer-notification-start-interval-0s" interval="0s" name="start" timeout="200s"/>
             <op id="openstack-ceilometer-notification-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
@@ -448,7 +422,6 @@
       </clone>
       <clone id="openstack-cinder-api-clone">
         <primitive class="systemd" id="openstack-cinder-api" type="openstack-cinder-api">
-          <instance_attributes id="openstack-cinder-api-instance_attributes"/>
           <operations>
             <op id="openstack-cinder-api-start-interval-0s" interval="0s" name="start" timeout="200s"/>
             <op id="openstack-cinder-api-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
@@ -461,7 +434,6 @@
       </clone>
       <clone id="neutron-dhcp-agent-clone">
         <primitive class="systemd" id="neutron-dhcp-agent" type="neutron-dhcp-agent">
-          <instance_attributes id="neutron-dhcp-agent-instance_attributes"/>
           <operations>
             <op id="neutron-dhcp-agent-start-interval-0s" interval="0s" name="start" timeout="200s"/>
             <op id="neutron-dhcp-agent-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
@@ -474,7 +446,6 @@
       </clone>
       <clone id="neutron-openvswitch-agent-clone">
         <primitive class="systemd" id="neutron-openvswitch-agent" type="neutron-openvswitch-agent">
-          <instance_attributes id="neutron-openvswitch-agent-instance_attributes"/>
           <operations>
             <op id="neutron-openvswitch-agent-start-interval-0s" interval="0s" name="start" timeout="200s"/>
             <op id="neutron-openvswitch-agent-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
@@ -487,7 +458,6 @@
       </clone>
       <clone id="openstack-nova-novncproxy-clone">
         <primitive class="systemd" id="openstack-nova-novncproxy" type="openstack-nova-novncproxy">
-          <instance_attributes id="openstack-nova-novncproxy-instance_attributes"/>
           <operations>
             <op id="openstack-nova-novncproxy-start-interval-0s" interval="0s" name="start" timeout="200s"/>
             <op id="openstack-nova-novncproxy-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
@@ -515,7 +485,6 @@
       </clone>
       <clone id="neutron-server-clone">
         <primitive class="systemd" id="neutron-server" type="neutron-server">
-          <instance_attributes id="neutron-server-instance_attributes"/>
           <operations>
             <op id="neutron-server-start-interval-0s" interval="0s" name="start" timeout="200s"/>
             <op id="neutron-server-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
@@ -528,7 +497,6 @@
       </clone>
       <clone id="openstack-ceilometer-central-clone">
         <primitive class="systemd" id="openstack-ceilometer-central" type="openstack-ceilometer-central">
-          <instance_attributes id="openstack-ceilometer-central-instance_attributes"/>
           <operations>
             <op id="openstack-ceilometer-central-start-interval-0s" interval="0s" name="start" timeout="200s"/>
             <op id="openstack-ceilometer-central-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
@@ -541,7 +509,6 @@
       </clone>
       <clone id="httpd-clone">
         <primitive class="systemd" id="httpd" type="httpd">
-          <instance_attributes id="httpd-instance_attributes"/>
           <operations>
             <op id="httpd-start-interval-0s" interval="0s" name="start" timeout="200s"/>
             <op id="httpd-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
@@ -555,7 +522,6 @@
       </clone>
       <clone id="openstack-heat-api-cfn-clone">
         <primitive class="systemd" id="openstack-heat-api-cfn" type="openstack-heat-api-cfn">
-          <instance_attributes id="openstack-heat-api-cfn-instance_attributes"/>
           <operations>
             <op id="openstack-heat-api-cfn-start-interval-0s" interval="0s" name="start" timeout="200s"/>
             <op id="openstack-heat-api-cfn-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
@@ -568,7 +534,6 @@
       </clone>
       <clone id="openstack-nova-conductor-clone">
         <primitive class="systemd" id="openstack-nova-conductor" type="openstack-nova-conductor">
-          <instance_attributes id="openstack-nova-conductor-instance_attributes"/>
           <operations>
             <op id="openstack-nova-conductor-start-interval-0s" interval="0s" name="start" timeout="200s"/>
             <op id="openstack-nova-conductor-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>

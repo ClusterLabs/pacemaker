@@ -1,10 +1,9 @@
-<cib validate-with="pacemaker-1.0" crm_feature_set="3.0.1" have-quorum="1" dc-uuid="raki.linbit" admin_epoch="0" epoch="170" num_updates="15" cib-last-written="Fri Jul 13 13:51:08 2012">
+<cib validate-with="pacemaker-3.0" crm_feature_set="3.0.1" have-quorum="1" dc-uuid="raki.linbit" admin_epoch="0" epoch="170" num_updates="15" cib-last-written="Fri Jul 13 13:51:08 2012">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7"/>
         <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
-        <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="2"/>
         <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
         <nvpair name="last-lrm-refresh" id="cib-bootstrap-options-last-lrm-refresh" value="1252936429"/>
       </cluster_property_set>

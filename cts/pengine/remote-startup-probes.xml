@@ -1,4 +1,4 @@
-<cib epoch="11" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" cib-last-written="Tue Sep  3 17:59:24 2013" update-origin="18builder" update-client="crm_resource" crm_feature_set="3.0.7" have-quorum="1" dc-uuid="5">
+<cib epoch="11" num_updates="1" admin_epoch="0" validate-with="pacemaker-3.0" cib-last-written="Tue Sep  3 17:59:24 2013" update-origin="18builder" update-client="crm_resource" crm_feature_set="3.0.7" have-quorum="1" dc-uuid="5">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -13,38 +13,32 @@
     </nodes>
     <resources>
       <primitive class="stonith" id="shooter" type="fence_xvm">
-        <instance_attributes id="shooter-instance_attributes"/>
         <operations>
           <op id="shooter-monitor-interval-60s" interval="60s" name="monitor"/>
         </operations>
       </primitive>
       <primitive class="ocf" id="remote1" provider="pacemaker" type="remote">
-        <instance_attributes id="remote1-instance_attributes"/>
         <operations>
           <op id="remote1-monitor-interval-60s" interval="60s" name="monitor"/>
         </operations>
         <meta_attributes id="remote1-meta_attributes"/>
       </primitive>
       <primitive class="ocf" id="FAKE1" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE1-instance_attributes"/>
         <operations>
           <op id="FAKE1-monitor-interval-60s" interval="60s" name="monitor"/>
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE2" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE2-instance_attributes"/>
         <operations>
           <op id="FAKE2-monitor-interval-60s" interval="60s" name="monitor"/>
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE3" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE3-instance_attributes"/>
         <operations>
           <op id="FAKE3-monitor-interval-60s" interval="60s" name="monitor"/>
         </operations>
       </primitive>
       <primitive class="ocf" id="FAKE4" provider="heartbeat" type="Dummy">
-        <instance_attributes id="FAKE4-instance_attributes"/>
         <operations>
           <op id="FAKE4-monitor-interval-60s" interval="60s" name="monitor"/>
         </operations>

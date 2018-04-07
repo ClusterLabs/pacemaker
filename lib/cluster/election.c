@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004-2016 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -93,14 +93,14 @@ election_remove(election_t *e, const char *uname)
 void
 election_reset(election_t *e)
 {
-    crm_trace("Resetting election %s", e->name);
-    if(e) {
+    if (e != NULL) {
+        crm_trace("Resetting election %s", e->name);
         mainloop_timer_stop(e->timeout);
-    }
-    if (e && e->voted) {
-        crm_trace("Destroying voted cache with %d members", g_hash_table_size(e->voted));
-        g_hash_table_destroy(e->voted);
-        e->voted = NULL;
+        if (e->voted) {
+            crm_trace("Destroying voted cache with %d members", g_hash_table_size(e->voted));
+            g_hash_table_destroy(e->voted);
+            e->voted = NULL;
+        }
     }
 }
 

@@ -146,7 +146,7 @@ pe_free_nodes(GListPtr nodes)
 
     while (iterator != NULL) {
         node_t *node = (node_t *) iterator->data;
-        struct node_shared_s *details = node->details;
+        struct pe_node_shared_s *details = node->details;
 
         iterator = iterator->next;
 

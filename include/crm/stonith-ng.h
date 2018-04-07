@@ -16,6 +16,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * \file
  * \brief Fencing aka. STONITH
@@ -82,11 +86,10 @@ typedef struct stonith_history_s {
     char *action;
     char *origin;
     char *delegate;
-    int completed;
-    int state;
-
-    struct stonith_history_s *next;
     char *client;
+    int state;
+    time_t completed;
+    struct stonith_history_s *next;
 } stonith_history_t;
 
 typedef struct stonith_s stonith_t;
@@ -162,7 +165,7 @@ typedef struct stonith_api_operations_s
      */
     int (*register_device)(
         stonith_t *st, int options, const char *id,
-        const char *namespace, const char *agent, stonith_key_value_t *params);
+        const char *provider, const char *agent, stonith_key_value_t *params);
 
     /*!
      * \brief Remove a fencing level for a specific node.
@@ -196,19 +199,19 @@ typedef struct stonith_api_operations_s
      * \retval negative error code on failure
      */
     int (*metadata)(stonith_t *st, int options,
-            const char *device, const char *namespace, char **output, int timeout);
+            const char *device, const char *provider, char **output, int timeout);
 
     /*!
      * \brief Retrieve a list of installed stonith agents
      *
-     * \note if namespace is not provided, all known agents will be returned
+     * \note if provider is not provided, all known agents will be returned
      * \note list must be freed using stonith_key_value_freeall()
      * \note call_options parameter is not used, it is reserved for future use.
      *
      * \retval num items in list on success
      * \retval negative error code on failure
      */
-    int (*list_agents)(stonith_t *stonith, int call_options, const char *namespace,
+    int (*list_agents)(stonith_t *stonith, int call_options, const char *provider,
             stonith_key_value_t **devices, int timeout);
 
     /*!
@@ -365,7 +368,7 @@ struct stonith_s
 
     int call_id;
     int call_timeout;
-    void *private;
+    void *st_private;
 
     stonith_api_operations_t *cmds;
 };
@@ -433,19 +436,22 @@ time_t stonith_api_time(uint32_t nodeid, const char *uname, bool in_progress);
 
  */
 
-#  define STONITH_LIBRARY "libstonithd.so.5"
+#  define STONITH_LIBRARY "libstonithd.so.6"
+
+typedef int (*st_api_kick_fn) (int nodeid, const char *uname, int timeout, bool off);
+typedef time_t (*st_api_time_fn) (int nodeid, const char *uname, bool in_progress);
 
 static inline int
 stonith_api_kick_helper(uint32_t nodeid, int timeout, bool off)
 {
     static void *st_library = NULL;
-    static int (*st_kick_fn) (int nodeid, const char *uname, int timeout, bool off) = NULL;
+    static st_api_kick_fn st_kick_fn;
 
     if (st_library == NULL) {
         st_library = dlopen(STONITH_LIBRARY, RTLD_LAZY);
     }
     if (st_library && st_kick_fn == NULL) {
-        st_kick_fn = dlsym(st_library, "stonith_api_kick");
+        st_kick_fn = (st_api_kick_fn) dlsym(st_library, "stonith_api_kick");
     }
     if (st_kick_fn == NULL) {
 #ifdef ELIBACC
@@ -462,13 +468,13 @@ static inline time_t
 stonith_api_time_helper(uint32_t nodeid, bool in_progress)
 {
     static void *st_library = NULL;
-    static time_t(*st_time_fn) (int nodeid, const char *uname, bool in_progress) = NULL;
+    static st_api_time_fn st_time_fn;
 
     if (st_library == NULL) {
         st_library = dlopen(STONITH_LIBRARY, RTLD_LAZY);
     }
     if (st_library && st_time_fn == NULL) {
-        st_time_fn = dlsym(st_library, "stonith_api_time");
+        st_time_fn = (st_api_time_fn) dlsym(st_library, "stonith_api_time");
     }
     if (st_time_fn == NULL) {
         return 0;
@@ -476,5 +482,9 @@ stonith_api_time_helper(uint32_t nodeid, bool in_progress)
 
     return (*st_time_fn) (nodeid, NULL, in_progress);
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

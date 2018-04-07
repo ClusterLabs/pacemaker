@@ -1,19 +1,8 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -78,7 +67,9 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
     unsigned old_len = g_list_length(fsa_message_queue);
     fsa_data_t *fsa_data = NULL;
 
-    CRM_CHECK(raised_from != NULL, raised_from = "<unknown>");
+    if (raised_from == NULL) {
+        raised_from = "<unknown>";
+    }
 
     if (input == I_NULL && with_actions == A_NOTHING /* && data == NULL */ ) {
         /* no point doing anything */
@@ -146,12 +137,8 @@ register_fsa_input_adv(enum crmd_fsa_cause cause, enum crmd_fsa_input input,
                 fsa_data->data_type = fsa_dt_lrm;
                 break;
 
-            case C_SUBSYSTEM_CONNECT:
-            case C_LRM_MONITOR_CALLBACK:
             case C_TIMER_POPPED:
             case C_SHUTDOWN:
-            case C_HEARTBEAT_FAILED:
-            case C_ILLEGAL:
             case C_UNKNOWN:
             case C_STARTUP:
                 crm_err("Copying %s data (from %s)"
@@ -621,8 +608,9 @@ handle_failcount_op(xmlNode * stored_msg)
     const char *rsc = NULL;
     const char *uname = NULL;
     const char *op = NULL;
-    const char *interval = NULL;
-    int interval_ms = 0;
+    const char *interval_ms_s = NULL;
+    char *interval_spec = NULL;
+    guint interval_ms = 0;
     gboolean is_remote_node = FALSE;
     xmlNode *xml_op = get_message_xml(stored_msg, F_CRM_DATA);
 
@@ -636,9 +624,9 @@ handle_failcount_op(xmlNode * stored_msg)
         if (xml_attrs) {
             op = crm_element_value(xml_attrs,
                                    CRM_META "_" XML_RSC_ATTR_CLEAR_OP);
-            interval = crm_element_value(xml_attrs,
-                                         CRM_META "_" XML_RSC_ATTR_CLEAR_INTERVAL);
-            interval_ms = crm_parse_int(interval, "0");
+            interval_ms_s = crm_element_value(xml_attrs,
+                                              CRM_META "_" XML_RSC_ATTR_CLEAR_INTERVAL);
+            interval_ms = crm_parse_ms(interval_ms_s);
         }
     }
     uname = crm_element_value(xml_op, XML_LRM_ATTR_TARGET);
@@ -651,7 +639,13 @@ handle_failcount_op(xmlNode * stored_msg)
     if (crm_element_value(xml_op, XML_LRM_ATTR_ROUTER_NODE)) {
         is_remote_node = TRUE;
     }
-    update_attrd_clear_failures(uname, rsc, op, interval, is_remote_node);
+
+    if (interval_ms) {
+        interval_spec = crm_strdup_printf("%ums", interval_ms);
+    }
+    update_attrd_clear_failures(uname, rsc, op, interval_spec, is_remote_node);
+    free(interval_spec);
+
     lrm_clear_last_failure(rsc, uname, op, interval_ms);
 
     return I_NULL;

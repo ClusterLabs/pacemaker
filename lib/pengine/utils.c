@@ -1,20 +1,10 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+
 #include <crm_internal.h>
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
@@ -183,7 +173,8 @@ GHashTable *
 node_hash_from_list(GListPtr list)
 {
     GListPtr gIter = list;
-    GHashTable *result = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, g_hash_destroy_str);
+    GHashTable *result = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL,
+                                               free);
 
     for (; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
@@ -537,7 +528,8 @@ custom_action(resource_t * rsc, char *key, const char *task,
             pe_clear_action_bit(action, pe_action_runnable);
 
         } else if (is_not_set(rsc->flags, pe_rsc_managed)
-                   && g_hash_table_lookup(action->meta, XML_LRM_ATTR_INTERVAL) == NULL) {
+                   && g_hash_table_lookup(action->meta,
+                                          XML_LRM_ATTR_INTERVAL_MS) == NULL) {
             crm_debug("Action %s (unmanaged)", action->uuid);
             pe_rsc_trace(rsc, "Set optional on %s", action->uuid);
             pe_set_action_bit(action, pe_action_optional);
@@ -628,7 +620,7 @@ unpack_operation_on_fail(action_t * action)
         const char *name = NULL;
         const char *role = NULL;
         const char *on_fail = NULL;
-        const char *interval = NULL;
+        const char *interval_spec = NULL;
         const char *enabled = NULL;
 
         CRM_CHECK(action->rsc != NULL, return NULL);
@@ -643,14 +635,14 @@ unpack_operation_on_fail(action_t * action)
             role = crm_element_value(operation, "role");
             on_fail = crm_element_value(operation, XML_OP_ATTR_ON_FAIL);
             enabled = crm_element_value(operation, "enabled");
-            interval = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
+            interval_spec = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
             if (!on_fail) {
                 continue;
             } else if (enabled && !crm_is_true(enabled)) {
                 continue;
             } else if (safe_str_neq(name, "monitor") || safe_str_neq(role, "Master")) {
                 continue;
-            } else if (crm_get_interval(interval) <= 0) {
+            } else if (crm_parse_interval_spec(interval_spec) == 0) {
                 continue;
             }
 
@@ -664,11 +656,11 @@ unpack_operation_on_fail(action_t * action)
 static xmlNode *
 find_min_interval_mon(resource_t * rsc, gboolean include_disabled)
 {
-    int number = 0;
-    int min_interval = -1;
+    guint interval_ms = 0;
+    guint min_interval_ms = G_MAXUINT;
     const char *name = NULL;
     const char *value = NULL;
-    const char *interval = NULL;
+    const char *interval_spec = NULL;
     xmlNode *op = NULL;
     xmlNode *operation = NULL;
 
@@ -677,7 +669,7 @@ find_min_interval_mon(resource_t * rsc, gboolean include_disabled)
 
         if (crm_str_eq((const char *)operation->name, "op", TRUE)) {
             name = crm_element_value(operation, "name");
-            interval = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
+            interval_spec = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
             value = crm_element_value(operation, "enabled");
             if (!include_disabled && value && crm_is_true(value) == FALSE) {
                 continue;
@@ -687,13 +679,10 @@ find_min_interval_mon(resource_t * rsc, gboolean include_disabled)
                 continue;
             }
 
-            number = crm_get_interval(interval);
-            if (number < 0) {
-                continue;
-            }
+            interval_ms = crm_parse_interval_spec(interval_spec);
 
-            if (min_interval < 0 || number < min_interval) {
-                min_interval = number;
+            if (interval_ms && (interval_ms < min_interval_ms)) {
+                min_interval_ms = interval_ms;
                 op = operation;
             }
         }
@@ -724,30 +713,30 @@ unpack_start_delay(const char *value, GHashTable *meta)
 
 static int
 unpack_interval_origin(const char *value, GHashTable *meta, xmlNode *xml_obj,
-                       unsigned long long interval, crm_time_t *now)
+                       guint interval_ms, crm_time_t *now)
 {
     int start_delay = 0;
 
-    if (interval > 0 && value) {
+    if ((interval_ms > 0) && (value != NULL)) {
         crm_time_t *origin = crm_time_new(value);
 
         if (origin && now) {
             crm_time_t *delay = NULL;
             int rc = crm_time_compare(origin, now);
             long long delay_s = 0;
-            int interval_s = (interval / 1000);
+            int interval_sec = interval_ms / 1000;
 
-            crm_trace("Origin: %s, interval: %d", value, interval_s);
+            crm_trace("Origin: %s, interval: %d", value, interval_sec);
 
             /* If 'origin' is in the future, find the most recent "multiple" that occurred in the past */
             while(rc > 0) {
-                crm_time_add_seconds(origin, -interval_s);
+                crm_time_add_seconds(origin, -interval_sec);
                 rc = crm_time_compare(origin, now);
             }
 
             /* Now find the first "multiple" that occurs after 'now' */
             while (rc < 0) {
-                crm_time_add_seconds(origin, interval_s);
+                crm_time_add_seconds(origin, interval_sec);
                 rc = crm_time_compare(origin, now);
             }
 
@@ -762,8 +751,9 @@ unpack_interval_origin(const char *value, GHashTable *meta, xmlNode *xml_obj,
             crm_time_log(LOG_TRACE, "delay", delay, crm_time_log_duration);
 
             delay_s = crm_time_get_seconds(delay);
-
-            CRM_CHECK(delay_s >= 0, delay_s = 0);
+            if (delay_s < 0) {
+                delay_s = 0;
+            }
             start_delay = delay_s * 1000;
 
             if (xml_obj) {
@@ -789,17 +779,11 @@ unpack_interval_origin(const char *value, GHashTable *meta, xmlNode *xml_obj,
 static int
 unpack_timeout(const char *value)
 {
-    int timeout = 0;
+    int timeout = crm_get_msec(value);
 
-    if (value == NULL) {
-        value = CRM_DEFAULT_OP_TIMEOUT_S;
-    }
-
-    timeout = crm_get_msec(value);
     if (timeout < 0) {
-        timeout = 0;
+        timeout = crm_get_msec(CRM_DEFAULT_OP_TIMEOUT_S);
     }
-
     return timeout;
 }
 
@@ -825,21 +809,20 @@ pe_get_configured_timeout(resource_t *rsc, const char *action, pe_working_set_t 
         timeout = g_hash_table_lookup(action_meta, XML_ATTR_TIMEOUT);
     }
 
-    if (timeout == NULL) {
-        timeout = CRM_DEFAULT_OP_TIMEOUT_S;
-    }
+    // @TODO check meta-attributes (including versioned meta-attributes)
+    // @TODO maybe use min-interval monitor timeout as default for monitors
 
     timeout_ms = crm_get_msec(timeout);
     if (timeout_ms < 0) {
-        timeout_ms = 0;
+        timeout_ms = crm_get_msec(CRM_DEFAULT_OP_TIMEOUT_S);
     }
-
     return timeout_ms;
 }
 
 #if ENABLE_VERSIONED_ATTRS
 static void
-unpack_versioned_meta(xmlNode *versioned_meta, xmlNode *xml_obj, unsigned long long interval, crm_time_t *now)
+unpack_versioned_meta(xmlNode *versioned_meta, xmlNode *xml_obj,
+                      guint interval_ms, crm_time_t *now)
 {
     xmlNode *attrs = NULL;
     xmlNode *attr = NULL;
@@ -854,7 +837,8 @@ unpack_versioned_meta(xmlNode *versioned_meta, xmlNode *xml_obj, unsigned long l
 
                 crm_xml_add_int(attr, XML_NVPAIR_ATTR_VALUE, start_delay);
             } else if (safe_str_eq(name, XML_OP_ATTR_ORIGIN)) {
-                int start_delay = unpack_interval_origin(value, NULL, xml_obj, interval, now);
+                int start_delay = unpack_interval_origin(value, NULL, xml_obj,
+                                                         interval_ms, now);
 
                 crm_xml_add(attr, XML_NVPAIR_ATTR_NAME, XML_OP_ATTR_START_DELAY);
                 crm_xml_add_int(attr, XML_NVPAIR_ATTR_VALUE, start_delay);
@@ -884,41 +868,40 @@ void
 unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
                  pe_working_set_t * data_set)
 {
-    unsigned long long interval = 0;
+    guint interval_ms = 0;
     int timeout = 0;
     char *value_ms = NULL;
     const char *value = NULL;
     const char *field = NULL;
+    char *default_timeout = NULL;
 #if ENABLE_VERSIONED_ATTRS
     pe_rsc_action_details_t *rsc_details = NULL;
 #endif
 
-    CRM_CHECK(action->rsc != NULL, return);
-
-    // Probe timeouts default to minimum-interval monitor's
-    if ((xml_obj == NULL) && action &&
-        safe_str_eq(action->task, RSC_STATUS) && (interval == 0)) {
-
-        xmlNode *min_interval_mon = find_min_interval_mon(action->rsc, FALSE);
-
-        if (min_interval_mon) {
-            value = crm_element_value(min_interval_mon, XML_ATTR_TIMEOUT);
-            if (value) {
-                crm_trace("\t%s defaults to minimum-interval monitor's timeout '%s'",
-                          action->uuid, value);
-                g_hash_table_insert(action->meta, strdup(XML_ATTR_TIMEOUT),
-                                    strdup(value));
-            }
-        }
-    }
+    CRM_CHECK(action && action->rsc, return);
 
     // Cluster-wide <op_defaults> <meta_attributes>
     unpack_instance_attributes(data_set->input, data_set->op_defaults, XML_TAG_META_SETS, NULL,
                                action->meta, NULL, FALSE, data_set->now);
 
+    // Probe timeouts default differently, so handle timeout default later
+    default_timeout = g_hash_table_lookup(action->meta, XML_ATTR_TIMEOUT);
+    if (default_timeout) {
+        default_timeout = strdup(default_timeout);
+        g_hash_table_remove(action->meta, XML_ATTR_TIMEOUT);
+    }
+
     // <op> <meta_attributes> take precedence over defaults
     unpack_instance_attributes(data_set->input, xml_obj, XML_TAG_META_SETS,
                                NULL, action->meta, NULL, TRUE, data_set->now);
+
+#if ENABLE_VERSIONED_ATTRS
+    rsc_details = pe_rsc_action_details(action);
+    pe_unpack_versioned_attributes(data_set->input, xml_obj, XML_TAG_ATTR_SETS, NULL,
+                                   rsc_details->versioned_parameters, data_set->now);
+    pe_unpack_versioned_attributes(data_set->input, xml_obj, XML_TAG_META_SETS, NULL,
+                                   rsc_details->versioned_meta, data_set->now);
+#endif
 
     /* Anything set as an <op> XML property has highest precedence.
      * This ensures we use the name and interval from the <op> tag.
@@ -934,26 +917,46 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
         }
     }
 
-#if ENABLE_VERSIONED_ATTRS
-    rsc_details = pe_rsc_action_details(action);
-    pe_unpack_versioned_attributes(data_set->input, xml_obj, XML_TAG_ATTR_SETS, NULL,
-                                   rsc_details->versioned_parameters, data_set->now);
-    pe_unpack_versioned_attributes(data_set->input, xml_obj, XML_TAG_META_SETS, NULL,
-                                   rsc_details->versioned_meta, data_set->now);
-#endif
-
     g_hash_table_remove(action->meta, "id");
 
+    // Normalize interval to milliseconds
     field = XML_LRM_ATTR_INTERVAL;
     value = g_hash_table_lookup(action->meta, field);
     if (value != NULL) {
-        interval = crm_get_interval(value);
-        if (interval > 0) {
-            value_ms = crm_itoa(interval);
+        interval_ms = crm_parse_interval_spec(value);
+        if (interval_ms > 0) {
+            value_ms = crm_strdup_printf("%u", interval_ms);
             g_hash_table_replace(action->meta, strdup(field), value_ms);
 
         } else {
             g_hash_table_remove(action->meta, field);
+        }
+    }
+
+    // Handle timeout default, now that we know the interval
+    if (g_hash_table_lookup(action->meta, XML_ATTR_TIMEOUT)) {
+        free(default_timeout);
+
+    } else {
+        // Probe timeouts default to minimum-interval monitor's
+        if (safe_str_eq(action->task, RSC_STATUS) && (interval_ms == 0)) {
+
+            xmlNode *min_interval_mon = find_min_interval_mon(action->rsc, FALSE);
+
+            if (min_interval_mon) {
+                value = crm_element_value(min_interval_mon, XML_ATTR_TIMEOUT);
+                if (value) {
+                    crm_trace("\t%s defaults to minimum-interval monitor's timeout '%s'",
+                              action->uuid, value);
+                    free(default_timeout);
+                    default_timeout = strdup(value);
+                }
+            }
+        }
+
+        if (default_timeout) {
+            g_hash_table_insert(action->meta, strdup(XML_ATTR_TIMEOUT),
+                                default_timeout);
         }
     }
 
@@ -1048,7 +1051,7 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
      * failures. */
     } else if (((value == NULL) || !is_set(action->rsc->flags, pe_rsc_managed)) &&
                 (is_rsc_baremetal_remote_node(action->rsc, data_set) &&
-               !(safe_str_eq(action->task, CRMD_ACTION_STATUS) && interval == 0) &&
+               !(safe_str_eq(action->task, CRMD_ACTION_STATUS) && (interval_ms == 0)) &&
                 (safe_str_neq(action->task, CRMD_ACTION_START)))) {
 
         if (!is_set(action->rsc->flags, pe_rsc_managed)) {
@@ -1063,7 +1066,7 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
                 value = "recover baremetal remote node connection (default)";
             }
 
-            if (action->rsc->remote_reconnect_interval) {
+            if (action->rsc->remote_reconnect_ms) {
                 action->fail_role = RSC_ROLE_STOPPED;
             }
             action->on_fail = action_fail_reset_remote;
@@ -1108,22 +1111,21 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
     pe_rsc_trace(action->rsc, "\t%s failure results in: %s", action->task,
                  role2text(action->fail_role));
 
-    field = XML_OP_ATTR_START_DELAY;
     value = g_hash_table_lookup(action->meta, XML_OP_ATTR_START_DELAY);
     if (value) {
         unpack_start_delay(value, action->meta);
     } else {
         value = g_hash_table_lookup(action->meta, XML_OP_ATTR_ORIGIN);
-        unpack_interval_origin(value, action->meta, xml_obj, interval, data_set->now);
+        unpack_interval_origin(value, action->meta, xml_obj, interval_ms,
+                               data_set->now);
     }
 
-    field = XML_ATTR_TIMEOUT;
-    value = g_hash_table_lookup(action->meta, field);
+    value = g_hash_table_lookup(action->meta, XML_ATTR_TIMEOUT);
     timeout = unpack_timeout(value);
     g_hash_table_replace(action->meta, strdup(XML_ATTR_TIMEOUT), crm_itoa(timeout));
 
 #if ENABLE_VERSIONED_ATTRS
-    unpack_versioned_meta(rsc_details->versioned_meta, xml_obj, interval,
+    unpack_versioned_meta(rsc_details->versioned_meta, xml_obj, interval_ms,
                           data_set->now);
 #endif
 }
@@ -1131,12 +1133,12 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
 static xmlNode *
 find_rsc_op_entry_helper(resource_t * rsc, const char *key, gboolean include_disabled)
 {
-    unsigned long long number = 0;
+    guint interval_ms = 0;
     gboolean do_retry = TRUE;
     char *local_key = NULL;
     const char *name = NULL;
     const char *value = NULL;
-    const char *interval = NULL;
+    const char *interval_spec = NULL;
     char *match_key = NULL;
     xmlNode *op = NULL;
     xmlNode *operation = NULL;
@@ -1146,21 +1148,21 @@ find_rsc_op_entry_helper(resource_t * rsc, const char *key, gboolean include_dis
          operation = __xml_next_element(operation)) {
         if (crm_str_eq((const char *)operation->name, "op", TRUE)) {
             name = crm_element_value(operation, "name");
-            interval = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
+            interval_spec = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
             value = crm_element_value(operation, "enabled");
             if (!include_disabled && value && crm_is_true(value) == FALSE) {
                 continue;
             }
 
-            number = crm_get_interval(interval);
-            match_key = generate_op_key(rsc->id, name, number);
+            interval_ms = crm_parse_interval_spec(interval_spec);
+            match_key = generate_op_key(rsc->id, name, interval_ms);
             if (safe_str_eq(key, match_key)) {
                 op = operation;
             }
             free(match_key);
 
             if (rsc->clone_name) {
-                match_key = generate_op_key(rsc->clone_name, name, number);
+                match_key = generate_op_key(rsc->clone_name, name, interval_ms);
                 if (safe_str_eq(key, match_key)) {
                     op = operation;
                 }
@@ -1299,7 +1301,7 @@ find_recurring_actions(GListPtr input, node_t * not_on_node)
     for (; gIter != NULL; gIter = gIter->next) {
         action_t *action = (action_t *) gIter->data;
 
-        value = g_hash_table_lookup(action->meta, XML_LRM_ATTR_INTERVAL);
+        value = g_hash_table_lookup(action->meta, XML_LRM_ATTR_INTERVAL_MS);
         if (value == NULL) {
             /* skip */
         } else if (safe_str_eq(value, "0")) {
@@ -1532,8 +1534,8 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
     const xmlNode *xml_a = a;
     const xmlNode *xml_b = b;
 
-    const char *a_xml_id = crm_element_value_const(xml_a, XML_ATTR_ID);
-    const char *b_xml_id = crm_element_value_const(xml_b, XML_ATTR_ID);
+    const char *a_xml_id = crm_element_value(xml_a, XML_ATTR_ID);
+    const char *b_xml_id = crm_element_value(xml_b, XML_ATTR_ID);
 
     if (safe_str_eq(a_xml_id, b_xml_id)) {
         /* We have duplicate lrm_rsc_op entries in the status
@@ -1545,8 +1547,8 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
         sort_return(0, "duplicate");
     }
 
-    crm_element_value_const_int(xml_a, XML_LRM_ATTR_CALLID, &a_call_id);
-    crm_element_value_const_int(xml_b, XML_LRM_ATTR_CALLID, &b_call_id);
+    crm_element_value_int(xml_a, XML_LRM_ATTR_CALLID, &a_call_id);
+    crm_element_value_int(xml_b, XML_LRM_ATTR_CALLID, &b_call_id);
 
     if (a_call_id == -1 && b_call_id == -1) {
         /* both are pending ops so it doesn't matter since
@@ -1568,8 +1570,8 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
         int last_a = -1;
         int last_b = -1;
 
-        crm_element_value_const_int(xml_a, XML_RSC_OP_LAST_CHANGE, &last_a);
-        crm_element_value_const_int(xml_b, XML_RSC_OP_LAST_CHANGE, &last_b);
+        crm_element_value_int(xml_a, XML_RSC_OP_LAST_CHANGE, &last_a);
+        crm_element_value_int(xml_b, XML_RSC_OP_LAST_CHANGE, &last_b);
 
         crm_trace("rc-change: %d vs %d", last_a, last_b);
         if (last_a >= 0 && last_a < last_b) {
@@ -1589,8 +1591,8 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
         int b_id = -1;
         int dummy = -1;
 
-        const char *a_magic = crm_element_value_const(xml_a, XML_ATTR_TRANSITION_MAGIC);
-        const char *b_magic = crm_element_value_const(xml_b, XML_ATTR_TRANSITION_MAGIC);
+        const char *a_magic = crm_element_value(xml_a, XML_ATTR_TRANSITION_MAGIC);
+        const char *b_magic = crm_element_value(xml_b, XML_ATTR_TRANSITION_MAGIC);
 
         CRM_CHECK(a_magic != NULL && b_magic != NULL, sort_return(0, "No magic"));
         if(!decode_transition_magic(a_magic, &a_uuid, &a_id, &dummy, &dummy, &dummy, &dummy)) {
@@ -1778,7 +1780,8 @@ ticket_new(const char *ticket_id, pe_working_set_t * data_set)
 
     if (data_set->tickets == NULL) {
         data_set->tickets =
-            g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, destroy_ticket);
+            g_hash_table_new_full(crm_str_hash, g_str_equal, free,
+                                  destroy_ticket);
     }
 
     ticket = g_hash_table_lookup(data_set->tickets, ticket_id);
@@ -1947,12 +1950,12 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
     op_digest_cache_t *data = NULL;
 
     char *key = NULL;
-    int interval = 0;
+    guint interval_ms = 0;
 
     const char *op_version;
     const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
-    const char *interval_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
-
+    const char *interval_ms_s = crm_element_value(xml_op,
+                                                  XML_LRM_ATTR_INTERVAL_MS);
     const char *digest_all;
     const char *digest_restart;
 
@@ -1962,8 +1965,8 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
     digest_all = crm_element_value(xml_op, XML_LRM_ATTR_OP_DIGEST);
     digest_restart = crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST);
 
-    interval = crm_parse_int(interval_s, "0");
-    key = generate_op_key(rsc->id, task, interval);
+    interval_ms = crm_parse_ms(interval_ms_s);
+    key = generate_op_key(rsc->id, task, interval_ms);
     data = rsc_action_digest(rsc, task, key, node, xml_op, data_set);
 
     data->rc = RSC_DIGEST_MATCH;
@@ -1982,7 +1985,7 @@ rsc_action_digest_cmp(resource_t * rsc, xmlNode * xml_op, node_t * node,
         pe_rsc_info(rsc, "Parameters to %s on %s changed: was %s vs. now %s (%s:%s) %s",
                  key, node->details->uname,
                  crm_str(digest_all), data->digest_all_calc,
-                 (interval > 0)? "reschedule" : "reload",
+                 (interval_ms > 0)? "reschedule" : "reload",
                  op_version, crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
         data->rc = RSC_DIGEST_ALL;
     }
@@ -2266,8 +2269,6 @@ void pe_action_set_flag_reason(const char *function, long line,
     } else if(is_set(flags, pe_action_optional)) {
         unset = TRUE;
         change = "required";
-    } else if(is_set(flags, pe_action_failure_is_fatal)) {
-        change = "fatally failed";
     } else if(is_set(flags, pe_action_migrate_runnable)) {
         unset = TRUE;
         overwrite = TRUE;
@@ -2277,8 +2278,8 @@ void pe_action_set_flag_reason(const char *function, long line,
     } else if(is_set(flags, pe_action_requires_any)) {
         change = "required";
     } else {
-        crm_err("Unknown flag change to %s by %s: 0x%.16x",
-                flags, action->uuid, (reason? reason->uuid : 0));
+        crm_err("Unknown flag change to %x by %s: 0x%s",
+                flags, action->uuid, (reason? reason->uuid : "0"));
     }
 
     if(unset) {

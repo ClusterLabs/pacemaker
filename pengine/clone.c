@@ -1,19 +1,8 @@
-/* 
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+/*
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ *
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -223,9 +212,9 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
         GListPtr list1 = NULL;
         GListPtr list2 = NULL;
         GHashTable *hash1 =
-            g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, g_hash_destroy_str);
+            g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free);
         GHashTable *hash2 =
-            g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, g_hash_destroy_str);
+            g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free);
 
         n = node_copy(resource1->running_on->data);
         g_hash_table_insert(hash1, (gpointer) n->details->id, n);
@@ -449,7 +438,7 @@ color_instance(resource_t * rsc, node_t * prefer, gboolean all_coloc, int limit,
     chosen = rsc->cmds->allocate(rsc, prefer, data_set);
     if (chosen) {
         node_t *local_node = parent_node_instance(rsc, chosen);
-        if (prefer && chosen && chosen->details != prefer->details) {
+        if (prefer && (chosen->details != prefer->details)) {
             crm_notice("Pre-allocation failed: got %s instead of %s",
                        chosen->details->uname, prefer->details->uname);
             g_hash_table_destroy(rsc->allowed_nodes);
