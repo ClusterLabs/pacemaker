@@ -1,21 +1,10 @@
 #!@BASH_PATH@
-
- # Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- #
- # This program is free software; you can redistribute it and/or
- # modify it under the terms of the GNU General Public
- # License as published by the Free Software Foundation; either
- # version 2 of the License, or (at your option) any later version.
- #
- # This software is distributed in the hope that it will be useful,
- # but WITHOUT ANY WARRANTY; without even the implied warranty of
- # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- # General Public License for more details.
- #
- # You should have received a copy of the GNU General Public
- # License along with this library; if not, write to the Free Software
- # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- #
+#
+# Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+#
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
+#
 
 USAGE_TEXT="Usage: cts-pengine [<options>]
 Options:
@@ -34,7 +23,14 @@ SBINDIR="@sbindir@"
 BUILDDIR="@abs_top_builddir@"
 CRM_SCHEMA_DIRECTORY="@CRM_SCHEMA_DIRECTORY@"
 
-test_home=$(dirname $(readlink -e $0))
+# If readlink supports -e (i.e. GNU), use it
+readlink -e / >/dev/null 2>/dev/null
+if [ $? -eq 0 ]; then
+    test_home="$(dirname $(readlink -e $0))"
+else
+    test_home="$(dirname $0)"
+fi
+
 io_dir="$test_home/pengine"
 failed="$test_home/.regression.failed.diff"
 test_binary=

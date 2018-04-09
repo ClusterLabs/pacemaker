@@ -24,7 +24,14 @@ Tests (default tests are 'pengine cli lrmd'):
  fencing           Fencing daemon
  all               Synonym for 'pengine cli lrmd fencing'"
 
-test_home="$(dirname $(readlink -e $0))"
+# If readlink supports -e (i.e. GNU), use it
+readlink -e / >/dev/null 2>/dev/null
+if [ $? -eq 0 ]; then
+    test_home="$(dirname $(readlink -e $0))"
+else
+    test_home="$(dirname $0)"
+fi
+
 valgrind=""
 verbose=""
 tests=""
