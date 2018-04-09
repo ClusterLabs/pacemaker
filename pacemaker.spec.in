@@ -76,8 +76,8 @@
 ##   propagated by systemd project
 ## - when not good enough, there's always a possibility to check
 ##   particular distro-specific macros (incl. version comparison)
-%define systemd_native (%{?_unitdir:1}%{?!_unitdir:0}%{nil \
-  } || %{?__transaction_systemd_inhibit:1}%{?!__transaction_systemd_inhibit:0}%{nil \
+%define systemd_native (%{?_unitdir:1}%{!?_unitdir:0}%{nil \
+  } || %{?__transaction_systemd_inhibit:1}%{!?__transaction_systemd_inhibit:0}%{nil \
   } || %(test -f /usr/lib/os-release; test $? -ne 0; echo $?))
 
 
@@ -380,7 +380,7 @@ find . -exec touch \{\} \;
 # Early versions of autotools (e.g. RHEL <= 5) do not support --docdir
 export docdir=%{pcmk_docdir}
 
-export systemdunitdir=%{?_unitdir}%{?!_unitdir:no}
+export systemdunitdir=%{?_unitdir}%{!?_unitdir:no}
 
 %if %{with hardening}
 # prefer distro-provided hardening flags in case they are defined
