@@ -1,8 +1,13 @@
-#!/bin/bash
+#!@BASH_PATH@
 #
 # cts-regression
 #
 # Convenience wrapper for running any of the Pacemaker regression tests
+#
+# Copyright 2012-2018 Andrew Beekhof <andrew@beekhof.net>
+#
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
 USAGE_TEXT="Usage: cts-regression [<options>] [<test> ...]

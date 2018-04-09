@@ -1,4 +1,10 @@
-#!/bin/bash
+#!@BASH_PATH@
+#
+# Copyright 2008-2018 Andrew Beekhof <andrew@beekhof.net>
+#
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
+#
 if [ -e ~/.cts ]; then
     . ~/.cts
 fi

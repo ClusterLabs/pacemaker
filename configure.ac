@@ -1700,9 +1700,13 @@ dnl Files we output that need to be executable
 AC_CONFIG_FILES([cts/CTSlab.py], [chmod +x cts/CTSlab.py])
 AC_CONFIG_FILES([cts/LSBDummy], [chmod +x cts/LSBDummy])
 AC_CONFIG_FILES([cts/OCFIPraTest.py], [chmod +x cts/OCFIPraTest.py])
+AC_CONFIG_FILES([cts/cluster_test], [chmod +x cts/cluster_test])
+AC_CONFIG_FILES([cts/cts], [chmod +x cts/cts])
+AC_CONFIG_FILES([cts/cts-cli], [chmod +x cts/cts-cli])
 AC_CONFIG_FILES([cts/cts-coverage], [chmod +x cts/cts-coverage])
 AC_CONFIG_FILES([cts/cts-lrmd], [chmod +x cts/cts-lrmd])
 AC_CONFIG_FILES([cts/cts-pengine], [chmod +x cts/cts-pengine])
+AC_CONFIG_FILES([cts/cts-regression], [chmod +x cts/cts-regression])
 AC_CONFIG_FILES([cts/cts-stonithd], [chmod +x cts/cts-stonithd])
 AC_CONFIG_FILES([cts/lxc_autogen.sh], [chmod +x cts/lxc_autogen.sh])
 AC_CONFIG_FILES([cts/benchmark/clubench], [chmod +x cts/benchmark/clubench])
@@ -1718,6 +1722,7 @@ dnl Other files we output
 AC_CONFIG_FILES(Makefile                                            \
                 Doxyfile                                            \
                 cts/Makefile                                        \
+                cts/CTS.py                                          \
                 cts/CTSvars.py                                      \
                 cts/benchmark/Makefile                              \
                 cib/Makefile                                        \
