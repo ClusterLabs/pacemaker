@@ -1,22 +1,8 @@
-/* crm_internal.h */
-
 /*
- * Copyright (C) 2006 - 2008
- *     Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2006-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #ifndef CRM_INTERNAL__H
@@ -141,7 +127,6 @@ extern int node_score_green;
 extern int node_score_yellow;
 
 /* Assorted convenience functions */
-int crm_pid_active(long pid, const char *daemon);
 void crm_make_daemon(const char *name, gboolean daemonize, const char *pidfile);
 
 /* from operations.c */
@@ -251,8 +236,6 @@ void strip_text_nodes(xmlNode * xml);
 void pcmk_panic(const char *origin);
 void sysrq_init(void);
 pid_t pcmk_locate_sbd(void);
-long crm_pidfile_inuse(const char *filename, long mypid, const char *daemon);
-long crm_read_pidfile(const char *filename);
 
 #  define crm_config_err(fmt...) { crm_config_error = TRUE; crm_err(fmt); }
 #  define crm_config_warn(fmt...) { crm_config_warning = TRUE; crm_warn(fmt); }

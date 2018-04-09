@@ -1,20 +1,8 @@
 /*
- * Copyright (C) 2015
- *     Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2015-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #ifndef CRM_COMMON_INTERNAL__H
@@ -57,6 +45,14 @@ unsigned int crm_procfs_num_cores(void);
 
 void crm_schema_init(void);
 void crm_schema_cleanup(void);
+
+
+/* internal functions related to process IDs (from pid.c) */
+
+int crm_pid_active(long pid, const char *daemon);
+long crm_pidfile_inuse(const char *filename, long mypid, const char *daemon);
+long crm_read_pidfile(const char *filename);
+int crm_lock_pidfile(const char *filename, const char *name);
 
 
 /* internal generic string functions (from strings.c) */
