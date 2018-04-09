@@ -1,20 +1,10 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
+
 #include <crm_internal.h>
 
 #include <crm/crm.h>
@@ -120,8 +110,10 @@ do_cl_join_offer_respond(long long action,
                          enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
-    const char *welcome_from = crm_element_value(input->msg, F_CRM_HOST_FROM);
-    const char *join_id = crm_element_value(input->msg, F_CRM_JOIN_ID);
+    const char *welcome_from;
+    const char *join_id;
+
+    CRM_CHECK(input != NULL, return);
 
 #if 0
     if (we are sick) {
@@ -132,6 +124,8 @@ do_cl_join_offer_respond(long long action,
     }
 #endif
 
+    welcome_from = crm_element_value(input->msg, F_CRM_HOST_FROM);
+    join_id = crm_element_value(input->msg, F_CRM_JOIN_ID);
     crm_trace("Accepting cluster join offer from node %s "CRM_XS" join-%s",
               welcome_from, crm_element_value(input->msg, F_CRM_JOIN_ID));
 
@@ -150,7 +144,6 @@ do_cl_join_offer_respond(long long action,
 
     update_dc_expected(input->msg);
 
-    CRM_LOG_ASSERT(input != NULL);
     query_call_id =
         fsa_cib_conn->cmds->query(fsa_cib_conn, NULL, NULL, cib_scope_local | cib_no_children);
     fsa_register_cib_callback(query_call_id, FALSE, strdup(join_id), join_query_callback);

@@ -354,7 +354,7 @@ schedule_lrmd_cmd(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     }
 
     /* crmd expects lrmd to automatically cancel recurring ops before rsc stops. */
-    if (rsc && safe_str_eq(cmd->action, "stop")) {
+    if (safe_str_eq(cmd->action, "stop")) {
         cancel_all_recurring(rsc, NULL);
     }
 
