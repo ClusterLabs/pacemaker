@@ -433,18 +433,6 @@ function test_dates() {
     test_assert $CRM_EX_OK 0
 }
 
-function get_epoch() {
-    CIB_user=root CIB_file=$1 CIB_shadow="" cibadmin -Q | head -n 1 | sed -e 's/.* epoch=\"\([0-9]*\).*/\1/'
-}
-
-function restore_epoch() {
-    infile=$1; shift
-    old=$1; shift
-    new=$(get_epoch $infile)
-    
-    sed -i 's/epoch=.$old/epoch=\"$new/g' $infile
-}
-
 function test_acl_loop() {
     local TMPXML="$1"
 
@@ -693,8 +681,11 @@ EOF
     test_assert $CRM_EX_OK
 
     SHADOWPATH="$(crm_shadow --file)"
-    sed -i 's/epoch=.2/epoch=\"6/g' "$SHADOWPATH"
-    sed -i 's/admin_epoch=.1/admin_epoch=\"0/g' "$SHADOWPATH"
+    # sed -i isn't portable :-(
+    cp -p "$SHADOWPATH" "${SHADOWPATH}.$$" # to keep permissions
+    sed -e 's/epoch=.2/epoch=\"6/g' -e 's/admin_epoch=.1/admin_epoch=\"0/g' \
+        "$SHADOWPATH" > "${SHADOWPATH}.$$"
+    mv -- "${SHADOWPATH}.$$" "$SHADOWPATH"
 
     test_acl_loop "$TMPXML"
 
@@ -845,7 +836,8 @@ for t in $tests; do
     eval TMPFILE_$t="$TMPFILE"
     test_$t > "$TMPFILE"
 
-    sed -i -e 's/cib-last-written.*>/>/'\
+    # sed -i isn't portable :-(
+    sed -e 's/cib-last-written.*>/>/'\
         -e 's/ last-run=\"[0-9]*\"//'\
         -e 's/crm_feature_set="[^"]*" //'\
         -e 's/validate-with="[^"]*" //'\
@@ -859,7 +851,8 @@ for t in $tests; do
         -e 's/schemas\.c:\([0-9][0-9]*\)/schemas.c:NNN/' \
         -e 's/constraints\.:\([0-9][0-9]*\)/constraints.:NNN/' \
         -e 's/\(validation ([0-9][0-9]* of \)[0-9][0-9]*\().*\)/\1X\2/' \
-        "$TMPFILE"
+        "$TMPFILE" > "${TMPFILE}.$$"
+    mv -- "${TMPFILE}.$$" "$TMPFILE"
 
     if [ $do_save -eq 1 ]; then
         cp "$TMPFILE" $test_home/cli/regression.$t.exp

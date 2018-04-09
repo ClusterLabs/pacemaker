@@ -84,6 +84,17 @@ function show_test() {
     printf "  Test %-25s $*\n" "$name:"
 }
 
+# Normalize policy engine output for comparison
+normalize() {
+    for NORMALIZE_FILE in "$@"; do
+        # sed -i is not portable :-(
+        sed -e 's/crm_feature_set="[^"]*"//' \
+            -e 's/batch-limit="[0-9]*"//'    \
+            "$NORMALIZE_FILE" > "${NORMALIZE_FILE}.$$"
+        mv -- "${NORMALIZE_FILE}.$$" "$NORMALIZE_FILE"
+    done
+}
+
 info "Test home is:\t$test_home"
 
 create_mode="false"
@@ -332,7 +343,7 @@ do_test() {
         rm -f $dot_output
     fi
 
-    sed -i -e 's/crm_feature_set="[^"]*"//' -e 's/batch-limit="[0-9]*"//' $expected $output
+    normalize "$expected" "$output"
     diff $diff_opts $expected $output >/dev/null
     rc2=$?
     if [ $rc2 -ne 0 ]; then
