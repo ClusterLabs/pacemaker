@@ -568,13 +568,16 @@ getent group %{gname} >/dev/null || groupadd -r %{gname} -g 189
 getent passwd %{uname} >/dev/null || useradd -r -g %{gname} -u 189 -s /sbin/nologin -c "cluster user" %{uname}
 exit 0
 
-%post -n %{name}-libs -p /sbin/ldconfig
+%if %{defined ldconfig_scriptlets}
+%ldconfig_scriptlets libs
+%ldconfig_scriptlets cluster-libs
+%else
+%post libs -p /sbin/ldconfig
+%postun libs -p /sbin/ldconfig
 
-%postun -n %{name}-libs -p /sbin/ldconfig
-
-%post -n %{name}-cluster-libs -p /sbin/ldconfig
-
-%postun -n %{name}-cluster-libs -p /sbin/ldconfig
+%post cluster-libs -p /sbin/ldconfig
+%postun cluster-libs -p /sbin/ldconfig
+%endif
 
 %files
 ###########################################################
