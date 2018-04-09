@@ -1820,7 +1820,7 @@ do_lrm_invoke(long long action,
                                     PCMK_OCF_CONNECTION_DIED);
             return;
 
-        } else if (!create_rsc) {
+        } else if ((rc < 0) && !create_rsc) {
             /* Delete of malformed or nonexistent resource
              * (deleting something that does not exist is a success)
              */
