@@ -176,10 +176,7 @@ Requires:      resource-agents
 Requires:      %{name}-libs = %{version}-%{release}
 Requires:      %{name}-cluster-libs = %{version}-%{release}
 Requires:      %{name}-cli = %{version}-%{release}
-
-%if %{defined systemd_requires}
-%systemd_requires
-%endif
+%{?systemd_requires}
 
 # Pacemaker targets compatibility with python 2.6+ and 3.2+
 Requires:      python >= 2.6
@@ -299,9 +296,8 @@ Group:         System Environment/Daemons
 Requires:      %{name}-libs = %{version}-%{release}
 Requires:      %{name}-cli = %{version}-%{release}
 Requires:      resource-agents
-%if %{defined systemd_requires}
-%systemd_requires
-%endif
+# -remote can be fully independent of systemd
+%{?systemd_ordering}%{!?systemd_ordering:%{?systemd_requires}}
 
 %description remote
 Pacemaker is an advanced, scalable High-Availability cluster resource
