@@ -55,6 +55,23 @@ long crm_read_pidfile(const char *filename);
 int crm_lock_pidfile(const char *filename, const char *name);
 
 
+/* interal functions related to resource operations (from operations.c) */
+
+char *generate_op_key(const char *rsc_id, const char *op_type,
+                      guint interval_ms);
+char *generate_notify_key(const char *rsc_id, const char *notify_type,
+                          const char *op_type);
+char *generate_transition_magic(const char *transition_key, int op_status,
+                                int op_rc);
+char *generate_transition_key(int action, int transition_id, int target_rc,
+                              const char *node);
+void filter_action_parameters(xmlNode *param_set, const char *version);
+xmlNode *create_operation_update(xmlNode *parent, lrmd_event_data_t *event,
+                                 const char *caller_version, int target_rc,
+                                 const char *node, const char *origin,
+                                 int level);
+
+
 /* internal generic string functions (from strings.c) */
 
 long long crm_int_helper(const char *text, char **end_text);
