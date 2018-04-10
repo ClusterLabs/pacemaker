@@ -6,7 +6,7 @@
  */
 
 #include <crm_internal.h>
-#include <pacemaker.h>
+#include "pacemakerd.h"
 
 #include <sys/utsname.h>
 #include <sys/stat.h>           /* for calls to stat() */

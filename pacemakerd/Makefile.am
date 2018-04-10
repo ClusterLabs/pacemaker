@@ -19,14 +19,14 @@ endif
 
 ## SOURCES
 
-noinst_HEADERS		= pacemaker.h
+noinst_HEADERS		= pacemakerd.h
 
 pacemakerd_CFLAGS	= $(CFLAGS_HARDENED_EXE)
 pacemakerd_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
 
 pacemakerd_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la $(top_builddir)/lib/common/libcrmcommon.la
 pacemakerd_LDADD	+= $(CLUSTERLIBS)
-pacemakerd_SOURCES	= pacemaker.c corosync.c
+pacemakerd_SOURCES	= pacemakerd.c pcmkd_corosync.c
 
 endif
 

@@ -6,7 +6,7 @@
  */
 
 #include <crm_internal.h>
-#include <pacemaker.h>
+#include "pacemakerd.h"
 
 #include <pwd.h>
 #include <grp.h>
