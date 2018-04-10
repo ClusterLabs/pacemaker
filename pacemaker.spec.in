@@ -338,6 +338,7 @@ Summary:       Test framework for cluster-related technologies like Pacemaker
 Group:         System Environment/Daemons
 Requires:      %{python_pkg} >= %{python_min}
 Requires:      %{name}-libs = %{version}-%{release}
+BuildArch:     noarch
 
 # systemd python bindings are separate package in some distros
 %if %{defined systemd_requires}
@@ -359,6 +360,7 @@ Test framework for cluster-related technologies like Pacemaker
 License:       CC-BY-SA-4.0
 Summary:       Documentation for Pacemaker
 Group:         Documentation
+BuildArch:     noarch
 
 %description   doc
 Documentation for Pacemaker.
