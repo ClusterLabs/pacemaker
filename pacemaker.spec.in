@@ -263,26 +263,26 @@ The %{name}-cli package contains command line tools that can be used
 to query and control the cluster from machines that may, or may not,
 be part of the cluster.
 
-%package -n %{name}-libs
+%package libs
 License:       GPLv2+ and LGPLv2+
 Summary:       Core Pacemaker libraries
 Group:         System Environment/Daemons
 Requires(pre): shadow-utils
 
-%description -n %{name}-libs
+%description libs
 Pacemaker is an advanced, scalable High-Availability cluster resource
 manager.
 
 The %{name}-libs package contains shared libraries needed for cluster
 nodes and those just running the CLI tools.
 
-%package -n %{name}-cluster-libs
+%package cluster-libs
 License:       GPLv2+ and LGPLv2+
 Summary:       Cluster Libraries used by Pacemaker
 Group:         System Environment/Daemons
 Requires:      %{name}-libs = %{version}-%{release}
 
-%description -n %{name}-cluster-libs
+%description cluster-libs
 Pacemaker is an advanced, scalable High-Availability cluster resource
 manager.
 
@@ -312,7 +312,7 @@ The %{name}-remote package contains the Pacemaker Remote daemon
 which is capable of extending pacemaker functionality to remote
 nodes not running the full corosync/cluster stack.
 
-%package -n %{name}-libs-devel
+%package libs-devel
 License:       GPLv2+ and LGPLv2+
 Summary:       Pacemaker development package
 Group:         Development/Libraries
@@ -325,7 +325,7 @@ Requires:      bzip2-devel%{?_isa} glib2-devel%{?_isa}
 Requires:      libqb-devel%{?_isa}
 Requires:      corosynclib-devel%{?_isa} >= 2.0.0
 
-%description -n %{name}-libs-devel
+%description libs-devel
 Pacemaker is an advanced, scalable High-Availability cluster resource
 manager.
 
@@ -562,8 +562,7 @@ fi
 %systemd_postun_with_restart crm_mon.service
 %endif
 
-%pre -n %{name}-libs
-
+%pre libs
 getent group %{gname} >/dev/null || groupadd -r %{gname} -g 189
 getent passwd %{uname} >/dev/null || useradd -r -g %{gname} -u 189 -s /sbin/nologin -c "cluster user" %{uname}
 exit 0
@@ -702,7 +701,7 @@ exit 0
 %dir %attr (770, %{uname}, %{gname}) %{_var}/log/pacemaker
 %dir %attr (770, %{uname}, %{gname}) %{_var}/log/pacemaker/bundles
 
-%files -n %{name}-libs
+%files libs
 %defattr(-,root,root)
 
 %{_libdir}/libcib.so.*
@@ -718,7 +717,7 @@ exit 0
 %doc COPYING
 %doc ChangeLog
 
-%files -n %{name}-cluster-libs
+%files cluster-libs
 %defattr(-,root,root)
 %{_libdir}/libcrmcluster.so.*
 %license licenses/LGPLv2.1
@@ -758,7 +757,7 @@ exit 0
 %doc COPYING
 %doc ChangeLog
 
-%files -n %{name}-libs-devel
+%files libs-devel
 %defattr(-,root,root)
 %{_includedir}/pacemaker
 %{_libdir}/*.so
