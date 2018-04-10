@@ -177,6 +177,13 @@ typedef struct stonith_topology_s {
 
 } stonith_topology_t;
 
+void init_device_list(void);
+void free_device_list(void);
+void init_topology_list(void);
+void free_topology_list(void);
+void free_remote_op_list(void);
+void free_metadata_cache(void);
+
 long long get_stonith_flag(const char *name);
 
 void stonith_command(crm_client_t * client, uint32_t id, uint32_t flags,
@@ -217,10 +224,6 @@ int process_remote_stonith_query(xmlNode * msg);
 void *create_remote_stonith_op(const char *client, xmlNode * request, gboolean peer);
 
 int stonith_fence_history(xmlNode * msg, xmlNode ** output);
-
-void free_device(gpointer data);
-
-void free_topology_entry(gpointer data);
 
 bool fencing_peer_active(crm_node_t *peer);
 

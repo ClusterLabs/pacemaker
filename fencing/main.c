@@ -1,19 +1,8 @@
 /*
- * Copyright (C) 2009 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2009-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -532,11 +521,8 @@ fencing_topology_init()
     const char *xpath = "//" XML_TAG_FENCING_LEVEL;
 
     crm_trace("Full topology refresh");
-
-    if(topology) {
-        g_hash_table_destroy(topology);
-        topology = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free_topology_entry);
-    }
+    free_topology_list();
+    init_topology_list();
 
     /* Grab everything */
     xpathObj = xpath_search(local_cib, xpath);
@@ -1160,6 +1146,10 @@ stonith_cleanup(void)
 
     crm_peer_destroy();
     crm_client_cleanup();
+    free_remote_op_list();
+    free_topology_list();
+    free_device_list();
+    free_metadata_cache();
     free(stonith_our_uname);
     free_xml(local_cib);
 }
@@ -1466,10 +1456,8 @@ main(int argc, char **argv)
         stonith_our_uname = strdup("localhost");
     }
 
-
-    device_list = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free_device);
-
-    topology = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free_topology_entry);
+    init_device_list();
+    init_topology_list();
 
     if(stonith_watchdog_timeout_ms > 0) {
         xmlNode *xml;

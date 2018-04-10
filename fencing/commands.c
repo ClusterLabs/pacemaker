@@ -485,7 +485,7 @@ schedule_stonith_command(async_command_t * cmd, stonith_device_t * device)
     }
 }
 
-void
+static void
 free_device(gpointer data)
 {
     GListPtr gIter = NULL;
@@ -512,6 +512,23 @@ free_device(gpointer data)
     free(device->agent);
     free(device->id);
     free(device);
+}
+
+void free_device_list()
+{
+    if (device_list != NULL) {
+        g_hash_table_destroy(device_list);
+        device_list = NULL;
+    }
+}
+
+void
+init_device_list()
+{
+    if (device_list == NULL) {
+        device_list = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL,
+                                            free_device);
+    }
 }
 
 static GHashTable *
@@ -670,16 +687,28 @@ parse_host_list(const char *hosts)
 
 GHashTable *metadata_cache = NULL;
 
+void
+free_metadata_cache() {
+    if (metadata_cache != NULL) {
+        g_hash_table_destroy(metadata_cache);
+        metadata_cache = NULL;
+    }
+}
+
+static void
+init_metadata_cache() {
+    if (metadata_cache == NULL) {
+        metadata_cache = crm_str_table_new();
+    }
+}
+
 static xmlNode *
 get_agent_metadata(const char *agent)
 {
     xmlNode *xml = NULL;
     char *buffer = NULL;
 
-    if(metadata_cache == NULL) {
-        metadata_cache = crm_str_table_new();
-    }
-
+    init_metadata_cache();
     buffer = g_hash_table_lookup(metadata_cache, agent);
     if(safe_str_eq(agent, STONITH_WATCHDOG_AGENT)) {
         return NULL;
@@ -1228,7 +1257,7 @@ count_active_levels(stonith_topology_t * tp)
     return count;
 }
 
-void
+static void
 free_topology_entry(gpointer data)
 {
     stonith_topology_t *tp = data;
@@ -1245,6 +1274,24 @@ free_topology_entry(gpointer data)
     free(tp->target_pattern);
     free(tp->target_attribute);
     free(tp);
+}
+
+void
+free_topology_list()
+{
+    if (topology != NULL) {
+        g_hash_table_destroy(topology);
+        topology = NULL;
+    }
+}
+
+void
+init_topology_list()
+{
+    if (topology == NULL) {
+        topology = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL,
+                                         free_topology_entry);
+    }
 }
 
 char *stonith_level_key(xmlNode *level, int mode)
