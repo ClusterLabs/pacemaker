@@ -1761,11 +1761,6 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/fencing/Makefile                                \
                 lib/lrmd/Makefile                                   \
                 lib/services/Makefile                               \
-                mcp/Makefile                                        \
-                mcp/pacemaker                                       \
-                mcp/pacemaker.service                               \
-                mcp/pacemaker.upstart                               \
-                mcp/pacemaker.combined.upstart                      \
                 lrmd/Makefile                                       \
                 lrmd/pacemaker_remote.service                       \
                 lrmd/pacemaker_remote                               \
@@ -1774,6 +1769,11 @@ AC_CONFIG_FILES(Makefile                                            \
                 extra/resources/Makefile                            \
                 extra/logrotate/Makefile                            \
                 extra/logrotate/pacemaker                           \
+                pacemakerd/Makefile                                 \
+                pacemakerd/pacemaker                                \
+                pacemakerd/pacemaker.service                        \
+                pacemakerd/pacemaker.upstart                        \
+                pacemakerd/pacemaker.combined.upstart               \
                 tools/Makefile                                      \
                 tools/report.collector                              \
                 tools/report.common                                 \

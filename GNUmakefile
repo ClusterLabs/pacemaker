@@ -1,19 +1,8 @@
 #
-# Copyright (C) 2008 Andrew Beekhof
+# Copyright 2008-2018 Andrew Beekhof <andrew@beekhof.net>
 #
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
 default: $(shell test ! -e configure && echo init) $(shell test -e configure && echo core)
@@ -336,7 +325,9 @@ summary:
 	@printf "\n- Update source tarball to revision: `git log --pretty=format:%h -n 1`"
 	@printf "\n- Changesets: `git log --pretty=oneline $(LAST_RELEASE)..HEAD | wc -l`"
 	@printf "\n- Diff:      "
-	@git diff -r $(LAST_RELEASE)..HEAD --stat include lib mcp pengine/*.c pengine/*.h  cib crmd fencing lrmd tools xml | tail -n 1
+	@git diff -r $(LAST_RELEASE)..HEAD --stat \
+		include lib pacemakerd pengine/*.c pengine/*.h \
+		cib crmd fencing lrmd tools xml | tail -n 1
 
 rc-changes:
 	@make NEXT_RELEASE=$(shell echo $(LAST_RC) | sed s:-rc.*::) LAST_RELEASE=$(LAST_RC) changes
@@ -369,7 +360,7 @@ CLANG_checkers =
 # --inconclusive --std=posix
 CPPCHECK_ARGS ?=
 cppcheck:
-	for d in replace lib mcp attrd pengine cib crmd fencing lrmd tools; \
+	for d in replace lib pacemakerd attrd pengine cib crmd fencing lrmd tools; \
 		do cppcheck $(CPPCHECK_ARGS) -q $$d; \
 	done
 

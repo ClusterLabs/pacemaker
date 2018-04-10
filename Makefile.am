@@ -1,21 +1,8 @@
 #
-# Pacemaker code
+# Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
 #
-# Copyright (C) 2004 Andrew Beekhof
-#
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
 EXTRA_DIST              = autogen.sh m4/gnulib-cache.m4
@@ -24,7 +11,7 @@ MAINTAINERCLEANFILES    = Makefile.in aclocal.m4 configure DRF/config-h.in \
                         DRF/stamp-h.in libtool.m4 ltdl.m4
 
 # Only these will get installed with a plain "make install"
-CORE_INSTALL	= replace include lib mcp \
+CORE_INSTALL	= replace include lib pacemakerd \
 		  attrd pengine cib crmd fencing lrmd tools xml
 
 # Only these will get built with a plain "make" or "make clean"
