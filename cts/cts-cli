@@ -11,6 +11,7 @@ Options:
 
 : ${shadow=cts-cli}
 test_home="$(dirname $(readlink -e $0))"
+shadow_dir=$(mktemp -td cts-cli.shadow.XXXXXXXXXX)
 num_errors=0
 num_passed=0
 GREP_OPTIONS=
@@ -73,6 +74,7 @@ function test_assert() {
 function test_tools() {
     local TMPXML=$(mktemp --tmpdir cts-cli.tools.xml.XXXXXXXXXX)
     local TMPORIG=$(mktemp --tmpdir cts-cli.tools.existing.xml.XXXXXXXXXX)
+    export CIB_shadow_dir="${shadow_dir}"
 
     $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow  2>&1
     export CIB_shadow=$shadow
@@ -370,6 +372,7 @@ function test_tools() {
     cmd="crm_resource -r test-primitive --meta -d is-managed"
     test_assert $CRM_EX_OK
 
+    unset CIB_shadow_dir
     rm -f "$TMPXML" "$TMPORIG"
 }
 
@@ -614,7 +617,7 @@ function test_acl_loop() {
 function test_acls() {
     local SHADOWPATH
     local TMPXML=$(mktemp --tmpdir cts-cli.acls.xml.XXXXXXXXXX)
-
+    export CIB_shadow_dir="${shadow_dir}"
 
     $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow --validate-with pacemaker-1.3 2>&1
     export CIB_shadow=$shadow
@@ -681,12 +684,15 @@ EOF
     sed -i 's/admin_epoch=.1/admin_epoch=\"0/g' "$SHADOWPATH"
 
     test_acl_loop "$TMPXML"
+
+    unset CIB_shadow_dir
     rm -f "$TMPXML"
 }
 
 function test_validity() {
     local TMPGOOD=$(mktemp --tmpdir cts-cli.validity.good.xml.XXXXXXXXXX)
     local TMPBAD=$(mktemp --tmpdir cts-cli.validity.bad.xml.XXXXXXXXXX)
+    export CIB_shadow_dir="${shadow_dir}"
 
     $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow --validate-with pacemaker-1.2 2>&1
     export CIB_shadow=$shadow
@@ -752,6 +758,7 @@ function test_validity() {
     cmd="crm_simulate -x $TMPBAD -S"
     test_assert $CRM_EX_OK 0
 
+    unset CIB_shadow_dir
     rm -f "$TMPGOOD" "$TMPBAD"
 }
 
@@ -845,6 +852,9 @@ for t in $tests; do
         cp "$TMPFILE" $test_home/cli/regression.$t.exp
     fi
 done
+
+rm -f "${shadow_dir}/*"
+rmdir "${shadow_dir}"
     
 failed=0
 
