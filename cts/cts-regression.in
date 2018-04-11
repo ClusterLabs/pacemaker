@@ -1,8 +1,13 @@
-#!/bin/bash
+#!@BASH_PATH@
 #
 # cts-regression
 #
 # Convenience wrapper for running any of the Pacemaker regression tests
+#
+# Copyright 2012-2018 Andrew Beekhof <andrew@beekhof.net>
+#
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
 USAGE_TEXT="Usage: cts-regression [<options>] [<test> ...]
@@ -19,7 +24,14 @@ Tests (default tests are 'pengine cli lrmd'):
  fencing           Fencing daemon
  all               Synonym for 'pengine cli lrmd fencing'"
 
-test_home="$(dirname $(readlink -e $0))"
+# If readlink supports -e (i.e. GNU), use it
+readlink -e / >/dev/null 2>/dev/null
+if [ $? -eq 0 ]; then
+    test_home="$(dirname $(readlink -e $0))"
+else
+    test_home="$(dirname $0)"
+fi
+
 valgrind=""
 verbose=""
 tests=""

@@ -1,19 +1,8 @@
 /*
- * Copyright (C) 2009 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2009-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -82,7 +71,8 @@ typedef struct st_query_result_s {
     GHashTable *devices;
 } st_query_result_t;
 
-GHashTable *remote_op_list = NULL;
+static GHashTable *remote_op_list = NULL;
+
 void call_remote_stonith(remote_fencing_op_t * op, st_query_result_t * peer);
 static void remote_op_done(remote_fencing_op_t * op, xmlNode * data, int rc, int dup);
 extern xmlNode *stonith_create_op(int call_id, const char *token, const char *op, xmlNode * data,
@@ -108,6 +98,15 @@ free_remote_query(gpointer data)
         g_hash_table_destroy(query->devices);
         free(query->host);
         free(query);
+    }
+}
+
+void
+free_remote_op_list()
+{
+    if (remote_op_list != NULL) {
+        g_hash_table_destroy(remote_op_list);
+        remote_op_list = NULL;
     }
 }
 
@@ -238,6 +237,7 @@ free_remote_op(gpointer data)
 
     free(op->id);
     free(op->action);
+    free(op->delegate);
     free(op->target);
     free(op->client_id);
     free(op->client_name);
@@ -255,6 +255,7 @@ free_remote_op(gpointer data)
         op->devices_list = NULL;
     }
     g_list_free_full(op->automatic_list, free);
+    g_list_free(op->duplicates);
     free(op);
 }
 

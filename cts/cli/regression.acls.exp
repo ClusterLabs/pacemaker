@@ -1182,8 +1182,8 @@ Call failed: Permission denied
 * Passed: cibadmin       - bob: Replace - delete attribute (allow)
 
 
-    !#!#!#!#! Upgrading to pacemaker-2.0 and retesting !#!#!#!#!
-=#=#=#= Begin test: root: Upgrade to pacemaker-2.0 =#=#=#=
+    !#!#!#!#! Upgrading to latest CIB schema and re-testing !#!#!#!#!
+=#=#=#= Begin test: root: Upgrade to latest CIB schema =#=#=#=
 __xml_acl_post_process:	Creation of acl_permission=observer-read-1 is allowed
 __xml_acl_post_process:	Creation of acl_permission=observer-write-1 is allowed
 __xml_acl_post_process:	Creation of acl_permission=observer-write-2 is allowed
@@ -1206,7 +1206,7 @@ __xml_acl_post_process:	Creation of role=auto-betteridea is allowed
 __xml_acl_post_process:	Creation of acl_role=auto-betteridea is allowed
 __xml_acl_post_process:	Creation of acl_permission=betteridea-nothing is allowed
 __xml_acl_post_process:	Creation of acl_permission=betteridea-resources is allowed
-=#=#=#= Current cib after: root: Upgrade to pacemaker-2.0 =#=#=#=
+=#=#=#= Current cib after: root: Upgrade to latest CIB schema =#=#=#=
 <cib epoch="2" num_updates="0" admin_epoch="1">
   <configuration>
     <crm_config>
@@ -1260,8 +1260,8 @@ __xml_acl_post_process:	Creation of acl_permission=betteridea-resources is allow
   </configuration>
   <status/>
 </cib>
-=#=#=#= End test: root: Upgrade to pacemaker-2.0 - OK (0) =#=#=#=
-* Passed: cibadmin       - root: Upgrade to pacemaker-2.0
+=#=#=#= End test: root: Upgrade to latest CIB schema - OK (0) =#=#=#=
+* Passed: cibadmin       - root: Upgrade to latest CIB schema
 =#=#=#= Begin test: unknownguy: Query configuration =#=#=#=
 Call failed: Permission denied
 =#=#=#= End test: unknownguy: Query configuration - Insufficient privileges (4) =#=#=#=

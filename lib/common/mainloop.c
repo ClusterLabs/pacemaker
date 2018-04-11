@@ -311,6 +311,17 @@ crm_signal(int sig, void (*dispatch) (int sig))
     return TRUE;
 }
 
+static void
+mainloop_destroy_signal_entry(int sig)
+{
+    crm_signal_t *tmp = crm_signals[sig];
+
+    crm_signals[sig] = NULL;
+
+    crm_trace("Destroying signal %d", sig);
+    mainloop_destroy_trigger((crm_trigger_t *) tmp);
+}
+
 gboolean
 mainloop_add_signal(int sig, void (*dispatch) (int sig))
 {
@@ -348,11 +359,7 @@ mainloop_add_signal(int sig, void (*dispatch) (int sig))
     crm_signals[sig]->signal = sig;
 
     if (crm_signal(sig, mainloop_signal_handler) == FALSE) {
-        crm_signal_t *tmp = crm_signals[sig];
-
-        crm_signals[sig] = NULL;
-
-        mainloop_destroy_trigger((crm_trigger_t *) tmp);
+        mainloop_destroy_signal_entry(sig);
         return FALSE;
     }
 #if 0
@@ -372,8 +379,6 @@ mainloop_add_signal(int sig, void (*dispatch) (int sig))
 gboolean
 mainloop_destroy_signal(int sig)
 {
-    crm_signal_t *tmp = NULL;
-
     if (sig >= NSIG || sig < 0) {
         crm_err("Signal %d is out of range", sig);
         return FALSE;
@@ -385,11 +390,7 @@ mainloop_destroy_signal(int sig)
     } else if (crm_signals[sig] == NULL) {
         return TRUE;
     }
-
-    crm_trace("Destroying signal %d", sig);
-    tmp = crm_signals[sig];
-    crm_signals[sig] = NULL;
-    mainloop_destroy_trigger((crm_trigger_t *) tmp);
+    mainloop_destroy_signal_entry(sig);
     return TRUE;
 }
 
@@ -398,8 +399,12 @@ static qb_array_t *gio_map = NULL;
 void
 mainloop_cleanup(void) 
 {
-    if(gio_map) {
+    if (gio_map) {
         qb_array_free(gio_map);
+    }
+
+    for (int sig = 0; sig < NSIG; ++sig) {
+        mainloop_destroy_signal_entry(sig);
     }
 }
 

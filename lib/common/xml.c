@@ -4040,19 +4040,19 @@ apply_xml_diff(xmlNode *old_xml, xmlNode * diff, xmlNode **new_xml)
 }
 
 static void
-__xml_diff_object(xmlNode * old, xmlNode * new)
+__xml_diff_object(xmlNode *old_xml, xmlNode *new_xml)
 {
     xmlNode *cIter = NULL;
     xmlAttr *pIter = NULL;
 
-    CRM_CHECK(new != NULL, return);
-    if(old == NULL) {
-        crm_node_created(new);
-        __xml_acl_post_process(new); /* Check creation is allowed */
+    CRM_CHECK(new_xml != NULL, return);
+    if (old_xml == NULL) {
+        crm_node_created(new_xml);
+        __xml_acl_post_process(new_xml); // Check creation is allowed
         return;
 
     } else {
-        xml_private_t *p = new->_private;
+        xml_private_t *p = new_xml->_private;
 
         if(p->flags & xpf_processed) {
             /* Avoid re-comparing nodes */
@@ -4061,39 +4061,40 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
         p->flags |= xpf_processed;
     }
 
-    for (pIter = crm_first_attr(new); pIter != NULL; pIter = pIter->next) {
+    for (pIter = crm_first_attr(new_xml); pIter != NULL; pIter = pIter->next) {
         xml_private_t *p = pIter->_private;
 
         /* Assume everything was just created and take it from there */
         p->flags |= xpf_created;
     }
 
-    for (pIter = crm_first_attr(old); pIter != NULL; ) {
+    for (pIter = crm_first_attr(old_xml); pIter != NULL; ) {
         xmlAttr *prop = pIter;
         xml_private_t *p = NULL;
         const char *name = (const char *)pIter->name;
-        const char *old_value = crm_element_value(old, name);
-        xmlAttr *exists = xmlHasProp(new, pIter->name);
+        const char *old_value = crm_element_value(old_xml, name);
+        xmlAttr *exists = xmlHasProp(new_xml, pIter->name);
 
         pIter = pIter->next;
         if(exists == NULL) {
-            p = new->doc->_private;
+            p = new_xml->doc->_private;
 
             /* Prevent the dirty flag being set recursively upwards */
             clear_bit(p->flags, xpf_tracking);
-            exists = xmlSetProp(new, (const xmlChar *)name, (const xmlChar *)old_value);
+            exists = xmlSetProp(new_xml, (const xmlChar *) name,
+                                (const xmlChar *) old_value);
             set_bit(p->flags, xpf_tracking);
 
             p = exists->_private;
             p->flags = 0;
 
-            crm_trace("Lost %s@%s=%s", old->name, name, old_value);
-            xml_remove_prop(new, name);
+            crm_trace("Lost %s@%s=%s", old_xml->name, name, old_value);
+            xml_remove_prop(new_xml, name);
 
         } else {
             int p_new = __xml_offset((xmlNode*)exists);
             int p_old = __xml_offset((xmlNode*)prop);
-            const char *value = crm_element_value(new, name);
+            const char *value = crm_element_value(new_xml, name);
 
             p = exists->_private;
             p->flags = (p->flags & ~xpf_created);
@@ -4102,16 +4103,18 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
                 /* Restore the original value, so we can call crm_xml_add(),
                  * which checks ACLs
                  */
-                char *vcopy = crm_element_value_copy(new, name);
+                char *vcopy = crm_element_value_copy(new_xml, name);
 
-                crm_trace("Modified %s@%s %s->%s", old->name, name, old_value, vcopy);
-                xmlSetProp(new, prop->name, (const xmlChar *)old_value);
-                crm_xml_add(new, name, vcopy);
+                crm_trace("Modified %s@%s %s->%s",
+                          old_xml->name, name, old_value, vcopy);
+                xmlSetProp(new_xml, prop->name, (const xmlChar *) old_value);
+                crm_xml_add(new_xml, name, vcopy);
                 free(vcopy);
 
             } else if(p_old != p_new) {
-                crm_info("Moved %s@%s (%d -> %d)", old->name, name, p_old, p_new);
-                __xml_node_dirty(new);
+                crm_info("Moved %s@%s (%d -> %d)",
+                         old_xml->name, name, p_old, p_new);
+                __xml_node_dirty(new_xml);
                 p->flags |= xpf_dirty|xpf_moved;
 
                 if(p_old > p_new) {
@@ -4126,21 +4129,21 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
         }
     }
 
-    for (pIter = crm_first_attr(new); pIter != NULL; ) {
+    for (pIter = crm_first_attr(new_xml); pIter != NULL; ) {
         xmlAttr *prop = pIter;
         xml_private_t *p = pIter->_private;
 
         pIter = pIter->next;
         if(is_set(p->flags, xpf_created)) {
             char *name = strdup((const char *)prop->name);
-            char *value = crm_element_value_copy(new, name);
+            char *value = crm_element_value_copy(new_xml, name);
 
-            crm_trace("Created %s@%s=%s", new->name, name, value);
+            crm_trace("Created %s@%s=%s", new_xml->name, name, value);
             /* Remove plus create won't work as it will modify the relative attribute ordering */
-            if(__xml_acl_check(new, name, xpf_acl_write)) {
+            if (__xml_acl_check(new_xml, name, xpf_acl_write)) {
                 crm_attr_dirty(prop);
             } else {
-                xmlUnsetProp(new, prop->name); /* Remove - change not allowed */
+                xmlUnsetProp(new_xml, prop->name); /* Remove - change not allowed */
             }
 
             free(value);
@@ -4148,9 +4151,9 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
         }
     }
 
-    for (cIter = __xml_first_child(old); cIter != NULL; ) {
+    for (cIter = __xml_first_child(old_xml); cIter != NULL; ) {
         xmlNode *old_child = cIter;
-        xmlNode *new_child = find_element(new, cIter, TRUE);
+        xmlNode *new_child = find_element(new_xml, cIter, TRUE);
 
         cIter = __xml_next(cIter);
         if(new_child) {
@@ -4158,7 +4161,7 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
 
         } else {
             /* Create then free (which will check the acls if necessary) */
-            xmlNode *candidate = add_node_copy(new, old_child);
+            xmlNode *candidate = add_node_copy(new_xml, old_child);
             xmlNode *top = xmlDocGetRootElement(candidate->doc);
 
             __xml_node_clean(candidate);
@@ -4166,7 +4169,7 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
             /* Record the old position */
             free_xml_with_position(candidate, __xml_offset(old_child));
 
-            if (find_element(new, old_child, TRUE) == NULL) {
+            if (find_element(new_xml, old_child, TRUE) == NULL) {
                 xml_private_t *p = old_child->_private;
 
                 p->flags |= xpf_skip;
@@ -4174,9 +4177,9 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
         }
     }
 
-    for (cIter = __xml_first_child(new); cIter != NULL; ) {
+    for (cIter = __xml_first_child(new_xml); cIter != NULL; ) {
         xmlNode *new_child = cIter;
-        xmlNode *old_child = find_element(old, cIter, TRUE);
+        xmlNode *old_child = find_element(old_xml, cIter, TRUE);
 
         cIter = __xml_next(cIter);
         if(old_child == NULL) {
@@ -4194,7 +4197,7 @@ __xml_diff_object(xmlNode * old, xmlNode * new)
 
                 crm_info("%s.%s moved from %d to %d",
                          new_child->name, ID(new_child), p_old, p_new);
-                __xml_node_dirty(new);
+                __xml_node_dirty(new_xml);
                 p->flags |= xpf_moved;
 
                 if(p_old > p_new) {

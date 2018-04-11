@@ -1,21 +1,10 @@
 #!@BASH_PATH@
-
- # Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- #
- # This program is free software; you can redistribute it and/or
- # modify it under the terms of the GNU General Public
- # License as published by the Free Software Foundation; either
- # version 2 of the License, or (at your option) any later version.
- #
- # This software is distributed in the hope that it will be useful,
- # but WITHOUT ANY WARRANTY; without even the implied warranty of
- # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- # General Public License for more details.
- #
- # You should have received a copy of the GNU General Public
- # License along with this library; if not, write to the Free Software
- # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- #
+#
+# Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+#
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
+#
 
 USAGE_TEXT="Usage: cts-pengine [<options>]
 Options:
@@ -34,7 +23,14 @@ SBINDIR="@sbindir@"
 BUILDDIR="@abs_top_builddir@"
 CRM_SCHEMA_DIRECTORY="@CRM_SCHEMA_DIRECTORY@"
 
-test_home=$(dirname $(readlink -e $0))
+# If readlink supports -e (i.e. GNU), use it
+readlink -e / >/dev/null 2>/dev/null
+if [ $? -eq 0 ]; then
+    test_home="$(dirname $(readlink -e $0))"
+else
+    test_home="$(dirname $0)"
+fi
+
 io_dir="$test_home/pengine"
 failed="$test_home/.regression.failed.diff"
 test_binary=
@@ -86,6 +82,17 @@ function failed() {
 function show_test() {
     name=$1; shift
     printf "  Test %-25s $*\n" "$name:"
+}
+
+# Normalize policy engine output for comparison
+normalize() {
+    for NORMALIZE_FILE in "$@"; do
+        # sed -i is not portable :-(
+        sed -e 's/crm_feature_set="[^"]*"//' \
+            -e 's/batch-limit="[0-9]*"//'    \
+            "$NORMALIZE_FILE" > "${NORMALIZE_FILE}.$$"
+        mv -- "${NORMALIZE_FILE}.$$" "$NORMALIZE_FILE"
+    done
 }
 
 info "Test home is:\t$test_home"
@@ -336,7 +343,7 @@ do_test() {
         rm -f $dot_output
     fi
 
-    sed -i -e 's/crm_feature_set="[^"]*"//' -e 's/batch-limit="[0-9]*"//' $expected $output
+    normalize "$expected" "$output"
     diff $diff_opts $expected $output >/dev/null
     rc2=$?
     if [ $rc2 -ne 0 ]; then
@@ -916,6 +923,7 @@ do_test obsolete-lrm-resource "cl#5115 - Do not use obsolete lrm_resource sectio
 do_test expire-non-blocked-failure "Ignore failure-timeout only if the failed operation has on-fail=block"
 do_test asymmetrical-order-move "Respect asymmetrical ordering when trying to move resources"
 do_test start-then-stop-with-unfence "Avoid graph loop with start-then-stop constraint plus unfencing"
+do_test order-expired-failure "Order failcount cleanup after remote fencing"
 
 do_test ignore_stonith_rsc_order1 "cl#5056- Ignore order constraint between stonith and non-stonith rsc."
 do_test ignore_stonith_rsc_order2 "cl#5056- Ignore order constraint with group rsc containing mixed stonith and non-stonith."

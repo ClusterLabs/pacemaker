@@ -23,8 +23,14 @@ EXTRA_DIST              = autogen.sh m4/gnulib-cache.m4
 MAINTAINERCLEANFILES    = Makefile.in aclocal.m4 configure DRF/config-h.in \
                         DRF/stamp-h.in libtool.m4 ltdl.m4
 
-CORE	= replace include lib mcp attrd pengine cib crmd fencing lrmd tools xml
-SUBDIRS	= $(CORE) extra doc
+# Only these will get installed with a plain "make install"
+CORE_INSTALL	= replace include lib mcp \
+		  attrd pengine cib crmd fencing lrmd tools xml
+
+# Only these will get built with a plain "make" or "make clean"
+CORE		= $(CORE_INSTALL) cts
+
+SUBDIRS	= $(CORE) doc extra
 
 AM_CPPFLAGS		= -I$(top_srcdir)/include
 
@@ -32,9 +38,6 @@ doc_DATA = README.markdown COPYING
 
 licensedir              = $(docdir)/licenses/
 license_DATA            = $(wildcard licenses/*)
-
-# Test components
-SUBDIRS	+= cts
 
 # Scratch file for ad-hoc testing
 noinst_PROGRAMS = scratch
@@ -45,15 +48,19 @@ scratch.c:
 	echo 'int main(void){}' >$@
 
 core:
-	@echo "Building only core components: $(CORE)"
+	@echo "Building only core components and tests: $(CORE)"
 	list='$(CORE)'; for subdir in $$list; do echo "Building $$subdir"; $(MAKE) -C $$subdir all || exit 1; done
 
 core-install:
-	@echo "Installing only core components: $(CORE)"
-	list='$(CORE)'; for subdir in $$list; do echo "Installing $$subdir"; $(MAKE) -C $$subdir install || exit 1; done
+	@echo "Installing only core components: $(CORE_INSTALL)"
+	list='$(CORE_INSTALL)'; \
+	for subdir in $$list; do \
+	    echo "Installing $$subdir"; \
+	    $(MAKE) -C $$subdir install || exit 1; \
+	done
 
 core-clean:
-	@echo "Cleaning only core components: $(CORE)"
+	@echo "Cleaning only core components and tests: $(CORE)"
 	list='$(CORE)'; for subdir in $$list; do echo "Cleaning $$subdir"; $(MAKE) -C $$subdir clean || exit 1; done
 
 install-exec-local:
