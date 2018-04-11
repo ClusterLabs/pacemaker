@@ -70,11 +70,13 @@ enum crm_alert_keys_e {
     CRM_alert_timestamp,
     CRM_alert_attribute_name,
     CRM_alert_attribute_value,
+    CRM_alert_timestamp_epoch,
+    CRM_alert_timestamp_ns,
     CRM_alert_select_kind,
     CRM_alert_select_attribute_name
 };
 
-#define CRM_ALERT_INTERNAL_KEY_MAX 16
+#define CRM_ALERT_INTERNAL_KEY_MAX 18
 #define CRM_ALERT_NODE_SEQUENCE "CRM_alert_node_sequence"
 
 extern const char *crm_alert_keys[CRM_ALERT_INTERNAL_KEY_MAX][3];

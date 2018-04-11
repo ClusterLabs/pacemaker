@@ -141,6 +141,9 @@ exec_alert_list(lrmd_t *lrmd, GList *alert_list, enum crm_alert_flags kind,
     bool any_success = FALSE, any_failure = FALSE;
     const char *kind_s = crm_alert_flag2text(kind);
     crm_time_hr_t *now = NULL;
+    crm_time_t *dt = crm_time_new(NULL);
+    char *timestamp_epoch = calloc(1, 34);
+    char *timestamp_nanos = calloc(1, 14);
 
     params = alert_key2param(params, CRM_alert_kind, kind_s);
     params = alert_key2param(params, CRM_alert_version, VERSION);
@@ -187,6 +190,12 @@ exec_alert_list(lrmd_t *lrmd, GList *alert_list, enum crm_alert_flags kind,
                                               timestamp);
                 free(timestamp);
             }
+
+            crm_time_set_hr_dt(dt, now);
+            snprintf(timestamp_epoch, 32, "%lld", crm_time_get_seconds_since_epoch(dt));
+            copy_params = alert_key2param(copy_params, CRM_alert_timestamp_epoch, timestamp_epoch);
+            snprintf(timestamp_nanos, 12, "%06d000", now->useconds);
+            copy_params = alert_key2param(copy_params, CRM_alert_timestamp_ns, timestamp_nanos);
         }
 
         copy_params = alert_envvar2params(copy_params, entry);
@@ -204,6 +213,18 @@ exec_alert_list(lrmd_t *lrmd, GList *alert_list, enum crm_alert_flags kind,
 
     if (now) {
         free(now);
+    }
+
+    if (dt) { 
+        free(dt);
+    }
+
+    if (timestamp_epoch) {
+        free(timestamp_epoch);
+    }
+    
+    if (timestamp_nanos) {
+        free(timestamp_nanos);
     }
 
     if (any_failure) {
