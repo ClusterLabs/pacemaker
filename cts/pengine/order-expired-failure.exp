@@ -1,0 +1,343 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <rsc_op id="29" operation="stop" operation_key="overcloud-novacompute-1_stop_0" on_node="controller-1" on_node_uuid="2">
+        <primitive id="overcloud-novacompute-1" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="60000"  reconnect_interval="60"/>
+        <downed>
+          <node id="overcloud-novacompute-1"/>
+        </downed>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="230" operation="stop" operation_key="compute-unfence-trigger_stop_0" internal_operation_key="compute-unfence-trigger:1_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <crm_event id="26" operation="clear_failcount" operation_key="overcloud-novacompute-1_clear_failcount_0" on_node="controller-1" on_node_uuid="2">
+        <primitive id="overcloud-novacompute-1" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_op_no_wait="true" CRM_meta_timeout="20000"  reconnect_interval="60"/>
+      </crm_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="27" operation="stonith" operation_key="stonith-overcloud-novacompute-1-reboot" on_node="overcloud-novacompute-1" on_node_uuid="overcloud-novacompute-1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <rsc_op id="74" operation="monitor" operation_key="rabbitmq-bundle-0_monitor_30000" on_node="controller-2" on_node_uuid="3">
+        <primitive id="rabbitmq-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="rabbitmq-bundle-docker-0" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_timeout="30000" addr="controller-2"  port="3122"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <rsc_op id="14" operation="cancel" operation_key="rabbitmq-bundle-0_monitor_60000" on_node="controller-2" on_node_uuid="3">
+        <primitive id="rabbitmq-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_call_id="7" CRM_meta_container="rabbitmq-bundle-docker-0" CRM_meta_interval="60000" CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_operation="monitor" CRM_meta_timeout="30000" addr="controller-2"  port="3122"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="4">
+    <action_set>
+      <rsc_op id="79" operation="monitor" operation_key="rabbitmq-bundle-1_monitor_30000" on_node="controller-0" on_node_uuid="1">
+        <primitive id="rabbitmq-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="rabbitmq-bundle-docker-1" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="controller-0" CRM_meta_on_node_uuid="1" CRM_meta_timeout="30000" addr="controller-0"  port="3122"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="5">
+    <action_set>
+      <rsc_op id="3" operation="cancel" operation_key="rabbitmq-bundle-1_monitor_60000" on_node="controller-0" on_node_uuid="1">
+        <primitive id="rabbitmq-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_call_id="9" CRM_meta_container="rabbitmq-bundle-docker-1" CRM_meta_interval="60000" CRM_meta_on_node="controller-0" CRM_meta_on_node_uuid="1" CRM_meta_operation="monitor" CRM_meta_timeout="30000" addr="controller-0"  port="3122"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="6">
+    <action_set>
+      <rsc_op id="84" operation="monitor" operation_key="rabbitmq-bundle-2_monitor_30000" on_node="controller-1" on_node_uuid="2">
+        <primitive id="rabbitmq-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="rabbitmq-bundle-docker-2" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="30000" addr="controller-1"  port="3122"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="7">
+    <action_set>
+      <rsc_op id="31" operation="cancel" operation_key="rabbitmq-bundle-2_monitor_60000" on_node="controller-1" on_node_uuid="2">
+        <primitive id="rabbitmq-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_call_id="9" CRM_meta_container="rabbitmq-bundle-docker-2" CRM_meta_interval="60000" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_operation="monitor" CRM_meta_timeout="30000" addr="controller-1"  port="3122"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="8">
+    <action_set>
+      <rsc_op id="111" operation="monitor" operation_key="galera-bundle-0_monitor_30000" on_node="controller-2" on_node_uuid="3">
+        <primitive id="galera-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="galera-bundle-docker-0" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_timeout="30000" addr="controller-2"  port="3123"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="9">
+    <action_set>
+      <rsc_op id="16" operation="cancel" operation_key="galera-bundle-0_monitor_60000" on_node="controller-2" on_node_uuid="3">
+        <primitive id="galera-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_call_id="12" CRM_meta_container="galera-bundle-docker-0" CRM_meta_interval="60000" CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_operation="monitor" CRM_meta_timeout="30000" addr="controller-2"  port="3123"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="10">
+    <action_set>
+      <rsc_op id="116" operation="monitor" operation_key="galera-bundle-1_monitor_30000" on_node="controller-0" on_node_uuid="1">
+        <primitive id="galera-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="galera-bundle-docker-1" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="controller-0" CRM_meta_on_node_uuid="1" CRM_meta_timeout="30000" addr="controller-0"  port="3123"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="11">
+    <action_set>
+      <rsc_op id="5" operation="cancel" operation_key="galera-bundle-1_monitor_60000" on_node="controller-0" on_node_uuid="1">
+        <primitive id="galera-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_call_id="14" CRM_meta_container="galera-bundle-docker-1" CRM_meta_interval="60000" CRM_meta_on_node="controller-0" CRM_meta_on_node_uuid="1" CRM_meta_operation="monitor" CRM_meta_timeout="30000" addr="controller-0"  port="3123"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="12">
+    <action_set>
+      <rsc_op id="121" operation="monitor" operation_key="galera-bundle-2_monitor_30000" on_node="controller-1" on_node_uuid="2">
+        <primitive id="galera-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="galera-bundle-docker-2" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="30000" addr="controller-1"  port="3123"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="13">
+    <action_set>
+      <rsc_op id="33" operation="cancel" operation_key="galera-bundle-2_monitor_60000" on_node="controller-1" on_node_uuid="2">
+        <primitive id="galera-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_call_id="14" CRM_meta_container="galera-bundle-docker-2" CRM_meta_interval="60000" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_operation="monitor" CRM_meta_timeout="30000" addr="controller-1"  port="3123"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="14">
+    <action_set>
+      <rsc_op id="154" operation="monitor" operation_key="redis-bundle-0_monitor_30000" on_node="controller-2" on_node_uuid="3">
+        <primitive id="redis-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="redis-bundle-docker-0" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_timeout="30000" addr="controller-2"  port="3124"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="15">
+    <action_set>
+      <rsc_op id="18" operation="cancel" operation_key="redis-bundle-0_monitor_60000" on_node="controller-2" on_node_uuid="3">
+        <primitive id="redis-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_call_id="17" CRM_meta_container="redis-bundle-docker-0" CRM_meta_interval="60000" CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_operation="monitor" CRM_meta_timeout="30000" addr="controller-2"  port="3124"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="16">
+    <action_set>
+      <rsc_op id="159" operation="monitor" operation_key="redis-bundle-1_monitor_30000" on_node="controller-0" on_node_uuid="1">
+        <primitive id="redis-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="redis-bundle-docker-1" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="controller-0" CRM_meta_on_node_uuid="1" CRM_meta_timeout="30000" addr="controller-0"  port="3124"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="17">
+    <action_set>
+      <rsc_op id="7" operation="cancel" operation_key="redis-bundle-1_monitor_60000" on_node="controller-0" on_node_uuid="1">
+        <primitive id="redis-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_call_id="19" CRM_meta_container="redis-bundle-docker-1" CRM_meta_interval="60000" CRM_meta_on_node="controller-0" CRM_meta_on_node_uuid="1" CRM_meta_operation="monitor" CRM_meta_timeout="30000" addr="controller-0"  port="3124"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="18">
+    <action_set>
+      <rsc_op id="164" operation="monitor" operation_key="redis-bundle-2_monitor_30000" on_node="controller-1" on_node_uuid="2">
+        <primitive id="redis-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="redis-bundle-docker-2" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="30000" addr="controller-1"  port="3124"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="19">
+    <action_set>
+      <rsc_op id="35" operation="cancel" operation_key="redis-bundle-2_monitor_60000" on_node="controller-1" on_node_uuid="2">
+        <primitive id="redis-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_call_id="19" CRM_meta_container="redis-bundle-docker-2" CRM_meta_interval="60000" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_operation="monitor" CRM_meta_timeout="30000" addr="controller-1"  port="3124"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="20">
+    <action_set>
+      <rsc_op id="208" operation="monitor" operation_key="ip-10.0.0.110_monitor_10000" on_node="controller-1" on_node_uuid="2">
+        <primitive id="ip-10.0.0.110" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" cidr_netmask="32"  ip="10.0.0.110"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="207" operation="start" operation_key="ip-10.0.0.110_start_0" on_node="controller-1" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="21">
+    <action_set>
+      <rsc_op id="207" operation="start" operation_key="ip-10.0.0.110_start_0" on_node="controller-1" on_node_uuid="2">
+        <primitive id="ip-10.0.0.110" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_name="start" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" cidr_netmask="32"  ip="10.0.0.110"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="253" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="22">
+    <action_set>
+      <rsc_op id="227" operation="start" operation_key="stonith-fence_compute-fence-nova_start_0" on_node="controller-2" on_node_uuid="3">
+        <primitive id="stonith-fence_compute-fence-nova" class="stonith" type="fence_compute"/>
+        <attributes CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" auth_url="http://10.0.0.110:5000" compute-domain="localdomain"  login="admin" passwd="C9UkFUsCJrbJgAM7GXcccaeCU" project-domain="Default" record_only="1" tenant_name="admin" user-domain="Default"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="23" operation="stop" operation_key="stonith-fence_compute-fence-nova_stop_0" on_node="controller-2" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="253" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="23">
+    <action_set>
+      <rsc_op id="23" operation="stop" operation_key="stonith-fence_compute-fence-nova_stop_0" on_node="controller-2" on_node_uuid="3">
+        <primitive id="stonith-fence_compute-fence-nova" class="stonith" type="fence_compute"/>
+        <attributes CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" auth_url="http://10.0.0.110:5000" compute-domain="localdomain"  login="admin" passwd="C9UkFUsCJrbJgAM7GXcccaeCU" project-domain="Default" record_only="1" tenant_name="admin" user-domain="Default"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="24">
+    <action_set>
+      <rsc_op id="22" operation="monitor" operation_key="stonith-fence_compute-fence-nova_monitor_60000" on_node="controller-2" on_node_uuid="3">
+        <primitive id="stonith-fence_compute-fence-nova" class="stonith" type="fence_compute"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" auth_url="http://10.0.0.110:5000" compute-domain="localdomain"  login="admin" passwd="C9UkFUsCJrbJgAM7GXcccaeCU" project-domain="Default" record_only="1" tenant_name="admin" user-domain="Default"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="227" operation="start" operation_key="stonith-fence_compute-fence-nova_start_0" on_node="controller-2" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="25">
+    <action_set>
+      <pseudo_event id="230" operation="stop" operation_key="compute-unfence-trigger_stop_0" internal_operation_key="compute-unfence-trigger:1_stop_0">
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="14" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="27" operation="stonith" operation_key="stonith-overcloud-novacompute-1-reboot" on_node="overcloud-novacompute-1" on_node_uuid="overcloud-novacompute-1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="233" operation="stop" operation_key="compute-unfence-trigger-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="26" priority="1000000">
+    <action_set>
+      <pseudo_event id="234" operation="stopped" operation_key="compute-unfence-trigger-clone_stopped_0">
+        <attributes CRM_meta_clone_max="14" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="230" operation="stop" operation_key="compute-unfence-trigger_stop_0" internal_operation_key="compute-unfence-trigger:1_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="233" operation="stop" operation_key="compute-unfence-trigger-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="27">
+    <action_set>
+      <pseudo_event id="233" operation="stop" operation_key="compute-unfence-trigger-clone_stop_0">
+        <attributes CRM_meta_clone_max="14" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="27" operation="stonith" operation_key="stonith-overcloud-novacompute-1-reboot" on_node="overcloud-novacompute-1" on_node_uuid="overcloud-novacompute-1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="28">
+    <action_set>
+      <pseudo_event id="253" operation="stonith_complete" operation_key="stonith_complete">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="27" operation="stonith" operation_key="stonith-overcloud-novacompute-1-reboot" on_node="overcloud-novacompute-1" on_node_uuid="overcloud-novacompute-1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="29">
+    <action_set>
+      <pseudo_event id="53" operation="all_stopped" operation_key="all_stopped">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="23" operation="stop" operation_key="stonith-fence_compute-fence-nova_stop_0" on_node="controller-2" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="29" operation="stop" operation_key="overcloud-novacompute-1_stop_0" on_node="controller-1" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="230" operation="stop" operation_key="compute-unfence-trigger_stop_0" internal_operation_key="compute-unfence-trigger:1_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="253" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="30">
+    <action_set>
+      <crm_event id="27" operation="stonith" operation_key="stonith-overcloud-novacompute-1-reboot" on_node="overcloud-novacompute-1" on_node_uuid="overcloud-novacompute-1">
+        <attributes CRM_meta_compute_instanceha_role="true" CRM_meta_digests_all="stonith-fence_compute-fence-nova:fence_compute:ad312d85623cdb0a792e6fbd5e91a820," CRM_meta_digests_secure="stonith-fence_compute-fence-nova:fence_compute:caf046d0a0953a2e7d15bbbde1371880," CRM_meta_on_node="overcloud-novacompute-1" CRM_meta_on_node_uuid="overcloud-novacompute-1" CRM_meta_stonith_action="reboot" />
+        <downed>
+          <node id="overcloud-novacompute-1"/>
+        </downed>
+      </crm_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+</transition_graph>
