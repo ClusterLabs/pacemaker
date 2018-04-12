@@ -423,7 +423,8 @@ make %{_smp_mflags} V=1 all
   && cts/cts-cli \
   && touch .CHECKED
 } 2>&1 | sed 's/[fF]ail/faiil/g'  # prevent false positives in rpmlint
-[ -f .CHECKED ] && rm -f -- .CHECKED || false
+[ -f .CHECKED ] && rm -f -- .CHECKED
+exit $?  # TODO remove when rpm<4.14 compatibility irrelevant
 
 %install
 rm -rf %{buildroot}
