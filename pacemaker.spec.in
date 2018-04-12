@@ -187,7 +187,6 @@ Group:         System Environment/Daemons
 # https://github.com/ClusterLabs/pacemaker/archive/e91769e5a39f5cb2f7b097d3c612368f0530535e/pacemaker-e91769e.tar.gz
 Source0:       https://github.com/%{github_owner}/%{name}/archive/%{commit}/%{name}-%{shortcommit}.tar.gz
 BuildRoot:     %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
-AutoReqProv:   on
 Requires:      resource-agents
 Requires:      %{name}-libs = %{version}-%{release}
 Requires:      %{name}-cluster-libs = %{version}-%{release}
