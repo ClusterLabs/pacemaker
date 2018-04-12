@@ -425,7 +425,6 @@ make %{_smp_mflags} V=1 all
 exit $?  # TODO remove when rpm<4.14 compatibility irrelevant
 
 %install
-rm -rf %{buildroot}
 make DESTDIR=%{buildroot} docdir=%{pcmk_docdir} V=1 install
 
 mkdir -p ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig
