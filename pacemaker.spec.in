@@ -469,9 +469,6 @@ find . -name '*.gcno' -type f | while read F ; do
 done
 %endif
 
-%clean
-rm -rf %{buildroot}
-
 %post
 %if %{defined _unitdir}
 %systemd_post pacemaker.service
