@@ -441,9 +441,6 @@ find %{buildroot} -name '*.xml' -type f -print0 | xargs -0 chmod a-x
 find %{buildroot} -name '*.a' -type f -print0 | xargs -0 rm -f
 find %{buildroot} -name '*.la' -type f -print0 | xargs -0 rm -f
 
-# Do not package these either
-rm -f %{buildroot}/%{_libdir}/service_crm.so
-
 # Don't ship init scripts for systemd based platforms
 %if %{defined _unitdir}
 rm -f %{buildroot}/%{_initrddir}/pacemaker
