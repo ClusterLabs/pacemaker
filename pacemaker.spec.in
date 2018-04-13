@@ -369,14 +369,6 @@ manager.
 %prep
 %setup -q -n %{name}-%{commit}
 
-# Force the local time
-#
-# 'git' sets the file date to the date of the last commit.
-# This can result in files having been created in the future
-# when building on machines in timezones 'behind' the one the
-# commit occurred in - which seriously confuses 'make'
-find . -exec touch \{\} \;
-
 %build
 
 # Early versions of autotools (e.g. RHEL <= 5) do not support --docdir

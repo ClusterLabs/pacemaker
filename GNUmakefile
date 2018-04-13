@@ -128,10 +128,10 @@ export:
 	    rm -f $(PACKAGE).tar.*;						\
 	    if [ $(TAG) = dirty ]; then 					\
 		git commit -m "DO-NOT-PUSH" -a;					\
-		git archive --prefix=$(distdir)/ HEAD | gzip > $(TARFILE);	\
+		git archive --prefix=$(distdir)/ -o "$(TARFILE)" HEAD^{tree};	\
 		git reset --mixed HEAD^; 					\
 	    else								\
-		git archive --prefix=$(distdir)/ $(TAG) | gzip > $(TARFILE);	\
+		git archive --prefix=$(distdir)/ -o "$(TARFILE)" $(TAG)^{tree};	\
 	    fi;									\
 	    echo `date`: Rebuilt $(TARFILE);					\
 	else									\
