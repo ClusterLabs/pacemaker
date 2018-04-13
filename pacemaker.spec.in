@@ -548,6 +548,21 @@ fi
 %systemd_postun_with_restart crm_mon.service
 %endif
 
+%post cts
+%if %{defined _unitdir}
+%systemd_post pacemaker-cts-dummyd@.service
+%endif
+
+%preun cts
+%if %{defined _unitdir}
+%systemd_preun pacemaker-cts-dummyd@.service
+%endif
+
+%postun cts
+%if %{defined _unitdir}
+%systemd_postun_with_restart pacemaker-cts-dummyd@.service
+%endif
+
 %pre libs
 getent group %{gname} >/dev/null || groupadd -r %{gname} -g 189
 getent passwd %{uname} >/dev/null || useradd -r -g %{gname} -u 189 -s /sbin/nologin -c "cluster user" %{uname}
@@ -728,6 +743,11 @@ exit 0
 %files cts
 %{py_site}/cts
 %{_datadir}/pacemaker/tests
+
+%if %{defined _unitdir}
+%{_unitdir}/pacemaker-cts-dummyd@.service
+%endif
+
 %license licenses/GPLv2
 %doc COPYING
 %doc ChangeLog

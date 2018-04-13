@@ -1711,6 +1711,7 @@ AC_CONFIG_FILES([cts/cts-stonithd], [chmod +x cts/cts-stonithd])
 AC_CONFIG_FILES([cts/lxc_autogen.sh], [chmod +x cts/lxc_autogen.sh])
 AC_CONFIG_FILES([cts/benchmark/clubench], [chmod +x cts/benchmark/clubench])
 AC_CONFIG_FILES([cts/fence_dummy], [chmod +x cts/fence_dummy])
+AC_CONFIG_FILES([cts/pacemaker-cts-dummyd], [chmod +x cts/pacemaker-cts-dummyd])
 AC_CONFIG_FILES([fencing/fence_legacy], [chmod +x fencing/fence_legacy])
 AC_CONFIG_FILES([tools/crm_failcount], [chmod +x tools/crm_failcount])
 AC_CONFIG_FILES([tools/crm_master], [chmod +x tools/crm_master])
@@ -1725,6 +1726,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 cts/CTS.py                                          \
                 cts/CTSvars.py                                      \
                 cts/benchmark/Makefile                              \
+                cts/pacemaker-cts-dummyd@.service                   \
                 cib/Makefile                                        \
                 attrd/Makefile                                      \
                 crmd/Makefile                                       \
