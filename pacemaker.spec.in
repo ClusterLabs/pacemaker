@@ -62,8 +62,8 @@
 ##   propagated by systemd project
 ## - when not good enough, there's always a possibility to check
 ##   particular distro-specific macros (incl. version comparison)
-%define systemd_native (%{?_unitdir:1}%{?!_unitdir:0}%{nil \
-  } || %{?__transaction_systemd_inhibit:1}%{?!__transaction_systemd_inhibit:0}%{nil \
+%define systemd_native (%{?_unitdir:1}%{!?_unitdir:0}%{nil \
+  } || %{?__transaction_systemd_inhibit:1}%{!?__transaction_systemd_inhibit:0}%{nil \
   } || %(test -f /usr/lib/os-release; test $? -ne 0; echo $?))
 
 
@@ -186,16 +186,11 @@ Group:         System Environment/Daemons
 # Hint: use "spectool -s 0 pacemaker.spec" (rpmdevtools) to check the final URL:
 # https://github.com/ClusterLabs/pacemaker/archive/e91769e5a39f5cb2f7b097d3c612368f0530535e/pacemaker-e91769e.tar.gz
 Source0:       https://github.com/%{github_owner}/%{name}/archive/%{commit}/%{name}-%{shortcommit}.tar.gz
-BuildRoot:     %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
-AutoReqProv:   on
 Requires:      resource-agents
 Requires:      %{name}-libs = %{version}-%{release}
 Requires:      %{name}-cluster-libs = %{version}-%{release}
 Requires:      %{name}-cli = %{version}-%{release}
-
-%if %{defined systemd_requires}
-%systemd_requires
-%endif
+%{?systemd_requires}
 
 # Pacemaker requires a minimum Python functionality
 Requires:      %{python_pkg} >= %{python_min}
@@ -266,26 +261,26 @@ The %{name}-cli package contains command line tools that can be used
 to query and control the cluster from machines that may, or may not,
 be part of the cluster.
 
-%package -n %{name}-libs
+%package libs
 License:       GPLv2+ and LGPLv2+
 Summary:       Core Pacemaker libraries
 Group:         System Environment/Daemons
 Requires(pre): shadow-utils
 
-%description -n %{name}-libs
+%description libs
 Pacemaker is an advanced, scalable High-Availability cluster resource
 manager.
 
 The %{name}-libs package contains shared libraries needed for cluster
 nodes and those just running the CLI tools.
 
-%package -n %{name}-cluster-libs
+%package cluster-libs
 License:       GPLv2+ and LGPLv2+
 Summary:       Cluster Libraries used by Pacemaker
 Group:         System Environment/Daemons
 Requires:      %{name}-libs = %{version}-%{release}
 
-%description -n %{name}-cluster-libs
+%description cluster-libs
 Pacemaker is an advanced, scalable High-Availability cluster resource
 manager.
 
@@ -304,9 +299,8 @@ Group:         System Environment/Daemons
 Requires:      %{name}-libs = %{version}-%{release}
 Requires:      %{name}-cli = %{version}-%{release}
 Requires:      resource-agents
-%if %{defined systemd_requires}
-%systemd_requires
-%endif
+# -remote can be fully independent of systemd
+%{?systemd_ordering}%{!?systemd_ordering:%{?systemd_requires}}
 
 %description remote
 Pacemaker is an advanced, scalable High-Availability cluster resource
@@ -316,7 +310,7 @@ The %{name}-remote package contains the Pacemaker Remote daemon
 which is capable of extending pacemaker functionality to remote
 nodes not running the full corosync/cluster stack.
 
-%package -n %{name}-libs-devel
+%package libs-devel
 License:       GPLv2+ and LGPLv2+
 Summary:       Pacemaker development package
 Group:         Development/Libraries
@@ -329,7 +323,7 @@ Requires:      bzip2-devel%{?_isa} glib2-devel%{?_isa}
 Requires:      libqb-devel%{?_isa}
 Requires:      corosynclib-devel%{?_isa} >= 2.0.0
 
-%description -n %{name}-libs-devel
+%description libs-devel
 Pacemaker is an advanced, scalable High-Availability cluster resource
 manager.
 
@@ -342,6 +336,7 @@ Summary:       Test framework for cluster-related technologies like Pacemaker
 Group:         System Environment/Daemons
 Requires:      %{python_pkg} >= %{python_min}
 Requires:      %{name}-libs = %{version}-%{release}
+BuildArch:     noarch
 
 # systemd python bindings are separate package in some distros
 %if %{defined systemd_requires}
@@ -363,6 +358,7 @@ Test framework for cluster-related technologies like Pacemaker
 License:       CC-BY-SA-4.0
 Summary:       Documentation for Pacemaker
 Group:         Documentation
+BuildArch:     noarch
 
 %description   doc
 Documentation for Pacemaker.
@@ -373,20 +369,12 @@ manager.
 %prep
 %setup -q -n %{name}-%{commit}
 
-# Force the local time
-#
-# 'git' sets the file date to the date of the last commit.
-# This can result in files having been created in the future
-# when building on machines in timezones 'behind' the one the
-# commit occurred in - which seriously confuses 'make'
-find . -exec touch \{\} \;
-
 %build
 
 # Early versions of autotools (e.g. RHEL <= 5) do not support --docdir
 export docdir=%{pcmk_docdir}
 
-export systemdunitdir=%{?_unitdir}%{?!_unitdir:no}
+export systemdunitdir=%{?_unitdir}%{!?_unitdir:no}
 
 %if %{with hardening}
 # prefer distro-provided hardening flags in case they are defined
@@ -425,10 +413,10 @@ make %{_smp_mflags} V=1 all
   && cts/cts-cli \
   && touch .CHECKED
 } 2>&1 | sed 's/[fF]ail/faiil/g'  # prevent false positives in rpmlint
-[ -f .CHECKED ] && rm -f -- .CHECKED || false
+[ -f .CHECKED ] && rm -f -- .CHECKED
+exit $?  # TODO remove when rpm<4.14 compatibility irrelevant
 
 %install
-rm -rf %{buildroot}
 make DESTDIR=%{buildroot} docdir=%{pcmk_docdir} V=1 install
 
 mkdir -p ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig
@@ -471,9 +459,6 @@ find . -name '*.gcno' -type f | while read F ; do
         cp $F ${GCOV_BASE}/$D
 done
 %endif
-
-%clean
-rm -rf %{buildroot}
 
 %post
 %if %{defined _unitdir}
@@ -566,24 +551,24 @@ fi
 %systemd_postun_with_restart crm_mon.service
 %endif
 
-%pre -n %{name}-libs
-
+%pre libs
 getent group %{gname} >/dev/null || groupadd -r %{gname} -g 189
 getent passwd %{uname} >/dev/null || useradd -r -g %{gname} -u 189 -s /sbin/nologin -c "cluster user" %{uname}
 exit 0
 
-%post -n %{name}-libs -p /sbin/ldconfig
+%if %{defined ldconfig_scriptlets}
+%ldconfig_scriptlets libs
+%ldconfig_scriptlets cluster-libs
+%else
+%post libs -p /sbin/ldconfig
+%postun libs -p /sbin/ldconfig
 
-%postun -n %{name}-libs -p /sbin/ldconfig
-
-%post -n %{name}-cluster-libs -p /sbin/ldconfig
-
-%postun -n %{name}-cluster-libs -p /sbin/ldconfig
+%post cluster-libs -p /sbin/ldconfig
+%postun cluster-libs -p /sbin/ldconfig
+%endif
 
 %files
 ###########################################################
-%defattr(-,root,root)
-
 %config(noreplace) %{_sysconfdir}/sysconfig/pacemaker
 %{_sbindir}/pacemakerd
 
@@ -634,8 +619,6 @@ exit 0
 %endif
 
 %files cli
-%defattr(-,root,root)
-
 %dir %attr (750, root, %{gname}) %{_sysconfdir}/pacemaker
 %config(noreplace) %{_sysconfdir}/logrotate.d/pacemaker
 %config(noreplace) %{_sysconfdir}/sysconfig/crm_mon
@@ -703,9 +686,7 @@ exit 0
 %dir %attr (770, %{uname}, %{gname}) %{_var}/log/pacemaker
 %dir %attr (770, %{uname}, %{gname}) %{_var}/log/pacemaker/bundles
 
-%files -n %{name}-libs
-%defattr(-,root,root)
-
+%files libs
 %{_libdir}/libcib.so.*
 %{_libdir}/liblrmd.so.*
 %{_libdir}/libcrmservice.so.*
@@ -719,16 +700,13 @@ exit 0
 %doc COPYING
 %doc ChangeLog
 
-%files -n %{name}-cluster-libs
-%defattr(-,root,root)
+%files cluster-libs
 %{_libdir}/libcrmcluster.so.*
 %license licenses/LGPLv2.1
 %doc COPYING
 %doc ChangeLog
 
 %files remote
-%defattr(-,root,root)
-
 %config(noreplace) %{_sysconfdir}/sysconfig/pacemaker
 %if %{defined _unitdir}
 # state directory is shared between the subpackets
@@ -747,20 +725,17 @@ exit 0
 %doc ChangeLog
 
 %files doc
-%defattr(-,root,root)
 %doc %{pcmk_docdir}
 %license licenses/CC-BY-SA-4.0
 
 %files cts
-%defattr(-,root,root)
 %{py_site}/cts
 %{_datadir}/pacemaker/tests
 %license licenses/GPLv2
 %doc COPYING
 %doc ChangeLog
 
-%files -n %{name}-libs-devel
-%defattr(-,root,root)
+%files libs-devel
 %{_includedir}/pacemaker
 %{_libdir}/*.so
 %if %{with coverage}
