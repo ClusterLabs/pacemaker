@@ -59,6 +59,7 @@ enum xml_private_flags {
 
      xpf_acl_create  = 0x1000,
      xpf_acl_denied  = 0x2000,
+     xpf_lazy        = 0x4000,
 };
 
 typedef struct xml_private_s {
@@ -101,10 +102,22 @@ static inline bool TRACKING_CHANGES(xmlNode *xml)
 {
     if(xml == NULL || xml->doc == NULL || xml->doc->_private == NULL) {
         return FALSE;
-    } else if(is_set(((xml_private_t *)xml->doc->_private)->flags, xpf_tracking)) {
-        return TRUE;
+    } else if(is_not_set(((xml_private_t *)xml->doc->_private)->flags, xpf_tracking)) {
+        return FALSE;
     }
-    return FALSE;
+    return TRUE;
+}
+
+static inline bool TRACKING_CHANGES_LAZY(xmlNode *xml)
+{
+    if(xml == NULL || xml->doc == NULL || xml->doc->_private == NULL) {
+        return FALSE;
+    } else if(is_not_set(((xml_private_t *)xml->doc->_private)->flags, xpf_tracking)) {
+        return FALSE;
+    } else if(is_not_set(((xml_private_t *)xml->doc->_private)->flags, xpf_lazy)) {
+        return FALSE;
+    }
+    return TRUE;
 }
 
 #define buffer_print(buffer, max, offset, fmt, args...) do {            \
@@ -4111,7 +4124,7 @@ __xml_diff_object(xmlNode *old_xml, xmlNode *new_xml)
                 crm_xml_add(new_xml, name, vcopy);
                 free(vcopy);
 
-            } else if(p_old != p_new) {
+            } else if(p_old != p_new && TRACKING_CHANGES_LAZY(new_xml) == FALSE) {
                 crm_info("Moved %s@%s (%d -> %d)",
                          old_xml->name, name, p_old, p_new);
                 __xml_node_dirty(new_xml);
@@ -4209,6 +4222,13 @@ __xml_diff_object(xmlNode *old_xml, xmlNode *new_xml)
             }
         }
     }
+}
+
+void
+xml_calculate_significant_changes(xmlNode *old_xml, xmlNode *new_xml)
+{
+    set_doc_flag(new_xml, xpf_lazy);
+    xml_calculate_changes(old_xml, new_xml);
 }
 
 void
