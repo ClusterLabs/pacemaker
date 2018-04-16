@@ -72,6 +72,8 @@ Doxyfile
 /cts/cts-stonithd
 /cts/fence_dummy
 /cts/lxc_autogen.sh
+/cts/pacemaker-cts-dummyd
+/cts/pacemaker-cts-dummyd@.service
 extra/logrotate/pacemaker
 /fencing/fence_legacy
 include/config.h

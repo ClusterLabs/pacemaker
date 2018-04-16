@@ -1,20 +1,10 @@
 #
-# Copyright (C) 2001 Michael Moerz
+# Copyright 2001-2018 Michael Moerz
 #
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License, or (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
+
 MAINTAINERCLEANFILES    = Makefile.in
 
 CLEANFILES      = CTSlab.py LSBDummy OCFIPraTest.py fence_dummy
@@ -54,6 +44,13 @@ cts_SCRIPTS	=	cts		\
 			lxc_autogen.sh	\
 			LSBDummy		\
 			fence_dummy
+
+if BUILD_SYSTEMD
+daemondir	=	$(CRM_DAEMON_DIR)
+daemon_SCRIPTS	=	pacemaker-cts-dummyd
+
+systemdunit_DATA	= pacemaker-cts-dummyd@.service
+endif
 
 clidir		= $(testdir)/cli
 cli_DATA	= cli/regression.dates.exp cli/regression.tools.exp \

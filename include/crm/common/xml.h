@@ -363,6 +363,7 @@ bool xml_tracking_changes(xmlNode * xml);
 bool xml_document_dirty(xmlNode *xml);
 void xml_track_changes(xmlNode * xml, const char *user, xmlNode *acl_source, bool enforce_acls);
 void xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml);
+void xml_calculate_significant_changes(xmlNode *old_xml, xmlNode *new_xml);
 void xml_accept_changes(xmlNode * xml);
 void xml_log_changes(uint8_t level, const char *function, xmlNode *xml);
 void xml_log_patchset(uint8_t level, const char *function, xmlNode *xml);
