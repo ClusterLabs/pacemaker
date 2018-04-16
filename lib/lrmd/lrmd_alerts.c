@@ -194,7 +194,8 @@ exec_alert_list(lrmd_t *lrmd, GList *alert_list, enum crm_alert_flags kind,
                 free(timestamp);
             }
 
-            snprintf(timestamp_epoch, sizeof(timestamp_epoch), "%ld", tv_now.tv_sec);
+            snprintf(timestamp_epoch, sizeof(timestamp_epoch), "%lld",
+                     (long long) tv_now.tv_sec);
             copy_params = alert_key2param(copy_params, CRM_alert_timestamp_epoch, timestamp_epoch);
             snprintf(timestamp_usec, sizeof(timestamp_usec), "%06d", now->useconds);
             copy_params = alert_key2param(copy_params, CRM_alert_timestamp_usec, timestamp_usec);
