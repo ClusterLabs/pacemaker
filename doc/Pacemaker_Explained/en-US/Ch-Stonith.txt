@@ -612,7 +612,9 @@ Some possible uses of topologies include:
  indexterm:[Fencing,fencing-level,target]
 
 |target-pattern
-|A regular expression matching the names of nodes to which this level applies
+|An extended regular expression (as defined in
+ http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap09.html#tag_09_04[POSIX])
+ matching the names of nodes to which this level applies
  indexterm:[target-pattern,fencing-level]
  indexterm:[Fencing,fencing-level,target-pattern]
 
