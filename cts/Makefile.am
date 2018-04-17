@@ -18,7 +18,7 @@ EXTRA_DIST      = $(cts_SCRIPTS) $(cts_DATA)
 testdir		= $(datadir)/$(PACKAGE)/tests
 test_SCRIPTS	= cts-coverage cts-regression cts-cli cts-lrmd cts-pengine \
 		  cts-stonithd
-test_DATA	= valgrind-pcmk.suppressions
+test_DATA	= README.md valgrind-pcmk.suppressions
 
 ctslibdir	= $(pythondir)/cts
 ctslib_PYTHON	=	__init__.py		\
@@ -38,7 +38,7 @@ ctslib_PYTHON	=	__init__.py		\
 			watcher.py
 
 ctsdir		= 	$(testdir)/cts
-cts_DATA	=	README.md cts.supp
+cts_DATA	=	cts.supp
 cts_SCRIPTS	=	cts		\
 			CTSlab.py		\
 			lxc_autogen.sh	\
