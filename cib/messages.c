@@ -56,26 +56,23 @@ cib_process_shutdown_req(const char *op, int options, const char *section, xmlNo
                          xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
                          xmlNode ** answer)
 {
-    int result = pcmk_ok;
     const char *host = crm_element_value(req, F_ORIG);
 
     *answer = NULL;
 
     if (crm_element_value(req, F_CIB_ISREPLY) == NULL) {
-        crm_info("Shutdown REQ from %s", host);
+        crm_info("Peer %s is requesting to shut down", host);
         return pcmk_ok;
-
-    } else if (cib_shutdown_flag) {
-        crm_info("Shutdown ACK from %s", host);
-        terminate_cib(__FUNCTION__, 0);
-        return pcmk_ok;
-
-    } else {
-        crm_err("Shutdown ACK from %s - not shutting down", host);
-        result = -EINVAL;
     }
 
-    return result;
+    if (cib_shutdown_flag == FALSE) {
+        crm_err("Peer %s mistakenly thinks we wanted to shut down", host);
+        return -EINVAL;
+    }
+
+    crm_info("Peer %s has acknowledged our shutdown request", host);
+    terminate_cib(__FUNCTION__, 0);
+    return pcmk_ok;
 }
 
 int
