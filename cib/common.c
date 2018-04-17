@@ -1,19 +1,8 @@
 /*
- * Copyright (C) 2008 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2008-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -156,34 +145,8 @@ cib_cleanup_none(int options, xmlNode ** data, xmlNode ** output)
     return pcmk_ok;
 }
 
-static int
-cib_cleanup_sync(int options, xmlNode ** data, xmlNode ** output)
-{
-    /* data is non-NULL but doesn't need to be free'd */
-    CRM_LOG_ASSERT(*data == NULL);
-    CRM_LOG_ASSERT(*output == NULL);
-    return pcmk_ok;
-}
-
-/*
-  typedef struct cib_operation_s
-  {
-  const char* 	operation;
-  gboolean	modifies_cib;
-  gboolean	needs_privileges;
-  gboolean	needs_quorum;
-  int (*prepare)(xmlNode *, xmlNode**, const char **);
-  int (*cleanup)(xmlNode**, xmlNode**);
-  int (*fn)(
-  const char *, int, const char *,
-  xmlNode*, xmlNode*, xmlNode**, xmlNode**);
-  } cib_operation_t;
-*/
-/* technically bump does modify the cib...
- * but we want to split the "bump" from the "sync"
- */
-/* *INDENT-OFF* */
 static cib_operation_t cib_server_ops[] = {
+    // Booleans are modifies_cib, needs_privileges, needs_quorum
     {NULL,             FALSE, FALSE, FALSE, cib_prepare_none, cib_cleanup_none,   cib_process_default},
     {CIB_OP_QUERY,     FALSE, FALSE, FALSE, cib_prepare_none, cib_cleanup_query,  cib_process_query},
     {CIB_OP_MODIFY,    TRUE,  TRUE,  TRUE,  cib_prepare_data, cib_cleanup_data,   cib_process_modify},
@@ -191,7 +154,7 @@ static cib_operation_t cib_server_ops[] = {
     {CIB_OP_REPLACE,   TRUE,  TRUE,  TRUE,  cib_prepare_data, cib_cleanup_data,   cib_process_replace_svr},
     {CIB_OP_CREATE,    TRUE,  TRUE,  TRUE,  cib_prepare_data, cib_cleanup_data,   cib_process_create},
     {CIB_OP_DELETE,    TRUE,  TRUE,  TRUE,  cib_prepare_data, cib_cleanup_data,   cib_process_delete},
-    {CIB_OP_SYNC,      FALSE, TRUE,  FALSE, cib_prepare_sync, cib_cleanup_sync,   cib_process_sync},
+    {CIB_OP_SYNC,      FALSE, TRUE,  FALSE, cib_prepare_sync, cib_cleanup_none,   cib_process_sync},
     {CIB_OP_BUMP,      TRUE,  TRUE,  TRUE,  cib_prepare_none, cib_cleanup_output, cib_process_bump},
     {CIB_OP_ERASE,     TRUE,  TRUE,  TRUE,  cib_prepare_none, cib_cleanup_output, cib_process_erase},
     {CRM_OP_NOOP,      FALSE, FALSE, FALSE, cib_prepare_none, cib_cleanup_none,   cib_process_default},
@@ -199,13 +162,12 @@ static cib_operation_t cib_server_ops[] = {
     {CIB_OP_UPGRADE,   TRUE,  TRUE,  TRUE,  cib_prepare_none, cib_cleanup_output, cib_process_upgrade_server},
     {CIB_OP_SLAVE,     FALSE, TRUE,  FALSE, cib_prepare_none, cib_cleanup_none,   cib_process_readwrite},
     {CIB_OP_SLAVEALL,  FALSE, TRUE,  FALSE, cib_prepare_none, cib_cleanup_none,   cib_process_readwrite},
-    {CIB_OP_SYNC_ONE,  FALSE, TRUE,  FALSE, cib_prepare_sync, cib_cleanup_sync,   cib_process_sync_one},
+    {CIB_OP_SYNC_ONE,  FALSE, TRUE,  FALSE, cib_prepare_sync, cib_cleanup_none,   cib_process_sync_one},
     {CIB_OP_MASTER,    TRUE,  TRUE,  FALSE, cib_prepare_data, cib_cleanup_data,   cib_process_readwrite},
     {CIB_OP_ISMASTER,  FALSE, TRUE,  FALSE, cib_prepare_none, cib_cleanup_none,   cib_process_readwrite},
-    {"cib_shutdown_req",FALSE, TRUE, FALSE, cib_prepare_sync, cib_cleanup_sync,   cib_process_shutdown_req},
+    {"cib_shutdown_req",FALSE, TRUE, FALSE, cib_prepare_sync, cib_cleanup_none,   cib_process_shutdown_req},
     {CRM_OP_PING,      FALSE, FALSE, FALSE, cib_prepare_none, cib_cleanup_output, cib_process_ping},
 };
-/* *INDENT-ON* */
 
 int
 cib_get_operation_id(const char *op, int *operation)
