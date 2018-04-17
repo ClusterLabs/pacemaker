@@ -169,7 +169,6 @@ exec_alert_list(lrmd_t *lrmd, GList *alert_list, enum crm_alert_flags kind,
         }
 
         if (now == NULL) {
-            now = crm_time_hr_new(NULL);
             if (gettimeofday(&tv_now, NULL) == 0) {
                 now = crm_time_timeval_hr_convert(NULL, &tv_now);
             }
