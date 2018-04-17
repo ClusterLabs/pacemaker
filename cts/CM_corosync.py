@@ -1,36 +1,16 @@
-'''CTS: Cluster Testing System: Corosync-dependent modules...
+''' Corosync-specific class for Pacemaker's Cluster Test Suite (CTS)
 '''
 
-__copyright__ = '''
-Copyright (C) 2007 Andrew Beekhof <andrew@suse.de>
+# Pacemaker targets compatibility with Python 2.7 and 3.2+
+from __future__ import print_function, unicode_literals, absolute_import, division
 
-'''
-
-#
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA.
+__copyright__ = "Copyright 2007-2018 Andrew Beekhof <andrew@beekhof.net>"
+__license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from cts.CTSvars import *
 from cts.CM_common  import crm_common
 from cts.CTS     import Process
 from cts.patterns    import PatternSelector
-
-#######################################################################
-#
-#  Corosync-dependent modules
-#
-#######################################################################
 
 class crm_corosync(crm_common):
     '''
@@ -42,12 +22,6 @@ class crm_corosync(crm_common):
 
         self.fullcomplist = {}
         self.templates = PatternSelector(self.name)
-
-        if self.Env["have_systemd"]:
-            self.update({
-                # When systemd is in use, we can look for this instead
-                "Pat:We_stopped"   : "%s.*Corosync Cluster Engine exiting normally",
-            })
 
     def Components(self):
         complist = []
