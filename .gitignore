@@ -152,12 +152,16 @@ lib/gnu/libgnu.a
 lib/gnu/stdalign.h
 *.coverity
 
-# Built only in 2.0 branch (makes switching branches easier)
+# Built or present only in 2.0 branch (makes switching branches easier)
+/cts/cts-cli
 /cts/cts-coverage
 /cts/cts-lrmd
 /cts/cts-pengine
+/cts/cts-regression
 /cts/cts-stonithd
 /cts/fence_dummy
+/cts/pacemaker-cts-dummyd
+/cts/pacemaker-cts-dummyd@.service
 /cts/pengine/
 /doc/Pacemaker_Administration.build
 /doc/Pacemaker_Administration/

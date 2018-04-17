@@ -238,6 +238,7 @@ free_remote_op(gpointer data)
 
     free(op->id);
     free(op->action);
+    free(op->delegate);
     free(op->target);
     free(op->client_id);
     free(op->client_name);
@@ -255,6 +256,7 @@ free_remote_op(gpointer data)
         op->devices_list = NULL;
     }
     g_list_free_full(op->automatic_list, free);
+    g_list_free(op->duplicates);
     free(op);
 }
 

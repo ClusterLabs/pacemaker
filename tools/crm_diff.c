@@ -190,7 +190,11 @@ generate_patch(xmlNode *object_1, xmlNode *object_2, const char *xml_file_2,
     }
 
     xml_track_changes(object_2, NULL, object_2, FALSE);
-    xml_calculate_changes(object_1, object_2);
+    if(as_cib) {
+        xml_calculate_significant_changes(object_1, object_2);
+    } else {
+        xml_calculate_changes(object_1, object_2);
+    }
     crm_log_xml_debug(object_2, (xml_file_2? xml_file_2: "target"));
 
     output = xml_create_patchset(0, object_1, object_2, NULL, FALSE);
