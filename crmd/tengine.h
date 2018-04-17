@@ -1,20 +1,10 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+
 #ifndef TENGINE__H
 #  define TENGINE__H
 
@@ -33,7 +23,7 @@ void purge_stonith_cleanup(void);
 void execute_stonith_cleanup(void);
 
 /* tengine */
-extern crm_action_t *match_down_event(const char *target, bool quiet);
+extern crm_action_t *match_down_event(const char *target);
 extern crm_action_t *get_cancel_action(const char *id, const char *node);
 
 extern gboolean cib_action_update(crm_action_t * action, int status, int op_rc);

@@ -1,19 +1,8 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -392,12 +381,11 @@ get_cancel_action(const char *id, const char *node)
  * \brief Find a transition event that would have made a specified node down
  *
  * \param[in] target  UUID of node to match
- * \param[in] quiet   If FALSE, log a warning if no match found
  *
  * \return Matching event if found, NULL otherwise
  */
 crm_action_t *
-match_down_event(const char *target, bool quiet)
+match_down_event(const char *target)
 {
     crm_action_t *match = NULL;
     xmlXPathObjectPtr xpath_ret = NULL;
@@ -430,15 +418,11 @@ match_down_event(const char *target, bool quiet)
     free(xpath);
 
     if (match != NULL) {
-        crm_debug("Shutdown action found for node %s: action %d (%s)",
-                  target, match->id,
-                  crm_element_value(match->xml, XML_LRM_ATTR_TASK_KEY));
-
+        crm_debug("Shutdown action %d (%s) found for node %s", match->id,
+                  crm_element_value(match->xml, XML_LRM_ATTR_TASK_KEY), target);
     } else {
-        do_crm_log((quiet? LOG_DEBUG : LOG_WARNING),
-                   "No reason to expect node %s to be down", target);
+        crm_debug("No reason to expect node %s to be down", target);
     }
-
     return match;
 }
 

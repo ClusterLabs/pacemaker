@@ -1,19 +1,8 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -190,7 +179,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
         xmlNode *update = NULL;
         int flags = node_update_peer;
         gboolean alive = is_remote? appeared : crm_is_peer_active(node);
-        crm_action_t *down = match_down_event(node->uuid, appeared);
+        crm_action_t *down = match_down_event(node->uuid);
 
         crm_trace("Alive=%d, appeared=%d, down=%d",
                   alive, appeared, (down? down->id : -1));
@@ -230,13 +219,12 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
             }
 
         } else if (appeared == FALSE) {
-            crm_notice("Stonith/shutdown of %s not matched", node->uname);
-
+            crm_warn("Stonith/shutdown of node %s was not expected",
+                     node->uname);
             if (!is_remote) {
                 crm_update_peer_join(__FUNCTION__, node, crm_join_none);
                 check_join_state(fsa_state, __FUNCTION__);
             }
-
             abort_transition(INFINITY, tg_restart, "Node failure", NULL);
             fail_incompletable_actions(transition_graph, node->uuid);
 
