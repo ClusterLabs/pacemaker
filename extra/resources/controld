@@ -44,7 +44,7 @@ meta_data() {
     cat <<END
 <?xml version="1.0"?>
 <!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
-<resource-agent name="controld" version="1.0">
+<resource-agent name="controld" version="1.1">
 <version>1.0</version>
 
 <longdesc lang="en">
@@ -62,14 +62,6 @@ Any additional options to start the dlm_controld service with
 </longdesc>
 <shortdesc lang="en">DLM Options</shortdesc>
 <content type="string" default="-s 0" />
-</parameter>
-
-<parameter name="configdir" unique="1">
-<longdesc lang="en">
-This parameter is deprecated and ignored
-</longdesc>
-<shortdesc lang="en">Deprecated and ignored</shortdesc>
-<content type="string" default="deprecated" />
 </parameter>
 
 <parameter name="daemon" unique="1">
