@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004-2017 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -513,9 +513,15 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char * c
         CRM_LOG_ASSERT(n_task != NULL);
         op_id = generate_notify_key(op->rsc_id, n_type, n_task);
 
-        /* these are not yet allowed to fail */
-        op->op_status = PCMK_LRM_OP_DONE;
-        op->rc = 0;
+        if (op->op_status != PCMK_LRM_OP_PENDING) {
+            /* Ignore notify errors.
+             *
+             * @TODO We really should keep the actual result here, and ignore it
+             * when processing the CIB diff.
+             */
+            op->op_status = PCMK_LRM_OP_DONE;
+            op->rc = 0;
+        }
 
     } else if (did_rsc_op_fail(op, target_rc)) {
         op_id = generate_op_key(op->rsc_id, "last_failure", 0);
