@@ -255,8 +255,9 @@ class Environment(object):
         self["cts-master"] = master
 
         if not "have_systemd" in self.data:
-            self["have_systemd"] = not self.rsh(self.target, "systemctl list-units")
-        
+            self["have_systemd"] = not self.rsh(self.target,
+                                                "systemctl list-units",
+                                                silent=True)
         self.detect_syslog()
         self.detect_at_boot()
         self.detect_ip_offset()
