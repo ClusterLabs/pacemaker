@@ -143,31 +143,31 @@ AC_ARG_WITH(pkgname,
 AC_SUBST(PKGNAME)
 
 AC_ARG_ENABLE([ansi],
-    [  --enable-ansi  Force GCC to compile to ANSI standard for older compilers. [default=no] ])
+    [  --enable-ansi  Force GCC to compile to ANSI standard for older compilers. @<:@no@:>@])
 
 AC_ARG_ENABLE([fatal-warnings],
-    [  --enable-fatal-warnings  Enable pedantic and fatal warnings for gcc [default=yes] ])
+    [  --enable-fatal-warnings  Enable pedantic and fatal warnings for gcc @<:@yes@:>@])
 
 AC_ARG_ENABLE([quiet],
-    [  --enable-quiet  Suppress make output unless there is an error [default=no] ])
+    [  --enable-quiet  Suppress make output unless there is an error @<:@no@:>@])
 
 AC_ARG_ENABLE([no-stack],
-    [  --enable-no-stack  Build only the Policy Engine and its requirements [default=no] ])
+    [  --enable-no-stack  Build only the Policy Engine and its requirements @<:@no@:>@])
 
 AC_ARG_ENABLE([upstart],
-    [  --enable-upstart  Enable support for managing resources via Upstart [default=try] ],
+    [  --enable-upstart  Enable support for managing resources via Upstart @<:@try@:>@ ],
     [],
     [enable_upstart=try],
 )
 
 AC_ARG_ENABLE([systemd],
-    [  --enable-systemd  Enable support for managing resources via systemd [default=try]],
+    [  --enable-systemd  Enable support for managing resources via systemd @<:@try@:>@],
     [],
     [enable_systemd=try],
 )
 
 AC_ARG_ENABLE(hardening,
-    [  --with-hardening  Harden the resulting executables/libraries (best effort by default) ],
+    [  --with-hardening  Harden the resulting executables/libraries @<:@try@:>@],
     [ HARDENING="${enableval}" ],
     [ HARDENING=try ],
 )
@@ -185,12 +185,12 @@ AC_ARG_WITH(nagios,
 )
 
 AC_ARG_WITH(nagios-plugin-dir,
-    [  --with-nagios-plugin-dir=DIR  Directory for nagios plugins [${NAGIOS_PLUGIN_DIR}] ],
+    [  --with-nagios-plugin-dir=DIR  Directory for nagios plugins @<:@LIBEXECDIR/nagios/plugins@:>@],
     [ NAGIOS_PLUGIN_DIR="$withval" ]
 )
 
 AC_ARG_WITH(nagios-metadata-dir,
-    [  --with-nagios-metadata-dir=DIR  Directory for nagios plugins metadata [${NAGIOS_METADATA_DIR}] ],
+    [  --with-nagios-metadata-dir=DIR  Directory for nagios plugins metadata @<:@DATADIR/nagios/plugins-metadata@:>@],
     [ NAGIOS_METADATA_DIR="$withval" ]
 )
 
@@ -214,7 +214,7 @@ AC_ARG_WITH(gnutls-priorities,
 
 INITDIR=""
 AC_ARG_WITH(initdir,
-    [  --with-initdir=DIR  Directory for init (rc) scripts [${INITDIR}] ],
+    [  --with-initdir=DIR  Directory for init (rc) scripts],
     [ INITDIR="$withval" ])
 
 SUPPORT_PROFILING=0
@@ -228,13 +228,13 @@ AC_ARG_WITH(coverage,
 
 PUBLICAN_BRAND="common"
 AC_ARG_WITH(brand,
-    [  --with-brand=brand  Brand to use for generated documentation (set empty for no docs) [$PUBLICAN_BRAND] ],
+    [  --with-brand=brand  Brand to use for generated documentation (set empty for no docs) @<:@common@:>@],
     [ test x"$withval" = x"no" || PUBLICAN_BRAND="$withval" ])
 AC_SUBST(PUBLICAN_BRAND)
 
 CONFIGDIR=""
 AC_ARG_WITH(configdir,
-    [  --with-configdir=DIR  Directory for Pacemaker configuration file [${CONFIGDIR}]],
+    [  --with-configdir=DIR  Directory for Pacemaker configuration file @<:@SYSCONFDIR/sysconfig@:>@],
     [ CONFIGDIR="$withval" ]
 )
 
