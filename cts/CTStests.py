@@ -22,7 +22,12 @@ __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT AN
 #                Thank you.
 #
 
-import time, os, re, string, subprocess, tempfile
+import os
+import re
+import time
+import subprocess
+import tempfile
+
 from stat import *
 from cts import CTS
 from cts.CTSaudits import *
@@ -1012,7 +1017,7 @@ class BandwidthTest(CTSTest):
                 return None
             if re.search("udp",line) or re.search("UDP,", line):
                 count = count + 1
-                linesplit = str.split(line," ")
+                linesplit = line.split(" ")
                 for j in range(len(linesplit)-1):
                     if linesplit[j] == "udp": break
                     if linesplit[j] == "length:": break
@@ -1023,8 +1028,8 @@ class BandwidthTest(CTSTest):
                     self.logger.log("Invalid tcpdump line: %s" % line)
                     return None
                 T1 = linesplit[0]
-                timesplit = str.split(T1,":")
-                time2split = str.split(timesplit[2],".")
+                timesplit = T1.split(":")
+                time2split = timesplit[2].split(".")
                 time1 = (int(timesplit[0])*60+int(timesplit[1]))*60+int(time2split[0])+int(time2split[1])*0.000001
                 break
 
@@ -1034,7 +1039,7 @@ class BandwidthTest(CTSTest):
                 return None
             if re.search("udp",line) or re.search("UDP,", line):
                 count = count+1
-                linessplit = str.split(line," ")
+                linessplit = line.split(" ")
                 for j in range(len(linessplit)-1):
                     if linessplit[j] == "udp": break
                     if linesplit[j] == "length:": break
@@ -1045,8 +1050,8 @@ class BandwidthTest(CTSTest):
                     return None
 
         T2 = linessplit[0]
-        timesplit = str.split(T2,":")
-        time2split = str.split(timesplit[2],".")
+        timesplit = T2.split(":")
+        time2split = timesplit[2].split(".")
         time2 = (int(timesplit[0])*60+int(timesplit[1]))*60+int(time2split[0])+int(time2split[1])*0.000001
         time = time2-time1
         if (time <= 0):
