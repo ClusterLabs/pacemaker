@@ -320,13 +320,6 @@ struct pe_action_s {
     enum action_fail_response on_fail;
     enum rsc_role_e fail_role;
 
-    pe_action_t *pre_notify;
-    pe_action_t *pre_notified;
-    pe_action_t *post_notify;
-    pe_action_t *post_notified;
-
-    int seen_count;
-
     GHashTable *meta;
     GHashTable *extra;
 
