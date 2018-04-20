@@ -13,8 +13,6 @@
 * libxml2-devel
 * libxslt-devel 
 * bzip2-devel
-* gnutls-devel
-* pam-devel
 * libqb-devel
 
 ## Cluster Stack Dependencies (Pick at least one)
@@ -22,6 +20,8 @@
 * (no other stacks are currently supported)
 
 ## Optional Build Dependencies
+* gnutls-devel 2.1.7 or later (Pacemaker Remote and encrypted remote CIB admin)
+* pam-devel (encrypted remote CIB admin)
 * ncurses-devel (interactive crm_mon)
 * systemd-devel (systemd support)
 * dbus-devel (systemd/upstart resource support)

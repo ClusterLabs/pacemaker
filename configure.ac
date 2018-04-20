@@ -1364,27 +1364,17 @@ dnl ========================================================================
 dnl    GnuTLS
 dnl ========================================================================
 
-AC_CHECK_HEADERS(gnutls/gnutls.h)
-AC_CHECK_HEADERS(security/pam_appl.h pam/pam_appl.h)
-
-dnl GNUTLS library: Attempt to determine by 'libgnutls-config' program.
-dnl If no 'libgnutls-config', try traditional autoconf means.
-AC_PATH_PROGS(LIBGNUTLS_CONFIG, libgnutls-config)
-
-if test -n "$LIBGNUTLS_CONFIG"; then
-    AC_MSG_CHECKING(for gnutls header flags)
-    GNUTLSHEAD="`$LIBGNUTLS_CONFIG --cflags`";
-    AC_MSG_RESULT($GNUTLSHEAD)
-    AC_MSG_CHECKING(for gnutls library flags)
-    GNUTLSLIBS="`$LIBGNUTLS_CONFIG --libs`";
-    AC_MSG_RESULT($GNUTLSLIBS)
+dnl gnutls_priority_set_direct available since 2.1.7 (released 2007-11-29)
+AC_CHECK_LIB(gnutls, gnutls_priority_set_direct)
+if test "$ac_cv_lib_gnutls_gnutls_priority_set_direct" != ""; then
+    AC_CHECK_HEADERS(gnutls/gnutls.h)
 fi
-AC_CHECK_LIB(gnutls, gnutls_init)
-AC_CHECK_FUNCS(gnutls_priority_set_direct)
 
-AC_SUBST(GNUTLSHEAD)
-AC_SUBST(GNUTLSLIBS)
+dnl ========================================================================
+dnl    PAM
+dnl ========================================================================
 
+AC_CHECK_HEADERS(security/pam_appl.h pam/pam_appl.h)
 
 dnl ========================================================================
 dnl    System Health

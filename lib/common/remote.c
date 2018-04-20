@@ -1,21 +1,10 @@
 /*
- * Copyright (c) 2008 Andrew Beekhof
+ * Copyright 2008-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+
 #include <crm_internal.h>
 #include <crm/crm.h>
 
@@ -174,14 +163,10 @@ crm_create_anon_tls_session(int csock, int type /* GNUTLS_SERVER, GNUTLS_CLIENT 
     gnutls_session_t *session = gnutls_malloc(sizeof(gnutls_session_t));
 
     gnutls_init(session, type);
-#  ifdef HAVE_GNUTLS_PRIORITY_SET_DIRECT
-/*      http://www.manpagez.com/info/gnutls/gnutls-2.10.4/gnutls_81.php#Echo-Server-with-anonymous-authentication */
+
+    // http://www.manpagez.com/info/gnutls/gnutls-2.10.4/gnutls_81.php#Echo-Server-with-anonymous-authentication
     gnutls_priority_set_direct(*session, "NORMAL:+ANON-DH", NULL);
-/*	gnutls_priority_set_direct (*session, "NONE:+VERS-TLS-ALL:+CIPHER-ALL:+MAC-ALL:+SIGN-ALL:+COMP-ALL:+ANON-DH", NULL); */
-#  else
-    gnutls_set_default_priority(*session);
-    gnutls_kx_set_priority(*session, anon_tls_kx_order);
-#  endif
+
     gnutls_transport_set_ptr(*session, (gnutls_transport_ptr_t) GINT_TO_POINTER(csock));
     switch (type) {
         case GNUTLS_SERVER:
@@ -203,12 +188,7 @@ create_psk_tls_session(int csock, int type /* GNUTLS_SERVER, GNUTLS_CLIENT */ , 
     gnutls_session_t *session = gnutls_malloc(sizeof(gnutls_session_t));
 
     gnutls_init(session, type);
-#  ifdef HAVE_GNUTLS_PRIORITY_SET_DIRECT
     gnutls_priority_set_direct(*session, "NORMAL:+DHE-PSK:+PSK", NULL);
-#  else
-    gnutls_set_default_priority(*session);
-    gnutls_kx_set_priority(*session, psk_tls_kx_order);
-#  endif
     gnutls_transport_set_ptr(*session, (gnutls_transport_ptr_t) GINT_TO_POINTER(csock));
     switch (type) {
         case GNUTLS_SERVER:

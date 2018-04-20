@@ -207,11 +207,11 @@ BuildRequires: coreutils findutils grep sed
 BuildRequires: automake autoconf gcc libtool pkgconfig libtool-ltdl-devel
 BuildRequires: pkgconfig(glib-2.0) >= 2.16
 BuildRequires: libxml2-devel libxslt-devel libuuid-devel
-BuildRequires: bzip2-devel pam-devel
+BuildRequires: bzip2-devel
 
 # Enables optional functionality
 BuildRequires: ncurses-devel docbook-style-xsl
-BuildRequires: help2man gnutls-devel pkgconfig(dbus-1)
+BuildRequires: help2man gnutls-devel pam-devel pkgconfig(dbus-1)
 
 %if %{systemd_native}
 BuildRequires: pkgconfig(systemd)
