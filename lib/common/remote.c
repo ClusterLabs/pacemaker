@@ -165,7 +165,8 @@ crm_create_anon_tls_session(int csock, int type /* GNUTLS_SERVER, GNUTLS_CLIENT 
     gnutls_init(session, type);
 
     // http://www.manpagez.com/info/gnutls/gnutls-2.10.4/gnutls_81.php#Echo-Server-with-anonymous-authentication
-    gnutls_priority_set_direct(*session, "NORMAL:+ANON-DH", NULL);
+    gnutls_priority_set_direct(*session, PCMK_GNUTLS_PRIORITIES ":+ANON-DH",
+                               NULL);
 
     gnutls_transport_set_ptr(*session, (gnutls_transport_ptr_t) GINT_TO_POINTER(csock));
     switch (type) {
@@ -188,7 +189,8 @@ create_psk_tls_session(int csock, int type /* GNUTLS_SERVER, GNUTLS_CLIENT */ , 
     gnutls_session_t *session = gnutls_malloc(sizeof(gnutls_session_t));
 
     gnutls_init(session, type);
-    gnutls_priority_set_direct(*session, "NORMAL:+DHE-PSK:+PSK", NULL);
+    gnutls_priority_set_direct(*session,
+                               PCMK_GNUTLS_PRIORITIES ":+DHE-PSK:+PSK", NULL);
     gnutls_transport_set_ptr(*session, (gnutls_transport_ptr_t) GINT_TO_POINTER(csock));
     switch (type) {
         case GNUTLS_SERVER:

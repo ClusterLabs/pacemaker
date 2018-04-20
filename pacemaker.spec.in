@@ -66,6 +66,9 @@
   } || %{?__transaction_systemd_inhibit:1}%{!?__transaction_systemd_inhibit:0}%{nil \
   } || %(test -f /usr/lib/os-release; test $? -ne 0; echo $?))
 
+%if 0%{?fedora} > 20 || 0%{?rhel} > 7
+%global gnutls_priorities @SYSTEM
+%endif
 
 # Python-related definitions
 
@@ -396,6 +399,7 @@ export LDFLAGS_HARDENED_LIB="%{?_hardening_ldflags}"
         %{!?with_doc:        --with-brand=}        \
         %{!?with_hardening:  --disable-hardening}  \
         %{?python_path:      PYTHON=%{python_path}} \
+        %{?gnutls_priorities: --with-gnutls-priorities="%{gnutls_priorities}"} \
         --with-initdir=%{_initrddir}               \
         --localstatedir=%{_var}                    \
         --with-version=%{version}-%{release}
