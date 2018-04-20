@@ -423,13 +423,14 @@ handle_duplicates(remote_fencing_op_t * op, xmlNode * data, int rc)
         remote_fencing_op_t *other = iter->data;
 
         if (other->state == st_duplicate) {
-            /* Ie. it hasn't timed out already */
             other->state = op->state;
-            crm_debug("Peforming duplicate notification for %s@%s.%.8s = %s", other->client_name,
-                      other->originator, other->id, pcmk_strerror(rc));
+            crm_debug("Performing duplicate notification for %s@%s.%.8s = %s",
+                      other->client_name, other->originator, other->id,
+                      pcmk_strerror(rc));
             remote_op_done(other, data, rc, TRUE);
 
         } else {
+            // Possible if (for example) it timed out already
             crm_err("Skipping duplicate notification for %s@%s - %d", other->client_name,
                     other->originator, other->state);
         }

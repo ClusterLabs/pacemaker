@@ -1,4 +1,10 @@
 #!/bin/bash
+#
+# Copyright 2011-2018 Andrew Beekhof <andrew@beekhof.net>
+#
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
+#
 
 accept_defaults=0
 do_raw=0
@@ -230,7 +236,7 @@ if [ $accept_defaults = 0 ]; then
     read -p "Shall I disable iptables? [$IPTABLES] " -t 60 IPTABLES
     if [ $pcmk_ver = 10 ]; then
 	echo ""
-	echo "Without a default domain, external/ssh fencing probably wont work because it can't find its peers"
+	echo "Without a default domain, external/ssh fencing probably won't work because it can't find its peers"
 	read -p "Shall I set one? [No] (domain.name) " -t 60 DOMAIN
     fi
 

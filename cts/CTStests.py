@@ -4,7 +4,7 @@
 # Pacemaker targets compatibility with Python 2.7 and 3.2+
 from __future__ import print_function, unicode_literals, absolute_import, division
 
-__copyright__ = """Copyright (C) 2000, 2001 Alan Robertson <alanr@unix.sh>
+__copyright__ = """Copyright 2000, 2001 Alan Robertson <alanr@unix.sh>
 Add RecourceRecover testcase Zhao Kai <zhaokai@cn.ibm.com>
 """
 
@@ -273,7 +273,7 @@ class StopTest(CTSTest):
         patterns.append(self.templates["Pat:We_stopped"] % node)
 
         # Any active node needs to notice this one left
-        # NOTE: This wont work if we have multiple partitions
+        # (note that this won't work if we have multiple partitions)
         for other in self.Env["nodes"]:
             if self.CM.ShouldBeStatus[other] == "up" and other != node:
                 patterns.append(self.templates["Pat:They_stopped"] %(other, self.CM.key_for_node(node)))

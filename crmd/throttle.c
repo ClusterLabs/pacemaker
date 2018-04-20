@@ -49,7 +49,7 @@ static mainloop_timer_t *throttle_timer = NULL;
 #if SUPPORT_PROCFS
 /*!
  * \internal
- * \brief Return name of /proc file containing the CIB deamon's load statistics
+ * \brief Return name of /proc file containing the CIB daemon's load statistics
  *
  * \return Newly allocated memory with file name on success, NULL otherwise
  *

@@ -2445,7 +2445,7 @@ do_update_resource(const char *node_name, lrmd_rsc_info_t * rsc, lrmd_event_data
      *   (probably because of an internal error)
      *
      * Worst case:
-     *   we get shot for having resources "running" when the really weren't
+     *   we get shot for having resources "running" that really weren't
      *
      * the alternative however means blocking here for too long, which
      * isn't acceptable

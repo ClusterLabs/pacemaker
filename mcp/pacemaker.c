@@ -1002,7 +1002,7 @@ main(int argc, char **argv)
         if (rc < 0) {
             crm_perror(LOG_ERR,
                        "Core file generation will remain disabled."
-                       " Core files are an important diagnositic tool,"
+                       " Core files are an important diagnostic tool, so"
                        " please consider enabling them by default.");
         }
     }

@@ -1,34 +1,22 @@
-'''CTS: Cluster Testing System: Cluster Manager Common Class
+""" Cluster Manager common class for Pacemaker's Cluster Test Suite (CTS)
 
 This was originally the cluster manager class for the Heartbeat stack.
 It is retained for use as a base class by other cluster manager classes.
 It could be merged into the ClusterManager class directly, but this is
 easier.
-'''
+"""
 
-__copyright__ = '''
+# Pacemaker targets compatibility with Python 2.7 and 3.2+
+from __future__ import print_function, unicode_literals, absolute_import, division
+
+__copyright__ = """
 Author: Huang Zhen <zhenhltc@cn.ibm.com>
-Copyright (C) 2004 International Business Machines
+Copyright 2004 International Business Machines
 
 Additional Audits, Revised Start action, Default Configuration:
-     Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
-
-'''
-
-#
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA.
+     Copyright 2004 Andrew Beekhof <andrew@beekhof.net>
+"""
+__license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import sys
 from cts.CTSvars  import *
@@ -231,10 +219,7 @@ class crm_common(ClusterManager):
         return rc
 
     def active_resources(self, node):
-        # [SM].* {node} matches Started, Slave, Master
-        # Stopped wont be matched as it wont include {node}
         (rc, output) = self.rsh(node, """crm_resource -c""", None)
-
         resources = []
         for line in output: 
             if re.search("^Resource", line):

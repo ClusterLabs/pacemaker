@@ -426,7 +426,7 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char * c
     } else if (did_rsc_op_fail(op, target_rc)) {
         op_id = generate_op_key(op->rsc_id, "last_failure", 0);
         if (op->interval_ms == 0) {
-            /* Ensure 'last' gets updated too in case recording-pending="true" */
+            // Ensure 'last' gets updated, in case record-pending is true
             op_id_additional = generate_op_key(op->rsc_id, "last", 0);
         }
         exit_reason = op->exit_reason;
