@@ -152,7 +152,7 @@ run_test() {
 }
 
 run_tests() {
-    TESTS="$1"
+    TESTS="$@"
     local TEST
     local TEST_RC
     local FAILED
