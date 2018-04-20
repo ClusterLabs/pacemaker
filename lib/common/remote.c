@@ -244,9 +244,9 @@ pcmk__new_tls_session(int csock, unsigned int conn_type,
 #  ifdef HAVE_GNUTLS_PRIORITY_SET_DIRECT
     if (cred_type == GNUTLS_CRD_ANON) {
         // http://www.manpagez.com/info/gnutls/gnutls-2.10.4/gnutls_81.php#Echo-Server-with-anonymous-authentication
-        prio = "NORMAL:+ANON-DH";
+        prio = PCMK_GNUTLS_PRIORITIES ":+ANON-DH";
     } else {
-        prio = "NORMAL:+DHE-PSK:+PSK";
+        prio = PCMK_GNUTLS_PRIORITIES ":+DHE-PSK:+PSK";
     }
 #  endif
 
