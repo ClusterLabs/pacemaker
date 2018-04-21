@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-#	Resource Agent for managing the DLM controld process.
+# OCF resource agent for managing the DLM controld process
 #
 # Copyright (c) 2009 Novell, Inc
 #                    All Rights Reserved.
@@ -41,10 +41,10 @@ if [ -e "$OCF_ROOT/resource.d/heartbeat/controld" ]; then
 fi
 
 meta_data() {
-	cat <<END
+    cat <<END
 <?xml version="1.0"?>
 <!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
-<resource-agent name="controld" version="0.9">
+<resource-agent name="controld" version="1.0">
 <version>1.0</version>
 
 <longdesc lang="en">
@@ -66,10 +66,10 @@ Any additional options to start the dlm_controld service with
 
 <parameter name="configdir" unique="1">
 <longdesc lang="en">
-The location where configfs is or should be mounted
+This parameter is deprecated and ignored
 </longdesc>
-<shortdesc lang="en">Location of configfs</shortdesc>
-<content type="string" default="/sys/kernel/config" />
+<shortdesc lang="en">Deprecated and ignored</shortdesc>
+<content type="string" default="deprecated" />
 </parameter>
 
 <parameter name="daemon" unique="1">
@@ -109,10 +109,12 @@ END
 
 #######################################################################
 
+CONFIGFS_DIR="/sys/kernel/config"
+DLM_CONFIGFS_DIR="${CONFIGFS_DIR}/dlm"
 DLM_SYSFS_DIR="/sys/kernel/dlm"
 
 controld_usage() {
-	cat <<END
+    cat <<END
 usage: $0 {start|stop|monitor|validate-all|meta-data}
 
 Expects to have a fully populated OCF RA-compliant environment set.
@@ -143,29 +145,30 @@ controld_start() {
       *) return $OCF_ERR_GENERIC;;
     esac
 
-        if [ ! -e $OCF_RESKEY_configdir ]; then
-    	    modprobe configfs
-    	    if [ ! -e $OCF_RESKEY_configdir ]; then
-               ocf_log err "$OCF_RESKEY_configdir not available"
-       	       return $OCF_ERR_INSTALLED
-	    fi
-	fi
+    # Ensure configfs is mounted
+    if [ ! -e "$CONFIGFS_DIR" ]; then
+        modprobe configfs
+        if [ ! -e "$CONFIGFS_DIR" ]; then
+           ocf_log err "$CONFIGFS_DIR not available"
+           return $OCF_ERR_INSTALLED
+        fi
+    fi
+    mount -t configfs | grep " $CONFIGFS_DIR " >/dev/null 2>/dev/null
+    if [ $? -ne 0 ]; then
+       mount -t configfs none "$CONFIGFS_DIR"
+    fi
 
-    	mount | grep "type configfs" > /dev/null
-    	if [ $? != 0 ]; then
-	   mount -t configfs none $OCF_RESKEY_configdir    
-    	fi
-
-    	if [ ! -e $OCF_RESKEY_configdir/dlm ]; then
-           modprobe dlm
-    	   if [ ! -e $OCF_RESKEY_configdir/dlm ]; then
-              ocf_log err "$OCF_RESKEY_configdir/dlm not available"
-       	      return $OCF_ERR_INSTALLED
-	   fi
-    	fi
+    # Ensure DLM is available
+    if [ ! -e "$DLM_CONFIGFS_DIR" ]; then
+       modprobe dlm
+       if [ ! -e "$DLM_CONFIGFS_DIR" ]; then
+          ocf_log err "$DLM_CONFIGFS_DIR not available"
+          return $OCF_ERR_INSTALLED
+       fi
+    fi
 
     if ! ocf_is_true "$OCF_RESKEY_allow_stonith_disabled" && \
-    	! ocf_is_true "`crm_attribute --type=crm_config --name=stonith-enabled --query --quiet --default=true`"; then
+        ! ocf_is_true "`crm_attribute --type=crm_config --name=stonith-enabled --query --quiet --default=true`"; then
         ocf_log err "The cluster property stonith-enabled may not be deactivated to use the DLM"
         return $OCF_ERR_CONFIGURED
     fi
@@ -180,7 +183,7 @@ controld_start() {
         case $rc in
           $OCF_SUCCESS)
             local addr_list
-            addr_list="$(cat /sys/kernel/config/dlm/cluster/comms/*/addr_list 2>/dev/null)"
+            addr_list="$(cat "${DLM_CONFIGFS_DIR}"/cluster/comms/*/addr_list 2>/dev/null)"
             if [ $? -eq 0 ] && [ -n "$addr_list" ]; then
                 return $OCF_SUCCESS
             fi
@@ -201,23 +204,23 @@ controld_stop() {
     controld_monitor; rc=$?
 
     if [ $rc = $OCF_NOT_RUNNING ]; then
-	return $OCF_SUCCESS
+        return $OCF_SUCCESS
     fi
 
     killall -TERM ${OCF_RESKEY_daemon}; rc=$?
 
     if [ $rc != 0 ]; then
-	return $OCF_ERR_GENERIC
+        return $OCF_ERR_GENERIC
     fi
 
     rc=$OCF_SUCCESS
     while [ $rc = $OCF_SUCCESS ]; do
-	controld_monitor; rc=$?
-	sleep 1
+        controld_monitor; rc=$?
+        sleep 1
     done
 
     if [ $rc = $OCF_NOT_RUNNING ]; then
-    	rc=$OCF_SUCCESS
+        rc=$OCF_SUCCESS
     fi
 
     return $rc
@@ -233,7 +236,7 @@ controld_monitor() {
              ocf_log err "DLM status is: stateful_merge_wait"
              rc=$OCF_ERR_GENERIC
          elif [ -z "$smw" ] && dlm_tool ls | grep -q "wait fencing" && \
-	      ! stonith_admin -H '*' -V | grep -q "wishes to"; then
+              ! stonith_admin -H '*' -V | grep -q "wishes to"; then
              ocf_log err "DLM status is: wait fencing"
              rc=$OCF_ERR_GENERIC
          else
@@ -258,10 +261,10 @@ controld_validate() {
     check_binary ${OCF_RESKEY_daemon}
 
     case ${OCF_RESKEY_CRM_meta_globally_unique} in
-	yes|Yes|true|True|1) 
-	    ocf_log err "$OCF_RESOURCE_INSTANCE must be configured with the globally_unique=false meta attribute"
-	    exit $OCF_ERR_CONFIGURED
-	    ;;
+        yes|Yes|true|True|1) 
+            ocf_log err "$OCF_RESOURCE_INSTANCE must be configured with the globally_unique=false meta attribute"
+            exit $OCF_ERR_CONFIGURED
+            ;;
     esac
 
     [ -d /var/run/cluster ] || mkdir /var/run/cluster
@@ -270,7 +273,6 @@ controld_validate() {
 }
 
 : ${OCF_RESKEY_sctp=false}
-: ${OCF_RESKEY_configdir=/sys/kernel/config}
 : ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
 
 case "$HA_quorum_type" in
@@ -280,34 +282,33 @@ esac
 
 case "$OCF_RESOURCE_INSTANCE" in
     *[gG][fF][sS]*) 
-	: ${OCF_RESKEY_args=-g 0}
-	: ${OCF_RESKEY_daemon=gfs_controld${daemon_ext}}
-	;;
+        : ${OCF_RESKEY_args=-g 0}
+        : ${OCF_RESKEY_daemon=gfs_controld${daemon_ext}}
+        ;;
     *[dD][lL][mM]*)
-	: ${OCF_RESKEY_args=-s 0}
-	: ${OCF_RESKEY_daemon=dlm_controld${daemon_ext}}
-	;;
+        : ${OCF_RESKEY_args=-s 0}
+        : ${OCF_RESKEY_daemon=dlm_controld${daemon_ext}}
+        ;;
     *)
-	: ${OCF_RESKEY_args=-s 0}
-	: ${OCF_RESKEY_daemon=dlm_controld${daemon_ext}}
+        : ${OCF_RESKEY_args=-s 0}
+        : ${OCF_RESKEY_daemon=dlm_controld${daemon_ext}}
 esac
 
 case $__OCF_ACTION in
-meta-data)	meta_data
-		exit $OCF_SUCCESS
-		;;
-start)		controld_validate; controld_start;;
-stop)		controld_stop;;
-monitor)	controld_validate; controld_monitor;;
-validate-all)	controld_validate;;
-usage|help)	controld_usage
-		exit $OCF_SUCCESS
-		;;
-*)		controld_usage
-		exit $OCF_ERR_UNIMPLEMENTED
-		;;
+meta-data)      meta_data
+                exit $OCF_SUCCESS
+                ;;
+start)          controld_validate; controld_start;;
+stop)           controld_stop;;
+monitor)        controld_validate; controld_monitor;;
+validate-all)   controld_validate;;
+usage|help)     controld_usage
+                exit $OCF_SUCCESS
+                ;;
+*)              controld_usage
+                exit $OCF_ERR_UNIMPLEMENTED
+                ;;
 esac
 rc=$?
 
 exit $rc
-
