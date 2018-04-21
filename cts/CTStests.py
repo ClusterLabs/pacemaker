@@ -1,32 +1,14 @@
-'''CTS: Cluster Testing System: Tests module
+""" Test-specific classes for Pacemaker's Cluster Test Suite (CTS)
+"""
 
-There are a few things we want to do here:
+# Pacemaker targets compatibility with Python 2.7 and 3.2+
+from __future__ import print_function, unicode_literals, absolute_import, division
 
- '''
-from __future__ import division
-from __future__ import print_function
-
-__copyright__ = '''
-Copyright (C) 2000, 2001 Alan Robertson <alanr@unix.sh>
-Licensed under the GNU GPL.
-
+__copyright__ = """Copyright 2000, 2001 Alan Robertson <alanr@unix.sh>
 Add RecourceRecover testcase Zhao Kai <zhaokai@cn.ibm.com>
-'''
+"""
 
-#
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA.
+__license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 #
 #        SPECIAL NOTE:
@@ -40,7 +22,12 @@ Add RecourceRecover testcase Zhao Kai <zhaokai@cn.ibm.com>
 #                Thank you.
 #
 
-import time, os, re, string, subprocess, tempfile
+import os
+import re
+import time
+import subprocess
+import tempfile
+
 from stat import *
 from cts import CTS
 from cts.CTSaudits import *
@@ -286,7 +273,7 @@ class StopTest(CTSTest):
         patterns.append(self.templates["Pat:We_stopped"] % node)
 
         # Any active node needs to notice this one left
-        # NOTE: This wont work if we have multiple partitions
+        # (note that this won't work if we have multiple partitions)
         for other in self.Env["nodes"]:
             if self.CM.ShouldBeStatus[other] == "up" and other != node:
                 patterns.append(self.templates["Pat:They_stopped"] %(other, self.CM.key_for_node(node)))
@@ -1030,7 +1017,7 @@ class BandwidthTest(CTSTest):
                 return None
             if re.search("udp",line) or re.search("UDP,", line):
                 count = count + 1
-                linesplit = str.split(line," ")
+                linesplit = line.split(" ")
                 for j in range(len(linesplit)-1):
                     if linesplit[j] == "udp": break
                     if linesplit[j] == "length:": break
@@ -1041,8 +1028,8 @@ class BandwidthTest(CTSTest):
                     self.logger.log("Invalid tcpdump line: %s" % line)
                     return None
                 T1 = linesplit[0]
-                timesplit = str.split(T1,":")
-                time2split = str.split(timesplit[2],".")
+                timesplit = T1.split(":")
+                time2split = timesplit[2].split(".")
                 time1 = (int(timesplit[0])*60+int(timesplit[1]))*60+int(time2split[0])+int(time2split[1])*0.000001
                 break
 
@@ -1052,7 +1039,7 @@ class BandwidthTest(CTSTest):
                 return None
             if re.search("udp",line) or re.search("UDP,", line):
                 count = count+1
-                linessplit = str.split(line," ")
+                linessplit = line.split(" ")
                 for j in range(len(linessplit)-1):
                     if linessplit[j] == "udp": break
                     if linesplit[j] == "length:": break
@@ -1063,8 +1050,8 @@ class BandwidthTest(CTSTest):
                     return None
 
         T2 = linessplit[0]
-        timesplit = str.split(T2,":")
-        time2split = str.split(timesplit[2],".")
+        timesplit = T2.split(":")
+        time2split = timesplit[2].split(".")
         time2 = (int(timesplit[0])*60+int(timesplit[1]))*60+int(time2split[0])+int(time2split[1])*0.000001
         time = time2-time1
         if (time <= 0):
@@ -3119,6 +3106,7 @@ class RemoteRscFailure(RemoteDriver):
     def errorstoignore(self):
         ignore_pats = [
             r"pengine.*: Recover remote-rsc\s*\(.*\)",
+            r"Dummy.*: No process state file found",
         ]
 
         ignore_pats.extend(RemoteDriver.errorstoignore(self))

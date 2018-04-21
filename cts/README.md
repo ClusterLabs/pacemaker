@@ -2,9 +2,22 @@
 
 ## Purpose
 
-CTS thoroughly exercises a pacemaker test cluster by running a randomized
-series of predefined tests on the cluster. CTS can be run against a
-pre-existing cluster configuration or (more typically) overwrite the existing
+Pacemaker's CTS is primarily for developers and packagers of the Pacemaker
+source code, but it can be useful for users who wish to see how their cluster
+will react to various situations.
+
+CTS consists of two main parts: a set of regression tests for verifying the
+functionality of particular Pacemaker components, and a cluster exerciser for
+intensively testing the behavior of an entire working cluster.
+
+The primary regression test front end is cts-regression in this directory. Run
+it with the --help option to see its usage. The regression tests can be run on
+any single cluster node. The cluster should be stopped on that node when
+running the tests.
+
+The rest of this document focuses on the cluster exerciser. The cluster
+exerciser runs a randomized series of predefined tests on the cluster. CTS can
+be run against a pre-existing cluster configuration or overwrite the existing
 configuration with a test configuration.
 
 
@@ -35,7 +48,8 @@ configuration with a test configuration.
 
 * CTS is not guaranteed to run on all platforms that pacemaker itself does.
   It calls commands such as service that may not be provided by all OSes.
-	
+
+
 ## Preparation
 
 Install Pacemaker (including CTS) on all machines. These scripts are
@@ -83,7 +97,7 @@ and configure some sort of fencing:
     --stonith $TYPE  # e.g. "--stonith xvm" to use fence_xvm or "--stonith ssh" to use external/ssh
 
 A complete command line might look like:
-  
+
     python ./CTSlab.py --nodes "pcmk-1 pcmk-2 pcmk-3" --outputfile ~/cts.log \
         --clobber-cib --populate-resources --test-ip-base 192.168.9.100   \
         --stonith xvm 50
@@ -234,9 +248,7 @@ the IP address 192.168.123.11 or 192.168.123.12, the hostname lxc1 or lxc2
 The test will revert all of the configuration when it is done.
 
 
-## Mini-HOWTOs
-
-### Allow passwordless remote SSH connections
+## Mini-HOWTO: Allow passwordless remote SSH connections
 
 The CTS scripts run "ssh -l root" so you don't have to do any of your testing
 logged in as root on the test machine. Here is how to allow such connections

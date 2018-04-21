@@ -1,34 +1,22 @@
-'''CTS: Cluster Testing System: Cluster Manager Common Class
+""" Cluster Manager common class for Pacemaker's Cluster Test Suite (CTS)
 
 This was originally the cluster manager class for the Heartbeat stack.
 It is retained for use as a base class by other cluster manager classes.
 It could be merged into the ClusterManager class directly, but this is
 easier.
-'''
+"""
 
-__copyright__ = '''
+# Pacemaker targets compatibility with Python 2.7 and 3.2+
+from __future__ import print_function, unicode_literals, absolute_import, division
+
+__copyright__ = """
 Author: Huang Zhen <zhenhltc@cn.ibm.com>
-Copyright (C) 2004 International Business Machines
+Copyright 2004 International Business Machines
 
 Additional Audits, Revised Start action, Default Configuration:
-     Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
-
-'''
-
-#
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA.
+     Copyright 2004 Andrew Beekhof <andrew@beekhof.net>
+"""
+__license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import sys
 from cts.CTSvars  import *
@@ -111,7 +99,7 @@ class crm_common(ClusterManager):
         out = self.rsh(node, self.templates["StatusCmd"]%node, 1)
         self.debug("Node %s status: '%s'" %(node, out))            
 
-        if not out or str.find(out, 'ok') < 0:
+        if not out or (out.find('ok') < 0):
             if self.ShouldBeStatus[node] == "up":
                 self.log(
                     "Node status for %s is %s but we think it should be %s"
@@ -127,10 +115,10 @@ class crm_common(ClusterManager):
         self.ShouldBeStatus[node] = "up"
 
         # check the output first - because syslog-ng loses messages
-        if str.find(out, 'S_NOT_DC') != -1:
+        if out.find('S_NOT_DC') != -1:
             # Up and stable
             return 2
-        if str.find(out, 'S_IDLE') != -1:
+        if out.find('S_IDLE') != -1:
             # Up and stable
             return 2
 
@@ -217,24 +205,21 @@ class crm_common(ClusterManager):
 
         if not status_line:
             rc = 0
-        elif str.find(status_line, 'S_IDLE') != -1:
+        elif status_line.find('S_IDLE') != -1:
             rc = 1
-        elif str.find(status_line, 'S_INTEGRATION') != -1:
+        elif status_line.find('S_INTEGRATION') != -1:
             rc = 1
-        elif str.find(status_line, 'S_FINALIZE_JOIN') != -1:
+        elif status_line.find('S_FINALIZE_JOIN') != -1:
             rc = 1
-        elif str.find(status_line, 'S_POLICY_ENGINE') != -1:
+        elif status_line.find('S_POLICY_ENGINE') != -1:
             rc = 1
-        elif str.find(status_line, 'S_TRANSITION_ENGINE') != -1:
+        elif status_line.find('S_TRANSITION_ENGINE') != -1:
             rc = 1
 
         return rc
 
     def active_resources(self, node):
-        # [SM].* {node} matches Started, Slave, Master
-        # Stopped wont be matched as it wont include {node}
         (rc, output) = self.rsh(node, """crm_resource -c""", None)
-
         resources = []
         for line in output: 
             if re.search("^Resource", line):
@@ -303,9 +288,9 @@ class crm_common(ClusterManager):
         for node in node_list:
             if self.ShouldBeStatus[node] == "up":
                 quorum = self.rsh(node, self.templates["QuorumCmd"], 1)
-                if str.find(quorum, "1") != -1:
+                if quorum.find("1") != -1:
                     return 1
-                elif str.find(quorum, "0") != -1:
+                elif quorum.find("0") != -1:
                     return 0
                 else:
                     self.debug("WARN: Unexpected quorum test result from " + node + ":" + quorum)

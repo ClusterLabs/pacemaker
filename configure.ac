@@ -143,31 +143,31 @@ AC_ARG_WITH(pkgname,
 AC_SUBST(PKGNAME)
 
 AC_ARG_ENABLE([ansi],
-    [  --enable-ansi  Force GCC to compile to ANSI standard for older compilers. [default=no] ])
+    [  --enable-ansi  Force GCC to compile to ANSI standard for older compilers. @<:@no@:>@])
 
 AC_ARG_ENABLE([fatal-warnings],
-    [  --enable-fatal-warnings  Enable pedantic and fatal warnings for gcc [default=yes] ])
+    [  --enable-fatal-warnings  Enable pedantic and fatal warnings for gcc @<:@yes@:>@])
 
 AC_ARG_ENABLE([quiet],
-    [  --enable-quiet  Suppress make output unless there is an error [default=no] ])
+    [  --enable-quiet  Suppress make output unless there is an error @<:@no@:>@])
 
 AC_ARG_ENABLE([no-stack],
-    [  --enable-no-stack  Build only the Policy Engine and its requirements [default=no] ])
+    [  --enable-no-stack  Build only the Policy Engine and its requirements @<:@no@:>@])
 
 AC_ARG_ENABLE([upstart],
-    [  --enable-upstart  Enable support for managing resources via Upstart [default=try] ],
+    [  --enable-upstart  Enable support for managing resources via Upstart @<:@try@:>@ ],
     [],
     [enable_upstart=try],
 )
 
 AC_ARG_ENABLE([systemd],
-    [  --enable-systemd  Enable support for managing resources via systemd [default=try]],
+    [  --enable-systemd  Enable support for managing resources via systemd @<:@try@:>@],
     [],
     [enable_systemd=try],
 )
 
 AC_ARG_ENABLE(hardening,
-    [  --with-hardening  Harden the resulting executables/libraries (best effort by default) ],
+    [  --with-hardening  Harden the resulting executables/libraries @<:@try@:>@],
     [ HARDENING="${enableval}" ],
     [ HARDENING=try ],
 )
@@ -185,12 +185,12 @@ AC_ARG_WITH(nagios,
 )
 
 AC_ARG_WITH(nagios-plugin-dir,
-    [  --with-nagios-plugin-dir=DIR  Directory for nagios plugins [${NAGIOS_PLUGIN_DIR}] ],
+    [  --with-nagios-plugin-dir=DIR  Directory for nagios plugins @<:@LIBEXECDIR/nagios/plugins@:>@],
     [ NAGIOS_PLUGIN_DIR="$withval" ]
 )
 
 AC_ARG_WITH(nagios-metadata-dir,
-    [  --with-nagios-metadata-dir=DIR  Directory for nagios plugins metadata [${NAGIOS_METADATA_DIR}] ],
+    [  --with-nagios-metadata-dir=DIR  Directory for nagios plugins metadata @<:@DATADIR/nagios/plugins-metadata@:>@],
     [ NAGIOS_METADATA_DIR="$withval" ]
 )
 
@@ -206,9 +206,15 @@ AC_ARG_WITH(cibsecrets,
     [ SUPPORT_CIBSECRETS=no ],
 )
 
+AC_ARG_WITH(gnutls-priorities,
+    [  --with-gnutls-priorities  GnuTLS cipher priorities @<:@NORMAL@:>@ ],
+    [ PCMK_GNUTLS_PRIORITIES="$withval" ],
+    [ PCMK_GNUTLS_PRIORITIES="NORMAL" ],
+)
+
 INITDIR=""
 AC_ARG_WITH(initdir,
-    [  --with-initdir=DIR  Directory for init (rc) scripts [${INITDIR}] ],
+    [  --with-initdir=DIR  Directory for init (rc) scripts],
     [ INITDIR="$withval" ])
 
 SUPPORT_PROFILING=0
@@ -222,13 +228,13 @@ AC_ARG_WITH(coverage,
 
 PUBLICAN_BRAND="common"
 AC_ARG_WITH(brand,
-    [  --with-brand=brand  Brand to use for generated documentation (set empty for no docs) [$PUBLICAN_BRAND] ],
+    [  --with-brand=brand  Brand to use for generated documentation (set empty for no docs) @<:@common@:>@],
     [ test x"$withval" = x"no" || PUBLICAN_BRAND="$withval" ])
 AC_SUBST(PUBLICAN_BRAND)
 
 CONFIGDIR=""
 AC_ARG_WITH(configdir,
-    [  --with-configdir=DIR  Directory for Pacemaker configuration file [${CONFIGDIR}]],
+    [  --with-configdir=DIR  Directory for Pacemaker configuration file @<:@SYSCONFDIR/sysconfig@:>@],
     [ CONFIGDIR="$withval" ]
 )
 
@@ -370,6 +376,9 @@ if test x"${CRM_BUNDLE_DIR}" = x""; then
 fi
 AC_DEFINE_UNQUOTED(CRM_BUNDLE_DIR,"$CRM_BUNDLE_DIR", Location for Pacemaker bundle logs)
 AC_SUBST(CRM_BUNDLE_DIR)
+
+AC_DEFINE_UNQUOTED([PCMK_GNUTLS_PRIORITIES], ["$PCMK_GNUTLS_PRIORITIES"],
+		   [GnuTLS cipher priorities])
 
 for j in prefix exec_prefix bindir sbindir libexecdir datadir sysconfdir \
     sharedstatedir localstatedir libdir includedir oldincludedir infodir \
@@ -1364,27 +1373,17 @@ dnl ========================================================================
 dnl    GnuTLS
 dnl ========================================================================
 
-AC_CHECK_HEADERS(gnutls/gnutls.h)
-AC_CHECK_HEADERS(security/pam_appl.h pam/pam_appl.h)
-
-dnl GNUTLS library: Attempt to determine by 'libgnutls-config' program.
-dnl If no 'libgnutls-config', try traditional autoconf means.
-AC_PATH_PROGS(LIBGNUTLS_CONFIG, libgnutls-config)
-
-if test -n "$LIBGNUTLS_CONFIG"; then
-    AC_MSG_CHECKING(for gnutls header flags)
-    GNUTLSHEAD="`$LIBGNUTLS_CONFIG --cflags`";
-    AC_MSG_RESULT($GNUTLSHEAD)
-    AC_MSG_CHECKING(for gnutls library flags)
-    GNUTLSLIBS="`$LIBGNUTLS_CONFIG --libs`";
-    AC_MSG_RESULT($GNUTLSLIBS)
+dnl gnutls_priority_set_direct available since 2.1.7 (released 2007-11-29)
+AC_CHECK_LIB(gnutls, gnutls_priority_set_direct)
+if test "$ac_cv_lib_gnutls_gnutls_priority_set_direct" != ""; then
+    AC_CHECK_HEADERS(gnutls/gnutls.h)
 fi
-AC_CHECK_LIB(gnutls, gnutls_init)
-AC_CHECK_FUNCS(gnutls_priority_set_direct)
 
-AC_SUBST(GNUTLSHEAD)
-AC_SUBST(GNUTLSLIBS)
+dnl ========================================================================
+dnl    PAM
+dnl ========================================================================
 
+AC_CHECK_HEADERS(security/pam_appl.h pam/pam_appl.h)
 
 dnl ========================================================================
 dnl    System Health
@@ -1762,11 +1761,6 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/fencing/Makefile                                \
                 lib/lrmd/Makefile                                   \
                 lib/services/Makefile                               \
-                mcp/Makefile                                        \
-                mcp/pacemaker                                       \
-                mcp/pacemaker.service                               \
-                mcp/pacemaker.upstart                               \
-                mcp/pacemaker.combined.upstart                      \
                 lrmd/Makefile                                       \
                 lrmd/pacemaker_remote.service                       \
                 lrmd/pacemaker_remote                               \
@@ -1775,6 +1769,11 @@ AC_CONFIG_FILES(Makefile                                            \
                 extra/resources/Makefile                            \
                 extra/logrotate/Makefile                            \
                 extra/logrotate/pacemaker                           \
+                pacemakerd/Makefile                                 \
+                pacemakerd/pacemaker                                \
+                pacemakerd/pacemaker.service                        \
+                pacemakerd/pacemaker.upstart                        \
+                pacemakerd/pacemaker.combined.upstart               \
                 tools/Makefile                                      \
                 tools/report.collector                              \
                 tools/report.common                                 \

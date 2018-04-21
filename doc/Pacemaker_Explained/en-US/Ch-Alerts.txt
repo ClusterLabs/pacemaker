@@ -307,6 +307,18 @@ See their source code for the full set of instance attributes they support.
  be delayed due to system load, etc.).
  indexterm:[Environment Variable,CRM_alert_,timestamp]
 
+|CRM_alert_timestamp_epoch
+|The same time as +CRM_alert_timestamp+, expressed as the integer number of
+ seconds since January 1, 1970. This (along with +CRM_alert_timestamp_usec+)
+ can be useful for alert agents that need to format time in a specific way
+ rather than let the user configure it.
+ indexterm:[Environment Variable,CRM_alert_,timestamp_epoch]
+
+|CRM_alert_timestamp_usec
+|The same time as +CRM_alert_timestamp+, expressed as the integer number of
+ microseconds since +CRM_alert_timestamp_epoch+.
+ indexterm:[Environment Variable,CRM_alert_,timestamp_usec]
+
 |CRM_alert_node
 |Name of affected node
  indexterm:[Environment Variable,CRM_alert_,node]

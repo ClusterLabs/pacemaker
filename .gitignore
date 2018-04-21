@@ -82,10 +82,10 @@ include/crm_config.h
 lrmd/pacemaker_remote
 lrmd/pacemaker_remoted
 lrmd/pacemaker_remote.service
-mcp/pacemaker
-mcp/pacemaker.combined.upstart
-mcp/pacemaker.service
-mcp/pacemaker.upstart
+/pacemakerd/pacemaker
+/pacemakerd/pacemaker.combined.upstart
+/pacemakerd/pacemaker.service
+/pacemakerd/pacemaker.upstart
 publican.cfg
 /tools/cibsecret
 /tools/crm_error
@@ -127,7 +127,7 @@ fencing/stonithd.xml
 lrmd/lrmd
 lrmd/lrmd_internal_ctl
 lrmd/lrmd_test
-mcp/pacemakerd
+/pacemakerd/pacemakerd
 pengine/pengine
 pengine/pengine.xml
 pengine/ptest
@@ -183,6 +183,7 @@ lib/gnu/stdalign.h
 /cts/HBDummy
 /fencing/regression.py
 /lrmd/regression.py
+/mcp
 /pengine/.regression.failed.diff
 /pengine/regression.core.sh
 /pengine/test10/shadow.*

@@ -1,5 +1,5 @@
-'''CTS: Cluster Testing System: CIB generator
-'''
+""" CIB generator for Pacemaker's Cluster Test Suite (CTS)
+"""
 
 # Pacemaker targets compatibility with Python 2.7 and 3.2+
 from __future__ import print_function, unicode_literals, absolute_import, division
@@ -7,7 +7,8 @@ from __future__ import print_function, unicode_literals, absolute_import, divisi
 __copyright__ = "Copyright 2008-2018 Andrew Beekhof <andrew@beekhof.net>"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
-import os, string, warnings
+import os
+import warnings
 import tempfile
 
 from cts.CTSvars import *
@@ -194,10 +195,10 @@ class CIB12(ConfigBase):
             all_node_names = [ prefix+n for n in self.CM.Env["nodes"] for prefix in ('', 'remote-') ]
 
             # Add all parameters specified by user
-            entries = str.split(self.CM.Env["stonith-params"], ',')
+            entries = self.CM.Env["stonith-params"].split(',')
             for entry in entries:
                 try:
-                    (name, value) = str.split(entry, '=', 1)
+                    (name, value) = entry.split('=', 1)
                 except ValueError:
                     print("Warning: skipping invalid fencing parameter: %s" % entry)
                     continue

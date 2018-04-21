@@ -491,7 +491,7 @@ collect_notification_data(resource_t * rsc, gboolean state, gboolean activity,
                 task = text2task(op->task);
 
                 if(task == stop_rsc && op->node->details->unclean) {
-                    /* Create one anyway,, some additional noise if op->node cannot be fenced */
+                    // Create anyway (additional noise if node can't be fenced)
                 } else if(is_not_set(op->flags, pe_action_runnable)) {
                     continue;
                 }

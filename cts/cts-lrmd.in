@@ -138,7 +138,7 @@ class ExitCodeError(TestError):
 class OutputNotFoundError(TestError):
     """ Exception raised when command output does not contain wanted string """
 
-    def __init__(self, exit_code):
+    def __init__(self, output):
         self.output = output
 
     def __str__(self):
@@ -148,7 +148,7 @@ class OutputNotFoundError(TestError):
 class OutputFoundError(TestError):
     """ Exception raised when command output contains unwanted string """
 
-    def __init__(self, exit_code):
+    def __init__(self, output):
         self.output = output
 
     def __str__(self):

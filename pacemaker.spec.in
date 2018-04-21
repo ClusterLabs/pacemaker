@@ -66,6 +66,9 @@
   } || %{?__transaction_systemd_inhibit:1}%{!?__transaction_systemd_inhibit:0}%{nil \
   } || %(test -f /usr/lib/os-release; test $? -ne 0; echo $?))
 
+%if 0%{?fedora} > 20 || 0%{?rhel} > 7
+%global gnutls_priorities @SYSTEM
+%endif
 
 # Python-related definitions
 
@@ -207,11 +210,11 @@ BuildRequires: coreutils findutils grep sed
 BuildRequires: automake autoconf gcc libtool pkgconfig libtool-ltdl-devel
 BuildRequires: pkgconfig(glib-2.0) >= 2.16
 BuildRequires: libxml2-devel libxslt-devel libuuid-devel
-BuildRequires: bzip2-devel pam-devel
+BuildRequires: bzip2-devel
 
 # Enables optional functionality
 BuildRequires: ncurses-devel docbook-style-xsl
-BuildRequires: help2man gnutls-devel pkgconfig(dbus-1)
+BuildRequires: help2man gnutls-devel pam-devel pkgconfig(dbus-1)
 
 %if %{systemd_native}
 BuildRequires: pkgconfig(systemd)
@@ -396,6 +399,7 @@ export LDFLAGS_HARDENED_LIB="%{?_hardening_ldflags}"
         %{!?with_doc:        --with-brand=}        \
         %{!?with_hardening:  --disable-hardening}  \
         %{?python_path:      PYTHON=%{python_path}} \
+        %{?gnutls_priorities: --with-gnutls-priorities="%{gnutls_priorities}"} \
         --with-initdir=%{_initrddir}               \
         --localstatedir=%{_var}                    \
         --with-version=%{version}-%{release}
@@ -420,13 +424,13 @@ exit $?  # TODO remove when rpm<4.14 compatibility irrelevant
 make DESTDIR=%{buildroot} docdir=%{pcmk_docdir} V=1 install
 
 mkdir -p ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig
-install -m 644 mcp/pacemaker.sysconfig ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig/pacemaker
+install -m 644 pacemakerd/pacemaker.sysconfig ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig/pacemaker
 install -m 644 tools/crm_mon.sysconfig ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig/crm_mon
 
 %if %{with upstart_job}
 mkdir -p ${RPM_BUILD_ROOT}%{_sysconfdir}/init
-install -m 644 mcp/pacemaker.upstart ${RPM_BUILD_ROOT}%{_sysconfdir}/init/pacemaker.conf
-install -m 644 mcp/pacemaker.combined.upstart ${RPM_BUILD_ROOT}%{_sysconfdir}/init/pacemaker.combined.conf
+install -m 644 pacemakerd/pacemaker.upstart ${RPM_BUILD_ROOT}%{_sysconfdir}/init/pacemaker.conf
+install -m 644 pacemakerd/pacemaker.combined.upstart ${RPM_BUILD_ROOT}%{_sysconfdir}/init/pacemaker.combined.conf
 install -m 644 tools/crm_mon.upstart ${RPM_BUILD_ROOT}%{_sysconfdir}/init/crm_mon.conf
 %endif
 

@@ -1,20 +1,10 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+
 #include <crm_internal.h>
 
 #include <glib.h>
@@ -1053,7 +1043,7 @@ unpack_node_loop(xmlNode * status, bool fence, pe_working_set_t * data_set)
 }
 
 /* remove nodes that are down, stopping */
-/* create +ve rsc_to_node constraints between resources and the nodes they are running on */
+/* create positive rsc_to_node constraints between resources and the nodes they are running on */
 /* anything else? */
 gboolean
 unpack_status(xmlNode * status, pe_working_set_t * data_set)
@@ -2950,10 +2940,12 @@ update_resource_state(resource_t * rsc, node_t * node, xmlNode * xml_op, const c
                 break;
             case action_fail_reset_remote:
                 if (rsc->remote_reconnect_ms == 0) {
-                    /* when reconnect delay is not in use, the connection is allowed
-                     * to start again after the remote node is fenced and completely
-                     * stopped. Otherwise, with reconnect delay we wait for the failure
-                     * to be cleared entirely before reconnected can be attempted. */ 
+                    /* With no reconnect interval, the connection is allowed to
+                     * start again after the remote node is fenced and
+                     * completely stopped. (With a reconnect interval, we wait
+                     * for the failure to be cleared entirely before attempting
+                     * to reconnect.)
+                     */
                     *on_fail = action_fail_ignore;
                     rsc->next_role = RSC_ROLE_UNKNOWN;
                 }

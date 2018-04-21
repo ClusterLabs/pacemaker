@@ -1,19 +1,8 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -685,7 +674,8 @@ RecurringOp(resource_t * rsc, action_t * start, node_t * node,
     }
 
     if (op_cannot_recur(name)) {
-        crm_config_err("Invalid recurring action %s wth name: '%s'", ID(operation), name);
+        crm_config_err("Ignoring %s because action '%s' cannot be recurring",
+                       ID(operation), name);
         return;
     }
 
@@ -1302,7 +1292,7 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
         Recurring(rsc, start, chosen, data_set);
         Recurring_Stopped(rsc, start, chosen, data_set);
     } else {
-        pe_rsc_trace(rsc, "Monitor ops for in-active resource");
+        pe_rsc_trace(rsc, "Monitor ops for inactive resource");
         Recurring_Stopped(rsc, NULL, NULL, data_set);
     }
 
@@ -1616,14 +1606,14 @@ filter_colocation_constraint(resource_t * rsc_lh, resource_t * rsc_rh,
 
     if (constraint->score < 0
         && constraint->role_lh != RSC_ROLE_UNKNOWN && constraint->role_lh == rsc_lh->next_role) {
-        crm_trace("LH: Skipping -ve constraint: \"%s\" state filter",
+        crm_trace("LH: Skipping negative constraint: \"%s\" state filter",
                   role2text(constraint->role_lh));
         return influence_nothing;
     }
 
     if (constraint->score < 0
         && constraint->role_rh != RSC_ROLE_UNKNOWN && constraint->role_rh == rsc_rh->next_role) {
-        crm_trace("RH: Skipping -ve constraint: \"%s\" state filter",
+        crm_trace("RH: Skipping negative constraint: \"%s\" state filter",
                   role2text(constraint->role_rh));
         return influence_nothing;
     }
