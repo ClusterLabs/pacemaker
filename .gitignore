@@ -165,6 +165,7 @@ lib/gnu/stdalign.h
 /cts/pengine/
 /doc/Pacemaker_Administration.build
 /doc/Pacemaker_Administration/
+/pacemakerd/
 
 #Other 
 mock
