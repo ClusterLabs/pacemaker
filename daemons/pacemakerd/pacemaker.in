@@ -151,7 +151,7 @@ stop()
 
 	rm -f "$LOCK_FILE"
 	rm -f "@localstatedir@/run/$prog.pid"
-	killall -q -9 'crmd stonithd attrd cib lrmd pacemakerd'
+	killall -q -9 pacemakerd pacemaker-attrd crmd stonithd cib lrmd
 	success
 	echo
 }

@@ -3,7 +3,7 @@
 # Enable debug logging globally or per-subsystem.
 # Multiple subsystems may be listed separated by commas,
 # e.g. PCMK_debug=crmd,pengine
-# PCMK_debug=yes|no|crmd|pengine|cib|stonith-ng|attrd|pacemakerd
+# PCMK_debug=yes|no|crmd|pengine|cib|stonith-ng|pacemaker-attrd|pacemakerd
 
 # Send detailed log messages to the specified file. Compared to messages logged
 # via syslog, messages in this file may have extended information, and will
@@ -47,7 +47,7 @@
 # blackbox recorder can also be enabled for Pacemaker daemons at runtime by
 # sending SIGUSR1 (or SIGTRAP), and disabled by sending SIGUSR2. Multiple
 # subsystems may be listed separated by commas, e.g. PCMK_blackbox=crmd,pengine
-# PCMK_blackbox=yes|no|crmd|pengine|cib|stonith-ng|attrd|pacemakerd
+# PCMK_blackbox=yes|no|crmd|pengine|cib|stonith-ng|pacemaker-attrd|pacemakerd
 
 #==#==# Advanced use only
 

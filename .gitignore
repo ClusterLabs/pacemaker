@@ -113,7 +113,7 @@ cib/cibmon
 cib/cibpipe
 crmd/atest
 crmd/crmd
-/daemons/attrd/attrd
+/daemons/attrd/pacemaker-attrd
 /daemons/pacemakerd/pacemakerd
 doc/api/*
 doc/Clusters_from_Scratch.txt

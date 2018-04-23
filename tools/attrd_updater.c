@@ -1,20 +1,8 @@
-
-/* 
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+/*
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ *
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -43,19 +31,19 @@ static struct crm_option long_options[] = {
     {"name",    1, 0, 'n', "The attribute's name"},
 
     {"-spacer-",1, 0, '-', "\nCommands:"},
-    {"update",  1, 0, 'U', "Update the attribute's value in attrd.  If this causes the value to change, it will also be updated in the cluster configuration"},
-    {"update-both", 1, 0, 'B', "Update the attribute's value and time to wait (dampening) in attrd. If this causes the value or dampening to change, the attribute will also be written to the cluster configuration, so be aware that repeatedly changing the dampening reduces its effectiveness."},
-    {"update-delay", 0, 0, 'Y', "Update the attribute's dampening in attrd (requires -d/--delay). If this causes the dampening to change, the attribute will also be written to the cluster configuration, so be aware that repeatedly changing the dampening reduces its effectiveness."},
-    {"query",   0, 0, 'Q', "\tQuery the attribute's value from attrd"},
-    {"delete",  0, 0, 'D', "\tDelete the attribute in attrd.  If a value was previously set, it will also be removed from the cluster configuration"},
-    {"refresh", 0, 0, 'R', "\t(Advanced) Force the attrd daemon to resend all current values to the CIB\n"},    
-    
+    {"update",  1, 0, 'U', "Update the attribute's value in pacemaker-attrd. If this causes the value to change, it will also be updated in the cluster configuration"},
+    {"update-both", 1, 0, 'B', "Update the attribute's value and time to wait (dampening) in pacemaker-attrd. If this causes the value or dampening to change, the attribute will also be written to the cluster configuration, so be aware that repeatedly changing the dampening reduces its effectiveness."},
+    {"update-delay", 0, 0, 'Y', "Update the attribute's dampening in pacemaker-attrd (requires -d/--delay). If this causes the dampening to change, the attribute will also be written to the cluster configuration, so be aware that repeatedly changing the dampening reduces its effectiveness."},
+    {"query",   0, 0, 'Q', "\tQuery the attribute's value from pacemaker-attrd"},
+    {"delete",  0, 0, 'D', "\tDelete the attribute in pacemaker-attrd.  If a value was previously set, it will also be removed from the cluster configuration"},
+    {"refresh", 0, 0, 'R', "\t(Advanced) Force the pacemaker-attrd daemon to resend all current values to the CIB\n"},
+
     {"-spacer-",1, 0, '-', "\nAdditional options:"},
     {"delay",   1, 0, 'd', "The time to wait (dampening) in seconds for further changes before writing"},
     {"set",     1, 0, 's', "(Advanced) The attribute set in which to place the value"},
     {"node",    1, 0, 'N', "Set the attribute for the named node (instead of the local one)"},
     {"all",     0, 0, 'A', "Show values of the attribute for all nodes (query only)"},
-    /* lifetime could be implemented for atomic attrd if there is sufficient user demand */
+    /* lifetime could be implemented if there is sufficient user demand */
     {"lifetime",1, 0, 'l', "(Deprecated) Lifetime of the node attribute (silently ignored by cluster)"},
     {"private", 0, 0, 'p', "\tIf this creates a new attribute, never write the attribute to the CIB"},
 
@@ -172,8 +160,8 @@ main(int argc, char **argv)
     } else {
         /* @TODO We don't know whether the specified node is a Pacemaker Remote
          * node or not, so we can't set attrd_opt_remote when appropriate.
-         * However, it's not a big problem, because attrd will learn and
-         * remember a node's "remoteness".
+         * However, it's not a big problem, because pacemaker-attrd will learn
+         * and remember a node's "remoteness".
          */
 
         attr_node = attrd_get_target(attr_node);
@@ -186,7 +174,7 @@ main(int argc, char **argv)
 
 /*!
  * \internal
- * \brief Submit a query request to attrd and wait for reply
+ * \brief Submit a query request to pacemaker-attrd and wait for reply
  *
  * \param[in] name    Name of attribute to query
  * \param[in] host    Query applies to this host only (or all hosts if NULL)
@@ -213,7 +201,7 @@ send_attrd_query(const char *name, const char *host, xmlNode **reply)
     crm_xml_add(query, F_ATTRD_TASK, ATTRD_OP_QUERY);
     crm_xml_add(query, F_ATTRD_ATTRIBUTE, name);
 
-    /* Connect to attrd, send query XML and get reply */
+    /* Connect to pacemaker-attrd, send query XML and get reply */
     crm_debug("Sending query for value of %s on %s", name, (host? host : "all nodes"));
     ipc = crm_ipc_new(T_ATTRD, 0);
     if (crm_ipc_connect(ipc) == FALSE) {
@@ -232,7 +220,7 @@ send_attrd_query(const char *name, const char *host, xmlNode **reply)
 }
 
 /*!
- * \brief Validate attrd's XML reply to an query
+ * \brief Validate pacemaker-attrd's XML reply to an query
  *
  * param[in] reply      Root of reply XML tree to validate
  * param[in] attr_name  Name of attribute that was queried
@@ -271,7 +259,7 @@ validate_attrd_reply(xmlNode *reply, const char *attr_name)
 }
 
 /*!
- * \brief Print the attribute values in an attrd XML query reply
+ * \brief Print the attribute values in a pacemaker-attrd XML query reply
  *
  * \param[in] reply     Root of XML tree with query reply
  * \param[in] attr_name Name of attribute that was queried
@@ -307,7 +295,7 @@ print_attrd_values(xmlNode *reply, const char *attr_name)
 }
 
 /*!
- * \brief Submit a query to attrd and print reply
+ * \brief Submit a query to pacemaker-attrd and print reply
  *
  * \param[in] attr_name  Name of attribute to be affected by request
  * \param[in] attr_node  Name of host to query for (or NULL for localhost)
@@ -328,7 +316,7 @@ do_query(const char *attr_name, const char *attr_node, gboolean query_all)
         attr_node = attrd_get_target(attr_node);
     }
 
-    /* Build and send attrd request, and get XML reply */
+    /* Build and send pacemaker-attrd request, and get XML reply */
     rc = send_attrd_query(attr_name, attr_node, &reply);
     if (rc != pcmk_ok) {
         fprintf(stderr, "Could not query value of %s: %s (%d)\n", attr_name, pcmk_strerror(rc), rc);

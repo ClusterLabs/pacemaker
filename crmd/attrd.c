@@ -117,7 +117,7 @@ update_attrd(const char *host, const char *name, const char *value,
 void
 update_attrd_remote_node_removed(const char *host, const char *user_name)
 {
-    crm_trace("Asking attrd to purge Pacemaker Remote node %s", host);
+    crm_trace("Asking pacemaker-attrd to purge Pacemaker Remote node %s", host);
     update_attrd_helper(host, NULL, NULL, NULL, user_name, TRUE, 'C');
 }
 
@@ -136,7 +136,7 @@ update_attrd_clear_failures(const char *host, const char *rsc, const char *op,
         interval_desc = "all";
         op_desc = "operations";
     }
-    crm_info("Asking attrd to clear failure of %s %s for %s on %s node %s",
+    crm_info("Asking pacemaker-attrd to clear failure of %s %s for %s on %s node %s",
              interval_desc, op_desc, rsc, node_type, host);
     update_attrd_helper(host, rsc, op, interval_spec, NULL, is_remote_node, 0);
 }

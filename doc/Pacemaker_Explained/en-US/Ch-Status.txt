@@ -38,7 +38,7 @@ with the tools appropriate to those sources.
 
 |node_state|crmd
 
-|transient_attributes|attrd
+|transient_attributes|pacemaker-attrd
 
 |lrm|lrmd
 

@@ -1019,7 +1019,7 @@ attrd_ipc_server_init(qb_ipcs_service_t **ipcs, struct qb_ipcs_service_handlers 
     *ipcs = mainloop_add_ipc_server(T_ATTRD, QB_IPC_NATIVE, cb);
 
     if (*ipcs == NULL) {
-        crm_err("Failed to create attrd servers: exiting and inhibiting respawn.");
+        crm_err("Failed to create pacemaker-attrd server: exiting and inhibiting respawn");
         crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
         crm_exit(CRM_EX_FATAL);
     }

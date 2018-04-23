@@ -1556,8 +1556,8 @@ dnl default case are as follows:
 dnl
 dnl * CFLAGS_HARDENED_EXE, LDFLAGS_HARDENED_EXE
 dnl    compiler and linker flags (respectively) for daemon programs
-dnl    (attrd, cib, crmd, lrmd, stonithd, pacemakerd, pacemaker_remoted,
-dnl    pengine)
+dnl    (pacemaker-attrd, cib, crmd, lrmd, stonithd, pacemakerd,
+dnl    pacemaker_remoted, pengine)
 dnl
 dnl * CFLAGS_HARDENED_LIB, LDFLAGS_HARDENED_LIB
 dnl    compiler and linker flags (respectively) for libraries linked

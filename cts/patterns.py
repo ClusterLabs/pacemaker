@@ -257,7 +257,7 @@ class crm_corosync(BasePatterns):
 
         self.components["cib"] = [
                     "State transition .* S_RECOVERY",
-                    r"Respawning failed child process: (attrd|crmd)",
+                    r"Respawning failed child process: (pacemaker-attrd|crmd)",
                     "Connection to cib_.* failed",
                     "Connection to cib_.* closed",
                     r"crmd.*:.*Connection to the CIB terminated...",
@@ -291,8 +291,8 @@ class crm_corosync(BasePatterns):
                     ]
         self.components["crmd-ignore"] = []
 
-        self.components["attrd"] = []
-        self.components["attrd-ignore"] = []
+        self.components["pacemaker-attrd"] = []
+        self.components["pacemaker-attrd-ignore"] = []
 
         self.components["pengine"] = [
                     "State transition .* S_RECOVERY",

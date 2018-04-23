@@ -1,4 +1,10 @@
 #!/bin/bash
+#
+# Copyright 2011-2018 Andrew Beekhof <andrew@beekhof.net>
+#
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
+#
 
 hosts=
 group=
@@ -41,7 +47,7 @@ if [ $kill != 0 ]; then
     cluster-helper $target -- "service corosync stop" &> /dev/null &
     cluster-helper $target -- "service pacemaker stop" &> /dev/null &
 
-    cluster-helper $target -- "killall -q -9 corosync pacemakerd pacemaker_remoted stonithd lrmd crmd pengine attrd cib dlm_controld gfs_controld" &> /dev/null
+    cluster-helper $target -- "killall -q -9 corosync pacemakerd pacemaker-attrd pacemaker_remoted stonithd lrmd crmd pengine cib dlm_controld gfs_controld" &> /dev/null
     cluster-helper $target -- 'kill -9 `pidof valgrind`' &> /dev/null
 
     if [ $kill == 2 ]; then

@@ -103,7 +103,7 @@ the necessary processes are running:
  1380 ?        Ss     0:00  \_ /usr/libexec/pacemaker/cib
  1381 ?        Ss     0:00  \_ /usr/libexec/pacemaker/stonithd
  1382 ?        Ss     0:00  \_ /usr/libexec/pacemaker/lrmd
- 1383 ?        Ss     0:00  \_ /usr/libexec/pacemaker/attrd
+ 1383 ?        Ss     0:00  \_ /usr/libexec/pacemaker/pacemaker-attrd
  1384 ?        Ss     0:00  \_ /usr/libexec/pacemaker/pengine
  1385 ?        Ss     0:00  \_ /usr/libexec/pacemaker/crmd
 ----

@@ -8,22 +8,22 @@
 include $(top_srcdir)/Makefile.common
 
 halibdir	= $(CRM_DAEMON_DIR)
-halib_PROGRAMS	= attrd
+halib_PROGRAMS	= pacemaker-attrd
 ## SOURCES
 
 noinst_HEADERS  = internal.h attrd_common.h
 
-attrd_CFLAGS	= $(CFLAGS_HARDENED_EXE)
-attrd_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
+pacemaker_attrd_CFLAGS	= $(CFLAGS_HARDENED_EXE)
+pacemaker_attrd_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
 
-attrd_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la	\
-                $(top_builddir)/lib/pengine/libpe_rules.la      \
-		$(top_builddir)/lib/common/libcrmcommon.la	\
-		$(top_builddir)/lib/cib/libcib.la		\
-                $(top_builddir)/lib/lrmd/liblrmd.la             \
-		$(CLUSTERLIBS)
+pacemaker_attrd_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la	\
+			  $(top_builddir)/lib/pengine/libpe_rules.la	\
+			  $(top_builddir)/lib/common/libcrmcommon.la	\
+			  $(top_builddir)/lib/cib/libcib.la		\
+			  $(top_builddir)/lib/lrmd/liblrmd.la		\
+			  $(CLUSTERLIBS)
 
-attrd_SOURCES	= main.c commands.c attrd_common.c attrd_common_alerts.c
+pacemaker_attrd_SOURCES	= main.c commands.c attrd_common.c attrd_common_alerts.c
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~

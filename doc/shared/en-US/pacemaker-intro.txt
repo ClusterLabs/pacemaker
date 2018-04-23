@@ -85,28 +85,28 @@ image::images/pcmk-stack.png["Example cluster stack",width="10cm",height="7.5cm"
 
 Pacemaker itself is composed of multiple daemons that work together:
 
- * attrd
+ * pacemakerd
+ * pacemaker-attrd
  * cib
  * crmd
  * lrmd
- * pacemakerd
  * pengine
  * stonithd
 
 .Internal Components
 image::images/pcmk-internals.png["Pacemaker software components",align="center",scaledwidth="65%"]
 
-The Pacemaker daemon (pacemakerd) is the master process that spawns all the
-other daemons, and respawns them if they unexpectedly exit.
+The Pacemaker master process (pacemakerd) spawns all the other daemons, and
+respawns them if they unexpectedly exit.
 
 The 'Cluster Information Base' (CIB) is an
 https://en.wikipedia.org/wiki/XML[XML] representation of the cluster's
 configuration and the state of all nodes and resources. The CIB daemon (cib)
 keeps the CIB synchronized across the cluster, and handles requests to modify it.
 
-The 'attribute daemon' (attrd) maintains a database of attributes for all
-nodes, keeps it synchronized across the cluster, and handles requests to modify
-them. These attributes are usually recorded in the CIB.
+The attribute manager (pacemaker-attrd) maintains a database of attributes for
+all nodes, keeps it synchronized across the cluster, and handles requests to
+modify them. These attributes are usually recorded in the CIB.
 
 Given a snapshot of the CIB as input, the 'policy engine' (pengine) determines
 what actions are necessary to achieve the desired state of the cluster.
@@ -130,6 +130,21 @@ The DC responds to cluster events by taking a current snapshot of the CIB,
 feeding it to the policy engine, then asking the lrmd (either directly on the
 local node, or via requests to crmd peers on other nodes) and stonithd to
 execute any necessary actions.
+
+.Old daemon names
+[NOTE]
+====
+The Pacemaker daemons were renamed in version 2.0. You may still find
+references to the old names, especially in documentation targeted to version
+1.1.
+
+[cols="1,2",options="header",align="center"]
+|=========================================================
+| Old name | New name
+| attrd | pacemaker-attrd
+|=========================================================
+
+====
 
 == Node Redundancy Designs ==
 

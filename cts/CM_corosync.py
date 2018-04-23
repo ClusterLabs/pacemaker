@@ -1,5 +1,5 @@
-''' Corosync-specific class for Pacemaker's Cluster Test Suite (CTS)
-'''
+""" Corosync-specific class for Pacemaker's Cluster Test Suite (CTS)
+"""
 
 # Pacemaker targets compatibility with Python 2.7 and 3.2+
 from __future__ import print_function, unicode_literals, absolute_import, division
@@ -26,7 +26,7 @@ class crm_corosync(crm_common):
     def Components(self):
         complist = []
         if not len(list(self.fullcomplist.keys())):
-            for c in ["cib", "lrmd", "crmd", "attrd" ]:
+            for c in ["cib", "lrmd", "crmd", "pacemaker-attrd" ]:
                 self.fullcomplist[c] = Process(
                     self, c, 
                     pats = self.templates.get_component(self.name, c),
