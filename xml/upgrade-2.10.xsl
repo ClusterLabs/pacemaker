@@ -1048,7 +1048,7 @@
                 not($InverseMode)">
     <xsl:if test="$InverseMode
                   and
-                  not($InnerSimulation)">
+                  $InnerSimulation">
       <xsl:call-template name="HelperDenormalizedSpace">
         <xsl:with-param name="Source" select="$InnerPass"/>
         <xsl:with-param name="ResultTreeFragment" select="true()"/>
@@ -1441,6 +1441,7 @@
         <xsl:call-template name="ProcessAttrOpMetaAttributes">
           <xsl:with-param name="Source" select="."/>
           <xsl:with-param name="InverseMode" select="true()"/>
+          <xsl:with-param name="InnerSimulation" select="true()"/>
         </xsl:call-template>
       </xsl:for-each>
     </xsl:variable>
@@ -1448,7 +1449,12 @@
     <xsl:if test="normalize-space($ToPropagateFromOp)
                   != $ToPropagateFromOp">
       <meta_attributes id="{concat('_2TO3_', @id, '-meta')}">
-        <xsl:copy-of select="$ToPropagateFromOp"/>
+        <xsl:for-each select="operations/op">
+          <xsl:call-template name="ProcessAttrOpMetaAttributes">
+            <xsl:with-param name="Source" select="."/>
+            <xsl:with-param name="InverseMode" select="true()"/>
+          </xsl:call-template>
+        </xsl:for-each>
       </meta_attributes>
     </xsl:if>
 
