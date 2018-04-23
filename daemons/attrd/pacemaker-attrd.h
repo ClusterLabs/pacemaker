@@ -1,16 +1,18 @@
 /*
- * Copyright 2017-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2013-2018 Andrew Beekhof <andrew@beekhof.net>
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef PCMK_ATTRD_COMMON__H
-#  define PCMK_ATTRD_COMMON__H
+#ifndef PACEMAKER_ATTRD__H
+#  define PACEMAKER_ATTRD__H
 
 #include <regex.h>
 #include <glib.h>
 #include <crm/crm.h>
+#include <crm/cluster.h>
+#include <crm/cluster/election.h>
 #include <crm/cib/internal.h>
 
 void attrd_init_mainloop(void);
@@ -61,4 +63,54 @@ gboolean attrd_read_options(gpointer user_data);
 void attrd_cib_updated_cb(const char *event, xmlNode *msg);
 int attrd_send_attribute_alert(const char *node, int nodeid,
                                const char *attr, const char *value);
-#endif /* PCMK_ATTRD_COMMON__H */
+
+typedef struct attribute_s {
+    char *uuid; /* TODO: Remove if at all possible */
+    char *id;
+    char *set;
+    GHashTable *values;
+    int update;
+    int timeout_ms;
+
+    /* TODO: refactor these three as a bitmask */
+    bool changed; /* whether attribute value has changed since last write */
+    bool unknown_peer_uuids; /* whether we know we're missing a peer uuid */
+    gboolean is_private; /* whether to keep this attribute out of the CIB */
+
+    mainloop_timer_t *timer;
+
+    char *user;
+
+} attribute_t;
+
+typedef struct attribute_value_s {
+        uint32_t nodeid;
+        gboolean is_remote;
+        char *nodename;
+        char *current;
+        char *requested;
+        gboolean seen;
+} attribute_value_t;
+
+crm_cluster_t *attrd_cluster;
+GHashTable *attributes;
+election_t *writer;
+
+#define attrd_send_ack(client, id, flags) \
+    crm_ipcs_send_ack((client), (id), (flags), "ack", __FUNCTION__, __LINE__)
+
+void write_attributes(bool all);
+void attrd_broadcast_protocol(void);
+void attrd_peer_message(crm_node_t *client, xmlNode *msg);
+void attrd_client_peer_remove(const char *client_name, xmlNode *xml);
+void attrd_client_clear_failure(xmlNode *xml);
+void attrd_client_update(xmlNode *xml);
+void attrd_client_refresh(void);
+void attrd_client_query(crm_client_t *client, uint32_t id, uint32_t flags, xmlNode *query);
+
+void free_attribute(gpointer data);
+
+gboolean attrd_election_cb(gpointer user_data);
+void attrd_peer_change_cb(enum crm_status_type type, crm_node_t *peer, const void *data);
+
+#endif /* PACEMAKER_ATTRD__H */

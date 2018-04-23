@@ -18,7 +18,7 @@
 #include <crm/cluster/election.h>
 #include <crm/cib/internal.h>
 
-#include <internal.h>
+#include "pacemaker-attrd.h"
 
 /*
  * Legacy attrd (all pre-1.1.11 Pacemaker versions, plus all versions when used

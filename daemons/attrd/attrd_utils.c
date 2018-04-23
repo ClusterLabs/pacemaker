@@ -17,7 +17,7 @@
 #include <crm/common/ipcs.h>
 #include <crm/common/mainloop.h>
 
-#include <attrd_common.h>
+#include "pacemaker-attrd.h"
 
 cib_t *the_cib = NULL;
 

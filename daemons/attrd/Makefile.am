@@ -11,7 +11,7 @@ halibdir	= $(CRM_DAEMON_DIR)
 halib_PROGRAMS	= pacemaker-attrd
 ## SOURCES
 
-noinst_HEADERS  = internal.h attrd_common.h
+noinst_HEADERS  = pacemaker-attrd.h
 
 pacemaker_attrd_CFLAGS	= $(CFLAGS_HARDENED_EXE)
 pacemaker_attrd_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
@@ -23,7 +23,8 @@ pacemaker_attrd_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la	\
 			  $(top_builddir)/lib/lrmd/liblrmd.la		\
 			  $(CLUSTERLIBS)
 
-pacemaker_attrd_SOURCES	= main.c commands.c attrd_common.c attrd_common_alerts.c
+pacemaker_attrd_SOURCES	= pacemaker-attrd.c attrd_commands.c 	\
+			  attrd_utils.c attrd_alerts.c
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~
