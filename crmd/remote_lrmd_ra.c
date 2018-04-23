@@ -1,19 +1,8 @@
-/* 
- * Copyright (C) 2013 David Vossel <davidvossel@gmail.com>
- * 
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+/*
+ * Copyright 2013-2018 David Vossel <davidvossel@gmail.com>
+ *
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -530,7 +519,7 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
 
     lrm_state = lrm_state_find(op->remote_nodename);
     if (!lrm_state || !lrm_state->remote_ra_data) {
-        crm_debug("lrm_state info not found for remote lrmd connection event");
+        crm_debug("No state information found for remote connection event");
         return;
     }
     ra_data = lrm_state->remote_ra_data;
@@ -622,7 +611,7 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
             ra_data->active = TRUE;
         }
 
-        crm_debug("remote lrmd connect event matched %s action. ", cmd->action);
+        crm_debug("Remote connection event matched %s action", cmd->action);
         report_remote_ra_result(cmd);
         cmd_handled = TRUE;
 
@@ -643,7 +632,7 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
             cmd->reported_success = 1;
         }
 
-        crm_debug("remote lrmd poke event matched %s action. ", cmd->action);
+        crm_debug("Remote poke event matched %s action", cmd->action);
 
         /* success, keep rescheduling if interval is present. */
         if (cmd->interval_ms && (cmd->cancel == FALSE)) {
@@ -769,7 +758,7 @@ handle_remote_ra_exec(gpointer user_data)
             rc = handle_remote_ra_start(lrm_state, cmd, cmd->timeout);
             if (rc == 0) {
                 /* take care of this later when we get async connection result */
-                crm_debug("began remote lrmd connect, waiting for connect event.");
+                crm_debug("Remote connection started, waiting for connect event");
                 ra_data->cur_cmd = cmd;
                 return TRUE;
             } else {
@@ -794,7 +783,8 @@ handle_remote_ra_exec(gpointer user_data)
             }
 
             if (rc == 0) {
-                crm_debug("poked remote lrmd at node %s, waiting for async response.", cmd->rsc_id);
+                crm_debug("Poked Pacemaker Remote at node %s, waiting for async response",
+                          cmd->rsc_id);
                 ra_data->cur_cmd = cmd;
                 cmd->monitor_timeout_id = g_timeout_add(cmd->timeout, monitor_timeout_cb, cmd);
                 return TRUE;

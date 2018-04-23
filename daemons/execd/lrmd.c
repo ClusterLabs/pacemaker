@@ -56,8 +56,9 @@ typedef struct lrmd_cmd_s {
     char *userdata_str;
 
 #ifdef HAVE_SYS_TIMEB_H
-    /* recurring and systemd operations may involve more than one lrmd command
-     * per operation, so they need info about original and most recent
+    /* Recurring and systemd operations may involve more than one executor
+     * command per operation, so they need info about the original and the most
+     * recent.
      */
     struct timeb t_first_run;   /* Timestamp of when op first ran */
     struct timeb t_run;         /* Timestamp of when op most recently ran */
@@ -417,7 +418,7 @@ time_diff_ms(struct timeb *now, struct timeb *old)
  * command, so we report the entire time since then and not just the time since
  * the most recent command (for recurring and systemd operations).
  *
- * /param[in] cmd  LRMD command object to reset
+ * /param[in] cmd  Executor command object to reset
  *
  * /note It's not obvious what the queued time should be for a systemd
  * start/stop operation, which might go like this:
@@ -767,7 +768,8 @@ action_complete(svc_action_t * action)
     bool goagain = false;
 
     if (!cmd) {
-        crm_err("LRMD action (%s) completed does not match any known operations.", action->id);
+        crm_err("Completed executor action (%s) does not match any known operations",
+                action->id);
         return;
     }
 #ifdef HAVE_SYS_TIMEB_H
@@ -1032,10 +1034,12 @@ lrmd_rsc_execute_stonith(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
             }
         }
 
-        /* Stonith automatically registers devices from the IPC when changes occur,
-         * but to avoid a possible race condition between stonith receiving the IPC update
-         * and the lrmd requesting that resource, the lrmd still registers the device as well.
-         * Stonith knows how to handle duplicate device registrations correctly. */
+        /* Stonith automatically registers devices from the IPC when changes
+         * occur, but to avoid a possible race condition between stonith
+         * receiving the IPC update and the executor requesting that resource,
+         * the executor still registers the device as well. Stonith knows how to
+         * handle duplicate device registrations correctly.
+         */
         rc = stonith_api->cmds->register_device(stonith_api,
                                                 st_opt_sync_call,
                                                 cmd->rsc_id,

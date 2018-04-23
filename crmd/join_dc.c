@@ -1,20 +1,10 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
+
 #include <crm_internal.h>
 
 #include <crm/crm.h>
@@ -563,23 +553,24 @@ do_dc_join_ack(long long action,
         xmlNode *now_dc_lrmd_state = do_lrm_query(TRUE, fsa_our_uname);
 
         if (now_dc_lrmd_state != NULL) {
-            crm_debug("LRM state is updated from do_lrm_query.(%s)", join_from);
+            crm_debug("Local executor state updated from query");
             fsa_cib_update(XML_CIB_TAG_STATUS, now_dc_lrmd_state,
                 cib_scope_local | cib_quorum_override | cib_can_create, call_id, NULL);
             free_xml(now_dc_lrmd_state);
         } else {
-            crm_warn("Could not get our LRM state. LRM state is updated from join_ack->xml.(%s)", join_from);
+            crm_warn("Local executor state updated from join acknowledgement because query failed");
             fsa_cib_update(XML_CIB_TAG_STATUS, join_ack->xml,
                 cib_scope_local | cib_quorum_override | cib_can_create, call_id, NULL);
         }
     } else {
-        crm_debug("LRM state is updated from join_ack->xml.(%s)", join_from);
+        crm_debug("Executor state for %s updated from join acknowledgement",
+                  join_from);
         fsa_cib_update(XML_CIB_TAG_STATUS, join_ack->xml,
            cib_scope_local | cib_quorum_override | cib_can_create, call_id, NULL);
     }
 
     fsa_register_cib_callback(call_id, FALSE, NULL, join_update_complete_callback);
-    crm_debug("join-%d: Registered callback for LRM update %d", join_id, call_id);
+    crm_debug("join-%d: Registered callback for CIB status update %d", join_id, call_id);
 }
 
 void

@@ -25,7 +25,7 @@ static struct crm_option long_options[] = {
     {"quiet",            0, 0, 'Q', "\t\tSuppress all output to screen"},
     {"tls",              0, 0, 'S', "\t\tUse tls backend for local connection"},
     {"listen",           1, 0, 'l', "\tListen for a specific event string"},
-    {"api-call",         1, 0, 'c', "\tDirectly relates to lrmd api functions"},
+    {"api-call",         1, 0, 'c', "\tDirectly relates to executor API functions"},
     {"no-wait",          0, 0, 'w', "\tMake api call and do not wait for result."},
     {"is-running",       0, 0, 'R', "\tDetermine if a resource is registered and running."},
     {"notify-orig",      0, 0, 'n', "\tOnly notify this client the results of an api action."},
@@ -153,13 +153,13 @@ connection_events(lrmd_event_data_t * event)
     }
 
     if (!rc) {
-        crm_info("lrmd client connection established");
+        crm_info("Executor client connection established");
         start_test(NULL);
         return;
     } else {
         sleep(1);
         try_connect();
-        crm_notice("lrmd client connection failed");
+        crm_notice("Executor client connection failed");
     }
 }
 
@@ -172,7 +172,7 @@ try_connect(void)
 
     lrmd_conn->cmds->set_callback(lrmd_conn, connection_events);
     for (; num_tries < tries; num_tries++) {
-        rc = lrmd_conn->cmds->connect_async(lrmd_conn, "lrmd", 3000);
+        rc = lrmd_conn->cmds->connect_async(lrmd_conn, "pacemaker-execd", 3000);
 
         if (!rc) {
             return;             /* we'll hear back in async callback */
@@ -454,7 +454,7 @@ main(int argc, char **argv)
     crm_trigger_t *trig;
 
     crm_set_options(NULL, "mode [options]", long_options,
-                    "Inject commands into the lrmd and watch for events\n");
+                    "Inject commands into the executor, and watch for events\n");
 
     while (1) {
         flag = crm_get_option(argc, argv, &option_index);

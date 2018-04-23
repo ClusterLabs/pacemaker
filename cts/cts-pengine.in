@@ -1219,7 +1219,7 @@ do_test bundle-replicas-change "Change bundle from 1 replica to multiple"
 
 echo ""
 do_test whitebox-fail1 "Fail whitebox container rsc."
-do_test whitebox-fail2 "Fail whitebox container rsc lrmd connection."
+do_test whitebox-fail2 "Fail cluster connection to guest node"
 do_test whitebox-fail3 "Failed containers should not run nested on remote nodes."
 do_test whitebox-start "Start whitebox container with resources assigned to it"
 do_test whitebox-stop "Stop whitebox container with resources assigned to it"

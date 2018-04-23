@@ -16,13 +16,13 @@ Options:
  -V, --verbose   Increase test verbosity
  -v, --valgrind  Run test commands under valgrind
 
-Tests (default tests are 'pengine cli lrmd'):
+Tests (default tests are 'pengine cli pacemaker-execd'):
  pengine           Policy engine
  cli               Command-line tools
- lrmd              Local resource manager
+ pacemaker-execd   Local resource agent executor
  pacemaker_remote  Local resource manager in remote mode
  fencing           Fencing daemon
- all               Synonym for 'pengine cli lrmd fencing'"
+ all               Synonym for 'pengine cli pacemaker-execd fencing'"
 
 # If readlink supports -e (i.e. GNU), use it
 readlink -e / >/dev/null 2>/dev/null
@@ -78,7 +78,7 @@ add_test() {
     local TEST="$1"
 
     case "$TEST" in
-        pengine|lrmd|pacemaker_remote|fencing|cli)
+        pengine|pacemaker-execd|pacemaker_remote|fencing|cli)
             if [[ ! $tests =~ $TEST ]]; then
                 tests="$tests $TEST"
             fi
@@ -107,12 +107,12 @@ run_test() {
                 rc=$CRM_EX_NOT_INSTALLED
             fi
             ;;
-        lrmd)
+        pacemaker-execd)
             if [ -x $test_home/cts-lrmd ]; then
                 run_as_root $test_home/cts-lrmd
                 rc=$?
             else
-                error "lrmd regression test not found"
+                error "pacemaker-execd regression test not found"
                 rc=$CRM_EX_NOT_INSTALLED
             fi
             ;;
@@ -187,14 +187,14 @@ while [ $# -gt 0 ] ; do
             valgrind="-v"
             shift
             ;;
-        pengine|lrmd|pacemaker_remote|fencing|cli)
+        pengine|pacemaker-execd|pacemaker_remote|fencing|cli)
             add_test $1
             shift
             ;;
         all)
             add_test pengine
             add_test cli
-            add_test lrmd
+            add_test pacemaker-execd
             add_test fencing
             shift
             ;;
@@ -210,7 +210,7 @@ done
 if [ -z "$tests" ]; then
     add_test pengine
     add_test cli
-    add_test lrmd
+    add_test pacemaker-execd
 fi
 
 run_tests $tests

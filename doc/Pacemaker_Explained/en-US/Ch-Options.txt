@@ -38,7 +38,7 @@ The empty configuration above contains the major sections that make up a CIB:
   ** +status+: This section contains the history of each resource on each node.
     Based on this data, the cluster can construct the complete current
     state of the cluster.  The authoritative source for this section
-    is the local resource manager (lrmd process) on each cluster node, and
+    is the local executor (pacemaker-execd process) on each cluster node, and
     the cluster will occasionally repopulate the entire section.  For this
     reason, it is never written to disk, and administrators are advised
     against modifying it in any way.

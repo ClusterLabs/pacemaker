@@ -58,12 +58,12 @@ static void
 lrm_connection_destroy(void)
 {
     if (is_set(fsa_input_register, R_LRM_CONNECTED)) {
-        crm_crit("LRM Connection failed");
+        crm_crit("Connection to executor failed");
         register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
         clear_bit(fsa_input_register, R_LRM_CONNECTED);
 
     } else {
-        crm_info("LRM Connection disconnected");
+        crm_info("Disconnected from executor");
     }
 
 }
@@ -320,9 +320,10 @@ do_lrm_control(long long action,
                enum crmd_fsa_state cur_state,
                enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-    /* This only pertains to local lrmd connections.  Remote connections are handled as
-     * resources within the pengine.  Connecting and disconnecting from remote lrmd instances
-     * handled differently than the local. */
+    /* This only pertains to local executor connections. Remote connections are
+     * handled as resources within the pengine. Connecting and disconnecting
+     * from remote executor instances is handled differently.
+     */
 
     lrm_state_t *lrm_state = NULL;
 
@@ -344,21 +345,21 @@ do_lrm_control(long long action,
         }
 
         clear_bit(fsa_input_register, R_LRM_CONNECTED);
-        crm_info("Disconnecting from the LRM");
+        crm_info("Disconnecting from the executor");
         lrm_state_disconnect(lrm_state);
         lrm_state_reset_tables(lrm_state, FALSE);
-        crm_notice("Disconnected from the LRM");
+        crm_notice("Disconnected from the executor");
     }
 
     if (action & A_LRM_CONNECT) {
         int ret = pcmk_ok;
 
-        crm_debug("Connecting to the LRM");
+        crm_debug("Connecting to the executor");
         ret = lrm_state_ipc_connect(lrm_state);
 
         if (ret != pcmk_ok) {
             if (lrm_state->num_lrm_register_fails < MAX_LRM_REG_FAILS) {
-                crm_warn("Failed to connect to the LRM %d time%s (%d max)",
+                crm_warn("Failed to connect to the executor %d time%s (%d max)",
                          lrm_state->num_lrm_register_fails,
                          s_if_plural(lrm_state->num_lrm_register_fails),
                          MAX_LRM_REG_FAILS);
@@ -370,7 +371,7 @@ do_lrm_control(long long action,
         }
 
         if (ret != pcmk_ok) {
-            crm_err("Failed to connect to the LRM the max allowed %d time%s",
+            crm_err("Failed to connect to the executor the max allowed %d time%s",
                     lrm_state->num_lrm_register_fails,
                     s_if_plural(lrm_state->num_lrm_register_fails));
             register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
@@ -378,7 +379,7 @@ do_lrm_control(long long action,
         }
 
         set_bit(fsa_input_register, R_LRM_CONNECTED);
-        crm_info("LRM connection established");
+        crm_info("Connection to the executor established");
     }
 
     if (action & ~(A_LRM_CONNECT | A_LRM_DISCONNECT)) {
@@ -430,7 +431,7 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
     }
 
     if (counter > 0) {
-        do_crm_log(log_level, "%d pending LRM operation%s at %s",
+        do_crm_log(log_level, "%d pending executor operation%s at %s",
                    counter, s_if_plural(counter), when);
 
         if (cur_state == S_TERMINATE || !is_set(fsa_input_register, R_SENT_RSC_STOP)) {
@@ -685,7 +686,7 @@ build_operation_update(xmlNode * parent, lrmd_rsc_info_t * rsc, lrmd_event_data_
     lrm_state = lrm_state_find(node_name);
     if (lrm_state == NULL) {
         crm_warn("Cannot calculate digests for operation " CRM_OP_FMT
-                 " because we have no LRM connection to %s",
+                 " because we have no connection to executor for %s",
                  op->rsc_id, op->op_type, op->interval_ms, node_name);
         return TRUE;
     }
@@ -694,7 +695,7 @@ build_operation_update(xmlNode * parent, lrmd_rsc_info_t * rsc, lrmd_event_data_
     if (metadata == NULL) {
         /* For now, we always collect resource agent meta-data via a local,
          * synchronous, direct execution of the agent. This has multiple issues:
-         * the lrmd should execute agents, not the crmd; meta-data for
+         * the executor should execute agents, not the crmd; meta-data for
          * Pacemaker Remote nodes should be collected on those nodes, not
          * locally; and the meta-data call shouldn't eat into the timeout of the
          * real action being performed.
@@ -829,7 +830,7 @@ do_lrm_query_internal(lrm_state_t *lrm_state, int update_flags)
     /* Build a list of active (not always running) resources */
     build_active_RAs(lrm_state, rsc_list);
 
-    crm_log_xml_trace(xml_state, "Current state of the LRM");
+    crm_log_xml_trace(xml_state, "Current executor state");
 
     return xml_state;
 }
@@ -840,7 +841,7 @@ do_lrm_query(gboolean is_replace, const char *node_name)
     lrm_state_t *lrm_state = lrm_state_find(node_name);
 
     if (!lrm_state) {
-        crm_err("Could not query lrm state for lrmd node %s", node_name);
+        crm_err("Could not find executor state for node %s", node_name);
         return NULL;
     }
     return do_lrm_query_internal(lrm_state,
@@ -876,7 +877,8 @@ notify_deleted(lrm_state_t * lrm_state, ha_msg_input_t * input, const char *rsc_
         time_t now = time(NULL);
         char *now_s = crm_itoa(now);
 
-        crm_debug("Triggering a refresh after %s deleted %s from the LRM", from_sys, rsc_id);
+        crm_debug("Triggering a refresh after %s deleted %s from the executor",
+                  from_sys, rsc_id);
 
         update_attr_delegate(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
                              "last-lrm-refresh", now_s, FALSE, NULL, NULL);
@@ -995,7 +997,7 @@ erase_lrm_history_by_op(lrm_state_t *lrm_state, lrmd_event_data_t *op)
         free(op_id);
     }
 
-    crm_debug("Erasing LRM resource history for " CRM_OP_FMT " (call=%d)",
+    crm_debug("Erasing resource operation history for " CRM_OP_FMT " (call=%d)",
               op->rsc_id, op->op_type, op->interval_ms, op->call_id);
 
     fsa_cib_conn->cmds->remove(fsa_cib_conn, XML_CIB_TAG_STATUS, xml_top,
@@ -1057,7 +1059,7 @@ erase_lrm_history_by_id(lrm_state_t *lrm_state, const char *rsc_id,
                                      lrm_state->node_name, rsc_id, key);
     }
 
-    crm_debug("Erasing LRM resource history for %s on %s (call=%d)",
+    crm_debug("Erasing resource operation history for %s on %s (call=%d)",
               key, rsc_id, call_id);
     fsa_cib_conn->cmds->remove(fsa_cib_conn, op_xpath, NULL,
                                cib_quorum_override | cib_xpath);
@@ -1239,7 +1241,7 @@ cancel_op_key(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *key, g
  * \retval -EINVAL   Required information is missing from arguments
  * \retval -ENOTCONN No active connection to LRM
  * \retval -ENODEV   Resource not found
- * \retval -errno    Error communicating with lrmd when registering resource
+ * \retval -errno    Error communicating with executor when registering resource
  *
  * \note Caller is responsible for freeing result on success.
  */
@@ -1256,7 +1258,7 @@ get_lrm_resource(lrm_state_t *lrm_state, xmlNode *rsc_xml, gboolean do_create,
         return -ENOTCONN;
     }
 
-    crm_trace("Retrieving resource information for %s from the LRM", id);
+    crm_trace("Retrieving resource information for %s from the executor", id);
     *rsc_info = lrm_state_get_rsc_info(lrm_state, id, 0);
 
     // If resource isn't known by ID, try clone name, if provided
@@ -1274,19 +1276,19 @@ get_lrm_resource(lrm_state_t *lrm_state, xmlNode *rsc_xml, gboolean do_create,
         const char *type = crm_element_value(rsc_xml, XML_ATTR_TYPE);
         int rc;
 
-        crm_trace("Registering resource %s with LRM", id);
+        crm_trace("Registering resource %s with the executor", id);
         rc = lrm_state_register_rsc(lrm_state, id, class, provider, type,
                                     lrmd_opt_drop_recurring);
         if (rc != pcmk_ok) {
             fsa_data_t *msg_data = NULL;
 
-            crm_err("Could not register resource %s with LRM on %s: %s "
+            crm_err("Could not register resource %s with the executor on %s: %s "
                     CRM_XS " rc=%d",
                     id, lrm_state->node_name, pcmk_strerror(rc), rc);
 
             /* Register this as an internal error if this involves the local
-             * lrmd. Otherwise, we're likely dealing with an unresponsive remote
-             * node, which is not an FSA failure.
+             * executor. Otherwise, we're likely dealing with an unresponsive
+             * remote node, which is not an FSA failure.
              */
             if (lrm_state_is_local(lrm_state) == TRUE) {
                 register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
@@ -1510,13 +1512,13 @@ fail_lrm_resource(xmlNode *xml, lrm_state_t *lrm_state, const char *user_name,
 
     CRM_CHECK(xml_rsc != NULL, return);
 
-    /* The lrmd simply executes operations and reports the results, without any
-     * concept of success or failure, so to fail a resource, we must fake what a
-     * failure looks like.
+    /* The executor simply executes operations and reports the results, without
+     * any concept of success or failure, so to fail a resource, we must fake
+     * what a failure looks like.
      *
-     * To do this, we create a fake lrmd operation event for the resource, and
-     * pass that event to the lrmd client callback so it will be processed as if
-     * it came from the lrmd.
+     * To do this, we create a fake executor operation event for the resource,
+     * and pass that event to the executor client callback so it will be
+     * processed as if it came from the executor.
      */
     op = construct_op(lrm_state, xml, ID(xml_rsc), "asyncmon");
     fake_op_status(lrm_state, op, PCMK_LRM_OP_DONE, PCMK_OCF_UNKNOWN_ERROR);
@@ -1558,7 +1560,7 @@ handle_refresh_op(lrm_state_t *lrm_state, const char *user_name,
     xmlNode *fragment = do_lrm_query_internal(lrm_state, node_update_all);
 
     fsa_cib_update(XML_CIB_TAG_STATUS, fragment, cib_quorum_override, rc, user_name);
-    crm_info("Forced a local LRM refresh: call=%d", rc);
+    crm_info("Forced a local resource history refresh: call=%d", rc);
 
     if (safe_str_neq(CRM_SYSTEM_CRMD, from_sys)) {
         xmlNode *reply = create_request(CRM_OP_INVOKE_LRM, fragment, from_host,
@@ -1766,7 +1768,7 @@ do_lrm_invoke(long long action,
 
 #if ENABLE_ACL
     user_name = crm_acl_get_set_user(input->msg, F_CRM_USER, NULL);
-    crm_trace("LRM command from user '%s'", user_name);
+    crm_trace("Executor command from user '%s'", user_name);
 #endif
 
     crm_op = crm_element_value(input->msg, F_CRM_TASK);
@@ -1774,7 +1776,7 @@ do_lrm_invoke(long long action,
     if (safe_str_neq(from_sys, CRM_SYSTEM_TENGINE)) {
         from_host = crm_element_value(input->msg, F_CRM_HOST_FROM);
     }
-    crm_trace("LRM %s command from %s", crm_op, from_sys);
+    crm_trace("Executor %s command from %s", crm_op, from_sys);
 
     if (safe_str_eq(crm_op, CRM_OP_LRM_DELETE)) {
         crm_rsc_delete = TRUE; // Only crm_resource uses this op
@@ -1842,8 +1844,9 @@ do_lrm_invoke(long long action,
             return;
 
         } else if (rc < 0) {
-            // Error communicating with lrmd
-            crm_err("Could not register resource '%s' with lrmd: %s " CRM_XS " rc=%d",
+            // Error communicating with the executor
+            crm_err("Could not register resource '%s' with executor: %s "
+                    CRM_XS " rc=%d",
                     ID(xml_rsc), pcmk_strerror(rc), rc);
             crm_log_xml_warn(input->msg, "failed registration");
             synthesize_lrmd_failure(lrm_state, input->xml,
@@ -1930,7 +1933,7 @@ construct_op(lrm_state_t * lrm_state, xmlNode * rsc_op, const char *rsc_id, cons
         && safe_str_neq(op->op_type, CRMD_ACTION_DELETE)
         && !is_remote_lrmd_ra(NULL, NULL, rsc_id)) {
 
-        // Resource info *should* already be cached, so we don't get lrmd call
+        // Resource info *should* already be cached, so we don't get executor call
         lrmd_rsc_info_t *rsc = lrm_state_get_rsc_info(lrm_state, rsc_id, 0);
         struct ra_metadata_s *metadata;
 
@@ -2425,7 +2428,7 @@ do_update_resource(const char *node_name, lrmd_rsc_info_t * rsc, lrmd_event_data
         }
 
     } else {
-        crm_warn("Resource %s no longer exists in the lrmd", op->rsc_id);
+        crm_warn("Resource %s no longer exists in the executor", op->rsc_id);
         send_direct_ack(NULL, NULL, rsc, op, op->rsc_id);
         goto cleanup;
     }

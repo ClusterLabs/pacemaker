@@ -400,7 +400,7 @@ do_startup(long long action,
     config_read = mainloop_add_trigger(G_PRIORITY_HIGH, crm_read_options, NULL);
     transition_trigger = mainloop_add_trigger(G_PRIORITY_LOW, te_graph_trigger, NULL);
 
-    crm_debug("Creating CIB and LRM objects");
+    crm_debug("Creating CIB and executor objects");
     fsa_cib_conn = cib_new();
 
     lrm_state_init_local();
@@ -612,7 +612,7 @@ do_started(long long action,
         return;
 
     } else if (is_set(fsa_input_register, R_LRM_CONNECTED) == FALSE) {
-        crm_info("Delaying start, LRM not connected (%.16llx)", R_LRM_CONNECTED);
+        crm_info("Delaying start, not connected to executor (%.16llx)", R_LRM_CONNECTED);
 
         crmd_fsa_stall(TRUE);
         return;

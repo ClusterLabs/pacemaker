@@ -45,7 +45,7 @@ enum crm_proc_flag {
     // Cluster layers
     crm_proc_cpg       = 0x04000000,
 
-    crm_proc_lrmd      = 0x00000010,
+    crm_proc_execd     = 0x00000010,
     crm_proc_cib       = 0x00000100,
     crm_proc_crmd      = 0x00000200,
     crm_proc_attrd     = 0x00001000,
@@ -102,8 +102,8 @@ peer2text(enum crm_proc_flag proc)
         case crm_proc_te:
             text = "tengine";
             break;
-        case crm_proc_lrmd:
-            text = "lrmd";
+        case crm_proc_execd:
+            text = "pacemaker-execd";
             break;
         case crm_proc_attrd:
             text = "pacemaker-attrd";

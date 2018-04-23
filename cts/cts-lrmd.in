@@ -1,5 +1,5 @@
 #!@PYTHON@
-""" Regression tests for Pacemaker's lrmd
+""" Regression tests for Pacemaker's pacemaker-execd
 """
 
 # Pacemaker targets compatibility with Python 2.7 and 3.2+
@@ -72,14 +72,15 @@ def update_path():
     new_path = os.environ['PATH']
     if os.path.exists("%s/cts-lrmd.in" % TEST_DIR):
         print("Running tests from the source tree: %s (%s)" % (BUILD_DIR, TEST_DIR))
-        # For lrmd, lrmd_test and pacemaker_remoted
+        # For pacemaker-execd, lrmd_test and pacemaker_remoted
         new_path = "%s/daemons/execd:%s" % (BUILD_DIR, new_path)
         new_path = "%s/tools:%s" % (BUILD_DIR, new_path)   # For crm_resource
         new_path = "%s/fencing:%s" % (BUILD_DIR, new_path) # For stonithd
 
     else:
         print("Running tests from the install tree: @CRM_DAEMON_DIR@ (not %s)" % TEST_DIR)
-        new_path = "@CRM_DAEMON_DIR@:%s" % (new_path) # For stonithd, lrmd, lrmd_test and pacemaker_remoted
+        # For stonithd, pacemaker-execd, lrmd_test and pacemaker_remoted
+        new_path = "@CRM_DAEMON_DIR@:%s" % (new_path)
 
     print('Using PATH="{}"'.format(new_path))
     os.environ['PATH'] = new_path
@@ -157,7 +158,7 @@ class OutputFoundError(TestError):
 
 
 class Test(object):
-    """ Executor for a single lrmd regression test """
+    """ Executor for a single pacemaker-execd regression test """
 
     def __init__(self, name, description, verbose=0, tls=0):
         self.name = name
@@ -167,7 +168,7 @@ class Test(object):
         if tls:
             self.daemon_location = "pacemaker_remoted"
         else:
-            self.daemon_location = "lrmd"
+            self.daemon_location = "pacemaker-execd"
 
         self.test_tool_location = "lrmd_test"
         self.verbose = verbose
@@ -177,7 +178,7 @@ class Test(object):
         self.cmd_tool_output = ""
         self.result_exitcode = CrmExit.OK
 
-        self.lrmd_process = None
+        self.execd_process = None
         self.stonith_process = None
 
         self.executed = 0
@@ -208,7 +209,7 @@ class Test(object):
         """ Prepare the host for running a test """
 
         ### make sure we are in full control here ###
-        cmd = shlex.split("killall -q -9 stonithd lt-stonithd lrmd lt-lrmd lrmd_test lt-lrmd_test pacemaker_remoted")
+        cmd = shlex.split("killall -q -9 stonithd lt-stonithd pacemaker-execd lt-pacemaker-execd lrmd_test lt-lrmd_test pacemaker_remoted")
         test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
         test.wait()
 
@@ -220,7 +221,7 @@ class Test(object):
         if self.verbose:
             additional_args = additional_args + " -V"
 
-        self.lrmd_process = subprocess.Popen(shlex.split("%s %s -l /tmp/lrmd-regression.log"
+        self.execd_process = subprocess.Popen(shlex.split("%s %s -l /tmp/pacemaker-execd-regression.log"
                                                          % (self.daemon_location, additional_args)))
 
         time.sleep(1)
@@ -228,22 +229,22 @@ class Test(object):
     def clean_environment(self):
         """ Clean up the host after running a test """
 
-        if self.lrmd_process:
-            self.lrmd_process.terminate()
-            self.lrmd_process.wait()
+        if self.execd_process:
+            self.execd_process.terminate()
+            self.execd_process.wait()
 
             if self.verbose:
                 print("Daemon output")
-                logfile = io.open('/tmp/lrmd-regression.log', 'rt', errors='replace')
+                logfile = io.open('/tmp/pacemaker-execd-regression.log', 'rt', errors='replace')
                 for line in logfile:
                     print(line.strip().encode('utf-8', 'replace'))
-            os.remove('/tmp/lrmd-regression.log')
+            os.remove('/tmp/pacemaker-execd-regression.log')
 
         if self.stonith_process:
             self.stonith_process.terminate()
             self.stonith_process.wait()
 
-        self.lrmd_process = None
+        self.execd_process = None
         self.stonith_process = None
 
     def add_sys_cmd(self, cmd, args):
@@ -296,7 +297,7 @@ class Test(object):
             ### Typically, the kill argument is used to detect some sort of
             ### failure. Without yielding for a few seconds here, the process
             ### launched earlier that is listening for the failure may not have
-            ### time to connect to the lrmd.
+            ### time to connect to pacemaker-execd.
             time.sleep(2)
             subprocess.Popen(shlex.split(args['kill']))
 
@@ -372,7 +373,7 @@ class Test(object):
         return res
 
 class Tests(object):
-    """ Collection of all lrmd regression tests """
+    """ Collection of all pacemaker-execd regression tests """
 
     def __init__(self, verbose=0, tls=0):
         self.tests = []
@@ -700,7 +701,7 @@ done
             test.add_cmd(common_cmds["%s_unreg_line" % (rsc)] + " " + common_cmds["%s_unreg_event" % (rsc)])
 
     def build_negative_tests(self):
-        """ Register tests related to how the lrmd handles failures """
+        """ Register tests related to how pacemaker-execd handles failures """
 
         ### ocf start timeout test  ###
         test = self.new_test("ocf_start_timeout", "Force start timeout to occur, verify start failure.")
@@ -731,7 +732,7 @@ done
 
         ### stonith component fail ###
         common_cmds = self.common_cmds
-        test = self.new_test("stonith_component_fail", "Kill stonith component after lrmd connects")
+        test = self.new_test("stonith_component_fail", "Kill stonith component after pacemaker-execd connects")
         test.add_cmd(common_cmds["stonith_reg_line"]   + " " + common_cmds["stonith_reg_event"])
         test.add_cmd(common_cmds["stonith_start_line"] + " " + common_cmds["stonith_start_event"])
 
@@ -1227,7 +1228,7 @@ class TestOptions(object):
         print("\t [--list-tests | -l]                  Print out all registered tests.")
         print("\t [--run-only | -r 'testname']         Run a specific test")
         print("\t [--verbose | -V]                     Verbose output")
-        print("\t [--pacemaker-remote | -R             Test pacemaker-remote binary instead of lrmd.")
+        print("\t [--pacemaker-remote | -R             Test pacemaker_remoted binary instead of pacemaker-execd.")
         print("\t [--run-only-pattern | -p 'string']   Run only tests containing the string value")
         print("\n\tExample: Run only the test 'start_stop'")
         print("\t\t " + sys.argv[0] + " --run-only start_stop")
@@ -1236,7 +1237,7 @@ class TestOptions(object):
 
 
 def main(argv):
-    """ Run lrmd regression tests as specified by arguments """
+    """ Run pacemaker-execd regression tests as specified by arguments """
 
     update_path()
 

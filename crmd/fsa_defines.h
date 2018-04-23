@@ -1,20 +1,10 @@
-/* 
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+/*
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ *
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+
 #ifndef FSA_DEFINES__H
 #  define FSA_DEFINES__H
 
@@ -365,9 +355,9 @@ enum crmd_fsa_input {
 #  define	A_READCONFIG		0x0080000000000000ULL
 
 /* -- LRM Actions -- */
-        /* Connect to the Local Resource Manager */
+        /* Connect to pacemaker-execd */
 #  define	A_LRM_CONNECT		0x0100000000000000ULL
-        /* Disconnect from the Local Resource Manager */
+        /* Disconnect from pacemaker-execd */
 #  define A_LRM_DISCONNECT	0x0200000000000000ULL
 #  define A_LRM_INVOKE		0x0400000000000000ULL
 #  define A_LRM_EVENT		0x0800000000000000ULL
@@ -414,9 +404,7 @@ enum crmd_fsa_input {
                                         /* Is the Policy Engine connected? */
 #  define	R_TE_CONNECTED	0x00000400ULL
                                         /* Is the Transition Engine connected? */
-#  define	R_LRM_CONNECTED	0x00000800ULL
-                                        /* Is the Local Resource Manager
-                                           connected? */
+#  define	R_LRM_CONNECTED	0x00000800ULL   // Is pacemaker-execd connected?
 
 #  define	R_CIB_REQUIRED	0x00001000ULL
                                         /* Is the CIB required? */

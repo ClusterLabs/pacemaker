@@ -159,7 +159,7 @@ class crm_corosync(BasePatterns):
             r"input=I_INTEGRATED cause=C_TIMER_POPPED",
             r"input=I_FINALIZED cause=C_TIMER_POPPED",
             r"input=I_ERROR",
-            r"(pacemakerd|lrmd|crmd):.*, exiting",
+            r"(pacemakerd|pacemaker-execd|crmd):.*, exiting",
             r"pengine.*Attempting recovery of resource",
             r"is taking more than 2x its timeout",
             r"Confirm not received from",
@@ -227,8 +227,7 @@ class crm_corosync(BasePatterns):
             r"\[[0-9]+\] exited with status [0-9]+ \(",
             r"cib.*error:.*Corosync connection lost",
             r"stonith-ng.*error:.*Corosync connection terminated",
-            r"lrmd.*error:.*Connection to stonith-ng.* (failed|closed)",
-            r"lrmd.*error:.*LRMD lost STONITH connection",
+            r"pacemaker-execd.*error:.*Connection to stonith-ng.* (failed|closed)",
             r"crmd.*State transition .* S_RECOVERY",
             r"crmd.*error:.*Input (I_ERROR|I_TERMINATE ) .*received in state",
             r"crmd.*error:.*Could not recover from internal error",
@@ -249,10 +248,10 @@ class crm_corosync(BasePatterns):
         ]
 
         self.components["cib-ignore"] = [
-            "lrmd.*Connection to stonith-ng failed",
-            "lrmd.*Connection to stonith-ng.* closed",
-            "lrmd.*LRMD lost STONITH connection",
-            "lrmd.*STONITH connection failed, finalizing .* pending operations",
+            "pacemaker-execd.*Connection to stonith-ng failed",
+            "pacemaker-execd.*Connection to stonith-ng.* closed",
+            "pacemaker-execd.*LRMD lost STONITH connection",
+            "pacemaker-execd.*STONITH connection failed, finalizing .* pending operations",
             ]
 
         self.components["cib"] = [
@@ -269,18 +268,18 @@ class crm_corosync(BasePatterns):
                     "crmd.*Could not recover from internal error",
                     ]
 
-        self.components["lrmd"] = [
-                    "State transition .* S_RECOVERY",
-                    "LRM Connection failed",
-                    r"Respawning failed child process: crmd",
-                    "Connection to lrmd failed",
-                    "Connection to lrmd.* closed",
-                    "crmd.*I_ERROR.*lrm_connection_destroy",
-                    r"crmd\[[0-9]+\] exited with status 1 \(",
-                    r"crmd.*: Input I_TERMINATE .*from do_recover",
-                    "crmd.*Could not recover from internal error",
-                    ]
-        self.components["lrmd-ignore"] = []
+        self.components["pacemaker-execd"] = [
+            r"crmd.*Connection to (pacemaker-execd|lrmd|executor) (failed|closed)",
+            r"crmd.*I_ERROR.*lrm_connection_destroy",
+            r"crmd.*State transition .* S_RECOVERY",
+            r"crmd.*: Input I_TERMINATE .*from do_recover",
+            r"crmd.*Could not recover from internal error",
+            r"pacemakerd.*pacemaker-execd.* terminated with signal 9",
+            r"pacemakerd.*crmd\[[0-9]+\] exited with status 1",
+            r"pacemakerd.*Respawning failed child process: pacemaker-execd",
+            r"pacemakerd.*Respawning failed child process: crmd",
+        ]
+        self.components["pacemaker-execd-ignore"] = []
 
         self.components["crmd"] = [
 #                    "WARN: determine_online_status: Node .* is unclean",

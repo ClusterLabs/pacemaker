@@ -319,7 +319,7 @@ class crm_common(ClusterManager):
         stonith_ignore = [
             r"Updating failcount for child_DoFencing",
             r"(ERROR|error).*: Sign-in failed: triggered a retry",
-            "lrmd.*(ERROR|error): stonithd_receive_ops_result failed.",
+            "pacemaker-execd.*(ERROR|error): stonithd_receive_ops_result failed.",
              ]
 
         stonith_ignore.extend(common_ignore)
@@ -359,7 +359,7 @@ class crm_common(ClusterManager):
                     r"attrd.*exited with status 1",
                     ], badnews_ignore = common_ignore)
 
-        lrmd = Process(self, "lrmd", triggersreboot=self.fastfail, pats = [
+        execd = Process(self, "pacemaker-execd", triggersreboot=self.fastfail, pats = [
                     "State transition .* S_RECOVERY",
                     "LRM Connection failed",
                     "crmd.*I_ERROR.*lrm_connection_destroy",
@@ -407,14 +407,14 @@ class crm_common(ClusterManager):
                 r"attrd.*exited with status 1",
                 r"crmd.*exited with status 2",
                 ])
-            lrmd.pats.extend([
+            execd.pats.extend([
                 # these status numbers are likely wrong now
                 r"crmd.*exited with status 2",
                 ])
 
         complist.append(ccm)
         complist.append(cib)
-        complist.append(lrmd)
+        complist.append(execd)
         complist.append(crmd)
         complist.append(pengine)
 

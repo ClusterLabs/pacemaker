@@ -169,8 +169,8 @@ get_action_delay_base(stonith_device_t * device, const char * action)
  *       <operation> entry in the fencing resource configuration. However that
  *       is insufficient because fencing devices may be registered directly via
  *       the STONITH register_device() API instead of going through the CIB
- *       (e.g. stonith_admin uses it for its -R option, and the LRMD uses it to
- *       ensure a device is registered when a command is issued). As device
+ *       (e.g. stonith_admin uses it for its -R option, and the executor uses it
+ *       to ensure a device is registered when a command is issued). As device
  *       properties, pcmk_*_timeout parameters can be grabbed by stonithd when
  *       the device is registered, whether by CIB change or API call.
  */

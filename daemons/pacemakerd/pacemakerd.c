@@ -54,7 +54,10 @@ typedef struct pcmk_child_s {
 /* *INDENT-OFF* */
 static pcmk_child_t pcmk_children[] = {
     { 0, crm_proc_none,       0, 0, FALSE, "none",       NULL,            NULL },
-    { 0, crm_proc_lrmd,       3, 0, TRUE,  "lrmd",       NULL,            CRM_DAEMON_DIR"/lrmd" },
+    {
+        0, crm_proc_execd,      3, 0, TRUE,  "pacemaker-execd",
+        NULL, CRM_DAEMON_DIR "/pacemaker-execd"
+    },
     { 0, crm_proc_cib,        1, 0, TRUE,  "cib",        CRM_DAEMON_USER, CRM_DAEMON_DIR"/cib" },
     { 0, crm_proc_crmd,       6, 0, TRUE,  "crmd",       CRM_DAEMON_USER, CRM_DAEMON_DIR"/crmd" },
     {
@@ -1038,7 +1041,7 @@ main(int argc, char **argv)
     crm_build_path(CRM_CONFIG_DIR, 0750);
     mcp_chown(CRM_CONFIG_DIR, pcmk_uid, pcmk_gid);
 
-    /* Resource agent paths are constructed by the lrmd */
+    // Don't build CRM_RSCTMP_DIR, pacemaker-execd will do it
 
     ipcs = mainloop_add_ipc_server(CRM_SYSTEM_MCP, QB_IPC_NATIVE, &mcp_ipc_callbacks);
     if (ipcs == NULL) {

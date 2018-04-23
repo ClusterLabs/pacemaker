@@ -1,9 +1,16 @@
 #==#==# Variables that control logging
 
-# Enable debug logging globally or per-subsystem.
-# Multiple subsystems may be listed separated by commas,
-# e.g. PCMK_debug=crmd,pengine
-# PCMK_debug=yes|no|crmd|pengine|cib|stonith-ng|pacemaker-attrd|pacemakerd
+# Enable debug logging globally (yes|no) or by subsystem. Multiple subsystems
+# may be comma-separated, for example: PCMK_debug=pacemakerd,pacemaker-execd
+# Subsystems are:
+#  pacemakerd
+#  pacemaker-attrd
+#  pacemaker-execd
+#  cib
+#  crmd
+#  pengine
+#  stonith-ng
+# PCMK_debug=no
 
 # Send detailed log messages to the specified file. Compared to messages logged
 # via syslog, messages in this file may have extended information, and will
@@ -121,7 +128,7 @@
 # PCMK_callgrind_enabled=cib,crmd
 
 # Set the options to pass to valgrind, when valgrind is enabled. See
-# valgrind(1) man page for details. "--vgdb=no" is specified because lrmd can
-# lower privileges when executing commands, which would otherwise leave a bunch
-# of unremovable files in /tmp.
+# valgrind(1) man page for details. "--vgdb=no" is specified because
+# pacemaker-execd can lower privileges when executing commands, which would
+# otherwise leave a bunch of unremovable files in /tmp.
 VALGRIND_OPTS="--leak-check=full --trace-children=no --vgdb=no --num-callers=25 --log-file=/var/lib/pacemaker/valgrind-%p --suppressions=/usr/share/pacemaker/tests/valgrind-pcmk.suppressions --gen-suppressions=all"

@@ -113,8 +113,8 @@ cib/cibpipe
 crmd/atest
 crmd/crmd
 /daemons/attrd/pacemaker-attrd
-/daemons/execd/lrmd
 /daemons/execd/lrmd_test
+/daemons/execd/pacemaker-execd
 /daemons/execd/pacemaker_remoted
 /daemons/pacemakerd/pacemakerd
 doc/api/*

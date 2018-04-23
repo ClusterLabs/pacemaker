@@ -431,7 +431,7 @@ create_pseudo_resource_op(resource_t * rsc, const char *task, bool optional, boo
 
 /*!
  * \internal
- * \brief Create a LRMD cancel op
+ * \brief Create an executor cancel op
  *
  * \param[in] rsc          Resource of action to cancel
  * \param[in] task         Name of action to cancel

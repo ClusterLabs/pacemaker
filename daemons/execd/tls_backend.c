@@ -1,20 +1,8 @@
 /*
- * Copyright (c) 2012 David Vossel <davidvossel@gmail.com>
+ * Copyright 2012-2018 David Vossel <davidvossel@gmail.com>
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -67,13 +55,13 @@ lrmd_remote_client_msg(gpointer data)
             rc = gnutls_handshake(*client->remote->tls_session);
 
             if (rc < 0 && rc != GNUTLS_E_AGAIN) {
-                crm_err("Remote lrmd tls handshake failed");
+                crm_err("TLS handshake with Pacemaker Remote failed");
                 return -1;
             }
         } while (rc == GNUTLS_E_INTERRUPTED);
 
         if (rc == 0) {
-            crm_debug("Remote lrmd tls handshake completed");
+            crm_debug("TLS handshake with Pacemaker Remote completed");
             client->remote->tls_handshake_complete = TRUE;
             if (client->remote->auth_timeout) {
                 g_source_remove(client->remote->auth_timeout);
@@ -219,7 +207,8 @@ lrmd_remote_listen(gpointer data)
     new_client->remote->tls_session = session;
     new_client->remote->auth_timeout =
         g_timeout_add(LRMD_REMOTE_AUTH_TIMEOUT, lrmd_auth_timeout_cb, new_client);
-    crm_notice("LRMD client connection established. %p id: %s", new_client, new_client->id);
+    crm_notice("Client connection to Pacemaker Remote established "
+               CRM_XS " %p id: %s", new_client, new_client->id);
 
     new_client->remote->source =
         mainloop_add_fd("lrmd-remote-client", G_PRIORITY_DEFAULT, csock, new_client,

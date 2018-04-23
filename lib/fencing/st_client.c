@@ -1134,8 +1134,8 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
     crm_trace("looking up %s/%s metadata", agent, provider);
 
     /* By having this in a library, we can access it from stonith_admin
-     *  when neither lrmd or stonith-ng are running
-     * Important for the crm shell's validations...
+     * when neither the executor nor stonith-ng are running, which is
+     * important for higher-level tools.
      */
 
     if (safe_str_eq(provider, "redhat")) {

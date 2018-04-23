@@ -40,7 +40,7 @@ with the tools appropriate to those sources.
 
 |transient_attributes|pacemaker-attrd
 
-|lrm|lrmd
+|lrm|pacemaker-execd
 
 |=========================================================
 

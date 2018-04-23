@@ -151,10 +151,10 @@ te_update_diff_v1(const char *event, xmlNode *diff)
                                 "//" XML_LRM_TAG_RESOURCE);
         max = numXpathResults(xpathObj);
         if (max > 1) {
-            crm_debug("Ignoring resource operation updates due to LRM refresh of %d resources",
+            crm_debug("Ignoring resource operation updates due to history refresh of %d resources",
                       max);
             crm_log_xml_trace(diff, "lrm-refresh");
-            abort_transition(INFINITY, tg_restart, "LRM Refresh", NULL);
+            abort_transition(INFINITY, tg_restart, "History refresh", NULL);
             goto bail;
         }
         freeXpathObject(xpathObj);
@@ -265,7 +265,7 @@ process_resource_updates(const char *node, xmlNode *xml, xmlNode *change,
         && xml->children && xml->children->next) {
 
         crm_log_xml_trace(change, "lrm-refresh");
-        abort_transition(INFINITY, tg_restart, "LRM Refresh", NULL);
+        abort_transition(INFINITY, tg_restart, "History refresh", NULL);
         return;
     }
 

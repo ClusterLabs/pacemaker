@@ -1,20 +1,8 @@
 /*
- * Copyright (c) 2012 David Vossel <davidvossel@gmail.com>
+ * Copyright 2012-2018 David Vossel <davidvossel@gmail.com>
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #ifndef LRMD__H
@@ -26,7 +14,7 @@ extern "C" {
 
 /**
  * \file
- * \brief Local Resource Manager
+ * \brief Resource agent executor
  * \ingroup lrmd
  */
 #include <stdbool.h>
@@ -137,12 +125,12 @@ typedef struct lrmd_key_value_s {
 /* *INDENT-ON* */
 
 /*!
- * \brief Create a new local lrmd connection
+ * \brief Create a new connection to the local executor
  */
 lrmd_t *lrmd_api_new(void);
 
 /*!
- * \brief Create a new remote lrmd connection using tls backend
+ * \brief Create a new TLS connection to a remote executor
  *
  * \param nodename  name of remote node identified with this connection
  * \param server    name of server to connect to
@@ -155,7 +143,7 @@ lrmd_t *lrmd_remote_api_new(const char *nodename, const char *server, int port);
 /*!
  * \brief Use after lrmd_poll returns 1 to read and dispatch a message
  *
- * \param[in,out] lrmd  lrmd connection object
+ * \param[in,out] lrmd  Executor connection object
  *
  * \return TRUE if connection is still up, FALSE if disconnected
  */
@@ -171,7 +159,7 @@ bool lrmd_dispatch(lrmd_t * lrmd);
 int lrmd_poll(lrmd_t * lrmd, int timeout);
 
 /*!
- * \brief Destroy lrmd object
+ * \brief Destroy executor connection object
  */
 void lrmd_api_delete(lrmd_t * lrmd);
 lrmd_key_value_t *lrmd_key_value_add(lrmd_key_value_t * kvp, const char *key, const char *value);
@@ -228,7 +216,7 @@ typedef struct lrmd_event_data_s {
 
     /*! The executed ra return code mapped to OCF */
     enum ocf_exitcode rc;
-    /*! The lrmd status returned for exec_complete events */
+    /*! The executor status returned for exec_complete events */
     int op_status;
     /*! stdout from resource agent operation */
     const char *output;
@@ -292,7 +280,7 @@ void lrmd_key_value_freeall(lrmd_key_value_t * head);
 
 typedef struct lrmd_api_operations_s {
     /*!
-     * \brief Connect from the lrmd.
+     * \brief Connect to an executor
      *
      * \retval 0, success
      * \retval negative error code on failure
@@ -300,7 +288,7 @@ typedef struct lrmd_api_operations_s {
     int (*connect) (lrmd_t * lrmd, const char *client_name, int *fd);
 
     /*!
-     * \brief Establish an connection to lrmd, don't block while connecting.
+     * \brief Initiate an executor connection without blocking
      * \note this function requires the use of mainloop.
      *
      * \note The is returned using the event callback.
@@ -320,7 +308,7 @@ typedef struct lrmd_api_operations_s {
     int (*is_connected) (lrmd_t * lrmd);
 
     /*!
-     * \brief Poke lrmd connection to verify it is still capable of serving requests
+     * \brief Poke executor connection to verify it is still capable of serving requests
      * \note The response comes in the form of a poke event to the callback. 
      *
      * \retval 0, wait for response in callback
@@ -329,7 +317,7 @@ typedef struct lrmd_api_operations_s {
     int (*poke_connection) (lrmd_t * lrmd);
 
     /*!
-     * \brief Disconnect from the lrmd.
+     * \brief Disconnect from the executor.
      *
      * \retval 0, success
      * \retval negative error code on failure
@@ -337,7 +325,7 @@ typedef struct lrmd_api_operations_s {
     int (*disconnect) (lrmd_t * lrmd);
 
     /*!
-     * \brief Register a resource with the lrmd.
+     * \brief Register a resource with the executor.
      *
      * \note Synchronous, guaranteed to occur in daemon before function returns.
      *
@@ -367,7 +355,7 @@ typedef struct lrmd_api_operations_s {
                               enum lrmd_call_options options, GList **output);
 
     /*!
-     * \brief Unregister a resource from the lrmd.
+     * \brief Unregister a resource from the executor.
      *
      * \note All pending and recurring operations will be cancelled
      *       automatically.
@@ -383,7 +371,7 @@ typedef struct lrmd_api_operations_s {
     int (*unregister_rsc) (lrmd_t * lrmd, const char *rsc_id, enum lrmd_call_options options);
 
     /*!
-     * \brief Sets the callback to receive lrmd events on.
+     * \brief Set a callback for executor events
      */
     void (*set_callback) (lrmd_t * lrmd, lrmd_event_callback callback);
 
@@ -421,7 +409,7 @@ typedef struct lrmd_api_operations_s {
      * \note For each resource, cancel operations and exec operations
      *       are processed in the order they are received.
      *       It is safe to assume that for a single resource, a cancel
-     *       will occur in the lrmd before an exec if the client's cancel
+     *       will occur in the executor before an exec if the client's cancel
      *       api call occurs before the exec api call.
      *
      *       It is not however safe to assume any operation on one resource will
@@ -437,22 +425,22 @@ typedef struct lrmd_api_operations_s {
     /*!
      * \brief Get resource metadata for a specified resource agent
      *
-     * \param[in]  lrmd      LRMD connection (unused)
+     * \param[in]  lrmd      Executor connection (unused)
      * \param[in]  class     Resource agent class
      * \param[in]  provider  Resource agent provider
      * \param[in]  agent     Resource agent type
      * \param[out] output    Metadata will be stored here (must not be NULL)
-     * \param[in]  options   Options to use with any LRMD API calls (unused)
+     * \param[in]  options   Options to use with any executor API calls (unused)
      *
      * \note Caller is responsible for freeing output. This call is currently
      *       always synchronous (blocking), and always done directly by the
-     *       library (not via the LRMD connection). This means that it is based
-     *       on the local host environment, even if the lrmd connection is to a
+     *       library (not via the executor connection). This means that it is based
+     *       on the local host environment, even if the executor connection is to a
      *       remote node, so (for most resource agent classes) this will fail if
      *       the agent is not installed locally. This also means that, if an
      *       external agent must be executed, it will be executed by the
-     *       caller's user, not the lrmd's.
-     * \todo Add a metadata call to the LRMD API and let the server handle this.
+     *       caller's user, not the executor's.
+     * \todo Add a metadata call to the executor API and let the server handle this.
      *
      * \retval lrmd_ok success
      * \retval negative error code on failure

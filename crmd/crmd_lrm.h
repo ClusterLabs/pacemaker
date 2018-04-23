@@ -1,19 +1,8 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #include <crmd_messages.h>
@@ -78,7 +67,7 @@ struct pending_deletion_op_s {
 };
 
 /*!
- * \brief Is this the local ipc connection to the lrmd
+ * \brief Check whether this the local IPC connection to the executor
  */
 gboolean
 lrm_state_is_local(lrm_state_t *lrm_state);
@@ -86,7 +75,7 @@ lrm_state_is_local(lrm_state_t *lrm_state);
 /*!
  * \brief Clear all state information from a single state entry.
  * \note It sometimes useful to save metadata cache when it won't go stale.
- * \note This does not close the lrmd connection
+ * \note This does not close the executor connection
  */
 void lrm_state_reset_tables(lrm_state_t * lrm_state, gboolean reset_metadata);
 GList *lrm_state_get_list(void);
@@ -102,12 +91,12 @@ gboolean lrm_state_init_local(void);
 void lrm_state_destroy_all(void);
 
 /*!
- * \brief Create lrmd connection entry.
+ * \brief Create executor connection entry
  */
 lrm_state_t *lrm_state_create(const char *node_name);
 
 /*!
- * \brief Destroy lrmd connection keyed of node name
+ * \brief Destroy executor connection by node name
  */
 void lrm_state_destroy(const char *node_name);
 
@@ -122,10 +111,10 @@ lrm_state_t *lrm_state_find(const char *node_name);
 lrm_state_t *lrm_state_find_or_create(const char *node_name);
 
 /*!
- * The functions below are wrappers for the lrmd api calls the crmd
- * uses.  These wrapper functions allow us to treat the crmd's remote
- * lrmd connection resources the same as regular resources.  Internally
- * Regular resources go to the lrmd, and remote connection resources are
+ * The functions below are wrappers for the executor API calls the crmd
+ * uses. These wrapper functions allow us to treat the crmd's remote
+ * executor connection resources the same as regular resources. Internally,
+ * regular resources go to the executor, and remote connection resources are
  * handled locally in the crmd.
  */
 void lrm_state_disconnect_only(lrm_state_t * lrm_state);
@@ -156,7 +145,7 @@ int lrm_state_register_rsc(lrm_state_t * lrm_state,
 int lrm_state_unregister_rsc(lrm_state_t * lrm_state,
                              const char *rsc_id, enum lrmd_call_options options);
 
-/*! These functions are used to manage the remote lrmd connection resources */
+// Functions used to manage remote executor connection resources
 void remote_lrm_op_callback(lrmd_event_data_t * op);
 gboolean is_remote_lrmd_ra(const char *agent, const char *provider, const char *id);
 lrmd_rsc_info_t *remote_ra_get_rsc_info(lrm_state_t * lrm_state, const char *rsc_id);

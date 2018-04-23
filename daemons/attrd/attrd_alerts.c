@@ -24,7 +24,7 @@ attrd_lrmd_callback(lrmd_event_data_t * op)
     CRM_CHECK(op != NULL, return);
     switch (op->type) {
         case lrmd_event_disconnect:
-            crm_info("Lost connection to LRMD");
+            crm_info("Lost connection to executor");
             attrd_lrmd_disconnect();
             break;
         default:
@@ -50,7 +50,7 @@ attrd_lrmd_connect()
                 break;
             }
 
-            crm_debug("Could not connect to LRMD, %d tries remaining",
+            crm_debug("Could not connect to executor, %d tries remaining",
                       (max_attempts - fails));
             /* @TODO We don't want to block here with sleep, but we should wait
              * some time between connection attempts. We could possibly add a

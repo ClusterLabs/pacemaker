@@ -87,9 +87,9 @@ Pacemaker itself is composed of multiple daemons that work together:
 
  * pacemakerd
  * pacemaker-attrd
+ * pacemaker-execd
  * cib
  * crmd
- * lrmd
  * pengine
  * stonithd
 
@@ -111,8 +111,8 @@ modify them. These attributes are usually recorded in the CIB.
 Given a snapshot of the CIB as input, the 'policy engine' (pengine) determines
 what actions are necessary to achieve the desired state of the cluster.
 
-The 'local resource management daemon' (lrmd) handles requests to execute
-resource agents on the local node, and returns the result.
+The 'local executor' (pacemaker-execd) handles requests to execute
+resource agents on the local cluster node, and returns the result.
 
 The 'STONITH daemon' (stonithd) handles requests to fence nodes. Given a target
 node, stonithd decides which cluster node(s) should execute which fencing
@@ -127,8 +127,8 @@ Pacemaker centralizes cluster decision-making by electing one of the CRMd
 instances as the 'Designated Controller' ('DC'). Should the elected CRMd
 process (or the node it is on) fail, a new one is quickly established.
 The DC responds to cluster events by taking a current snapshot of the CIB,
-feeding it to the policy engine, then asking the lrmd (either directly on the
-local node, or via requests to crmd peers on other nodes) and stonithd to
+feeding it to the policy engine, then asking the executors (either directly on
+the local node, or via requests to crmd peers on other nodes) and stonithd to
 execute any necessary actions.
 
 .Old daemon names
