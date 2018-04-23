@@ -1728,12 +1728,12 @@ AC_CONFIG_FILES(Makefile                                            \
                 cts/pacemaker-cts-dummyd@.service                   \
                 cib/Makefile                                        \
                 daemons/Makefile                                    \
+                daemons/attrd/Makefile                              \
                 daemons/pacemakerd/Makefile                         \
                 daemons/pacemakerd/pacemaker                        \
                 daemons/pacemakerd/pacemaker.service                \
                 daemons/pacemakerd/pacemaker.upstart                \
                 daemons/pacemakerd/pacemaker.combined.upstart       \
-                attrd/Makefile                                      \
                 crmd/Makefile                                       \
                 pengine/Makefile                                    \
                 doc/Makefile                                        \

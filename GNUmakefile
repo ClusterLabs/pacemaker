@@ -360,7 +360,7 @@ CLANG_checkers =
 # --inconclusive --std=posix
 CPPCHECK_ARGS ?=
 cppcheck:
-	for d in replace lib daemons attrd pengine cib crmd fencing lrmd tools; \
+	for d in replace lib daemons pengine cib crmd fencing lrmd tools; \
 		do cppcheck $(CPPCHECK_ARGS) -q $$d; \
 	done
 

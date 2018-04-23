@@ -12,7 +12,7 @@ MAINTAINERCLEANFILES    = Makefile.in aclocal.m4 configure DRF/config-h.in \
 
 # Only these will get installed with a plain "make install"
 CORE_INSTALL	= replace include lib daemons \
-		  attrd pengine cib crmd fencing lrmd tools xml
+		  pengine cib crmd fencing lrmd tools xml
 
 # Only these will get built with a plain "make" or "make clean"
 CORE		= $(CORE_INSTALL) cts

@@ -105,7 +105,6 @@ publican.cfg
 *.8
 *.8.xml
 *.8.html
-attrd/attrd
 doc/*/en-US/images/*.png
 doc/*/tmp/**
 doc/*/publish
@@ -114,6 +113,7 @@ cib/cibmon
 cib/cibpipe
 crmd/atest
 crmd/crmd
+/daemons/attrd/attrd
 /daemons/pacemakerd/pacemakerd
 doc/api/*
 doc/Clusters_from_Scratch.txt
@@ -179,6 +179,7 @@ lib/gnu/stdalign.h
 /xml/test-2/*.up.err
 
 # Formerly built files (helps when jumping back and forth in checkout)
+/attrd
 /coverage.sh
 /cts/HBDummy
 /fencing/regression.py
