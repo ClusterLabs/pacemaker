@@ -327,7 +327,7 @@ summary:
 	@printf "\n- Diff:      "
 	@git diff -r $(LAST_RELEASE)..HEAD --stat \
 		include lib daemons pengine/*.c pengine/*.h \
-		cib crmd fencing lrmd tools xml | tail -n 1
+		cib crmd fencing tools xml | tail -n 1
 
 rc-changes:
 	@make NEXT_RELEASE=$(shell echo $(LAST_RC) | sed s:-rc.*::) LAST_RELEASE=$(LAST_RC) changes
@@ -360,7 +360,7 @@ CLANG_checkers =
 # --inconclusive --std=posix
 CPPCHECK_ARGS ?=
 cppcheck:
-	for d in replace lib daemons pengine cib crmd fencing lrmd tools; \
+	for d in replace lib daemons pengine cib crmd fencing tools; \
 		do cppcheck $(CPPCHECK_ARGS) -q $$d; \
 	done
 

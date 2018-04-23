@@ -74,6 +74,8 @@ Doxyfile
 /cts/lxc_autogen.sh
 /cts/pacemaker-cts-dummyd
 /cts/pacemaker-cts-dummyd@.service
+/daemons/execd/pacemaker_remote
+/daemons/execd/pacemaker_remote.service
 /daemons/pacemakerd/pacemaker
 /daemons/pacemakerd/pacemaker.combined.upstart
 /daemons/pacemakerd/pacemaker.service
@@ -83,9 +85,6 @@ extra/logrotate/pacemaker
 include/config.h
 include/config.h.in
 include/crm_config.h
-lrmd/pacemaker_remote
-lrmd/pacemaker_remoted
-lrmd/pacemaker_remote.service
 publican.cfg
 /tools/cibsecret
 /tools/crm_error
@@ -114,6 +113,9 @@ cib/cibpipe
 crmd/atest
 crmd/crmd
 /daemons/attrd/pacemaker-attrd
+/daemons/execd/lrmd
+/daemons/execd/lrmd_test
+/daemons/execd/pacemaker_remoted
 /daemons/pacemakerd/pacemakerd
 doc/api/*
 doc/Clusters_from_Scratch.txt
@@ -125,9 +127,6 @@ fencing/stonith-test
 fencing/stonith_admin
 fencing/stonithd
 fencing/stonithd.xml
-lrmd/lrmd
-lrmd/lrmd_internal_ctl
-lrmd/lrmd_test
 pengine/pengine
 pengine/pengine.xml
 pengine/ptest
@@ -183,7 +182,7 @@ lib/gnu/stdalign.h
 /coverage.sh
 /cts/HBDummy
 /fencing/regression.py
-/lrmd/regression.py
+/lrmd
 /mcp
 /pengine/.regression.failed.diff
 /pengine/regression.core.sh

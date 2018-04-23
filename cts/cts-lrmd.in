@@ -72,7 +72,8 @@ def update_path():
     new_path = os.environ['PATH']
     if os.path.exists("%s/cts-lrmd.in" % TEST_DIR):
         print("Running tests from the source tree: %s (%s)" % (BUILD_DIR, TEST_DIR))
-        new_path = "%s/lrmd:%s" % (BUILD_DIR, new_path)    # For lrmd, lrmd_test and pacemaker_remoted
+        # For lrmd, lrmd_test and pacemaker_remoted
+        new_path = "%s/daemons/execd:%s" % (BUILD_DIR, new_path)
         new_path = "%s/tools:%s" % (BUILD_DIR, new_path)   # For crm_resource
         new_path = "%s/fencing:%s" % (BUILD_DIR, new_path) # For stonithd
 

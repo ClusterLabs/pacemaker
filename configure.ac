@@ -1729,6 +1729,9 @@ AC_CONFIG_FILES(Makefile                                            \
                 cib/Makefile                                        \
                 daemons/Makefile                                    \
                 daemons/attrd/Makefile                              \
+                daemons/execd/Makefile                              \
+                daemons/execd/pacemaker_remote                      \
+                daemons/execd/pacemaker_remote.service              \
                 daemons/pacemakerd/Makefile                         \
                 daemons/pacemakerd/pacemaker                        \
                 daemons/pacemakerd/pacemaker.service                \
@@ -1767,9 +1770,6 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/fencing/Makefile                                \
                 lib/lrmd/Makefile                                   \
                 lib/services/Makefile                               \
-                lrmd/Makefile                                       \
-                lrmd/pacemaker_remote.service                       \
-                lrmd/pacemaker_remote                               \
                 extra/Makefile                                      \
                 extra/alerts/Makefile                               \
                 extra/resources/Makefile                            \
