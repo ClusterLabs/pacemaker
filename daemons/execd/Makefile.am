@@ -45,6 +45,6 @@ cts_exec_helper_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la	\
 			  $(top_builddir)/pengine/libpengine.la
 cts_exec_helper_SOURCES	= cts-exec-helper.c
 
-noinst_HEADERS  = lrmd_private.h
+noinst_HEADERS  = pacemaker-execd.h
 
 CLEANFILES = $(man8_MANS)

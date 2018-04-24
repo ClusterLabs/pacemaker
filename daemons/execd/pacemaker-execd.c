@@ -21,7 +21,7 @@
 #include <crm/common/ipc.h>
 #include <crm/common/ipcs.h>
 
-#include <lrmd_private.h>
+#include "pacemaker-execd.h"
 
 #if defined(HAVE_GNUTLS_GNUTLS_H) && defined(SUPPORT_REMOTE)
 #  define ENABLE_PCMK_REMOTE

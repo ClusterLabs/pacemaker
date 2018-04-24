@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2017 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2016-2018 Andrew Beekhof <andrew@beekhof.net>
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -16,7 +16,7 @@
 #include <crm/common/alerts_internal.h>
 #include <crm/msg_xml.h>
 
-#include <lrmd_private.h>
+#include "pacemaker-execd.h"
 
 /* Track in-flight alerts so we can wait for them at shutdown */
 static GHashTable *inflight_alerts; /* key = call_id, value = timeout */

@@ -17,7 +17,7 @@
 #include <crm/common/ipcs.h>
 #include <crm/msg_xml.h>
 
-#include <lrmd_private.h>
+#include "pacemaker-execd.h"
 
 #ifdef HAVE_SYS_TIMEB_H
 #  include <sys/timeb.h>

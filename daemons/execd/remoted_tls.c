@@ -16,13 +16,13 @@
 #include <crm/msg_xml.h>
 #include <crm/common/mainloop.h>
 
-#include <lrmd_private.h>
-
 #include <netdb.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <arpa/inet.h>
+
+#include "pacemaker-execd.h"
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
 #  define LRMD_REMOTE_AUTH_TIMEOUT 10000

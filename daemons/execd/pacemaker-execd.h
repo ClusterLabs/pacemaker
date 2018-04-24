@@ -1,24 +1,12 @@
 /*
- * Copyright (c) 2012 David Vossel <davidvossel@gmail.com>
+ * Copyright 2012-2018 David Vossel <davidvossel@gmail.com>
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef LRMD_PVT__H
-#  define LRMD_PVT__H
+#ifndef PACEMAKER_EXECD__H
+#  define PACEMAKER_EXECD__H
 
 #  include <glib.h>
 #  include <crm/common/ipcs.h>
@@ -111,4 +99,5 @@ int ipc_proxy_shutdown_req(crm_client_t *ipc_proxy);
 
 int process_lrmd_alert_exec(crm_client_t *client, uint32_t id, xmlNode *request);
 void lrmd_drain_alerts(GMainContext *ctx);
-#endif
+
+#endif // PACEMAKER_EXECD__H
