@@ -14,7 +14,8 @@ halib_PROGRAMS	= pacemaker-controld
 
 ## SOURCES
 
-noinst_HEADERS	= crmd_alerts.h crmd_callbacks.h crmd_fsa.h crmd.h \
+noinst_HEADERS	= controld_alerts.h		\
+		  crmd_callbacks.h crmd_fsa.h crmd.h \
 		crmd_lrm.h crmd_messages.h crmd_utils.h fsa_defines.h \
 		fsa_matrix.h fsa_proto.h membership.h te_callbacks.h \
 		tengine.h throttle.h crmd_metadata.h

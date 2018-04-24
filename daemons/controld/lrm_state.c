@@ -15,7 +15,7 @@
 #include <crmd_messages.h>
 #include <crmd_callbacks.h>
 #include <crmd_lrm.h>
-#include <crmd_alerts.h>
+#include <controld_alerts.h>
 #include <crm/pengine/rules.h>
 #include <crm/pengine/rules_internal.h>
 #include <crm/transition.h>

@@ -24,7 +24,7 @@
 #include <crmd_messages.h>
 #include <crmd_callbacks.h>
 #include <crmd_lrm.h>
-#include <crmd_alerts.h>
+#include <controld_alerts.h>
 #include <crmd_metadata.h>
 #include <tengine.h>
 #include <throttle.h>
