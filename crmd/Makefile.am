@@ -1,20 +1,10 @@
 #
-# Copyright (C) 2004 Andrew Beekhof
+# Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
 #
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License, or (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
+
 include $(top_srcdir)/Makefile.common
 
 halibdir	= $(CRM_DAEMON_DIR)
@@ -45,7 +35,7 @@ crmd_LDADD	= $(top_builddir)/lib/fencing/libstonithd.la		\
 crmd_SOURCES	= main.c corosync.c crmd_metadata.c			\
 		fsa.c control.c messages.c membership.c callbacks.c attrd.c	\
 		election.c join_client.c join_dc.c throttle.c			\
-		cib.c pengine.c tengine.c lrm.c lrm_state.c remote_lrmd_ra.c	\
+		cib.c pengine.c tengine.c lrm.c lrm_state.c remote_ra.c		\
 		utils.c misc.c te_events.c te_actions.c te_utils.c te_callbacks.c
 
 if BUILD_XML_HELP
