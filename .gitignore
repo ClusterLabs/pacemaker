@@ -115,7 +115,7 @@ crmd/crmd
 /daemons/attrd/pacemaker-attrd
 /daemons/execd/cts-exec-helper
 /daemons/execd/pacemaker-execd
-/daemons/execd/pacemaker_remoted
+/daemons/execd/pacemaker-remoted
 /daemons/pacemakerd/pacemakerd
 doc/api/*
 doc/Clusters_from_Scratch.txt

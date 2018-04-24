@@ -20,7 +20,7 @@ Tests (default tests are 'pengine cli exec'):
  pengine           Policy engine
  cli               Command-line tools
  exec              Local resource agent executor
- pacemaker_remote  Local resource manager in remote mode
+ pacemaker_remote  Resource agent executor in remote mode
  fencing           Fencing daemon
  all               Synonym for 'pengine cli exec fencing'"
 

@@ -7,7 +7,7 @@
 
 # chkconfig: - 99 01
 # description: Pacemaker Cluster Manager
-# processname: pacemaker_remoted
+# processname: pacemaker-remoted
 #
 ### BEGIN INIT INFO
 # Provides:		pacemaker_remote
@@ -16,12 +16,12 @@
 # Required-Stop:	$network $remote_fs
 # Default-Start:
 # Default-Stop:
-# Short-Description:	Starts and stops the Pacemaker remote agent for non-cluster nodes
-# Description:		Starts and stops the Pacemaker remote agent for non-cluster nodes
+# Short-Description:	Manage the executor for Pacemaker Remote nodes
+# Description:		Manage the executor for Pacemaker Remote nodes
 ### END INIT INFO
 
-desc="Pacemaker Remote Agent"
-prog="pacemaker_remoted"
+desc="Pacemaker Remote Executor"
+prog="pacemaker-remoted"
 
 # set secure PATH
 PATH="/sbin:/bin:/usr/sbin:/usr/bin:@sbindir@"

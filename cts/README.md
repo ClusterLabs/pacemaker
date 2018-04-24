@@ -176,11 +176,11 @@ variables may be set differently on different nodes.
 
 ### Remote node testing
 
-If the pacemaker_remoted daemon is installed on all cluster nodes, CTS will
+If the pacemaker-remoted daemon is installed on all cluster nodes, CTS will
 enable remote node tests.
 
 The remote node tests choose a random node, stop the cluster on it, start
-pacemaker_remote on it, and add an ocf:pacemaker:remote resource to turn it
+pacemaker-remoted on it, and add an ocf:pacemaker:remote resource to turn it
 into a remote node. When the test is done, CTS will turn the node back into
 a cluster node.
 
@@ -201,14 +201,14 @@ to the hostnames. Example:
 
 When running the remote node tests, the pacemaker components on the cluster
 nodes can be run under valgrind as described in the "Memory testing" section.
-However, pacemaker_remote cannot be run under valgrind that way, because it is
+However, pacemaker-remoted cannot be run under valgrind that way, because it is
 started by the OS's regular boot system and not by pacemaker.
 
 Details vary by system, but the goal is to set the VALGRIND_OPTS environment
-variable and then start pacemaker_remoted by prefixing it with the path to
+variable and then start pacemaker-remoted by prefixing it with the path to
 valgrind.
 
-The init script and systemd service file provided with pacemaker_remote will
+The init script and systemd service file provided with pacemaker-remoted will
 load the pacemaker environment variables from the same location used by other
 pacemaker components, so VALGRIND_OPTS will be set correctly if using one of
 those.
@@ -220,7 +220,7 @@ valgrind. For example:
     cat >/etc/systemd/system/pacemaker_remote.service.d/valgrind.conf <<EOF
     [Service]
     ExecStart=
-    ExecStart=/usr/bin/valgrind /usr/sbin/pacemaker_remoted
+    ExecStart=/usr/bin/valgrind /usr/sbin/pacemaker-remoted
     EOF
 
 ### Container testing

@@ -12,7 +12,7 @@ halib_PROGRAMS		= pacemaker-execd cts-exec-helper
 
 initdir			= $(INITDIR)
 init_SCRIPTS		= pacemaker_remote
-sbin_PROGRAMS		= pacemaker_remoted
+sbin_PROGRAMS		= pacemaker-remoted
 
 if BUILD_SYSTEMD
 systemdunit_DATA	= pacemaker_remote.service

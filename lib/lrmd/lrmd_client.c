@@ -1161,7 +1161,8 @@ lrmd_tcp_connect_cb(void *userdata, int sock)
     crm_info("TLS connection to Pacemaker Remote server %s:%d succeeded",
              native->server, native->port);
 
-    name = crm_strdup_printf("remote-lrmd-%s:%d", native->server, native->port);
+    name = crm_strdup_printf("pacemaker-remote-%s:%d",
+                             native->server, native->port);
 
     native->process_notify = mainloop_add_trigger(G_PRIORITY_HIGH, lrmd_tls_dispatch, lrmd);
     native->source =
@@ -1243,7 +1244,7 @@ lrmd_tls_connect(lrmd_t * lrmd, int *fd)
     if (fd) {
         *fd = sock;
     } else {
-        char *name = crm_strdup_printf("remote-lrmd-%s:%d",
+        char *name = crm_strdup_printf("pacemaker-remote-%s:%d",
                                        native->server, native->port);
 
         native->process_notify = mainloop_add_trigger(G_PRIORITY_HIGH, lrmd_tls_dispatch, lrmd);

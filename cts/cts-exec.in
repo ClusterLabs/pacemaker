@@ -72,14 +72,14 @@ def update_path():
     new_path = os.environ['PATH']
     if os.path.exists("%s/cts-exec.in" % TEST_DIR):
         print("Running tests from the source tree: %s (%s)" % (BUILD_DIR, TEST_DIR))
-        # For pacemaker-execd, cts-exec-helper, and pacemaker_remoted
+        # For pacemaker-execd, cts-exec-helper, and pacemaker-remoted
         new_path = "%s/daemons/execd:%s" % (BUILD_DIR, new_path)
         new_path = "%s/tools:%s" % (BUILD_DIR, new_path)   # For crm_resource
         new_path = "%s/fencing:%s" % (BUILD_DIR, new_path) # For stonithd
 
     else:
         print("Running tests from the install tree: @CRM_DAEMON_DIR@ (not %s)" % TEST_DIR)
-        # For stonithd, pacemaker-execd, cts-exec-helper, and pacemaker_remoted
+        # For stonithd, pacemaker-execd, cts-exec-helper, and pacemaker-remoted
         new_path = "@CRM_DAEMON_DIR@:%s" % (new_path)
 
     print('Using PATH="{}"'.format(new_path))
@@ -166,7 +166,7 @@ class Test(object):
         self.cmds = []
 
         if tls:
-            self.daemon_location = "pacemaker_remoted"
+            self.daemon_location = "pacemaker-remoted"
         else:
             self.daemon_location = "pacemaker-execd"
 
@@ -209,7 +209,7 @@ class Test(object):
         """ Prepare the host for running a test """
 
         ### make sure we are in full control here ###
-        cmd = shlex.split("killall -q -9 stonithd lt-stonithd pacemaker-execd lt-pacemaker-execd cts-exec-helper lt-cts-exec-helper pacemaker_remoted")
+        cmd = shlex.split("killall -q -9 stonithd lt-stonithd pacemaker-execd lt-pacemaker-execd cts-exec-helper lt-cts-exec-helper pacemaker-remoted")
         test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
         test.wait()
 
@@ -1228,7 +1228,7 @@ class TestOptions(object):
         print("\t [--list-tests | -l]                  Print out all registered tests.")
         print("\t [--run-only | -r 'testname']         Run a specific test")
         print("\t [--verbose | -V]                     Verbose output")
-        print("\t [--pacemaker-remote | -R             Test pacemaker_remoted binary instead of pacemaker-execd.")
+        print("\t [--pacemaker-remote | -R             Test pacemaker-remoted binary instead of pacemaker-execd")
         print("\t [--run-only-pattern | -p 'string']   Run only tests containing the string value")
         print("\n\tExample: Run only the test 'start_stop'")
         print("\t\t " + sys.argv[0] + " --run-only start_stop")

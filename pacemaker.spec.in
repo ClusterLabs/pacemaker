@@ -595,7 +595,7 @@ exit 0
 %endif
 
 %exclude %{_libexecdir}/pacemaker/cts-exec-helper
-%exclude %{_sbindir}/pacemaker_remoted
+%exclude %{_sbindir}/pacemaker-remoted
 %{_libexecdir}/pacemaker/*
 
 %{_sbindir}/crm_attribute
@@ -689,7 +689,7 @@ exit 0
 %exclude %{_mandir}/man8/crm_master.*
 %exclude %{_mandir}/man8/fence_legacy.*
 %exclude %{_mandir}/man8/pacemakerd.*
-%exclude %{_mandir}/man8/pacemaker_remoted.*
+%exclude %{_mandir}/man8/pacemaker-remoted.*
 %exclude %{_mandir}/man8/stonith_admin.*
 
 %license licenses/GPLv2
@@ -734,8 +734,8 @@ exit 0
 %{_initrddir}/pacemaker_remote
 %endif
 
-%{_sbindir}/pacemaker_remoted
-%{_mandir}/man8/pacemaker_remoted.*
+%{_sbindir}/pacemaker-remoted
+%{_mandir}/man8/pacemaker-remoted.*
 %license licenses/GPLv2
 %doc COPYING
 %doc ChangeLog

@@ -1,20 +1,8 @@
 /*
- * Copyright (c) 2015 David Vossel <davidvossel@gmail.com>
+ * Copyright 2015-2018 David Vossel <davidvossel@gmail.com>
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -127,7 +115,7 @@ remote_proxy_free(gpointer data)
 int
 remote_proxy_dispatch(const char *buffer, ssize_t length, gpointer userdata)
 {
-    /* Async responses from cib and friends back to clients via pacemaker_remoted */
+    // Async responses from cib and friends to clients via pacemaker-remoted
     xmlNode *xml = NULL;
     uint32_t flags = 0;
     remote_proxy_t *proxy = userdata;
@@ -295,7 +283,7 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
         } else {
             int rc = pcmk_ok;
             xmlNode *op_reply = NULL;
-            /* For backwards compatibility with pacemaker_remoted <= 1.1.10 */
+            // @COMPAT pacemaker_remoted <= 1.1.10
 
             crm_trace("Relaying %s request %d from %s to %s for %s",
                       op, msg_id, proxy->node_name, crm_ipc_name(proxy->ipc), name);

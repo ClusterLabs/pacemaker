@@ -254,6 +254,8 @@ dnl ===============================================
 dnl General Processing
 dnl ===============================================
 
+AC_PROG_LN_S
+
 if cc_supports_flag -Werror; then
     WERROR="-Werror"
 else
@@ -1557,7 +1559,7 @@ dnl
 dnl * CFLAGS_HARDENED_EXE, LDFLAGS_HARDENED_EXE
 dnl    compiler and linker flags (respectively) for daemon programs
 dnl    (pacemaker-attrd, pacemaker-execd, cib, crmd, stonithd, pacemakerd,
-dnl    pacemaker_remoted, pengine)
+dnl    pacemaker-remoted, pengine)
 dnl
 dnl * CFLAGS_HARDENED_LIB, LDFLAGS_HARDENED_LIB
 dnl    compiler and linker flags (respectively) for libraries linked

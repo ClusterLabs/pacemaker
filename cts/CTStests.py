@@ -2708,7 +2708,7 @@ class RemoteDriver(CTSTest):
 
         # We kill the process to prevent a graceful stop,
         # then stop it to prevent the OS from restarting it.
-        self.rsh(node, "killall -9 pacemaker_remoted")
+        self.rsh(node, "killall -9 pacemaker-remoted")
         self.stop_pcmk_remote(node)
 
     def start_metal(self, node):
@@ -2964,7 +2964,7 @@ class RemoteDriver(CTSTest):
             return False
 
         for node in self.Env["nodes"]:
-            rc = self.rsh(node, "type pacemaker_remoted >/dev/null 2>&1")
+            rc = self.rsh(node, "which pacemaker-remoted >/dev/null 2>&1")
             if rc != 0:
                 return False
         return True

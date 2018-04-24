@@ -211,8 +211,8 @@ lrmd_remote_listen(gpointer data)
                CRM_XS " %p id: %s", new_client, new_client->id);
 
     new_client->remote->source =
-        mainloop_add_fd("lrmd-remote-client", G_PRIORITY_DEFAULT, csock, new_client,
-                        &lrmd_remote_fd_cb);
+        mainloop_add_fd("pacemaker-remote-client", G_PRIORITY_DEFAULT, csock,
+                        new_client, &lrmd_remote_fd_cb);
     return TRUE;
 }
 
@@ -355,7 +355,8 @@ lrmd_init_remote_tls_server()
         goto init_remote_cleanup;
     }
 
-    mainloop_add_fd("lrmd-remote", G_PRIORITY_DEFAULT, ssock, NULL, &remote_listen_fd_callbacks);
+    mainloop_add_fd("pacemaker-remote-server", G_PRIORITY_DEFAULT, ssock, NULL,
+                    &remote_listen_fd_callbacks);
 
     rc = ssock;
   init_remote_cleanup:

@@ -112,7 +112,7 @@ class crm_corosync(BasePatterns):
 
         self.commands.update({
             "StartCmd"       : "service corosync start && service pacemaker start",
-            "StopCmd"        : "service pacemaker stop; [ ! -e /usr/sbin/pacemaker_remoted ] || service pacemaker_remote stop; service corosync stop",
+            "StopCmd"        : "service pacemaker stop; [ ! -e /usr/sbin/pacemaker-remoted ] || service pacemaker_remote stop; service corosync stop",
 
             "EpochCmd"      : "crm_node -e",
             "QuorumCmd"      : "crm_node -q",

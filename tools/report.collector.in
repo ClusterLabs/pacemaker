@@ -209,6 +209,11 @@ getconfig() {
 	esac
 	echo "$host" > $target/RUNNING
 
+    elif is_running pacemaker-remoted; then
+        dump_status_and_config
+        echo "$host" > $target/RUNNING
+
+    # Pre-2.0.0 daemon name in case we're collecting on a mixed-version cluster
     elif is_running pacemaker_remoted; then
         dump_status_and_config
         echo "$host" > $target/RUNNING
@@ -593,7 +598,7 @@ get_logfiles() {
     pattern="$pattern\\|cib_perform_op\\|process_lrm_event"
 
     # - pacemaker_remote might use a different file
-    pattern="$pattern\\|pacemaker_remoted:"
+    pattern="$pattern\\|pacemaker[-_]remoted:"
 
     findmsg 3 "$pattern"
 }

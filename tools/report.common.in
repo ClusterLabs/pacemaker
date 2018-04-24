@@ -68,7 +68,7 @@ SYSLOGS="
     /var/log/cluster/*
 "
 
-# Whether pacemaker_remoted was found (0 = yes, 1 = no, -1 = haven't looked yet)
+# Whether pacemaker-remoted was found (0 = yes, 1 = no, -1 = haven't looked yet)
 REMOTED_STATUS=-1
 
 #
@@ -120,7 +120,12 @@ is_running() {
 has_remoted() {
     if [ $REMOTED_STATUS -eq -1 ]; then
         REMOTED_STATUS=1
-        if which pacemaker_remoted >/dev/null 2>&1; then
+        if which pacemaker-remoted >/dev/null 2>&1; then
+            REMOTED_STATUS=0
+        # Check for pre-2.0.0 daemon name in case we have mixed-version cluster
+        elif which pacemaker_remoted >/dev/null 2>&1; then
+            REMOTED_STATUS=0
+        elif [ -x "@sbindir@/pacemaker-remoted" ]; then
             REMOTED_STATUS=0
         elif [ -x "@sbindir@/pacemaker_remoted" ]; then
             REMOTED_STATUS=0
@@ -128,7 +133,9 @@ has_remoted() {
             # @TODO: the binary might be elsewhere,
             # but a global search is too expensive
             for d in /{usr,opt}/{local/,}{s,}bin; do
-                if [ -x "${d}/pacemaker_remoted" ]; then
+                if [ -x "${d}/pacemaker-remoted" ]; then
+                    REMOTED_STATUS=0
+                elif [ -x "${d}/pacemaker_remoted" ]; then
                     REMOTED_STATUS=0
                 fi
             done

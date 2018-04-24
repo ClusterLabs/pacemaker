@@ -276,7 +276,7 @@ create_docker_resource(
                                       "run_cmd", data->docker_run_command);
             } else {
                 crm_create_nvpair_xml(xml_obj, NULL,
-                                      "run_cmd", SBIN_DIR "/pacemaker_remoted");
+                                      "run_cmd", SBIN_DIR "/pacemaker-remoted");
             }
 
             /* TODO: Allow users to specify their own?
@@ -437,7 +437,8 @@ create_rkt_resource(
             if(data->docker_run_command) {
                 crm_create_nvpair_xml(xml_obj, NULL, "run_cmd", data->docker_run_command);
             } else {
-                crm_create_nvpair_xml(xml_obj, NULL, "run_cmd", SBIN_DIR"/pacemaker_remoted");
+                crm_create_nvpair_xml(xml_obj, NULL, "run_cmd",
+                                      SBIN_DIR "/pacemaker-remoted");
             }
 
             /* TODO: Allow users to specify their own?
@@ -681,8 +682,8 @@ create_container(
          * different node than the one on which the docker container
          * is active.
          *
-         * Makes it possible to have remote nodes, running docker
-         * containers with pacemaker_remoted inside in order to start
+         * This makes it possible to have Pacemaker Remote nodes running
+         * containers with pacemaker-remoted inside in order to start
          * services inside those containers.
          */
         set_bit(tuple->remote->flags, pe_rsc_allow_remote_remotes);

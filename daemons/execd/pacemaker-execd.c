@@ -440,7 +440,7 @@ static void spawn_pidone(int argc, char **argv, char **envp)
             setsid();
             setpgid(0, 0);
 
-            /* Child remains as pacemaker_remoted */
+            /* Child remains as pacemaker-remoted */
             return;
 	case -1:
             perror("fork");
@@ -526,11 +526,11 @@ main(int argc, char **argv, char **envp)
 #ifndef ENABLE_PCMK_REMOTE
     crm_log_preinit("pacemaker-execd", argc, argv);
     crm_set_options(NULL, "[options]", long_options,
-                    "Daemon for controlling services confirming to different standards");
+                    "Resource agent executor daemon for cluster nodes");
 #else
-    crm_log_preinit("pacemaker_remoted", argc, argv);
+    crm_log_preinit("pacemaker-remoted", argc, argv);
     crm_set_options(NULL, "[options]", long_options,
-                    "Pacemaker Remote daemon for extending pacemaker functionality to remote nodes.");
+                    "Resource agent executor daemon for Pacemaker Remote nodes");
 #endif
 
     while (1) {

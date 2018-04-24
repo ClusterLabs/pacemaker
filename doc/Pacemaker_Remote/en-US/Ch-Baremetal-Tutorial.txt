@@ -81,13 +81,13 @@ pacemaker_remote.service - Pacemaker Remote Service
    Active: active (running) since Fri 2018-01-12 15:21:20 CDT; 20s ago
  Main PID: 21273 (pacemaker_remot)
    CGroup: /system.slice/pacemaker_remote.service
-           └─21273 /usr/sbin/pacemaker_remoted
+           └─21273 /usr/sbin/pacemaker-remoted
 
 Jan 12 15:21:20 remote1 systemd[1]: Starting Pacemaker Remote Service...
 Jan 12 15:21:20 remote1 systemd[1]: Started Pacemaker Remote Service.
-Jan 12 15:21:20 remote1 pacemaker_remoted[21273]: notice: crm_add_logfile: Additional logging available in /var/log/pacemaker.log
-Jan 12 15:21:20 remote1 pacemaker_remoted[21273]: notice: lrmd_init_remote_tls_server: Starting a tls listener on port 3121.
-Jan 12 15:21:20 remote1 pacemaker_remoted[21273]: notice: bind_and_listen: Listening on address ::
+Jan 12 15:21:20 remote1 pacemaker-remoted[21273]: notice: crm_add_logfile: Additional logging available in /var/log/pacemaker.log
+Jan 12 15:21:20 remote1 pacemaker-remoted[21273]: notice: lrmd_init_remote_tls_server: Starting a tls listener on port 3121.
+Jan 12 15:21:20 remote1 pacemaker-remoted[21273]: notice: bind_and_listen: Listening on address ::
 ----
 
 == Verify Connection to Remote Node ==

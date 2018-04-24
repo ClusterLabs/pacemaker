@@ -1,6 +1,6 @@
 [Unit]
-Description=Pacemaker Remote Service
-Documentation=man:pacemaker_remoted http://clusterlabs.org/doc/en-US/Pacemaker/1.1-pcs/html/Pacemaker_Remote/index.html
+Description=Pacemaker Remote executor daemon
+Documentation=man:pacemaker-remoted http://clusterlabs.org/doc/en-US/Pacemaker/1.1-pcs/html/Pacemaker_Remote/index.html
 
 # See main pacemaker unit file for descriptions of why these are needed
 After=network.target
@@ -22,7 +22,7 @@ NotifyAccess=none
 EnvironmentFile=-@CONFIGDIR@/pacemaker
 EnvironmentFile=-@CONFIGDIR@/sbd
 
-ExecStart=@sbindir@/pacemaker_remoted
+ExecStart=@sbindir@/pacemaker-remoted
 
 # Systemd v227 and above can limit the number of processes spawned by a
 # service. That is a bad idea for an HA cluster resource manager, so disable it
