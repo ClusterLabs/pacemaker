@@ -24,7 +24,8 @@ pacemaker_execd_LDFLAGS		= $(LDFLAGS_HARDENED_EXE)
 pacemaker_execd_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la \
 				  $(top_builddir)/lib/services/libcrmservice.la	\
 				  $(top_builddir)/lib/fencing/libstonithd.la ${COMPAT_LIBS}
-pacemaker_execd_SOURCES		= main.c lrmd.c lrmd_alert_api.c
+pacemaker_execd_SOURCES		= pacemaker-execd.c execd_commands.c \
+				  execd_alerts.c
 
 pacemaker_remoted_CPPFLAGS	= -DSUPPORT_REMOTE $(AM_CPPFLAGS)
 
@@ -33,7 +34,8 @@ pacemaker_remoted_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
 
 pacemaker_remoted_LDADD		= $(pacemaker_execd_LDADD) \
 				  $(top_builddir)/lib/lrmd/liblrmd.la
-pacemaker_remoted_SOURCES	= $(pacemaker_execd_SOURCES) tls_backend.c ipc_proxy.c
+pacemaker_remoted_SOURCES	= $(pacemaker_execd_SOURCES) \
+				  remoted_tls.c remoted_proxy.c
 
 cts_exec_helper_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la	\
 			  $(top_builddir)/lib/lrmd/liblrmd.la		\
