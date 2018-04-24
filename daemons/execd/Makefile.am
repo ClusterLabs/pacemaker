@@ -41,7 +41,7 @@ lrmd_test_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la	\
 			  $(top_builddir)/lib/services/libcrmservice.la	\
 			  $(top_builddir)/lib/pengine/libpe_status.la	\
 			  $(top_builddir)/pengine/libpengine.la
-lrmd_test_SOURCES	= test.c
+lrmd_test_SOURCES	= cts-exec-helper.c
 
 noinst_HEADERS  = lrmd_private.h
 
