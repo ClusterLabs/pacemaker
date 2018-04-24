@@ -116,6 +116,9 @@ cib/cibpipe
 /daemons/execd/pacemaker-execd
 /daemons/execd/pacemaker-remoted
 /daemons/pacemakerd/pacemakerd
+/daemons/schedulerd/pengine
+/daemons/schedulerd/pengine.xml
+/daemons/schedulerd/ptest
 doc/api/*
 doc/Clusters_from_Scratch.txt
 doc/Pacemaker_Explained.txt
@@ -126,9 +129,6 @@ fencing/stonith-test
 fencing/stonith_admin
 fencing/stonithd
 fencing/stonithd.xml
-pengine/pengine
-pengine/pengine.xml
-pengine/ptest
 scratch
 tools/attrd_updater
 tools/cibadmin
@@ -184,9 +184,7 @@ lib/gnu/stdalign.h
 /fencing/regression.py
 /lrmd
 /mcp
-/pengine/.regression.failed.diff
-/pengine/regression.core.sh
-/pengine/test10/shadow.*
+/pengine
 
 #Other 
 mock

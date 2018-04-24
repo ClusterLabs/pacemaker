@@ -1559,7 +1559,7 @@ dnl
 dnl * CFLAGS_HARDENED_EXE, LDFLAGS_HARDENED_EXE
 dnl    compiler and linker flags (respectively) for daemon programs
 dnl    (pacemakerd, pacemaker-attrd, pacemaker-controld, pacemaker-execd,
-dnl    cib, stonithd, pacemaker-remoted, pengine)
+dnl    cib, stonithd, pacemaker-remoted, pacemaker-schedulerd)
 dnl
 dnl * CFLAGS_HARDENED_LIB, LDFLAGS_HARDENED_LIB
 dnl    compiler and linker flags (respectively) for libraries linked
@@ -1740,7 +1740,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 daemons/pacemakerd/pacemaker.service                \
                 daemons/pacemakerd/pacemaker.upstart                \
                 daemons/pacemakerd/pacemaker.combined.upstart       \
-                pengine/Makefile                                    \
+                daemons/schedulerd/Makefile                         \
                 doc/Makefile                                        \
                 doc/Clusters_from_Scratch/publican.cfg              \
                 doc/Pacemaker_Administration/publican.cfg           \

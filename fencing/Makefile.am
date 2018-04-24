@@ -1,20 +1,11 @@
+#
+# Copyright 2004-2018 International Business Machines
 # Author: Sun Jiang Dong <sunjd@cn.ibm.com>
-# Copyright (c) 2004 International Business Machines
 #
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License, or (at your option) any later version.
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-#
+
 include $(top_srcdir)/Makefile.common
 
 ## binary progs
@@ -44,7 +35,7 @@ stonith_admin_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la	\
 			$(top_builddir)/lib/fencing/libstonithd.la	\
 			$(CLUSTERLIBS)
 
-stonithd_CPPFLAGS	= -I$(top_srcdir)/pengine $(AM_CPPFLAGS)
+stonithd_CPPFLAGS	= -I$(top_srcdir)/daemons/schedulerd $(AM_CPPFLAGS)
 stonithd_YFLAGS		= -d
 
 stonithd_CFLAGS		= $(CFLAGS_HARDENED_EXE)
@@ -54,7 +45,7 @@ stonithd_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la	\
 			$(top_builddir)/lib/cluster/libcrmcluster.la	\
 			$(top_builddir)/lib/fencing/libstonithd.la	\
 			$(top_builddir)/lib/pengine/libpe_status.la	\
-			$(top_builddir)/pengine/libpengine.la		\
+			$(top_builddir)/daemons/schedulerd/libpengine.la	\
 			$(CLUSTERLIBS)
 
 stonithd_SOURCES	= main.c commands.c remote.c
