@@ -13,7 +13,7 @@
 #include <crmd.h>
 #include <crmd_fsa.h>
 #include <crmd_messages.h>
-#include <crmd_callbacks.h>
+#include <controld_callbacks.h>
 #include <crmd_lrm.h>
 #include <controld_alerts.h>
 #include <crm/pengine/rules.h>

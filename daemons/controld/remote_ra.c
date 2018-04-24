@@ -12,7 +12,7 @@
 #include <crmd.h>
 #include <crmd_fsa.h>
 #include <crmd_messages.h>
-#include <crmd_callbacks.h>
+#include <controld_callbacks.h>
 #include <crmd_lrm.h>
 #include <crm/lrmd.h>
 #include <crm/services.h>
