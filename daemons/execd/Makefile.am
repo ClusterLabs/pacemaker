@@ -8,7 +8,7 @@
 include $(top_srcdir)/Makefile.common
 
 halibdir		= $(CRM_DAEMON_DIR)
-halib_PROGRAMS		= pacemaker-execd lrmd_test
+halib_PROGRAMS		= pacemaker-execd cts-exec-helper
 
 initdir			= $(INITDIR)
 init_SCRIPTS		= pacemaker_remote
@@ -35,13 +35,13 @@ pacemaker_remoted_LDADD		= $(pacemaker_execd_LDADD) \
 				  $(top_builddir)/lib/lrmd/liblrmd.la
 pacemaker_remoted_SOURCES	= $(pacemaker_execd_SOURCES) tls_backend.c ipc_proxy.c
 
-lrmd_test_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la	\
+cts_exec_helper_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la	\
 			  $(top_builddir)/lib/lrmd/liblrmd.la		\
 			  $(top_builddir)/lib/cib/libcib.la		\
 			  $(top_builddir)/lib/services/libcrmservice.la	\
 			  $(top_builddir)/lib/pengine/libpe_status.la	\
 			  $(top_builddir)/pengine/libpengine.la
-lrmd_test_SOURCES	= cts-exec-helper.c
+cts_exec_helper_SOURCES	= cts-exec-helper.c
 
 noinst_HEADERS  = lrmd_private.h
 

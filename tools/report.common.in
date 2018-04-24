@@ -151,7 +151,7 @@ detect_daemon_dir() {
     do
         # pacemaker and pacemaker-cts packages can install to daemon directory,
         # so check for a file from each
-        if [ -e $d/pengine ] || [ -e $d/lrmd_test ]; then
+        if [ -e $d/pengine ] || [ -e $d/cts-exec-helper ]; then
             found_dir "daemons" "$d"
             return
         fi
@@ -163,7 +163,7 @@ detect_daemon_dir() {
         return
     fi
 
-    for f in $(find / -maxdepth $maxdepth -type f -name pengine -o -name lrmd_test); do
+    for f in $(find / -maxdepth $maxdepth -type f -name pengine -o -name cts-exec-helper); do
         d=$(dirname "$f")
         found_dir "daemons" "$d"
         return

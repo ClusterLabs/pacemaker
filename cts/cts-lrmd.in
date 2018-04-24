@@ -72,14 +72,14 @@ def update_path():
     new_path = os.environ['PATH']
     if os.path.exists("%s/cts-lrmd.in" % TEST_DIR):
         print("Running tests from the source tree: %s (%s)" % (BUILD_DIR, TEST_DIR))
-        # For pacemaker-execd, lrmd_test and pacemaker_remoted
+        # For pacemaker-execd, cts-exec-helper, and pacemaker_remoted
         new_path = "%s/daemons/execd:%s" % (BUILD_DIR, new_path)
         new_path = "%s/tools:%s" % (BUILD_DIR, new_path)   # For crm_resource
         new_path = "%s/fencing:%s" % (BUILD_DIR, new_path) # For stonithd
 
     else:
         print("Running tests from the install tree: @CRM_DAEMON_DIR@ (not %s)" % TEST_DIR)
-        # For stonithd, pacemaker-execd, lrmd_test and pacemaker_remoted
+        # For stonithd, pacemaker-execd, cts-exec-helper, and pacemaker_remoted
         new_path = "@CRM_DAEMON_DIR@:%s" % (new_path)
 
     print('Using PATH="{}"'.format(new_path))
@@ -170,7 +170,7 @@ class Test(object):
         else:
             self.daemon_location = "pacemaker-execd"
 
-        self.test_tool_location = "lrmd_test"
+        self.test_tool_location = "cts-exec-helper"
         self.verbose = verbose
         self.tls = tls
 
@@ -209,7 +209,7 @@ class Test(object):
         """ Prepare the host for running a test """
 
         ### make sure we are in full control here ###
-        cmd = shlex.split("killall -q -9 stonithd lt-stonithd pacemaker-execd lt-pacemaker-execd lrmd_test lt-lrmd_test pacemaker_remoted")
+        cmd = shlex.split("killall -q -9 stonithd lt-stonithd pacemaker-execd lt-pacemaker-execd cts-exec-helper lt-cts-exec-helper pacemaker_remoted")
         test = subprocess.Popen(cmd, stdout=subprocess.PIPE)
         test.wait()
 
@@ -258,17 +258,17 @@ class Test(object):
         self.__new_cmd(self.test_tool_location, args, CrmExit.OK, match, 0, no_match)
 
     def add_cmd(self, args):
-        """ Add an lrmd_test command to be executed as part of this test """
+        """ Add a cts-exec-helper command to be executed as part of this test """
 
         self.__new_cmd(self.test_tool_location, args, CrmExit.OK, "")
 
     def add_cmd_and_kill(self, kill_proc, args):
-        """ Add an lrmd_test command and system command to be executed as part of this test """
+        """ Add a cts-exec-helper command and system command to be executed as part of this test """
 
         self.__new_cmd(self.test_tool_location, args, CrmExit.OK, "", kill=kill_proc)
 
     def add_expected_fail_cmd(self, args, exitcode=CrmExit.ERROR):
-        """ Add an lrmd_test command to be executed as part of this test and expected to fail """
+        """ Add a cts-exec-helper command to be executed as part of this test and expected to fail """
 
         self.__new_cmd(self.test_tool_location, args, exitcode, "")
 

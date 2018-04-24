@@ -366,7 +366,7 @@ generate_params(void)
     set_working_set_defaults(&data_set);
 
     cib_conn = cib_new();
-    rc = cib_conn->cmds->signon(cib_conn, "lrmd_test", cib_query);
+    rc = cib_conn->cmds->signon(cib_conn, "cts-exec-helper", cib_query);
     if (rc != pcmk_ok) {
         crm_err("Error signing on to the CIB service: %s", pcmk_strerror(rc));
         rc = -1;
@@ -563,7 +563,8 @@ main(int argc, char **argv)
         options.no_connect = 1;
     }
 
-    crm_log_init("lrmd_ctest", LOG_INFO, TRUE, options.verbose ? TRUE : FALSE, argc, argv, FALSE);
+    crm_log_init(NULL, LOG_INFO, TRUE, (options.verbose? TRUE : FALSE),
+                 argc, argv, FALSE);
 
     if (options.is_running) {
         if (!options.timeout) {

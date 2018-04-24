@@ -594,7 +594,7 @@ exit 0
 %{_initrddir}/pacemaker
 %endif
 
-%exclude %{_libexecdir}/pacemaker/lrmd_test
+%exclude %{_libexecdir}/pacemaker/cts-exec-helper
 %exclude %{_sbindir}/pacemaker_remoted
 %{_libexecdir}/pacemaker/*
 
@@ -666,7 +666,7 @@ exit 0
 %exclude %{_datadir}/pacemaker/tests
 %{_datadir}/pacemaker
 %{_datadir}/snmp/mibs/PCMK-MIB.txt
-%{_libexecdir}/pacemaker/lrmd_test
+%{_libexecdir}/pacemaker/cts-exec-helper
 
 %exclude /usr/lib/ocf/resource.d/pacemaker/controld
 %exclude /usr/lib/ocf/resource.d/pacemaker/o2cb

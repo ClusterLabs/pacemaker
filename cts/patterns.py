@@ -27,7 +27,7 @@ class BasePatterns(object):
             "CibAddXml"      : "cibadmin --modify -c --xml-text %s",
             "CibDelXpath"    : "cibadmin --delete --xpath %s",
             # 300,000 == 5 minutes
-            "RscRunning"     : CTSvars.CRM_DAEMON_DIR + "/lrmd_test -R -r %s",
+            "RscRunning"     : CTSvars.CRM_DAEMON_DIR + "/cts-exec-helper -R -r %s",
             "CIBfile"        : "%s:"+CTSvars.CRM_CONFIG_DIR+"/cib.xml",
             "TmpDir"         : "/tmp",
 
