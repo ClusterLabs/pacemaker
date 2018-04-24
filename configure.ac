@@ -1558,8 +1558,8 @@ dnl default case are as follows:
 dnl
 dnl * CFLAGS_HARDENED_EXE, LDFLAGS_HARDENED_EXE
 dnl    compiler and linker flags (respectively) for daemon programs
-dnl    (pacemaker-attrd, pacemaker-execd, cib, crmd, stonithd, pacemakerd,
-dnl    pacemaker-remoted, pengine)
+dnl    (pacemakerd, pacemaker-attrd, pacemaker-controld, pacemaker-execd,
+dnl    cib, stonithd, pacemaker-remoted, pengine)
 dnl
 dnl * CFLAGS_HARDENED_LIB, LDFLAGS_HARDENED_LIB
 dnl    compiler and linker flags (respectively) for libraries linked
@@ -1731,6 +1731,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 cib/Makefile                                        \
                 daemons/Makefile                                    \
                 daemons/attrd/Makefile                              \
+                daemons/controld/Makefile                           \
                 daemons/execd/Makefile                              \
                 daemons/execd/pacemaker_remote                      \
                 daemons/execd/pacemaker_remote.service              \
@@ -1739,7 +1740,6 @@ AC_CONFIG_FILES(Makefile                                            \
                 daemons/pacemakerd/pacemaker.service                \
                 daemons/pacemakerd/pacemaker.upstart                \
                 daemons/pacemakerd/pacemaker.combined.upstart       \
-                crmd/Makefile                                       \
                 pengine/Makefile                                    \
                 doc/Makefile                                        \
                 doc/Clusters_from_Scratch/publican.cfg              \
@@ -1747,6 +1747,11 @@ AC_CONFIG_FILES(Makefile                                            \
                 doc/Pacemaker_Development/publican.cfg              \
                 doc/Pacemaker_Explained/publican.cfg                \
                 doc/Pacemaker_Remote/publican.cfg                   \
+                extra/Makefile                                      \
+                extra/alerts/Makefile                               \
+                extra/resources/Makefile                            \
+                extra/logrotate/Makefile                            \
+                extra/logrotate/pacemaker                           \
                 fencing/Makefile                                    \
                 include/Makefile                                    \
                 include/crm/Makefile                                \
@@ -1767,23 +1772,18 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/common/Makefile                                 \
                 lib/cluster/Makefile                                \
                 lib/cib/Makefile                                    \
+                lib/gnu/Makefile                                    \
                 lib/pengine/Makefile                                \
                 lib/transition/Makefile                             \
                 lib/fencing/Makefile                                \
                 lib/lrmd/Makefile                                   \
                 lib/services/Makefile                               \
-                extra/Makefile                                      \
-                extra/alerts/Makefile                               \
-                extra/resources/Makefile                            \
-                extra/logrotate/Makefile                            \
-                extra/logrotate/pacemaker                           \
                 tools/Makefile                                      \
                 tools/report.collector                              \
                 tools/report.common                                 \
                 tools/crm_mon.service                               \
                 tools/crm_mon.upstart                               \
                 xml/Makefile                                        \
-                lib/gnu/Makefile                                    \
 )
 
 dnl Now process the entire list of files added by previous

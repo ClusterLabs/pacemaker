@@ -327,7 +327,7 @@ summary:
 	@printf "\n- Diff:      "
 	@git diff -r $(LAST_RELEASE)..HEAD --stat \
 		include lib daemons pengine/*.c pengine/*.h \
-		cib crmd fencing tools xml | tail -n 1
+		cib fencing tools xml | tail -n 1
 
 rc-changes:
 	@make NEXT_RELEASE=$(shell echo $(LAST_RC) | sed s:-rc.*::) LAST_RELEASE=$(LAST_RC) changes
@@ -347,7 +347,7 @@ changelog:
 indent:
 	find . -name "*.h" -exec ./p-indent \{\} \;
 	find . -name "*.c" -exec ./p-indent \{\} \;
-	git co HEAD crmd/fsa_proto.h lib/gnu
+	git co HEAD daemons/controld/fsa_proto.h lib/gnu
 
 rel-tags: tags
 	find . -name TAGS -exec sed -i 's:\(.*\)/\(.*\)/TAGS:\2/TAGS:g' \{\} \;
@@ -360,7 +360,7 @@ CLANG_checkers =
 # --inconclusive --std=posix
 CPPCHECK_ARGS ?=
 cppcheck:
-	for d in replace lib daemons pengine cib crmd fencing tools; \
+	for d in replace lib daemons pengine cib fencing tools; \
 		do cppcheck $(CPPCHECK_ARGS) -q $$d; \
 	done
 

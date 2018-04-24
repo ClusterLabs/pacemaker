@@ -6,4 +6,4 @@
 #
 
 MAINTAINERCLEANFILES	= Makefile.in
-SUBDIRS			= attrd execd pacemakerd
+SUBDIRS			= attrd controld execd pacemakerd

@@ -110,9 +110,8 @@ doc/*/publish
 cib/cib
 cib/cibmon
 cib/cibpipe
-crmd/atest
-crmd/crmd
 /daemons/attrd/pacemaker-attrd
+/daemons/controld/crmd
 /daemons/execd/cts-exec-helper
 /daemons/execd/pacemaker-execd
 /daemons/execd/pacemaker-remoted
@@ -180,6 +179,7 @@ lib/gnu/stdalign.h
 # Formerly built files (helps when jumping back and forth in checkout)
 /attrd
 /coverage.sh
+/crmd
 /cts/HBDummy
 /fencing/regression.py
 /lrmd
