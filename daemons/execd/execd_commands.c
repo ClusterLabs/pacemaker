@@ -284,8 +284,9 @@ merge_recurring_duplicate(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 merge_dup:
 
 
-    /* This should not occur, if it does we need to investigate in the crmd
-     * how something like this is possible */
+    /* This should not occur. If it does, we need to investigate how something
+     * like this is possible in the controller.
+     */
     crm_warn("Duplicate recurring op entry detected (" CRM_OP_FMT "), merging with previous op entry",
             rsc->rsc_id,
             normalize_action_name(rsc, dup->action),
@@ -332,7 +333,9 @@ schedule_lrmd_cmd(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
         return;
     }
 
-    /* crmd expects lrmd to automatically cancel recurring ops before rsc stops. */
+    /* The controller expects the executor to automatically cancel
+     * recurring operations before a resource stops.
+     */
     if (safe_str_eq(cmd->action, "stop")) {
         cancel_all_recurring(rsc, NULL);
     }
@@ -1286,7 +1289,7 @@ process_lrmd_signon(crm_client_t *client, xmlNode *request, int call_id)
     crm_xml_add(reply, F_LRMD_PROTOCOL_VERSION, LRMD_PROTOCOL_VERSION);
 
     if (crm_is_true(is_ipc_provider)) {
-        /* this is a remote connection from a cluster nodes crmd */
+        // This is a remote connection from a cluster node's controller
 #ifdef SUPPORT_REMOTE
         ipc_proxy_add_provider(client);
 #endif

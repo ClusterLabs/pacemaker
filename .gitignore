@@ -111,7 +111,7 @@ cib/cib
 cib/cibmon
 cib/cibpipe
 /daemons/attrd/pacemaker-attrd
-/daemons/controld/crmd
+/daemons/controld/pacemaker-controld
 /daemons/execd/cts-exec-helper
 /daemons/execd/pacemaker-execd
 /daemons/execd/pacemaker-remoted

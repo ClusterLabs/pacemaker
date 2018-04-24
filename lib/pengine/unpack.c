@@ -1176,7 +1176,7 @@ determine_online_status_no_fencing(pe_working_set_t * data_set, xmlNode * node_s
         }
 
     } else if (this_node->details->expected_up == FALSE) {
-        crm_trace("CRMd is down: in_cluster=%s", crm_str(in_cluster));
+        crm_trace("Controller is down: in_cluster=%s", crm_str(in_cluster));
         crm_trace("\tis_peer=%s, join=%s, expected=%s",
                   crm_str(is_peer), crm_str(join), crm_str(exp_state));
 

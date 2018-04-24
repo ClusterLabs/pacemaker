@@ -5,9 +5,9 @@
 # Subsystems are:
 #  pacemakerd
 #  pacemaker-attrd
+#  pacemaker-controld
 #  pacemaker-execd
 #  cib
-#  crmd
 #  pengine
 #  stonith-ng
 # PCMK_debug=no
@@ -52,9 +52,9 @@
 # rolling buffer of all logs (including info, debug, and trace) and is written
 # after a crash or assertion failure, and/or when SIGTRAP is received. The
 # blackbox recorder can also be enabled for Pacemaker daemons at runtime by
-# sending SIGUSR1 (or SIGTRAP), and disabled by sending SIGUSR2. Multiple
-# subsystems may be listed separated by commas, e.g. PCMK_blackbox=crmd,pengine
-# PCMK_blackbox=yes|no|crmd|pengine|cib|stonith-ng|pacemaker-attrd|pacemakerd
+# sending SIGUSR1 (or SIGTRAP), and disabled by sending SIGUSR2. Specify value
+# as for PCMK_debug above.
+# PCMK_blackbox=no
 
 #==#==# Advanced use only
 
@@ -118,14 +118,12 @@
 # for some (inexpensive) memory checks.
 # MALLOC_CHECK_=3
 
-# Set to yes/no or cib,crmd etc. to run some or all daemons under valgrind.
-# PCMK_valgrind_enabled=yes
-# PCMK_valgrind_enabled=cib,crmd
+# Set as for PCMK_debug above to run some or all daemons under valgrind.
+# PCMK_valgrind_enabled=no
 
-# Set to yes/no or cib,crmd etc. to run some or all daemons under valgrind with
+# Set as for PCMK_debug above to run some or all daemons under valgrind with
 # the callgrind tool enabled.
-# PCMK_callgrind_enabled=yes
-# PCMK_callgrind_enabled=cib,crmd
+# PCMK_callgrind_enabled=no
 
 # Set the options to pass to valgrind, when valgrind is enabled. See
 # valgrind(1) man page for details. "--vgdb=no" is specified because

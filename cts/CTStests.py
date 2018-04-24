@@ -713,7 +713,7 @@ class PartialStart(CTSTest):
 #   FIXME!  This should use the CM class to get the pattern
 #       then it would be applicable in general
         watchpats = []
-        watchpats.append("crmd.*Connecting to cluster infrastructure")
+        watchpats.append("pacemaker-controld.*Connecting to cluster infrastructure")
         watch = self.create_watch(watchpats, self.Env["DeadTime"]+10)
         watch.setwatch()
 
@@ -1632,7 +1632,7 @@ class SplitBrainTest(CTSTest):
         return [
             r"Another DC detected:",
             r"(ERROR|error).*: .*Application of an update diff failed",
-            r"crmd.*:.*not in our membership list",
+            r"pacemaker-controld.*:.*not in our membership list",
             r"CRIT:.*node.*returning after partition",
         ]
 
@@ -2234,7 +2234,7 @@ class BSC_AddResource(CTSTest):
         self.resource_offset =         self.resource_offset  + 1
 
         r_id = "bsc-rsc-%s-%d" % (node, self.resource_offset)
-        start_pat = "crmd.*%s_start_0.*confirmed.*ok"
+        start_pat = "pacemaker-controld.*%s_start_0.*confirmed.*ok"
 
         patterns = []
         patterns.append(start_pat % r_id)
@@ -3046,8 +3046,8 @@ class RemoteStonithd(RemoteDriver):
         ignore_pats = [
             r"Lost connection to Pacemaker Remote node",
             r"Software caused connection abort",
-            r"crmd.*:\s+error.*: Operation remote-.*_monitor",
-            r"crmd.*:\s+error.*: Result of monitor operation for remote-.*",
+            r"pacemaker-controld.*:\s+error.*: Operation remote-.*_monitor",
+            r"pacemaker-controld.*:\s+error.*: Result of monitor operation for remote-.*",
             r"pengine.*:\s+Recover remote-.*\s*\(.*\)",
             r"Calculated [Tt]ransition .*pe-error",
             r"error.*: Resource .*ocf::.* is active on 2 nodes attempting recovery",

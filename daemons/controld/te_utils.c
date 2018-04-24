@@ -1,19 +1,8 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -295,8 +284,8 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
 
             /* @TODO Ideally, at this point, we'd check whether the fenced node
              * hosted any guest nodes, and call remote_node_down() for them.
-             * Unfortunately, the crmd doesn't have a simple, reliable way to
-             * map hosts to guests. It might be possible to track this in the
+             * Unfortunately, the controller doesn't have a simple, reliable way
+             * to map hosts to guests. It might be possible to track this in the
              * peer cache via crm_remote_peer_cache_refresh(). For now, we rely
              * on the PE creating fence pseudo-events for the guests.
              */

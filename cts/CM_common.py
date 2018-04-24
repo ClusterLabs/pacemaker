@@ -312,7 +312,7 @@ class crm_common(ClusterManager):
                     "send_ipc_message: IPC Channel to .* is not connected",
                     "unconfirmed_actions: Waiting on .* unconfirmed actions",
                     "cib_native_msgready: Message pending on command channel",
-                    r": Performing A_EXIT_1 - forcefully exiting the CRMd",
+                    r": Performing A_EXIT_1 - forcefully exiting ",
                     r"Resource .* was active at shutdown.  You may ignore this error if it is unmanaged.",
             ]
 
@@ -326,12 +326,12 @@ class crm_common(ClusterManager):
 
         ccm = Process(self, "ccm", triggersreboot=self.fastfail, pats = [
                     "State transition .* S_RECOVERY",
-                    "crmd.*Action A_RECOVER .* not supported",
-                    r"crmd.*: Input I_TERMINATE .*from do_recover",
-                    r"crmd.*: Could not recover from internal error",
-                    "crmd.*I_ERROR.*crmd_cib_connection_destroy",
+                    "pacemaker-controld.*Action A_RECOVER .* not supported",
+                    r"pacemaker-controld.*: Input I_TERMINATE .*from do_recover",
+                    r"pacemaker-controld.*: Could not recover from internal error",
+                    "pacemaker-controld.*I_ERROR.*crmd_cib_connection_destroy",
                     # these status numbers are likely wrong now
-                    r"crmd.*exited with status 2",
+                    r"pacemaker-controld.*exited with status 2",
                     r"attrd.*exited with status 1",
                     r"cib.*exited with status 2",
 
@@ -351,26 +351,27 @@ class crm_common(ClusterManager):
                     "State transition .* S_RECOVERY",
                     "Lost connection to the CIB service",
                     "Connection to the CIB terminated...",
-                    r"crmd.*: Input I_TERMINATE .*from do_recover",
-                    "crmd.*I_ERROR.*crmd_cib_connection_destroy",
-                    r"crmd.*: Could not recover from internal error",
+                    r"pacemaker-controld.*: Input I_TERMINATE .*from do_recover",
+                    "pacemaker-controld.*I_ERROR.*crmd_cib_connection_destroy",
+                    r"pacemaker-controld.*: Could not recover from internal error",
                     # these status numbers are likely wrong now
-                    r"crmd.*exited with status 2",
+                    r"pacemaker-controld.*exited with status 2",
                     r"attrd.*exited with status 1",
                     ], badnews_ignore = common_ignore)
 
         execd = Process(self, "pacemaker-execd", triggersreboot=self.fastfail, pats = [
                     "State transition .* S_RECOVERY",
                     "LRM Connection failed",
-                    "crmd.*I_ERROR.*lrm_connection_destroy",
+                    "pacemaker-controld.*I_ERROR.*lrm_connection_destroy",
                     "State transition S_STARTING -> S_PENDING",
-                    r"crmd.*: Input I_TERMINATE .*from do_recover",
-                    r"crmd.*: Could not recover from internal error",
+                    r"pacemaker-controld.*: Input I_TERMINATE .*from do_recover",
+                    r"pacemaker-controld.*: Could not recover from internal error",
                     # this status number is likely wrong now
-                    r"crmd.*exited with status 2",
+                    r"pacemaker-controld.*exited with status 2",
                     ], badnews_ignore = common_ignore)
 
-        crmd = Process(self, "crmd", triggersreboot=self.fastfail, pats = [
+        controld = Process(self, "pacemaker-controld", triggersreboot=self.fastfail,
+                    pats = [
 #                    "WARN: determine_online_status: Node .* is unclean",
 #                    "Scheduling Node .* for STONITH",
 #                    "Executing .* fencing operation",
@@ -381,17 +382,17 @@ class crm_common(ClusterManager):
 
         pengine = Process(self, "pengine", triggersreboot=self.fastfail, pats = [
                     "State transition .* S_RECOVERY",
-                    r"crmd.*: Input I_TERMINATE .*from do_recover",
-                    r"crmd.*: Could not recover from internal error",
-                    r"crmd.*CRIT.*: Connection to the Policy Engine failed",
-                    "crmd.*I_ERROR.*save_cib_contents",
+                    r"pacemaker-controld.*: Input I_TERMINATE .*from do_recover",
+                    r"pacemaker-controld.*: Could not recover from internal error",
+                    r"pacemaker-controld.*CRIT.*: Connection to the Policy Engine failed",
+                    "pacemaker-controld.*I_ERROR.*save_cib_contents",
                     # this status number is likely wrong now
-                    r"crmd.*exited with status 2",
+                    r"pacemaker-controld.*exited with status 2",
                     ], badnews_ignore = common_ignore, dc_only=1)
 
         if self.Env["DoFencing"] == 1 :
             complist.append(Process(self, "stoniths", triggersreboot=self.fastfail, dc_pats = [
-                        r"crmd.*CRIT.*: Fencing daemon connection failed",
+                        r"pacemaker-controld.*CRIT.*: Fencing daemon connection failed",
                         "Attempting connection to fencing daemon",
                     ], badnews_ignore = stonith_ignore))
 
@@ -400,22 +401,22 @@ class crm_common(ClusterManager):
                 # these status numbers are likely wrong now
                 r"attrd.*exited with status 1",
                 r"cib.*exited with status 2",
-                r"crmd.*exited with status 2",
+                r"pacemaker-controld.*exited with status 2",
                 ])
             cib.pats.extend([
                 # these status numbers are likely wrong now
                 r"attrd.*exited with status 1",
-                r"crmd.*exited with status 2",
+                r"pacemaker-controld.*exited with status 2",
                 ])
             execd.pats.extend([
                 # these status numbers are likely wrong now
-                r"crmd.*exited with status 2",
+                r"pacemaker-controld.*exited with status 2",
                 ])
 
         complist.append(ccm)
         complist.append(cib)
         complist.append(execd)
-        complist.append(crmd)
+        complist.append(controld)
         complist.append(pengine)
 
         return complist

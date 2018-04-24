@@ -9,7 +9,7 @@
 #  define FSA_DEFINES__H
 
 /*======================================
- *	States the DC/CRMd can be in
+ *	States the controller can be in
  *======================================*/
 enum crmd_fsa_state {
     S_IDLE = 0,                 /* Nothing happening */
@@ -27,7 +27,7 @@ enum crmd_fsa_state {
                                  * to form a complete and up-to-date picture of
                                  * the CIB
                                  */
-    S_NOT_DC,                   /* we are in crmd/slave mode */
+    S_NOT_DC,                   /* we are in non-DC mode */
     S_POLICY_ENGINE,            /* Determine next stable state of the cluster */
     S_RECOVERY,                 /* Something bad happened, check everything is ok
                                  * before continuing and attempt to recover if
@@ -128,11 +128,10 @@ Description:
       S_SHUTDOWN.  Similarly if any other point in the shutdown
       fails or stalls, this is escalated and we end up in S_TERMINATE.
 
-      At any point, the CRMd/DC can relay messages for its sub-systems,
-      but outbound messages (from sub-systems) should probably be blocked
-      until S_INTEGRATION (for the DC case) or the join protocol has
-      completed (for the CRMd case)
-      
+      At any point, the controller can relay messages for its subsystems,
+      but outbound messages (from subsystems) should probably be blocked
+      until S_INTEGRATION (for the DC) or the join protocol has
+      completed (for non-DC controllers).
 */
 
 /*======================================
@@ -448,7 +447,7 @@ enum crmd_fsa_input {
 #  define R_IN_RECOVERY	0x80000000ULL
 
 /*
- * Magic RC used within CRMd to indicate direct nacks
+ * Magic RC used within the controller to indicate direct nacks
  * (operation is invalid in current state)
  */
 #define CRM_DIRECT_NACK_RC (99)

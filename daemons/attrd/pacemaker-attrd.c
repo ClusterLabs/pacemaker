@@ -127,13 +127,13 @@ attrd_erase_cb(xmlNode *msg, int call_id, int rc, xmlNode *output,
  * \brief Wipe all transient attributes for this node from the CIB
  *
  * Clear any previous transient node attributes from the CIB. This is
- * normally done by the DC's crmd when this node leaves the cluster, but
+ * normally done by the DC's controller when this node leaves the cluster, but
  * this handles the case where the node restarted so quickly that the
  * cluster layer didn't notice.
  *
- * \todo If attrd respawns after crashing (see PCMK_respawned), ideally we'd
- *       skip this and sync our attributes from the writer. However, currently
- *       we reject any values for us that the writer has, in
+ * \todo If pacemaker-attrd respawns after crashing (see PCMK_respawned),
+ *       ideally we'd skip this and sync our attributes from the writer.
+ *       However, currently we reject any values for us that the writer has, in
  *       attrd_peer_update().
  */
 static void

@@ -50,7 +50,7 @@ typedef struct pcmk_child_s {
 } pcmk_child_t;
 
 /* Index into the array below */
-#define pcmk_child_crmd  3
+#define pcmk_child_controld  3
 /* *INDENT-OFF* */
 static pcmk_child_t pcmk_children[] = {
     { 0, crm_proc_none,       0, 0, FALSE, "none",       NULL,            NULL },
@@ -59,7 +59,10 @@ static pcmk_child_t pcmk_children[] = {
         NULL, CRM_DAEMON_DIR "/pacemaker-execd"
     },
     { 0, crm_proc_cib,        1, 0, TRUE,  "cib",        CRM_DAEMON_USER, CRM_DAEMON_DIR"/cib" },
-    { 0, crm_proc_crmd,       6, 0, TRUE,  "crmd",       CRM_DAEMON_USER, CRM_DAEMON_DIR"/crmd" },
+    {
+        0, crm_proc_controld,   6, 0, TRUE, "pacemaker-controld",
+        CRM_DAEMON_USER, CRM_DAEMON_DIR "/pacemaker-controld"
+    },
     {
         0, crm_proc_attrd,      4, 0, TRUE, "pacemaker-attrd",
         CRM_DAEMON_USER, CRM_DAEMON_DIR "/pacemaker-attrd"
@@ -383,7 +386,7 @@ pcmk_shutdown_worker(gpointer user_data)
                     next_log = now + 30;
                     child->respawn = FALSE;
                     stop_child(child, SIGTERM);
-                    if (phase < pcmk_children[pcmk_child_crmd].start_seq) {
+                    if (phase < pcmk_children[pcmk_child_controld].start_seq) {
                         g_timeout_add(180000 /* 3m */ , escalate_shutdown, child);
                     }
 

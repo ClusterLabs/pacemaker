@@ -586,7 +586,8 @@ the configuration.
   No further devices in that level are exercised, and the next level is attempted instead.
 * If the operation succeeds for all the listed devices in a level, the level is deemed to have passed.
 * The operation is finished when a level has passed (success), or all levels have been attempted (failed).
-* If the operation failed, the next step is determined by the Policy Engine and/or `crmd`.
+* If the operation failed, the next step is determined by the Policy Engine
+  and/or the controller.
 
 Some possible uses of topologies include:
 

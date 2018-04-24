@@ -201,7 +201,7 @@ getconfig() {
 	fi
     done
 
-    if is_running crmd; then
+    if is_running pacemaker-controld; then
         dump_status_and_config
 	case $cluster in
 	    corosync)         crm_node -p --corosync > $target/$MEMBERSHIP_F 2>&1;;

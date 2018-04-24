@@ -47,7 +47,7 @@ enum crm_proc_flag {
 
     crm_proc_execd     = 0x00000010,
     crm_proc_cib       = 0x00000100,
-    crm_proc_crmd      = 0x00000200,
+    crm_proc_controld  = 0x00000200,
     crm_proc_attrd     = 0x00001000,
 
     crm_proc_stonithd  = 0x00002000,
@@ -82,7 +82,7 @@ peer2text(enum crm_proc_flag proc)
 {
     const char *text = "unknown";
 
-    if (proc == (crm_proc_crmd | crm_get_cluster_proc())) {
+    if (proc == (crm_proc_controld | crm_get_cluster_proc())) {
         return "peer";
     }
 
@@ -93,8 +93,8 @@ peer2text(enum crm_proc_flag proc)
         case crm_proc_cib:
             text = "cib";
             break;
-        case crm_proc_crmd:
-            text = "crmd";
+        case crm_proc_controld:
+            text = "pacemaker-controld";
             break;
         case crm_proc_pe:
             text = "pengine";
@@ -128,8 +128,9 @@ text2proc(const char *proc)
 
     if (proc && strcmp(proc, "cib") == 0) {
         return crm_proc_cib;
-    } else if (proc && strcmp(proc, "crmd") == 0) {
-        return crm_proc_crmd;
+
+    } else if (proc && strcmp(proc, "pacemaker-controld") == 0) {
+        return crm_proc_controld;
     }
 
     return crm_proc_none;

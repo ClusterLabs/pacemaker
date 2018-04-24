@@ -28,7 +28,7 @@ static qb_ipcs_service_t *attrd_ipcs = NULL;
 static qb_ipcs_service_t *crmd_ipcs = NULL;
 static qb_ipcs_service_t *stonith_ipcs = NULL;
 
-/* ipc providers == crmd clients connecting from cluster nodes */
+// An IPC provider is a cluster node controller connecting as a client
 static GList *ipc_providers = NULL;
 /* ipc clients == things like cibadmin, crm_resource, connecting locally */
 static GHashTable *ipc_clients = NULL;
@@ -162,7 +162,9 @@ ipc_proxy_forward_client(crm_client_t *ipc_proxy, xmlNode *xml)
      * Looking at the chain of events.
      *
      * -----remote node----------------|---- cluster node ------
-     * ipc_client <--1--> this code <--2--> crmd:remote_proxy_cb/remote_proxy_relay_event() <----3----> ipc server
+     * ipc_client <--1--> this code
+     *    <--2--> pacemaker-controld:remote_proxy_cb/remote_proxy_relay_event()
+     *    <--3--> ipc server
      *
      * This function is receiving a msg from connection 2
      * and forwarding it to connection 1.
@@ -215,7 +217,9 @@ ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
      * Looking at the chain of events.
      *
      * -----remote node----------------|---- cluster node ------
-     * ipc_client <--1--> this code <--2--> crmd:remote_proxy_dispatch_internal() <----3----> ipc server
+     * ipc_client <--1--> this code
+     *     <--2--> pacemaker-controld:remote_proxy_dispatch_internal()
+     *     <--3--> ipc server
      *
      * This function is receiving a request from connection
      * 1 and forwarding it to connection 2.
@@ -231,8 +235,9 @@ ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     CRM_CHECK(client->id != NULL, crm_err("Invalid client: %p", client);
               free_xml(request); return FALSE);
 
-    /* this ensures that synced request/responses happen over the event channel
-     * in the crmd, allowing the crmd to process the messages async */
+    /* This ensures that synced request/responses happen over the event channel
+     * in the controller, allowing the controller to process the messages async.
+     */
     set_bit(flags, crm_ipc_proxied);
     client->request_id = id;
 
@@ -265,7 +270,7 @@ ipc_proxy_shutdown_req(crm_client_t *ipc_proxy)
 
     crm_xml_add(msg, F_LRMD_IPC_OP, LRMD_IPC_OP_SHUTDOWN_REQ);
 
-    /* We don't really have a session, but crmd needs this attribute
+    /* We don't really have a session, but the controller needs this attribute
      * to recognize this as proxy communication.
      */
     crm_xml_add(msg, F_LRMD_IPC_SESSION, "0");
@@ -408,8 +413,8 @@ ipc_proxy_init(void)
     stonith_ipc_server_init(&stonith_ipcs, &stonith_proxy_callbacks);
     crmd_ipcs = crmd_ipc_server_init(&crmd_proxy_callbacks);
     if (crmd_ipcs == NULL) {
-        crm_err("Failed to create crmd server: exiting and inhibiting respawn.");
-        crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
+        crm_err("Failed to create controller: exiting and inhibiting respawn");
+        crm_warn("Verify pacemaker and pacemaker_remote are not both enabled");
         crm_exit(CRM_EX_FATAL);
     }
 }

@@ -1,19 +1,8 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -930,8 +919,8 @@ add_maintenance_update(pe_working_set_t *data_set)
  * \brief Add XML with nodes that an action is expected to bring down
  *
  * If a specified action is expected to bring any nodes down, add an XML block
- * with their UUIDs. When a node is lost, this allows the crmd to determine
- * whether it was expected.
+ * with their UUIDs. When a node is lost, this allows the controller to
+ * determine whether it was expected.
  *
  * \param[in,out] xml       Parent XML tag to add to
  * \param[in]     action    Action to check for downed nodes

@@ -2369,7 +2369,7 @@ stage7(pe_working_set_t * data_set)
 int transition_id = -1;
 
 /*
- * Create a dependency graph to send to the transitioner (via the CRMd)
+ * Create a dependency graph to send to the transitioner (via the controller)
  */
 gboolean
 stage8(pe_working_set_t * data_set)

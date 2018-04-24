@@ -1,20 +1,10 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+
 #ifndef XML_TAGS__H
 #  define XML_TAGS__H
 
@@ -249,8 +239,9 @@ extern "C" {
 
 #  define XML_CIB_ATTR_SHUTDOWN       	"shutdown"
 
-/* LRM is a bit of a misnomer here; the crmd and pengine use these to track
- * actions, which usually but not always are LRM operations
+/* Aside from being an old name for the executor, LRM is a misnomer here because
+ * the controller and pengine use these to track actions, which are not always
+ * executor operations.
  */
 
 // XML attribute that takes interval specification (user-facing configuration)
@@ -264,9 +255,9 @@ extern "C" {
 #  define XML_LRM_ATTR_TASK_KEY		"operation_key"
 #  define XML_LRM_ATTR_TARGET		"on_node"
 #  define XML_LRM_ATTR_TARGET_UUID	"on_node_uuid"
-/*! Actions to be executed on Pacemaker Remote nodes are routed through
- *  crmd on the cluster node hosting the remote connection. That cluster node
- *  is considered the router node for the action.
+/*! Actions to be executed on Pacemaker Remote nodes are routed through the
+ *  controller on the cluster node hosting the remote connection. That cluster
+ *  node is considered the router node for the action.
  */
 #  define XML_LRM_ATTR_ROUTER_NODE  "router_node"
 #  define XML_LRM_ATTR_RSCID		"rsc-id"

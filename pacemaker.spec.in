@@ -604,7 +604,7 @@ exit 0
 %{_sbindir}/fence_legacy
 %{_sbindir}/stonith_admin
 
-%doc %{_mandir}/man7/crmd.*
+%doc %{_mandir}/man7/pacemaker-controld.*
 %doc %{_mandir}/man7/pengine.*
 %doc %{_mandir}/man7/stonithd.*
 %doc %{_mandir}/man7/ocf_pacemaker_controld.*
@@ -677,7 +677,7 @@ exit 0
 /usr/lib/ocf/resource.d/pacemaker
 
 %doc %{_mandir}/man7/*
-%exclude %{_mandir}/man7/crmd.*
+%exclude %{_mandir}/man7/pacemaker-controld.*
 %exclude %{_mandir}/man7/pengine.*
 %exclude %{_mandir}/man7/stonithd.*
 %exclude %{_mandir}/man7/ocf_pacemaker_controld.*

@@ -439,7 +439,7 @@ static void
 crmd_proxy_dispatch(const char *session, xmlNode *msg)
 {
 
-    crm_log_xml_trace(msg, "CRMd-PROXY[inbound]");
+    crm_log_xml_trace(msg, "controller-proxy[inbound]");
 
     crm_xml_add(msg, F_CRM_SYS_FROM, session);
     if (crmd_authorize_message(msg, NULL, session)) {
@@ -521,9 +521,8 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
         return;
 
     } else if (safe_str_eq(op, LRMD_IPC_OP_REQUEST) && proxy && proxy->is_local) {
-        /* this is for the crmd, which we are, so don't try
-         * and connect/send to ourselves over ipc. instead
-         * do it directly.
+        /* This is for the controller, which we are, so don't try
+         * to send to ourselves over IPC -- do it directly.
          */
         int flags = 0;
         xmlNode *request = get_message_xml(msg, F_LRMD_IPC_MSG);
@@ -701,9 +700,6 @@ lrm_state_unregister_rsc(lrm_state_t * lrm_state,
         return -ENOTCONN;
     }
 
-    /* optimize this... this function is a synced round trip from client to daemon.
-     * The crmd/lrm.c code path that uses this function should always treat it as an
-     * async operation. The lrmd client api needs to make an async version unreg available. */
     if (is_remote_lrmd_ra(NULL, NULL, rsc_id)) {
         lrm_state_destroy(rsc_id);
         return pcmk_ok;
@@ -711,6 +707,11 @@ lrm_state_unregister_rsc(lrm_state_t * lrm_state,
 
     g_hash_table_remove(lrm_state->rsc_info_cache, rsc_id);
 
+    /* @TODO Optimize this ... this function is a blocking round trip from
+     * client to daemon. The pacemaker-controld/lrm.c code path that uses this
+     * function should always treat it as an async operation. The executor API
+     * should make an async version available.
+     */
     return ((lrmd_t *) lrm_state->conn)->cmds->unregister_rsc(lrm_state->conn, rsc_id, options);
 }
 

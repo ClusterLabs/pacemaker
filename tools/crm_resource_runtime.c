@@ -495,7 +495,7 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
         rc = 0;
 
     } else {
-        crm_debug("Could not send %s op to the crmd", op);
+        crm_debug("Could not send %s op to the controller", op);
         rc = -ENOTCONN;
     }
 
@@ -1605,8 +1605,8 @@ wait_till_stable(int timeout_ms, cib_t * cib)
              * done. Warn the user in this case.
              *
              * @TODO A possible long-term solution would be to reimplement the
-             * wait as a new crmd operation that would be forwarded to the DC.
-             * However, that would have potential problems of its own.
+             * wait as a new controller operation that would be forwarded to the
+             * DC. However, that would have potential problems of its own.
              */
             const char *dc_version = g_hash_table_lookup(data_set.config_hash,
                                                          "dc-version");

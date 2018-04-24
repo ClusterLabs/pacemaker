@@ -327,9 +327,9 @@ lrmd_shutdown(int nsig)
             /* Stop accepting new proxy connections */
             lrmd_tls_server_destroy();
 
-            /* Older crmd versions will never acknowledge our request, so set a
-             * fairly short timeout to exit quickly in that case. If we get the
-             * ack, we'll defuse this timer.
+            /* Older controller versions will never acknowledge our request, so
+             * set a fairly short timeout to exit quickly in that case. If we
+             * get the ack, we'll defuse this timer.
              */
             shutdown_ack_timer = g_timeout_add_seconds(20, lrmd_exit, NULL);
 

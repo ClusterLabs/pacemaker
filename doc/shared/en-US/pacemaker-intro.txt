@@ -87,9 +87,9 @@ Pacemaker itself is composed of multiple daemons that work together:
 
  * pacemakerd
  * pacemaker-attrd
+ * pacemaker-controld
  * pacemaker-execd
  * cib
- * crmd
  * pengine
  * stonithd
 
@@ -119,17 +119,17 @@ node, stonithd decides which cluster node(s) should execute which fencing
 device(s), and calls the necessary fencing agents (either directly, or via
 requests to stonithd peers on other nodes), and returns the result.
 
-The 'cluster resource management daemon' ('CRMd') is Pacemaker's coordinator,
+The 'controller' (pacemaker-controld) is Pacemaker's coordinator,
 maintaining a consistent view of the cluster membership and orchestrating all
 the other components.
 
-Pacemaker centralizes cluster decision-making by electing one of the CRMd
-instances as the 'Designated Controller' ('DC'). Should the elected CRMd
+Pacemaker centralizes cluster decision-making by electing one of the controller
+instances as the 'Designated Controller' ('DC'). Should the elected DC
 process (or the node it is on) fail, a new one is quickly established.
 The DC responds to cluster events by taking a current snapshot of the CIB,
 feeding it to the policy engine, then asking the executors (either directly on
-the local node, or via requests to crmd peers on other nodes) and stonithd to
-execute any necessary actions.
+the local node, or via requests to controller peers on other nodes) and
+stonithd to execute any necessary actions.
 
 .Old daemon names
 [NOTE]

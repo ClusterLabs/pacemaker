@@ -131,7 +131,7 @@ stop()
 {
 	shutdown_prog=$prog
 	if ! status $prog > /dev/null 2>&1; then
-	    shutdown_prog="crmd"
+	    shutdown_prog="pacemaker-controld"
 	fi
 
 	if status $shutdown_prog > /dev/null 2>&1; then
@@ -151,8 +151,9 @@ stop()
 
 	rm -f "$LOCK_FILE"
 	rm -f "@localstatedir@/run/$prog.pid"
-	killall -q -9 pacemakerd pacemaker-attrd pacemaker-execd \
-		crmd stonithd cib
+	killall -q -9 pacemakerd pacemaker-attrd pacemaker-controld \
+		pacemaker-execd \
+		stonithd cib
 	success
 	echo
 }

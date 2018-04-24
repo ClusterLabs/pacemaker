@@ -229,7 +229,7 @@ Integrating a remote node into the cluster is achieved through the
 creation of a remote node connection resource. The remote node connection
 resource both establishes the connection to the remote node and defines that
 the remote node exists. Note that this resource is actually internal to
-Pacemaker's crmd component. A metadata file for this resource can be found in
+Pacemaker's controller. A metadata file for this resource can be found in
 the +/usr/lib/ocf/resource.d/pacemaker/remote+ file that describes what options
 are available, but there is no actual *ocf:pacemaker:remote* resource agent
 script that performs any work.

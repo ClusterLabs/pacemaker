@@ -15,7 +15,9 @@
 #include <utils.h>
 #include <crm/services.h>
 
-/* #define DELETE_THEN_REFRESH 1  // The crmd will remove the resource from the CIB itself, making this redundant */
+// The controller removes the resource from the CIB, making this redundant
+// #define DELETE_THEN_REFRESH 1
+
 #define INFINITY_HACK   (INFINITY * -100)
 
 #define VARIANT_NATIVE 1

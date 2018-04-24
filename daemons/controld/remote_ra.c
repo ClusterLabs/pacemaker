@@ -70,10 +70,11 @@ typedef struct remote_ra_data_s {
     enum remote_migration_status migrate_status;
 
     gboolean active;
-    gboolean is_maintenance; /* kind of complex to determine from crmd-context
-                              * so we have it signalled back with the
-                              * transition from pengine
-                              */
+
+    /* Maintenance mode is difficult to determine from the controller's context,
+     * so we have it signalled back with the transition from pengine.
+     */
+    gboolean is_maintenance;
 } remote_ra_data_t;
 
 static int handle_remote_ra_start(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd, int timeout_ms);

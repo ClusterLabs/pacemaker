@@ -111,11 +111,11 @@ lrm_state_t *lrm_state_find(const char *node_name);
 lrm_state_t *lrm_state_find_or_create(const char *node_name);
 
 /*!
- * The functions below are wrappers for the executor API calls the crmd
- * uses. These wrapper functions allow us to treat the crmd's remote
+ * The functions below are wrappers for the executor API the the controller
+ * uses. These wrapper functions allow us to treat the controller's remote
  * executor connection resources the same as regular resources. Internally,
  * regular resources go to the executor, and remote connection resources are
- * handled locally in the crmd.
+ * handled locally in the controller.
  */
 void lrm_state_disconnect_only(lrm_state_t * lrm_state);
 void lrm_state_disconnect(lrm_state_t * lrm_state);

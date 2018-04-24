@@ -64,13 +64,14 @@ SendSIGKILL=no
 # However, the node will likely end up being fenced as a result, so it's
 # not enabled by default.
 #
-# ExecStopPost=/usr/bin/killall -TERM pacemaker-attrd pacemaker-execd \
-#              crmd stonithd cib pengine
+# ExecStopPost=/usr/bin/killall -TERM pacemaker-attrd pacemaker-controld \
+#              pacemaker-execd \
+#              stonithd cib pengine
 
 # If you want Corosync to stop whenever Pacemaker is stopped,
 # uncomment the next line too:
 #
-# ExecStopPost=/bin/sh -c 'pidof crmd || killall -TERM corosync'
+# ExecStopPost=/bin/sh -c 'pidof pacemaker-controld || killall -TERM corosync'
 
 # Uncomment this for older versions of systemd that didn't support
 # TimeoutStopSec

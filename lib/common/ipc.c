@@ -86,7 +86,7 @@ create_request_adv(const char *task, xmlNode * msg_data,
         crm_err("No sys from specified");
     }
 
-    /* host_from will get set for us if necessary by CRMd when routed */
+    // host_from will get set for us if necessary by the controller when routed
     request = create_xml_node(NULL, __FUNCTION__);
     crm_xml_add(request, F_CRM_ORIGIN, origin);
     crm_xml_add(request, F_TYPE, T_CRM);
@@ -456,9 +456,10 @@ crm_ipcs_recv(crm_client_t * c, void *data, size_t size, uint32_t * id, uint32_t
     }
 
     if (is_set(header->flags, crm_ipc_proxied)) {
-        /* mark this client as being the endpoint of a proxy connection.
-         * Proxy connections responses are sent on the event channel to avoid
-         * blocking the proxy daemon (crmd) */
+        /* Mark this client as being the endpoint of a proxy connection.
+         * Proxy connections responses are sent on the event channel, to avoid
+         * blocking the controller serving as proxy.
+         */
         c->flags |= crm_client_flag_ipc_proxied;
     }
 

@@ -41,7 +41,7 @@ resource_ipc_timeout(gpointer data)
 static void
 resource_ipc_connection_destroy(gpointer user_data)
 {
-    crm_info("Connection to CRMd was terminated");
+    crm_info("Connection to controller was terminated");
     crm_exit(CRM_EX_DISCONNECT);
 }
 
@@ -53,8 +53,10 @@ start_mainloop(void)
     }
 
     mainloop = g_main_loop_new(NULL, FALSE);
-    fprintf(stderr, "Waiting for %d replies from the CRMd", crmd_replies_needed);
-    crm_debug("Waiting for %d replies from the CRMd", crmd_replies_needed);
+    fprintf(stderr, "Waiting for %d replies from the controller",
+            crmd_replies_needed);
+    crm_debug("Waiting for %d replies from the controller",
+              crmd_replies_needed);
 
     g_timeout_add(message_timeout_ms, resource_ipc_timeout, NULL);
     g_main_loop_run(mainloop);
@@ -417,7 +419,7 @@ main(int argc, char **argv)
 
     bool require_resource = TRUE; /* whether command requires that resource be specified */
     bool require_dataset = TRUE;  /* whether command requires populated dataset instance */
-    bool require_crmd = FALSE;    /* whether command requires connection to CRMd */
+    bool require_crmd = FALSE;    // whether command requires controller connection
 
     int rc = pcmk_ok;
     int is_ocf_rc = 0;
@@ -815,7 +817,7 @@ main(int argc, char **argv)
         }
     }
 
-    /* Establish a connection to the CRMd if needed */
+    // Establish a connection to the controller if needed
     if (require_crmd) {
         xmlNode *xml = NULL;
         mainloop_io_t *source =
@@ -823,7 +825,7 @@ main(int argc, char **argv)
         crmd_channel = mainloop_get_ipc_client(source);
 
         if (crmd_channel == NULL) {
-            CMD_ERR("Error signing on to the CRMd service");
+            CMD_ERR("Error connecting to the controller");
             rc = -ENOTCONN;
             goto bail;
         }

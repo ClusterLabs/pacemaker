@@ -274,15 +274,15 @@ do_cl_join_finalize_respond(long long action,
                   join_id, fsa_our_dc);
 
         /*
-         * If this is the node's first join since the crmd started on it,
+         * If this is the node's first join since the controller started on it,
          * set its initial state (standby or member) according to the user's
          * preference.
          *
          * We do not clear the LRM history here. Even if the DC failed to do it
          * when we last left, removing them here creates a race condition if the
-         * crmd is being recovered. Instead of a list of active resources from
-         * the executor, we may end up with a blank status section. If we are
-         * _NOT_ lucky, we will probe for the "wrong" instance of anonymous
+         * controller is being recovered. Instead of a list of active resources
+         * from the executor, we may end up with a blank status section. If we
+         * are _NOT_ lucky, we will probe for the "wrong" instance of anonymous
          * clones and end up with multiple active instances on the machine.
          */
         if (first_join && is_not_set(fsa_input_register, R_SHUTDOWN)) {

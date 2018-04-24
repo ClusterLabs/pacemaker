@@ -15,7 +15,7 @@
 In the broadest terms, stonith works like this:
 
 1. The initiator (an external program such as `stonith_admin`, or the cluster
-   itself via the `crmd`) asks the local `stonithd`, "Hey, can you fence this
+   itself via the controller) asks the local `stonithd`, "Hey, can you fence this
    node?"
 1. The local `stonithd` asks all the `stonithd's` in the cluster (including
    itself), "Hey, what fencing devices do you have access to that can fence
@@ -39,7 +39,7 @@ In the broadest terms, stonith works like this:
 A fencing request can be initiated by the cluster or externally, using the
 libfencing API.
 
-* The cluster always initiates fencing via `crmd/te_actions.c:te_fence_node()`
+* The cluster always initiates fencing via `pacemaker-controld/te_actions.c:te_fence_node()`
   (which calls the `fence()` API). This occurs when a graph synapse contains a
   `CRM_OP_FENCE` XML operation.
 * The main external clients are `stonith_admin` and `stonith-test`.

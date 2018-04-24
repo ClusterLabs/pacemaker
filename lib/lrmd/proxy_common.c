@@ -179,7 +179,7 @@ remote_proxy_new(lrmd_t *lrmd, struct ipc_client_callbacks *proxy_callbacks,
 
     if (safe_str_eq(crm_system_name, CRM_SYSTEM_CRMD)
         && safe_str_eq(channel, CRM_SYSTEM_CRMD)) {
-        /* The crmd doesn't need to connect to itself */
+        // The controller doesn't need to connect to itself
         proxy->is_local = TRUE;
 
     } else {
@@ -233,7 +233,7 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
             return;
         }
 
-        /* crmd requests MUST be handled by the crmd, not us */
+        // Controller requests MUST be handled by the controller, not us
         CRM_CHECK(proxy->is_local == FALSE,
                   remote_proxy_end_session(proxy); return);
 

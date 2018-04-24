@@ -413,7 +413,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
             send_msg_via_ipc(msg, sys_to);
 
         } else if (AM_I_DC) {
-            ROUTER_RESULT("Message result: DC/CRMd process");
+            ROUTER_RESULT("Message result: DC/controller process");
             processing_complete = FALSE;        /* more to be done by caller */
         } else if (originated_locally && safe_str_neq(sys_from, CRM_SYSTEM_PENGINE)
                    && safe_str_neq(sys_from, CRM_SYSTEM_TENGINE)) {
@@ -439,7 +439,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
         }
 
     } else if (is_local && (is_for_crm || is_for_cib)) {
-        ROUTER_RESULT("Message result: CRMd process");
+        ROUTER_RESULT("Message result: controller process");
         processing_complete = FALSE;    /* more to be done by caller */
 
     } else if (is_local) {
@@ -942,7 +942,7 @@ handle_response(xmlNode * stored_msg)
         const char *host_from = crm_element_value(stored_msg, F_CRM_HOST_FROM);
 
         crm_err("Unexpected response (op=%s, src=%s) sent to the %s",
-                op, host_from, AM_I_DC ? "DC" : "CRMd");
+                op, host_from, AM_I_DC ? "DC" : "controller");
     }
 }
 

@@ -375,7 +375,7 @@ do_exit(long long action,
     }
 
     verify_stopped(cur_state, LOG_ERR);
-    do_crm_log(log_level, "Performing %s - %s exiting the CRMd",
+    do_crm_log(log_level, "Performing %s - %s exiting the controller",
                fsa_action2string(action), exit_type);
 
     crm_info("[%s] stopped (%d)", crm_system_name, exit_code);
@@ -541,7 +541,7 @@ crmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 #endif
 
     crm_trace("Processing msg from %s", crm_client_name(client));
-    crm_log_xml_trace(msg, "CRMd[inbound]");
+    crm_log_xml_trace(msg, "controller[inbound]");
 
     crm_xml_add(msg, F_CRM_SYS_FROM, client->id);
     if (crmd_authorize_message(msg, client, NULL)) {
@@ -728,9 +728,9 @@ static pe_cluster_option crmd_opts[] = {
 void
 crmd_metadata(void)
 {
-    config_metadata("CRM Daemon", "1.0",
-                    "CRM Daemon Options",
-                    "This is a fake resource that details the options that can be configured for the CRM Daemon.",
+    config_metadata("pacemaker-controld", "1.0",
+                    "controller properties",
+                    "Cluster properties used by Pacemaker's controller",
                     crmd_opts, DIMOF(crmd_opts));
 }
 

@@ -482,8 +482,8 @@ finalize_sync_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, voi
         }
 
     } else {
-        crm_debug("No longer the DC in S_FINALIZE_JOIN: %s/%s",
-                  AM_I_DC ? "DC" : "CRMd", fsa_state2string(fsa_state));
+        crm_debug("No longer the DC in S_FINALIZE_JOIN: %s in %s",
+                  AM_I_DC ? "DC" : "controller", fsa_state2string(fsa_state));
     }
 }
 

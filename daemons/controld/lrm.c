@@ -298,8 +298,9 @@ lrm_op_callback(lrmd_event_data_t * op)
     nodename = op->remote_nodename ? op->remote_nodename : fsa_our_uname;
 
     if (op->type == lrmd_event_disconnect && (safe_str_eq(nodename, fsa_our_uname))) {
-        /* if this is the local lrmd ipc connection, set the right bits in the
-         * crmd when the connection goes down */
+        /* If this is the local executor IPC connection, set the right bits in the
+         * controller when the connection goes down.
+         */
         lrm_connection_destroy();
         return;
     } else if (op->type != lrmd_event_exec_complete) {
@@ -695,7 +696,7 @@ build_operation_update(xmlNode * parent, lrmd_rsc_info_t * rsc, lrmd_event_data_
     if (metadata == NULL) {
         /* For now, we always collect resource agent meta-data via a local,
          * synchronous, direct execution of the agent. This has multiple issues:
-         * the executor should execute agents, not the crmd; meta-data for
+         * the executor should execute agents, not the controller; meta-data for
          * Pacemaker Remote nodes should be collected on those nodes, not
          * locally; and the meta-data call shouldn't eat into the timeout of the
          * real action being performed.

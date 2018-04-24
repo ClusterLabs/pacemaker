@@ -104,10 +104,10 @@ pcmk_panic_local(void)
     pid_t ppid = getppid();
 
     if(uid != 0 && ppid > 1) {
-        /* We're a non-root pacemaker daemon (cib, crmd, pengine,
-         * attrd, etc) with the original pacemakerd parent
+        /* We're a non-root pacemaker daemon (cib, pacemaker-controld, pengine,
+         * pacemaker-attrd, etc.) with the original pacemakerd parent.
          *
-         * Of these, only crmd is likely to be initiating resets
+         * Of these, only the controller is likely to be initiating resets.
          */
         do_crm_log_always(LOG_EMERG, "Signaling parent %d to panic", ppid);
         crm_exit(CRM_EX_PANIC);
