@@ -16,7 +16,7 @@ EXTRA_DIST      = $(cts_SCRIPTS) $(cts_DATA)
 # and command-specific test data should be in a command-specific subdirectory.
 #
 testdir		= $(datadir)/$(PACKAGE)/tests
-test_SCRIPTS	= cts-coverage cts-regression cts-cli cts-lrmd cts-pengine \
+test_SCRIPTS	= cts-coverage cts-regression cts-cli cts-exec cts-pengine \
 		  cts-stonithd
 test_DATA	= README.md valgrind-pcmk.suppressions
 

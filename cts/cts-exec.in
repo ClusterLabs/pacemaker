@@ -70,7 +70,7 @@ def update_path():
     """ Set the PATH environment variable appropriately for the tests """
 
     new_path = os.environ['PATH']
-    if os.path.exists("%s/cts-lrmd.in" % TEST_DIR):
+    if os.path.exists("%s/cts-exec.in" % TEST_DIR):
         print("Running tests from the source tree: %s (%s)" % (BUILD_DIR, TEST_DIR))
         # For pacemaker-execd, cts-exec-helper, and pacemaker_remoted
         new_path = "%s/daemons/execd:%s" % (BUILD_DIR, new_path)
