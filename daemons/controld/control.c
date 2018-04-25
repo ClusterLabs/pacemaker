@@ -26,7 +26,7 @@
 #include <controld_alerts.h>
 #include <controld_metadata.h>
 #include <tengine.h>
-#include <throttle.h>
+#include <controld_throttle.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>

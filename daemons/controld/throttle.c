@@ -19,7 +19,7 @@
 #include <crm/cluster.h>
 
 #include <controld_fsa.h>
-#include <throttle.h>
+#include <controld_throttle.h>
 
 
 enum throttle_state_e {

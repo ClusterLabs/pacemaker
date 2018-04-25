@@ -19,7 +19,7 @@
 #include <controld_lrm.h>
 #include <controld_messages.h>
 #include <crm/cluster.h>
-#include <throttle.h>
+#include <controld_throttle.h>
 
 char *te_uuid = NULL;
 GHashTable *te_targets = NULL;

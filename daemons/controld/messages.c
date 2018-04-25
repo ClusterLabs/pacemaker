@@ -24,7 +24,7 @@
 #include <controld_messages.h>
 #include <controld_lrm.h>
 #include <tengine.h>
-#include <throttle.h>
+#include <controld_throttle.h>
 
 GListPtr fsa_message_queue = NULL;
 extern void crm_shutdown(int nsig);

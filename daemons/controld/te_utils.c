@@ -17,7 +17,7 @@
 #include <controld_fsa.h>
 #include <controld_lrm.h>
 #include <controld_messages.h>
-#include <throttle.h>
+#include <controld_throttle.h>
 #include <crm/fencing/internal.h>
 
 crm_trigger_t *stonith_reconnect = NULL;
