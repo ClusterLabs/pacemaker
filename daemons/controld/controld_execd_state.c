@@ -708,7 +708,7 @@ lrm_state_unregister_rsc(lrm_state_t * lrm_state,
     g_hash_table_remove(lrm_state->rsc_info_cache, rsc_id);
 
     /* @TODO Optimize this ... this function is a blocking round trip from
-     * client to daemon. The pacemaker-controld/lrm.c code path that uses this
+     * client to daemon. The controld_execd_state.c code path that uses this
      * function should always treat it as an async operation. The executor API
      * should make an async version available.
      */

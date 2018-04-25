@@ -40,11 +40,31 @@ pacemaker_controld_LDADD = $(top_builddir)/lib/fencing/libstonithd.la		\
 			   $(top_builddir)/lib/lrmd/liblrmd.la			\
 			   $(CLUSTERLIBS)
 
-pacemaker_controld_SOURCES = main.c corosync.c crmd_metadata.c			\
-			     fsa.c control.c messages.c membership.c callbacks.c attrd.c	\
-			     election.c join_client.c join_dc.c throttle.c			\
-			     cib.c pengine.c tengine.c lrm.c lrm_state.c remote_ra.c		\
-			     utils.c misc.c te_events.c te_actions.c te_utils.c te_callbacks.c
+pacemaker_controld_SOURCES = pacemaker-controld.c	\
+			     controld_attrd.c		\
+			     controld_callbacks.c	\
+			     controld_based.c		\
+			     controld_control.c		\
+			     controld_corosync.c	\
+			     controld_election.c	\
+			     controld_execd.c		\
+			     controld_execd_state.c	\
+			     controld_fsa.c		\
+			     misc.c			\
+			     controld_join_client.c	\
+			     controld_join_dc.c		\
+			     controld_membership.c	\
+			     controld_messages.c	\
+			     controld_metadata.c	\
+			     controld_remote_ra.c	\
+			     controld_schedulerd.c	\
+			     controld_te_actions.c	\
+			     controld_te_callbacks.c	\
+			     controld_te_events.c	\
+			     controld_te_utils.c	\
+			     controld_throttle.c	\
+			     controld_transition.c	\
+			     controld_utils.c
 
 if BUILD_XML_HELP
 man7_MANS 	= pacemaker-controld.7

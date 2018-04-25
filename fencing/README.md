@@ -39,9 +39,10 @@ In the broadest terms, stonith works like this:
 A fencing request can be initiated by the cluster or externally, using the
 libfencing API.
 
-* The cluster always initiates fencing via `pacemaker-controld/te_actions.c:te_fence_node()`
-  (which calls the `fence()` API). This occurs when a graph synapse contains a
-  `CRM_OP_FENCE` XML operation.
+* The cluster always initiates fencing via
+  `daemons/controld/controld_te_actions.c:te_fence_node()` (which calls the
+  `fence()` API). This occurs when a graph synapse contains a `CRM_OP_FENCE`
+  XML operation.
 * The main external clients are `stonith_admin` and `stonith-test`.
 
 Highlights of the fencing API:

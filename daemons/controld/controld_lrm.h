@@ -47,10 +47,8 @@ struct recurring_op_s {
 
 typedef struct lrm_state_s {
     const char *node_name;
-    /* reserved for lrm_state.c usage only */
-    void *conn;
-    /* reserved for remote_lrmd_ra.c usage only */
-    void *remote_ra_data;
+    void *conn;                 // Reserved for controld_execd_state.c usage
+    void *remote_ra_data;       // Reserved for controld_remote_ra.c usage
 
     GHashTable *resource_history;
     GHashTable *pending_ops;
