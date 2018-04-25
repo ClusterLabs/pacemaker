@@ -17,7 +17,7 @@
 #include <crm/cluster/election.h>
 #include <crm/crm.h>
 #include <controld_fsa.h>
-#include <crmd_messages.h>
+#include <controld_messages.h>
 #include <controld_callbacks.h>
 #include <tengine.h>
 

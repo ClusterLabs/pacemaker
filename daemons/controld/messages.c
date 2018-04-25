@@ -21,7 +21,7 @@
 #include <crm/common/ipcs.h>
 
 #include <pacemaker-controld.h>
-#include <crmd_messages.h>
+#include <controld_messages.h>
 #include <controld_lrm.h>
 #include <tengine.h>
 #include <throttle.h>

@@ -17,7 +17,7 @@
 
 #include <controld_fsa.h>
 #include <crmd_utils.h>
-#include <crmd_messages.h>
+#include <controld_messages.h>
 
 /*	A_DC_TIMER_STOP, A_DC_TIMER_START,
  *	A_FINALIZE_TIMER_STOP, A_FINALIZE_TIMER_START

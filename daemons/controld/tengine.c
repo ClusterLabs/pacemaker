@@ -13,7 +13,7 @@
 
 #include <pacemaker-controld.h>
 #include <controld_fsa.h>
-#include <crmd_messages.h>
+#include <controld_messages.h>
 #include <te_callbacks.h>  /* te_update_diff */
 #include <tengine.h>
 

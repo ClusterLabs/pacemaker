@@ -13,7 +13,7 @@
 #include <crm/common/xml.h>
 
 #include <controld_fsa.h>
-#include <crmd_messages.h>
+#include <controld_messages.h>
 
 /*	A_LOG, A_WARN, A_ERROR	*/
 void

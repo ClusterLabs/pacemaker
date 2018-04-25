@@ -19,7 +19,7 @@
 #include <crm/cib.h>
 
 #include <pacemaker-controld.h>
-#include <crmd_messages.h>
+#include <controld_messages.h>
 #include <controld_callbacks.h>
 #include <controld_lrm.h>
 #include <tengine.h>

@@ -17,7 +17,7 @@
 
 #include <controld_fsa.h>
 #include <controld_lrm.h>
-#include <crmd_messages.h>
+#include <controld_messages.h>
 #include <crm/cluster.h>
 #include <throttle.h>
 

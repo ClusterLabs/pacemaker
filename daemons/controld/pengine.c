@@ -17,7 +17,7 @@
 
 #include <pacemaker-controld.h>
 #include <controld_fsa.h>
-#include <crmd_messages.h>  /* register_fsa_error_adv */
+#include <controld_messages.h>  /* register_fsa_error_adv */
 
 static mainloop_io_t *pe_subsystem = NULL;
 

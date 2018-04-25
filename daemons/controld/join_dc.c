@@ -14,7 +14,7 @@
 #include <crm/cluster.h>
 
 #include <controld_fsa.h>
-#include <crmd_messages.h>
+#include <controld_messages.h>
 #include "tengine.h"
 
 char *max_epoch = NULL;

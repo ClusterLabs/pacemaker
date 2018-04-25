@@ -17,7 +17,7 @@
 #include <pacemaker-controld.h>
 #include <controld_callbacks.h> // for crmd_cib_connection_destroy()
 #include <controld_fsa.h>
-#include <crmd_messages.h>
+#include <controld_messages.h>
 
 int cib_retries = 0;
 

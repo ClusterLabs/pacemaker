@@ -5,7 +5,7 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#include <crmd_messages.h>
+#include <controld_messages.h>
 #include <crmd_metadata.h>
 
 extern gboolean verify_stopped(enum crmd_fsa_state cur_state, int log_level);

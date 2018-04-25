@@ -13,7 +13,7 @@
 #include <crm/common/xml.h>
 
 #include <controld_fsa.h>
-#include <crmd_messages.h>
+#include <controld_messages.h>
 
 int reannounce_count = 0;
 void join_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data);
