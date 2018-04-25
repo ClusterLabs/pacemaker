@@ -20,7 +20,7 @@
 #include <crm/cib.h>
 #include <crm/common/ipcs.h>
 
-#include <crmd.h>
+#include <pacemaker-controld.h>
 #include <crmd_messages.h>
 #include <crmd_lrm.h>
 #include <tengine.h>

@@ -18,7 +18,7 @@
 #include <crm/cluster.h>
 #include <crm/cib.h>
 
-#include <crmd.h>
+#include <pacemaker-controld.h>
 #include <crmd_messages.h>
 #include <controld_callbacks.h>
 #include <crmd_lrm.h>

@@ -9,7 +9,7 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 
-#include <crmd.h>
+#include <pacemaker-controld.h>
 #include <controld_fsa.h>
 #include <crmd_messages.h>
 #include <controld_callbacks.h>

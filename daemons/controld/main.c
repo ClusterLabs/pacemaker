@@ -21,7 +21,7 @@
 #include <crm/common/ipc.h>
 #include <crm/common/xml.h>
 
-#include <crmd.h>
+#include <pacemaker-controld.h>
 #include <controld_fsa.h>
 #include <crmd_messages.h>
 

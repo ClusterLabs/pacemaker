@@ -21,7 +21,7 @@
 #include <controld_callbacks.h>
 #include <tengine.h>
 #include <membership.h>
-#include <crmd.h>
+#include <pacemaker-controld.h>
 
 gboolean membership_flux_hack = FALSE;
 void post_cache_update(int instance);
