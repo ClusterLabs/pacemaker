@@ -50,7 +50,6 @@ pacemaker_controld_SOURCES = pacemaker-controld.c	\
 			     controld_execd.c		\
 			     controld_execd_state.c	\
 			     controld_fsa.c		\
-			     misc.c			\
 			     controld_join_client.c	\
 			     controld_join_dc.c		\
 			     controld_membership.c	\
