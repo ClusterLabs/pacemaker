@@ -178,7 +178,10 @@ test_runner_upgrade() {
 EOF
 	fi
 
-	if test "$((_tru_mode ^ (1 << 2)))" -ne $((1 << 2)); then
+	# only respond with the flags except for "-B", i.e., when both:
+	# - _tru_mode non-zero
+	# - "-B" in _tru_mode is zero (hence non-zero when flipped with XOR)
+	if test "$((_tru_mode * ((_tru_mode ^ (1 << 2)) & (1 << 2))))" -ne 0; then
 		if test $((_tru_mode & (1 << 0))) -ne 0; then
 			cp -a "${_tru_target}" "${_tru_ref}"
 			cp -a "${_tru_target_err}" "${_tru_ref_err}"
