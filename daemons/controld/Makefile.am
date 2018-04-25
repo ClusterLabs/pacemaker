@@ -25,7 +25,6 @@ noinst_HEADERS	= controld_alerts.h		\
 		  controld_throttle.h		\
 		  controld_utils.h		\
 		  pacemaker-controld.h		\
-		te_callbacks.h \
 		tengine.h
 
 pacemaker_controld_CFLAGS	= $(CFLAGS_HARDENED_EXE)

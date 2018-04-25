@@ -45,7 +45,16 @@ extern char *te_uuid;
 
 extern void notify_crmd(crm_graph_t * graph);
 
-#  include <te_callbacks.h>
+void cib_fencing_updated(xmlNode *msg, int call_id, int rc, xmlNode *output,
+                         void *user_data);
+void cib_action_updated(xmlNode *msg, int call_id, int rc, xmlNode *output,
+                        void *user_data);
+gboolean action_timer_callback(gpointer data);
+gboolean te_graph_trigger(gpointer user_data);
+void te_update_diff(const char *event, xmlNode *msg);
+void tengine_stonith_callback(stonith_t *stonith,
+                              stonith_callback_data_t *data);
+void update_stonith_max_attempts(const char* value);
 
 extern void trigger_graph_processing(const char *fn, int line);
 void abort_after_delay(int abort_priority, enum transition_action abort_action,

@@ -14,7 +14,6 @@
 #include <crm/msg_xml.h>
 
 #include <tengine.h>
-#include <te_callbacks.h>
 #include <controld_fsa.h>
 
 #include <crm/cluster.h>        /* For ONLINESTATUS etc */
