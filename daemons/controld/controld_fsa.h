@@ -736,5 +736,5 @@ void do_dc_join_final(long long action, enum crmd_fsa_cause cause,
                       enum crmd_fsa_state cur_state,
                       enum crmd_fsa_input current_input, fsa_data_t *msg_data);
 
-#  include <crmd_utils.h>
+#  include <controld_utils.h>
 #endif

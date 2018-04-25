@@ -12,7 +12,7 @@
 #include <crm/msg_xml.h>
 
 #include <controld_fsa.h>
-#include <crmd_utils.h>
+#include <controld_utils.h>
 #include <controld_messages.h>
 
 crm_ipc_t *attrd_ipc = NULL;

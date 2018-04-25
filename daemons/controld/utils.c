@@ -16,7 +16,7 @@
 #include <crm/cluster.h>
 
 #include <controld_fsa.h>
-#include <crmd_utils.h>
+#include <controld_utils.h>
 #include <controld_messages.h>
 
 /*	A_DC_TIMER_STOP, A_DC_TIMER_START,
