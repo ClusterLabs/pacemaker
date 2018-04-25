@@ -418,11 +418,9 @@ relay_message(xmlNode * msg, gboolean originated_locally)
         } else if (originated_locally && safe_str_neq(sys_from, CRM_SYSTEM_PENGINE)
                    && safe_str_neq(sys_from, CRM_SYSTEM_TENGINE)) {
 
-            /* Neither the TE or PE should be sending messages
-             *   to DC's on other nodes
-             *
-             * By definition, if we are no longer the DC, then
-             *   the PE or TE's data should be discarded
+            /* Neither the TE nor the scheduler should be sending messages
+             * to DCs on other nodes. By definition, if we are no longer the DC,
+             * then the scheduler's or TE's data should be discarded.
              */
 
 #if SUPPORT_COROSYNC
@@ -918,7 +916,7 @@ handle_response(xmlNode * stored_msg)
         crm_log_xml_err(stored_msg, "Bad message");
 
     } else if (AM_I_DC && strcmp(op, CRM_OP_PECALC) == 0) {
-        /* Check if the PE answer been superseded by a subsequent request? */
+        // Check whether scheduler answer been superseded by subsequent request
         const char *msg_ref = crm_element_value(stored_msg, XML_ATTR_REFERENCE);
 
         if (msg_ref == NULL) {

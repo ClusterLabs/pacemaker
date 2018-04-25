@@ -65,8 +65,8 @@ SendSIGKILL=no
 # not enabled by default.
 #
 # ExecStopPost=/usr/bin/killall -TERM pacemaker-attrd pacemaker-controld \
-#              pacemaker-execd \
-#              stonithd cib pengine
+#              pacemaker-execd pacemaker-schedulerd \
+#              stonithd cib
 
 # If you want Corosync to stop whenever Pacemaker is stopped,
 # uncomment the next line too:

@@ -408,7 +408,7 @@ getpeinputs() {
         )
         if [ "$flist" ]; then
             (cd $(dirname "$PE_STATE_DIR") && tar cf - $flist) | (cd "$3" && tar xf -)
-            debug "found `echo $flist | wc -w` pengine input files in $PE_STATE_DIR"
+            debug "found `echo $flist | wc -w` scheduler input files in $PE_STATE_DIR"
         fi
     fi
 }
@@ -590,7 +590,7 @@ get_logfiles() {
     # - initial pacemakerd logs and tracing might go to a different file
     pattern="Starting Pacemaker"
 
-    # - make sure we get something from the Policy Engine
+    # - make sure we get something from the scheduler
     pattern="$pattern\\|Calculated Transition"
 
     # - cib and pacemaker-execd updates

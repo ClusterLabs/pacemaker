@@ -123,12 +123,21 @@ static pe_cluster_option pe_opts[] = {
 /* 	{ "", "", , "0", "", NULL }, */
 
 	/* Storing inputs */
-	{ "pe-error-series-max", NULL, "integer", NULL, "-1", &check_number,
-	  "The number of PE inputs resulting in ERRORs to save", "Zero to disable, -1 to store unlimited." },
-	{ "pe-warn-series-max",  NULL, "integer", NULL, "5000", &check_number,
-	  "The number of PE inputs resulting in WARNINGs to save", "Zero to disable, -1 to store unlimited." },
-	{ "pe-input-series-max", NULL, "integer", NULL, "4000", &check_number,
-	  "The number of other PE inputs to save", "Zero to disable, -1 to store unlimited." },
+	{
+        "pe-error-series-max", NULL, "integer", NULL, "-1", &check_number,
+	    "The number of scheduler inputs resulting in ERRORs to save",
+        "Zero to disable, -1 to store unlimited"
+    },
+	{
+        "pe-warn-series-max",  NULL, "integer", NULL, "5000", &check_number,
+	    "The number of scheduler inputs resulting in WARNINGs to save",
+        "Zero to disable, -1 to store unlimited"
+    },
+	{
+        "pe-input-series-max", NULL, "integer", NULL, "4000", &check_number,
+	    "The number of other scheduler inputs to save",
+        "Zero to disable, -1 to store unlimited"
+    },
 
 	/* Node health */
 	{ "node-health-strategy", NULL, "enum", "none, migrate-on-red, only-green, progressive, custom", "none", &check_health,
@@ -156,9 +165,8 @@ static pe_cluster_option pe_opts[] = {
 void
 pe_metadata(void)
 {
-    config_metadata("Policy Engine", "1.0",
-                    "Policy Engine Options",
-                    "This is a fake resource that details the options that can be configured for the Policy Engine.",
+    config_metadata("pacemaker-schedulerd", "1.0", "scheduler properties",
+                    "Cluster properties used by Pacemaker's scheduler",
                     pe_opts, DIMOF(pe_opts));
 }
 

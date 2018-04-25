@@ -183,10 +183,9 @@ do_dc_join_offer_all(long long action,
                      enum crmd_fsa_state cur_state,
                      enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-    /* reset everyone's status back to down or in_ccm in the CIB
-     *
-     * any nodes that are active in the CIB but not in the cluster membership
-     *   will be seen as offline by the PE anyway
+    /* Reset everyone's status back to down or in_ccm in the CIB.
+     * Any nodes that are active in the CIB but not in the cluster membership
+     * will be seen as offline by the scheduler anyway.
      */
     current_join_id++;
     initialize_join(TRUE);
@@ -198,7 +197,7 @@ do_dc_join_offer_all(long long action,
     }
     g_hash_table_foreach(crm_peer_cache, join_make_offer, NULL);
 
-    /* don't waste time by invoking the PE yet; */
+    // Don't waste time by invoking the scheduler yet
     crm_info("join-%d: Waiting on %d outstanding join acks",
              current_join_id, crmd_join_phase_count(crm_join_welcomed));
 }
@@ -267,7 +266,7 @@ do_dc_join_offer_one(long long action,
      */
     abort_transition(INFINITY, tg_restart, "Node join", NULL);
 
-    /* don't waste time by invoking the PE yet; */
+    // Don't waste time by invoking the scheduler yet
     crm_debug("Waiting on %d outstanding join acks for join-%d",
               crmd_join_phase_count(crm_join_welcomed), current_join_id);
 }
@@ -391,7 +390,7 @@ do_dc_join_filter_offer(long long action,
 
 
     if (check_join_state(cur_state, __FUNCTION__) == FALSE) {
-        /* don't waste time by invoking the PE yet; */
+        // Don't waste time by invoking the scheduler yet
         crm_debug("join-%d: Still waiting on %d outstanding offers",
                   join_id, crmd_join_phase_count(crm_join_welcomed));
     }

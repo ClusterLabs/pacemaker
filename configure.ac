@@ -152,7 +152,7 @@ AC_ARG_ENABLE([quiet],
     [  --enable-quiet  Suppress make output unless there is an error @<:@no@:>@])
 
 AC_ARG_ENABLE([no-stack],
-    [  --enable-no-stack  Build only the Policy Engine and its requirements @<:@no@:>@])
+    [  --enable-no-stack  Build only the scheduler and its requirements @<:@no@:>@])
 
 AC_ARG_ENABLE([upstart],
     [  --enable-upstart  Enable support for managing resources via Upstart @<:@try@:>@ ],
@@ -1038,7 +1038,7 @@ AC_DEFINE_UNQUOTED(CRM_BLACKBOX_DIR,"$CRM_BLACKBOX_DIR", Where to keep blackbox 
 AC_SUBST(CRM_BLACKBOX_DIR)
 
 PE_STATE_DIR="${localstatedir}/lib/pacemaker/pengine"
-AC_DEFINE_UNQUOTED(PE_STATE_DIR,"$PE_STATE_DIR", Where to keep PEngine outputs)
+AC_DEFINE_UNQUOTED(PE_STATE_DIR,"$PE_STATE_DIR", Where to keep scheduler outputs)
 AC_SUBST(PE_STATE_DIR)
 
 CRM_CONFIG_DIR="${localstatedir}/lib/pacemaker/cib"
@@ -1288,7 +1288,7 @@ dnl    Cluster stack - Sanity
 dnl
 
 if test x${enable_no_stack} = xyes; then
-    AC_MSG_NOTICE(No cluster stack supported.  Just building the Policy Engine)
+    AC_MSG_NOTICE(No cluster stack supported, building only the scheduler)
     PCMK_FEATURES="$PCMK_FEATURES no-cluster-stack"
 else
     AC_MSG_CHECKING(for supported stacks)

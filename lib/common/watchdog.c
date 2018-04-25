@@ -104,8 +104,9 @@ pcmk_panic_local(void)
     pid_t ppid = getppid();
 
     if(uid != 0 && ppid > 1) {
-        /* We're a non-root pacemaker daemon (cib, pacemaker-controld, pengine,
-         * pacemaker-attrd, etc.) with the original pacemakerd parent.
+        /* We're a non-root pacemaker daemon (cib, pacemaker-controld,
+         * pacemaker-schedulerd, pacemaker-attrd, etc.) with the original
+         * pacemakerd parent.
          *
          * Of these, only the controller is likely to be initiating resets.
          */

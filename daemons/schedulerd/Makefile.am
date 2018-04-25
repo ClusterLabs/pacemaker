@@ -1,20 +1,10 @@
 #
-# Copyright (C) 2004 Andrew Beekhof
+# Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
 #
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License, or (at your option) any later version.
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-#
+
 include $(top_srcdir)/Makefile.common
 
 AM_CPPFLAGS	+= -I$(top_builddir) -I$(top_srcdir)
@@ -29,10 +19,10 @@ COMMONLIBS	= $(top_builddir)/lib/common/libcrmcommon.la	\
 lib_LTLIBRARIES	= libpengine.la
 
 ## binary progs
-halib_PROGRAMS	= pengine
+halib_PROGRAMS	= pacemaker-schedulerd
 
 if BUILD_XML_HELP
-man7_MANS =	pengine.7
+man7_MANS =	pacemaker-schedulerd.7
 endif
 
 ## SOURCES
@@ -51,11 +41,11 @@ libpengine_la_SOURCES	= pengine.c allocate.c notif.c utils.c constraints.c \
 			native.c group.c clone.c pe_promotable.c graph.c \
 			utilization.c container.c
 
-pengine_CFLAGS	= $(CFLAGS_HARDENED_EXE)
-pengine_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
-pengine_LDADD	= $(top_builddir)/lib/cib/libcib.la $(COMMONLIBS)
+pacemaker_schedulerd_CFLAGS	= $(CFLAGS_HARDENED_EXE)
+pacemaker_schedulerd_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
+pacemaker_schedulerd_LDADD	= $(top_builddir)/lib/cib/libcib.la $(COMMONLIBS)
 # libcib for get_object_root()
-pengine_SOURCES	= main.c
+pacemaker_schedulerd_SOURCES	= main.c
 
 install-exec-local:
 	$(mkinstalldirs) $(DESTDIR)/$(PE_STATE_DIR)

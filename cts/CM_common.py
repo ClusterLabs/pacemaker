@@ -380,11 +380,11 @@ class crm_common(ClusterManager):
                     "State transition S_STARTING -> S_PENDING",
                     ], badnews_ignore = common_ignore)
 
-        pengine = Process(self, "pengine", triggersreboot=self.fastfail, pats = [
+        schedulerd = Process(self, "pacemaker-schedulerd", triggersreboot=self.fastfail, pats = [
                     "State transition .* S_RECOVERY",
                     r"pacemaker-controld.*: Input I_TERMINATE .*from do_recover",
                     r"pacemaker-controld.*: Could not recover from internal error",
-                    r"pacemaker-controld.*CRIT.*: Connection to the Policy Engine failed",
+                    r"pacemaker-controld.*CRIT.*: Connection to the scheduler failed",
                     "pacemaker-controld.*I_ERROR.*save_cib_contents",
                     # this status number is likely wrong now
                     r"pacemaker-controld.*exited with status 2",
@@ -417,7 +417,7 @@ class crm_common(ClusterManager):
         complist.append(cib)
         complist.append(execd)
         complist.append(controld)
-        complist.append(pengine)
+        complist.append(schedulerd)
 
         return complist
 

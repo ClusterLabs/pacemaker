@@ -64,7 +64,7 @@ class BasePatterns(object):
 
             "Pat:Fencing_start" : "(Initiating remote operation|Requesting peer fencing ).* (for|of) %s",
             "Pat:Fencing_ok"    : r"stonith.*:\s*Operation .* of %s by .* for .*@.*: OK",
-            "Pat:Fencing_recover"    : r"pengine.*: Recover %s",
+            "Pat:Fencing_recover"    : r"schedulerd.*: Recover %s",
 
             "Pat:RscOpOK"       : r"pacemaker-controld.*:\s+Result of %s operation for %s.*: (0 \()?ok",
             "Pat:RscRemoteOpOK" : r"pacemaker-controld.*:\s+Result of %s operation for %s on %s: (0 \()?ok",
@@ -160,7 +160,7 @@ class crm_corosync(BasePatterns):
             r"input=I_FINALIZED cause=C_TIMER_POPPED",
             r"input=I_ERROR",
             r"(pacemakerd|pacemaker-execd|pacemaker-controld):.*, exiting",
-            r"pengine.*Attempting recovery of resource",
+            r"schedulerd.*Attempting recovery of resource",
             r"is taking more than 2x its timeout",
             r"Confirm not received from",
             r"Welcome reply not received from",
@@ -173,7 +173,7 @@ class crm_corosync(BasePatterns):
             r"Parameters to .* action changed:",
             r"Parameters to .* changed",
             r"\[[0-9]+\] terminated with signal [0-9]+ \(",
-            r"pengine:.*Recover .*\(.* -\> .*\)",
+            r"schedulerd:.*Recover .*\(.* -\> .*\)",
             r"rsyslogd.* imuxsock lost .* messages from pid .* due to rate-limiting",
             r"Peer is not part of our cluster",
             r"We appear to be in an election loop",
@@ -243,7 +243,7 @@ class crm_corosync(BasePatterns):
             r"stonith.*:\s*(Corosync connection terminated|Shutting down)",
             r"cib.*:\s*Corosync connection lost!\s+Exiting.",
             r"pacemaker-controld.*:\s*(connection terminated|Disconnected from Corosync)",
-            r"pengine.*Scheduling Node .* for STONITH",
+            r"schedulerd.*Scheduling Node .* for STONITH",
             r"pacemaker-controld.*:\s*Peer .* was terminated \(.*\) by .* for .*:\s*OK",
         ]
 
@@ -293,18 +293,18 @@ class crm_corosync(BasePatterns):
         self.components["pacemaker-attrd"] = []
         self.components["pacemaker-attrd-ignore"] = []
 
-        self.components["pengine"] = [
+        self.components["pacemaker-schedulerd"] = [
                     "State transition .* S_RECOVERY",
                     r"Respawning failed child process: pacemaker-controld",
                     r"pacemaker-controld\[[0-9]+\] exited with status 1 \(",
                     "Connection to pengine failed",
                     "Connection to pengine.* closed",
-                    "Connection to the Policy Engine failed",
+                    r"Connection to the scheduler failed",
                     "pacemaker-controld.*I_ERROR.*save_cib_contents",
                     r"pacemaker-controld.*: Input I_TERMINATE .*from do_recover",
                     "pacemaker-controld.*Could not recover from internal error",
                     ]
-        self.components["pengine-ignore"] = []
+        self.components["pacemaker-schedulerd-ignore"] = []
 
         self.components["stonith"] = [
             "Connection to stonith-ng failed",
@@ -314,7 +314,7 @@ class crm_corosync(BasePatterns):
             r"pacemaker-controld.*:\s*warn.*:\s*Callback already present",
         ]
         self.components["stonith-ignore"] = [
-            r"pengine.*: Recover Fencing",
+            r"schedulerd.*: Recover Fencing",
             r"Updating failcount for Fencing",
             r"error:.*Connection to stonith-ng failed",
             r"error:.*Connection to stonith-ng.*closed \(I/O condition=17\)",

@@ -72,7 +72,7 @@ typedef struct remote_ra_data_s {
     gboolean active;
 
     /* Maintenance mode is difficult to determine from the controller's context,
-     * so we have it signalled back with the transition from pengine.
+     * so we have it signalled back with the transition from the scheduler.
      */
     gboolean is_maintenance;
 } remote_ra_data_t;

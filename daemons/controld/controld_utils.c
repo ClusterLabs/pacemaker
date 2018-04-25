@@ -79,7 +79,7 @@ get_timer_desc(fsa_timer_t * timer)
         return "Wait Timer";
 
     } else if (timer == recheck_timer) {
-        return "PEngine Recheck Timer";
+        return "Cluster Recheck Timer";
 
     }
     return "Unknown Timer";

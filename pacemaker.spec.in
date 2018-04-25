@@ -605,7 +605,7 @@ exit 0
 %{_sbindir}/stonith_admin
 
 %doc %{_mandir}/man7/pacemaker-controld.*
-%doc %{_mandir}/man7/pengine.*
+%doc %{_mandir}/man7/pacemaker-schedulerd.*
 %doc %{_mandir}/man7/stonithd.*
 %doc %{_mandir}/man7/ocf_pacemaker_controld.*
 %doc %{_mandir}/man7/ocf_pacemaker_o2cb.*
@@ -678,7 +678,7 @@ exit 0
 
 %doc %{_mandir}/man7/*
 %exclude %{_mandir}/man7/pacemaker-controld.*
-%exclude %{_mandir}/man7/pengine.*
+%exclude %{_mandir}/man7/pacemaker-schedulerd.*
 %exclude %{_mandir}/man7/stonithd.*
 %exclude %{_mandir}/man7/ocf_pacemaker_controld.*
 %exclude %{_mandir}/man7/ocf_pacemaker_o2cb.*

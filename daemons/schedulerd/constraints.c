@@ -1183,8 +1183,9 @@ sort_cons_priority_lh(gconstpointer a, gconstpointer b)
         return 1;
     }
 
-    /* @COMPAT PE <2.0.0: Process promotable clones before nonpromotable clones
-     * (probably unnecessary, but avoids having to update regression tests)
+    /* @COMPAT scheduler <2.0.0: Process promotable clones before nonpromotable
+     * clones (probably unnecessary, but avoids having to update regression
+     * tests)
      */
     if (rsc_constraint1->rsc_lh->variant == pe_clone) {
         if (is_set(rsc_constraint1->rsc_lh->flags, pe_rsc_promotable)
@@ -1230,8 +1231,9 @@ sort_cons_priority_rh(gconstpointer a, gconstpointer b)
         return 1;
     }
 
-    /* @COMPAT PE <2.0.0: Process promotable clones before nonpromotable clones
-     * (probably unnecessary, but avoids having to update regression tests)
+    /* @COMPAT scheduler <2.0.0: Process promotable clones before nonpromotable
+     * clones (probably unnecessary, but avoids having to update regression
+     * tests)
      */
     if (rsc_constraint1->rsc_rh->variant == pe_clone) {
         if (is_set(rsc_constraint1->rsc_rh->flags, pe_rsc_promotable)

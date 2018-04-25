@@ -322,7 +322,7 @@ do_lrm_control(long long action,
                enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     /* This only pertains to local executor connections. Remote connections are
-     * handled as resources within the pengine. Connecting and disconnecting
+     * handled as resources within the scheduler. Connecting and disconnecting
      * from remote executor instances is handled differently.
      */
 
@@ -701,9 +701,9 @@ build_operation_update(xmlNode * parent, lrmd_rsc_info_t * rsc, lrmd_event_data_
          * locally; and the meta-data call shouldn't eat into the timeout of the
          * real action being performed.
          *
-         * These issues are planned to be addressed by having the PE schedule
-         * a meta-data cache check at the beginning of each transition. Once
-         * that is working, this block will only be a fallback in case the
+         * These issues are planned to be addressed by having the scheduler
+         * schedule a meta-data cache check at the beginning of each transition.
+         * Once that is working, this block will only be a fallback in case the
          * initial collection fails.
          */
         char *metadata_str = NULL;
@@ -1410,8 +1410,8 @@ force_reprobe(lrm_state_t *lrm_state, const char *from_sys,
     /* Now delete the copy in the CIB */
     erase_status_tag(lrm_state->node_name, XML_CIB_TAG_LRM, cib_scope_local);
 
-    /* And finally, _delete_ the value in pacemaker-attrd
-     * Setting it to FALSE results in the PE sending us back here again
+    /* Finally, _delete_ the value in pacemaker-attrd -- setting it to FALSE
+     * would result in the scheduler sending us back here again
      */
     update_attrd(lrm_state->node_name, CRM_OP_PROBED, NULL, user_name, is_remote_node);
 }
@@ -1461,7 +1461,7 @@ synthesize_lrmd_failure(lrm_state_t *lrm_state, xmlNode *action, int rc)
 
     } else {
         /* If we can't process the result normally, at least write it to the CIB
-         * if possible, so the PE can act on it.
+         * if possible, so the scheduler can act on it.
          */
         const char *standard = crm_element_value(xml_rsc, XML_AGENT_ATTR_CLASS);
         const char *provider = crm_element_value(xml_rsc, XML_AGENT_ATTR_PROVIDER);
@@ -1647,15 +1647,15 @@ static bool do_lrm_cancel(ha_msg_input_t *input, lrm_state_t *lrm_state,
 
     op_key = generate_op_key(rsc->id, op_task, crm_parse_ms(interval_ms_s));
 
-    crm_debug("PE requested op %s (call=%s) be cancelled",
+    crm_debug("Scheduler requested op %s (call=%s) be cancelled",
               op_key, (call_id? call_id : "NA"));
     call = crm_parse_int(call_id, "0");
     if (call == 0) {
-        /* the normal case when the PE cancels a recurring op */
+        // Normal case when the scheduler cancels a recurring op
         in_progress = cancel_op_key(lrm_state, rsc, op_key, TRUE);
 
     } else {
-        /* the normal case when the PE cancels an orphan op */
+        // Normal case when the scheduler cancels an orphan op
         in_progress = cancel_op(lrm_state, rsc->id, NULL, call, TRUE);
     }
 
@@ -2527,7 +2527,7 @@ process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op, struct recurr
             case PCMK_OCF_RUNNING_MASTER:
             case PCMK_OCF_DEGRADED:
             case PCMK_OCF_DEGRADED_MASTER:
-                /* Leave it up to the TE/PE to decide if this is an error */
+                // Leave it to the TE/scheduler to decide if this is an error
                 op->op_status = PCMK_LRM_OP_DONE;
                 break;
             default:

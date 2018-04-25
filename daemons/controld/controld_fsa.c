@@ -38,7 +38,7 @@ char *fsa_cluster_name = NULL;
 election_t *fsa_election = NULL;
 
 fsa_timer_t *wait_timer = NULL;        // How long to wait before retrying a cib or executor connection
-fsa_timer_t *recheck_timer = NULL;     /* Periodically re-run the PE to account for time based rules/preferences */
+fsa_timer_t *recheck_timer = NULL;     // Periodically re-run scheduler to handle time-based actions
 fsa_timer_t *election_trigger = NULL;  /* How long to wait at startup, or after an election, for the DC to make contact */
 fsa_timer_t *transition_timer = NULL;  /* How long to delay the start of a new transition with the expectation something else might happen too */
 fsa_timer_t *integration_timer = NULL;

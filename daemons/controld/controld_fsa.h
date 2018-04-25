@@ -104,14 +104,14 @@ enum crmd_fsa_state {
       to incorporate its information into the CIB.
 
       Once we have the latest CIB, we then enter the S_POLICY_ENGINE state
-      where invoke the Policy Engine. It is possible that between
-      invoking the Policy Engine and receiving an answer, that we receive
+      where invoke the scheduler. It is possible that between
+      invoking the scheduler and receiving an answer, that we receive
       more input. In this case, we would discard the orginal result and
       invoke it again.
 
-      Once we are satisfied with the output from the Policy Engine, we
-      enter S_TRANSITION_ENGINE and feed the Policy Engine's output to the
-      Transition Engine who attempts to make the Policy Engine's
+      Once we are satisfied with the output from the scheduler, we
+      enter S_TRANSITION_ENGINE and feed the scheduler's output to the
+      Transition Engine who attempts to make the scheduler's
       calculation a reality. If the transition completes successfully,
       we enter S_IDLE, otherwise we go back to S_POLICY_ENGINE with the
       current unstable state and try again.
@@ -152,7 +152,7 @@ enum crmd_fsa_input {
     I_CIB_UPDATE,               /* An update to the CIB occurred */
     I_DC_TIMEOUT,               /* We have lost communication with the DC */
     I_ELECTION,                 /* Someone started an election */
-    I_PE_CALC,                  /* The Policy Engine needs to be invoked */
+    I_PE_CALC,                  /* The scheduler needs to be invoked */
     I_RELEASE_DC,               /* The election completed and we were not
                                  * elected, but we were the DC beforehand
                                  */
@@ -291,14 +291,14 @@ enum crmd_fsa_input {
 /* -- Recovery, DC start/stop -- */
         /* Something bad happened, try to recover */
 #  define A_RECOVER                 0x0000000001000000ULL
-        /* Hook to perform any actions (apart from starting, the TE, PE
+        /* Hook to perform any actions (apart from starting, the TE, scheduler,
          * and gathering the latest CIB) that might be necessary before
          * giving up the responsibilities of being the DC.
          */
 #  define A_DC_RELEASE              0x0000000002000000ULL
         /* */
 #  define A_DC_RELEASED             0x0000000004000000ULL
-        /* Hook to perform any actions (apart from starting, the TE, PE
+        /* Hook to perform any actions (apart from starting, the TE, scheduler,
          * and gathering the latest CIB) that might be necessary before
          * taking over the responsibilities of being the DC.
          */
@@ -333,7 +333,7 @@ enum crmd_fsa_input {
 #  define A_TE_CANCEL               0x0000800000000000ULL
 #  define A_TE_HALT                 0x0001000000000000ULL
 
-/* -- Policy Engine actions -- */
+/* -- Scheduler actions -- */
         /* Calculate the next state for the cluster.  This is only
          * invoked once per needed calculation.
          */
@@ -390,22 +390,18 @@ enum crmd_fsa_input {
 
 #  define R_JOIN_OK         0x00000010ULL   /* Have we completed the join process */
 #  define R_READ_CONFIG     0x00000040ULL
-#  define R_INVOKE_PE       0x00000080ULL
-                                        /* Does the PE needed to be invoked at
-                                           the next appropriate point? */
+#  define R_INVOKE_PE       0x00000080ULL   // Should the scheduler be invoked?
 
 #  define R_CIB_CONNECTED   0x00000100ULL
                                         /* Is the CIB connected? */
-#  define R_PE_CONNECTED    0x00000200ULL
-                                        /* Is the Policy Engine connected? */
+#  define R_PE_CONNECTED    0x00000200ULL   // Is the scheduler connected?
 #  define R_TE_CONNECTED    0x00000400ULL
                                         /* Is the Transition Engine connected? */
 #  define R_LRM_CONNECTED   0x00000800ULL   // Is pacemaker-execd connected?
 
 #  define R_CIB_REQUIRED    0x00001000ULL
                                         /* Is the CIB required? */
-#  define R_PE_REQUIRED     0x00002000ULL
-                                        /* Is the Policy Engine required? */
+#  define R_PE_REQUIRED     0x00002000ULL   // Is the scheduler required?
 #  define R_TE_REQUIRED     0x00004000ULL
                                         /* Is the Transition Engine required? */
 #  define R_ST_REQUIRED     0x00008000ULL
@@ -424,9 +420,7 @@ enum crmd_fsa_input {
 #  define R_REQ_PEND        0x01000000ULL
                                         /* Are there Requests waiting for
                                            processing? */
-#  define R_PE_PEND         0x02000000ULL
-                                        /* Has the PE been invoked and we're
-                                           awaiting a reply? */
+#  define R_PE_PEND         0x02000000ULL   // Are we awaiting reply from scheduler?
 #  define R_TE_PEND         0x04000000ULL
                                         /* Has the TE been invoked and we're
                                            awaiting completion? */
@@ -499,7 +493,7 @@ extern cib_t *fsa_cib_conn;
 
 extern char *fsa_our_uname;
 extern char *fsa_our_uuid;
-extern char *fsa_pe_ref;        /* the last invocation of the PE */
+extern char *fsa_pe_ref;        // Last invocation of the scheduler
 extern char *fsa_our_dc;
 extern char *fsa_our_dc_version;
 extern GListPtr fsa_message_queue;

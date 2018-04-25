@@ -3742,7 +3742,7 @@ crm_xml_dump(xmlNode * data, int options, char **buffer, int *offset, int *max, 
     }
 #if 0
     if (is_not_set(options, xml_log_option_filtered)) {
-        /* Turning this code on also changes the PE tests for some reason
+        /* Turning this code on also changes the scheduler tests for some reason
          * (not just newlines).  Figure out why before considering to
          * enable this permanently.
          *

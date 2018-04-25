@@ -285,7 +285,7 @@ attrd_get_target(const char *name)
         const char *target = getenv(target_var);
         const char *host_physical = getenv(phys_var);
 
-        /* It is important we use the names by which the PE knows us */
+        // It is important to use the name by which the scheduler knows us
         if (host_physical && safe_str_eq(target, "host")) {
             name = host_physical;
 

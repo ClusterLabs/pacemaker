@@ -7,8 +7,8 @@
 #  pacemaker-attrd
 #  pacemaker-controld
 #  pacemaker-execd
+#  pacemaker-schedulerd
 #  cib
-#  pengine
 #  stonith-ng
 # PCMK_debug=no
 

@@ -23,7 +23,7 @@ static mainloop_io_t *pe_subsystem = NULL;
 
 /*!
  * \internal
- * \brief Close any PE connection and free associated memory
+ * \brief Close any scheduler connection and free associated memory
  */
 void
 pe_subsystem_free(void)
@@ -44,7 +44,7 @@ pe_subsystem_free(void)
  * \param[in] output     Result of CIB query
  * \param[in] user_data  Unique identifier for filename (will be freed)
  *
- * \note This is intended to be called after a PE connection fails.
+ * \note This is intended to be called after a scheduler connection fails.
  */
 static void
 save_cib_contents(xmlNode *msg, int call_id, int rc, xmlNode *output,
@@ -59,10 +59,10 @@ save_cib_contents(xmlNode *msg, int call_id, int rc, xmlNode *output,
         char *filename = crm_strdup_printf(PE_STATE_DIR "/pe-core-%s.bz2", id);
 
         if (write_xml_file(output, filename, TRUE) < 0) {
-            crm_err("Could not save Cluster Information Base to %s after Policy Engine crash",
+            crm_err("Could not save Cluster Information Base to %s after scheduler crash",
                     filename);
         } else {
-            crm_notice("Saved Cluster Information Base to %s after Policy Engine crash",
+            crm_notice("Saved Cluster Information Base to %s after scheduler crash",
                        filename);
         }
         free(filename);
@@ -71,7 +71,7 @@ save_cib_contents(xmlNode *msg, int call_id, int rc, xmlNode *output,
 
 /*!
  * \internal
- * \brief Respond to PE connection failure
+ * \brief Respond to scheduler connection failure
  *
  * \param[in] user_data  Ignored
  */
@@ -82,11 +82,11 @@ pe_ipc_destroy(gpointer user_data)
         int rc = pcmk_ok;
         char *uuid_str = crm_generate_uuid();
 
-        crm_crit("Connection to the Policy Engine failed "
+        crm_crit("Connection to the scheduler failed "
                  CRM_XS " uuid=%s", uuid_str);
 
         /*
-         * The PE died...
+         * The scheduler died...
          *
          * Save the current CIB so that we have a chance of
          * figuring out what killed it.
@@ -99,7 +99,7 @@ pe_ipc_destroy(gpointer user_data)
         fsa_register_cib_callback(rc, FALSE, uuid_str, save_cib_contents);
 
     } else {
-        crm_info("Connection to the Policy Engine released");
+        crm_info("Connection to the scheduler released");
     }
 
     clear_bit(fsa_input_register, R_PE_CONNECTED);
@@ -110,7 +110,7 @@ pe_ipc_destroy(gpointer user_data)
 
 /*!
  * \internal
- * \brief Handle message from PE connection
+ * \brief Handle message from scheduler connection
  *
  * \param[in] buffer    XML message (will be freed)
  * \param[in] length    Ignored
@@ -198,11 +198,11 @@ do_pe_control(long long action,
             if (pe_subsystem_new()) {
                 set_bit(fsa_input_register, R_PE_CONNECTED);
             } else {
-                crm_warn("Could not connect to Policy Engine");
+                crm_warn("Could not connect to scheduler");
                 register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
             }
         } else {
-            crm_info("Ignoring request to connect to PE while shutting down");
+            crm_info("Ignoring request to connect to scheduler while shutting down");
         }
     }
 }
@@ -218,18 +218,18 @@ do_pe_invoke(long long action,
              enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
     if (AM_I_DC == FALSE) {
-        crm_err("Not invoking Policy Engine because not DC: %s",
+        crm_err("Not invoking scheduler because not DC: %s",
                 fsa_action2string(action));
         return;
     }
 
     if (is_set(fsa_input_register, R_PE_CONNECTED) == FALSE) {
         if (is_set(fsa_input_register, R_SHUTDOWN)) {
-            crm_err("Cannot shut down gracefully without the Policy Engine");
+            crm_err("Cannot shut down gracefully without the scheduler");
             register_fsa_input_before(C_FSA_INTERNAL, I_TERMINATE, NULL);
 
         } else {
-            crm_info("Waiting for the Policy Engine to connect");
+            crm_info("Waiting for the scheduler to connect");
             crmd_fsa_stall(FALSE);
             register_fsa_action(A_PE_START);
         }
@@ -237,12 +237,12 @@ do_pe_invoke(long long action,
     }
 
     if (cur_state != S_POLICY_ENGINE) {
-        crm_notice("Not invoking Policy Engine because in state %s",
+        crm_notice("Not invoking scheduler because in state %s",
                    fsa_state2string(cur_state));
         return;
     }
     if (is_set(fsa_input_register, R_HAVE_CIB) == FALSE) {
-        crm_err("Attempted to invoke Policy Engine without consistent Cluster Information Base!");
+        crm_err("Attempted to invoke scheduler without consistent Cluster Information Base!");
 
         /* start the join from scratch */
         register_fsa_input_before(C_FSA_INTERNAL, I_ELECTION, NULL);
@@ -332,11 +332,12 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         return;
 
     } else if (AM_I_DC == FALSE || is_set(fsa_input_register, R_PE_CONNECTED) == FALSE) {
-        crm_debug("No need to invoke the PE anymore");
+        crm_debug("No need to invoke the scheduler anymore");
         return;
 
     } else if (fsa_state != S_POLICY_ENGINE) {
-        crm_debug("Discarding PE request in state: %s", fsa_state2string(fsa_state));
+        crm_debug("Discarding scheduler request in state: %s",
+                  fsa_state2string(fsa_state));
         return;
 
     /* this callback counts as 1 */
@@ -348,13 +349,13 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         return;
 
     } else if (fsa_state != S_POLICY_ENGINE) {
-        crm_err("Invoking PE in state: %s", fsa_state2string(fsa_state));
+        crm_err("Invoking scheduler in state: %s", fsa_state2string(fsa_state));
         return;
     }
 
     CRM_LOG_ASSERT(output != NULL);
 
-    /* refresh our remote-node cache when the pengine is invoked */
+    // Refresh the remote node cache when the scheduler is invoked
     crm_remote_peer_cache_refresh(output);
 
     crm_xml_add(output, XML_ATTR_DC_UUID, fsa_our_uuid);
@@ -373,11 +374,11 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     rc = pe_subsystem_send(cmd);
     if (rc < 0) {
-        crm_err("Could not contact the Policy Engine: %s " CRM_XS " rc=%d",
+        crm_err("Could not contact the scheduler: %s " CRM_XS " rc=%d",
                 pcmk_strerror(rc), rc);
         register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
     }
-    crm_debug("Invoking the PE: query=%d, ref=%s, seq=%llu, quorate=%d",
+    crm_debug("Invoking the scheduler: query=%d, ref=%s, seq=%llu, quorate=%d",
               fsa_pe_query, fsa_pe_ref, crm_peer_seq, fsa_has_quorum);
     free_xml(cmd);
 }

@@ -116,8 +116,8 @@ cib/cibpipe
 /daemons/execd/pacemaker-execd
 /daemons/execd/pacemaker-remoted
 /daemons/pacemakerd/pacemakerd
-/daemons/schedulerd/pengine
-/daemons/schedulerd/pengine.xml
+/daemons/schedulerd/pacemaker-schedulerd
+/daemons/schedulerd/pacemaker-schedulerd.xml
 /daemons/schedulerd/ptest
 doc/api/*
 doc/Clusters_from_Scratch.txt

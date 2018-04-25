@@ -459,7 +459,7 @@ Full list of resources:
 
 === Testing Recovery and Fencing ===
 
-Pacemaker's policy engine is smart enough to know fencing guest nodes
+Pacemaker's scheduler is smart enough to know fencing guest nodes
 associated with a virtual machine means shutting off/rebooting the virtual
 machine.  No special configuration is necessary to make this happen.  If you
 are interested in testing this functionality out, trying stopping the guest's

@@ -53,7 +53,7 @@ enum crm_proc_flag {
     crm_proc_stonithd  = 0x00002000,
     crm_proc_stonith_ng= 0x00100000,
 
-    crm_proc_pe        = 0x00010000,
+    crm_proc_schedulerd = 0x00010000,
     crm_proc_te        = 0x00020000,
 };
 /* *INDENT-ON* */
@@ -96,8 +96,8 @@ peer2text(enum crm_proc_flag proc)
         case crm_proc_controld:
             text = "pacemaker-controld";
             break;
-        case crm_proc_pe:
-            text = "pengine";
+        case crm_proc_schedulerd:
+            text = "pacemaker-schedulerd";
             break;
         case crm_proc_te:
             text = "tengine";

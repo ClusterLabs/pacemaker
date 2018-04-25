@@ -46,7 +46,7 @@ class Environment(object):
         self["notification-recipient"] = "/var/lib/pacemaker/notify.log"
         self["loop-minutes"] = 60
         self["valgrind-prefix"] = None
-        self["valgrind-procs"] = "pacemaker-attrd pacemaker-controld pacemaker-execd cib pengine stonith-ng"
+        self["valgrind-procs"] = "pacemaker-attrd pacemaker-controld pacemaker-execd cib pacemaker-schedulerd stonith-ng"
         self["valgrind-opts"] = """--leak-check=full --show-reachable=yes --trace-children=no --num-callers=25 --gen-suppressions=all --suppressions="""+CTSvars.CTS_home+"""/cts.supp"""
 
         self["experimental-tests"] = 0

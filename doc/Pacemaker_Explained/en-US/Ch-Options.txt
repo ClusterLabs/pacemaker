@@ -137,8 +137,8 @@ different sets of options during working hours than during weekends.) For now,
 we will describe the simple case where each option is present at most once.
 
 You can obtain an up-to-date list of cluster options, including
-their default values, by running the `man pengine` and `man pacemaker-controld`
-commands.
+their default values, by running the `man pacemaker-schedulerd` and
+`man pacemaker-controld` commands.
 
 .Cluster Options
 [width="95%",cols="5m,2,11<a",options="header",align="center"]

@@ -52,7 +52,7 @@
 /* Where to keep configuration files */
 #undef CRM_CONFIG_DIR
 
-/* Where to keep PEngine outputs */
+/* Where to keep scheduler outputs */
 #undef PE_STATE_DIR
 
 /* Location to store core files produced by Pacemaker daemons */

@@ -68,7 +68,10 @@ static pcmk_child_t pcmk_children[] = {
         CRM_DAEMON_USER, CRM_DAEMON_DIR "/pacemaker-attrd"
     },
     { 0, crm_proc_stonithd,   0, 0, TRUE,  "stonithd",   NULL,            NULL },
-    { 0, crm_proc_pe,         5, 0, TRUE,  "pengine",    CRM_DAEMON_USER, CRM_DAEMON_DIR"/pengine" },
+    {
+        0, crm_proc_schedulerd, 5, 0, TRUE, "pacemaker-schedulerd",
+        CRM_DAEMON_USER, CRM_DAEMON_DIR "/pacemaker-schedulerd"
+    },
     { 0, crm_proc_stonith_ng, 2, 0, TRUE,  "stonith-ng", NULL,            CRM_DAEMON_DIR"/stonithd" },
 };
 /* *INDENT-ON* */
@@ -1024,7 +1027,7 @@ main(int argc, char **argv)
     mkdir(CRM_STATE_DIR, 0750);
     mcp_chown(CRM_STATE_DIR, pcmk_uid, pcmk_gid);
 
-    /* Used to store core/blackbox/pengine/cib files in */
+    /* Used to store core/blackbox/scheduler/cib files in */
     crm_build_path(CRM_PACEMAKER_DIR, 0750);
     mcp_chown(CRM_PACEMAKER_DIR, pcmk_uid, pcmk_gid);
 
@@ -1036,7 +1039,7 @@ main(int argc, char **argv)
     crm_build_path(CRM_BLACKBOX_DIR, 0750);
     mcp_chown(CRM_BLACKBOX_DIR, pcmk_uid, pcmk_gid);
 
-    /* Used to store policy engine inputs in */
+    // Used to store scheduler inputs in
     crm_build_path(PE_STATE_DIR, 0750);
     mcp_chown(PE_STATE_DIR, pcmk_uid, pcmk_gid);
 

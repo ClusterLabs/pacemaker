@@ -33,11 +33,11 @@ class crm_corosync(crm_common):
                     badnews_ignore = self.templates.get_component(self.name, "%s-ignore" % c),
                     common_ignore = self.templates.get_component(self.name, "common-ignore"))
 
-            # pengine uses dc_pats instead of pats
-            self.fullcomplist["pengine"] = Process(
-                self, "pengine", 
-                dc_pats = self.templates.get_component(self.name, "pengine"),
-                badnews_ignore = self.templates.get_component(self.name, "pengine-ignore"),
+            # the scheduler uses dc_pats instead of pats
+            self.fullcomplist["pacemaker-schedulerd"] = Process(
+                self, "pacemaker-schedulerd", 
+                dc_pats = self.templates.get_component(self.name, "pacemaker-schedulerd"),
+                badnews_ignore = self.templates.get_component(self.name, "pacemaker-schedulerd-ignore"),
                 common_ignore = self.templates.get_component(self.name, "common-ignore"))
 
             # stonith-ng's process name is different from its component name

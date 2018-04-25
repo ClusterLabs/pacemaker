@@ -158,7 +158,7 @@ detect_daemon_dir() {
     do
         # pacemaker and pacemaker-cts packages can install to daemon directory,
         # so check for a file from each
-        if [ -e $d/pengine ] || [ -e $d/cts-exec-helper ]; then
+        if [ -e $d/pacemaker-schedulerd ] || [ -e $d/cts-exec-helper ]; then
             found_dir "daemons" "$d"
             return
         fi
@@ -170,7 +170,7 @@ detect_daemon_dir() {
         return
     fi
 
-    for f in $(find / -maxdepth $maxdepth -type f -name pengine -o -name cts-exec-helper); do
+    for f in $(find / -maxdepth $maxdepth -type f -name pacemaker-schedulerd -o -name cts-exec-helper); do
         d=$(dirname "$f")
         found_dir "daemons" "$d"
         return
@@ -219,22 +219,22 @@ detect_pe_dir() {
 
     d="$config_root/pengine"
     if [ -d "$d" ]; then
-        found_dir "policy engine inputs" "$d"
+        found_dir "scheduler inputs" "$d"
         return
     fi
 
     if has_remoted; then
-        info "Pacemaker policy engine inputs not found (this appears to be a Pacemaker Remote node)"
+        info "Pacemaker scheduler inputs not found (this appears to be a Pacemaker Remote node)"
         return
     fi
 
-    info "Searching for where Pacemaker keeps Policy Engine inputs... this may take a while"
+    info "Searching for where Pacemaker keeps scheduler inputs... this may take a while"
     for d in $(find / -maxdepth $maxdepth -type d -name pengine); do
-        found_dir "policy engine inputs" "$d"
+        found_dir "scheduler inputs" "$d"
         return
     done
 
-    fatal "Pacemaker policy engine inputs not found (nonstandard installation?)"
+    fatal "Pacemaker scheduler inputs not found (nonstandard installation?)"
 }
 
 detect_host() {

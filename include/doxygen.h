@@ -21,7 +21,7 @@
  * \defgroup date ISO-8601 Date/Time API
  * \defgroup cib Configuration API
  * \defgroup lrmd Executor API
- * \defgroup pengine Policy Engine API
+ * \defgroup pengine Scheduler API
  * \defgroup fencing Fencing API
  */
 

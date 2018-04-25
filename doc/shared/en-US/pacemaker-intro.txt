@@ -90,7 +90,7 @@ Pacemaker itself is composed of multiple daemons that work together:
  * pacemaker-controld
  * pacemaker-execd
  * cib
- * pengine
+ * pacemaker-schedulerd
  * stonithd
 
 .Internal Components
@@ -108,8 +108,9 @@ The attribute manager (pacemaker-attrd) maintains a database of attributes for
 all nodes, keeps it synchronized across the cluster, and handles requests to
 modify them. These attributes are usually recorded in the CIB.
 
-Given a snapshot of the CIB as input, the 'policy engine' (pengine) determines
-what actions are necessary to achieve the desired state of the cluster.
+Given a snapshot of the CIB as input, the 'scheduler' (pacemaker-schedulerd)
+determines what actions are necessary to achieve the desired state of the
+cluster.
 
 The 'local executor' (pacemaker-execd) handles requests to execute
 resource agents on the local cluster node, and returns the result.
@@ -127,7 +128,7 @@ Pacemaker centralizes cluster decision-making by electing one of the controller
 instances as the 'Designated Controller' ('DC'). Should the elected DC
 process (or the node it is on) fail, a new one is quickly established.
 The DC responds to cluster events by taking a current snapshot of the CIB,
-feeding it to the policy engine, then asking the executors (either directly on
+feeding it to the scheduler, then asking the executors (either directly on
 the local node, or via requests to controller peers on other nodes) and
 stonithd to execute any necessary actions.
 

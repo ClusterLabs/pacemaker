@@ -123,7 +123,7 @@ Stonith options:
                    none (assume every device can fence every machine)
   pcmk_delay_max: Enable random delay for stonith actions and specify the maximum of random delay This prevents double fencing when using slow devices such as sbd. Use this to
                   enable random delay for stonith actions and specify the maximum of random delay.
-  pcmk_action_limit: The maximum number of actions can be performed in parallel on this device Pengine property concurrent-fencing=true needs to be configured first. Then use this
+  pcmk_action_limit: The maximum number of actions can be performed in parallel on this device Cluster property concurrent-fencing=true needs to be configured first. Then use this
                      to specify the maximum number of actions can be performed in parallel on this device. -1 is unlimited.
 
 Default operations:

@@ -240,7 +240,7 @@ extern "C" {
 #  define XML_CIB_ATTR_SHUTDOWN       	"shutdown"
 
 /* Aside from being an old name for the executor, LRM is a misnomer here because
- * the controller and pengine use these to track actions, which are not always
+ * the controller and scheduler use these to track actions, which are not always
  * executor operations.
  */
 

@@ -1369,7 +1369,7 @@ main(int argc, char **argv)
         printf
             ("    <shortdesc lang=\"en\">The maximum number of actions can be performed in parallel on this device</shortdesc>\n");
         printf
-            ("    <longdesc lang=\"en\">Pengine property concurrent-fencing=true needs to be configured first.\n"
+            ("    <longdesc lang=\"en\">Cluster property concurrent-fencing=true needs to be configured first.\n"
              "Then use this to specify the maximum number of actions can be performed in parallel on this device. -1 is unlimited.</longdesc>\n");
         printf("    <content type=\"integer\" default=\"1\"/>\n");
         printf("  </parameter>\n");

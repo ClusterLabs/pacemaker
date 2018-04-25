@@ -1087,7 +1087,7 @@ class MaintenanceMode(CTSTest):
         # fail the resource right after turning Maintenance mode on
         # verify it is not recovered until maintenance mode is turned off
         if action == "On":
-            pats.append(r"pengine.*:\s+warning:.*Processing failed op %s for %s on" % (self.action, self.rid))
+            pats.append(r"schedulerd.*:\s+warning:.*Processing failed op %s for %s on" % (self.action, self.rid))
         else:
             pats.append(self.templates["Pat:RscOpOK"] % ("stop", self.rid))
             pats.append(self.templates["Pat:RscOpOK"] % ("start", self.rid))
@@ -1236,7 +1236,7 @@ class MaintenanceMode(CTSTest):
         '''Return list of errors which should be ignored'''
         return [
             r"Updating failcount for %s" % self.rid,
-            r"pengine.*: Recover %s\s*\(.*\)" % self.rid,
+            r"schedulerd.*: Recover %s\s*\(.*\)" % self.rid,
             r"Unknown operation: fail",
             r"(ERROR|error): sending stonithRA op to stonithd failed.",
             self.templates["Pat:RscOpOK"] % (self.action, self.rid),
@@ -1296,7 +1296,7 @@ class ResourceRecover(CTSTest):
         self.debug("Shooting %s aka. %s" % (rsc.clone_id, rsc.id))
 
         pats = []
-        pats.append(r"pengine.*:\s+warning:.*Processing failed op %s for (%s|%s) on" % (self.action,
+        pats.append(r"schedulerd.*:\s+warning:.*Processing failed op %s for (%s|%s) on" % (self.action,
             rsc.id, rsc.clone_id))
 
         if rsc.managed():
@@ -1337,7 +1337,7 @@ class ResourceRecover(CTSTest):
         '''Return list of errors which should be ignored'''
         return [
             r"Updating failcount for %s" % self.rid,
-            r"pengine.*: Recover (%s|%s)\s*\(.*\)" % (self.rid, self.rid_alt),
+            r"schedulerd.*: Recover (%s|%s)\s*\(.*\)" % (self.rid, self.rid_alt),
             r"Unknown operation: fail",
             r"(ERROR|error): sending stonithRA op to stonithd failed.",
             self.templates["Pat:RscOpOK"] % (self.action, self.rid),
@@ -1711,8 +1711,8 @@ class Reattach(CTSTest):
         self.incr("calls")
 
         pats = []
-        # Conveniently, pengine will display this message when disabling management,
-        # even if fencing is not enabled, so we can rely on it.
+        # Conveniently, the scheduler will display this message when disabling
+        # management, even if fencing is not enabled, so we can rely on it.
         managed = self.create_watch(["Delaying fencing operations"], 60)
         managed.setwatch()
 
@@ -2569,10 +2569,10 @@ class RemoteLXC(CTSTest):
         '''Return list of errors which should be ignored'''
         return [
             r"Updating failcount for ping",
-            r"pengine.*: Recover (ping|lxc-ms|container)\s*\(.*\)",
+            r"schedulerd.*: Recover (ping|lxc-ms|container)\s*\(.*\)",
             # The orphaned lxc-ms resource causes an expected transition error
-            # that is a result of the pengine not having knowledge that the 
-            # ms resource used to be a clone.  As a result it looks like that 
+            # that is a result of the scheduler not having knowledge that the
+            # promotable resource used to be a clone. As a result, it looks like that 
             # resource is running in multiple locations when it shouldn't... But in
             # this instance we know why this error is occurring and that it is expected.
             r"Calculated [Tt]ransition .*pe-error",
@@ -3048,7 +3048,7 @@ class RemoteStonithd(RemoteDriver):
             r"Software caused connection abort",
             r"pacemaker-controld.*:\s+error.*: Operation remote-.*_monitor",
             r"pacemaker-controld.*:\s+error.*: Result of monitor operation for remote-.*",
-            r"pengine.*:\s+Recover remote-.*\s*\(.*\)",
+            r"schedulerd.*:\s+Recover remote-.*\s*\(.*\)",
             r"Calculated [Tt]ransition .*pe-error",
             r"error.*: Resource .*ocf::.* is active on 2 nodes attempting recovery",
         ]
@@ -3105,7 +3105,7 @@ class RemoteRscFailure(RemoteDriver):
 
     def errorstoignore(self):
         ignore_pats = [
-            r"pengine.*: Recover remote-rsc\s*\(.*\)",
+            r"schedulerd.*: Recover remote-rsc\s*\(.*\)",
             r"Dummy.*: No process state file found",
         ]
 
