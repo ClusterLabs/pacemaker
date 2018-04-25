@@ -24,7 +24,6 @@
 #include <crmd_messages.h>
 #include <crmd_fsa.h>
 #include <tengine.h>
-#include <fsa_proto.h>
 #include <fsa_matrix.h>
 
 char *fsa_our_dc = NULL;

@@ -20,7 +20,6 @@
 
 #include <crmd.h>
 #include <crmd_fsa.h>
-#include <fsa_proto.h>
 #include <crmd_messages.h>
 #include <controld_callbacks.h>
 #include <crmd_lrm.h>

@@ -522,9 +522,10 @@ extern crm_trigger_t *config_read;
 extern unsigned long long saved_ccm_membership_id;
 extern gboolean ever_had_quorum;
 
-// These two should be moved elsewhere
+// These should be moved elsewhere
 void do_update_cib_nodes(gboolean overwrite, const char *caller);
 int crmd_cib_smart_opt(void);
+xmlNode *do_lrm_query(gboolean, const char *node_name);
 
 const char *fsa_input2string(enum crmd_fsa_input input);
 const char *fsa_state2string(enum crmd_fsa_state state);
@@ -540,6 +541,200 @@ enum crmd_fsa_state s_crmd_fsa(enum crmd_fsa_cause cause);
         mainloop_set_trigger(source); \
     } while(0)
 
-#  include <fsa_proto.h>
+/* A_READCONFIG */
+void do_read_config(long long action, enum crmd_fsa_cause cause,
+                    enum crmd_fsa_state cur_state,
+                    enum crmd_fsa_input current_input, fsa_data_t *msg_data);
+
+/* A_PE_INVOKE */
+void do_pe_invoke(long long action, enum crmd_fsa_cause cause,
+                  enum crmd_fsa_state cur_state,
+                  enum crmd_fsa_input current_input, fsa_data_t *msg_data);
+
+/* A_ERROR */
+void do_error(long long action, enum crmd_fsa_cause cause,
+              enum crmd_fsa_state cur_state,
+              enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
+
+/* A_LOG */
+void do_log(long long action, enum crmd_fsa_cause cause,
+            enum crmd_fsa_state cur_state,
+            enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
+
+/* A_STARTUP */
+void do_startup(long long action, enum crmd_fsa_cause cause,
+                enum crmd_fsa_state cur_state,
+                enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
+
+/* A_CIB_START, STOP, RESTART */
+void do_cib_control(long long action, enum crmd_fsa_cause cause,
+                    enum crmd_fsa_state cur_state,
+                    enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
+
+/* A_HA_CONNECT */
+void do_ha_control(long long action, enum crmd_fsa_cause cause,
+                   enum crmd_fsa_state cur_state,
+                   enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
+
+/* A_LRM_CONNECT */
+void do_lrm_control(long long action, enum crmd_fsa_cause cause,
+                    enum crmd_fsa_state cur_state,
+                    enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
+
+/* A_PE_START, STOP, RESTART */
+void do_pe_control(long long action, enum crmd_fsa_cause cause,
+                   enum crmd_fsa_state cur_state,
+                   enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
+
+/* A_TE_START, STOP, RESTART */
+void do_te_control(long long action, enum crmd_fsa_cause cause,
+                   enum crmd_fsa_state cur_state,
+                   enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
+
+/* A_STARTED */
+void do_started(long long action, enum crmd_fsa_cause cause,
+                enum crmd_fsa_state cur_state,
+                enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
+
+/* A_MSG_ROUTE */
+void do_msg_route(long long action, enum crmd_fsa_cause cause,
+                  enum crmd_fsa_state cur_state,
+                  enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
+
+/* A_RECOVER */
+void do_recover(long long action, enum crmd_fsa_cause cause,
+                enum crmd_fsa_state cur_state,
+                enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
+
+/* A_ELECTION_VOTE */
+void do_election_vote(long long action, enum crmd_fsa_cause cause,
+                      enum crmd_fsa_state cur_state,
+                      enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
+
+/* A_ELECTION_COUNT */
+void do_election_count_vote(long long action, enum crmd_fsa_cause cause,
+                            enum crmd_fsa_state cur_state,
+                            enum crmd_fsa_input cur_input,
+                            fsa_data_t *msg_data);
+
+/* A_ELECTION_CHECK */
+void do_election_check(long long action, enum crmd_fsa_cause cause,
+                       enum crmd_fsa_state cur_state,
+                       enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
+
+/* A_DC_TIMER_STOP */
+void do_timer_control(long long action, enum crmd_fsa_cause cause,
+                      enum crmd_fsa_state cur_state,
+                      enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
+
+/* A_DC_TAKEOVER */
+void do_dc_takeover(long long action, enum crmd_fsa_cause cause,
+                    enum crmd_fsa_state cur_state,
+                    enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
+
+/* A_DC_RELEASE */
+void do_dc_release(long long action, enum crmd_fsa_cause cause,
+                   enum crmd_fsa_state cur_state,
+                   enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
+
+/* A_DC_JOIN_OFFER_ALL */
+void do_dc_join_offer_all(long long action, enum crmd_fsa_cause cause,
+                          enum crmd_fsa_state cur_state,
+                          enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
+
+/* A_DC_JOIN_OFFER_ONE */
+void do_dc_join_offer_one(long long action, enum crmd_fsa_cause cause,
+                          enum crmd_fsa_state cur_state,
+                          enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
+
+/* A_DC_JOIN_ACK */
+void do_dc_join_ack(long long action, enum crmd_fsa_cause cause,
+                    enum crmd_fsa_state cur_state,
+                    enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
+
+/* A_DC_JOIN_REQ */
+void do_dc_join_filter_offer(long long action, enum crmd_fsa_cause cause,
+                             enum crmd_fsa_state cur_state,
+                             enum crmd_fsa_input cur_input,
+                             fsa_data_t *msg_data);
+
+/* A_DC_JOIN_FINALIZE */
+void do_dc_join_finalize(long long action, enum crmd_fsa_cause cause,
+                         enum crmd_fsa_state cur_state,
+                         enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
+
+/* A_CL_JOIN_QUERY */
+/* is there a DC out there? */
+void do_cl_join_query(long long action, enum crmd_fsa_cause cause,
+                      enum crmd_fsa_state cur_state,
+                      enum crmd_fsa_input current_input, fsa_data_t *msg_data);
+
+/* A_CL_JOIN_ANNOUNCE */
+void do_cl_join_announce(long long action, enum crmd_fsa_cause cause,
+                         enum crmd_fsa_state cur_state,
+                         enum crmd_fsa_input current_input, fsa_data_t *msg_data);
+
+/* A_CL_JOIN_REQUEST */
+void do_cl_join_offer_respond(long long action, enum crmd_fsa_cause cause,
+                              enum crmd_fsa_state cur_state,
+                              enum crmd_fsa_input current_input,
+                              fsa_data_t *msg_data);
+
+/* A_CL_JOIN_RESULT */
+void do_cl_join_finalize_respond(long long action, enum crmd_fsa_cause cause,
+                                 enum crmd_fsa_state cur_state,
+                                 enum crmd_fsa_input current_input,
+                                 fsa_data_t *msg_data);
+
+/* A_UPDATE_NODESTATUS */
+void do_update_node_status(long long action, enum crmd_fsa_cause cause,
+                           enum crmd_fsa_state cur_state,
+                           enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
+
+/* A_LRM_INVOKE */
+void do_lrm_invoke(long long action, enum crmd_fsa_cause cause,
+                   enum crmd_fsa_state cur_state,
+                   enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
+
+/* A_LRM_EVENT */
+void do_lrm_event(long long action, enum crmd_fsa_cause cause,
+                  enum crmd_fsa_state cur_state,
+                  enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
+
+/* A_TE_INVOKE, A_TE_CANCEL */
+void do_te_invoke(long long action, enum crmd_fsa_cause cause,
+                  enum crmd_fsa_state cur_state,
+                  enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
+
+/* A_TE_INVOKE */
+void do_te_copyto(long long action, enum crmd_fsa_cause cause,
+                  enum crmd_fsa_state cur_state,
+                  enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
+
+/* A_SHUTDOWN_REQ */
+void do_shutdown_req(long long action, enum crmd_fsa_cause cause,
+                     enum crmd_fsa_state cur_state,
+                     enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
+
+/* A_SHUTDOWN */
+void do_shutdown(long long action, enum crmd_fsa_cause cause,
+                 enum crmd_fsa_state cur_state,
+                 enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
+
+/* A_STOP */
+void do_stop(long long action, enum crmd_fsa_cause cause,
+             enum crmd_fsa_state cur_state,
+             enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
+
+/* A_EXIT_0, A_EXIT_1 */
+void do_exit(long long action, enum crmd_fsa_cause cause,
+             enum crmd_fsa_state cur_state,
+             enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
+
+/* A_DC_JOIN_FINAL */
+void do_dc_join_final(long long action, enum crmd_fsa_cause cause,
+                      enum crmd_fsa_state cur_state,
+                      enum crmd_fsa_input current_input, fsa_data_t *msg_data);
+
 #  include <crmd_utils.h>
 #endif

@@ -18,7 +18,6 @@
 #include <crmd_messages.h>
 #include <crmd_fsa.h>
 #include <crmd_lrm.h>
-#include <fsa_proto.h>
 #include <controld_callbacks.h>
 #include <tengine.h>
 #include <membership.h>
