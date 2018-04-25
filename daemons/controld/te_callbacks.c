@@ -15,7 +15,7 @@
 
 #include <tengine.h>
 #include <te_callbacks.h>
-#include <crmd_fsa.h>
+#include <controld_fsa.h>
 
 #include <crm/cluster.h>        /* For ONLINESTATUS etc */
 

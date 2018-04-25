@@ -16,7 +16,7 @@
 #include <crm/common/xml.h>
 #include <crm/cluster/internal.h>
 #include <crmd_messages.h>
-#include <crmd_fsa.h>
+#include <controld_fsa.h>
 #include <crmd_lrm.h>
 #include <controld_callbacks.h>
 #include <tengine.h>

@@ -15,7 +15,7 @@
 #include <crm/common/xml.h>
 #include <tengine.h>
 
-#include <crmd_fsa.h>
+#include <controld_fsa.h>
 
 char *failed_stop_offset = NULL;
 char *failed_start_offset = NULL;

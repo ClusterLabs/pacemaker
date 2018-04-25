@@ -12,7 +12,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 
-#include <crmd_fsa.h>
+#include <controld_fsa.h>
 #include <crmd_messages.h>
 
 int reannounce_count = 0;

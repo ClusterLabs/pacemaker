@@ -22,7 +22,7 @@
 #include <crm/common/xml.h>
 
 #include <crmd.h>
-#include <crmd_fsa.h>
+#include <controld_fsa.h>
 #include <crmd_messages.h>
 
 #define OPTARGS	"hV"

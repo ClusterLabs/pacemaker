@@ -22,7 +22,7 @@
 #include <crm/cluster.h>
 
 #include <crmd_messages.h>
-#include <crmd_fsa.h>
+#include <controld_fsa.h>
 #include <tengine.h>
 #include <fsa_matrix.h>
 

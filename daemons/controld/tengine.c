@@ -12,7 +12,7 @@
 #include <crm/common/xml.h>
 
 #include <crmd.h>
-#include <crmd_fsa.h>
+#include <controld_fsa.h>
 #include <crmd_messages.h>
 #include <te_callbacks.h>  /* te_update_diff */
 #include <tengine.h>

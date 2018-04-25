@@ -344,10 +344,11 @@ changelog:
 	git show $(LAST_RELEASE):ChangeLog >> ChangeLog
 	@echo -e "\033[1;35m -- Don't forget to run the bumplibs.sh script! --\033[0m"
 
+DO_NOT_INDENT = lib/gnu daemons/controld/controld_fsa.h
+
 indent:
-	find . -name "*.h" -exec ./p-indent \{\} \;
-	find . -name "*.c" -exec ./p-indent \{\} \;
-	git co HEAD daemons/controld/fsa_proto.h lib/gnu
+	find . -name "*.[ch]" -exec ./p-indent \{\} \;
+	git co HEAD $(DO_NOT_INDENT)
 
 rel-tags: tags
 	find . -name TAGS -exec sed -i 's:\(.*\)/\(.*\)/TAGS:\2/TAGS:g' \{\} \;

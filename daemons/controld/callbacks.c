@@ -10,7 +10,7 @@
 #include <sys/param.h>
 #include <crm/crm.h>
 #include <string.h>
-#include <crmd_fsa.h>
+#include <controld_fsa.h>
 
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>

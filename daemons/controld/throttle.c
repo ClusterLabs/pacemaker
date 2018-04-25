@@ -18,7 +18,7 @@
 #include <crm/msg_xml.h>
 #include <crm/cluster.h>
 
-#include <crmd_fsa.h>
+#include <controld_fsa.h>
 #include <throttle.h>
 
 

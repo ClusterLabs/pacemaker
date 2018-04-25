@@ -11,7 +11,7 @@
 #include <crm/attrd.h>
 #include <crm/msg_xml.h>
 
-#include <crmd_fsa.h>
+#include <controld_fsa.h>
 #include <crmd_utils.h>
 #include <crmd_messages.h>
 

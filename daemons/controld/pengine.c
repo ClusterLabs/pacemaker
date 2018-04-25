@@ -16,7 +16,7 @@
 #include <crm/msg_xml.h>
 
 #include <crmd.h>
-#include <crmd_fsa.h>
+#include <controld_fsa.h>
 #include <crmd_messages.h>  /* register_fsa_error_adv */
 
 static mainloop_io_t *pe_subsystem = NULL;
