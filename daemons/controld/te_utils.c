@@ -15,7 +15,7 @@
 #include <crm/common/xml.h>
 #include <tengine.h>
 #include <controld_fsa.h>
-#include <crmd_lrm.h>
+#include <controld_lrm.h>
 #include <crmd_messages.h>
 #include <throttle.h>
 #include <crm/fencing/internal.h>

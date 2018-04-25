@@ -17,8 +17,9 @@ halib_PROGRAMS	= pacemaker-controld
 noinst_HEADERS	= controld_alerts.h		\
 		  controld_callbacks.h		\
 		  controld_fsa.h		\
+		  controld_lrm.h		\
 		  pacemaker-controld.h		\
-		crmd_lrm.h crmd_messages.h crmd_utils.h \
+		crmd_messages.h crmd_utils.h \
 		fsa_matrix.h membership.h te_callbacks.h \
 		tengine.h throttle.h crmd_metadata.h
 

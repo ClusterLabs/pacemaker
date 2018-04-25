@@ -17,7 +17,7 @@
 #include <crm/cluster/internal.h>
 #include <crmd_messages.h>
 #include <controld_fsa.h>
-#include <crmd_lrm.h>
+#include <controld_lrm.h>
 #include <controld_callbacks.h>
 #include <tengine.h>
 #include <membership.h>

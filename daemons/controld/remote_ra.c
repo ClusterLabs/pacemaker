@@ -13,7 +13,7 @@
 #include <controld_fsa.h>
 #include <crmd_messages.h>
 #include <controld_callbacks.h>
-#include <crmd_lrm.h>
+#include <controld_lrm.h>
 #include <crm/lrmd.h>
 #include <crm/services.h>
 

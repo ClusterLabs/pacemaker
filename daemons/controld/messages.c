@@ -22,7 +22,7 @@
 
 #include <pacemaker-controld.h>
 #include <crmd_messages.h>
-#include <crmd_lrm.h>
+#include <controld_lrm.h>
 #include <tengine.h>
 #include <throttle.h>
 

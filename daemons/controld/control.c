@@ -22,7 +22,7 @@
 #include <controld_fsa.h>
 #include <crmd_messages.h>
 #include <controld_callbacks.h>
-#include <crmd_lrm.h>
+#include <controld_lrm.h>
 #include <controld_alerts.h>
 #include <crmd_metadata.h>
 #include <tengine.h>
