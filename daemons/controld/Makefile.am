@@ -23,9 +23,9 @@ noinst_HEADERS	= controld_alerts.h		\
 		  controld_messages.h		\
 		  controld_metadata.h		\
 		  controld_throttle.h		\
+		  controld_transition.h		\
 		  controld_utils.h		\
-		  pacemaker-controld.h		\
-		tengine.h
+		  pacemaker-controld.h
 
 pacemaker_controld_CFLAGS	= $(CFLAGS_HARDENED_EXE)
 pacemaker_controld_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)

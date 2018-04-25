@@ -23,7 +23,7 @@
 #include <pacemaker-controld.h>
 #include <controld_messages.h>
 #include <controld_lrm.h>
-#include <tengine.h>
+#include <controld_transition.h>
 #include <controld_throttle.h>
 
 GListPtr fsa_message_queue = NULL;

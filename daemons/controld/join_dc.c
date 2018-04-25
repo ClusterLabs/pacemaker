@@ -15,7 +15,7 @@
 
 #include <controld_fsa.h>
 #include <controld_messages.h>
-#include "tengine.h"
+#include "controld_transition.h"
 
 char *max_epoch = NULL;
 char *max_generation_from = NULL;

@@ -13,7 +13,7 @@
 #include <crm/msg_xml.h>
 
 #include <crm/common/xml.h>
-#include <tengine.h>
+#include <controld_transition.h>
 
 #include <controld_fsa.h>
 

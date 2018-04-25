@@ -18,7 +18,7 @@
 #include <controld_messages.h>
 #include <controld_callbacks.h>
 #include <controld_lrm.h>
-#include <tengine.h>
+#include <controld_transition.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>

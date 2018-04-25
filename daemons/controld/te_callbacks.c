@@ -13,7 +13,7 @@
 #include <crm/common/xml.h>
 #include <crm/msg_xml.h>
 
-#include <tengine.h>
+#include <controld_transition.h>
 #include <controld_fsa.h>
 
 #include <crm/cluster.h>        /* For ONLINESTATUS etc */

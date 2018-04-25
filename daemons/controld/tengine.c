@@ -14,7 +14,7 @@
 #include <pacemaker-controld.h>
 #include <controld_fsa.h>
 #include <controld_messages.h>
-#include <tengine.h>
+#include <controld_transition.h>
 
 
 extern crm_graph_functions_t te_graph_fns;

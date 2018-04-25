@@ -19,7 +19,7 @@
 #include <controld_fsa.h>
 #include <controld_messages.h>
 #include <controld_callbacks.h>
-#include <tengine.h>
+#include <controld_transition.h>
 
 /*	A_ELECTION_VOTE	*/
 void

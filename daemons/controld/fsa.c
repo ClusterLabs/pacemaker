@@ -23,7 +23,7 @@
 
 #include <controld_messages.h>
 #include <controld_fsa.h>
-#include <tengine.h>
+#include <controld_transition.h>
 #include <controld_matrix.h>
 
 char *fsa_our_dc = NULL;

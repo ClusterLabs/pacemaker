@@ -19,7 +19,7 @@
 #include <controld_fsa.h>
 #include <controld_lrm.h>
 #include <controld_callbacks.h>
-#include <tengine.h>
+#include <controld_transition.h>
 #include <controld_membership.h>
 #include <pacemaker-controld.h>
 
