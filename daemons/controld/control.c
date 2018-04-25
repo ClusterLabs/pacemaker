@@ -24,7 +24,7 @@
 #include <controld_callbacks.h>
 #include <controld_lrm.h>
 #include <controld_alerts.h>
-#include <crmd_metadata.h>
+#include <controld_metadata.h>
 #include <tengine.h>
 #include <throttle.h>
 
