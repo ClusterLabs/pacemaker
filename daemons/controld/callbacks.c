@@ -23,7 +23,7 @@
 #include <controld_callbacks.h>
 #include <controld_lrm.h>
 #include <tengine.h>
-#include <membership.h>
+#include <controld_membership.h>
 
 /* From join_dc... */
 extern gboolean check_join_state(enum crmd_fsa_state cur_state, const char *source);

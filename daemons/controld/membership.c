@@ -20,7 +20,7 @@
 #include <controld_lrm.h>
 #include <controld_callbacks.h>
 #include <tengine.h>
-#include <membership.h>
+#include <controld_membership.h>
 #include <pacemaker-controld.h>
 
 gboolean membership_flux_hack = FALSE;
