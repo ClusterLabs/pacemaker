@@ -326,7 +326,7 @@ summary:
 	@printf "\n- Changesets: `git log --pretty=oneline $(LAST_RELEASE)..HEAD | wc -l`"
 	@printf "\n- Diff:      "
 	@git diff -r $(LAST_RELEASE)..HEAD --stat \
-		include lib pacemakerd pengine/*.c pengine/*.h \
+		include lib daemons pengine/*.c pengine/*.h \
 		cib crmd fencing lrmd tools xml | tail -n 1
 
 rc-changes:
@@ -360,7 +360,7 @@ CLANG_checkers =
 # --inconclusive --std=posix
 CPPCHECK_ARGS ?=
 cppcheck:
-	for d in replace lib pacemakerd attrd pengine cib crmd fencing lrmd tools; \
+	for d in replace lib daemons attrd pengine cib crmd fencing lrmd tools; \
 		do cppcheck $(CPPCHECK_ARGS) -q $$d; \
 	done
 

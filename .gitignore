@@ -74,6 +74,10 @@ Doxyfile
 /cts/lxc_autogen.sh
 /cts/pacemaker-cts-dummyd
 /cts/pacemaker-cts-dummyd@.service
+/daemons/pacemakerd/pacemaker
+/daemons/pacemakerd/pacemaker.combined.upstart
+/daemons/pacemakerd/pacemaker.service
+/daemons/pacemakerd/pacemaker.upstart
 extra/logrotate/pacemaker
 /fencing/fence_legacy
 include/config.h
@@ -82,10 +86,6 @@ include/crm_config.h
 lrmd/pacemaker_remote
 lrmd/pacemaker_remoted
 lrmd/pacemaker_remote.service
-/pacemakerd/pacemaker
-/pacemakerd/pacemaker.combined.upstart
-/pacemakerd/pacemaker.service
-/pacemakerd/pacemaker.upstart
 publican.cfg
 /tools/cibsecret
 /tools/crm_error
@@ -114,6 +114,7 @@ cib/cibmon
 cib/cibpipe
 crmd/atest
 crmd/crmd
+/daemons/pacemakerd/pacemakerd
 doc/api/*
 doc/Clusters_from_Scratch.txt
 doc/Pacemaker_Explained.txt
@@ -127,7 +128,6 @@ fencing/stonithd.xml
 lrmd/lrmd
 lrmd/lrmd_internal_ctl
 lrmd/lrmd_test
-/pacemakerd/pacemakerd
 pengine/pengine
 pengine/pengine.xml
 pengine/ptest

@@ -1727,6 +1727,12 @@ AC_CONFIG_FILES(Makefile                                            \
                 cts/benchmark/Makefile                              \
                 cts/pacemaker-cts-dummyd@.service                   \
                 cib/Makefile                                        \
+                daemons/Makefile                                    \
+                daemons/pacemakerd/Makefile                         \
+                daemons/pacemakerd/pacemaker                        \
+                daemons/pacemakerd/pacemaker.service                \
+                daemons/pacemakerd/pacemaker.upstart                \
+                daemons/pacemakerd/pacemaker.combined.upstart       \
                 attrd/Makefile                                      \
                 crmd/Makefile                                       \
                 pengine/Makefile                                    \
@@ -1769,11 +1775,6 @@ AC_CONFIG_FILES(Makefile                                            \
                 extra/resources/Makefile                            \
                 extra/logrotate/Makefile                            \
                 extra/logrotate/pacemaker                           \
-                pacemakerd/Makefile                                 \
-                pacemakerd/pacemaker                                \
-                pacemakerd/pacemaker.service                        \
-                pacemakerd/pacemaker.upstart                        \
-                pacemakerd/pacemaker.combined.upstart               \
                 tools/Makefile                                      \
                 tools/report.collector                              \
                 tools/report.common                                 \
