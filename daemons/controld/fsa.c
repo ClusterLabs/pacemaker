@@ -24,7 +24,7 @@
 #include <controld_messages.h>
 #include <controld_fsa.h>
 #include <tengine.h>
-#include <fsa_matrix.h>
+#include <controld_matrix.h>
 
 char *fsa_our_dc = NULL;
 cib_t *fsa_cib_conn = NULL;

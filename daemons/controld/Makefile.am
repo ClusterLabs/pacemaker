@@ -18,11 +18,12 @@ noinst_HEADERS	= controld_alerts.h		\
 		  controld_callbacks.h		\
 		  controld_fsa.h		\
 		  controld_lrm.h		\
+		  controld_matrix.h		\
 		  controld_messages.h		\
 		  controld_metadata.h		\
 		  controld_utils.h		\
 		  pacemaker-controld.h		\
-		fsa_matrix.h membership.h te_callbacks.h \
+		membership.h te_callbacks.h \
 		tengine.h throttle.h
 
 pacemaker_controld_CFLAGS	= $(CFLAGS_HARDENED_EXE)
