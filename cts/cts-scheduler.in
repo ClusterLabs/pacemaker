@@ -31,7 +31,7 @@ else
     test_home="$(dirname $0)"
 fi
 
-io_dir="$test_home/pengine"
+io_dir="$test_home/scheduler"
 failed="$test_home/.regression.failed.diff"
 test_binary=
 testcmd_options=
