@@ -20,10 +20,9 @@ if BUILD_XML_HELP
 man7_MANS	= pacemaker-fenced.7
 endif
 
-stonith_test_SOURCES	= test.c
-
+stonith_test_SOURCES	= cts-fence-helper.c
 stonith_test_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la	\
-			$(top_builddir)/lib/fencing/libstonithd.la
+			  $(top_builddir)/lib/fencing/libstonithd.la
 
 pacemaker_fenced_CPPFLAGS	= -I$(top_srcdir)/daemons/schedulerd $(AM_CPPFLAGS)
 pacemaker_fenced_YFLAGS		= -d
