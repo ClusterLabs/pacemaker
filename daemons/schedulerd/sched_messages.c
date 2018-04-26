@@ -20,7 +20,7 @@
 #include <crm/pengine/status.h>
 #include <pacemaker-schedulerd.h>
 #include <sched_allocate.h>
-#include <utils.h>
+#include <sched_utils.h>
 #include <crm/common/ipcs.h>
 
 xmlNode *do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, crm_time_t * now);

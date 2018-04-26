@@ -30,7 +30,7 @@ endif
 noinst_HEADERS	= pacemaker-schedulerd.h \
 		  sched_allocate.h \
 		  sched_notif.h \
-		  utils.h
+		  sched_utils.h
 		  
 
 libpengine_la_LDFLAGS	= -version-info 16:0:0

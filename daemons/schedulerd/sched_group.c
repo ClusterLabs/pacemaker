@@ -11,7 +11,7 @@
 #include <crm/msg_xml.h>
 
 #include <sched_allocate.h>
-#include <utils.h>
+#include <sched_utils.h>
 
 #define VARIANT_GROUP 1
 #include <lib/pengine/variant.h>

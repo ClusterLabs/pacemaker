@@ -12,7 +12,7 @@
 #include <crm/msg_xml.h>
 #include <sched_allocate.h>
 #include <sched_notif.h>
-#include <utils.h>
+#include <sched_utils.h>
 #include <crm/services.h>
 
 // The controller removes the resource from the CIB, making this redundant

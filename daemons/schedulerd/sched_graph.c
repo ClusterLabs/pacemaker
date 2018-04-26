@@ -16,7 +16,7 @@
 #include <glib.h>
 
 #include <sched_allocate.h>
-#include <utils.h>
+#include <sched_utils.h>
 
 void update_colo_start_chain(action_t * action);
 gboolean rsc_update_action(action_t * first, action_t * then, enum pe_ordering type);

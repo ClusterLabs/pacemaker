@@ -9,7 +9,7 @@
 #include <crm/msg_xml.h>
 #include <sched_allocate.h>
 #include <sched_notif.h>
-#include <utils.h>
+#include <sched_utils.h>
 
 typedef struct notify_entry_s {
     resource_t *rsc;

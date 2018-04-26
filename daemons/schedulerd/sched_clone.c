@@ -10,7 +10,7 @@
 #include <crm/msg_xml.h>
 #include <sched_allocate.h>
 #include <sched_notif.h>
-#include <utils.h>
+#include <sched_utils.h>
 
 #define VARIANT_CLONE 1
 #include <lib/pengine/variant.h>
