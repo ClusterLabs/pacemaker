@@ -6,7 +6,7 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
-USAGE_TEXT="Usage: cts-pengine [<options>]
+USAGE_TEXT="Usage: cts-scheduler [<options>]
 Options:
  --help                 Display this text, then exit
  -V, --verbose          Display any differences from expected output
@@ -84,7 +84,7 @@ function show_test() {
     printf "  Test %-25s $*\n" "$name:"
 }
 
-# Normalize policy engine output for comparison
+# Normalize scheduler output for comparison
 normalize() {
     for NORMALIZE_FILE in "$@"; do
         # sed -i is not portable :-(

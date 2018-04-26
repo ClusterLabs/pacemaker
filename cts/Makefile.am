@@ -16,7 +16,7 @@ EXTRA_DIST      = $(cts_SCRIPTS) $(cts_DATA)
 # and command-specific test data should be in a command-specific subdirectory.
 #
 testdir		= $(datadir)/$(PACKAGE)/tests
-test_SCRIPTS	= cts-coverage cts-regression cts-cli cts-exec cts-pengine \
+test_SCRIPTS	= cts-coverage cts-regression cts-cli cts-exec cts-scheduler \
 		  cts-stonithd
 test_DATA	= README.md valgrind-pcmk.suppressions
 
@@ -56,25 +56,25 @@ clidir		= $(testdir)/cli
 cli_DATA	= cli/regression.dates.exp cli/regression.tools.exp \
 		  cli/regression.acls.exp cli/regression.validity.exp
 
-PE_TESTS	= $(wildcard pengine/*.scores)
-pedir		= $(testdir)/pengine
+PE_TESTS	= $(wildcard scheduler/*.scores)
+pedir		= $(testdir)/scheduler
 pe_DATA		= $(PE_TESTS) \
 		  $(PE_TESTS:%.scores=%.xml) \
 		  $(PE_TESTS:%.scores=%.exp) \
 		  $(PE_TESTS:%.scores=%.dot) \
 		  $(PE_TESTS:%.scores=%.summary) \
-		  $(wildcard pengine/*.stderr)
+		  $(wildcard scheduler/*.stderr)
 
-# For "make check", run a single pengine test
-TESTS = pengine/bug-rh-1097457.xml
+# For "make check", run a single scheduler test
+TESTS = scheduler/bug-rh-1097457.xml
 TEST_EXTENSIONS = .xml
-XML_LOG_COMPILER = ./cts-pengine
+XML_LOG_COMPILER = ./cts-scheduler
 AM_XML_LOG_FLAGS = -V --run
 
-pe-list:
-	echo $(shell ls -1 pengine/*.xml)
+scheduler-list:
+	echo $(shell ls -1 scheduler/*.xml)
 
 clean-local:
-	rm -f pengine/*.pe.*
+	rm -f scheduler/*.pe.*
 
 SUBDIRS	= benchmark

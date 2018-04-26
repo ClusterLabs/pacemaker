@@ -16,13 +16,13 @@ Options:
  -V, --verbose   Increase test verbosity
  -v, --valgrind  Run test commands under valgrind
 
-Tests (default tests are 'pengine cli exec'):
- pengine           Policy engine
+Tests (default tests are 'scheduler cli exec'):
+ scheduler         Action scheduler
  cli               Command-line tools
  exec              Local resource agent executor
  pacemaker_remote  Resource agent executor in remote mode
  fencing           Fencing daemon
- all               Synonym for 'pengine cli exec fencing'"
+ all               Synonym for 'scheduler cli exec fencing'"
 
 # If readlink supports -e (i.e. GNU), use it
 readlink -e / >/dev/null 2>/dev/null
@@ -78,7 +78,7 @@ add_test() {
     local TEST="$1"
 
     case "$TEST" in
-        pengine|exec|pacemaker_remote|fencing|cli)
+        scheduler|exec|pacemaker_remote|fencing|cli)
             if [[ ! $tests =~ $TEST ]]; then
                 tests="$tests $TEST"
             fi
@@ -98,12 +98,12 @@ run_test() {
     info "Executing the $t regression tests"
     info "============================================================"
     case $t in
-        pengine)
-            if [ -x $test_home/cts-pengine ]; then
-                $test_home/cts-pengine $verbose $valgrind
+        scheduler)
+            if [ -x $test_home/cts-scheduler ]; then
+                $test_home/cts-scheduler $verbose $valgrind
                 rc=$?
             else
-                error "pengine regression test not found"
+                error "scheduler regression test not found"
                 rc=$CRM_EX_NOT_INSTALLED
             fi
             ;;
@@ -187,12 +187,12 @@ while [ $# -gt 0 ] ; do
             valgrind="-v"
             shift
             ;;
-        pengine|exec|pacemaker_remote|fencing|cli)
+        scheduler|exec|pacemaker_remote|fencing|cli)
             add_test $1
             shift
             ;;
         all)
-            add_test pengine
+            add_test scheduler
             add_test cli
             add_test exec
             add_test fencing
@@ -208,7 +208,7 @@ while [ $# -gt 0 ] ; do
 done
 
 if [ -z "$tests" ]; then
-    add_test pengine
+    add_test scheduler
     add_test cli
     add_test exec
 fi

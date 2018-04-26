@@ -5,7 +5,7 @@
         <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.18-685.48c9a80.git.el7-48c9a80"/>
         <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
-        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="cts-pengine"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="cts-scheduler"/>
         <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1521153842"/>
       </cluster_property_set>
     </crm_config>
