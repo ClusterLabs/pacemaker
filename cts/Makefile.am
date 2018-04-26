@@ -17,7 +17,7 @@ EXTRA_DIST      = $(cts_SCRIPTS) $(cts_DATA)
 #
 testdir		= $(datadir)/$(PACKAGE)/tests
 test_SCRIPTS	= cts-coverage cts-regression cts-cli cts-exec cts-scheduler \
-		  cts-stonithd
+		  cts-fencing
 test_DATA	= README.md valgrind-pcmk.suppressions
 
 ctslibdir	= $(pythondir)/cts

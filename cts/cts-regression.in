@@ -21,7 +21,7 @@ Tests (default tests are 'scheduler cli exec'):
  cli               Command-line tools
  exec              Local resource agent executor
  pacemaker_remote  Resource agent executor in remote mode
- fencing           Fencing daemon
+ fencing           Fencer
  all               Synonym for 'scheduler cli exec fencing'"
 
 # If readlink supports -e (i.e. GNU), use it
@@ -126,8 +126,8 @@ run_test() {
             fi
             ;;
         fencing)
-            if [ -x $test_home/cts-stonithd ]; then
-                run_as_root $test_home/cts-stonithd
+            if [ -x $test_home/cts-fencing ]; then
+                run_as_root $test_home/cts-fencing
                 rc=$?
             else
                 error "fencing regression test not found"

@@ -67,9 +67,9 @@ Doxyfile
 /cts/cts-cli
 /cts/cts-coverage
 /cts/cts-exec
+/cts/cts-fencing
 /cts/cts-regression
 /cts/cts-scheduler
-/cts/cts-stonithd
 /cts/fence_dummy
 /cts/lxc_autogen.sh
 /cts/pacemaker-cts-dummyd
