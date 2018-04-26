@@ -2575,7 +2575,7 @@ class RemoteLXC(CTSTest):
             # ms resource used to be a clone.  As a result it looks like that 
             # resource is running in multiple locations when it shouldn't... But in
             # this instance we know why this error is occurring and that it is expected.
-            r"Calculated [Tt]ransition .* /var/lib/pacemaker/pengine/pe-error",
+            r"Calculated [Tt]ransition .*pe-error",
             r"Resource lxc-ms .* is active on 2 nodes attempting recovery",
             r"Unknown operation: fail",
             r"(ERROR|error): sending stonithRA op to stonithd failed.",
@@ -3049,7 +3049,7 @@ class RemoteStonithd(RemoteDriver):
             r"crmd.*:\s+error.*: Operation remote-.*_monitor",
             r"crmd.*:\s+error.*: Result of monitor operation for remote-.*",
             r"pengine.*:\s+Recover remote-.*\s*\(.*\)",
-            r"Calculated [Tt]ransition .* /var/lib/pacemaker/pengine/pe-error",
+            r"Calculated [Tt]ransition .*pe-error",
             r"error.*: Resource .*ocf::.* is active on 2 nodes attempting recovery",
         ]
 
