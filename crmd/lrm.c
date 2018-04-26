@@ -1722,7 +1722,6 @@ do_lrm_delete(ha_msg_input_t *input, lrm_state_t *lrm_state,
         }
         send_direct_ack(from_host, from_sys, NULL, op, rsc->id);
         lrmd_free_event(op);
-        lrmd_free_rsc_info(rsc);
         return;
     }
 #endif
