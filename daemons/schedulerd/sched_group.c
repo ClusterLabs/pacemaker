@@ -10,7 +10,7 @@
 #include <pengine.h>
 #include <crm/msg_xml.h>
 
-#include <allocate.h>
+#include <sched_allocate.h>
 #include <utils.h>
 
 #define VARIANT_GROUP 1

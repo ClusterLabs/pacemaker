@@ -15,7 +15,7 @@
 
 #include <glib.h>
 
-#include <allocate.h>
+#include <sched_allocate.h>
 #include <utils.h>
 
 void update_colo_start_chain(action_t * action);

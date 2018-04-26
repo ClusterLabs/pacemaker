@@ -7,7 +7,7 @@
 
 #include <crm_internal.h>
 #include <crm/msg_xml.h>
-#include <allocate.h>
+#include <sched_allocate.h>
 #include <utils.h>
 
 void

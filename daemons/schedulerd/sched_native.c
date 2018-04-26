@@ -10,7 +10,7 @@
 #include <pengine.h>
 #include <crm/pengine/rules.h>
 #include <crm/msg_xml.h>
-#include <allocate.h>
+#include <sched_allocate.h>
 #include <notif.h>
 #include <utils.h>
 #include <crm/services.h>

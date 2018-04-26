@@ -32,7 +32,7 @@
 
 #include <crm/cib/internal.h>
 #include <crm/pengine/status.h>
-#include <allocate.h>
+#include <sched_allocate.h>
 
 #include <internal.h>
 

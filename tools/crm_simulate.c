@@ -22,7 +22,7 @@
 #include <crm/transition.h>
 #include <crm/common/iso8601.h>
 #include <crm/pengine/status.h>
-#include <allocate.h>
+#include <sched_allocate.h>
 #include "fake_transition.h"
 
 cib_t *global_cib = NULL;

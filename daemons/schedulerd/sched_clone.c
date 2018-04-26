@@ -8,10 +8,9 @@
 #include <crm_internal.h>
 
 #include <crm/msg_xml.h>
-#include <allocate.h>
+#include <sched_allocate.h>
 #include <notif.h>
 #include <utils.h>
-#include <allocate.h>
 
 #define VARIANT_CLONE 1
 #include <lib/pengine/variant.h>

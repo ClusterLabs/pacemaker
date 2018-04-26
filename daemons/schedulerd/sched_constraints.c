@@ -20,7 +20,7 @@
 
 #include <crm/pengine/status.h>
 #include <pengine.h>
-#include <allocate.h>
+#include <sched_allocate.h>
 #include <utils.h>
 #include <crm/pengine/rules.h>
 

@@ -25,7 +25,7 @@
 
 #include <glib.h>
 #include <pengine.h>
-#include <allocate.h>
+#include <sched_allocate.h>
 #include <libxml/parser.h>
 
 gboolean use_stdin = FALSE;
