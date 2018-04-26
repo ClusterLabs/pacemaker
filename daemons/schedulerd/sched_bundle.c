@@ -9,7 +9,7 @@
 
 #include <crm/msg_xml.h>
 #include <sched_allocate.h>
-#include <notif.h>
+#include <sched_notif.h>
 #include <utils.h>
 
 #define VARIANT_CONTAINER 1

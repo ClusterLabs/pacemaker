@@ -8,7 +8,7 @@
 #include <crm_internal.h>
 #include <crm/msg_xml.h>
 #include <sched_allocate.h>
-#include <notif.h>
+#include <sched_notif.h>
 #include <utils.h>
 
 typedef struct notify_entry_s {

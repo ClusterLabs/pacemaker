@@ -27,7 +27,9 @@ endif
 
 ## SOURCES
 
-noinst_HEADERS	= sched_allocate.h notif.h utils.h pengine.h
+noinst_HEADERS	= sched_allocate.h \
+		  sched_notif.h \
+		  utils.h pengine.h
 
 libpengine_la_LDFLAGS	= -version-info 16:0:0
 
