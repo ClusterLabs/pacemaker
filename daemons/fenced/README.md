@@ -3,8 +3,8 @@
 * `pacemaker-fenced.c`, `pacemaker-fenced.h`, `fenced_commands.c`,
   `fenced_remote.c`, `pacemaker-fenced.7`: pacemaker-fenced (the fencer) and
    its man page
-* `fence_dummy`, `fence_legacy`, `fence_legacy.8`:
-  Pacemaker-supplied fence agents and their man pages
+* `fence_legacy`, `fence_legacy.8`: Pacemaker-supplied wrapper for
+   LHA fence agents and its man page
 * `cts-fence-helper.c`: `cts-fence-helper` command-line tool
 
 # How fencing requests are handled
