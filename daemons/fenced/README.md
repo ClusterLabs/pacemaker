@@ -2,8 +2,9 @@
 
 * `admin.c`, `stonith_admin.8`: `stonith_admin` command-line tool and its man
   page
-* `commands.c`, `pacemakerd-fenced.h`, `main.c`, `remote.c`, `pacemaker-fenced.7`:
-  pacemaker-fenced (the fencer) and its man page
+* `pacemaker-fenced.c`, `pacemaker-fenced.h`, `fenced_commands.c`,
+  `fenced_remote.c`, `pacemaker-fenced.7`: pacemaker-fenced (the fencer) and
+   its man page
 * `fence_dummy`, `fence_legacy`, `fence_legacy.8`:
   Pacemaker-supplied fence agents and their man pages
 * `test.c`: `stonith-test` command-line tool

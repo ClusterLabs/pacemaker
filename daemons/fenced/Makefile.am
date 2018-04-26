@@ -45,6 +45,8 @@ pacemaker_fenced_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la		\
 				  $(top_builddir)/lib/pengine/libpe_status.la		\
 				  $(top_builddir)/daemons/schedulerd/libpengine.la	\
 				  $(CLUSTERLIBS)
-pacemaker_fenced_SOURCES	= main.c commands.c remote.c
+pacemaker_fenced_SOURCES	= pacemaker-fenced.c \
+				  fenced_commands.c \
+				  fenced_remote.c
 
 CLEANFILES = $(man7_MANS) $(man8_MANS)
