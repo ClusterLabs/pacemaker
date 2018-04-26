@@ -34,7 +34,7 @@
 #include <crm/pengine/status.h>
 #include <sched_allocate.h>
 
-#include <internal.h>
+#include <pacemaker-fenced.h>
 
 char *stonith_our_uname = NULL;
 char *stonith_our_uuid = NULL;

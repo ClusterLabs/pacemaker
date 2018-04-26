@@ -35,7 +35,7 @@
 #  include <crm/common/cib_secrets.h>
 #endif
 
-#include <internal.h>
+#include <pacemaker-fenced.h>
 
 GHashTable *device_list = NULL;
 GHashTable *topology = NULL;

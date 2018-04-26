@@ -32,7 +32,7 @@
 #include <crm/common/xml.h>
 
 #include <crm/common/util.h>
-#include <internal.h>
+#include <pacemaker-fenced.h>
 
 #define TIMEOUT_MULTIPLY_FACTOR 1.2
 

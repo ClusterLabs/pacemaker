@@ -15,7 +15,7 @@ halib_PROGRAMS	= pacemaker-fenced stonith-test
 sbin_PROGRAMS	= stonith_admin
 sbin_SCRIPTS	= fence_legacy
 
-noinst_HEADERS	= internal.h
+noinst_HEADERS	= pacemaker-fenced.h
 
 if BUILD_XML_HELP
 man7_MANS	= pacemaker-fenced.7
