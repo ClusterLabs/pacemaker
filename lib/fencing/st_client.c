@@ -289,7 +289,7 @@ stonith_api_remove_level(stonith_t * st, int options, const char *node, int leve
 
 /*!
  * \internal
- * \brief Create XML for stonithd topology level registration request
+ * \brief Create XML for fence topology level registration request
  *
  * \param[in] node        If not NULL, target level by this node name
  * \param[in] pattern     If not NULL, target by node name using this regex
@@ -411,7 +411,7 @@ append_arg(const char *key, const char *value, char **args)
 static void
 append_config_arg(gpointer key, gpointer value, gpointer user_data)
 {
-    /* stonithd will filter action out when it registers the device,
+    /* The fencer will filter action out when it registers the device,
      * but ignore it here just in case any other library callers
      * fail to do so.
      */
@@ -1134,7 +1134,7 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
     crm_trace("looking up %s/%s metadata", agent, provider);
 
     /* By having this in a library, we can access it from stonith_admin
-     * when neither the executor nor stonith-ng are running, which is
+     * when neither the executor nor the fencer are running, which is
      * important for higher-level tools.
      */
 
@@ -1597,7 +1597,7 @@ stonith_api_signoff(stonith_t * stonith)
 {
     stonith_private_t *native = stonith->st_private;
 
-    crm_debug("Signing out of the STONITH Service");
+    crm_debug("Disconnecting from the fencer");
 
     if (native->source != NULL) {
         /* Attached to mainloop */
@@ -1695,8 +1695,8 @@ stonith_perform_callback(stonith_t * stonith, xmlNode * msg, int call_id, int rc
         invoke_callback(stonith, call_id, rc, local_blob.user_data, local_blob.callback);
 
     } else if (private->op_callback == NULL && rc != pcmk_ok) {
-        crm_warn("STONITH command failed: %s", pcmk_strerror(rc));
-        crm_log_xml_debug(msg, "Failed STONITH Update");
+        crm_warn("Fencing command failed: %s", pcmk_strerror(rc));
+        crm_log_xml_debug(msg, "Failed fence update");
     }
 
     if (private->op_callback != NULL) {
@@ -1777,7 +1777,7 @@ stonith_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata)
     blob.stonith = st;
     blob.xml = string2xml(buffer);
     if (blob.xml == NULL) {
-        crm_warn("Received a NULL msg from STONITH service: %s.", buffer);
+        crm_warn("Received malformed message from fencer: %s", buffer);
         return 0;
     }
 
@@ -1828,7 +1828,7 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
         if (native->ipc && crm_ipc_connect(native->ipc)) {
             *stonith_fd = crm_ipc_get_fd(native->ipc);
         } else if (native->ipc) {
-            crm_perror(LOG_ERR, "Connection to STONITH manager failed");
+            crm_perror(LOG_ERR, "Connection to fencer failed");
             rc = -ENOTCONN;
         }
 
@@ -1890,11 +1890,11 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
 #if HAVE_MSGFROMIPC_TIMEOUT
         stonith->call_timeout = MAX_IPC_DELAY;
 #endif
-        crm_debug("Connection to STONITH successful");
+        crm_debug("Connection to fencer successful");
         return pcmk_ok;
     }
 
-    crm_debug("Connection to STONITH failed: %s", pcmk_strerror(rc));
+    crm_debug("Connection to fencer failed: %s", pcmk_strerror(rc));
     stonith->cmds->disconnect(stonith);
     return rc;
 }
@@ -2013,7 +2013,7 @@ stonith_api_add_callback(stonith_t * stonith, int call_id, int timeout, int opti
             crm_trace("Call failed, calling %s: %s", callback_name, pcmk_strerror(call_id));
             invoke_callback(stonith, call_id, call_id, user_data, callback);
         } else {
-            crm_warn("STONITH call failed: %s", pcmk_strerror(call_id));
+            crm_warn("Fencer call failed: %s", pcmk_strerror(call_id));
         }
         return FALSE;
     }
@@ -2208,7 +2208,7 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
     }
 
     crm_xml_add_int(op_msg, F_STONITH_TIMEOUT, timeout);
-    crm_trace("Sending %s message to STONITH service, Timeout: %ds", op, timeout);
+    crm_trace("Sending %s message to fencer with timeout %ds", op, timeout);
 
     rc = crm_ipc_send(native->ipc, op_msg, ipc_flags, 1000 * (timeout + 60), &op_reply);
     free_xml(op_msg);
@@ -2262,7 +2262,7 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
 
   done:
     if (crm_ipc_connected(native->ipc) == FALSE) {
-        crm_err("STONITH disconnected");
+        crm_err("Fencer disconnected");
         stonith->state = stonith_disconnected;
     }
 

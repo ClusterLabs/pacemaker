@@ -51,7 +51,7 @@ enum crm_proc_flag {
     crm_proc_attrd     = 0x00001000,
 
     crm_proc_stonithd  = 0x00002000,
-    crm_proc_stonith_ng= 0x00100000,
+    crm_proc_fenced    = 0x00100000,
 
     crm_proc_schedulerd = 0x00010000,
     crm_proc_te        = 0x00020000,
@@ -111,8 +111,8 @@ peer2text(enum crm_proc_flag proc)
         case crm_proc_stonithd:
             text = "stonithd";
             break;
-        case crm_proc_stonith_ng:
-            text = "stonith-ng";
+        case crm_proc_fenced:
+            text = "pacemaker-fenced";
             break;
         case crm_proc_cpg:
             text = "corosync-cpg";

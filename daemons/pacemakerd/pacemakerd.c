@@ -72,7 +72,10 @@ static pcmk_child_t pcmk_children[] = {
         0, crm_proc_schedulerd, 5, 0, TRUE, "pacemaker-schedulerd",
         CRM_DAEMON_USER, CRM_DAEMON_DIR "/pacemaker-schedulerd"
     },
-    { 0, crm_proc_stonith_ng, 2, 0, TRUE,  "stonith-ng", NULL,            CRM_DAEMON_DIR"/stonithd" },
+    {
+        0, crm_proc_fenced,     2, 0, TRUE, "pacemaker-fenced",
+        NULL, CRM_DAEMON_DIR "/pacemaker-fenced"
+    },
 };
 /* *INDENT-ON* */
 
@@ -688,9 +691,6 @@ check_active_before_startup_processes(gpointer user_data)
                 continue;
             } else {
                 const char *name = pcmk_children[lpc].name;
-                if (pcmk_children[lpc].flag == crm_proc_stonith_ng) {
-                    name = "stonithd";
-                }
 
                 if (crm_pid_active(pcmk_children[lpc].pid, name) != 1) {
                     crm_notice("Process %s terminated (pid=%d)",
@@ -737,9 +737,6 @@ find_and_track_existing_processes(void)
 
             if (pcmk_children[i].start_seq == 0) {
                 continue;
-            }
-            if (pcmk_children[i].flag == crm_proc_stonith_ng) {
-                name = "stonithd";
             }
             if (safe_str_eq(entry_name, name) && (crm_pid_active(pid, NULL) == 1)) {
                 crm_notice("Tracking existing %s process (pid=%d)", name, pid);

@@ -26,7 +26,7 @@ class crm_corosync(crm_common):
     def Components(self):
         complist = []
         if not len(list(self.fullcomplist.keys())):
-            for c in ["cib", "pacemaker-controld", "pacemaker-attrd", "pacemaker-execd" ]:
+            for c in [ "cib", "pacemaker-controld", "pacemaker-attrd", "pacemaker-execd", "pacemaker-fenced" ]:
                 self.fullcomplist[c] = Process(
                     self, c, 
                     pats = self.templates.get_component(self.name, c),
@@ -38,13 +38,6 @@ class crm_corosync(crm_common):
                 self, "pacemaker-schedulerd", 
                 dc_pats = self.templates.get_component(self.name, "pacemaker-schedulerd"),
                 badnews_ignore = self.templates.get_component(self.name, "pacemaker-schedulerd-ignore"),
-                common_ignore = self.templates.get_component(self.name, "common-ignore"))
-
-            # stonith-ng's process name is different from its component name
-            self.fullcomplist["stonith-ng"] = Process(
-                self, "stonith-ng", process="stonithd", 
-                pats = self.templates.get_component(self.name, "stonith"),
-                badnews_ignore = self.templates.get_component(self.name, "stonith-ignore"),
                 common_ignore = self.templates.get_component(self.name, "common-ignore"))
 
             # add (or replace) extra components
@@ -63,7 +56,7 @@ class crm_corosync(crm_common):
                 if key in vgrind:
                     self.log("Filtering %s from the component list as it is being profiled by valgrind" % key)
                     continue
-            if key == "stonith-ng" and not self.Env["DoFencing"]:
+            if key == "pacemaker-fenced" and not self.Env["DoFencing"]:
                 continue
             complist.append(self.fullcomplist[key])
 

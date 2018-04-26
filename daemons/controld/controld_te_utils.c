@@ -143,14 +143,14 @@ fail_incompletable_stonith(crm_graph_t * graph)
                 action->failed = TRUE;
                 last_action = action->xml;
                 update_graph(graph, action);
-                crm_notice("Failing action %d (%s): STONITHd terminated",
+                crm_notice("Failing action %d (%s): fencer terminated",
                            action->id, ID(action->xml));
             }
         }
     }
 
     if (last_action != NULL) {
-        crm_warn("STONITHd failure resulted in un-runnable actions");
+        crm_warn("Fencer failure resulted in unrunnable actions");
         abort_for_stonith_failure(tg_restart, NULL, last_action);
         return TRUE;
     }

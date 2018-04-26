@@ -68,7 +68,7 @@ one set of meta-attributes and one set of instance attributes.  This
 can be revisited if it becomes a significant limitation for people.
 ===========
 
-See the table below or run `man stonithd` to see special instance attributes
+See the table below or run `man pacemaker-fenced` to see special instance attributes
 that may be set for any fencing resource, regardless of fence agent.
 
 .Additional Properties of Fencing Resources
@@ -385,15 +385,15 @@ http://www.clusterlabs.org/doc/[Clusters from Scratch] guide for those details.
 
 . If the device does not know how to fence nodes based on their uname,
   you may also need to set the special +pcmk_host_map+ parameter.  See
-  `man stonithd` for details.
+  `man pacemaker-fenced` for details.
 
 . If the device does not support the `list` command, you may also need
   to set the special +pcmk_host_list+ and/or +pcmk_host_check+
-  parameters.  See `man stonithd` for details.
+  parameters.  See `man pacemaker-fenced` for details.
 
 . If the device does not expect the victim to be specified with the
   `port` parameter, you may also need to set the special
-  +pcmk_host_argument+ parameter. See `man stonithd` for details.
+  +pcmk_host_argument+ parameter. See `man pacemaker-fenced` for details.
 
 . Upload it into the CIB using cibadmin:
 +

@@ -36,7 +36,7 @@
 
 #define TIMEOUT_MULTIPLY_FACTOR 1.2
 
-/* When one stonithd queries its peers for devices able to handle a fencing
+/* When one fencer queries its peers for devices able to handle a fencing
  * request, each peer will reply with a list of such devices available to it.
  * Each reply will be parsed into a st_query_result_t, with each device's
  * information kept in a device_properties_t.

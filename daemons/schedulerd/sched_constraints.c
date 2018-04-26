@@ -1362,13 +1362,14 @@ new_rsc_order(resource_t * lh_rsc, const char *lh_task,
     CRM_CHECK(rh_rsc != NULL, return -1);
     CRM_CHECK(rh_task != NULL, return -1);
 
-    /* We no longer need to test if these reference stonith resources
-     * now that stonithd has access to them even when they're not "running"
-     *
+#if 0
+    /* We do not need to test if these reference stonith resources
+     * because the fencer has access to them even when they're not "running"
+     */
     if (validate_order_resources(lh_rsc, lh_task, rh_rsc, rh_task)) {
         return -1;
     }
-    */
+#endif
 
     lh_key = generate_op_key(lh_rsc->id, lh_task, 0);
     rh_key = generate_op_key(rh_rsc->id, rh_task, 0);

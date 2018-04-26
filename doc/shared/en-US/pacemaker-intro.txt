@@ -91,7 +91,7 @@ Pacemaker itself is composed of multiple daemons that work together:
  * pacemaker-execd
  * cib
  * pacemaker-schedulerd
- * stonithd
+ * pacemaker-fenced
 
 .Internal Components
 image::images/pcmk-internals.png["Pacemaker software components",align="center",scaledwidth="65%"]
@@ -115,10 +115,10 @@ cluster.
 The 'local executor' (pacemaker-execd) handles requests to execute
 resource agents on the local cluster node, and returns the result.
 
-The 'STONITH daemon' (stonithd) handles requests to fence nodes. Given a target
-node, stonithd decides which cluster node(s) should execute which fencing
+The 'fencer' (pacemaker-fenced) handles requests to fence nodes. Given a target
+node, the fencer decides which cluster node(s) should execute which fencing
 device(s), and calls the necessary fencing agents (either directly, or via
-requests to stonithd peers on other nodes), and returns the result.
+requests to the fencer peers on other nodes), and returns the result.
 
 The 'controller' (pacemaker-controld) is Pacemaker's coordinator,
 maintaining a consistent view of the cluster membership and orchestrating all
@@ -130,7 +130,7 @@ process (or the node it is on) fail, a new one is quickly established.
 The DC responds to cluster events by taking a current snapshot of the CIB,
 feeding it to the scheduler, then asking the executors (either directly on
 the local node, or via requests to controller peers on other nodes) and
-stonithd to execute any necessary actions.
+the fencer to execute any necessary actions.
 
 .Old daemon names
 [NOTE]

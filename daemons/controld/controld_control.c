@@ -121,7 +121,7 @@ do_shutdown(long long action,
         /* Prevent it from coming up again */
         clear_bit(fsa_input_register, R_ST_REQUIRED);
 
-        crm_info("Disconnecting STONITH...");
+        crm_info("Disconnecting from fencer");
         stonith_api->cmds->disconnect(stonith_api);
     }
 }

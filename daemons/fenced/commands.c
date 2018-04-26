@@ -168,10 +168,10 @@ get_action_delay_base(stonith_device_t * device, const char * action)
  *       set the same way as start/stop/monitor timeouts, i.e. with an
  *       <operation> entry in the fencing resource configuration. However that
  *       is insufficient because fencing devices may be registered directly via
- *       the STONITH register_device() API instead of going through the CIB
+ *       the fencer's register_device() API instead of going through the CIB
  *       (e.g. stonith_admin uses it for its -R option, and the executor uses it
  *       to ensure a device is registered when a command is issued). As device
- *       properties, pcmk_*_timeout parameters can be grabbed by stonithd when
+ *       properties, pcmk_*_timeout parameters can be grabbed by the fencer when
  *       the device is registered, whether by CIB change or API call.
  */
 static int
@@ -1904,7 +1904,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
         crm_xml_add(dev, "agent", device->agent);
         crm_xml_add_int(dev, F_STONITH_DEVICE_VERIFIED, device->verified);
 
-        /* If the originating stonithd wants to reboot the node, and we have a
+        /* If the originating fencer wants to reboot the node, and we have a
          * capable device that doesn't support "reboot", remap to "off" instead.
          */
         if (is_not_set(device->flags, st_device_supports_reboot)
@@ -1925,7 +1925,7 @@ stonith_query_capable_device_cb(GList * devices, void *user_data)
              * disallowed for the local host. However if only one or two are
              * disallowed, we send back the results and mark which ones are
              * disallowed. If "reboot" is disallowed, this might cause problems
-             * with older stonithd versions, which won't check for it. Older
+             * with older fencer versions, which won't check for it. Older
              * versions will ignore "off" and "on", so they are not a problem.
              */
             add_disallowed(dev, action, device, query->target,
@@ -2202,9 +2202,9 @@ st_child_done(GPid pid, int rc, const char *output, gpointer user_data)
         }
 
         /* Duplicate merging will do the right thing for either type of remapped
-         * reboot. If the executing stonithd remapped an unsupported reboot to
+         * reboot. If the executing fencer remapped an unsupported reboot to
          * off, then cmd->action will be reboot and will be merged with any
-         * other reboot requests. If the originating stonithd remapped a
+         * other reboot requests. If the originating fencer remapped a
          * topology reboot to off then on, we will get here once with
          * cmd->action "off" and once with "on", and they will be merged
          * separately with similar requests.

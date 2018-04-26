@@ -130,20 +130,20 @@ interchangeably here as well as in other texts.
 
 The stonith subsystem consists of two components:
 
-- stonithd
+- pacemaker-fenced
 
 - stonith plugins
 
-=== stonithd
+=== pacemaker-fenced
 
-stonithd is a daemon which may be accessed by the local processes
+pacemaker-fenced is a daemon which may be accessed by the local processes
 or over the network. It accepts commands which correspond to
 fencing operations: reset, power-off, and power-on.  It may also
 check the status of the fencing device.
 
-stonithd runs on every node in the CRM HA cluster. The
-stonithd instance running on the DC node receives a fencing
-request from the CRM. It is up to this and other stonithd
+pacemaker-fenced runs on every node in the CRM HA cluster. The
+pacemaker-fenced instance running on the DC node receives a fencing
+request from the CRM. It is up to this and other pacemaker-fenced
 programs to carry out the desired fencing operation.
 
 === Stonith plugins
@@ -151,7 +151,7 @@ programs to carry out the desired fencing operation.
 For every supported fencing device there is a stonith plugin
 which is capable of controlling that device. A stonith plugin is
 the interface to the fencing device. All stonith plugins look the
-same to stonithd, but are quite different on the other side
+same to pacemaker-fenced, but are quite different on the other side
 reflecting the nature of the fencing device.
 
 Some plugins support more than one device. A typical example is
@@ -193,7 +193,7 @@ A short help text is also available:
 	For more information see
 	http://publib-b.boulder.ibm.com/redbooks.nsf/RedbookAbstracts/SG247038.html
 
-.You just said that there is stonithd and stonith plugins. What's with these resources now?
+.You just said that there is pacemaker-fenced and stonith plugins. What's with these resources now?
 **************************
 Resources of class stonith are just a representation of stonith
 plugins in the CIB. Well, a bit more: apart from the fencing
@@ -280,12 +280,7 @@ There is always certain probability that the stonith operation is
 going to fail. Hence, a stonith operation on the node which is
 the executioner too is not reliable. If the node is reset, then
 it cannot send the notification about the fencing operation
-outcome. The only way to do that is to assume that the operation
-is going to succeed and send the notification beforehand. Then,
-if the operation fails, we are in trouble.
-
-Given all this, we decided that, by convention, stonithd refuses
-to kill its host.
+outcome.
 **************************
 
 If you haven't already guessed, configuration of a UPS kind of
@@ -426,9 +421,9 @@ avoided whenever possible. But it is OK on one-node clusters.
 `suicide` and `null` are the only exceptions to the "don't shoot my
 host" rule.
 
-.What about that stonithd? You forgot about it, eh?
+.What about that pacemaker-fenced? You forgot about it, eh?
 **************************
-The stonithd daemon, though it is really the master of ceremony,
+The pacemaker-fenced daemon, though it is really the master of ceremony,
 requires no configuration itself. All configuration is stored in
 the CIB.
 **************************

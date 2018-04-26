@@ -36,7 +36,7 @@ membership	pcmk_peer_update.*(lost|memb):
 quorum		(crmd|pacemaker-controld).*crm_update_quorum
 pause		Process.pause.detected
 resources	(lrmd|pacemaker-execd).*rsc:(start|stop)
-stonith		te_fence_node|stonith-ng.*log_oper.*report|stonithd.*(requests|(Succeeded|Failed).to.STONITH|result=)
+stonith		te_fence_node|fenced.*(requests|(Succeeded|Failed).to.|result=)
 start_stop	shutdown.decision|Corosync.Cluster.Engine|corosync.*Initializing.transport|Executive.Service.RELEASE|crm_shutdown:.Requesting.shutdown|pcmk_shutdown:.Shutdown.complete
 "
 

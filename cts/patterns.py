@@ -63,7 +63,7 @@ class BasePatterns(object):
             "Pat:TransitionComplete" : "Transition status: Complete: complete",
 
             "Pat:Fencing_start" : "(Initiating remote operation|Requesting peer fencing ).* (for|of) %s",
-            "Pat:Fencing_ok"    : r"stonith.*:\s*Operation .* of %s by .* for .*@.*: OK",
+            "Pat:Fencing_ok"    : r"pacemaker-fenced.*:\s*Operation .* of %s by .* for .*@.*: OK",
             "Pat:Fencing_recover"    : r"schedulerd.*: Recover %s",
 
             "Pat:RscOpOK"       : r"pacemaker-controld.*:\s+Result of %s operation for %s.*: (0 \()?ok",
@@ -226,21 +226,19 @@ class crm_corosync(BasePatterns):
             r"error:.*Connection to the CPG API failed: Library error",
             r"\[[0-9]+\] exited with status [0-9]+ \(",
             r"cib.*error:.*Corosync connection lost",
-            r"stonith-ng.*error:.*Corosync connection terminated",
-            r"pacemaker-execd.*error:.*Connection to stonith-ng.* (failed|closed)",
+            r"pacemaker-fenced.*error:.*Corosync connection terminated",
             r"pacemaker-controld.*State transition .* S_RECOVERY",
             r"pacemaker-controld.*error:.*Input (I_ERROR|I_TERMINATE ) .*received in state",
             r"pacemaker-controld.*error:.*Could not recover from internal error",
             r"error:.*Connection to cib_(shm|rw).* (failed|closed)",
-            r"error:.*STONITH connection failed",
-            r"error: Connection to stonith-ng.* (failed|closed)",
+            r"error:.*Connection to (fencer|stonith-ng).* (closed|failed|lost)",
             r"crit: Fencing daemon connection failed",
             ]
 
         self.components["corosync"] = [
             r"pacemakerd.*error:.*Connection destroyed",
             r"attrd.*:\s*(crit|error):.*Lost connection to (Corosync|CIB) service",
-            r"stonith.*:\s*(Corosync connection terminated|Shutting down)",
+            r"pacemaker-fenced.*:\s*(Corosync connection terminated|Shutting down)",
             r"cib.*:\s*Corosync connection lost!\s+Exiting.",
             r"pacemaker-controld.*:\s*(connection terminated|Disconnected from Corosync)",
             r"schedulerd.*Scheduling Node .* for STONITH",
@@ -248,9 +246,7 @@ class crm_corosync(BasePatterns):
         ]
 
         self.components["cib-ignore"] = [
-            "pacemaker-execd.*Connection to stonith-ng failed",
-            "pacemaker-execd.*Connection to stonith-ng.* closed",
-            "pacemaker-execd.*LRMD lost STONITH connection",
+            r"pacemaker-execd.*Connection to (fencer|stonith-ng).* (closed|failed|lost)",
             "pacemaker-execd.*STONITH connection failed, finalizing .* pending operations",
             ]
 
@@ -306,24 +302,19 @@ class crm_corosync(BasePatterns):
                     ]
         self.components["pacemaker-schedulerd-ignore"] = []
 
-        self.components["stonith"] = [
-            "Connection to stonith-ng failed",
-            "LRMD lost STONITH connection",
-            "Connection to stonith-ng.* closed",
-            "Fencing daemon connection failed",
+        self.components["pacemaker-fenced"] = [
+            r"error:.*Connection to (fencer|stonith-ng).* (closed|failed|lost)",
+            r"Fencing daemon connection failed",
             r"pacemaker-controld.*:\s*warn.*:\s*Callback already present",
         ]
-        self.components["stonith-ignore"] = [
-            r"schedulerd.*: Recover Fencing",
-            r"Updating failcount for Fencing",
-            r"error:.*Connection to stonith-ng failed",
-            r"error:.*Connection to stonith-ng.*closed \(I/O condition=17\)",
+        self.components["pacemaker-fenced-ignore"] = [
+            r"error:.*Connection to (fencer|stonith-ng).* (closed|failed|lost)",
             r"crit:.*Fencing daemon connection failed",
             r"error:.*Sign-in failed: triggered a retry",
-            "STONITH connection failed, finalizing .* pending operations.",
+            r"Connection to (fencer|stonith-ng) failed, finalizing .* pending operations",
             r"pacemaker-controld.*:\s+Result of .* operation for Fencing.*Error",
         ]
-        self.components["stonith-ignore"].extend(self.components["common-ignore"])
+        self.components["pacemaker-fenced-ignore"].extend(self.components["common-ignore"])
 
 
 class crm_corosync_docker(crm_corosync):

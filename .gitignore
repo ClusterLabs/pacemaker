@@ -117,8 +117,8 @@ cib/cibpipe
 /daemons/execd/pacemaker-remoted
 /daemons/fenced/stonith-test
 /daemons/fenced/stonith_admin
-/daemons/fenced/stonithd
-/daemons/fenced/stonithd.xml
+/daemons/fenced/pacemaker-fenced
+/daemons/fenced/pacemaker-fenced.xml
 /daemons/pacemakerd/pacemakerd
 /daemons/schedulerd/pacemaker-schedulerd
 /daemons/schedulerd/pacemaker-schedulerd.xml

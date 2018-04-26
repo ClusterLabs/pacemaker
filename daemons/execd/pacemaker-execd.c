@@ -46,7 +46,7 @@ static void
 stonith_connection_destroy_cb(stonith_t * st, stonith_event_t * e)
 {
     stonith_api->state = stonith_disconnected;
-    crm_err("STONITH connection lost");
+    crm_err("Connection to fencer lost");
     stonith_connection_failed();
 }
 

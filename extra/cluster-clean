@@ -47,7 +47,7 @@ if [ $kill != 0 ]; then
     cluster-helper $target -- "service corosync stop" &> /dev/null &
     cluster-helper $target -- "service pacemaker stop" &> /dev/null &
 
-    cluster-helper $target -- "killall -q -9 corosync pacemakerd pacemaker-attrd pacemaker-controld pacemaker-execd pacemaker-remoted pacemaker-schedulerd stonithd cib dlm_controld gfs_controld" &> /dev/null
+    cluster-helper $target -- "killall -q -9 corosync pacemakerd pacemaker-attrd pacemaker-controld pacemaker-execd pacemaker-fenced pacemaker-remoted pacemaker-schedulerd cib dlm_controld gfs_controld" &> /dev/null
     cluster-helper $target -- 'kill -9 `pidof valgrind`' &> /dev/null
 
     if [ $kill == 2 ]; then

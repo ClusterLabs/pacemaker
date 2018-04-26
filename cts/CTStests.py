@@ -480,7 +480,7 @@ class StonithdTest(CTSTest):
             self.debug("Waiting for the cluster to recover")
             self.CM.cluster_stable()
 
-            self.debug("Waiting STONITHd node to come back up")
+            self.debug("Waiting for fenced node to come back up")
             self.CM.ns.WaitForAllNodesToComeUp(self.Env["nodes"], 600)
 
             self.logger.log("Fencing command on %s failed to fence %s (rc=%d)" % (origin, node, rc))
@@ -499,7 +499,7 @@ class StonithdTest(CTSTest):
         self.debug("Waiting for the cluster to recover")
         self.CM.cluster_stable()
 
-        self.debug("Waiting STONITHd node to come back up")
+        self.debug("Waiting for fenced node to come back up")
         self.CM.ns.WaitForAllNodesToComeUp(self.Env["nodes"], 600)
 
         self.debug("Waiting for the cluster to re-stabilize with all nodes")
@@ -1238,7 +1238,6 @@ class MaintenanceMode(CTSTest):
             r"Updating failcount for %s" % self.rid,
             r"schedulerd.*: Recover %s\s*\(.*\)" % self.rid,
             r"Unknown operation: fail",
-            r"(ERROR|error): sending stonithRA op to stonithd failed.",
             self.templates["Pat:RscOpOK"] % (self.action, self.rid),
             r"(ERROR|error).*: Action %s_%s_%d .* initiated outside of a transition" % (self.rid, self.action, self.interval),
         ]
@@ -1339,7 +1338,6 @@ class ResourceRecover(CTSTest):
             r"Updating failcount for %s" % self.rid,
             r"schedulerd.*: Recover (%s|%s)\s*\(.*\)" % (self.rid, self.rid_alt),
             r"Unknown operation: fail",
-            r"(ERROR|error): sending stonithRA op to stonithd failed.",
             self.templates["Pat:RscOpOK"] % (self.action, self.rid),
             r"(ERROR|error).*: Action %s_%s_%d .* initiated outside of a transition" % (self.rid, self.action, self.interval),
         ]
@@ -1391,7 +1389,7 @@ class ComponentFail(CTSTest):
         if node_is_dc:
           self.patterns.extend(chosen.dc_pats)
 
-        if chosen.name == "stonith":
+        if chosen.name == "pacemaker-fenced":
             # Ignore actions for STONITH resources
             (rc, lines) = self.rsh(node, "crm_resource -c", None)
             for line in lines:
@@ -1422,7 +1420,7 @@ class ComponentFail(CTSTest):
         self.debug("Waiting for the cluster to recover")
         self.CM.cluster_stable()
 
-        self.debug("Waiting for any STONITHd node to come back up")
+        self.debug("Waiting for any fenced node to come back up")
         self.CM.ns.WaitForAllNodesToComeUp(self.Env["nodes"], 600)
 
         self.debug("Waiting for the cluster to re-stabilize with all nodes")
@@ -2578,7 +2576,6 @@ class RemoteLXC(CTSTest):
             r"Calculated [Tt]ransition .*pe-error",
             r"Resource lxc-ms .* is active on 2 nodes attempting recovery",
             r"Unknown operation: fail",
-            r"(ERROR|error): sending stonithRA op to stonithd failed.",
             r"VirtualDomain.*ERROR: Unable to determine emulator",
         ]
 

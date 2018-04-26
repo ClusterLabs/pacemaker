@@ -1260,7 +1260,7 @@ main(int argc, char **argv)
     crm_cluster_t cluster;
     const char *actions[] = { "reboot", "off", "on", "list", "monitor", "status" };
 
-    crm_log_preinit("stonith-ng", argc, argv);
+    crm_log_preinit(NULL, argc, argv);
     crm_set_options(NULL, "mode [options]", long_options,
                     "Provides a summary of cluster's current state."
                     "\n\nOutputs varying levels of detail in a number of different formats.\n");
@@ -1297,11 +1297,10 @@ main(int argc, char **argv)
 
     if (argc - optind == 1 && safe_str_eq("metadata", argv[optind])) {
         printf("<?xml version=\"1.0\"?><!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n");
-        printf("<resource-agent name=\"stonithd\">\n");
+        printf("<resource-agent name=\"pacemaker-fenced\">\n");
         printf(" <version>1.0</version>\n");
-        printf
-            (" <longdesc lang=\"en\">This is a fake resource that details the instance attributes handled by stonithd.</longdesc>\n");
-        printf(" <shortdesc lang=\"en\">Options available for all stonith resources</shortdesc>\n");
+        printf(" <longdesc lang=\"en\">Instance attributes available for all \"stonith\"-class resources</longdesc>\n");
+        printf(" <shortdesc lang=\"en\">Instance attributes available for all \"stonith\"-class resources</shortdesc>\n");
         printf(" <parameters>\n");
 
         printf("  <parameter name=\"priority\" unique=\"0\">\n");
@@ -1423,7 +1422,7 @@ main(int argc, char **argv)
         crm_help('?', CRM_EX_USAGE);
     }
 
-    crm_log_init("stonith-ng", LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
+    crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     mainloop_add_signal(SIGTERM, stonith_shutdown);
 
     crm_peer_init();

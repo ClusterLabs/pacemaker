@@ -606,7 +606,7 @@ exit 0
 
 %doc %{_mandir}/man7/pacemaker-controld.*
 %doc %{_mandir}/man7/pacemaker-schedulerd.*
-%doc %{_mandir}/man7/stonithd.*
+%doc %{_mandir}/man7/pacemaker-fenced.*
 %doc %{_mandir}/man7/ocf_pacemaker_controld.*
 %doc %{_mandir}/man7/ocf_pacemaker_o2cb.*
 %doc %{_mandir}/man7/ocf_pacemaker_remote.*
@@ -679,7 +679,7 @@ exit 0
 %doc %{_mandir}/man7/*
 %exclude %{_mandir}/man7/pacemaker-controld.*
 %exclude %{_mandir}/man7/pacemaker-schedulerd.*
-%exclude %{_mandir}/man7/stonithd.*
+%exclude %{_mandir}/man7/pacemaker-fenced.*
 %exclude %{_mandir}/man7/ocf_pacemaker_controld.*
 %exclude %{_mandir}/man7/ocf_pacemaker_o2cb.*
 %exclude %{_mandir}/man7/ocf_pacemaker_remote.*

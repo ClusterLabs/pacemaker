@@ -55,15 +55,15 @@ Any flags that do not take arguments, such as +--ssl+, should be passed as +ssl=
 
 . If the device does not know how to fence nodes based on their uname,
   you may also need to set the special *pcmk_host_map* parameter.  See
-  `man stonithd` for details.
+  `man pacemaker-fenced` for details.
 
 . If the device does not support the *list* command, you may also need
   to set the special *pcmk_host_list* and/or *pcmk_host_check*
-  parameters.  See `man stonithd` for details.
+  parameters.  See `man pacemaker-fenced` for details.
 
 . If the device does not expect the victim to be specified with the
   *port* parameter, you may also need to set the special
-  *pcmk_host_argument* parameter. See `man stonithd` for details.
+  *pcmk_host_argument* parameter. See `man pacemaker-fenced` for details.
 
 . Commit the new configuration: `pcs cluster cib-push stonith_cfg`
 

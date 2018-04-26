@@ -7,9 +7,9 @@
 #  pacemaker-attrd
 #  pacemaker-controld
 #  pacemaker-execd
+#  pacemaker-fenced
 #  pacemaker-schedulerd
 #  cib
-#  stonith-ng
 # PCMK_debug=no
 
 # Send detailed log messages to the specified file. Compared to messages logged

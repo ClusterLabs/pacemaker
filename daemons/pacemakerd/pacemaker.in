@@ -151,9 +151,9 @@ stop()
 
 	rm -f "$LOCK_FILE"
 	rm -f "@localstatedir@/run/$prog.pid"
-	killall -q -9 pacemakerd pacemaker-attrd pacemaker-controld \
-		pacemaker-execd pacemaker-schedulerd \
-		stonithd cib
+	killall -q -9 pacemakerd pacemaker-attrd cib \
+		pacemaker-controld pacemaker-execd pacemaker-fenced \
+		pacemaker-schedulerd 
 	success
 	echo
 }

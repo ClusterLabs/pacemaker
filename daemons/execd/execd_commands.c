@@ -999,7 +999,7 @@ stonith_connection_failed(void)
         return;
     }
 
-    crm_err("STONITH connection failed, finalizing %d pending operations.",
+    crm_err("Connection to fencer failed, finalizing %d pending operations",
             g_list_length(cmd_list));
     for (cmd_iter = cmd_list; cmd_iter; cmd_iter = cmd_iter->next) {
         stonith_action_complete(cmd_iter->data, -ENOTCONN);

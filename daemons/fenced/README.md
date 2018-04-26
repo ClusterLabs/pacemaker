@@ -2,8 +2,8 @@
 
 * `admin.c`, `stonith_admin.8`: `stonith_admin` command-line tool and its man
   page
-* `commands.c`, `internal.h`, `main.c`, `remote.c`, `stonithd.7`: stonithd and
-  its man page
+* `commands.c`, `internal.h`, `main.c`, `remote.c`, `pacemaker-fenced.7`:
+  pacemaker-fenced (the fencer) and its man page
 * `fence_dummy`, `fence_legacy`, `fence_legacy.8`:
   Pacemaker-supplied fence agents and their man pages
 * `test.c`: `stonith-test` command-line tool
@@ -15,21 +15,21 @@
 In the broadest terms, stonith works like this:
 
 1. The initiator (an external program such as `stonith_admin`, or the cluster
-   itself via the controller) asks the local `stonithd`, "Hey, can you fence this
+   itself via the controller) asks the local fencer, "Hey, can you fence this
    node?"
-1. The local `stonithd` asks all the `stonithd's` in the cluster (including
+1. The local fencer asks all the fencers in the cluster (including
    itself), "Hey, what fencing devices do you have access to that can fence
    this node?"
-1. Each `stonithd` in the cluster replies with a list of available devices that
+1. Each fencer in the cluster replies with a list of available devices that
    it knows about.
-1. Once the original `stonithd` gets all the replies, it asks the most
-   appropriate `stonithd` peer to actually carry out the fencing. It may send
+1. Once the original fencer gets all the replies, it asks the most
+   appropriate fencer peer to actually carry out the fencing. It may send
    out more than one such request if the target node must be fenced with
    multiple devices.
-1. The chosen `stonithd(s)` call the appropriate fencing resource agent(s) to
-   do the fencing, then replies to the original `stonithd` with the result.
-1. The original `stonithd` broadcasts the result to all `stonithd's`.
-1. Each `stonithd` sends the result to each of its local clients (including, at
+1. The chosen fencer(s) call the appropriate fencing resource agent(s) to
+   do the fencing, then replies to the original fencer with the result.
+1. The original fencer broadcasts the result to all fencers.
+1. Each fencer sends the result to each of its local clients (including, at
    some point, the initiator).
 
 ## Detailed view
@@ -56,19 +56,19 @@ Highlights of the fencing API:
 
 The function calls for a stonith request go something like this as of this writing:
 
-The local `stonithd` receives the client's request via an IPC or messaging
+The local fencer receives the client's request via an IPC or messaging
 layer callback, which calls
 * `stonith_command()`, which (for requests) calls
   * `handle_request()`, which (for `STONITH_OP_FENCE` from a client) calls
     * `initiate_remote_stonith_op()`, which creates a `STONITH_OP_QUERY` XML
       request with the target, desired action, timeout, etc.. then broadcasts
-      the operation to the cluster group (i.e. all `stonithd` instances) and
+      the operation to the cluster group (i.e. all fencer instances) and
       starts a timer. The query is broadcast because (1) location constraints
       might prevent the local node from accessing the stonith device directly,
       and (2) even if the local node does have direct access, another node
       might be preferred to carry out the fencing.
 
-Each `stonithd` receives the original `stonithd's STONITH_OP_QUERY` broadcast
+Each fencer receives the original fencer's STONITH_OP_QUERY` broadcast
 request via IPC or messaging layer callback, which calls:
 * `stonith_command()`, which (for requests) calls
   *  `handle_request()`, which (for `STONITH_OP_QUERY` from a peer) calls
@@ -76,9 +76,9 @@ request via IPC or messaging layer callback, which calls:
       * `get_capable_devices()` with `stonith_query_capable_device_db()` to add
         device information to an XML reply and send it. (A message is
 	considered a reply if it contains `T_STONITH_REPLY`, which is only set
-        by `stonithd` peers, not clients.)
+        by fencer peers, not clients.)
 
-The original `stonithd` receives all peers' `STONITH_OP_QUERY` replies via IPC
+The original fencer receives all peers' `STONITH_OP_QUERY` replies via IPC
 or messaging layer callback, which calls:
 * `stonith_command()`, which (for replies) calls
   * `handle_reply()` which (for `STONITH_OP_QUERY`) calls
@@ -101,7 +101,7 @@ or messaging layer callback, which calls:
 
 Each `STONITH_OP_FENCE` request goes something like this as of this writing:
 
-The chosen peer `stonithd` receives the `STONITH_OP_FENCE` request via IPC or
+The chosen peer fencer receives the `STONITH_OP_FENCE` request via IPC or
 messaging layer callback, which calls:
 * `stonith_command()`, which (for requests) calls
   * `handle_request()`, which (for `STONITH_OP_FENCE` from a peer) calls
@@ -112,24 +112,24 @@ messaging layer callback, which calls:
 	`stonith_fence_get_devices_cb()`), which adds the operation to the
         device's pending operations list and triggers processing.
 
-The chosen peer `stonithd's` mainloop is triggered and calls
+The chosen peer fencer's mainloop is triggered and calls
 * `stonith_device_dispatch()`, which calls
   * `stonith_device_execute()`, which pops off the next item from the device's
     pending operations list. If acting as the (internally implemented) watchdog
     agent, it panics the node, otherwise it calls
     * `stonith_action_create()` and `stonith_action_execute_async()` to call the fencing agent.
 
-The chosen peer stonithd's mainloop is triggered again once the fencing agent returns, and calls
+The chosen peer fencer's mainloop is triggered again once the fencing agent returns, and calls
 * `stonith_action_async_done()` which adds the results to an action object then calls its
   * done callback (`st_child_done()`), which calls `schedule_stonith_command()`
     for a new device if there are further required actions to execute or if the
     original action failed, then builds and sends an XML reply to the original
-    `stonithd` (via `stonith_send_async_reply()`), then checks whether any
+    fencer (via `stonith_send_async_reply()`), then checks whether any
     pending actions are the same as the one just executed and merges them if so.
 
 ### Fencing replies
 
-The original `stonithd` receives the `STONITH_OP_FENCE` reply via IPC or
+The original fencer receives the `STONITH_OP_FENCE` reply via IPC or
 messaging layer callback, which calls:
 * `stonith_command()`, which (for replies) calls
   * `handle_reply()`, which calls

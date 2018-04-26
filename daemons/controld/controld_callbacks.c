@@ -194,7 +194,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
             if (safe_str_eq(task, CRM_OP_FENCE)) {
 
                 /* tengine_stonith_callback() confirms fence actions */
-                crm_trace("Updating CIB %s stonithd reported fencing of %s complete",
+                crm_trace("Updating CIB %s fencer reported fencing of %s complete",
                           (down->confirmed? "after" : "before"), node->uname);
 
             } else if ((alive == FALSE) && safe_str_eq(task, CRM_OP_SHUTDOWN)) {
