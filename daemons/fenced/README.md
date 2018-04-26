@@ -1,7 +1,5 @@
 # Directory contents
 
-* `admin.c`, `stonith_admin.8`: `stonith_admin` command-line tool and its man
-  page
 * `pacemaker-fenced.c`, `pacemaker-fenced.h`, `fenced_commands.c`,
   `fenced_remote.c`, `pacemaker-fenced.7`: pacemaker-fenced (the fencer) and
    its man page

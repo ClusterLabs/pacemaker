@@ -12,7 +12,6 @@ include $(top_srcdir)/Makefile.common
 halibdir	= $(CRM_DAEMON_DIR)
 halib_PROGRAMS	= pacemaker-fenced stonith-test
 
-sbin_PROGRAMS	= stonith_admin
 sbin_SCRIPTS	= fence_legacy
 
 noinst_HEADERS	= pacemaker-fenced.h
@@ -25,15 +24,6 @@ stonith_test_SOURCES	= test.c
 
 stonith_test_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la	\
 			$(top_builddir)/lib/fencing/libstonithd.la
-
-stonith_admin_SOURCES	= admin.c
-
-stonith_admin_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la	\
-			$(top_builddir)/lib/cib/libcib.la		\
-			$(top_builddir)/lib/pengine/libpe_status.la	\
-			$(top_builddir)/lib/cluster/libcrmcluster.la	\
-			$(top_builddir)/lib/fencing/libstonithd.la	\
-			$(CLUSTERLIBS)
 
 pacemaker_fenced_CPPFLAGS	= -I$(top_srcdir)/daemons/schedulerd $(AM_CPPFLAGS)
 pacemaker_fenced_YFLAGS		= -d

@@ -21,8 +21,21 @@ sbin_SCRIPTS		+= cibsecret
 endif
 EXTRA_DIST		= $(sbin_SCRIPTS)
 
-sbin_PROGRAMS		= crm_simulate crmadmin cibadmin crm_node crm_attribute crm_resource crm_verify \
-			 crm_shadow attrd_updater crm_diff crm_mon iso8601 crm_ticket crm_error
+sbin_PROGRAMS		= attrd_updater \
+			  cibadmin \
+			  crmadmin \
+			  crm_simulate \
+			  crm_attribute \
+			  crm_diff \
+			  crm_error \
+			  crm_mon \
+			  crm_node \
+			  crm_resource \
+			  crm_shadow \
+			  crm_verify \
+			  crm_ticket \
+			  iso8601 \
+			  stonith_admin
 
 if BUILD_SERVICELOG
 sbin_PROGRAMS		+= notifyServicelogEvent
@@ -116,6 +129,14 @@ crm_ticket_LDADD	= $(top_builddir)/lib/pengine/libpe_rules.la	\
 			  $(top_builddir)/daemons/schedulerd/libpengine.la	\
 			  $(top_builddir)/lib/cib/libcib.la		\
 			  $(top_builddir)/lib/common/libcrmcommon.la
+
+stonith_admin_SOURCES	= stonith_admin.c
+stonith_admin_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la	\
+			  $(top_builddir)/lib/cib/libcib.la		\
+			  $(top_builddir)/lib/pengine/libpe_status.la	\
+			  $(top_builddir)/lib/cluster/libcrmcluster.la	\
+			  $(top_builddir)/lib/fencing/libstonithd.la	\
+			  $(CLUSTERLIBS)
 
 if BUILD_SERVICELOG
 notifyServicelogEvent_SOURCES	= notifyServicelogEvent.c
