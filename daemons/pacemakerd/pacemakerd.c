@@ -51,9 +51,12 @@ typedef struct pcmk_child_s {
 
 /* Index into the array below */
 #define pcmk_child_controld  3
-/* *INDENT-OFF* */
+
 static pcmk_child_t pcmk_children[] = {
-    { 0, crm_proc_none,       0, 0, FALSE, "none",       NULL,            NULL },
+    {
+        0, crm_proc_none,       0, 0, FALSE, "none",
+        NULL, NULL
+    },
     {
         0, crm_proc_execd,      3, 0, TRUE,  "pacemaker-execd",
         NULL, CRM_DAEMON_DIR "/pacemaker-execd"
@@ -67,7 +70,6 @@ static pcmk_child_t pcmk_children[] = {
         0, crm_proc_attrd,      4, 0, TRUE, "pacemaker-attrd",
         CRM_DAEMON_USER, CRM_DAEMON_DIR "/pacemaker-attrd"
     },
-    { 0, crm_proc_stonithd,   0, 0, TRUE,  "stonithd",   NULL,            NULL },
     {
         0, crm_proc_schedulerd, 5, 0, TRUE, "pacemaker-schedulerd",
         CRM_DAEMON_USER, CRM_DAEMON_DIR "/pacemaker-schedulerd"
@@ -77,7 +79,6 @@ static pcmk_child_t pcmk_children[] = {
         NULL, CRM_DAEMON_DIR "/pacemaker-fenced"
     },
 };
-/* *INDENT-ON* */
 
 static gboolean start_child(pcmk_child_t * child);
 static gboolean check_active_before_startup_processes(gpointer user_data);

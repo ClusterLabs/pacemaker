@@ -40,21 +40,18 @@ struct crm_ais_msg_s {
 
 /* *INDENT-OFF* */
 enum crm_proc_flag {
-    crm_proc_none      = 0x00000001,
+    crm_proc_none       = 0x00000001,
 
     // Cluster layers
-    crm_proc_cpg       = 0x04000000,
+    crm_proc_cpg        = 0x04000000,
 
-    crm_proc_execd     = 0x00000010,
-    crm_proc_cib       = 0x00000100,
-    crm_proc_controld  = 0x00000200,
-    crm_proc_attrd     = 0x00001000,
-
-    crm_proc_stonithd  = 0x00002000,
-    crm_proc_fenced    = 0x00100000,
-
+    // Daemons
+    crm_proc_execd      = 0x00000010,
+    crm_proc_cib        = 0x00000100,
+    crm_proc_controld   = 0x00000200,
+    crm_proc_attrd      = 0x00001000,
     crm_proc_schedulerd = 0x00010000,
-    crm_proc_te        = 0x00020000,
+    crm_proc_fenced     = 0x00100000,
 };
 /* *INDENT-ON* */
 
@@ -99,17 +96,11 @@ peer2text(enum crm_proc_flag proc)
         case crm_proc_schedulerd:
             text = "pacemaker-schedulerd";
             break;
-        case crm_proc_te:
-            text = "tengine";
-            break;
         case crm_proc_execd:
             text = "pacemaker-execd";
             break;
         case crm_proc_attrd:
             text = "pacemaker-attrd";
-            break;
-        case crm_proc_stonithd:
-            text = "stonithd";
             break;
         case crm_proc_fenced:
             text = "pacemaker-fenced";
