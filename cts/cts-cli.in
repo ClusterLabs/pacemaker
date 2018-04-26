@@ -859,8 +859,7 @@ for t in $tests; do
     fi
 done
 
-rm -f "${shadow_dir}/*"
-rmdir "${shadow_dir}"
+rm -rf "${shadow_dir}"
     
 failed=0
 
