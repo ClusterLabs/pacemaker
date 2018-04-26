@@ -10,7 +10,7 @@ include $(top_srcdir)/Makefile.common
 
 ## binary progs
 halibdir	= $(CRM_DAEMON_DIR)
-halib_PROGRAMS	= pacemaker-fenced stonith-test
+halib_PROGRAMS	= pacemaker-fenced cts-fence-helper
 
 sbin_SCRIPTS	= fence_legacy
 
@@ -20,9 +20,9 @@ if BUILD_XML_HELP
 man7_MANS	= pacemaker-fenced.7
 endif
 
-stonith_test_SOURCES	= cts-fence-helper.c
-stonith_test_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la	\
-			  $(top_builddir)/lib/fencing/libstonithd.la
+cts_fence_helper_SOURCES	= cts-fence-helper.c
+cts_fence_helper_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la	\
+				  $(top_builddir)/lib/fencing/libstonithd.la
 
 pacemaker_fenced_CPPFLAGS	= -I$(top_srcdir)/daemons/schedulerd $(AM_CPPFLAGS)
 pacemaker_fenced_YFLAGS		= -d

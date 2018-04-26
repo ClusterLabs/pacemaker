@@ -497,10 +497,10 @@ class Tests(object):
             verbose_arg = "-V"
 
         test = self.new_test("standalone_low_level_api_test", "Sanity test client api in standalone mode.")
-        test.add_cmd("@CRM_DAEMON_DIR@/stonith-test", "-t %s" % (verbose_arg))
+        test.add_cmd("@CRM_DAEMON_DIR@/cts-fence-helper", "-t %s" % (verbose_arg))
 
         test = self.new_test("cpg_low_level_api_test", "Sanity test client api using mainloop and cpg.", 1)
-        test.add_cmd("@CRM_DAEMON_DIR@/stonith-test", "-m %s" % (verbose_arg))
+        test.add_cmd("@CRM_DAEMON_DIR@/cts-fence-helper", "-m %s" % (verbose_arg))
 
     def build_custom_timeout_tests(self):
         """ Register tests to verify custom timeout usage """

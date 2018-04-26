@@ -5,7 +5,7 @@
    its man page
 * `fence_dummy`, `fence_legacy`, `fence_legacy.8`:
   Pacemaker-supplied fence agents and their man pages
-* `test.c`: `stonith-test` command-line tool
+* `cts-fence-helper.c`: `cts-fence-helper` command-line tool
 
 # How fencing requests are handled
 
@@ -42,7 +42,7 @@ libfencing API.
   `daemons/controld/controld_te_actions.c:te_fence_node()` (which calls the
   `fence()` API). This occurs when a graph synapse contains a `CRM_OP_FENCE`
   XML operation.
-* The main external clients are `stonith_admin` and `stonith-test`.
+* The main external clients are `stonith_admin` and `cts-fence-helper`.
 
 Highlights of the fencing API:
 * `stonith_api_new()` creates and returns a new `stonith_t` object, whose

@@ -638,7 +638,8 @@ main(int argc, char **argv)
         }
     }
 
-    crm_log_init("stonith-test", LOG_INFO, TRUE, verbose ? TRUE : FALSE, argc, argv, FALSE);
+    crm_log_init(NULL, LOG_INFO, TRUE, (verbose? TRUE : FALSE), argc, argv,
+                 FALSE);
 
     if (optind > argc) {
         ++argerr;

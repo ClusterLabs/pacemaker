@@ -115,7 +115,7 @@ cib/cibpipe
 /daemons/execd/cts-exec-helper
 /daemons/execd/pacemaker-execd
 /daemons/execd/pacemaker-remoted
-/daemons/fenced/stonith-test
+/daemons/fenced/cts-fence-helper
 /daemons/fenced/pacemaker-fenced
 /daemons/fenced/pacemaker-fenced.xml
 /daemons/pacemakerd/pacemakerd
