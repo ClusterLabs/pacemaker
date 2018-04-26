@@ -18,7 +18,7 @@
 #include <crm/pengine/rules.h>
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>
-#include <pengine.h>
+#include <pacemaker-schedulerd.h>
 #include "fake_transition.h"
 
 extern bool print_pending;

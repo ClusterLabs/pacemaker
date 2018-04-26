@@ -27,9 +27,11 @@ endif
 
 ## SOURCES
 
-noinst_HEADERS	= sched_allocate.h \
+noinst_HEADERS	= pacemaker-schedulerd.h \
+		  sched_allocate.h \
 		  sched_notif.h \
-		  utils.h pengine.h
+		  utils.h
+		  
 
 libpengine_la_LDFLAGS	= -version-info 16:0:0
 

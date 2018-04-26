@@ -17,7 +17,7 @@
 #include <glib.h>
 
 #include <crm/pengine/status.h>
-#include <pengine.h>
+#include <pacemaker-schedulerd.h>
 #include <sched_allocate.h>
 #include <utils.h>
 

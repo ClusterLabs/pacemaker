@@ -35,7 +35,7 @@
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>
 #include <../lib/pengine/unpack.h>
-#include <pengine.h>
+#include <pacemaker-schedulerd.h>
 #include <crm/stonith-ng.h>
 
 extern void cleanup_alloc_calculations(pe_working_set_t * data_set);

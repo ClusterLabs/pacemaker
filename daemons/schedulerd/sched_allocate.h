@@ -1,29 +1,19 @@
-/* 
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+/*
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ *
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
-#ifndef CRM_PENGINE_COMPLEX_ALLOC__H
-#  define CRM_PENGINE_COMPLEX_ALLOC__H
+
+#ifndef SCHED_ALLOCATE__H
+#  define SCHED_ALLOCATE__H
 
 #  include <glib.h>
 #  include <crm/common/xml.h>
 #  include <crm/pengine/status.h>
 #  include <crm/pengine/complex.h>
 #  include <crm/pengine/internal.h>
-#  include <pengine.h>
+#  include <pacemaker-schedulerd.h>
 
 struct resource_alloc_functions_s {
     GHashTable *(*merge_weights) (resource_t *, const char *, GHashTable *, const char *, float,

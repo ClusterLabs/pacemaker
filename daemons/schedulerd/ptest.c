@@ -24,7 +24,7 @@
 #include <crm/cib.h>
 
 #include <glib.h>
-#include <pengine.h>
+#include <pacemaker-schedulerd.h>
 #include <sched_allocate.h>
 #include <libxml/parser.h>
 

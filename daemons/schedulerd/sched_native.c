@@ -7,7 +7,7 @@
 
 #include <crm_internal.h>
 
-#include <pengine.h>
+#include <pacemaker-schedulerd.h>
 #include <crm/pengine/rules.h>
 #include <crm/msg_xml.h>
 #include <sched_allocate.h>
