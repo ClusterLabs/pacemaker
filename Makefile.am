@@ -11,8 +11,7 @@ MAINTAINERCLEANFILES    = Makefile.in aclocal.m4 configure DRF/config-h.in \
                         DRF/stamp-h.in libtool.m4 ltdl.m4
 
 # Only these will get installed with a plain "make install"
-CORE_INSTALL	= replace include lib daemons \
-		  cib fencing tools xml
+CORE_INSTALL	= replace include lib daemons cib tools xml
 
 # Only these will get built with a plain "make" or "make clean"
 CORE		= $(CORE_INSTALL) cts

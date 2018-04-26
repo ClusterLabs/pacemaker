@@ -76,12 +76,12 @@ Doxyfile
 /cts/pacemaker-cts-dummyd@.service
 /daemons/execd/pacemaker_remote
 /daemons/execd/pacemaker_remote.service
+/daemons/fenced/fence_legacy
 /daemons/pacemakerd/pacemaker
 /daemons/pacemakerd/pacemaker.combined.upstart
 /daemons/pacemakerd/pacemaker.service
 /daemons/pacemakerd/pacemaker.upstart
 extra/logrotate/pacemaker
-/fencing/fence_legacy
 include/config.h
 include/config.h.in
 include/crm_config.h
@@ -115,6 +115,10 @@ cib/cibpipe
 /daemons/execd/cts-exec-helper
 /daemons/execd/pacemaker-execd
 /daemons/execd/pacemaker-remoted
+/daemons/fenced/stonith-test
+/daemons/fenced/stonith_admin
+/daemons/fenced/stonithd
+/daemons/fenced/stonithd.xml
 /daemons/pacemakerd/pacemakerd
 /daemons/schedulerd/pacemaker-schedulerd
 /daemons/schedulerd/pacemaker-schedulerd.xml
@@ -125,10 +129,6 @@ doc/Pacemaker_Explained.txt
 doc/acls.html
 doc/crm_fencing.html
 doc/publican-catalog*
-fencing/stonith-test
-fencing/stonith_admin
-fencing/stonithd
-fencing/stonithd.xml
 scratch
 tools/attrd_updater
 tools/cibadmin
@@ -181,7 +181,7 @@ lib/gnu/stdalign.h
 /coverage.sh
 /crmd
 /cts/HBDummy
-/fencing/regression.py
+/fencing
 /lrmd
 /mcp
 /pengine

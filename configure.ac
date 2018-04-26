@@ -1713,7 +1713,7 @@ AC_CONFIG_FILES([cts/lxc_autogen.sh], [chmod +x cts/lxc_autogen.sh])
 AC_CONFIG_FILES([cts/benchmark/clubench], [chmod +x cts/benchmark/clubench])
 AC_CONFIG_FILES([cts/fence_dummy], [chmod +x cts/fence_dummy])
 AC_CONFIG_FILES([cts/pacemaker-cts-dummyd], [chmod +x cts/pacemaker-cts-dummyd])
-AC_CONFIG_FILES([fencing/fence_legacy], [chmod +x fencing/fence_legacy])
+AC_CONFIG_FILES([daemons/fenced/fence_legacy], [chmod +x daemons/fenced/fence_legacy])
 AC_CONFIG_FILES([tools/crm_failcount], [chmod +x tools/crm_failcount])
 AC_CONFIG_FILES([tools/crm_master], [chmod +x tools/crm_master])
 AC_CONFIG_FILES([tools/crm_report], [chmod +x tools/crm_report])
@@ -1735,6 +1735,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 daemons/execd/Makefile                              \
                 daemons/execd/pacemaker_remote                      \
                 daemons/execd/pacemaker_remote.service              \
+                daemons/fenced/Makefile                             \
                 daemons/pacemakerd/Makefile                         \
                 daemons/pacemakerd/pacemaker                        \
                 daemons/pacemakerd/pacemaker.service                \
@@ -1752,7 +1753,6 @@ AC_CONFIG_FILES(Makefile                                            \
                 extra/resources/Makefile                            \
                 extra/logrotate/Makefile                            \
                 extra/logrotate/pacemaker                           \
-                fencing/Makefile                                    \
                 include/Makefile                                    \
                 include/crm/Makefile                                \
                 include/crm/cib/Makefile                            \

@@ -325,9 +325,8 @@ summary:
 	@printf "\n- Update source tarball to revision: `git log --pretty=format:%h -n 1`"
 	@printf "\n- Changesets: `git log --pretty=oneline $(LAST_RELEASE)..HEAD | wc -l`"
 	@printf "\n- Diff:      "
-	@git diff -r $(LAST_RELEASE)..HEAD --stat \
-		include lib daemons \
-		cib fencing tools xml | tail -n 1
+	@git diff -r $(LAST_RELEASE)..HEAD --stat include lib daemons \
+		cib tools xml | tail -n 1
 
 rc-changes:
 	@make NEXT_RELEASE=$(shell echo $(LAST_RC) | sed s:-rc.*::) LAST_RELEASE=$(LAST_RC) changes
@@ -361,7 +360,7 @@ CLANG_checkers =
 # --inconclusive --std=posix
 CPPCHECK_ARGS ?=
 cppcheck:
-	for d in replace lib daemons cib fencing tools; \
+	for d in replace lib daemons cib tools; \
 		do cppcheck $(CPPCHECK_ARGS) -q $$d; \
 	done
 
