@@ -1478,7 +1478,7 @@ check_dump_input(int last_action, action_t * action, action_wrapper_t * wrapper)
         if (action->rsc && safe_str_eq(action->task, RSC_MIGRATE)) {
             /* Remove the orders like the following if not relevant:
              *     "load_stopped_node2" -> "rscA_migrate_to node1"
-             * which were created also from: native.c: MigrateRsc()
+             * which were created also from: sched_native.c: MigrateRsc()
              *     order_actions(other, then, other_w->type);
              */
 
@@ -1654,7 +1654,7 @@ should_dump_input(int last_action, action_t * action, action_wrapper_t * wrapper
         if (graph_has_loop(action, action, wrapper)) {
             /* Remove the orders like the following if they are introducing any graph loops:
              *     "load_stopped_node2" -> "rscA_migrate_to node1"
-             * which were created also from: native.c: MigrateRsc()
+             * which were created also from: sched_native.c: MigrateRsc()
              *     order_actions(other, then, other_w->type);
              */
             crm_debug("Breaking graph loop - load migrate: %s.%s -> %s.%s",
