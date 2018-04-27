@@ -518,7 +518,9 @@
                                   )
                                 )
                               ]"/>
-        <xsl:if test="not($InverseMode or $InnerSimulation)">
+        <xsl:if test="$InverseMode = false()
+                      and
+                      not($InnerSimulation)">
           <xsl:call-template name="MapMsg">
             <xsl:with-param name="Context" select="@id"/>
             <xsl:with-param name="Replacement" select="$Replacement"/>
