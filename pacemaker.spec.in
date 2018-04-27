@@ -438,9 +438,6 @@ install -m 644 tools/crm_mon.upstart ${RPM_BUILD_ROOT}%{_sysconfdir}/init/crm_mo
 mkdir -p ${RPM_BUILD_ROOT}%{_localstatedir}/lib/rpm-state/%{name}
 %endif
 
-# These are not actually scripts
-find %{buildroot} -name '*.xml' -type f -print0 | xargs -0 chmod a-x
-
 # Don't package static libs
 find %{buildroot} -name '*.a' -type f -print0 | xargs -0 rm -f
 find %{buildroot} -name '*.la' -type f -print0 | xargs -0 rm -f
