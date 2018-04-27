@@ -26,8 +26,13 @@ pacemaker_based_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
 pacemaker_based_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la \
 			  $(COMMONLIBS) $(CLUSTERLIBS)
 
-pacemaker_based_SOURCES	= io.c messages.c notify.c \
-		callbacks.c main.c remote.c common.c
+pacemaker_based_SOURCES	= pacemaker-based.c \
+			  based_callbacks.c \
+			  based_common.c \
+			  based_io.c \
+			  based_messages.c \
+			  based_notify.c \
+			  based_remote.c
 
 cibmon_LDADD	= $(COMMONLIBS)
 cibmon_SOURCES	= cibmon.c
