@@ -819,7 +819,8 @@
  Source ctxt:    (primitive|template)/operations/op/meta_attributes
  Target ctxt:    (primitive|template)/operations/op/meta_attributes
  Target-inv ctxt:(primitive|template)/meta_attributes
- Dependencies:   N/A
+ Dependencies:   ProcessAttrOpMetaAttributes
+                 ProcessNonattrOpMetaAttributes
  -->
 <xsl:template name="ProcessNonattrOpMetaAttributes">
   <xsl:param name="Source"/>
