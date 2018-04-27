@@ -1314,7 +1314,7 @@
                                   not(@in-case-of)
                                   and
                                   not(
-                                    $MapClusterProperties/cibtr:replace[
+                                    $MapClusterNode/cibtr:replace[
                                       @what = current()/@name
                                       and
                                       @in-case-of
