@@ -298,9 +298,8 @@ check_sbd_timeout(const char *value)
 
         if (st_timeout < sbd_timeout) {
             do_crm_log_always(LOG_EMERG,
-                              "Shutting down: stonith-watchdog-timeout (%s) too short (must be >%ldms)",
+                              "FIX CONFIGURATION: stonith-watchdog-timeout (%s) too short (must be >%ldms)",
                               value, sbd_timeout);
-            crm_exit(CRM_EX_FATAL);
             return FALSE;
         }
         crm_info("Watchdog configured with stonith-watchdog-timeout %s and SBD timeout %ldms",
