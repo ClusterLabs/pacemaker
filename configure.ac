@@ -1728,9 +1728,9 @@ AC_CONFIG_FILES(Makefile                                            \
                 cts/CTSvars.py                                      \
                 cts/benchmark/Makefile                              \
                 cts/pacemaker-cts-dummyd@.service                   \
-                cib/Makefile                                        \
                 daemons/Makefile                                    \
                 daemons/attrd/Makefile                              \
+                daemons/based/Makefile                              \
                 daemons/controld/Makefile                           \
                 daemons/execd/Makefile                              \
                 daemons/execd/pacemaker_remote                      \

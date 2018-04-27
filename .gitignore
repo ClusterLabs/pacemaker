@@ -107,10 +107,9 @@ publican.cfg
 doc/*/en-US/images/*.png
 doc/*/tmp/**
 doc/*/publish
-cib/cib
-cib/cibmon
-cib/cibpipe
 /daemons/attrd/pacemaker-attrd
+/daemons/based/cib
+/daemons/based/cibmon
 /daemons/controld/pacemaker-controld
 /daemons/execd/cts-exec-helper
 /daemons/execd/pacemaker-execd
@@ -177,6 +176,7 @@ lib/gnu/stdalign.h
 
 # Formerly built files (helps when jumping back and forth in checkout)
 /attrd
+/cib
 /coverage.sh
 /crmd
 /cts/HBDummy
