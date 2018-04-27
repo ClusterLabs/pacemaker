@@ -195,7 +195,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
     xmlNode *root = NULL;
     xmlNode *status = NULL;
 
-    if (!crm_is_writable(dir, file, CRM_DAEMON_USER, NULL, FALSE)) {
+    if (pcmk__daemon_can_write(dir, file) == FALSE) {
         cib_status = -EACCES;
         return NULL;
     }
