@@ -439,6 +439,16 @@
     moved) at this other part of the tree" contexts; for such cases,
     there's usually InverseMode parameter to be assigned true()
     (implicit default) and false(), respectively
+ E. the common idiom that emerges is: evaluate simulation value,
+    depending on the presence of the "success mark" (cf. A.),
+    possibly emit non-simulation value; since it would (likely)
+    re-evaluate the simulation anew (wastefully) or perhaps
+    this sort of dependency injection can just come handy,
+    common transformation helpers below offer InnerPass
+    parameter to be optionally passed, either as a string (when
+    no-denormalized-space is an internal criterium for the template)
+    or, conventionally, the result tree fragment representing the
+    output of the template at hand called with a simulation flag
 
  -->
 
@@ -453,8 +463,7 @@
   <xsl:param name="Source"/>
   <xsl:param name="InverseMode" select="false()"/>
   <xsl:param name="InnerSimulation" select="false()"/>
-
-  <xsl:variable name="InnerPass">
+  <xsl:param name="InnerPass">
     <xsl:choose>
       <xsl:when test="$InnerSimulation">
         <xsl:value-of select="''"/>
@@ -464,10 +473,11 @@
           <xsl:with-param name="Source" select="$Source"/>
           <xsl:with-param name="InverseMode" select="$InverseMode"/>
           <xsl:with-param name="InnerSimulation" select="true()"/>
+          <xsl:with-param name="InnerPass" select="'INNER-RECURSION'"/>
         </xsl:call-template>
       </xsl:otherwise>
     </xsl:choose>
-  </xsl:variable>
+  </xsl:param>
 
   <xsl:for-each select="$Source/node()">
     <xsl:choose>
@@ -645,8 +655,7 @@
   <xsl:param name="Source"/>
   <xsl:param name="InverseMode" select="false()"/>
   <xsl:param name="InnerSimulation" select="false()"/>
-
-  <xsl:variable name="InnerPass">
+  <xsl:param name="InnerPass">
     <xsl:choose>
       <xsl:when test="$InverseMode
                       or
@@ -657,10 +666,11 @@
         <xsl:call-template name="ProcessRscInstanceAttributes">
           <xsl:with-param name="Source" select="$Source"/>
           <xsl:with-param name="InnerSimulation" select="true()"/>
+          <xsl:with-param name="InnerPass" select="'INNER-RECURSION'"/>
         </xsl:call-template>
       </xsl:otherwise>
     </xsl:choose>
-  </xsl:variable>
+  </xsl:param>
 
   <!-- B: special-casing nvpair -->
   <xsl:for-each select="$Source/node()">
@@ -834,10 +844,7 @@
   <xsl:param name="Source"/>
   <xsl:param name="InverseMode" select="false()"/>
   <xsl:param name="InnerSimulation" select="false()"/>
-
-  <xsl:variable name="EnclosingTag" select="../../.."/>
-
-  <xsl:variable name="InnerPass">
+  <xsl:param name="InnerPass">
     <xsl:choose>
       <xsl:when test="$InverseMode
                       or
@@ -848,10 +855,13 @@
         <xsl:call-template name="ProcessNonattrOpMetaAttributes">
           <xsl:with-param name="Source" select="$Source"/>
           <xsl:with-param name="InnerSimulation" select="true()"/>
+          <xsl:with-param name="InnerPass" select="'INNER-RECURSION'"/>
         </xsl:call-template>
       </xsl:otherwise>
     </xsl:choose>
-  </xsl:variable>
+  </xsl:param>
+
+  <xsl:variable name="EnclosingTag" select="../../.."/>
 
   <xsl:for-each select="$Source/node()">
     <xsl:choose>
@@ -1023,10 +1033,7 @@
   <xsl:param name="Source"/>
   <xsl:param name="InverseMode" select="false()"/>
   <xsl:param name="InnerSimulation" select="false()"/>
-
-  <xsl:variable name="EnclosingTag" select="../.."/>
-
-  <xsl:variable name="InnerPass">
+  <xsl:param name="InnerPass">
     <xsl:choose>
       <xsl:when test="$InnerSimulation">
         <xsl:value-of select="''"/>
@@ -1036,10 +1043,13 @@
           <xsl:with-param name="Source" select="$Source"/>
           <xsl:with-param name="InverseMode" select="$InverseMode"/>
           <xsl:with-param name="InnerSimulation" select="true()"/>
+          <xsl:with-param name="InnerPass" select="'INNER-RECURSION'"/>
         </xsl:call-template>
       </xsl:otherwise>
     </xsl:choose>
-  </xsl:variable>
+  </xsl:param>
+
+  <xsl:variable name="EnclosingTag" select="../.."/>
 
   <xsl:if test="(
                   $InverseMode
@@ -1226,7 +1236,12 @@
                           != $ProcessedOpMetaAttributes">
               <xsl:copy>
                 <xsl:apply-templates select="@*"/>
-                <xsl:copy-of select="$ProcessedOpMetaAttributes"/>
+                <xsl:call-template name="ProcessNonattrOpMetaAttributes">
+                  <xsl:with-param name="Source" select="."/>
+                  <xsl:with-param name="InnerSimulation" select="$InnerSimulation"/>
+                  <!-- cf. trick E. -->
+                  <xsl:with-param name="InnerPass" select="$ProcessedOpMetaAttributes"/>
+                </xsl:call-template>
               </xsl:copy>
             </xsl:if>
           </xsl:when>
