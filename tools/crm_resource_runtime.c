@@ -1054,7 +1054,7 @@ update_working_set_xml(pe_working_set_t *data_set, xmlNode **xml)
  * \brief Update a working set's XML input based on a CIB query
  *
  * \param[in] data_set   Data set instance to initialize
- * \param[in] cib        Connection to the CIB
+ * \param[in] cib        Connection to the CIB manager
  *
  * \return pcmk_ok on success, -errno on failure
  * \note On success, caller is responsible for freeing memory allocated for
@@ -1207,7 +1207,7 @@ max_delay_in(pe_working_set_t * data_set, GList *resources)
  *                       (specified in milliseconds, but a two-second
  *                       granularity is actually used; if 0, a timeout will be
  *                       calculated based on the resource timeout)
- * \param[in] cib        Connection to the CIB for modifying/checking resource
+ * \param[in] cib        Connection to the CIB manager
  *
  * \return pcmk_ok on success, -errno on failure (exits on certain failures)
  */
@@ -1560,7 +1560,7 @@ print_pending_actions(GListPtr actions)
  * \param[in] timeout_ms Consider failed if actions do not complete in this time
  *                       (specified in milliseconds, but one-second granularity
  *                       is actually used; if 0, a default will be used)
- * \param[in] cib        Connection to the CIB
+ * \param[in] cib        Connection to the CIB manager
  *
  * \return pcmk_ok on success, -errno on failure
  */

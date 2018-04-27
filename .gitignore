@@ -108,7 +108,7 @@ doc/*/en-US/images/*.png
 doc/*/tmp/**
 doc/*/publish
 /daemons/attrd/pacemaker-attrd
-/daemons/based/cib
+/daemons/based/pacemaker-based
 /daemons/based/cibmon
 /daemons/controld/pacemaker-controld
 /daemons/execd/cts-exec-helper

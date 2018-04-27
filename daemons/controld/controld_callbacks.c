@@ -266,12 +266,12 @@ crmd_cib_connection_destroy(gpointer user_data)
     fsa_cib_conn->state = cib_disconnected;
 
     if (is_set(fsa_input_register, R_CIB_CONNECTED) == FALSE) {
-        crm_info("Connection to the CIB terminated...");
+        crm_info("Connection to the CIB manager terminated");
         return;
     }
 
     /* eventually this will trigger a reconnect, not a shutdown */
-    crm_err("Connection to the CIB terminated...");
+    crm_err("Connection to the CIB manager terminated");
     register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
     clear_bit(fsa_input_register, R_CIB_CONNECTED);
 

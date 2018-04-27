@@ -5,11 +5,11 @@
 # Subsystems are:
 #  pacemakerd
 #  pacemaker-attrd
+#  pacemaker-based
 #  pacemaker-controld
 #  pacemaker-execd
 #  pacemaker-fenced
 #  pacemaker-schedulerd
-#  cib
 # PCMK_debug=no
 
 # Send detailed log messages to the specified file. Compared to messages logged

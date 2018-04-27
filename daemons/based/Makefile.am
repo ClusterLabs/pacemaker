@@ -1,20 +1,10 @@
 #
-# Copyright (C) 2004 Andrew Beekhof
+# Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
 #
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License, or (at your option) any later version.
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-#
+
 include $(top_srcdir)/Makefile.common
 
 EXTRA_DIST	= cib.pam
@@ -25,18 +15,18 @@ COMMONLIBS	= $(top_builddir)/lib/common/libcrmcommon.la \
 		$(top_builddir)/lib/cib/libcib.la
 
 ## binary progs
-halib_PROGRAMS	= cib cibmon
+halib_PROGRAMS	= pacemaker-based cibmon
 
 ## SOURCES
 noinst_HEADERS	= callbacks.h cibio.h cibmessages.h common.h notify.h
 
-cib_CFLAGS	= $(CFLAGS_HARDENED_EXE)
-cib_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
+pacemaker_based_CFLAGS	= $(CFLAGS_HARDENED_EXE)
+pacemaker_based_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
 
-cib_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la \
-		  $(COMMONLIBS) $(CLUSTERLIBS)
+pacemaker_based_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la \
+			  $(COMMONLIBS) $(CLUSTERLIBS)
 
-cib_SOURCES	= io.c messages.c notify.c \
+pacemaker_based_SOURCES	= io.c messages.c notify.c \
 		callbacks.c main.c remote.c common.c
 
 cibmon_LDADD	= $(COMMONLIBS)

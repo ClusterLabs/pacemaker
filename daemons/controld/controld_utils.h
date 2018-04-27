@@ -24,7 +24,7 @@
 		NULL, options, user_name);				\
 									\
 	} else {							\
-		crm_err("No CIB connection available");			\
+		crm_err("No CIB manager connection available");			\
 	}
 
 #  define fsa_cib_anon_update(section, data, options)			\

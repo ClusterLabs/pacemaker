@@ -102,7 +102,7 @@ attrd_cib_destroy_cb(gpointer user_data)
 
     } else {
         /* eventually this should trigger a reconnect, not a shutdown */
-        crm_err("Lost connection to CIB service!");
+        crm_err("Lost connection to the CIB manager");
         attrd_exit_status = CRM_EX_DISCONNECT;
         attrd_shutdown(0);
     }
@@ -170,17 +170,18 @@ attrd_cib_connect(int max_retry)
         }
 
         attempts++;
-        crm_debug("CIB signon attempt %d", attempts);
+        crm_debug("Connection attempt %d to the CIB manager", attempts);
         rc = the_cib->cmds->signon(the_cib, T_ATTRD, cib_command);
 
     } while(rc != pcmk_ok && attempts < max_retry);
 
     if (rc != pcmk_ok) {
-        crm_err("Signon to CIB failed: %s (%d)", pcmk_strerror(rc), rc);
+        crm_err("Connection to the CIB manager failed: %s " CRM_XS " rc=%d",
+                pcmk_strerror(rc), rc);
         goto cleanup;
     }
 
-    crm_debug("Connected to the CIB after %d attempts", attempts);
+    crm_debug("Connected to the CIB manager after %d attempts", attempts);
 
     rc = the_cib->cmds->set_connection_dnotify(the_cib, attrd_cib_destroy_cb);
     if (rc != pcmk_ok) {

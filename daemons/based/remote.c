@@ -484,13 +484,13 @@ cib_remote_msg(gpointer data)
             rc = gnutls_handshake(*client->remote->tls_session);
 
             if (rc < 0 && rc != GNUTLS_E_AGAIN) {
-                crm_err("Remote cib tls handshake failed");
+                crm_err("TLS handshake with remote CIB manager failed");
                 return -1;
             }
         } while (rc == GNUTLS_E_INTERRUPTED);
 
         if (rc == 0) {
-            crm_debug("Remote cib tls handshake completed");
+            crm_debug("TLS handshake with remote CIB manager completed");
             client->remote->tls_handshake_complete = TRUE;
             if (client->remote->auth_timeout) {
                 g_source_remove(client->remote->auth_timeout);
@@ -549,7 +549,7 @@ cib_remote_msg(gpointer data)
     }
 
     if (disconnected) {
-        crm_trace("disconnected while receiving remote cib msg.");
+        crm_trace("Disconnected while receiving message from remote CIB manager");
         return -1;
     }
 

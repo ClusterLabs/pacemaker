@@ -303,9 +303,9 @@ class crm_common(ClusterManager):
                     "(ERROR|error): crm_log_message_adv:",
                     "(ERROR|error): MSG: No message to dump",
                     "pending LRM operations at shutdown",
-                    "Lost connection to the CIB service",
+                    "Lost connection to the CIB manager",
                     "Connection to the CIB terminated...",
-                    "Sending message to CIB service FAILED",
+                    "Sending message to the CIB manager FAILED",
                     "Action A_RECOVER .* not supported",
                     "(ERROR|error): stonithd_op_result_ready: not signed on",
                     "pingd.*(ERROR|error): send_update: Could not send update",
@@ -347,10 +347,10 @@ class crm_common(ClusterManager):
                     "State transition S_STARTING -> S_PENDING",
                     ], badnews_ignore = common_ignore)
 
-        cib = Process(self, "cib", triggersreboot=self.fastfail, pats = [
+        based = Process(self, "pacemaker-based", triggersreboot=self.fastfail, pats = [
                     "State transition .* S_RECOVERY",
-                    "Lost connection to the CIB service",
-                    "Connection to the CIB terminated...",
+                    "Lost connection to the CIB manager",
+                    "Connection to the CIB manager terminated",
                     r"pacemaker-controld.*: Input I_TERMINATE .*from do_recover",
                     "pacemaker-controld.*I_ERROR.*crmd_cib_connection_destroy",
                     r"pacemaker-controld.*: Could not recover from internal error",
@@ -400,10 +400,9 @@ class crm_common(ClusterManager):
             ccm.pats.extend([
                 # these status numbers are likely wrong now
                 r"attrd.*exited with status 1",
-                r"cib.*exited with status 2",
-                r"pacemaker-controld.*exited with status 2",
+                r"pacemaker-(based|controld).*exited with status 2",
                 ])
-            cib.pats.extend([
+            based.pats.extend([
                 # these status numbers are likely wrong now
                 r"attrd.*exited with status 1",
                 r"pacemaker-controld.*exited with status 2",
@@ -414,7 +413,7 @@ class crm_common(ClusterManager):
                 ])
 
         complist.append(ccm)
-        complist.append(cib)
+        complist.append(based)
         complist.append(execd)
         complist.append(controld)
         complist.append(schedulerd)

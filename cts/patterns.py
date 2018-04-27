@@ -225,7 +225,7 @@ class crm_corosync(BasePatterns):
         self.components["corosync-ignore"] = [
             r"error:.*Connection to the CPG API failed: Library error",
             r"\[[0-9]+\] exited with status [0-9]+ \(",
-            r"cib.*error:.*Corosync connection lost",
+            r"pacemaker-based.*error:.*Corosync connection lost",
             r"pacemaker-fenced.*error:.*Corosync connection terminated",
             r"pacemaker-controld.*State transition .* S_RECOVERY",
             r"pacemaker-controld.*error:.*Input (I_ERROR|I_TERMINATE ) .*received in state",
@@ -239,30 +239,27 @@ class crm_corosync(BasePatterns):
             r"pacemakerd.*error:.*Connection destroyed",
             r"attrd.*:\s*(crit|error):.*Lost connection to (Corosync|CIB) service",
             r"pacemaker-fenced.*:\s*(Corosync connection terminated|Shutting down)",
-            r"cib.*:\s*Corosync connection lost!\s+Exiting.",
+            r"pacemaker-based.*:\s*Corosync connection lost!\s+Exiting.",
             r"pacemaker-controld.*:\s*(connection terminated|Disconnected from Corosync)",
             r"schedulerd.*Scheduling Node .* for STONITH",
             r"pacemaker-controld.*:\s*Peer .* was terminated \(.*\) by .* for .*:\s*OK",
         ]
 
-        self.components["cib-ignore"] = [
+        self.components["pacemaker-based"] = [
+            r"State transition .* S_RECOVERY",
+            r"Respawning failed child process: (pacemaker-attrd|pacemaker-controld)",
+            r"Connection to cib_.* (failed|closed)",
+            r"pacemaker-controld.*:.*Connection to the CIB terminated...",
+            r"attrd.*:.*(Lost connection to CIB service|Connection to the CIB terminated)",
+            r"pacemaker-controld\[[0-9]+\] exited with status 1 \(",
+            r"attrd\[[0-9]+\] exited with status 102 \(",
+            r"pacemaker-controld.*: Input I_TERMINATE .*from do_recover",
+            r"pacemaker-controld.*I_ERROR.*crmd_cib_connection_destroy",
+            r"pacemaker-controld.*Could not recover from internal error",
+        ]
+        self.components["pacemaker-based-ignore"] = [
             r"pacemaker-execd.*Connection to (fencer|stonith-ng).* (closed|failed|lost)",
-            "pacemaker-execd.*STONITH connection failed, finalizing .* pending operations",
-            ]
-
-        self.components["cib"] = [
-                    "State transition .* S_RECOVERY",
-                    r"Respawning failed child process: (pacemaker-attrd|pacemaker-controld)",
-                    "Connection to cib_.* failed",
-                    "Connection to cib_.* closed",
-                    r"pacemaker-controld.*:.*Connection to the CIB terminated...",
-                    r"attrd.*:.*(Lost connection to CIB service|Connection to the CIB terminated)",
-                    r"pacemaker-controld\[[0-9]+\] exited with status 1 \(",
-                    r"attrd\[[0-9]+\] exited with status 102 \(",
-                    r"pacemaker-controld.*: Input I_TERMINATE .*from do_recover",
-                    "pacemaker-controld.*I_ERROR.*crmd_cib_connection_destroy",
-                    "pacemaker-controld.*Could not recover from internal error",
-                    ]
+        ]
 
         self.components["pacemaker-execd"] = [
             r"pacemaker-controld.*Connection to (pacemaker-execd|lrmd|executor) (failed|closed)",

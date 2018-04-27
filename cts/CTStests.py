@@ -902,8 +902,8 @@ class ValgrindTest(CTSTest):
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
         return [
-            r"cib.*: \*\*\*\*\*\*\*\*\*\*\*\*\*",
-            r"cib.*: .* avoid confusing Valgrind",
+            r"pacemaker-based.*: \*\*\*\*\*\*\*\*\*\*\*\*\*",
+            r"pacemaker-based.*: .* avoid confusing Valgrind",
             r"HA_VALGRIND_ENABLED",
         ]
 

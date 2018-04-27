@@ -242,11 +242,11 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
         crm_warn("Continuing with an empty configuration.");
     }
 
-    if (cib_writes_enabled && use_valgrind) {
-        if (crm_is_true(use_valgrind) || strstr(use_valgrind, "cib")) {
-            cib_writes_enabled = FALSE;
-            crm_err("*** Disabling disk writes to avoid confusing Valgrind ***");
-        }
+    if (cib_writes_enabled && use_valgrind &&
+        (crm_is_true(use_valgrind) || strstr(use_valgrind, "pacemaker-based"))) {
+
+        cib_writes_enabled = FALSE;
+        crm_err("*** Disabling disk writes to avoid confusing Valgrind ***");
     }
 
     status = find_xml_node(root, XML_CIB_TAG_STATUS, FALSE);

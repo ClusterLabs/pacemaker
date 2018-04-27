@@ -257,8 +257,8 @@ crmd_exit(crm_exit_t exit_code)
     election_fini(fsa_election);
     fsa_election = NULL;
 
-    /* Tear down the CIB connection, but don't free it yet -- it could be used
-     * when we drain the mainloop later.
+    /* Tear down the CIB manager connection, but don't free it yet -- it could
+     * be used when we drain the mainloop later.
      */
     cib_free_callbacks(fsa_cib_conn);
     fsa_cib_conn->cmds->signoff(fsa_cib_conn);
@@ -399,7 +399,7 @@ do_startup(long long action,
     config_read = mainloop_add_trigger(G_PRIORITY_HIGH, crm_read_options, NULL);
     transition_trigger = mainloop_add_trigger(G_PRIORITY_LOW, te_graph_trigger, NULL);
 
-    crm_debug("Creating CIB and executor objects");
+    crm_debug("Creating CIB manager and executor objects");
     fsa_cib_conn = cib_new();
 
     lrm_state_init_local();

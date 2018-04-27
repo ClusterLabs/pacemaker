@@ -1,21 +1,10 @@
 /*
- * Copyright (c) 2008 Andrew Beekhof
+ * Copyright 2008-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+
 #include <crm_internal.h>
 
 #include <unistd.h>
@@ -447,7 +436,7 @@ cib_remote_signoff(cib_t * cib)
 
     /* cib_remote_opaque_t *private = cib->variant_opaque; */
 
-    crm_debug("Signing out of the CIB Service");
+    crm_debug("Disconnecting from the CIB manager");
 #ifdef HAVE_GNUTLS_GNUTLS_H
     cib_tls_close(cib);
 #endif
@@ -524,7 +513,7 @@ cib_remote_perform_op(cib_t * cib, const char *op, const char *host, const char 
         return -EPROTO;
     }
 
-    crm_trace("Sending %s message to CIB service", op);
+    crm_trace("Sending %s message to the CIB manager", op);
     if (!(call_options & cib_sync_call)) {
         crm_remote_send(&private->callback, op_msg);
     } else {
@@ -581,7 +570,7 @@ cib_remote_perform_op(cib_t * cib, const char *op, const char *host, const char 
     }
 
     /* if(IPC_ISRCONN(native->command_channel) == FALSE) { */
-    /*      crm_err("CIB disconnected: %d",  */
+    /*      crm_err("The CIB manager disconnected: %d",  */
     /*              native->command_channel->ch_status); */
     /*      cib->state = cib_disconnected; */
     /* } */

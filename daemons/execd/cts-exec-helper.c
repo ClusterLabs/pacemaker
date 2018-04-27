@@ -368,7 +368,7 @@ generate_params(void)
     cib_conn = cib_new();
     rc = cib_conn->cmds->signon(cib_conn, "cts-exec-helper", cib_query);
     if (rc != pcmk_ok) {
-        crm_err("Error signing on to the CIB service: %s", pcmk_strerror(rc));
+        crm_err("Could not connect to the CIB manager: %s", pcmk_strerror(rc));
         rc = -1;
         goto param_gen_bail;
     }

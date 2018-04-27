@@ -64,9 +64,9 @@ SendSIGKILL=no
 # However, the node will likely end up being fenced as a result, so it's
 # not enabled by default.
 #
-# ExecStopPost=/usr/bin/killall -TERM pacemaker-attrd pacemaker-controld \
-#              pacemaker-execd pacemaker-fenced pacemaker-schedulerd \
-#              cib
+# ExecStopPost=/usr/bin/killall -TERM pacemaker-attrd pacemaker-based \
+#              pacemaker-controld pacemaker-execd pacemaker-fenced \
+#              pacemaker-schedulerd
 
 # If you want Corosync to stop whenever Pacemaker is stopped,
 # uncomment the next line too:

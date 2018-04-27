@@ -209,7 +209,8 @@ main(int argc, char **argv)
     rc = the_cib->cmds->signon(the_cib, crm_system_name, cib_command);
 
     if (rc != pcmk_ok) {
-        fprintf(stderr, "Error signing on to the CIB service: %s\n", pcmk_strerror(rc));
+        fprintf(stderr, "Error connecting to the CIB manager: %s\n",
+                pcmk_strerror(rc));
         return crm_exit(crm_errno2exit(rc));
     }
 

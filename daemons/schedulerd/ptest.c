@@ -115,7 +115,7 @@ static struct crm_option long_options[] = {
     {"show-utilization", 0, 0, 'U', "Display utilization information"},
     {"all-actions", 0, 0, 'a', "Display all possible actions - even ones not part of the transition graph"},
 
-    {"live-check",  0, 0, 'L', "Connect to the CIB and use the current contents as input"},
+    {"live-check",  0, 0, 'L', "Connect to the CIB manager and use the current CIB contents as input"},
     {"xml-text",    1, 0, 'X', "Retrieve XML from the supplied string"},
     {"xml-file",    1, 0, 'x', "Retrieve XML from the named file"},
     /* {"xml-pipe",    0, 0, 'p', "Retrieve XML from stdin\n"}, */

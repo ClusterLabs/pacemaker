@@ -61,7 +61,10 @@ static pcmk_child_t pcmk_children[] = {
         0, crm_proc_execd,      3, 0, TRUE,  "pacemaker-execd",
         NULL, CRM_DAEMON_DIR "/pacemaker-execd"
     },
-    { 0, crm_proc_cib,        1, 0, TRUE,  "cib",        CRM_DAEMON_USER, CRM_DAEMON_DIR"/cib" },
+    {
+        0, crm_proc_based,      1, 0, TRUE,  "pacemaker-based",
+        CRM_DAEMON_USER, CRM_DAEMON_DIR "/pacemaker-based"
+    },
     {
         0, crm_proc_controld,   6, 0, TRUE, "pacemaker-controld",
         CRM_DAEMON_USER, CRM_DAEMON_DIR "/pacemaker-controld"

@@ -100,7 +100,7 @@ the necessary processes are running:
 ...lots of processes...
  1362 ?        Ssl    0:35 corosync
  1379 ?        Ss     0:00 /usr/sbin/pacemakerd -f
- 1380 ?        Ss     0:00  \_ /usr/libexec/pacemaker/cib
+ 1380 ?        Ss     0:00  \_ /usr/libexec/pacemaker/pacemaker-based
  1381 ?        Ss     0:00  \_ /usr/libexec/pacemaker/pacemaker-fenced
  1382 ?        Ss     0:00  \_ /usr/libexec/pacemaker/pacemaker-execd
  1383 ?        Ss     0:00  \_ /usr/libexec/pacemaker/pacemaker-attrd

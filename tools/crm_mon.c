@@ -197,7 +197,7 @@ mon_timer_popped(gpointer data)
 static void
 mon_cib_connection_destroy(gpointer user_data)
 {
-    print_as("Connection to the CIB terminated\n");
+    print_as("Connection to the CIB manager terminated\n");
     if (cib) {
         cib->cmds->signoff(cib);
         timer_id = g_timeout_add(reconnect_msec, mon_timer_popped, NULL);
@@ -3703,7 +3703,7 @@ mon_st_callback(stonith_t * st, stonith_event_t * e)
 }
 
 /*
- * De-init ncurses, signoff from the CIB and deallocate memory.
+ * De-init ncurses, disconnect from the CIB manager, and deallocate memory.
  */
 static void
 clean_up(crm_exit_t exit_code)

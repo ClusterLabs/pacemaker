@@ -1119,10 +1119,10 @@ static void
 cib_connection_destroy(gpointer user_data)
 {
     if (stonith_shutdown_flag) {
-        crm_info("Connection to the CIB closed.");
+        crm_info("Connection to the CIB manager closed");
         return;
     } else {
-        crm_notice("Connection to the CIB terminated. Shutting down.");
+        crm_notice("Connection to the CIB manager terminated, shutting down");
     }
     if (cib_api) {
         cib_api->cmds->signoff(cib_api);
@@ -1182,7 +1182,7 @@ setup_cib(void)
     }
 
     if (cib_api == NULL) {
-        crm_err("No connection to the CIB");
+        crm_err("No connection to the CIB manager");
         return;
     }
 
@@ -1192,7 +1192,7 @@ setup_cib(void)
     } while (rc == -ENOTCONN && ++retries < 5);
 
     if (rc != pcmk_ok) {
-        crm_err("Could not connect to the CIB service: %s (%d)", pcmk_strerror(rc), rc);
+        crm_err("Could not connect to the CIB manager: %s (%d)", pcmk_strerror(rc), rc);
 
     } else if (pcmk_ok !=
                cib_api->cmds->add_notify_callback(cib_api, T_CIB_DIFF_NOTIFY, update_cib_cache_cb)) {

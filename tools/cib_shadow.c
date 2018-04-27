@@ -1,20 +1,8 @@
-
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -347,7 +335,8 @@ main(int argc, char **argv)
         if (command == 'c' || command == 'r') {
             rc = real_cib->cmds->query(real_cib, NULL, &output, command_options);
             if (rc != pcmk_ok) {
-                fprintf(stderr, "Could not connect to the CIB: %s\n", pcmk_strerror(rc));
+                fprintf(stderr, "Could not connect to the CIB manager: %s\n",
+                        pcmk_strerror(rc));
                 exit_code = crm_errno2exit(rc);
                 goto done;
             }

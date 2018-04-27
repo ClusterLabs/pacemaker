@@ -685,13 +685,13 @@ main(int argc, char **argv)
 
     cib_conn = cib_new();
     if (cib_conn == NULL) {
-        CMD_ERR("Could not connect to CIB");
+        CMD_ERR("Could not connect to the CIB manager");
         return CRM_EX_DISCONNECT;
     }
 
     rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
     if (rc != pcmk_ok) {
-        CMD_ERR("Could not connect to CIB: %s", pcmk_strerror(rc));
+        CMD_ERR("Could not connect to the CIB manager: %s", pcmk_strerror(rc));
         exit_code = crm_errno2exit(rc);
         goto bail;
     }

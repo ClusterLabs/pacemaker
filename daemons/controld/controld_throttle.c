@@ -60,7 +60,7 @@ static mainloop_timer_t *throttle_timer = NULL;
 static char *
 find_cib_loadfile(void)
 {
-    int pid = crm_procfs_pid_of("cib");
+    int pid = crm_procfs_pid_of("pacemaker-based");
 
     return pid? crm_strdup_printf("/proc/%d/stat", pid) : NULL;
 }

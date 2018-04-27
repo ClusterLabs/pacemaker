@@ -92,7 +92,7 @@ do_cib_control(long long action,
         }
 
         if (rc != pcmk_ok) {
-            crm_info("Could not connect to the CIB service: %s", pcmk_strerror(rc));
+            crm_info("Could not connect to the CIB manager: %s", pcmk_strerror(rc));
 
         } else if (pcmk_ok !=
                    fsa_cib_conn->cmds->set_connection_dnotify(fsa_cib_conn,

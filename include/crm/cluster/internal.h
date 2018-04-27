@@ -47,7 +47,7 @@ enum crm_proc_flag {
 
     // Daemons
     crm_proc_execd      = 0x00000010,
-    crm_proc_cib        = 0x00000100,
+    crm_proc_based      = 0x00000100,
     crm_proc_controld   = 0x00000200,
     crm_proc_attrd      = 0x00001000,
     crm_proc_schedulerd = 0x00010000,
@@ -87,8 +87,8 @@ peer2text(enum crm_proc_flag proc)
         case crm_proc_none:
             text = "none";
             break;
-        case crm_proc_cib:
-            text = "cib";
+        case crm_proc_based:
+            text = "pacemaker-based";
             break;
         case crm_proc_controld:
             text = "pacemaker-controld";
@@ -117,8 +117,8 @@ text2proc(const char *proc)
 {
     /* We only care about these two so far */
 
-    if (proc && strcmp(proc, "cib") == 0) {
-        return crm_proc_cib;
+    if (proc && strcmp(proc, "pacemaker-based") == 0) {
+        return crm_proc_based;
 
     } else if (proc && strcmp(proc, "pacemaker-controld") == 0) {
         return crm_proc_controld;

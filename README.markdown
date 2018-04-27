@@ -51,8 +51,8 @@ This is not an exhaustive list:
 
 [clufter](https://github.com/jnpkrn/clufter) is a general-purpose tool
 for converting one cluster representation format to another. Among other
-possibilities, it can convert from a CMAN+rgmanager-based cluster to
-a corosync+pacemaker-based one. See its documentation for details.
+possibilities, it can convert from a cluster based on rgmanager with CMAN to
+a one based on pacemaker with corosync. See its documentation for details.
 
 ## How can I help?
 

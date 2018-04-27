@@ -26,7 +26,7 @@ class crm_corosync(crm_common):
     def Components(self):
         complist = []
         if not len(list(self.fullcomplist.keys())):
-            for c in [ "cib", "pacemaker-controld", "pacemaker-attrd", "pacemaker-execd", "pacemaker-fenced" ]:
+            for c in [ "pacemaker-based", "pacemaker-controld", "pacemaker-attrd", "pacemaker-execd", "pacemaker-fenced" ]:
                 self.fullcomplist[c] = Process(
                     self, c, 
                     pats = self.templates.get_component(self.name, c),

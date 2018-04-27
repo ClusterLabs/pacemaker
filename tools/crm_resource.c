@@ -774,11 +774,11 @@ main(int argc, char **argv)
         require_dataset = TRUE;
     }
 
-    /* Establish a connection to the CIB */
+    /* Establish a connection to the CIB manager */
     cib_conn = cib_new();
     rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
     if (rc != pcmk_ok) {
-        CMD_ERR("Error signing on to the CIB service: %s", pcmk_strerror(rc));
+        CMD_ERR("Error connecting to the CIB manager: %s", pcmk_strerror(rc));
         goto bail;
     }
 

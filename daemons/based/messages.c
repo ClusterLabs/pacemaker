@@ -94,7 +94,7 @@ cib_process_default(const char *op, int options, const char *section, xmlNode * 
 
     } else {
         result = -EPROTONOSUPPORT;
-        crm_err("Action [%s] is not supported by the CIB", op);
+        crm_err("Action [%s] is not supported by the CIB manager", op);
     }
     return result;
 }

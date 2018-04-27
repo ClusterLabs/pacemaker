@@ -87,11 +87,11 @@ Pacemaker itself is composed of multiple daemons that work together:
 
  * pacemakerd
  * pacemaker-attrd
+ * pacemaker-based
  * pacemaker-controld
  * pacemaker-execd
- * cib
- * pacemaker-schedulerd
  * pacemaker-fenced
+ * pacemaker-schedulerd
 
 .Internal Components
 image::images/pcmk-internals.png["Pacemaker software components",align="center",scaledwidth="65%"]
@@ -101,8 +101,9 @@ respawns them if they unexpectedly exit.
 
 The 'Cluster Information Base' (CIB) is an
 https://en.wikipedia.org/wiki/XML[XML] representation of the cluster's
-configuration and the state of all nodes and resources. The CIB daemon (cib)
-keeps the CIB synchronized across the cluster, and handles requests to modify it.
+configuration and the state of all nodes and resources. The 'CIB manager'
+(pacemaker-based) keeps the CIB synchronized across the cluster, and handles
+requests to modify it.
 
 The attribute manager (pacemaker-attrd) maintains a database of attributes for
 all nodes, keeps it synchronized across the cluster, and handles requests to
