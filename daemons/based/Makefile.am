@@ -18,7 +18,7 @@ COMMONLIBS	= $(top_builddir)/lib/common/libcrmcommon.la \
 halib_PROGRAMS	= pacemaker-based cibmon
 
 ## SOURCES
-noinst_HEADERS	= callbacks.h cibio.h cibmessages.h common.h notify.h
+noinst_HEADERS	= pacemaker-based.h
 
 pacemaker_based_CFLAGS	= $(CFLAGS_HARDENED_EXE)
 pacemaker_based_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)

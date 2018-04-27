@@ -24,10 +24,7 @@
 
 #include <crm/common/xml.h>
 
-#include <cibio.h>
-#include <callbacks.h>
-#include <cibmessages.h>
-#include "common.h"
+#include <pacemaker-based.h>
 
 extern gboolean cib_is_master;
 extern const char *cib_root;

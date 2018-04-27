@@ -22,13 +22,14 @@
 
 #include <crm/crm.h>
 
-#include <cibio.h>
 #include <crm/cib.h>
 #include <crm/common/util.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/cib/internal.h>
 #include <crm/cluster.h>
+
+#include <pacemaker-based.h>
 
 extern const char *cib_root;
 

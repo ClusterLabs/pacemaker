@@ -25,9 +25,7 @@
 #include <crm/common/ipcs.h>
 #include <crm/cluster/internal.h>
 
-#include <cibio.h>
-#include <cibmessages.h>
-#include <callbacks.h>
+#include <pacemaker-based.h>
 
 /* Maximum number of diffs to ignore while waiting for a resync */
 #define MAX_DIFF_RETRY 5
@@ -35,7 +33,6 @@
 gboolean cib_is_master = FALSE;
 
 xmlNode *the_cib = NULL;
-extern const char *cib_our_uname;
 int revision_check(xmlNode * cib_update, xmlNode * cib_copy, int flags);
 int get_revision(xmlNode * xml_obj, int cur_revision);
 
@@ -47,9 +44,6 @@ gboolean update_results(xmlNode * failed, xmlNode * target, const char *operatio
 int cib_update_counter(xmlNode * xml_obj, const char *field, gboolean reset);
 
 int sync_our_cib(xmlNode * request, gboolean all);
-
-extern xmlNode *cib_msg_copy(const xmlNode * msg, gboolean with_data);
-extern gboolean cib_shutdown_flag;
 
 int
 cib_process_shutdown_req(const char *op, int options, const char *section, xmlNode * req,
