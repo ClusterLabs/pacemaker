@@ -357,6 +357,7 @@
 <xsl:template name="HelperDenormalizedSpace">
   <xsl:param name="Source"/>
   <xsl:param name="ResultTreeFragment" select="false()"/>
+  <xsl:param name="InnerSimulation" select="false()"/>
   <xsl:choose>
     <xsl:when test="not($ResultTreeFragment)">
       <!-- intention here is that immediately surrounding text (mostly expected
@@ -378,7 +379,7 @@
                       $ExistingSpace/self::text()[
                         normalize-space(.) != string(.)
                       ]
-                    )">
+                    ) and $InnerSimulation">
         <xsl:text> </xsl:text>
       </xsl:if>
     </xsl:when>
@@ -560,6 +561,7 @@
                           )">
               <xsl:call-template name="HelperDenormalizedSpace">
                 <xsl:with-param name="Source" select="."/>
+                <xsl:with-param name="InnerSimulation" select="true()"/>
               </xsl:call-template>
               <xsl:copy>
                 <xsl:for-each select="@*">
@@ -588,6 +590,7 @@
           <xsl:when test="$Replacement">
             <xsl:call-template name="HelperDenormalizedSpace">
               <xsl:with-param name="Source" select="."/>
+              <xsl:with-param name="InnerSimulation" select="true()"/>
             </xsl:call-template>
             <xsl:copy>
               <xsl:for-each select="@*">
@@ -614,6 +617,7 @@
           <xsl:otherwise>
             <xsl:call-template name="HelperDenormalizedSpace">
               <xsl:with-param name="Source" select="."/>
+              <xsl:with-param name="InnerSimulation" select="true()"/>
             </xsl:call-template>
             <xsl:call-template name="HelperIdentity"/>
           </xsl:otherwise>
@@ -760,6 +764,7 @@
             <!-- plain rename (space helper?) -->
             <xsl:call-template name="HelperDenormalizedSpace">
               <xsl:with-param name="Source" select="."/>
+              <xsl:with-param name="InnerSimulation" select="true()"/>
             </xsl:call-template>
             <xsl:copy>
               <xsl:for-each select="@*">
@@ -795,6 +800,7 @@
           <xsl:otherwise>
             <xsl:call-template name="HelperDenormalizedSpace">
               <xsl:with-param name="Source" select="."/>
+              <xsl:with-param name="InnerSimulation" select="true()"/>
             </xsl:call-template>
             <xsl:copy>
               <xsl:apply-templates select="@*|node()"/>
@@ -989,6 +995,7 @@
           <xsl:otherwise>
             <xsl:call-template name="HelperDenormalizedSpace">
               <xsl:with-param name="Source" select="."/>
+              <xsl:with-param name="InnerSimulation" select="true()"/>
             </xsl:call-template>
             <xsl:call-template name="HelperIdentity"/>
           </xsl:otherwise>
