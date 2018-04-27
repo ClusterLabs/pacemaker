@@ -230,9 +230,10 @@ main(int argc, char **argv)
         crm_notice("Using custom config location: %s", cib_root);
     }
 
-    if (crm_is_writable(cib_root, NULL, CRM_DAEMON_USER, CRM_DAEMON_GROUP, FALSE) == FALSE) {
-        crm_err("Bad permissions on %s. Terminating", cib_root);
-        fprintf(stderr, "ERROR: Bad permissions on %s. See logs for details\n", cib_root);
+    if (pcmk__daemon_can_write(cib_root, NULL) == FALSE) {
+        crm_err("Terminating due to bad permissions on %s", cib_root);
+        fprintf(stderr, "ERROR: Bad permissions on %s (see logs for details)\n",
+                cib_root);
         fflush(stderr);
         return 100;
     }
