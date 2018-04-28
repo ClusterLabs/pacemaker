@@ -18,6 +18,9 @@ class BasePatterns(object):
         patternvariants[name] = self
         self.ignore = [
             "avoid confusing Valgrind",
+
+            # Logging bug in some versions of libvirtd
+            r"libvirtd.*: internal error: Failed to parse PCI config address",
         ]
         self.BadNews = []
         self.components = {}
