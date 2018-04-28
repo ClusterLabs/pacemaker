@@ -181,37 +181,49 @@ crm_log_deinit(void)
 }
 
 #define FMT_MAX 256
+
 static void
 set_format_string(int method, const char *daemon)
 {
-    int offset = 0;
-    char fmt[FMT_MAX];
-
-    if (method > QB_LOG_STDERR) {
-        /* When logging to a file */
-        struct utsname res;
-
-        if (uname(&res) == 0) {
-            offset +=
-                snprintf(fmt + offset, FMT_MAX - offset, "%%t [%lu] %s %10s: ",
-                         (unsigned long) getpid(), res.nodename, daemon);
-        } else {
-            offset += snprintf(fmt + offset, FMT_MAX - offset, "%%t [%lu] %10s: ",
-                               (unsigned long) getpid(), daemon);
-        }
-    }
-
     if (method == QB_LOG_SYSLOG) {
-        offset += snprintf(fmt + offset, FMT_MAX - offset, "%%g %%-7p: %%b");
+        // The system log gets a simplified, user-friendly format
         crm_extended_logging(method, QB_FALSE);
-    } else if (crm_tracing_enabled()) {
-        offset += snprintf(fmt + offset, FMT_MAX - offset, "(%%-12f:%%5l %%g) %%-7p: %%n:\t%%b");
-    } else {
-        offset += snprintf(fmt + offset, FMT_MAX - offset, "%%g %%-7p: %%n:\t%%b");
-    }
+        qb_log_format_set(method, "%g %p: %b");
 
-    CRM_LOG_ASSERT(offset > 0);
-    qb_log_format_set(method, fmt);
+    } else {
+        // Everything else gets more detail, for advanced troubleshooting
+
+        int offset = 0;
+        char fmt[FMT_MAX];
+
+        if (method > QB_LOG_STDERR) {
+            struct utsname res;
+            const char *nodename = "localhost";
+
+            if (uname(&res) == 0) {
+                nodename = res.nodename;
+            }
+
+            // If logging to file, prefix with timestamp, node name, daemon ID
+            offset += snprintf(fmt + offset, FMT_MAX - offset,
+                               "%%t %s %-20s[%lu] ",
+                               nodename, daemon, (unsigned long) getpid());
+        }
+
+        // Add function name (in parentheses)
+        offset += snprintf(fmt + offset, FMT_MAX - offset, "(%%n");
+        if (crm_tracing_enabled()) {
+            // When tracing, add file and line number
+            offset += snprintf(fmt + offset, FMT_MAX - offset, "@%%f:%%l");
+        }
+        offset += snprintf(fmt + offset, FMT_MAX - offset, ")");
+
+        // Add tag (if any), severity, and actual message
+        offset += snprintf(fmt + offset, FMT_MAX - offset, " %%g\t%%p: %%b");
+
+        CRM_LOG_ASSERT(offset > 0);
+        qb_log_format_set(method, fmt);
+    }
 }
 
 gboolean
