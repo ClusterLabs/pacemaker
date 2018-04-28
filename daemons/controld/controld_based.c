@@ -63,7 +63,7 @@ do_cib_control(long long action,
             return;
         }
 
-        crm_info("Disconnecting CIB");
+        crm_info("Disconnecting from the CIB manager");
         clear_bit(fsa_input_register, R_CIB_CONNECTED);
 
         fsa_cib_conn->cmds->del_notify_callback(fsa_cib_conn, T_CIB_DIFF_NOTIFY, do_cib_updated);
@@ -72,14 +72,14 @@ do_cib_control(long long action,
             fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
             fsa_cib_conn->cmds->signoff(fsa_cib_conn);
         }
-        crm_notice("Disconnected from the CIB");
+        crm_notice("Disconnected from the CIB manager");
     }
 
     if (action & A_CIB_START) {
         int rc = pcmk_ok;
 
         if (cur_state == S_STOPPING) {
-            crm_err("Ignoring request to start the CIB after shutdown");
+            crm_err("Ignoring request to connect to the CIB manager after shutdown");
             return;
         }
 

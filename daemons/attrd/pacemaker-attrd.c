@@ -75,7 +75,7 @@ attrd_cpg_destroy(gpointer unused)
         crm_info("Corosync disconnection complete");
 
     } else {
-        crm_crit("Lost connection to Corosync service!");
+        crm_crit("Lost connection to cluster layer, shutting down");
         attrd_exit_status = CRM_EX_DISCONNECT;
         attrd_shutdown(0);
     }
@@ -102,7 +102,7 @@ attrd_cib_destroy_cb(gpointer user_data)
 
     } else {
         /* eventually this should trigger a reconnect, not a shutdown */
-        crm_err("Lost connection to the CIB manager");
+        crm_crit("Lost connection to the CIB manager, shutting down");
         attrd_exit_status = CRM_EX_DISCONNECT;
         attrd_shutdown(0);
     }

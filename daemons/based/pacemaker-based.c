@@ -246,7 +246,7 @@ cib_cs_destroy(gpointer user_data)
     if (cib_shutdown_flag) {
         crm_info("Corosync disconnection complete");
     } else {
-        crm_err("Corosync connection lost!  Exiting.");
+        crm_crit("Lost connection to cluster layer, shutting down");
         terminate_cib(__FUNCTION__, CRM_EX_DISCONNECT);
     }
 }

@@ -794,7 +794,7 @@ init_children_processes(void)
 static void
 mcp_cpg_destroy(gpointer user_data)
 {
-    crm_err("Connection destroyed");
+    crm_crit("Lost connection to cluster layer, shutting down");
     crm_exit(CRM_EX_DISCONNECT);
 }
 

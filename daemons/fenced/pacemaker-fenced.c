@@ -214,7 +214,7 @@ stonith_peer_ais_callback(cpg_handle_t handle,
 static void
 stonith_peer_cs_destroy(gpointer user_data)
 {
-    crm_err("Corosync connection terminated");
+    crm_crit("Lost connection to cluster layer, shutting down");
     stonith_shutdown(0);
 }
 #endif
@@ -1122,7 +1122,7 @@ cib_connection_destroy(gpointer user_data)
         crm_info("Connection to the CIB manager closed");
         return;
     } else {
-        crm_notice("Connection to the CIB manager terminated, shutting down");
+        crm_crit("Lost connection to the CIB manager, shutting down");
     }
     if (cib_api) {
         cib_api->cmds->signoff(cib_api);

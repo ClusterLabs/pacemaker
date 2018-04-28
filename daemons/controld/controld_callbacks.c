@@ -270,8 +270,8 @@ crmd_cib_connection_destroy(gpointer user_data)
         return;
     }
 
-    /* eventually this will trigger a reconnect, not a shutdown */
-    crm_err("Connection to the CIB manager terminated");
+    // @TODO This should trigger a reconnect, not a shutdown
+    crm_crit("Lost connection to the CIB manager, shutting down");
     register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
     clear_bit(fsa_input_register, R_CIB_CONNECTED);
 

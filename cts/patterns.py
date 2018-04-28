@@ -238,11 +238,15 @@ class crm_corosync(BasePatterns):
             ]
 
         self.components["corosync"] = [
-            r"pacemakerd.*error:.*Connection destroyed",
-            r"attrd.*:\s*(crit|error):.*Lost connection to (Corosync|CIB) service",
-            r"pacemaker-fenced.*:\s*(Corosync connection terminated|Shutting down)",
-            r"pacemaker-based.*:\s*Corosync connection lost!\s+Exiting.",
-            r"pacemaker-controld.*:\s*(connection terminated|Disconnected from Corosync)",
+            # We expect each daemon to lose its cluster connection.
+            # However, if the CIB manager loses its connection first,
+            # it's possible for another daemon to lose that connection and
+            # exit before losing the cluster connection.
+            r"pacemakerd.*:\s*(crit|error):.*Lost connection to cluster layer",
+            r"pacemaker-attrd.*:\s*(crit|error):.*Lost connection to (cluster layer|the CIB manager)",
+            r"pacemaker-based.*:\s*(crit|error):.*Lost connection to cluster layer",
+            r"pacemaker-controld.*:\s*(crit|error):.*Lost connection to (cluster layer|the CIB manager)",
+            r"pacemaker-fenced.*:\s*(crit|error):.*Lost connection to (cluster layer|the CIB manager)",
             r"schedulerd.*Scheduling Node .* for STONITH",
             r"pacemaker-controld.*:\s*Peer .* was terminated \(.*\) by .* for .*:\s*OK",
         ]
