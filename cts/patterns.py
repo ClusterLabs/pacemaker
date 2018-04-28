@@ -252,15 +252,18 @@ class crm_corosync(BasePatterns):
         ]
 
         self.components["pacemaker-based"] = [
-            r"State transition .* S_RECOVERY",
-            r"Respawning failed child process: (pacemaker-attrd|pacemaker-controld)",
-            r"Connection to cib_.* (failed|closed)",
-            r"pacemaker-controld.*:.*Connection to the CIB terminated...",
-            r"attrd.*:.*(Lost connection to CIB service|Connection to the CIB terminated)",
-            r"pacemaker-controld\[[0-9]+\] exited with status 1 \(",
-            r"attrd\[[0-9]+\] exited with status 102 \(",
-            r"pacemaker-controld.*: Input I_TERMINATE .*from do_recover",
+            r"pacemakerd.* pacemaker-attrd\[[0-9]+\] exited with status 102",
+            r"pacemakerd.* pacemaker-controld\[[0-9]+\] exited with status 1",
+            r"pacemakerd.* Respawning failed child process: pacemaker-attrd",
+            r"pacemakerd.* Respawning failed child process: pacemaker-based",
+            r"pacemakerd.* Respawning failed child process: pacemaker-controld",
+            r"pacemakerd.* Respawning failed child process: pacemaker-fenced",
+            r"pacemaker-.* Connection to cib_.* (failed|closed)",
+            r"pacemaker-attrd.*:.*Lost connection to the CIB manager",
+            r"pacemaker-controld.*:.*Lost connection to the CIB manager",
             r"pacemaker-controld.*I_ERROR.*crmd_cib_connection_destroy",
+            r"pacemaker-controld.* State transition .* S_RECOVERY",
+            r"pacemaker-controld.*: Input I_TERMINATE .*from do_recover",
             r"pacemaker-controld.*Could not recover from internal error",
         ]
         self.components["pacemaker-based-ignore"] = [
