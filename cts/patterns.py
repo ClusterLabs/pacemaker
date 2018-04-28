@@ -145,9 +145,8 @@ class crm_corosync(BasePatterns):
             r"Parse error: Ignoring unknown option .*nodename",
             r"error.*: Operation 'reboot' .* with device 'FencingFail' returned:",
             r"getinfo response error: 1$",
-            "sbd.* error: inquisitor_child: DEBUG MODE IS ACTIVE",
-            r"sbd.* pcmk:\s*error:.*Connection to cib_ro failed",
-            r"sbd.* pcmk:\s*error:.*Connection to cib_ro.* closed .I/O condition=17",
+            r"sbd.* error: inquisitor_child: DEBUG MODE IS ACTIVE",
+            r"sbd.* pcmk:\s*error:.*Connection to cib_ro.* (failed|closed)",
         ]
 
         self.BadNews = [

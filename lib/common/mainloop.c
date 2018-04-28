@@ -674,7 +674,8 @@ mainloop_gio_callback(GIOChannel * gio, GIOCondition condition, gpointer data)
     }
 
     if (client->ipc && crm_ipc_connected(client->ipc) == FALSE) {
-        crm_err("Connection to %s[%p] closed (I/O condition=%d)", client->name, client, condition);
+        crm_err("Connection to %s closed " CRM_XS "client=%p condition=%d",
+                client->name, client, condition);
         keep = FALSE;
 
     } else if (condition & (G_IO_HUP | G_IO_NVAL | G_IO_ERR)) {
