@@ -203,26 +203,18 @@ class crm_corosync(BasePatterns):
         ]
 
         self.components["common-ignore"] = [
-                    "Pending action:",
-                    "error: crm_log_message_adv:",
-                    r"resource( was|s were) active at shutdown",
-                    "pending LRM operations at shutdown",
-                    "Lost connection to the CIB service",
-                    "Connection to the CIB terminated...",
-                    "Sending message to CIB service FAILED",
-                    "apply_xml_diff:.*Diff application failed!",
-                    r"pacemaker-controld.*:\s*Action A_RECOVER .* not supported",
-                    "unconfirmed_actions:.*Waiting on .* unconfirmed actions",
-                    "cib_native_msgready:.*Message pending on command channel",
-                    r"pacemaker-controld.*:\s*Performing A_EXIT_1 - forcefully exiting ",
-                    "verify_stopped:.*Resource .* was active at shutdown.  You may ignore this error if it is unmanaged.",
-                    "error: attrd_connection_destroy:.*Lost connection to attrd",
-                    r".*:\s*Executing .* fencing operation \(.*\) on ",
-                    r".*:\s*Requesting fencing \([^)]+\) of node ",
-                    r"(Blackbox dump requested|Problem detected)",
-#                    "error: native_create_actions: Resource .*stonith::.* is active on 2 nodes attempting recovery",
-#                    "error: process_pe_message: Transition .* ERRORs found during PE processing",
-            ]
+            r"Pending action:",
+            r"resource( was|s were) active at shutdown",
+            r"pending LRM operations at shutdown",
+            r"Lost connection to the CIB manager",
+            r"pacemaker-controld.*:\s*Action A_RECOVER .* not supported",
+            r"pacemaker-controld.*:\s*Performing A_EXIT_1 - forcefully exiting ",
+            r".*:\s*Executing .* fencing operation \(.*\) on ",
+            r".*:\s*Requesting fencing \([^)]+\) of node ",
+            r"(Blackbox dump requested|Problem detected)",
+#           "Resource .*stonith::.* is active on 2 nodes attempting recovery",
+#           "Transition .* ERRORs found during PE processing",
+        ]
         
         self.components["corosync-ignore"] = [
             r"error:.*Connection to the CPG API failed: Library error",
@@ -248,7 +240,7 @@ class crm_corosync(BasePatterns):
             r"pacemaker-controld.*:\s*(crit|error):.*Lost connection to (cluster layer|the CIB manager)",
             r"pacemaker-fenced.*:\s*(crit|error):.*Lost connection to (cluster layer|the CIB manager)",
             r"schedulerd.*Scheduling Node .* for STONITH",
-            r"pacemaker-controld.*:\s*Peer .* was terminated \(.*\) by .* for .*:\s*OK",
+            r"pacemaker-controld.*:\s*Peer .* was terminated \(.*\) by .* on behalf of .*:\s*OK",
         ]
 
         self.components["pacemaker-based"] = [
