@@ -16,7 +16,7 @@ Options:
  -V, --verbose   Increase test verbosity
  -v, --valgrind  Run test commands under valgrind
 
-Tests (default tests are 'scheduler cli exec'):
+Tests (default tests are 'scheduler cli'):
  scheduler         Action scheduler
  cli               Command-line tools
  exec              Local resource agent executor
@@ -210,7 +210,6 @@ done
 if [ -z "$tests" ]; then
     add_test scheduler
     add_test cli
-    add_test exec
 fi
 
 run_tests $tests
