@@ -87,7 +87,6 @@ dnl Compiler characteristics
 dnl ========================================================================
 
 AC_PROG_CC dnl Can force other with environment variable "CC".
-AM_PROG_CC_C_O
 AC_PROG_CC_STDC
 gl_EARLY
 gl_INIT
@@ -95,17 +94,12 @@ gl_INIT
 LT_INIT([dlopen])
 LTDL_INIT([convenience])
 
-AC_PROG_YACC
-AM_PROG_LEX
-
-AC_C_STRINGIZE
 AC_TYPE_SIZE_T
 AC_CHECK_SIZEOF(char)
 AC_CHECK_SIZEOF(short)
 AC_CHECK_SIZEOF(int)
 AC_CHECK_SIZEOF(long)
 AC_CHECK_SIZEOF(long long)
-AC_STRUCT_TIMEZONE
 
 dnl ===============================================
 dnl Helpers
@@ -143,34 +137,49 @@ AC_ARG_WITH(pkgname,
 AC_SUBST(PKGNAME)
 
 AC_ARG_ENABLE([ansi],
-    [  --enable-ansi  Force GCC to compile to ANSI standard for older compilers. [default=no] ])
+    [  --enable-ansi  Force GCC to compile to ANSI standard for older compilers. @<:@no@:>@])
 
 AC_ARG_ENABLE([fatal-warnings],
-    [  --enable-fatal-warnings  Enable pedantic and fatal warnings for gcc [default=yes] ])
+    [  --enable-fatal-warnings  Enable pedantic and fatal warnings for gcc @<:@yes@:>@])
 
 AC_ARG_ENABLE([quiet],
-    [  --enable-quiet  Suppress make output unless there is an error [default=no] ])
+    [  --enable-quiet  Suppress make output unless there is an error @<:@no@:>@])
 
 AC_ARG_ENABLE([no-stack],
-    [  --enable-no-stack  Build only the Policy Engine and its requirements [default=no] ])
+    [  --enable-no-stack  Build only the scheduler and its requirements @<:@no@:>@])
 
 AC_ARG_ENABLE([upstart],
-    [  --enable-upstart  Enable support for managing resources via Upstart [default=try] ],
+    [  --enable-upstart  Enable support for managing resources via Upstart @<:@try@:>@ ],
     [],
     [enable_upstart=try],
 )
 
 AC_ARG_ENABLE([systemd],
-    [  --enable-systemd  Enable support for managing resources via systemd [default=try]],
+    [  --enable-systemd  Enable support for managing resources via systemd @<:@try@:>@],
     [],
     [enable_systemd=try],
 )
 
 AC_ARG_ENABLE(hardening,
-    [  --with-hardening  Harden the resulting executables/libraries (best effort by default) ],
+    [  --enable-hardening  Harden the resulting executables/libraries @<:@try@:>@],
     [ HARDENING="${enableval}" ],
     [ HARDENING=try ],
 )
+
+# By default, we add symlinks at the pre-2.0.0 daemon name locations, so that:
+# (1) tools that directly invoke those names for metadata etc. will still work
+# (2) this installation can be used in a bundle container image used with
+#     cluster hosts running Pacemaker 1.1.17+
+# If you know your target systems will not have any need for it, you can
+# disable this option. Once the above use cases are no longer in wide use, we
+# can disable this option by default, and once we no longer want to support
+# them at all, we can drop the option altogether.
+AC_ARG_ENABLE(legacy-links,
+    [  --enable-legacy-links  Add symlinks for old daemon names @<:@yes@:>@],
+    [ LEGACY_LINKS="${enableval}" ],
+    [ LEGACY_LINKS=yes ],
+)
+AM_CONDITIONAL(BUILD_LEGACY_LINKS, test "x${LEGACY_LINKS}" = "xyes")
 
 AC_ARG_WITH(corosync,
     [  --with-corosync  Support the Corosync messaging and membership layer ],
@@ -185,12 +194,12 @@ AC_ARG_WITH(nagios,
 )
 
 AC_ARG_WITH(nagios-plugin-dir,
-    [  --with-nagios-plugin-dir=DIR  Directory for nagios plugins [${NAGIOS_PLUGIN_DIR}] ],
+    [  --with-nagios-plugin-dir=DIR  Directory for nagios plugins @<:@LIBEXECDIR/nagios/plugins@:>@],
     [ NAGIOS_PLUGIN_DIR="$withval" ]
 )
 
 AC_ARG_WITH(nagios-metadata-dir,
-    [  --with-nagios-metadata-dir=DIR  Directory for nagios plugins metadata [${NAGIOS_METADATA_DIR}] ],
+    [  --with-nagios-metadata-dir=DIR  Directory for nagios plugins metadata @<:@DATADIR/nagios/plugins-metadata@:>@],
     [ NAGIOS_METADATA_DIR="$withval" ]
 )
 
@@ -206,9 +215,15 @@ AC_ARG_WITH(cibsecrets,
     [ SUPPORT_CIBSECRETS=no ],
 )
 
+AC_ARG_WITH(gnutls-priorities,
+    [  --with-gnutls-priorities  GnuTLS cipher priorities @<:@NORMAL@:>@ ],
+    [ PCMK_GNUTLS_PRIORITIES="$withval" ],
+    [ PCMK_GNUTLS_PRIORITIES="NORMAL" ],
+)
+
 INITDIR=""
 AC_ARG_WITH(initdir,
-    [  --with-initdir=DIR  Directory for init (rc) scripts [${INITDIR}] ],
+    [  --with-initdir=DIR  Directory for init (rc) scripts],
     [ INITDIR="$withval" ])
 
 SUPPORT_PROFILING=0
@@ -222,13 +237,13 @@ AC_ARG_WITH(coverage,
 
 PUBLICAN_BRAND="common"
 AC_ARG_WITH(brand,
-    [  --with-brand=brand  Brand to use for generated documentation (set empty for no docs) [$PUBLICAN_BRAND] ],
+    [  --with-brand=brand  Brand to use for generated documentation (set empty for no docs) @<:@common@:>@],
     [ test x"$withval" = x"no" || PUBLICAN_BRAND="$withval" ])
 AC_SUBST(PUBLICAN_BRAND)
 
 CONFIGDIR=""
 AC_ARG_WITH(configdir,
-    [  --with-configdir=DIR  Directory for Pacemaker configuration file [${CONFIGDIR}]],
+    [  --with-configdir=DIR  Directory for Pacemaker configuration file @<:@SYSCONFDIR/sysconfig@:>@],
     [ CONFIGDIR="$withval" ]
 )
 
@@ -247,6 +262,8 @@ AC_ARG_WITH(bundledir,
 dnl ===============================================
 dnl General Processing
 dnl ===============================================
+
+AC_PROG_LN_S
 
 if cc_supports_flag -Werror; then
     WERROR="-Werror"
@@ -370,6 +387,9 @@ if test x"${CRM_BUNDLE_DIR}" = x""; then
 fi
 AC_DEFINE_UNQUOTED(CRM_BUNDLE_DIR,"$CRM_BUNDLE_DIR", Location for Pacemaker bundle logs)
 AC_SUBST(CRM_BUNDLE_DIR)
+
+AC_DEFINE_UNQUOTED([PCMK_GNUTLS_PRIORITIES], ["$PCMK_GNUTLS_PRIORITIES"],
+		   [GnuTLS cipher priorities])
 
 for j in prefix exec_prefix bindir sbindir libexecdir datadir sysconfdir \
     sharedstatedir localstatedir libdir includedir oldincludedir infodir \
@@ -1027,7 +1047,7 @@ AC_DEFINE_UNQUOTED(CRM_BLACKBOX_DIR,"$CRM_BLACKBOX_DIR", Where to keep blackbox 
 AC_SUBST(CRM_BLACKBOX_DIR)
 
 PE_STATE_DIR="${localstatedir}/lib/pacemaker/pengine"
-AC_DEFINE_UNQUOTED(PE_STATE_DIR,"$PE_STATE_DIR", Where to keep PEngine outputs)
+AC_DEFINE_UNQUOTED(PE_STATE_DIR,"$PE_STATE_DIR", Where to keep scheduler outputs)
 AC_SUBST(PE_STATE_DIR)
 
 CRM_CONFIG_DIR="${localstatedir}/lib/pacemaker/cib"
@@ -1277,7 +1297,7 @@ dnl    Cluster stack - Sanity
 dnl
 
 if test x${enable_no_stack} = xyes; then
-    AC_MSG_NOTICE(No cluster stack supported.  Just building the Policy Engine)
+    AC_MSG_NOTICE(No cluster stack supported, building only the scheduler)
     PCMK_FEATURES="$PCMK_FEATURES no-cluster-stack"
 else
     AC_MSG_CHECKING(for supported stacks)
@@ -1364,27 +1384,17 @@ dnl ========================================================================
 dnl    GnuTLS
 dnl ========================================================================
 
-AC_CHECK_HEADERS(gnutls/gnutls.h)
-AC_CHECK_HEADERS(security/pam_appl.h pam/pam_appl.h)
-
-dnl GNUTLS library: Attempt to determine by 'libgnutls-config' program.
-dnl If no 'libgnutls-config', try traditional autoconf means.
-AC_PATH_PROGS(LIBGNUTLS_CONFIG, libgnutls-config)
-
-if test -n "$LIBGNUTLS_CONFIG"; then
-    AC_MSG_CHECKING(for gnutls header flags)
-    GNUTLSHEAD="`$LIBGNUTLS_CONFIG --cflags`";
-    AC_MSG_RESULT($GNUTLSHEAD)
-    AC_MSG_CHECKING(for gnutls library flags)
-    GNUTLSLIBS="`$LIBGNUTLS_CONFIG --libs`";
-    AC_MSG_RESULT($GNUTLSLIBS)
+dnl gnutls_priority_set_direct available since 2.1.7 (released 2007-11-29)
+AC_CHECK_LIB(gnutls, gnutls_priority_set_direct)
+if test "$ac_cv_lib_gnutls_gnutls_priority_set_direct" != ""; then
+    AC_CHECK_HEADERS(gnutls/gnutls.h)
 fi
-AC_CHECK_LIB(gnutls, gnutls_init)
-AC_CHECK_FUNCS(gnutls_priority_set_direct)
 
-AC_SUBST(GNUTLSHEAD)
-AC_SUBST(GNUTLSLIBS)
+dnl ========================================================================
+dnl    PAM
+dnl ========================================================================
 
+AC_CHECK_HEADERS(security/pam_appl.h pam/pam_appl.h)
 
 dnl ========================================================================
 dnl    System Health
@@ -1557,8 +1567,8 @@ dnl default case are as follows:
 dnl
 dnl * CFLAGS_HARDENED_EXE, LDFLAGS_HARDENED_EXE
 dnl    compiler and linker flags (respectively) for daemon programs
-dnl    (attrd, cib, crmd, lrmd, stonithd, pacemakerd, pacemaker_remoted,
-dnl    pengine)
+dnl    (pacemakerd, pacemaker-attrd, pacemaker-controld, pacemaker-execd,
+dnl    cib, stonithd, pacemaker-remoted, pacemaker-schedulerd)
 dnl
 dnl * CFLAGS_HARDENED_LIB, LDFLAGS_HARDENED_LIB
 dnl    compiler and linker flags (respectively) for libraries linked
@@ -1700,14 +1710,19 @@ dnl Files we output that need to be executable
 AC_CONFIG_FILES([cts/CTSlab.py], [chmod +x cts/CTSlab.py])
 AC_CONFIG_FILES([cts/LSBDummy], [chmod +x cts/LSBDummy])
 AC_CONFIG_FILES([cts/OCFIPraTest.py], [chmod +x cts/OCFIPraTest.py])
+AC_CONFIG_FILES([cts/cluster_test], [chmod +x cts/cluster_test])
+AC_CONFIG_FILES([cts/cts], [chmod +x cts/cts])
+AC_CONFIG_FILES([cts/cts-cli], [chmod +x cts/cts-cli])
 AC_CONFIG_FILES([cts/cts-coverage], [chmod +x cts/cts-coverage])
-AC_CONFIG_FILES([cts/cts-lrmd], [chmod +x cts/cts-lrmd])
-AC_CONFIG_FILES([cts/cts-pengine], [chmod +x cts/cts-pengine])
-AC_CONFIG_FILES([cts/cts-stonithd], [chmod +x cts/cts-stonithd])
+AC_CONFIG_FILES([cts/cts-exec], [chmod +x cts/cts-exec])
+AC_CONFIG_FILES([cts/cts-fencing], [chmod +x cts/cts-fencing])
+AC_CONFIG_FILES([cts/cts-regression], [chmod +x cts/cts-regression])
+AC_CONFIG_FILES([cts/cts-scheduler], [chmod +x cts/cts-scheduler])
 AC_CONFIG_FILES([cts/lxc_autogen.sh], [chmod +x cts/lxc_autogen.sh])
 AC_CONFIG_FILES([cts/benchmark/clubench], [chmod +x cts/benchmark/clubench])
 AC_CONFIG_FILES([cts/fence_dummy], [chmod +x cts/fence_dummy])
-AC_CONFIG_FILES([fencing/fence_legacy], [chmod +x fencing/fence_legacy])
+AC_CONFIG_FILES([cts/pacemaker-cts-dummyd], [chmod +x cts/pacemaker-cts-dummyd])
+AC_CONFIG_FILES([daemons/fenced/fence_legacy], [chmod +x daemons/fenced/fence_legacy])
 AC_CONFIG_FILES([tools/crm_failcount], [chmod +x tools/crm_failcount])
 AC_CONFIG_FILES([tools/crm_master], [chmod +x tools/crm_master])
 AC_CONFIG_FILES([tools/crm_report], [chmod +x tools/crm_report])
@@ -1718,19 +1733,35 @@ dnl Other files we output
 AC_CONFIG_FILES(Makefile                                            \
                 Doxyfile                                            \
                 cts/Makefile                                        \
+                cts/CTS.py                                          \
                 cts/CTSvars.py                                      \
                 cts/benchmark/Makefile                              \
-                cib/Makefile                                        \
-                attrd/Makefile                                      \
-                crmd/Makefile                                       \
-                pengine/Makefile                                    \
+                cts/pacemaker-cts-dummyd@.service                   \
+                daemons/Makefile                                    \
+                daemons/attrd/Makefile                              \
+                daemons/based/Makefile                              \
+                daemons/controld/Makefile                           \
+                daemons/execd/Makefile                              \
+                daemons/execd/pacemaker_remote                      \
+                daemons/execd/pacemaker_remote.service              \
+                daemons/fenced/Makefile                             \
+                daemons/pacemakerd/Makefile                         \
+                daemons/pacemakerd/pacemaker                        \
+                daemons/pacemakerd/pacemaker.service                \
+                daemons/pacemakerd/pacemaker.upstart                \
+                daemons/pacemakerd/pacemaker.combined.upstart       \
+                daemons/schedulerd/Makefile                         \
                 doc/Makefile                                        \
                 doc/Clusters_from_Scratch/publican.cfg              \
                 doc/Pacemaker_Administration/publican.cfg           \
                 doc/Pacemaker_Development/publican.cfg              \
                 doc/Pacemaker_Explained/publican.cfg                \
                 doc/Pacemaker_Remote/publican.cfg                   \
-                fencing/Makefile                                    \
+                extra/Makefile                                      \
+                extra/alerts/Makefile                               \
+                extra/resources/Makefile                            \
+                extra/logrotate/Makefile                            \
+                extra/logrotate/pacemaker                           \
                 include/Makefile                                    \
                 include/crm/Makefile                                \
                 include/crm/cib/Makefile                            \
@@ -1750,31 +1781,18 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/common/Makefile                                 \
                 lib/cluster/Makefile                                \
                 lib/cib/Makefile                                    \
+                lib/gnu/Makefile                                    \
                 lib/pengine/Makefile                                \
                 lib/transition/Makefile                             \
                 lib/fencing/Makefile                                \
                 lib/lrmd/Makefile                                   \
                 lib/services/Makefile                               \
-                mcp/Makefile                                        \
-                mcp/pacemaker                                       \
-                mcp/pacemaker.service                               \
-                mcp/pacemaker.upstart                               \
-                mcp/pacemaker.combined.upstart                      \
-                lrmd/Makefile                                       \
-                lrmd/pacemaker_remote.service                       \
-                lrmd/pacemaker_remote                               \
-                extra/Makefile                                      \
-                extra/alerts/Makefile                               \
-                extra/resources/Makefile                            \
-                extra/logrotate/Makefile                            \
-                extra/logrotate/pacemaker                           \
                 tools/Makefile                                      \
                 tools/report.collector                              \
                 tools/report.common                                 \
                 tools/crm_mon.service                               \
                 tools/crm_mon.upstart                               \
                 xml/Makefile                                        \
-                lib/gnu/Makefile                                    \
 )
 
 dnl Now process the entire list of files added by previous

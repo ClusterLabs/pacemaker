@@ -1,0 +1,191 @@
+#!@BASH_PATH@
+
+# Authors:
+#  Andrew Beekhof <abeekhof@redhat.com>
+#  Fabio M. Di Nitto <fdinitto@redhat.com>
+#
+# License: Revised BSD
+
+# chkconfig: - 99 01
+# description: Pacemaker Cluster Manager
+# processname: pacemakerd
+#
+### BEGIN INIT INFO
+# Provides:		pacemaker
+# Required-Start:	$network $remote_fs corosync
+# Should-Start:		$syslog
+# Required-Stop:	$network $remote_fs corosync
+# Default-Start:
+# Default-Stop:
+# Short-Description:	Starts and stops Pacemaker Cluster Manager.
+# Description:		Starts and stops Pacemaker Cluster Manager.
+### END INIT INFO
+
+desc="Pacemaker Cluster Manager"
+prog="pacemakerd"
+
+# set secure PATH
+PATH="/sbin:/bin:/usr/sbin:/usr/bin:@sbindir@"
+
+checkrc() {
+    if [ $? = 0 ]; then
+	success
+    else
+	failure
+    fi
+}
+
+success()
+{
+	echo -ne "[  OK  ]\r"
+}
+
+failure()
+{
+	echo -ne "[FAILED]\r"
+}
+
+log() 
+{
+    logger -t pacemaker -p daemon.notice "$*"
+}
+
+notify()
+{
+    log "$*"
+    echo -n "$*"
+}
+
+status()
+{
+	pid=$(pidof $1 2>/dev/null)
+	local rtrn=$?
+	if [ $rtrn -ne 0 ]; then
+		echo "$1 is stopped"
+		if [ -f "@localstatedir@/run/$prog.pid" ]; then
+			rtrn=1
+		else
+			rtrn=3
+		fi
+	else
+		echo "$1 (pid $pid) is running..."
+	fi
+	return $rtrn
+}
+
+if [ -d @CONFIGDIR@ ]; then
+	[ -f @INITDIR@/functions ] && . @INITDIR@/functions
+set -a
+	[ -f @CONFIGDIR@/pacemaker ] && . @CONFIGDIR@/pacemaker
+	[ -f @CONFIGDIR@/sbd ] && . @CONFIGDIR@/sbd
+set +a
+fi
+
+LOCK_DIR="."
+if [ -d "@localstatedir@/lock/subsys" ]; then
+	LOCK_DIR="@localstatedir@/lock/subsys" 
+elif [ -d "@localstatedir@/lock" ]; then
+	LOCK_DIR="@localstatedir@/lock" 
+fi
+[ -z "$LOCK_FILE" ] && LOCK_FILE="$LOCK_DIR/pacemaker"
+
+# Check if there is a valid watchdog-device configured in sbd config
+if [ x != "x$SBD_WATCHDOG_DEV" -a "/dev/null" != "$SBD_WATCHDOG_DEV" -a -c "$SBD_WATCHDOG_DEV" ]; then
+	# enhance for unavailable chkconfig - don't touch sbd for now
+	if chkconfig --list sbd_helper 2>/dev/null | grep -q ":on"; then
+		SBD_SERVICE=sbd_helper
+	fi
+fi
+
+start()
+{
+	notify "Starting $desc"
+
+	# most recent distributions use tmpfs for $@localstatedir@/run
+	# to avoid to clean it up on every boot.
+	# they also assume that init scripts will create
+	# required subdirectories for proper operations
+	mkdir -p "@localstatedir@/run"
+
+	if status $prog > /dev/null 2>&1; then
+		success
+	else
+		$prog > /dev/null 2>&1 &
+
+		# Time to connect to corosync and fail
+		sleep 5
+
+		if status $prog > /dev/null 2>&1; then
+			touch "$LOCK_FILE"
+			pidof $prog > "@localstatedir@/run/$prog.pid"
+			success
+		else
+			failure
+			rtrn=1
+		fi
+	fi
+	echo
+}
+
+stop()
+{
+	shutdown_prog=$prog
+	if ! status $prog > /dev/null 2>&1; then
+	    shutdown_prog="pacemaker-controld"
+	fi
+
+	if status $shutdown_prog > /dev/null 2>&1; then
+	    notify "Signaling $desc to terminate"
+	    kill -TERM $(pidof $prog) > /dev/null 2>&1
+	    checkrc
+	    echo
+
+	    notify "Waiting for cluster services to unload"
+	    while status $prog > /dev/null 2>&1; do
+		sleep 1
+		echo -n "."
+	    done
+	else
+	    echo -n "$desc is already stopped"
+	fi
+
+	rm -f "$LOCK_FILE"
+	rm -f "@localstatedir@/run/$prog.pid"
+	killall -q -9 pacemakerd pacemaker-attrd pacemaker-based \
+		pacemaker-controld pacemaker-execd pacemaker-fenced \
+		pacemaker-schedulerd 
+	success
+	echo
+}
+
+rtrn=0
+
+case "$1" in
+start)
+	start
+;;
+restart|reload|force-reload)
+	stop
+	start
+;;
+condrestart|try-restart)
+	if status $prog > /dev/null 2>&1; then
+	    stop
+	    start
+	fi
+;;
+status)
+	status $prog
+	rtrn=$?
+;;
+stop)
+	stop
+	[ "x$SBD_SERVICE" != x ] && service $SBD_SERVICE stop
+;;
+*)
+	echo "usage: $0 {start|stop|restart|reload|force-reload|condrestart|try-restart|status}"
+	rtrn=2
+;;
+esac
+
+exit $rtrn

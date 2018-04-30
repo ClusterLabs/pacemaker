@@ -86,7 +86,7 @@ create_request_adv(const char *task, xmlNode * msg_data,
         crm_err("No sys from specified");
     }
 
-    /* host_from will get set for us if necessary by CRMd when routed */
+    // host_from will get set for us if necessary by the controller when routed
     request = create_xml_node(NULL, __FUNCTION__);
     crm_xml_add(request, F_CRM_ORIGIN, origin);
     crm_xml_add(request, F_TYPE, T_CRM);
@@ -347,14 +347,34 @@ crm_client_new(qb_ipcs_connection_t * c, uid_t uid_client, gid_t gid_client)
     return client;
 }
 
+static struct iovec *
+pcmk__new_ipc_event()
+{
+    struct iovec *iov = calloc(2, sizeof(struct iovec));
+
+    CRM_ASSERT(iov != NULL);
+    return iov;
+}
+
+/*!
+ * \brief Free an I/O vector created by crm_ipc_prepare()
+ *
+ * \param[in] event  I/O vector to free
+ */
+void
+pcmk_free_ipc_event(struct iovec *event)
+{
+    if (event != NULL) {
+        free(event[0].iov_base);
+        free(event[1].iov_base);
+        free(event);
+    }
+}
+
 static void
 free_event(gpointer data)
 {
-    struct iovec *event = data;
-
-    free(event[0].iov_base);
-    free(event[1].iov_base);
-    free(event);
+    pcmk_free_ipc_event((struct iovec *) data);
 }
 
 static void
@@ -456,9 +476,10 @@ crm_ipcs_recv(crm_client_t * c, void *data, size_t size, uint32_t * id, uint32_t
     }
 
     if (is_set(header->flags, crm_ipc_proxied)) {
-        /* mark this client as being the endpoint of a proxy connection.
-         * Proxy connections responses are sent on the event channel to avoid
-         * blocking the proxy daemon (crmd) */
+        /* Mark this client as being the endpoint of a proxy connection.
+         * Proxy connections responses are sent on the event channel, to avoid
+         * blocking the controller serving as proxy.
+         */
         c->flags |= crm_client_flag_ipc_proxied;
     }
 
@@ -556,6 +577,8 @@ crm_ipcs_flush_events(crm_client_t * c)
 
         rc = qb_ipcs_event_sendv(c->ipcs, event, 2);
         if (rc < 0) {
+            // The event didn't get sent, so put it back
+            g_queue_push_head(c->event_queue, event);
             break;
         }
 
@@ -569,7 +592,7 @@ crm_ipcs_flush_events(crm_client_t * c)
                       header->qb.id, c->ipcs, c->pid, (long long) rc,
                       (char *) (event[1].iov_base));
         }
-        free_event((gpointer) event);
+        pcmk_free_ipc_event(event);
     }
 
     queue_len -= sent;
@@ -631,9 +654,7 @@ crm_ipc_prepare(uint32_t request, xmlNode * message, struct iovec ** result, uin
     CRM_LOG_ASSERT(max_send_size != 0);
 
     *result = NULL;
-    iov = calloc(2, sizeof(struct iovec));
-
-
+    iov = pcmk__new_ipc_event();
     iov[0].iov_len = hdr_offset;
     iov[0].iov_base = header;
 
@@ -673,10 +694,7 @@ crm_ipc_prepare(uint32_t request, xmlNode * message, struct iovec ** result, uin
                  header->size_uncompressed, max_send_size, 4 * biggest);
 
             free(compressed);
-            free(buffer);
-            free(header);
-            free(iov);
-
+            pcmk_free_ipc_event(iov);
             return rc;
         }
     }
@@ -715,7 +733,7 @@ crm_ipcs_sendv(crm_client_t * c, struct iovec * iov, enum crm_ipc_flags flags)
             add_event(c, iov);
 
         } else {
-            struct iovec *iov_copy = calloc(2, sizeof(struct iovec));
+            struct iovec *iov_copy = pcmk__new_ipc_event();
 
             crm_trace("Sending a copy to %p[%d]", c->ipcs, c->pid);
             iov_copy[0].iov_len = iov[0].iov_len;
@@ -745,9 +763,7 @@ crm_ipcs_sendv(crm_client_t * c, struct iovec * iov, enum crm_ipc_flags flags)
         }
 
         if (flags & crm_ipc_server_free) {
-            free(iov[0].iov_base);
-            free(iov[1].iov_base);
-            free(iov);
+            pcmk_free_ipc_event(iov);
         }
     }
 
@@ -779,13 +795,11 @@ crm_ipcs_send(crm_client_t * c, uint32_t request, xmlNode * message,
     rc = crm_ipc_prepare(request, message, &iov, ipc_buffer_max);
     if (rc > 0) {
         rc = crm_ipcs_sendv(c, iov, flags | crm_ipc_server_free);
-
     } else {
-        free(iov);
+        pcmk_free_ipc_event(iov);
         crm_notice("Message to pid %d failed: %s " CRM_XS " rc=%lld ipcs=%p",
                    c->pid, pcmk_strerror(rc), (long long) rc, c->ipcs);
     }
-
     return rc;
 }
 
@@ -1330,9 +1344,7 @@ crm_ipc_send(crm_ipc_t * client, xmlNode * message, enum crm_ipc_flags flags, in
                  header->qb.id, client->name, client->ipc, pcmk_strerror(rc), rc);
     }
 
-    free(header);
-    free(iov[1].iov_base);
-    free(iov);
+    pcmk_free_ipc_event(iov);
     return rc;
 }
 

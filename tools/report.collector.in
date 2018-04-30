@@ -1,22 +1,12 @@
- # Copyright (C) 2007 Dejan Muhamedagic <dmuhamedagic@suse.de>
- #			Almost everything as part of hb_report
- # Copyright (C) 2010 Andrew Beekhof <andrew@beekhof.net>
- #			Cleanups, refactoring, extensions
- #
- # This program is free software; you can redistribute it and/or
- # modify it under the terms of the GNU General Public
- # License as published by the Free Software Foundation; either
- # version 2.1 of the License, or (at your option) any later version.
- #
- # This software is distributed in the hope that it will be useful,
- # but WITHOUT ANY WARRANTY; without even the implied warranty of
- # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- # General Public License for more details.
- #
- # You should have received a copy of the GNU General Public
- # License along with this library; if not, write to the Free Software
- # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- #
+#
+# Originally based on hb_report
+# Copyright 2007 Dejan Muhamedagic <dmuhamedagic@suse.de>
+#
+# Later changes copyright 2010-2018 Andrew Beekhof <andrew@beekhof.net>
+#
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
+#
 
 if
     echo $REPORT_HOME | grep -qs '^/'
@@ -211,7 +201,7 @@ getconfig() {
 	fi
     done
 
-    if is_running crmd; then
+    if is_running pacemaker-controld; then
         dump_status_and_config
 	case $cluster in
 	    corosync)         crm_node -p --corosync > $target/$MEMBERSHIP_F 2>&1;;
@@ -219,6 +209,11 @@ getconfig() {
 	esac
 	echo "$host" > $target/RUNNING
 
+    elif is_running pacemaker-remoted; then
+        dump_status_and_config
+        echo "$host" > $target/RUNNING
+
+    # Pre-2.0.0 daemon name in case we're collecting on a mixed-version cluster
     elif is_running pacemaker_remoted; then
         dump_status_and_config
         echo "$host" > $target/RUNNING
@@ -413,7 +408,7 @@ getpeinputs() {
         )
         if [ "$flist" ]; then
             (cd $(dirname "$PE_STATE_DIR") && tar cf - $flist) | (cd "$3" && tar xf -)
-            debug "found `echo $flist | wc -w` pengine input files in $PE_STATE_DIR"
+            debug "found `echo $flist | wc -w` scheduler input files in $PE_STATE_DIR"
         fi
     fi
 }
@@ -595,14 +590,15 @@ get_logfiles() {
     # - initial pacemakerd logs and tracing might go to a different file
     pattern="Starting Pacemaker"
 
-    # - make sure we get something from the Policy Engine
+    # - make sure we get something from the scheduler
     pattern="$pattern\\|Calculated Transition"
 
-    # - cib and lrmd updates (helpful on non-DC nodes or when the cluster has been up for a long time)
+    # - cib and pacemaker-execd updates
+    # (helpful on non-DC nodes and when cluster has been up for a long time)
     pattern="$pattern\\|cib_perform_op\\|process_lrm_event"
 
     # - pacemaker_remote might use a different file
-    pattern="$pattern\\|pacemaker_remoted:"
+    pattern="$pattern\\|pacemaker[-_]remoted:"
 
     findmsg 3 "$pattern"
 }

@@ -17,7 +17,7 @@ stop()
 	shutdown_prog=$prog
 
 	if ! status $prog > /dev/null 2>&1; then
-	    shutdown_prog="crmd"
+	    shutdown_prog="pacemaker-controld"
 	fi
 
 	cname=$(crm_node --name)
@@ -36,7 +36,9 @@ stop()
 
 	rm -f /var/lock/subsystem/pacemaker
 	rm -f /var/run/${prog}.pid
-	killall -q -9 'crmd stonithd attrd cib lrmd pacemakerd pacemaker_remoted'
+	killall -q -9 pacemakerd pacemaker-attrd pacemaker-based \
+		pacemaker-controld pacemaker-execd pacemaker-fenced \
+		pacemaker-schedulerd pacemaker-remoted
 }
 
 stop "pacemakerd"

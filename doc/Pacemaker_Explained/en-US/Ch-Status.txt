@@ -36,11 +36,11 @@ with the tools appropriate to those sources.
 
 | CIB Object | Authoritative Source
 
-|node_state|crmd
+|node_state|pacemaker-controld
 
-|transient_attributes|attrd
+|transient_attributes|pacemaker-attrd
 
-|lrm|lrmd
+|lrm|pacemaker-execd
 
 |=========================================================
 
@@ -244,7 +244,7 @@ indexterm:[transition-key,Action Status]
 indexterm:[Action,Status,transition-key]
 
 A concatenation of the job's graph action number, the graph number,
-the expected result and the UUID of the crmd instance that scheduled
+the expected result and the UUID of the controller instance that scheduled
 it. This is used to construct +transition-magic+ (below).
 
 | transition-magic |
@@ -254,9 +254,9 @@ indexterm:[Action,Status,transition-magic]
 A concatenation of the job's +op-status+, +rc-code+ and
 +transition-key+. Guaranteed to be unique for the life of the cluster
 (which ensures it is part of CIB update notifications) and contains
-all the information needed for the crmd to correctly analyze and
+all the information needed for the controller to correctly analyze and
 process the completed job. Most importantly, the decomposed elements
-tell the crmd if the job entry was expected and whether it failed.
+tell the controller if the job entry was expected and whether it failed.
             
 | op-digest |
 indexterm:[op-digest,Action Status]
@@ -301,7 +301,7 @@ the node first starts, in order to determine the resource's current state
 before it takes any further action.
         
 From the +transition-key+, we can see that this was the 22nd action of
-the 2nd graph produced by this instance of the crmd
+the 2nd graph produced by this instance of the controller
 (2668bbeb-06d5-40f9-936d-24cb7f87006a).
 
 The third field of the +transition-key+ contains a 7, which indicates
@@ -367,6 +367,6 @@ currently active.
 Additionally, from the presence of a +stop+ operation with a lower
 +call-id+ than that of the +start+ operation, we can conclude that the
 resource has been restarted.  Specifically this occurred as part of
-actions 11 and 31 of transition 11 from the crmd instance with the key
+actions 11 and 31 of transition 11 from the controller instance with the key
 +2668bbeb...+.  This information can be helpful for locating the
 relevant section of the logs when looking for the source of a failure.

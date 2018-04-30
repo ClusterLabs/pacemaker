@@ -1,19 +1,8 @@
-/* 
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+/*
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ *
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -83,7 +72,10 @@ static struct crm_option long_options[] = {
     {"-spacer-",  1, 0, '-', "\n\tThis is an internal detail and is rarely useful to administrators except when deciding on which node to examine the logs.\n"},
     {"nodes",     0, 0, 'N', "\tDisplay the uname of all member nodes"},
     {"election",  0, 0, 'E', "(Advanced) Start an election for the cluster co-ordinator"},
-    {"kill",      1, 0, 'K', "(Advanced) Shut down the crmd (not the rest of the clusterstack ) on the specified node"},
+    {
+        "kill",      1, 0, 'K',
+        "(Advanced) Stop the controller (not the rest of the cluster stack) on specified node"
+    },
     {"health",    0, 0, 'H', NULL, 1},
     
     {"-spacer-",	1, 0, '-', "\nAdditional Options:"},
@@ -106,7 +98,7 @@ main(int argc, char **argv)
 
     crm_log_cli_init("crmadmin");
     crm_set_options(NULL, "command [options]", long_options,
-                    "Development tool for performing some crmd-specific commands."
+                    "Development tool for performing some controller-specific commands."
                     "\n  Likely to be replaced by crm_node in the future");
     if (argc < 2) {
         crm_help('?', CRM_EX_USAGE);
@@ -319,7 +311,7 @@ do_work(void)
 void
 crmadmin_ipc_connection_destroy(gpointer user_data)
 {
-    crm_err("Connection to CRMd was terminated");
+    crm_err("Connection to controller was terminated");
     if (mainloop) {
         g_main_loop_quit(mainloop);
     } else {

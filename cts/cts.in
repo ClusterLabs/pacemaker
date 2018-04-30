@@ -1,0 +1,331 @@
+#!@BASH_PATH@
+#
+# Copyright 2012-2018 Andrew Beekhof <andrew@beekhof.net>
+#
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
+#
+
+if [ -e $PWD/cts/CTSlab.py ]; then
+    cts_root=$PWD/cts
+elif [ -e $PWD/CTSlab.py ]; then
+    cts_root=$PWD
+else
+    cts_root=`dirname $0`
+fi
+
+logfile=0
+summary=0
+verbose=0
+watch=0
+saved=0
+tests=""
+
+install=0
+clean=0
+build=0
+kill=0
+run=0
+boot=0
+setup=0
+target=rhel-7
+cmd=""
+trace=""
+
+custom_log=""
+patterns="-e CTS:"
+
+
+helpmsg=$(cat <<EOF
+Usage: %s [options] {[{init|local-init|setup} [TARGET]] | [OTHER-CMDS]}
+
+[--]help, -h            show help screen and exit
+-x                      turn on debugging
+-a                      show relevant screen sessions and exit
+-c,-g CLUSTER_NAME      set the cluster name
+-S                      show summary from the last CTS run
+-s                      show summary for the current log (see -l)
+-v                      increase verbosity
+-p                      (currently unused)
+-e PATTERN              grep pattern to apply when 'summary' or 'watch' requested
+-l                      print the filename of the log that would be operated on
+-w                      continous (filtered) monitoring of the log file
+-f,-sf FILE             show summary for the provided log
+-t TEST, [0-9]*         add a test to the working set
+[--]build               [???] request building Pacemaker
+[--]kill                request termination of cluster software
+[--]run                 request CTS run (passing remaining arguments through)
+[--]boot, start         request CTS run (with --boot option)
+[--]clean               request cleaning up after CTS run
+[--]install, --inst     request installing packages to get ready to run CTS
+[--]setup               request initialization to get ready to run CTS
+trace-ls, tls           list traced functions
+trace-add, tadd FUNC    add a function to the list of traced ones
+trace-rm, trm FUNC      remove a function from the list of traced ones
+trace-set, tset FUNC    set function(s) as the only to be traced
+(f|fedora|r|rhel).*     specify target distro
+init, local-init        [local] initialize CTS environment
+--wget                  [local] download up-to-date CTS helpers
+--                      delimits tests that follow
+EOF
+)
+
+while true; do
+    case $1 in
+	-h|--help|help) printf "${helpmsg}\n" "$0"; exit;;
+	-x) set -x; shift;;
+	-a)
+	screen -ls | grep cts
+	exit 0;;
+	-c|-g) cluster_name=$2; shift; shift;;
+	-S) summary=1; saved=1; shift;;
+	-s) summary=1; shift;;
+	-v) verbose=`expr $verbose + 1`; shift;;
+	-p) shift;;
+	-e) patterns="$patterns -e `echo $2 | sed 's/ /\\\W/g'`"; shift; shift;;
+	-l) logfile=1; shift;;
+	-w) watch=1; shift;;
+	-f|-sf) summary=1; custom_log=$2; shift; shift;;
+	-t) tests="$tests $2"; shift; shift;;
+	[0-9]*) tests="$tests $1"; shift;;
+	--build|build) build=1; shift;;
+	--kill|kill) kill=1; shift; break;;
+	--run|run) run=1; shift; break;;
+	--boot|boot|start) boot=1; clean=1; shift; break;;
+	--clean|clean) clean=1; shift;;
+	--inst|--install|install) install=1; clean=1; shift;;
+	--setup|setup) setup=1; shift;;
+	trace-ls|tls) cmd=$1; shift;;
+	trace-add|tadd|trace-rm|trm|trace-set|tset) cmd=$1; trace=$2; shift; shift;;
+	f*|fedora*)
+		target="fedora-`echo $1 | sed -e s/fedora// -e s/-// -e s/f//`"
+		shift;;
+	r|rhel) target="rhel-7"; shift;;
+	r*|rhel*)
+		target="rhel-`echo $1 | sed -e s/rhel// -e s/-// -e s/r//`"
+		shift;;
+	init|local-init)
+	    local_root=
+	    case $cts_root in
+		/*) local_root=`dirname $cts_root`;;
+		*)  local_root=`dirname $PWD/$cts_root`;;
+	    esac
+
+	    cat << EOF > $cts_root/CTSvars.py
+class CTSvars:
+        CTS_home="$local_root/cts"
+        Fencing_home="$local_root/daemons/fenced"
+        CRM_CONFIG_DIR="/var/lib/pacemaker/cib"
+        CRM_DAEMON_USER="hacluster"
+        CRM_DAEMON_DIR="/usr/libexec/pacemaker"
+        OCF_ROOT_DIR="/usr/lib/ocf"
+EOF
+
+	    files="extra/cluster-init extra/cluster-helper extra/cluster-clean tools/crm_report.in"
+	    for f in $files; do
+		cp $local_root/$f $cts_root/
+	    done
+
+	    cp $local_root/tools/report.common.in $local_root/tools/report.common
+	    sed -i.sed s:@localstatedir@:/var: $local_root/tools/report.common
+
+	    cp $cts_root/crm_report.in $cts_root/crm_report
+	    sed -i.sed s:@datadir@/@PACKAGE@:$local_root/tools: $cts_root/crm_report
+	    chmod +x $cts_root/crm_report
+
+	    cp $cts_root/LSBDummy.in $cts_root/LSBDummy
+	    chmod +x $local_root/daemons/fenced/fence_*
+	    sed -i.sed s:@OCF_ROOT_DIR@:/usr/lib/ocf: $cts_root/LSBDummy
+	    
+	    echo "Make sure you add $cts_root to your PATH and set a value for \$cluster_name in .bashrc"
+	    exit 0
+	    ;;
+
+	--wget)
+	    files="cluster-helper cluster-init cluster-clean"
+	    for f in $files; do
+		rm -f $cts_root/$f
+		echo "Downloading helper script $f from GitHub"
+		wget -O $cts_root/$f https://raw.github.com/ClusterLabs/pacemaker/master/extra/$f
+		chmod +x $cts_root/$f
+	    done
+	    shift
+	    ;;
+	--) shift; tests="$tests $*"; break;;
+	"") break;;
+	*) echo "Unknown argument: $1"; exit 1;;
+    esac
+done
+
+# Add the location of this script
+export PATH="$PATH:$cts_root"
+which cluster-helper &>/dev/null
+if [ $? != 0 ]; then
+    echo $0 needs the cluster-helper script to be in your path
+    echo You can obtain it from: https://raw.github.com/ClusterLabs/pacemaker/master/extra/cluster-helper
+    exit 1
+fi
+
+which cluster-clean &>/dev/null
+if [ $? != 0 ]; then
+    echo $0 needs the cluster-clean script to be in your path
+    echo You can obtain it from: https://raw.github.com/ClusterLabs/pacemaker/master/extra/cluster-clean
+    exit 1
+fi
+
+if [ "x$cluster_name" = x -o "x$cluster_name" = xpick ]; then
+    clusters=`ls -1 ~/.dsh/group/[a-z]+[0-9] | sed s/.*group.// | tr '\n' ' ' `
+
+    echo "custom) interactively define a cluster"
+    for i in $clusters; do
+	echo "$i) `cluster-helper --list short -g $i`"
+    done
+
+    read -p "Choose a cluster [custom]: " cluster_name
+    echo
+fi
+
+if [ -z $cluster_name ]; then
+    cluster_name=custom
+fi
+
+
+case $cluster_name in
+  custom)
+    read -p "Cluster name: " cluster_name
+    read -p "Cluster hosts: " cluster_hosts
+    read -p "Cluster log file: " cluster_log
+    cluster-helper add -g "$cluster_name" -w "$cluster_hosts"
+    ;;
+  *)
+    cluster_hosts=`cluster-helper --list short -g $cluster_name`
+    cluster_log=~/cluster-$cluster_name.log;
+    ;;
+esac
+
+if [ x$cmd != x ]; then
+    config=/etc/sysconfig/pacemaker
+    case $cmd in
+	trace-ls|tls)
+	    cluster-helper -g $cluster_name -- grep PCMK_trace_functions $config
+	    ;;
+	trace-add|tadd)
+	    echo "Adding $trace to PCMK_trace_functions"
+	    cluster-helper -g $cluster_name -- sed -i "s/.*PCMK_trace_functions=/PCMK_trace_functions=$trace,/" $config
+	    ;;
+	trace-rm|trm)
+	    echo "Removing $trace from PCMK_trace_functions"
+	    cluster-helper -g $cluster_name -- sed -i "s/.*PCMK_trace_functions=\\\\\\(.*\\\\\\)$trace,\\\\\\(.*\\\\\\)/PCMK_trace_functions=\\\\\\1\\\\\\2/" $config
+	    ;;
+	trace-set|tset)
+	    echo "Setting PCMK_trace_functions to '$trace'"
+	    cluster-helper -g $cluster_name -- sed -i "s/.*PCMK_trace_functions.*/PCMK_trace_functions=$trace/" $config
+	    ;;
+    esac
+    exit 0
+fi
+
+if [ $build = 1 -a $run = 1 ]; then
+    install=1
+    clean=1
+fi
+
+if [ $build = 1 ]; then
+    which build-pcmk
+    if [ $? != 0 ]; then
+	echo "You'll need to write/obtain build-pcmk in order to build pacemaker from here.  Skipping"
+    else
+	build-pcmk r7
+	rc=$?
+	if [ $rc != 0 ]; then
+	    echo "Build failed: $rc"
+	    exit $rc
+	fi
+    fi
+fi
+
+if [ $clean = 1 ]; then
+    rm -f $cluster_log; cluster-clean -g $cluster_name --kill
+elif [ $kill = 1 ]; then
+    cluster-clean -g $cluster_name --kill-only
+    exit 0
+fi
+
+if [ $install = 1 ]; then
+    cluster-helper -g $cluster_name -- yum install -y pacemaker pacemaker-debuginfo pacemaker-cts libqb libqb-debuginfo
+fi
+
+if [ $setup = 1 ]; then
+    cluster-init -g $cluster_name $target -u --test
+    exit 0
+
+elif [ $boot = 1 ]; then
+    $cts_root/CTSlab.py -r -c -g $cluster_name --boot
+    rc=$?
+    if [ $rc = 0 ]; then
+	echo "The cluster is ready..."
+    fi
+    exit $rc
+
+elif [ $run = 1 ]; then
+    $cts_root/CTSlab.py -r -c -g $cluster_name 500 "$@"
+    exit $?
+
+elif [ $clean = 1 ]; then
+    exit 0
+fi
+
+screen -ls | grep cts-$cluster_name &>/dev/null
+active=$?
+
+if [ ! -z $custom_log ]; then
+    cluster_log=$custom_log
+fi
+
+if [ "x$tests" != x -a "x$tests" != "x " ]; then
+    for t in $tests; do
+	echo "crm_report --cts-log $cluster_log -d -T $t"
+	crm_report --cts-log $cluster_log -d -T $t
+    done
+
+elif [ $logfile = 1 ]; then
+    echo $cluster_log
+
+elif [ $summary = 1 ]; then
+    files=$cluster_log
+    if [ $saved = 1 ]; then
+	files=`ls -1tr ~/CTS-*/cluster-log.txt`
+    fi
+    for f in $files; do
+	echo $f
+	case $verbose in
+	    0) cat -n $f | grep $patterns | grep -v "CTS: debug:"
+    		;;
+	    1) cat -n $f | grep $patterns | grep -v "CTS:.* cmd:"
+    		;;
+	    *) cat -n $f | grep $patterns
+		;;
+	esac
+	echo ""
+    done
+
+elif [ $watch = 1 ]; then
+    case $verbose in
+	0) tail -F $cluster_log | grep $patterns | grep -v "CTS: debug:"
+    		;;
+	1) tail -F $cluster_log | grep $patterns | grep -v "CTS:.* cmd:"
+    		;;
+	*) tail -F $cluster_log | grep $patterns
+		;;
+    esac
+
+elif [ $active = 0 ]; then
+    screen -x cts-$cluster_name
+
+else
+    touch $cluster_log
+
+#    . ~/.bashrc
+    export cluster_name cluster_hosts cluster_log
+    screen -S cts-$cluster_name bash
+fi

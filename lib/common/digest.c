@@ -198,7 +198,7 @@ calculate_xml_versioned_digest(xmlNode * input, gboolean sort, gboolean do_filte
      * removing this affects even full-restart upgrades from old versions
      *
      * The sorting associated with v1 digest creation accounted for 23% of
-     * the CIB's CPU usage on the server. v2 drops this.
+     * the CIB manager's CPU usage on the server. v2 drops this.
      *
      * The filtering accounts for an additional 2.5% and we may want to
      * remove it in future.

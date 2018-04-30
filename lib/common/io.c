@@ -1,19 +1,8 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -240,88 +229,137 @@ crm_chown_last_sequence(const char *directory, const char *series, uid_t uid, gi
     return rc;
 }
 
+static bool
+pcmk__daemon_user_can_write(const char *target_name, struct stat *target_stat)
+{
+    struct passwd *sys_user = NULL;
+
+    errno = 0;
+    sys_user = getpwnam(CRM_DAEMON_USER);
+    if (sys_user == NULL) {
+        crm_notice("Could not find user %s: %s",
+                   CRM_DAEMON_USER, pcmk_strerror(errno));
+        return FALSE;
+    }
+    if (target_stat->st_uid != sys_user->pw_uid) {
+        crm_notice("%s is not owned by user %s " CRM_XS " uid %d != %d",
+                   target_name, CRM_DAEMON_USER, sys_user->pw_uid,
+                   target_stat->st_uid);
+        return FALSE;
+    }
+    if ((target_stat->st_mode & (S_IRUSR | S_IWUSR)) == 0) {
+        crm_notice("%s is not readable and writable by user %s "
+                   CRM_XS " st_mode=0%lo",
+                   target_name, CRM_DAEMON_USER,
+                   (unsigned long) target_stat->st_mode);
+        return FALSE;
+    }
+    return TRUE;
+}
+
+static bool
+pcmk__daemon_group_can_write(const char *target_name, struct stat *target_stat)
+{
+    struct group *sys_grp = NULL;
+
+    errno = 0;
+    sys_grp = getgrnam(CRM_DAEMON_GROUP);
+    if (sys_grp == NULL) {
+        crm_notice("Could not find group %s: %s",
+                   CRM_DAEMON_GROUP, pcmk_strerror(errno));
+        return FALSE;
+    }
+
+    if (target_stat->st_gid != sys_grp->gr_gid) {
+        crm_notice("%s is not owned by group %s " CRM_XS " uid %d != %d",
+                   target_name, CRM_DAEMON_GROUP,
+                   sys_grp->gr_gid, target_stat->st_gid);
+        return FALSE;
+    }
+
+    if ((target_stat->st_mode & (S_IRGRP | S_IWGRP)) == 0) {
+        crm_notice("%s is not readable and writable by group %s "
+                   CRM_XS " st_mode=0%lo",
+                   target_name, CRM_DAEMON_GROUP,
+                   (unsigned long) target_stat->st_mode);
+        return FALSE;
+    }
+    return TRUE;
+}
+
 /*!
  * \internal
- * \brief Return whether a directory or file is writable by a user/group
+ * \brief Check whether a directory or file is writable by the cluster daemon
  *
- * \param[in] dir Directory to check or that contains file
- * \param[in] file File name to check (or NULL to check directory)
- * \param[in] user Name of user that should have write permission
- * \param[in] group Name of group that should have write permission
- * \param[in] need_both Whether both user and group must be able to write
+ * Return TRUE if either the cluster daemon user or cluster daemon group has
+ * write permission on a specified file or directory.
  *
- * \return TRUE if permissions match, FALSE if they don't or on error
+ * \param[in] dir      Directory to check (this argument must be specified, and
+ *                     the directory must exist)
+ * \param[in] file     File to check (only the directory will be checked if this
+ *                     argument is not specified or the file does not exist)
+ *
+ * \return TRUE if target is writable by cluster daemon, FALSE otherwise
  */
-gboolean
-crm_is_writable(const char *dir, const char *file,
-                const char *user, const char *group, gboolean need_both)
+bool
+pcmk__daemon_can_write(const char *dir, const char *file)
 {
-    int s_res = -1;
+    int s_res = 0;
     struct stat buf;
     char *full_file = NULL;
     const char *target = NULL;
 
-    gboolean pass = TRUE;
-    gboolean readwritable = FALSE;
-
+    // Caller must supply directory
     CRM_ASSERT(dir != NULL);
+
+    // If file is given, check whether it exists as a regular file
     if (file != NULL) {
         full_file = crm_concat(dir, file, '/');
         target = full_file;
+
         s_res = stat(full_file, &buf);
-        if (s_res == 0 && S_ISREG(buf.st_mode) == FALSE) {
-            crm_err("%s must be a regular file", target);
-            pass = FALSE;
-            goto out;
+        if (s_res < 0) {
+            crm_notice("%s not found: %s", target, pcmk_strerror(errno));
+            free(full_file);
+            full_file = NULL;
+            target = NULL;
+
+        } else if (S_ISREG(buf.st_mode) == FALSE) {
+            crm_err("%s must be a regular file " CRM_XS " st_mode=0%lo",
+                    target, (unsigned long) buf.st_mode);
+            free(full_file);
+            return FALSE;
         }
     }
 
-    if (s_res != 0) {
+    // If file is not given, ensure dir exists as directory
+    if (target == NULL) {
         target = dir;
         s_res = stat(dir, &buf);
-        if (s_res != 0) {
-            crm_err("%s must exist and be a directory", dir);
-            pass = FALSE;
-            goto out;
+        if (s_res < 0) {
+            crm_err("%s not found: %s", dir, pcmk_strerror(errno));
+            return FALSE;
 
         } else if (S_ISDIR(buf.st_mode) == FALSE) {
-            crm_err("%s must be a directory", dir);
-            pass = FALSE;
+            crm_err("%s must be a directory " CRM_XS " st_mode=0%lo",
+                    dir, (unsigned long) buf.st_mode);
+            return FALSE;
         }
     }
 
-    if (user) {
-        struct passwd *sys_user = NULL;
+    if (!pcmk__daemon_user_can_write(target, &buf)
+        && !pcmk__daemon_group_can_write(target, &buf)) {
 
-        sys_user = getpwnam(user);
-        readwritable = (sys_user != NULL
-                        && buf.st_uid == sys_user->pw_uid && (buf.st_mode & (S_IRUSR | S_IWUSR)));
-        if (readwritable == FALSE) {
-            crm_err("%s must be owned and r/w by user %s", target, user);
-            if (need_both) {
-                pass = FALSE;
-            }
-        }
+        crm_err("%s must be owned and writable by either user %s or group %s "
+                CRM_XS " st_mode=0%ol",
+                target, CRM_DAEMON_USER, CRM_DAEMON_GROUP,
+                (unsigned long) buf.st_mode);
+        free(full_file);
+        return FALSE;
     }
 
-    if (group) {
-        struct group *sys_grp = getgrnam(group);
-
-        readwritable = (sys_grp != NULL
-                        && buf.st_gid == sys_grp->gr_gid && (buf.st_mode & (S_IRGRP | S_IWGRP)));
-        if (readwritable == FALSE) {
-            if (need_both || user == NULL) {
-                pass = FALSE;
-                crm_err("%s must be owned and r/w by group %s", target, group);
-            } else {
-                crm_warn("%s should be owned and r/w by group %s", target, group);
-            }
-        }
-    }
-
-  out:
     free(full_file);
-    return pass;
+    return TRUE;
 }
 
 /*!

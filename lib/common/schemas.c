@@ -684,7 +684,7 @@ apply_transformation(xmlNode *xml, const char *transform, gboolean to_logs)
 #if PCMK_SCHEMAS_EMERGENCY_XSLT != 0
     emergency_res = xsltSaveResultToString(&emergency_result,
                                            &emergency_txt_len, res, xslt);
-    free(res);
+    xmlFreeDoc(res);
     CRM_CHECK(emergency_res == 0, goto cleanup);
     out = string2xml((const char *) emergency_result);
     free(emergency_result);

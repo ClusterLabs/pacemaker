@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011-2017 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2011-2018 Andrew Beekhof <andrew@beekhof.net>
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -20,11 +20,11 @@
 
 /*!
  * \internal
- * \brief Create a generic attrd operation
+ * \brief Create a generic pacemaker-attrd operation
  *
  * \param[in] user_name  If not NULL, ACL user to set for operation
  *
- * \return XML of attrd operation
+ * \return XML of pacemaker-attrd operation
  */
 static xmlNode *
 create_attrd_op(const char *user_name)
@@ -42,10 +42,10 @@ create_attrd_op(const char *user_name)
 
 /*!
  * \internal
- * \brief Send an operation to attrd via IPC
+ * \brief Send an operation to pacemaker-attrd via IPC
  *
- * \param[in] ipc       Connection to attrd (or NULL to use a local connection)
- * \param[in] attrd_op  XML of attrd operation to send
+ * \param[in] ipc       Connection to pacemaker-attrd (or NULL to use a local connection)
+ * \param[in] attrd_op  XML of pacemaker-attrd operation to send
  *
  * \return pcmk_ok on success, -errno otherwise
  */
@@ -106,10 +106,10 @@ send_attrd_op(crm_ipc_t *ipc, xmlNode *attrd_op)
 }
 
 /*!
- * \brief Send a request to attrd
+ * \brief Send a request to pacemaker-attrd
  *
- * \param[in] ipc      Connection to attrd (or NULL to use a local connection)
- * \param[in] command  A character indicating the type of attrd request:
+ * \param[in] ipc      Connection to pacemaker-attrd (or NULL to use a local connection)
+ * \param[in] command  A character indicating the type of pacemaker-attrd request:
  *                     U or v: update attribute (or refresh if name is NULL)
  *                     u: update attributes matching regular expression in name
  *                     D: delete attribute (value must be NULL)
@@ -124,12 +124,12 @@ send_attrd_op(crm_ipc_t *ipc, xmlNode *attrd_op)
  * \param[in] section  Status or nodes
  * \param[in] set      ID of attribute set to use (or NULL to choose first)
  * \param[in] dampen   Attribute dampening to use with B/Y, and U/v if creating
- * \param[in] user_name ACL user to pass to attrd
+ * \param[in] user_name ACL user to pass to pacemaker-attrd
  * \param[in] options  Bitmask that may include:
  *                     attrd_opt_remote: host is a Pacemaker Remote node
  *                     attrd_opt_private: attribute is private (not kept in CIB)
  *
- * \return pcmk_ok if request was successfully submitted to attrd, else -errno
+ * \return pcmk_ok if request was successfully submitted to pacemaker-attrd, else -errno
  */
 int
 attrd_update_delegate(crm_ipc_t *ipc, char command, const char *host,
@@ -212,27 +212,27 @@ done:
     free_xml(update);
 
     if (display_command) {
-        crm_debug("Asked attrd to %s %s: %s (%d)",
+        crm_debug("Asked pacemaker-attrd to %s %s: %s (%d)",
                   display_command, display_host, pcmk_strerror(rc), rc);
     } else {
-        crm_debug("Asked attrd to update %s=%s for %s: %s (%d)",
+        crm_debug("Asked pacemaker-attrd to update %s=%s for %s: %s (%d)",
                   name, value, display_host, pcmk_strerror(rc), rc);
     }
     return rc;
 }
 
 /*!
- * \brief Send a request to attrd to clear resource failure
+ * \brief Send a request to pacemaker-attrd to clear resource failure
  *
- * \param[in] ipc           Connection to attrd (NULL to use local connection)
+ * \param[in] ipc           Connection to pacemaker-attrd (NULL to use local connection)
  * \param[in] host          Affect only this host (or NULL for all hosts)
  * \param[in] resource      Name of resource to clear (or NULL for all)
  * \param[in] operation     Name of operation to clear (or NULL for all)
  * \param[in] interval_spec If operation is not NULL, its interval
- * \param[in] user_name     ACL user to pass to attrd
+ * \param[in] user_name     ACL user to pass to pacemaker-attrd
  * \param[in] options       attrd_opt_remote if host is a Pacemaker Remote node
  *
- * \return pcmk_ok if request was successfully submitted to attrd, else -errno
+ * \return pcmk_ok if request was successfully submitted to pacemaker-attrd, else -errno
  */
 int
 attrd_clear_delegate(crm_ipc_t *ipc, const char *host, const char *resource,
@@ -261,7 +261,7 @@ attrd_clear_delegate(crm_ipc_t *ipc, const char *host, const char *resource,
         interval_desc = "all";
         op_desc = "operations";
     }
-    crm_debug("Asked attrd to clear failure of %s %s for %s on %s: %s (%d)",
+    crm_debug("Asked pacemaker-attrd to clear failure of %s %s for %s on %s: %s (%d)",
               interval_desc, op_desc, (resource? resource : "all resources"),
               (host? host : "all nodes"), pcmk_strerror(rc), rc);
     return rc;
@@ -285,7 +285,7 @@ attrd_get_target(const char *name)
         const char *target = getenv(target_var);
         const char *host_physical = getenv(phys_var);
 
-        /* It is important we use the names by which the PE knows us */
+        // It is important to use the name by which the scheduler knows us
         if (host_physical && safe_str_eq(target, "host")) {
             name = host_physical;
 

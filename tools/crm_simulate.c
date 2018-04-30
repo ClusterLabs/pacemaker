@@ -22,7 +22,7 @@
 #include <crm/transition.h>
 #include <crm/common/iso8601.h>
 #include <crm/pengine/status.h>
-#include <allocate.h>
+#include <sched_allocate.h>
 #include "fake_transition.h"
 
 cib_t *global_cib = NULL;
@@ -490,7 +490,7 @@ static struct crm_option long_options[] = {
     {"all-actions",  0, 0, 'a', "\tDisplay all possible actions in the DOT graph - even ones not part of the transition"},
 
     {"-spacer-",    0, 0, '-', "\nData Source:"},
-    {"live-check",  0, 0, 'L', "\tConnect to the CIB and use the current contents as input"},
+    {"live-check",  0, 0, 'L', "\tConnect to the CIB mamager and use the current CIB contents as input"},
     {"xml-file",    1, 0, 'x', "\tRetrieve XML from the named file"},
     {"xml-pipe",    0, 0, 'p', "\tRetrieve XML from stdin"},
 
@@ -790,7 +790,7 @@ main(int argc, char **argv)
     global_cib = cib_new();
     rc = global_cib->cmds->signon(global_cib, crm_system_name, cib_command);
     if (rc != pcmk_ok) {
-        fprintf(stderr, "Could not connect to the CIB: %s\n",
+        fprintf(stderr, "Could not connect to the CIB manager: %s\n",
                 pcmk_strerror(rc));
         goto done;
     }

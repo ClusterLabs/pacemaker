@@ -1,27 +1,11 @@
-'''
-Classes related to producing and searching logs
-'''
-from __future__ import print_function
+""" Test environment classes for Pacemaker's Cluster Test Suite (CTS)
+"""
 
-__copyright__='''
-Copyright (C) 2014 Andrew Beekhof <andrew@beekhof.net>
-Licensed under the GNU GPL.
-'''
+# Pacemaker targets compatibility with Python 2.7 and 3.2+
+from __future__ import print_function, unicode_literals, absolute_import, division
 
-#
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA.
+__copyright__ = "Copyright 2014-2018 Andrew Beekhof <andrew@beekhof.net>"
+__license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import sys, time, os, socket, random
 
@@ -62,7 +46,7 @@ class Environment(object):
         self["notification-recipient"] = "/var/lib/pacemaker/notify.log"
         self["loop-minutes"] = 60
         self["valgrind-prefix"] = None
-        self["valgrind-procs"] = "attrd cib crmd lrmd pengine stonith-ng"
+        self["valgrind-procs"] = "pacemaker-attrd pacemaker-based pacemaker-controld pacemaker-execd pacemaker-fenced pacemaker-schedulerd"
         self["valgrind-opts"] = """--leak-check=full --show-reachable=yes --trace-children=no --num-callers=25 --gen-suppressions=all --suppressions="""+CTSvars.CTS_home+"""/cts.supp"""
 
         self["experimental-tests"] = 0
@@ -255,8 +239,9 @@ class Environment(object):
         self["cts-master"] = master
 
         if not "have_systemd" in self.data:
-            self["have_systemd"] = not self.rsh(self.target, "systemctl list-units")
-        
+            self["have_systemd"] = not self.rsh(self.target,
+                                                "systemctl list-units",
+                                                silent=True)
         self.detect_syslog()
         self.detect_at_boot()
         self.detect_ip_offset()

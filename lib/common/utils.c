@@ -681,168 +681,6 @@ crm_abort(const char *file, const char *function, int line,
     crm_perror(LOG_ERR, "Cannot wait on forked child %d", pid);
 }
 
-int
-crm_pid_active(long pid, const char *daemon)
-{
-    static int have_proc_pid = 0;
-
-    if(have_proc_pid == 0) {
-        char proc_path[PATH_MAX], exe_path[PATH_MAX];
-
-        /* check to make sure pid hasn't been reused by another process */
-        snprintf(proc_path, sizeof(proc_path), "/proc/%lu/exe", (long unsigned int)getpid());
-
-        have_proc_pid = 1;
-        if(readlink(proc_path, exe_path, PATH_MAX - 1) < 0) {
-            have_proc_pid = -1;
-        }
-    }
-
-    if (pid <= 0) {
-        return -1;
-
-    } else if (kill(pid, 0) < 0 && errno == ESRCH) {
-        return 0;
-
-    } else if(daemon == NULL || have_proc_pid == -1) {
-        return 1;
-
-    } else {
-        int rc = 0;
-        char proc_path[PATH_MAX], exe_path[PATH_MAX], myexe_path[PATH_MAX];
-
-        /* check to make sure pid hasn't been reused by another process */
-        snprintf(proc_path, sizeof(proc_path), "/proc/%ld/exe", pid);
-
-        rc = readlink(proc_path, exe_path, PATH_MAX - 1);
-        if (rc < 0 && errno == EACCES) {
-            crm_perror(LOG_INFO, "Could not read from %s", proc_path);
-            return 1;
-        } else if (rc < 0) {
-            crm_perror(LOG_ERR, "Could not read from %s", proc_path);
-            return 0;
-        }
-        
-
-        exe_path[rc] = 0;
-
-        if(daemon[0] != '/') {
-            rc = snprintf(myexe_path, sizeof(proc_path), CRM_DAEMON_DIR"/%s", daemon);
-            myexe_path[rc] = 0;
-        } else {
-            rc = snprintf(myexe_path, sizeof(proc_path), "%s", daemon);
-            myexe_path[rc] = 0;
-        }
-        
-        if (strcmp(exe_path, myexe_path) == 0) {
-            return 1;
-        }
-    }
-
-    return 0;
-}
-
-#define	LOCKSTRLEN	11
-
-long
-crm_read_pidfile(const char *filename)
-{
-    int fd;
-    struct stat sbuf;
-    long pid = -ENOENT;
-    char buf[LOCKSTRLEN + 1];
-
-    if ((fd = open(filename, O_RDONLY)) < 0) {
-        goto bail;
-    }
-
-    if (fstat(fd, &sbuf) >= 0 && sbuf.st_size < LOCKSTRLEN) {
-        sleep(2);           /* if someone was about to create one,
-                             * give'm a sec to do so
-                             */
-    }
-
-    if (read(fd, buf, sizeof(buf)) < 1) {
-        goto bail;
-    }
-
-    if (sscanf(buf, "%ld", &pid) > 0) {
-        if (pid <= 0) {
-            pid = -ESRCH;
-        } else {
-            crm_trace("Got pid %lu from %s\n", pid, filename);
-        }
-    }
-
-  bail:
-    if (fd >= 0) {
-        close(fd);
-    }
-    return pid;
-}
-
-long
-crm_pidfile_inuse(const char *filename, long mypid, const char *daemon)
-{
-    long pid = crm_read_pidfile(filename);
-
-    if (pid < 2) {
-        /* Invalid pid */
-        pid = -ENOENT;
-        unlink(filename);
-
-    } else if (mypid && pid == mypid) {
-        /* In use by us */
-        pid = pcmk_ok;
-
-    } else if (crm_pid_active(pid, daemon) == FALSE) {
-        /* Contains a stale value */
-        unlink(filename);
-        pid = -ENOENT;
-
-    } else if (mypid && pid != mypid) {
-        /* locked by existing process - give up */
-        pid = -EEXIST;
-    }
-
-    return pid;
-}
-
-static int
-crm_lock_pidfile(const char *filename, const char *name)
-{
-    long mypid = 0;
-    int fd = 0, rc = 0;
-    char buf[LOCKSTRLEN + 2];
-
-    mypid = (unsigned long)getpid();
-
-    rc = crm_pidfile_inuse(filename, 0, name);
-    if (rc == -ENOENT) {
-        /* exists but the process is not active */
-
-    } else if (rc != pcmk_ok) {
-        /* locked by existing process - give up */
-        return rc;
-    }
-
-    if ((fd = open(filename, O_CREAT | O_WRONLY | O_EXCL, 0644)) < 0) {
-        /* Hmmh, why did we fail? Anyway, nothing we can do about it */
-        return -errno;
-    }
-
-    snprintf(buf, sizeof(buf), "%*ld\n", LOCKSTRLEN - 1, mypid);
-    rc = write(fd, buf, LOCKSTRLEN);
-    close(fd);
-
-    if (rc != LOCKSTRLEN) {
-        crm_perror(LOG_ERR, "Incomplete write to %s", filename);
-        return -errno;
-    }
-
-    return crm_pidfile_inuse(filename, mypid, name);
-}
-
 void
 crm_make_daemon(const char *name, gboolean daemonize, const char *pidfile)
 {
@@ -1154,8 +992,8 @@ void cib_ipc_servers_init(qb_ipcs_service_t **ipcs_ro,
     *ipcs_shm = mainloop_add_ipc_server(cib_channel_shm, QB_IPC_SHM, rw_cb);
 
     if (*ipcs_ro == NULL || *ipcs_rw == NULL || *ipcs_shm == NULL) {
-        crm_err("Failed to create cib servers: exiting and inhibiting respawn.");
-        crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
+        crm_err("Failed to create the CIB manager: exiting and inhibiting respawn");
+        crm_warn("Verify pacemaker and pacemaker_remote are not both enabled");
         crm_exit(CRM_EX_FATAL);
     }
 }
@@ -1181,7 +1019,7 @@ attrd_ipc_server_init(qb_ipcs_service_t **ipcs, struct qb_ipcs_service_handlers 
     *ipcs = mainloop_add_ipc_server(T_ATTRD, QB_IPC_NATIVE, cb);
 
     if (*ipcs == NULL) {
-        crm_err("Failed to create attrd servers: exiting and inhibiting respawn.");
+        crm_err("Failed to create pacemaker-attrd server: exiting and inhibiting respawn");
         crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
         crm_exit(CRM_EX_FATAL);
     }
@@ -1193,7 +1031,7 @@ stonith_ipc_server_init(qb_ipcs_service_t **ipcs, struct qb_ipcs_service_handler
     *ipcs = mainloop_add_ipc_server("stonith-ng", QB_IPC_NATIVE, cb);
 
     if (*ipcs == NULL) {
-        crm_err("Failed to create stonith-ng servers: exiting and inhibiting respawn.");
+        crm_err("Failed to create fencer: exiting and inhibiting respawn.");
         crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
         crm_exit(CRM_EX_FATAL);
     }

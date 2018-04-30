@@ -2,30 +2,20 @@
 
 '''OCF IPaddr/IPaddr2 Resource Agent Test'''
 
-from __future__ import print_function
+# Pacemaker targets compatibility with Python 2.7 and 3.2+
+from __future__ import print_function, unicode_literals, absolute_import, division
 
-__copyright__ = '''
-Author: Huang Zhen <zhenhltc@cn.ibm.com>
-Copyright (C) 2004 International Business Machines
-Licensed under the GNU GPL.
-'''
+__copyright__ = """Copyright 2004 International Business Machines
+Author: Huang Zhen <zhenhltc@cn.ibm.com>"""
+__license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
-#
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA.
+import os
+import sys
+import time
+import random
+import struct
+import syslog
 
-import string, sys, struct, os, random, time, syslog
 from cts.CTSvars import *
 
 
@@ -116,9 +106,9 @@ if __name__ == '__main__':
     # Generate the test ips
     iplist = []
     ipstatus = {}
-    fields = string.split(ipbase, '.')
+    fields = ipbase.split('.')
     for i in range(0, ipnum) :
-        ip = string.join(fields, '.')
+        ip = fields.join('.')
         iplist.append(ip)
         ipstatus[ip] = perform_op(ra,ip,"monitor")
         fields[3] = str(int(fields[3])+1)

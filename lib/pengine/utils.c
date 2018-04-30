@@ -463,17 +463,6 @@ custom_action(resource_t * rsc, char *key, const char *task,
             pe_rsc_trace(rsc, "Unset optional on %s", action->uuid);
         }
 
-/*
-  Implied by calloc()...
-  action->actions_before   = NULL;
-  action->actions_after    = NULL;
-
-  action->pseudo     = FALSE;
-  action->dumped     = FALSE;
-  action->processed  = FALSE;
-  action->seen_count = 0;
-*/
-
         action->extra = crm_str_table_new();
         action->meta = crm_str_table_new();
 

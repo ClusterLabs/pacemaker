@@ -1,30 +1,13 @@
 #!/bin/sh
 #
-#
 # Dummy OCF RA. Does nothing but wait a few seconds, can be
 # configured to fail occassionally.
 #
-# Copyright (c) 2004 SUSE LINUX AG, Lars Marowsky-Brée
-#                    All Rights Reserved.
+# Copyright 2004-2018 SUSE LINUX AG, Lars Marowsky-Brée
+# All Rights Reserved.
 #
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of version 2 of the GNU General Public License as
-# published by the Free Software Foundation.
-#
-# This program is distributed in the hope that it would be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-#
-# Further, this software is distributed without any warranty that it is
-# free of the rightful claim of any third person regarding infringement
-# or the like.  Any license provided herein, whether implied or
-# otherwise, applies only to this software file.  Patent licenses, if
-# any, provided herein do not apply to combinations of this program with
-# other software, or any other product whatsoever.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write the Free Software Foundation,
-# Inc., 59 Temple Place - Suite 330, Boston MA 02111-1307, USA.
+# This source code is licensed under the GNU General Public License version 2
+# (GPLv2) WITHOUT ANY WARRANTY.
 #
 
 #######################################################################
@@ -127,7 +110,7 @@ END
 
 #######################################################################
 
-# don't exit on TERM, to test that lrmd makes sure that we do exit
+# don't exit on TERM, to test that pacemaker-execd makes sure that we do exit
 trap sigterm_handler TERM
 sigterm_handler() {
     ocf_log info "They use TERM to bring us down. No such luck."
@@ -188,7 +171,7 @@ dummy_monitor() {
     if [ $OCF_RESKEY_op_sleep -ne 0 ]; then
         if [ "$1" = "" -a -f "${VERIFY_SERIALIZED_FILE}" ]; then
             # two monitor ops have occurred at the same time.
-            # this is to verify a condition in the lrmd regression tests.
+            # This verifies a condition in pacemaker-execd regression tests.
             ocf_log err "$VERIFY_SERIALIZED_FILE exists already"
             return $OCF_ERR_GENERIC
         fi

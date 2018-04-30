@@ -81,7 +81,9 @@ indexterm:[Constraints,Location,rsc]
 
 |rsc-pattern
 |
-|A regular expression matching the names of resources to which this constraint
+|An extended regular expression (as defined in
+ http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap09.html#tag_09_04[POSIX])
+ matching the names of resources to which this constraint
  applies, if +rsc+ is not specified; if the regular expression contains
  submatches and the constraint is governed by a rule (see <<ch-rules>>), the
  submatches can be referenced as +%0+ through +%9+ in the rule's

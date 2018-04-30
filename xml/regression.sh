@@ -178,7 +178,10 @@ test_runner_upgrade() {
 EOF
 	fi
 
-	if test "$((_tru_mode ^ (1 << 2)))" -ne $((1 << 2)); then
+	# only respond with the flags except for "-B", i.e., when both:
+	# - _tru_mode non-zero
+	# - "-B" in _tru_mode is zero (hence non-zero when flipped with XOR)
+	if test "$((_tru_mode * ((_tru_mode ^ (1 << 2)) & (1 << 2))))" -ne 0; then
 		if test $((_tru_mode & (1 << 0))) -ne 0; then
 			cp -a "${_tru_target}" "${_tru_ref}"
 			cp -a "${_tru_target_err}" "${_tru_ref_err}"
@@ -322,7 +325,7 @@ tests="${tests} test2to3"
 # -B
 # -D
 # -G  ... see usage
-cts_pengine() {
+cts_scheduler() {
 	_tcp_mode=0
 	_tcp_ret=0
 	_tcp_validatewith=
@@ -330,7 +333,7 @@ cts_pengine() {
 	_tcp_schema_t=
 	_tcp_template=
 
-	find ../cts/pengine -name '*.xml' -print | env LC_ALL=C sort \
+	find ../cts/scheduler -name '*.xml' -print | env LC_ALL=C sort \
 	  | { case " $* " in
 	      *\ -C\ *) test_cleaner -r;;
 	      *\ -S\ *) emit_result "not implemented" "option -S";;
@@ -418,7 +421,7 @@ EOF
 		done; log2_or_0_return ${_tcp_ret};;
 	      esac; }
 }
-tests="${tests} cts_pengine"
+tests="${tests} cts_scheduler"
 
 #
 # "framework"

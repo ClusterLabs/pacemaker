@@ -665,7 +665,7 @@ cib_file_write_live(char *path)
  * \param[in] cib CIB object to sign off
  *
  * \return pcmk_ok on success, pcmk_err_generic on failure
- * \todo This method should refuse to write the live CIB if the CIB daemon is
+ * \todo This method should refuse to write the live CIB if the CIB manager is
  *       running.
  */
 int
@@ -674,7 +674,7 @@ cib_file_signoff(cib_t * cib)
     int rc = pcmk_ok;
     cib_file_opaque_t *private = cib->variant_opaque;
 
-    crm_debug("Signing out of the CIB Service");
+    crm_debug("Disconnecting from the CIB manager");
     cib->state = cib_disconnected;
     cib->type = cib_no_connection;
 

@@ -1,13 +1,13 @@
 # Using Standalone Configuration
 #
 # The standalone configuration can only be applied to the
-# stonithd process while in standalone mode.  This is achieved
-# by using the --stand-alone option when launching stonithd.
-# When in standalone mode, stonithd will look for a config
+# pacemaker-fenced process while in standalone mode.  This is achieved
+# by using the --stand-alone option when launching pacemaker-fenced.
+# When in standalone mode, pacemaker-fenced will look for a config
 # file named stonith-ng.conf in the /etc/pacemaker directory.
 # If the config file is present, it will be applied on startup.
 #
-# Below are examples of how to configure stonithd in standalone
+# Below are examples of how to configure pacemaker-fenced in standalone
 # mode using this configuration file.
 #
 
@@ -23,7 +23,7 @@ device stonith-1 fence_ipmilan auth=md5 lanplus=true method=onoff \
 ports stonith-1 v02-a
 
 # There is no host checker for ipmilan and there is no host
-# or port argument really, tell stonithd this.
+# or port argument really, tell pacemaker-fenced this.
 options stonith-1 host_argument=none
 
 
@@ -48,7 +48,7 @@ ports stonith-3 v02-a="1,5" v02-b="2,6"
 #
 device stonith-4 fence_xvm
 
-# Non-fencing agent option to give stonithd hints
+# Non-fencing agent option to give pacemaker-fenced hints
 options stonith-4 pcmk_arg_map="domain:uname"
 
 

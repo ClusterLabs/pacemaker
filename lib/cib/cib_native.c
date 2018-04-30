@@ -1,21 +1,18 @@
 /*
- * Copyright (c) 2004 International Business Machines
+ * Copyright 2004 International Business Machines
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+
+#include <crm_internal.h>
+
+#ifndef _GNU_SOURCE
+#  define _GNU_SOURCE
+#endif
+
+#include <bzlib.h>
+#include <errno.h>
 #include <crm_internal.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -107,7 +104,7 @@ cib_native_dispatch_internal(const char *buffer, ssize_t length, gpointer userda
     msg = string2xml(buffer);
 
     if (msg == NULL) {
-        crm_warn("Received a NULL msg from CIB service.");
+        crm_warn("Received a NULL message from the CIB manager");
         return 0;
     }
 
@@ -266,11 +263,11 @@ cib_native_signon_raw(cib_t * cib, const char *name, enum cib_conn_type type, in
     }
 
     if (rc == pcmk_ok) {
-        crm_debug("Connection to CIB successful");
+        crm_debug("Connection to CIB manager successful");
         return pcmk_ok;
     }
 
-    crm_debug("Connection to CIB failed: %s", pcmk_strerror(rc));
+    crm_debug("Connection to CIB manager failed: %s", pcmk_strerror(rc));
     cib_native_signoff(cib);
     return rc;
 }
@@ -280,7 +277,7 @@ cib_native_signoff(cib_t * cib)
 {
     cib_native_opaque_t *native = cib->variant_opaque;
 
-    crm_debug("Signing out of the CIB Service");
+    crm_debug("Disconnecting from the CIB manager");
 
     if (native->source != NULL) {
         /* Attached to mainloop */
@@ -381,7 +378,7 @@ cib_native_perform_op_delegate(cib_t * cib, const char *op, const char *host, co
         return -EPROTO;
     }
 
-    crm_trace("Sending %s message to CIB service (timeout=%ds)", op, cib->call_timeout);
+    crm_trace("Sending %s message to the CIB manager (timeout=%ds)", op, cib->call_timeout);
     rc = crm_ipc_send(native->ipc, op_msg, ipc_flags, cib->call_timeout * 1000, &op_reply);
     free_xml(op_msg);
 
@@ -465,7 +462,7 @@ cib_native_perform_op_delegate(cib_t * cib, const char *op, const char *host, co
 
   done:
     if (crm_ipc_connected(native->ipc) == FALSE) {
-        crm_err("CIB disconnected");
+        crm_err("The CIB manager disconnected");
         cib->state = cib_disconnected;
     }
 

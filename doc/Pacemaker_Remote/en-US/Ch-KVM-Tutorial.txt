@@ -266,11 +266,11 @@ Start pacemaker_remote, and verify the start was successful:
 	  Active: active (running) since Thu 2013-03-14 18:24:04 EDT; 2min 8s ago
 	Main PID: 1233 (pacemaker_remot)
 	  CGroup: name=systemd:/system/pacemaker_remote.service
-		  └─1233 /usr/sbin/pacemaker_remoted
+		  └─1233 /usr/sbin/pacemaker-remoted
 
   Mar 14 18:24:04 guest1 systemd[1]: Starting Pacemaker Remote Service...
   Mar 14 18:24:04 guest1 systemd[1]: Started Pacemaker Remote Service.
-  Mar 14 18:24:04 guest1 pacemaker_remoted[1233]: notice: lrmd_init_remote_tls_server: Starting a tls listener on port 3121.
+  Mar 14 18:24:04 guest1 pacemaker-remoted[1233]: notice: lrmd_init_remote_tls_server: Starting a tls listener on port 3121.
 ----
 
 === Verify Host Connection to Guest ===
@@ -459,7 +459,7 @@ Full list of resources:
 
 === Testing Recovery and Fencing ===
 
-Pacemaker's policy engine is smart enough to know fencing guest nodes
+Pacemaker's scheduler is smart enough to know fencing guest nodes
 associated with a virtual machine means shutting off/rebooting the virtual
 machine.  No special configuration is necessary to make this happen.  If you
 are interested in testing this functionality out, trying stopping the guest's
@@ -469,7 +469,7 @@ cluster node's corosync membership without properly shutting it down.
 ssh into the guest and run this command.
 
 ----
-# kill -9 `pidof pacemaker_remoted`
+# kill -9 $(pidof pacemaker-remoted)
 ----
 
 Within a few seconds, your `pcs status` output will show a monitor failure,

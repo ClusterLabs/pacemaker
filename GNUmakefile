@@ -1,19 +1,8 @@
 #
-# Copyright (C) 2008 Andrew Beekhof
+# Copyright 2008-2018 Andrew Beekhof <andrew@beekhof.net>
 #
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
 default: $(shell test ! -e configure && echo init) $(shell test -e configure && echo core)
@@ -128,10 +117,10 @@ export:
 	    rm -f $(PACKAGE).tar.*;						\
 	    if [ $(TAG) = dirty ]; then 					\
 		git commit -m "DO-NOT-PUSH" -a;					\
-		git archive --prefix=$(distdir)/ HEAD | gzip > $(TARFILE);	\
+		git archive --prefix=$(distdir)/ -o "$(TARFILE)" HEAD^{tree};	\
 		git reset --mixed HEAD^; 					\
 	    else								\
-		git archive --prefix=$(distdir)/ $(TAG) | gzip > $(TARFILE);	\
+		git archive --prefix=$(distdir)/ -o "$(TARFILE)" $(TAG)^{tree};	\
 	    fi;									\
 	    echo `date`: Rebuilt $(TARFILE);					\
 	else									\
@@ -336,7 +325,7 @@ summary:
 	@printf "\n- Update source tarball to revision: `git log --pretty=format:%h -n 1`"
 	@printf "\n- Changesets: `git log --pretty=oneline $(LAST_RELEASE)..HEAD | wc -l`"
 	@printf "\n- Diff:      "
-	@git diff -r $(LAST_RELEASE)..HEAD --stat include lib mcp pengine/*.c pengine/*.h  cib crmd fencing lrmd tools xml | tail -n 1
+	@git diff -r $(LAST_RELEASE)..HEAD --stat include lib daemons tools xml | tail -n 1
 
 rc-changes:
 	@make NEXT_RELEASE=$(shell echo $(LAST_RC) | sed s:-rc.*::) LAST_RELEASE=$(LAST_RC) changes
@@ -345,7 +334,7 @@ changes: summary
 	@printf "\n- Features added since $(LAST_RELEASE)\n"
 	@git log --pretty=format:'  +%s' --abbrev-commit $(LAST_RELEASE)..HEAD | grep -e Feature: | sed -e 's@Feature:@@' | sort -uf
 	@printf "\n- Changes since $(LAST_RELEASE)\n"
-	@git log --pretty=format:'  +%s' --abbrev-commit $(LAST_RELEASE)..HEAD | grep -e High: -e Fix: -e Bug | sed -e 's@Fix:@@' -e s@High:@@ -e s@Fencing:@fencing:@ -e 's@Bug@ Bug@' -e s@PE:@pengine:@ | sort -uf
+	@git log --pretty=format:'  +%s' --abbrev-commit $(LAST_RELEASE)..HEAD | grep -e High: -e Fix: -e Bug | sed -e 's@Fix:@@' -e s@High:@@ -e s@Fencing:@fencing:@ -e 's@Bug@ Bug@' -e s@PE:@scheduler:@ -e s@pengine:@scheduler:@ | sort -uf
 
 changelog:
 	@make changes > ChangeLog
@@ -353,10 +342,11 @@ changelog:
 	git show $(LAST_RELEASE):ChangeLog >> ChangeLog
 	@echo -e "\033[1;35m -- Don't forget to run the bumplibs.sh script! --\033[0m"
 
+DO_NOT_INDENT = lib/gnu daemons/controld/controld_fsa.h
+
 indent:
-	find . -name "*.h" -exec ./p-indent \{\} \;
-	find . -name "*.c" -exec ./p-indent \{\} \;
-	git co HEAD crmd/fsa_proto.h lib/gnu
+	find . -name "*.[ch]" -exec ./p-indent \{\} \;
+	git co HEAD $(DO_NOT_INDENT)
 
 rel-tags: tags
 	find . -name TAGS -exec sed -i 's:\(.*\)/\(.*\)/TAGS:\2/TAGS:g' \{\} \;
@@ -369,7 +359,7 @@ CLANG_checkers =
 # --inconclusive --std=posix
 CPPCHECK_ARGS ?=
 cppcheck:
-	for d in replace lib mcp attrd pengine cib crmd fencing lrmd tools; \
+	for d in replace lib daemons tools; \
 		do cppcheck $(CPPCHECK_ARGS) -q $$d; \
 	done
 

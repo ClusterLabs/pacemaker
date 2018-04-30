@@ -1,26 +1,11 @@
-'''CTS: Cluster Testing System: Audit module
- '''
-from __future__ import absolute_import
+""" Auditing classes for Pacemaker's Cluster Test Suite (CTS)
+"""
 
-__copyright__ = '''
-Copyright (C) 2000, 2001,2005 Alan Robertson <alanr@unix.sh>
-Licensed under the GNU GPL.
-'''
+# Pacemaker targets compatibility with Python 2.7 and 3.2+
+from __future__ import print_function, unicode_literals, absolute_import, division
 
-#
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA.
+__copyright__ = "Copyright 2000-2018 Alan Robertson <alanr@unix.sh>"
+__license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import time, re, uuid
 from cts.watcher import LogWatcher
@@ -534,7 +519,7 @@ class ColocationAudit(PrimitiveAudit):
         return rc
 
 
-class CrmdStateAudit(ClusterAudit):
+class ControllerStateAudit(ClusterAudit):
     def __init__(self, cm):
         self.CM = cm
         self.Stats = {"calls":0
@@ -593,7 +578,7 @@ class CrmdStateAudit(ClusterAudit):
         return passed
 
     def name(self):
-        return "CrmdStateAudit"
+        return "ControllerStateAudit"
     
     def is_applicable(self):
         # @TODO Due to long-ago refactoring, this name test would never match,
@@ -863,7 +848,7 @@ class PartitionAudit(ClusterAudit):
 AllAuditClasses.append(DiskAudit)
 AllAuditClasses.append(FileAudit)
 AllAuditClasses.append(LogAudit)
-AllAuditClasses.append(CrmdStateAudit)
+AllAuditClasses.append(ControllerStateAudit)
 AllAuditClasses.append(PartitionAudit)
 AllAuditClasses.append(PrimitiveAudit)
 AllAuditClasses.append(GroupAudit)
