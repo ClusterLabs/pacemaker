@@ -87,7 +87,6 @@ dnl Compiler characteristics
 dnl ========================================================================
 
 AC_PROG_CC dnl Can force other with environment variable "CC".
-AM_PROG_CC_C_O
 AC_PROG_CC_STDC
 gl_EARLY
 gl_INIT
@@ -95,17 +94,12 @@ gl_INIT
 LT_INIT([dlopen])
 LTDL_INIT([convenience])
 
-AC_PROG_YACC
-AM_PROG_LEX
-
-AC_C_STRINGIZE
 AC_TYPE_SIZE_T
 AC_CHECK_SIZEOF(char)
 AC_CHECK_SIZEOF(short)
 AC_CHECK_SIZEOF(int)
 AC_CHECK_SIZEOF(long)
 AC_CHECK_SIZEOF(long long)
-AC_STRUCT_TIMEZONE
 
 dnl ===============================================
 dnl Helpers
