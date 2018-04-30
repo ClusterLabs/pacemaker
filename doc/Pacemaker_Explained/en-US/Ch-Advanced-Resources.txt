@@ -1067,10 +1067,12 @@ installed on every node allowed to run the bundle.
  indexterm:[Docker,Property,network]
 
 |run-command
-|`/usr/sbin/pacemaker_remoted` if bundle contains a +primitive+, otherwise none
+|`/usr/sbin/pacemaker-remoted` if bundle contains a +primitive+, otherwise none
 |This command will be run inside the container when launching it ("PID 1"). If
- the bundle contains a +primitive+, this command 'must' start pacemaker_remoted
- (but could, for example, be a script that does other stuff, too).
+ the bundle contains a +primitive+, this command 'must' start pacemaker-remoted
+ (but could, for example, be a script that does other stuff, too). If the
+ container image has a pre-2.0.0 version of Pacemaker, set this to
+ +/usr/sbin/pacemaker_remoted+ (note the underbar instead of dash).
  indexterm:[run-command,Docker]
  indexterm:[Docker,Property,run-command]
 
@@ -1139,10 +1141,12 @@ installed on every node allowed to run the bundle.
  indexterm:[rkt,Property,network]
 
 |run-command
-|`/usr/sbin/pacemaker_remoted` if bundle contains a +primitive+, otherwise none
+|`/usr/sbin/pacemaker-remoted` if bundle contains a +primitive+, otherwise none
 |This command will be run inside the container when launching it ("PID 1"). If
- the bundle contains a +primitive+, this command 'must' start pacemaker_remoted
- (but could, for example, be a script that does other stuff, too).
+ the bundle contains a +primitive+, this command 'must' start pacemaker-remoted
+ (but could, for example, be a script that does other stuff, too). If the
+ container image has a pre-2.0.0 version of Pacemaker, set this to
+ +/usr/sbin/pacemaker_remoted+ (note the underbar instead of dash).
  indexterm:[run-command,rkt]
  indexterm:[rkt,Property,run-command]
 

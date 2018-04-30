@@ -480,7 +480,7 @@ class StonithdTest(CTSTest):
             self.debug("Waiting for the cluster to recover")
             self.CM.cluster_stable()
 
-            self.debug("Waiting STONITHd node to come back up")
+            self.debug("Waiting for fenced node to come back up")
             self.CM.ns.WaitForAllNodesToComeUp(self.Env["nodes"], 600)
 
             self.logger.log("Fencing command on %s failed to fence %s (rc=%d)" % (origin, node, rc))
@@ -499,7 +499,7 @@ class StonithdTest(CTSTest):
         self.debug("Waiting for the cluster to recover")
         self.CM.cluster_stable()
 
-        self.debug("Waiting STONITHd node to come back up")
+        self.debug("Waiting for fenced node to come back up")
         self.CM.ns.WaitForAllNodesToComeUp(self.Env["nodes"], 600)
 
         self.debug("Waiting for the cluster to re-stabilize with all nodes")
@@ -713,7 +713,7 @@ class PartialStart(CTSTest):
 #   FIXME!  This should use the CM class to get the pattern
 #       then it would be applicable in general
         watchpats = []
-        watchpats.append("crmd.*Connecting to cluster infrastructure")
+        watchpats.append("pacemaker-controld.*Connecting to cluster infrastructure")
         watch = self.create_watch(watchpats, self.Env["DeadTime"]+10)
         watch.setwatch()
 
@@ -902,8 +902,8 @@ class ValgrindTest(CTSTest):
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
         return [
-            r"cib.*: \*\*\*\*\*\*\*\*\*\*\*\*\*",
-            r"cib.*: .* avoid confusing Valgrind",
+            r"pacemaker-based.*: \*\*\*\*\*\*\*\*\*\*\*\*\*",
+            r"pacemaker-based.*: .* avoid confusing Valgrind",
             r"HA_VALGRIND_ENABLED",
         ]
 
@@ -1087,7 +1087,7 @@ class MaintenanceMode(CTSTest):
         # fail the resource right after turning Maintenance mode on
         # verify it is not recovered until maintenance mode is turned off
         if action == "On":
-            pats.append(r"pengine.*:\s+warning:.*Processing failed op %s for %s on" % (self.action, self.rid))
+            pats.append(r"schedulerd.*:\s+warning:.*Processing failed op %s for %s on" % (self.action, self.rid))
         else:
             pats.append(self.templates["Pat:RscOpOK"] % ("stop", self.rid))
             pats.append(self.templates["Pat:RscOpOK"] % ("start", self.rid))
@@ -1236,9 +1236,8 @@ class MaintenanceMode(CTSTest):
         '''Return list of errors which should be ignored'''
         return [
             r"Updating failcount for %s" % self.rid,
-            r"pengine.*: Recover %s\s*\(.*\)" % self.rid,
+            r"schedulerd.*: Recover %s\s*\(.*\)" % self.rid,
             r"Unknown operation: fail",
-            r"(ERROR|error): sending stonithRA op to stonithd failed.",
             self.templates["Pat:RscOpOK"] % (self.action, self.rid),
             r"(ERROR|error).*: Action %s_%s_%d .* initiated outside of a transition" % (self.rid, self.action, self.interval),
         ]
@@ -1296,7 +1295,7 @@ class ResourceRecover(CTSTest):
         self.debug("Shooting %s aka. %s" % (rsc.clone_id, rsc.id))
 
         pats = []
-        pats.append(r"pengine.*:\s+warning:.*Processing failed op %s for (%s|%s) on" % (self.action,
+        pats.append(r"schedulerd.*:\s+warning:.*Processing failed op %s for (%s|%s) on" % (self.action,
             rsc.id, rsc.clone_id))
 
         if rsc.managed():
@@ -1337,9 +1336,8 @@ class ResourceRecover(CTSTest):
         '''Return list of errors which should be ignored'''
         return [
             r"Updating failcount for %s" % self.rid,
-            r"pengine.*: Recover (%s|%s)\s*\(.*\)" % (self.rid, self.rid_alt),
+            r"schedulerd.*: Recover (%s|%s)\s*\(.*\)" % (self.rid, self.rid_alt),
             r"Unknown operation: fail",
-            r"(ERROR|error): sending stonithRA op to stonithd failed.",
             self.templates["Pat:RscOpOK"] % (self.action, self.rid),
             r"(ERROR|error).*: Action %s_%s_%d .* initiated outside of a transition" % (self.rid, self.action, self.interval),
         ]
@@ -1391,7 +1389,7 @@ class ComponentFail(CTSTest):
         if node_is_dc:
           self.patterns.extend(chosen.dc_pats)
 
-        if chosen.name == "stonith":
+        if chosen.name == "pacemaker-fenced":
             # Ignore actions for STONITH resources
             (rc, lines) = self.rsh(node, "crm_resource -c", None)
             for line in lines:
@@ -1422,7 +1420,7 @@ class ComponentFail(CTSTest):
         self.debug("Waiting for the cluster to recover")
         self.CM.cluster_stable()
 
-        self.debug("Waiting for any STONITHd node to come back up")
+        self.debug("Waiting for any fenced node to come back up")
         self.CM.ns.WaitForAllNodesToComeUp(self.Env["nodes"], 600)
 
         self.debug("Waiting for the cluster to re-stabilize with all nodes")
@@ -1632,7 +1630,7 @@ class SplitBrainTest(CTSTest):
         return [
             r"Another DC detected:",
             r"(ERROR|error).*: .*Application of an update diff failed",
-            r"crmd.*:.*not in our membership list",
+            r"pacemaker-controld.*:.*not in our membership list",
             r"CRIT:.*node.*returning after partition",
         ]
 
@@ -1711,8 +1709,8 @@ class Reattach(CTSTest):
         self.incr("calls")
 
         pats = []
-        # Conveniently, pengine will display this message when disabling management,
-        # even if fencing is not enabled, so we can rely on it.
+        # Conveniently, the scheduler will display this message when disabling
+        # management, even if fencing is not enabled, so we can rely on it.
         managed = self.create_watch(["Delaying fencing operations"], 60)
         managed.setwatch()
 
@@ -2234,7 +2232,7 @@ class BSC_AddResource(CTSTest):
         self.resource_offset =         self.resource_offset  + 1
 
         r_id = "bsc-rsc-%s-%d" % (node, self.resource_offset)
-        start_pat = "crmd.*%s_start_0.*confirmed.*ok"
+        start_pat = "pacemaker-controld.*%s_start_0.*confirmed.*ok"
 
         patterns = []
         patterns.append(start_pat % r_id)
@@ -2569,16 +2567,15 @@ class RemoteLXC(CTSTest):
         '''Return list of errors which should be ignored'''
         return [
             r"Updating failcount for ping",
-            r"pengine.*: Recover (ping|lxc-ms|container)\s*\(.*\)",
+            r"schedulerd.*: Recover (ping|lxc-ms|container)\s*\(.*\)",
             # The orphaned lxc-ms resource causes an expected transition error
-            # that is a result of the pengine not having knowledge that the 
-            # ms resource used to be a clone.  As a result it looks like that 
+            # that is a result of the scheduler not having knowledge that the
+            # promotable resource used to be a clone. As a result, it looks like that 
             # resource is running in multiple locations when it shouldn't... But in
             # this instance we know why this error is occurring and that it is expected.
             r"Calculated [Tt]ransition .*pe-error",
             r"Resource lxc-ms .* is active on 2 nodes attempting recovery",
             r"Unknown operation: fail",
-            r"(ERROR|error): sending stonithRA op to stonithd failed.",
             r"VirtualDomain.*ERROR: Unable to determine emulator",
         ]
 
@@ -2708,7 +2705,7 @@ class RemoteDriver(CTSTest):
 
         # We kill the process to prevent a graceful stop,
         # then stop it to prevent the OS from restarting it.
-        self.rsh(node, "killall -9 pacemaker_remoted")
+        self.rsh(node, "killall -9 pacemaker-remoted")
         self.stop_pcmk_remote(node)
 
     def start_metal(self, node):
@@ -2964,7 +2961,7 @@ class RemoteDriver(CTSTest):
             return False
 
         for node in self.Env["nodes"]:
-            rc = self.rsh(node, "type pacemaker_remoted >/dev/null 2>&1")
+            rc = self.rsh(node, "which pacemaker-remoted >/dev/null 2>&1")
             if rc != 0:
                 return False
         return True
@@ -3046,9 +3043,9 @@ class RemoteStonithd(RemoteDriver):
         ignore_pats = [
             r"Lost connection to Pacemaker Remote node",
             r"Software caused connection abort",
-            r"crmd.*:\s+error.*: Operation remote-.*_monitor",
-            r"crmd.*:\s+error.*: Result of monitor operation for remote-.*",
-            r"pengine.*:\s+Recover remote-.*\s*\(.*\)",
+            r"pacemaker-controld.*:\s+error.*: Operation remote-.*_monitor",
+            r"pacemaker-controld.*:\s+error.*: Result of monitor operation for remote-.*",
+            r"schedulerd.*:\s+Recover remote-.*\s*\(.*\)",
             r"Calculated [Tt]ransition .*pe-error",
             r"error.*: Resource .*ocf::.* is active on 2 nodes attempting recovery",
         ]
@@ -3105,7 +3102,7 @@ class RemoteRscFailure(RemoteDriver):
 
     def errorstoignore(self):
         ignore_pats = [
-            r"pengine.*: Recover remote-rsc\s*\(.*\)",
+            r"schedulerd.*: Recover remote-rsc\s*\(.*\)",
             r"Dummy.*: No process state file found",
         ]
 

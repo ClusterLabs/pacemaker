@@ -1176,7 +1176,7 @@ determine_online_status_no_fencing(pe_working_set_t * data_set, xmlNode * node_s
         }
 
     } else if (this_node->details->expected_up == FALSE) {
-        crm_trace("CRMd is down: in_cluster=%s", crm_str(in_cluster));
+        crm_trace("Controller is down: in_cluster=%s", crm_str(in_cluster));
         crm_trace("\tis_peer=%s, join=%s, expected=%s",
                   crm_str(is_peer), crm_str(join), crm_str(exp_state));
 
@@ -1772,7 +1772,7 @@ process_rsc_state(resource_t * rsc, node_t * node,
 
         /* If this is a guest node, fence it (regardless of whether fencing is
          * enabled, because guest node fencing is done by recovery of the
-         * container resource rather than by stonithd). Mark the resource
+         * container resource rather than by the fencer). Mark the resource
          * we're processing as failed. When the guest comes back up, its
          * operation history in the CIB will be cleared, freeing the affected
          * resource to run again once we are sure we know its state.

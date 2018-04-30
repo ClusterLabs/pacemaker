@@ -325,9 +325,7 @@ summary:
 	@printf "\n- Update source tarball to revision: `git log --pretty=format:%h -n 1`"
 	@printf "\n- Changesets: `git log --pretty=oneline $(LAST_RELEASE)..HEAD | wc -l`"
 	@printf "\n- Diff:      "
-	@git diff -r $(LAST_RELEASE)..HEAD --stat \
-		include lib daemons pengine/*.c pengine/*.h \
-		cib crmd fencing lrmd tools xml | tail -n 1
+	@git diff -r $(LAST_RELEASE)..HEAD --stat include lib daemons tools xml | tail -n 1
 
 rc-changes:
 	@make NEXT_RELEASE=$(shell echo $(LAST_RC) | sed s:-rc.*::) LAST_RELEASE=$(LAST_RC) changes
@@ -336,7 +334,7 @@ changes: summary
 	@printf "\n- Features added since $(LAST_RELEASE)\n"
 	@git log --pretty=format:'  +%s' --abbrev-commit $(LAST_RELEASE)..HEAD | grep -e Feature: | sed -e 's@Feature:@@' | sort -uf
 	@printf "\n- Changes since $(LAST_RELEASE)\n"
-	@git log --pretty=format:'  +%s' --abbrev-commit $(LAST_RELEASE)..HEAD | grep -e High: -e Fix: -e Bug | sed -e 's@Fix:@@' -e s@High:@@ -e s@Fencing:@fencing:@ -e 's@Bug@ Bug@' -e s@PE:@pengine:@ | sort -uf
+	@git log --pretty=format:'  +%s' --abbrev-commit $(LAST_RELEASE)..HEAD | grep -e High: -e Fix: -e Bug | sed -e 's@Fix:@@' -e s@High:@@ -e s@Fencing:@fencing:@ -e 's@Bug@ Bug@' -e s@PE:@scheduler:@ -e s@pengine:@scheduler:@ | sort -uf
 
 changelog:
 	@make changes > ChangeLog
@@ -344,10 +342,11 @@ changelog:
 	git show $(LAST_RELEASE):ChangeLog >> ChangeLog
 	@echo -e "\033[1;35m -- Don't forget to run the bumplibs.sh script! --\033[0m"
 
+DO_NOT_INDENT = lib/gnu daemons/controld/controld_fsa.h
+
 indent:
-	find . -name "*.h" -exec ./p-indent \{\} \;
-	find . -name "*.c" -exec ./p-indent \{\} \;
-	git co HEAD crmd/fsa_proto.h lib/gnu
+	find . -name "*.[ch]" -exec ./p-indent \{\} \;
+	git co HEAD $(DO_NOT_INDENT)
 
 rel-tags: tags
 	find . -name TAGS -exec sed -i 's:\(.*\)/\(.*\)/TAGS:\2/TAGS:g' \{\} \;
@@ -360,7 +359,7 @@ CLANG_checkers =
 # --inconclusive --std=posix
 CPPCHECK_ARGS ?=
 cppcheck:
-	for d in replace lib daemons attrd pengine cib crmd fencing lrmd tools; \
+	for d in replace lib daemons tools; \
 		do cppcheck $(CPPCHECK_ARGS) -q $$d; \
 	done
 

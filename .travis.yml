@@ -62,7 +62,7 @@ before_script:
 
 script: 
 - if test ${CC} != cov-build; then sudo make install-exec-local || true; fi
-- if test ${CC} != cov-build; then make && ./cts/cts-regression -V; fi
+- if test ${CC} != cov-build; then make && ./cts/cts-regression -V cli scheduler exec; fi
 - if test ${CC} = cov-build; then export CC=gcc; bash ./travisci_build_coverity_scan.sh; fi
 
 #after_script:

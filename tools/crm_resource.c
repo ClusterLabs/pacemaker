@@ -1,20 +1,8 @@
-
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_resource.h>
@@ -53,7 +41,7 @@ resource_ipc_timeout(gpointer data)
 static void
 resource_ipc_connection_destroy(gpointer user_data)
 {
-    crm_info("Connection to CRMd was terminated");
+    crm_info("Connection to controller was terminated");
     crm_exit(CRM_EX_DISCONNECT);
 }
 
@@ -65,8 +53,10 @@ start_mainloop(void)
     }
 
     mainloop = g_main_loop_new(NULL, FALSE);
-    fprintf(stderr, "Waiting for %d replies from the CRMd", crmd_replies_needed);
-    crm_debug("Waiting for %d replies from the CRMd", crmd_replies_needed);
+    fprintf(stderr, "Waiting for %d replies from the controller",
+            crmd_replies_needed);
+    crm_debug("Waiting for %d replies from the controller",
+              crmd_replies_needed);
 
     g_timeout_add(message_timeout_ms, resource_ipc_timeout, NULL);
     g_main_loop_run(mainloop);
@@ -429,7 +419,7 @@ main(int argc, char **argv)
 
     bool require_resource = TRUE; /* whether command requires that resource be specified */
     bool require_dataset = TRUE;  /* whether command requires populated dataset instance */
-    bool require_crmd = FALSE;    /* whether command requires connection to CRMd */
+    bool require_crmd = FALSE;    // whether command requires controller connection
 
     int rc = pcmk_ok;
     int is_ocf_rc = 0;
@@ -784,11 +774,11 @@ main(int argc, char **argv)
         require_dataset = TRUE;
     }
 
-    /* Establish a connection to the CIB */
+    /* Establish a connection to the CIB manager */
     cib_conn = cib_new();
     rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
     if (rc != pcmk_ok) {
-        CMD_ERR("Error signing on to the CIB service: %s", pcmk_strerror(rc));
+        CMD_ERR("Error connecting to the CIB manager: %s", pcmk_strerror(rc));
         goto bail;
     }
 
@@ -827,7 +817,7 @@ main(int argc, char **argv)
         }
     }
 
-    /* Establish a connection to the CRMd if needed */
+    // Establish a connection to the controller if needed
     if (require_crmd) {
         xmlNode *xml = NULL;
         mainloop_io_t *source =
@@ -835,7 +825,7 @@ main(int argc, char **argv)
         crmd_channel = mainloop_get_ipc_client(source);
 
         if (crmd_channel == NULL) {
-            CMD_ERR("Error signing on to the CRMd service");
+            CMD_ERR("Error connecting to the controller");
             rc = -ENOTCONN;
             goto bail;
         }
@@ -1126,7 +1116,8 @@ main(int argc, char **argv)
 
             if (node && is_remote_node(node)) {
                 if (node->details->remote_rsc == NULL || node->details->remote_rsc->running_on == NULL) {
-                    CMD_ERR("No lrmd connection detected to remote node %s", host_uname);
+                    CMD_ERR("No cluster connection to Pacemaker Remote node %s detected",
+                            host_uname);
                     rc = -ENXIO;
                     goto bail;
                 }

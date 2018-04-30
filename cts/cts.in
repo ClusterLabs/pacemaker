@@ -17,7 +17,6 @@ fi
 logfile=0
 summary=0
 verbose=0
-pengine=0
 watch=0
 saved=0
 tests=""
@@ -82,7 +81,7 @@ while true; do
 	-S) summary=1; saved=1; shift;;
 	-s) summary=1; shift;;
 	-v) verbose=`expr $verbose + 1`; shift;;
-	-p) pengine=1; shift;;
+	-p) shift;;
 	-e) patterns="$patterns -e `echo $2 | sed 's/ /\\\W/g'`"; shift; shift;;
 	-l) logfile=1; shift;;
 	-w) watch=1; shift;;
@@ -115,7 +114,7 @@ while true; do
 	    cat << EOF > $cts_root/CTSvars.py
 class CTSvars:
         CTS_home="$local_root/cts"
-        Fencing_home="$local_root/fencing"
+        Fencing_home="$local_root/daemons/fenced"
         CRM_CONFIG_DIR="/var/lib/pacemaker/cib"
         CRM_DAEMON_USER="hacluster"
         CRM_DAEMON_DIR="/usr/libexec/pacemaker"
@@ -135,7 +134,7 @@ EOF
 	    chmod +x $cts_root/crm_report
 
 	    cp $cts_root/LSBDummy.in $cts_root/LSBDummy
-	    chmod +x $local_root/fencing/fence_*
+	    chmod +x $local_root/daemons/fenced/fence_*
 	    sed -i.sed s:@OCF_ROOT_DIR@:/usr/lib/ocf: $cts_root/LSBDummy
 	    
 	    echo "Make sure you add $cts_root to your PATH and set a value for \$cluster_name in .bashrc"

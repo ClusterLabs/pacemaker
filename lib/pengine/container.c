@@ -1,19 +1,8 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -287,7 +276,7 @@ create_docker_resource(
                                       "run_cmd", data->docker_run_command);
             } else {
                 crm_create_nvpair_xml(xml_obj, NULL,
-                                      "run_cmd", SBIN_DIR "/pacemaker_remoted");
+                                      "run_cmd", SBIN_DIR "/pacemaker-remoted");
             }
 
             /* TODO: Allow users to specify their own?
@@ -306,7 +295,8 @@ create_docker_resource(
          * "normal" remote nodes
          *
          *     crm_create_nvpair_xml(xml_obj, NULL,
-         *                           "run_cmd", "/usr/libexec/pacemaker/lrmd");
+         *                           "run_cmd",
+         *                           "/usr/libexec/pacemaker/pacemaker-execd");
          *     crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd",
          *         "/usr/libexec/pacemaker/lrmd_internal_ctl -c poke");
          */
@@ -447,7 +437,8 @@ create_rkt_resource(
             if(data->docker_run_command) {
                 crm_create_nvpair_xml(xml_obj, NULL, "run_cmd", data->docker_run_command);
             } else {
-                crm_create_nvpair_xml(xml_obj, NULL, "run_cmd", SBIN_DIR"/pacemaker_remoted");
+                crm_create_nvpair_xml(xml_obj, NULL, "run_cmd",
+                                      SBIN_DIR "/pacemaker-remoted");
             }
 
             /* TODO: Allow users to specify their own?
@@ -466,7 +457,8 @@ create_rkt_resource(
          * "normal" remote nodes
          *
          *     crm_create_nvpair_xml(xml_obj, NULL,
-         *                           "run_cmd", "/usr/libexec/pacemaker/lrmd");
+         *                           "run_cmd",
+         *                           "/usr/libexec/pacemaker/pacemaker-execd");
          *     crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd",
          *         "/usr/libexec/pacemaker/lrmd_internal_ctl -c poke");
          */
@@ -690,8 +682,8 @@ create_container(
          * different node than the one on which the docker container
          * is active.
          *
-         * Makes it possible to have remote nodes, running docker
-         * containers with pacemaker_remoted inside in order to start
+         * This makes it possible to have Pacemaker Remote nodes running
+         * containers with pacemaker-remoted inside in order to start
          * services inside those containers.
          */
         set_bit(tuple->remote->flags, pe_rsc_allow_remote_remotes);

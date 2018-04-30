@@ -1,20 +1,8 @@
 /*
- * Copyright (c) 2012 David Vossel <davidvossel@gmail.com>
+ * Copyright 2012-2018 David Vossel <davidvossel@gmail.com>
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -382,7 +370,7 @@ lrmd_tls_dispatch(gpointer userdata)
                 int reply_id = 0;
                 crm_element_value_int(xml, F_LRMD_CALLID, &reply_id);
                 /* if this happens, we want to know about it */
-                crm_err("Got outdated remote LRM reply %d", reply_id);
+                crm_err("Got outdated Pacemaker Remote reply %d", reply_id);
             }
         }
         free_xml(xml);
@@ -390,7 +378,7 @@ lrmd_tls_dispatch(gpointer userdata)
     }
 
     if (disconnected) {
-        crm_info("Lost %s LRM connection while reading data",
+        crm_info("Lost %s executor connection while reading data",
                  (native->remote_nodename? native->remote_nodename : "local"));
         lrmd_tls_disconnect(lrmd);
         return 0;
@@ -480,7 +468,7 @@ lrmd_create_op(const char *token, const char *op, xmlNode *data, int timeout,
         add_message_xml(op_msg, F_LRMD_CALLDATA, data);
     }
 
-    crm_trace("Created lrmd %s command with call options %.8lx (%d)",
+    crm_trace("Created executor %s command with call options %.8lx (%d)",
               op, (long)options, options);
     return op_msg;
 }
@@ -656,7 +644,7 @@ lrmd_tls_send(lrmd_t * lrmd, xmlNode * msg)
 
     rc = lrmd_tls_send_msg(native->remote, msg, global_remote_msg_id, "request");
     if (rc <= 0) {
-        crm_err("Remote lrmd send failed, disconnecting");
+        crm_err("Disconnecting because TLS message could not be sent to Pacemaker Remote");
         lrmd_tls_disconnect(lrmd);
         return -ENOTCONN;
     }
@@ -682,12 +670,12 @@ lrmd_tls_send_recv(lrmd_t * lrmd, xmlNode * msg, int timeout, xmlNode ** reply)
     xml = lrmd_tls_recv_reply(lrmd, timeout, global_remote_msg_id, &disconnected);
 
     if (disconnected) {
-        crm_err("Remote lrmd server disconnected while waiting for reply with id %d. ",
+        crm_err("Pacemaker Remote disconnected while waiting for reply to request id %d",
                 global_remote_msg_id);
         lrmd_tls_disconnect(lrmd);
         rc = -ENOTCONN;
     } else if (!xml) {
-        crm_err("Remote lrmd never received reply for request id %d. timeout: %dms ",
+        crm_err("Did not receive reply from Pacemaker Remote for request id %d (timeout %dms)",
                 global_remote_msg_id, timeout);
         rc = -ECOMM;
     }
@@ -775,9 +763,9 @@ lrmd_api_is_connected(lrmd_t * lrmd)
 
 /*!
  * \internal
- * \brief Send a prepared API command to the lrmd server
+ * \brief Send a prepared API command to the executor
  *
- * \param[in]  lrmd          Existing connection to the lrmd server
+ * \param[in]  lrmd          Existing connection to the executor
  * \param[in]  op            Name of API command to send
  * \param[in]  data          Command data XML to add to the sent command
  * \param[out] output_data   If expecting a reply, it will be stored here
@@ -810,7 +798,7 @@ lrmd_send_command(lrmd_t *lrmd, const char *op, xmlNode *data,
 
     CRM_CHECK(native->token != NULL,;
         );
-    crm_trace("sending %s op to lrmd", op);
+    crm_trace("Sending %s op to executor", op);
 
     op_msg = lrmd_create_op(native->token, op, data, timeout, options);
 
@@ -851,7 +839,7 @@ lrmd_send_command(lrmd_t *lrmd, const char *op, xmlNode *data,
 
   done:
     if (lrmd_api_is_connected(lrmd) == FALSE) {
-        crm_err("LRMD disconnected");
+        crm_err("Executor disconnected");
     }
 
     free_xml(op_msg);
@@ -913,7 +901,7 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
     rc = lrmd_send_xml(lrmd, hello, -1, &reply);
 
     if (rc < 0) {
-        crm_perror(LOG_DEBUG, "Couldn't complete registration with the lrmd API: %d", rc);
+        crm_perror(LOG_DEBUG, "Couldn't complete registration with the executor API: %d", rc);
         rc = -ECOMM;
     } else if (reply == NULL) {
         crm_err("Did not receive registration reply");
@@ -926,7 +914,7 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
         crm_element_value_int(reply, F_LRMD_RC, &rc);
 
         if (rc == -EPROTO) {
-            crm_err("LRMD protocol mismatch client version %s, server version %s",
+            crm_err("Executor protocol version mismatch between client (%s) and server (%s)",
                 LRMD_PROTOCOL_VERSION, version);
             crm_log_xml_err(reply, "Protocol Error");
 
@@ -966,7 +954,7 @@ lrmd_ipc_connect(lrmd_t * lrmd, int *fd)
         .destroy = lrmd_ipc_connection_destroy
     };
 
-    crm_info("Connecting to lrmd");
+    crm_info("Connecting to executor");
 
     if (fd) {
         /* No mainloop */
@@ -974,7 +962,7 @@ lrmd_ipc_connect(lrmd_t * lrmd, int *fd)
         if (native->ipc && crm_ipc_connect(native->ipc)) {
             *fd = crm_ipc_get_fd(native->ipc);
         } else if (native->ipc) {
-            crm_perror(LOG_ERR, "Connection to local resource manager failed");
+            crm_perror(LOG_ERR, "Connection to executor failed");
             rc = -ENOTCONN;
         }
     } else {
@@ -983,7 +971,7 @@ lrmd_ipc_connect(lrmd_t * lrmd, int *fd)
     }
 
     if (native->ipc == NULL) {
-        crm_debug("Could not connect to the LRMD API");
+        crm_debug("Could not connect to the executor API");
         rc = -ENOTCONN;
     }
 
@@ -1014,14 +1002,14 @@ set_key(gnutls_datum_t * key, const char *location)
             key->size = key_cache_len;
             memcpy(key->data, key_cache, key_cache_len);
 
-            crm_debug("using cached LRMD key");
+            crm_debug("Using cached executor key");
             return 0;
         } else {
             key_cache_len = 0;
             key_cache_updated = 0;
             free(key_cache);
             key_cache = NULL;
-            crm_debug("clearing lrmd key cache");
+            crm_debug("Clearing executor key cache");
         }
     }
 
@@ -1076,12 +1064,12 @@ lrmd_tls_set_key(gnutls_datum_t * key)
         return pcmk_ok;
 
     } else if (specific_location) {
-        crm_err("No valid lrmd remote key found at %s, trying default location", specific_location);
+        crm_err("No valid Pacemaker Remote key found at %s, trying default location", specific_location);
     }
 
     if ((set_key(key, DEFAULT_REMOTE_KEY_LOCATION) != 0)
         && (set_key(key, ALT_REMOTE_KEY_LOCATION) != 0)) {
-        crm_err("No valid lrmd remote key found at %s", DEFAULT_REMOTE_KEY_LOCATION);
+        crm_err("No valid Pacemaker Remote key found at %s", DEFAULT_REMOTE_KEY_LOCATION);
         return -ENOKEY;
     }
 
@@ -1132,7 +1120,7 @@ lrmd_tcp_connect_cb(void *userdata, int sock)
 
     if (rc < 0) {
         lrmd_tls_connection_destroy(lrmd);
-        crm_info("Could not connect to remote LRMD at %s:%d",
+        crm_info("Could not connect to Pacemaker Remote at %s:%d",
                  native->server, native->port);
         report_async_connection_result(lrmd, rc);
         return;
@@ -1146,7 +1134,7 @@ lrmd_tcp_connect_cb(void *userdata, int sock)
 
     rc = lrmd_tls_set_key(&psk_key);
     if (rc != 0) {
-        crm_warn("Could not set key for remote LRMD at %s:%d " CRM_XS " rc=%d",
+        crm_warn("Could not set key for Pacemaker Remote at %s:%d " CRM_XS " rc=%d",
                  native->server, native->port, rc);
         lrmd_tls_connection_destroy(lrmd);
         report_async_connection_result(lrmd, rc);
@@ -1160,7 +1148,7 @@ lrmd_tcp_connect_cb(void *userdata, int sock)
     native->remote->tls_session = create_psk_tls_session(sock, GNUTLS_CLIENT, native->psk_cred_c);
 
     if (crm_initiate_client_tls_handshake(native->remote, LRMD_CLIENT_HANDSHAKE_TIMEOUT) != 0) {
-        crm_warn("Disconnecting after TLS handshake with remote LRMD %s:%d failed",
+        crm_warn("Disconnecting after TLS handshake with Pacemaker Remote server %s:%d failed",
                  native->server, native->port);
         gnutls_deinit(*native->remote->tls_session);
         gnutls_free(native->remote->tls_session);
@@ -1170,10 +1158,11 @@ lrmd_tcp_connect_cb(void *userdata, int sock)
         return;
     }
 
-    crm_info("TLS connection to remote LRMD %s:%d succeeded",
+    crm_info("TLS connection to Pacemaker Remote server %s:%d succeeded",
              native->server, native->port);
 
-    name = crm_strdup_printf("remote-lrmd-%s:%d", native->server, native->port);
+    name = crm_strdup_printf("pacemaker-remote-%s:%d",
+                             native->server, native->port);
 
     native->process_notify = mainloop_add_trigger(G_PRIORITY_HIGH, lrmd_tls_dispatch, lrmd);
     native->source =
@@ -1221,7 +1210,7 @@ lrmd_tls_connect(lrmd_t * lrmd, int *fd)
 
     sock = crm_remote_tcp_connect(native->server, native->port);
     if (sock < 0) {
-        crm_warn("Could not establish remote lrmd connection to %s", native->server);
+        crm_warn("Could not establish Pacemaker Remote connection to %s", native->server);
         lrmd_tls_connection_destroy(lrmd);
         return -ENOTCONN;
     }
@@ -1249,13 +1238,13 @@ lrmd_tls_connect(lrmd_t * lrmd, int *fd)
         return -EKEYREJECTED;
     }
 
-    crm_info("Remote lrmd client TLS connection established with server %s:%d", native->server,
+    crm_info("Client TLS connection established with Pacemaker Remote server %s:%d", native->server,
              native->port);
 
     if (fd) {
         *fd = sock;
     } else {
-        char *name = crm_strdup_printf("remote-lrmd-%s:%d",
+        char *name = crm_strdup_printf("pacemaker-remote-%s:%d",
                                        native->server, native->port);
 
         native->process_notify = mainloop_add_trigger(G_PRIORITY_HIGH, lrmd_tls_dispatch, lrmd);
@@ -1299,10 +1288,7 @@ lrmd_api_connect_async(lrmd_t * lrmd, const char *name, int timeout)
     int rc = 0;
     lrmd_private_t *native = lrmd->lrmd_private;
 
-    if (!native->callback) {
-        crm_err("Async connect not possible, no lrmd client callback set.");
-        return -1;
-    }
+    CRM_CHECK(native && native->callback, return -1);
 
     switch (native->type) {
         case CRM_CLIENT_IPC:
@@ -1390,7 +1376,7 @@ lrmd_api_disconnect(lrmd_t * lrmd)
 {
     lrmd_private_t *native = lrmd->lrmd_private;
 
-    crm_info("Disconnecting %s LRM connection to %s",
+    crm_info("Disconnecting %s %s executor connection",
              crm_client_type_text(native->type),
              (native->remote_nodename? native->remote_nodename : "local"));
     switch (native->type) {
@@ -1586,7 +1572,7 @@ lrmd_api_get_recurring_ops(lrmd_t *lrmd, const char *rsc_id, int timeout_ms,
         const char *rsc_id = crm_element_value(rsc_xml, F_LRMD_RSC_ID);
 
         if (rsc_id == NULL) {
-            crm_err("Could not parse recurring operation information from LRMD");
+            crm_err("Could not parse recurring operation information from executor");
             continue;
         }
         for (xmlNode *op_xml = first_named_child(rsc_xml, T_LRMD_RSC_OP);
@@ -1958,10 +1944,9 @@ lrmd_remote_api_new(const char *nodename, const char *server, int port)
 
     return new_lrmd;
 #else
-    crm_err("GNUTLS is not enabled for this build, remote LRMD client can not be created");
+    crm_err("Cannot communicate with Pacemaker Remote because GnuTLS is not enabled for this build");
     return NULL;
 #endif
-
 }
 
 void

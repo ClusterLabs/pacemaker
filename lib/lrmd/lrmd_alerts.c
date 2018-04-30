@@ -1,20 +1,8 @@
 /*
- * Copyright (c) 2015 David Vossel <davidvossel@gmail.com>
+ * Copyright 2015-2018 David Vossel <davidvossel@gmail.com>
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -124,7 +112,7 @@ is_target_alert(char **list, const char *value)
  * \internal
  * \brief Execute alert agents for an event
  *
- * \param[in]     lrmd        LRMD connection to use
+ * \param[in]     lrmd        Executor connection to use
  * \param[in]     alert_list  Alerts to execute
  * \param[in]     kind        Type of event that is being alerted for
  * \param[in]     attr_name   If crm_alert_attribute, the attribute name
@@ -227,7 +215,7 @@ exec_alert_list(lrmd_t *lrmd, GList *alert_list, enum crm_alert_flags kind,
  * \internal
  * \brief Send an alert for a node attribute change
  *
- * \param[in] lrmd        LRMD connection to use
+ * \param[in] lrmd        Executor connection to use
  * \param[in] alert_list  List of alert agents to execute
  * \param[in] node        Name of node with attribute change
  * \param[in] nodeid      Node ID of node with attribute change
@@ -265,7 +253,7 @@ lrmd_send_attribute_alert(lrmd_t *lrmd, GList *alert_list,
  * \internal
  * \brief Send an alert for a node membership event
  *
- * \param[in] lrmd        LRMD connection to use
+ * \param[in] lrmd        Executor connection to use
  * \param[in] alert_list  List of alert agents to execute
  * \param[in] node        Name of node with change
  * \param[in] nodeid      Node ID of node with change
@@ -299,7 +287,7 @@ lrmd_send_node_alert(lrmd_t *lrmd, GList *alert_list,
  * \internal
  * \brief Send an alert for a fencing event
  *
- * \param[in] lrmd        LRMD connection to use
+ * \param[in] lrmd        Executor connection to use
  * \param[in] alert_list  List of alert agents to execute
  * \param[in] target      Name of fence target node
  * \param[in] task        Type of fencing event that occurred
@@ -336,7 +324,7 @@ lrmd_send_fencing_alert(lrmd_t *lrmd, GList *alert_list,
  * \internal
  * \brief Send an alert for a resource operation
  *
- * \param[in] lrmd        LRMD connection to use
+ * \param[in] lrmd        Executor connection to use
  * \param[in] alert_list  List of alert agents to execute
  * \param[in] node        Name of node that executed operation
  * \param[in] op          Resource operation

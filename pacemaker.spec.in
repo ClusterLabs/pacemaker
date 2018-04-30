@@ -146,6 +146,9 @@
 ## Add option to turn off hardening of libraries and daemon executables
 %bcond_without hardening
 
+## Add option to disable links for legacy daemon names
+%bcond_without legacy_links
+
 
 # Keep sane profiling data if requested
 %if %{with profiling}
@@ -393,15 +396,16 @@ export LDFLAGS_HARDENED_LIB="%{?_hardening_ldflags}"
 
 ./autogen.sh
 
-%{configure}                                       \
-        %{?with_profiling:   --with-profiling}     \
-        %{?with_coverage:    --with-coverage}      \
-        %{!?with_doc:        --with-brand=}        \
-        %{!?with_hardening:  --disable-hardening}  \
-        %{?python_path:      PYTHON=%{python_path}} \
-        %{?gnutls_priorities: --with-gnutls-priorities="%{gnutls_priorities}"} \
-        --with-initdir=%{_initrddir}               \
-        --localstatedir=%{_var}                    \
+%{configure}                                                                    \
+        %{?python_path:        PYTHON=%{python_path}}                           \
+        %{!?with_hardening:    --disable-hardening}                             \
+        %{!?with_legacy_links: --disable-legacy-links}                          \
+        %{?with_profiling:     --with-profiling}                                \
+        %{?with_coverage:      --with-coverage}                                 \
+        %{!?with_doc:          --with-brand=}                                   \
+        %{?gnutls_priorities:  --with-gnutls-priorities="%{gnutls_priorities}"} \
+        --with-initdir=%{_initrddir}                                            \
+        --localstatedir=%{_var}                                                 \
         --with-version=%{version}-%{release}
 
 %if 0%{?suse_version} >= 1200
@@ -413,7 +417,7 @@ sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
 make %{_smp_mflags} V=1 all
 
 %check
-{ cts/cts-pengine --run one-or-more-unrunnable-instances \
+{ cts/cts-scheduler --run one-or-more-unrunnable-instances \
   && cts/cts-cli \
   && touch .CHECKED
 } 2>&1 | sed 's/[fF]ail/faiil/g'  # prevent false positives in rpmlint
@@ -437,9 +441,6 @@ install -m 644 tools/crm_mon.upstart ${RPM_BUILD_ROOT}%{_sysconfdir}/init/crm_mo
 %if %{defined _unitdir}
 mkdir -p ${RPM_BUILD_ROOT}%{_localstatedir}/lib/rpm-state/%{name}
 %endif
-
-# These are not actually scripts
-find %{buildroot} -name '*.xml' -type f -print0 | xargs -0 chmod a-x
 
 # Don't package static libs
 find %{buildroot} -name '*.a' -type f -print0 | xargs -0 rm -f
@@ -594,8 +595,11 @@ exit 0
 %{_initrddir}/pacemaker
 %endif
 
-%exclude %{_libexecdir}/pacemaker/lrmd_test
+%exclude %{_libexecdir}/pacemaker/cts-exec-helper
+%exclude %{_sbindir}/pacemaker-remoted
+%if %{with legacy_links}
 %exclude %{_sbindir}/pacemaker_remoted
+%endif
 %{_libexecdir}/pacemaker/*
 
 %{_sbindir}/crm_attribute
@@ -604,9 +608,9 @@ exit 0
 %{_sbindir}/fence_legacy
 %{_sbindir}/stonith_admin
 
-%doc %{_mandir}/man7/crmd.*
-%doc %{_mandir}/man7/pengine.*
-%doc %{_mandir}/man7/stonithd.*
+%doc %{_mandir}/man7/pacemaker-controld.*
+%doc %{_mandir}/man7/pacemaker-schedulerd.*
+%doc %{_mandir}/man7/pacemaker-fenced.*
 %doc %{_mandir}/man7/ocf_pacemaker_controld.*
 %doc %{_mandir}/man7/ocf_pacemaker_o2cb.*
 %doc %{_mandir}/man7/ocf_pacemaker_remote.*
@@ -666,7 +670,7 @@ exit 0
 %exclude %{_datadir}/pacemaker/tests
 %{_datadir}/pacemaker
 %{_datadir}/snmp/mibs/PCMK-MIB.txt
-%{_libexecdir}/pacemaker/lrmd_test
+%{_libexecdir}/pacemaker/cts-exec-helper
 
 %exclude /usr/lib/ocf/resource.d/pacemaker/controld
 %exclude /usr/lib/ocf/resource.d/pacemaker/o2cb
@@ -677,9 +681,9 @@ exit 0
 /usr/lib/ocf/resource.d/pacemaker
 
 %doc %{_mandir}/man7/*
-%exclude %{_mandir}/man7/crmd.*
-%exclude %{_mandir}/man7/pengine.*
-%exclude %{_mandir}/man7/stonithd.*
+%exclude %{_mandir}/man7/pacemaker-controld.*
+%exclude %{_mandir}/man7/pacemaker-schedulerd.*
+%exclude %{_mandir}/man7/pacemaker-fenced.*
 %exclude %{_mandir}/man7/ocf_pacemaker_controld.*
 %exclude %{_mandir}/man7/ocf_pacemaker_o2cb.*
 %exclude %{_mandir}/man7/ocf_pacemaker_remote.*
@@ -689,7 +693,7 @@ exit 0
 %exclude %{_mandir}/man8/crm_master.*
 %exclude %{_mandir}/man8/fence_legacy.*
 %exclude %{_mandir}/man8/pacemakerd.*
-%exclude %{_mandir}/man8/pacemaker_remoted.*
+%exclude %{_mandir}/man8/pacemaker-remoted.*
 %exclude %{_mandir}/man8/stonith_admin.*
 
 %license licenses/GPLv2
@@ -734,8 +738,11 @@ exit 0
 %{_initrddir}/pacemaker_remote
 %endif
 
+%{_sbindir}/pacemaker-remoted
+%if %{with legacy_links}
 %{_sbindir}/pacemaker_remoted
-%{_mandir}/man8/pacemaker_remoted.*
+%endif
+%{_mandir}/man8/pacemaker-remoted.*
 %license licenses/GPLv2
 %doc COPYING
 %doc ChangeLog

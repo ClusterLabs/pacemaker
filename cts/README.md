@@ -126,7 +126,7 @@ Valgrind is a program for detecting memory management problems (such as
 use-after-free errors). If you have valgrind installed, you can enable it by
 setting the following environment variables on all cluster nodes:
 
-    PCMK_valgrind_enabled=attrd,cib,crmd,lrmd,pengine,stonith-ng
+    PCMK_valgrind_enabled=pacemaker-attrd,pacemaker-controld,pacemaker-execd,pacemaker-fenced,cib,pacemaker-schedulerd
     VALGRIND_OPTS="--leak-check=full --trace-children=no --num-callers=25
         --log-file=/var/lib/pacemaker/valgrind-%p
         --suppressions=/usr/share/pacemaker/tests/valgrind-pcmk.suppressions
@@ -134,7 +134,7 @@ setting the following environment variables on all cluster nodes:
 
 and running CTS with these options:
 
-    --valgrind-tests --valgrind-procs="attrd cib crmd lrmd pengine stonith-ng"
+    --valgrind-tests --valgrind-procs="pacemaker-attrd pacemaker-controld pacemaker-execd cib pacemaker-schedulerd pacemaker-fenced"
 
 These options should only be set while specifically testing memory management,
 because they may slow down the cluster significantly, and they will disable
@@ -176,11 +176,11 @@ variables may be set differently on different nodes.
 
 ### Remote node testing
 
-If the pacemaker_remoted daemon is installed on all cluster nodes, CTS will
+If the pacemaker-remoted daemon is installed on all cluster nodes, CTS will
 enable remote node tests.
 
 The remote node tests choose a random node, stop the cluster on it, start
-pacemaker_remote on it, and add an ocf:pacemaker:remote resource to turn it
+pacemaker-remoted on it, and add an ocf:pacemaker:remote resource to turn it
 into a remote node. When the test is done, CTS will turn the node back into
 a cluster node.
 
@@ -201,14 +201,14 @@ to the hostnames. Example:
 
 When running the remote node tests, the pacemaker components on the cluster
 nodes can be run under valgrind as described in the "Memory testing" section.
-However, pacemaker_remote cannot be run under valgrind that way, because it is
+However, pacemaker-remoted cannot be run under valgrind that way, because it is
 started by the OS's regular boot system and not by pacemaker.
 
 Details vary by system, but the goal is to set the VALGRIND_OPTS environment
-variable and then start pacemaker_remoted by prefixing it with the path to
+variable and then start pacemaker-remoted by prefixing it with the path to
 valgrind.
 
-The init script and systemd service file provided with pacemaker_remote will
+The init script and systemd service file provided with pacemaker-remoted will
 load the pacemaker environment variables from the same location used by other
 pacemaker components, so VALGRIND_OPTS will be set correctly if using one of
 those.
@@ -220,7 +220,7 @@ valgrind. For example:
     cat >/etc/systemd/system/pacemaker_remote.service.d/valgrind.conf <<EOF
     [Service]
     ExecStart=
-    ExecStart=/usr/bin/valgrind /usr/sbin/pacemaker_remoted
+    ExecStart=/usr/bin/valgrind /usr/sbin/pacemaker-remoted
     EOF
 
 ### Container testing

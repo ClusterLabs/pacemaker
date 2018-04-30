@@ -54,12 +54,12 @@ post-stop script
     # if you use watchdog of corosync, uncomment the line below.
     #pidof corosync || false
 
-    pidof crmd || stop corosync
+    pidof pacemaker-controld || stop corosync
 
     # if you want to reboot a machine by watchdog of corosync when
     # pacemakerd disappeared unexpectedly, uncomment the line below
     # and invalidate above "respawn" stanza.
-    #pidof crmd && killall -q -9 corosync
+    #pidof pacemaker-controld && killall -q -9 corosync
 
     # if you use crm_mon, uncomment the line below.
     #stop crm_mon

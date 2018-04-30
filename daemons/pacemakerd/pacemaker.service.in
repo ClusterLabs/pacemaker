@@ -57,19 +57,21 @@ TasksMax=infinity
 # resource.  Sending -KILL will just get the node fenced
 SendSIGKILL=no
 
-# If we ever hit the StartLimitInterval/StartLimitBurst limit and the
+# If we ever hit the StartLimitInterval/StartLimitBurst limit, and the
 # admin wants to stop the cluster while pacemakerd is not running, it
 # might be a good idea to enable the ExecStopPost directive below.
 #
-# Although the node will likely end up being fenced as a result so it's
-# not on by default
+# However, the node will likely end up being fenced as a result, so it's
+# not enabled by default.
 #
-# ExecStopPost=/usr/bin/killall -TERM crmd attrd stonithd cib pengine lrmd
+# ExecStopPost=/usr/bin/killall -TERM pacemaker-attrd pacemaker-based \
+#              pacemaker-controld pacemaker-execd pacemaker-fenced \
+#              pacemaker-schedulerd
 
 # If you want Corosync to stop whenever Pacemaker is stopped,
 # uncomment the next line too:
 #
-# ExecStopPost=/bin/sh -c 'pidof crmd || killall -TERM corosync'
+# ExecStopPost=/bin/sh -c 'pidof pacemaker-controld || killall -TERM corosync'
 
 # Uncomment this for older versions of systemd that didn't support
 # TimeoutStopSec

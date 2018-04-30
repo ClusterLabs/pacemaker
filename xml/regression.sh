@@ -325,7 +325,7 @@ tests="${tests} test2to3"
 # -B
 # -D
 # -G  ... see usage
-cts_pengine() {
+cts_scheduler() {
 	_tcp_mode=0
 	_tcp_ret=0
 	_tcp_validatewith=
@@ -333,7 +333,7 @@ cts_pengine() {
 	_tcp_schema_t=
 	_tcp_template=
 
-	find ../cts/pengine -name '*.xml' -print | env LC_ALL=C sort \
+	find ../cts/scheduler -name '*.xml' -print | env LC_ALL=C sort \
 	  | { case " $* " in
 	      *\ -C\ *) test_cleaner -r;;
 	      *\ -S\ *) emit_result "not implemented" "option -S";;
@@ -421,7 +421,7 @@ EOF
 		done; log2_or_0_return ${_tcp_ret};;
 	      esac; }
 }
-tests="${tests} cts_pengine"
+tests="${tests} cts_scheduler"
 
 #
 # "framework"

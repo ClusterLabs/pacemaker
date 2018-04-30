@@ -1,4 +1,10 @@
 #!@BASH_PATH@
+#
+# Copyright 2013-2018 David Vossel <davidvossel@gmail.com>
+#
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
+#
 
 containers="2"
 download=0
@@ -107,9 +113,9 @@ if [ $verify -eq 1 ]; then
 		echo "rsync is required"
 	fi
 
-	which pacemaker_remoted > /dev/null 2>&1
+	which pacemaker-remoted > /dev/null 2>&1
 	if [ $? -ne 0 ]; then
-		echo "pacemaker_remoted is required"
+		echo "pacemaker-remoted is required"
 	fi
 fi
 
@@ -324,7 +330,7 @@ ip route add default via $addr.1
 hostname lxc$c
 df > $working_dir/lxc$c-filesystem/disk_usage.txt
 export PCMK_debugfile=@CRM_LOG_DIR@/pacemaker_remote_lxc$c.log
-/usr/sbin/pacemaker_remoted
+/usr/sbin/pacemaker-remoted
 END
 		chmod 711 lxc$c-filesystem/launch-helper
 

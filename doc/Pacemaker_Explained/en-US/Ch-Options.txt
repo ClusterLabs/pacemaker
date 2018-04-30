@@ -38,7 +38,7 @@ The empty configuration above contains the major sections that make up a CIB:
   ** +status+: This section contains the history of each resource on each node.
     Based on this data, the cluster can construct the complete current
     state of the cluster.  The authoritative source for this section
-    is the local resource manager (lrmd process) on each cluster node, and
+    is the local executor (pacemaker-execd process) on each cluster node, and
     the cluster will occasionally repopulate the entire section.  For this
     reason, it is never written to disk, and administrators are advised
     against modifying it in any way.
@@ -137,7 +137,8 @@ different sets of options during working hours than during weekends.) For now,
 we will describe the simple case where each option is present at most once.
 
 You can obtain an up-to-date list of cluster options, including
-their default values, by running the `man pengine` and `man crmd` commands.
+their default values, by running the `man pacemaker-schedulerd` and
+`man pacemaker-controld` commands.
 
 .Cluster Options
 [width="95%",cols="5m,2,11<a",options="header",align="center"]
@@ -384,21 +385,21 @@ indexterm:[Cluster,Option,shutdown-escalation]
 _Advanced Use Only:_ If you need to adjust this value, it probably indicates
 the presence of a bug.
 
-| crmd-integration-timeout | 3min |
-indexterm:[crmd-integration-timeout,Cluster Option]
-indexterm:[Cluster,Option,crmd-integration-timeout]
+| join-integration-timeout | 3min |
+indexterm:[join-integration-timeout,Cluster Option]
+indexterm:[Cluster,Option,join-integration-timeout]
 _Advanced Use Only:_ If you need to adjust this value, it probably indicates
 the presence of a bug.
 
-| crmd-finalization-timeout | 30min |
-indexterm:[crmd-finalization-timeout,Cluster Option]
-indexterm:[Cluster,Option,crmd-finalization-timeout]
+| join-finalization-timeout | 30min |
+indexterm:[join-finalization-timeout,Cluster Option]
+indexterm:[Cluster,Option,join-finalization-timeout]
 _Advanced Use Only:_ If you need to adjust this value, it probably indicates
 the presence of a bug.
 
-| crmd-transition-delay | 0s |
-indexterm:[crmd-transition-delay,Cluster Option]
-indexterm:[Cluster,Option,crmd-transition-delay]
+| transition-delay | 0s |
+indexterm:[transition-delay,Cluster Option]
+indexterm:[Cluster,Option,transition-delay]
 _Advanced Use Only:_ Delay cluster recovery for the configured interval to
 allow for additional/related events to occur. Useful if your configuration is
 sensitive to the order in which ping updates arrive.

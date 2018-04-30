@@ -50,19 +50,38 @@ typedef struct pcmk_child_s {
 } pcmk_child_t;
 
 /* Index into the array below */
-#define pcmk_child_crmd  3
-/* *INDENT-OFF* */
+#define pcmk_child_controld  3
+
 static pcmk_child_t pcmk_children[] = {
-    { 0, crm_proc_none,       0, 0, FALSE, "none",       NULL,            NULL },
-    { 0, crm_proc_lrmd,       3, 0, TRUE,  "lrmd",       NULL,            CRM_DAEMON_DIR"/lrmd" },
-    { 0, crm_proc_cib,        1, 0, TRUE,  "cib",        CRM_DAEMON_USER, CRM_DAEMON_DIR"/cib" },
-    { 0, crm_proc_crmd,       6, 0, TRUE,  "crmd",       CRM_DAEMON_USER, CRM_DAEMON_DIR"/crmd" },
-    { 0, crm_proc_attrd,      4, 0, TRUE,  "attrd",      CRM_DAEMON_USER, CRM_DAEMON_DIR"/attrd" },
-    { 0, crm_proc_stonithd,   0, 0, TRUE,  "stonithd",   NULL,            NULL },
-    { 0, crm_proc_pe,         5, 0, TRUE,  "pengine",    CRM_DAEMON_USER, CRM_DAEMON_DIR"/pengine" },
-    { 0, crm_proc_stonith_ng, 2, 0, TRUE,  "stonith-ng", NULL,            CRM_DAEMON_DIR"/stonithd" },
+    {
+        0, crm_proc_none,       0, 0, FALSE, "none",
+        NULL, NULL
+    },
+    {
+        0, crm_proc_execd,      3, 0, TRUE,  "pacemaker-execd",
+        NULL, CRM_DAEMON_DIR "/pacemaker-execd"
+    },
+    {
+        0, crm_proc_based,      1, 0, TRUE,  "pacemaker-based",
+        CRM_DAEMON_USER, CRM_DAEMON_DIR "/pacemaker-based"
+    },
+    {
+        0, crm_proc_controld,   6, 0, TRUE, "pacemaker-controld",
+        CRM_DAEMON_USER, CRM_DAEMON_DIR "/pacemaker-controld"
+    },
+    {
+        0, crm_proc_attrd,      4, 0, TRUE, "pacemaker-attrd",
+        CRM_DAEMON_USER, CRM_DAEMON_DIR "/pacemaker-attrd"
+    },
+    {
+        0, crm_proc_schedulerd, 5, 0, TRUE, "pacemaker-schedulerd",
+        CRM_DAEMON_USER, CRM_DAEMON_DIR "/pacemaker-schedulerd"
+    },
+    {
+        0, crm_proc_fenced,     2, 0, TRUE, "pacemaker-fenced",
+        NULL, CRM_DAEMON_DIR "/pacemaker-fenced"
+    },
 };
-/* *INDENT-ON* */
 
 static gboolean start_child(pcmk_child_t * child);
 static gboolean check_active_before_startup_processes(gpointer user_data);
@@ -377,7 +396,7 @@ pcmk_shutdown_worker(gpointer user_data)
                     next_log = now + 30;
                     child->respawn = FALSE;
                     stop_child(child, SIGTERM);
-                    if (phase < pcmk_children[pcmk_child_crmd].start_seq) {
+                    if (phase < pcmk_children[pcmk_child_controld].start_seq) {
                         g_timeout_add(180000 /* 3m */ , escalate_shutdown, child);
                     }
 
@@ -676,9 +695,6 @@ check_active_before_startup_processes(gpointer user_data)
                 continue;
             } else {
                 const char *name = pcmk_children[lpc].name;
-                if (pcmk_children[lpc].flag == crm_proc_stonith_ng) {
-                    name = "stonithd";
-                }
 
                 if (crm_pid_active(pcmk_children[lpc].pid, name) != 1) {
                     crm_notice("Process %s terminated (pid=%d)",
@@ -725,9 +741,6 @@ find_and_track_existing_processes(void)
 
             if (pcmk_children[i].start_seq == 0) {
                 continue;
-            }
-            if (pcmk_children[i].flag == crm_proc_stonith_ng) {
-                name = "stonithd";
             }
             if (safe_str_eq(entry_name, name) && (crm_pid_active(pid, NULL) == 1)) {
                 crm_notice("Tracking existing %s process (pid=%d)", name, pid);
@@ -781,7 +794,7 @@ init_children_processes(void)
 static void
 mcp_cpg_destroy(gpointer user_data)
 {
-    crm_err("Connection destroyed");
+    crm_crit("Lost connection to cluster layer, shutting down");
     crm_exit(CRM_EX_DISCONNECT);
 }
 
@@ -1015,7 +1028,7 @@ main(int argc, char **argv)
     mkdir(CRM_STATE_DIR, 0750);
     mcp_chown(CRM_STATE_DIR, pcmk_uid, pcmk_gid);
 
-    /* Used to store core/blackbox/pengine/cib files in */
+    /* Used to store core/blackbox/scheduler/cib files in */
     crm_build_path(CRM_PACEMAKER_DIR, 0750);
     mcp_chown(CRM_PACEMAKER_DIR, pcmk_uid, pcmk_gid);
 
@@ -1027,7 +1040,7 @@ main(int argc, char **argv)
     crm_build_path(CRM_BLACKBOX_DIR, 0750);
     mcp_chown(CRM_BLACKBOX_DIR, pcmk_uid, pcmk_gid);
 
-    /* Used to store policy engine inputs in */
+    // Used to store scheduler inputs in
     crm_build_path(PE_STATE_DIR, 0750);
     mcp_chown(PE_STATE_DIR, pcmk_uid, pcmk_gid);
 
@@ -1035,7 +1048,7 @@ main(int argc, char **argv)
     crm_build_path(CRM_CONFIG_DIR, 0750);
     mcp_chown(CRM_CONFIG_DIR, pcmk_uid, pcmk_gid);
 
-    /* Resource agent paths are constructed by the lrmd */
+    // Don't build CRM_RSCTMP_DIR, pacemaker-execd will do it
 
     ipcs = mainloop_add_ipc_server(CRM_SYSTEM_MCP, QB_IPC_NATIVE, &mcp_ipc_callbacks);
     if (ipcs == NULL) {

@@ -512,9 +512,9 @@ restarted rather than migrated.
 
 For example, if the resource depends on a clone, and at the time the resource
 needs to be moved, the clone has instances that are stopping and instances
-that are starting, then the resource will be restarted.
-The Policy Engine is not yet able to model this
-situation correctly and so takes the safer (if less optimal) path.
+that are starting, then the resource will be restarted. The scheduler is not
+yet able to model this situation correctly and so takes the safer (if less
+optimal) path.
 
 Also, if a migratable resource depends on a non-migratable resource, and both
 need to be moved, the migratable resource will be restarted.

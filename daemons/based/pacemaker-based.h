@@ -1,0 +1,155 @@
+/*
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ *
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
+ */
+
+#ifndef PACEMAKER_BASED__H
+#  define PACEMAKER_BASED__H
+
+#include <stdio.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <glib.h>
+#include <errno.h>
+#include <fcntl.h>
+
+#include <crm/crm.h>
+#include <crm/cib.h>
+#include <crm/common/xml.h>
+#include <crm/cluster.h>
+#include <crm/common/ipcs.h>
+#include <crm/common/mainloop.h>
+#include <crm/cib/internal.h>
+
+#ifdef HAVE_GNUTLS_GNUTLS_H
+#  undef KEYFILE
+#  include <gnutls/gnutls.h>
+#endif
+
+enum cib_notifications {
+    cib_notify_pre     = 0x0001,
+    cib_notify_post    = 0x0002,
+    cib_notify_replace = 0x0004,
+    cib_notify_confirm = 0x0008,
+    cib_notify_diff    = 0x0010,
+
+    // Not a notification, but uses the same IPC bitmask
+    cib_is_daemon      = 0x1000, // Whether client is another cluster daemon
+};
+
+typedef struct cib_operation_s {
+    const char *operation;
+    gboolean modifies_cib;
+    gboolean needs_privileges;
+    gboolean needs_quorum;
+    int (*prepare) (xmlNode *, xmlNode **, const char **);
+    int (*cleanup) (int, xmlNode **, xmlNode **);
+    int (*fn) (const char *, int, const char *, xmlNode *,
+               xmlNode *, xmlNode *, xmlNode **, xmlNode **);
+} cib_operation_t;
+
+extern gboolean cib_is_master;
+extern GHashTable *peer_hash;
+extern GHashTable *config_hash;
+extern xmlNode *the_cib;
+extern crm_trigger_t *cib_writer;
+extern volatile gboolean cib_writes_enabled;
+
+extern GMainLoop *mainloop;
+extern crm_cluster_t crm_cluster;
+extern GHashTable *local_notify_queue;
+extern gboolean legacy_mode;
+extern gboolean stand_alone;
+extern gboolean cib_shutdown_flag;
+extern const char *cib_root;
+extern char *cib_our_uname;
+extern int cib_status;
+extern FILE *msg_cib_strm;
+
+extern struct qb_ipcs_service_handlers ipc_ro_callbacks;
+extern struct qb_ipcs_service_handlers ipc_rw_callbacks;
+extern qb_ipcs_service_t *ipcs_ro;
+extern qb_ipcs_service_t *ipcs_rw;
+extern qb_ipcs_service_t *ipcs_shm;
+
+void cib_peer_callback(xmlNode *msg, void *private_data);
+void cib_common_callback_worker(uint32_t id, uint32_t flags,
+                                xmlNode *op_request, crm_client_t *cib_client,
+                                gboolean privileged);
+void cib_shutdown(int nsig);
+void initiate_exit(void);
+void terminate_cib(const char *caller, int fast);
+gboolean cib_legacy_mode(void);
+
+gboolean uninitializeCib(void);
+gboolean verifyCibXml(xmlNode *cib);
+xmlNode *readCibXml(char *buffer);
+xmlNode *readCibXmlFile(const char *dir, const char *file,
+                        gboolean discard_status);
+int activateCibXml(xmlNode *doc, gboolean to_disk, const char *op);
+
+xmlNode *createCibRequest(gboolean isLocal, const char *operation,
+                          const char *section, const char *verbose,
+                          xmlNode *data);
+int cib_process_shutdown_req(const char *op, int options, const char *section,
+                             xmlNode *req, xmlNode *input,
+                             xmlNode *existing_cib, xmlNode **result_cib,
+                             xmlNode **answer);
+int cib_process_default(const char *op, int options, const char *section,
+                        xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                        xmlNode **result_cib, xmlNode **answer);
+int cib_process_ping(const char *op, int options, const char *section,
+                     xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                     xmlNode **result_cib, xmlNode **answer);
+int cib_process_readwrite(const char *op, int options, const char *section,
+                          xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                          xmlNode **result_cib, xmlNode **answer);
+int cib_process_replace_svr(const char *op, int options, const char *section,
+                            xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                            xmlNode **result_cib, xmlNode **answer);
+int cib_server_process_diff(const char *op, int options, const char *section,
+                            xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                            xmlNode **result_cib, xmlNode **answer);
+int cib_process_sync(const char *op, int options, const char *section,
+                     xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                     xmlNode **result_cib, xmlNode **answer);
+int cib_process_sync_one(const char *op, int options, const char *section,
+                         xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                         xmlNode **result_cib, xmlNode **answer);
+int cib_process_delete_absolute(const char *op, int options,
+                                const char *section, xmlNode *req,
+                                xmlNode *input, xmlNode *existing_cib,
+                                xmlNode **result_cib, xmlNode **answer);
+int cib_process_upgrade_server(const char *op, int options, const char *section,
+                               xmlNode *req, xmlNode *input,
+                               xmlNode *existing_cib, xmlNode **result_cib,
+                               xmlNode **answer);
+void send_sync_request(const char *host);
+
+xmlNode *cib_msg_copy(xmlNode *msg, gboolean with_data);
+xmlNode *cib_construct_reply(xmlNode *request, xmlNode *output, int rc);
+int cib_get_operation_id(const char *op, int *operation);
+cib_op_t *cib_op_func(int call_type);
+gboolean cib_op_modifies(int call_type);
+int cib_op_prepare(int call_type, xmlNode *request, xmlNode **input,
+                   const char **section);
+int cib_op_cleanup(int call_type, int options, xmlNode **input,
+                   xmlNode **output);
+int cib_op_can_run(int call_type, int call_options, gboolean privileged,
+                   gboolean global_update);
+void cib_diff_notify(int options, const char *client, const char *call_id,
+                     const char *op, xmlNode *update, int result,
+                     xmlNode *old_cib);
+void cib_replace_notify(const char *origin, xmlNode *update, int result,
+                        xmlNode *diff);
+
+static inline const char *
+cib_config_lookup(const char *opt)
+{
+    return g_hash_table_lookup(config_hash, opt);
+}
+
+#endif // PACEMAKER_BASED__H

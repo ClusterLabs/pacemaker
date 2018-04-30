@@ -1,20 +1,8 @@
-
-/* 
- * Copyright (C) 2012 Gao,Yan <ygao@suse.com>
- * 
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+/*
+ * Copyright 2012-2018 Gao,Yan <ygao@suse.com>
+ *
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -40,7 +28,7 @@
 #include <crm/pengine/rules.h>
 #include <crm/pengine/status.h>
 
-#include <../pengine/pengine.h>
+#include <pacemaker-schedulerd.h>
 
 gboolean do_force = FALSE;
 gboolean BE_QUIET = FALSE;
@@ -697,13 +685,13 @@ main(int argc, char **argv)
 
     cib_conn = cib_new();
     if (cib_conn == NULL) {
-        CMD_ERR("Could not connect to CIB");
+        CMD_ERR("Could not connect to the CIB manager");
         return CRM_EX_DISCONNECT;
     }
 
     rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
     if (rc != pcmk_ok) {
-        CMD_ERR("Could not connect to CIB: %s", pcmk_strerror(rc));
+        CMD_ERR("Could not connect to the CIB manager: %s", pcmk_strerror(rc));
         exit_code = crm_errno2exit(rc);
         goto bail;
     }

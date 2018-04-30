@@ -992,8 +992,8 @@ void cib_ipc_servers_init(qb_ipcs_service_t **ipcs_ro,
     *ipcs_shm = mainloop_add_ipc_server(cib_channel_shm, QB_IPC_SHM, rw_cb);
 
     if (*ipcs_ro == NULL || *ipcs_rw == NULL || *ipcs_shm == NULL) {
-        crm_err("Failed to create cib servers: exiting and inhibiting respawn.");
-        crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
+        crm_err("Failed to create the CIB manager: exiting and inhibiting respawn");
+        crm_warn("Verify pacemaker and pacemaker_remote are not both enabled");
         crm_exit(CRM_EX_FATAL);
     }
 }
@@ -1019,7 +1019,7 @@ attrd_ipc_server_init(qb_ipcs_service_t **ipcs, struct qb_ipcs_service_handlers 
     *ipcs = mainloop_add_ipc_server(T_ATTRD, QB_IPC_NATIVE, cb);
 
     if (*ipcs == NULL) {
-        crm_err("Failed to create attrd servers: exiting and inhibiting respawn.");
+        crm_err("Failed to create pacemaker-attrd server: exiting and inhibiting respawn");
         crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
         crm_exit(CRM_EX_FATAL);
     }
@@ -1031,7 +1031,7 @@ stonith_ipc_server_init(qb_ipcs_service_t **ipcs, struct qb_ipcs_service_handler
     *ipcs = mainloop_add_ipc_server("stonith-ng", QB_IPC_NATIVE, cb);
 
     if (*ipcs == NULL) {
-        crm_err("Failed to create stonith-ng servers: exiting and inhibiting respawn.");
+        crm_err("Failed to create fencer: exiting and inhibiting respawn.");
         crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
         crm_exit(CRM_EX_FATAL);
     }
