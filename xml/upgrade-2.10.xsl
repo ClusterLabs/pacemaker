@@ -357,6 +357,7 @@
 <xsl:template name="HelperDenormalizedSpace">
   <xsl:param name="Source"/>
   <xsl:param name="ResultTreeFragment" select="false()"/>
+  <xsl:param name="InnerSimulation" select="false()"/>
   <xsl:choose>
     <xsl:when test="not($ResultTreeFragment)">
       <!-- intention here is that immediately surrounding text (mostly expected
@@ -378,7 +379,7 @@
                       $ExistingSpace/self::text()[
                         normalize-space(.) != string(.)
                       ]
-                    )">
+                    ) and $InnerSimulation">
         <xsl:text> </xsl:text>
       </xsl:if>
     </xsl:when>
@@ -438,6 +439,16 @@
     moved) at this other part of the tree" contexts; for such cases,
     there's usually InverseMode parameter to be assigned true()
     (implicit default) and false(), respectively
+ E. the common idiom that emerges is: evaluate simulation value,
+    depending on the presence of the "success mark" (cf. A.),
+    possibly emit non-simulation value; since it would (likely)
+    re-evaluate the simulation anew (wastefully) or perhaps
+    this sort of dependency injection can just come handy,
+    common transformation helpers below offer InnerPass
+    parameter to be optionally passed, either as a string (when
+    no-denormalized-space is an internal criterium for the template)
+    or, conventionally, the result tree fragment representing the
+    output of the template at hand called with a simulation flag
 
  -->
 
@@ -452,8 +463,7 @@
   <xsl:param name="Source"/>
   <xsl:param name="InverseMode" select="false()"/>
   <xsl:param name="InnerSimulation" select="false()"/>
-
-  <xsl:variable name="InnerPass">
+  <xsl:param name="InnerPass">
     <xsl:choose>
       <xsl:when test="$InnerSimulation">
         <xsl:value-of select="''"/>
@@ -463,10 +473,11 @@
           <xsl:with-param name="Source" select="$Source"/>
           <xsl:with-param name="InverseMode" select="$InverseMode"/>
           <xsl:with-param name="InnerSimulation" select="true()"/>
+          <xsl:with-param name="InnerPass" select="'INNER-RECURSION'"/>
         </xsl:call-template>
       </xsl:otherwise>
     </xsl:choose>
-  </xsl:variable>
+  </xsl:param>
 
   <xsl:for-each select="$Source/node()">
     <xsl:choose>
@@ -518,7 +529,11 @@
                                   )
                                 )
                               ]"/>
-        <xsl:if test="not($InverseMode or $InnerSimulation)">
+        <xsl:if test="$InverseMode = false()
+                      and
+                      $InnerSimulation
+                      and
+                      $InnerPass = 'INNER-RECURSION'">
           <xsl:call-template name="MapMsg">
             <xsl:with-param name="Context" select="@id"/>
             <xsl:with-param name="Replacement" select="$Replacement"/>
@@ -558,6 +573,7 @@
                           )">
               <xsl:call-template name="HelperDenormalizedSpace">
                 <xsl:with-param name="Source" select="."/>
+                <xsl:with-param name="InnerSimulation" select="$InnerSimulation"/>
               </xsl:call-template>
               <xsl:copy>
                 <xsl:for-each select="@*">
@@ -586,6 +602,7 @@
           <xsl:when test="$Replacement">
             <xsl:call-template name="HelperDenormalizedSpace">
               <xsl:with-param name="Source" select="."/>
+              <xsl:with-param name="InnerSimulation" select="$InnerSimulation"/>
             </xsl:call-template>
             <xsl:copy>
               <xsl:for-each select="@*">
@@ -612,6 +629,7 @@
           <xsl:otherwise>
             <xsl:call-template name="HelperDenormalizedSpace">
               <xsl:with-param name="Source" select="."/>
+              <xsl:with-param name="InnerSimulation" select="$InnerSimulation"/>
             </xsl:call-template>
             <xsl:call-template name="HelperIdentity"/>
           </xsl:otherwise>
@@ -639,8 +657,7 @@
   <xsl:param name="Source"/>
   <xsl:param name="InverseMode" select="false()"/>
   <xsl:param name="InnerSimulation" select="false()"/>
-
-  <xsl:variable name="InnerPass">
+  <xsl:param name="InnerPass">
     <xsl:choose>
       <xsl:when test="$InverseMode
                       or
@@ -654,7 +671,7 @@
         </xsl:call-template>
       </xsl:otherwise>
     </xsl:choose>
-  </xsl:variable>
+  </xsl:param>
 
   <!-- B: special-casing nvpair -->
   <xsl:for-each select="$Source/node()">
@@ -758,6 +775,7 @@
             <!-- plain rename (space helper?) -->
             <xsl:call-template name="HelperDenormalizedSpace">
               <xsl:with-param name="Source" select="."/>
+              <xsl:with-param name="InnerSimulation" select="$InnerSimulation"/>
             </xsl:call-template>
             <xsl:copy>
               <xsl:for-each select="@*">
@@ -793,6 +811,7 @@
           <xsl:otherwise>
             <xsl:call-template name="HelperDenormalizedSpace">
               <xsl:with-param name="Source" select="."/>
+              <xsl:with-param name="InnerSimulation" select="$InnerSimulation"/>
             </xsl:call-template>
             <xsl:copy>
               <xsl:apply-templates select="@*|node()"/>
@@ -819,30 +838,29 @@
  Source ctxt:    (primitive|template)/operations/op/meta_attributes
  Target ctxt:    (primitive|template)/operations/op/meta_attributes
  Target-inv ctxt:(primitive|template)/meta_attributes
- Dependencies:   N/A
+ Dependencies:   ProcessAttrOpMetaAttributes
+                 ProcessNonattrOpMetaAttributes
  -->
 <xsl:template name="ProcessNonattrOpMetaAttributes">
   <xsl:param name="Source"/>
   <xsl:param name="InverseMode" select="false()"/>
   <xsl:param name="InnerSimulation" select="false()"/>
-
-  <xsl:variable name="EnclosingTag" select="../../.."/>
-
-  <xsl:variable name="InnerPass">
+  <xsl:param name="InnerPass">
     <xsl:choose>
-      <xsl:when test="$InverseMode
-                      or
-                      $InnerSimulation">
+      <xsl:when test="$InnerSimulation">
         <xsl:value-of select="''"/>
       </xsl:when>
       <xsl:otherwise>
         <xsl:call-template name="ProcessNonattrOpMetaAttributes">
           <xsl:with-param name="Source" select="$Source"/>
           <xsl:with-param name="InnerSimulation" select="true()"/>
+          <xsl:with-param name="InnerPass" select="'INNER-RECURSION'"/>
         </xsl:call-template>
       </xsl:otherwise>
     </xsl:choose>
-  </xsl:variable>
+  </xsl:param>
+
+  <xsl:variable name="EnclosingTag" select="../../.."/>
 
   <xsl:for-each select="$Source/node()">
     <xsl:choose>
@@ -896,7 +914,7 @@
                                   )
                                 )
                               ]"/>
-        <xsl:if test="not($InverseMode or $InnerSimulation)">
+        <xsl:if test="not($InnerSimulation)">
           <xsl:call-template name="MapMsg">
             <xsl:with-param name="Context" select="../../@id"/>
             <xsl:with-param name="Replacement" select="$Replacement"/>
@@ -986,6 +1004,7 @@
           <xsl:otherwise>
             <xsl:call-template name="HelperDenormalizedSpace">
               <xsl:with-param name="Source" select="."/>
+              <xsl:with-param name="InnerSimulation" select="$InnerSimulation"/>
             </xsl:call-template>
             <xsl:call-template name="HelperIdentity"/>
           </xsl:otherwise>
@@ -1013,10 +1032,7 @@
   <xsl:param name="Source"/>
   <xsl:param name="InverseMode" select="false()"/>
   <xsl:param name="InnerSimulation" select="false()"/>
-
-  <xsl:variable name="EnclosingTag" select="../.."/>
-
-  <xsl:variable name="InnerPass">
+  <xsl:param name="InnerPass">
     <xsl:choose>
       <xsl:when test="$InnerSimulation">
         <xsl:value-of select="''"/>
@@ -1029,7 +1045,9 @@
         </xsl:call-template>
       </xsl:otherwise>
     </xsl:choose>
-  </xsl:variable>
+  </xsl:param>
+
+  <xsl:variable name="EnclosingTag" select="../.."/>
 
   <xsl:if test="(
                   $InverseMode
@@ -1045,7 +1063,7 @@
                 not($InverseMode)">
     <xsl:if test="$InverseMode
                   and
-                  not($InnerSimulation)">
+                  $InnerSimulation">
       <xsl:call-template name="HelperDenormalizedSpace">
         <xsl:with-param name="Source" select="$InnerPass"/>
         <xsl:with-param name="ResultTreeFragment" select="true()"/>
@@ -1208,7 +1226,7 @@
             <xsl:variable name="ProcessedOpMetaAttributes">
               <xsl:call-template name="ProcessNonattrOpMetaAttributes">
                 <xsl:with-param name="Source" select="."/>
-                <xsl:with-param name="InnerSimulation" select="$InnerSimulation"/>
+                <xsl:with-param name="InnerSimulation" select="true()"/>
               </xsl:call-template>
             </xsl:variable>
             <!-- cf. trick A. -->
@@ -1216,7 +1234,12 @@
                           != $ProcessedOpMetaAttributes">
               <xsl:copy>
                 <xsl:apply-templates select="@*"/>
-                <xsl:copy-of select="$ProcessedOpMetaAttributes"/>
+                <xsl:call-template name="ProcessNonattrOpMetaAttributes">
+                  <xsl:with-param name="Source" select="."/>
+                  <xsl:with-param name="InnerSimulation" select="$InnerSimulation"/>
+                  <!-- cf. trick E. -->
+                  <xsl:with-param name="InnerPass" select="$ProcessedOpMetaAttributes"/>
+                </xsl:call-template>
               </xsl:copy>
             </xsl:if>
           </xsl:when>
@@ -1229,6 +1252,125 @@
     <!-- E: special-casing meta_attributes -->
     </xsl:element>
   </xsl:if>
+</xsl:template>
+
+<!--
+ Source ctxt:    configuration
+ Target ctxt:    {op,rsc}_defaults/meta_attributes [per $Variant, see below]
+ Target-inv ctxt:N/A
+ Dependencies:   ProcessClusterProperties
+
+ Variant:        'op_defaults' | 'rsc_defaults'
+ -->
+<xsl:template name="ProcessDefaultsNonruleClusterProperties">
+  <xsl:param name="Source"/>
+  <xsl:param name="Variant"/>
+  <xsl:param name="InnerSimulation" select="false()"/>
+  <xsl:param name="InnerPass">
+    <xsl:choose>
+      <xsl:when test="$InnerSimulation">
+        <xsl:value-of select="''"/>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:call-template name="ProcessDefaultsNonruleClusterProperties">
+          <xsl:with-param name="Source" select="$Source"/>
+          <xsl:with-param name="Variant" select="$Variant"/>
+          <xsl:with-param name="InnerSimulation" select="true()"/>
+          <xsl:with-param name="InnerPass" select="'INNER-RECURSION'"/>
+        </xsl:call-template>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:param>
+
+  <xsl:choose>
+    <xsl:when test="$Source/*[name() = $Variant]/meta_attributes[
+                      not(@id-ref)
+                      and
+                      not(rule)
+                    ]">
+      <xsl:call-template name="ProcessClusterProperties">
+        <xsl:with-param name="Source"
+                        select="$Source/crm_config/cluster_property_set[
+                                  not(@id-ref)
+                                  and
+                                  not(rule)
+                                ]"/>
+        <xsl:with-param name="InverseMode"
+                        select="$Source/*[name() = $Variant]/meta_attributes[
+                                  not(@id-ref)
+                                  and
+                                  not(rule)
+                                ]"/>
+        <xsl:with-param name="InnerSimulation" select="$InnerSimulation"/>
+      </xsl:call-template>
+    </xsl:when>
+    <xsl:otherwise>
+      <xsl:call-template name="ProcessClusterProperties">
+        <xsl:with-param name="Source"
+                      select="$Source/crm_config/cluster_property_set[
+                                  not(@id-ref)
+                                  and
+                                  not(rule)
+                                ]"/>
+        <xsl:with-param name="InverseMode"
+                        select="$Variant"/>
+        <xsl:with-param name="InnerSimulation" select="$InnerSimulation"/>
+      </xsl:call-template>
+    </xsl:otherwise>
+  </xsl:choose>
+</xsl:template>
+
+<!--
+ Source ctxt:    configuration
+ Target ctxt:    {op,rsc}_defaults/meta_attributes [per $Variant, see below]
+ Target-inv ctxt:N/A
+ Dependencies:   ProcessClusterProperties
+
+ Variant:        'op_defaults' | 'rsc_defaults'
+ -->
+<xsl:template name="ProcessDefaultsRuleClusterProperties">
+  <xsl:param name="Source"/>
+  <xsl:param name="Variant"/>
+  <xsl:param name="InnerSimulation" select="false()"/>
+  <xsl:param name="InnerPass">
+    <xsl:choose>
+      <xsl:when test="$InnerSimulation">
+        <xsl:value-of select="''"/>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:call-template name="ProcessDefaultsRuleClusterProperties">
+          <xsl:with-param name="Source" select="$Source"/>
+          <xsl:with-param name="Variant" select="$Variant"/>
+          <xsl:with-param name="InnerSimulation" select="true()"/>
+          <xsl:with-param name="InnerPass" select="'INNER-RECURSION'"/>
+        </xsl:call-template>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:param>
+
+  <xsl:for-each select="crm_config/cluster_property_set[
+                          not(@id-ref)
+                          and
+                          rule
+                        ]">
+    <xsl:variable name="ProcessedPartial">
+      <xsl:call-template name="ProcessClusterProperties">
+        <xsl:with-param name="Source" select="$Source"/>
+        <xsl:with-param name="InverseMode" select="$Variant"/>
+        <xsl:with-param name="InnerSimulation" select="true()"/>
+      </xsl:call-template>
+    </xsl:variable>
+    <xsl:if test="normalize-space($ProcessedPartial)
+                  != $ProcessedPartial">
+      <meta_attributes id="{concat('_2TO3_', @id)}">
+        <xsl-copy-of select="rule"/>
+        <xsl:call-template name="ProcessClusterProperties">
+          <xsl:with-param name="Source" select="$Source"/>
+          <xsl:with-param name="InverseMode" select="$Variant"/>
+        </xsl:call-template>
+      </meta_attributes>
+    </xsl:if>
+  </xsl:for-each>
 </xsl:template>
 
 <!--
@@ -1251,13 +1393,19 @@
   <xsl:variable name="ProcessedClusterProperties">
     <xsl:call-template name="ProcessClusterProperties">
       <xsl:with-param name="Source" select="."/>
+      <xsl:with-param name="InnerSimulation" select="true()"/>
+      <xsl:with-param name="InnerPass" select="'INNER-RECURSION'"/>
     </xsl:call-template>
   </xsl:variable>
   <xsl:if test="normalize-space($ProcessedClusterProperties)
                 != $ProcessedClusterProperties">
     <xsl:copy>
       <xsl:apply-templates select="@*"/>
-      <xsl:copy-of select="$ProcessedClusterProperties"/>
+      <xsl:call-template name="ProcessClusterProperties">
+        <xsl:with-param name="Source" select="."/>
+        <!-- cf. trick E. -->
+        <xsl:with-param name="InnerPass" select="$ProcessedClusterProperties"/>
+      </xsl:call-template>
     </xsl:copy>
   </xsl:if>
 </xsl:template>
@@ -1313,7 +1461,7 @@
                                   not(@in-case-of)
                                   and
                                   not(
-                                    $MapClusterProperties/cibtr:replace[
+                                    $MapClusterNode/cibtr:replace[
                                       @what = current()/@name
                                       and
                                       @in-case-of
@@ -1393,12 +1541,9 @@
                 <xsl:when test="self::op">
                   <!-- process @*|meta_attributes/nvpair
                        (keep/drop/move elsewhere) -->
-                  <xsl:variable name="ProcessedOpMetaAttributes">
-                    <xsl:call-template name="ProcessAttrOpMetaAttributes">
-                      <xsl:with-param name="Source" select="."/>
-                    </xsl:call-template>
-                  </xsl:variable>
-                  <xsl:copy-of select="$ProcessedOpMetaAttributes"/>
+                  <xsl:call-template name="ProcessAttrOpMetaAttributes">
+                    <xsl:with-param name="Source" select="."/>
+                  </xsl:call-template>
                 </xsl:when>
                 <xsl:otherwise>
                   <xsl:call-template name="HelperIdentity"/>
@@ -1412,6 +1557,7 @@
           <xsl:variable name="ProcessedRscInstanceAttributes">
             <xsl:call-template name="ProcessRscInstanceAttributes">
               <xsl:with-param name="Source" select="."/>
+              <xsl:with-param name="InnerSimulation" select="true()"/>
             </xsl:call-template>
           </xsl:variable>
           <!-- cf. trick A. -->
@@ -1419,7 +1565,11 @@
                         != $ProcessedRscInstanceAttributes">
             <xsl:copy>
               <xsl:apply-templates select="@*"/>
-              <xsl:copy-of select="$ProcessedRscInstanceAttributes"/>
+              <xsl:call-template name="ProcessRscInstanceAttributes">
+                <xsl:with-param name="Source" select="."/>
+                <!-- cf. trick E. -->
+                <xsl:with-param name="InnerPass" select="$ProcessedRscInstanceAttributes"/>
+              </xsl:call-template>
             </xsl:copy>
           </xsl:if>
         </xsl:when>
@@ -1438,6 +1588,7 @@
         <xsl:call-template name="ProcessAttrOpMetaAttributes">
           <xsl:with-param name="Source" select="."/>
           <xsl:with-param name="InverseMode" select="true()"/>
+          <xsl:with-param name="InnerSimulation" select="true()"/>
         </xsl:call-template>
       </xsl:for-each>
     </xsl:variable>
@@ -1445,7 +1596,12 @@
     <xsl:if test="normalize-space($ToPropagateFromOp)
                   != $ToPropagateFromOp">
       <meta_attributes id="{concat('_2TO3_', @id, '-meta')}">
-        <xsl:copy-of select="$ToPropagateFromOp"/>
+        <xsl:for-each select="operations/op">
+          <xsl:call-template name="ProcessAttrOpMetaAttributes">
+            <xsl:with-param name="Source" select="."/>
+            <xsl:with-param name="InverseMode" select="true()"/>
+          </xsl:call-template>
+        </xsl:for-each>
       </meta_attributes>
     </xsl:if>
 
@@ -1479,122 +1635,34 @@
 </xsl:template>
 
 <xsl:template match="configuration">
+  <xsl:variable name="Configuration" select="."/>
   <xsl:variable name="ProcessedOpDefaultsNonruleClusterProperties">
-    <xsl:choose>
-      <xsl:when test="op_defaults/meta_attributes[
-                        not(@id-ref)
-                        and
-                        not(rule)
-                      ]">
-        <xsl:call-template name="ProcessClusterProperties">
-          <xsl:with-param name="Source"
-                          select="crm_config/cluster_property_set[
-                                    not(@id-ref)
-                                    and
-                                    not(rule)
-                                  ]"/>
-          <xsl:with-param name="InverseMode"
-                          select="op_defaults/meta_attributes[
-                                    not(@id-ref)
-                                    and
-                                    not(rule)
-                                  ]"/>
-        </xsl:call-template>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:call-template name="ProcessClusterProperties">
-          <xsl:with-param name="Source"
-                          select="crm_config/cluster_property_set[
-                                    not(@id-ref)
-                                    and
-                                    not(rule)
-                                  ]"/>
-          <xsl:with-param name="InverseMode"
-                          select="'op_defaults'"/>
-        </xsl:call-template>
-      </xsl:otherwise>
-    </xsl:choose>
+    <xsl:call-template name="ProcessDefaultsNonruleClusterProperties">
+      <xsl:with-param name="Source" select="$Configuration"/>
+      <xsl:with-param name="Variant" select="'op_defaults'"/>
+      <xsl:with-param name="InnerSimulation" select="true()"/>
+    </xsl:call-template>
   </xsl:variable>
   <xsl:variable name="ProcessedRscDefaultsNonruleClusterProperties">
-    <xsl:choose>
-      <xsl:when test="rsc_defaults/meta_attributes[
-                        not(@id-ref)
-                        and
-                        not(rule)
-                      ]">
-        <xsl:call-template name="ProcessClusterProperties">
-          <xsl:with-param name="Source"
-                          select="crm_config/cluster_property_set[
-                                    not(@id-ref)
-                                    and
-                                    not(rule)
-                                  ]"/>
-          <xsl:with-param name="InverseMode"
-                          select="rsc_defaults/meta_attributes[
-                                    not(@id-ref)
-                                    and
-                                    not(rule)
-                                  ]"/>
-        </xsl:call-template>
-      </xsl:when>
-      <xsl:otherwise>
-        <xsl:call-template name="ProcessClusterProperties">
-          <xsl:with-param name="Source"
-                          select="crm_config/cluster_property_set[
-                                    not(@id-ref)
-                                    and
-                                    not(rule)
-                                  ]"/>
-          <xsl:with-param name="InverseMode"
-                          select="'rsc_defaults'"/>
-        </xsl:call-template>
-      </xsl:otherwise>
-    </xsl:choose>
+    <xsl:call-template name="ProcessDefaultsNonruleClusterProperties">
+      <xsl:with-param name="Source" select="$Configuration"/>
+      <xsl:with-param name="Variant" select="'rsc_defaults'"/>
+      <xsl:with-param name="InnerSimulation" select="true()"/>
+    </xsl:call-template>
   </xsl:variable>
   <xsl:variable name="ProcessedOpDefaultsRuleClusterProperties">
-    <xsl:for-each select="crm_config/cluster_property_set[
-                            not(@id-ref)
-                            and
-                            rule
-                          ]">
-
-      <xsl:variable name="ProcessedPartial">
-        <xsl:call-template name="ProcessClusterProperties">
-          <xsl:with-param name="Source"
-                          select="."/>
-          <xsl:with-param name="InverseMode" select="'op_defaults'"/>
-        </xsl:call-template>
-      </xsl:variable>
-      <xsl:if test="normalize-space($ProcessedPartial)
-                    != $ProcessedPartial">
-        <meta_attributes id="{concat('_2TO3_', @id)}">
-          <xsl-copy-of select="rule"/>
-          <xsl:copy-of select="$ProcessedPartial"/>
-        </meta_attributes>
-      </xsl:if>
-    </xsl:for-each>
+    <xsl:call-template name="ProcessDefaultsNonruleClusterProperties">
+      <xsl:with-param name="Source" select="$Configuration"/>
+      <xsl:with-param name="Variant" select="'op_defaults'"/>
+      <xsl:with-param name="InnerSimulation" select="true()"/>
+    </xsl:call-template>
   </xsl:variable>
   <xsl:variable name="ProcessedRscDefaultsRuleClusterProperties">
-    <xsl:for-each select="crm_config/cluster_property_set[
-                            not(@id-ref)
-                            and
-                            rule
-                          ]">
-      <xsl:variable name="ProcessedPartial">
-        <xsl:call-template name="ProcessClusterProperties">
-          <xsl:with-param name="Source"
-                          select="."/>
-          <xsl:with-param name="InverseMode" select="'rsc_defaults'"/>
-        </xsl:call-template>
-      </xsl:variable>
-      <xsl:if test="normalize-space($ProcessedPartial)
-                    != $ProcessedPartial">
-        <meta_attributes id="{concat('_2TO3_', @id)}">
-          <xsl-copy-of select="rule"/>
-          <xsl:copy-of select="$ProcessedPartial"/>
-        </meta_attributes>
-      </xsl:if>
-    </xsl:for-each>
+    <xsl:call-template name="ProcessDefaultsNonruleClusterProperties">
+      <xsl:with-param name="Source" select="$Configuration"/>
+      <xsl:with-param name="Variant" select="'rsc_defaults'"/>
+      <xsl:with-param name="InnerSimulation" select="true()"/>
+    </xsl:call-template>
   </xsl:variable>
 
   <xsl:copy>
@@ -1624,28 +1692,36 @@
                                     )
                                   ]">
                     <xsl:apply-templates select="@*|node()"/>
-                    <xsl:if test="$WhichDefaults = 'op_defaults'">
-                      <xsl:copy-of select="$ProcessedOpDefaultsNonruleClusterProperties"/>
-                    </xsl:if>
-                    <xsl:if test="$WhichDefaults = 'rsc_defaults'">
-                      <xsl:copy-of select="$ProcessedRscDefaultsNonruleClusterProperties"/>
+                    <xsl:if test="$WhichDefaults = 'op_defaults'
+                                  or
+                                  $WhichDefaults = 'rsc_defaults'">
+                      <xsl:call-template name="ProcessDefaultsNonruleClusterProperties">
+                        <xsl:with-param name="Source" select="$Configuration"/>
+                        <xsl:with-param name="Variant" select="$WhichDefaults"/>
+                      </xsl:call-template>
                     </xsl:if>
                   </xsl:when>
                   <xsl:otherwise>
                     <xsl:apply-templates select="@*|node()"/>
                   </xsl:otherwise>
                 </xsl:choose>
-                <xsl:if test="$WhichDefaults = 'op_defaults'
-                              and
-                              normalize-space($ProcessedOpDefaultsRuleClusterProperties)
-                              != $ProcessedOpDefaultsRuleClusterProperties">
-                  <xsl:copy-of select="$ProcessedOpDefaultsRuleClusterProperties"/>
-                </xsl:if>
-                <xsl:if test="$WhichDefaults = 'rsc_defaults'
-                              and
-                              normalize-space($ProcessedRscDefaultsRuleClusterProperties)
-                              != $ProcessedRscDefaultsRuleClusterProperties">
-                  <xsl:copy-of select="$ProcessedRscDefaultsRuleClusterProperties"/>
+                <xsl:if test="(
+                                $WhichDefaults = 'op_defaults'
+                                and
+                                normalize-space($ProcessedOpDefaultsRuleClusterProperties)
+                                != $ProcessedOpDefaultsRuleClusterProperties
+                              )
+                              or
+                              (
+                                $WhichDefaults = 'rsc_defaults'
+                                and
+                                normalize-space($ProcessedRscDefaultsRuleClusterProperties)
+                                != $ProcessedRscDefaultsRuleClusterProperties
+                              )">
+                  <xsl:call-template name="ProcessDefaultsRuleClusterProperties">
+                    <xsl:with-param name="Source" select="$Configuration"/>
+                    <xsl:with-param name="Variant" select="$WhichDefaults"/>
+                  </xsl:call-template>
                 </xsl:if>
               </xsl:copy>
             </xsl:for-each>
@@ -1673,10 +1749,16 @@
         <xsl:if test="normalize-space($ProcessedOpDefaultsNonruleClusterProperties)
                       != $ProcessedOpDefaultsNonruleClusterProperties">
           <meta_attributes id="{concat('_2TO3_', '-op-defaults')}">
-            <xsl:copy-of select="$ProcessedOpDefaultsNonruleClusterProperties"/>
+            <xsl:call-template name="ProcessDefaultsNonruleClusterProperties">
+              <xsl:with-param name="Source" select="$Configuration"/>
+              <xsl:with-param name="Variant" select="'op_defaults'"/>
+            </xsl:call-template>
           </meta_attributes>
         </xsl:if>
-        <xsl:copy-of select="$ProcessedOpDefaultsRuleClusterProperties"/>
+        <xsl:call-template name="ProcessDefaultsRuleClusterProperties">
+          <xsl:with-param name="Source" select="$Configuration"/>
+          <xsl:with-param name="Variant" select="'op_defaults'"/>
+        </xsl:call-template>
         <xsl:apply-templates select="text()[position() = last()]"/>
       </op_defaults>
     </xsl:if>
@@ -1693,10 +1775,16 @@
         <xsl:if test="normalize-space($ProcessedRscDefaultsNonruleClusterProperties)
                       != $ProcessedRscDefaultsNonruleClusterProperties">
           <meta_attributes id="{concat('_2TO3_', '-rsc-defaults')}">
-            <xsl:copy-of select="$ProcessedRscDefaultsNonruleClusterProperties"/>
+            <xsl:call-template name="ProcessDefaultsNonruleClusterProperties">
+              <xsl:with-param name="Source" select="$Configuration"/>
+              <xsl:with-param name="Variant" select="'rsc_defaults'"/>
+            </xsl:call-template>
           </meta_attributes>
         </xsl:if>
-        <xsl:copy-of select="$ProcessedRscDefaultsRuleClusterProperties"/>
+        <xsl:call-template name="ProcessDefaultsRuleClusterProperties">
+          <xsl:with-param name="Source" select="$Configuration"/>
+          <xsl:with-param name="Variant" select="'rsc_defaults'"/>
+        </xsl:call-template>
         <xsl:apply-templates select="text()[position() = last()]"/>
       </rsc_defaults>
     </xsl:if>

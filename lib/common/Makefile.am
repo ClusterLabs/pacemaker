@@ -6,7 +6,7 @@
 #
 include $(top_srcdir)/Makefile.common
 
-AM_CPPFLAGS		+= -I$(top_builddir)/lib/gnu -I$(top_srcdir)/lib/gnu
+AM_CPPFLAGS		+= -I$(top_builddir)/lib/gnu -I$(top_srcdir)/lib/gnu -DPCMK_SCHEMAS_EMERGENCY_XSLT=0
 
 ## libraries
 lib_LTLIBRARIES	= libcrmcommon.la
