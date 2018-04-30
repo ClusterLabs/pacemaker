@@ -167,7 +167,7 @@ AC_ARG_ENABLE([systemd],
 )
 
 AC_ARG_ENABLE(hardening,
-    [  --with-hardening  Harden the resulting executables/libraries @<:@try@:>@],
+    [  --enable-hardening  Harden the resulting executables/libraries @<:@try@:>@],
     [ HARDENING="${enableval}" ],
     [ HARDENING=try ],
 )
