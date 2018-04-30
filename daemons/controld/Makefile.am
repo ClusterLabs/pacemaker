@@ -9,10 +9,7 @@ include $(top_srcdir)/Makefile.common
 
 halibdir	= $(CRM_DAEMON_DIR)
 
-## binary progs
 halib_PROGRAMS	= pacemaker-controld
-
-## SOURCES
 
 noinst_HEADERS	= controld_alerts.h		\
 		  controld_callbacks.h		\
@@ -70,3 +67,11 @@ man7_MANS 	= pacemaker-controld.7
 endif
 
 CLEANFILES = $(man7_MANS)
+
+if BUILD_LEGACY_LINKS
+install-exec-hook:
+	cd $(DESTDIR)$(CRM_DAEMON_DIR) && $(LN_S) pacemaker-controld crmd
+
+uninstall-hook:
+	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f crmd
+endif

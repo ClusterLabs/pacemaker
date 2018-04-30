@@ -19,6 +19,7 @@ COMMONLIBS	= $(top_builddir)/lib/common/libcrmcommon.la	\
 lib_LTLIBRARIES	= libpengine.la
 
 ## binary progs
+
 halib_PROGRAMS	= pacemaker-schedulerd
 
 if BUILD_XML_HELP
@@ -65,6 +66,14 @@ install-exec-local:
 	-chown $(CRM_DAEMON_USER) $(DESTDIR)/$(PE_STATE_DIR)
 	-chgrp $(CRM_DAEMON_GROUP) $(DESTDIR)/$(PE_STATE_DIR)
 	-chmod 750 $(DESTDIR)/$(PE_STATE_DIR)
+
+if BUILD_LEGACY_LINKS
+install-exec-hook:
+	cd $(DESTDIR)$(CRM_DAEMON_DIR) && $(LN_S) pacemaker-schedulerd pengine
+
+uninstall-hook:
+	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f pengine
+endif
 
 uninstall-local:
 

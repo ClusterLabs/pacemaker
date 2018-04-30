@@ -146,6 +146,9 @@
 ## Add option to turn off hardening of libraries and daemon executables
 %bcond_without hardening
 
+## Add option to disable links for legacy daemon names
+%bcond_without legacy_links
+
 
 # Keep sane profiling data if requested
 %if %{with profiling}
@@ -393,15 +396,16 @@ export LDFLAGS_HARDENED_LIB="%{?_hardening_ldflags}"
 
 ./autogen.sh
 
-%{configure}                                       \
-        %{?with_profiling:   --with-profiling}     \
-        %{?with_coverage:    --with-coverage}      \
-        %{!?with_doc:        --with-brand=}        \
-        %{!?with_hardening:  --disable-hardening}  \
-        %{?python_path:      PYTHON=%{python_path}} \
-        %{?gnutls_priorities: --with-gnutls-priorities="%{gnutls_priorities}"} \
-        --with-initdir=%{_initrddir}               \
-        --localstatedir=%{_var}                    \
+%{configure}                                                                    \
+        %{?python_path:        PYTHON=%{python_path}}                           \
+        %{!?with_hardening:    --disable-hardening}                             \
+        %{!?with_legacy_links: --disable-legacy-links}                          \
+        %{?with_profiling:     --with-profiling}                                \
+        %{?with_coverage:      --with-coverage}                                 \
+        %{!?with_doc:          --with-brand=}                                   \
+        %{?gnutls_priorities:  --with-gnutls-priorities="%{gnutls_priorities}"} \
+        --with-initdir=%{_initrddir}                                            \
+        --localstatedir=%{_var}                                                 \
         --with-version=%{version}-%{release}
 
 %if 0%{?suse_version} >= 1200
@@ -593,6 +597,9 @@ exit 0
 
 %exclude %{_libexecdir}/pacemaker/cts-exec-helper
 %exclude %{_sbindir}/pacemaker-remoted
+%if %{with legacy_links}
+%exclude %{_sbindir}/pacemaker_remoted
+%endif
 %{_libexecdir}/pacemaker/*
 
 %{_sbindir}/crm_attribute
@@ -732,6 +739,9 @@ exit 0
 %endif
 
 %{_sbindir}/pacemaker-remoted
+%if %{with legacy_links}
+%{_sbindir}/pacemaker_remoted
+%endif
 %{_mandir}/man8/pacemaker-remoted.*
 %license licenses/GPLv2
 %doc COPYING

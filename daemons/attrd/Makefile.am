@@ -8,8 +8,8 @@
 include $(top_srcdir)/Makefile.common
 
 halibdir	= $(CRM_DAEMON_DIR)
+
 halib_PROGRAMS	= pacemaker-attrd
-## SOURCES
 
 noinst_HEADERS  = pacemaker-attrd.h
 
@@ -28,3 +28,11 @@ pacemaker_attrd_SOURCES	= pacemaker-attrd.c attrd_commands.c 	\
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~
+
+if BUILD_LEGACY_LINKS
+install-exec-hook:
+	cd $(DESTDIR)$(CRM_DAEMON_DIR) && $(LN_S) pacemaker-attrd attrd
+
+uninstall-hook:
+	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f attrd
+endif

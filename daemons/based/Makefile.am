@@ -14,10 +14,8 @@ halibdir	= $(CRM_DAEMON_DIR)
 COMMONLIBS	= $(top_builddir)/lib/common/libcrmcommon.la \
 		$(top_builddir)/lib/cib/libcib.la
 
-## binary progs
 halib_PROGRAMS	= pacemaker-based cibmon
 
-## SOURCES
 noinst_HEADERS	= pacemaker-based.h
 
 pacemaker_based_CFLAGS	= $(CFLAGS_HARDENED_EXE)
@@ -42,5 +40,14 @@ clean-generic:
 
 install-exec-local:
 #	cp -f $(top_srcdir)/crm/cib/cib.pam $(DESTDIR)/etc/pam.d/cib
+
+if BUILD_LEGACY_LINKS
+install-exec-hook:
+	test -d $(DESTDIR)$(CRM_DAEMON_DIR) || mkdir -p $(DESTDIR)$(CRM_DAEMON_DIR)
+	cd $(DESTDIR)$(CRM_DAEMON_DIR) && $(LN_S) pacemaker-based cib
+
+uninstall-hook:
+	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f cib
+endif
 
 uninstall-local:

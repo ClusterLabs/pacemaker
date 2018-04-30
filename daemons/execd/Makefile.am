@@ -8,6 +8,7 @@
 include $(top_srcdir)/Makefile.common
 
 halibdir		= $(CRM_DAEMON_DIR)
+
 halib_PROGRAMS		= pacemaker-execd cts-exec-helper
 
 initdir			= $(INITDIR)
@@ -48,3 +49,13 @@ cts_exec_helper_SOURCES	= cts-exec-helper.c
 noinst_HEADERS  = pacemaker-execd.h
 
 CLEANFILES = $(man8_MANS)
+
+if BUILD_LEGACY_LINKS
+install-exec-hook:
+	cd $(DESTDIR)$(CRM_DAEMON_DIR) && $(LN_S) pacemaker-execd lrmd
+	cd $(DESTDIR)$(sbindir) && $(LN_S) pacemaker-remoted pacemaker_remoted
+
+uninstall-hook:
+	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f lrmd
+	cd $(DESTDIR)$(sbindir) && rm -f pacemaker_remoted
+endif
