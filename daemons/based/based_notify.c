@@ -106,7 +106,6 @@ cib_notify_send(xmlNode * xml)
     ssize_t rc = crm_ipc_prepare(0, xml, &iov, 0);
 
     crm_trace("Notifying clients");
-
     if (rc > 0) {
         update.msg = xml;
         update.iov = iov;
@@ -117,13 +116,7 @@ cib_notify_send(xmlNode * xml)
         crm_notice("Could not notify clients: %s " CRM_XS " rc=%lld",
                    pcmk_strerror(rc), (long long) rc);
     }
-
-    if (iov) {
-        free(iov[0].iov_base);
-        free(iov[1].iov_base);
-        free(iov);
-    }
-
+    pcmk_free_ipc_event(iov);
     crm_trace("Notify complete");
 }
 
