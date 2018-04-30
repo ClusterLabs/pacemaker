@@ -577,6 +577,8 @@ crm_ipcs_flush_events(crm_client_t * c)
 
         rc = qb_ipcs_event_sendv(c->ipcs, event, 2);
         if (rc < 0) {
+            // The event didn't get sent, so put it back
+            g_queue_push_head(c->event_queue, event);
             break;
         }
 
