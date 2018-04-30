@@ -19,7 +19,7 @@ lib_LTLIBRARIES	= libcrmcommon.la
 
 CFLAGS		= $(CFLAGS_COPY:-Wcast-qual=) -fPIC
 
-libcrmcommon_la_LDFLAGS	= -version-info 13:0:0
+libcrmcommon_la_LDFLAGS	= -version-info 14:0:1
 
 libcrmcommon_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libcrmcommon_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
