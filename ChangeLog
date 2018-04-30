@@ -1,3 +1,24 @@
+* Mon Apr 30 2018 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.0-rc3
+- Update source tarball to revision: 5aab21d
+- Changesets: 166
+- Diff:       289 files changed, 58655 insertions(+), 59505 deletions(-)
+
+- Features added since Pacemaker-2.0.0-rc2
+  + Daemons have been renamed to make logs more intuitive
+  + Tweak detail log message format for readability with new names
+  + alerts: add epoch and usec alert variables for improved SNMP alerts
+  + controller: rename "crmd-*" cluster options
+
+- Changes since Pacemaker-2.0.0-rc2
+  + CIB manager: don't use empty CIB if real CIB has bad permissions
+  + CIB manager: handle mixed-case node names when modifying attributes (regression in 1.1.17)
+  + controller: avoid double free after ACL rejection of resource delete
+  + controller: delete resource from lrmd when appropriate (regression in rc2)
+  + controller: don't record pending notify actions as completed
+  + scheduler: don't time out failures that cause fencing until fencing completes
+  + resources: drop broken configdir parameter from ocf:pacemaker:controld
+  + tools: ignore attribute placement when crm_diff compares in cib mode
+
 * Fri Apr 06 2018 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.0-rc2
 - Update source tarball to revision: 40519e2
 - Changesets: 192
