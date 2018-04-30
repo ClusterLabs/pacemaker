@@ -20,7 +20,7 @@ include $(top_srcdir)/Makefile.common
 ## libraries
 lib_LTLIBRARIES	= libcrmcluster.la 
 
-libcrmcluster_la_LDFLAGS = -version-info 9:0:0
+libcrmcluster_la_LDFLAGS = -version-info 9:1:0
 
 libcrmcluster_la_CFLAGS  = $(CFLAGS_HARDENED_LIB)
 libcrmcluster_la_LDFLAGS += $(LDFLAGS_HARDENED_LIB)
