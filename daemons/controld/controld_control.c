@@ -702,18 +702,25 @@ static pe_cluster_option crmd_opts[] = {
 	{ XML_CONFIG_ATTR_FORCE_QUIT, NULL, "time", NULL, "20min", &check_timer,
           "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug."
         },
-	{ "crmd-integration-timeout", NULL, "time", NULL, "3min", &check_timer,
-          "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug."
-        },
-	{ "crmd-finalization-timeout", NULL, "time", NULL, "30min", &check_timer,
-          "*** Advanced Use Only ***.", "If you need to adjust this value, it probably indicates the presence of a bug."
-        },
-	{ "crmd-transition-delay", NULL, "time", NULL, "0s", &check_timer,
-          "*** Advanced Use Only ***\n"
-          "Enabling this option will slow down cluster recovery under all conditions",
-          "Delay cluster recovery for the configured interval to allow for additional/related events to occur.\n"
-          "Useful if your configuration is sensitive to the order in which ping updates arrive."
-        },
+	{
+        "join-integration-timeout", "crmd-integration-timeout",
+        "time", NULL, "3min", &check_timer,
+        "*** Advanced Use Only ***",
+        "If need to adjust this value, it probably indicates the presence of a bug"
+    },
+	{
+        "join-finalization-timeout", "crmd-finalization-timeout",
+        "time", NULL, "30min", &check_timer,
+        "*** Advanced Use Only ***",
+        "If you need to adjust this value, it probably indicates the presence of a bug"
+    },
+	{
+        "transition-delay", "crmd-transition-delay",
+        "time", NULL, "0s", &check_timer,
+        "*** Advanced Use Only *** Enabling this option will slow down cluster recovery under all conditions",
+        "Delay cluster recovery for the configured interval to allow for additional/related events to occur.\n"
+        "Useful if your configuration is sensitive to the order in which ping updates arrive."
+    },
 	{ "stonith-watchdog-timeout", NULL, "time", NULL, NULL, &check_sbd_timeout,
 	  "How long to wait before we can assume nodes are safely down", NULL
         },
@@ -819,13 +826,13 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     recheck_timer->period_ms = crm_get_msec(value);
     crm_debug("Checking for expired actions every %dms", recheck_timer->period_ms);
 
-    value = crmd_pref(config_hash, "crmd-transition-delay");
+    value = crmd_pref(config_hash, "transition-delay");
     transition_timer->period_ms = crm_get_msec(value);
 
-    value = crmd_pref(config_hash, "crmd-integration-timeout");
+    value = crmd_pref(config_hash, "join-integration-timeout");
     integration_timer->period_ms = crm_get_msec(value);
 
-    value = crmd_pref(config_hash, "crmd-finalization-timeout");
+    value = crmd_pref(config_hash, "join-finalization-timeout");
     finalization_timer->period_ms = crm_get_msec(value);
 
     free(fsa_cluster_name);

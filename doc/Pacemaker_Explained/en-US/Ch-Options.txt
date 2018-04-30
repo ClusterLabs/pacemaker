@@ -385,21 +385,21 @@ indexterm:[Cluster,Option,shutdown-escalation]
 _Advanced Use Only:_ If you need to adjust this value, it probably indicates
 the presence of a bug.
 
-| crmd-integration-timeout | 3min |
-indexterm:[crmd-integration-timeout,Cluster Option]
-indexterm:[Cluster,Option,crmd-integration-timeout]
+| join-integration-timeout | 3min |
+indexterm:[join-integration-timeout,Cluster Option]
+indexterm:[Cluster,Option,join-integration-timeout]
 _Advanced Use Only:_ If you need to adjust this value, it probably indicates
 the presence of a bug.
 
-| crmd-finalization-timeout | 30min |
-indexterm:[crmd-finalization-timeout,Cluster Option]
-indexterm:[Cluster,Option,crmd-finalization-timeout]
+| join-finalization-timeout | 30min |
+indexterm:[join-finalization-timeout,Cluster Option]
+indexterm:[Cluster,Option,join-finalization-timeout]
 _Advanced Use Only:_ If you need to adjust this value, it probably indicates
 the presence of a bug.
 
-| crmd-transition-delay | 0s |
-indexterm:[crmd-transition-delay,Cluster Option]
-indexterm:[Cluster,Option,crmd-transition-delay]
+| transition-delay | 0s |
+indexterm:[transition-delay,Cluster Option]
+indexterm:[Cluster,Option,transition-delay]
 _Advanced Use Only:_ Delay cluster recovery for the configured interval to
 allow for additional/related events to occur. Useful if your configuration is
 sensitive to the order in which ping updates arrive.
