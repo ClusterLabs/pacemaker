@@ -620,7 +620,8 @@ class Environment(object):
         print("\t [--yes | -y]                 continue to run cts when there is an interaction whether to continue running pacemaker-cts")
         print("\t ")
         print("\t Example: ")
-        print("\t    python sys.argv[0] -g virt1 --stack cs -r --stonith ssh --schema pacemaker-1.0 500")
+        # @PYTHON@ would be better here but not worth making file this a .in
+        print("\t    python sys.argv[0] -g virt1 -r --stonith ssh --schema pacemaker-2.0 500")
 
         sys.exit(status)
 
