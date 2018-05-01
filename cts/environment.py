@@ -38,7 +38,7 @@ class Environment(object):
         self["LogWatcher"] = "any"
         self["SyslogFacility"] = "daemon"
         self["LogFileName"] = "/var/log/messages"
-        self["Schema"] = "pacemaker-2.0"
+        self["Schema"] = "pacemaker-3.0"
         self["Stack"] = "corosync"
         self["stonith-type"] = "external/ssh"
         self["stonith-params"] = "hostlist=all,livedangerously=yes"

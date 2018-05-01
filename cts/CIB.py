@@ -421,6 +421,9 @@ class CIB12(ConfigBase):
 class CIB20(CIB12):
     version = "pacemaker-2.5"
 
+class CIB30(CIB12):
+    version = "pacemaker-3.0"
+
 #class HASI(CIB10):
 #    def add_resources(self):
 #        # DLM resource
@@ -440,6 +443,7 @@ class ConfigFactory(object):
         self.rsh = self.CM.rsh
         self.register("pacemaker12", CIB12, CM, self)
         self.register("pacemaker20", CIB20, CM, self)
+        self.register("pacemaker30", CIB30, CM, self)
 #        self.register("hae", HASI, CM, self)
         self.target = self.CM.Env["nodes"][0]
         self.tmpfile = None
@@ -467,6 +471,8 @@ class ConfigFactory(object):
             name = "pacemaker12";
         elif name == "pacemaker-2.0":
             name = "pacemaker20";
+        elif name == "pacemaker-3.0":
+            name = "pacemaker30";
         elif name == "hasi":
             name = "hae";
 
@@ -475,7 +481,7 @@ class ConfigFactory(object):
         else:
             self.CM.log("Configuration variant '%s' is unknown.  Defaulting to latest config" % name)
 
-        return self.pacemaker20()
+        return self.pacemaker30()
 
 
 class ConfigFactoryItem(object):
