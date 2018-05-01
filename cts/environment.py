@@ -148,7 +148,7 @@ class Environment(object):
     def set_stack(self, name):
         # Normalize stack names
         if name == "corosync" or name == "cs" or name == "mcp":
-            self.data["Stack"] = "corosync 2.x"
+            self.data["Stack"] = "corosync 2+"
 
         else:
             raise ValueError("Unknown stack: "+name)
@@ -158,7 +158,7 @@ class Environment(object):
         if not "Stack" in self.data:
             return "unknown"
 
-        elif self.data["Stack"] == "corosync 2.x":
+        elif self.data["Stack"] == "corosync 2+":
             if self["docker"]:
                 return "crm-corosync-docker"
             else:
