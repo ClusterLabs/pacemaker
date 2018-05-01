@@ -1,20 +1,8 @@
-
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_resource.h>
@@ -447,7 +435,8 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
 
         if (node && is_remote_node(node)) {
             if (node->details->remote_rsc == NULL || node->details->remote_rsc->running_on == NULL) {
-                CMD_ERR("No lrmd connection detected to remote node %s", host_uname);
+                CMD_ERR("No cluster connection to Pacemaker Remote node %s detected",
+                        host_uname);
                 return -ENXIO;
             }
             node = node->details->remote_rsc->running_on->data;
@@ -506,7 +495,7 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
         rc = 0;
 
     } else {
-        crm_debug("Could not send %s op to the crmd", op);
+        crm_debug("Could not send %s op to the controller", op);
         rc = -ENOTCONN;
     }
 
@@ -1065,7 +1054,7 @@ update_working_set_xml(pe_working_set_t *data_set, xmlNode **xml)
  * \brief Update a working set's XML input based on a CIB query
  *
  * \param[in] data_set   Data set instance to initialize
- * \param[in] cib        Connection to the CIB
+ * \param[in] cib        Connection to the CIB manager
  *
  * \return pcmk_ok on success, -errno on failure
  * \note On success, caller is responsible for freeing memory allocated for
@@ -1218,7 +1207,7 @@ max_delay_in(pe_working_set_t * data_set, GList *resources)
  *                       (specified in milliseconds, but a two-second
  *                       granularity is actually used; if 0, a timeout will be
  *                       calculated based on the resource timeout)
- * \param[in] cib        Connection to the CIB for modifying/checking resource
+ * \param[in] cib        Connection to the CIB manager
  *
  * \return pcmk_ok on success, -errno on failure (exits on certain failures)
  */
@@ -1571,7 +1560,7 @@ print_pending_actions(GListPtr actions)
  * \param[in] timeout_ms Consider failed if actions do not complete in this time
  *                       (specified in milliseconds, but one-second granularity
  *                       is actually used; if 0, a default will be used)
- * \param[in] cib        Connection to the CIB
+ * \param[in] cib        Connection to the CIB manager
  *
  * \return pcmk_ok on success, -errno on failure
  */
@@ -1616,8 +1605,8 @@ wait_till_stable(int timeout_ms, cib_t * cib)
              * done. Warn the user in this case.
              *
              * @TODO A possible long-term solution would be to reimplement the
-             * wait as a new crmd operation that would be forwarded to the DC.
-             * However, that would have potential problems of its own.
+             * wait as a new controller operation that would be forwarded to the
+             * DC. However, that would have potential problems of its own.
              */
             const char *dc_version = g_hash_table_lookup(data_set.config_hash,
                                                          "dc-version");

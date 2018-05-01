@@ -142,7 +142,7 @@ Like guest nodes, remote nodes will never become the DC, initiate
 fencing actions or participate in quorum voting.
 
 That is not to say, however, that fencing of a remote node works any
-differently than that of a cluster node. The Pacemaker policy engine
+differently than that of a cluster node. The Pacemaker scheduler
 understands how to fence remote nodes. As long as a fencing device exists, the
 cluster is capable of ensuring remote nodes are fenced in the exact same way as
 cluster nodes.

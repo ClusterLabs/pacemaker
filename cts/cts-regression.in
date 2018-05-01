@@ -1,0 +1,215 @@
+#!@BASH_PATH@
+#
+# cts-regression
+#
+# Convenience wrapper for running any of the Pacemaker regression tests
+#
+# Copyright 2012-2018 Andrew Beekhof <andrew@beekhof.net>
+#
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
+#
+
+USAGE_TEXT="Usage: cts-regression [<options>] [<test> ...]
+Options:
+ --help          Display this text, then exit
+ -V, --verbose   Increase test verbosity
+ -v, --valgrind  Run test commands under valgrind
+
+Tests (default tests are 'scheduler cli'):
+ scheduler         Action scheduler
+ cli               Command-line tools
+ exec              Local resource agent executor
+ pacemaker_remote  Resource agent executor in remote mode
+ fencing           Fencer
+ all               Synonym for 'scheduler cli exec fencing'"
+
+# If readlink supports -e (i.e. GNU), use it
+readlink -e / >/dev/null 2>/dev/null
+if [ $? -eq 0 ]; then
+    test_home="$(dirname $(readlink -e $0))"
+else
+    test_home="$(dirname $0)"
+fi
+
+valgrind=""
+verbose=""
+tests=""
+
+# These constants must track crm_exit_t values
+CRM_EX_OK=0
+CRM_EX_ERROR=1
+CRM_EX_NOT_INSTALLED=5
+CRM_EX_USAGE=64
+
+function info() {
+    printf "$*\n"
+}
+
+function error() {
+    printf "      * ERROR:   $*\n"
+}
+
+function run_as_root() {
+    CMD="$1"
+    shift
+    ARGS="$@"
+
+    # Test might not be executable if run from source directory
+    chmod a+x $CMD
+
+    CMD="$CMD $ARGS $verbose"
+
+    if [ $EUID -eq 0 ]; then
+        $CMD
+
+    elif [ -z $TRAVIS ]; then
+        # sudo doesn't work in buildbot, su doesn't work in travis
+        echo "Enter the root password..."
+        su root -c "$CMD"
+
+    else
+        echo "Enter the root password if prompted..."
+        sudo -- $CMD
+    fi
+}
+
+add_test() {
+    local TEST="$1"
+
+    case "$TEST" in
+        scheduler|exec|pacemaker_remote|fencing|cli)
+            if [[ ! $tests =~ $TEST ]]; then
+                tests="$tests $TEST"
+            fi
+            ;;
+        *)
+            error "unknown test: $TEST"
+            echo
+            echo "$USAGE_TEXT"
+            exit $CRM_EX_USAGE
+            ;;
+    esac
+}
+
+run_test() {
+    local t="$1"
+
+    info "Executing the $t regression tests"
+    info "============================================================"
+    case $t in
+        scheduler)
+            if [ -x $test_home/cts-scheduler ]; then
+                $test_home/cts-scheduler $verbose $valgrind
+                rc=$?
+            else
+                error "scheduler regression test not found"
+                rc=$CRM_EX_NOT_INSTALLED
+            fi
+            ;;
+        exec)
+            if [ -x $test_home/cts-exec ]; then
+                run_as_root $test_home/cts-exec
+                rc=$?
+            else
+                error "executor regression test not found"
+                rc=$CRM_EX_NOT_INSTALLED
+            fi
+            ;;
+        pacemaker_remote)
+            if [ -x $test_home/cts-exec ]; then
+                run_as_root $test_home/cts-exec -R
+                rc=$?
+            else
+                error "pacemaker_remote regression test not found"
+                rc=$CRM_EX_NOT_INSTALLED
+            fi
+            ;;
+        fencing)
+            if [ -x $test_home/cts-fencing ]; then
+                run_as_root $test_home/cts-fencing
+                rc=$?
+            else
+                error "fencing regression test not found"
+                rc=$CRM_EX_NOT_INSTALLED
+            fi
+            ;;
+        cli)
+            if [ -x $test_home/cts-cli ]; then
+                $test_home/cts-cli $verbose $valgrind
+                rc=$?
+            else
+                error "cli regression test not found"
+                rc=$CRM_EX_NOT_INSTALLED
+            fi
+            ;;
+    esac
+
+    info "============================================================"
+    info ""
+    info ""
+    return $rc
+}
+
+run_tests() {
+    TESTS="$@"
+    local TEST
+    local TEST_RC
+    local FAILED
+
+    FAILED=""
+    for TEST in $TESTS; do
+        run_test $TEST
+	TEST_RC=$?
+        if [ $TEST_RC -ne 0 ]; then
+            info "$TEST regression tests failed ($TEST_RC)"
+            FAILED="$FAILED $TEST"
+        fi
+    done
+    if [ -n "$FAILED" ]; then
+        error "failed regression tests: $FAILED"
+        return $CRM_EX_ERROR
+    fi
+    return $CRM_EX_OK
+}
+
+while [ $# -gt 0 ] ; do
+    case "$1" in
+        --help)
+            echo "$USAGE_TEXT"
+            exit $CRM_EX_OK
+            ;;
+        -V|--verbose)
+            verbose="-V"
+            shift
+            ;;
+        -v|--valgrind)
+            valgrind="-v"
+            shift
+            ;;
+        scheduler|exec|pacemaker_remote|fencing|cli)
+            add_test $1
+            shift
+            ;;
+        all)
+            add_test scheduler
+            add_test cli
+            add_test exec
+            add_test fencing
+            shift
+            ;;
+        *)
+            error "unknown option: $1"
+            echo
+            echo "$USAGE_TEXT"
+            exit $CRM_EX_USAGE
+            ;;
+    esac
+done
+
+if [ -z "$tests" ]; then
+    add_test scheduler
+    add_test cli
+fi
+
+run_tests $tests

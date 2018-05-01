@@ -1,0 +1,907 @@
+#!@BASH_PATH@
+#
+# Copyright 2008-2018 Andrew Beekhof <andrew@beekhof.net>
+#
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
+#
+
+USAGE_TEXT="Usage: cts-cli [<options>]
+Options:
+ --help          Display this text, then exit
+ -V, --verbose   Display any differences from expected output
+ -t 'TEST [...]' Run only specified tests (default: 'dates tools acls validity')
+ -p DIR          Look for executables in DIR (may be specified multiple times)
+ -v, --valgrind  Run all commands under valgrind
+ -s              Save actual output as expected output"
+
+# If readlink supports -e (i.e. GNU), use it
+readlink -e / >/dev/null 2>/dev/null
+if [ $? -eq 0 ]; then
+    test_home="$(dirname $(readlink -e $0))"
+else
+    test_home="$(dirname $0)"
+fi
+
+: ${shadow=cts-cli}
+shadow_dir=$(mktemp -td cts-cli.shadow.XXXXXXXXXX)
+num_errors=0
+num_passed=0
+GREP_OPTIONS=
+verbose=0
+tests="dates tools acls validity"
+do_save=0
+VALGRIND_CMD=
+VALGRIND_OPTS="
+    -q
+    --gen-suppressions=all
+    --show-reachable=no
+    --leak-check=full
+    --trace-children=no
+    --time-stamp=yes
+    --num-callers=20
+    --suppressions=$test_home/valgrind-pcmk.suppressions
+"
+
+# These constants must track crm_exit_t values
+CRM_EX_OK=0
+CRM_EX_ERROR=1
+CRM_EX_INSUFFICIENT_PRIV=4
+CRM_EX_USAGE=64
+CRM_EX_CONFIG=78
+CRM_EX_OLD=103
+CRM_EX_NOSUCH=105
+CRM_EX_UNSAFE=107
+CRM_EX_EXISTS=108
+CRM_EX_MULTIPLE=109
+
+function test_assert() {
+    target=$1; shift
+    cib=$1; shift
+    app=`echo "$cmd" | sed 's/\ .*//'`
+    printf "* Running: $app - $desc\n" 1>&2
+
+    printf "=#=#=#= Begin test: $desc =#=#=#=\n"
+    eval $VALGRIND_CMD $cmd 2>&1
+    rc=$?
+
+    if [ x$cib != x0 ]; then
+        printf "=#=#=#= Current cib after: $desc =#=#=#=\n"
+        CIB_user=root cibadmin -Q
+    fi
+
+    printf "=#=#=#= End test: $desc - $(crm_error --exit $rc) ($rc) =#=#=#=\n"
+
+    if [ $rc -ne $target ]; then
+        num_errors=$(( $num_errors + 1 ))
+        printf "* Failed (rc=%.3d): %-14s - %s\n" $rc $app "$desc"
+        printf "* Failed (rc=%.3d): %-14s - %s\n" $rc $app "$desc (`which $app`)" 1>&2
+        return
+        exit $CRM_EX_ERROR
+    else
+        printf "* Passed: %-14s - %s\n" $app "$desc"
+        num_passed=$(( $num_passed + 1 ))
+    fi
+}
+
+function test_tools() {
+    local TMPXML=$(mktemp --tmpdir cts-cli.tools.xml.XXXXXXXXXX)
+    local TMPORIG=$(mktemp --tmpdir cts-cli.tools.existing.xml.XXXXXXXXXX)
+    export CIB_shadow_dir="${shadow_dir}"
+
+    $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow  2>&1
+    export CIB_shadow=$shadow
+
+    desc="Validate CIB"
+    cmd="cibadmin -Q"
+    test_assert $CRM_EX_OK
+
+    desc="Configure something before erasing"
+    cmd="crm_attribute -n cluster-delay -v 60s"
+    test_assert $CRM_EX_OK
+
+    desc="Require --force for CIB erasure"
+    cmd="cibadmin -E"
+    test_assert $CRM_EX_UNSAFE
+
+    desc="Allow CIB erasure with --force"
+    cmd="cibadmin -E --force"
+    test_assert $CRM_EX_OK
+
+    desc="Query CIB"
+    cmd="cibadmin -Q > $TMPORIG"
+    test_assert $CRM_EX_OK
+
+    desc="Set cluster option"
+    cmd="crm_attribute -n cluster-delay -v 60s"
+    test_assert $CRM_EX_OK
+
+    desc="Query new cluster option"
+    cmd="cibadmin -Q -o crm_config | grep cib-bootstrap-options-cluster-delay"
+    test_assert $CRM_EX_OK
+
+    desc="Query cluster options"
+    cmd="cibadmin -Q -o crm_config > $TMPXML"
+    test_assert $CRM_EX_OK
+
+    desc="Set no-quorum policy"
+    cmd="crm_attribute -n no-quorum-policy -v ignore"
+    test_assert $CRM_EX_OK
+
+    desc="Delete nvpair"
+    cmd="cibadmin -D -o crm_config --xml-text '<nvpair id=\"cib-bootstrap-options-cluster-delay\"/>'"
+    test_assert $CRM_EX_OK
+
+    desc="Create operation should fail"
+    cmd="cibadmin -C -o crm_config --xml-file $TMPXML"
+    test_assert $CRM_EX_EXISTS
+
+    desc="Modify cluster options section"
+    cmd="cibadmin -M -o crm_config --xml-file $TMPXML"
+    test_assert $CRM_EX_OK
+
+    desc="Query updated cluster option"
+    cmd="cibadmin -Q -o crm_config | grep cib-bootstrap-options-cluster-delay"
+    test_assert $CRM_EX_OK
+
+    desc="Set duplicate cluster option"
+    cmd="crm_attribute -n cluster-delay -v 40s -s duplicate"
+    test_assert $CRM_EX_OK
+
+    desc="Setting multiply defined cluster option should fail"
+    cmd="crm_attribute -n cluster-delay -v 30s"
+    test_assert $CRM_EX_MULTIPLE
+
+    desc="Set cluster option with -s"
+    cmd="crm_attribute -n cluster-delay -v 30s -s duplicate"
+    test_assert $CRM_EX_OK
+
+    desc="Delete cluster option with -i"
+    cmd="crm_attribute -n cluster-delay -D -i cib-bootstrap-options-cluster-delay"
+    test_assert $CRM_EX_OK
+
+    desc="Create node1 and bring it online"
+    cmd="crm_simulate --live-check --in-place --node-up=node1"
+    test_assert $CRM_EX_OK
+
+    desc="Create node attribute"
+    cmd="crm_attribute -n ram -v 1024M -N node1 -t nodes"
+    test_assert $CRM_EX_OK
+
+    desc="Query new node attribute"
+    cmd="cibadmin -Q -o nodes | grep node1-ram"
+    test_assert $CRM_EX_OK
+
+    desc="Set a transient (fail-count) node attribute"
+    cmd="crm_attribute -n fail-count-foo -v 3 -N node1 -t status"
+    test_assert $CRM_EX_OK
+
+    desc="Query a fail count"
+    cmd="crm_failcount --query -r foo -N node1"
+    test_assert $CRM_EX_OK
+
+    desc="Delete a transient (fail-count) node attribute"
+    cmd="crm_attribute -n fail-count-foo -D -N node1 -t status"
+    test_assert $CRM_EX_OK
+
+    desc="Digest calculation"
+    cmd="cibadmin -Q | cibadmin -5 -p 2>&1 > /dev/null"
+    test_assert $CRM_EX_OK
+
+    # This update will fail because it has version numbers
+    desc="Replace operation should fail"
+    cmd="cibadmin -R --xml-file $TMPORIG"
+    test_assert $CRM_EX_OLD
+
+    desc="Default standby value"
+    cmd="crm_standby -N node1 -G"
+    test_assert $CRM_EX_OK
+ 
+    desc="Set standby status"
+    cmd="crm_standby -N node1 -v true"
+    test_assert $CRM_EX_OK
+ 
+    desc="Query standby value"
+    cmd="crm_standby -N node1 -G"
+    test_assert $CRM_EX_OK
+ 
+    desc="Delete standby value"
+    cmd="crm_standby -N node1 -D"
+    test_assert $CRM_EX_OK
+
+    desc="Create a resource"
+    cmd="cibadmin -C -o resources --xml-text '<primitive id=\"dummy\" class=\"ocf\" provider=\"pacemaker\" type=\"Dummy\"/>'"
+    test_assert $CRM_EX_OK
+
+    desc="Create a resource meta attribute"
+    cmd="crm_resource -r dummy --meta -p is-managed -v false"
+    test_assert $CRM_EX_OK
+
+    desc="Query a resource meta attribute"
+    cmd="crm_resource -r dummy --meta -g is-managed"
+    test_assert $CRM_EX_OK
+
+    desc="Remove a resource meta attribute"
+    cmd="crm_resource -r dummy --meta -d is-managed"
+    test_assert $CRM_EX_OK
+
+    desc="Create a resource attribute"
+    cmd="crm_resource -r dummy -p delay -v 10s"
+    test_assert $CRM_EX_OK
+
+    desc="List the configured resources"
+    cmd="crm_resource -L"
+    test_assert $CRM_EX_OK
+
+    desc="Require a destination when migrating a resource that is stopped"
+    cmd="crm_resource -r dummy -M"
+    test_assert $CRM_EX_USAGE
+
+    desc="Don't support migration to non-existent locations"
+    cmd="crm_resource -r dummy -M -N i.dont.exist"
+    test_assert $CRM_EX_NOSUCH
+
+    desc="Create a fencing resource"
+    cmd="cibadmin -C -o resources --xml-text '<primitive id=\"Fence\" class=\"stonith\" type=\"fence_true\"/>'"
+    test_assert $CRM_EX_OK
+
+    desc="Bring resources online"
+    cmd="crm_simulate --live-check --in-place -S"
+    test_assert $CRM_EX_OK
+
+    desc="Try to move a resource to its existing location"
+    cmd="crm_resource -r dummy --move --host node1"
+    test_assert $CRM_EX_EXISTS
+
+    desc="Move a resource from its existing location"
+    cmd="crm_resource -r dummy --move"
+    test_assert $CRM_EX_OK
+
+    desc="Clear out constraints generated by --move"
+    cmd="crm_resource -r dummy --clear"
+    test_assert $CRM_EX_OK
+
+    desc="Default ticket granted state"
+    cmd="crm_ticket -t ticketA -G granted -d false"
+    test_assert $CRM_EX_OK
+
+    desc="Set ticket granted state"
+    cmd="crm_ticket -t ticketA -r --force"
+    test_assert $CRM_EX_OK
+
+    desc="Query ticket granted state"
+    cmd="crm_ticket -t ticketA -G granted"
+    test_assert $CRM_EX_OK
+
+    desc="Delete ticket granted state"
+    cmd="crm_ticket -t ticketA -D granted --force"
+    test_assert $CRM_EX_OK
+
+    desc="Make a ticket standby"
+    cmd="crm_ticket -t ticketA -s"
+    test_assert $CRM_EX_OK
+
+    desc="Query ticket standby state"
+    cmd="crm_ticket -t ticketA -G standby"
+    test_assert $CRM_EX_OK
+
+    desc="Activate a ticket"
+    cmd="crm_ticket -t ticketA -a"
+    test_assert $CRM_EX_OK
+
+    desc="Delete ticket standby state"
+    cmd="crm_ticket -t ticketA -D standby"
+    test_assert $CRM_EX_OK
+
+    desc="Ban a resource on unknown node"
+    cmd="crm_resource -r dummy -B -N host1"
+    test_assert $CRM_EX_NOSUCH
+
+    desc="Create two more nodes and bring them online"
+    cmd="crm_simulate --live-check --in-place --node-up=node2 --node-up=node3"
+    test_assert $CRM_EX_OK
+
+    desc="Ban dummy from node1"
+    cmd="crm_resource -r dummy -B -N node1"
+    test_assert $CRM_EX_OK
+
+    desc="Ban dummy from node2"
+    cmd="crm_resource -r dummy -B -N node2"
+    test_assert $CRM_EX_OK
+
+    desc="Relocate resources due to ban"
+    cmd="crm_simulate --live-check --in-place -S"
+    test_assert $CRM_EX_OK
+
+    desc="Move dummy to node1"
+    cmd="crm_resource -r dummy -M -N node1"
+    test_assert $CRM_EX_OK
+
+    desc="Clear implicit constraints for dummy on node2"
+    cmd="crm_resource -r dummy -U -N node2"
+    test_assert $CRM_EX_OK
+
+    desc="Drop the status section"
+    cmd="cibadmin -R -o status --xml-text '<status/>'"
+    test_assert $CRM_EX_OK 0
+    
+    desc="Create a clone"
+    cmd="cibadmin -C -o resources --xml-text '<clone id=\"test-clone\"><primitive id=\"test-primitive\" class=\"ocf\" provider=\"pacemaker\" type=\"Dummy\"/></clone>'"
+    test_assert $CRM_EX_OK 0
+
+    desc="Create a resource meta attribute"
+    cmd="crm_resource -r test-primitive --meta -p is-managed -v false"
+    test_assert $CRM_EX_OK
+
+    desc="Create a resource meta attribute in the primitive"
+    cmd="crm_resource -r test-primitive --meta -p is-managed -v false --force"
+    test_assert $CRM_EX_OK
+
+    desc="Update resource meta attribute with duplicates"
+    cmd="crm_resource -r test-clone --meta -p is-managed -v true"
+    test_assert $CRM_EX_OK
+
+    desc="Update resource meta attribute with duplicates (force clone)"
+    cmd="crm_resource -r test-clone --meta -p is-managed -v true --force"
+    test_assert $CRM_EX_OK
+
+    desc="Update child resource meta attribute with duplicates"
+    cmd="crm_resource -r test-primitive --meta -p is-managed -v false"
+    test_assert $CRM_EX_OK
+
+    desc="Delete resource meta attribute with duplicates"
+    cmd="crm_resource -r test-clone --meta -d is-managed"
+    test_assert $CRM_EX_OK
+
+    desc="Delete resource meta attribute in parent"
+    cmd="crm_resource -r test-primitive --meta -d is-managed"
+    test_assert $CRM_EX_OK
+
+    desc="Create a resource meta attribute in the primitive"
+    cmd="crm_resource -r test-primitive --meta -p is-managed -v false --force"
+    test_assert $CRM_EX_OK
+
+    desc="Update existing resource meta attribute"
+    cmd="crm_resource -r test-clone --meta -p is-managed -v true"
+    test_assert $CRM_EX_OK
+    
+    desc="Create a resource meta attribute in the parent"
+    cmd="crm_resource -r test-clone --meta -p is-managed -v true --force"
+    test_assert $CRM_EX_OK
+
+    desc="Copy resources"
+    cmd="cibadmin -Q -o resources > $TMPXML"
+    test_assert $CRM_EX_OK 0
+
+    desc="Delete resource paremt meta attribute (force)"
+    cmd="crm_resource -r test-clone --meta -d is-managed --force"
+    test_assert $CRM_EX_OK
+
+    desc="Restore duplicates"
+    cmd="cibadmin -R -o resources --xml-file $TMPXML"
+    test_assert $CRM_EX_OK
+
+    desc="Delete resource child meta attribute"
+    cmd="crm_resource -r test-primitive --meta -d is-managed"
+    test_assert $CRM_EX_OK
+
+    unset CIB_shadow_dir
+    rm -f "$TMPXML" "$TMPORIG"
+}
+
+function test_dates() {
+    desc="2014-01-01 00:30:00 - 1 Hour"
+    cmd="iso8601 -d '2014-01-01 00:30:00Z' -D P-1H -E '2013-12-31 23:30:00Z'"
+    test_assert $CRM_EX_OK 0
+
+    for y in 06 07 08 09 10 11 12 13 14 15 16 17 18; do
+        desc="20$y-W01-7"
+        cmd="iso8601 -d '20$y-W01-7 00Z'"
+        test_assert $CRM_EX_OK 0
+
+        desc="20$y-W01-7 - round-trip"
+        cmd="iso8601 -d '20$y-W01-7 00Z' -W -E '20$y-W01-7 00:00:00Z'"
+        test_assert $CRM_EX_OK 0
+
+        desc="20$y-W01-1"
+        cmd="iso8601 -d '20$y-W01-1 00Z'"
+        test_assert $CRM_EX_OK 0
+
+        desc="20$y-W01-1 - round-trip"
+        cmd="iso8601 -d '20$y-W01-1 00Z' -W -E '20$y-W01-1 00:00:00Z'"
+        test_assert $CRM_EX_OK 0
+    done
+
+    desc="2009-W53-07"
+    cmd="iso8601 -d '2009-W53-7 00:00:00Z' -W -E '2009-W53-7 00:00:00Z'"
+    test_assert $CRM_EX_OK 0
+
+    desc="2009-01-31 + 1 Month"
+    cmd="iso8601 -d '2009-01-31 00:00:00Z' -D P1M -E '2009-02-28 00:00:00Z'"
+    test_assert $CRM_EX_OK 0
+
+    desc="2009-01-31 + 2 Months"
+    cmd="iso8601 -d '2009-01-31 00:00:00Z' -D P2M -E '2009-03-31 00:00:00Z'"
+    test_assert $CRM_EX_OK 0
+
+    desc="2009-01-31 + 3 Months"
+    cmd="iso8601 -d '2009-01-31 00:00:00Z' -D P3M -E '2009-04-30 00:00:00Z'"
+    test_assert $CRM_EX_OK 0
+
+    desc="2009-03-31 - 1 Month"
+    cmd="iso8601 -d '2009-03-31 00:00:00Z' -D P-1M -E '2009-02-28 00:00:00Z'"
+    test_assert $CRM_EX_OK 0
+}
+
+function test_acl_loop() {
+    local TMPXML="$1"
+
+    # Make sure we're rejecting things for the right reasons
+    export PCMK_trace_functions=__xml_acl_check,__xml_acl_post_process
+    export PCMK_stderr=1
+
+    CIB_user=root cibadmin --replace --xml-text '<resources/>'
+
+    export CIB_user=unknownguy
+    desc="$CIB_user: Query configuration"
+    cmd="cibadmin -Q"
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
+
+    desc="$CIB_user: Set enable-acl"
+    cmd="crm_attribute -n enable-acl -v false"
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
+
+    desc="$CIB_user: Set stonith-enabled"
+    cmd="crm_attribute -n stonith-enabled -v false"
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
+
+    desc="$CIB_user: Create a resource"
+    cmd="cibadmin -C -o resources --xml-text '<primitive id=\"dummy\" class=\"ocf\" provider=\"pacemaker\" type=\"Dummy\"/>'"
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
+
+    export CIB_user=l33t-haxor
+    desc="$CIB_user: Query configuration"
+    cmd="cibadmin -Q"
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
+
+    desc="$CIB_user: Set enable-acl"
+    cmd="crm_attribute -n enable-acl -v false"
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
+
+    desc="$CIB_user: Set stonith-enabled"
+    cmd="crm_attribute -n stonith-enabled -v false"
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
+
+    desc="$CIB_user: Create a resource"
+    cmd="cibadmin -C -o resources --xml-text '<primitive id=\"dummy\" class=\"ocf\" provider=\"pacemaker\" type=\"Dummy\"/>'"
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
+
+    export CIB_user=niceguy
+    desc="$CIB_user: Query configuration"
+    cmd="cibadmin -Q"
+    test_assert $CRM_EX_OK 0
+
+    desc="$CIB_user: Set enable-acl"
+    cmd="crm_attribute -n enable-acl -v false"
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
+
+    desc="$CIB_user: Set stonith-enabled"
+    cmd="crm_attribute -n stonith-enabled -v false"
+    test_assert $CRM_EX_OK
+
+    desc="$CIB_user: Create a resource"
+    cmd="cibadmin -C -o resources --xml-text '<primitive id=\"dummy\" class=\"ocf\" provider=\"pacemaker\" type=\"Dummy\"/>'"
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
+
+    export CIB_user=root
+    desc="$CIB_user: Query configuration"
+    cmd="cibadmin -Q"
+    test_assert $CRM_EX_OK 0
+
+    desc="$CIB_user: Set stonith-enabled"
+    cmd="crm_attribute -n stonith-enabled -v true"
+    test_assert $CRM_EX_OK
+
+    desc="$CIB_user: Create a resource"
+    cmd="cibadmin -C -o resources --xml-text '<primitive id=\"dummy\" class=\"ocf\" provider=\"pacemaker\" type=\"Dummy\"/>'"
+    test_assert $CRM_EX_OK
+
+    export CIB_user=l33t-haxor
+
+    desc="$CIB_user: Create a resource meta attribute"
+    cmd="crm_resource -r dummy --meta -p target-role -v Stopped"
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
+
+    desc="$CIB_user: Query a resource meta attribute"
+    cmd="crm_resource -r dummy --meta -g target-role"
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
+
+    desc="$CIB_user: Remove a resource meta attribute"
+    cmd="crm_resource -r dummy --meta -d target-role"
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
+
+    export CIB_user=niceguy
+
+    desc="$CIB_user: Create a resource meta attribute"
+    cmd="crm_resource -r dummy --meta -p target-role -v Stopped"
+    test_assert $CRM_EX_OK
+
+    desc="$CIB_user: Query a resource meta attribute"
+    cmd="crm_resource -r dummy --meta -g target-role"
+    test_assert $CRM_EX_OK
+
+    desc="$CIB_user: Remove a resource meta attribute"
+    cmd="crm_resource -r dummy --meta -d target-role"
+    test_assert $CRM_EX_OK
+
+    desc="$CIB_user: Create a resource meta attribute"
+    cmd="crm_resource -r dummy --meta -p target-role -v Started"
+    test_assert $CRM_EX_OK
+
+    export CIB_user=badidea
+    desc="$CIB_user: Query configuration - implied deny"
+    cmd="cibadmin -Q"
+    test_assert $CRM_EX_OK 0
+
+    export CIB_user=betteridea
+    desc="$CIB_user: Query configuration - explicit deny"
+    cmd="cibadmin -Q"
+    test_assert $CRM_EX_OK 0
+
+    CIB_user=root cibadmin -Q > "$TMPXML"
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin --delete --xml-text '<acls/>'
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
+
+    export CIB_user=niceguy
+    desc="$CIB_user: Replace - remove acls"
+    cmd="cibadmin --replace --xml-file $TMPXML"
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
+
+    CIB_user=root cibadmin -Q > "$TMPXML"
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -C -o resources --xml-text '<primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>'
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
+
+    desc="$CIB_user: Replace - create resource"
+    cmd="cibadmin --replace --xml-file $TMPXML"
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
+
+    CIB_user=root cibadmin -Q > "$TMPXML"
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" crm_attribute -n enable-acl -v false
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
+
+    desc="$CIB_user: Replace - modify attribute (deny)"
+    cmd="cibadmin --replace --xml-file $TMPXML"
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
+
+    CIB_user=root cibadmin -Q > "$TMPXML"
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin --replace --xml-text '<nvpair id="cib-bootstrap-options-enable-acl" name="enable-acl"/>'
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
+
+    desc="$CIB_user: Replace - delete attribute (deny)"
+    cmd="cibadmin --replace --xml-file $TMPXML"
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
+
+    CIB_user=root cibadmin -Q > "$TMPXML"
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin --modify --xml-text '<primitive id="dummy" description="nothing interesting"/>'
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
+
+    desc="$CIB_user: Replace - create attribute (deny)"
+    cmd="cibadmin --replace --xml-file $TMPXML"
+    test_assert $CRM_EX_INSUFFICIENT_PRIV 0
+
+    CIB_user=bob
+    CIB_user=root cibadmin -Q > "$TMPXML"
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin --modify --xml-text '<primitive id="dummy" description="nothing interesting"/>'
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
+
+    desc="$CIB_user: Replace - create attribute (allow)"
+    cmd="cibadmin --replace -o resources --xml-file $TMPXML"
+    test_assert $CRM_EX_OK 0
+
+    CIB_user=root cibadmin -Q > "$TMPXML"
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin --modify --xml-text '<primitive id="dummy" description="something interesting"/>'
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
+
+    desc="$CIB_user: Replace - modify attribute (allow)"
+    cmd="cibadmin --replace -o resources --xml-file $TMPXML"
+    test_assert $CRM_EX_OK 0
+
+    CIB_user=root cibadmin -Q > "$TMPXML"
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin --replace -o resources --xml-text '<primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>'
+    CIB_user=root CIB_file="$TMPXML" CIB_shadow="" cibadmin -Ql
+
+    desc="$CIB_user: Replace - delete attribute (allow)"
+    cmd="cibadmin --replace -o resources --xml-file $TMPXML"
+    test_assert $CRM_EX_OK 0
+}
+
+function test_acls() {
+    local SHADOWPATH
+    local TMPXML=$(mktemp --tmpdir cts-cli.acls.xml.XXXXXXXXXX)
+    export CIB_shadow_dir="${shadow_dir}"
+
+    $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow --validate-with pacemaker-1.3 2>&1
+    export CIB_shadow=$shadow
+
+    cat <<EOF > "$TMPXML"
+    <acls>
+      <acl_user id="l33t-haxor">
+        <deny id="crook-nothing" xpath="/cib"/>
+      </acl_user>
+      <acl_user id="niceguy">
+        <role_ref id="observer"/>
+      </acl_user>
+      <acl_user id="bob">
+        <role_ref id="admin"/>
+      </acl_user>
+      <acl_role id="observer">
+        <read id="observer-read-1" xpath="/cib"/>
+        <write id="observer-write-1" xpath="//nvpair[@name=&apos;stonith-enabled&apos;]"/>
+        <write id="observer-write-2" xpath="//nvpair[@name=&apos;target-role&apos;]"/>
+      </acl_role>
+      <acl_role id="admin">
+        <read id="admin-read-1" xpath="/cib"/>
+        <write id="admin-write-1" xpath="//resources"/>
+      </acl_role>
+    </acls>
+EOF
+
+    desc="Configure some ACLs"
+    cmd="cibadmin -M -o acls --xml-file $TMPXML"
+    test_assert $CRM_EX_OK
+
+    desc="Enable ACLs"
+    cmd="crm_attribute -n enable-acl -v true"
+    test_assert $CRM_EX_OK
+
+    desc="Set cluster option"
+    cmd="crm_attribute -n no-quorum-policy -v ignore"
+    test_assert $CRM_EX_OK
+
+    desc="New ACL"
+    cmd="cibadmin --create -o acls --xml-text '<acl_user id=\"badidea\"><read id=\"badidea-resources\" xpath=\"//meta_attributes\"/></acl_user>'"
+    test_assert $CRM_EX_OK
+
+    desc="Another ACL"
+    cmd="cibadmin --create -o acls --xml-text '<acl_user id=\"betteridea\"><read id=\"betteridea-resources\" xpath=\"//meta_attributes\"/></acl_user>'"
+    test_assert $CRM_EX_OK
+
+    desc="Updated ACL"
+    cmd="cibadmin --replace -o acls --xml-text '<acl_user id=\"betteridea\"><deny id=\"betteridea-nothing\" xpath=\"/cib\"/><read id=\"betteridea-resources\" xpath=\"//meta_attributes\"/></acl_user>'"
+    test_assert $CRM_EX_OK
+
+    test_acl_loop "$TMPXML"
+
+    printf "\n\n    !#!#!#!#! Upgrading to latest CIB schema and re-testing !#!#!#!#!\n"
+    printf "\nUpgrading to latest CIB schema and re-testing\n" 1>&2
+
+    export CIB_user=root
+    desc="$CIB_user: Upgrade to latest CIB schema"
+    cmd="cibadmin --upgrade --force -V"
+    test_assert $CRM_EX_OK
+
+    SHADOWPATH="$(crm_shadow --file)"
+    # sed -i isn't portable :-(
+    cp -p "$SHADOWPATH" "${SHADOWPATH}.$$" # to keep permissions
+    sed -e 's/epoch=.2/epoch=\"6/g' -e 's/admin_epoch=.1/admin_epoch=\"0/g' \
+        "$SHADOWPATH" > "${SHADOWPATH}.$$"
+    mv -- "${SHADOWPATH}.$$" "$SHADOWPATH"
+
+    test_acl_loop "$TMPXML"
+
+    unset CIB_shadow_dir
+    rm -f "$TMPXML"
+}
+
+function test_validity() {
+    local TMPGOOD=$(mktemp --tmpdir cts-cli.validity.good.xml.XXXXXXXXXX)
+    local TMPBAD=$(mktemp --tmpdir cts-cli.validity.bad.xml.XXXXXXXXXX)
+    export CIB_shadow_dir="${shadow_dir}"
+
+    $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow --validate-with pacemaker-1.2 2>&1
+    export CIB_shadow=$shadow
+    export PCMK_trace_functions=update_validation,cli_config_update
+    export PCMK_stderr=1
+
+    cibadmin -C -o resources --xml-text '<primitive id="dummy1" class="ocf" provider="pacemaker" type="Dummy"/>'
+    cibadmin -C -o resources --xml-text '<primitive id="dummy2" class="ocf" provider="pacemaker" type="Dummy"/>'
+    cibadmin -C -o constraints --xml-text '<rsc_order id="ord_1-2" first="dummy1" first-action="start" then="dummy2"/>'
+    cibadmin -Q > "$TMPGOOD"
+
+
+    desc="Try to make resulting CIB invalid (enum violation)"
+    cmd="cibadmin -M -o constraints --xml-text '<rsc_order id=\"ord_1-2\" first=\"dummy1\" first-action=\"break\" then=\"dummy2\"/>'"
+    test_assert $CRM_EX_CONFIG
+
+    sed 's|"start"|"break"|' "$TMPGOOD" > "$TMPBAD"
+    desc="Run crm_simulate with invalid CIB (enum violation)"
+    cmd="crm_simulate -x $TMPBAD -S"
+    test_assert $CRM_EX_CONFIG 0
+
+
+    desc="Try to make resulting CIB invalid (unrecognized validate-with)"
+    cmd="cibadmin -M --xml-text '<cib validate-with=\"pacemaker-9999.0\"/>'"
+    test_assert $CRM_EX_CONFIG
+
+    sed 's|"pacemaker-1.2"|"pacemaker-9999.0"|' "$TMPGOOD" > "$TMPBAD"
+    desc="Run crm_simulate with invalid CIB (unrecognized validate-with)"
+    cmd="crm_simulate -x $TMPBAD -S"
+    test_assert $CRM_EX_CONFIG 0
+
+
+    desc="Try to make resulting CIB invalid, but possibly recoverable (valid with X.Y+1)"
+    cmd="cibadmin -C -o configuration --xml-text '<tags/>'"
+    test_assert $CRM_EX_CONFIG
+
+    sed 's|</configuration>|<tags/>\0|' "$TMPGOOD" > "$TMPBAD"
+    desc="Run crm_simulate with invalid, but possibly recoverable CIB (valid with X.Y+1)"
+    cmd="crm_simulate -x $TMPBAD -S"
+    test_assert $CRM_EX_OK 0
+
+
+    sed 's|\s\s*validate-with="[^"]*"||' "$TMPGOOD" > "$TMPBAD"
+    desc="Make resulting CIB valid, although without validate-with attribute"
+    cmd="cibadmin -R --xml-file $TMPBAD"
+    test_assert $CRM_EX_OK
+
+    desc="Run crm_simulate with valid CIB, but without validate-with attribute"
+    cmd="crm_simulate -x $TMPBAD -S"
+    test_assert $CRM_EX_OK 0
+
+
+    # this will just disable validation and accept the config, outputting
+    # validation errors
+    sed -e 's|\s\s*validate-with="[^"]*"||' \
+        -e 's|\(\s\s*epoch="[^"]*\)"|\10"|' -e 's|"start"|"break"|' \
+        "$TMPGOOD" > "$TMPBAD"
+    desc="Make resulting CIB invalid, and without validate-with attribute"
+    cmd="cibadmin -R --xml-file $TMPBAD"
+    test_assert $CRM_EX_OK
+
+    desc="Run crm_simulate with invalid CIB, also without validate-with attribute"
+    cmd="crm_simulate -x $TMPBAD -S"
+    test_assert $CRM_EX_OK 0
+
+    unset CIB_shadow_dir
+    rm -f "$TMPGOOD" "$TMPBAD"
+}
+
+# Process command-line arguments
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -t)
+            tests="$2"
+            shift 2
+            ;;
+        -V|--verbose)
+            verbose=1
+            shift
+            ;;
+        -v|--valgrind)
+            export G_SLICE=always-malloc
+            VALGRIND_CMD="valgrind $VALGRIND_OPTS"
+            shift
+            ;;
+        -s)
+            do_save=1
+            shift
+            ;;
+        -p)
+            export PATH="$2:$PATH"
+            shift
+            ;;
+        --help)
+            echo "$USAGE_TEXT"
+            exit $CRM_EX_OK
+            ;;
+        *)
+            echo "error: unknown option $1"
+            echo
+            echo "$USAGE_TEXT"
+            exit $CRM_EX_USAGE
+            ;;
+    esac
+done
+
+for t in $tests; do
+    case "$t" in
+        dates) ;;
+        tools) ;;
+        acls) ;;
+        validity) ;;
+        *)
+            echo "error: unknown test $t"
+            echo
+            echo "$USAGE_TEXT"
+            exit $CRM_EX_USAGE
+            ;;
+    esac
+done
+
+# Check whether we're running from source directory
+SRCDIR=$(dirname $test_home)
+if [ -x "$SRCDIR/tools/crm_simulate" ]; then
+    export PATH="$SRCDIR/tools:$PATH"
+    echo "Using local binaries from: $SRCDIR/tools"
+
+    if [ -x "$SRCDIR/xml" ]; then
+        export PCMK_schema_directory="$SRCDIR/xml"
+        echo "Using local schemas from: $PCMK_schema_directory"
+    fi
+fi
+
+for t in $tests; do
+    echo "Testing $t"
+    TMPFILE=$(mktemp --tmpdir cts-cli.$t.XXXXXXXXXX)
+    eval TMPFILE_$t="$TMPFILE"
+    test_$t > "$TMPFILE"
+
+    # sed -i isn't portable :-(
+    sed -e 's/cib-last-written.*>/>/'\
+        -e 's/ last-run=\"[0-9]*\"//'\
+        -e 's/crm_feature_set="[^"]*" //'\
+        -e 's/validate-with="[^"]*" //'\
+        -e 's/Created new pacemaker-.* configuration/Created new pacemaker configuration/'\
+        -e 's/.*\(__xml_acl_check\|__xml_acl_post_process\|unpack_resources\|update_validation\|unpack_simple_rsc_order\)@.*\.c:[0-9][0-9]*)/\1/g' \
+        -e 's/ last-rc-change=\"[0-9]*\"//'\
+        -e 's|^/tmp/cts-cli\.validity\.bad.xml\.[^:]*:|validity.bad.xml:|'\
+        -e 's/^Entity: line [0-9][0-9]*: //'\
+        -e 's/\(validation ([0-9][0-9]* of \)[0-9][0-9]*\().*\)/\1X\2/' \
+        "$TMPFILE" > "${TMPFILE}.$$"
+    mv -- "${TMPFILE}.$$" "$TMPFILE"
+
+    if [ $do_save -eq 1 ]; then
+        cp "$TMPFILE" $test_home/cli/regression.$t.exp
+    fi
+done
+
+rm -rf "${shadow_dir}"
+    
+failed=0
+
+if [ $verbose -eq 1 ]; then
+    echo -e "\n\nResults"
+fi
+for t in $tests; do
+    eval TMPFILE="\$TMPFILE_$t"
+    if [ $verbose -eq 1 ]; then
+        diff -wu $test_home/cli/regression.$t.exp "$TMPFILE"
+    else
+        diff -w $test_home/cli/regression.$t.exp "$TMPFILE" >/dev/null 2>&1
+    fi
+    if [ $? -ne 0 ]; then
+        failed=1
+    fi
+done
+
+echo -e "\n\nSummary"
+for t in $tests; do
+    eval TMPFILE="\$TMPFILE_$t"
+    grep -e "^*" "$TMPFILE"
+done
+
+if [ $num_errors -ne 0 ]; then
+    echo "$num_errors tests failed; see output in:"
+    for t in $tests; do
+        eval TMPFILE="\$TMPFILE_$t"
+        echo "    $TMPFILE"
+    done
+    exit $CRM_EX_ERROR
+
+elif [ $failed -eq 1 ]; then
+    echo "$num_passed tests passed but output was unexpected; see output in:"
+    for t in $tests; do
+        eval TMPFILE="\$TMPFILE_$t"
+        echo "    $TMPFILE"
+    done
+    exit $CRM_EX_DIGEST
+
+else
+    echo $num_passed tests passed
+    for t in $tests; do
+        eval TMPFILE="\$TMPFILE_$t"
+        rm -f "$TMPFILE"
+    done
+    crm_shadow --force --delete $shadow >/dev/null 2>&1
+    exit $CRM_EX_OK
+fi

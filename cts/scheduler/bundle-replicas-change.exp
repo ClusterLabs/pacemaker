@@ -1,0 +1,586 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <rsc_op id="37" operation="monitor" operation_key="httpd:0_monitor_10000" on_node="httpd-bundle-0" on_node_uuid="httpd-bundle-0" router_node="rh74-test">
+        <primitive id="httpd:0" class="ocf" provider="heartbeat" type="apache"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="3" CRM_meta_globally_unique="true" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="httpd-bundle-0" CRM_meta_on_node_uuid="httpd-bundle-0" CRM_meta_physical_host="rh74-test" CRM_meta_timeout="40000"  pcmk_external_ip="192.168.20.188"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="19" operation="start" operation_key="httpd-bundle-0_start_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="36" operation="start" operation_key="httpd:0_start_0" on_node="httpd-bundle-0" on_node_uuid="httpd-bundle-0" router_node="rh74-test"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <rsc_op id="36" operation="start" operation_key="httpd:0_start_0" on_node="httpd-bundle-0" on_node_uuid="httpd-bundle-0" router_node="rh74-test">
+        <primitive id="httpd:0" class="ocf" provider="heartbeat" type="apache"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="3" CRM_meta_globally_unique="true" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="httpd-bundle-0" CRM_meta_on_node_uuid="httpd-bundle-0" CRM_meta_physical_host="rh74-test" CRM_meta_timeout="200000"  pcmk_external_ip="192.168.20.188"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="6" operation="start" operation_key="httpd-bundle-docker-0_start_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="19" operation="start" operation_key="httpd-bundle-0_start_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="42" operation="start" operation_key="httpd-bundle-clone_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <rsc_op id="8" operation="monitor" operation_key="httpd:0_monitor_0" on_node="httpd-bundle-0" on_node_uuid="httpd-bundle-0" router_node="rh74-test">
+        <primitive id="httpd:0" class="ocf" provider="heartbeat" type="apache"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="3" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_on_node="httpd-bundle-0" CRM_meta_on_node_uuid="httpd-bundle-0" CRM_meta_op_target_rc="7" CRM_meta_physical_host="rh74-test" CRM_meta_timeout="40000"  pcmk_external_ip="192.168.20.188"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="19" operation="start" operation_key="httpd-bundle-0_start_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <rsc_op id="39" operation="monitor" operation_key="httpd:1_monitor_10000" on_node="httpd-bundle-1" on_node_uuid="httpd-bundle-1" router_node="rh74-test">
+        <primitive id="httpd:1" class="ocf" provider="heartbeat" type="apache"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="3" CRM_meta_globally_unique="true" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="httpd-bundle-1" CRM_meta_on_node_uuid="httpd-bundle-1" CRM_meta_physical_host="rh74-test" CRM_meta_timeout="40000"  pcmk_external_ip="192.168.20.189"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="24" operation="start" operation_key="httpd-bundle-1_start_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="38" operation="start" operation_key="httpd:1_start_0" on_node="httpd-bundle-1" on_node_uuid="httpd-bundle-1" router_node="rh74-test"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="4">
+    <action_set>
+      <rsc_op id="38" operation="start" operation_key="httpd:1_start_0" on_node="httpd-bundle-1" on_node_uuid="httpd-bundle-1" router_node="rh74-test">
+        <primitive id="httpd:1" class="ocf" provider="heartbeat" type="apache"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="3" CRM_meta_clone_node_max="3" CRM_meta_globally_unique="true" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="httpd-bundle-1" CRM_meta_on_node_uuid="httpd-bundle-1" CRM_meta_physical_host="rh74-test" CRM_meta_timeout="200000"  pcmk_external_ip="192.168.20.189"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="22" operation="start" operation_key="httpd-bundle-docker-1_start_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="24" operation="start" operation_key="httpd-bundle-1_start_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="36" operation="start" operation_key="httpd:0_start_0" on_node="httpd-bundle-0" on_node_uuid="httpd-bundle-0" router_node="rh74-test"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="42" operation="start" operation_key="httpd-bundle-clone_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="5">
+    <action_set>
+      <rsc_op id="41" operation="monitor" operation_key="httpd:2_monitor_10000" on_node="httpd-bundle-2" on_node_uuid="httpd-bundle-2" router_node="rh74-test">
+        <primitive id="httpd:2" class="ocf" provider="heartbeat" type="apache"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="3" CRM_meta_globally_unique="true" CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="httpd-bundle-2" CRM_meta_on_node_uuid="httpd-bundle-2" CRM_meta_physical_host="rh74-test" CRM_meta_timeout="40000"  pcmk_external_ip="192.168.20.190"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="30" operation="start" operation_key="httpd-bundle-2_start_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="40" operation="start" operation_key="httpd:2_start_0" on_node="httpd-bundle-2" on_node_uuid="httpd-bundle-2" router_node="rh74-test"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="6">
+    <action_set>
+      <rsc_op id="40" operation="start" operation_key="httpd:2_start_0" on_node="httpd-bundle-2" on_node_uuid="httpd-bundle-2" router_node="rh74-test">
+        <primitive id="httpd:2" class="ocf" provider="heartbeat" type="apache"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="3" CRM_meta_clone_node_max="3" CRM_meta_globally_unique="true" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="httpd-bundle-2" CRM_meta_on_node_uuid="httpd-bundle-2" CRM_meta_physical_host="rh74-test" CRM_meta_timeout="200000"  pcmk_external_ip="192.168.20.190"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="28" operation="start" operation_key="httpd-bundle-docker-2_start_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="30" operation="start" operation_key="httpd-bundle-2_start_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="38" operation="start" operation_key="httpd:1_start_0" on_node="httpd-bundle-1" on_node_uuid="httpd-bundle-1" router_node="rh74-test"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="42" operation="start" operation_key="httpd-bundle-clone_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="7" priority="1000000">
+    <action_set>
+      <pseudo_event id="43" operation="running" operation_key="httpd-bundle-clone_running_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="3" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="36" operation="start" operation_key="httpd:0_start_0" on_node="httpd-bundle-0" on_node_uuid="httpd-bundle-0" router_node="rh74-test"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="38" operation="start" operation_key="httpd:1_start_0" on_node="httpd-bundle-1" on_node_uuid="httpd-bundle-1" router_node="rh74-test"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="40" operation="start" operation_key="httpd:2_start_0" on_node="httpd-bundle-2" on_node_uuid="httpd-bundle-2" router_node="rh74-test"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="42" operation="start" operation_key="httpd-bundle-clone_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="8">
+    <action_set>
+      <pseudo_event id="42" operation="start" operation_key="httpd-bundle-clone_start_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="3" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="8" operation="monitor" operation_key="httpd:0_monitor_0" on_node="httpd-bundle-0" on_node_uuid="httpd-bundle-0" router_node="rh74-test"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="10" operation="monitor" operation_key="httpd-bundle-docker-1_monitor_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="13" operation="monitor" operation_key="httpd-bundle-docker-2_monitor_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="32" operation="start" operation_key="httpd-bundle_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="9">
+    <action_set>
+      <rsc_op id="17" operation="stop" operation_key="httpd-bundle-docker-0_stop_0" on_node="rh74-test" on_node_uuid="3232287163">
+        <primitive id="httpd-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="rh74-test" CRM_meta_on_node_uuid="3232287163" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="pcmktest:http" monitor_cmd="/bin/true" mount_points="/var/local/containers/httpd-bundle-0,/var/log/pacemaker/bundles/httpd-bundle-0,/var/log/pacemaker/bundles/httpd-bundle-0" reuse="false" run_cmd="/usr/sbin/pacemaker-remoted" run_opts=" --restart=no -h httpd-bundle-0 -e PCMK_stderr=1 -e PCMK_remote_port=3121 -v /var/local/containers/httpd-bundle-0:/var/www/html:rw -v /var/log/pacemaker/bundles/httpd-bundle-0:/etc/httpd/logs:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/httpd-bundle-0:/var/log -p 192.168.20.188:80:80 -p 192.168.20.188:3121:3121 --log-driver=journald  --add-host=httpd-bundle-0:192.168.20.188 --add-host=httpd-bundle-1:192.168.20.189 --add-host=httpd-bundle-2:192.168.20.190"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="18" operation="stop" operation_key="httpd-bundle-0_stop_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="34" operation="stop" operation_key="httpd-bundle_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="10">
+    <action_set>
+      <rsc_op id="6" operation="start" operation_key="httpd-bundle-docker-0_start_0" on_node="rh74-test" on_node_uuid="3232287163">
+        <primitive id="httpd-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="rh74-test" CRM_meta_on_node_uuid="3232287163" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="pcmktest:http" monitor_cmd="/bin/true" mount_points="/var/local/containers/httpd-bundle-0,/var/log/pacemaker/bundles/httpd-bundle-0,/var/log/pacemaker/bundles/httpd-bundle-0" reuse="false" run_cmd="/usr/sbin/pacemaker-remoted" run_opts=" --restart=no -h httpd-bundle-0 -e PCMK_stderr=1 -e PCMK_remote_port=3121 -v /var/local/containers/httpd-bundle-0:/var/www/html:rw -v /var/log/pacemaker/bundles/httpd-bundle-0:/etc/httpd/logs:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/httpd-bundle-0:/var/log -p 192.168.20.188:80:80 -p 192.168.20.188:3121:3121 --log-driver=journald  --add-host=httpd-bundle-0:192.168.20.188 --add-host=httpd-bundle-1:192.168.20.189 --add-host=httpd-bundle-2:192.168.20.190"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="17" operation="stop" operation_key="httpd-bundle-docker-0_stop_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="32" operation="start" operation_key="httpd-bundle_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="11">
+    <action_set>
+      <rsc_op id="2" operation="monitor" operation_key="httpd-bundle-docker-0_monitor_60000" on_node="rh74-test" on_node_uuid="3232287163">
+        <primitive id="httpd-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="rh74-test" CRM_meta_on_node_uuid="3232287163" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="pcmktest:http" monitor_cmd="/bin/true" mount_points="/var/local/containers/httpd-bundle-0,/var/log/pacemaker/bundles/httpd-bundle-0,/var/log/pacemaker/bundles/httpd-bundle-0" reuse="false" run_cmd="/usr/sbin/pacemaker-remoted" run_opts=" --restart=no -h httpd-bundle-0 -e PCMK_stderr=1 -e PCMK_remote_port=3121 -v /var/local/containers/httpd-bundle-0:/var/www/html:rw -v /var/log/pacemaker/bundles/httpd-bundle-0:/etc/httpd/logs:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/httpd-bundle-0:/var/log -p 192.168.20.188:80:80 -p 192.168.20.188:3121:3121 --log-driver=journald  --add-host=httpd-bundle-0:192.168.20.188 --add-host=httpd-bundle-1:192.168.20.189 --add-host=httpd-bundle-2:192.168.20.190"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="6" operation="start" operation_key="httpd-bundle-docker-0_start_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="12">
+    <action_set>
+      <rsc_op id="19" operation="start" operation_key="httpd-bundle-0_start_0" on_node="rh74-test" on_node_uuid="3232287163">
+        <primitive id="httpd-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="httpd-bundle-docker-0" CRM_meta_on_node="rh74-test" CRM_meta_on_node_uuid="3232287163" CRM_meta_timeout="20000" addr="192.168.20.188"  port="3121"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="6" operation="start" operation_key="httpd-bundle-docker-0_start_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="18" operation="stop" operation_key="httpd-bundle-0_stop_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="13">
+    <action_set>
+      <rsc_op id="18" operation="stop" operation_key="httpd-bundle-0_stop_0" on_node="rh74-test" on_node_uuid="3232287163">
+        <primitive id="httpd-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="httpd-bundle-docker-0" CRM_meta_on_node="rh74-test" CRM_meta_on_node_uuid="3232287163" CRM_meta_timeout="20000" addr="192.168.20.188"  port="3121"/>
+        <downed>
+          <node id="httpd-bundle-0"/>
+        </downed>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="46" operation="stop" operation_key="httpd_stop_0" on_node="httpd-bundle-0" on_node_uuid="httpd-bundle-0" router_node="rh74-test"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="14">
+    <action_set>
+      <rsc_op id="3" operation="monitor" operation_key="httpd-bundle-0_monitor_30000" on_node="rh74-test" on_node_uuid="3232287163">
+        <primitive id="httpd-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="httpd-bundle-docker-0" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="rh74-test" CRM_meta_on_node_uuid="3232287163" CRM_meta_timeout="30000" addr="192.168.20.188"  port="3121"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="19" operation="start" operation_key="httpd-bundle-0_start_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="15">
+    <action_set>
+      <rsc_op id="21" operation="monitor" operation_key="httpd-bundle-ip-192.168.20.189_monitor_60000" on_node="rh74-test" on_node_uuid="3232287163">
+        <primitive id="httpd-bundle-ip-192.168.20.189" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="rh74-test" CRM_meta_on_node_uuid="3232287163" CRM_meta_timeout="20000" cidr_netmask="24"  ip="192.168.20.189" nic="ens192"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="20" operation="start" operation_key="httpd-bundle-ip-192.168.20.189_start_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="16">
+    <action_set>
+      <rsc_op id="20" operation="start" operation_key="httpd-bundle-ip-192.168.20.189_start_0" on_node="rh74-test" on_node_uuid="3232287163">
+        <primitive id="httpd-bundle-ip-192.168.20.189" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_on_node="rh74-test" CRM_meta_on_node_uuid="3232287163" CRM_meta_timeout="20000" cidr_netmask="24"  ip="192.168.20.189" nic="ens192"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="9" operation="monitor" operation_key="httpd-bundle-ip-192.168.20.189_monitor_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="17">
+    <action_set>
+      <rsc_op id="9" operation="monitor" operation_key="httpd-bundle-ip-192.168.20.189_monitor_0" on_node="rh74-test" on_node_uuid="3232287163">
+        <primitive id="httpd-bundle-ip-192.168.20.189" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_on_node="rh74-test" CRM_meta_on_node_uuid="3232287163" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" cidr_netmask="24"  ip="192.168.20.189" nic="ens192"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="18">
+    <action_set>
+      <rsc_op id="23" operation="monitor" operation_key="httpd-bundle-docker-1_monitor_60000" on_node="rh74-test" on_node_uuid="3232287163">
+        <primitive id="httpd-bundle-docker-1" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="rh74-test" CRM_meta_on_node_uuid="3232287163" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="pcmktest:http" monitor_cmd="/bin/true" mount_points="/var/local/containers/httpd-bundle-1,/var/log/pacemaker/bundles/httpd-bundle-1,/var/log/pacemaker/bundles/httpd-bundle-1" reuse="false" run_cmd="/usr/sbin/pacemaker-remoted" run_opts=" --restart=no -h httpd-bundle-1 -e PCMK_stderr=1 -e PCMK_remote_port=3121 -v /var/local/containers/httpd-bundle-1:/var/www/html:rw -v /var/log/pacemaker/bundles/httpd-bundle-1:/etc/httpd/logs:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/httpd-bundle-1:/var/log -p 192.168.20.189:80:80 -p 192.168.20.189:3121:3121 --log-driver=journald  --add-host=httpd-bundle-0:192.168.20.188 --add-host=httpd-bundle-1:192.168.20.189 --add-host=httpd-bundle-2:192.168.20.190"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="22" operation="start" operation_key="httpd-bundle-docker-1_start_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="19">
+    <action_set>
+      <rsc_op id="22" operation="start" operation_key="httpd-bundle-docker-1_start_0" on_node="rh74-test" on_node_uuid="3232287163">
+        <primitive id="httpd-bundle-docker-1" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="rh74-test" CRM_meta_on_node_uuid="3232287163" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="pcmktest:http" monitor_cmd="/bin/true" mount_points="/var/local/containers/httpd-bundle-1,/var/log/pacemaker/bundles/httpd-bundle-1,/var/log/pacemaker/bundles/httpd-bundle-1" reuse="false" run_cmd="/usr/sbin/pacemaker-remoted" run_opts=" --restart=no -h httpd-bundle-1 -e PCMK_stderr=1 -e PCMK_remote_port=3121 -v /var/local/containers/httpd-bundle-1:/var/www/html:rw -v /var/log/pacemaker/bundles/httpd-bundle-1:/etc/httpd/logs:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/httpd-bundle-1:/var/log -p 192.168.20.189:80:80 -p 192.168.20.189:3121:3121 --log-driver=journald  --add-host=httpd-bundle-0:192.168.20.188 --add-host=httpd-bundle-1:192.168.20.189 --add-host=httpd-bundle-2:192.168.20.190"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="10" operation="monitor" operation_key="httpd-bundle-docker-1_monitor_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="20" operation="start" operation_key="httpd-bundle-ip-192.168.20.189_start_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="32" operation="start" operation_key="httpd-bundle_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="20">
+    <action_set>
+      <rsc_op id="10" operation="monitor" operation_key="httpd-bundle-docker-1_monitor_0" on_node="rh74-test" on_node_uuid="3232287163">
+        <primitive id="httpd-bundle-docker-1" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="rh74-test" CRM_meta_on_node_uuid="3232287163" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="pcmktest:http" monitor_cmd="/bin/true" mount_points="/var/local/containers/httpd-bundle-1,/var/log/pacemaker/bundles/httpd-bundle-1,/var/log/pacemaker/bundles/httpd-bundle-1" reuse="false" run_cmd="/usr/sbin/pacemaker-remoted" run_opts=" --restart=no -h httpd-bundle-1 -e PCMK_stderr=1 -e PCMK_remote_port=3121 -v /var/local/containers/httpd-bundle-1:/var/www/html:rw -v /var/log/pacemaker/bundles/httpd-bundle-1:/etc/httpd/logs:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/httpd-bundle-1:/var/log -p 192.168.20.189:80:80 -p 192.168.20.189:3121:3121 --log-driver=journald  --add-host=httpd-bundle-0:192.168.20.188 --add-host=httpd-bundle-1:192.168.20.189 --add-host=httpd-bundle-2:192.168.20.190"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="21">
+    <action_set>
+      <rsc_op id="25" operation="monitor" operation_key="httpd-bundle-1_monitor_30000" on_node="rh74-test" on_node_uuid="3232287163">
+        <primitive id="httpd-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="httpd-bundle-docker-1" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="rh74-test" CRM_meta_on_node_uuid="3232287163" CRM_meta_timeout="30000" addr="192.168.20.189"  port="3121"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="24" operation="start" operation_key="httpd-bundle-1_start_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="22">
+    <action_set>
+      <rsc_op id="24" operation="start" operation_key="httpd-bundle-1_start_0" on_node="rh74-test" on_node_uuid="3232287163">
+        <primitive id="httpd-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="httpd-bundle-docker-1" CRM_meta_on_node="rh74-test" CRM_meta_on_node_uuid="3232287163" CRM_meta_timeout="20000" addr="192.168.20.189"  port="3121"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="11" operation="monitor" operation_key="httpd-bundle-1_monitor_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="22" operation="start" operation_key="httpd-bundle-docker-1_start_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="23">
+    <action_set>
+      <rsc_op id="11" operation="monitor" operation_key="httpd-bundle-1_monitor_0" on_node="rh74-test" on_node_uuid="3232287163">
+        <primitive id="httpd-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="httpd-bundle-docker-1" CRM_meta_on_node="rh74-test" CRM_meta_on_node_uuid="3232287163" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="192.168.20.189"  port="3121"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="22" operation="start" operation_key="httpd-bundle-docker-1_start_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="24">
+    <action_set>
+      <rsc_op id="27" operation="monitor" operation_key="httpd-bundle-ip-192.168.20.190_monitor_60000" on_node="rh74-test" on_node_uuid="3232287163">
+        <primitive id="httpd-bundle-ip-192.168.20.190" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="rh74-test" CRM_meta_on_node_uuid="3232287163" CRM_meta_timeout="20000" cidr_netmask="24"  ip="192.168.20.190" nic="ens192"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="26" operation="start" operation_key="httpd-bundle-ip-192.168.20.190_start_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="25">
+    <action_set>
+      <rsc_op id="26" operation="start" operation_key="httpd-bundle-ip-192.168.20.190_start_0" on_node="rh74-test" on_node_uuid="3232287163">
+        <primitive id="httpd-bundle-ip-192.168.20.190" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_on_node="rh74-test" CRM_meta_on_node_uuid="3232287163" CRM_meta_timeout="20000" cidr_netmask="24"  ip="192.168.20.190" nic="ens192"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="12" operation="monitor" operation_key="httpd-bundle-ip-192.168.20.190_monitor_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="26">
+    <action_set>
+      <rsc_op id="12" operation="monitor" operation_key="httpd-bundle-ip-192.168.20.190_monitor_0" on_node="rh74-test" on_node_uuid="3232287163">
+        <primitive id="httpd-bundle-ip-192.168.20.190" class="ocf" provider="heartbeat" type="IPaddr2"/>
+        <attributes CRM_meta_on_node="rh74-test" CRM_meta_on_node_uuid="3232287163" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" cidr_netmask="24"  ip="192.168.20.190" nic="ens192"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="27">
+    <action_set>
+      <rsc_op id="29" operation="monitor" operation_key="httpd-bundle-docker-2_monitor_60000" on_node="rh74-test" on_node_uuid="3232287163">
+        <primitive id="httpd-bundle-docker-2" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="rh74-test" CRM_meta_on_node_uuid="3232287163" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="pcmktest:http" monitor_cmd="/bin/true" mount_points="/var/local/containers/httpd-bundle-2,/var/log/pacemaker/bundles/httpd-bundle-2,/var/log/pacemaker/bundles/httpd-bundle-2" reuse="false" run_cmd="/usr/sbin/pacemaker-remoted" run_opts=" --restart=no -h httpd-bundle-2 -e PCMK_stderr=1 -e PCMK_remote_port=3121 -v /var/local/containers/httpd-bundle-2:/var/www/html:rw -v /var/log/pacemaker/bundles/httpd-bundle-2:/etc/httpd/logs:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/httpd-bundle-2:/var/log -p 192.168.20.190:80:80 -p 192.168.20.190:3121:3121 --log-driver=journald  --add-host=httpd-bundle-0:192.168.20.188 --add-host=httpd-bundle-1:192.168.20.189 --add-host=httpd-bundle-2:192.168.20.190"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="28" operation="start" operation_key="httpd-bundle-docker-2_start_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="28">
+    <action_set>
+      <rsc_op id="28" operation="start" operation_key="httpd-bundle-docker-2_start_0" on_node="rh74-test" on_node_uuid="3232287163">
+        <primitive id="httpd-bundle-docker-2" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="rh74-test" CRM_meta_on_node_uuid="3232287163" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="pcmktest:http" monitor_cmd="/bin/true" mount_points="/var/local/containers/httpd-bundle-2,/var/log/pacemaker/bundles/httpd-bundle-2,/var/log/pacemaker/bundles/httpd-bundle-2" reuse="false" run_cmd="/usr/sbin/pacemaker-remoted" run_opts=" --restart=no -h httpd-bundle-2 -e PCMK_stderr=1 -e PCMK_remote_port=3121 -v /var/local/containers/httpd-bundle-2:/var/www/html:rw -v /var/log/pacemaker/bundles/httpd-bundle-2:/etc/httpd/logs:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/httpd-bundle-2:/var/log -p 192.168.20.190:80:80 -p 192.168.20.190:3121:3121 --log-driver=journald  --add-host=httpd-bundle-0:192.168.20.188 --add-host=httpd-bundle-1:192.168.20.189 --add-host=httpd-bundle-2:192.168.20.190"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="13" operation="monitor" operation_key="httpd-bundle-docker-2_monitor_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="26" operation="start" operation_key="httpd-bundle-ip-192.168.20.190_start_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="32" operation="start" operation_key="httpd-bundle_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="29">
+    <action_set>
+      <rsc_op id="13" operation="monitor" operation_key="httpd-bundle-docker-2_monitor_0" on_node="rh74-test" on_node_uuid="3232287163">
+        <primitive id="httpd-bundle-docker-2" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="rh74-test" CRM_meta_on_node_uuid="3232287163" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="pcmktest:http" monitor_cmd="/bin/true" mount_points="/var/local/containers/httpd-bundle-2,/var/log/pacemaker/bundles/httpd-bundle-2,/var/log/pacemaker/bundles/httpd-bundle-2" reuse="false" run_cmd="/usr/sbin/pacemaker-remoted" run_opts=" --restart=no -h httpd-bundle-2 -e PCMK_stderr=1 -e PCMK_remote_port=3121 -v /var/local/containers/httpd-bundle-2:/var/www/html:rw -v /var/log/pacemaker/bundles/httpd-bundle-2:/etc/httpd/logs:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/httpd-bundle-2:/var/log -p 192.168.20.190:80:80 -p 192.168.20.190:3121:3121 --log-driver=journald  --add-host=httpd-bundle-0:192.168.20.188 --add-host=httpd-bundle-1:192.168.20.189 --add-host=httpd-bundle-2:192.168.20.190"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="30">
+    <action_set>
+      <rsc_op id="31" operation="monitor" operation_key="httpd-bundle-2_monitor_30000" on_node="rh74-test" on_node_uuid="3232287163">
+        <primitive id="httpd-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="httpd-bundle-docker-2" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="rh74-test" CRM_meta_on_node_uuid="3232287163" CRM_meta_timeout="30000" addr="192.168.20.190"  port="3121"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="30" operation="start" operation_key="httpd-bundle-2_start_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="31">
+    <action_set>
+      <rsc_op id="30" operation="start" operation_key="httpd-bundle-2_start_0" on_node="rh74-test" on_node_uuid="3232287163">
+        <primitive id="httpd-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="httpd-bundle-docker-2" CRM_meta_on_node="rh74-test" CRM_meta_on_node_uuid="3232287163" CRM_meta_timeout="20000" addr="192.168.20.190"  port="3121"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="14" operation="monitor" operation_key="httpd-bundle-2_monitor_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="28" operation="start" operation_key="httpd-bundle-docker-2_start_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="32">
+    <action_set>
+      <rsc_op id="14" operation="monitor" operation_key="httpd-bundle-2_monitor_0" on_node="rh74-test" on_node_uuid="3232287163">
+        <primitive id="httpd-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="httpd-bundle-docker-2" CRM_meta_on_node="rh74-test" CRM_meta_on_node_uuid="3232287163" CRM_meta_op_target_rc="7" CRM_meta_timeout="30000" addr="192.168.20.190"  port="3121"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="28" operation="start" operation_key="httpd-bundle-docker-2_start_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="33">
+    <action_set>
+      <rsc_op id="46" operation="stop" operation_key="httpd_stop_0" on_node="httpd-bundle-0" on_node_uuid="httpd-bundle-0" router_node="rh74-test">
+        <primitive id="httpd" class="ocf" provider="heartbeat" type="apache"/>
+        <attributes CRM_meta_on_node="httpd-bundle-0" CRM_meta_on_node_uuid="httpd-bundle-0" CRM_meta_physical_host="rh74-test" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="34">
+    <action_set>
+      <rsc_op id="7" operation="delete" operation_key="httpd_delete_0" on_node="httpd-bundle-0" on_node_uuid="httpd-bundle-0" router_node="rh74-test">
+        <primitive id="httpd" class="ocf" provider="heartbeat" type="apache"/>
+        <attributes CRM_meta_on_node="httpd-bundle-0" CRM_meta_on_node_uuid="httpd-bundle-0" CRM_meta_timeout="20000" />
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="19" operation="start" operation_key="httpd-bundle-0_start_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="46" operation="stop" operation_key="httpd_stop_0" on_node="httpd-bundle-0" on_node_uuid="httpd-bundle-0" router_node="rh74-test"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="35" priority="1000000">
+    <action_set>
+      <pseudo_event id="35" operation="stopped" operation_key="httpd-bundle_stopped_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="17" operation="stop" operation_key="httpd-bundle-docker-0_stop_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="36">
+    <action_set>
+      <pseudo_event id="34" operation="stop" operation_key="httpd-bundle_stop_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="37" priority="1000000">
+    <action_set>
+      <pseudo_event id="33" operation="running" operation_key="httpd-bundle_running_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="6" operation="start" operation_key="httpd-bundle-docker-0_start_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="22" operation="start" operation_key="httpd-bundle-docker-1_start_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="28" operation="start" operation_key="httpd-bundle-docker-2_start_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="43" operation="running" operation_key="httpd-bundle-clone_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="38">
+    <action_set>
+      <pseudo_event id="32" operation="start" operation_key="httpd-bundle_start_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="39">
+    <action_set>
+      <pseudo_event id="5" operation="all_stopped" operation_key="all_stopped">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="17" operation="stop" operation_key="httpd-bundle-docker-0_stop_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="18" operation="stop" operation_key="httpd-bundle-0_stop_0" on_node="rh74-test" on_node_uuid="3232287163"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="46" operation="stop" operation_key="httpd_stop_0" on_node="httpd-bundle-0" on_node_uuid="httpd-bundle-0" router_node="rh74-test"/>
+      </trigger>
+    </inputs>
+  </synapse>
+</transition_graph>

@@ -1,0 +1,1289 @@
+#!@BASH_PATH@
+#
+# Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+#
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
+#
+
+USAGE_TEXT="Usage: cts-scheduler [<options>]
+Options:
+ --help                 Display this text, then exit
+ -V, --verbose          Display any differences from expected output
+ --run TEST             Run only single specified test
+ --update               Update expected results with actual results
+ -b, --binary PATH      Specify path to crm_simulate
+ -i, --io-dir PATH      Specify path to regression test data directory
+ -v, --valgrind         Run all commands under valgrind
+ --valgrind-dhat        Run all commands under valgrind with heap analyzer
+ --valgrind-skip-output If running under valgrind, don't display output
+ --testcmd-options      Additional options for command under test"
+
+SBINDIR="@sbindir@"
+BUILDDIR="@abs_top_builddir@"
+CRM_SCHEMA_DIRECTORY="@CRM_SCHEMA_DIRECTORY@"
+
+# If readlink supports -e (i.e. GNU), use it
+readlink -e / >/dev/null 2>/dev/null
+if [ $? -eq 0 ]; then
+    test_home="$(dirname $(readlink -e $0))"
+else
+    test_home="$(dirname $0)"
+fi
+
+io_dir="$test_home/scheduler"
+failed="$test_home/.regression.failed.diff"
+test_binary=
+testcmd_options=
+
+single_test=
+verbose=0
+num_failed=0
+num_tests=0
+VALGRIND_CMD=""
+VALGRIND_OPTS="-q
+    --gen-suppressions=all
+    --log-file=%q{valgrind_output}
+    --time-stamp=yes
+    --trace-children=no
+    --show-reachable=no
+    --leak-check=full
+    --num-callers=20
+    --suppressions=$test_home/valgrind-pcmk.suppressions"
+VALGRIND_DHAT_OPTS="--tool=exp-dhat
+    --log-file=%q{valgrind_output}
+    --time-stamp=yes
+    --trace-children=no
+    --show-top-n=100
+    --num-callers=4"
+diff_opts="--ignore-all-space --ignore-blank-lines -u -N"
+
+# These constants must track crm_exit_t values
+CRM_EX_OK=0
+CRM_EX_ERROR=1
+CRM_EX_NOT_INSTALLED=5
+CRM_EX_USAGE=64
+CRM_EX_NOINPUT=66
+
+EXITCODE=$CRM_EX_OK
+
+function info() {
+    printf "$*\n"
+}
+
+function error() {
+    printf "      * ERROR:   $*\n"
+}
+
+function failed() {
+    printf "      * FAILED:  $*\n"
+}
+
+function show_test() {
+    name=$1; shift
+    printf "  Test %-25s $*\n" "$name:"
+}
+
+# Normalize scheduler output for comparison
+normalize() {
+    for NORMALIZE_FILE in "$@"; do
+        # sed -i is not portable :-(
+        sed -e 's/crm_feature_set="[^"]*"//' \
+            -e 's/batch-limit="[0-9]*"//'    \
+            "$NORMALIZE_FILE" > "${NORMALIZE_FILE}.$$"
+        mv -- "${NORMALIZE_FILE}.$$" "$NORMALIZE_FILE"
+    done
+}
+
+info "Test home is:\t$test_home"
+
+create_mode="false"
+while [ $# -gt 0 ] ; do
+    case "$1" in
+        -V|--verbose)
+            verbose=1
+            shift
+            ;;
+        -v|--valgrind)
+            export G_SLICE=always-malloc
+            VALGRIND_CMD="valgrind $VALGRIND_OPTS"
+            shift
+            ;;
+        --valgrind-dhat)
+            VALGRIND_CMD="valgrind $VALGRIND_DHAT_OPTS"
+            shift
+            ;;
+        --valgrind-skip-output)
+            VALGRIND_SKIP_OUTPUT=1
+            shift
+            ;;
+        --update)
+            create_mode="true"
+            shift
+            ;;
+        --run)
+            single_test=$(basename "$2" ".xml")
+            shift 2
+            ;;
+        -b|--binary)
+            test_binary="$2"
+            shift 2
+            ;;
+        -i|--io-dir)
+            io_dir="$2"
+            shift 2
+            ;;
+        --help)
+            echo "$USAGE_TEXT"
+            exit $CRM_EX_OK
+            ;;
+        --testcmd-options)
+            testcmd_options=$2
+            shift 2
+            ;;
+        *)
+            error "unknown option: $1"
+            exit $CRM_EX_USAGE
+            ;;
+    esac
+done
+
+if [ -z "$PCMK_schema_directory" ]; then
+    if [ -d "$BUILDDIR/xml" ]; then
+        export PCMK_schema_directory="$BUILDDIR/xml"
+    elif [ -d "$CRM_SCHEMA_DIRECTORY" ]; then
+        export PCMK_schema_directory="$CRM_SCHEMA_DIRECTORY"
+    fi
+fi
+
+if [ -z "$test_binary" ]; then
+    if [ -x "$BUILDDIR/tools/crm_simulate" ]; then
+        test_binary="$BUILDDIR/tools/crm_simulate"
+    elif [ -x "$SBINDIR/crm_simulate" ]; then
+        test_binary="$SBINDIR/crm_simulate"
+    fi
+fi
+if [ ! -x "$test_binary" ]; then
+    error "Test binary $test_binary not found"
+    exit $CRM_EX_NOT_INSTALLED
+fi
+
+info "Test binary is:\t$test_binary"
+if [ -n "$PCMK_schema_directory" ]; then
+    info "Schema home is:\t$PCMK_schema_directory"
+fi
+if [ "x$VALGRIND_CMD" != "x" ]; then
+    info "Activating memory testing with valgrind";
+fi
+
+info " "
+
+test_cmd="$VALGRIND_CMD $test_binary $testcmd_options"
+#echo $test_cmd
+
+if [ `whoami` != root ]; then
+    declare -x CIB_shadow_dir=/tmp
+fi
+
+do_test() {
+    did_fail=0
+    expected_rc=0
+    num_tests=$(( $num_tests + 1 ))
+
+    base=$1; shift
+    name=$1; shift
+
+    input=$io_dir/${base}.xml
+    output=$io_dir/${base}.out
+    expected=$io_dir/${base}.exp
+
+    dot_png=$io_dir/${base}.png
+    dot_expected=$io_dir/${base}.dot
+    dot_output=$io_dir/${base}.pe.dot
+
+    scores=$io_dir/${base}.scores
+    score_output=$io_dir/${base}.scores.pe
+
+    stderr_expected=$io_dir/${base}.stderr
+    stderr_output=$io_dir/${base}.stderr.pe
+
+    summary=$io_dir/${base}.summary
+    summary_output=$io_dir/${base}.summary.pe
+
+    valgrind_output=$io_dir/${base}.valgrind
+    export valgrind_output
+
+    if [ "x$1" = "x--rc" ]; then
+        expected_rc=$2
+        shift; shift;
+    fi
+
+    show_test "$base" "$name"
+
+    if [ ! -f $input ]; then
+        error "No input";
+        did_fail=1
+        num_failed=$(( $num_failed + 1 ))
+        return $CRM_EX_NOINPUT;
+    fi
+
+    if [ "$create_mode" != "true" -a ! -f $expected ]; then
+        error "no stored output";
+        return $CRM_EX_NOINPUT;
+    fi
+
+#    ../admin/crm_verify -X $input
+    if [ ! -z "$single_test" ]; then
+        echo CIB_shadow_dir=$io_dir $test_cmd -x $input -D $dot_output -G $output -S $*
+        CIB_shadow_dir=$io_dir $test_cmd -x $input -D $dot_output -G $output -S $* 2>&1 | tee $summary_output
+    else
+        CIB_shadow_dir=$io_dir $test_cmd -x $input -S &> $summary_output
+    fi
+
+    CIB_shadow_dir=$io_dir $test_cmd -x $input -D $dot_output -G $output -SQ -s $* 2> $stderr_output > $score_output
+    rc=$?
+
+    if [ $rc -ne $expected_rc ]; then
+        failed "Test returned: $rc";
+        did_fail=1
+        echo "CIB_shadow_dir=$io_dir $test_cmd -x $input -D $dot_output -G $output -SQ -s $*"
+    fi
+
+    if [ -z "$VALGRIND_SKIP_OUTPUT" ]; then
+        if [ -s "${valgrind_output}" ]; then
+            error "Valgrind reported errors";
+            did_fail=1
+            cat ${valgrind_output}
+        fi
+        rm -f ${valgrind_output}
+    fi
+
+    if [ -s core ]; then
+        error "Core-file detected: core.${base}";
+        did_fail=1
+        rm -f $test_home/core.$base
+        mv core $test_home/core.$base
+    fi
+
+    if [ -e "$stderr_expected" ]; then
+
+        diff $diff_opts $stderr_expected $stderr_output >/dev/null
+        rc2=$?
+        if [ $rc2 -ne 0 ]; then
+            failed "stderr changed";
+            diff $diff_opts $stderr_expected $stderr_output 2>/dev/null >> $failed
+            echo "" >> $failed
+            did_fail=1
+        fi
+
+    elif [ -s "$stderr_output" ]; then
+        error "Output was written to stderr"
+        did_fail=1
+        cat $stderr_output
+    fi
+    rm -f $stderr_output
+
+    if [ ! -s $output ]; then
+        error "No graph produced";
+        did_fail=1
+        num_failed=$(( $num_failed + 1 ))
+        rm -f $output
+        return $CRM_EX_ERROR;
+    fi
+
+    if [ ! -s $dot_output ]; then
+        error "No dot-file summary produced";
+        did_fail=1
+        num_failed=$(( $num_failed + 1 ))
+        rm -f $output
+        return $CRM_EX_ERROR;
+    else
+        echo "digraph \"g\" {" > $dot_output.sort
+        LC_ALL=POSIX sort -u $dot_output | grep -v -e ^}$ -e digraph >> $dot_output.sort
+        echo "}" >> $dot_output.sort
+        mv -f $dot_output.sort $dot_output
+    fi
+
+    if [ ! -s $score_output ]; then
+        error "No allocation scores produced";
+        did_fail=1
+        num_failed=$(( $num_failed + 1 ))
+        rm $output
+        return $CRM_EX_ERROR;
+    else
+        LC_ALL=POSIX sort $score_output > $score_output.sorted
+        mv -f $score_output.sorted $score_output
+    fi
+
+    if [ "$create_mode" = "true" ]; then
+        cp "$output" "$expected"
+        cp "$dot_output" "$dot_expected"
+        cp "$score_output" "$scores"
+        cp "$summary_output" "$summary"
+        info "  Updated expected outputs"
+    fi
+
+    diff $diff_opts $summary $summary_output >/dev/null
+    rc2=$?
+    if [ $rc2 -ne 0 ]; then
+        failed "summary changed";
+        diff $diff_opts $summary $summary_output 2>/dev/null >> $failed
+        echo "" >> $failed
+        did_fail=1
+    fi
+
+    diff $diff_opts $dot_expected $dot_output >/dev/null
+    rc=$?
+    if [ $rc -ne 0 ]; then
+        failed "dot-file summary changed";
+        diff $diff_opts $dot_expected $dot_output 2>/dev/null >> $failed
+        echo "" >> $failed
+        did_fail=1
+    else
+        rm -f $dot_output
+    fi
+
+    normalize "$expected" "$output"
+    diff $diff_opts $expected $output >/dev/null
+    rc2=$?
+    if [ $rc2 -ne 0 ]; then
+        failed "xml-file changed";
+        diff $diff_opts $expected $output 2>/dev/null >> $failed
+        echo "" >> $failed
+        did_fail=1
+    fi
+
+    diff $diff_opts $scores $score_output >/dev/null
+    rc=$?
+    if [ $rc -ne 0 ]; then
+        failed "scores-file changed";
+        diff $diff_opts $scores $score_output 2>/dev/null >> $failed
+        echo "" >> $failed
+        did_fail=1
+    fi
+    rm -f $output $score_output $summary_output
+    if [ $did_fail -eq 1 ]; then
+        num_failed=$(( $num_failed + 1 ))
+        return $CRM_EX_ERROR
+    fi
+    return $CRM_EX_OK
+}
+
+function test_results {
+    if [ $num_failed -ne 0 ]; then
+        if [ -s "$failed" ]; then
+            if [ $verbose -eq 1 ]; then
+                error "Results of $num_failed failed tests (out of $num_tests)...."
+                cat $failed
+            else
+                error "Results of $num_failed failed tests (out of $num_tests) are in $failed...."
+                error "Use $0 -V to display them automatically."
+            fi
+        else
+            error "$num_failed (of $num_tests) tests failed (no diff results)"
+            rm $failed
+        fi
+        EXITCODE=$CRM_EX_ERROR
+    fi
+}
+
+# zero out the error log
+> $failed
+
+if [ -n "$single_test" ]; then
+    do_test $single_test "Single shot" $*
+    TEST_RC=$?
+    cat $failed
+    exit $TEST_RC
+fi
+
+DO_VERSIONED_TESTS=0
+create_mode=true
+# info Creating the following tests from $io_dir
+# do_test order-expired-failure "Order failcount cleanup after remote fencing"
+
+create_mode=false
+
+info Performing the following tests from $io_dir
+echo ""
+
+do_test simple1 "Offline     "
+do_test simple2 "Start       "
+do_test simple3 "Start 2     "
+do_test simple4 "Start Failed"
+do_test simple6 "Stop Start  "
+do_test simple7 "Shutdown    "
+#do_test simple8 "Stonith     "
+#do_test simple9 "Lower version"
+#do_test simple10 "Higher version"
+do_test simple11 "Priority (ne)"
+do_test simple12 "Priority (eq)"
+do_test simple8 "Stickiness"
+
+echo ""
+do_test group1 "Group                   "
+do_test group2 "Group + Native          "
+do_test group3 "Group + Group           "
+do_test group4 "Group + Native (nothing)"
+do_test group5 "Group + Native (move)   "
+do_test group6 "Group + Group (move)    "
+do_test group7 "Group colocation"
+do_test group13 "Group colocation (cant run)"
+do_test group8 "Group anti-colocation"
+do_test group9 "Group recovery"
+do_test group10 "Group partial recovery"
+do_test group11 "Group target_role"
+do_test group14 "Group stop (graph terminated)"
+do_test group15 "Negative group colocation"
+do_test bug-1573 "Partial stop of a group with two children"
+do_test bug-1718 "Mandatory group ordering - Stop group_FUN"
+do_test bug-lf-2613 "Move group on failure"
+do_test bug-lf-2619 "Move group on clone failure"
+do_test group-fail "Ensure stop order is preserved for partially active groups"
+do_test group-unmanaged "No need to restart r115 because r114 is unmanaged"
+do_test group-unmanaged-stopped "Make sure r115 is stopped when r114 fails"
+do_test group-dependents "Account for the location preferences of things colocated with a group"
+
+echo ""
+do_test rsc_dep1 "Must not     "
+do_test rsc_dep3 "Must         "
+do_test rsc_dep5 "Must not 3   "
+do_test rsc_dep7 "Must 3       "
+do_test rsc_dep10 "Must (but cant)"
+do_test rsc_dep2  "Must (running) "
+do_test rsc_dep8  "Must (running : alt) "
+do_test rsc_dep4  "Must (running + move)"
+do_test asymmetric "Asymmetric - require explicit location constraints"
+
+echo ""
+do_test orphan-0 "Orphan ignore"
+do_test orphan-1 "Orphan stop"
+do_test orphan-2 "Orphan stop, remove failcount"
+
+echo ""
+do_test params-0 "Params: No change"
+do_test params-1 "Params: Changed"
+do_test params-2 "Params: Resource definition"
+do_test params-4 "Params: Reload"
+do_test params-5 "Params: Restart based on probe digest"
+do_test novell-251689 "Resource definition change + target_role=stopped"
+do_test bug-lf-2106 "Restart all anonymous clone instances after config change"
+do_test params-6 "Params: Detect reload in previously migrated resource"
+do_test nvpair-id-ref "Support id-ref in nvpair with optional name"
+do_test not-reschedule-unneeded-monitor "Do not reschedule unneeded monitors while resource definitions have changed"
+do_test reload-becomes-restart "Cancel reload if restart becomes required"
+
+echo ""
+do_test target-0 "Target Role : baseline"
+do_test target-1 "Target Role : master"
+do_test target-2 "Target Role : invalid"
+
+echo ""
+do_test base-score "Set a node's default score for all nodes"
+
+echo ""
+do_test date-1 "Dates" -t "2005-020"
+do_test date-2 "Date Spec - Pass" -t "2005-020T12:30"
+do_test date-3 "Date Spec - Fail" -t "2005-020T11:30"
+do_test origin "Timing of recurring operations" -t "2014-05-07 00:28:00" 
+do_test probe-0 "Probe (anon clone)"
+do_test probe-1 "Pending Probe"
+do_test probe-2 "Correctly re-probe cloned groups"
+do_test probe-3 "Probe (pending node)"
+do_test probe-4 "Probe (pending node + stopped resource)"
+do_test standby "Standby"
+do_test comments "Comments"
+
+echo ""
+do_test one-or-more-0 "Everything starts"
+do_test one-or-more-1 "Nothing starts because of A"
+do_test one-or-more-2 "D can start because of C"
+do_test one-or-more-3 "D cannot start because of B and C"
+do_test one-or-more-4 "D cannot start because of target-role"
+do_test one-or-more-5 "Start A and F even though C and D are stopped"
+do_test one-or-more-6 "Leave A running even though B is stopped"
+do_test one-or-more-7 "Leave A running even though C is stopped"
+do_test bug-5140-require-all-false "Allow basegrp:0 to stop"
+do_test clone-require-all-1 "clone B starts node 3 and 4"
+do_test clone-require-all-2 "clone B remains stopped everywhere"
+do_test clone-require-all-3 "clone B stops everywhere because A stops everywhere"
+do_test clone-require-all-4 "clone B remains on node 3 and 4 with only one instance of A remaining."
+do_test clone-require-all-5 "clone B starts on node 1 3 and 4"
+do_test clone-require-all-6 "clone B remains active after shutting down instances of A"
+do_test clone-require-all-7 "clone A and B both start at the same time. all instances of A start before B."
+do_test clone-require-all-no-interleave-1 "C starts everywhere after A and B"
+do_test clone-require-all-no-interleave-2 "C starts on nodes 1, 2, and 4 with only one active instance of B"
+do_test clone-require-all-no-interleave-3 "C remains active when instance of B is stopped on one node and started on another."
+do_test one-or-more-unrunnable-instances "Avoid dependencies on instances that won't ever be started"
+
+echo ""
+do_test order1 "Order start 1     "
+do_test order2 "Order start 2     "
+do_test order3 "Order stop        "
+do_test order4 "Order (multiple)  "
+do_test order5 "Order (move)  "
+do_test order6 "Order (move w/ restart)  "
+do_test order7 "Order (mandatory)  "
+do_test order-optional "Order (score=0)  "
+do_test order-required "Order (score=INFINITY)  "
+do_test bug-lf-2171 "Prevent group start when clone is stopped"
+do_test order-clone "Clone ordering should be able to prevent startup of dependent clones"
+do_test order-sets "Ordering for resource sets"
+do_test order-serialize "Serialize resources without inhibiting migration"
+do_test order-serialize-set "Serialize a set of resources without inhibiting migration"
+do_test clone-order-primitive "Order clone start after a primitive"
+do_test clone-order-16instances "Verify ordering of 16 cloned resources"
+do_test order-optional-keyword "Order (optional keyword)"
+do_test order-mandatory "Order (mandatory keyword)"
+do_test bug-lf-2493 "Don't imply colocation requirements when applying ordering constraints with clones"
+do_test ordered-set-basic-startup "Constraint set with default order settings."
+do_test ordered-set-natural "Allow natural set ordering"
+do_test order-wrong-kind "Order (error)"
+
+echo ""
+do_test coloc-loop "Colocation - loop"
+do_test coloc-many-one "Colocation - many-to-one"
+do_test coloc-list "Colocation - many-to-one with list"
+do_test coloc-group "Colocation - groups"
+do_test coloc-slave-anti "Anti-colocation with slave shouldn't prevent master colocation"
+do_test coloc-attr "Colocation based on node attributes"
+do_test coloc-negative-group "Negative colocation with a group"
+do_test coloc-intra-set "Intra-set colocation"
+do_test bug-lf-2435 "Colocation sets with a negative score"
+do_test coloc-clone-stays-active "Ensure clones don't get stopped/demoted because a dependent must stop"
+do_test coloc_fp_logic "Verify floating point calculations in colocation are working"
+do_test colo_master_w_native "cl#5070 - Verify promotion order is affected when colocating master to native rsc."
+do_test colo_slave_w_native  "cl#5070 - Verify promotion order is affected when colocating slave to native rsc."
+do_test anti-colocation-order "cl#5187 - Prevent resources in an anti-colocation from even temporarily running on a same node"
+do_test anti-colocation-master "Organize order of actions for master resources in anti-colocations"
+do_test anti-colocation-slave "Organize order of actions for slave resources in anti-colocations"
+do_test enforce-colo1 "Always enforce B with A INFINITY."
+do_test complex_enforce_colo "Always enforce B with A INFINITY. (make sure heat-engine stops)"
+
+echo ""
+do_test rsc-sets-seq-true "Resource Sets - sequential=false"
+do_test rsc-sets-seq-false "Resource Sets - sequential=true"
+do_test rsc-sets-clone "Resource Sets - Clone"
+do_test rsc-sets-master "Resource Sets - Master"
+do_test rsc-sets-clone-1 "Resource Sets - Clone (lf#2404)"
+
+#echo ""
+#do_test agent1 "version: lt (empty)"
+#do_test agent2 "version: eq "
+#do_test agent3 "version: gt "
+
+echo ""
+do_test attrs1 "string: eq (and)     "
+do_test attrs2 "string: lt / gt (and)"
+do_test attrs3 "string: ne (or)      "
+do_test attrs4 "string: exists       "
+do_test attrs5 "string: not_exists   "
+do_test attrs6 "is_dc: true          "
+do_test attrs7 "is_dc: false         "
+do_test attrs8 "score_attribute      "
+do_test per-node-attrs "Per node resource parameters"
+
+echo ""
+do_test mon-rsc-1 "Schedule Monitor - start"
+do_test mon-rsc-2 "Schedule Monitor - move "
+do_test mon-rsc-3 "Schedule Monitor - pending start     "
+do_test mon-rsc-4 "Schedule Monitor - move/pending start"
+
+echo ""
+do_test rec-rsc-0 "Resource Recover - no start     "
+do_test rec-rsc-1 "Resource Recover - start        "
+do_test rec-rsc-2 "Resource Recover - monitor      "
+do_test rec-rsc-3 "Resource Recover - stop - ignore"
+do_test rec-rsc-4 "Resource Recover - stop - block "
+do_test rec-rsc-5 "Resource Recover - stop - fence "
+do_test rec-rsc-6 "Resource Recover - multiple - restart"
+do_test rec-rsc-7 "Resource Recover - multiple - stop   "
+do_test rec-rsc-8 "Resource Recover - multiple - block  "
+do_test rec-rsc-9 "Resource Recover - group/group"
+do_test monitor-recovery "on-fail=block + resource recovery detected by recurring monitor"
+do_test stop-failure-no-quorum "Stop failure without quorum"
+do_test stop-failure-no-fencing "Stop failure without fencing available"
+do_test stop-failure-with-fencing "Stop failure with fencing available"
+do_test multiple-active-block-group "Support of multiple-active=block for resource groups"
+do_test multiple-monitor-one-failed "Consider resource failed if any of the configured monitor operations failed"
+
+echo ""
+do_test quorum-1 "No quorum - ignore"
+do_test quorum-2 "No quorum - freeze"
+do_test quorum-3 "No quorum - stop  "
+do_test quorum-4 "No quorum - start anyway"
+do_test quorum-5 "No quorum - start anyway (group)"
+do_test quorum-6 "No quorum - start anyway (clone)"
+do_test bug-cl-5212 "No promotion with no-quorum-policy=freeze"
+do_test suicide-needed-inquorate "no-quorum-policy=suicide: suicide necessary"
+do_test suicide-not-needed-initial-quorum "no-quorum-policy=suicide: suicide not necessary at initial quorum"
+do_test suicide-not-needed-never-quorate "no-quorum-policy=suicide: suicide not necessary if never quorate"
+do_test suicide-not-needed-quorate "no-quorum-policy=suicide: suicide necessary if quorate"
+
+echo ""
+do_test rec-node-1 "Node Recover - Startup   - no fence"
+do_test rec-node-2 "Node Recover - Startup   - fence   "
+do_test rec-node-3 "Node Recover - HA down   - no fence"
+do_test rec-node-4 "Node Recover - HA down   - fence   "
+do_test rec-node-5 "Node Recover - CRM down  - no fence"
+do_test rec-node-6 "Node Recover - CRM down  - fence   "
+do_test rec-node-7 "Node Recover - no quorum - ignore  "
+do_test rec-node-8 "Node Recover - no quorum - freeze  "
+do_test rec-node-9 "Node Recover - no quorum - stop    "
+do_test rec-node-10 "Node Recover - no quorum - stop w/fence"
+do_test rec-node-11 "Node Recover - CRM down w/ group - fence   "
+do_test rec-node-12 "Node Recover - nothing active - fence   "
+do_test rec-node-13 "Node Recover - failed resource + shutdown - fence   "
+do_test rec-node-15 "Node Recover - unknown lrm section"
+do_test rec-node-14 "Serialize all stonith's"
+
+echo ""
+do_test multi1 "Multiple Active (stop/start)"
+
+echo ""
+do_test migrate-begin     "Normal migration"
+do_test migrate-success   "Completed migration"
+do_test migrate-partial-1 "Completed migration, missing stop on source"
+do_test migrate-partial-2 "Successful migrate_to only"
+do_test migrate-partial-3 "Successful migrate_to only, target down"
+do_test migrate-partial-4 "Migrate from the correct host after migrate_to+migrate_from"
+do_test bug-5186-partial-migrate "Handle partial migration when src node loses membership"
+
+do_test migrate-fail-2 "Failed migrate_from"
+do_test migrate-fail-3 "Failed migrate_from + stop on source"
+do_test migrate-fail-4 "Failed migrate_from + stop on target - ideally we wouldn't need to re-stop on target"
+do_test migrate-fail-5 "Failed migrate_from + stop on source and target"
+
+do_test migrate-fail-6 "Failed migrate_to"
+do_test migrate-fail-7 "Failed migrate_to + stop on source"
+do_test migrate-fail-8 "Failed migrate_to + stop on target - ideally we wouldn't need to re-stop on target"
+do_test migrate-fail-9 "Failed migrate_to + stop on source and target"
+
+do_test migrate-stop "Migration in a stopping stack"
+do_test migrate-start "Migration in a starting stack"
+do_test migrate-stop_start "Migration in a restarting stack"
+do_test migrate-stop-complex "Migration in a complex stopping stack"
+do_test migrate-start-complex "Migration in a complex starting stack"
+do_test migrate-stop-start-complex "Migration in a complex moving stack"
+do_test migrate-shutdown "Order the post-migration 'stop' before node shutdown"
+
+do_test migrate-1 "Migrate (migrate)"
+do_test migrate-2 "Migrate (stable)"
+do_test migrate-3 "Migrate (failed migrate_to)"
+do_test migrate-4 "Migrate (failed migrate_from)"
+do_test novell-252693 "Migration in a stopping stack"
+do_test novell-252693-2 "Migration in a starting stack"
+do_test novell-252693-3 "Non-Migration in a starting and stopping stack"
+do_test bug-1820 "Migration in a group"
+do_test bug-1820-1 "Non-migration in a group"
+do_test migrate-5 "Primitive migration with a clone"
+do_test migrate-fencing "Migration after Fencing"
+do_test migrate-both-vms "Migrate two VMs that have no colocation"
+do_test migration-behind-migrating-remote "Migrate resource behind migrating remote connection"
+
+do_test 1-a-then-bm-move-b "Advanced migrate logic. A then B. migrate B."
+do_test 2-am-then-b-move-a "Advanced migrate logic, A then B, migrate A without stopping B"
+do_test 3-am-then-bm-both-migrate "Advanced migrate logic. A then B. migrate both"
+do_test 4-am-then-bm-b-not-migratable "Advanced migrate logic, A then B, B not migratable"
+do_test 5-am-then-bm-a-not-migratable "Advanced migrate logic. A then B. move both, a not migratable"
+do_test 6-migrate-group "Advanced migrate logic, migrate a group"
+do_test 7-migrate-group-one-unmigratable "Advanced migrate logic, migrate group mixed with allow-migrate true/false"
+do_test 8-am-then-bm-a-migrating-b-stopping "Advanced migrate logic, A then B, A migrating, B stopping"
+do_test 9-am-then-bm-b-migrating-a-stopping "Advanced migrate logic, A then B, B migrate, A stopping"
+do_test 10-a-then-bm-b-move-a-clone "Advanced migrate logic, A clone then B, migrate B while stopping A"
+do_test 11-a-then-bm-b-move-a-clone-starting "Advanced migrate logic, A clone then B, B moving while A is start/stopping"
+
+do_test a-promote-then-b-migrate "A promote then B start. migrate B"
+do_test a-demote-then-b-migrate "A demote then B stop. migrate B"
+
+if [ $DO_VERSIONED_TESTS -eq 1 ]; then
+    do_test migrate-versioned "Disable migration for versioned resources"
+fi
+
+#echo ""
+#do_test complex1 "Complex "
+
+do_test bug-lf-2422 "Dependency on partially active group - stop ocfs:*"
+
+echo ""
+do_test clone-anon-probe-1 "Probe the correct (anonymous) clone instance for each node"
+do_test clone-anon-probe-2 "Avoid needless re-probing of anonymous clones"
+do_test clone-anon-failcount "Merge failcounts for anonymous clones"
+do_test inc0 "Incarnation start"
+do_test inc1 "Incarnation start order"
+do_test inc2 "Incarnation silent restart, stop, move"
+do_test inc3 "Inter-incarnation ordering, silent restart, stop, move"
+do_test inc4 "Inter-incarnation ordering, silent restart, stop, move (ordered)"
+do_test inc5 "Inter-incarnation ordering, silent restart, stop, move (restart 1)"
+do_test inc6 "Inter-incarnation ordering, silent restart, stop, move (restart 2)"
+do_test inc7 "Clone colocation"
+do_test inc8 "Clone anti-colocation"
+do_test inc9 "Non-unique clone"
+do_test inc10 "Non-unique clone (stop)"
+do_test inc11 "Primitive colocation with clones"
+do_test inc12 "Clone shutdown"
+do_test cloned-group "Make sure only the correct number of cloned groups are started"
+do_test cloned-group-stop "Ensure stopping qpidd also stops glance and cinder"
+do_test clone-no-shuffle "Don't prioritize allocation of instances that must be moved"
+do_test clone-max-zero "Orphan processing with clone-max=0"
+do_test clone-anon-dup "Bug LF#2087 - Correctly parse the state of anonymous clones that are active more than once per node"
+do_test bug-lf-2160 "Don't shuffle clones due to colocation"
+do_test bug-lf-2213 "clone-node-max enforcement for cloned groups"
+do_test bug-lf-2153 "Clone ordering constraints"
+do_test bug-lf-2361 "Ensure clones observe mandatory ordering constraints if the LHS is unrunnable"
+do_test bug-lf-2317 "Avoid needless restart of primitive depending on a clone"
+do_test clone-colocate-instance-1 "Colocation with a specific clone instance (negative example)"
+do_test clone-colocate-instance-2 "Colocation with a specific clone instance"
+do_test clone-order-instance "Ordering with specific clone instances"
+do_test bug-lf-2453 "Enforce mandatory clone ordering without colocation"
+do_test bug-lf-2508 "Correctly reconstruct the status of anonymous cloned groups"
+do_test bug-lf-2544 "Balanced clone placement"
+do_test bug-lf-2445 "Redistribute clones with node-max > 1 and stickiness = 0"
+do_test bug-lf-2574 "Avoid clone shuffle"
+do_test bug-lf-2581 "Avoid group restart due to unrelated clone (re)start"
+do_test bug-cl-5168 "Don't shuffle clones"
+do_test bug-cl-5170 "Prevent clone from starting with on-fail=block"
+do_test clone-fail-block-colocation "Move colocated group when failed clone has on-fail=block"
+do_test clone-interleave-1 "Clone-3 cannot start on pcmk-1 due to interleaved ordering (no colocation)"
+do_test clone-interleave-2 "Clone-3 must stop on pcmk-1 due to interleaved ordering (no colocation)"
+do_test clone-interleave-3 "Clone-3 must be recovered on pcmk-1 due to interleaved ordering (no colocation)"
+do_test rebalance-unique-clones "Rebalance unique clone instances with no stickiness"
+
+echo ""
+do_test cloned_start_one  "order first clone then clone... first clone_min=2"
+do_test cloned_start_two  "order first clone then clone... first clone_min=2"
+do_test cloned_stop_one   "order first clone then clone... first clone_min=2"
+do_test cloned_stop_two   "order first clone then clone... first clone_min=2"
+do_test clone_min_interleave_start_one "order first clone then clone... first clone_min=2 and then has interleave=true"
+do_test clone_min_interleave_start_two "order first clone then clone... first clone_min=2 and then has interleave=true"
+do_test clone_min_interleave_stop_one  "order first clone then clone... first clone_min=2 and then has interleave=true"
+do_test clone_min_interleave_stop_two  "order first clone then clone... first clone_min=2 and then has interleave=true"
+do_test clone_min_start_one "order first clone then primitive... first clone_min=2"
+do_test clone_min_start_two "order first clone then primitive... first clone_min=2"
+do_test clone_min_stop_all  "order first clone then primitive... first clone_min=2"
+do_test clone_min_stop_one  "order first clone then primitive... first clone_min=2"
+do_test clone_min_stop_two  "order first clone then primitive... first clone_min=2"
+
+echo ""
+do_test unfence-startup "Clean unfencing"
+do_test unfence-definition "Unfencing when the agent changes"
+do_test unfence-parameters "Unfencing when the agent parameters changes"
+do_test unfence-device "Unfencing when a cluster has only fence devices"
+
+echo ""
+do_test master-0 "Stopped -> Slave"
+do_test master-1 "Stopped -> Promote"
+do_test master-2 "Stopped -> Promote : notify"
+do_test master-3 "Stopped -> Promote : master location"
+do_test master-4 "Started -> Promote : master location"
+do_test master-5 "Promoted -> Promoted"
+do_test master-6 "Promoted -> Promoted (2)"
+do_test master-7 "Promoted -> Fenced"
+do_test master-8 "Promoted -> Fenced -> Moved"
+do_test master-9 "Stopped + Promotable + No quorum"
+do_test master-10 "Stopped -> Promotable : notify with monitor"
+do_test master-11 "Stopped -> Promote : colocation"
+do_test novell-239082 "Demote/Promote ordering"
+do_test novell-239087 "Stable master placement"
+do_test master-12 "Promotion based solely on rsc_location constraints"
+do_test master-13 "Include preferences of colocated resources when placing master"
+do_test master-demote "Ordering when actions depends on demoting a slave resource"
+do_test master-ordering "Prevent resources from starting that need a master"
+do_test bug-1765 "Master-Master Colocation (dont stop the slaves)"
+do_test master-group "Promotion of cloned groups"
+do_test bug-lf-1852 "Don't shuffle master/slave instances unnecessarily"
+do_test master-failed-demote "Don't retry failed demote actions"
+do_test master-failed-demote-2 "Don't retry failed demote actions (notify=false)"
+do_test master-depend "Ensure resources that depend on the master don't get allocated until the master does"
+do_test master-reattach "Re-attach to a running master"
+do_test master-allow-start "Don't include master score if it would prevent allocation"
+do_test master-colocation "Allow master instances placemaker to be influenced by colocation constraints"
+do_test master-pseudo "Make sure promote/demote pseudo actions are created correctly"
+do_test master-role "Prevent target-role from promoting more than master-max instances"
+do_test bug-lf-2358 "Master-Master anti-colocation"
+do_test master-promotion-constraint "Mandatory master colocation constraints"
+do_test unmanaged-master "Ensure role is preserved for unmanaged resources"
+do_test master-unmanaged-monitor "Start the correct monitor operation for unmanaged masters"
+do_test master-demote-2 "Demote does not clear past failure"
+do_test master-move "Move master based on failure of colocated group"
+do_test master-probed-score "Observe the promotion score of probed resources"
+do_test colocation_constraint_stops_master "cl#5054 - Ensure master is demoted when stopped by colocation constraint"
+do_test colocation_constraint_stops_slave  "cl#5054 - Ensure slave is not demoted when stopped by colocation constraint"
+do_test order_constraint_stops_master      "cl#5054 - Ensure master is demoted when stopped by order constraint"
+do_test order_constraint_stops_slave       "cl#5054 - Ensure slave is not demoted when stopped by order constraint"
+do_test master_monitor_restart "cl#5072 - Ensure master monitor operation will start after promotion."
+do_test bug-rh-880249 "Handle replacement of an m/s resource with a primitive"
+do_test bug-5143-ms-shuffle "Prevent master shuffling due to promotion score"
+do_test master-demote-block "Block promotion if demote fails with on-fail=block"
+do_test master-dependent-ban "Don't stop instances from being active because a dependent is banned from that host"
+do_test master-stop "Stop instances due to location constraint with role=Started"
+do_test master-partially-demoted-group "Allow partially demoted group to finish demoting"
+do_test bug-cl-5213 "Ensure role colocation with -INFINITY is enforced"
+do_test bug-cl-5219 "Allow unrelated resources with a common colocation target to remain promoted"
+do_test master-asymmetrical-order "Fix the behaviors of multi-state resources with asymmetrical ordering"
+do_test master-notify "Master promotion with notifies"
+do_test master-score-startup "Use permanent master scores without LRM history"
+do_test failed-demote-recovery "Recover resource in slave role after demote fails"
+do_test failed-demote-recovery-master "Recover resource in master role after demote fails"
+
+echo ""
+do_test history-1 "Correctly parse stateful-1 resource state"
+
+echo ""
+do_test managed-0 "Managed (reference)"
+do_test managed-1 "Not managed - down "
+do_test managed-2 "Not managed - up   "
+do_test bug-5028 "Shutdown should block if anything depends on an unmanaged resource"
+do_test bug-5028-detach "Ensure detach still works"
+do_test bug-5028-bottom "Ensure shutdown still blocks if the blocked resource is at the bottom of the stack"
+do_test unmanaged-stop-1 "cl#5155 - Block the stop of resources if any depending resource is unmanaged "
+do_test unmanaged-stop-2 "cl#5155 - Block the stop of resources if the first resource in a mandatory stop order is unmanaged "
+do_test unmanaged-stop-3 "cl#5155 - Block the stop of resources if any depending resource in a group is unmanaged "
+do_test unmanaged-stop-4 "cl#5155 - Block the stop of resources if any depending resource in the middle of a group is unmanaged "
+do_test unmanaged-block-restart "Block restart of resources if any dependent resource in a group is unmanaged"
+
+echo ""
+do_test interleave-0 "Interleave (reference)"
+do_test interleave-1 "coloc - not interleaved"
+do_test interleave-2 "coloc - interleaved   "
+do_test interleave-3 "coloc - interleaved (2)"
+do_test interleave-pseudo-stop "Interleaved clone during stonith"
+do_test interleave-stop "Interleaved clone during stop"
+do_test interleave-restart "Interleaved clone during dependency restart"
+
+echo ""
+do_test notify-0 "Notify reference"
+do_test notify-1 "Notify simple"
+do_test notify-2 "Notify simple, confirm"
+do_test notify-3 "Notify move, confirm"
+do_test novell-239079 "Notification priority"
+#do_test notify-2 "Notify - 764"
+do_test notifs-for-unrunnable "Don't schedule notifications for an unrunnable action"
+
+echo ""
+do_test 594 "OSDL #594 - Unrunnable actions scheduled in transition"
+do_test 662 "OSDL #662 - Two resources start on one node when incarnation_node_max = 1"
+do_test 696 "OSDL #696 - CRM starts stonith RA without monitor"
+do_test 726 "OSDL #726 - Attempting to schedule rsc_posic041_monitor_5000 _after_ a stop"
+do_test 735 "OSDL #735 - Correctly detect that rsc_hadev1 is stopped on hadev3"
+do_test 764 "OSDL #764 - Missing monitor op for DoFencing:child_DoFencing:1"
+do_test 797 "OSDL #797 - Assert triggered: task_id_i > max_call_id"
+do_test 829 "OSDL #829"
+do_test 994 "OSDL #994 - Stopping the last resource in a resource group causes the entire group to be restarted"
+do_test 994-2 "OSDL #994 - with a dependent resource"
+do_test 1360 "OSDL #1360 - Clone stickiness"
+do_test 1484 "OSDL #1484 - on_fail=stop"
+do_test 1494 "OSDL #1494 - Clone stability"
+do_test unrunnable-1 "Unrunnable"
+do_test unrunnable-2 "Unrunnable 2"
+do_test stonith-0 "Stonith loop - 1"
+do_test stonith-1 "Stonith loop - 2"
+do_test stonith-2 "Stonith loop - 3"
+do_test stonith-3 "Stonith startup"
+do_test stonith-4 "Stonith node state"
+do_test bug-1572-1 "Recovery of groups depending on master/slave"
+do_test bug-1572-2 "Recovery of groups depending on master/slave when the master is never re-promoted"
+do_test bug-1685 "Depends-on-master ordering"
+do_test bug-1822 "Don't promote partially active groups"
+do_test bug-pm-11 "New resource added to a m/s group"
+do_test bug-pm-12 "Recover only the failed portion of a cloned group"
+do_test bug-n-387749 "Don't shuffle clone instances"
+do_test bug-n-385265 "Don't ignore the failure stickiness of group children - resource_idvscommon should stay stopped"
+do_test bug-n-385265-2 "Ensure groups are migrated instead of remaining partially active on the current node"
+do_test bug-lf-1920 "Correctly handle probes that find active resources"
+do_test bnc-515172 "Location constraint with multiple expressions"
+do_test colocate-primitive-with-clone "Optional colocation with a clone"
+do_test use-after-free-merge "Use-after-free in native_merge_weights"
+do_test bug-lf-2551 "STONITH ordering for stop"
+do_test bug-lf-2606 "Stonith implies demote"
+do_test bug-lf-2474 "Ensure resource op timeout takes precedence over op_defaults"
+do_test bug-suse-707150 "Prevent vm-01 from starting due to colocation/ordering"
+do_test bug-5014-A-start-B-start "Verify when A starts B starts using symmetrical=false"
+do_test bug-5014-A-stop-B-started "Verify when A stops B does not stop if it has already started using symmetric=false"
+do_test bug-5014-A-stopped-B-stopped "Verify when A is stopped and B has not started, B does not start before A using symmetric=false"
+do_test bug-5014-CthenAthenB-C-stopped "Verify when C then A is symmetrical=true, A then B is symmetric=false, and C is stopped that nothing starts."
+do_test bug-5014-CLONE-A-start-B-start "Verify when A starts B starts using clone resources with symmetric=false"
+do_test bug-5014-CLONE-A-stop-B-started "Verify when A stops B does not stop if it has already started using clone resources with symmetric=false."
+do_test bug-5014-GROUP-A-start-B-start "Verify when A starts B starts when using group resources with symmetric=false."
+do_test bug-5014-GROUP-A-stopped-B-started "Verify when A stops B does not stop if it has already started using group resources with symmetric=false."
+do_test bug-5014-GROUP-A-stopped-B-stopped "Verify when A is stopped and B has not started, B does not start before A using group resources with symmetric=false."
+do_test bug-5014-ordered-set-symmetrical-false "Verify ordered sets work with symmetrical=false"
+do_test bug-5014-ordered-set-symmetrical-true "Verify ordered sets work with symmetrical=true"
+do_test bug-5007-masterslave_colocation "Verify use of colocation scores other than INFINITY and -INFINITY work on multi-state resources."
+do_test bug-5038 "Prevent restart of anonymous clones when clone-max decreases"
+do_test bug-5025-1 "Automatically clean up failcount after resource config change with reload"
+do_test bug-5025-2 "Make sure clear failcount action isn't set when config does not change."
+do_test bug-5025-3 "Automatically clean up failcount after resource config change with restart"
+do_test bug-5025-4 "Clear failcount when last failure is a start op and rsc attributes changed."
+do_test failcount "Ensure failcounts are correctly expired"
+do_test failcount-block "Ensure failcounts are not expired when on-fail=block is present"
+do_test per-op-failcount "Ensure per-operation failcount is handled and not passed to fence agent"
+do_test on-fail-ignore "Ensure on-fail=ignore works even beyond migration-threshold"
+do_test monitor-onfail-restart "bug-5058 - Monitor failure with on-fail set to restart"
+do_test monitor-onfail-stop    "bug-5058 - Monitor failure wiht on-fail set to stop"
+do_test bug-5059 "No need to restart p_stateful1:*"
+do_test bug-5069-op-enabled  "Test on-fail=ignore with failure when monitor is enabled."
+do_test bug-5069-op-disabled "Test on-fail-ignore with failure when monitor is disabled."
+do_test obsolete-lrm-resource "cl#5115 - Do not use obsolete lrm_resource sections"
+do_test expire-non-blocked-failure "Ignore failure-timeout only if the failed operation has on-fail=block"
+do_test asymmetrical-order-move "Respect asymmetrical ordering when trying to move resources"
+do_test start-then-stop-with-unfence "Avoid graph loop with start-then-stop constraint plus unfencing"
+do_test order-expired-failure "Order failcount cleanup after remote fencing"
+
+do_test ignore_stonith_rsc_order1 "cl#5056- Ignore order constraint between stonith and non-stonith rsc."
+do_test ignore_stonith_rsc_order2 "cl#5056- Ignore order constraint with group rsc containing mixed stonith and non-stonith."
+do_test ignore_stonith_rsc_order3 "cl#5056- Ignore order constraint, stonith clone and mixed group"
+do_test ignore_stonith_rsc_order4 "cl#5056- Ignore order constraint, stonith clone and clone with nested mixed group"
+do_test honor_stonith_rsc_order1 "cl#5056- Honor order constraint, stonith clone and pure stonith group(single rsc)."
+do_test honor_stonith_rsc_order2 "cl#5056- Honor order constraint, stonith clone and pure stonith group(multiple rsc)"
+do_test honor_stonith_rsc_order3 "cl#5056- Honor order constraint, stonith clones with nested pure stonith group."
+do_test honor_stonith_rsc_order4 "cl#5056- Honor order constraint, between two native stonith rscs."
+do_test probe-timeout "cl#5099 - Default probe timeout"
+
+do_test concurrent-fencing "Allow performing fencing operations in parallel"
+
+echo ""
+do_test systemhealth1  "System Health ()               #1"
+do_test systemhealth2  "System Health ()               #2"
+do_test systemhealth3  "System Health ()               #3"
+do_test systemhealthn1 "System Health (None)           #1"
+do_test systemhealthn2 "System Health (None)           #2"
+do_test systemhealthn3 "System Health (None)           #3"
+do_test systemhealthm1 "System Health (Migrate On Red) #1"
+do_test systemhealthm2 "System Health (Migrate On Red) #2"
+do_test systemhealthm3 "System Health (Migrate On Red) #3"
+do_test systemhealtho1 "System Health (Only Green)     #1"
+do_test systemhealtho2 "System Health (Only Green)     #2"
+do_test systemhealtho3 "System Health (Only Green)     #3"
+do_test systemhealthp1 "System Health (Progessive)     #1"
+do_test systemhealthp2 "System Health (Progessive)     #2"
+do_test systemhealthp3 "System Health (Progessive)     #3"
+
+echo ""
+do_test utilization "Placement Strategy - utilization"
+do_test minimal     "Placement Strategy - minimal"
+do_test balanced    "Placement Strategy - balanced"
+
+echo ""
+do_test placement-stickiness "Optimized Placement Strategy - stickiness"
+do_test placement-priority   "Optimized Placement Strategy - priority"
+do_test placement-location   "Optimized Placement Strategy - location"
+do_test placement-capacity   "Optimized Placement Strategy - capacity"
+
+echo ""
+do_test utilization-order1 "Utilization Order - Simple"
+do_test utilization-order2 "Utilization Order - Complex"
+do_test utilization-order3 "Utilization Order - Migrate"
+do_test utilization-order4 "Utilization Order - Live Migration (bnc#695440)"
+do_test utilization-shuffle "Don't displace prmExPostgreSQLDB2 on act2, Start prmExPostgreSQLDB1 on act3"
+do_test load-stopped-loop "Avoid transition loop due to load_stopped (cl#5044)"
+do_test load-stopped-loop-2 "cl#5235 - Prevent graph loops that can be introduced by load_stopped -> migrate_to ordering"
+
+echo ""
+do_test colocated-utilization-primitive-1 "Colocated Utilization - Primitive"
+do_test colocated-utilization-primitive-2 "Colocated Utilization - Choose the most capable node"
+do_test colocated-utilization-group "Colocated Utilization - Group"
+do_test colocated-utilization-clone "Colocated Utilization - Clone"
+
+do_test utilization-check-allowed-nodes "Only check the capacities of the nodes that can run the resource"
+
+echo ""
+do_test reprobe-target_rc "Ensure correct target_rc for reprobe of inactive resources"
+do_test node-maintenance-1 "cl#5128 - Node maintenance"
+do_test node-maintenance-2 "cl#5128 - Node maintenance (coming out of maintenance mode)"
+do_test shutdown-maintenance-node "Do not fence a maintenance node if it shuts down cleanly"
+
+do_test rsc-maintenance "Per-resource maintenance"
+
+echo ""
+do_test not-installed-agent "The resource agent is missing"
+do_test not-installed-tools "Something the resource agent needs is missing"
+
+echo ""
+do_test stopped-monitor-00 "Stopped Monitor - initial start"
+do_test stopped-monitor-01 "Stopped Monitor - failed started"
+do_test stopped-monitor-02 "Stopped Monitor - started multi-up"
+do_test stopped-monitor-03 "Stopped Monitor - stop started"
+do_test stopped-monitor-04 "Stopped Monitor - failed stop"
+do_test stopped-monitor-05 "Stopped Monitor - start unmanaged"
+do_test stopped-monitor-06 "Stopped Monitor - unmanaged multi-up"
+do_test stopped-monitor-07 "Stopped Monitor - start unmanaged multi-up"
+do_test stopped-monitor-08 "Stopped Monitor - migrate"
+do_test stopped-monitor-09 "Stopped Monitor - unmanage started"
+do_test stopped-monitor-10 "Stopped Monitor - unmanaged started multi-up"
+do_test stopped-monitor-11 "Stopped Monitor - stop unmanaged started"
+do_test stopped-monitor-12 "Stopped Monitor - unmanaged started multi-up (targer-role="Stopped")"
+do_test stopped-monitor-20 "Stopped Monitor - initial stop"
+do_test stopped-monitor-21 "Stopped Monitor - stopped single-up"
+do_test stopped-monitor-22 "Stopped Monitor - stopped multi-up"
+do_test stopped-monitor-23 "Stopped Monitor - start stopped"
+do_test stopped-monitor-24 "Stopped Monitor - unmanage stopped"
+do_test stopped-monitor-25 "Stopped Monitor - unmanaged stopped multi-up"
+do_test stopped-monitor-26 "Stopped Monitor - start unmanaged stopped"
+do_test stopped-monitor-27 "Stopped Monitor - unmanaged stopped multi-up (target-role="Started")"
+do_test stopped-monitor-30 "Stopped Monitor - new node started"
+do_test stopped-monitor-31 "Stopped Monitor - new node stopped"
+
+echo ""
+# This is a combo test to check:
+# - probe timeout defaults to the minimum-interval monitor's
+# - duplicate recurring operations are ignored
+# - if timeout spec is bad, the default timeout is used
+# - failure is blocked with on-fail=block even if ISO8601 interval is specified
+# - started/stopped role monitors are started/stopped on right nodes
+do_test intervals "Recurring monitor interval handling"
+
+echo""
+do_test ticket-primitive-1 "Ticket - Primitive (loss-policy=stop, initial)"
+do_test ticket-primitive-2 "Ticket - Primitive (loss-policy=stop, granted)"
+do_test ticket-primitive-3 "Ticket - Primitive (loss-policy-stop, revoked)"
+do_test ticket-primitive-4 "Ticket - Primitive (loss-policy=demote, initial)"
+do_test ticket-primitive-5 "Ticket - Primitive (loss-policy=demote, granted)"
+do_test ticket-primitive-6 "Ticket - Primitive (loss-policy=demote, revoked)"
+do_test ticket-primitive-7 "Ticket - Primitive (loss-policy=fence, initial)"
+do_test ticket-primitive-8 "Ticket - Primitive (loss-policy=fence, granted)"
+do_test ticket-primitive-9 "Ticket - Primitive (loss-policy=fence, revoked)"
+do_test ticket-primitive-10 "Ticket - Primitive (loss-policy=freeze, initial)"
+do_test ticket-primitive-11 "Ticket - Primitive (loss-policy=freeze, granted)"
+do_test ticket-primitive-12 "Ticket - Primitive (loss-policy=freeze, revoked)"
+
+do_test ticket-primitive-13 "Ticket - Primitive (loss-policy=stop, standby, granted)"
+do_test ticket-primitive-14 "Ticket - Primitive (loss-policy=stop, granted, standby)"
+do_test ticket-primitive-15 "Ticket - Primitive (loss-policy=stop, standby, revoked)"
+do_test ticket-primitive-16 "Ticket - Primitive (loss-policy=demote, standby, granted)"
+do_test ticket-primitive-17 "Ticket - Primitive (loss-policy=demote, granted, standby)"
+do_test ticket-primitive-18 "Ticket - Primitive (loss-policy=demote, standby, revoked)"
+do_test ticket-primitive-19 "Ticket - Primitive (loss-policy=fence, standby, granted)"
+do_test ticket-primitive-20 "Ticket - Primitive (loss-policy=fence, granted, standby)"
+do_test ticket-primitive-21 "Ticket - Primitive (loss-policy=fence, standby, revoked)"
+do_test ticket-primitive-22 "Ticket - Primitive (loss-policy=freeze, standby, granted)"
+do_test ticket-primitive-23 "Ticket - Primitive (loss-policy=freeze, granted, standby)"
+do_test ticket-primitive-24 "Ticket - Primitive (loss-policy=freeze, standby, revoked)"
+
+echo""
+do_test ticket-group-1 "Ticket - Group (loss-policy=stop, initial)"
+do_test ticket-group-2 "Ticket - Group (loss-policy=stop, granted)"
+do_test ticket-group-3 "Ticket - Group (loss-policy-stop, revoked)"
+do_test ticket-group-4 "Ticket - Group (loss-policy=demote, initial)"
+do_test ticket-group-5 "Ticket - Group (loss-policy=demote, granted)"
+do_test ticket-group-6 "Ticket - Group (loss-policy=demote, revoked)"
+do_test ticket-group-7 "Ticket - Group (loss-policy=fence, initial)"
+do_test ticket-group-8 "Ticket - Group (loss-policy=fence, granted)"
+do_test ticket-group-9 "Ticket - Group (loss-policy=fence, revoked)"
+do_test ticket-group-10 "Ticket - Group (loss-policy=freeze, initial)"
+do_test ticket-group-11 "Ticket - Group (loss-policy=freeze, granted)"
+do_test ticket-group-12 "Ticket - Group (loss-policy=freeze, revoked)"
+
+do_test ticket-group-13 "Ticket - Group (loss-policy=stop, standby, granted)"
+do_test ticket-group-14 "Ticket - Group (loss-policy=stop, granted, standby)"
+do_test ticket-group-15 "Ticket - Group (loss-policy=stop, standby, revoked)"
+do_test ticket-group-16 "Ticket - Group (loss-policy=demote, standby, granted)"
+do_test ticket-group-17 "Ticket - Group (loss-policy=demote, granted, standby)"
+do_test ticket-group-18 "Ticket - Group (loss-policy=demote, standby, revoked)"
+do_test ticket-group-19 "Ticket - Group (loss-policy=fence, standby, granted)"
+do_test ticket-group-20 "Ticket - Group (loss-policy=fence, granted, standby)"
+do_test ticket-group-21 "Ticket - Group (loss-policy=fence, standby, revoked)"
+do_test ticket-group-22 "Ticket - Group (loss-policy=freeze, standby, granted)"
+do_test ticket-group-23 "Ticket - Group (loss-policy=freeze, granted, standby)"
+do_test ticket-group-24 "Ticket - Group (loss-policy=freeze, standby, revoked)"
+
+echo""
+do_test ticket-clone-1 "Ticket - Clone (loss-policy=stop, initial)"
+do_test ticket-clone-2 "Ticket - Clone (loss-policy=stop, granted)"
+do_test ticket-clone-3 "Ticket - Clone (loss-policy-stop, revoked)"
+do_test ticket-clone-4 "Ticket - Clone (loss-policy=demote, initial)"
+do_test ticket-clone-5 "Ticket - Clone (loss-policy=demote, granted)"
+do_test ticket-clone-6 "Ticket - Clone (loss-policy=demote, revoked)"
+do_test ticket-clone-7 "Ticket - Clone (loss-policy=fence, initial)"
+do_test ticket-clone-8 "Ticket - Clone (loss-policy=fence, granted)"
+do_test ticket-clone-9 "Ticket - Clone (loss-policy=fence, revoked)"
+do_test ticket-clone-10 "Ticket - Clone (loss-policy=freeze, initial)"
+do_test ticket-clone-11 "Ticket - Clone (loss-policy=freeze, granted)"
+do_test ticket-clone-12 "Ticket - Clone (loss-policy=freeze, revoked)"
+
+do_test ticket-clone-13 "Ticket - Clone (loss-policy=stop, standby, granted)"
+do_test ticket-clone-14 "Ticket - Clone (loss-policy=stop, granted, standby)"
+do_test ticket-clone-15 "Ticket - Clone (loss-policy=stop, standby, revoked)"
+do_test ticket-clone-16 "Ticket - Clone (loss-policy=demote, standby, granted)"
+do_test ticket-clone-17 "Ticket - Clone (loss-policy=demote, granted, standby)"
+do_test ticket-clone-18 "Ticket - Clone (loss-policy=demote, standby, revoked)"
+do_test ticket-clone-19 "Ticket - Clone (loss-policy=fence, standby, granted)"
+do_test ticket-clone-20 "Ticket - Clone (loss-policy=fence, granted, standby)"
+do_test ticket-clone-21 "Ticket - Clone (loss-policy=fence, standby, revoked)"
+do_test ticket-clone-22 "Ticket - Clone (loss-policy=freeze, standby, granted)"
+do_test ticket-clone-23 "Ticket - Clone (loss-policy=freeze, granted, standby)"
+do_test ticket-clone-24 "Ticket - Clone (loss-policy=freeze, standby, revoked)"
+
+echo""
+do_test ticket-master-1 "Ticket - Master (loss-policy=stop, initial)"
+do_test ticket-master-2 "Ticket - Master (loss-policy=stop, granted)"
+do_test ticket-master-3 "Ticket - Master (loss-policy-stop, revoked)"
+do_test ticket-master-4 "Ticket - Master (loss-policy=demote, initial)"
+do_test ticket-master-5 "Ticket - Master (loss-policy=demote, granted)"
+do_test ticket-master-6 "Ticket - Master (loss-policy=demote, revoked)"
+do_test ticket-master-7 "Ticket - Master (loss-policy=fence, initial)"
+do_test ticket-master-8 "Ticket - Master (loss-policy=fence, granted)"
+do_test ticket-master-9 "Ticket - Master (loss-policy=fence, revoked)"
+do_test ticket-master-10 "Ticket - Master (loss-policy=freeze, initial)"
+do_test ticket-master-11 "Ticket - Master (loss-policy=freeze, granted)"
+do_test ticket-master-12 "Ticket - Master (loss-policy=freeze, revoked)"
+
+do_test ticket-master-13 "Ticket - Master (loss-policy=stop, standby, granted)"
+do_test ticket-master-14 "Ticket - Master (loss-policy=stop, granted, standby)"
+do_test ticket-master-15 "Ticket - Master (loss-policy=stop, standby, revoked)"
+do_test ticket-master-16 "Ticket - Master (loss-policy=demote, standby, granted)"
+do_test ticket-master-17 "Ticket - Master (loss-policy=demote, granted, standby)"
+do_test ticket-master-18 "Ticket - Master (loss-policy=demote, standby, revoked)"
+do_test ticket-master-19 "Ticket - Master (loss-policy=fence, standby, granted)"
+do_test ticket-master-20 "Ticket - Master (loss-policy=fence, granted, standby)"
+do_test ticket-master-21 "Ticket - Master (loss-policy=fence, standby, revoked)"
+do_test ticket-master-22 "Ticket - Master (loss-policy=freeze, standby, granted)"
+do_test ticket-master-23 "Ticket - Master (loss-policy=freeze, granted, standby)"
+do_test ticket-master-24 "Ticket - Master (loss-policy=freeze, standby, revoked)"
+
+echo ""
+do_test ticket-rsc-sets-1 "Ticket - Resource sets (1 ticket, initial)"
+do_test ticket-rsc-sets-2 "Ticket - Resource sets (1 ticket, granted)"
+do_test ticket-rsc-sets-3 "Ticket - Resource sets (1 ticket, revoked)"
+do_test ticket-rsc-sets-4 "Ticket - Resource sets (2 tickets, initial)"
+do_test ticket-rsc-sets-5 "Ticket - Resource sets (2 tickets, granted)"
+do_test ticket-rsc-sets-6 "Ticket - Resource sets (2 tickets, granted)"
+do_test ticket-rsc-sets-7 "Ticket - Resource sets (2 tickets, revoked)"
+
+do_test ticket-rsc-sets-8 "Ticket - Resource sets (1 ticket, standby, granted)"
+do_test ticket-rsc-sets-9 "Ticket - Resource sets (1 ticket, granted, standby)"
+do_test ticket-rsc-sets-10 "Ticket - Resource sets (1 ticket, standby, revoked)"
+do_test ticket-rsc-sets-11 "Ticket - Resource sets (2 tickets, standby, granted)"
+do_test ticket-rsc-sets-12 "Ticket - Resource sets (2 tickets, standby, granted)"
+do_test ticket-rsc-sets-13 "Ticket - Resource sets (2 tickets, granted, standby)"
+do_test ticket-rsc-sets-14 "Ticket - Resource sets (2 tickets, standby, revoked)"
+
+do_test cluster-specific-params "Cluster-specific instance attributes based on rules"
+do_test site-specific-params "Site-specific instance attributes based on rules"
+
+echo ""
+do_test template-1 "Template - 1"
+do_test template-2 "Template - 2"
+do_test template-3 "Template - 3 (merge operations)"
+
+do_test template-coloc-1 "Template - Colocation 1"
+do_test template-coloc-2 "Template - Colocation 2"
+do_test template-coloc-3 "Template - Colocation 3"
+do_test template-order-1 "Template - Order 1"
+do_test template-order-2 "Template - Order 2"
+do_test template-order-3 "Template - Order 3"
+do_test template-ticket  "Template - Ticket"
+
+do_test template-rsc-sets-1  "Template - Resource Sets 1"
+do_test template-rsc-sets-2  "Template - Resource Sets 2"
+do_test template-rsc-sets-3  "Template - Resource Sets 3"
+do_test template-rsc-sets-4  "Template - Resource Sets 4"
+
+do_test template-clone-primitive "Cloned primitive from template"
+do_test template-clone-group     "Cloned group from template"
+
+do_test location-sets-templates "Resource sets and templates - Location"
+
+do_test tags-coloc-order-1 "Tags - Colocation and Order (Simple)"
+do_test tags-coloc-order-2 "Tags - Colocation and Order (Resource Sets with Templates)"
+do_test tags-location      "Tags - Location"
+do_test tags-ticket        "Tags - Ticket"
+
+echo ""
+do_test container-1 "Container - initial"
+do_test container-2 "Container - monitor failed"
+do_test container-3 "Container - stop failed"
+do_test container-4 "Container - reached migration-threshold"
+do_test container-group-1 "Container in group - initial"
+do_test container-group-2 "Container in group - monitor failed"
+do_test container-group-3 "Container in group - stop failed"
+do_test container-group-4 "Container in group - reached migration-threshold"
+do_test container-is-remote-node "Place resource within container when container is remote-node"
+do_test bug-rh-1097457 "Kill user defined container/contents ordering"
+do_test bug-cl-5247 "Graph loop when recovering m/s resource in a container"
+
+do_test bundle-order-startup "Bundle startup ordering"
+do_test bundle-order-partial-start "Bundle startup ordering when some dependancies are already running"
+do_test bundle-order-partial-start-2 "Bundle startup ordering when some dependancies and the container are already running"
+do_test bundle-order-stop    "Bundle stop ordering"
+do_test bundle-order-partial-stop "Bundle startup ordering when some dependancies are already stopped"
+do_test bundle-order-stop-on-remote "Stop nested resource after bringing up the connection"
+
+do_test bundle-order-startup-clone "Prevent startup because bundle isn't promoted"
+do_test bundle-order-startup-clone-2 "Bundle startup with clones"
+do_test bundle-order-stop-clone "Stop bundle because clone is stopping"
+do_test bundle-nested-colocation "Colocation of nested connection resources"
+
+do_test bundle-order-fencing "Order pseudo bundle fencing after parent node fencing if both are happening"
+
+do_test bundle-probe-order-1 "order 1"
+do_test bundle-probe-order-2 "order 2"
+do_test bundle-probe-order-3 "order 3"
+do_test bundle-probe-remotes "Ensure remotes get probed too"
+do_test bundle-replicas-change "Change bundle from 1 replica to multiple"
+
+echo ""
+do_test whitebox-fail1 "Fail whitebox container rsc."
+do_test whitebox-fail2 "Fail cluster connection to guest node"
+do_test whitebox-fail3 "Failed containers should not run nested on remote nodes."
+do_test whitebox-start "Start whitebox container with resources assigned to it"
+do_test whitebox-stop "Stop whitebox container with resources assigned to it"
+do_test whitebox-move "Move whitebox container with resources assigned to it"
+do_test whitebox-asymmetric "Verify connection rsc opts-in based on container resource"
+do_test whitebox-ms-ordering "Verify promote/demote can not occur before connection is established"
+do_test whitebox-ms-ordering-move "Stop/Start cycle within a moving container"
+do_test whitebox-orphaned    "Properly shutdown orphaned whitebox container"
+do_test whitebox-orphan-ms   "Properly tear down orphan ms resources on remote-nodes"
+do_test whitebox-unexpectedly-running "Recover container nodes the cluster did not start."
+do_test whitebox-migrate1 "Migrate both container and connection resource"
+do_test whitebox-imply-stop-on-fence "imply stop action on container node rsc when host node is fenced"
+do_test whitebox-nested-group "Verify guest remote-node works nested in a group"
+do_test guest-node-host-dies "Verify guest node is recovered if host goes away"
+
+echo ""
+do_test remote-startup-probes  "Baremetal remote-node startup probes"
+do_test remote-startup         "Startup a newly discovered remote-nodes with no status."
+do_test remote-fence-unclean   "Fence unclean baremetal remote-node"
+do_test remote-fence-unclean2  "Fence baremetal remote-node after cluster node fails and connection can not be recovered"
+do_test remote-fence-unclean-3 "Probe failed remote nodes (triggers fencing)"
+do_test remote-move            "Move remote-node connection resource"
+do_test remote-disable         "Disable a baremetal remote-node"
+do_test remote-probe-disable   "Probe then stop a baremetal remote-node"
+do_test remote-orphaned        "Properly shutdown orphaned connection resource"
+do_test remote-orphaned2       "verify we can handle orphaned remote connections with active resources on the remote"
+do_test remote-recover         "Recover connection resource after cluster-node fails."
+do_test remote-stale-node-entry "Make sure we properly handle leftover remote-node entries in the node section"
+do_test remote-partial-migrate  "Make sure partial migrations are handled before ops on the remote node."
+do_test remote-partial-migrate2 "Make sure partial migration target is prefered for remote connection."
+do_test remote-recover-fail     "Make sure start failure causes fencing if rsc are active on remote."
+do_test remote-start-fail       "Make sure a start failure does not result in fencing if no active resources are on remote."
+do_test remote-unclean2         "Make monitor failure always results in fencing, even if no rsc are active on remote."
+do_test remote-fence-before-reconnect "Fence before clearing recurring monitor failure"
+do_test remote-recovery "Recover remote connections before attempting demotion"
+do_test remote-recover-connection "Optimistically recovery of only the connection"
+do_test remote-recover-all        "Fencing when the connection has no home"
+do_test remote-recover-no-resources   "Fencing when the connection has no home and no active resources"
+do_test remote-recover-unknown        "Fencing when the connection has no home and the remote has no operation history"
+do_test remote-reconnect-delay        "Waiting for remote reconnect interval to expire"
+do_test remote-connection-unrecoverable  "Remote connection host must be fenced, with connection unrecoverable"
+
+echo ""
+do_test resource-discovery      "Exercises resource-discovery location constraint option."
+do_test rsc-discovery-per-node  "Disable resource discovery per node"
+
+if [ $DO_VERSIONED_TESTS -eq 1 ]; then
+    echo ""
+    do_test versioned-resources     "Start resources with #ra-version rules"
+    do_test restart-versioned       "Restart resources on #ra-version change"
+    do_test reload-versioned        "Reload resources on #ra-version change"
+
+    echo ""
+    do_test versioned-operations-1  "Use #ra-version to configure operations of native resources"
+    do_test versioned-operations-2  "Use #ra-version to configure operations of stonith resources"
+    do_test versioned-operations-3  "Use #ra-version to configure operations of master/slave resources"
+    do_test versioned-operations-4  "Use #ra-version to configure operations of groups of the resources"
+fi
+
+echo ""
+test_results
+exit $EXITCODE

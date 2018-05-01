@@ -1,20 +1,8 @@
 /*
- * Copyright (C) 2015
- *     Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2015-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #ifndef CRM_COMMON_INTERNAL__H
@@ -35,9 +23,7 @@ int get_last_sequence(const char *directory, const char *series);
 void write_last_sequence(const char *directory, const char *series, int sequence, int max);
 int crm_chown_last_sequence(const char *directory, const char *series, uid_t uid, gid_t gid);
 
-gboolean crm_is_writable(const char *dir, const char *file, const char *user, const char *group,
-                         gboolean need_both);
-
+bool pcmk__daemon_can_write(const char *dir, const char *file);
 void crm_sync_directory(const char *name);
 
 char *crm_read_contents(const char *filename);
@@ -57,6 +43,31 @@ unsigned int crm_procfs_num_cores(void);
 
 void crm_schema_init(void);
 void crm_schema_cleanup(void);
+
+
+/* internal functions related to process IDs (from pid.c) */
+
+int crm_pid_active(long pid, const char *daemon);
+long crm_pidfile_inuse(const char *filename, long mypid, const char *daemon);
+long crm_read_pidfile(const char *filename);
+int crm_lock_pidfile(const char *filename, const char *name);
+
+
+/* interal functions related to resource operations (from operations.c) */
+
+char *generate_op_key(const char *rsc_id, const char *op_type,
+                      guint interval_ms);
+char *generate_notify_key(const char *rsc_id, const char *notify_type,
+                          const char *op_type);
+char *generate_transition_magic(const char *transition_key, int op_status,
+                                int op_rc);
+char *generate_transition_key(int action, int transition_id, int target_rc,
+                              const char *node);
+void filter_action_parameters(xmlNode *param_set, const char *version);
+xmlNode *create_operation_update(xmlNode *parent, lrmd_event_data_t *event,
+                                 const char *caller_version, int target_rc,
+                                 const char *node, const char *origin,
+                                 int level);
 
 
 /* internal generic string functions (from strings.c) */

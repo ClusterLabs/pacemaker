@@ -29,8 +29,10 @@ stop()
 
 	rm -f /var/lock/subsystem/pacemaker
 	rm -f /var/run/${prog}.pid
-	killall -q -9 'crmd stonithd attrd cib lrmd pacemakerd pacemaker_remoted'
+	killall -q -9 pacemakerd pacemaker-attrd pacemaker-based \
+		pacemaker-controld pacemaker-execd pacemaker-fenced \
+		pacemaker-schedulerd pacemaker-remoted
 }
 
-stop "pacemaker_remoted"
+stop "pacemaker-remoted"
 exit 0

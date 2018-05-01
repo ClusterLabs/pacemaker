@@ -1,23 +1,12 @@
- # Copyright (C) 2007 Dejan Muhamedagic <dmuhamedagic@suse.de>
- #			Almost everything as part of hb_report
- # Copyright (C) 2010 Andrew Beekhof <andrew@beekhof.net>
- #			Cleanups, refactoring, extensions
- #
- #
- # This program is free software; you can redistribute it and/or
- # modify it under the terms of the GNU General Public
- # License as published by the Free Software Foundation; either
- # version 2.1 of the License, or (at your option) any later version.
- #
- # This software is distributed in the hope that it will be useful,
- # but WITHOUT ANY WARRANTY; without even the implied warranty of
- # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- # General Public License for more details.
- #
- # You should have received a copy of the GNU General Public
- # License along with this library; if not, write to the Free Software
- # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- #
+#
+# Originally based on hb_report
+# Copyright 2007 Dejan Muhamedagic <dmuhamedagic@suse.de>
+#
+# Later changes copyright 2010-2018 Andrew Beekhof <andrew@beekhof.net>
+#
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
+#
 
 host=`uname -n`
 shorthost=`echo $host | sed s:\\\\..*::`
@@ -44,10 +33,10 @@ DRBD_INFO_F=drbd_info.txt
 EVENT_PATTERNS="
 state		do_state_transition
 membership	pcmk_peer_update.*(lost|memb):
-quorum		crmd.*crm_update_quorum
+quorum		(crmd|pacemaker-controld).*crm_update_quorum
 pause		Process.pause.detected
-resources	lrmd.*rsc:(start|stop)
-stonith		te_fence_node|stonith-ng.*log_oper.*report|stonithd.*(requests|(Succeeded|Failed).to.STONITH|result=)
+resources	(lrmd|pacemaker-execd).*rsc:(start|stop)
+stonith		te_fence_node|fenced.*(requests|(Succeeded|Failed).to.|result=)
 start_stop	shutdown.decision|Corosync.Cluster.Engine|corosync.*Initializing.transport|Executive.Service.RELEASE|crm_shutdown:.Requesting.shutdown|pcmk_shutdown:.Shutdown.complete
 "
 
@@ -79,7 +68,7 @@ SYSLOGS="
     /var/log/cluster/*
 "
 
-# Whether pacemaker_remoted was found (0 = yes, 1 = no, -1 = haven't looked yet)
+# Whether pacemaker-remoted was found (0 = yes, 1 = no, -1 = haven't looked yet)
 REMOTED_STATUS=-1
 
 #
@@ -131,7 +120,12 @@ is_running() {
 has_remoted() {
     if [ $REMOTED_STATUS -eq -1 ]; then
         REMOTED_STATUS=1
-        if which pacemaker_remoted >/dev/null 2>&1; then
+        if which pacemaker-remoted >/dev/null 2>&1; then
+            REMOTED_STATUS=0
+        # Check for pre-2.0.0 daemon name in case we have mixed-version cluster
+        elif which pacemaker_remoted >/dev/null 2>&1; then
+            REMOTED_STATUS=0
+        elif [ -x "@sbindir@/pacemaker-remoted" ]; then
             REMOTED_STATUS=0
         elif [ -x "@sbindir@/pacemaker_remoted" ]; then
             REMOTED_STATUS=0
@@ -139,7 +133,9 @@ has_remoted() {
             # @TODO: the binary might be elsewhere,
             # but a global search is too expensive
             for d in /{usr,opt}/{local/,}{s,}bin; do
-                if [ -x "${d}/pacemaker_remoted" ]; then
+                if [ -x "${d}/pacemaker-remoted" ]; then
+                    REMOTED_STATUS=0
+                elif [ -x "${d}/pacemaker_remoted" ]; then
                     REMOTED_STATUS=0
                 fi
             done
@@ -162,7 +158,7 @@ detect_daemon_dir() {
     do
         # pacemaker and pacemaker-cts packages can install to daemon directory,
         # so check for a file from each
-        if [ -e $d/pengine ] || [ -e $d/lrmd_test ]; then
+        if [ -e $d/pacemaker-schedulerd ] || [ -e $d/cts-exec-helper ]; then
             found_dir "daemons" "$d"
             return
         fi
@@ -174,7 +170,7 @@ detect_daemon_dir() {
         return
     fi
 
-    for f in $(find / -maxdepth $maxdepth -type f -name pengine -o -name lrmd_test); do
+    for f in $(find / -maxdepth $maxdepth -type f -name pacemaker-schedulerd -o -name cts-exec-helper); do
         d=$(dirname "$f")
         found_dir "daemons" "$d"
         return
@@ -223,22 +219,22 @@ detect_pe_dir() {
 
     d="$config_root/pengine"
     if [ -d "$d" ]; then
-        found_dir "policy engine inputs" "$d"
+        found_dir "scheduler inputs" "$d"
         return
     fi
 
     if has_remoted; then
-        info "Pacemaker policy engine inputs not found (this appears to be a Pacemaker Remote node)"
+        info "Pacemaker scheduler inputs not found (this appears to be a Pacemaker Remote node)"
         return
     fi
 
-    info "Searching for where Pacemaker keeps Policy Engine inputs... this may take a while"
+    info "Searching for where Pacemaker keeps scheduler inputs... this may take a while"
     for d in $(find / -maxdepth $maxdepth -type d -name pengine); do
-        found_dir "policy engine inputs" "$d"
+        found_dir "scheduler inputs" "$d"
         return
     done
 
-    fatal "Pacemaker policy engine inputs not found (nonstandard installation?)"
+    fatal "Pacemaker scheduler inputs not found (nonstandard installation?)"
 }
 
 detect_host() {

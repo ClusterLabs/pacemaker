@@ -1,19 +1,8 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #ifndef CRM_CLUSTER_INTERNAL__H
@@ -51,21 +40,18 @@ struct crm_ais_msg_s {
 
 /* *INDENT-OFF* */
 enum crm_proc_flag {
-    crm_proc_none      = 0x00000001,
+    crm_proc_none       = 0x00000001,
 
     // Cluster layers
-    crm_proc_cpg       = 0x04000000,
+    crm_proc_cpg        = 0x04000000,
 
-    crm_proc_lrmd      = 0x00000010,
-    crm_proc_cib       = 0x00000100,
-    crm_proc_crmd      = 0x00000200,
-    crm_proc_attrd     = 0x00001000,
-
-    crm_proc_stonithd  = 0x00002000,
-    crm_proc_stonith_ng= 0x00100000,
-
-    crm_proc_pe        = 0x00010000,
-    crm_proc_te        = 0x00020000,
+    // Daemons
+    crm_proc_execd      = 0x00000010,
+    crm_proc_based      = 0x00000100,
+    crm_proc_controld   = 0x00000200,
+    crm_proc_attrd      = 0x00001000,
+    crm_proc_schedulerd = 0x00010000,
+    crm_proc_fenced     = 0x00100000,
 };
 /* *INDENT-ON* */
 
@@ -93,7 +79,7 @@ peer2text(enum crm_proc_flag proc)
 {
     const char *text = "unknown";
 
-    if (proc == (crm_proc_crmd | crm_get_cluster_proc())) {
+    if (proc == (crm_proc_controld | crm_get_cluster_proc())) {
         return "peer";
     }
 
@@ -101,29 +87,23 @@ peer2text(enum crm_proc_flag proc)
         case crm_proc_none:
             text = "none";
             break;
-        case crm_proc_cib:
-            text = "cib";
+        case crm_proc_based:
+            text = "pacemaker-based";
             break;
-        case crm_proc_crmd:
-            text = "crmd";
+        case crm_proc_controld:
+            text = "pacemaker-controld";
             break;
-        case crm_proc_pe:
-            text = "pengine";
+        case crm_proc_schedulerd:
+            text = "pacemaker-schedulerd";
             break;
-        case crm_proc_te:
-            text = "tengine";
-            break;
-        case crm_proc_lrmd:
-            text = "lrmd";
+        case crm_proc_execd:
+            text = "pacemaker-execd";
             break;
         case crm_proc_attrd:
-            text = "attrd";
+            text = "pacemaker-attrd";
             break;
-        case crm_proc_stonithd:
-            text = "stonithd";
-            break;
-        case crm_proc_stonith_ng:
-            text = "stonith-ng";
+        case crm_proc_fenced:
+            text = "pacemaker-fenced";
             break;
         case crm_proc_cpg:
             text = "corosync-cpg";
@@ -137,10 +117,11 @@ text2proc(const char *proc)
 {
     /* We only care about these two so far */
 
-    if (proc && strcmp(proc, "cib") == 0) {
-        return crm_proc_cib;
-    } else if (proc && strcmp(proc, "crmd") == 0) {
-        return crm_proc_crmd;
+    if (proc && strcmp(proc, "pacemaker-based") == 0) {
+        return crm_proc_based;
+
+    } else if (proc && strcmp(proc, "pacemaker-controld") == 0) {
+        return crm_proc_controld;
     }
 
     return crm_proc_none;

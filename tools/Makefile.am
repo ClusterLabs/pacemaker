@@ -1,30 +1,14 @@
 #
-# Copyright (C) 2004-2009 Andrew Beekhof
+# Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
 #
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 include $(top_srcdir)/Makefile.common
 
 if BUILD_SYSTEMD
 systemdunit_DATA = crm_mon.service
 endif
-
-COMMONLIBS	= 							\
-		$(top_builddir)/lib/common/libcrmcommon.la		\
-		$(top_builddir)/lib/cib/libcib.la			\
-		$(CURSESLIBS) $(CLUSTERLIBS)
 
 noinst_HEADERS		= crm_resource.h fake_transition.h
 
@@ -37,8 +21,21 @@ sbin_SCRIPTS		+= cibsecret
 endif
 EXTRA_DIST		= $(sbin_SCRIPTS)
 
-sbin_PROGRAMS		= crm_simulate crmadmin cibadmin crm_node crm_attribute crm_resource crm_verify \
-			 crm_shadow attrd_updater crm_diff crm_mon iso8601 crm_ticket crm_error
+sbin_PROGRAMS		= attrd_updater \
+			  cibadmin \
+			  crmadmin \
+			  crm_simulate \
+			  crm_attribute \
+			  crm_diff \
+			  crm_error \
+			  crm_mon \
+			  crm_node \
+			  crm_resource \
+			  crm_shadow \
+			  crm_verify \
+			  crm_ticket \
+			  iso8601 \
+			  stonith_admin
 
 if BUILD_SERVICELOG
 sbin_PROGRAMS		+= notifyServicelogEvent
@@ -52,71 +49,94 @@ endif
 MAN8DEPS		= crm_attribute crm_node
 
 crmadmin_SOURCES	= crmadmin.c
-crmadmin_LDADD		= $(top_builddir)/lib/pengine/libpe_status.la \
-			  $(COMMONLIBS) $(CLUSTERLIBS)
+crmadmin_LDADD		= $(top_builddir)/lib/pengine/libpe_status.la	\
+			  $(top_builddir)/lib/cib/libcib.la		\
+			  $(top_builddir)/lib/common/libcrmcommon.la	\
+			  $(CLUSTERLIBS)
 
 crm_error_SOURCES	= crm_error.c
-crm_error_LDADD		= $(COMMONLIBS)
+crm_error_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la
 
 cibadmin_SOURCES	= cibadmin.c
-cibadmin_LDADD		= $(COMMONLIBS)
+cibadmin_LDADD		= $(top_builddir)/lib/cib/libcib.la		\
+			  $(top_builddir)/lib/common/libcrmcommon.la
 
 crm_shadow_SOURCES	= cib_shadow.c
-crm_shadow_LDADD	= $(COMMONLIBS)
+crm_shadow_LDADD	= $(top_builddir)/lib/cib/libcib.la		\
+			  $(top_builddir)/lib/common/libcrmcommon.la
 
 crm_node_SOURCES	= crm_node.c
-crm_node_LDADD		= $(top_builddir)/lib/cluster/libcrmcluster.la \
-			  $(COMMONLIBS) $(CLUSTERLIBS)
+crm_node_LDADD		= $(top_builddir)/lib/cluster/libcrmcluster.la	\
+			  $(top_builddir)/lib/cib/libcib.la		\
+			  $(top_builddir)/lib/common/libcrmcommon.la	\
+			  $(CLUSTERLIBS)
 
 crm_simulate_SOURCES	= crm_simulate.c fake_transition.c
-crm_simulate_CFLAGS	= -I$(top_srcdir)/pengine
+crm_simulate_CFLAGS	= -I$(top_srcdir)/daemons/schedulerd
 
-crm_simulate_LDADD	= $(top_builddir)/lib/pengine/libpe_status.la		\
-			$(top_builddir)/pengine/libpengine.la 			\
-			$(top_builddir)/lib/cib/libcib.la			\
-			$(top_builddir)/lib/lrmd/liblrmd.la			\
-			$(top_builddir)/lib/transition/libtransitioner.la	\
-			$(COMMONLIBS)
+crm_simulate_LDADD	= $(top_builddir)/lib/pengine/libpe_status.la	\
+			  $(top_builddir)/daemons/schedulerd/libpengine.la	\
+			  $(top_builddir)/lib/cib/libcib.la		\
+			  $(top_builddir)/lib/lrmd/liblrmd.la		\
+			  $(top_builddir)/lib/transition/libtransitioner.la \
+			  $(top_builddir)/lib/common/libcrmcommon.la
 
 crm_diff_SOURCES	= crm_diff.c
-crm_diff_LDADD		= $(COMMONLIBS)
+crm_diff_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la
 
 crm_mon_SOURCES		= crm_mon.c
-crm_mon_LDADD		= $(top_builddir)/lib/pengine/libpe_status.la		\
-			  $(top_builddir)/lib/fencing/libstonithd.la		\
-			  $(top_builddir)/pengine/libpengine.la \
-			  $(COMMONLIBS)
+crm_mon_CFLAGS		= -I$(top_srcdir)/daemons/schedulerd
+crm_mon_LDADD		= $(top_builddir)/lib/pengine/libpe_status.la	\
+			  $(top_builddir)/lib/fencing/libstonithd.la	\
+			  $(top_builddir)/daemons/schedulerd/libpengine.la	\
+			  $(top_builddir)/lib/cib/libcib.la		\
+			  $(top_builddir)/lib/common/libcrmcommon.la	\
+			  $(CURSESLIBS)
 
 # Arguments could be made that this should live in crm/pengine
 crm_verify_SOURCES	= crm_verify.c
 crm_verify_LDADD	= $(top_builddir)/lib/pengine/libpe_status.la 	\
-			$(top_builddir)/pengine/libpengine.la		\
-			$(COMMONLIBS)
+			  $(top_builddir)/daemons/schedulerd/libpengine.la	\
+			  $(top_builddir)/lib/cib/libcib.la		\
+			  $(top_builddir)/lib/common/libcrmcommon.la
 
 crm_attribute_SOURCES	= crm_attribute.c
-crm_attribute_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la $(COMMONLIBS)
+crm_attribute_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la	\
+			  $(top_builddir)/lib/cib/libcib.la		\
+			  $(top_builddir)/lib/common/libcrmcommon.la
 
 crm_resource_SOURCES	= crm_resource.c crm_resource_ban.c crm_resource_runtime.c crm_resource_print.c fake_transition.c
-crm_resource_CFLAGS	= -I$(top_srcdir)/pengine
-crm_resource_LDADD	= $(top_builddir)/lib/pengine/libpe_rules.la  		\
-			$(top_builddir)/lib/lrmd/liblrmd.la 			\
-			$(top_builddir)/lib/services/libcrmservice.la 		\
-			$(top_builddir)/lib/pengine/libpe_status.la 		\
-			$(top_builddir)/pengine/libpengine.la 			\
-			$(top_builddir)/lib/transition/libtransitioner.la	\
-			$(COMMONLIBS)
+crm_resource_CFLAGS	= -I$(top_srcdir)/daemons/schedulerd
+crm_resource_LDADD	= $(top_builddir)/lib/pengine/libpe_rules.la  	\
+			  $(top_builddir)/lib/lrmd/liblrmd.la 		\
+			  $(top_builddir)/lib/services/libcrmservice.la \
+			  $(top_builddir)/lib/pengine/libpe_status.la 	\
+			  $(top_builddir)/daemons/schedulerd/libpengine.la	\
+			  $(top_builddir)/lib/transition/libtransitioner.la \
+			  $(top_builddir)/lib/cib/libcib.la		\
+			  $(top_builddir)/lib/common/libcrmcommon.la
 
 iso8601_SOURCES		= test.iso8601.c
-iso8601_LDADD		= $(COMMONLIBS)
+iso8601_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la
 
 attrd_updater_SOURCES	= attrd_updater.c
-attrd_updater_LDADD	= $(COMMONLIBS)
+attrd_updater_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la
 
 crm_ticket_SOURCES	= crm_ticket.c
-crm_ticket_LDADD	= $(top_builddir)/lib/pengine/libpe_rules.la  \
-			$(top_builddir)/lib/pengine/libpe_status.la \
-			$(top_builddir)/pengine/libpengine.la \
-			$(COMMONLIBS)
+crm_ticket_CFLAGS	= -I$(top_srcdir)/daemons/schedulerd
+crm_ticket_LDADD	= $(top_builddir)/lib/pengine/libpe_rules.la	\
+			  $(top_builddir)/lib/pengine/libpe_status.la	\
+			  $(top_builddir)/daemons/schedulerd/libpengine.la	\
+			  $(top_builddir)/lib/cib/libcib.la		\
+			  $(top_builddir)/lib/common/libcrmcommon.la
+
+stonith_admin_SOURCES	= stonith_admin.c
+stonith_admin_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la	\
+			  $(top_builddir)/lib/cib/libcib.la		\
+			  $(top_builddir)/lib/pengine/libpe_status.la	\
+			  $(top_builddir)/lib/cluster/libcrmcluster.la	\
+			  $(top_builddir)/lib/fencing/libstonithd.la	\
+			  $(CLUSTERLIBS)
 
 if BUILD_SERVICELOG
 notifyServicelogEvent_SOURCES	= notifyServicelogEvent.c

@@ -1,20 +1,10 @@
-/* 
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+/*
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ *
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+
 #include <crm_internal.h>
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
@@ -128,17 +118,26 @@ static pe_cluster_option pe_opts[] = {
 	{ "stop-orphan-actions", NULL, "boolean", NULL, "true", &check_boolean,
 	  "Should deleted actions be cancelled", NULL },
  	{ "remove-after-stop", NULL, "boolean", NULL, "false", &check_boolean,
-	  "Remove resources from the LRM after they are stopped",
+	  "Remove resources from the executor after they are stopped",
 	  "Always set this to false.  Other values are, at best, poorly tested and potentially dangerous." },
 /* 	{ "", "", , "0", "", NULL }, */
 
 	/* Storing inputs */
-	{ "pe-error-series-max", NULL, "integer", NULL, "-1", &check_number,
-	  "The number of PE inputs resulting in ERRORs to save", "Zero to disable, -1 to store unlimited." },
-	{ "pe-warn-series-max",  NULL, "integer", NULL, "5000", &check_number,
-	  "The number of PE inputs resulting in WARNINGs to save", "Zero to disable, -1 to store unlimited." },
-	{ "pe-input-series-max", NULL, "integer", NULL, "4000", &check_number,
-	  "The number of other PE inputs to save", "Zero to disable, -1 to store unlimited." },
+	{
+        "pe-error-series-max", NULL, "integer", NULL, "-1", &check_number,
+	    "The number of scheduler inputs resulting in ERRORs to save",
+        "Zero to disable, -1 to store unlimited"
+    },
+	{
+        "pe-warn-series-max",  NULL, "integer", NULL, "5000", &check_number,
+	    "The number of scheduler inputs resulting in WARNINGs to save",
+        "Zero to disable, -1 to store unlimited"
+    },
+	{
+        "pe-input-series-max", NULL, "integer", NULL, "4000", &check_number,
+	    "The number of other scheduler inputs to save",
+        "Zero to disable, -1 to store unlimited"
+    },
 
 	/* Node health */
 	{ "node-health-strategy", NULL, "enum", "none, migrate-on-red, only-green, progressive, custom", "none", &check_health,
@@ -166,9 +165,8 @@ static pe_cluster_option pe_opts[] = {
 void
 pe_metadata(void)
 {
-    config_metadata("Policy Engine", "1.0",
-                    "Policy Engine Options",
-                    "This is a fake resource that details the options that can be configured for the Policy Engine.",
+    config_metadata("pacemaker-schedulerd", "1.0", "scheduler properties",
+                    "Cluster properties used by Pacemaker's scheduler",
                     pe_opts, DIMOF(pe_opts));
 }
 

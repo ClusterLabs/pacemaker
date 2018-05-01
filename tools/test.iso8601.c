@@ -1,19 +1,8 @@
-/* 
- * Copyright (C) 2005 Andrew Beekhof <andrew@beekhof.net>
- * 
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+/*
+ * Copyright 2005-2018 Andrew Beekhof <andrew@beekhof.net>
+ *
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -33,10 +22,15 @@ static struct crm_option long_options[] = {
     {"-spacer-",    0, 0, '-', "\nCommands:"},
     {"now",      0, 0, 'n', "\tDisplay the current date/time"},
     {"date",     1, 0, 'd', "Parse an ISO8601 date/time.  Eg. '2005-01-20 00:30:00 +01:00' or '2005-040'"},
-    {"period",   1, 0, 'p', "Parse an ISO8601 date/time with interval/period (wth start time).  Eg. '2005-040/2005-043'"},
-    {"duration", 1, 0, 'D', "Parse an ISO8601 date/time with duration (wth start time). Eg. '2005-040/P1M'"},
-    {"expected", 1, 0, 'E', "Parse an ISO8601 date/time with duration (wth start time). Eg. '2005-040/P1M'"},
-
+    { "period",   1, 0, 'p',
+      "Parse an ISO8601 period (interval) with start time (for example, '2005-040/2005-043')"
+    },
+    { "duration", 1, 0, 'D',
+      "Parse an ISO8601 duration with start time (for example, '2005-040/P1M')"
+    },
+    { "expected", 1, 0, 'E',
+      "Parse an ISO8601 duration with start time (for example, '2005-040/P1M')"
+    },
     {"-spacer-",0, 0, '-', "\nOutput Modifiers:"},
     {"seconds", 0, 0, 's', "\tShow result as a seconds since 0000-001 00:00:00Z"},
     {"epoch", 0, 0, 'S', "\tShow result as a seconds since EPOCH (1970-001 00:00:00Z)"},

@@ -1,19 +1,8 @@
 /*
- * Copyright (C) 2005 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2005-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 /*
@@ -470,13 +459,13 @@ crm_time_as_string(crm_time_t * date_time, int flags)
         } else if (flags & crm_time_seconds) {
             long long s = crm_time_get_seconds(date_time);
 
-            snprintf(date_s, 32, "%lld", s); /* Durations may not be +ve */
+            snprintf(date_s, 32, "%lld", s);
             goto done;
 
         } else if (flags & crm_time_epoch) {
             long long s = crm_time_get_seconds_since_epoch(date_time);
 
-            snprintf(date_s, 32, "%lld", s); /* Durations may not be +ve */
+            snprintf(date_s, 32, "%lld", s);
             goto done;
 
         } else if (flags & crm_time_weeks) {

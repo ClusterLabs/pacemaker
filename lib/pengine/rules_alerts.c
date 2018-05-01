@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2017 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2015-2018 Andrew Beekhof <andrew@beekhof.net>
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -168,7 +168,7 @@ unpack_alert(xmlNode *alert, crm_alert_entry_t *entry, guint *max_timeout)
  *
  * \return  List of unpacked alert entries
  *
- * \note Unlike most unpack functions, this is not used by the pengine itself,
+ * \note Unlike most unpack functions, this is not used by the scheduler itself,
  *       but is supplied for use by daemons that need to send alerts.
  */
 GListPtr

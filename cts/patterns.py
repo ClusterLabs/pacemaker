@@ -1,4 +1,12 @@
-from __future__ import print_function
+""" Pattern-holding classes for Pacemaker's Cluster Test Suite (CTS)
+"""
+
+# Pacemaker targets compatibility with Python 2.7 and 3.2+
+from __future__ import print_function, unicode_literals, absolute_import, division
+
+__copyright__ = "Copyright 2008-2018 Andrew Beekhof <andrew@beekhof.net>"
+__license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
+
 import sys, os
 
 from cts.CTSvars import *
@@ -10,6 +18,9 @@ class BasePatterns(object):
         patternvariants[name] = self
         self.ignore = [
             "avoid confusing Valgrind",
+
+            # Logging bug in some versions of libvirtd
+            r"libvirtd.*: internal error: Failed to parse PCI config address",
         ]
         self.BadNews = []
         self.components = {}
@@ -19,7 +30,7 @@ class BasePatterns(object):
             "CibAddXml"      : "cibadmin --modify -c --xml-text %s",
             "CibDelXpath"    : "cibadmin --delete --xpath %s",
             # 300,000 == 5 minutes
-            "RscRunning"     : CTSvars.CRM_DAEMON_DIR + "/lrmd_test -R -r %s",
+            "RscRunning"     : CTSvars.CRM_DAEMON_DIR + "/cts-exec-helper -R -r %s",
             "CIBfile"        : "%s:"+CTSvars.CRM_CONFIG_DIR+"/cib.xml",
             "TmpDir"         : "/tmp",
 
@@ -43,7 +54,7 @@ class BasePatterns(object):
             "StandbyQueryCmd" : "crm_attribute -qG -U %s -n standby -l forever -d off 2>/dev/null",
         }
         self.search = {
-            "Pat:DC_IDLE"      : "crmd.*State transition.*-> S_IDLE",
+            "Pat:DC_IDLE"      : "pacemaker-controld.*State transition.*-> S_IDLE",
             
             # This won't work if we have multiple partitions
             "Pat:Local_started" : "%s\W.*The local CRM is operational",
@@ -55,12 +66,12 @@ class BasePatterns(object):
             "Pat:TransitionComplete" : "Transition status: Complete: complete",
 
             "Pat:Fencing_start" : "(Initiating remote operation|Requesting peer fencing ).* (for|of) %s",
-            "Pat:Fencing_ok"    : r"stonith.*:\s*Operation .* of %s by .* for .*@.*: OK",
-            "Pat:Fencing_recover"    : r"pengine.*: Recover %s",
+            "Pat:Fencing_ok"    : r"pacemaker-fenced.*:\s*Operation .* of %s by .* for .*@.*: OK",
+            "Pat:Fencing_recover"    : r"schedulerd.*: Recover %s",
 
-            "Pat:RscOpOK"       : r"crmd.*:\s+Result of %s operation for %s.*: (0 \()?ok",
-            "Pat:RscRemoteOpOK" : r"crmd.*:\s+Result of %s operation for %s on %s: (0 \()?ok",
-            "Pat:NodeFenced"    : r"crmd.*:\s* Peer %s was terminated \(.*\) by .* on behalf of .*: OK",
+            "Pat:RscOpOK"       : r"pacemaker-controld.*:\s+Result of %s operation for %s.*: (0 \()?ok",
+            "Pat:RscRemoteOpOK" : r"pacemaker-controld.*:\s+Result of %s operation for %s on %s: (0 \()?ok",
+            "Pat:NodeFenced"    : r"pacemaker-controld.*:\s* Peer %s was terminated \(.*\) by .* on behalf of .*: OK",
             "Pat:FenceOpOK"     : "Operation .* for host '%s' with device .* returned: 0",
         }
 
@@ -104,7 +115,7 @@ class crm_corosync(BasePatterns):
 
         self.commands.update({
             "StartCmd"       : "service corosync start && service pacemaker start",
-            "StopCmd"        : "service pacemaker stop; [ ! -e /usr/sbin/pacemaker_remoted ] || service pacemaker_remote stop; service corosync stop",
+            "StopCmd"        : "service pacemaker stop; [ ! -e /usr/sbin/pacemaker-remoted ] || service pacemaker_remote stop; service corosync stop",
 
             "EpochCmd"      : "crm_node -e",
             "QuorumCmd"      : "crm_node -q",
@@ -112,11 +123,11 @@ class crm_corosync(BasePatterns):
         })
 
         self.search.update({
-            # Close enough... "Corosync Cluster Engine exiting normally" isn't printed
-            #   reliably and there's little interest in doing anything about it
+            # Close enough ... "Corosync Cluster Engine exiting normally" isn't
+            # printed reliably.
             "Pat:We_stopped"   : "%s\W.*Unloading all Corosync service engines",
-            "Pat:They_stopped" : "%s\W.*crmd.*Node %s(\[|\s).*state is now lost",
-            "Pat:They_dead"    : "crmd.*Node %s(\[|\s).*state is now lost",
+            "Pat:They_stopped" : "%s\W.*pacemaker-controld.*Node %s(\[|\s).*state is now lost",
+            "Pat:They_dead"    : "pacemaker-controld.*Node %s(\[|\s).*state is now lost",
 
             "Pat:ChildExit"    : r"\[[0-9]+\] exited with status [0-9]+ \(",
             "Pat:ChildKilled"  : r"%s\W.*pacemakerd.*%s\[[0-9]+\] terminated with signal 9",
@@ -134,9 +145,8 @@ class crm_corosync(BasePatterns):
             r"Parse error: Ignoring unknown option .*nodename",
             r"error.*: Operation 'reboot' .* with device 'FencingFail' returned:",
             r"getinfo response error: 1$",
-            "sbd.* error: inquisitor_child: DEBUG MODE IS ACTIVE",
-            r"sbd.* pcmk:\s*error:.*Connection to cib_ro failed",
-            r"sbd.* pcmk:\s*error:.*Connection to cib_ro.* closed .I/O condition=17",
+            r"sbd.* error: inquisitor_child: DEBUG MODE IS ACTIVE",
+            r"sbd.* pcmk:\s*error:.*Connection to cib_ro.* (failed|closed)",
         ]
 
         self.BadNews = [
@@ -151,8 +161,8 @@ class crm_corosync(BasePatterns):
             r"input=I_INTEGRATED cause=C_TIMER_POPPED",
             r"input=I_FINALIZED cause=C_TIMER_POPPED",
             r"input=I_ERROR",
-            r"(pacemakerd|lrmd|crmd):.*, exiting",
-            r"pengine.*Attempting recovery of resource",
+            r"(pacemakerd|pacemaker-execd|pacemaker-controld):.*, exiting",
+            r"schedulerd.*Attempting recovery of resource",
             r"is taking more than 2x its timeout",
             r"Confirm not received from",
             r"Welcome reply not received from",
@@ -165,7 +175,7 @@ class crm_corosync(BasePatterns):
             r"Parameters to .* action changed:",
             r"Parameters to .* changed",
             r"\[[0-9]+\] terminated with signal [0-9]+ \(",
-            r"pengine:.*Recover .*\(.* -\> .*\)",
+            r"schedulerd:.*Recover .*\(.* -\> .*\)",
             r"rsyslogd.* imuxsock lost .* messages from pid .* due to rate-limiting",
             r"Peer is not part of our cluster",
             r"We appear to be in an election loop",
@@ -183,7 +193,7 @@ class crm_corosync(BasePatterns):
             #r"No need to invoke the TE",
             #r"ping.*: DEBUG: Updated connected = 0",
             #r"Digest mis-match:",
-            r"crmd:.*Transition failed: terminated",
+            r"pacemaker-controld:.*Transition failed: terminated",
             r"Local CIB .* differs from .*:",
             r"warn.*:\s*Continuing but .* will NOT be used",
             r"warn.*:\s*Cluster configuration file .* is corrupt",
@@ -193,130 +203,116 @@ class crm_corosync(BasePatterns):
         ]
 
         self.components["common-ignore"] = [
-                    "Pending action:",
-                    "error: crm_log_message_adv:",
-                    r"resource( was|s were) active at shutdown",
-                    "pending LRM operations at shutdown",
-                    "Lost connection to the CIB service",
-                    "Connection to the CIB terminated...",
-                    "Sending message to CIB service FAILED",
-                    "apply_xml_diff:.*Diff application failed!",
-                    r"crmd.*:\s*Action A_RECOVER .* not supported",
-                    "unconfirmed_actions:.*Waiting on .* unconfirmed actions",
-                    "cib_native_msgready:.*Message pending on command channel",
-                    r"crmd.*:\s*Performing A_EXIT_1 - forcefully exiting the CRMd",
-                    "verify_stopped:.*Resource .* was active at shutdown.  You may ignore this error if it is unmanaged.",
-                    "error: attrd_connection_destroy:.*Lost connection to attrd",
-                    r".*:\s*Executing .* fencing operation \(.*\) on ",
-                    r".*:\s*Requesting fencing \([^)]+\) of node ",
-                    r"(Blackbox dump requested|Problem detected)",
-#                    "error: native_create_actions: Resource .*stonith::.* is active on 2 nodes attempting recovery",
-#                    "error: process_pe_message: Transition .* ERRORs found during PE processing",
-            ]
+            r"Pending action:",
+            r"resource( was|s were) active at shutdown",
+            r"pending LRM operations at shutdown",
+            r"Lost connection to the CIB manager",
+            r"pacemaker-controld.*:\s*Action A_RECOVER .* not supported",
+            r"pacemaker-controld.*:\s*Performing A_EXIT_1 - forcefully exiting ",
+            r".*:\s*Executing .* fencing operation \(.*\) on ",
+            r".*:\s*Requesting fencing \([^)]+\) of node ",
+            r"(Blackbox dump requested|Problem detected)",
+#           "Resource .*stonith::.* is active on 2 nodes attempting recovery",
+#           "Transition .* ERRORs found during PE processing",
+        ]
         
         self.components["corosync-ignore"] = [
             r"error:.*Connection to the CPG API failed: Library error",
             r"\[[0-9]+\] exited with status [0-9]+ \(",
-            r"cib.*error:.*Corosync connection lost",
-            r"stonith-ng.*error:.*Corosync connection terminated",
-            r"lrmd.*error:.*Connection to stonith-ng.* (failed|closed)",
-            r"lrmd.*error:.*LRMD lost STONITH connection",
-            r"crmd.*State transition .* S_RECOVERY",
-            r"crmd.*error:.*Input (I_ERROR|I_TERMINATE ) .*received in state",
-            r"crmd.*error:.*Could not recover from internal error",
+            r"pacemaker-based.*error:.*Corosync connection lost",
+            r"pacemaker-fenced.*error:.*Corosync connection terminated",
+            r"pacemaker-controld.*State transition .* S_RECOVERY",
+            r"pacemaker-controld.*error:.*Input (I_ERROR|I_TERMINATE ) .*received in state",
+            r"pacemaker-controld.*error:.*Could not recover from internal error",
             r"error:.*Connection to cib_(shm|rw).* (failed|closed)",
-            r"error:.*STONITH connection failed",
-            r"error: Connection to stonith-ng.* (failed|closed)",
+            r"error:.*Connection to (fencer|stonith-ng).* (closed|failed|lost)",
             r"crit: Fencing daemon connection failed",
             ]
 
         self.components["corosync"] = [
-            r"pacemakerd.*error:.*Connection destroyed",
-            r"attrd.*:\s*(crit|error):.*Lost connection to (Corosync|CIB) service",
-            r"stonith.*:\s*(Corosync connection terminated|Shutting down)",
-            r"cib.*:\s*Corosync connection lost!\s+Exiting.",
-            r"crmd.*:\s*(connection terminated|Disconnected from Corosync)",
-            r"pengine.*Scheduling Node .* for STONITH",
-            r"crmd.*:\s*Peer .* was terminated \(.*\) by .* for .*:\s*OK",
+            # We expect each daemon to lose its cluster connection.
+            # However, if the CIB manager loses its connection first,
+            # it's possible for another daemon to lose that connection and
+            # exit before losing the cluster connection.
+            r"pacemakerd.*:\s*(crit|error):.*Lost connection to cluster layer",
+            r"pacemaker-attrd.*:\s*(crit|error):.*Lost connection to (cluster layer|the CIB manager)",
+            r"pacemaker-based.*:\s*(crit|error):.*Lost connection to cluster layer",
+            r"pacemaker-controld.*:\s*(crit|error):.*Lost connection to (cluster layer|the CIB manager)",
+            r"pacemaker-fenced.*:\s*(crit|error):.*Lost connection to (cluster layer|the CIB manager)",
+            r"schedulerd.*Scheduling Node .* for STONITH",
+            r"pacemaker-controld.*:\s*Peer .* was terminated \(.*\) by .* on behalf of .*:\s*OK",
         ]
 
-        self.components["cib-ignore"] = [
-            "lrmd.*Connection to stonith-ng failed",
-            "lrmd.*Connection to stonith-ng.* closed",
-            "lrmd.*LRMD lost STONITH connection",
-            "lrmd.*STONITH connection failed, finalizing .* pending operations",
-            ]
+        self.components["pacemaker-based"] = [
+            r"pacemakerd.* pacemaker-attrd\[[0-9]+\] exited with status 102",
+            r"pacemakerd.* pacemaker-controld\[[0-9]+\] exited with status 1",
+            r"pacemakerd.* Respawning failed child process: pacemaker-attrd",
+            r"pacemakerd.* Respawning failed child process: pacemaker-based",
+            r"pacemakerd.* Respawning failed child process: pacemaker-controld",
+            r"pacemakerd.* Respawning failed child process: pacemaker-fenced",
+            r"pacemaker-.* Connection to cib_.* (failed|closed)",
+            r"pacemaker-attrd.*:.*Lost connection to the CIB manager",
+            r"pacemaker-controld.*:.*Lost connection to the CIB manager",
+            r"pacemaker-controld.*I_ERROR.*crmd_cib_connection_destroy",
+            r"pacemaker-controld.* State transition .* S_RECOVERY",
+            r"pacemaker-controld.*: Input I_TERMINATE .*from do_recover",
+            r"pacemaker-controld.*Could not recover from internal error",
+        ]
+        self.components["pacemaker-based-ignore"] = [
+            r"pacemaker-execd.*Connection to (fencer|stonith-ng).* (closed|failed|lost)",
+        ]
 
-        self.components["cib"] = [
-                    "State transition .* S_RECOVERY",
-                    r"Respawning failed child process: (attrd|crmd)",
-                    "Connection to cib_.* failed",
-                    "Connection to cib_.* closed",
-                    r"crmd.*:.*Connection to the CIB terminated...",
-                    r"attrd.*:.*(Lost connection to CIB service|Connection to the CIB terminated)",
-                    r"crmd\[[0-9]+\] exited with status 1 \(",
-                    r"attrd\[[0-9]+\] exited with status 102 \(",
-                    r"crmd.*: Input I_TERMINATE .*from do_recover",
-                    "crmd.*I_ERROR.*crmd_cib_connection_destroy",
-                    "crmd.*Could not recover from internal error",
-                    ]
+        self.components["pacemaker-execd"] = [
+            r"pacemaker-controld.*Connection to (pacemaker-execd|lrmd|executor) (failed|closed)",
+            r"pacemaker-controld.*I_ERROR.*lrm_connection_destroy",
+            r"pacemaker-controld.*State transition .* S_RECOVERY",
+            r"pacemaker-controld.*: Input I_TERMINATE .*from do_recover",
+            r"pacemaker-controld.*Could not recover from internal error",
+            r"pacemakerd.*pacemaker-execd.* terminated with signal 9",
+            r"pacemakerd.*pacemaker-controld\[[0-9]+\] exited with status 1",
+            r"pacemakerd.*Respawning failed child process: pacemaker-execd",
+            r"pacemakerd.*Respawning failed child process: pacemaker-controld",
+        ]
+        self.components["pacemaker-execd-ignore"] = []
 
-        self.components["lrmd"] = [
-                    "State transition .* S_RECOVERY",
-                    "LRM Connection failed",
-                    r"Respawning failed child process: crmd",
-                    "Connection to lrmd failed",
-                    "Connection to lrmd.* closed",
-                    "crmd.*I_ERROR.*lrm_connection_destroy",
-                    r"crmd\[[0-9]+\] exited with status 1 \(",
-                    r"crmd.*: Input I_TERMINATE .*from do_recover",
-                    "crmd.*Could not recover from internal error",
-                    ]
-        self.components["lrmd-ignore"] = []
-
-        self.components["crmd"] = [
+        self.components["pacemaker-controld"] = [
 #                    "WARN: determine_online_status: Node .* is unclean",
 #                    "Scheduling Node .* for STONITH",
 #                    "Executing .* fencing operation",
 # Only if the node wasn't the DC:  "State transition S_IDLE",
                     "State transition .* -> S_IDLE",
                     ]
-        self.components["crmd-ignore"] = []
+        self.components["pacemaker-controld-ignore"] = []
 
-        self.components["attrd"] = []
-        self.components["attrd-ignore"] = []
+        self.components["pacemaker-attrd"] = []
+        self.components["pacemaker-attrd-ignore"] = []
 
-        self.components["pengine"] = [
+        self.components["pacemaker-schedulerd"] = [
                     "State transition .* S_RECOVERY",
-                    r"Respawning failed child process: crmd",
-                    r"crmd\[[0-9]+\] exited with status 1 \(",
+                    r"Respawning failed child process: pacemaker-controld",
+                    r"pacemaker-controld\[[0-9]+\] exited with status 1 \(",
                     "Connection to pengine failed",
                     "Connection to pengine.* closed",
-                    "Connection to the Policy Engine failed",
-                    "crmd.*I_ERROR.*save_cib_contents",
-                    r"crmd.*: Input I_TERMINATE .*from do_recover",
-                    "crmd.*Could not recover from internal error",
+                    r"Connection to the scheduler failed",
+                    "pacemaker-controld.*I_ERROR.*save_cib_contents",
+                    r"pacemaker-controld.*: Input I_TERMINATE .*from do_recover",
+                    "pacemaker-controld.*Could not recover from internal error",
                     ]
-        self.components["pengine-ignore"] = []
+        self.components["pacemaker-schedulerd-ignore"] = []
 
-        self.components["stonith"] = [
-            "Connection to stonith-ng failed",
-            "LRMD lost STONITH connection",
-            "Connection to stonith-ng.* closed",
-            "Fencing daemon connection failed",
-            r"crmd.*:\s*warn.*:\s*Callback already present",
+        self.components["pacemaker-fenced"] = [
+            r"error:.*Connection to (fencer|stonith-ng).* (closed|failed|lost)",
+            r"Fencing daemon connection failed",
+            r"pacemaker-controld.*:\s*warn.*:\s*Callback already present",
         ]
-        self.components["stonith-ignore"] = [
-            r"pengine.*: Recover Fencing",
-            r"Updating failcount for Fencing",
-            r"error:.*Connection to stonith-ng failed",
-            r"error:.*Connection to stonith-ng.*closed \(I/O condition=17\)",
+        self.components["pacemaker-fenced-ignore"] = [
+            r"error:.*Connection to (fencer|stonith-ng).* (closed|failed|lost)",
             r"crit:.*Fencing daemon connection failed",
             r"error:.*Sign-in failed: triggered a retry",
-            "STONITH connection failed, finalizing .* pending operations.",
-            r"crmd.*:\s+Result of .* operation for Fencing.*Error",
+            r"Connection to (fencer|stonith-ng) failed, finalizing .* pending operations",
+            r"pacemaker-controld.*:\s+Result of .* operation for Fencing.*Error",
         ]
-        self.components["stonith-ignore"].extend(self.components["common-ignore"])
+        self.components["pacemaker-fenced-ignore"].extend(self.components["common-ignore"])
 
 
 class crm_corosync_docker(crm_corosync):

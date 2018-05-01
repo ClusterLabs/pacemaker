@@ -1,0 +1,172 @@
+#!@BASH_PATH@
+#
+# Copyright 2008-2018 Andrew Beekhof <andrew@beekhof.net>
+#
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
+#
+if [ -e ~/.cts ]; then
+    . ~/.cts
+fi
+anyAsked=0
+
+[ $# -lt 1 ] || CTS_numtests=$1
+
+die() { echo "$@"; exit 1; }
+
+if [ -z "$CTS_asked_once" ]; then
+    anyAsked=1
+    echo "This script should only be executed on the test master."
+    echo "The test master will remotely execute the actions required by the tests and should not be part of the cluster itself."
+    
+    read -p "Is this host intended to be the test master? (yN) " doUnderstand
+    [ "$doUnderstand" = "y" ] \
+        || die "This script must be executed on the test master"
+fi
+
+if [ -z "$CTS_node_list" ]; then
+    anyAsked=1
+    read -p "Please list your cluster nodes (eg. node1 node2 node3): " CTS_node_list
+else
+    echo "Beginning test of cluster: $CTS_node_list"
+fi
+
+if [ -z "$CTS_stack" ]; then
+    anyAsked=1
+    read -p "Which cluster stack are you using? ([corosync]): " CTS_stack
+    [ -n "$CTS_stack" ] || CTS_stack=corosync
+else
+    echo "Using the $CTS_stack cluster stack"
+fi
+
+[ "${CTS_node_list}" = "${CTS_node_list/$HOSTNAME/}" ] \
+    || die "This script must be executed on the test master and the test master cannot be part of the cluster"
+
+printf "+ Bootstraping ssh... "
+if [ -z "$SSH_AUTH_SOCK" ]; then
+    printf "\n + Initializing SSH "
+    eval "$(ssh-agent)"
+    echo " + Adding identities..."
+    ssh-add
+    rc=$?
+    if [ $rc -ne 0 ]; then
+	echo " -- No identities added"
+	printf "\nThe ability to open key-based 'ssh' connections (as the user 'root') is required to use CTS.\n"
+
+	read -p " - Do you want this program to help you create one? (yN) " auto_fix
+	if [ "$auto_fix" = "y" ]; then
+	    ssh-keygen -t dsa
+	    ssh-add
+	else
+	    die "Please run 'ssh-keygen -t dsa' to create a new key"
+	fi
+    fi
+else
+    echo "OK"
+fi
+
+test_ok=1
+printf "+ Testing ssh configuration... "
+for n in $CTS_node_list; do
+    ssh -l root -o PasswordAuthentication=no -o ConnectTimeout=5 "$n" /bin/true
+    rc=$?
+    if [ $rc -ne 0 ]; then
+	echo " - connection to $n failed"
+	test_ok=0
+    fi
+done
+
+if [ $test_ok -eq 0 ]; then
+    printf "\nThe ability to open key-based 'ssh' connections (as the user 'root') is required to use CTS.\n"
+
+    read -p " - Do you want this program to help you with such a setup? (yN) " auto_fix
+    if [ "$auto_fix" = "y" ]; then
+        # XXX are we picking the most suitable identity?
+        privKey=$(ssh-add -L | head -n1 | cut -d" " -f3)
+        sshCopyIdOpts="-o User=root"
+        [ -z "$privKey" ] || sshCopyIdOpts+=" -i \"${privKey}.pub\""
+        for n in $CTS_node_list; do
+            eval "ssh-copy-id $sshCopyIdOpts \"${n}\"" \
+                || die "Attempt to 'ssh-copy-id $sshCopyIdOpts \"$n\"' failed"
+        done
+    else
+        die "Please install one of your SSH public keys to root's account on all cluster nodes"
+    fi
+fi
+echo "OK"
+
+if [ -z "$CTS_logfile" ]; then
+    anyAsked=1
+    read -p " + Where does/should syslog store logs from remote hosts? (/var/log/messages) " CTS_logfile
+    [ -n "$CTS_logfile" ] || CTS_logfile=/var/log/messages
+fi
+
+[ -e "$CTS_logfile" ] || die "$CTS_logfile doesn't exist"
+
+if [ -z "$CTS_logfacility" ]; then
+    anyAsked=1
+    read -p " + Which log facility does the cluster use? (daemon) " CTS_logfacility
+    [ -n "$CTS_logfacility" ] || CTS_logfacility=daemon
+fi
+
+if [ -z "$CTS_boot" ]; then
+    read -p "+ Is the cluster software started automatically when a node boots? [yN] " CTS_boot
+    if [ -z "$CTS_boot" ]; then
+	CTS_boot=0
+    else
+	case $CTS_boot in
+	    1|y|Y) CTS_boot=1;;
+	    *) CTS_boot=0;;
+	esac
+    fi
+fi
+
+if [ -z "$CTS_numtests" ]; then
+    read -p "+ How many test iterations should be performed? (500) " CTS_numtests
+    [ -n "$CTS_numtests" ] || CTS_numtests=500
+fi
+
+if [ -z "$CTS_asked_once" ]; then
+    anyAsked=1
+    read -p "+ What type of STONITH agent do you use? (none) " CTS_stonith
+    [ -z "$CTS_stonith" ] \
+        || read -p "+ List any STONITH agent parameters (eq. device_host=switch.power.com): " CTS_stonith_args
+    [ -n "$CTS_adv" ] \
+        || read -p "+ (Advanced) Any extra CTS parameters? (none) " CTS_adv
+fi
+
+[ $anyAsked -eq 0 ] \
+    || read -p "+ Save values to ~/.cts for next time? (yN) " doSave
+
+if [ "$doSave" = "y" ]; then
+    cat > ~/.cts <<-EOF
+	# CTS Test data
+	CTS_stack="$CTS_stack"
+	CTS_node_list="$CTS_node_list"
+	CTS_logfile="$CTS_logfile"
+	CTS_logport="$CTS_logport"
+	CTS_logfacility="$CTS_logfacility"
+	CTS_asked_once=1
+	CTS_adv="$CTS_adv"
+	CTS_stonith="$CTS_stonith"
+	CTS_stonith_args="$CTS_stonith_args"
+	CTS_boot="$CTS_boot"
+EOF
+fi
+
+cts_extra=""
+if [ -n "$CTS_stonith" ]; then
+    cts_extra="$cts_extra --stonith-type $CTS_stonith"
+    [ -z "$CTS_stonith_args" ] \
+        || cts_extra="$cts_extra --stonith-params \"$CTS_stonith_args\""
+else
+    cts_extra="$cts_extra --stonith 0"
+    echo " - Testing a cluster without STONITH is like a blunt pencil... pointless"
+fi
+
+printf "\nAll set to go for %d iterations!\n" "$CTS_numtests"
+[ $anyAsked -ne 0 ] \
+    || echo "+ To use a different configuration, remove ~/.cts and re-run cts (or edit it manually)."
+
+echo Now paste the following command into this shell:
+echo "python `dirname "$0"`/CTSlab.py -L \"$CTS_logfile\" --syslog-facility \"$CTS_logfacility\" --no-unsafe-tests --stack \"$CTS_stack\" $CTS_adv --at-boot \"$CTS_boot\" $cts_extra \"$CTS_numtests\" --nodes \"$CTS_node_list\""

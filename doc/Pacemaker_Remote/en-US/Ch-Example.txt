@@ -89,7 +89,7 @@ Guest nodes will show up in `crm_mon` output as normal:
 Stack: corosync
 Current DC: node1 (version 1.1.16-12.el7_4.5-94ff4df) - partition with quorum
 Last updated: Fri Jan 12 13:52:39 2018
-Last change: Fri Jan 12 13:25:17 2018 via crmd on node1
+Last change: Fri Jan 12 13:25:17 2018 via pacemaker-controld on node1
 
 2 nodes configured
 2 resources configured
@@ -110,7 +110,7 @@ Now, the crm_mon output would show:
 Stack: corosync
 Current DC: node1 (version 1.1.16-12.el7_4.5-94ff4df) - partition with quorum
 Last updated: Fri Jan 12 13:52:39 2018
-Last change: Fri Jan 12 13:25:17 2018 via crmd on node1
+Last change: Fri Jan 12 13:25:17 2018 via pacemaker-controld on node1
 
 2 nodes configured
 2 resources configured

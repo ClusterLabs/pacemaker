@@ -85,51 +85,68 @@ image::images/pcmk-stack.png["Example cluster stack",width="10cm",height="7.5cm"
 
 Pacemaker itself is composed of multiple daemons that work together:
 
- * attrd
- * cib
- * crmd
- * lrmd
  * pacemakerd
- * pengine
- * stonithd
+ * pacemaker-attrd
+ * pacemaker-based
+ * pacemaker-controld
+ * pacemaker-execd
+ * pacemaker-fenced
+ * pacemaker-schedulerd
 
 .Internal Components
 image::images/pcmk-internals.png["Pacemaker software components",align="center",scaledwidth="65%"]
 
-The Pacemaker daemon (pacemakerd) is the master process that spawns all the
-other daemons, and respawns them if they unexpectedly exit.
+The Pacemaker master process (pacemakerd) spawns all the other daemons, and
+respawns them if they unexpectedly exit.
 
 The 'Cluster Information Base' (CIB) is an
 https://en.wikipedia.org/wiki/XML[XML] representation of the cluster's
-configuration and the state of all nodes and resources. The CIB daemon (cib)
-keeps the CIB synchronized across the cluster, and handles requests to modify it.
+configuration and the state of all nodes and resources. The 'CIB manager'
+(pacemaker-based) keeps the CIB synchronized across the cluster, and handles
+requests to modify it.
 
-The 'attribute daemon' (attrd) maintains a database of attributes for all
-nodes, keeps it synchronized across the cluster, and handles requests to modify
-them. These attributes are usually recorded in the CIB.
+The attribute manager (pacemaker-attrd) maintains a database of attributes for
+all nodes, keeps it synchronized across the cluster, and handles requests to
+modify them. These attributes are usually recorded in the CIB.
 
-Given a snapshot of the CIB as input, the 'policy engine' (pengine) determines
-what actions are necessary to achieve the desired state of the cluster.
+Given a snapshot of the CIB as input, the 'scheduler' (pacemaker-schedulerd)
+determines what actions are necessary to achieve the desired state of the
+cluster.
 
-The 'local resource management daemon' (lrmd) handles requests to execute
-resource agents on the local node, and returns the result.
+The 'local executor' (pacemaker-execd) handles requests to execute
+resource agents on the local cluster node, and returns the result.
 
-The 'STONITH daemon' (stonithd) handles requests to fence nodes. Given a target
-node, stonithd decides which cluster node(s) should execute which fencing
+The 'fencer' (pacemaker-fenced) handles requests to fence nodes. Given a target
+node, the fencer decides which cluster node(s) should execute which fencing
 device(s), and calls the necessary fencing agents (either directly, or via
-requests to stonithd peers on other nodes), and returns the result.
+requests to the fencer peers on other nodes), and returns the result.
 
-The 'cluster resource management daemon' ('CRMd') is Pacemaker's coordinator,
+The 'controller' (pacemaker-controld) is Pacemaker's coordinator,
 maintaining a consistent view of the cluster membership and orchestrating all
 the other components.
 
-Pacemaker centralizes cluster decision-making by electing one of the CRMd
-instances as the 'Designated Controller' ('DC'). Should the elected CRMd
+Pacemaker centralizes cluster decision-making by electing one of the controller
+instances as the 'Designated Controller' ('DC'). Should the elected DC
 process (or the node it is on) fail, a new one is quickly established.
 The DC responds to cluster events by taking a current snapshot of the CIB,
-feeding it to the policy engine, then asking the lrmd (either directly on the
-local node, or via requests to crmd peers on other nodes) and stonithd to
-execute any necessary actions.
+feeding it to the scheduler, then asking the executors (either directly on
+the local node, or via requests to controller peers on other nodes) and
+the fencer to execute any necessary actions.
+
+.Old daemon names
+[NOTE]
+====
+The Pacemaker daemons were renamed in version 2.0. You may still find
+references to the old names, especially in documentation targeted to version
+1.1.
+
+[cols="1,2",options="header",align="center"]
+|=========================================================
+| Old name | New name
+| attrd | pacemaker-attrd
+|=========================================================
+
+====
 
 == Node Redundancy Designs ==
 

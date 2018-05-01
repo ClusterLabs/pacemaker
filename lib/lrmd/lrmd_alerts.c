@@ -1,20 +1,8 @@
 /*
- * Copyright (c) 2015 David Vossel <davidvossel@gmail.com>
+ * Copyright 2015-2018 David Vossel <davidvossel@gmail.com>
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- *
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -124,7 +112,7 @@ is_target_alert(char **list, const char *value)
  * \internal
  * \brief Execute alert agents for an event
  *
- * \param[in]     lrmd        LRMD connection to use
+ * \param[in]     lrmd        Executor connection to use
  * \param[in]     alert_list  Alerts to execute
  * \param[in]     kind        Type of event that is being alerted for
  * \param[in]     attr_name   If crm_alert_attribute, the attribute name
@@ -141,6 +129,9 @@ exec_alert_list(lrmd_t *lrmd, GList *alert_list, enum crm_alert_flags kind,
     bool any_success = FALSE, any_failure = FALSE;
     const char *kind_s = crm_alert_flag2text(kind);
     crm_time_hr_t *now = NULL;
+    struct timeval tv_now;
+    char timestamp_epoch[20];
+    char timestamp_usec[7];
 
     params = alert_key2param(params, CRM_alert_kind, kind_s);
     params = alert_key2param(params, CRM_alert_version, VERSION);
@@ -166,7 +157,9 @@ exec_alert_list(lrmd_t *lrmd, GList *alert_list, enum crm_alert_flags kind,
         }
 
         if (now == NULL) {
-            now = crm_time_hr_new(NULL);
+            if (gettimeofday(&tv_now, NULL) == 0) {
+                now = crm_time_timeval_hr_convert(NULL, &tv_now);
+            }
         }
         crm_info("Sending %s alert via %s to %s",
                  kind_s, entry->id, entry->recipient);
@@ -187,6 +180,12 @@ exec_alert_list(lrmd_t *lrmd, GList *alert_list, enum crm_alert_flags kind,
                                               timestamp);
                 free(timestamp);
             }
+
+            snprintf(timestamp_epoch, sizeof(timestamp_epoch), "%lld",
+                     (long long) tv_now.tv_sec);
+            copy_params = alert_key2param(copy_params, CRM_alert_timestamp_epoch, timestamp_epoch);
+            snprintf(timestamp_usec, sizeof(timestamp_usec), "%06d", now->useconds);
+            copy_params = alert_key2param(copy_params, CRM_alert_timestamp_usec, timestamp_usec);
         }
 
         copy_params = alert_envvar2params(copy_params, entry);
@@ -216,7 +215,7 @@ exec_alert_list(lrmd_t *lrmd, GList *alert_list, enum crm_alert_flags kind,
  * \internal
  * \brief Send an alert for a node attribute change
  *
- * \param[in] lrmd        LRMD connection to use
+ * \param[in] lrmd        Executor connection to use
  * \param[in] alert_list  List of alert agents to execute
  * \param[in] node        Name of node with attribute change
  * \param[in] nodeid      Node ID of node with attribute change
@@ -254,7 +253,7 @@ lrmd_send_attribute_alert(lrmd_t *lrmd, GList *alert_list,
  * \internal
  * \brief Send an alert for a node membership event
  *
- * \param[in] lrmd        LRMD connection to use
+ * \param[in] lrmd        Executor connection to use
  * \param[in] alert_list  List of alert agents to execute
  * \param[in] node        Name of node with change
  * \param[in] nodeid      Node ID of node with change
@@ -288,7 +287,7 @@ lrmd_send_node_alert(lrmd_t *lrmd, GList *alert_list,
  * \internal
  * \brief Send an alert for a fencing event
  *
- * \param[in] lrmd        LRMD connection to use
+ * \param[in] lrmd        Executor connection to use
  * \param[in] alert_list  List of alert agents to execute
  * \param[in] target      Name of fence target node
  * \param[in] task        Type of fencing event that occurred
@@ -325,7 +324,7 @@ lrmd_send_fencing_alert(lrmd_t *lrmd, GList *alert_list,
  * \internal
  * \brief Send an alert for a resource operation
  *
- * \param[in] lrmd        LRMD connection to use
+ * \param[in] lrmd        Executor connection to use
  * \param[in] alert_list  List of alert agents to execute
  * \param[in] node        Name of node that executed operation
  * \param[in] op          Resource operation

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2016 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2012-2018 Andrew Beekhof <andrew@beekhof.net>
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -764,7 +764,7 @@ systemd_unit_exec(svc_action_t * op)
               op->synchronous ? "" : "a", op->action, op->agent, op->rsc);
 
     if (safe_str_eq(op->action, "meta-data")) {
-        /* TODO: See if we can teach the lrmd not to make these calls synchronously */
+        // @TODO Implement an async meta-data call in executor API
         op->stdout_data = systemd_unit_metadata(op->agent, op->timeout);
         op->rc = PCMK_OCF_OK;
 

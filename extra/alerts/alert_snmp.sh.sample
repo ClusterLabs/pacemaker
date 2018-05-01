@@ -92,7 +92,12 @@ trap_snmp_persistent_dir_default="/var/lib/pacemaker/snmp"
 : ${trap_snmp_persistent_dir=${trap_snmp_persistent_dir_default}}
 
 if [ "${trap_add_hires_timestamp_oid}" = "true" ]; then
-    hires_timestamp="HOST-RESOURCES-MIB::hrSystemDate s ${CRM_alert_timestamp}"
+# 
+# Please make hires_timestamp with CRM_alert_timestamp_epoch and CRM_alert_timestamp_usec according to Netsnmp's DateAndTime specification.
+# The current format is "%Y-%m-%d,%H:%M:%S.%01N".
+#
+    trap_fmt_timestamp=`date --date="@${CRM_alert_timestamp_epoch}" +"%Y-%m-%d,%H:%M:%S."`$(echo ${CRM_alert_timestamp_usec} | cut -b 1)
+    hires_timestamp="HOST-RESOURCES-MIB::hrSystemDate s ${trap_fmt_timestamp}"
 fi
 
 is_in_list() {

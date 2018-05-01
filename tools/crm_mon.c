@@ -1,19 +1,8 @@
 /*
- * Copyright (C) 2004-2015 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -46,7 +35,7 @@
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>
 #include <../lib/pengine/unpack.h>
-#include <../pengine/pengine.h>
+#include <pacemaker-schedulerd.h>
 #include <crm/stonith-ng.h>
 
 extern void cleanup_alloc_calculations(pe_working_set_t * data_set);
@@ -208,7 +197,7 @@ mon_timer_popped(gpointer data)
 static void
 mon_cib_connection_destroy(gpointer user_data)
 {
-    print_as("Connection to the CIB terminated\n");
+    print_as("Connection to the CIB manager terminated\n");
     if (cib) {
         cib->cmds->signoff(cib);
         timer_id = g_timeout_add(reconnect_msec, mon_timer_popped, NULL);
@@ -3714,7 +3703,7 @@ mon_st_callback(stonith_t * st, stonith_event_t * e)
 }
 
 /*
- * De-init ncurses, signoff from the CIB and deallocate memory.
+ * De-init ncurses, disconnect from the CIB manager, and deallocate memory.
  */
 static void
 clean_up(crm_exit_t exit_code)

@@ -1,20 +1,8 @@
-
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -512,8 +500,9 @@ do_init(void)
     the_cib = cib_new();
     rc = the_cib->cmds->signon(the_cib, crm_system_name, cib_command);
     if (rc != pcmk_ok) {
-        crm_err("Signon to CIB failed: %s", pcmk_strerror(rc));
-        fprintf(stderr, "Signon to CIB failed: %s\n", pcmk_strerror(rc));
+        crm_err("Connection to the CIB manager failed: %s", pcmk_strerror(rc));
+        fprintf(stderr, "Connection to the CIB manager failed: %s\n",
+                pcmk_strerror(rc));
     }
 
     return rc;
