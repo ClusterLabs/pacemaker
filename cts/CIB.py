@@ -40,7 +40,6 @@ from cts.cib_xml import *
 class ConfigBase(object):
     cts_cib = None
     version = "unknown"
-    feature_set = "unknown"
     Factory = None
 
     def __init__(self, CM, factory, tmpfile=None):
@@ -74,7 +73,6 @@ class ConfigBase(object):
 
 
 class CIB12(ConfigBase):
-    feature_set = "3.0"
     version = "pacemaker-1.2"
     counter = 1
 
@@ -164,8 +162,6 @@ class CIB12(ConfigBase):
             self.Factory.target = target
 
         self.Factory.rsh(self.Factory.target, "HOME=/root cibadmin --empty %s > %s" % (self.version, self.Factory.tmpfile))
-        #cib_base = self.cib_template % (self.feature_set, self.version, ''' remote-tls-port='9898' remote-clear-port='9999' ''')
-
         self.num_nodes = len(self.CM.Env["nodes"])
 
         no_quorum = "stop"
@@ -423,7 +419,6 @@ class CIB12(ConfigBase):
 
 
 class CIB20(CIB12):
-    feature_set = "3.0"
     version = "pacemaker-2.5"
 
 #class HASI(CIB10):
