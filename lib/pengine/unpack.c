@@ -2638,9 +2638,21 @@ unpack_rsc_op_failure(resource_t * rsc, node_t * node, int rc, xmlNode * xml_op,
     }
 
     if (rc != PCMK_OCF_NOT_INSTALLED || is_set(data_set->flags, pe_flag_symmetric_cluster)) {
-        crm_warn("Processing failed op %s for %s on %s: %s (%d)",
-                 task, rsc->id, node->details->uname, services_ocf_exitcode_str(rc),
-                 rc);
+        crm_warn("Processing failed %s of %s on %s: %s " CRM_XS " rc=%d",
+                 (is_probe? "probe" : task), rsc->id, node->details->uname,
+                 services_ocf_exitcode_str(rc), rc);
+
+        if (is_probe && (rc != PCMK_OCF_OK)
+            && (rc != PCMK_OCF_NOT_RUNNING)
+            && (rc != PCMK_OCF_RUNNING_MASTER)) {
+
+            /* A failed (not just unexpected) probe result could mean the user
+             * didn't know resources will be probed even where they can't run.
+             */
+            crm_notice("If it is not possible for %s to run on %s, see "
+                       "the resource-discovery option for location constraints",
+                       rsc->id, node->details->uname);
+        }
 
         record_failed_op(xml_op, node, rsc, data_set);
 
