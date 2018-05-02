@@ -67,7 +67,9 @@
   } || %(test -f /usr/lib/os-release; test $? -ne 0; echo $?))
 
 %if 0%{?fedora} > 20 || 0%{?rhel} > 7
-%global gnutls_priorities @SYSTEM
+## Base GnuTLS cipher priorities (presumably only the initial, required keyword)
+## overridable with "rpmbuild --define 'pcmk_gnutls_priorities PRIORITY-SPEC'"
+%define gnutls_priorities %{?pcmk_gnutls_priorities}%{!?pcmk_gnutls_priorities:@SYSTEM}
 %endif
 
 # Python-related definitions
