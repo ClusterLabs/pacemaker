@@ -215,11 +215,10 @@ AC_ARG_WITH(cibsecrets,
     [ SUPPORT_CIBSECRETS=no ],
 )
 
+PCMK_GNUTLS_PRIORITIES="NORMAL"
 AC_ARG_WITH(gnutls-priorities,
     [  --with-gnutls-priorities  GnuTLS cipher priorities @<:@NORMAL@:>@ ],
-    [ PCMK_GNUTLS_PRIORITIES="$withval" ],
-    [ PCMK_GNUTLS_PRIORITIES="NORMAL" ],
-)
+    [ test x"$withval" = x"no" || PCMK_GNUTLS_PRIORITIES="$withval" ])
 
 INITDIR=""
 AC_ARG_WITH(initdir,
@@ -388,8 +387,12 @@ fi
 AC_DEFINE_UNQUOTED(CRM_BUNDLE_DIR,"$CRM_BUNDLE_DIR", Location for Pacemaker bundle logs)
 AC_SUBST(CRM_BUNDLE_DIR)
 
+
+if test x"${PCMK_GNUTLS_PRIORITIES}" = x""; then
+    AC_MSG_ERROR([Empty string not applicable with --with-gnutls-priorities])
+fi
 AC_DEFINE_UNQUOTED([PCMK_GNUTLS_PRIORITIES], ["$PCMK_GNUTLS_PRIORITIES"],
-		   [GnuTLS cipher priorities])
+                   [GnuTLS cipher priorities])
 
 for j in prefix exec_prefix bindir sbindir libexecdir datadir sysconfdir \
     sharedstatedir localstatedir libdir includedir oldincludedir infodir \
