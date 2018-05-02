@@ -8,6 +8,7 @@ TAGS
 Makefile
 Makefile.in
 .deps
+.dirstamp
 .libs
 *.pc
 *.pyc
@@ -155,17 +156,20 @@ lib/gnu/stdalign.h
 # Built or present only in 2.0 branch (makes switching branches easier)
 /cts/cts-cli
 /cts/cts-coverage
-/cts/cts-lrmd
-/cts/cts-pengine
+/cts/cts-exec
+/cts/cts-fencing
+/cts/cts-log-watcher
 /cts/cts-regression
-/cts/cts-stonithd
+/cts/cts-scheduler
+/cts/cts-support
 /cts/fence_dummy
 /cts/pacemaker-cts-dummyd
 /cts/pacemaker-cts-dummyd@.service
-/cts/pengine/
+/cts/scheduler/
+/daemons
 /doc/Pacemaker_Administration.build
 /doc/Pacemaker_Administration/
-/pacemakerd/
+/tools/stonith_admin
 
 #Other 
 mock
