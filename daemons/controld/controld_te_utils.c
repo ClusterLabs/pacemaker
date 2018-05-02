@@ -473,7 +473,7 @@ static struct abort_timer_s {
 static gboolean
 abort_timer_popped(gpointer data)
 {
-    if (abort_timer.aborted == FALSE) {
+    if (AM_I_DC && (abort_timer.aborted == FALSE)) {
         abort_transition(abort_timer.priority, abort_timer.action,
                          abort_timer.text, NULL);
     }
