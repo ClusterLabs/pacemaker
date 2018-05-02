@@ -719,7 +719,7 @@ find_and_track_existing_processes(void)
     DIR *dp;
     struct dirent *entry;
     bool start_tracker = FALSE;
-    char entry_name[64];
+    char entry_name[16];
 
     dp = opendir("/proc");
     if (!dp) {
@@ -737,13 +737,12 @@ find_and_track_existing_processes(void)
             continue;
         }
         for (i = 0; i < max; i++) {
-            const char *name = pcmk_children[i].name;
+            if ((pcmk_children[i].start_seq != 0)
+                && !strncmp(entry_name, pcmk_children[i].name, 15)
+                && (crm_pid_active(pid, NULL) == 1)) {
 
-            if (pcmk_children[i].start_seq == 0) {
-                continue;
-            }
-            if (safe_str_eq(entry_name, name) && (crm_pid_active(pid, NULL) == 1)) {
-                crm_notice("Tracking existing %s process (pid=%d)", name, pid);
+                crm_notice("Tracking existing %s process (pid=%d)",
+                           pcmk_children[i].name, pid);
                 pcmk_children[i].pid = pid;
                 pcmk_children[i].active_before_startup = TRUE;
                 start_tracker = TRUE;
