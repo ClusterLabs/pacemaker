@@ -7,8 +7,6 @@
 
 MAINTAINERCLEANFILES    = Makefile.in
 
-CLEANFILES      = CTSlab.py LSBDummy OCFIPraTest.py fence_dummy
-
 EXTRA_DIST      = $(cts_SCRIPTS) $(cts_DATA)
 
 #
