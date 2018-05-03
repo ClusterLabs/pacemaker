@@ -604,7 +604,9 @@ create_remote_resource(
         tuple->node->rsc_discover_mode = pe_discover_exclusive;
 
         /* Ensure the node shows up as allowed and with the correct discovery set */
-        g_hash_table_destroy(tuple->child->allowed_nodes);
+        if (tuple->child->allowed_nodes != NULL) {
+            g_hash_table_destroy(tuple->child->allowed_nodes);
+        }
         tuple->child->allowed_nodes = g_hash_table_new_full(crm_str_hash,
                                                             g_str_equal, NULL,
                                                             free);
