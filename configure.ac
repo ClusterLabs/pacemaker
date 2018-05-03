@@ -263,6 +263,7 @@ dnl General Processing
 dnl ===============================================
 
 AC_PROG_LN_S
+AC_PROG_MKDIR_P
 
 if cc_supports_flag -Werror; then
     WERROR="-Werror"
