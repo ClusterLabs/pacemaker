@@ -9,6 +9,9 @@ MAINTAINERCLEANFILES    = Makefile.in
 
 EXTRA_DIST      = $(cts_SCRIPTS) $(cts_DATA)
 
+halibdir	= $(CRM_DAEMON_DIR)
+halib_SCRIPTS	= cts-log-watcher
+
 #
 # Test commands and globally applicable test files should be in $(testdir),
 # and command-specific test data should be in a command-specific subdirectory.

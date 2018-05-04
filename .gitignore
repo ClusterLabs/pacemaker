@@ -68,6 +68,7 @@ Doxyfile
 /cts/cts-coverage
 /cts/cts-exec
 /cts/cts-fencing
+/cts/cts-log-watcher
 /cts/cts-regression
 /cts/cts-scheduler
 /cts/fence_dummy

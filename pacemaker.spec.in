@@ -598,6 +598,7 @@ exit 0
 %endif
 
 %exclude %{_libexecdir}/pacemaker/cts-exec-helper
+%exclude %{_libexecdir}/pacemaker/cts-log-watcher
 %exclude %{_sbindir}/pacemaker-remoted
 %if %{with legacy_links}
 %exclude %{_sbindir}/pacemaker_remoted
@@ -760,6 +761,7 @@ exit 0
 %if %{defined _unitdir}
 %{_unitdir}/pacemaker-cts-dummyd@.service
 %endif
+%{_libexecdir}/pacemaker/cts-log-watcher
 
 %license licenses/GPLv2
 %doc COPYING

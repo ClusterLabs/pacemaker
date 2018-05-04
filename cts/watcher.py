@@ -15,88 +15,7 @@ import threading
 from cts.remote import *
 from cts.logging import *
 
-has_log_watcher = {}
-log_watcher_file = "cts_log_watcher.py"
-log_watcher_bin = CTSvars.CRM_DAEMON_DIR + "/" + log_watcher_file
-log_watcher = """
-import sys, os, fcntl
-
-'''
-Remote logfile reader for CTS
-Reads a specified number of lines from the supplied offset
-Returns the current offset
-
-Contains logic for handling truncation
-'''
-
-limit    = 0
-offset   = 0
-prefix   = ''
-filename = '/var/log/messages'
-
-skipthis=None
-args=sys.argv[1:]
-for i in range(0, len(args)):
-    if skipthis:
-        skipthis=None
-        continue
-
-    elif args[i] == '-l' or args[i] == '--limit':
-        skipthis=1
-        limit = int(args[i+1])
-
-    elif args[i] == '-f' or args[i] == '--filename':
-        skipthis=1
-        filename = args[i+1]
-
-    elif args[i] == '-o' or args[i] == '--offset':
-        skipthis=1
-        offset = args[i+1]
-
-    elif args[i] == '-p' or args[i] == '--prefix':
-        skipthis=1
-        prefix = args[i+1]
-
-    elif args[i] == '-t' or args[i] == '--tag':
-        skipthis=1
-
-if not os.access(filename, os.R_OK):
-    print(prefix + 'Last read: %d, limit=%d, count=%d - unreadable' % (0, limit, 0))
-    sys.exit(1)
-
-logfile=open(filename, 'r')
-logfile.seek(0, os.SEEK_END)
-newsize=logfile.tell()
-
-if offset != 'EOF':
-    offset = int(offset)
-    if newsize >= offset:
-        logfile.seek(offset)
-    else:
-        print(prefix + ('File truncated from %d to %d' % (offset, newsize)))
-        if (newsize*1.05) < offset:
-            logfile.seek(0)
-        # else: we probably just lost a few logs after a fencing op
-        #       continue from the new end
-        # TODO: accept a timestamp and discard all messages older than it
-
-# Don't block when we reach EOF
-fcntl.fcntl(logfile.fileno(), fcntl.F_SETFL, os.O_NONBLOCK)
-
-count = 0
-while True:
-    if logfile.tell() >= newsize:   break
-    elif limit and count >= limit: break
-
-    line = logfile.readline()
-    if not line: break
-
-    print(line.strip())
-    count += 1
-
-print(prefix + 'Last read: %d, limit=%d, count=%d' % (logfile.tell(), limit, count))
-logfile.close()
-"""
+log_watcher_bin = CTSvars.CRM_DAEMON_DIR + "/cts-log-watcher"
 
 class SearchObj(object):
     def __init__(self, filename, host=None, name=None):
@@ -142,25 +61,9 @@ class SearchObj(object):
 
 class FileObj(SearchObj):
     def __init__(self, filename, host=None, name=None):
-        global has_log_watcher
         SearchObj.__init__(self, filename, host, name)
 
         if host is not None:
-            if not host in has_log_watcher:
-
-                global log_watcher
-                global log_watcher_bin
-
-                self.debug("Installing %s on %s" % (log_watcher_file, host))
-
-                os.system("cat << END >> %s\n%s\nEND" %(log_watcher_file, log_watcher))
-                os.system("chmod 755 %s" %(log_watcher_file))
-
-                self.rsh.cp(log_watcher_file, "root@%s:%s" % (host, log_watcher_bin))
-                has_log_watcher[host] = 1
-
-                os.system("rm -f %s" %(log_watcher_file))
-
             self.harvest()
 
     def async_complete(self, pid, returncode, outLines, errLines):
@@ -193,7 +96,7 @@ class FileObj(SearchObj):
 
         global log_watcher_bin
         return self.rsh.call_async(self.host,
-                                   "python %s -t %s -p CTSwatcher: -l 200 -f %s -o %s" % (log_watcher_bin, self.name, self.filename, self.offset),
+                                   "%s -t %s -p CTSwatcher: -l 200 -f %s -o %s" % (log_watcher_bin, self.name, self.filename, self.offset),
                 completionDelegate=self)
 
     def setend(self):
@@ -202,7 +105,7 @@ class FileObj(SearchObj):
 
         global log_watcher_bin
         (rc, lines) = self.rsh(self.host,
-                               "python %s -t %s -p CTSwatcher: -l 2 -f %s -o %s" % (log_watcher_bin, self.name, self.filename, "EOF"),
+                               "%s -t %s -p CTSwatcher: -l 2 -f %s -o %s" % (log_watcher_bin, self.name, self.filename, "EOF"),
                  None, silent=True)
 
         for line in lines:
