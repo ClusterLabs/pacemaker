@@ -212,8 +212,9 @@
 
 <xsl:variable name="MapResourceInstanceAttributes"
               select="document('')/xsl:stylesheet
-                        /cibtr:map/cibtr:table[@for = 'resource-instance-attributes'
-                      ]"/>
+                        /cibtr:map/cibtr:table[
+                          @for = 'resource-instance-attributes'
+                        ]"/>
 
 <xsl:variable name="MapResourcesOperation"
               select="document('')/xsl:stylesheet
@@ -656,13 +657,10 @@
  -->
 <xsl:template name="ProcessRscInstanceAttributes">
   <xsl:param name="Source"/>
-  <xsl:param name="InverseMode" select="false()"/>
   <xsl:param name="InnerSimulation" select="false()"/>
   <xsl:param name="InnerPass">
     <xsl:choose>
-      <xsl:when test="$InverseMode
-                      or
-                      $InnerSimulation">
+      <xsl:when test="$InnerSimulation">
         <xsl:value-of select="''"/>
       </xsl:when>
       <xsl:otherwise>
@@ -677,9 +675,7 @@
   <!-- B: special-casing nvpair -->
   <xsl:for-each select="$Source/node()">
     <xsl:choose>
-      <xsl:when test="self::text()
-                      and
-                      not($InverseMode)">
+      <xsl:when test="self::text()">
         <!-- cf. trick A. (consideration 1.) -->
         <xsl:choose>
           <xsl:when test="normalize-space($InnerPass)
@@ -755,7 +751,7 @@
                                   )
                                 )
                               ]"/>
-        <xsl:if test="not($InverseMode or $InnerSimulation)">
+        <xsl:if test="not($InnerSimulation)">
           <xsl:call-template name="MapMsg">
             <xsl:with-param name="Context" select="@id"/>
             <xsl:with-param name="Replacement" select="$Replacement"/>
@@ -764,16 +760,11 @@
         <xsl:choose>
           <xsl:when test="$Replacement
                           and
-                          (
-                            not(string($Replacement/@with))
-                            or
-                            $Replacement/@where
-                          )">
+                          not(string($Replacement/@with))">
             <!-- drop (move-over code missing) -->
           </xsl:when>
-          <xsl:when test="$InverseMode"/>
           <xsl:when test="$Replacement">
-            <!-- plain rename (space helper?) -->
+            <!-- plain rename -->
             <xsl:call-template name="HelperDenormalizedSpace">
               <xsl:with-param name="Source" select="."/>
               <xsl:with-param name="InnerSimulation" select="$InnerSimulation"/>
@@ -814,21 +805,12 @@
               <xsl:with-param name="Source" select="."/>
               <xsl:with-param name="InnerSimulation" select="$InnerSimulation"/>
             </xsl:call-template>
-            <xsl:copy>
-              <xsl:apply-templates select="@*|node()"/>
-            </xsl:copy>
+            <xsl:call-template name="HelperIdentity"/>
           </xsl:otherwise>
         </xsl:choose>
       </xsl:when>
-      <xsl:when test="$InverseMode
-                      or
-                      self::comment()">
-        <!-- drop -->
-      </xsl:when>
       <xsl:otherwise>
-        <xsl:copy>
-          <xsl:apply-templates select="@*|node()"/>
-        </xsl:copy>
+        <xsl:call-template name="HelperIdentity"/>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:for-each>
