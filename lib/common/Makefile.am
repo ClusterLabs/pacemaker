@@ -33,7 +33,8 @@ libcrmcommon_la_SOURCES	= compat.c digest.c ipc.c io.c procfs.c utils.c xml.c	\
 if BUILD_CIBSECRETS
 libcrmcommon_la_SOURCES	+= cib_secrets.c
 endif
-libcrmcommon_la_SOURCES	+= $(top_builddir)/lib/gnu/md5.c
+#libcrmcommon_la_SOURCES	+= $(top_builddir)/lib/gnu/md5.c
+libcrmcommon_la_SOURCES	+= ../gnu/md5.c
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~
