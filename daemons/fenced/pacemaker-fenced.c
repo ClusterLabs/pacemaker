@@ -1299,7 +1299,8 @@ main(int argc, char **argv)
         printf("<?xml version=\"1.0\"?><!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n");
         printf("<resource-agent name=\"pacemaker-fenced\">\n");
         printf(" <version>1.0</version>\n");
-        printf(" <longdesc lang=\"en\">Instance attributes available for all \"stonith\"-class resources</longdesc>\n");
+        printf(" <longdesc lang=\"en\">Instance attributes available for all \"stonith\"-class resources"
+                                       " and used by Pacemaker's fence daemon, formerly known as stonithd</longdesc>\n");
         printf(" <shortdesc lang=\"en\">Instance attributes available for all \"stonith\"-class resources</shortdesc>\n");
         printf(" <parameters>\n");
 
