@@ -71,6 +71,7 @@ Doxyfile
 /cts/cts-log-watcher
 /cts/cts-regression
 /cts/cts-scheduler
+/cts/cts-support
 /cts/fence_dummy
 /cts/lxc_autogen.sh
 /cts/pacemaker-cts-dummyd

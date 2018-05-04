@@ -1,0 +1,111 @@
+#!/bin/sh
+#
+# Installer for support files needed by Pacemaker's Cluster Test Suite
+#
+# Copyright 2018 Red Hat, Inc.
+#
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
+#
+
+USAGE_TEXT="Usage: $0 <install|uninstall|--help>"
+
+HELP_TEXT="$USAGE_TEXT
+Commands (must be run as root):
+ install      Install support files needed by Pacemaker CTS
+ uninstall    Remove support files needed by Pacemaker CTS"
+
+# These constants must track crm_exit_t values
+CRM_EX_OK=0
+CRM_EX_ERROR=1
+CRM_EX_USAGE=64
+
+UNIT_DIR="@systemdunitdir@"
+LIBEXEC_DIR="@libexecdir@/pacemaker"
+INIT_DIR="@INITDIR@"
+DATA_DIR="@datadir@/pacemaker/tests/cts"
+
+DUMMY_DAEMON="pacemaker-cts-dummyd"
+DUMMY_DAEMON_UNIT="pacemaker-cts-dummyd@.service" 
+
+# If the install directory doesn't exist, assume we're in a build directory.
+if [ ! -d "$DATA_DIR" ]; then
+    # If readlink supports -e (i.e. GNU), use it.
+    readlink -e / >/dev/null 2>/dev/null
+    if [ $? -eq 0 ]; then
+        DATA_DIR="$(dirname $(readlink -e $0))"
+    else
+        DATA_DIR="$(dirname $0)"
+    fi
+fi
+
+usage() {
+    echo "Error: $@"
+    echo "$USAGE_TEXT"
+    exit $CRM_EX_USAGE
+}
+
+must_be_root() {
+    if ! [ "$(id -u)" = "0" ]; then
+        usage "this command must be run as root"
+        return $CRM_EX_ERROR
+    fi
+    return $CRM_EX_OK
+}
+
+support_uninstall() {
+    must_be_root || return $CRM_EX_ERROR
+
+    if [ -d "$UNIT_DIR" ]; then
+        for FILE in  "$UNIT_DIR/$DUMMY_DAEMON_UNIT"; do
+            echo "Removing $FILE ..."
+            rm -f "$UNIT_DIR/$DUMMY_DAEMON_UNIT"
+        done
+        systemctl daemon-reload # Ignore failure
+    fi
+
+    for FILE in "$LIBEXEC_DIR/$DUMMY_DAEMON"; do
+        echo "Removing $FILE ..."
+        rm -f "$FILE"
+    done
+
+    return $CRM_EX_OK
+}
+
+support_install() {
+    support_uninstall || return $CRM_EX_ERROR
+    cd "$DATA_DIR"
+    if [ -d "$UNIT_DIR" ]; then
+
+        echo "Installing $DUMMY_DAEMON ..."
+        mkdir -p "$LIBEXEC_DIR"
+        install -m 0755 "$DUMMY_DAEMON" "$LIBEXEC_DIR" || return $CRM_EX_ERROR
+
+        echo "Installing $DUMMY_DAEMON_UNIT ..."
+        install -m 0644 "$DUMMY_DAEMON_UNIT" "$UNIT_DIR" || return $CRM_EX_ERROR
+        systemctl daemon-reload # Ignore failure
+    fi
+    return $CRM_EX_OK
+}
+
+COMMAND=""
+while [ $# -gt 0 ] ; do
+    case "$1" in
+        --help)
+            echo "$HELP_TEXT"
+            exit $CRM_EX_OK
+            ;;
+        install|uninstall)
+            COMMAND="$1"
+            shift
+            ;;
+        *)
+            usage "unknown option '$1'"
+            ;;
+    esac
+done
+case "$COMMAND" in
+    install)   support_install              ;;
+    uninstall) support_uninstall            ;;
+    *)         usage "must specify command" ;;
+esac
