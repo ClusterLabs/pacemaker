@@ -58,10 +58,11 @@ AC_ARG_WITH(pkg-name,
     [  --with-pkg-name=name     Override package name (if you are a packager needing to pretend) ],
     [ PACKAGE_NAME="$withval" ])
 
-dnl 1.11:         minimum automake version required
-dnl foreign:      don't require GNU-standard top-level files
-dnl silent-rules: allow "--enable-silent-rules" (no-op in 1.13+)
-AM_INIT_AUTOMAKE([1.11 foreign silent-rules])
+dnl 1.11:           minimum automake version required
+dnl foreign:        don't require GNU-standard top-level files
+dnl silent-rules:   allow "--enable-silent-rules" (no-op in 1.13+)
+dnl subdir-objects: keep .o's with their .c's (no-op in 2.0+)
+AM_INIT_AUTOMAKE([1.11 foreign silent-rules subdir-objects])
 
 dnl Example 2.4. Silent Custom Rule to Generate a File
 dnl %-bar.pc: %.pc
@@ -263,6 +264,7 @@ dnl General Processing
 dnl ===============================================
 
 AC_PROG_LN_S
+AC_PROG_MKDIR_P
 
 if cc_supports_flag -Werror; then
     WERROR="-Werror"
@@ -1005,6 +1007,10 @@ AC_CHECK_FUNCS(qb_ipcs_connection_get_buffer_size,
                AC_DEFINE(HAVE_IPCS_GET_BUFFER_SIZE, 1,
                          [Have qb_ipcc_get_buffer_size function]))
 
+dnl libqb not yet released (as of 2018-05)
+CHECK_ENUM_VALUE([qb/qblog.h],[qb_log_conf],[QB_LOG_CONF_MAX_LINE_LEN])
+CHECK_ENUM_VALUE([qb/qblog.h],[qb_log_conf],[QB_LOG_CONF_ELLIPSIS])
+
 dnl Support Linux-HA fence agents if available
 if test "$cross_compiling" != "yes"; then
     CPPFLAGS="$CPPFLAGS -I${prefix}/include/heartbeat"
@@ -1719,8 +1725,10 @@ AC_CONFIG_FILES([cts/cts-cli], [chmod +x cts/cts-cli])
 AC_CONFIG_FILES([cts/cts-coverage], [chmod +x cts/cts-coverage])
 AC_CONFIG_FILES([cts/cts-exec], [chmod +x cts/cts-exec])
 AC_CONFIG_FILES([cts/cts-fencing], [chmod +x cts/cts-fencing])
+AC_CONFIG_FILES([cts/cts-log-watcher], [chmod +x cts/cts-log-watcher])
 AC_CONFIG_FILES([cts/cts-regression], [chmod +x cts/cts-regression])
 AC_CONFIG_FILES([cts/cts-scheduler], [chmod +x cts/cts-scheduler])
+AC_CONFIG_FILES([cts/cts-support], [chmod +x cts/cts-support])
 AC_CONFIG_FILES([cts/lxc_autogen.sh], [chmod +x cts/lxc_autogen.sh])
 AC_CONFIG_FILES([cts/benchmark/clubench], [chmod +x cts/benchmark/clubench])
 AC_CONFIG_FILES([cts/fence_dummy], [chmod +x cts/fence_dummy])

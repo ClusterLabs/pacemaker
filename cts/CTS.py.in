@@ -362,6 +362,10 @@ class ClusterManager(UserDict):
             self.rsh.cp(file_with_path, "root@%s:%s/%s" % (node, destdir, filename))
         return file_with_path
 
+    def install_support(self, command="install"):
+        for node in self.Env["nodes"]:
+            self.rsh(node, CTSvars.CRM_DAEMON_DIR + "/cts-support " + command)
+
     def install_config(self, node):
         return None
 

@@ -1,5 +1,12 @@
-from __future__ import print_function
-from __future__ import absolute_import
+""" Test scenario classes for Pacemaker's Cluster Test Suite (CTS)
+"""
+
+# Pacemaker targets compatibility with Python 2.7 and 3.2+
+from __future__ import print_function, unicode_literals, absolute_import, division
+
+__copyright__ = "Copyright 2000-2018 Alan Robertson <alanr@unix.sh>"
+__license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
+
 from cts.CTS import *
 from cts.CTStests import CTSTest
 from cts.CTSaudits import ClusterAudit
@@ -90,6 +97,7 @@ A partially set up scenario is torn down if it fails during setup.
         self.audit()
         if self.ClusterManager.Env["valgrind-tests"]:
             self.ClusterManager.install_helper("cts.supp")
+        self.ClusterManager.install_support()
 
         self.BadNews = LogWatcher(self.ClusterManager.Env["LogFileName"],
                                   self.ClusterManager.templates.get_patterns(
@@ -124,6 +132,7 @@ A partially set up scenario is torn down if it fails during setup.
 
         self.audit()
         self.ClusterManager.StatsExtract()
+        self.ClusterManager.install_support("uninstall")
 
     def incr(self, name):
         '''Increment (or initialize) the value associated with the given name'''

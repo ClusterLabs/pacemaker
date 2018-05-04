@@ -7,9 +7,10 @@
 
 MAINTAINERCLEANFILES    = Makefile.in
 
-CLEANFILES      = CTSlab.py LSBDummy OCFIPraTest.py fence_dummy
-
 EXTRA_DIST      = $(cts_SCRIPTS) $(cts_DATA)
+
+halibdir	= $(CRM_DAEMON_DIR)
+halib_SCRIPTS	= cts-log-watcher cts-support
 
 #
 # Test commands and globally applicable test files should be in $(testdir),
@@ -38,19 +39,14 @@ ctslib_PYTHON	=	__init__.py		\
 			watcher.py
 
 ctsdir		= 	$(testdir)/cts
-cts_DATA	=	cts.supp
-cts_SCRIPTS	=	cts		\
+cts_DATA	=	cts.supp		\
+			pacemaker-cts-dummyd@.service
+cts_SCRIPTS	=	cts			\
 			CTSlab.py		\
-			lxc_autogen.sh	\
+			lxc_autogen.sh		\
 			LSBDummy		\
-			fence_dummy
-
-if BUILD_SYSTEMD
-daemondir	=	$(CRM_DAEMON_DIR)
-daemon_SCRIPTS	=	pacemaker-cts-dummyd
-
-systemdunit_DATA	= pacemaker-cts-dummyd@.service
-endif
+			fence_dummy		\
+			pacemaker-cts-dummyd
 
 clidir		= $(testdir)/cli
 cli_DATA	= cli/regression.dates.exp cli/regression.tools.exp \
@@ -78,3 +74,9 @@ clean-local:
 	rm -f scheduler/*.pe.*
 
 SUBDIRS	= benchmark
+
+cts-support-install: cts-support
+	./cts-support install
+
+cts-support-uninstall: cts-support
+	./cts-support uninstall

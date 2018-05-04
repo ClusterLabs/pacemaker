@@ -8,6 +8,7 @@ TAGS
 Makefile
 Makefile.in
 .deps
+.dirstamp
 .libs
 *.pc
 *.pyc
@@ -68,8 +69,10 @@ Doxyfile
 /cts/cts-coverage
 /cts/cts-exec
 /cts/cts-fencing
+/cts/cts-log-watcher
 /cts/cts-regression
 /cts/cts-scheduler
+/cts/cts-support
 /cts/fence_dummy
 /cts/lxc_autogen.sh
 /cts/pacemaker-cts-dummyd
