@@ -166,7 +166,8 @@ void
 pe_metadata(void)
 {
     config_metadata("pacemaker-schedulerd", "1.0", "scheduler properties",
-                    "Cluster properties used by Pacemaker's scheduler",
+                    "Cluster properties used by Pacemaker's scheduler,"
+                    " formerly known as pengine",
                     pe_opts, DIMOF(pe_opts));
 }
 
