@@ -495,14 +495,8 @@ dnl built-in list with (unversioned) "python" having precedence. To configure
 dnl Pacemaker to use a specific python interpreter version, define PYTHON
 dnl when calling configure, for example: ./configure PYTHON=/usr/bin/python3.6
 
-dnl PYTHON must be a full path
-case "x$PYTHON" in
-    /*)
-        ;;
-    *)
-        AC_PATH_PROG([PYTHON], [$PYTHON])
-        ;;
-esac
+dnl Ensure PYTHON is an absolute path
+AC_PATH_PROG([PYTHON], [$PYTHON])
 
 case "x$PYTHON" in
     x*python3*)
