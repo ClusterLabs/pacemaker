@@ -686,20 +686,10 @@ if test x"${PKG_CONFIG}" = x""; then
     AC_MSG_ERROR(You need pkgconfig installed in order to build ${PACKAGE})
 fi
 
-if
-    $PKG_CONFIG --exists glib-2.0
-then
-    GLIBCONFIG="$PKG_CONFIG glib-2.0"
-else
-    set -x
-    echo PKG_CONFIG_PATH=$PKG_CONFIG_PATH
-    $PKG_CONFIG --exists glib-2.0; echo $?
-    $PKG_CONFIG --cflags glib-2.0; echo $?
-    $PKG_CONFIG glib-2.0; echo $?
-    set +x
-    AC_MSG_ERROR(You need glib2-devel installed in order to build ${PACKAGE})
-fi
-AC_MSG_RESULT(using $GLIBCONFIG)
+# Require glib 2.16.0 (2008-03) or later for g_hash_table_iter_init() etc.
+PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.16.0],
+                  [CPPFLAGS="${CPPFLAGS} ${GLIB_CFLAGS}"
+                   LIBS="${LIBS} ${GLIB_LIBS}"])
 
 #
 # Where is dlopen?
@@ -710,18 +700,6 @@ elif test "$ac_cv_lib_dl_dlopen" = yes; then
     LIBADD_DL=-ldl
 else
     LIBADD_DL=${lt_cv_dlopen_libs}
-fi
-
-if test "X$GLIBCONFIG" != X; then
-    AC_MSG_CHECKING(for special glib includes: )
-    GLIBHEAD=`$GLIBCONFIG --cflags`
-    AC_MSG_RESULT($GLIBHEAD)
-    CPPFLAGS="$CPPFLAGS $GLIBHEAD"
-
-    AC_MSG_CHECKING(for glib library flags)
-    GLIBLIB=`$GLIBCONFIG --libs`
-    AC_MSG_RESULT($GLIBLIB)
-    LIBS="$LIBS $GLIBLIB"
 fi
 
 dnl FreeBSD needs -lcompat for ftime() used by lrmd.c
@@ -1115,20 +1093,11 @@ AC_DEFINE_UNQUOTED(BUILD_VERSION, "$BUILD_VERSION", Build version)
 AC_SUBST(BUILD_VERSION)
 
 HAVE_dbus=1
-HAVE_upstart=0
-HAVE_systemd=0
-PKG_CHECK_MODULES(DBUS, dbus-1, ,HAVE_dbus=0)
-
+PKG_CHECK_MODULES([DBUS], [dbus-1],
+		  [CPPFLAGS="${CPPFLAGS} ${DBUS_CFLAGS}"],
+		  [HAVE_dbus=0])
 AC_DEFINE_UNQUOTED(SUPPORT_DBUS, $HAVE_dbus, Support dbus)
 AM_CONDITIONAL(BUILD_DBUS, test $HAVE_dbus = 1)
-
-if test $HAVE_dbus = 1; then
-    CFLAGS="$CFLAGS `$PKG_CONFIG --cflags dbus-1`"
-fi
-
-DBUS_LIBS="$CFLAGS `$PKG_CONFIG --libs dbus-1`"
-AC_SUBST(DBUS_LIBS)
-
 AC_CHECK_TYPES([DBusBasicValue],,,[[#include <dbus/dbus.h>]])
 
 if test "x${enable_systemd}" != xno; then
@@ -1163,6 +1132,7 @@ fi
 
 AC_MSG_CHECKING([whether to enable support for managing resources via systemd])
 AC_MSG_RESULT([${enable_systemd}])
+HAVE_systemd=0
 if test "x${enable_systemd}" = xyes; then
     HAVE_systemd=1
     PCMK_FEATURES="$PCMK_FEATURES systemd"
@@ -1210,6 +1180,7 @@ if test "x${enable_upstart}" != xno; then
 fi
 AC_MSG_CHECKING([whether to enable support for managing resources via Upstart])
 AC_MSG_RESULT([${enable_upstart}])
+HAVE_upstart=0
 if test "x${enable_upstart}" = xyes; then
     HAVE_upstart=1
     PCMK_FEATURES="$PCMK_FEATURES upstart"
