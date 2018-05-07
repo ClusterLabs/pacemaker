@@ -12,9 +12,7 @@
 #endif
 
 #include <sys/types.h>
-#include <sys/stat.h>
 #include <stdio.h>
-
 #include <errno.h>
 #include <unistd.h>
 #include <dirent.h>
@@ -63,18 +61,9 @@ static void handle_blocked_ops(void);
 const char *
 resources_find_service_class(const char *agent)
 {
-    char *path = NULL;
-
-#ifdef LSB_ROOT_DIR
-    struct stat st;
-
-    path = crm_strdup_printf("%s/%s", LSB_ROOT_DIR, agent);
-    if (stat(path, &st) == 0) {
-        free(path);
+    if (services__lsb_agent_exists(agent)) {
         return PCMK_RESOURCE_CLASS_LSB;
     }
-    free(path);
-#endif
 
 #if SUPPORT_SYSTEMD
     if (systemd_unit_exists(agent)) {
@@ -235,7 +224,7 @@ resources_action_create(const char *name, const char *standard,
         op->opaque->args[1] = strdup(action);
 
     } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_LSB) == 0) {
-        op->opaque->exec = dup_file_path(op->agent, LSB_ROOT_DIR);
+        op->opaque->exec = services__lsb_agent_path(op->agent);
         op->opaque->args[0] = strdup(op->opaque->exec);
         op->opaque->args[1] = strdup(op->action);
         op->opaque->args[2] = NULL;

@@ -13,6 +13,7 @@
 
 #include <stdio.h>
 #include <errno.h>
+#include <sys/stat.h>
 
 #include <crm/crm.h>
 #include <crm/services.h>
@@ -242,6 +243,25 @@ GList *
 services__list_lsb_agents(void)
 {
     return services_os_get_directory_list(LSB_ROOT_DIR, TRUE, TRUE);
+}
+
+char *
+services__lsb_agent_path(const char *agent)
+{
+    return (*agent == '/')? strdup(agent)
+        : crm_strdup_printf("%s/%s", LSB_ROOT_DIR, agent);
+}
+
+bool
+services__lsb_agent_exists(const char *agent)
+{
+    bool rc = FALSE;
+    struct stat st;
+    char *path = services__lsb_agent_path(agent);
+
+    rc = (stat(path, &st) == 0);
+    free(path);
+    return rc;
 }
 
 /* The remaining functions below are not used by the Pacemaker code base, and
