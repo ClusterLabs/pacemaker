@@ -837,12 +837,15 @@ for t in $tests; do
     test_$t > "$TMPFILE"
 
     # sed -i isn't portable :-(
+    # neither is \| :-(
     sed -e 's/cib-last-written.*>/>/'\
         -e 's/ last-run=\"[0-9]*\"//'\
         -e 's/crm_feature_set="[^"]*" //'\
         -e 's/validate-with="[^"]*" //'\
         -e 's/Created new pacemaker-.* configuration/Created new pacemaker configuration/'\
-        -e 's/.*\(__xml_acl_check\|__xml_acl_post_process\|unpack_resources\|update_validation\|unpack_simple_rsc_order\)@.*\.c:[0-9][0-9]*)/\1/g' \
+        -e 's/.*\(__xml_.*\)@.*\.c:[0-9][0-9]*)/\1/g' \
+        -e 's/.*\(unpack_.*\)@.*\.c:[0-9][0-9]*)/\1/g' \
+        -e 's/.*\(update_validation\)@.*\.c:[0-9][0-9]*)/\1/g' \
         -e 's/ last-rc-change=\"[0-9]*\"//'\
         -e 's|^/tmp/cts-cli\.validity\.bad.xml\.[^:]*:|validity.bad.xml:|'\
         -e 's/^Entity: line [0-9][0-9]*: //'\
