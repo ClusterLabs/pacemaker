@@ -8,7 +8,7 @@ set -eu
 # $1=reference (can be '-' for stdin), $2=investigated
 # alt.: wdiff, colordiff, ...
 DIFF=${DIFF:-diff}
-DIFFOPTS=${DIFFOPTS:--u}
+DIFFOPTS=${DIFFOPTS--u}
 DIFFPAGER=${DIFFPAGER:-less -LRX}
 # $1=schema, $2=validated
 # alt.: jing -i
