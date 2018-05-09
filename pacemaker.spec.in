@@ -544,6 +544,11 @@ fi
 %if %{defined _unitdir}
 %systemd_post crm_mon.service
 %endif
+if [ "$1" = "2" ]; then
+    # Package upgrade, not initial install:
+    # Move any pre-2.0 logs to new location to ensure they get rotated
+    mv -f %{_var}/log/pacemaker.log* %{_var}/log/pacemaker >/dev/null 2>/dev/null || :
+fi
 
 %preun cli
 %if %{defined _unitdir}
@@ -582,7 +587,6 @@ exit 0
 %{_initrddir}/pacemaker
 %endif
 
-%exclude %{_libexecdir}/pacemaker/cts-exec-helper
 %exclude %{_libexecdir}/pacemaker/cts-log-watcher
 %exclude %{_libexecdir}/pacemaker/cts-support
 %exclude %{_sbindir}/pacemaker-remoted
@@ -659,7 +663,6 @@ exit 0
 %exclude %{_datadir}/pacemaker/tests
 %{_datadir}/pacemaker
 %{_datadir}/snmp/mibs/PCMK-MIB.txt
-%{_libexecdir}/pacemaker/cts-exec-helper
 
 %exclude /usr/lib/ocf/resource.d/pacemaker/controld
 %exclude /usr/lib/ocf/resource.d/pacemaker/o2cb

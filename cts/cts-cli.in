@@ -24,7 +24,7 @@ else
 fi
 
 : ${shadow=cts-cli}
-shadow_dir=$(mktemp -td cts-cli.shadow.XXXXXXXXXX)
+shadow_dir=$(mktemp -d ${TMPDIR:-/tmp}/cts-cli.shadow.XXXXXXXXXX)
 num_errors=0
 num_passed=0
 GREP_OPTIONS=
@@ -85,8 +85,8 @@ function test_assert() {
 }
 
 function test_tools() {
-    local TMPXML=$(mktemp --tmpdir cts-cli.tools.xml.XXXXXXXXXX)
-    local TMPORIG=$(mktemp --tmpdir cts-cli.tools.existing.xml.XXXXXXXXXX)
+    local TMPXML=$(mktemp ${TMPDIR:-/tmp}/cts-cli.tools.xml.XXXXXXXXXX)
+    local TMPORIG=$(mktemp ${TMPDIR:-/tmp}/cts-cli.tools.existing.xml.XXXXXXXXXX)
     export CIB_shadow_dir="${shadow_dir}"
 
     $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow  2>&1
@@ -617,7 +617,7 @@ function test_acl_loop() {
 
 function test_acls() {
     local SHADOWPATH
-    local TMPXML=$(mktemp --tmpdir cts-cli.acls.xml.XXXXXXXXXX)
+    local TMPXML=$(mktemp ${TMPDIR:-/tmp}/cts-cli.acls.xml.XXXXXXXXXX)
     export CIB_shadow_dir="${shadow_dir}"
 
     $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow --validate-with pacemaker-1.3 2>&1
@@ -694,8 +694,8 @@ EOF
 }
 
 function test_validity() {
-    local TMPGOOD=$(mktemp --tmpdir cts-cli.validity.good.xml.XXXXXXXXXX)
-    local TMPBAD=$(mktemp --tmpdir cts-cli.validity.bad.xml.XXXXXXXXXX)
+    local TMPGOOD=$(mktemp ${TMPDIR:-/tmp}/cts-cli.validity.good.xml.XXXXXXXXXX)
+    local TMPBAD=$(mktemp ${TMPDIR:-/tmp}/cts-cli.validity.bad.xml.XXXXXXXXXX)
     export CIB_shadow_dir="${shadow_dir}"
 
     $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow --validate-with pacemaker-1.2 2>&1
@@ -832,17 +832,20 @@ fi
 
 for t in $tests; do
     echo "Testing $t"
-    TMPFILE=$(mktemp --tmpdir cts-cli.$t.XXXXXXXXXX)
+    TMPFILE=$(mktemp ${TMPDIR:-/tmp}/cts-cli.$t.XXXXXXXXXX)
     eval TMPFILE_$t="$TMPFILE"
     test_$t > "$TMPFILE"
 
     # sed -i isn't portable :-(
+    # neither is \| :-(
     sed -e 's/cib-last-written.*>/>/'\
         -e 's/ last-run=\"[0-9]*\"//'\
         -e 's/crm_feature_set="[^"]*" //'\
         -e 's/validate-with="[^"]*" //'\
         -e 's/Created new pacemaker-.* configuration/Created new pacemaker configuration/'\
-        -e 's/.*\(__xml_acl_check\|__xml_acl_post_process\|unpack_resources\|update_validation\|unpack_simple_rsc_order\)@.*\.c:[0-9][0-9]*)/\1/g' \
+        -e 's/.*\(__xml_.*\)@.*\.c:[0-9][0-9]*)/\1/g' \
+        -e 's/.*\(unpack_.*\)@.*\.c:[0-9][0-9]*)/\1/g' \
+        -e 's/.*\(update_validation\)@.*\.c:[0-9][0-9]*)/\1/g' \
         -e 's/ last-rc-change=\"[0-9]*\"//'\
         -e 's|^/tmp/cts-cli\.validity\.bad.xml\.[^:]*:|validity.bad.xml:|'\
         -e 's/^Entity: line [0-9][0-9]*: //'\

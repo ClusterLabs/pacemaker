@@ -872,12 +872,6 @@ services_os_get_directory_list(const char *root, gboolean files, gboolean execut
 }
 
 GList *
-resources_os_list_lsb_agents(void)
-{
-    return get_directory_list(LSB_ROOT_DIR, TRUE, TRUE);
-}
-
-GList *
 resources_os_list_ocf_providers(void)
 {
     return get_directory_list(OCF_ROOT_DIR "/resource.d", FALSE, TRUE);
