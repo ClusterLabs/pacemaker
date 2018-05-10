@@ -1,4 +1,4 @@
-#!/bin/bash
+#!@BASH_PATH@
 #
 #
 #	SysInfo OCF Resource Agent
