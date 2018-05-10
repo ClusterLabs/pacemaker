@@ -1,7 +1,7 @@
-Resources-operation: moving requires under meta_attributes as requires unless already defined there for matching start|promote
 Resources-operation: myAddr1-start: moving requires under meta_attributes as requires unless already defined there for matching start|promote
 Resources-operation: moving requires under meta_attributes as requires unless already defined there for matching start|promote
 Resources-operation: myAddr2-start: moving requires under meta_attributes as requires unless already defined there for matching start|promote
+Resources-operation: moving requires under meta_attributes as requires unless already defined there for matching start|promote
 Resources-operation: moving requires under meta_attributes as requires unless already defined there for matching start|promote
 Resources-operation: moving requires under meta_attributes as requires unless already defined there for matching start|promote
 Resources-operation: stateful1-demote: dropping requires

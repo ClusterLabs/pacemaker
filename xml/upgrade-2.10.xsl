@@ -893,7 +893,9 @@
                                   )
                                 )
                               ]"/>
-        <xsl:if test="not($InnerSimulation)">
+        <xsl:if test="not($InverseMode or $InnerSimulation)
+                      or
+                      $InnerPass = 'TRIGGER-MSG'">
           <xsl:call-template name="MapMsg">
             <xsl:with-param name="Context" select="../../@id"/>
             <xsl:with-param name="Replacement" select="$Replacement"/>
@@ -957,11 +959,11 @@
                             )">
                 <!-- cf. trick C. (indicate for inverse mode) -->
                 <xsl:choose>
+                  <!-- instead of HelperDenormalizedSpace -->
                   <xsl:when test="$InnerSimulation">
                     <xsl:value-of select="concat(@name, ' ')"/>
                   </xsl:when>
                   <xsl:otherwise>
-                    <xsl:text> </xsl:text>
                     <xsl:copy>
                       <xsl:apply-templates select="@*"/>
                     </xsl:copy>
@@ -1206,6 +1208,14 @@
               <xsl:call-template name="ProcessNonattrOpMetaAttributes">
                 <xsl:with-param name="Source" select="."/>
                 <xsl:with-param name="InnerSimulation" select="true()"/>
+                <xsl:with-param name="InnerPass"
+                                select="substring-after(
+                                          concat(
+                                            string($InnerSimulation),
+                                            'TRIGGER-MSG'
+                                          ),
+                                         'true'
+                                        )"/>
               </xsl:call-template>
             </xsl:variable>
             <!-- cf. trick A. -->
@@ -1587,6 +1597,7 @@
         <xsl:call-template name="ProcessNonattrOpMetaAttributes">
           <xsl:with-param name="Source" select="."/>
           <xsl:with-param name="InverseMode" select="true()"/>
+          <xsl:with-param name="InnerSimulation" select="true()"/>
         </xsl:call-template>
       </xsl:variable>
       <!-- cf. trick A. -->
@@ -1602,7 +1613,12 @@
           <xsl:apply-templates select="node()[
                                          name() != 'nvpair'
                                        ]"/>
-          <xsl:copy-of select="$ProcessedOpMetaAttributes"/>
+          <xsl:call-template name="ProcessNonattrOpMetaAttributes">
+            <xsl:with-param name="Source" select="."/>
+            <xsl:with-param name="InverseMode" select="true()"/>
+            <!-- cf. trick E. -->
+            <xsl:with-param name="InnerPass" select="$ProcessedOpMetaAttributes"/>
+          </xsl:call-template>
           <xsl:apply-templates select="text()[position() = last()]"/>
         </xsl:copy>
       </xsl:if>
