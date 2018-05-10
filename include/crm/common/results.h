@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2012-2018 Andrew Beekhof <andrew@beekhof.net>
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -47,6 +47,9 @@ extern "C" {
 #  define pcmk_err_cib_save             210
 #  define pcmk_err_schema_unchanged     211
 #  define pcmk_err_cib_corrupt          212
+#  define pcmk_err_multiple             213
+#  define pcmk_err_node_unknown         214
+#  define pcmk_err_already              215
 
 /*
  * Exit status codes

@@ -995,8 +995,7 @@ Error performing operation: Invalid argument
 =#=#=#= End test: Require a destination when migrating a resource that is stopped - Incorrect usage (64) =#=#=#=
 * Passed: crm_resource   - Require a destination when migrating a resource that is stopped
 =#=#=#= Begin test: Don't support migration to non-existent locations =#=#=#=
-Error performing operation: node 'i.dont.exist' is unknown
-Error performing operation: No such device or address
+Error performing operation: Node not found
 =#=#=#= Current cib after: Don't support migration to non-existent locations =#=#=#=
 <cib epoch="17" num_updates="0" admin_epoch="1">
   <configuration>
@@ -1149,8 +1148,7 @@ Online: [ node1 ]
 =#=#=#= End test: Bring resources online - OK (0) =#=#=#=
 * Passed: crm_simulate   - Bring resources online
 =#=#=#= Begin test: Try to move a resource to its existing location =#=#=#=
-Error performing operation: dummy is already active on node1
-Error performing operation: File exists
+Error performing operation: Situation already as requested
 =#=#=#= Current cib after: Try to move a resource to its existing location =#=#=#=
 <cib epoch="18" num_updates="4" admin_epoch="1">
   <configuration>
@@ -1731,8 +1729,7 @@ true
 =#=#=#= End test: Delete ticket standby state - OK (0) =#=#=#=
 * Passed: crm_ticket     - Delete ticket standby state
 =#=#=#= Begin test: Ban a resource on unknown node =#=#=#=
-Error performing operation: node 'host1' is unknown
-Error performing operation: No such device or address
+Error performing operation: Node not found
 =#=#=#= Current cib after: Ban a resource on unknown node =#=#=#=
 <cib epoch="20" num_updates="5" admin_epoch="1">
   <configuration>
