@@ -165,6 +165,32 @@
   <!--
    Target tag:     primitive
                    template
+   Object:         ./meta_attributes/nvpair/@name
+   Selector ctxt:  N/A
+   Move ctxt:      N/A
+   -->
+  <cibtr:table for="resource-meta-attributes" msg-prefix="Resource meta_attributes">
+    <cibtr:replace what="isolation"
+                   with="target-role"
+                   redefined-as="Stopped"
+                   msg-extra="isolation wrappers obsoleted with bundle resources"/>
+    <cibtr:replace what="isolation-host"
+                   with="target-role"
+                   redefined-as="Stopped"
+                   msg-extra="isolation wrappers obsoleted with bundle resources"/>
+    <cibtr:replace what="isolation-instance"
+                   with="target-role"
+                   redefined-as="Stopped"
+                   msg-extra="isolation wrappers obsoleted with bundle resources"/>
+    <cibtr:replace what="isolation-wrapper"
+                   with="target-role"
+                   redefined-as="Stopped"
+                   msg-extra="isolation wrappers obsoleted with bundle resources"/>
+  </cibtr:table>
+
+  <!--
+   Target tag:     primitive
+                   template
    Object:         ./operations/op/@*
                    ./operations/op/meta_attributes/nvpair/@name
    Selector ctxt:  ./operations/op/@name
@@ -214,6 +240,12 @@
               select="document('')/xsl:stylesheet
                         /cibtr:map/cibtr:table[
                           @for = 'resource-instance-attributes'
+                        ]"/>
+
+<xsl:variable name="MapResourceMetaAttributes"
+              select="document('')/xsl:stylesheet
+                        /cibtr:map/cibtr:table[
+                          @for = 'resource-meta-attributes'
                         ]"/>
 
 <xsl:variable name="MapResourcesOperation"
@@ -803,6 +835,174 @@
               <xsl:with-param name="InnerSimulation" select="$InnerSimulation"/>
             </xsl:call-template>
             <xsl:call-template name="HelperIdentity"/>
+          </xsl:otherwise>
+        </xsl:choose>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:call-template name="HelperIdentity"/>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:for-each>
+  <!-- E: special-casing nvpair -->
+</xsl:template>
+
+<!--
+ Source ctxt:    (primitive|template)/meta_attributes
+ Target ctxt:    (primitive|template)/meta_attributes
+ Target-inv ctxt:N/A
+ Dependencies:   N/A
+ -->
+<xsl:template name="ProcessRscMetaAttributes">
+  <xsl:param name="Source"/>
+  <xsl:param name="InnerSimulation" select="false()"/>
+  <xsl:param name="InnerPass">
+    <xsl:choose>
+      <xsl:when test="$InnerSimulation">
+        <xsl:value-of select="''"/>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:call-template name="ProcessRscMetaAttributes">
+          <xsl:with-param name="Source" select="$Source"/>
+          <xsl:with-param name="InnerSimulation" select="true()"/>
+        </xsl:call-template>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:param>
+
+  <!-- B: special-casing nvpair -->
+  <xsl:for-each select="$Source/node()">
+    <xsl:choose>
+      <xsl:when test="self::text()">
+        <!-- cf. trick A. (consideration 1.) -->
+        <xsl:choose>
+          <xsl:when test="normalize-space($InnerPass)
+                          != $InnerPass
+                          and
+                          (
+                            not(preceding-sibling::nvpair)
+                            or
+                            generate-id(preceding-sibling::nvpair[1])
+                            != generate-id(preceding-sibling::*[1])
+                          ) or (
+                            not(following-sibling::nvpair)
+                            or
+                            generate-id(following-sibling::nvpair[1])
+                            != generate-id(following-sibling::*[1])
+                          )">
+            <xsl:value-of select="."/>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:value-of select="normalize-space(.)"/>
+          </xsl:otherwise>
+        </xsl:choose>
+      </xsl:when>
+      <xsl:when test="self::nvpair">
+        <xsl:variable name="Replacement"
+                      select="$MapResourceMetaAttributes/cibtr:replace[
+                                @what = current()/@name
+                                and
+                                (
+                                  (
+                                    @in-case-of
+                                    and
+                                    contains(concat('|', @in-case-of, '|'),
+                                             concat('|', current()/@value, '|'))
+                                  )
+                                  or
+                                  (
+                                    not(@in-case-of)
+                                    and
+                                    not(
+                                      $MapResourceMetaAttributes/cibtr:replace[
+                                        @what = current()/@name
+                                        and
+                                        (
+                                          @in-case-of
+                                          and
+                                          contains(concat('|', @in-case-of, '|'),
+                                                   concat('|', current()/@value, '|'))
+                                        )
+                                      ]
+                                    )
+                                  )
+                                )
+                              ]"/>
+        <xsl:if test="not($InnerSimulation)">
+          <xsl:call-template name="MapMsg">
+            <xsl:with-param name="Context" select="@id"/>
+            <xsl:with-param name="Replacement" select="$Replacement"/>
+          </xsl:call-template>
+        </xsl:if>
+        <xsl:choose>
+          <xsl:when test="$Replacement
+                          and
+                          not(string($Replacement/@with))">
+            <!-- drop (move-over code missing) -->
+          </xsl:when>
+          <xsl:when test="$Replacement">
+            <!-- plain rename -->
+            <xsl:variable name="SimulateFollowingSiblings">
+              <!-- prevent generating redundant name-value pairs -->
+              <xsl:for-each select="(..|../following-sibling::meta_attributes)[
+                                      not(rule)
+                                    ]">
+                <xsl:if test="$InnerPass != 'TRIGGER-RECURSION'">
+                  <xsl:call-template name="ProcessRscMetaAttributes">
+                    <xsl:with-param name="Source" select="."/>
+                    <xsl:with-param name="InnerSimulation" select="true()"/>
+                    <xsl:with-param name="InnerPass" select="'TRIGGER-RECURSION'"/>
+                  </xsl:call-template>
+                </xsl:if>
+              </xsl:for-each>
+            </xsl:variable>
+            <xsl:choose>
+              <!-- instead of HelperDenormalizedSpace -->
+              <xsl:when test="$InnerSimulation">
+                <xsl:value-of select="concat(generate-id(), '@', $Replacement/@with, ' ')"/>
+              </xsl:when>
+              <xsl:otherwise>
+                <xsl:if test="not(
+                                contains($SimulateFollowingSiblings,
+                                         concat($Replacement/@with, ' '))
+                              )
+                              or
+                              generate-id()
+                              =
+                              substring-before($SimulateFollowingSiblings,
+                                               concat('@', $Replacement/@with))">
+                  <xsl:copy>
+                    <xsl:for-each select="@*">
+                      <xsl:choose>
+                        <xsl:when test="name() = 'name'">
+                          <xsl:attribute name="{name()}">
+                            <xsl:value-of select="$Replacement/@with"/>
+                          </xsl:attribute>
+                        </xsl:when>
+                        <xsl:when test="string($Replacement/@redefined-as)
+                                        and
+                                        name() = 'value'">
+                          <xsl:attribute name="{name()}">
+                            <xsl:value-of select="$Replacement/@redefined-as"/>
+                          </xsl:attribute>
+                        </xsl:when>
+                        <xsl:otherwise>
+                          <xsl:copy/>
+                        </xsl:otherwise>
+                      </xsl:choose>
+                    </xsl:for-each>
+                  </xsl:copy>
+                </xsl:if>
+              </xsl:otherwise>
+            </xsl:choose>
+          </xsl:when>
+          <xsl:otherwise>
+            <!-- XXX: emits superfluous empty lines with test-2/02[23],
+                      but keeps -B run green -->
+            <xsl:call-template name="HelperDenormalizedSpace">
+              <xsl:with-param name="Source" select="."/>
+              <xsl:with-param name="InnerSimulation" select="$InnerSimulation"/>
+            </xsl:call-template>
+           <xsl:call-template name="HelperIdentity"/>
           </xsl:otherwise>
         </xsl:choose>
       </xsl:when>
@@ -1522,7 +1722,7 @@
 <xsl:template match="primitive|template">
   <xsl:copy>
     <xsl:apply-templates select="@*"/>
-    <!-- B: special-casing operations|instance_attributes -->
+    <!-- B: special-casing operations|instance_attributes|meta_attributes -->
     <xsl:for-each select="node()">
       <xsl:choose>
         <xsl:when test="self::operations">
@@ -1566,12 +1766,32 @@
             </xsl:copy>
           </xsl:if>
         </xsl:when>
+        <xsl:when test="self::meta_attributes">
+          <xsl:variable name="ProcessedRscMetaAttributes">
+            <xsl:call-template name="ProcessRscMetaAttributes">
+              <xsl:with-param name="Source" select="."/>
+              <xsl:with-param name="InnerSimulation" select="true()"/>
+            </xsl:call-template>
+          </xsl:variable>
+          <!-- cf. trick A. -->
+          <xsl:if test="normalize-space($ProcessedRscMetaAttributes)
+                        != $ProcessedRscMetaAttributes">
+            <xsl:copy>
+              <xsl:apply-templates select="@*"/>
+              <xsl:call-template name="ProcessRscMetaAttributes">
+                <xsl:with-param name="Source" select="."/>
+                <!-- cf. trick E. -->
+                <xsl:with-param name="InnerPass" select="$ProcessedRscMetaAttributes"/>
+              </xsl:call-template>
+            </xsl:copy>
+          </xsl:if>
+        </xsl:when>
         <xsl:otherwise>
           <xsl:call-template name="HelperIdentity"/>
         </xsl:otherwise>
       </xsl:choose>
     </xsl:for-each>
-    <!-- E: special-casing operations -->
+    <!-- E: special-casing operations|instance_attributes|meta_attributes -->
 
     <!-- add as last meta_attributes block... -->
 
