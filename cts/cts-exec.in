@@ -573,7 +573,6 @@ done
             os.system("cp @datadir@/@PACKAGE@/tests/cts/LSBDummy /etc/init.d/LSBDummy")
 
         os.system("chmod a+x /etc/init.d/LSBDummy")
-        os.system("mkdir -p @CRM_CORE_DIR@/root")
         subprocess.call(["cts-support", "install"])
 
     def cleanup_test_environment(self):
