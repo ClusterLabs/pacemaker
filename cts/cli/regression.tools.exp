@@ -256,10 +256,10 @@ Call failed: File exists
 =#=#=#= End test: Set duplicate cluster option - OK (0) =#=#=#=
 * Passed: crm_attribute  - Set duplicate cluster option
 =#=#=#= Begin test: Setting multiply defined cluster option should fail =#=#=#=
-Error performing operation: Name not unique on network
 Multiple attributes match name=cluster-delay
   Value: 60s 	(id=cib-bootstrap-options-cluster-delay)
   Value: 40s 	(id=duplicate-cluster-delay)
+Please choose from one of the matches above and supply the 'id' with --attr-id
 =#=#=#= Current cib after: Setting multiply defined cluster option should fail =#=#=#=
 <cib epoch="7" num_updates="0" admin_epoch="1">
   <configuration>

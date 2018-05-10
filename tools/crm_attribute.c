@@ -309,7 +309,8 @@ main(int argc, char **argv)
         crm_info("Read %s=%s %s%s",
                  attr_name, crm_str(read_value), set_name ? "in " : "", set_name ? set_name : "");
 
-        if (rc == -EINVAL) {
+        if (rc == -ENOTUNIQ) {
+            // Multiple matches (already displayed) are not error for queries
             rc = pcmk_ok;
 
         } else if (BE_QUIET == FALSE) {
@@ -325,7 +326,7 @@ main(int argc, char **argv)
         free(read_value);
     }
 
-    if (rc == -EINVAL) {
+    if (rc == -ENOTUNIQ) {
         printf("Please choose from one of the matches above and supply the 'id' with --attr-id\n");
 
     } else if (rc != pcmk_ok) {
