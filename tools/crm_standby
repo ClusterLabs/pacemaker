@@ -73,7 +73,7 @@ if [ $lifetime -eq 0 ]; then
         g)
             # For query, report the forever entry if one exists, otherwise
             # report the reboot entry if one exists, otherwise report off.
-            crm_attribute $options -l forever 2>&1 > /dev/null
+            crm_attribute $options -l forever >/dev/null 2>&1
             if [ $? -eq 0 ]; then
                 options="$options -l forever"
             else

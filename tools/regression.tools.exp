@@ -588,7 +588,6 @@ Call failed: Update was older than existing configuration
 =#=#=#= End test: Replace operation should fail - Update was older than existing configuration (205) =#=#=#=
 * Passed: cibadmin       - Replace operation should fail
 =#=#=#= Begin test: Default standby value =#=#=#=
-Error performing operation: No such device or address
 scope=status  name=standby value=off
 =#=#=#= Current cib after: Default standby value =#=#=#=
 <cib epoch="11" num_updates="2" admin_epoch="1">
