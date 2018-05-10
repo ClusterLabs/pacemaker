@@ -1,4 +1,4 @@
-Resources-operation: moving requires under meta_attributes as requires unless already defined there for matching start|promote
-Resources-operation: stateful-promote: moving requires under meta_attributes as requires unless already defined there for matching start|promote
-Resources-operation: stateful-demote: dropping requires
+Resources-operation: myAddr-start (rsc=myAddr): moving requires under meta_attributes as requires unless already defined there for matching start|promote
+Resources-operation: stateful-promote (rsc=stateful, meta=stateful-promote-meta): moving requires under meta_attributes as requires unless already defined there for matching start|promote
+Resources-operation: stateful-demote (rsc=stateful, meta=stateful-demote-meta): dropping requires
 Resources-operation: ... only start/promote operation taken into account

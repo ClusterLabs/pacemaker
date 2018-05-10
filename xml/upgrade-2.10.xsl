@@ -897,7 +897,11 @@
                       or
                       $InnerPass = 'TRIGGER-MSG'">
           <xsl:call-template name="MapMsg">
-            <xsl:with-param name="Context" select="../../@id"/>
+            <xsl:with-param name="Context"
+                            select="concat(../../@id,
+                                           ' (rsc=', $EnclosingTag/@id,
+                                           ', meta=', ../@id,
+                                           ')')"/>
             <xsl:with-param name="Replacement" select="$Replacement"/>
           </xsl:call-template>
         </xsl:if>
@@ -1097,7 +1101,10 @@
                             ]"/>
       <xsl:if test="not($InverseMode or $InnerSimulation)">
         <xsl:call-template name="MapMsg">
-          <xsl:with-param name="Context" select="../../@id"/>
+          <xsl:with-param name="Context"
+                                select="concat(../@id,
+                                               ' (rsc=', $EnclosingTag/@id,
+                                               ')')"/>
           <xsl:with-param name="Replacement" select="$Replacement"/>
         </xsl:call-template>
       </xsl:if>
