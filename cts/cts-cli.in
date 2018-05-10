@@ -6,6 +6,12 @@
 # or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 
+#
+# Note on portable usage of sed: GNU/POSIX/*BSD sed have a limited subset of
+# compatible functionality. Do not use the -i option, alternation (\|),
+# \0, or character sequences such as \n or \s.
+#
+
 USAGE_TEXT="Usage: cts-cli [<options>]
 Options:
  --help          Display this text, then exit
@@ -733,13 +739,13 @@ function test_validity() {
     cmd="cibadmin -C -o configuration --xml-text '<tags/>'"
     test_assert $CRM_EX_CONFIG
 
-    sed 's|</configuration>|<tags/>\0|' "$TMPGOOD" > "$TMPBAD"
+    sed 's|</configuration>|<tags/></configuration>|' "$TMPGOOD" > "$TMPBAD"
     desc="Run crm_simulate with invalid, but possibly recoverable CIB (valid with X.Y+1)"
     cmd="crm_simulate -x $TMPBAD -S"
     test_assert $CRM_EX_OK 0
 
 
-    sed 's|\s\s*validate-with="[^"]*"||' "$TMPGOOD" > "$TMPBAD"
+    sed 's|[ 	][ 	]*validate-with="[^"]*"||' "$TMPGOOD" > "$TMPBAD"
     desc="Make resulting CIB valid, although without validate-with attribute"
     cmd="cibadmin -R --xml-file $TMPBAD"
     test_assert $CRM_EX_OK
@@ -751,8 +757,8 @@ function test_validity() {
 
     # this will just disable validation and accept the config, outputting
     # validation errors
-    sed -e 's|\s\s*validate-with="[^"]*"||' \
-        -e 's|\(\s\s*epoch="[^"]*\)"|\10"|' -e 's|"start"|"break"|' \
+    sed -e 's|[ 	][ 	]*validate-with="[^"]*"||' \
+        -e 's|\([ 	][ 	]*epoch="[^"]*\)"|\10"|' -e 's|"start"|"break"|' \
         "$TMPGOOD" > "$TMPBAD"
     desc="Make resulting CIB invalid, and without validate-with attribute"
     cmd="cibadmin -R --xml-file $TMPBAD"
@@ -836,8 +842,6 @@ for t in $tests; do
     eval TMPFILE_$t="$TMPFILE"
     test_$t > "$TMPFILE"
 
-    # sed -i isn't portable :-(
-    # neither is \| :-(
     sed -e 's/cib-last-written.*>/>/'\
         -e 's/ last-run=\"[0-9]*\"//'\
         -e 's/crm_feature_set="[^"]*" //'\
