@@ -1,4 +1,4 @@
-#!/bin/bash
+#!@BASH_PATH@
 #
 #
 # HealthSMART OCF RA. Checks the S.M.A.R.T. status of all given

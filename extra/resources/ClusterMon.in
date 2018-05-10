@@ -1,4 +1,4 @@
-#!/bin/bash
+#!@BASH_PATH@
 #
 #
 #	ClusterMon OCF RA.

@@ -84,7 +84,12 @@ Doxyfile
 /daemons/pacemakerd/pacemaker.combined.upstart
 /daemons/pacemakerd/pacemaker.service
 /daemons/pacemakerd/pacemaker.upstart
-extra/logrotate/pacemaker
+/extra/logrotate/pacemaker
+/extra/resources/ClusterMon
+/extra/resources/HealthSMART
+/extra/resources/SysInfo
+/extra/resources/ifspeed
+/extra/resources/o2cb
 include/config.h
 include/config.h.in
 include/crm_config.h
