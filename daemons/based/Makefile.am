@@ -44,7 +44,7 @@ install-exec-local:
 if BUILD_LEGACY_LINKS
 install-exec-hook:
 	$(MKDIR_P) -- $(DESTDIR)$(CRM_DAEMON_DIR)
-	cd $(DESTDIR)$(CRM_DAEMON_DIR) && $(LN_S) pacemaker-based cib
+	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -rf cib && $(LN_S) pacemaker-based cib
 
 uninstall-hook:
 	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f cib
