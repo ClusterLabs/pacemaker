@@ -42,7 +42,7 @@ CLEANFILES = $(man7_MANS) $(man8_MANS)
 
 if BUILD_LEGACY_LINKS
 install-exec-hook:
-	cd $(DESTDIR)$(CRM_DAEMON_DIR) && $(LN_S) pacemaker-fenced stonithd
+	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f stonithd && $(LN_S) pacemaker-fenced stonithd
 
 uninstall-hook:
 	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f stonithd

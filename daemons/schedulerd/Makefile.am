@@ -69,7 +69,7 @@ install-exec-local:
 
 if BUILD_LEGACY_LINKS
 install-exec-hook:
-	cd $(DESTDIR)$(CRM_DAEMON_DIR) && $(LN_S) pacemaker-schedulerd pengine
+	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f pengine && $(LN_S) pacemaker-schedulerd pengine
 
 uninstall-hook:
 	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f pengine
