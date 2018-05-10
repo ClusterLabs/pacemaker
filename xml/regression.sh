@@ -309,10 +309,20 @@ test_runner() {
 
 #
 # particular test variations
+# stdin: granular test specification(s) if any
 #
 
 test2to3() {
-	find test-2 -name '*.xml' -print | env LC_ALL=C sort \
+	_t23_pattern=
+
+	while read _t23_spec; do
+		_t23_spec=${_t23_spec%.xml}
+		_t23_spec=${_t23_spec%\*}
+		_t23_pattern="${_t23_pattern} -name ${_t23_spec}*.xml -o"
+	done
+	test -z "${_t23_pattern}" || _t23_pattern="( ${_t23_pattern%-o} )"
+
+	find test-2 -name '*.xml' ${_t23_pattern} -print | env LC_ALL=C sort \
 	  | { case " $* " in
 	      *\ -C\ *) test_cleaner;;
 	      *\ -S\ *) test_selfcheck -o=2.10;;
@@ -432,6 +442,8 @@ tests="${tests} cts_scheduler"
 test_suite() {
 	_ts_pass=
 	_ts_select=
+	_ts_select_full=
+	_ts_test_specs=
 	_ts_global_ret=0
 	_ts_ret=0
 
@@ -439,24 +451,48 @@ test_suite() {
 		case "$1" in
 		-) while read _ts_spec; do _ts_select="${_ts_spec}@$1"; done;;
 		-*) _ts_pass="${_ts_pass} $1";;
-		*) _ts_select="${_ts_select}@$1";;
+		*) _ts_select_full="${_ts_select_full}@$1"
+		   _ts_select="${_ts_select}@${1%%/*}";;
 		esac
 		shift
 	done
 	_ts_select="${_ts_select}@"
+	_ts_select_full="${_ts_select_full}@"
 
 	for _ts_test in ${tests}; do
 
-		case "${_ts_select}" in
-		*@${_ts_test}@*)
-		_ts_select="${_ts_select%@${_ts_test}@*}@${_ts_select#*@${_ts_test}@}"
-		;;
-		@) case "${_ts_test}" in test*) ;; *) continue;; esac
-		;;
-		*) continue;;
-		esac
+		while true; do
+			case "${_ts_select}" in
+			*@${_ts_test}@*)
+			_ts_select="${_ts_select%@${_ts_test}@*}"\
+"@${_ts_select#*@${_ts_test}@}"
+			;;
+			@) case "${_ts_test}" in test*) break;; *) continue 2;; esac
+			;;
+			*) continue 2;;
+			esac
+		done
 
-		"${_ts_test}" ${_ts_pass} || _ts_ret=$?
+		_ts_test_specs=
+		while true; do
+			case "${_ts_select_full}" in
+			*@${_ts_test}/*)
+				_ts_test_full="${_ts_test}/${_ts_select_full#*@${_ts_test}/}"
+				_ts_test_full="${_ts_test_full%%@*}"
+				_ts_select_full="${_ts_select_full%@${_ts_test_full}@*}"\
+"@${_ts_select_full#*@${_ts_test_full}@}"
+				_ts_test_specs="${_ts_test_specs} ${_ts_test_full#*/}"
+			;;
+			*)
+			break
+			;;
+			esac
+		done
+
+		for _ts_test_spec in ${_ts_test_specs}; do
+			printf '%s\n' "${_ts_test_spec}"
+		done | "${_ts_test}" ${_ts_pass} || _ts_ret=$?
+
 		test ${_ts_ret} = 0 \
 		  && emit_result ${_ts_ret} "${_ts_test}" \
 		  || emit_result "at least 2^$((_ts_ret - 1))" "${_ts_test}"
@@ -475,7 +511,7 @@ test_suite() {
 # NOTE: big letters are dedicated for per-test-set behaviour,
 #       small ones for generic/global behaviour
 usage() {
-	printf '%s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n' \
+	printf '%s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n' \
 	    "usage: $0 [-{B,C,D,G,S,X}]* [-|{${tests## }}*]" \
 	    "- when no suites (arguments) provided, \"test*\" ones get used" \
 	    "- with '-' suite specification the actual ones grabbed on stdin" \
@@ -484,7 +520,8 @@ usage() {
 	    "- use '-D' to review originals vs. \"referential\" outcomes" \
 	    "- use '-G' to generate \"referential\" outcomes" \
 	    "- use '-S' for template self-check (requires net access)" \
-	    "- use '-X' to show explanatory details about the upgrade"
+	    "- use '-X' to show explanatory details about the upgrade" \
+	    "- test specification can be granular, e.g. 'test2to3/022'"
 }
 
 main() {
