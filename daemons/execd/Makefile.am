@@ -52,8 +52,8 @@ CLEANFILES = $(man8_MANS)
 
 if BUILD_LEGACY_LINKS
 install-exec-hook:
-	cd $(DESTDIR)$(CRM_DAEMON_DIR) && $(LN_S) pacemaker-execd lrmd
-	cd $(DESTDIR)$(sbindir) && $(LN_S) pacemaker-remoted pacemaker_remoted
+	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f lrmd && $(LN_S) pacemaker-execd lrmd
+	cd $(DESTDIR)$(sbindir) && rm -f pacemaker_remoted && $(LN_S) pacemaker-remoted pacemaker_remoted
 
 uninstall-hook:
 	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f lrmd
