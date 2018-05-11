@@ -475,7 +475,6 @@
           <xsl:with-param name="Source" select="$Source"/>
           <xsl:with-param name="InverseMode" select="$InverseMode"/>
           <xsl:with-param name="InnerSimulation" select="true()"/>
-          <xsl:with-param name="InnerPass" select="'INNER-RECURSION'"/>
         </xsl:call-template>
       </xsl:otherwise>
     </xsl:choose>
@@ -533,9 +532,7 @@
                               ]"/>
         <xsl:if test="$InverseMode = false()
                       and
-                      $InnerSimulation
-                      and
-                      $InnerPass = 'INNER-RECURSION'">
+                      $InnerSimulation">
           <xsl:call-template name="MapMsg">
             <xsl:with-param name="Context" select="@id"/>
             <xsl:with-param name="Replacement" select="$Replacement"/>
@@ -837,7 +834,6 @@
         <xsl:call-template name="ProcessNonattrOpMetaAttributes">
           <xsl:with-param name="Source" select="$Source"/>
           <xsl:with-param name="InnerSimulation" select="true()"/>
-          <xsl:with-param name="InnerPass" select="'INNER-RECURSION'"/>
         </xsl:call-template>
       </xsl:otherwise>
     </xsl:choose>
@@ -1259,7 +1255,6 @@
           <xsl:with-param name="Source" select="$Source"/>
           <xsl:with-param name="Variant" select="$Variant"/>
           <xsl:with-param name="InnerSimulation" select="true()"/>
-          <xsl:with-param name="InnerPass" select="'INNER-RECURSION'"/>
         </xsl:call-template>
       </xsl:otherwise>
     </xsl:choose>
@@ -1325,7 +1320,6 @@
           <xsl:with-param name="Source" select="$Source"/>
           <xsl:with-param name="Variant" select="$Variant"/>
           <xsl:with-param name="InnerSimulation" select="true()"/>
-          <xsl:with-param name="InnerPass" select="'INNER-RECURSION'"/>
         </xsl:call-template>
       </xsl:otherwise>
     </xsl:choose>
@@ -1377,7 +1371,6 @@
     <xsl:call-template name="ProcessClusterProperties">
       <xsl:with-param name="Source" select="."/>
       <xsl:with-param name="InnerSimulation" select="true()"/>
-      <xsl:with-param name="InnerPass" select="'INNER-RECURSION'"/>
     </xsl:call-template>
   </xsl:variable>
   <xsl:if test="normalize-space($ProcessedClusterProperties)
@@ -1712,9 +1705,7 @@
           </xsl:copy>
         </xsl:when>
         <xsl:otherwise>
-          <xsl:copy>
-            <xsl:apply-templates select="@*|node()"/>
-          </xsl:copy>
+          <xsl:call-template name="HelperIdentity"/>
         </xsl:otherwise>
       </xsl:choose>
     </xsl:for-each>
