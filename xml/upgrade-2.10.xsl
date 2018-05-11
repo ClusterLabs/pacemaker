@@ -5,7 +5,8 @@
  SPDX-License-Identifier: GPL-2.0-or-later
  -->
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-                xmlns:cibtr="http://clusterlabs.org/ns/pacemaker/cibtr-2">
+                xmlns:cibtr="http://clusterlabs.org/ns/pacemaker/cibtr-2"
+                exclude-result-prefixes="cibtr">
 <xsl:output method="xml" encoding="UTF-8" indent="yes" omit-xml-declaration="yes"/>
 
 <xsl:param name="cib-min-ver" select="'3.0'"/>
@@ -1462,7 +1463,7 @@
                                   and
                                   not(
                                     $MapClusterNode/cibtr:replace[
-                                      @what = current()/@name
+                                      @what = name(current())
                                       and
                                       @in-case-of
                                       and

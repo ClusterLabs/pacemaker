@@ -13,6 +13,23 @@ DIFFPAGER=${DIFFPAGER:-less -LRX}
 # $1=schema, $2=validated
 # alt.: jing -i
 RNGVALIDATOR=${RNGVALIDATOR:-xmllint --noout --relaxng}
+# $1=stylesheet, $2=source
+# alt.: Xalan, saxon (note: only validates reliably with -B)
+_xalan_wrapper() {
+	{ Xalan "$2" "$1" 2>&1 1>&3 \
+	  | sed -e '/^Source tree node.*$/d' \
+	        -e 's|^XSLT message: \(.*\) (Occurred.*)|\1|'; } 3>&1- 1>&2
+}
+# filtered out message: https://bugzilla.redhat.com/show_bug.cgi?id=1577367
+_saxon_wrapper() {
+	{ saxon "-xsl:$1" "-s:$2" -versionmsg:off 2>&1 1>&3 \
+	  | sed -e '/^Cannot find CatalogManager.properties$/d'; } 3>&1- 1>&2
+}
+#_xalan_wrapper() { Xalan $2 $1; }
+XSLTPROCESSOR=${XSLTPROCESSOR:-xsltproc}
+test "${XSLTPROCESSOR}" != Xalan || XSLTPROCESSOR=_xalan_wrapper
+test "${XSLTPROCESSOR}" != saxon || XSLTPROCESSOR=_saxon_wrapper
+
 tests=  # test* names (should go first) here will become preselected default
 
 #
@@ -124,7 +141,7 @@ test_explanation() {
 		shift
 	done
 
-	xsltproc upgrade-detail.xsl "${_tsc_template}"
+	${XSLTPROCESSOR} upgrade-detail.xsl "${_tsc_template}"
 }
 
 # stdout: filename of the transformed file
@@ -141,7 +158,7 @@ test_runner_upgrade() {
 	_tru_target_err="${_tru_target}.err"
 
 	if test $((_tru_mode & (1 << 2))) -eq 0; then
-		xsltproc "${_tru_template}" "${_tru_source}" \
+		${XSLTPROCESSOR} "${_tru_template}" "${_tru_source}" \
 		  > "${_tru_target}" 2> "${_tru_target_err}" \
 		  || { _tru_ref=$?; echo "${_tru_target_err}"
 		       return ${_tru_ref}; }
@@ -155,7 +172,7 @@ test_runner_upgrade() {
 		#   (extraneous inter-element whitespace like blank
 		#   lines will not get removed otherwise, see lower)
 		xmllint --noblanks "${_tru_source}" \
-		  | xsltproc "${_tru_template}" - \
+		  | ${XSLTPROCESSOR} "${_tru_template}" - \
 		  > "${_tru_target}" 2> "${_tru_target_err}" \
 		  || { _tru_ref=$?; echo "${_tru_target_err}"
 		       return ${_tru_ref}; }
@@ -163,7 +180,7 @@ test_runner_upgrade() {
 		_tru_template="$(dirname "${_tru_target}")"
 		_tru_template="${_tru_template}/.$(basename "${_tru_target}")"
 		mv "${_tru_target}" "${_tru_template}"
-		xsltproc - "${_tru_template}" > "${_tru_target}" <<-EOF
+		${XSLTPROCESSOR} - "${_tru_template}" > "${_tru_target}" <<-EOF
 	<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 	<xsl:output method="xml" encoding="UTF-8" omit-xml-declaration="yes"/>
 	<xsl:template match="@*|*|comment()|processing-instruction()">
@@ -205,7 +222,7 @@ EOF
 		fi
 	elif test -f "${_tru_ref}" && test -e "${_tru_ref_err}"; then
 		{ test "$((_tru_mode & (1 << 2)))" -eq 0 && cat "${_tru_ref}" \
-		    || xsltproc - "${_tru_ref}" <<-EOF
+		    || ${XSLTPROCESSOR} - "${_tru_ref}" <<-EOF
 	<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 	<xsl:output method="xml" encoding="UTF-8" omit-xml-declaration="yes"/>
 	<xsl:template match="@*|*|comment()|processing-instruction()">
@@ -358,7 +375,7 @@ cts_scheduler() {
 			shift
 		done
 		while read _tcp_origin; do
-			_tcp_validatewith=$(xsltproc - "${_tcp_origin}" <<-EOF
+			_tcp_validatewith=$(${XSLTPROCESSOR} - "${_tcp_origin}" <<-EOF
 	<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 	<xsl:output method="text" encoding="UTF-8"/>
 	<xsl:template match="/">
