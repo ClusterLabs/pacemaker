@@ -1,0 +1,25 @@
+<cib validate-with="pacemaker-3.0" admin_epoch="0" epoch="0" num_updates="0">
+  <configuration>
+    <crm_config/>
+    <nodes/>
+    <resources>
+
+      <!-- from c713bbe39:pengine/test10/isolation-restart-all.xml -->
+      <primitive class="ocf" id="fake" provider="heartbeat" type="Dummy">
+        <instance_attributes id="fake-instance_attributes">
+          <nvpair id="fake-instance_attributes-docker_image" name="pcmk_docker_image" value="centos:dock-wrapper-test"/>
+          <nvpair id="fake-instance_attributes-docker_privileged" name="pcmk_docker_privileged" value="false"/>
+        </instance_attributes>
+        <operations>
+          <op id="fake-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+        <meta_attributes id="fake-meta_attributes">
+          <nvpair id="fake-meta_attributes-isolation-wrapper" name="target-role" value="Stopped"/>
+        </meta_attributes>
+      </primitive>
+
+    </resources>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>

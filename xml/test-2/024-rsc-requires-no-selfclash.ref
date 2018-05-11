@@ -100,7 +100,7 @@
           </operations>
         <meta_attributes id="_2TO3_stateful2-promote-meta3">
                 
-               <nvpair id="stateful2-promote-requires3-1" name="requires" value="fencing"/>
+              <nvpair id="stateful2-promote-requires3-1" name="requires" value="fencing"/>
               </meta_attributes></primitive>
       </clone>
 

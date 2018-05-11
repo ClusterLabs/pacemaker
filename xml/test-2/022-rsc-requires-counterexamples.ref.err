@@ -1,2 +1,2 @@
-Resources-operation: dropping requires
+Resources-operation: myAddr-stop (rsc=myAddr): dropping requires
 Resources-operation: ... only start/promote operation taken into account
