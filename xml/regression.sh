@@ -466,7 +466,8 @@ test_suite() {
 
 	while test $# -gt 0; do
 		case "$1" in
-		-) while read _ts_spec; do _ts_select="${_ts_spec}@$1"; done;;
+		-) printf '%s\n' 'waiting for tests specified at stdin...';
+		   while read _ts_spec; do _ts_select="${_ts_spec}@$1"; done;;
 		-*) _ts_pass="${_ts_pass} $1";;
 		*) _ts_select_full="${_ts_select_full}@$1"
 		   _ts_select="${_ts_select}@${1%%/*}";;
