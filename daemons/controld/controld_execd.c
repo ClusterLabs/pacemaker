@@ -1457,6 +1457,7 @@ synthesize_lrmd_failure(lrm_state_t *lrm_state, xmlNode *action, int rc)
         rsc_info = lrm_state_get_rsc_info(lrm_state, op->rsc_id, 0);
     }
     if (rsc_info) {
+        lrmd_free_rsc_info(rsc_info);
         process_lrm_event(lrm_state, op, NULL);
 
     } else {
