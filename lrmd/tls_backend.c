@@ -324,6 +324,7 @@ lrmd_init_remote_tls_server()
     if (rc != 0) {
         crm_warn("A cluster connection will not be possible until the key is available");
     }
+    gnutls_free(psk_key.data);
 
     memset(&hints, 0, sizeof(struct addrinfo));
     /* Bind to the wildcard address (INADDR_ANY or IN6ADDR_ANY_INIT).
