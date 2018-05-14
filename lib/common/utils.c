@@ -1203,6 +1203,46 @@ crm_generate_uuid(void)
 }
 
 /*!
+ * \brief Get name to be used as identifier for cluster messages
+ *
+ * \param[in] name  Actual system name to check
+ *
+ * \return Non-NULL cluster message identifier corresponding to name
+ *
+ * \note The Pacemaker daemons were renamed in version 2.0.0, but the old names
+ *       must continue to be used as the identifier for cluster messages, so
+ *       that mixed-version clusters are possible during a rolling upgrade.
+ */
+const char *
+pcmk_message_name(const char *name)
+{
+    if (name == NULL) {
+        return "unknown";
+
+    } else if (!strcmp(name, "pacemaker-attrd")) {
+        return "attrd";
+
+    } else if (!strcmp(name, "pacemaker-based")) {
+        return CRM_SYSTEM_CIB;
+
+    } else if (!strcmp(name, "pacemaker-controld")) {
+        return CRM_SYSTEM_CRMD;
+
+    } else if (!strcmp(name, "pacemaker-execd")) {
+        return CRM_SYSTEM_LRMD;
+
+    } else if (!strcmp(name, "pacemaker-fenced")) {
+        return "stonith-ng";
+
+    } else if (!strcmp(name, "pacemaker-schedulerd")) {
+        return CRM_SYSTEM_PENGINE;
+
+    } else {
+        return name;
+    }
+}
+
+/*!
  * \brief Check whether a string represents a cluster daemon name
  *
  * \param[in] name  String to check
@@ -1212,15 +1252,16 @@ crm_generate_uuid(void)
 bool
 crm_is_daemon_name(const char *name)
 {
-    return (name &&
-            (!strcmp(name, CRM_SYSTEM_CRMD)
+    name = pcmk_message_name(name);
+    return (!strcmp(name, CRM_SYSTEM_CRMD)
             || !strcmp(name, CRM_SYSTEM_STONITHD)
-            || !strcmp(name, T_ATTRD)
+            || !strcmp(name, "stonith-ng")
+            || !strcmp(name, "attrd")
             || !strcmp(name, CRM_SYSTEM_CIB)
             || !strcmp(name, CRM_SYSTEM_MCP)
             || !strcmp(name, CRM_SYSTEM_DC)
             || !strcmp(name, CRM_SYSTEM_TENGINE)
-            || !strcmp(name, CRM_SYSTEM_LRMD)));
+            || !strcmp(name, CRM_SYSTEM_LRMD));
 }
 
 #include <md5.h>
