@@ -36,7 +36,6 @@
           <instance_attributes id="instance_attributes.id22013">
             <nvpair id="nvpair.id22019" name="ip" value="192.168.100.181"/>
           </instance_attributes>
-          <meta_attributes id="primitive-child_192.168.100.181.meta"/>
         </primitive>
         <primitive id="child_192.168.100.182" class="ocf" type="IPaddr" provider="heartbeat">
           <operations>
@@ -45,7 +44,6 @@
           <instance_attributes id="instance_attributes.id22055">
             <nvpair id="nvpair.id22061" name="ip" value="192.168.100.182"/>
           </instance_attributes>
-          <meta_attributes id="primitive-child_192.168.100.182.meta"/>
         </primitive>
         <primitive id="child_192.168.100.183" class="ocf" type="IPaddr" provider="heartbeat">
           <operations>
@@ -54,7 +52,6 @@
           <instance_attributes id="instance_attributes.id22097">
             <nvpair id="nvpair.id22103" name="ip" value="192.168.100.183"/>
           </instance_attributes>
-          <meta_attributes id="primitive-child_192.168.100.183.meta"/>
         </primitive>
         <meta_attributes id="group-group-1.meta"/>
       </group>

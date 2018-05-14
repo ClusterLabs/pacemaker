@@ -25,7 +25,6 @@
           <instance_attributes id="instance_attributes.id21946">
             <nvpair id="nvpair.id21953" name="drbd_resource" value="drbd0"/>
           </instance_attributes>
-          <meta_attributes id="primitive-drbd0.meta"/>
         </primitive>
         <meta_attributes id="clone-ms-drbd0.meta"/>
       </clone>
@@ -38,19 +37,15 @@
           <nvpair id="nvpair.id22001" name="promoted-node-max" value="1"/>
           <nvpair id="unique-2" name="globally-unique" value="true"/>
         </meta_attributes>
-        <primitive id="sf" class="ocf" provider="heartbeat" type="Stateful">
-          <meta_attributes id="primitive-sf.meta"/>
-        </primitive>
+        <primitive id="sf" class="ocf" provider="heartbeat" type="Stateful"/>
         <meta_attributes id="clone-ms-sf.meta"/>
       </clone>
       <primitive id="fs0" class="ocf" provider="heartbeat" type="Filesystem">
-        <meta_attributes id="meta_attributes.id22041"/>
         <instance_attributes id="instance_attributes.id22049">
           <nvpair id="nvpair.id22055" name="fstype" value="ext3"/>
           <nvpair id="nvpair.id22064" name="directory" value="/drbd"/>
           <nvpair id="nvpair.id22072" name="device" value="/dev/drbd0"/>
         </instance_attributes>
-        <meta_attributes id="primitive-fs0.meta"/>
       </primitive>
     </resources>
     <constraints>

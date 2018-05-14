@@ -23,7 +23,6 @@
         <instance_attributes id="instance_attributes.id21956">
           <nvpair id="nvpair.id21962" name="ip" value="127.0.0.10"/>
         </instance_attributes>
-        <meta_attributes id="primitive-DcIPaddr.meta"/>
       </primitive>
       <primitive id="rsc_hadev3" class="ocf" type="IPaddr" provider="heartbeat">
         <operations>
@@ -32,7 +31,6 @@
         <instance_attributes id="instance_attributes.id21997">
           <nvpair id="nvpair.id22003" name="ip" value="127.0.0.21"/>
         </instance_attributes>
-        <meta_attributes id="primitive-rsc_hadev3.meta"/>
       </primitive>
       <primitive id="rsc_hadev2" class="ocf" type="IPaddr" provider="heartbeat">
         <operations>
@@ -41,7 +39,6 @@
         <instance_attributes id="instance_attributes.id22038">
           <nvpair id="nvpair.id22044" name="ip" value="127.0.0.22"/>
         </instance_attributes>
-        <meta_attributes id="primitive-rsc_hadev2.meta"/>
       </primitive>
       <primitive id="rsc_hadev1" class="ocf" type="IPaddr" provider="heartbeat">
         <operations>
@@ -50,7 +47,6 @@
         <instance_attributes id="instance_attributes.id22079">
           <nvpair id="nvpair.id22085" name="ip" value="127.0.0.23"/>
         </instance_attributes>
-        <meta_attributes id="primitive-rsc_hadev1.meta"/>
       </primitive>
       <clone id="DoFencing">
         <primitive id="child_DoFencing" class="stonith" type="ssh">
@@ -60,7 +56,6 @@
           <instance_attributes id="instance_attributes.id22155">
             <nvpair id="nvpair.id22161" name="hostlist" value="hadev3 hadev2 hadev1 "/>
           </instance_attributes>
-          <meta_attributes id="primitive-child_DoFencing.meta"/>
         </primitive>
         <meta_attributes id="clone-DoFencing.meta">
           <nvpair id="nvpair.meta.auto-107" name="resource-stickiness" value="1"/>

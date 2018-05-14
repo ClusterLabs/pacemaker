@@ -177,7 +177,6 @@
             <operations id="fs2-operations">
               <op id="fs2-monitor-20" interval="20" name="monitor" timeout="40"/>
             </operations>
-            <meta_attributes id="fs2-meta_attributes"/>
           </primitive>
         </group>
       </clone>

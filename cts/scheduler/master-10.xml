@@ -29,7 +29,6 @@
             <op name="monitor" interval="1" id="mon-1"/>
             <op name="monitor" interval="11" id="mon-2" role="Master"/>
           </operations>
-          <meta_attributes id="primitive-child_rsc1.meta"/>
         </primitive>
         <meta_attributes id="clone-rsc1.meta">
           <nvpair id="promotable.meta.auto-34" name="promotable" value="true"/>

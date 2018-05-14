@@ -21,7 +21,6 @@
         <operations>
           <op name="monitor" interval="5s" id="op.auto-1" timeout="3s"/>
         </operations>
-        <meta_attributes id="primitive-rsc1.meta"/>
       </primitive>
     </resources>
     <constraints/>

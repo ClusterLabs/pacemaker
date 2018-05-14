@@ -21,7 +21,6 @@
           <operations>
             <op id="ClusterIP-monitor-30s" interval="30s" name="monitor"/>
           </operations>
-          <meta_attributes id="ClusterIP-meta_attributes"/>
         </primitive>
         <meta_attributes id="group1-meta_attributes">
           <nvpair id="group1-meta_attributes-target-role" name="target-role" value="Stopped"/>
@@ -36,7 +35,6 @@
           <operations>
             <op id="ClusterIP2-monitor-30s" interval="30s" name="monitor"/>
           </operations>
-          <meta_attributes id="ClusterIP2-meta_attributes"/>
         </primitive>
         <meta_attributes id="group2-meta_attributes">
           <nvpair id="group2-meta_attributes-target-role" name="target-role" value="Started"/>

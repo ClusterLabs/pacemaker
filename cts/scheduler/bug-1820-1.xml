@@ -15,9 +15,7 @@
       <node id="e4603bf6-d10f-4af2-b53b-ba72de6164d0" uname="world" type="member"/>
     </nodes>
     <resources>
-      <primitive id="p1" class="ocf" type="Xen" provider="heartbeat">
-        <meta_attributes id="primitive-p1.meta"/>
-      </primitive>
+      <primitive id="p1" class="ocf" type="Xen" provider="heartbeat"/>
       <group id="gr1">
         <primitive id="test1" class="ocf" type="Xen" provider="heartbeat">
           <instance_attributes id="instance_attributes.id21929">

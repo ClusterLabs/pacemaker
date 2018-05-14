@@ -43,7 +43,6 @@
           <instance_attributes id="instance_attributes.id22075">
             <nvpair id="nvpair.id22081" name="ip" value="192.168.100.181"/>
           </instance_attributes>
-          <meta_attributes id="primitive-ocf_child.meta"/>
         </primitive>
         <primitive id="heartbeat_child" class="ocf" provider="heartbeat" type="IPaddr">
           <operations>
@@ -52,7 +51,6 @@
           <instance_attributes id="instance_attributes.id22117">
             <nvpair id="nvpair.id22123" name="1" value="192.168.100.182"/>
           </instance_attributes>
-          <meta_attributes id="primitive-heartbeat_child.meta"/>
         </primitive>
         <meta_attributes id="group-group-1.meta"/>
       </group>
@@ -60,7 +58,6 @@
         <operations>
           <op name="monitor" interval="5s" id="ocf_lsb_monitor" timeout="20s"/>
         </operations>
-        <meta_attributes id="primitive-lsb_dummy.meta"/>
       </primitive>
       <primitive id="rsc_c001n08" class="ocf" type="IPaddr" provider="heartbeat">
         <operations>
@@ -139,7 +136,6 @@
           <instance_attributes id="instance_attributes.id22548">
             <nvpair id="nvpair.id22554" name="logfile" value="/var/log/cts_ocfdummy.log"/>
           </instance_attributes>
-          <meta_attributes id="primitive-ocf_msdummy.meta"/>
         </primitive>
         <meta_attributes id="clone-master_rsc_1.meta">
           <nvpair id="nvpair.meta.auto-231" name="promotable" value="true"/>

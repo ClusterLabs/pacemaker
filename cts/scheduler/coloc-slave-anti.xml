@@ -77,7 +77,6 @@
             <op name="stop" interval="0" id="drbd-r0-stop-1" timeout="10s" role="Master"/>
             <op name="stop" interval="0" id="drbd-r0-stop-2" timeout="10s" role="Slave"/>
           </operations>
-          <meta_attributes id="primitive-drbd-r0.meta"/>
         </primitive>
         <meta_attributes id="clone-drbd-msr.meta">
           <nvpair id="ordered.meta.auto-96" name="ordered" value="false"/>
@@ -96,7 +95,6 @@
             <op name="start" interval="0" id="fs-1-start" timeout="10s"/>
             <op name="stop" interval="0" id="fs-1-stop" timeout="10s"/>
           </operations>
-          <meta_attributes id="primitive-fs-1.meta"/>
         </primitive>
         <primitive id="ip-198" class="ocf" provider="heartbeat" type="IPaddr2">
           <instance_attributes id="instance_attributes.id22418">
@@ -110,7 +108,6 @@
             <op name="start" interval="0" id="ip-198-start" timeout="10s"/>
             <op name="stop" interval="0" id="ip-198-stop" timeout="10s"/>
           </operations>
-          <meta_attributes id="primitive-ip-198.meta"/>
         </primitive>
         <primitive id="apache" class="ocf" provider="custom" type="apache2">
           <instance_attributes id="instance_attributes.id22503">
@@ -125,7 +122,6 @@
             <op name="start" interval="0" id="apache-start" timeout="30s"/>
             <op name="stop" interval="0" id="apache-stop" timeout="30s"/>
           </operations>
-          <meta_attributes id="primitive-apache.meta"/>
         </primitive>
         <meta_attributes id="group-group-1.meta"/>
       </group>

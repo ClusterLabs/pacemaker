@@ -49,7 +49,6 @@
             <op name="monitor" interval="12s" id="drbd0_mon_0" timeout="5s"/>
             <op name="monitor" interval="10s" id="drbd0_mon_1" timeout="5s" role="Master"/>
           </operations>
-          <meta_attributes id="primitive-drbd0.meta"/>
         </primitive>
         <meta_attributes id="clone-ms_drbd.meta"/>
       </clone>
@@ -63,13 +62,11 @@
           <operations>
             <op name="monitor" interval="5s" id="IPaddr0_mon" timeout="5s"/>
           </operations>
-          <meta_attributes id="primitive-IPaddr0.meta"/>
         </primitive>
         <primitive id="MailTo" class="ocf" provider="heartbeat" type="MailTo">
           <instance_attributes id="instance_attributes.id22207">
             <nvpair id="nvpair.id22214" name="email" value="kittan@cs.uni-potsdam.de"/>
           </instance_attributes>
-          <meta_attributes id="primitive-MailTo.meta"/>
         </primitive>
         <meta_attributes id="group-group.meta"/>
       </group>

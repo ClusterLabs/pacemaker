@@ -21,7 +21,6 @@
         <operations>
           <op id="remote1-monitor-interval-60s" interval="60s" name="monitor"/>
         </operations>
-        <meta_attributes id="remote1-meta_attributes"/>
       </primitive>
       <primitive class="ocf" id="FAKE1" provider="heartbeat" type="Dummy">
         <operations>

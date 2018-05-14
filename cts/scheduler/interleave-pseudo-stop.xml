@@ -26,7 +26,6 @@
           <operations>
             <op name="monitor" interval="5" id="op.auto-1"/>
           </operations>
-          <meta_attributes id="primitive-stonithclone.meta"/>
         </primitive>
         <meta_attributes id="clone-stonithcloneset.meta"/>
       </clone>
@@ -38,9 +37,7 @@
           <nvpair id="nvpair.id22035" name="globally-unique" value="false"/>
           <nvpair id="nvpair.id22044" name="notify" value="true"/>
         </meta_attributes>
-        <primitive id="evmsclone" class="ocf" type="EvmsSCC" provider="heartbeat">
-          <meta_attributes id="primitive-evmsclone.meta"/>
-        </primitive>
+        <primitive id="evmsclone" class="ocf" type="EvmsSCC" provider="heartbeat"/>
         <meta_attributes id="clone-evmscloneset.meta"/>
       </clone>
       <clone id="imagestorecloneset">
@@ -66,7 +63,6 @@
           <meta_attributes id="meta_attributes.id22213">
             <nvpair id="nvpair.id22220" name="target-role" value="started"/>
           </meta_attributes>
-          <meta_attributes id="primitive-imagestoreclone.meta"/>
         </primitive>
         <meta_attributes id="clone-imagestorecloneset.meta"/>
       </clone>
@@ -90,7 +86,6 @@
             <op name="stop" interval="0" id="c32d29d2-25a9-4c42-ba55-1d5e087162b1" timeout="60"/>
             <op name="start" interval="0" id="a2147200-7172-4d96-85ea-0ebec68f5fb7" timeout="60"/>
           </operations>
-          <meta_attributes id="primitive-configstoreclone.meta"/>
         </primitive>
         <meta_attributes id="clone-configstorecloneset.meta"/>
       </clone>

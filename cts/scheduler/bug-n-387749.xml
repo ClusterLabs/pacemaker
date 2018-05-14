@@ -45,7 +45,6 @@
             <nvpair id="nvpair.id22072" name="fstype" value="ocfs2"/>
             <nvpair name="options" id="nvpair.id22081" value="rw,sync"/>
           </instance_attributes>
-          <meta_attributes id="primitive-export_home_ocfs2.meta"/>
         </primitive>
         <meta_attributes id="meta_attributes.id22093">
           <nvpair id="nvpair.id22100" name="globally-unique" value="true"/>
@@ -78,7 +77,6 @@
           <operations>
             <op name="monitor" interval="15" id="op.auto-2" timeout="15" start-delay="15" on-fail="stop" enabled="true" role="Started"/>
           </operations>
-          <meta_attributes id="primitive-resource_nfsserver_single.meta"/>
         </primitive>
         <meta_attributes id="meta_attributes.id22250"/>
         <meta_attributes id="group-group_nfs.meta"/>

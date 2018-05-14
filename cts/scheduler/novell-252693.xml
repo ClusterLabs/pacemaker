@@ -25,7 +25,6 @@
           <instance_attributes id="instance_attributes.id22007">
             <nvpair id="nvpair.id22014" name="hostlist" value="node1,node2"/>
           </instance_attributes>
-          <meta_attributes id="primitive-stonithclone.meta"/>
         </primitive>
         <meta_attributes id="clone-stonithcloneset.meta">
           <nvpair id="globally_unique.meta.auto-39" name="globally-unique" value="false"/>
@@ -38,7 +37,6 @@
           <operations>
             <op name="monitor" interval="5s" id="evmsdclone-op-01" timeout="20s"/>
           </operations>
-          <meta_attributes id="primitive-evmsdclone.meta"/>
         </primitive>
         <meta_attributes id="clone-evmsdcloneset.meta">
           <nvpair id="notify.meta.auto-68" name="notify" value="false"/>
@@ -47,9 +45,7 @@
         </meta_attributes>
       </clone>
       <clone id="evmscloneset">
-        <primitive id="evmsclone" class="ocf" type="EvmsSCC" provider="heartbeat">
-          <meta_attributes id="primitive-evmsclone.meta"/>
-        </primitive>
+        <primitive id="evmsclone" class="ocf" type="EvmsSCC" provider="heartbeat"/>
         <meta_attributes id="clone-evmscloneset.meta">
           <nvpair id="notify.meta.auto-87" name="notify" value="true"/>
           <nvpair id="globally_unique.meta.auto-87" name="globally-unique" value="false"/>
@@ -66,7 +62,6 @@
             <nvpair id="nvpair.id22195" name="directory" value="/var/lib/xen/images"/>
             <nvpair id="nvpair.id22204" name="fstype" value="ocfs2"/>
           </instance_attributes>
-          <meta_attributes id="primitive-imagestoreclone.meta"/>
         </primitive>
         <meta_attributes id="clone-imagestorecloneset.meta">
           <nvpair id="notify.meta.auto-100" name="notify" value="true"/>
@@ -85,7 +80,6 @@
             <nvpair id="nvpair.id22294" name="directory" value="/etc/xen/vm"/>
             <nvpair id="nvpair.id22303" name="fstype" value="ocfs2"/>
           </instance_attributes>
-          <meta_attributes id="primitive-configstoreclone.meta"/>
         </primitive>
         <meta_attributes id="clone-configstorecloneset.meta">
           <nvpair id="notify.meta.auto-133" name="notify" value="true"/>
@@ -106,7 +100,6 @@
         <meta_attributes id="meta_attributes.id22368">
           <nvpair id="nvpair.id22374" name="allow-migrate" value="true"/>
         </meta_attributes>
-        <meta_attributes id="primitive-sles10.meta"/>
       </primitive>
     </resources>
     <constraints>
