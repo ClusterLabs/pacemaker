@@ -879,11 +879,6 @@
                           != $InnerPass
                           and
                           (
-                            not(preceding-sibling::nvpair)
-                            or
-                            generate-id(preceding-sibling::nvpair[1])
-                            != generate-id(preceding-sibling::*[1])
-                          ) or (
                             not(following-sibling::nvpair)
                             or
                             generate-id(following-sibling::nvpair[1])
@@ -970,6 +965,10 @@
                               =
                               substring-before($SimulateFollowingSiblings,
                                                concat('@', $Replacement/@with))">
+                  <xsl:call-template name="HelperDenormalizedSpace">
+                    <xsl:with-param name="Source" select="."/>
+                    <xsl:with-param name="InnerSimulation" select="$InnerSimulation"/>
+                  </xsl:call-template>
                   <xsl:copy>
                     <xsl:for-each select="@*">
                       <xsl:choose>
@@ -996,13 +995,11 @@
             </xsl:choose>
           </xsl:when>
           <xsl:otherwise>
-            <!-- XXX: emits superfluous empty lines with test-2/02[23],
-                      but keeps -B run green -->
             <xsl:call-template name="HelperDenormalizedSpace">
               <xsl:with-param name="Source" select="."/>
               <xsl:with-param name="InnerSimulation" select="$InnerSimulation"/>
             </xsl:call-template>
-           <xsl:call-template name="HelperIdentity"/>
+            <xsl:call-template name="HelperIdentity"/>
           </xsl:otherwise>
         </xsl:choose>
       </xsl:when>
