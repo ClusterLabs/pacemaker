@@ -484,11 +484,12 @@ test_suite() {
 			*@${_ts_test}@*)
 			_ts_select="${_ts_select%@${_ts_test}@*}"\
 "@${_ts_select#*@${_ts_test}@}"
+			break
 			;;
-			@) case "${_ts_test}" in test*) break;; *) continue 2;; esac
+			@) case "${_ts_test}" in test*) break;; esac
 			;;
-			*) continue 2;;
 			esac
+			continue 2  # move on to matching with next local test
 		done
 
 		_ts_test_specs=
