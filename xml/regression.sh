@@ -16,14 +16,14 @@ RNGVALIDATOR=${RNGVALIDATOR:-xmllint --noout --relaxng}
 # $1=stylesheet, $2=source
 # alt.: Xalan, saxon (note: only validates reliably with -B)
 _xalan_wrapper() {
-	{ Xalan "$2" "$1" 2>&1 1>&3 \
+	{ Xalan "$2" "$1" 2>&1 >&3 \
 	  | sed -e '/^Source tree node.*$/d' \
-	        -e 's|^XSLT message: \(.*\) (Occurred.*)|\1|'; } 3>&1- 1>&2
+	        -e 's|^XSLT message: \(.*\) (Occurred.*)|\1|'; } 3>&- 3>&1 >&2
 }
 # filtered out message: https://bugzilla.redhat.com/show_bug.cgi?id=1577367
 _saxon_wrapper() {
-	{ saxon "-xsl:$1" "-s:$2" -versionmsg:off 2>&1 1>&3 \
-	  | sed -e '/^Cannot find CatalogManager.properties$/d'; } 3>&1- 1>&2
+	{ saxon "-xsl:$1" "-s:$2" -versionmsg:off 2>&1 >&3 \
+	  | sed -e '/^Cannot find CatalogManager.properties$/d'; } 3>&- 3>&1 >&2
 }
 #_xalan_wrapper() { Xalan $2 $1; }
 XSLTPROCESSOR=${XSLTPROCESSOR:-xsltproc}
