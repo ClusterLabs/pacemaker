@@ -1,3 +1,16 @@
+* Tue May 15 2018 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.0-rc4
+- Update source tarball to revision: d0735e3
+- Changesets: 74
+- Diff:       55 files changed, 930 insertions(+), 517 deletions(-)
+
+- Changes since Pacemaker-2.0.0-rc3
+  + Restore ability to do a rolling upgrade (regression in 2.0.0-rc3)
+  + Improved portability to BSD-based platforms
+  + controller,executor: avoid minor memory leaks
+  + executor: handle systemd actions correctly when used with "service:"
+  + libcrmservice: find absolute LSB paths when used with "service:"
+  + tools: cibsecret --help/--version doesn't require cluster to be running
+
 * Mon Apr 30 2018 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.0-rc3
 - Update source tarball to revision: 5aab21d
 - Changesets: 166
