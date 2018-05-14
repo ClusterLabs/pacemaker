@@ -173,19 +173,19 @@
     <cibtr:replace what="isolation"
                    with="target-role"
                    redefined-as="Stopped"
-                   msg-extra="isolation wrappers obsoleted with bundle resources"/>
+                   msg-extra="i.e. resource at hand disabled; isolation wrappers obsoleted with bundle resources"/>
     <cibtr:replace what="isolation-host"
                    with="target-role"
                    redefined-as="Stopped"
-                   msg-extra="isolation wrappers obsoleted with bundle resources"/>
+                   msg-extra="i.e. resource at hand disabled; isolation wrappers obsoleted with bundle resources"/>
     <cibtr:replace what="isolation-instance"
                    with="target-role"
                    redefined-as="Stopped"
-                   msg-extra="isolation wrappers obsoleted with bundle resources"/>
+                   msg-extra="i.e. resource at hand disabled; isolation wrappers obsoleted with bundle resources"/>
     <cibtr:replace what="isolation-wrapper"
                    with="target-role"
                    redefined-as="Stopped"
-                   msg-extra="isolation wrappers obsoleted with bundle resources"/>
+                   msg-extra="i.e. resource at hand disabled; isolation wrappers obsoleted with bundle resources"/>
   </cibtr:table>
 
   <!--
@@ -924,7 +924,10 @@
                               ]"/>
         <xsl:if test="not($InnerSimulation)">
           <xsl:call-template name="MapMsg">
-            <xsl:with-param name="Context" select="@id"/>
+            <xsl:with-param name="Context"
+                            select="concat(../../@id,
+                                           ' (meta=', ../@id,
+                                           ')')"/>
             <xsl:with-param name="Replacement" select="$Replacement"/>
           </xsl:call-template>
         </xsl:if>
