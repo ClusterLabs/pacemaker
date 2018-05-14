@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2017-10-06 19:59-0500\n"
-"PO-Revision-Date: 2017-10-06 19:59-0500\n"
+"POT-Creation-Date: 2018-05-14 18:03-0500\n"
+"PO-Revision-Date: 2018-05-14 18:03-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -40,7 +40,7 @@ msgstr ""
 #. Tag: programlisting
 #, no-c-format
 msgid "/*\n"
-" * Copyright (C) &lt;YYYY[-YYYY]&gt; Andrew Beekhof &lt;andrew@beekhof.net&gt;\n"
+" * Copyright &lt;YYYY[-YYYY]&gt; Andrew Beekhof &lt;andrew@beekhof.net&gt;\n"
 " *\n"
 " * This source code is licensed under &lt;LICENSE&gt; WITHOUT ANY WARRANTY.\n"
 " */"
@@ -48,7 +48,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<literal>&lt;YYYY&gt;</literal> is the year the code was <emphasis>originally</emphasis> created (it is the most important date for copyright purposes, as it establishes priority and the point from which expiration is calculated). If the code is modified in later years, add <literal>-YYYY</literal> with the most recent year of modification."
+msgid "<literal>&lt;YYYY&gt;</literal> is the year the code was <emphasis>originally</emphasis> created. <footnote><para> See the U.S. Copyright Office’s <ulink url=\"https://www.copyright.gov/comp3/\">\"Compendium of U.S. Copyright Office Practices\"</ulink>, particularly \"Chapter 2200: Notice of Copyright\", sections 2205.1(A) and 2205.1(F), or <ulink url=\"https://techwhirl.com/updating-copyright-notices/\">\"Updating Copyright Notices\"</ulink> for a more readable summary. </para></footnote> If the code is modified in later years, add <literal>-YYYY</literal> with the most recent year of modification."
 msgstr ""
 
 #. Tag: para

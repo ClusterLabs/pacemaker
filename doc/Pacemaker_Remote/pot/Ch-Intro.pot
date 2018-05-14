@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2017-10-06 19:59-0500\n"
-"PO-Revision-Date: 2017-10-06 19:59-0500\n"
+"POT-Creation-Date: 2018-05-14 18:03-0500\n"
+"PO-Revision-Date: 2018-05-14 18:03-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -100,136 +100,6 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "A virtual machine can be a cluster resource, and run pacemaker_remote to make it a guest node, allowing the cluster to manage services inside it. The virtual machine is <emphasis>transparent</emphasis> to the cluster."
-msgstr ""
-
-#. Tag: title
-#, no-c-format
-msgid "Support in Pacemaker Versions"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "It is recommended to run Pacemaker 1.1.12 or later when using pacemaker_remote due to important bug fixes. An overview of changes in pacemaker_remote capability by version (aside from bug fixes, which are included in every version):"
-msgstr ""
-
-#. Tag: title
-#, no-c-format
-msgid "1.1.16"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Support for watchdog-based fencing (sbd) on remote nodes"
-msgstr ""
-
-#. Tag: title
-#, no-c-format
-msgid "1.1.15"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "If pacemaker_remote is stopped on an active node, it will wait for the cluster to migrate all resources off before exiting, rather than exit immediately and get fenced."
-msgstr ""
-
-#. Tag: title
-#, no-c-format
-msgid "1.1.14"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Resources that create guest nodes can be included in groups"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "reconnect_interval option for remote nodes"
-msgstr ""
-
-#. Tag: title
-#, no-c-format
-msgid "1.1.13"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Support for maintenance mode"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Remote nodes can recover without being fenced when the cluster node hosting their connection fails"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "<literal>#kind</literal> built-in node attribute for use with rules"
-msgstr ""
-
-#. Tag: title
-#, no-c-format
-msgid "1.1.12"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Support for permanent node attributes"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Support for migration"
-msgstr ""
-
-#. Tag: title
-#, no-c-format
-msgid "1.1.11"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Support for IPv6"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Support for remote nodes"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Support for transient node attributes"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Support for clusters with mixed endian architectures"
-msgstr ""
-
-#. Tag: title
-#, no-c-format
-msgid "1.1.10"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "remote-connect-timeout for guest nodes"
-msgstr ""
-
-#. Tag: title
-#, no-c-format
-msgid "1.1.9"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Initial version to include pacemaker_remote"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Limited to guest nodes in KVM/LXC environments using only IPv4; all nodes' architectures must have same endianness"
 msgstr ""
 
 #. Tag: title
@@ -354,7 +224,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "That is not to say, however, that fencing of a remote node works any differently than that of a cluster node. The Pacemaker policy engine understands how to fence remote nodes. As long as a fencing device exists, the cluster is capable of ensuring remote nodes are fenced in the exact same way as cluster nodes."
+msgid "That is not to say, however, that fencing of a remote node works any differently than that of a cluster node. The Pacemaker scheduler understands how to fence remote nodes. As long as a fencing device exists, the cluster is capable of ensuring remote nodes are fenced in the exact same way as cluster nodes."
 msgstr ""
 
 #. Tag: title
