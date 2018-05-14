@@ -207,8 +207,6 @@
             <op id="iax2_mon-stop-0" interval="0" name="stop" timeout="20s"/>
             <op id="iax2_mon-monitor-60s" interval="60s" name="monitor" start-delay="30" timeout="20s"/>
           </operations>
-          <meta_attributes id="iax2_mon-meta_attributes">
-          </meta_attributes>
         </primitive>
         <primitive class="lsb" id="httpd" type="apache2">
           <operations>

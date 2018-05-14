@@ -30,7 +30,6 @@
           <instance_attributes id="instance_attributes.id22022">
             <nvpair id="nvpair.id22029" name="hostlist" value="32c47,32c48"/>
           </instance_attributes>
-          <meta_attributes id="primitive-stonithclone.meta"/>
         </primitive>
         <meta_attributes id="clone-stonithcloneset.meta">
           <nvpair id="globally_unique.meta.auto-43" name="globally-unique" value="false"/>
@@ -45,7 +44,6 @@
             <nvpair id="nvpair.id22103" name="directory" value="/images"/>
             <nvpair id="nvpair.id22112" name="fstype" value="ocfs2"/>
           </instance_attributes>
-          <meta_attributes id="primitive-imagestoreclone.meta"/>
         </primitive>
         <meta_attributes id="clone-imagestorecloneset.meta">
           <nvpair id="notify.meta.auto-72" name="notify" value="true"/>
@@ -61,7 +59,6 @@
             <nvpair id="nvpair.id22186" name="directory" value="/vm"/>
             <nvpair id="nvpair.id22194" name="fstype" value="ocfs2"/>
           </instance_attributes>
-          <meta_attributes id="primitive-configstoreclone.meta"/>
         </primitive>
         <meta_attributes id="clone-configstorecloneset.meta">
           <nvpair id="notify.meta.auto-100" name="notify" value="true"/>

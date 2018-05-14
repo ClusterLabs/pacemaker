@@ -52,7 +52,6 @@
           <op id="central-stop-timeout-20" interval="0s" name="stop" timeout="20"/>
           <op id="central-monitor-interval-10" interval="10" name="monitor" timeout="20"/>
         </operations>
-        <meta_attributes id="central-meta_attributes"/>
       </primitive>
     </resources>
     <constraints>

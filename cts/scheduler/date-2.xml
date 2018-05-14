@@ -25,14 +25,12 @@
           <instance_attributes id="instance_attributes.id21962">
             <nvpair id="nvpair.id21968" name="1" value="10.1.1.1/24/sit0"/>
           </instance_attributes>
-          <meta_attributes id="primitive-test_ip.meta"/>
         </primitive>
         <primitive id="test_mailto" class="ocf" type="MailTo" provider="heartbeat">
           <instance_attributes id="instance_attributes.id21991">
             <nvpair id="nvpair.id21998" name="email" value="root"/>
             <nvpair id="nvpair.id22006" name="subject" value="Test IP Failover"/>
           </instance_attributes>
-          <meta_attributes id="primitive-test_mailto.meta"/>
         </primitive>
         <meta_attributes id="group-test.meta"/>
       </group>

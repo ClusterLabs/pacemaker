@@ -74,7 +74,6 @@
           <operations>
             <op id="lb-haproxy-monitor-start-delay-10s" interval="60s" name="monitor" start-delay="10s"/>
           </operations>
-          <meta_attributes id="lb-haproxy-meta_attributes"/>
         </primitive>
         <meta_attributes id="lb-haproxy-clone-meta"/>
       </clone>
@@ -237,7 +236,6 @@
             <op id="galera-demote-timeout-120" interval="0s" name="demote" timeout="120"/>
             <op id="galera-promote-timeout-300s-on-fail-block" interval="0s" name="promote" on-fail="block" timeout="300s"/>
           </operations>
-          <meta_attributes id="galera-meta_attributes"/>
         </primitive>
         <meta_attributes id="galera-master-meta_attributes">
           <nvpair id="galera-master-meta_attributes-promotable" name="promotable" value="true"/>
@@ -699,7 +697,6 @@
           <operations>
             <op id="neutron-openvswitch-agent-compute-monitor-interval-60s" interval="60s" name="monitor"/>
           </operations>
-          <meta_attributes id="neutron-openvswitch-agent-compute-meta_attributes"/>
         </primitive>
         <meta_attributes id="neutron-openvswitch-agent-compute-clone-meta">
           <nvpair id="neutron-openvswitch-agent-compute-interleave" name="interleave" value="true"/>
@@ -710,7 +707,6 @@
           <operations>
             <op id="libvirtd-compute-monitor-interval-60s" interval="60s" name="monitor"/>
           </operations>
-          <meta_attributes id="libvirtd-compute-meta_attributes"/>
         </primitive>
         <meta_attributes id="libvirtd-compute-clone-meta">
           <nvpair id="libvirtd-compute-interleave" name="interleave" value="true"/>
@@ -721,7 +717,6 @@
           <operations>
             <op id="ceilometer-compute-monitor-interval-60s" interval="60s" name="monitor"/>
           </operations>
-          <meta_attributes id="ceilometer-compute-meta_attributes"/>
         </primitive>
         <meta_attributes id="ceilometer-compute-clone-meta">
           <nvpair id="ceilometer-compute-interleave" name="interleave" value="true"/>
@@ -768,7 +763,6 @@
           <op id="mrg-07-stop-timeout-60" interval="0s" name="stop" timeout="60"/>
           <op id="mrg-07-monitor-timeout-30" interval="60s" name="monitor" timeout="30"/>
         </operations>
-        <meta_attributes id="mrg-07-meta_attributes"/>
       </primitive>
       <primitive class="ocf" id="mrg-08" provider="pacemaker" type="remote">
         <operations>
@@ -776,7 +770,6 @@
           <op id="mrg-08-stop-timeout-60" interval="0s" name="stop" timeout="60"/>
           <op id="mrg-08-monitor-timeout-30" interval="60s" name="monitor" timeout="30"/>
         </operations>
-        <meta_attributes id="mrg-08-meta_attributes"/>
       </primitive>
       <primitive class="ocf" id="mrg-09" provider="pacemaker" type="remote">
         <operations>
@@ -784,7 +777,6 @@
           <op id="mrg-09-stop-timeout-60" interval="0s" name="stop" timeout="60"/>
           <op id="mrg-09-monitor-timeout-30" interval="60s" name="monitor" timeout="30"/>
         </operations>
-        <meta_attributes id="mrg-09-meta_attributes"/>
       </primitive>
     </resources>
     <constraints>

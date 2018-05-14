@@ -49,7 +49,6 @@
             <op name="monitor" interval="10s" id="op-ms-drbd1-1" timeout="15s" start-delay="30s" role="Master"/>
             <op name="monitor" interval="11s" id="op-ms-drbd1-2" timeout="15s" start-delay="30s" role="Slave"/>
           </operations>
-          <meta_attributes id="primitive-drbd1.meta"/>
         </primitive>
         <meta_attributes id="clone-ms-drbd1.meta"/>
       </clone>
@@ -63,7 +62,6 @@
         <operations>
           <op name="monitor" interval="21s" id="op-proftpd-1" timeout="5s" start-delay="21s"/>
         </operations>
-        <meta_attributes id="primitive-testip.meta"/>
       </primitive>
     </resources>
     <constraints>

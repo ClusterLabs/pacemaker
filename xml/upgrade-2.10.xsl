@@ -173,19 +173,19 @@
     <cibtr:replace what="isolation"
                    with="target-role"
                    redefined-as="Stopped"
-                   msg-extra="isolation wrappers obsoleted with bundle resources"/>
+                   msg-extra="i.e. resource at hand disabled; isolation wrappers obsoleted with bundle resources"/>
     <cibtr:replace what="isolation-host"
                    with="target-role"
                    redefined-as="Stopped"
-                   msg-extra="isolation wrappers obsoleted with bundle resources"/>
+                   msg-extra="i.e. resource at hand disabled; isolation wrappers obsoleted with bundle resources"/>
     <cibtr:replace what="isolation-instance"
                    with="target-role"
                    redefined-as="Stopped"
-                   msg-extra="isolation wrappers obsoleted with bundle resources"/>
+                   msg-extra="i.e. resource at hand disabled; isolation wrappers obsoleted with bundle resources"/>
     <cibtr:replace what="isolation-wrapper"
                    with="target-role"
                    redefined-as="Stopped"
-                   msg-extra="isolation wrappers obsoleted with bundle resources"/>
+                   msg-extra="i.e. resource at hand disabled; isolation wrappers obsoleted with bundle resources"/>
   </cibtr:table>
 
   <!--
@@ -879,11 +879,6 @@
                           != $InnerPass
                           and
                           (
-                            not(preceding-sibling::nvpair)
-                            or
-                            generate-id(preceding-sibling::nvpair[1])
-                            != generate-id(preceding-sibling::*[1])
-                          ) or (
                             not(following-sibling::nvpair)
                             or
                             generate-id(following-sibling::nvpair[1])
@@ -929,7 +924,10 @@
                               ]"/>
         <xsl:if test="not($InnerSimulation)">
           <xsl:call-template name="MapMsg">
-            <xsl:with-param name="Context" select="@id"/>
+            <xsl:with-param name="Context"
+                            select="concat(../../@id,
+                                           ' (meta=', ../@id,
+                                           ')')"/>
             <xsl:with-param name="Replacement" select="$Replacement"/>
           </xsl:call-template>
         </xsl:if>
@@ -970,6 +968,10 @@
                               =
                               substring-before($SimulateFollowingSiblings,
                                                concat('@', $Replacement/@with))">
+                  <xsl:call-template name="HelperDenormalizedSpace">
+                    <xsl:with-param name="Source" select="."/>
+                    <xsl:with-param name="InnerSimulation" select="$InnerSimulation"/>
+                  </xsl:call-template>
                   <xsl:copy>
                     <xsl:for-each select="@*">
                       <xsl:choose>
@@ -996,13 +998,11 @@
             </xsl:choose>
           </xsl:when>
           <xsl:otherwise>
-            <!-- XXX: emits superfluous empty lines with test-2/02[23],
-                      but keeps -B run green -->
             <xsl:call-template name="HelperDenormalizedSpace">
               <xsl:with-param name="Source" select="."/>
               <xsl:with-param name="InnerSimulation" select="$InnerSimulation"/>
             </xsl:call-template>
-           <xsl:call-template name="HelperIdentity"/>
+            <xsl:call-template name="HelperIdentity"/>
           </xsl:otherwise>
         </xsl:choose>
       </xsl:when>

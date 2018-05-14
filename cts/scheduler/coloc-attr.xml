@@ -46,9 +46,7 @@
           <nvpair id="nvpair.id22578" name="ordered" value="true"/>
           <nvpair id="nvpair.id22587" name="collocated" value="true"/>
         </meta_attributes>
-        <primitive id="resource_t11" class="lsb" type="nfsserver">
-          <meta_attributes id="primitive-resource_t11.meta"/>
-        </primitive>
+        <primitive id="resource_t11" class="lsb" type="nfsserver"/>
       </group>
       <group id="group_test2">
         <meta_attributes id="group-group_test2.meta"/>
@@ -56,9 +54,7 @@
           <nvpair id="nvpair.id22620" name="ordered" value="true"/>
           <nvpair id="nvpair.id22629" name="collocated" value="true"/>
         </meta_attributes>
-        <primitive id="resource_t21" class="ocf" type="Dummy" provider="heartbeat">
-          <meta_attributes id="primitive-resource_t21.meta"/>
-        </primitive>
+        <primitive id="resource_t21" class="ocf" type="Dummy" provider="heartbeat"/>
       </group>
     </resources>
     <constraints>

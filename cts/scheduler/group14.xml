@@ -46,7 +46,6 @@
         <instance_attributes id="instance_attributes.id22126">
           <nvpair id="nvpair.id22133" name="1" value="192.168.100.180"/>
         </instance_attributes>
-        <meta_attributes id="primitive-DcIPaddr.meta"/>
       </primitive>
       <group id="group-1">
         <primitive id="r192.168.100.181" class="ocf" type="IPaddr" provider="heartbeat">
@@ -56,7 +55,6 @@
           <instance_attributes id="instance_attributes.id22171">
             <nvpair id="nvpair.id22178" name="ip" value="192.168.100.181"/>
           </instance_attributes>
-          <meta_attributes id="primitive-r192.168.100.181.meta"/>
         </primitive>
         <primitive id="r192.168.100.182" class="ocf" type="IPaddr" provider="heartbeat">
           <operations>
@@ -65,7 +63,6 @@
           <instance_attributes id="instance_attributes.id22212">
             <nvpair id="nvpair.id22219" name="ip" value="192.168.100.182"/>
           </instance_attributes>
-          <meta_attributes id="primitive-r192.168.100.182.meta"/>
         </primitive>
         <primitive id="r192.168.100.183" class="ocf" type="IPaddr" provider="heartbeat">
           <operations>
@@ -74,7 +71,6 @@
           <instance_attributes id="instance_attributes.id22253">
             <nvpair id="nvpair.id22260" name="ip" value="192.168.100.183"/>
           </instance_attributes>
-          <meta_attributes id="primitive-r192.168.100.183.meta"/>
         </primitive>
         <meta_attributes id="group-group-1.meta"/>
       </group>
@@ -82,7 +78,6 @@
         <operations>
           <op name="monitor" interval="5s" id="ocf_lsb_monitor"/>
         </operations>
-        <meta_attributes id="primitive-lsb_dummy.meta"/>
       </primitive>
       <primitive id="migrator" class="ocf" type="Dummy" provider="heartbeat">
         <operations>
@@ -102,7 +97,6 @@
         <instance_attributes id="instance_attributes.id22358">
           <nvpair id="nvpair.id22364" name="ip" value="192.168.100.184"/>
         </instance_attributes>
-        <meta_attributes id="primitive-rsc_c001n03.meta"/>
       </primitive>
       <primitive id="rsc_c001n02" class="ocf" type="IPaddr" provider="heartbeat">
         <operations>
@@ -111,7 +105,6 @@
         <instance_attributes id="instance_attributes.id22397">
           <nvpair id="nvpair.id22404" name="ip" value="192.168.100.185"/>
         </instance_attributes>
-        <meta_attributes id="primitive-rsc_c001n02.meta"/>
       </primitive>
       <primitive id="rsc_c001n04" class="ocf" type="IPaddr" provider="heartbeat">
         <operations>
@@ -120,7 +113,6 @@
         <instance_attributes id="instance_attributes.id22437">
           <nvpair id="nvpair.id22444" name="ip" value="192.168.100.186"/>
         </instance_attributes>
-        <meta_attributes id="primitive-rsc_c001n04.meta"/>
       </primitive>
       <primitive id="rsc_c001n05" class="ocf" type="IPaddr" provider="heartbeat">
         <operations>
@@ -129,7 +121,6 @@
         <instance_attributes id="instance_attributes.id22477">
           <nvpair id="nvpair.id22483" name="ip" value="192.168.100.187"/>
         </instance_attributes>
-        <meta_attributes id="primitive-rsc_c001n05.meta"/>
       </primitive>
       <primitive id="rsc_c001n06" class="ocf" type="IPaddr" provider="heartbeat">
         <operations>
@@ -138,7 +129,6 @@
         <instance_attributes id="instance_attributes.id22517">
           <nvpair id="nvpair.id22523" name="ip" value="192.168.100.188"/>
         </instance_attributes>
-        <meta_attributes id="primitive-rsc_c001n06.meta"/>
       </primitive>
       <primitive id="rsc_c001n07" class="ocf" type="IPaddr" provider="heartbeat">
         <operations>
@@ -147,7 +137,6 @@
         <instance_attributes id="instance_attributes.id22556">
           <nvpair id="nvpair.id22563" name="ip" value="192.168.100.189"/>
         </instance_attributes>
-        <meta_attributes id="primitive-rsc_c001n07.meta"/>
       </primitive>
       <clone id="DoFencing">
         <primitive id="child_DoFencing" class="stonith" type="ssh">
@@ -175,7 +164,6 @@
             <op name="monitor" interval="5s" id="ocf_msdummy_monitor"/>
             <op name="monitor" interval="6s" id="ocf_msdummy_monitor_master" role="Master"/>
           </operations>
-          <meta_attributes id="primitive-ocf_msdummy.meta"/>
         </primitive>
         <meta_attributes id="clone-master_rsc_1.meta">
           <nvpair id="nvpair.meta.auto-306" name="promotable" value="true"/>

@@ -39,7 +39,6 @@
           <instance_attributes id="instance_attributes.id22007">
             <nvpair id="nvpair.id22013" name="drbd_resource" value="r0"/>
           </instance_attributes>
-          <meta_attributes id="primitive-drbd0.meta"/>
         </primitive>
         <meta_attributes id="clone-ms-drbd0.meta"/>
       </clone>

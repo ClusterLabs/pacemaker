@@ -131,7 +131,6 @@
           <instance_attributes id="instance_attributes.id22422">
             <nvpair id="nvpair.id22428" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
           </instance_attributes>
-          <meta_attributes id="primitive-child_DoFencing.meta"/>
         </primitive>
         <meta_attributes id="clone-DoFencing.meta">
           <nvpair id="interleave.meta.auto-194" name="interleave" value="1"/>
@@ -149,7 +148,6 @@
           <instance_attributes id="instance_attributes.id22494">
             <nvpair id="nvpair.id22500" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
           </instance_attributes>
-          <meta_attributes id="primitive-child_CloneSet.meta"/>
         </primitive>
         <meta_attributes id="clone-CloneSet.meta">
           <nvpair id="interleave.meta.auto-223" name="interleave" value="1"/>

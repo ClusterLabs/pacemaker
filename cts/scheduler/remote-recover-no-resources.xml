@@ -201,7 +201,6 @@
           <nvpair id="ip-192.168.24.6-instance_attributes-ip" name="ip" value="192.168.24.6"/>
           <nvpair id="ip-192.168.24.6-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
         </instance_attributes>
-        <meta_attributes id="ip-192.168.24.6-meta_attributes"/>
         <operations>
           <op id="ip-192.168.24.6-start-interval-0s" interval="0s" name="start" timeout="20s"/>
           <op id="ip-192.168.24.6-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
@@ -213,7 +212,6 @@
           <nvpair id="ip-10.0.0.102-instance_attributes-ip" name="ip" value="10.0.0.102"/>
           <nvpair id="ip-10.0.0.102-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
         </instance_attributes>
-        <meta_attributes id="ip-10.0.0.102-meta_attributes"/>
         <operations>
           <op id="ip-10.0.0.102-start-interval-0s" interval="0s" name="start" timeout="20s"/>
           <op id="ip-10.0.0.102-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
@@ -225,7 +223,6 @@
           <nvpair id="ip-172.17.1.14-instance_attributes-ip" name="ip" value="172.17.1.14"/>
           <nvpair id="ip-172.17.1.14-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
         </instance_attributes>
-        <meta_attributes id="ip-172.17.1.14-meta_attributes"/>
         <operations>
           <op id="ip-172.17.1.14-start-interval-0s" interval="0s" name="start" timeout="20s"/>
           <op id="ip-172.17.1.14-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
@@ -237,7 +234,6 @@
           <nvpair id="ip-172.17.1.17-instance_attributes-ip" name="ip" value="172.17.1.17"/>
           <nvpair id="ip-172.17.1.17-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
         </instance_attributes>
-        <meta_attributes id="ip-172.17.1.17-meta_attributes"/>
         <operations>
           <op id="ip-172.17.1.17-start-interval-0s" interval="0s" name="start" timeout="20s"/>
           <op id="ip-172.17.1.17-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
@@ -249,7 +245,6 @@
           <nvpair id="ip-172.17.3.15-instance_attributes-ip" name="ip" value="172.17.3.15"/>
           <nvpair id="ip-172.17.3.15-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
         </instance_attributes>
-        <meta_attributes id="ip-172.17.3.15-meta_attributes"/>
         <operations>
           <op id="ip-172.17.3.15-start-interval-0s" interval="0s" name="start" timeout="20s"/>
           <op id="ip-172.17.3.15-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
@@ -261,7 +256,6 @@
           <nvpair id="ip-172.17.4.11-instance_attributes-ip" name="ip" value="172.17.4.11"/>
           <nvpair id="ip-172.17.4.11-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
         </instance_attributes>
-        <meta_attributes id="ip-172.17.4.11-meta_attributes"/>
         <operations>
           <op id="ip-172.17.4.11-start-interval-0s" interval="0s" name="start" timeout="20s"/>
           <op id="ip-172.17.4.11-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
@@ -270,7 +264,6 @@
       </primitive>
       <clone id="haproxy-clone">
         <primitive class="systemd" id="haproxy" type="haproxy">
-          <meta_attributes id="haproxy-meta_attributes"/>
           <operations>
             <op id="haproxy-start-interval-0s" interval="0s" name="start" timeout="200s"/>
             <op id="haproxy-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
@@ -280,7 +273,6 @@
         <meta_attributes id="haproxy-clone-meta_attributes"/>
       </clone>
       <primitive class="systemd" id="openstack-cinder-volume" type="openstack-cinder-volume">
-        <meta_attributes id="openstack-cinder-volume-meta_attributes"/>
         <operations>
           <op id="openstack-cinder-volume-start-interval-0s" interval="0s" name="start" timeout="200s"/>
           <op id="openstack-cinder-volume-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
@@ -301,7 +293,6 @@
         <operations>
           <op id="stonith-fence_ipmilan-525400bbf613-monitor-interval-60s" interval="60s" name="monitor"/>
         </operations>
-        <meta_attributes id="stonith-fence_ipmilan-525400bbf613-meta_attributes"/>
       </primitive>
       <primitive class="stonith" id="stonith-fence_ipmilan-525400b4f6bd" type="fence_ipmilan">
         <instance_attributes id="stonith-fence_ipmilan-525400b4f6bd-instance_attributes">
@@ -317,7 +308,6 @@
         <operations>
           <op id="stonith-fence_ipmilan-525400b4f6bd-monitor-interval-60s" interval="60s" name="monitor"/>
         </operations>
-        <meta_attributes id="stonith-fence_ipmilan-525400b4f6bd-meta_attributes"/>
       </primitive>
       <primitive class="stonith" id="stonith-fence_ipmilan-5254005bdbb5" type="fence_ipmilan">
         <instance_attributes id="stonith-fence_ipmilan-5254005bdbb5-instance_attributes">
@@ -333,7 +323,6 @@
         <operations>
           <op id="stonith-fence_ipmilan-5254005bdbb5-monitor-interval-60s" interval="60s" name="monitor"/>
         </operations>
-        <meta_attributes id="stonith-fence_ipmilan-5254005bdbb5-meta_attributes"/>
       </primitive>
     </resources>
     <constraints>

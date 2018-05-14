@@ -22,7 +22,6 @@
           <instance_attributes id="instance_attributes.id21919">
             <nvpair id="nvpair.id21925" name="1" value="r0"/>
           </instance_attributes>
-          <meta_attributes id="primitive-datadisk_1.meta"/>
         </primitive>
         <primitive id="Filesystem_2" class="ocf" provider="heartbeat" type="Filesystem">
           <operations>
@@ -33,7 +32,6 @@
             <nvpair id="nvpair.id21976" name="directory" value="/home"/>
             <nvpair id="nvpair.id21985" name="fstype" value="reiserfs"/>
           </instance_attributes>
-          <meta_attributes id="primitive-Filesystem_2.meta"/>
         </primitive>
         <primitive id="IPaddr_5" class="ocf" provider="heartbeat" type="IPaddr">
           <operations>
@@ -42,13 +40,11 @@
           <instance_attributes id="instance_attributes.id22021">
             <nvpair id="nvpair.id22027" name="ip" value="10.10.10.222"/>
           </instance_attributes>
-          <meta_attributes id="primitive-IPaddr_5.meta"/>
         </primitive>
         <primitive id="postfix_9" class="lsb" type="postfix">
           <operations>
             <op name="monitor" interval="120s" id="postfix_9_mon" timeout="60s"/>
           </operations>
-          <meta_attributes id="primitive-postfix_9.meta"/>
         </primitive>
         <meta_attributes id="group-group_1.meta"/>
       </group>

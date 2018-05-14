@@ -45,7 +45,6 @@
           <instance_attributes id="instance_attributes.id22116">
             <nvpair id="nvpair.id22123" name="ip" value="192.168.100.181"/>
           </instance_attributes>
-          <meta_attributes id="primitive-r192.168.100.181.meta"/>
         </primitive>
         <primitive id="r192.168.100.182" class="ocf" provider="heartbeat" type="IPaddr">
           <operations>
@@ -54,7 +53,6 @@
           <instance_attributes id="instance_attributes.id22155">
             <nvpair id="nvpair.id22162" name="1" value="192.168.100.182"/>
           </instance_attributes>
-          <meta_attributes id="primitive-r192.168.100.182.meta"/>
         </primitive>
         <primitive id="r192.168.100.183" class="ocf" type="IPaddr" provider="heartbeat">
           <operations>
@@ -63,7 +61,6 @@
           <instance_attributes id="instance_attributes.id22196">
             <nvpair id="nvpair.id22202" name="ip" value="192.168.100.183"/>
           </instance_attributes>
-          <meta_attributes id="primitive-r192.168.100.183.meta"/>
         </primitive>
         <meta_attributes id="group-group-1.meta"/>
       </group>
@@ -71,7 +68,6 @@
         <operations>
           <op name="monitor" interval="5s" id="ocf_lsb_monitor"/>
         </operations>
-        <meta_attributes id="primitive-lsb_dummy.meta"/>
       </primitive>
       <primitive id="migrator" class="ocf" type="Dummy" provider="heartbeat">
         <operations>
@@ -91,7 +87,6 @@
         <instance_attributes id="instance_attributes.id22301">
           <nvpair id="nvpair.id22307" name="ip" value="192.168.100.184"/>
         </instance_attributes>
-        <meta_attributes id="primitive-rsc_sles-1.meta"/>
       </primitive>
       <primitive id="rsc_sles-2" class="ocf" type="IPaddr" provider="heartbeat">
         <operations>
@@ -100,7 +95,6 @@
         <instance_attributes id="instance_attributes.id22340">
           <nvpair id="nvpair.id22347" name="ip" value="192.168.100.185"/>
         </instance_attributes>
-        <meta_attributes id="primitive-rsc_sles-2.meta"/>
       </primitive>
       <primitive id="rsc_sles-3" class="ocf" type="IPaddr" provider="heartbeat">
         <operations>
@@ -109,7 +103,6 @@
         <instance_attributes id="instance_attributes.id22380">
           <nvpair id="nvpair.id22386" name="ip" value="192.168.100.186"/>
         </instance_attributes>
-        <meta_attributes id="primitive-rsc_sles-3.meta"/>
       </primitive>
       <primitive id="rsc_sles-4" class="ocf" type="IPaddr" provider="heartbeat">
         <operations>
@@ -118,7 +111,6 @@
         <instance_attributes id="instance_attributes.id22420">
           <nvpair id="nvpair.id22426" name="ip" value="192.168.100.187"/>
         </instance_attributes>
-        <meta_attributes id="primitive-rsc_sles-4.meta"/>
       </primitive>
       <clone id="DoFencing">
         <primitive id="child_DoFencing" class="stonith" type="external/vmware">
@@ -146,7 +138,6 @@
             <op name="monitor" interval="5s" id="ocf_msdummy_monitor"/>
             <op name="monitor" interval="6s" id="ocf_msdummy_monitor_master" role="Master"/>
           </operations>
-          <meta_attributes id="primitive-ocf_msdummy.meta"/>
         </primitive>
         <meta_attributes id="clone-master_rsc_1.meta">
           <nvpair id="nvpair.meta.auto-254" name="promotable" value="true"/>

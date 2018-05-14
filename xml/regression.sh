@@ -16,14 +16,14 @@ RNGVALIDATOR=${RNGVALIDATOR:-xmllint --noout --relaxng}
 # $1=stylesheet, $2=source
 # alt.: Xalan, saxon (note: only validates reliably with -B)
 _xalan_wrapper() {
-	{ Xalan "$2" "$1" 2>&1 1>&3 \
+	{ Xalan "$2" "$1" 2>&1 >&3 \
 	  | sed -e '/^Source tree node.*$/d' \
-	        -e 's|^XSLT message: \(.*\) (Occurred.*)|\1|'; } 3>&1- 1>&2
+	        -e 's|^XSLT message: \(.*\) (Occurred.*)|\1|'; } 3>&- 3>&1 >&2
 }
 # filtered out message: https://bugzilla.redhat.com/show_bug.cgi?id=1577367
 _saxon_wrapper() {
-	{ saxon "-xsl:$1" "-s:$2" -versionmsg:off 2>&1 1>&3 \
-	  | sed -e '/^Cannot find CatalogManager.properties$/d'; } 3>&1- 1>&2
+	{ saxon "-xsl:$1" "-s:$2" -versionmsg:off 2>&1 >&3 \
+	  | sed -e '/^Cannot find CatalogManager.properties$/d'; } 3>&- 3>&1 >&2
 }
 #_xalan_wrapper() { Xalan $2 $1; }
 XSLTPROCESSOR=${XSLTPROCESSOR:-xsltproc}
@@ -339,7 +339,8 @@ test2to3() {
 	done
 	test -z "${_t23_pattern}" || _t23_pattern="( ${_t23_pattern%-o} )"
 
-	find test-2 -name '*.xml' ${_t23_pattern} -print | env LC_ALL=C sort \
+	find test-2 -name test-2 -o -type d -prune \
+	  -o -name '*.xml' ${_t23_pattern} -print | env LC_ALL=C sort \
 	  | { case " $* " in
 	      *\ -C\ *) test_cleaner;;
 	      *\ -S\ *) test_selfcheck -o=2.10;;
@@ -360,7 +361,8 @@ cts_scheduler() {
 	_tcp_schema_t=
 	_tcp_template=
 
-	find ../cts/scheduler -name '*.xml' -print | env LC_ALL=C sort \
+	find ../cts/scheduler -name scheduler -o -type d -prune \
+	  -o -name '*.xml' -print | env LC_ALL=C sort \
 	  | { case " $* " in
 	      *\ -C\ *) test_cleaner -r;;
 	      *\ -S\ *) emit_result "not implemented" "option -S";;
@@ -484,11 +486,12 @@ test_suite() {
 			*@${_ts_test}@*)
 			_ts_select="${_ts_select%@${_ts_test}@*}"\
 "@${_ts_select#*@${_ts_test}@}"
+			break
 			;;
-			@) case "${_ts_test}" in test*) break;; *) continue 2;; esac
+			@) case "${_ts_test}" in test*) break;; esac
 			;;
-			*) continue 2;;
 			esac
+			continue 2  # move on to matching with next local test
 		done
 
 		_ts_test_specs=

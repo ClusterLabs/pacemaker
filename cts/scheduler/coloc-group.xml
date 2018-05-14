@@ -20,19 +20,11 @@
       <node id="node3" uname="node3" type="member"/>
     </nodes>
     <resources>
-      <primitive id="rsc1" class="ocf" provider="heartbeat" type="apache">
-        <meta_attributes id="primitive-rsc1.meta"/>
-      </primitive>
+      <primitive id="rsc1" class="ocf" provider="heartbeat" type="apache"/>
       <group id="group1">
-        <primitive id="rsc2" class="ocf" provider="heartbeat" type="apache">
-          <meta_attributes id="primitive-rsc2.meta"/>
-        </primitive>
-        <primitive id="rsc3" class="ocf" provider="heartbeat" type="apache">
-          <meta_attributes id="primitive-rsc3.meta"/>
-        </primitive>
-        <primitive id="rsc4" class="ocf" provider="heartbeat" type="apache">
-          <meta_attributes id="primitive-rsc4.meta"/>
-        </primitive>
+        <primitive id="rsc2" class="ocf" provider="heartbeat" type="apache"/>
+        <primitive id="rsc3" class="ocf" provider="heartbeat" type="apache"/>
+        <primitive id="rsc4" class="ocf" provider="heartbeat" type="apache"/>
         <meta_attributes id="group-group1.meta"/>
       </group>
     </resources>
