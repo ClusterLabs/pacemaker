@@ -339,7 +339,8 @@ test2to3() {
 	done
 	test -z "${_t23_pattern}" || _t23_pattern="( ${_t23_pattern%-o} )"
 
-	find test-2 -name '*.xml' ${_t23_pattern} -print | env LC_ALL=C sort \
+	find test-2 -name test-2 -o -type d -prune \
+	  -o -name '*.xml' ${_t23_pattern} -print | env LC_ALL=C sort \
 	  | { case " $* " in
 	      *\ -C\ *) test_cleaner;;
 	      *\ -S\ *) test_selfcheck -o=2.10;;
@@ -360,7 +361,8 @@ cts_scheduler() {
 	_tcp_schema_t=
 	_tcp_template=
 
-	find ../cts/scheduler -name '*.xml' -print | env LC_ALL=C sort \
+	find ../cts/scheduler -name scheduler -o -type d -prune \
+	  -o -name '*.xml' -print | env LC_ALL=C sort \
 	  | { case " $* " in
 	      *\ -C\ *) test_cleaner -r;;
 	      *\ -S\ *) emit_result "not implemented" "option -S";;
