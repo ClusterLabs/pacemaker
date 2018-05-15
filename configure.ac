@@ -58,10 +58,11 @@ AC_ARG_WITH(pkg-name,
     [  --with-pkg-name=name     Override package name (if you are a packager needing to pretend) ],
     [ PACKAGE_NAME="$withval" ])
 
-dnl 1.11:         minimum automake version required
-dnl foreign:      don't require GNU-standard top-level files
-dnl silent-rules: allow "--enable-silent-rules" (no-op in 1.13+)
-AM_INIT_AUTOMAKE([1.11 foreign silent-rules])
+dnl 1.11:           minimum automake version required
+dnl foreign:        don't require GNU-standard top-level files
+dnl silent-rules:   allow "--enable-silent-rules" (no-op in 1.13+)
+dnl subdir-objects: keep .o's with their .c's (no-op in 2.0+)
+AM_INIT_AUTOMAKE([1.11 foreign silent-rules subdir-objects])
 
 dnl Example 2.4. Silent Custom Rule to Generate a File
 dnl %-bar.pc: %.pc
@@ -215,11 +216,10 @@ AC_ARG_WITH(cibsecrets,
     [ SUPPORT_CIBSECRETS=no ],
 )
 
+PCMK_GNUTLS_PRIORITIES="NORMAL"
 AC_ARG_WITH(gnutls-priorities,
     [  --with-gnutls-priorities  GnuTLS cipher priorities @<:@NORMAL@:>@ ],
-    [ PCMK_GNUTLS_PRIORITIES="$withval" ],
-    [ PCMK_GNUTLS_PRIORITIES="NORMAL" ],
-)
+    [ test x"$withval" = x"no" || PCMK_GNUTLS_PRIORITIES="$withval" ])
 
 INITDIR=""
 AC_ARG_WITH(initdir,
@@ -264,6 +264,7 @@ dnl General Processing
 dnl ===============================================
 
 AC_PROG_LN_S
+AC_PROG_MKDIR_P
 
 if cc_supports_flag -Werror; then
     WERROR="-Werror"
@@ -388,8 +389,12 @@ fi
 AC_DEFINE_UNQUOTED(CRM_BUNDLE_DIR,"$CRM_BUNDLE_DIR", Location for Pacemaker bundle logs)
 AC_SUBST(CRM_BUNDLE_DIR)
 
+
+if test x"${PCMK_GNUTLS_PRIORITIES}" = x""; then
+    AC_MSG_ERROR([Empty string not applicable with --with-gnutls-priorities])
+fi
 AC_DEFINE_UNQUOTED([PCMK_GNUTLS_PRIORITIES], ["$PCMK_GNUTLS_PRIORITIES"],
-		   [GnuTLS cipher priorities])
+                   [GnuTLS cipher priorities])
 
 for j in prefix exec_prefix bindir sbindir libexecdir datadir sysconfdir \
     sharedstatedir localstatedir libdir includedir oldincludedir infodir \
@@ -490,14 +495,8 @@ dnl built-in list with (unversioned) "python" having precedence. To configure
 dnl Pacemaker to use a specific python interpreter version, define PYTHON
 dnl when calling configure, for example: ./configure PYTHON=/usr/bin/python3.6
 
-dnl PYTHON must be a full path
-case "x$PYTHON" in
-    /*)
-        ;;
-    *)
-        AC_PATH_PROG([PYTHON], [$PYTHON])
-        ;;
-esac
+dnl Ensure PYTHON is an absolute path
+AC_PATH_PROG([PYTHON], [$PYTHON])
 
 case "x$PYTHON" in
     x*python3*)
@@ -687,20 +686,10 @@ if test x"${PKG_CONFIG}" = x""; then
     AC_MSG_ERROR(You need pkgconfig installed in order to build ${PACKAGE})
 fi
 
-if
-    $PKG_CONFIG --exists glib-2.0
-then
-    GLIBCONFIG="$PKG_CONFIG glib-2.0"
-else
-    set -x
-    echo PKG_CONFIG_PATH=$PKG_CONFIG_PATH
-    $PKG_CONFIG --exists glib-2.0; echo $?
-    $PKG_CONFIG --cflags glib-2.0; echo $?
-    $PKG_CONFIG glib-2.0; echo $?
-    set +x
-    AC_MSG_ERROR(You need glib2-devel installed in order to build ${PACKAGE})
-fi
-AC_MSG_RESULT(using $GLIBCONFIG)
+# Require glib 2.16.0 (2008-03) or later for g_hash_table_iter_init() etc.
+PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.16.0],
+                  [CPPFLAGS="${CPPFLAGS} ${GLIB_CFLAGS}"
+                   LIBS="${LIBS} ${GLIB_LIBS}"])
 
 #
 # Where is dlopen?
@@ -711,18 +700,6 @@ elif test "$ac_cv_lib_dl_dlopen" = yes; then
     LIBADD_DL=-ldl
 else
     LIBADD_DL=${lt_cv_dlopen_libs}
-fi
-
-if test "X$GLIBCONFIG" != X; then
-    AC_MSG_CHECKING(for special glib includes: )
-    GLIBHEAD=`$GLIBCONFIG --cflags`
-    AC_MSG_RESULT($GLIBHEAD)
-    CPPFLAGS="$CPPFLAGS $GLIBHEAD"
-
-    AC_MSG_CHECKING(for glib library flags)
-    GLIBLIB=`$GLIBCONFIG --libs`
-    AC_MSG_RESULT($GLIBLIB)
-    LIBS="$LIBS $GLIBLIB"
 fi
 
 dnl FreeBSD needs -lcompat for ftime() used by lrmd.c
@@ -1002,6 +979,10 @@ AC_CHECK_FUNCS(qb_ipcs_connection_get_buffer_size,
                AC_DEFINE(HAVE_IPCS_GET_BUFFER_SIZE, 1,
                          [Have qb_ipcc_get_buffer_size function]))
 
+dnl libqb not yet released (as of 2018-05)
+CHECK_ENUM_VALUE([qb/qblog.h],[qb_log_conf],[QB_LOG_CONF_MAX_LINE_LEN])
+CHECK_ENUM_VALUE([qb/qblog.h],[qb_log_conf],[QB_LOG_CONF_ELLIPSIS])
+
 dnl Support Linux-HA fence agents if available
 if test "$cross_compiling" != "yes"; then
     CPPFLAGS="$CPPFLAGS -I${prefix}/include/heartbeat"
@@ -1112,20 +1093,11 @@ AC_DEFINE_UNQUOTED(BUILD_VERSION, "$BUILD_VERSION", Build version)
 AC_SUBST(BUILD_VERSION)
 
 HAVE_dbus=1
-HAVE_upstart=0
-HAVE_systemd=0
-PKG_CHECK_MODULES(DBUS, dbus-1, ,HAVE_dbus=0)
-
+PKG_CHECK_MODULES([DBUS], [dbus-1],
+		  [CPPFLAGS="${CPPFLAGS} ${DBUS_CFLAGS}"],
+		  [HAVE_dbus=0])
 AC_DEFINE_UNQUOTED(SUPPORT_DBUS, $HAVE_dbus, Support dbus)
 AM_CONDITIONAL(BUILD_DBUS, test $HAVE_dbus = 1)
-
-if test $HAVE_dbus = 1; then
-    CFLAGS="$CFLAGS `$PKG_CONFIG --cflags dbus-1`"
-fi
-
-DBUS_LIBS="$CFLAGS `$PKG_CONFIG --libs dbus-1`"
-AC_SUBST(DBUS_LIBS)
-
 AC_CHECK_TYPES([DBusBasicValue],,,[[#include <dbus/dbus.h>]])
 
 if test "x${enable_systemd}" != xno; then
@@ -1160,6 +1132,7 @@ fi
 
 AC_MSG_CHECKING([whether to enable support for managing resources via systemd])
 AC_MSG_RESULT([${enable_systemd}])
+HAVE_systemd=0
 if test "x${enable_systemd}" = xyes; then
     HAVE_systemd=1
     PCMK_FEATURES="$PCMK_FEATURES systemd"
@@ -1207,6 +1180,7 @@ if test "x${enable_upstart}" != xno; then
 fi
 AC_MSG_CHECKING([whether to enable support for managing resources via Upstart])
 AC_MSG_RESULT([${enable_upstart}])
+HAVE_upstart=0
 if test "x${enable_upstart}" = xyes; then
     HAVE_upstart=1
     PCMK_FEATURES="$PCMK_FEATURES upstart"
@@ -1716,13 +1690,20 @@ AC_CONFIG_FILES([cts/cts-cli], [chmod +x cts/cts-cli])
 AC_CONFIG_FILES([cts/cts-coverage], [chmod +x cts/cts-coverage])
 AC_CONFIG_FILES([cts/cts-exec], [chmod +x cts/cts-exec])
 AC_CONFIG_FILES([cts/cts-fencing], [chmod +x cts/cts-fencing])
+AC_CONFIG_FILES([cts/cts-log-watcher], [chmod +x cts/cts-log-watcher])
 AC_CONFIG_FILES([cts/cts-regression], [chmod +x cts/cts-regression])
 AC_CONFIG_FILES([cts/cts-scheduler], [chmod +x cts/cts-scheduler])
+AC_CONFIG_FILES([cts/cts-support], [chmod +x cts/cts-support])
 AC_CONFIG_FILES([cts/lxc_autogen.sh], [chmod +x cts/lxc_autogen.sh])
 AC_CONFIG_FILES([cts/benchmark/clubench], [chmod +x cts/benchmark/clubench])
 AC_CONFIG_FILES([cts/fence_dummy], [chmod +x cts/fence_dummy])
 AC_CONFIG_FILES([cts/pacemaker-cts-dummyd], [chmod +x cts/pacemaker-cts-dummyd])
 AC_CONFIG_FILES([daemons/fenced/fence_legacy], [chmod +x daemons/fenced/fence_legacy])
+AC_CONFIG_FILES([extra/resources/ClusterMon],  [chmod +x extra/resources/ClusterMon])
+AC_CONFIG_FILES([extra/resources/HealthSMART], [chmod +x extra/resources/HealthSMART])
+AC_CONFIG_FILES([extra/resources/SysInfo],     [chmod +x extra/resources/SysInfo])
+AC_CONFIG_FILES([extra/resources/ifspeed],     [chmod +x extra/resources/ifspeed])
+AC_CONFIG_FILES([extra/resources/o2cb],        [chmod +x extra/resources/o2cb])
 AC_CONFIG_FILES([tools/crm_failcount], [chmod +x tools/crm_failcount])
 AC_CONFIG_FILES([tools/crm_master], [chmod +x tools/crm_master])
 AC_CONFIG_FILES([tools/crm_report], [chmod +x tools/crm_report])

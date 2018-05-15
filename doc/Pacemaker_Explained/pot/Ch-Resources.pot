@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2017-05-08 11:19-0500\n"
-"PO-Revision-Date: 2017-05-08 11:19-0500\n"
+"POT-Creation-Date: 2018-05-14 18:03-0500\n"
+"PO-Revision-Date: 2018-05-14 18:03-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -149,7 +149,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "For more information, see the <ulink url=\"http://www.linux-ha.org/wiki/OCF_Resource_Agents\">reference</ulink> and <xref linkend=\"ap-ocf\" />."
+msgid "For more information, see the <ulink url=\"http://www.linux-ha.org/wiki/OCF_Resource_Agents\">reference</ulink> and the <emphasis>Resource Agents</emphasis> section of <emphasis>Pacemaker Administration</emphasis>."
 msgstr ""
 
 #. Tag: title
@@ -174,7 +174,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Many distributions claim LSB compliance but ship with broken init scripts. For details on how to check whether your init script is LSB-compatible, see <xref linkend=\"ap-lsb\" />. Common problematic violations of the LSB standard include:"
+msgid "Many distributions claim LSB compliance but ship with broken init scripts. For details on how to check whether your init script is LSB-compatible, see the <emphasis>Resource Agents</emphasis> section of <emphasis>Pacemaker Administration</emphasis>. Common problematic violations of the LSB standard include:"
 msgstr ""
 
 #. Tag: para
@@ -493,12 +493,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<literal>Started:</literal> Allow the resource to be started (and in the case of <link linkend=\"s-resource-multistate\">multi-state</link> resources, promoted to master if appropriate)"
+msgid "<literal>Started:</literal> Allow the resource to be started (and in the case of <link linkend=\"s-resource-promotable\">promotable clone resources</link>, promoted to master if appropriate)"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<literal>Slave:</literal> Allow the resource to be started, but only in Slave mode if the resource is <link linkend=\"s-resource-multistate\">multi-state</link>"
+msgid "<literal>Slave:</literal> Allow the resource to be started, but only in Slave mode if the resource is <link linkend=\"s-resource-promotable\">promotable</link>"
 msgstr ""
 
 #. Tag: para
@@ -543,12 +543,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "fencing (unless <literal>stonith-enabled</literal> is <literal>false</literal> or <literal>class</literal> is <literal>stonith</literal>, in which case it defaults to quorum)"
+msgid "<literal>quorum</literal> for resources with a <literal>class</literal> of <literal>stonith</literal>, otherwise <literal>unfencing</literal> if unfencing is active in the cluster, otherwise <literal>fencing</literal> if <literal>stonith-enabled</literal> is true, otherwise <literal>quorum</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Conditions under which the resource can be started <emphasis>(since 1.1.8)</emphasis> Allowed values:"
+msgid "Conditions under which the resource can be started Allowed values:"
 msgstr ""
 
 #. Tag: para
@@ -563,12 +563,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<literal>fencing:</literal> The cluster can only start this resource if a majority of the configured nodes are active <emphasis>and</emphasis> any failed or unknown nodes have been powered off"
+msgid "<literal>fencing:</literal> The cluster can only start this resource if a majority of the configured nodes are active <emphasis>and</emphasis> any failed or unknown nodes have been <link linkend=\"ch-stonith\">fenced</link>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<literal>unfencing:</literal> The cluster can only start this resource if a majority of the configured nodes are active <emphasis>and</emphasis> any failed or unknown nodes have been powered off <emphasis>and</emphasis> only on nodes that have been <emphasis>unfenced</emphasis> <emphasis>(since 1.1.9)</emphasis>"
+msgid "<literal>unfencing:</literal> The cluster can only start this resource if a majority of the configured nodes are active <emphasis>and</emphasis> any failed or unknown nodes have been fenced <emphasis>and</emphasis> only on nodes that have been <link linkend=\"s-unfencing\">unfenced</link>"
 msgstr ""
 
 #. Tag: para
@@ -653,12 +653,22 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
+msgid "<literal>container-attribute-target</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Specific to bundle resources; see <xref linkend=\"s-bundle-attributes\" />"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
 msgid "<literal>remote-node</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The name of the Pacemaker Remote guest node this resource is associated with, if any. If specified, this both enables the resource as a guest node and defines the unique name used to identify the guest node. The guest must be configured to run the Pacemaker Remote daemon when it is started. <literal>WARNING:</literal> This value cannot overlap with any resource or node IDs. <emphasis>(since 1.1.9)</emphasis>"
+msgid "The name of the Pacemaker Remote guest node this resource is associated with, if any. If specified, this both enables the resource as a guest node and defines the unique name used to identify the guest node. The guest must be configured to run the Pacemaker Remote daemon when it is started. <literal>WARNING:</literal> This value cannot overlap with any resource or node IDs."
 msgstr ""
 
 #. Tag: para
@@ -673,7 +683,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "If <literal>remote-node</literal> is specified, the port on the guest used for its Pacemaker Remote connection. The Pacemaker Remote daemon on the guest must be configured to listen on this port. <emphasis>(since 1.1.9)</emphasis>"
+msgid "If <literal>remote-node</literal> is specified, the port on the guest used for its Pacemaker Remote connection. The Pacemaker Remote daemon on the guest must be configured to listen on this port."
 msgstr ""
 
 #. Tag: para
@@ -688,7 +698,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "If <literal>remote-node</literal> is specified, the IP address or hostname used to connect to the guest via Pacemaker Remote. The Pacemaker Remote daemon on the guest must be configured to accept connections on this address. <emphasis>(since 1.1.9)</emphasis>"
+msgid "If <literal>remote-node</literal> is specified, the IP address or hostname used to connect to the guest via Pacemaker Remote. The Pacemaker Remote daemon on the guest must be configured to accept connections on this address."
 msgstr ""
 
 #. Tag: para
@@ -703,7 +713,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "If <literal>remote-node</literal> is specified, how long before a pending guest connection will time out. <emphasis>(since 1.1.10)</emphasis>"
+msgid "If <literal>remote-node</literal> is specified, how long before a pending guest connection will time out."
 msgstr ""
 
 #. Tag: para
@@ -1043,7 +1053,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Run the operation only on node(s) that the cluster thinks should be in the specified role. This only makes sense for recurring monitor operations. Allowed (case-sensitive) values: <literal>Stopped</literal>, <literal>Started</literal>, and in the case of <link linkend=\"s-resource-multistate\">multi-state</link> resources, <literal>Slave</literal> and <literal>Master</literal>. <indexterm> <primary>role</primary><secondary>Action Property</secondary> </indexterm> <indexterm> <primary>Action Property</primary> </indexterm> <indexterm> <primary>Action</primary><secondary>Property</secondary><tertiary>role</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>role</secondary> </indexterm> <indexterm> <primary>role</primary> </indexterm>"
+msgid "Run the operation only on node(s) that the cluster thinks should be in the specified role. This only makes sense for recurring monitor operations. Allowed (case-sensitive) values: <literal>Stopped</literal>, <literal>Started</literal>, and in the case of <link linkend=\"s-resource-promotable\">promotable clone resources</link>, <literal>Slave</literal> and <literal>Master</literal>. <indexterm> <primary>role</primary><secondary>Action Property</secondary> </indexterm> <indexterm> <primary>Action Property</primary> </indexterm> <indexterm> <primary>Action</primary><secondary>Property</secondary><tertiary>role</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>role</secondary> </indexterm> <indexterm> <primary>role</primary> </indexterm>"
 msgstr ""
 
 #. Tag: title

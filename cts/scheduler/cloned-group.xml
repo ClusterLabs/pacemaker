@@ -38,7 +38,6 @@
             <operations>
               <op name="monitor" interval="10s" id="mysql-proxy_mon" timeout="20s"/>
             </operations>
-            <meta_attributes id="primitive-mysql-proxy.meta"/>
           </primitive>
           <meta_attributes id="group-grrr.meta"/>
         </group>

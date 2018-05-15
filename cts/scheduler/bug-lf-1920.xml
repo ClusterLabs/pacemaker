@@ -26,7 +26,6 @@
         <operations>
           <op name="monitor" interval="30s" id="op-mysql-1" timeout="20s"/>
         </operations>
-        <meta_attributes id="primitive-mysql-bin.meta"/>
       </primitive>
     </resources>
     <constraints/>

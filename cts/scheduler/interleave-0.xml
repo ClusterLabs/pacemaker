@@ -131,7 +131,6 @@
           <instance_attributes id="instance_attributes.id22420">
             <nvpair id="nvpair.id22426" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
           </instance_attributes>
-          <meta_attributes id="primitive-child_DoFencing.meta"/>
         </primitive>
         <meta_attributes id="clone-DoFencing.meta">
           <nvpair id="resource_stickiness.meta.auto-194" name="resource-stickiness" value="200"/>
@@ -148,7 +147,6 @@
           <instance_attributes id="instance_attributes.id22490">
             <nvpair id="nvpair.id22496" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
           </instance_attributes>
-          <meta_attributes id="primitive-child_CloneSet.meta"/>
         </primitive>
         <meta_attributes id="clone-CloneSet.meta">
           <nvpair id="nvpair.meta.auto-229" name="clone-max" value="8"/>

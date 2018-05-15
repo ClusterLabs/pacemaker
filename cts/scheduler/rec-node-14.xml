@@ -13,9 +13,7 @@
     </nodes>
     <resources>
       <primitive id="stonith-1" class="stonith" type="dummy"/>
-      <primitive id="lsb_dummy" class="lsb" type="/usr/lib/heartbeat/cts/LSBDummy">
-        <meta_attributes id="primitive-lsb_dummy.meta"/>
-      </primitive>
+      <primitive id="lsb_dummy" class="lsb" type="/usr/lib/heartbeat/cts/LSBDummy"/>
     </resources>
     <constraints/>
   </configuration>

@@ -143,7 +143,6 @@
             <op id="FSdata1-stop-timeout-60" interval="0s" name="stop" timeout="60"/>
             <op id="FSdata1-monitor-interval-10" interval="10" name="monitor" on-fail="fence"/>
           </operations>
-          <meta_attributes id="FSdata1-meta_attributes"/>
         </primitive>
         <meta_attributes id="RES1-meta_attributes">
           <nvpair id="RES1-meta_attributes-target-role" name="target-role" value="Started"/>

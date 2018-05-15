@@ -13,8 +13,6 @@
     </nodes>
     <resources>
       <primitive id="Fencing" class="stonith" type="fence_xvm">
-        <meta_attributes id="Fencing-meta">
-        </meta_attributes>
         <instance_attributes id="Fencing-params">
           <nvpair id="Fencing-multicast_address" name="multicast_address" value="239.255.100.100"/>
           <nvpair id="Fencing-pcmk_host_list" name="pcmk_host_list" value="node1 node2 remote-1 remote-2"/>

@@ -1,0 +1,143 @@
+# 
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2018-05-14 18:03-0500\n"
+"PO-Revision-Date: 2018-05-14 18:03-0500\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: None\n"
+"MIME-Version: 1.0\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Installing Cluster Software"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Installing the Software"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Most major Linux distributions have pacemaker packages in their standard package repositories, or the software can be built from source code. See the <ulink url=\"http://clusterlabs.org/wiki/Install\">Install wiki page</ulink> for details."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Enabling Pacemaker"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Enabling Pacemaker For Corosync version 2 and greater"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "High-level cluster management tools are available that can configure corosync for you. This document focuses on the lower-level details if you want to configure corosync yourself."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Corosync configuration is normally located in <literal>/etc/corosync/corosync.conf</literal>."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Corosync configuration file for two nodes <emphasis role=\"strong\">myhost1</emphasis> and <emphasis role=\"strong\">myhost2</emphasis>"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "totem {\n"
+"version: 2\n"
+"secauth: off\n"
+"cluster_name: mycluster\n"
+"transport: udpu\n"
+"}\n"
+"\n"
+"nodelist {\n"
+"  node {\n"
+"        ring0_addr: myhost1\n"
+"        nodeid: 1\n"
+"       }\n"
+"  node {\n"
+"        ring0_addr: myhost2\n"
+"        nodeid: 2\n"
+"       }\n"
+"}\n"
+"\n"
+"quorum {\n"
+"provider: corosync_votequorum\n"
+"two_node: 1\n"
+"}\n"
+"\n"
+"logging {\n"
+"to_syslog: yes\n"
+"}"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Corosync configuration file for three nodes <emphasis role=\"strong\">myhost1</emphasis>, <emphasis role=\"strong\">myhost2</emphasis> and <emphasis role=\"strong\">myhost3</emphasis>"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "totem {\n"
+"version: 2\n"
+"secauth: off\n"
+"cluster_name: mycluster\n"
+"transport: udpu\n"
+"}\n"
+"\n"
+"nodelist {\n"
+"  node {\n"
+"        ring0_addr: myhost1\n"
+"        nodeid: 1\n"
+"       }\n"
+"  node {\n"
+"        ring0_addr: myhost2\n"
+"        nodeid: 2\n"
+"       }\n"
+"  node {\n"
+"        ring0_addr: myhost3\n"
+"        nodeid: 3\n"
+"       }\n"
+"}\n"
+"\n"
+"quorum {\n"
+"provider: corosync_votequorum\n"
+"\n"
+"}\n"
+"\n"
+"logging {\n"
+"to_syslog: yes\n"
+"}"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In the above examples, the <literal>totem</literal> section defines what protocol version and options (including encryption) to use, <footnote><para> Please consult the Corosync website (<ulink url=\"http://www.corosync.org/\">http://www.corosync.org/</ulink>) and documentation for details on enabling encryption and peer authentication for the cluster. </para></footnote> and gives the cluster a unique name (<literal>mycluster</literal> in these examples)."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The <literal>node</literal> section lists the nodes in this cluster."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The <literal>quorum</literal> section defines how the cluster uses quorum. The important thing is that two-node clusters must be handled specially, so <literal>two_node: 1</literal> must be defined for two-node clusters (and only for two-node clusters)."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The <literal>logging</literal> section should be self-explanatory."
+msgstr ""
+

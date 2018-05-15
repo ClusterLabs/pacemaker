@@ -1826,13 +1826,11 @@ cli_resource_move(resource_t *rsc, const char *rsc_id, const char *host_name,
         count = g_list_length(rsc->running_on);
 
     } else if (g_list_length(rsc->running_on) > 1) {
-        CMD_ERR("Resource '%s' not moved: active on multiple nodes", rsc_id);
-        return -ENOTUNIQ;
+        return -pcmk_err_multiple;
     }
 
     if(dest == NULL) {
-        CMD_ERR("Error performing operation: node '%s' is unknown", host_name);
-        return -ENXIO;
+        return -pcmk_err_node_unknown;
     }
 
     if(g_list_length(rsc->running_on) == 1) {
@@ -1850,9 +1848,7 @@ cli_resource_move(resource_t *rsc, const char *rsc_id, const char *host_name,
             crm_info("%s is already %s on %s, reinforcing placement with location constraint.",
                      rsc_id, scope_master?"promoted":"active", dest->details->uname);
         } else {
-            CMD_ERR("Error performing operation: %s is already %s on %s",
-                    rsc_id, scope_master?"promoted":"active", dest->details->uname);
-            return -EEXIST;
+            return -pcmk_err_already;
         }
     }
 

@@ -61,7 +61,6 @@
             <nvpair id="nvpair.id22197" name="directory" value="/mnt/share1"/>
             <nvpair id="nvpair.id22205" name="fstype" value="ocfs2"/>
           </instance_attributes>
-          <meta_attributes id="primitive-ocfs2.meta"/>
         </primitive>
         <meta_attributes id="clone-ocfs2-clone.meta">
           <nvpair id="notify.meta.auto-96" name="notify" value="true"/>

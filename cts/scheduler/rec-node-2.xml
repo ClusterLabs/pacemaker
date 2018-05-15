@@ -26,7 +26,6 @@
           <op name="stop" interval="0" id="stop-2" on-fail="block"/>
           <op name="start" interval="0" id="start-2"/>
         </operations>
-        <meta_attributes id="primitive-rsc2.meta"/>
       </primitive>
       <group id="group1">
         <primitive id="rsc3" class="ocf" provider="heartbeat" type="apache">
@@ -37,9 +36,7 @@
             <nvpair id="nvpair2-requires" name="requires" value="quorum"/>
           </meta_attributes>
         </primitive>
-        <primitive id="rsc4" class="ocf" provider="heartbeat" type="apache">
-          <meta_attributes id="primitive-rsc4.meta"/>
-        </primitive>
+        <primitive id="rsc4" class="ocf" provider="heartbeat" type="apache"/>
         <meta_attributes id="group-group1.meta"/>
       </group>
       <group id="group2">
@@ -47,11 +44,8 @@
           <operations>
             <op name="start" interval="0" id="op.auto-6"/>
           </operations>
-          <meta_attributes id="primitive-rsc5.meta"/>
         </primitive>
-        <primitive id="rsc6" class="ocf" provider="heartbeat" type="apache">
-          <meta_attributes id="primitive-rsc6.meta"/>
-        </primitive>
+        <primitive id="rsc6" class="ocf" provider="heartbeat" type="apache"/>
         <meta_attributes id="group-group2.meta"/>
       </group>
     </resources>

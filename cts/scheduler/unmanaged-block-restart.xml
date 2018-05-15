@@ -22,7 +22,6 @@
           </operations>
         </primitive>
         <primitive id="rsc3" class="ocf" provider="pacemaker" type="Dummy">
-          <meta_attributes id="rsc3-meta_attributes"/>
           <operations>
             <op id="rsc3-monitor-10" interval="10" name="monitor"/>
           </operations>

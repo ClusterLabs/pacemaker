@@ -36,7 +36,6 @@
           <instance_attributes id="instance_attributes.id22063">
             <nvpair id="nvpair.id22070" name="ip" value="192.168.1.101"/>
           </instance_attributes>
-          <meta_attributes id="primitive-IPaddr_192_168_1_101.meta"/>
         </primitive>
         <primitive id="LVM_2" class="ocf" provider="heartbeat" type="LVM">
           <operations>
@@ -45,7 +44,6 @@
           <instance_attributes id="instance_attributes.id22105">
             <nvpair id="nvpair.id22112" name="volgrpname" value="data01vg"/>
           </instance_attributes>
-          <meta_attributes id="primitive-LVM_2.meta"/>
         </primitive>
         <primitive id="Filesystem_3" class="ocf" provider="heartbeat" type="Filesystem">
           <operations>
@@ -56,7 +54,6 @@
             <nvpair id="nvpair.id22164" name="directory" value="/data/d1"/>
             <nvpair id="nvpair.id22172" name="fstype" value="xfs"/>
           </instance_attributes>
-          <meta_attributes id="primitive-Filesystem_3.meta"/>
         </primitive>
         <meta_attributes id="group-app01.meta"/>
       </group>
@@ -68,7 +65,6 @@
           <instance_attributes id="instance_attributes.id22214">
             <nvpair id="nvpair.id22221" name="ip" value="192.168.1.102"/>
           </instance_attributes>
-          <meta_attributes id="primitive-IPaddr_192_168_1_102.meta"/>
         </primitive>
         <primitive id="LVM_12" class="ocf" provider="heartbeat" type="LVM">
           <operations>
@@ -77,7 +73,6 @@
           <instance_attributes id="instance_attributes.id22256">
             <nvpair id="nvpair.id22263" name="volgrpname" value="data02vg"/>
           </instance_attributes>
-          <meta_attributes id="primitive-LVM_12.meta"/>
         </primitive>
         <primitive id="Filesystem_13" class="ocf" provider="heartbeat" type="Filesystem">
           <operations>
@@ -88,7 +83,6 @@
             <nvpair id="nvpair.id22314" name="directory" value="/data/d2"/>
             <nvpair id="nvpair.id22323" name="fstype" value="ext3"/>
           </instance_attributes>
-          <meta_attributes id="primitive-Filesystem_13.meta"/>
         </primitive>
         <meta_attributes id="group-app02.meta"/>
       </group>
@@ -100,7 +94,6 @@
           <instance_attributes id="instance_attributes.id22365">
             <nvpair id="nvpair.id22372" name="ip" value="192.168.1.104"/>
           </instance_attributes>
-          <meta_attributes id="primitive-IPaddr_192_168_1_104.meta"/>
         </primitive>
         <primitive id="LVM_22" class="ocf" provider="heartbeat" type="LVM">
           <operations>
@@ -109,7 +102,6 @@
           <instance_attributes id="instance_attributes.id22407">
             <nvpair id="nvpair.id22414" name="volgrpname" value="data03vg"/>
           </instance_attributes>
-          <meta_attributes id="primitive-LVM_22.meta"/>
         </primitive>
         <primitive id="Filesystem_23" class="ocf" provider="heartbeat" type="Filesystem">
           <operations>
@@ -120,7 +112,6 @@
             <nvpair id="nvpair.id22465" name="directory" value="/data/d3"/>
             <nvpair id="nvpair.id22474" name="fstype" value="xfs"/>
           </instance_attributes>
-          <meta_attributes id="primitive-Filesystem_23.meta"/>
         </primitive>
         <primitive id="oracle_24" class="ocf" provider="heartbeat" type="oracle">
           <operations>
@@ -129,7 +120,6 @@
           <instance_attributes id="instance_attributes.id22510">
             <nvpair id="nvpair.id22517" name="sid" value="testdb"/>
           </instance_attributes>
-          <meta_attributes id="primitive-oracle_24.meta"/>
         </primitive>
         <primitive id="oralsnr_25" class="ocf" provider="heartbeat" type="oralsnr">
           <operations>
@@ -138,7 +128,6 @@
           <instance_attributes id="instance_attributes.id22552">
             <nvpair id="nvpair.id22559" name="sid" value="testdb"/>
           </instance_attributes>
-          <meta_attributes id="primitive-oralsnr_25.meta"/>
         </primitive>
         <meta_attributes id="group-oracle.meta"/>
       </group>

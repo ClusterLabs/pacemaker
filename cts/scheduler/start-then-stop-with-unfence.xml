@@ -75,7 +75,6 @@
             <op id="jrummy-promote-interval-0s" interval="0s" name="promote" timeout="120"/>
             <op id="jrummy-demote-interval-0s" interval="0s" name="demote" timeout="120"/>
           </operations>
-          <meta_attributes id="jrummy-meta_attributes"/>
         </primitive>
         <meta_attributes id="jrummy-clone-meta_attributes"/>
       </clone>

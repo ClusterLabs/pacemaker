@@ -291,9 +291,16 @@ operation_finished(mainloop_child_t * p, pid_t pid, int core, int signo, int exi
             op->status = PCMK_LRM_OP_TIMEOUT;
             op->rc = PCMK_OCF_TIMEOUT;
 
+        } else if (op->cancel) {
+            /* If an in-flight recurring operation was killed because it was
+             * cancelled, don't treat that as a failure.
+             */
+            crm_info("%s - terminated with signal %d", prefix, signo);
+            op->status = PCMK_LRM_OP_CANCELLED;
+            op->rc = PCMK_OCF_OK;
+
         } else {
-            do_crm_log_unlikely((op->cancel) ? LOG_INFO : LOG_WARNING,
-                                "%s - terminated with signal %d", prefix, signo);
+            crm_warn("%s - terminated with signal %d", prefix, signo);
             op->status = PCMK_LRM_OP_ERROR;
             op->rc = PCMK_OCF_SIGNAL;
         }
@@ -869,12 +876,6 @@ services_os_get_directory_list(const char *root, gboolean files, gboolean execut
 
     free(namelist);
     return list;
-}
-
-GList *
-resources_os_list_lsb_agents(void)
-{
-    return get_directory_list(LSB_ROOT_DIR, TRUE, TRUE);
 }
 
 GList *

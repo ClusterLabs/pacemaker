@@ -939,8 +939,7 @@ main(int argc, char **argv)
         if (host_uname) {
             dest = pe_find_node(data_set.nodes, host_uname);
             if (dest == NULL) {
-                CMD_ERR("Unknown node: %s", host_uname);
-                rc = -ENXIO;
+                rc = -pcmk_err_node_unknown;
                 goto bail;
             }
         }
@@ -953,8 +952,7 @@ main(int argc, char **argv)
         if (host_uname) {
             dest = pe_find_node(data_set.nodes, host_uname);
             if (dest == NULL) {
-                CMD_ERR("Unknown node: %s", host_uname);
-                rc = -ENXIO;
+                rc = -pcmk_err_node_unknown;
                 goto bail;
             }
             rc = cli_resource_clear(rsc_id, dest->details->uname, NULL, cib_conn);
@@ -970,8 +968,7 @@ main(int argc, char **argv)
         node_t *dest = pe_find_node(data_set.nodes, host_uname);
 
         if (dest == NULL) {
-            CMD_ERR("Error performing operation: node '%s' is unknown", host_uname);
-            rc = -ENXIO;
+            rc = -pcmk_err_node_unknown;
             goto bail;
         }
         rc = cli_resource_ban(rsc_id, dest->details->uname, NULL, cib_conn);

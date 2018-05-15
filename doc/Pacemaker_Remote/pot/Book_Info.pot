@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2017-10-06 19:59-0500\n"
-"PO-Revision-Date: 2017-10-06 19:59-0500\n"
+"POT-Creation-Date: 2018-05-14 18:03-0500\n"
+"PO-Revision-Date: 2018-05-14 18:03-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -59,7 +59,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Pacemaker to perform resource management on cluster nodes"
+msgid "Pacemaker 1.1.16 <footnote><para>While this guide is part of the document set for Pacemaker 2.0, it demonstrates the version available in the standard &DISTRO; repositories</para></footnote> to perform resource management on cluster nodes"
 msgstr ""
 
 #. Tag: para

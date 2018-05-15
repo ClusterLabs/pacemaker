@@ -93,7 +93,6 @@
           <op id="vtest4-stop-interval-0s" interval="0s" name="stop" timeout="20"/>
           <op id="vtest4-monitor-interval-10" interval="10" name="monitor" timeout="20"/>
         </operations>
-        <meta_attributes id="vtest4-meta_attributes"/>
       </primitive>
       <clone id="vtest5-clone">
         <meta_attributes id="vtest5-clone-meta"/>
@@ -111,7 +110,6 @@
           <operations>
             <op id="vtest5-monitor-interval-10" interval="10" name="monitor" timeout="20"/>
           </operations>
-          <meta_attributes id="vtest5-meta_attributes"/>
         </primitive>
       </clone>
       <clone id="vtest7-master">

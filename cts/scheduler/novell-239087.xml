@@ -60,7 +60,6 @@
             <nvpair id="nvpair.id22186" name="drbd_resource" value="r0"/>
             <nvpair id="nvpair.id22194" name="clone_overrides_hostname" value="no"/>
           </instance_attributes>
-          <meta_attributes id="primitive-drbd0.meta"/>
         </primitive>
         <meta_attributes id="clone-ms-drbd0.meta"/>
       </clone>

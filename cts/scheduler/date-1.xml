@@ -44,7 +44,6 @@
             <expression id="expression.id22001" attribute="#uname" operation="eq" value="node2"/>
           </rule>
         </instance_attributes>
-        <meta_attributes id="primitive-rsc1.meta"/>
       </primitive>
     </resources>
     <constraints>

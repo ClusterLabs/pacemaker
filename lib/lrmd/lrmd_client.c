@@ -1569,8 +1569,7 @@ lrmd_api_get_recurring_ops(lrmd_t *lrmd, const char *rsc_id, int timeout_ms,
     for (xmlNode *rsc_xml = first_named_child(output_xml, F_LRMD_RSC);
          rsc_xml != NULL; rsc_xml = crm_next_same_xml(rsc_xml)) {
 
-        const char *rsc_id = crm_element_value(rsc_xml, F_LRMD_RSC_ID);
-
+        rsc_id = crm_element_value(rsc_xml, F_LRMD_RSC_ID);
         if (rsc_id == NULL) {
             crm_err("Could not parse recurring operation information from executor");
             continue;

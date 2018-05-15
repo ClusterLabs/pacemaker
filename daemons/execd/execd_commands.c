@@ -787,7 +787,7 @@ action_complete(svc_action_t * action)
     rsc = cmd->rsc_id ? g_hash_table_lookup(rsc_list, cmd->rsc_id) : NULL;
 
     if (rsc && safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_SERVICE)) {
-        rclass = resources_find_service_class(rsc->class);
+        rclass = resources_find_service_class(rsc->type);
     } else if(rsc) {
         rclass = rsc->class;
     }

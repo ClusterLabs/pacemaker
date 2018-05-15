@@ -13,30 +13,14 @@
       <node id="uuid2" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <primitive id="rsc1" class="ocf" provider="heartbeat" type="apache">
-        <meta_attributes id="primitive-rsc1.meta"/>
-      </primitive>
-      <primitive id="rsc2" class="ocf" provider="heartbeat" type="apache">
-        <meta_attributes id="primitive-rsc2.meta"/>
-      </primitive>
-      <primitive id="rsc3" class="ocf" provider="heartbeat" type="apache">
-        <meta_attributes id="primitive-rsc3.meta"/>
-      </primitive>
-      <primitive id="rsc4" class="ocf" provider="heartbeat" type="apache">
-        <meta_attributes id="primitive-rsc4.meta"/>
-      </primitive>
-      <primitive id="rsc5" class="ocf" provider="heartbeat" type="apache">
-        <meta_attributes id="primitive-rsc5.meta"/>
-      </primitive>
-      <primitive id="rsc6" class="ocf" provider="heartbeat" type="apache">
-        <meta_attributes id="primitive-rsc6.meta"/>
-      </primitive>
-      <primitive id="rsc7" class="ocf" provider="heartbeat" type="apache">
-        <meta_attributes id="primitive-rsc7.meta"/>
-      </primitive>
-      <primitive id="rsc8" class="ocf" provider="heartbeat" type="apache">
-        <meta_attributes id="primitive-rsc8.meta"/>
-      </primitive>
+      <primitive id="rsc1" class="ocf" provider="heartbeat" type="apache"/>
+      <primitive id="rsc2" class="ocf" provider="heartbeat" type="apache"/>
+      <primitive id="rsc3" class="ocf" provider="heartbeat" type="apache"/>
+      <primitive id="rsc4" class="ocf" provider="heartbeat" type="apache"/>
+      <primitive id="rsc5" class="ocf" provider="heartbeat" type="apache"/>
+      <primitive id="rsc6" class="ocf" provider="heartbeat" type="apache"/>
+      <primitive id="rsc7" class="ocf" provider="heartbeat" type="apache"/>
+      <primitive id="rsc8" class="ocf" provider="heartbeat" type="apache"/>
     </resources>
     <constraints>
       <rsc_order id="order1" first="rsc1" then="rsc2" score="0"/>

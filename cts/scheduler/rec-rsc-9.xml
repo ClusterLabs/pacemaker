@@ -27,17 +27,13 @@
         <meta_attributes id="meta_attributes.id21894">
           <nvpair id="nvpair.id21901" name="restart-type" value="restart"/>
         </meta_attributes>
-        <primitive id="rsc2" class="ocf" provider="heartbeat" type="apache">
-          <meta_attributes id="primitive-rsc2.meta"/>
-        </primitive>
+        <primitive id="rsc2" class="ocf" provider="heartbeat" type="apache"/>
         <meta_attributes id="group-foo.meta">
           <nvpair id="restart_type.meta.auto-25" name="restart-type" value="restart"/>
         </meta_attributes>
       </group>
       <group id="bar">
-        <primitive id="rsc3" class="ocf" provider="heartbeat" type="apache">
-          <meta_attributes id="primitive-rsc3.meta"/>
-        </primitive>
+        <primitive id="rsc3" class="ocf" provider="heartbeat" type="apache"/>
         <meta_attributes id="group-bar.meta"/>
       </group>
     </resources>

@@ -736,7 +736,8 @@ crmd_metadata(void)
 {
     config_metadata("pacemaker-controld", "1.0",
                     "controller properties",
-                    "Cluster properties used by Pacemaker's controller",
+                    "Cluster properties used by Pacemaker's controller,"
+                    " formerly known as crmd",
                     crmd_opts, DIMOF(crmd_opts));
 }
 

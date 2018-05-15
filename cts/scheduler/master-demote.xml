@@ -14,21 +14,18 @@
         <instance_attributes id="instance_attributes.id21896">
           <nvpair name="ip" value="192.168.2.210" id="nvpair.id21903"/>
         </instance_attributes>
-        <meta_attributes id="primitive-cyrus_address.meta"/>
       </primitive>
       <primitive id="cyrus_master" class="ocf" type="cyrus-imap" provider="heartbeat">
         <instance_attributes id="instance_attributes.id21925">
           <nvpair id="nvpair.id21932" name="binpath" value="/usr/local/sbin/cyrus_master"/>
           <nvpair id="nvpair.id21941" name="pidfile" value="/opt/cyrus/var/run/master.pid"/>
         </instance_attributes>
-        <meta_attributes id="primitive-cyrus_master.meta"/>
       </primitive>
       <primitive id="cyrus_syslogd" class="ocf" type="syslogd" provider="heartbeat">
         <instance_attributes id="instance_attributes.id21963">
           <nvpair id="nvpair.id21970" name="binpath" value="/usr/local/sbin/cyrus_syslogd"/>
           <nvpair id="nvpair.id21979" name="pidfile" value="/opt/cyrus/var/run/syslogd.pid"/>
         </instance_attributes>
-        <meta_attributes id="primitive-cyrus_syslogd.meta"/>
       </primitive>
       <primitive id="cyrus_filesys" class="ocf" type="Filesystem" provider="heartbeat">
         <instance_attributes id="instance_attributes.id22002">
@@ -37,13 +34,11 @@
           <nvpair id="nvpair.id22026" name="fstype" value="xfs"/>
           <nvpair id="nvpair.id22035" name="options" value="nobarrier"/>
         </instance_attributes>
-        <meta_attributes id="primitive-cyrus_filesys.meta"/>
       </primitive>
       <primitive id="cyrus_volgroup" class="ocf" type="VolGroup" provider="heartbeat">
         <instance_attributes id="instance_attributes.id22057">
           <nvpair id="nvpair.id22064" name="volgrpname" value="vg3"/>
         </instance_attributes>
-        <meta_attributes id="primitive-cyrus_volgroup.meta"/>
       </primitive>
       <clone id="cyrus_drbd">
         <meta_attributes id="meta_attributes.id22080">
@@ -62,7 +57,6 @@
           <operations>
             <op name="monitor" interval="10s" id="cyrus_drbd_mon_master" timeout="5s" role="Master"/>
           </operations>
-          <meta_attributes id="primitive-cyrus_drbd_node.meta"/>
         </primitive>
         <meta_attributes id="clone-cyrus_drbd.meta"/>
       </clone>
@@ -70,7 +64,6 @@
         <instance_attributes id="instance_attributes.id22198">
           <nvpair name="ip" value="192.168.1.188" id="nvpair.id22205"/>
         </instance_attributes>
-        <meta_attributes id="primitive-named_address.meta"/>
       </primitive>
       <primitive id="named_filesys" class="ocf" type="Filesystem" provider="heartbeat">
         <instance_attributes id="instance_attributes.id22227">
@@ -79,27 +72,23 @@
           <nvpair id="nvpair.id22252" name="fstype" value="xfs"/>
           <nvpair id="nvpair.id22260" name="options" value="nobarrier"/>
         </instance_attributes>
-        <meta_attributes id="primitive-named_filesys.meta"/>
       </primitive>
       <primitive id="named_volgroup" class="ocf" type="VolGroup" provider="heartbeat">
         <instance_attributes id="instance_attributes.id22283">
           <nvpair id="nvpair.id22289" name="volgrpname" value="vg4"/>
         </instance_attributes>
-        <meta_attributes id="primitive-named_volgroup.meta"/>
       </primitive>
       <primitive id="named_daemon" class="ocf" type="recursor" provider="heartbeat">
         <instance_attributes id="instance_attributes.id22312">
           <nvpair id="nvpair.id22318" name="binpath" value="/usr/local/sbin/recursor_daemon"/>
           <nvpair id="nvpair.id22327" name="pidfile" value="/opt/recursor/var/run/pdns_recursor.pid"/>
         </instance_attributes>
-        <meta_attributes id="primitive-named_daemon.meta"/>
       </primitive>
       <primitive id="named_syslogd" class="ocf" type="syslogd" provider="heartbeat">
         <instance_attributes id="instance_attributes.id22350">
           <nvpair id="nvpair.id22357" name="binpath" value="/usr/local/sbin/recursor_syslogd"/>
           <nvpair id="nvpair.id22366" name="pidfile" value="/opt/recursor/var/run/syslogd.pid"/>
         </instance_attributes>
-        <meta_attributes id="primitive-named_syslogd.meta"/>
       </primitive>
       <clone id="named_drbd">
         <meta_attributes id="meta_attributes.id22383">
@@ -118,7 +107,6 @@
           <operations>
             <op name="monitor" interval="10s" id="named_drbd_mon_master" timeout="5s" role="Master"/>
           </operations>
-          <meta_attributes id="primitive-named_drbd_node.meta"/>
         </primitive>
         <meta_attributes id="clone-named_drbd.meta"/>
       </clone>
@@ -132,7 +120,6 @@
             <nvpair id="nvpair.id22561" name="dampen" value="5s"/>
             <nvpair id="nvpair.id22570" name="multiplier" value="100"/>
           </instance_attributes>
-          <meta_attributes id="primitive-pingd_node.meta"/>
         </primitive>
         <meta_attributes id="clone-pingd_clone.meta">
           <nvpair id="nvpair.meta.auto-237" name="globally-unique" value="false"/>
@@ -150,7 +137,6 @@
             <nvpair id="nvpair.id22649" name="login" value="admin"/>
             <nvpair id="nvpair.id22658" name="password" value="xxxxxxxx"/>
           </instance_attributes>
-          <meta_attributes id="primitive-fence_node.meta"/>
         </primitive>
         <meta_attributes id="clone-fence_clone.meta"/>
       </clone>

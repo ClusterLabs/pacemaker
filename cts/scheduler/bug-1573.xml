@@ -32,7 +32,6 @@
           <instance_attributes id="instance_attributes.id22035">
             <nvpair id="nvpair.id22042" name="ip" value="192.168.1.101"/>
           </instance_attributes>
-          <meta_attributes id="primitive-IPaddr_192_168_1_101.meta"/>
         </primitive>
         <primitive id="apache_2" class="ocf" provider="heartbeat" type="apache">
           <operations>
@@ -41,7 +40,6 @@
           <instance_attributes id="instance_attributes.id22078">
             <nvpair id="nvpair.id22084" name="configfile" value="/etc/apache2/apache2.conf"/>
           </instance_attributes>
-          <meta_attributes id="primitive-apache_2.meta"/>
         </primitive>
         <meta_attributes id="group-group_1.meta"/>
       </group>
@@ -53,7 +51,6 @@
           <instance_attributes id="instance_attributes.id22126">
             <nvpair id="nvpair.id22133" name="ip" value="192.168.1.102"/>
           </instance_attributes>
-          <meta_attributes id="primitive-IPaddr_192_168_1_102.meta"/>
         </primitive>
         <primitive id="apache_6" class="ocf" provider="heartbeat" type="apache">
           <operations>

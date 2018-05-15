@@ -38,7 +38,6 @@
           <instance_attributes id="Apache-instance_attributes">
             <nvpair id="Apache-instance_attributes-configfile" name="configfile" value="/etc/apache2/httpd.conf"/>
           </instance_attributes>
-          <meta_attributes id="apache-meta_attributes"/>
         </primitive>
       </clone>
       <clone id="CloneResource2">

@@ -51,7 +51,6 @@
               <op name="monitor" interval="20" id="monitor-1s" timeout="60s" on-fail="stop" role="Slave"/>
               <op name="stop" interval="0" id="stop-1" timeout="60s" on-fail="stop"/>
             </operations>
-            <meta_attributes id="primitive-stateful-1.meta"/>
           </primitive>
           <primitive id="stateful-2" class="ocf" type="Stateful" provider="heartbeat">
             <operations>
@@ -60,7 +59,6 @@
               <op name="monitor" interval="20" id="monitor-2s" timeout="60s" on-fail="stop" role="Slave"/>
               <op name="stop" interval="0" id="stop-2" timeout="60s" on-fail="stop"/>
             </operations>
-            <meta_attributes id="primitive-stateful-2.meta"/>
           </primitive>
           <meta_attributes id="group-group.meta"/>
         </group>

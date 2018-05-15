@@ -70,7 +70,7 @@ CLEANFILES = $(man7_MANS)
 
 if BUILD_LEGACY_LINKS
 install-exec-hook:
-	cd $(DESTDIR)$(CRM_DAEMON_DIR) && $(LN_S) pacemaker-controld crmd
+	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f crmd && $(LN_S) pacemaker-controld crmd
 
 uninstall-hook:
 	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f crmd

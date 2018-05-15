@@ -70,6 +70,39 @@ init, local-init        [local] initialize CTS environment
 EOF
 )
 
+# Modify an uninstalled source checkout to allow running CTS there
+local_init() {
+    local_root="$(dirname "$cts_root")"
+    if [ ! -r "$cts_root/CTSvars.py.in" ]; then
+        echo "$local_root does not appear to be a source code directory"
+        exit 1
+    elif [ ! -r "$cts_root/CTSvars.py" ]; then
+        echo "You must run configure and make first"
+        exit 1
+    fi
+
+    # Update CTS_home and Fencing_Home in CTSvars.py
+    sed -e "s:@datadir@/@PACKAGE@/tests/cts:$local_root/cts:" \
+        "$cts_root/CTSvars.py" > "$cts_root/CTSvars.py.$$"
+    mv -- "$cts_root/CTSvars.py.$$" "$cts_root/CTSvars.py"
+
+    files="extra/cluster-init extra/cluster-helper extra/cluster-clean"
+    for f in $files; do
+        cp "$local_root/$f" "$cts_root/"
+    done
+
+    # Update report_data in a local copy of crm_report
+    sed -e "s:@datadir@/@PACKAGE@:$local_root/tools:" \
+        "$local_root/tools/crm_report" > "$cts_root/crm_report"
+    chmod +x "$cts_root/crm_report"
+
+    # Install the necessary helpers to system locations (must be done as root)
+    "$cts_root/cts-support" install
+
+    echo "Make sure you add $cts_root to your PATH and set a value for \$cluster_name in .bashrc"
+    exit 0
+}
+
 while true; do
     case $1 in
 	-h|--help|help) printf "${helpmsg}\n" "$0"; exit;;
@@ -104,43 +137,7 @@ while true; do
 	r*|rhel*)
 		target="rhel-`echo $1 | sed -e s/rhel// -e s/-// -e s/r//`"
 		shift;;
-	init|local-init)
-	    local_root=
-	    case $cts_root in
-		/*) local_root=`dirname $cts_root`;;
-		*)  local_root=`dirname $PWD/$cts_root`;;
-	    esac
-
-	    cat << EOF > $cts_root/CTSvars.py
-class CTSvars:
-        CTS_home="$local_root/cts"
-        Fencing_home="$local_root/daemons/fenced"
-        CRM_CONFIG_DIR="/var/lib/pacemaker/cib"
-        CRM_DAEMON_USER="hacluster"
-        CRM_DAEMON_DIR="/usr/libexec/pacemaker"
-        OCF_ROOT_DIR="/usr/lib/ocf"
-EOF
-
-	    files="extra/cluster-init extra/cluster-helper extra/cluster-clean tools/crm_report.in"
-	    for f in $files; do
-		cp $local_root/$f $cts_root/
-	    done
-
-	    cp $local_root/tools/report.common.in $local_root/tools/report.common
-	    sed -i.sed s:@localstatedir@:/var: $local_root/tools/report.common
-
-	    cp $cts_root/crm_report.in $cts_root/crm_report
-	    sed -i.sed s:@datadir@/@PACKAGE@:$local_root/tools: $cts_root/crm_report
-	    chmod +x $cts_root/crm_report
-
-	    cp $cts_root/LSBDummy.in $cts_root/LSBDummy
-	    chmod +x $local_root/daemons/fenced/fence_*
-	    sed -i.sed s:@OCF_ROOT_DIR@:/usr/lib/ocf: $cts_root/LSBDummy
-	    
-	    echo "Make sure you add $cts_root to your PATH and set a value for \$cluster_name in .bashrc"
-	    exit 0
-	    ;;
-
+        init|local-init) local_init ;;
 	--wget)
 	    files="cluster-helper cluster-init cluster-clean"
 	    for f in $files; do

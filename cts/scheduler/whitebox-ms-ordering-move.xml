@@ -118,7 +118,6 @@
         <operations>
           <op id="migrator-monitor-P10S" interval="P10S" name="monitor"/>
         </operations>
-        <meta_attributes id="migrator-meta_attributes"/>
       </primitive>
       <clone id="Connectivity">
         <meta_attributes id="Connectivity-meta">
@@ -133,7 +132,6 @@
           <operations>
             <op id="ping-1-monitor-60s" interval="60s" name="monitor"/>
           </operations>
-          <meta_attributes id="ping-1-meta_attributes"/>
         </primitive>
         <meta_attributes id="Connectivity-meta_attributes"/>
       </clone>

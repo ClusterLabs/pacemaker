@@ -77,10 +77,13 @@ def update_path():
         new_path = "%s/tools:%s" % (BUILD_DIR, new_path)   # For crm_resource
         # For pacemaker-fenced
         new_path = "%s/daemons/fenced:%s" % (BUILD_DIR, new_path)
+        # For cts-support
+        new_path = "%s/cts:%s" % (BUILD_DIR, new_path)
 
     else:
         print("Running tests from the install tree: @CRM_DAEMON_DIR@ (not %s)" % TEST_DIR)
-        # For pacemaker-execd, cts-exec-helper, pacemaker-fenced, and pacemaker-remoted
+        # For cts-exec-helper, cts-support, pacemaker-execd, pacemaker-fenced,
+        # and pacemaker-remoted
         new_path = "@CRM_DAEMON_DIR@:%s" % (new_path)
 
     print('Using PATH="{}"'.format(new_path))
@@ -570,10 +573,7 @@ done
             os.system("cp @datadir@/@PACKAGE@/tests/cts/LSBDummy /etc/init.d/LSBDummy")
 
         os.system("chmod a+x /etc/init.d/LSBDummy")
-        os.system("mkdir -p @CRM_CORE_DIR@/root")
-
-        if os.path.exists("/bin/systemctl"):
-            os.system("systemctl daemon-reload")
+        subprocess.call(["cts-support", "install"])
 
     def cleanup_test_environment(self):
         """ Clean up the host after executing desired tests """
@@ -584,6 +584,8 @@ done
         os.system("rm -f /etc/init.d/LSBDummy")
         os.system("rm -f " + SBIN_DIR + "/fence_dummy_monitor")
         os.system("rm -f " + SBIN_DIR + "/fence_dummy_sleep")
+        subprocess.call(["cts-support", "uninstall"])
+
         if os.path.exists("/bin/systemctl"):
             os.system("systemctl daemon-reload")
 

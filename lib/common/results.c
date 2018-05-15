@@ -173,6 +173,9 @@ pcmk_errorname(int rc)
         case pcmk_err_cib_backup: return "pcmk_err_cib_backup";
         case pcmk_err_cib_save: return "pcmk_err_cib_save";
         case pcmk_err_cib_corrupt: return "pcmk_err_cib_corrupt";
+        case pcmk_err_multiple: return "pcmk_err_multiple";
+        case pcmk_err_node_unknown: return "pcmk_err_node_unknown";
+        case pcmk_err_already: return "pcmk_err_already";
     }
     return "Unknown";
 }
@@ -211,7 +214,12 @@ pcmk_strerror(int rc)
             return "Could not save the new configuration to disk";
         case pcmk_err_cib_corrupt:
             return "Could not parse on-disk configuration";
-
+        case pcmk_err_multiple:
+            return "Resource active on multiple nodes";
+        case pcmk_err_node_unknown:
+            return "Node not found";
+        case pcmk_err_already:
+            return "Situation already as requested";
         case pcmk_err_schema_unchanged:
             return "Schema is already the latest available";
 
@@ -387,6 +395,7 @@ crm_errno2exit(int rc)
             return CRM_EX_DISCONNECT;
 
         case EEXIST:
+        case pcmk_err_already:
             return CRM_EX_EXISTS;
 
         case EIO:
@@ -396,9 +405,11 @@ crm_errno2exit(int rc)
             return CRM_EX_UNIMPLEMENT_FEATURE;
 
         case ENOTUNIQ:
+        case pcmk_err_multiple:
             return CRM_EX_MULTIPLE;
 
         case ENXIO:
+        case pcmk_err_node_unknown:
             return CRM_EX_NOSUCH;
 
         case ETIME:

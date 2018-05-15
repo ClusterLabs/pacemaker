@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2017-10-06 19:59-0500\n"
-"PO-Revision-Date: 2017-10-06 19:59-0500\n"
+"POT-Creation-Date: 2018-05-14 18:03-0500\n"
+"PO-Revision-Date: 2018-05-14 18:03-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -34,19 +34,33 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Every Python file should start like this:"
+msgid "If a Python file is meant to be executed (as opposed to imported), it should have a <literal>.in</literal> extension, and its first line should be:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "#!@PYTHON@"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "which will be replaced with the appropriate python executable when Pacemaker is built. To make that happen, add an AC_CONFIG_FILES() line to configure.ac, and add the file name without .in to .gitignore (see existing examples)."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "After the above line if any, every Python file should start like this:"
 msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "[&lt;SHEBANG&gt;]\n"
-"\"\"\" &lt;BRIEF-DESCRIPTION&gt;\n"
+msgid "\"\"\" &lt;BRIEF-DESCRIPTION&gt;\n"
 "\"\"\"\n"
 "\n"
-"# Pacemaker targets compatibility with Python 2.6+ and 3.2+\n"
+"# Pacemaker targets compatibility with Python 2.7 and 3.2+\n"
 "from __future__ import print_function, unicode_literals, absolute_import, division\n"
 "\n"
-"__copyright__ = \"Copyright (C) &lt;YYYY[-YYYY]&gt; Andrew Beekhof &lt;andrew@beekhof.net&gt;\"\n"
+"__copyright__ = \"Copyright &lt;YYYY[-YYYY]&gt; Andrew Beekhof &lt;andrew@beekhof.net&gt;\"\n"
 "__license__ = \"&lt;LICENSE&gt; WITHOUT ANY WARRANTY\""
 msgstr ""
 
@@ -67,7 +81,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<literal>&lt;YYYY&gt;</literal> is the year the code was <emphasis>originally</emphasis> created (it is the most important date for copyright purposes, as it establishes priority and the point from which expiration is calculated). If the code is modified in later years, add <literal>-YYYY</literal> with the most recent year of modification."
+msgid "<literal>&lt;YYYY&gt;</literal> is the year the code was <emphasis>originally</emphasis> created. <footnote><para> See the U.S. Copyright Office’s <ulink url=\"https://www.copyright.gov/comp3/\">\"Compendium of U.S. Copyright Office Practices\"</ulink>, particularly \"Chapter 2200: Notice of Copyright\", sections 2205.1(A) and 2205.1(F), or <ulink url=\"https://techwhirl.com/updating-copyright-notices/\">\"Updating Copyright Notices\"</ulink> for a more readable summary. </para></footnote> If the code is modified in later years, add <literal>-YYYY</literal> with the most recent year of modification."
 msgstr ""
 
 #. Tag: para
@@ -87,7 +101,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Pacemaker targets compatibility with Python 2.6 and later, and Python 3.2 and later. These versions have added features to be more compatible with each other, allowing us to support both the 2 and 3 series with the same code. It is a good idea to test any changes with both Python 2 and 3."
+msgid "Pacemaker targets compatibility with Python 2.7, and Python 3.2 and later. These versions have added features to be more compatible with each other, allowing us to support both the 2 and 3 series with the same code. It is a good idea to test any changes with both Python 2 and 3."
 msgstr ""
 
 #. Tag: title
@@ -162,11 +176,6 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Do not name variables <literal>with</literal> or <literal>as</literal>."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
 msgid "Do not raise or catch strings as exceptions (e.g. <literal>raise \"Bad thing\"</literal>)."
 msgstr ""
 
@@ -187,12 +196,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The <literal>argparse</literal>, <literal>html</literal>, <literal>ipaddress</literal>, <literal>sysconfig</literal>, and <literal>UserDict</literal> modules"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "The <literal>collections.OrderedDict</literal> class"
+msgid "The <literal>html</literal>, <literal>ipaddress</literal>, and <literal>UserDict</literal> modules"
 msgstr ""
 
 #. Tag: para
@@ -208,11 +212,6 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "<literal>subprocess</literal> module-specific exceptions"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Set literals (<literal>{1, 2, 3}</literal>)"
 msgstr ""
 
 #. Tag: title
@@ -287,7 +286,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Where not conflicting with this style guide, it is recommended (but not required) to follow <ulink url=\"https://www.python.org/dev/peps/pep-0008/:\">PEP 8</ulink>."
+msgid "Where not conflicting with this style guide, it is recommended (but not required) to follow <ulink url=\"https://www.python.org/dev/peps/pep-0008/\">PEP 8</ulink>."
 msgstr ""
 
 #. Tag: para

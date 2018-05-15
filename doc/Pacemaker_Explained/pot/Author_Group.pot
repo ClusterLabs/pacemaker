@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2017-10-06 19:59-0500\n"
-"PO-Revision-Date: 2017-10-06 19:59-0500\n"
+"POT-Creation-Date: 2018-05-14 18:03-0500\n"
+"PO-Revision-Date: 2018-05-14 18:03-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -30,21 +30,6 @@ msgstr ""
 #. Tag: contrib
 #, no-c-format
 msgid "Primary author"
-msgstr ""
-
-#. Tag: firstname
-#, no-c-format
-msgid "Dan"
-msgstr ""
-
-#. Tag: surname
-#, no-c-format
-msgid "Frîncu"
-msgstr ""
-
-#. Tag: contrib
-#, no-c-format
-msgid "Romanian translation"
 msgstr ""
 
 #. Tag: firstname

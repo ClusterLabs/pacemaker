@@ -26,7 +26,6 @@
           <op id="rhel7-auto4-stop-timeout-60" interval="0s" name="stop" timeout="60"/>
           <op id="rhel7-auto4-monitor-timeout-30" interval="60s" name="monitor" timeout="30"/>
         </operations>
-        <meta_attributes id="rhel7-auto4-meta_attributes"/>
       </primitive>
       <primitive class="ocf" id="FAKE1" provider="heartbeat" type="Dummy">
         <operations>

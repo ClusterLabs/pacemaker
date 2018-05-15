@@ -25,7 +25,6 @@
         </instance_attributes>
       </primitive>
       <primitive class="ocf" id="A" provider="pacemaker" type="Dummy">
-        <meta_attributes id="A-meta_attributes"/>
         <instance_attributes id="A-instance_attributes">
           <nvpair id="A-instance_attributes-target-role" name="target-role" value="started"/>
           <nvpair id="A-instance_attributes-state" name="state" value="anywhere"/>

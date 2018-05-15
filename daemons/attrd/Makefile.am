@@ -31,7 +31,7 @@ clean-generic:
 
 if BUILD_LEGACY_LINKS
 install-exec-hook:
-	cd $(DESTDIR)$(CRM_DAEMON_DIR) && $(LN_S) pacemaker-attrd attrd
+	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f attrd && $(LN_S) pacemaker-attrd attrd
 
 uninstall-hook:
 	cd $(DESTDIR)$(CRM_DAEMON_DIR) && rm -f attrd

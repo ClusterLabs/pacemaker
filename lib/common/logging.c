@@ -1,19 +1,8 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -343,6 +332,11 @@ crm_add_logfile(const char *filename)
     crm_notice("Additional logging available in %s", filename);
     qb_log_ctl(fd, QB_LOG_CONF_ENABLED, QB_TRUE);
     /* qb_log_ctl(fd, QB_LOG_CONF_FILE_SYNC, 1);  Turn on synchronous writes */
+
+#ifdef HAVE_qb_log_conf_QB_LOG_CONF_MAX_LINE_LEN
+        // Longer than default, for logging long XML lines
+        qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_MAX_LINE_LEN, 800);
+#endif
 
     /* Enable callsites */
     crm_update_callsites();
@@ -745,6 +739,10 @@ crm_log_preinit(const char *entity, int argc, char **argv)
 
         /* Nuke any syslog activity until it's asked for */
         qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_ENABLED, QB_FALSE);
+#ifdef HAVE_qb_log_conf_QB_LOG_CONF_MAX_LINE_LEN
+        // Shorter than default, generous for what we *should* send to syslog
+        qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_MAX_LINE_LEN, 256);
+#endif
 
         /* Set format strings and disable threading
          * Pacemaker and threads do not mix well (due to the amount of forking)
@@ -752,6 +750,10 @@ crm_log_preinit(const char *entity, int argc, char **argv)
         qb_log_tags_stringify_fn_set(crm_quark_to_string);
         for (lpc = QB_LOG_SYSLOG; lpc < QB_LOG_TARGET_MAX; lpc++) {
             qb_log_ctl(lpc, QB_LOG_CONF_THREADED, QB_FALSE);
+#ifdef HAVE_qb_log_conf_QB_LOG_CONF_ELLIPSIS
+            // End truncated lines with '...'
+            qb_log_ctl(lpc, QB_LOG_CONF_ELLIPSIS, QB_TRUE);
+#endif
             set_format_string(lpc, crm_system_name);
         }
     }

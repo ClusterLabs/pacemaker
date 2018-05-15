@@ -51,7 +51,6 @@
           <instance_attributes id="instance_attributes.id22105">
             <nvpair id="nvpair.id22112" name="ip" value="192.168.100.181"/>
           </instance_attributes>
-          <meta_attributes id="primitive-r192.168.100.181.meta"/>
         </primitive>
         <primitive id="r192.168.100.182" class="ocf" provider="heartbeat" type="IPaddr">
           <operations>
@@ -60,7 +59,6 @@
           <instance_attributes id="instance_attributes.id22144">
             <nvpair id="nvpair.id22151" name="1" value="192.168.100.182"/>
           </instance_attributes>
-          <meta_attributes id="primitive-r192.168.100.182.meta"/>
         </primitive>
         <primitive id="r192.168.100.183" class="ocf" type="IPaddr" provider="heartbeat">
           <operations>
@@ -69,7 +67,6 @@
           <instance_attributes id="instance_attributes.id22185">
             <nvpair id="nvpair.id22192" name="ip" value="192.168.100.183"/>
           </instance_attributes>
-          <meta_attributes id="primitive-r192.168.100.183.meta"/>
         </primitive>
         <meta_attributes id="group-group-1.meta"/>
       </group>
@@ -77,7 +74,6 @@
         <operations>
           <op name="monitor" interval="5s" id="ocf_lsb_monitor"/>
         </operations>
-        <meta_attributes id="primitive-lsb_dummy.meta"/>
       </primitive>
       <primitive id="migrator" class="ocf" type="Dummy" provider="heartbeat">
         <operations>
@@ -97,7 +93,6 @@
         <instance_attributes id="instance_attributes.id22290">
           <nvpair id="nvpair.id22296" name="ip" value="192.168.100.184"/>
         </instance_attributes>
-        <meta_attributes id="primitive-rsc_sles-1.meta"/>
       </primitive>
       <primitive id="rsc_sles-2" class="ocf" type="IPaddr" provider="heartbeat">
         <operations>
@@ -106,7 +101,6 @@
         <instance_attributes id="instance_attributes.id22329">
           <nvpair id="nvpair.id22336" name="ip" value="192.168.100.185"/>
         </instance_attributes>
-        <meta_attributes id="primitive-rsc_sles-2.meta"/>
       </primitive>
       <primitive id="rsc_sles-3" class="ocf" type="IPaddr" provider="heartbeat">
         <operations>
@@ -115,7 +109,6 @@
         <instance_attributes id="instance_attributes.id22369">
           <nvpair id="nvpair.id22376" name="ip" value="192.168.100.186"/>
         </instance_attributes>
-        <meta_attributes id="primitive-rsc_sles-3.meta"/>
       </primitive>
       <primitive id="rsc_sles-4" class="ocf" type="IPaddr" provider="heartbeat">
         <operations>
@@ -124,7 +117,6 @@
         <instance_attributes id="instance_attributes.id22409">
           <nvpair id="nvpair.id22415" name="ip" value="192.168.100.187"/>
         </instance_attributes>
-        <meta_attributes id="primitive-rsc_sles-4.meta"/>
       </primitive>
       <primitive id="rsc_sles-5" class="ocf" type="IPaddr" provider="heartbeat">
         <operations>
@@ -133,7 +125,6 @@
         <instance_attributes id="instance_attributes.id22449">
           <nvpair id="nvpair.id22455" name="ip" value="192.168.100.188"/>
         </instance_attributes>
-        <meta_attributes id="primitive-rsc_sles-5.meta"/>
       </primitive>
       <primitive id="rsc_sles-6" class="ocf" type="IPaddr" provider="heartbeat">
         <operations>
@@ -142,7 +133,6 @@
         <instance_attributes id="instance_attributes.id22488">
           <nvpair id="nvpair.id22495" name="ip" value="192.168.100.189"/>
         </instance_attributes>
-        <meta_attributes id="primitive-rsc_sles-6.meta"/>
       </primitive>
       <clone id="DoFencing">
         <primitive id="child_DoFencing" class="stonith" type="external/vmware">
@@ -169,7 +159,6 @@
             <op name="monitor" interval="5s" id="ocf_msdummy_monitor"/>
             <op name="monitor" interval="6s" id="ocf_msdummy_monitor_master" role="Master"/>
           </operations>
-          <meta_attributes id="primitive-ocf_msdummy.meta"/>
         </primitive>
         <meta_attributes id="clone-master_rsc_1.meta">
           <nvpair id="nvpair.meta.auto-304" name="promotable" value="true"/>

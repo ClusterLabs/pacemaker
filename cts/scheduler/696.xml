@@ -67,7 +67,6 @@
           <instance_attributes id="instance_attributes.id22152">
             <nvpair id="nvpair.id22158" name="hostlist" value="hadev1 hadev2 hadev3 "/>
           </instance_attributes>
-          <meta_attributes id="primitive-child_DoFencing.meta"/>
         </primitive>
         <meta_attributes id="clone-DoFencing.meta">
           <nvpair id="nvpair.meta.auto-105" name="resource-stickiness" value="1"/>

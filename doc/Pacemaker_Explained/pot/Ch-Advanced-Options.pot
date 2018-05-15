@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2017-05-08 11:19-0500\n"
-"PO-Revision-Date: 2017-05-08 11:19-0500\n"
+"POT-Creation-Date: 2018-05-14 18:03-0500\n"
+"PO-Revision-Date: 2018-05-14 18:03-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -15,157 +15,6 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "Advanced Configuration"
-msgstr ""
-
-#. Tag: title
-#, no-c-format
-msgid "Connecting from a Remote Machine"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "<indexterm> <primary>Cluster</primary><secondary>Remote connection</secondary> </indexterm> <indexterm> <primary>Remote connection</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Remote administration</secondary> </indexterm> <indexterm> <primary>Remote administration</primary> </indexterm>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Provided Pacemaker is installed on a machine, it is possible to connect to the cluster even if the machine itself is not in the same cluster. To do this, one simply sets up a number of environment variables and runs the same commands as when working on a cluster node."
-msgstr ""
-
-#. Tag: title
-#, no-c-format
-msgid "Environment Variables Used to Connect to Remote Instances of the CIB"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "Environment Variable"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "Default"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "Description"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "<literal>CIB_user</literal>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "$USER"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "The user to connect as. Needs to be part of the <literal>haclient</literal> group on the target host. <indexterm> <primary>Environment Variable</primary><secondary>CIB_user</secondary> </indexterm> <indexterm> <primary>CIB_user</primary> </indexterm>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "<literal>CIB_passwd</literal>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "The user’s password. Read from the command line if unset. <indexterm> <primary>Environment Variable</primary><secondary>CIB_passwd</secondary> </indexterm> <indexterm> <primary>CIB_passwd</primary> </indexterm>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "<literal>CIB_server</literal>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "localhost"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "The host to contact <indexterm> <primary>Environment Variable</primary><secondary>CIB_server</secondary> </indexterm> <indexterm> <primary>CIB_server</primary> </indexterm>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "<literal>CIB_port</literal>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "The port on which to contact the server; required. <indexterm> <primary>Environment Variable</primary><secondary>CIB_port</secondary> </indexterm> <indexterm> <primary>CIB_port</primary> </indexterm>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "<literal>CIB_encrypted</literal>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "TRUE"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Whether to encrypt network traffic <indexterm> <primary>Environment Variable</primary><secondary>CIB_encrypted</secondary> </indexterm> <indexterm> <primary>CIB_encrypted</primary> </indexterm>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "So, if <emphasis role=\"strong\">c001n01</emphasis> is an active cluster node and is listening on port 1234 for connections, and <emphasis role=\"strong\">someuser</emphasis> is a member of the <emphasis role=\"strong\">haclient</emphasis> group, then the following would prompt for <emphasis role=\"strong\">someuser</emphasis>'s password and return the cluster’s current configuration:"
-msgstr ""
-
-#. Tag: screen
-#, no-c-format
-msgid "# export CIB_port=1234; export CIB_server=c001n01; export CIB_user=someuser;\n"
-"# cibadmin -Q"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "For security reasons, the cluster does not listen for remote connections by default. If you wish to allow remote access, you need to set the <literal>remote-tls-port</literal> (encrypted) or <literal>remote-clear-port</literal> (unencrypted) CIB properties (i.e., those kept in the <literal>cib</literal> tag, like <literal>num_updates</literal> and <literal>epoch</literal>)."
-msgstr ""
-
-#. Tag: title
-#, no-c-format
-msgid "Extra top-level CIB properties for remote access"
-msgstr ""
-
-#. Tag: entry
-#, no-c-format
-msgid "Field"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "<literal>remote-tls-port</literal>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "<emphasis>none</emphasis>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Listen for encrypted remote connections on this port. <indexterm> <primary>remote-tls-port</primary><secondary>Remote Connection Option</secondary> </indexterm> <indexterm> <primary>Remote Connection Option</primary> </indexterm> <indexterm> <primary>Remote Connection</primary><secondary>Option</secondary><tertiary>remote-tls-port</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>remote-tls-port</secondary> </indexterm> <indexterm> <primary>remote-tls-port</primary> </indexterm>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "<literal>remote-clear-port</literal>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Listen for plaintext remote connections on this port. <indexterm> <primary>remote-clear-port</primary><secondary>Remote Connection Option</secondary> </indexterm> <indexterm> <primary>Remote Connection Option</primary> </indexterm> <indexterm> <primary>Remote Connection</primary><secondary>Option</secondary><tertiary>remote-clear-port</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>remote-clear-port</secondary> </indexterm> <indexterm> <primary>remote-clear-port</primary> </indexterm>"
 msgstr ""
 
 #. Tag: title
@@ -532,11 +381,6 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Older versions of Heartbeat required users to add ping nodes to <literal>ha.cf</literal>, but this is no longer required."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
 msgid "Older versions of Pacemaker used a different agent <emphasis role=\"strong\">ocf:pacemaker:pingd</emphasis> which is now deprecated in favor of <emphasis role=\"strong\">ping</emphasis>. If your version of Pacemaker does not contain the <emphasis role=\"strong\">ping</emphasis> resource agent, download the latest version from <ulink url=\"https://github.com/ClusterLabs/pacemaker/tree/master/extra/resources/ping\">https://github.com/ClusterLabs/pacemaker/tree/master/extra/resources/ping</ulink>"
 msgstr ""
 
@@ -548,6 +392,16 @@ msgstr ""
 #. Tag: title
 #, no-c-format
 msgid "Common Options for a <emphasis>ping</emphasis> Resource"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Field"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Description"
 msgstr ""
 
 #. Tag: para
@@ -814,17 +668,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "For example, if the resource depends on a clone, and at the time the resource needs to be moved, the clone has instances that are stopping and instances that are starting, then the resource will be restarted. The Policy Engine is not yet able to model this situation correctly and so takes the safer (if less optimal) path."
+msgid "For example, if the resource depends on a clone, and at the time the resource needs to be moved, the clone has instances that are stopping and instances that are starting, then the resource will be restarted. The scheduler is not yet able to model this situation correctly and so takes the safer (if less optimal) path."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "In pacemaker 1.1.11 and earlier, a migratable resource will be restarted when moving if it directly or indirectly depends on <emphasis>any</emphasis> primitive or group resources."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Even in newer versions, if a migratable resource depends on a non-migratable resource, and both need to be moved, the migratable resource will be restarted."
+msgid "Also, if a migratable resource depends on a non-migratable resource, and both need to be moved, the migratable resource will be restarted."
 msgstr ""
 
 #. Tag: title
@@ -1000,77 +849,6 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "Pacemaker provides examples that can be used directly or as a basis for custom code. The <literal>ocf:pacemaker:HealthCPU</literal> and <literal>ocf:pacemaker:HealthSMART</literal> resource agents set node health attributes based on CPU and disk parameters. The <literal>ipmiservicelogd</literal> daemon sets node health attributes based on IPMI values (the <literal>ocf:pacemaker:SystemHealth</literal> resource agent can be used to manage the daemon as a cluster resource)."
-msgstr ""
-
-#. Tag: title
-#, no-c-format
-msgid "Reusing Rules, Options and Sets of Operations"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Sometimes a number of constraints need to use the same set of rules, and resources need to set the same options and parameters. To simplify this situation, you can refer to an existing object using an <literal>id-ref</literal> instead of an id."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "So if for one resource you have"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Then instead of duplicating the rule for all your other resources, you can instead specify:"
-msgstr ""
-
-#. Tag: title
-#, no-c-format
-msgid "Referencing rules from other constraints"
-msgstr ""
-
-#. Tag: programlisting
-#, no-c-format
-msgid "&lt;rsc_location id=\"WebDB-connectivity\" rsc=\"WebDB\"&gt;\n"
-"      &lt;rule id-ref=\"ping-prefer-rule\"/&gt;\n"
-"&lt;/rsc_location&gt;"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "The cluster will insist that the <literal>rule</literal> exists somewhere. Attempting to add a reference to a non-existing rule will cause a validation failure, as will attempting to remove a <literal>rule</literal> that is referenced elsewhere."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "The same principle applies for <literal>meta_attributes</literal> and <literal>instance_attributes</literal> as illustrated in the example below:"
-msgstr ""
-
-#. Tag: title
-#, no-c-format
-msgid "Referencing attributes, options, and operations from other resources"
-msgstr ""
-
-#. Tag: programlisting
-#, no-c-format
-msgid "&lt;primitive id=\"mySpecialRsc\" class=\"ocf\" type=\"Special\" provider=\"me\"&gt;\n"
-"   &lt;instance_attributes id=\"mySpecialRsc-attrs\" score=\"1\" &gt;\n"
-"     &lt;nvpair id=\"default-interface\" name=\"interface\" value=\"eth0\"/&gt;\n"
-"     &lt;nvpair id=\"default-port\" name=\"port\" value=\"9999\"/&gt;\n"
-"   &lt;/instance_attributes&gt;\n"
-"   &lt;meta_attributes id=\"mySpecialRsc-options\"&gt;\n"
-"     &lt;nvpair id=\"failure-timeout\" name=\"failure-timeout\" value=\"5m\"/&gt;\n"
-"     &lt;nvpair id=\"migration-threshold\" name=\"migration-threshold\" value=\"1\"/&gt;\n"
-"     &lt;nvpair id=\"stickiness\" name=\"resource-stickiness\" value=\"0\"/&gt;\n"
-"   &lt;/meta_attributes&gt;\n"
-"   &lt;operations id=\"health-checks\"&gt;\n"
-"     &lt;op id=\"health-check\" name=\"monitor\" interval=\"60s\"/&gt;\n"
-"     &lt;op id=\"health-check\" name=\"monitor\" interval=\"30min\"/&gt;\n"
-"   &lt;/operations&gt;\n"
-"&lt;/primitive&gt;\n"
-"&lt;primitive id=\"myOtherlRsc\" class=\"ocf\" type=\"Other\" provider=\"me\"&gt;\n"
-"   &lt;instance_attributes id-ref=\"mySpecialRsc-attrs\"/&gt;\n"
-"   &lt;meta_attributes id-ref=\"mySpecialRsc-options\"/&gt;\n"
-"   &lt;operations id-ref=\"health-checks\"/&gt;\n"
-"&lt;/primitive&gt;"
 msgstr ""
 
 #. Tag: title
