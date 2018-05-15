@@ -22,6 +22,25 @@
 
   <!--
    see upgrade-2.10.xsl
+   - cibtr:table for="resource-meta-attributes"
+   -->
+  <define name="primitive-template.meta_attributes.nvpair.name-unsupported">
+    <attribute name="name">
+      <data type="string">
+        <except>
+          <choice>
+            <value>isolation</value>
+            <value>isolation-host</value>
+            <value>isolation-instance</value>
+            <value>isolation-wrapper</value>
+          </choice>
+        </except>
+      </data>
+    </attribute>
+  </define>
+
+  <!--
+   see upgrade-2.10.xsl
    - cibtr:table for="resource-instance-attributes"
    -->
   <define name="primitive-template.instance_attributes.nvpair.name-unsupported">
@@ -46,7 +65,13 @@
     <zeroOrMore>
       <choice>
         <element name="meta_attributes">
-          <externalRef href="nvset-3.0.rng"/>
+          <grammar>
+            <include href="nvset-3.0.rng">
+              <define name="element-nvset.name">
+                <parentRef name="primitive-template.meta_attributes.nvpair.name-unsupported"/>
+              </define>
+            </include>
+          </grammar>
         </element>
         <element name="instance_attributes">
           <grammar>
