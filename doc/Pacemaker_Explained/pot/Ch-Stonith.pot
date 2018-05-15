@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2017-05-08 11:19-0500\n"
-"PO-Revision-Date: 2017-05-08 11:19-0500\n"
+"POT-Creation-Date: 2018-05-14 18:03-0500\n"
+"PO-Revision-Date: 2018-05-14 18:03-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -79,11 +79,6 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "In pacemaker versions 1.1.9 and earlier, this feature either did not exist or did not work well. Only \"running\" STONITH resources could be used by Pacemaker for fencing, and if another component tried to fence a node while Pacemaker was moving STONITH resources, the fencing could fail."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
 msgid "All nodes have access to STONITH devices' definitions and instantiate them on-the-fly when needed, but preference is given to <emphasis>verified</emphasis> instances, which are the ones that are <emphasis>started</emphasis> according to the cluster’s knowledge."
 msgstr ""
 
@@ -114,12 +109,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "See the table below or run <literal>man stonithd</literal> to see special instance attributes that may be set for any fencing resource, regardless of fence agent."
+msgid "See the table below or run <literal>man pacemaker-fenced</literal> to see special instance attributes that may be set for any fencing resource, regardless of fence agent."
 msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Properties of Fencing Resources"
+msgid "Additional Properties of Fencing Resources"
 msgstr ""
 
 #. Tag: entry
@@ -159,32 +154,22 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<literal>priority</literal>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "integer"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "0"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "The priority of the STONITH resource. Devices are tried in order of highest priority to lowest. <indexterm> <primary>priority</primary><secondary>Fencing</secondary> </indexterm> <indexterm> <primary>Fencing</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>Property</secondary><tertiary>priority</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>priority</secondary> </indexterm> <indexterm> <primary>priority</primary> </indexterm>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "<literal>pcmk_host_map</literal>"
+msgid "<literal>provides</literal>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
 msgid "string"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Any special capability provided by the fence device. Currently, only one such capability is meaningful: <literal>unfencing</literal> (see <xref linkend=\"s-unfencing\" />). <indexterm> <primary>priority</primary><secondary>Fencing</secondary> </indexterm> <indexterm> <primary>Fencing</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>Property</secondary><tertiary>priority</tertiary> </indexterm> <indexterm> <primary>Property</primary><secondary>priority</secondary> </indexterm> <indexterm> <primary>priority</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>pcmk_host_map</literal>"
 msgstr ""
 
 #. Tag: para
@@ -254,7 +239,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Enable a random delay of up to the time specified before executing stonith actions. This is sometimes used in two-node clusters to ensure that the nodes don’t fence each other at the same time. The overall delay is derived from this random delay value adding a static delay so that the sum is kept below the maximum delay."
+msgid "Enable a random delay of up to the time specified before executing stonith actions. This is sometimes used in two-node clusters to ensure that the nodes don’t fence each other at the same time. The overall delay introduced by pacemaker is derived from this random delay value adding a static delay so that the sum is kept below the maximum delay."
 msgstr ""
 
 #. Tag: para
@@ -269,17 +254,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "time"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "0s"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Enable a base delay for stonith actions and specify base delay value. This prevents double fencing when different delays are configured on the nodes. The overall delay is derived from a random delay value adding this static delay so that the sum is kept below the maximum delay."
+msgid "Enable a static delay before executing stonith actions. This can be used e.g. in two-node clusters to ensure that the nodes don’t fence each other, by having separate fencing resources with different values. The node that is fenced with the shorter delay will lose a fencing race. The overall delay introduced by pacemaker is derived from this value plus a random delay such that the sum is kept below the maximum delay."
 msgstr ""
 
 #. Tag: para
@@ -294,12 +269,17 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
+msgid "integer"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
 msgid "1"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The maximum number of actions that can be performed in parallel on this device, if the cluster option <literal>concurrent-fencing</literal> is <literal>true</literal>. -1 is unlimited. <emphasis>(since 1.1.15)</emphasis>"
+msgid "The maximum number of actions that can be performed in parallel on this device, if the cluster option <literal>concurrent-fencing</literal> is <literal>true</literal>. -1 is unlimited."
 msgstr ""
 
 #. Tag: para
@@ -509,6 +489,31 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
+msgid "Unfencing"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Most fence devices cut the power to the target. By contrast, fence devices that perform <emphasis>fabric fencing</emphasis> cut off a node’s access to some critical resource, such as a shared disk or a network switch."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "With fabric fencing, it is expected that the cluster will fence the node, and then a system administrator must manually investigate what went wrong, correct any issues found, then reboot (or restart the cluster services on) the node."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Once the node reboots and rejoins the cluster, some fabric fencing devices require that an explicit command to restore the node’s access to the critical resource. This capability is called <emphasis>unfencing</emphasis> and is typically implemented as the fence agent’s <literal>on</literal> command."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If any cluster resource has <literal>requires</literal> set to <literal>unfencing</literal>, then that resource will not be probed or started on a node until that node has been unfenced."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
 msgid "Configuring STONITH"
 msgstr ""
 
@@ -544,17 +549,17 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "If the device does not know how to fence nodes based on their uname, you may also need to set the special <literal>pcmk_host_map</literal> parameter. See <literal>man stonithd</literal> for details."
+msgid "If the device does not know how to fence nodes based on their uname, you may also need to set the special <literal>pcmk_host_map</literal> parameter. See <literal>man pacemaker-fenced</literal> for details."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "If the device does not support the <literal>list</literal> command, you may also need to set the special <literal>pcmk_host_list</literal> and/or <literal>pcmk_host_check</literal> parameters. See <literal>man stonithd</literal> for details."
+msgid "If the device does not support the <literal>list</literal> command, you may also need to set the special <literal>pcmk_host_list</literal> and/or <literal>pcmk_host_check</literal> parameters. See <literal>man pacemaker-fenced</literal> for details."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "If the device does not expect the victim to be specified with the <literal>port</literal> parameter, you may also need to set the special <literal>pcmk_host_argument</literal> parameter. See <literal>man stonithd</literal> for details."
+msgid "If the device does not expect the victim to be specified with the <literal>port</literal> parameter, you may also need to set the special <literal>pcmk_host_argument</literal> parameter. See <literal>man pacemaker-fenced</literal> for details."
 msgstr ""
 
 #. Tag: para
@@ -791,7 +796,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "If the operation failed, the next step is determined by the Policy Engine and/or <literal>crmd</literal>."
+msgid "If the operation failed, the next step is determined by the scheduler and/or the controller."
 msgstr ""
 
 #. Tag: para
@@ -846,7 +851,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "A regular expression matching the names of nodes to which this level applies <emphasis>(since 1.1.14)</emphasis> <indexterm> <primary>target-pattern</primary><secondary>fencing-level</secondary> </indexterm> <indexterm> <primary>fencing-level</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>fencing-level</secondary><tertiary>target-pattern</tertiary> </indexterm> <indexterm> <primary>fencing-level</primary><secondary>target-pattern</secondary> </indexterm> <indexterm> <primary>target-pattern</primary> </indexterm>"
+msgid "An extended regular expression (as defined in <ulink url=\"http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap09.html#tag_09_04\">POSIX</ulink>) matching the names of nodes to which this level applies <indexterm> <primary>target-pattern</primary><secondary>fencing-level</secondary> </indexterm> <indexterm> <primary>fencing-level</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>fencing-level</secondary><tertiary>target-pattern</tertiary> </indexterm> <indexterm> <primary>fencing-level</primary><secondary>target-pattern</secondary> </indexterm> <indexterm> <primary>target-pattern</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -856,7 +861,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The name of a node attribute that is set (to <literal>target-value</literal>) for nodes to which this level applies <emphasis>(since 1.1.14)</emphasis> <indexterm> <primary>target-attribute</primary><secondary>fencing-level</secondary> </indexterm> <indexterm> <primary>fencing-level</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>fencing-level</secondary><tertiary>target-attribute</tertiary> </indexterm> <indexterm> <primary>fencing-level</primary><secondary>target-attribute</secondary> </indexterm> <indexterm> <primary>target-attribute</primary> </indexterm>"
+msgid "The name of a node attribute that is set (to <literal>target-value</literal>) for nodes to which this level applies <indexterm> <primary>target-attribute</primary><secondary>fencing-level</secondary> </indexterm> <indexterm> <primary>fencing-level</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>fencing-level</secondary><tertiary>target-attribute</tertiary> </indexterm> <indexterm> <primary>fencing-level</primary><secondary>target-attribute</secondary> </indexterm> <indexterm> <primary>target-attribute</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -866,7 +871,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The node attribute value (of <literal>target-attribute</literal>) that is set for nodes to which this level applies <emphasis>(since 1.1.14)</emphasis> <indexterm> <primary>target-attribute</primary><secondary>fencing-level</secondary> </indexterm> <indexterm> <primary>fencing-level</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>fencing-level</secondary><tertiary>target-attribute</tertiary> </indexterm> <indexterm> <primary>fencing-level</primary><secondary>target-attribute</secondary> </indexterm> <indexterm> <primary>target-attribute</primary> </indexterm>"
+msgid "The node attribute value (of <literal>target-attribute</literal>) that is set for nodes to which this level applies <indexterm> <primary>target-attribute</primary><secondary>fencing-level</secondary> </indexterm> <indexterm> <primary>fencing-level</primary> </indexterm> <indexterm> <primary>Fencing</primary><secondary>fencing-level</secondary><tertiary>target-attribute</tertiary> </indexterm> <indexterm> <primary>fencing-level</primary><secondary>target-attribute</secondary> </indexterm> <indexterm> <primary>target-attribute</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -1288,10 +1293,5 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "When a reboot operation is remapped, any action-specific timeout for the remapped action will be used (for example, <literal>pcmk_off_timeout</literal> will be used when executing the <literal>off</literal> command, not <literal>pcmk_reboot_timeout</literal>)."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "In Pacemaker versions 1.1.13 and earlier, reboots will not be remapped in the second case. To achieve the same effect, separate fencing devices for off and on actions must be configured."
 msgstr ""
 

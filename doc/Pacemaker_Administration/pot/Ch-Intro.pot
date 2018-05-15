@@ -24,17 +24,17 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "This document is intended to be an exhaustive reference for configuring Pacemaker."
+msgid "The purpose of this document is to help system administrators learn how to manage a Pacemaker cluster."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "To achieve this, it focuses on the XML syntax used to configure the CIB. For those that are allergic to XML, multiple higher-level front-ends (both command-line and GUI) are available. These tools will not be covered at all in this document <footnote><para> I hope, however, that the concepts explained here make the functionality of these tools more easily understood. </para></footnote>."
+msgid "System administrators may be interested in other parts of the <ulink url=\"https://www.clusterlabs.org/pacemaker/doc/\">Pacemaker documentation set</ulink>, such as <emphasis>Clusters from Scratch</emphasis>, a step-by-step guide to setting up an example cluster, and <emphasis>Pacemaker Explained</emphasis>, an exhaustive reference for cluster configuration."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Users may be interested in other parts of the <ulink url=\"https://www.clusterlabs.org/pacemaker/doc/\">Pacemaker documentation set</ulink>, such as <emphasis>Clusters from Scratch</emphasis>, a step-by-step guide to setting up an example cluster, and <emphasis>Pacemaker Administration</emphasis>, a guide to maintaining a cluster."
+msgid "Multiple higher-level tools (both command-line and GUI) are available to simplify cluster management. However, this document focuses on the lower-level command-line tools that come with Pacemaker itself. The concepts are applicable to the higher-level tools, though the syntax would differ."
 msgstr ""
 
 #. Tag: title

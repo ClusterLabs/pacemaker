@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2017-05-08 11:19-0500\n"
-"PO-Revision-Date: 2017-05-08 11:19-0500\n"
+"POT-Creation-Date: 2018-05-14 18:03-0500\n"
+"PO-Revision-Date: 2018-05-14 18:03-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -244,7 +244,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "How the <literal>value</literal> is derived <emphasis>(since 1.1.17)</emphasis>. Allowed values:"
+msgid "How the <literal>value</literal> is derived. Allowed values:"
 msgstr ""
 
 #. Tag: para
@@ -289,7 +289,17 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Node name"
+msgid "Node <link linkend=\"s-node-name\">name</link>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>#id</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Node ID"
 msgstr ""
 
 #. Tag: para
@@ -299,7 +309,47 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Node type. Possible values are <literal>cluster</literal>, <literal>remote</literal>, and <literal>container</literal>. Kind is <literal>remote</literal> for Pacemaker Remote nodes created with the <literal>ocf:pacemaker:remote</literal> resource, and <literal>container</literal> for Pacemaker Remote guest nodes (a legacy name unrelated to the now-common use of \"container\" for resource isolation). <emphasis>(since 1.1.13)</emphasis>"
+msgid "Node type. Possible values are <literal>cluster</literal>, <literal>remote</literal>, and <literal>container</literal>. Kind is <literal>remote</literal> for Pacemaker Remote nodes created with the <literal>ocf:pacemaker:remote</literal> resource, and <literal>container</literal> for Pacemaker Remote guest nodes and bundle nodes"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>#is_dc</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "\"true\" if this node is a Designated Controller (DC), \"false\" otherwise"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>#cluster-name</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The value of the <literal>cluster-name</literal> cluster property, if set"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>#site-name</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The value of the <literal>site-name</literal> cluster property, if set, otherwise identical to <literal>#cluster-name</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>#role</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The role the relevant promotable clone resource has on this node. Valid only within a rule for a location constraint for a promotable clone resource."
 msgstr ""
 
 #. Tag: title

@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2017-05-08 11:19-0500\n"
-"PO-Revision-Date: 2017-05-08 11:19-0500\n"
+"POT-Creation-Date: 2018-05-14 18:03-0500\n"
+"PO-Revision-Date: 2018-05-14 18:03-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -34,17 +34,17 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The decision was made to spin-off the CRM into its own project after the 2.1.3 Heartbeat release in order to:"
+msgid "Pacemaker was spun off from an earlier project called <ulink url=\"http://linux-ha.org/\">Heartbeat</ulink>, which combined a cluster layer and a cluster resource manager. The CRM was made into its own project, Pacemaker, in order to:"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "support both the Corosync and Heartbeat cluster stacks equally"
+msgid "support both the Corosync and Heartbeat cluster stacks equally (Heartbeat support was dropped in Pacemaker 2.0, as the project had faded out by then)"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "decouple the release cycles of two projects at very different stages of their life-cycles"
+msgid "decouple the release cycles of the cluster layer and the cluster resource manager at very different stages of their life-cycles"
 msgstr ""
 
 #. Tag: para
@@ -64,42 +64,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<ulink url=\"http://www.corosync.org/\">Corosync</ulink>"
+msgid "<ulink url=\"http://www.corosync.org/\">Corosync</ulink> version 2 and greater"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<ulink url=\"http://linux-ha.org/\">Heartbeat</ulink>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Can I Choose Which Messaging Layer to Use at Run Time?"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Yes. The CRM will automatically detect which started it and behave accordingly."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Can I Have a Mixed Heartbeat-Corosync Cluster?"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "No."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "<anchor id=\"q-messaging-layer\" xreflabel=\"[q-messaging-layer]\"></anchor> Which Messaging Layer Should I Choose?"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "<indexterm> <primary>Cluster</primary><secondary>Choosing Between Heartbeat and Corosync</secondary> </indexterm> <indexterm> <primary>Choosing Between Heartbeat and Corosync</primary> </indexterm> <indexterm> <primary>Cluster Stack</primary><secondary>Corosync</secondary> </indexterm> <indexterm> <primary>Corosync</primary> </indexterm> <indexterm> <primary>Corosync</primary> </indexterm> <indexterm> <primary>Cluster Stack</primary><secondary>Heartbeat</secondary> </indexterm> <indexterm> <primary>Heartbeat</primary> </indexterm> <indexterm> <primary>Heartbeat</primary> </indexterm> You can choose from multiple messaging layers, including heartbeat, corosync 1 (with or without CMAN), and corosync 2. Corosync 2 is the current state of the art due to its more advanced features and better support for pacemaker, but often the best choice is to use whatever comes with your Linux distribution, and follow the distribution’s setup instructions."
+msgid "Historically, Pacemaker 1 also supported Corosync version 1 (with either CMAN or a pacemaker plugin) and Heartbeat. Support for these legacy stacks was dropped with Pacemaker 2.0."
 msgstr ""
 
 #. Tag: para

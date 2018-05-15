@@ -1,0 +1,644 @@
+# 
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2018-05-14 18:03-0500\n"
+"PO-Revision-Date: 2018-05-14 18:03-0500\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: None\n"
+"MIME-Version: 1.0\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Resource Agents"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "OCF Resource Agents"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Location of Custom Scripts"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>OCF Resource Agents</primary> </indexterm> OCF Resource Agents are found in <literal>/usr/lib/ocf/resource.d/<replaceable>provider</replaceable></literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "When creating your own agents, you are encouraged to create a new directory under <literal>/usr/lib/ocf/resource.d/</literal> so that they are not confused with (or overwritten by) the agents shipped by existing providers."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "So, for example, if you choose the provider name of bigCorp and want a new resource named bigApp, you would create a resource agent called <literal>/usr/lib/ocf/resource.d/bigCorp/bigApp</literal> and define a resource:"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;primitive id=\"custom-app\" class=\"ocf\" provider=\"bigCorp\" type=\"bigApp\"/&gt;"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Actions"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "All OCF resource agents are required to implement the following actions."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Required Actions for OCF Agents"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Action"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Description"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Instructions"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>start</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Start the resource"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Return 0 on success and an appropriate error code otherwise. Must not report success until the resource is fully active. <indexterm> <primary>start</primary><secondary>OCF Action</secondary> </indexterm> <indexterm> <primary>OCF Action</primary> </indexterm> <indexterm> <primary>OCF</primary><secondary>Action</secondary><tertiary>start</tertiary> </indexterm> <indexterm> <primary>Action</primary><secondary>start</secondary> </indexterm> <indexterm> <primary>start</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>stop</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Stop the resource"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Return 0 on success and an appropriate error code otherwise. Must not report success until the resource is fully stopped. <indexterm> <primary>stop</primary><secondary>OCF Action</secondary> </indexterm> <indexterm> <primary>OCF Action</primary> </indexterm> <indexterm> <primary>OCF</primary><secondary>Action</secondary><tertiary>stop</tertiary> </indexterm> <indexterm> <primary>Action</primary><secondary>stop</secondary> </indexterm> <indexterm> <primary>stop</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>monitor</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Check the resource’s state"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Exit 0 if the resource is running, 7 if it is stopped, and anything else if it is failed. <indexterm> <primary>monitor</primary><secondary>OCF Action</secondary> </indexterm> <indexterm> <primary>OCF Action</primary> </indexterm> <indexterm> <primary>OCF</primary><secondary>Action</secondary><tertiary>monitor</tertiary> </indexterm> <indexterm> <primary>Action</primary><secondary>monitor</secondary> </indexterm> <indexterm> <primary>monitor</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "NOTE: The monitor script should test the state of the resource on the local machine only."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>meta-data</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Describe the resource"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Provide information about this resource as an XML snippet. Exit with 0. <indexterm> <primary>meta-data</primary><secondary>OCF Action</secondary> </indexterm> <indexterm> <primary>OCF Action</primary> </indexterm> <indexterm> <primary>OCF</primary><secondary>Action</secondary><tertiary>meta-data</tertiary> </indexterm> <indexterm> <primary>Action</primary><secondary>meta-data</secondary> </indexterm> <indexterm> <primary>meta-data</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "NOTE: This is <emphasis>not</emphasis> performed as root."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>validate-all</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Verify the supplied parameters"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Return 0 if parameters are valid, 2 if not valid, and 6 if resource is not configured. <indexterm> <primary>validate-all</primary><secondary>OCF Action</secondary> </indexterm> <indexterm> <primary>OCF Action</primary> </indexterm> <indexterm> <primary>OCF</primary><secondary>Action</secondary><tertiary>validate-all</tertiary> </indexterm> <indexterm> <primary>Action</primary><secondary>validate-all</secondary> </indexterm> <indexterm> <primary>validate-all</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Additional requirements (not part of the OCF specification) are placed on agents that will be used for advanced concepts such as clone resources."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Optional Actions for OCF Resource Agents"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>promote</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Promote the local instance of a promotable clone resource to the master (primary) state."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Return 0 on success <indexterm> <primary>promote</primary><secondary>OCF Action</secondary> </indexterm> <indexterm> <primary>OCF Action</primary> </indexterm> <indexterm> <primary>OCF</primary><secondary>Action</secondary><tertiary>promote</tertiary> </indexterm> <indexterm> <primary>Action</primary><secondary>promote</secondary> </indexterm> <indexterm> <primary>promote</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>demote</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Demote the local instance of a promotable clone resource to the slave (secondary) state."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Return 0 on success <indexterm> <primary>demote</primary><secondary>OCF Action</secondary> </indexterm> <indexterm> <primary>OCF Action</primary> </indexterm> <indexterm> <primary>OCF</primary><secondary>Action</secondary><tertiary>demote</tertiary> </indexterm> <indexterm> <primary>Action</primary><secondary>demote</secondary> </indexterm> <indexterm> <primary>demote</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>notify</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Used by the cluster to send the agent pre- and post-notification events telling the resource what has happened and will happen."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Must not fail. Must exit with 0 <indexterm> <primary>notify</primary><secondary>OCF Action</secondary> </indexterm> <indexterm> <primary>OCF Action</primary> </indexterm> <indexterm> <primary>OCF</primary><secondary>Action</secondary><tertiary>notify</tertiary> </indexterm> <indexterm> <primary>Action</primary><secondary>notify</secondary> </indexterm> <indexterm> <primary>notify</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "One action specified in the OCF specs, <literal>recover</literal>, is not currently used by the cluster. It is intended to be a variant of the <literal>start</literal> action that tries to recover a resource locally."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If you create a new OCF resource agent, use <indexterm> <primary>ocf-tester</primary> </indexterm><literal>ocf-tester</literal> to verify that the agent complies with the OCF standard properly."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "How are OCF Return Codes Interpreted?"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The first thing the cluster does is to check the return code against the expected result. If the result does not match the expected value, then the operation is considered to have failed, and recovery action is initiated."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "There are three types of failure recovery:"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Types of recovery performed by the cluster"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Type"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Action Taken by the Cluster"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>soft</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "A transient error occurred"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Restart the resource or move it to a new location <indexterm> <primary>soft</primary><secondary>OCF error</secondary> </indexterm> <indexterm> <primary>OCF error</primary> </indexterm> <indexterm> <primary>OCF</primary><secondary>error</secondary><tertiary>soft</tertiary> </indexterm> <indexterm> <primary>error</primary><secondary>soft</secondary> </indexterm> <indexterm> <primary>soft</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>hard</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "A non-transient error that may be specific to the current node occurred"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Move the resource elsewhere and prevent it from being retried on the current node <indexterm> <primary>hard</primary><secondary>OCF error</secondary> </indexterm> <indexterm> <primary>OCF error</primary> </indexterm> <indexterm> <primary>OCF</primary><secondary>error</secondary><tertiary>hard</tertiary> </indexterm> <indexterm> <primary>error</primary><secondary>hard</secondary> </indexterm> <indexterm> <primary>hard</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>fatal</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "A non-transient error that will be common to all cluster nodes (e.g. a bad configuration was specified)"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Stop the resource and prevent it from being started on any cluster node <indexterm> <primary>fatal</primary><secondary>OCF error</secondary> </indexterm> <indexterm> <primary>OCF error</primary> </indexterm> <indexterm> <primary>OCF</primary><secondary>error</secondary><tertiary>fatal</tertiary> </indexterm> <indexterm> <primary>error</primary><secondary>fatal</secondary> </indexterm> <indexterm> <primary>fatal</primary> </indexterm>"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "OCF Return Codes"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The following table outlines the different OCF return codes and the type of recovery the cluster will initiate when a failure code is received. Although counterintuitive, even actions that return 0 (aka. <literal>OCF_SUCCESS</literal>) can be considered to have failed, if 0 was not the expected return value."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "OCF Return Codes and their Recovery Types"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "RC"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "OCF Alias"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "RT"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>0</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>OCF_SUCCESS</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Success. The command completed successfully. This is the expected result for all start, stop, promote and demote commands. <indexterm> <primary>Return Code</primary><secondary>OCF_SUCCESS</secondary> </indexterm> <indexterm> <primary>OCF_SUCCESS</primary> </indexterm> <indexterm> <primary>Return Code</primary><secondary>0</secondary><tertiary>OCF_SUCCESS</tertiary> </indexterm> <indexterm> <primary>0</primary><secondary>OCF_SUCCESS</secondary> </indexterm> <indexterm> <primary>OCF_SUCCESS</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>1</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>OCF_ERR_GENERIC</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Generic \"there was a problem\" error code. <indexterm> <primary>Return Code</primary><secondary>OCF_ERR_GENERIC</secondary> </indexterm> <indexterm> <primary>OCF_ERR_GENERIC</primary> </indexterm> <indexterm> <primary>Return Code</primary><secondary>1</secondary><tertiary>OCF_ERR_GENERIC</tertiary> </indexterm> <indexterm> <primary>1</primary><secondary>OCF_ERR_GENERIC</secondary> </indexterm> <indexterm> <primary>OCF_ERR_GENERIC</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>2</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>OCF_ERR_ARGS</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The resource’s configuration is not valid on this machine. E.g. it refers to a location not found on the node. <indexterm> <primary>Return Code</primary><secondary>OCF_ERR_ARGS</secondary> </indexterm> <indexterm> <primary>OCF_ERR_ARGS</primary> </indexterm> <indexterm> <primary>Return Code</primary><secondary>2</secondary><tertiary>OCF_ERR_ARGS</tertiary> </indexterm> <indexterm> <primary>2</primary><secondary>OCF_ERR_ARGS</secondary> </indexterm> <indexterm> <primary>OCF_ERR_ARGS</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>3</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>OCF_ERR_UNIMPLEMENTED</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The requested action is not implemented. <indexterm> <primary>Return Code</primary><secondary>OCF_ERR_UNIMPLEMENTED</secondary> </indexterm> <indexterm> <primary>OCF_ERR_UNIMPLEMENTED</primary> </indexterm> <indexterm> <primary>Return Code</primary><secondary>3</secondary><tertiary>OCF_ERR_UNIMPLEMENTED</tertiary> </indexterm> <indexterm> <primary>3</primary><secondary>OCF_ERR_UNIMPLEMENTED</secondary> </indexterm> <indexterm> <primary>OCF_ERR_UNIMPLEMENTED</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>4</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>OCF_ERR_PERM</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The resource agent does not have sufficient privileges to complete the task. <indexterm> <primary>Return Code</primary><secondary>OCF_ERR_PERM</secondary> </indexterm> <indexterm> <primary>OCF_ERR_PERM</primary> </indexterm> <indexterm> <primary>Return Code</primary><secondary>4</secondary><tertiary>OCF_ERR_PERM</tertiary> </indexterm> <indexterm> <primary>4</primary><secondary>OCF_ERR_PERM</secondary> </indexterm> <indexterm> <primary>OCF_ERR_PERM</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>5</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>OCF_ERR_INSTALLED</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The tools required by the resource are not installed on this machine. <indexterm> <primary>Return Code</primary><secondary>OCF_ERR_INSTALLED</secondary> </indexterm> <indexterm> <primary>OCF_ERR_INSTALLED</primary> </indexterm> <indexterm> <primary>Return Code</primary><secondary>5</secondary><tertiary>OCF_ERR_INSTALLED</tertiary> </indexterm> <indexterm> <primary>5</primary><secondary>OCF_ERR_INSTALLED</secondary> </indexterm> <indexterm> <primary>OCF_ERR_INSTALLED</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>6</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>OCF_ERR_CONFIGURED</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The resource’s configuration is invalid. E.g. required parameters are missing. <indexterm> <primary>Return Code</primary><secondary>OCF_ERR_CONFIGURED</secondary> </indexterm> <indexterm> <primary>OCF_ERR_CONFIGURED</primary> </indexterm> <indexterm> <primary>Return Code</primary><secondary>6</secondary><tertiary>OCF_ERR_CONFIGURED</tertiary> </indexterm> <indexterm> <primary>6</primary><secondary>OCF_ERR_CONFIGURED</secondary> </indexterm> <indexterm> <primary>OCF_ERR_CONFIGURED</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>7</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>OCF_NOT_RUNNING</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The resource is safely stopped. The cluster will not attempt to stop a resource that returns this for any action. <indexterm> <primary>Return Code</primary><secondary>OCF_NOT_RUNNING</secondary> </indexterm> <indexterm> <primary>OCF_NOT_RUNNING</primary> </indexterm> <indexterm> <primary>Return Code</primary><secondary>7</secondary><tertiary>OCF_NOT_RUNNING</tertiary> </indexterm> <indexterm> <primary>7</primary><secondary>OCF_NOT_RUNNING</secondary> </indexterm> <indexterm> <primary>OCF_NOT_RUNNING</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>N/A</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>8</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>OCF_RUNNING_MASTER</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The resource is running in master mode. <indexterm> <primary>Return Code</primary><secondary>OCF_RUNNING_MASTER</secondary> </indexterm> <indexterm> <primary>OCF_RUNNING_MASTER</primary> </indexterm> <indexterm> <primary>Return Code</primary><secondary>8</secondary><tertiary>OCF_RUNNING_MASTER</tertiary> </indexterm> <indexterm> <primary>8</primary><secondary>OCF_RUNNING_MASTER</secondary> </indexterm> <indexterm> <primary>OCF_RUNNING_MASTER</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>9</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>OCF_FAILED_MASTER</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The resource is in master mode but has failed. The resource will be demoted, stopped and then started (and possibly promoted) again. <indexterm> <primary>Return Code</primary><secondary>OCF_FAILED_MASTER</secondary> </indexterm> <indexterm> <primary>OCF_FAILED_MASTER</primary> </indexterm> <indexterm> <primary>Return Code</primary><secondary>9</secondary><tertiary>OCF_FAILED_MASTER</tertiary> </indexterm> <indexterm> <primary>9</primary><secondary>OCF_FAILED_MASTER</secondary> </indexterm> <indexterm> <primary>OCF_FAILED_MASTER</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>other</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Custom error code. <indexterm> <primary>Return Code</primary><secondary>other</secondary> </indexterm> <indexterm> <primary>other</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Exceptions to the recovery handling described above:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Probes (non-recurring monitor actions) that find a resource active (or in master mode) will not result in recovery action unless it is also found active elsewhere."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The recovery action taken when a resource is found active more than once is determined by the resource’s <literal>multiple-active</literal> property."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Recurring actions that return <literal>OCF_ERR_UNIMPLEMENTED</literal> do not cause any type of recovery."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Init Script LSB Compliance"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The relevant part of the <ulink url=\"http://refspecs.linuxfoundation.org/lsb.shtml\">LSB specifications</ulink> includes a description of all the return codes listed here."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Assuming <literal>some_service</literal> is configured correctly and currently inactive, the following sequence will help you determine if it is LSB-compatible:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Start (stopped):"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# /etc/init.d/some_service start ; echo \"result: $?\""
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Did the service start?"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Did the command print <emphasis role=\"strong\">result: 0</emphasis> (in addition to its usual output)?"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Status (running):"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# /etc/init.d/some_service status ; echo \"result: $?\""
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Did the script accept the command?"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Did the script indicate the service was running?"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Start (running):"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Is the service still running?"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Stop (running):"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# /etc/init.d/some_service stop ; echo \"result: $?\""
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Was the service stopped?"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Status (stopped):"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Did the script indicate the service was not running?"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Did the command print <emphasis role=\"strong\">result: 3</emphasis> (in addition to its usual output)?"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Stop (stopped):"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Is the service still stopped?"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Status (failed):"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "This step is not readily testable and relies on manual inspection of the script."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The script can use one of the error codes (other than 3) listed in the LSB spec to indicate that it is active but failed. This tells the cluster that before moving the resource to another node, it needs to stop it on the existing one first."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If the answer to any of the above questions is no, then the script is not LSB-compliant. Your options are then to either fix the script or write an OCF agent based on the existing script."
+msgstr ""
+

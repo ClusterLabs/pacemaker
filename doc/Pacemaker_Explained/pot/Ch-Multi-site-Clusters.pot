@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2017-10-06 19:59-0500\n"
-"PO-Revision-Date: 2017-10-06 19:59-0500\n"
+"POT-Creation-Date: 2018-05-14 18:03-0500\n"
+"PO-Revision-Date: 2018-05-14 18:03-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -219,7 +219,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "If resource <literal>rsc1</literal> were a multi-state resource (i.e. it could run in master or slave mode), you might want to configure that only master mode depends on <literal>ticketA</literal>. With the following configuration, <literal>rsc1</literal> will be demoted to slave mode if <literal>ticketA</literal> is revoked:"
+msgid "If resource <literal>rsc1</literal> were a promotable resource (i.e. it could run in master or slave mode), you might want to configure that only master mode depends on <literal>ticketA</literal>. With the following configuration, <literal>rsc1</literal> will be demoted to slave mode if <literal>ticketA</literal> is revoked:"
 msgstr ""
 
 #. Tag: title

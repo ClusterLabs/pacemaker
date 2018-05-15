@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2017-10-06 19:59-0500\n"
-"PO-Revision-Date: 2017-10-06 19:59-0500\n"
+"POT-Creation-Date: 2018-05-14 18:03-0500\n"
+"PO-Revision-Date: 2018-05-14 18:03-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -30,11 +30,6 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "SUSE High Availibility Guide: <ulink url=\"http://www.suse.com/documentation/sle_ha/book_sleha/data/book_sleha.html\" />"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "Heartbeat configuration: <ulink url=\"http://www.linux-ha.org/\" />"
 msgstr ""
 
 #. Tag: para

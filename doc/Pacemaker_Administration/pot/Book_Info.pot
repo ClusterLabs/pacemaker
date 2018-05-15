@@ -14,21 +14,16 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
-msgid "Configuration Explained"
+msgid "Pacemaker Administration"
 msgstr ""
 
 #. Tag: subtitle
 #, no-c-format
-msgid "An A-Z guide to Pacemaker's Configuration Options"
-msgstr ""
-
-#. Tag: productname
-#, no-c-format
-msgid "Pacemaker"
+msgid "Managing Pacemaker Clusters"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The purpose of this document is to definitively explain the concepts used to configure Pacemaker. To achieve this, it will focus exclusively on the XML syntax used to configure Pacemaker's Cluster Information Base (CIB)."
+msgid "This document has instructions and tips for system administrators who need to manage high-availability clusters using Pacemaker."
 msgstr ""
 

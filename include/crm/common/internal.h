@@ -70,6 +70,11 @@ xmlNode *create_operation_update(xmlNode *parent, lrmd_event_data_t *event,
                                  int level);
 
 
+// miscellaneous utilities (from utils.c)
+
+const char *pcmk_message_name(const char *name);
+
+
 /* internal generic string functions (from strings.c) */
 
 long long crm_int_helper(const char *text, char **end_text);

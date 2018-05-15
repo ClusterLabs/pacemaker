@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2017-05-08 11:19-0500\n"
-"PO-Revision-Date: 2017-05-08 11:19-0500\n"
+"POT-Creation-Date: 2018-05-14 18:03-0500\n"
+"PO-Revision-Date: 2018-05-14 18:03-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -49,9 +49,9 @@ msgstr ""
 
 #. Tag: programlisting
 #, no-c-format
-msgid "  &lt;node_state id=\"cl-virt-1\" uname=\"cl-virt-2\" ha=\"active\" in_ccm=\"true\" crmd=\"online\" join=\"member\" expected=\"member\" crm-debug-origin=\"do_update_resource\"&gt;\n"
-"   &lt;transient_attributes id=\"cl-virt-1\"/&gt;\n"
-"   &lt;lrm id=\"cl-virt-1\"/&gt;\n"
+msgid "  &lt;node_state id=\"1\" uname=\"cl-virt-1\" in_ccm=\"true\" crmd=\"online\" crm-debug-origin=\"do_update_resource\" join=\"member\" expected=\"member\"&gt;\n"
+"   &lt;transient_attributes id=\"1\"/&gt;\n"
+"   &lt;lrm id=\"1\"/&gt;\n"
 "  &lt;/node_state&gt;"
 msgstr ""
 
@@ -82,7 +82,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "crmd"
+msgid "pacemaker-controld"
 msgstr ""
 
 #. Tag: para
@@ -92,7 +92,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "attrd"
+msgid "pacemaker-attrd"
 msgstr ""
 
 #. Tag: para
@@ -102,12 +102,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "lrmd"
+msgid "pacemaker-execd"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The fields used in the <literal>node_state</literal> objects are named as they are largely for historical reasons and are rooted in Pacemaker’s origins as the Heartbeat resource manager. They have remained unchanged to preserve compatibility with older versions."
+msgid "The fields used in the <literal>node_state</literal> objects are named as they are largely for historical reasons and are rooted in Pacemaker’s origins as the resource manager for the older Heartbeat project. They have remained unchanged to preserve compatibility with older versions."
 msgstr ""
 
 #. Tag: title
@@ -132,7 +132,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<indexterm> <primary>id</primary><secondary>Node Status</secondary> </indexterm> <indexterm> <primary>Node Status</primary> </indexterm> <indexterm> <primary>Node</primary><secondary>Status</secondary><tertiary>id</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>id</secondary> </indexterm> <indexterm> <primary>id</primary> </indexterm> Unique identifier for the node. Corosync-based clusters use a numeric counter, while Heartbeat clusters use a (barely) human-readable UUID."
+msgid "<indexterm> <primary>id</primary><secondary>Node Status</secondary> </indexterm> <indexterm> <primary>Node Status</primary> </indexterm> <indexterm> <primary>Node</primary><secondary>Status</secondary><tertiary>id</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>id</secondary> </indexterm> <indexterm> <primary>id</primary> </indexterm> Unique identifier for the node. Corosync-based clusters use a numeric counter."
 msgstr ""
 
 #. Tag: para
@@ -142,17 +142,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<indexterm> <primary>uname</primary><secondary>Node Status</secondary> </indexterm> <indexterm> <primary>Node Status</primary> </indexterm> <indexterm> <primary>Node</primary><secondary>Status</secondary><tertiary>uname</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>uname</secondary> </indexterm> <indexterm> <primary>uname</primary> </indexterm> The node’s machine name (output from <literal>uname -n</literal>)."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "<literal>ha</literal>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "<indexterm> <primary>ha</primary><secondary>Node Status</secondary> </indexterm> <indexterm> <primary>Node Status</primary> </indexterm> <indexterm> <primary>Node</primary><secondary>Status</secondary><tertiary>ha</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>ha</secondary> </indexterm> <indexterm> <primary>ha</primary> </indexterm> Is the cluster software active on this node? Allowed values: <literal>active</literal>, <literal>dead</literal>."
+msgid "<indexterm> <primary>uname</primary><secondary>Node Status</secondary> </indexterm> <indexterm> <primary>Node Status</primary> </indexterm> <indexterm> <primary>Node</primary><secondary>Status</secondary><tertiary>uname</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>uname</secondary> </indexterm> <indexterm> <primary>uname</primary> </indexterm> The node’s name as known by the cluster"
 msgstr ""
 
 #. Tag: para
@@ -162,7 +152,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<indexterm> <primary>in_ccm</primary><secondary>Node Status</secondary> </indexterm> <indexterm> <primary>Node Status</primary> </indexterm> <indexterm> <primary>Node</primary><secondary>Status</secondary><tertiary>in_ccm</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>in_ccm</secondary> </indexterm> <indexterm> <primary>in_ccm</primary> </indexterm> Is the node a member of the cluster? Allowed values: <literal>true</literal>, <literal>false</literal>."
+msgid "<indexterm> <primary>in_ccm</primary><secondary>Node Status</secondary> </indexterm> <indexterm> <primary>Node Status</primary> </indexterm> <indexterm> <primary>Node</primary><secondary>Status</secondary><tertiary>in_ccm</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>in_ccm</secondary> </indexterm> <indexterm> <primary>in_ccm</primary> </indexterm> Is the node a member at the cluster communication layer? Allowed values: <literal>true</literal>, <literal>false</literal>."
 msgstr ""
 
 #. Tag: para
@@ -172,7 +162,17 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<indexterm> <primary>crmd</primary><secondary>Node Status</secondary> </indexterm> <indexterm> <primary>Node Status</primary> </indexterm> <indexterm> <primary>Node</primary><secondary>Status</secondary><tertiary>crmd</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>crmd</secondary> </indexterm> <indexterm> <primary>crmd</primary> </indexterm> Is the crmd process active on the node? Allowed values: <literal>online</literal>, <literal>offline</literal>."
+msgid "<indexterm> <primary>crmd</primary><secondary>Node Status</secondary> </indexterm> <indexterm> <primary>Node Status</primary> </indexterm> <indexterm> <primary>Node</primary><secondary>Status</secondary><tertiary>crmd</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>crmd</secondary> </indexterm> <indexterm> <primary>crmd</primary> </indexterm> Is the node a member at the pacemaker layer? Allowed values: <literal>online</literal>, <literal>offline</literal>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>crm-debug-origin</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>crm-debug-origin</primary><secondary>Node Status</secondary> </indexterm> <indexterm> <primary>Node Status</primary> </indexterm> <indexterm> <primary>Node</primary><secondary>Status</secondary><tertiary>crm-debug-origin</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>crm-debug-origin</secondary> </indexterm> <indexterm> <primary>crm-debug-origin</primary> </indexterm> The name of the source function that made the most recent change (for debugging purposes)."
 msgstr ""
 
 #. Tag: para
@@ -193,16 +193,6 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "<indexterm> <primary>expected</primary><secondary>Node Status</secondary> </indexterm> <indexterm> <primary>Node Status</primary> </indexterm> <indexterm> <primary>Node</primary><secondary>Status</secondary><tertiary>expected</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>expected</secondary> </indexterm> <indexterm> <primary>expected</primary> </indexterm> Expected value for <literal>join</literal>."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "<literal>crm-debug-origin</literal>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
-msgid "<indexterm> <primary>crm-debug-origin</primary><secondary>Node Status</secondary> </indexterm> <indexterm> <primary>Node Status</primary> </indexterm> <indexterm> <primary>Node</primary><secondary>Status</secondary><tertiary>crm-debug-origin</tertiary> </indexterm> <indexterm> <primary>Status</primary><secondary>crm-debug-origin</secondary> </indexterm> <indexterm> <primary>crm-debug-origin</primary> </indexterm> The origin of the most recent change(s). For diagnostic purposes."
 msgstr ""
 
 #. Tag: para
@@ -236,7 +226,7 @@ msgid "&lt;transient_attributes id=\"cl-virt-1\"&gt;\n"
 "  &lt;instance_attributes id=\"status-cl-virt-1\"&gt;\n"
 "     &lt;nvpair id=\"status-cl-virt-1-pingd\" name=\"pingd\" value=\"3\"/&gt;\n"
 "     &lt;nvpair id=\"status-cl-virt-1-probe_complete\" name=\"probe_complete\" value=\"true\"/&gt;\n"
-"     &lt;nvpair id=\"status-cl-virt-1-fail-count-pingd:0\" name=\"fail-count-pingd:0\" value=\"1\"/&gt;\n"
+"     &lt;nvpair id=\"status-cl-virt-1-fail-count-pingd:0.monitor_30000\" name=\"fail-count-pingd:0#monitor_30000\" value=\"1\"/&gt;\n"
 "     &lt;nvpair id=\"status-cl-virt-1-last-failure-pingd:0\" name=\"last-failure-pingd:0\" value=\"1239009742\"/&gt;\n"
 "  &lt;/instance_attributes&gt;\n"
 "&lt;/transient_attributes&gt;"
@@ -244,7 +234,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "In the above example, we can see that the <literal>pingd:0</literal> resource has failed once, at 09:22:22 UTC 6 April 2009. <footnote><para> You can use the standard <literal>date</literal> command to print a human-readable version of any seconds-since-epoch value, for example <literal>date -d @1239009742</literal>. </para></footnote> We also see that the node is connected to three <emphasis role=\"strong\">pingd</emphasis> peers and that all known resources have been checked for on this machine (<literal>probe_complete</literal>)."
+msgid "In the above example, we can see that a monitor on the <literal>pingd:0</literal> resource has failed once, at 09:22:22 UTC 6 April 2009. <footnote><para> You can use the standard <literal>date</literal> command to print a human-readable version of any seconds-since-epoch value, for example <literal>date -d @1239009742</literal>. </para></footnote> We also see that the node is connected to three <emphasis role=\"strong\">pingd</emphasis> peers and that all known resources have been checked for on this machine (<literal>probe_complete</literal>)."
 msgstr ""
 
 #. Tag: title
@@ -364,7 +354,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The job’s result. Refer to <xref linkend=\"s-ocf-return-codes\" /> for details on what the values here mean and how they are interpreted."
+msgid "The job’s result. Refer to the <emphasis>Resource Agents</emphasis> section of <emphasis>Pacemaker Administration</emphasis> for details on what the values here mean and how they are interpreted."
 msgstr ""
 
 #. Tag: para
@@ -454,7 +444,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "A concatenation of the job’s graph action number, the graph number, the expected result and the UUID of the crmd instance that scheduled it. This is used to construct <literal>transition-magic</literal> (below)."
+msgid "A concatenation of the job’s graph action number, the graph number, the expected result and the UUID of the controller instance that scheduled it. This is used to construct <literal>transition-magic</literal> (below)."
 msgstr ""
 
 #. Tag: para
@@ -469,7 +459,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "A concatenation of the job’s <literal>op-status</literal>, <literal>rc-code</literal> and <literal>transition-key</literal>. Guaranteed to be unique for the life of the cluster (which ensures it is part of CIB update notifications) and contains all the information needed for the crmd to correctly analyze and process the completed job. Most importantly, the decomposed elements tell the crmd if the job entry was expected and whether it failed."
+msgid "A concatenation of the job’s <literal>op-status</literal>, <literal>rc-code</literal> and <literal>transition-key</literal>. Guaranteed to be unique for the life of the cluster (which ensures it is part of CIB update notifications) and contains all the information needed for the controller to correctly analyze and process the completed job. Most importantly, the decomposed elements tell the controller if the job entry was expected and whether it failed."
 msgstr ""
 
 #. Tag: para
@@ -532,7 +522,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "From the <literal>transition-key</literal>, we can see that this was the 22nd action of the 2nd graph produced by this instance of the crmd (2668bbeb-06d5-40f9-936d-24cb7f87006a)."
+msgid "From the <literal>transition-key</literal>, we can see that this was the 22nd action of the 2nd graph produced by this instance of the controller (2668bbeb-06d5-40f9-936d-24cb7f87006a)."
 msgstr ""
 
 #. Tag: para
@@ -627,6 +617,6 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Additionally, from the presence of a <literal>stop</literal> operation with a lower <literal>call-id</literal> than that of the <literal>start</literal> operation, we can conclude that the resource has been restarted. Specifically this occurred as part of actions 11 and 31 of transition 11 from the crmd instance with the key <literal>2668bbeb…</literal>. This information can be helpful for locating the relevant section of the logs when looking for the source of a failure."
+msgid "Additionally, from the presence of a <literal>stop</literal> operation with a lower <literal>call-id</literal> than that of the <literal>start</literal> operation, we can conclude that the resource has been restarted. Specifically this occurred as part of actions 11 and 31 of transition 11 from the controller instance with the key <literal>2668bbeb…</literal>. This information can be helpful for locating the relevant section of the logs when looking for the source of a failure."
 msgstr ""
 
