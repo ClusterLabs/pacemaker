@@ -13,9 +13,7 @@
       <node id="uuid2" uname="node2" type="member"/>
     </nodes>
     <resources>
-      <primitive id="rsc1" class="ocf" provider="heartbeat" type="apache">
-        <meta_attributes id="primitive-rsc1.meta"/>
-      </primitive>
+      <primitive id="rsc1" class="ocf" provider="heartbeat" type="apache"/>
     </resources>
     <constraints>
       <rsc_location id="run_rsc1" rsc="rsc1">

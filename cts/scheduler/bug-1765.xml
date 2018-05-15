@@ -45,7 +45,6 @@
           <meta_attributes id="meta_attributes.id22075">
             <nvpair id="nvpair.id22082" name="target-role" value="started"/>
           </meta_attributes>
-          <meta_attributes id="primitive-drbd0.meta"/>
         </primitive>
         <meta_attributes id="clone-ms-drbd0.meta"/>
       </clone>
@@ -72,7 +71,6 @@
           <meta_attributes id="meta_attributes.id22228">
             <nvpair id="nvpair.id22234" name="target-role" value="started"/>
           </meta_attributes>
-          <meta_attributes id="primitive-drbd1.meta"/>
         </primitive>
         <meta_attributes id="clone-ms-drbd1.meta"/>
       </clone>

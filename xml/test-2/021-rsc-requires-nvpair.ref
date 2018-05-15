@@ -22,7 +22,7 @@
               <!-- relying on order (+ colocation) to guarantee "requires"
                    transitively (unfencing/fencing/quorum)? -->
               
-             <nvpair id="myAddr-start-requires" name="requires" value="nothing"/>
+            <nvpair id="myAddr-start-requires" name="requires" value="nothing"/>
             </meta_attributes></primitive>
 
       <primitive id="myHttpd" class="ocf" provider="heartbeat" type="apache">

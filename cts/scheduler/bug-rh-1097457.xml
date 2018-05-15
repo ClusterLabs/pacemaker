@@ -79,7 +79,6 @@
           <op id="FSlun1-stop-timeout-60" interval="0s" name="stop" timeout="60"/>
           <op id="FSlun1-monitor-interval-10" interval="10" name="monitor" on-fail="restart"/>
         </operations>
-        <meta_attributes id="FSlun1-meta_attributes"/>
       </primitive>
       <primitive class="ocf" id="FSlun2" provider="heartbeat" type="Filesystem">
         <instance_attributes id="FSlun2-instance_attributes">
@@ -92,7 +91,6 @@
           <op id="FSlun2-stop-timeout-60" interval="0s" name="stop" timeout="60"/>
           <op id="FSlun2-monitor-interval-10" interval="10" name="monitor" on-fail="restart"/>
         </operations>
-        <meta_attributes id="FSlun2-meta_attributes"/>
       </primitive>
       <primitive class="ocf" id="VM2" provider="heartbeat" type="VirtualDomain">
         <instance_attributes id="VM2-instance_attributes">

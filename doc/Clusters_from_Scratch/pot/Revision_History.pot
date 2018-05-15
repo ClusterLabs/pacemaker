@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2017-10-06 19:59-0500\n"
-"PO-Revision-Date: 2017-10-06 19:59-0500\n"
+"POT-Creation-Date: 2018-05-14 18:03-0500\n"
+"PO-Revision-Date: 2018-05-14 18:03-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -105,5 +105,10 @@ msgstr ""
 #. Tag: member
 #, no-c-format
 msgid "Update for CentOS 7.1 and leaving firewalld/SELinux enabled"
+msgstr ""
+
+#. Tag: member
+#, no-c-format
+msgid "Update banner for Pacemaker 2.0 and content for CentOS 7.4 with Pacemaker 1.1.16"
 msgstr ""
 

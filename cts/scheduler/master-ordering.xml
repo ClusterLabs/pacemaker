@@ -127,7 +127,6 @@
             <nvpair id="nvpair.id22530" name="directory" value="/data/www"/>
             <nvpair id="nvpair.id22539" name="fstype" value="ocfs2"/>
           </instance_attributes>
-          <meta_attributes id="primitive-ocfs2_www.meta"/>
         </primitive>
         <meta_attributes id="clone-clone_ocfs2_www.meta">
           <nvpair id="nvpair.meta.auto-211" name="target-role" value="started"/>
@@ -208,7 +207,6 @@
           <nvpair id="nvpair.id22885" name="directory" value="/data/mysql"/>
           <nvpair id="nvpair.id22893" name="fstype" value="ext3"/>
         </instance_attributes>
-        <meta_attributes id="primitive-fs_mysql.meta"/>
       </primitive>
       <primitive id="mysql-server" class="ocf" provider="heartbeat" type="mysql">
         <operations>

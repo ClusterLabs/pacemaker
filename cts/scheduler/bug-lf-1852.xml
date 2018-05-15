@@ -41,7 +41,6 @@
           <instance_attributes id="instance_attributes.id22015">
             <nvpair id="nvpair.id22022" name="drbd_resource" value="r0"/>
           </instance_attributes>
-          <meta_attributes id="primitive-drbd0.meta"/>
         </primitive>
         <meta_attributes id="clone-ms-drbd0.meta"/>
       </clone>
@@ -55,17 +54,13 @@
             <nvpair id="nvpair.id22081" name="directory" value="/drbd"/>
             <nvpair id="nvpair.id22089" name="device" value="/dev/drbd0"/>
           </instance_attributes>
-          <meta_attributes id="primitive-fs0.meta"/>
         </primitive>
-        <primitive id="mysqlid" class="lsb" type="mysql">
-          <meta_attributes id="primitive-mysqlid.meta"/>
-        </primitive>
+        <primitive id="mysqlid" class="lsb" type="mysql"/>
         <primitive id="ip_resource" class="ocf" type="IPaddr2" provider="heartbeat">
           <instance_attributes id="instance_attributes.id22120">
             <nvpair name="ip" value="192.168.0.215" id="nvpair.id22126"/>
             <nvpair name="nic" value="eth0" id="nvpair.id22135"/>
           </instance_attributes>
-          <meta_attributes id="primitive-ip_resource.meta"/>
         </primitive>
         <meta_attributes id="group-fs_mysql_ip.meta"/>
       </group>

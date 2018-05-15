@@ -1,4 +1,4 @@
-<cib crm_feature_set="3.0.14" validate-with="pacemaker-2.10" epoch="104" num_updates="12" admin_epoch="0" cib-last-written="Mon Apr  9 06:28:41 2018" update-origin="controller-0" update-client="cibadmin" update-user="root" have-quorum="1" dc-uuid="2" execution-date="1523260535">
+<cib crm_feature_set="3.0.14" validate-with="pacemaker-3.0" epoch="104" num_updates="12" admin_epoch="0" cib-last-written="Mon Apr  9 06:28:41 2018" update-origin="controller-0" update-client="cibadmin" update-user="root" have-quorum="1" dc-uuid="2" execution-date="1523260535">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -286,12 +286,15 @@
       </primitive>
       <clone id="compute-unfence-trigger-clone">
         <primitive class="ocf" id="compute-unfence-trigger" provider="pacemaker" type="Dummy">
+          <meta_attributes id="compute-unfence-trigger-instance_attributes">
+            <nvpair id="computer-unfence-trigger-instance_attributes-requires" name="requires" value="unfencing"/>
+	  </meta_attributes>
           <operations>
             <op id="compute-unfence-trigger-migrate_from-interval-0s" interval="0s" name="migrate_from" timeout="20"/>
             <op id="compute-unfence-trigger-migrate_to-interval-0s" interval="0s" name="migrate_to" timeout="20"/>
             <op id="compute-unfence-trigger-monitor-interval-10" interval="10" name="monitor" timeout="20"/>
             <op id="compute-unfence-trigger-reload-interval-0s" interval="0s" name="reload" timeout="20"/>
-            <op id="compute-unfence-trigger-start-interval-0s" interval="0s" name="start" requires="unfencing"/>
+	    <op id="compute-unfence-trigger-start-interval-0s" interval="0s" name="start"/>
             <op id="compute-unfence-trigger-stop-interval-0s" interval="0s" name="stop" timeout="20"/>
           </operations>
         </primitive>

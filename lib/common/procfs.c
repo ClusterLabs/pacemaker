@@ -1,19 +1,8 @@
 /*
- * Copyright (C) 2015 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2015-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -35,13 +24,16 @@
  * \brief Get process ID and name associated with a /proc directory entry
  *
  * \param[in]  entry    Directory entry (must be result of readdir() on /proc)
- * \param[out] name     If not NULL, a char[64] to hold the process name
+ * \param[out] name     If not NULL, a char[16] to hold the process name
  * \param[out] pid      If not NULL, will be set to process ID of entry
  *
  * \return 0 on success, -1 if entry is not for a process or info not found
  *
  * \note This should be called only on Linux systems, as not all systems that
- *       support /proc store process names and IDs in the same way.
+ *       support /proc store process names and IDs in the same way. The kernel
+ *       limits the process name to the first 15 characters (plus terminator).
+ *       It would be nice if there were a public kernel API constant for that
+ *       limit, but there isn't.
  */
 int
 crm_procfs_process_info(struct dirent *entry, char *name, int *pid)
@@ -49,7 +41,7 @@ crm_procfs_process_info(struct dirent *entry, char *name, int *pid)
     int fd, local_pid;
     FILE *file;
     struct stat statbuf;
-    char key[16] = { 0 }, procpath[128] = { 0 };
+    char procpath[128] = { 0 };
 
     /* We're only interested in entries whose name is a PID,
      * so skip anything non-numeric or that is too long.
@@ -92,11 +84,11 @@ crm_procfs_process_info(struct dirent *entry, char *name, int *pid)
         if (!file) {
             return -1;
         }
-        if ((fscanf(file, "%15s%63s", key, name) != 2)
-            || safe_str_neq(key, "Name:")) {
+        if (fscanf(file, "Name:\t%15[^\n]", name) != 1) {
             fclose(file);
             return -1;
         }
+        name[15] = 0;
         fclose(file);
     }
 

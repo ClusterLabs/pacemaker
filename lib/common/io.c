@@ -351,7 +351,7 @@ pcmk__daemon_can_write(const char *dir, const char *file)
         && !pcmk__daemon_group_can_write(target, &buf)) {
 
         crm_err("%s must be owned and writable by either user %s or group %s "
-                CRM_XS " st_mode=0%ol",
+                CRM_XS " st_mode=0%lo",
                 target, CRM_DAEMON_USER, CRM_DAEMON_GROUP,
                 (unsigned long) buf.st_mode);
         free(full_file);

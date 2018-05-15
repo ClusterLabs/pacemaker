@@ -1,4 +1,4 @@
-#!/bin/bash
+#!@BASH_PATH@
 #
 # OCF resource agent which monitors state of network interface and records it
 # as a node attribute in the CIB based on the sum of speeds of its active (up,

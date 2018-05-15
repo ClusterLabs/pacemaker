@@ -41,7 +41,6 @@
           <instance_attributes id="instance_attributes.id22087">
             <nvpair id="nvpair.id22094" name="drbd_resource" value="sip-shared"/>
           </instance_attributes>
-          <meta_attributes id="primitive-prim_shared_storage.meta"/>
         </primitive>
         <meta_attributes id="clone-shared_storage.meta"/>
       </clone>
@@ -54,7 +53,6 @@
           <nvpair id="nvpair.id22147" name="directory" value="/shared"/>
           <nvpair id="nvpair.id22156" name="fstype" value="reiserfs"/>
         </instance_attributes>
-        <meta_attributes id="primitive-shared_filesystem.meta"/>
       </primitive>
     </resources>
     <constraints>

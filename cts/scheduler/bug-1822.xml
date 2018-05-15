@@ -54,7 +54,6 @@
             <instance_attributes id="instance_attributes.id22215">
               <nvpair id="nvpair.id22222" name="sleep_time" value="10000"/>
             </instance_attributes>
-            <meta_attributes id="primitive-master_slave_Stateful.meta"/>
           </primitive>
           <primitive id="master_slave_procdctl" class="ocf" type="procdctl" provider="heartbeat">
             <operations>
@@ -65,7 +64,6 @@
             <instance_attributes id="instance_attributes.id22281">
               <nvpair id="nvpair.id22288" name="procd" value="sleep 10000"/>
             </instance_attributes>
-            <meta_attributes id="primitive-master_slave_procdctl.meta"/>
           </primitive>
           <meta_attributes id="group-ms-sf_group.meta"/>
         </group>

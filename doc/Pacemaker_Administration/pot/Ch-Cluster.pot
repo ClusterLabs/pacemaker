@@ -1,0 +1,139 @@
+# 
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2018-05-14 18:03-0500\n"
+"PO-Revision-Date: 2018-05-14 18:03-0500\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: None\n"
+"MIME-Version: 1.0\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "The Cluster Layer"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Pacemaker and the Cluster Layer"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Pacemaker utilizes an underlying cluster layer for two purposes:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "obtaining quorum"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "messaging between nodes"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Currently, only Corosync 2 and later is supported for this layer."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Managing Nodes in a Corosync-Based Cluster"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Adding a New Corosync Node"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>Corosync</primary><secondary>Add Cluster Node</secondary> </indexterm> <indexterm> <primary>Add Cluster Node</primary> </indexterm> <indexterm> <primary>Add Cluster Node</primary><secondary>Corosync</secondary> </indexterm> <indexterm> <primary>Corosync</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "To add a new node:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Install Corosync and Pacemaker on the new host."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Copy <literal>/etc/corosync/corosync.conf</literal> and <literal>/etc/corosync/authkey</literal> (if it exists) from an existing node. You may need to modify the <emphasis role=\"strong\">mcastaddr</emphasis> option to match the new node’s IP address."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Start the cluster software on the new host. If a log message containing \"Invalid digest\" appears from Corosync, the keys are not consistent between the machines."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Removing a Corosync Node"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>Corosync</primary><secondary>Remove Cluster Node</secondary> </indexterm> <indexterm> <primary>Remove Cluster Node</primary> </indexterm> <indexterm> <primary>Remove Cluster Node</primary><secondary>Corosync</secondary> </indexterm> <indexterm> <primary>Corosync</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Because the messaging and membership layers are the authoritative source for cluster nodes, deleting them from the CIB is not a complete solution. First, one must arrange for corosync to forget about the node (<emphasis role=\"strong\">pcmk-1</emphasis> in the example below)."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Stop the cluster on the host to be removed. How to do this will vary with your operating system and installed versions of cluster software, for example, <literal>pcs cluster stop</literal> if you are using pcs for cluster management."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "From one of the remaining active cluster nodes, tell Pacemaker to forget about the removed host, which will also delete the node from the CIB:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# crm_node -R pcmk-1"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Replacing a Corosync Node"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>Corosync</primary><secondary>Replace Cluster Node</secondary> </indexterm> <indexterm> <primary>Replace Cluster Node</primary> </indexterm> <indexterm> <primary>Replace Cluster Node</primary><secondary>Corosync</secondary> </indexterm> <indexterm> <primary>Corosync</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "To replace an existing cluster node:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Make sure the old node is completely stopped."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Give the new machine the same hostname and IP address as the old one."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Follow the procedure above for adding a node."
+msgstr ""
+

@@ -17,14 +17,11 @@
             <nvpair id="nvpair.id21896" name="nic" value="eth0"/>
             <nvpair id="nvpair.id21905" name="lvs_support" value="true"/>
           </instance_attributes>
-          <meta_attributes id="primitive-VIP.meta"/>
         </primitive>
         <meta_attributes id="group-ClusterAlias.meta"/>
       </group>
       <clone id="dolly">
-        <primitive id="dollies" class="ocf" type="clone_server" provider="gn1">
-          <meta_attributes id="primitive-dollies.meta"/>
-        </primitive>
+        <primitive id="dollies" class="ocf" type="clone_server" provider="gn1"/>
         <meta_attributes id="clone-dolly.meta">
           <nvpair id="nvpair.meta.auto-42" name="resource-stickiness" value="0"/>
           <nvpair id="nvpair.meta.auto-40" name="clone-max" value="1"/>

@@ -39,7 +39,6 @@
           <operations>
             <op name="monitor" interval="5s" id="evmsdclone-op-01" timeout="20s"/>
           </operations>
-          <meta_attributes id="primitive-evmsdclone.meta"/>
         </primitive>
         <meta_attributes id="clone-evmsdcloneset.meta">
           <nvpair id="notify.meta.auto-68" name="notify" value="false"/>
@@ -48,9 +47,7 @@
         </meta_attributes>
       </clone>
       <clone id="evmscloneset">
-        <primitive id="evmsclone" class="ocf" type="EvmsSCC" provider="heartbeat">
-          <meta_attributes id="primitive-evmsclone.meta"/>
-        </primitive>
+        <primitive id="evmsclone" class="ocf" type="EvmsSCC" provider="heartbeat"/>
         <meta_attributes id="clone-evmscloneset.meta">
           <nvpair id="notify.meta.auto-87" name="notify" value="true"/>
           <nvpair id="globally_unique.meta.auto-87" name="globally-unique" value="false"/>
@@ -67,7 +64,6 @@
             <nvpair id="nvpair.id22195" name="directory" value="/var/lib/xen/images"/>
             <nvpair id="nvpair.id22204" name="fstype" value="ocfs2"/>
           </instance_attributes>
-          <meta_attributes id="primitive-imagestoreclone.meta"/>
         </primitive>
         <meta_attributes id="clone-imagestorecloneset.meta">
           <nvpair id="notify.meta.auto-100" name="notify" value="true"/>
@@ -86,7 +82,6 @@
             <nvpair id="nvpair.id22294" name="directory" value="/etc/xen/vm"/>
             <nvpair id="nvpair.id22303" name="fstype" value="ocfs2"/>
           </instance_attributes>
-          <meta_attributes id="primitive-configstoreclone.meta"/>
         </primitive>
         <meta_attributes id="clone-configstorecloneset.meta">
           <nvpair id="notify.meta.auto-133" name="notify" value="true"/>

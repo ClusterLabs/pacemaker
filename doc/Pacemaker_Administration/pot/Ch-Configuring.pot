@@ -1,0 +1,679 @@
+# 
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2018-05-14 18:03-0500\n"
+"PO-Revision-Date: 2018-05-14 18:03-0500\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: None\n"
+"MIME-Version: 1.0\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Configuring Pacemaker"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "How Should the Configuration be Updated?"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "There are three basic rules for updating the cluster configuration:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Rule 1 - Never edit the <literal>cib.xml</literal> file manually. Ever. I’m not making this up."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Rule 2 - Read Rule 1 again."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Rule 3 - The cluster will notice if you ignored rules 1 &amp; 2 and refuse to use the configuration."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Now that it is clear how <emphasis>not</emphasis> to update the configuration, we can begin to explain how you <emphasis>should</emphasis>."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Editing the CIB Using XML"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The most powerful tool for modifying the configuration is the <literal>cibadmin</literal> command. With <literal>cibadmin</literal>, you can query, add, remove, update or replace any part of the configuration. All changes take effect immediately, so there is no need to perform a reload-like operation."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The simplest way of using <literal>cibadmin</literal> is to use it to save the current configuration to a temporary file, edit that file with your favorite text or XML editor, and then upload the revised configuration. <footnote><para>This process might appear to risk overwriting changes that happen after the initial cibadmin call, but pacemaker will reject any update that is \"too old\". If the CIB is updated in some other fashion after the initial cibadmin, the second cibadmin will be rejected because the version number will be too low.</para></footnote>"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Safely using an editor to modify the cluster configuration"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# cibadmin --query &gt; tmp.xml\n"
+"# vi tmp.xml\n"
+"# cibadmin --replace --xml-file tmp.xml"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Some of the better XML editors can make use of a Relax NG schema to help make sure any changes you make are valid. The schema describing the configuration can be found in <literal>pacemaker.rng</literal>, which may be deployed in a location such as <literal>/usr/share/pacemaker</literal> or <literal>/usr/lib/heartbeat</literal> depending on your operating system and how you installed the software."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If you want to modify just one section of the configuration, you can query and replace just that section to avoid modifying any others."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Safely using an editor to modify only the resources section"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# cibadmin --query --scope resources &gt; tmp.xml\n"
+"# vi tmp.xml\n"
+"# cibadmin --replace --scope resources --xml-file tmp.xml"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Quickly Deleting Part of the Configuration"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Identify the object you wish to delete by XML tag and id. For example, you might search the CIB for all STONITH-related configuration:"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Searching for STONITH-related configuration items"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# cibadmin -Q | grep stonith\n"
+" &lt;nvpair id=\"cib-bootstrap-options-stonith-action\" name=\"stonith-action\" value=\"reboot\"/&gt;\n"
+" &lt;nvpair id=\"cib-bootstrap-options-stonith-enabled\" name=\"stonith-enabled\" value=\"1\"/&gt;\n"
+" &lt;primitive id=\"child_DoFencing\" class=\"stonith\" type=\"external/vmware\"&gt;\n"
+" &lt;lrm_resource id=\"child_DoFencing:0\" type=\"external/vmware\" class=\"stonith\"&gt;\n"
+" &lt;lrm_resource id=\"child_DoFencing:0\" type=\"external/vmware\" class=\"stonith\"&gt;\n"
+" &lt;lrm_resource id=\"child_DoFencing:1\" type=\"external/vmware\" class=\"stonith\"&gt;\n"
+" &lt;lrm_resource id=\"child_DoFencing:0\" type=\"external/vmware\" class=\"stonith\"&gt;\n"
+" &lt;lrm_resource id=\"child_DoFencing:2\" type=\"external/vmware\" class=\"stonith\"&gt;\n"
+" &lt;lrm_resource id=\"child_DoFencing:0\" type=\"external/vmware\" class=\"stonith\"&gt;\n"
+" &lt;lrm_resource id=\"child_DoFencing:3\" type=\"external/vmware\" class=\"stonith\"&gt;"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If you wanted to delete the <literal>primitive</literal> tag with id <literal>child_DoFencing</literal>, you would run:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# cibadmin --delete --xml-text '&lt;primitive id=\"child_DoFencing\"/&gt;'"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Updating the Configuration Without Using XML"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Most tasks can be performed with one of the other command-line tools provided with pacemaker, avoiding the need to read or edit XML."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "To enable STONITH for example, one could run:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# crm_attribute --name stonith-enabled --update 1"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Or, to check whether <emphasis role=\"strong\">somenode</emphasis> is allowed to run resources, there is:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# crm_standby --query --node somenode"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Or, to find the current location of <emphasis role=\"strong\">my-test-rsc</emphasis>, one can use:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# crm_resource --locate --resource my-test-rsc"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Examples of using these tools for specific cases will be given throughout this document where appropriate."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Making Configuration Changes in a Sandbox"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Often it is desirable to preview the effects of a series of changes before updating the configuration all at once. For this purpose, we have created <literal>crm_shadow</literal> which creates a \"shadow\" copy of the configuration and arranges for all the command line tools to use it."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "To begin, simply invoke <literal>crm_shadow --create</literal> with the name of a configuration to create <footnote><para>Shadow copies are identified with a name, making it possible to have more than one.</para></footnote>, and follow the simple on-screen instructions."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Read this section and the on-screen instructions carefully; failure to do so could result in destroying the cluster’s active configuration!"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Creating and displaying the active sandbox"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# crm_shadow --create test\n"
+"Setting up shadow instance\n"
+"Type Ctrl-D to exit the crm_shadow shell\n"
+"shadow[test]:\n"
+"shadow[test] # crm_shadow --which\n"
+"test"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "From this point on, all cluster commands will automatically use the shadow copy instead of talking to the cluster’s active configuration. Once you have finished experimenting, you can either make the changes active via the <literal>--commit</literal> option, or discard them using the <literal>--delete</literal> option. Again, be sure to follow the on-screen instructions carefully!"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "For a full list of <literal>crm_shadow</literal> options and commands, invoke it with the <literal>--help</literal> option."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Use sandbox to make multiple changes all at once, discard them, and verify real configuration is untouched"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid " shadow[test] # crm_failcount -r rsc_c001n01 -G\n"
+" scope=status  name=fail-count-rsc_c001n01 value=0\n"
+" shadow[test] # crm_standby --node c001n02 -v on\n"
+" shadow[test] # crm_standby --node c001n02 -G\n"
+" scope=nodes  name=standby value=on\n"
+"\n"
+" shadow[test] # cibadmin --erase --force\n"
+" shadow[test] # cibadmin --query\n"
+" &lt;cib crm_feature_set=\"3.0.14\" validate-with=\"pacemaker-3.0\" epoch=\"112\" num_updates=\"2\" admin_epoch=\"0\" cib-last-written=\"Mon Jan  8 23:26:47 2018\" update-origin=\"rhel7-1\" update-client=\"crm_node\" update-user=\"root\" have-quorum=\"1\" dc-uuid=\"1\"&gt;\n"
+"   &lt;configuration&gt;\n"
+"     &lt;crm_config/&gt;\n"
+"     &lt;nodes/&gt;\n"
+"     &lt;resources/&gt;\n"
+"     &lt;constraints/&gt;\n"
+"   &lt;/configuration&gt;\n"
+"   &lt;status/&gt;\n"
+" &lt;/cib&gt;\n"
+"  shadow[test] # crm_shadow --delete test --force\n"
+"  Now type Ctrl-D to exit the crm_shadow shell\n"
+"  shadow[test] # exit\n"
+"  # crm_shadow --which\n"
+"  No active shadow configuration defined\n"
+"  # cibadmin -Q\n"
+" &lt;cib crm_feature_set=\"3.0.14\" validate-with=\"pacemaker-3.0\" epoch=\"110\" num_updates=\"2\" admin_epoch=\"0\" cib-last-written=\"Mon Jan  8 23:26:47 2018\" update-origin=\"rhel7-1\" update-client=\"crm_node\" update-user=\"root\" have-quorum=\"1\"&gt;\n"
+"    &lt;configuration&gt;\n"
+"       &lt;crm_config&gt;\n"
+"          &lt;cluster_property_set id=\"cib-bootstrap-options\"&gt;\n"
+"             &lt;nvpair id=\"cib-bootstrap-1\" name=\"stonith-enabled\" value=\"1\"/&gt;\n"
+"             &lt;nvpair id=\"cib-bootstrap-2\" name=\"pe-input-series-max\" value=\"30000\"/&gt;"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Testing Your Configuration Changes"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "We saw previously how to make a series of changes to a \"shadow\" copy of the configuration. Before loading the changes back into the cluster (e.g. <literal>crm_shadow --commit mytest --force</literal>), it is often advisable to simulate the effect of the changes with <literal>crm_simulate</literal>. For example:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# crm_simulate --live-check -VVVVV --save-graph tmp.graph --save-dotfile tmp.dot"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "This tool uses the same library as the live cluster to show what it would have done given the supplied input. Its output, in addition to a significant amount of logging, is stored in two files <literal>tmp.graph</literal> and <literal>tmp.dot</literal>. Both files are representations of the same thing: the cluster’s response to your changes."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The graph file stores the complete transition from the existing cluster state to your desired new state, containing a list of all the actions, their parameters and their pre-requisites. Because the transition graph is not terribly easy to read, the tool also generates a Graphviz <footnote><para>Graph visualization software. See <ulink url=\"http://www.graphviz.org/\">http://www.graphviz.org/</ulink> for details.</para></footnote> dot-file representing the same information."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "For information on the options supported by <literal>crm_simulate</literal>, use its <literal>--help</literal> option."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Interpreting the Graphviz output"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Arrows indicate ordering dependencies"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Dashed arrows indicate dependencies that are not present in the transition graph"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Actions with a dashed border of any color do not form part of the transition graph"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Actions with a green border form part of the transition graph"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Actions with a red border are ones the cluster would like to execute but cannot run"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Actions with a blue border are ones the cluster does not feel need to be executed"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Actions with orange text are pseudo/pretend actions that the cluster uses to simplify the graph"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Actions with black text are sent to the LRM"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Resource actions have text of the form <replaceable>rsc</replaceable>_<replaceable>action</replaceable>_<replaceable>interval</replaceable> <replaceable>node</replaceable>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Any action depending on an action with a red border will not be able to execute."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Loops are <emphasis>really</emphasis> bad. Please report them to the development team."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Small Cluster Transition"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In the above example, it appears that a new node, <emphasis role=\"strong\">pcmk-2</emphasis>, has come online and that the cluster is checking to make sure <emphasis role=\"strong\">rsc1</emphasis>, <emphasis role=\"strong\">rsc2</emphasis> and <emphasis role=\"strong\">rsc3</emphasis> are not already running there (Indicated by the <emphasis role=\"strong\">rscN_monitor_0</emphasis> entries). Once it did that, and assuming the resources were not active there, it would have liked to stop <emphasis role=\"strong\">rsc1</emphasis> and <emphasis role=\"strong\">rsc2</emphasis> on <emphasis role=\"strong\">pcmk-1</emphasis> and move them to <emphasis role=\"strong\">pcmk-2</emphasis>. However, there appears to be some problem and the cluster cannot or is not permitted to perform the stop actions which implies it also cannot perform the start actions. For some reason the cluster does not want to start <emphasis role=\"strong\">rsc3</emphasis> anywhere."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Complex Cluster Transition"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Do I Need to Update the Configuration on All Cluster Nodes?"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "No. Any changes are immediately synchronized to the other active members of the cluster."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "To reduce bandwidth, the cluster only broadcasts the incremental updates that result from your changes and uses MD5 checksums to ensure that each copy is completely consistent."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Working with CIB Properties"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Although these fields can be written to by the user, in most cases the cluster will overwrite any values specified by the user with the \"correct\" ones."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "To change the ones that can be specified by the user, for example <literal>admin_epoch</literal>, one should use:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# cibadmin --modify --xml-text '&lt;cib admin_epoch=\"42\"/&gt;'"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "A complete set of CIB properties will look something like this:"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Attributes set for a cib object"
+msgstr ""
+
+#. Tag: programlisting
+#, no-c-format
+msgid "&lt;cib crm_feature_set=\"3.0.7\" validate-with=\"pacemaker-1.2\"\n"
+"   admin_epoch=\"42\" epoch=\"116\" num_updates=\"1\"\n"
+"   cib-last-written=\"Mon Jan 12 15:46:39 2015\" update-origin=\"rhel7-1\"\n"
+"   update-client=\"crm_attribute\" have-quorum=\"1\" dc-uuid=\"1\"&gt;"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Querying and Setting Cluster Options"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>Querying</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Setting</primary><secondary>Cluster Option</secondary> </indexterm> <indexterm> <primary>Cluster Option</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Querying Options</secondary> </indexterm> <indexterm> <primary>Querying Options</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Setting Options</secondary> </indexterm> <indexterm> <primary>Setting Options</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Cluster options can be queried and modified using the <literal>crm_attribute</literal> tool. To get the current value of <literal>cluster-delay</literal>, you can run:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# crm_attribute --query --name cluster-delay"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "which is more simply written as"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# crm_attribute -G -n cluster-delay"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If a value is found, you’ll see a result like this:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# crm_attribute -G -n cluster-delay\n"
+"scope=crm_config name=cluster-delay value=60s"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If no value is found, the tool will display an error:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# crm_attribute -G -n clusta-deway\n"
+"scope=crm_config name=clusta-deway value=(null)\n"
+"Error performing operation: No such device or address"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "To use a different value (for example, 30 seconds), simply run:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# crm_attribute --name cluster-delay --update 30s"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "To go back to the cluster’s default value, you can delete the value, for example:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# crm_attribute --name cluster-delay --delete\n"
+"Deleted crm_config option: id=cib-bootstrap-options-cluster-delay name=cluster-delay"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "When Options are Listed More Than Once"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "If you ever see something like the following, it means that the option you’re modifying is present more than once."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Deleting an option that is listed twice"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# crm_attribute --name batch-limit --delete\n"
+"\n"
+"Multiple attributes match name=batch-limit in crm_config:\n"
+"Value: 50          (set=cib-bootstrap-options, id=cib-bootstrap-options-batch-limit)\n"
+"Value: 100         (set=custom, id=custom-batch-limit)\n"
+"Please choose from one of the matches above and supply the 'id' with --id"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "In such cases, follow the on-screen instructions to perform the requested action. To determine which value is currently being used by the cluster, refer to the <emphasis>Rules</emphasis> section of <emphasis>Pacemaker Explained</emphasis>."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Connecting from a Remote Machine"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<indexterm> <primary>Cluster</primary><secondary>Remote connection</secondary> </indexterm> <indexterm> <primary>Remote connection</primary> </indexterm> <indexterm> <primary>Cluster</primary><secondary>Remote administration</secondary> </indexterm> <indexterm> <primary>Remote administration</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Provided Pacemaker is installed on a machine, it is possible to connect to the cluster even if the machine itself is not in the same cluster. To do this, one simply sets up a number of environment variables and runs the same commands as when working on a cluster node."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Environment Variables Used to Connect to Remote Instances of the CIB"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Environment Variable"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Default"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Description"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>CIB_user</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "$USER"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The user to connect as. Needs to be part of the <literal>haclient</literal> group on the target host. <indexterm> <primary>Environment Variable</primary><secondary>CIB_user</secondary> </indexterm> <indexterm> <primary>CIB_user</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>CIB_passwd</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The user’s password. Read from the command line if unset. <indexterm> <primary>Environment Variable</primary><secondary>CIB_passwd</secondary> </indexterm> <indexterm> <primary>CIB_passwd</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>CIB_server</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "localhost"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The host to contact <indexterm> <primary>Environment Variable</primary><secondary>CIB_server</secondary> </indexterm> <indexterm> <primary>CIB_server</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>CIB_port</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The port on which to contact the server; required. <indexterm> <primary>Environment Variable</primary><secondary>CIB_port</secondary> </indexterm> <indexterm> <primary>CIB_port</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>CIB_encrypted</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "TRUE"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Whether to encrypt network traffic <indexterm> <primary>Environment Variable</primary><secondary>CIB_encrypted</secondary> </indexterm> <indexterm> <primary>CIB_encrypted</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "So, if <emphasis role=\"strong\">c001n01</emphasis> is an active cluster node and is listening on port 1234 for connections, and <emphasis role=\"strong\">someuser</emphasis> is a member of the <emphasis role=\"strong\">haclient</emphasis> group, then the following would prompt for <emphasis role=\"strong\">someuser</emphasis>'s password and return the cluster’s current configuration:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "# export CIB_port=1234; export CIB_server=c001n01; export CIB_user=someuser;\n"
+"# cibadmin -Q"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "For security reasons, the cluster does not listen for remote connections by default. If you wish to allow remote access, you need to set the <literal>remote-tls-port</literal> (encrypted) or <literal>remote-clear-port</literal> (unencrypted) CIB properties (i.e., those kept in the <literal>cib</literal> tag, like <literal>num_updates</literal> and <literal>epoch</literal>)."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Extra top-level CIB properties for remote access"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Field"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>remote-tls-port</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis>none</emphasis>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Listen for encrypted remote connections on this port. <indexterm> <primary>remote-tls-port</primary><secondary>Remote Connection Option</secondary> </indexterm> <indexterm> <primary>Remote Connection Option</primary> </indexterm> <indexterm> <primary>Remote Connection</primary><secondary>Option</secondary><tertiary>remote-tls-port</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>remote-tls-port</secondary> </indexterm> <indexterm> <primary>remote-tls-port</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>remote-clear-port</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Listen for plaintext remote connections on this port. <indexterm> <primary>remote-clear-port</primary><secondary>Remote Connection Option</secondary> </indexterm> <indexterm> <primary>Remote Connection Option</primary> </indexterm> <indexterm> <primary>Remote Connection</primary><secondary>Option</secondary><tertiary>remote-clear-port</tertiary> </indexterm> <indexterm> <primary>Option</primary><secondary>remote-clear-port</secondary> </indexterm> <indexterm> <primary>remote-clear-port</primary> </indexterm>"
+msgstr ""
+

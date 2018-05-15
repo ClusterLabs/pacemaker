@@ -1,19 +1,8 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -415,6 +404,7 @@ cluster_connect_cpg(crm_cluster_t *cluster)
     uint32_t id = 0;
     crm_node_t *peer = NULL;
     cpg_handle_t handle = 0;
+    const char *message_name = pcmk_message_name(crm_system_name);
 
     struct mainloop_fd_callbacks cpg_fd_callbacks = {
         .dispatch = pcmk_cpg_dispatch,
@@ -433,7 +423,7 @@ cluster_connect_cpg(crm_cluster_t *cluster)
     cluster->group.value[0] = 0;
 
     /* group.value is char[128] */
-    strncpy(cluster->group.value, crm_system_name?crm_system_name:"unknown", 127);
+    strncpy(cluster->group.value, message_name, 127);
     cluster->group.value[127] = 0;
     cluster->group.length = 1 + QB_MIN(127, strlen(cluster->group.value));
 
@@ -454,7 +444,7 @@ cluster_connect_cpg(crm_cluster_t *cluster)
     retries = 0;
     cs_repeat(retries, 30, rc = cpg_join(handle, &cluster->group));
     if (rc != CS_OK) {
-        crm_err("Could not join the CPG group '%s': %d", crm_system_name, rc);
+        crm_err("Could not join the CPG group '%s': %d", message_name, rc);
         goto bail;
     }
 
@@ -623,13 +613,13 @@ text2msg_type(const char *text)
     int type = crm_msg_none;
 
     CRM_CHECK(text != NULL, return type);
+    text = pcmk_message_name(text);
     if (safe_str_eq(text, "ais")) {
         type = crm_msg_ais;
     } else if (safe_str_eq(text, CRM_SYSTEM_CIB)) {
         type = crm_msg_cib;
-    } else if (safe_str_eq(text, CRM_SYSTEM_CRMD)) {
-        type = crm_msg_crmd;
-    } else if (safe_str_eq(text, CRM_SYSTEM_DC)) {
+    } else if (safe_str_eq(text, CRM_SYSTEM_CRMD)
+               || safe_str_eq(text, CRM_SYSTEM_DC)) {
         type = crm_msg_crmd;
     } else if (safe_str_eq(text, CRM_SYSTEM_TENGINE)) {
         type = crm_msg_te;

@@ -40,7 +40,6 @@
             <op name="monitor" interval="59s" id="drbd0-op1" timeout="10s" role="Master"/>
             <op name="monitor" interval="60s" id="drbd0-op2" timeout="10s" role="Slave"/>
           </operations>
-          <meta_attributes id="primitive-drbd0.meta"/>
         </primitive>
         <meta_attributes id="clone-drbd.meta"/>
       </clone>
@@ -48,9 +47,7 @@
         <meta_attributes id="meta_attributes.id22094">
           <nvpair id="nvpair.id22101" name="globally-unique" value="false"/>
         </meta_attributes>
-        <primitive id="cman" class="lsb" type="cman">
-          <meta_attributes id="primitive-cman.meta"/>
-        </primitive>
+        <primitive id="cman" class="lsb" type="cman"/>
         <meta_attributes id="meta_attributes.id22146">
           <nvpair id="nvpair.id22153" name="target-role" value="started"/>
         </meta_attributes>
@@ -67,9 +64,7 @@
           <nvpair id="nvpair.id22182" name="target-role" value="started"/>
           <nvpair id="nvpair.id22191" name="globally-unique" value="false"/>
         </meta_attributes>
-        <primitive id="clvmd" class="lsb" type="lxclvmd">
-          <meta_attributes id="primitive-clvmd.meta"/>
-        </primitive>
+        <primitive id="clvmd" class="lsb" type="lxclvmd"/>
         <meta_attributes id="clone-clvmd_clone.meta">
           <nvpair id="ordered.meta.auto-121" name="ordered" value="false"/>
           <nvpair id="interleave.meta.auto-121" name="interleave" value="true"/>

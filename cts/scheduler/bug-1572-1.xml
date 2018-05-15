@@ -45,7 +45,6 @@
           <operations>
             <op name="monitor" interval="5m" id="drbd_monitor" timeout="60" start-delay="0" enabled="true" role="Started"/>
           </operations>
-          <meta_attributes id="primitive-rsc_drbd_7788.meta"/>
         </primitive>
         <meta_attributes id="clone-ms_drbd_7788.meta">
           <nvpair id="notify.meta.auto-82" name="promotable" value="true"/>
@@ -67,7 +66,6 @@
             <nvpair id="nvpair.id22252" name="fstype" value="ext3"/>
             <nvpair id="nvpair.id22260" name="notify" value="true"/>
           </instance_attributes>
-          <meta_attributes id="primitive-fs_mirror.meta"/>
         </primitive>
         <instance_attributes id="instance_attributes.id22272"/>
         <primitive id="pgsql_5555" class="ocf" type="pgsql" provider="heartbeat">
@@ -83,7 +81,6 @@
           <operations>
             <op name="monitor" interval="30" id="pgsql_5555_monitor" timeout="30" start-delay="10"/>
           </operations>
-          <meta_attributes id="primitive-pgsql_5555.meta"/>
         </primitive>
         <primitive id="IPaddr_147_81_84_133" class="ocf" provider="heartbeat" type="IPaddr">
           <operations>
@@ -92,7 +89,6 @@
           <instance_attributes id="instance_attributes.id22408">
             <nvpair id="nvpair.id22415" name="ip" value="147.81.84.133"/>
           </instance_attributes>
-          <meta_attributes id="primitive-IPaddr_147_81_84_133.meta"/>
         </primitive>
         <meta_attributes id="group-grp_pgsql_mirror.meta">
           <nvpair id="ordered.meta.auto-118" name="ordered" value="true"/>

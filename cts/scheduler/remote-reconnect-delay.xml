@@ -181,7 +181,6 @@
         <operations>
           <op id="remote-rsc-monitor-interval-10s" interval="10s" name="monitor"/>
         </operations>
-        <meta_attributes id="remote-meta_attributes"/>
       </primitive>
     </resources>
     <constraints>

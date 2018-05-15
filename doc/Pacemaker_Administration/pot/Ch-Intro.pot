@@ -1,0 +1,359 @@
+# 
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2018-05-14 18:03-0500\n"
+"PO-Revision-Date: 2018-05-14 18:03-0500\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: None\n"
+"MIME-Version: 1.0\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Read-Me-First"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "The Scope of this Document"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The purpose of this document is to help system administrators learn how to manage a Pacemaker cluster."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "System administrators may be interested in other parts of the <ulink url=\"https://www.clusterlabs.org/pacemaker/doc/\">Pacemaker documentation set</ulink>, such as <emphasis>Clusters from Scratch</emphasis>, a step-by-step guide to setting up an example cluster, and <emphasis>Pacemaker Explained</emphasis>, an exhaustive reference for cluster configuration."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Multiple higher-level tools (both command-line and GUI) are available to simplify cluster management. However, this document focuses on the lower-level command-line tools that come with Pacemaker itself. The concepts are applicable to the higher-level tools, though the syntax would differ."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "What Is <emphasis>Pacemaker</emphasis>?"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis role=\"strong\">Pacemaker</emphasis> is a high-availability <emphasis>cluster resource manager</emphasis> — software that runs on a set of hosts (a <emphasis>cluster</emphasis> of <emphasis>nodes</emphasis>) in order to minimize downtime of desired services (<emphasis>resources</emphasis>). <footnote><para> <emphasis>Cluster</emphasis> is sometimes used in other contexts to refer to hosts grouped together for other purposes, such as high-performance computing (HPC), but Pacemaker is not intended for those purposes. </para></footnote>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Pacemaker’s key features include:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Detection of and recovery from node- and service-level failures"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Ability to ensure data integrity by fencing faulty nodes"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Support for one or more nodes per cluster"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Support for multiple resource interface standards (anything that can be scripted can be clustered)"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Support (but no requirement) for shared storage"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Support for practically any redundancy configuration (active/passive, N+1, etc.)"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Automatically replicated configuration that can be updated from any node"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Ability to specify cluster-wide relationships between services, such as ordering, colocation and anti-colocation"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Support for advanced service types, such as <emphasis>clones</emphasis> (services that need to be active on multiple nodes), <emphasis>stateful resources</emphasis> (clones that can run in one of two modes), and containerized services"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Unified, scriptable cluster management tools"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Fencing"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis>Fencing</emphasis>, also known as <emphasis>STONITH</emphasis> (an acronym for Shoot The Other Node In The Head), is the ability to ensure that it is not possible for a node to be running a service. This is accomplished via <emphasis>fence devices</emphasis> such as intelligent power switches that cut power to the target, or intelligent network switches that cut the target’s access to the local network."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Pacemaker represents fence devices as a special class of resource."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "A cluster cannot safely recover from certain failure conditions, such as an unresponsive node, without fencing."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Cluster Architecture"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "At a high level, a cluster can viewed as having these parts (which together are often referred to as the <emphasis>cluster stack</emphasis>):"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis role=\"strong\">Resources:</emphasis> These are the reason for the cluster’s being — the services that need to be kept highly available."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis role=\"strong\">Resource agents:</emphasis> These are scripts or operating system components that start, stop, and monitor resources, given a set of resource parameters. These provide a uniform interface between Pacemaker and the managed services."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis role=\"strong\">Fence agents:</emphasis> These are scripts that execute node fencing actions, given a target and fence device parameters."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis role=\"strong\">Cluster membership layer:</emphasis> This component provides reliable messaging, membership, and quorum information about the cluster. Currently, Pacemaker supports <ulink url=\"http://www.corosync.org/\">Corosync</ulink> as this layer."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis role=\"strong\">Cluster resource manager:</emphasis> Pacemaker provides the brain that processes and reacts to events that occur in the cluster. These events may include nodes joining or leaving the cluster; resource events caused by failures, maintenance, or scheduled activities; and other administrative actions. To achieve the desired availability, Pacemaker may start and stop resources and fence nodes."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<emphasis role=\"strong\">Cluster tools:</emphasis> These provide an interface for users to interact with the cluster. Various command-line and graphical (GUI) interfaces are available."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Most managed services are not, themselves, cluster-aware. However, many popular open-source cluster filesystems make use of a common <emphasis>Distributed Lock Manager</emphasis> (DLM), which makes direct use of Corosync for its messaging and membership capabilities and Pacemaker for the ability to fence nodes."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Example Cluster Stack"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Pacemaker Architecture"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Pacemaker itself is composed of multiple daemons that work together:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "pacemakerd"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "pacemaker-attrd"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "pacemaker-based"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "pacemaker-controld"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "pacemaker-execd"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "pacemaker-fenced"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "pacemaker-schedulerd"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Internal Components"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The Pacemaker master process (pacemakerd) spawns all the other daemons, and respawns them if they unexpectedly exit."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The <emphasis>Cluster Information Base</emphasis> (CIB) is an <ulink url=\"https://en.wikipedia.org/wiki/XML\">XML</ulink> representation of the cluster’s configuration and the state of all nodes and resources. The <emphasis>CIB manager</emphasis> (pacemaker-based) keeps the CIB synchronized across the cluster, and handles requests to modify it."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The attribute manager (pacemaker-attrd) maintains a database of attributes for all nodes, keeps it synchronized across the cluster, and handles requests to modify them. These attributes are usually recorded in the CIB."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Given a snapshot of the CIB as input, the <emphasis>scheduler</emphasis> (pacemaker-schedulerd) determines what actions are necessary to achieve the desired state of the cluster."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The <emphasis>local executor</emphasis> (pacemaker-execd) handles requests to execute resource agents on the local cluster node, and returns the result."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The <emphasis>fencer</emphasis> (pacemaker-fenced) handles requests to fence nodes. Given a target node, the fencer decides which cluster node(s) should execute which fencing device(s), and calls the necessary fencing agents (either directly, or via requests to the fencer peers on other nodes), and returns the result."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The <emphasis>controller</emphasis> (pacemaker-controld) is Pacemaker’s coordinator, maintaining a consistent view of the cluster membership and orchestrating all the other components."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Pacemaker centralizes cluster decision-making by electing one of the controller instances as the <emphasis>Designated Controller</emphasis> (<emphasis>DC</emphasis>). Should the elected DC process (or the node it is on) fail, a new one is quickly established. The DC responds to cluster events by taking a current snapshot of the CIB, feeding it to the scheduler, then asking the executors (either directly on the local node, or via requests to controller peers on other nodes) and the fencer to execute any necessary actions."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Old daemon names"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The Pacemaker daemons were renamed in version 2.0. You may still find references to the old names, especially in documentation targeted to version 1.1."
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "Old name"
+msgstr ""
+
+#. Tag: entry
+#, no-c-format
+msgid "New name"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "attrd"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "cib"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "crmd"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "lrmd"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "stonithd"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "pacemaker_remoted"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "pacemaker-remoted"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Node Redundancy Designs"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Pacemaker supports practically any <ulink url=\"https://en.wikipedia.org/wiki/High-availability_cluster#Node_configurations\">node redundancy configuration</ulink> including <emphasis>Active/Active</emphasis>, <emphasis>Active/Passive</emphasis>, <emphasis>N+1</emphasis>, <emphasis>N+M</emphasis>, <emphasis>N-to-1</emphasis> and <emphasis>N-to-N</emphasis>."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Active/passive clusters with two (or more) nodes using Pacemaker and <ulink url=\"https://en.wikipedia.org/wiki/Distributed_Replicated_Block_Device:\">DRBD</ulink> are a cost-effective high-availability solution for many situations. One of the nodes provides the desired services, and if it fails, the other node takes over."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Active/Passive Redundancy"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Pacemaker also supports multiple nodes in a shared-failover design, reducing hardware costs by allowing several active/passive clusters to be combined and share a common backup node."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Shared Failover"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "When shared storage is available, every node can potentially be used for failover. Pacemaker can even run multiple copies of services to spread out the workload."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "N to N Redundancy"
+msgstr ""
+

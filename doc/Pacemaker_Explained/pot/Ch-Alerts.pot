@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2017-10-06 19:59-0500\n"
-"PO-Revision-Date: 2017-10-06 19:59-0500\n"
+"POT-Creation-Date: 2018-05-14 18:03-0500\n"
+"PO-Revision-Date: 2018-05-14 18:03-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -24,7 +24,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<emphasis>Alerts</emphasis> (available since Pacemaker 1.1.15) may be configured to take some external action when a cluster event occurs (node failure, resource starting or stopping, etc.)."
+msgid "<emphasis>Alerts</emphasis> may be configured to take some external action when a cluster event occurs (node failure, resource starting or stopping, etc.)."
 msgstr ""
 
 #. Tag: title
@@ -243,11 +243,6 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<emphasis>Coming in 1.1.18</emphasis>"
-msgstr ""
-
-#. Tag: para
-#, no-c-format
 msgid "By default, an alert agent will be called for node events, fencing events, and resource events. An agent may choose to ignore certain types of events, but there is still the overhead of calling it for those events. To eliminate that overhead, you may select which types of events the agent should receive."
 msgstr ""
 
@@ -429,6 +424,26 @@ msgstr ""
 #. Tag: para
 #, no-c-format
 msgid "A timestamp created prior to executing the agent, in the format specified by the <literal>timestamp-format</literal> meta-attribute. This allows the agent to have a reliable, high-precision time of when the event occurred, regardless of when the agent itself was invoked (which could potentially be delayed due to system load, etc.). <indexterm> <primary>Environment Variable</primary><secondary>CRM_alert_</secondary><tertiary>timestamp</tertiary> </indexterm> <indexterm> <primary>CRM_alert_</primary><secondary>timestamp</secondary> </indexterm> <indexterm> <primary>timestamp</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>CRM_alert_timestamp_epoch</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The same time as <literal>CRM_alert_timestamp</literal>, expressed as the integer number of seconds since January 1, 1970. This (along with <literal>CRM_alert_timestamp_usec</literal>) can be useful for alert agents that need to format time in a specific way rather than let the user configure it. <indexterm> <primary>Environment Variable</primary><secondary>CRM_alert_</secondary><tertiary>timestamp_epoch</tertiary> </indexterm> <indexterm> <primary>CRM_alert_</primary><secondary>timestamp_epoch</secondary> </indexterm> <indexterm> <primary>timestamp_epoch</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>CRM_alert_timestamp_usec</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The same time as <literal>CRM_alert_timestamp</literal>, expressed as the integer number of microseconds since <literal>CRM_alert_timestamp_epoch</literal>. <indexterm> <primary>Environment Variable</primary><secondary>CRM_alert_</secondary><tertiary>timestamp_usec</tertiary> </indexterm> <indexterm> <primary>CRM_alert_</primary><secondary>timestamp_usec</secondary> </indexterm> <indexterm> <primary>timestamp_usec</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para

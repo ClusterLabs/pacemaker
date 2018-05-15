@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2017-05-08 11:19-0500\n"
-"PO-Revision-Date: 2017-05-08 11:19-0500\n"
+"POT-Creation-Date: 2018-05-14 18:03-0500\n"
+"PO-Revision-Date: 2018-05-14 18:03-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -29,7 +29,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Download the 4GB <ulink url=\"http://isoredirect.centos.org/centos/7/isos/x86_64/CentOS-7-x86_64-DVD-1503-01.iso\">&DISTRO; &DISTRO_VERSION; DVD ISO</ulink>. Use the image to boot a virtual machine, or burn it to a DVD or USB drive and boot a physical server from that."
+msgid "Download the 4GB <ulink url=\"http://isoredirect.centos.org/centos/7/isos/x86_64/CentOS-7-x86_64-DVD-1708.iso\">&DISTRO; &DISTRO_VERSION; DVD ISO</ulink>. Use the image to boot a virtual machine, or burn it to a DVD or USB drive and boot a physical server from that."
 msgstr ""
 
 #. Tag: para
@@ -646,7 +646,7 @@ msgstr ""
 
 #. Tag: screen
 #, no-c-format
-msgid "[root@pcmk-1 ~]# ssh pcmk-2 -- 'echo redhat1 | passwd --stdin hacluster'"
+msgid "[root@pcmk-1 ~]# ssh pcmk-2 -- 'echo mysupersecretpassword | passwd --stdin hacluster'"
 msgstr ""
 
 #. Tag: title
@@ -692,21 +692,16 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Early versions of pcs required that <literal>--name</literal> be omitted from the above command."
-msgstr ""
-
-#. Tag: para
-#, no-c-format
 msgid "If you are not using <literal>pcs</literal> for cluster administration, follow whatever procedures are appropriate for your tools to create a corosync.conf and copy it to all nodes."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The <literal>pcs</literal> command will configure corosync to use UDP unicast transport; if you choose to use multicast instead, choose a multicast address carefully. <footnote><para>For some subtle issues, see the now-defunct <ulink url=\"http://web.archive.org/web/20101211210054/http://29west.com/docs/THPM/multicast-address-assignment.html\">http://web.archive.org/web/20101211210054/http://29west.com/docs/THPM/multicast-address-assignment.html</ulink> or the more detailed treatment in <ulink url=\"http://www.cisco.com/c/dam/en/us/support/docs/ip/ip-multicast/ipmlt_wp.pdf\">Cisco’s Guidelines for Enterprise IP Multicast Address Allocation</ulink> paper.</para></footnote>"
+msgid "The <literal>pcs</literal> command will configure corosync to use UDP unicast transport; if you choose to use multicast instead, choose a multicast address carefully. <footnote><para>For some subtle issues, see <ulink url=\"http://web.archive.org/web/20101211210054/http://29west.com/docs/THPM/multicast-address-assignment.html\">Topics in High-Performance Messaging: Multicast Address Assignment</ulink> or the more detailed treatment in <ulink url=\"https://www.cisco.com/c/dam/en/us/support/docs/ip/ip-multicast/ipmlt_wp.pdf\">Cisco’s Guidelines for Enterprise IP Multicast Address Allocation</ulink>.</para></footnote>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The final /etc/corosync.conf configuration on each node should look something like the sample in <xref linkend=\"ap-corosync-conf\" />."
+msgid "The final corosync.conf configuration on each node should look something like the sample in <xref linkend=\"ap-corosync-conf\" />."
 msgstr ""
 

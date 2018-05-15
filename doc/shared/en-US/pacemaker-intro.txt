@@ -144,6 +144,11 @@ references to the old names, especially in documentation targeted to version
 |=========================================================
 | Old name | New name
 | attrd | pacemaker-attrd
+| cib | pacemaker-based
+| crmd | pacemaker-controld
+| lrmd | pacemaker-execd
+| stonithd | pacemaker-fenced
+| pacemaker_remoted | pacemaker-remoted
 |=========================================================
 
 ====

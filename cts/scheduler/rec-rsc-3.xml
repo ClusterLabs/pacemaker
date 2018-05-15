@@ -17,7 +17,6 @@
         <operations>
           <op name="stop" interval="0" id="rsc1-stop" on-fail="ignore"/>
         </operations>
-        <meta_attributes id="primitive-rsc1.meta"/>
       </primitive>
     </resources>
     <constraints/>

@@ -45,7 +45,6 @@
           <operations>
             <op id="mysql-db-monitor-interval-60s" interval="60s" name="monitor"/>
           </operations>
-          <meta_attributes id="mysql-db-meta_attributes"/>
         </primitive>
         <meta_attributes id="mysql-group-meta_attributes"/>
       </group>
@@ -54,7 +53,6 @@
           <operations>
             <op id="qpidd-monitor-interval-60s" interval="60s" name="monitor"/>
           </operations>
-          <meta_attributes id="qpidd-meta_attributes"/>
         </primitive>
         <meta_attributes id="beekhof-meta_attributes">
 	  <nvpair id="beekhof" name="target-role" value="Stopped"/>

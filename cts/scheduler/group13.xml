@@ -10,9 +10,7 @@
     </nodes>
     <resources>
       <group id="nfs">
-        <primitive id="resource_nfs" class="lsb" type="nfs">
-          <meta_attributes id="primitive-resource_nfs.meta"/>
-        </primitive>
+        <primitive id="resource_nfs" class="lsb" type="nfs"/>
         <meta_attributes id="group-nfs.meta"/>
       </group>
       <group id="fs">

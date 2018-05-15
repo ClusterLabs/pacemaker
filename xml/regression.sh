@@ -8,11 +8,28 @@ set -eu
 # $1=reference (can be '-' for stdin), $2=investigated
 # alt.: wdiff, colordiff, ...
 DIFF=${DIFF:-diff}
-DIFFOPTS=${DIFFOPTS:--u}
+DIFFOPTS=${DIFFOPTS--u}
 DIFFPAGER=${DIFFPAGER:-less -LRX}
 # $1=schema, $2=validated
 # alt.: jing -i
 RNGVALIDATOR=${RNGVALIDATOR:-xmllint --noout --relaxng}
+# $1=stylesheet, $2=source
+# alt.: Xalan, saxon (note: only validates reliably with -B)
+_xalan_wrapper() {
+	{ Xalan "$2" "$1" 2>&1 >&3 \
+	  | sed -e '/^Source tree node.*$/d' \
+	        -e 's|^XSLT message: \(.*\) (Occurred.*)|\1|'; } 3>&- 3>&1 >&2
+}
+# filtered out message: https://bugzilla.redhat.com/show_bug.cgi?id=1577367
+_saxon_wrapper() {
+	{ saxon "-xsl:$1" "-s:$2" -versionmsg:off 2>&1 >&3 \
+	  | sed -e '/^Cannot find CatalogManager.properties$/d'; } 3>&- 3>&1 >&2
+}
+#_xalan_wrapper() { Xalan $2 $1; }
+XSLTPROCESSOR=${XSLTPROCESSOR:-xsltproc}
+test "${XSLTPROCESSOR}" != Xalan || XSLTPROCESSOR=_xalan_wrapper
+test "${XSLTPROCESSOR}" != saxon || XSLTPROCESSOR=_saxon_wrapper
+
 tests=  # test* names (should go first) here will become preselected default
 
 #
@@ -124,7 +141,7 @@ test_explanation() {
 		shift
 	done
 
-	xsltproc upgrade-detail.xsl "${_tsc_template}"
+	${XSLTPROCESSOR} upgrade-detail.xsl "${_tsc_template}"
 }
 
 # stdout: filename of the transformed file
@@ -141,7 +158,7 @@ test_runner_upgrade() {
 	_tru_target_err="${_tru_target}.err"
 
 	if test $((_tru_mode & (1 << 2))) -eq 0; then
-		xsltproc "${_tru_template}" "${_tru_source}" \
+		${XSLTPROCESSOR} "${_tru_template}" "${_tru_source}" \
 		  > "${_tru_target}" 2> "${_tru_target_err}" \
 		  || { _tru_ref=$?; echo "${_tru_target_err}"
 		       return ${_tru_ref}; }
@@ -155,7 +172,7 @@ test_runner_upgrade() {
 		#   (extraneous inter-element whitespace like blank
 		#   lines will not get removed otherwise, see lower)
 		xmllint --noblanks "${_tru_source}" \
-		  | xsltproc "${_tru_template}" - \
+		  | ${XSLTPROCESSOR} "${_tru_template}" - \
 		  > "${_tru_target}" 2> "${_tru_target_err}" \
 		  || { _tru_ref=$?; echo "${_tru_target_err}"
 		       return ${_tru_ref}; }
@@ -163,7 +180,7 @@ test_runner_upgrade() {
 		_tru_template="$(dirname "${_tru_target}")"
 		_tru_template="${_tru_template}/.$(basename "${_tru_target}")"
 		mv "${_tru_target}" "${_tru_template}"
-		xsltproc - "${_tru_template}" > "${_tru_target}" <<-EOF
+		${XSLTPROCESSOR} - "${_tru_template}" > "${_tru_target}" <<-EOF
 	<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 	<xsl:output method="xml" encoding="UTF-8" omit-xml-declaration="yes"/>
 	<xsl:template match="@*|*|comment()|processing-instruction()">
@@ -205,7 +222,7 @@ EOF
 		fi
 	elif test -f "${_tru_ref}" && test -e "${_tru_ref_err}"; then
 		{ test "$((_tru_mode & (1 << 2)))" -eq 0 && cat "${_tru_ref}" \
-		    || xsltproc - "${_tru_ref}" <<-EOF
+		    || ${XSLTPROCESSOR} - "${_tru_ref}" <<-EOF
 	<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 	<xsl:output method="xml" encoding="UTF-8" omit-xml-declaration="yes"/>
 	<xsl:template match="@*|*|comment()|processing-instruction()">
@@ -309,10 +326,21 @@ test_runner() {
 
 #
 # particular test variations
+# stdin: granular test specification(s) if any
 #
 
 test2to3() {
-	find test-2 -name '*.xml' -print | env LC_ALL=C sort \
+	_t23_pattern=
+
+	while read _t23_spec; do
+		_t23_spec=${_t23_spec%.xml}
+		_t23_spec=${_t23_spec%\*}
+		_t23_pattern="${_t23_pattern} -name ${_t23_spec}*.xml -o"
+	done
+	test -z "${_t23_pattern}" || _t23_pattern="( ${_t23_pattern%-o} )"
+
+	find test-2 -name test-2 -o -type d -prune \
+	  -o -name '*.xml' ${_t23_pattern} -print | env LC_ALL=C sort \
 	  | { case " $* " in
 	      *\ -C\ *) test_cleaner;;
 	      *\ -S\ *) test_selfcheck -o=2.10;;
@@ -333,7 +361,8 @@ cts_scheduler() {
 	_tcp_schema_t=
 	_tcp_template=
 
-	find ../cts/scheduler -name '*.xml' -print | env LC_ALL=C sort \
+	find ../cts/scheduler -name scheduler -o -type d -prune \
+	  -o -name '*.xml' -print | env LC_ALL=C sort \
 	  | { case " $* " in
 	      *\ -C\ *) test_cleaner -r;;
 	      *\ -S\ *) emit_result "not implemented" "option -S";;
@@ -348,7 +377,7 @@ cts_scheduler() {
 			shift
 		done
 		while read _tcp_origin; do
-			_tcp_validatewith=$(xsltproc - "${_tcp_origin}" <<-EOF
+			_tcp_validatewith=$(${XSLTPROCESSOR} - "${_tcp_origin}" <<-EOF
 	<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 	<xsl:output method="text" encoding="UTF-8"/>
 	<xsl:template match="/">
@@ -432,31 +461,59 @@ tests="${tests} cts_scheduler"
 test_suite() {
 	_ts_pass=
 	_ts_select=
+	_ts_select_full=
+	_ts_test_specs=
 	_ts_global_ret=0
 	_ts_ret=0
 
 	while test $# -gt 0; do
 		case "$1" in
-		-) while read _ts_spec; do _ts_select="${_ts_spec}@$1"; done;;
+		-) printf '%s\n' 'waiting for tests specified at stdin...';
+		   while read _ts_spec; do _ts_select="${_ts_spec}@$1"; done;;
 		-*) _ts_pass="${_ts_pass} $1";;
-		*) _ts_select="${_ts_select}@$1";;
+		*) _ts_select_full="${_ts_select_full}@$1"
+		   _ts_select="${_ts_select}@${1%%/*}";;
 		esac
 		shift
 	done
 	_ts_select="${_ts_select}@"
+	_ts_select_full="${_ts_select_full}@"
 
 	for _ts_test in ${tests}; do
 
-		case "${_ts_select}" in
-		*@${_ts_test}@*)
-		_ts_select="${_ts_select%@${_ts_test}@*}@${_ts_select#*@${_ts_test}@}"
-		;;
-		@) case "${_ts_test}" in test*) ;; *) continue;; esac
-		;;
-		*) continue;;
-		esac
+		while true; do
+			case "${_ts_select}" in
+			*@${_ts_test}@*)
+			_ts_select="${_ts_select%@${_ts_test}@*}"\
+"@${_ts_select#*@${_ts_test}@}"
+			break
+			;;
+			@) case "${_ts_test}" in test*) break;; esac
+			;;
+			esac
+			continue 2  # move on to matching with next local test
+		done
 
-		"${_ts_test}" ${_ts_pass} || _ts_ret=$?
+		_ts_test_specs=
+		while true; do
+			case "${_ts_select_full}" in
+			*@${_ts_test}/*)
+				_ts_test_full="${_ts_test}/${_ts_select_full#*@${_ts_test}/}"
+				_ts_test_full="${_ts_test_full%%@*}"
+				_ts_select_full="${_ts_select_full%@${_ts_test_full}@*}"\
+"@${_ts_select_full#*@${_ts_test_full}@}"
+				_ts_test_specs="${_ts_test_specs} ${_ts_test_full#*/}"
+			;;
+			*)
+			break
+			;;
+			esac
+		done
+
+		for _ts_test_spec in ${_ts_test_specs}; do
+			printf '%s\n' "${_ts_test_spec}"
+		done | "${_ts_test}" ${_ts_pass} || _ts_ret=$?
+
 		test ${_ts_ret} = 0 \
 		  && emit_result ${_ts_ret} "${_ts_test}" \
 		  || emit_result "at least 2^$((_ts_ret - 1))" "${_ts_test}"
@@ -475,7 +532,7 @@ test_suite() {
 # NOTE: big letters are dedicated for per-test-set behaviour,
 #       small ones for generic/global behaviour
 usage() {
-	printf '%s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n' \
+	printf '%s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n' \
 	    "usage: $0 [-{B,C,D,G,S,X}]* [-|{${tests## }}*]" \
 	    "- when no suites (arguments) provided, \"test*\" ones get used" \
 	    "- with '-' suite specification the actual ones grabbed on stdin" \
@@ -484,7 +541,8 @@ usage() {
 	    "- use '-D' to review originals vs. \"referential\" outcomes" \
 	    "- use '-G' to generate \"referential\" outcomes" \
 	    "- use '-S' for template self-check (requires net access)" \
-	    "- use '-X' to show explanatory details about the upgrade"
+	    "- use '-X' to show explanatory details about the upgrade" \
+	    "- test specification can be granular, e.g. 'test2to3/022'"
 }
 
 main() {

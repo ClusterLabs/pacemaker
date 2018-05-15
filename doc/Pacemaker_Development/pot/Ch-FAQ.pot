@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2017-10-06 19:59-0500\n"
-"PO-Revision-Date: 2017-10-06 19:59-0500\n"
+"POT-Creation-Date: 2018-05-14 18:03-0500\n"
+"PO-Revision-Date: 2018-05-14 18:03-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -94,7 +94,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<indexterm> <primary>git</primary><secondary>commit messages</secondary> </indexterm> <indexterm> <primary>commit messages</primary> </indexterm> See existing examples in the git log. The first line should look like <literal>change-type: affected-code: explanation</literal> where <literal>change-type</literal> can be <literal>Fix</literal> or <literal>Bug</literal> for most bug fixes, <literal>Feature</literal> for new features, <literal>Log</literal> for changes to log messages or handling, <literal>Doc</literal> for changes to documentation or comments, or <literal>Test</literal> for changes in CTS and regression tests. You will sometimes see <literal>Low</literal>, <literal>Med</literal> (or <literal>Mid</literal>) and <literal>High</literal> used instead for bug fixes, to indicate the severity. The important thing is that only commits with <literal>Feature</literal>, <literal>Fix</literal>, <literal>Bug</literal>, or <literal>High</literal> will automatically be included in the change log for the next release. The <literal>affected-code</literal> is the name of the component(s) being changed, for example, <literal>crmd</literal> or <literal>libcrmcommon</literal> (it’s more free-form, so don’t sweat getting it exact). The <literal>explanation</literal> briefly describes the change. The git project recommends the entire summary line stay under 50 characters, but more is fine if needed for clarity. Except for the most simple and obvious of changes, the summary should be followed by a blank line and then a longer explanation of <emphasis>why</emphasis> the change was made."
+msgid "<indexterm> <primary>git</primary><secondary>commit messages</secondary> </indexterm> <indexterm> <primary>commit messages</primary> </indexterm> See existing examples in the git log. The first line should look like <literal>change-type: affected-code: explanation</literal> where <literal>change-type</literal> can be <literal>Fix</literal> or <literal>Bug</literal> for most bug fixes, <literal>Feature</literal> for new features, <literal>Log</literal> for changes to log messages or handling, <literal>Doc</literal> for changes to documentation or comments, or <literal>Test</literal> for changes in CTS and regression tests. You will sometimes see <literal>Low</literal>, <literal>Med</literal> (or <literal>Mid</literal>) and <literal>High</literal> used instead for bug fixes, to indicate the severity. The important thing is that only commits with <literal>Feature</literal>, <literal>Fix</literal>, <literal>Bug</literal>, or <literal>High</literal> will automatically be included in the change log for the next release. The <literal>affected-code</literal> is the name of the component(s) being changed, for example, <literal>pacemaker-controld</literal> or <literal>libcrmcommon</literal> (it’s more free-form, so don’t sweat getting it exact). The <literal>explanation</literal> briefly describes the change. The git project recommends the entire summary line stay under 50 characters, but more is fine if needed for clarity. Except for the most simple and obvious of changes, the summary should be followed by a blank line and then a longer explanation of <emphasis>why</emphasis> the change was made."
 msgstr ""
 
 #. Tag: para

@@ -1,0 +1,87 @@
+#!@PYTHON@
+""" Remote log reader for Pacemaker's Cluster Test Suite (CTS)
+
+Reads a specified number of lines from the supplied offset
+Returns the current offset
+Contains logic for handling truncation
+"""
+
+# Pacemaker targets compatibility with Python 2.7 and 3.2+
+from __future__ import print_function, unicode_literals, absolute_import, division
+
+__copyright__ = "Copyright 2014-2018 Andrew Beekhof <andrew@beekhof.net>"
+__license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
+
+import sys
+import os
+import fcntl
+
+if __name__ == '__main__':
+
+    limit    = 0
+    offset   = 0
+    prefix   = ''
+    filename = '/var/log/messages'
+
+    skipthis=None
+    args=sys.argv[1:]
+    for i in range(0, len(args)):
+        if skipthis:
+            skipthis=None
+            continue
+
+        elif args[i] == '-l' or args[i] == '--limit':
+            skipthis=1
+            limit = int(args[i+1])
+
+        elif args[i] == '-f' or args[i] == '--filename':
+            skipthis=1
+            filename = args[i+1]
+
+        elif args[i] == '-o' or args[i] == '--offset':
+            skipthis=1
+            offset = args[i+1]
+
+        elif args[i] == '-p' or args[i] == '--prefix':
+            skipthis=1
+            prefix = args[i+1]
+
+        elif args[i] == '-t' or args[i] == '--tag':
+            skipthis=1
+
+    if not os.access(filename, os.R_OK):
+        print(prefix + 'Last read: %d, limit=%d, count=%d - unreadable' % (0, limit, 0))
+        sys.exit(1)
+
+    logfile=open(filename, 'r')
+    logfile.seek(0, os.SEEK_END)
+    newsize=logfile.tell()
+
+    if offset != 'EOF':
+        offset = int(offset)
+        if newsize >= offset:
+            logfile.seek(offset)
+        else:
+            print(prefix + ('File truncated from %d to %d' % (offset, newsize)))
+            if (newsize*1.05) < offset:
+                logfile.seek(0)
+            # else: we probably just lost a few logs after a fencing op
+            #       continue from the new end
+            # TODO: accept a timestamp and discard all messages older than it
+
+    # Don't block when we reach EOF
+    fcntl.fcntl(logfile.fileno(), fcntl.F_SETFL, os.O_NONBLOCK)
+
+    count = 0
+    while True:
+        if logfile.tell() >= newsize:   break
+        elif limit and count >= limit: break
+
+        line = logfile.readline()
+        if not line: break
+
+        print(line.strip())
+        count += 1
+
+    print(prefix + 'Last read: %d, limit=%d, count=%d' % (logfile.tell(), limit, count))
+    logfile.close()

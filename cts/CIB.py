@@ -40,7 +40,6 @@ from cts.cib_xml import *
 class ConfigBase(object):
     cts_cib = None
     version = "unknown"
-    feature_set = "unknown"
     Factory = None
 
     def __init__(self, CM, factory, tmpfile=None):
@@ -74,7 +73,6 @@ class ConfigBase(object):
 
 
 class CIB12(ConfigBase):
-    feature_set = "3.0"
     version = "pacemaker-1.2"
     counter = 1
 
@@ -164,8 +162,6 @@ class CIB12(ConfigBase):
             self.Factory.target = target
 
         self.Factory.rsh(self.Factory.target, "HOME=/root cibadmin --empty %s > %s" % (self.version, self.Factory.tmpfile))
-        #cib_base = self.cib_template % (self.feature_set, self.version, ''' remote-tls-port='9898' remote-clear-port='9999' ''')
-
         self.num_nodes = len(self.CM.Env["nodes"])
 
         no_quorum = "stop"
@@ -423,8 +419,10 @@ class CIB12(ConfigBase):
 
 
 class CIB20(CIB12):
-    feature_set = "3.0"
     version = "pacemaker-2.5"
+
+class CIB30(CIB12):
+    version = "pacemaker-3.0"
 
 #class HASI(CIB10):
 #    def add_resources(self):
@@ -445,6 +443,7 @@ class ConfigFactory(object):
         self.rsh = self.CM.rsh
         self.register("pacemaker12", CIB12, CM, self)
         self.register("pacemaker20", CIB20, CM, self)
+        self.register("pacemaker30", CIB30, CM, self)
 #        self.register("hae", HASI, CM, self)
         self.target = self.CM.Env["nodes"][0]
         self.tmpfile = None
@@ -472,6 +471,8 @@ class ConfigFactory(object):
             name = "pacemaker12";
         elif name == "pacemaker-2.0":
             name = "pacemaker20";
+        elif name == "pacemaker-3.0":
+            name = "pacemaker30";
         elif name == "hasi":
             name = "hae";
 
@@ -480,7 +481,7 @@ class ConfigFactory(object):
         else:
             self.CM.log("Configuration variant '%s' is unknown.  Defaulting to latest config" % name)
 
-        return self.pacemaker20()
+        return self.pacemaker30()
 
 
 class ConfigFactoryItem(object):

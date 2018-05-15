@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2017-05-08 11:19-0500\n"
-"PO-Revision-Date: 2017-05-08 11:19-0500\n"
+"POT-Creation-Date: 2018-05-14 18:03-0500\n"
+"PO-Revision-Date: 2018-05-14 18:03-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -149,7 +149,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "A regular expression matching the names of resources to which this constraint applies, if <literal>rsc</literal> is not specified; if the regular expression contains submatches and the constraint is governed by a rule (see <xref linkend=\"ch-rules\" />), the submatches can be referenced as <literal>%0</literal> through <literal>%9</literal> in the rule’s <literal>score-attribute</literal> or a rule expression’s <literal>attribute</literal> <emphasis>(since 1.1.16)</emphasis> <indexterm> <primary>rsc-pattern</primary><secondary>Location Constraints</secondary> </indexterm> <indexterm> <primary>Location Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Location</secondary><tertiary>rsc-pattern</tertiary> </indexterm> <indexterm> <primary>Location</primary><secondary>rsc-pattern</secondary> </indexterm> <indexterm> <primary>rsc-pattern</primary> </indexterm>"
+msgid "An extended regular expression (as defined in <ulink url=\"http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap09.html#tag_09_04\">POSIX</ulink>) matching the names of resources to which this constraint applies, if <literal>rsc</literal> is not specified; if the regular expression contains submatches and the constraint is governed by a rule (see <xref linkend=\"ch-rules\" />), the submatches can be referenced as <literal>%0</literal> through <literal>%9</literal> in the rule’s <literal>score-attribute</literal> or a rule expression’s <literal>attribute</literal> <indexterm> <primary>rsc-pattern</primary><secondary>Location Constraints</secondary> </indexterm> <indexterm> <primary>Location Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Location</secondary><tertiary>rsc-pattern</tertiary> </indexterm> <indexterm> <primary>Location</primary><secondary>rsc-pattern</secondary> </indexterm> <indexterm> <primary>rsc-pattern</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -184,7 +184,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Whether Pacemaker should perform resource discovery (that is, check whether the resource is already running) for this resource on this node. This should normally be left as the default, so that rogue instances of a service can be stopped when they are running where they are not supposed to be. However, there are two situations where disabling resource discovery is a good idea: when a service is not installed on a node, discovery might return an error (properly written OCF agents will not, so this is usually only seen with other agent types); and when Pacemaker Remote is used to scale a cluster to hundreds of nodes, limiting resource discovery to allowed nodes can significantly boost performance. <emphasis>(since 1.1.13)</emphasis>"
+msgid "Whether Pacemaker should perform resource discovery (that is, check whether the resource is already running) for this resource on this node. This should normally be left as the default, so that rogue instances of a service can be stopped when they are running where they are not supposed to be. However, there are two situations where disabling resource discovery is a good idea: when a service is not installed on a node, discovery might return an error (properly written OCF agents will not, so this is usually only seen with other agent types); and when Pacemaker Remote is used to scale a cluster to hundreds of nodes, limiting resource discovery to allowed nodes can significantly boost performance."
 msgstr ""
 
 #. Tag: para
@@ -445,17 +445,17 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "TRUE"
+msgid "TRUE for <literal>Mandatory</literal> and <literal>Optional</literal> kinds. FALSE for <literal>Serialize</literal> kind."
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "If true, the reverse of the constraint applies for the opposite action (for example, if B starts after A starts, then B stops before A stops). <indexterm> <primary>symmetrical</primary><secondary>Ordering Constraints</secondary> </indexterm> <indexterm> <primary>Ordering Constraints</primary> </indexterm> <indexterm> <primary>Ordering Constraints</primary><secondary>symmetrical</secondary> </indexterm> <indexterm> <primary>symmetrical</primary> </indexterm>"
+msgid "If true, the reverse of the constraint applies for the opposite action (for example, if B starts after A starts, then B stops before A stops). <literal>Serialize</literal> orders cannot be symmetrical. <indexterm> <primary>symmetrical</primary><secondary>Ordering Constraints</secondary> </indexterm> <indexterm> <primary>Ordering Constraints</primary> </indexterm> <indexterm> <primary>Ordering Constraints</primary><secondary>symmetrical</secondary> </indexterm> <indexterm> <primary>symmetrical</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "<literal>Promote</literal> and <literal>demote</literal> apply to the master role of <link linkend=\"s-resource-multistate\">multi-state</link> resources."
+msgid "<literal>Promote</literal> and <literal>demote</literal> apply to the master role of <link linkend=\"s-resource-promotable\">promotable</link> resources."
 msgstr ""
 
 #. Tag: title
@@ -533,12 +533,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "A unique name for the constraint. <indexterm> <primary>id</primary><secondary>Colocation Constraints</secondary> </indexterm> <indexterm> <primary>Colocation Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Colocation</secondary><tertiary>id</tertiary> </indexterm> <indexterm> <primary>Colocation</primary><secondary>id</secondary> </indexterm> <indexterm> <primary>id</primary> </indexterm>"
+msgid "A unique name for the constraint (required). <indexterm> <primary>id</primary><secondary>Colocation Constraints</secondary> </indexterm> <indexterm> <primary>Colocation Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Colocation</secondary><tertiary>id</tertiary> </indexterm> <indexterm> <primary>Colocation</primary><secondary>id</secondary> </indexterm> <indexterm> <primary>id</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The name of a resource that should be located relative to <literal>with-rsc</literal>. <indexterm> <primary>rsc</primary><secondary>Colocation Constraints</secondary> </indexterm> <indexterm> <primary>Colocation Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Colocation</secondary><tertiary>rsc</tertiary> </indexterm> <indexterm> <primary>Colocation</primary><secondary>rsc</secondary> </indexterm> <indexterm> <primary>rsc</primary> </indexterm>"
+msgid "The name of a resource that should be located relative to <literal>with-rsc</literal> (required). <indexterm> <primary>rsc</primary><secondary>Colocation Constraints</secondary> </indexterm> <indexterm> <primary>Colocation Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Colocation</secondary><tertiary>rsc</tertiary> </indexterm> <indexterm> <primary>Colocation</primary><secondary>rsc</secondary> </indexterm> <indexterm> <primary>rsc</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -548,7 +548,22 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The name of the resource used as the colocation target. The cluster will decide where to put this resource first and then decide where to put <literal>rsc</literal>. <indexterm> <primary>with-rsc</primary><secondary>Colocation Constraints</secondary> </indexterm> <indexterm> <primary>Colocation Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Colocation</secondary><tertiary>with-rsc</tertiary> </indexterm> <indexterm> <primary>Colocation</primary><secondary>with-rsc</secondary> </indexterm> <indexterm> <primary>with-rsc</primary> </indexterm>"
+msgid "The name of the resource used as the colocation target. The cluster will decide where to put this resource first and then decide where to put <literal>rsc</literal> (required). <indexterm> <primary>with-rsc</primary><secondary>Colocation Constraints</secondary> </indexterm> <indexterm> <primary>Colocation Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Colocation</secondary><tertiary>with-rsc</tertiary> </indexterm> <indexterm> <primary>Colocation</primary><secondary>with-rsc</secondary> </indexterm> <indexterm> <primary>with-rsc</primary> </indexterm>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "<literal>node-attribute</literal>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "#uname"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The node attribute that must be the same on the node running <literal>rsc</literal> and the node running <literal>with-rsc</literal> for the constraint to be satisfied. (For details, see <xref linkend=\"s-coloc-attribute\" />.) <indexterm> <primary>node-attribute</primary><secondary>Colocation Constraints</secondary> </indexterm> <indexterm> <primary>Colocation Constraints</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Colocation</secondary><tertiary>node-attribute</tertiary> </indexterm> <indexterm> <primary>Colocation</primary><secondary>node-attribute</secondary> </indexterm> <indexterm> <primary>node-attribute</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -638,6 +653,21 @@ msgstr ""
 
 #. Tag: title
 #, no-c-format
+msgid "Colocation by Node Attribute"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The <literal>node-attribute</literal> property of a colocation constraints allows you to express the requirement, \"these resources must be on similar nodes\"."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "As an example, imagine that you have two Storage Area Networks (SANs) that are not controlled by the cluster, and each node is connected to one or the other. You may have two resources <literal>r1</literal> and <literal>r2</literal> such that <literal>r2</literal> needs to use the same SAN as <literal>r1</literal>, but doesn’t necessarily have to be on the same exact node. In such a case, you could define a <link linkend=\"s-node-attributes\">node attribute</link> named <literal>san</literal>, with the value <literal>san1</literal> or <literal>san2</literal> on each node as appropriate. Then, you could colocate <literal>r2</literal> with <literal>r1</literal> using <literal>node-attribute</literal> set to <literal>san</literal>."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
 msgid "Resource Sets"
 msgstr ""
 
@@ -702,7 +732,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Whether all members of the set must be active before continuing. With the current implementation, the cluster may continue even if only one member of the set is started, but if more than one member of the set is starting at the same time, the cluster will still wait until all of those have started before continuing (this may change in future versions). Meaningful within <literal>rsc_order</literal>. <emphasis>(since 1.1.7)</emphasis> <indexterm> <primary>require-all</primary><secondary>Resource Sets</secondary> </indexterm> <indexterm> <primary>Resource Sets</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Resource Sets</secondary><tertiary>require-all</tertiary> </indexterm> <indexterm> <primary>Resource Sets</primary><secondary>require-all</secondary> </indexterm> <indexterm> <primary>require-all</primary> </indexterm>"
+msgid "Whether all members of the set must be active before continuing. With the current implementation, the cluster may continue even if only one member of the set is started, but if more than one member of the set is starting at the same time, the cluster will still wait until all of those have started before continuing (this may change in future versions). Meaningful within <literal>rsc_order</literal>. <indexterm> <primary>require-all</primary><secondary>Resource Sets</secondary> </indexterm> <indexterm> <primary>Resource Sets</primary> </indexterm> <indexterm> <primary>Constraints</primary><secondary>Resource Sets</secondary><tertiary>require-all</tertiary> </indexterm> <indexterm> <primary>Resource Sets</primary><secondary>require-all</secondary> </indexterm> <indexterm> <primary>require-all</primary> </indexterm>"
 msgstr ""
 
 #. Tag: para
@@ -1025,7 +1055,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "If desired, you can restrict the dependency to instances of multistate resources that are in a specific role, using the set’s <literal>role</literal> property."
+msgid "If desired, you can restrict the dependency to instances of promotable clone resources that are in a specific role, using the set’s <literal>role</literal> property."
 msgstr ""
 
 #. Tag: title
