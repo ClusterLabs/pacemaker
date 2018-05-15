@@ -25,6 +25,16 @@
    Selector ctxt:  ./nvpair/@value
    Move ctxt:      op_defaults ~ /cib/configuration/op_defaults
                    rsc_defaults ~ /cib/configuration/rsc_defaults
+   Related commit: c1c66fe13
+                   +
+                   7a9891f29
+                   7d0d1b0eb
+                   1f643d610
+                   73a5d63a8
+                   +
+                   642a09b22
+                   0c03e366d
+                   a28a558f9
    -->
   <cibtr:table for="cluster-properties" msg-prefix="Cluster properties"
                where-cases="op_defaults|rsc_defaults">
@@ -123,6 +133,7 @@
    Object:         ./@*
    Selector ctxt:  ./@*
    Move ctxt:      N/A
+   Related commit: 55ab749bf
    -->
   <cibtr:table for="cluster-node" msg-prefix="Cluster node">
     <cibtr:replace what="type"
@@ -137,6 +148,9 @@
    Object:         ./instance_attributes/nvpair/@name
    Selector ctxt:  N/A
    Move ctxt:      N/A
+   Related commit: 06d4559cb
+                   +
+                   6c8e0be20
    -->
   <cibtr:table for="resource-instance-attributes" msg-prefix="Resource instance_attributes">
     <cibtr:replace what="pcmk_arg_map"
@@ -168,6 +182,7 @@
    Object:         ./meta_attributes/nvpair/@name
    Selector ctxt:  N/A
    Move ctxt:      N/A
+   Related commit: c713bbe39
    -->
   <cibtr:table for="resource-meta-attributes" msg-prefix="Resource meta_attributes">
     <cibtr:replace what="isolation"
@@ -195,6 +210,7 @@
                    ./operations/op/meta_attributes/nvpair/@name
    Selector ctxt:  ./operations/op/@name
    Move ctxt:      meta_attributes ~ ./meta_attributes/nvpair
+   Related commit: 014a543d5
    -->
   <cibtr:table for="resources-operation" msg-prefix="Resources-operation"
                where-cases="meta_attributes">
@@ -212,6 +228,7 @@
    Object:         ./@*
    Selector ctxt:  N/A
    Move ctxt:      N/A
+   Related commit: 96d7ffedf
    -->
   <cibtr:table for="constraints-colocation" msg-prefix="Constraints-colocation">
     <cibtr:replace what="score-attribute"
