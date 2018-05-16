@@ -260,6 +260,7 @@ Summary:       Command line tools for controlling Pacemaker clusters
 Group:         System Environment/Daemons
 Requires:      %{name}-libs = %{version}-%{release}
 Requires:      perl-TimeDate
+Requires(post):coreutils
 
 %description cli
 Pacemaker is an advanced, scalable High-Availability cluster resource
@@ -547,7 +548,9 @@ fi
 if [ "$1" = "2" ]; then
     # Package upgrade, not initial install:
     # Move any pre-2.0 logs to new location to ensure they get rotated
-    mv -f %{_var}/log/pacemaker.log* %{_var}/log/pacemaker >/dev/null 2>/dev/null || :
+    { mv -fbS.rpmsave %{_var}/log/pacemaker.log* %{_var}/log/pacemaker \
+      || mv -f %{_var}/log/pacemaker.log* %{_var}/log/pacemaker
+    } >/dev/null 2>/dev/null || :
 fi
 
 %preun cli
