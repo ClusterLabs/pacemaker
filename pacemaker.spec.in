@@ -477,7 +477,7 @@ done
 %systemd_preun pacemaker.service
 %else
 /sbin/service pacemaker stop >/dev/null 2>&1 || :
-if [ $1 -eq 0 ]; then
+if [ "$1" -eq 0 ]; then
     # Package removal, not upgrade
     /sbin/chkconfig --del pacemaker || :
 fi
@@ -515,7 +515,7 @@ fi
 %systemd_preun pacemaker_remote.service
 %else
 /sbin/service pacemaker_remote stop >/dev/null 2>&1 || :
-if [ $1 -eq 0 ]; then
+if [ "$1" -eq 0 ]; then
     # Package removal, not upgrade
     /sbin/chkconfig --del pacemaker_remote || :
 fi
@@ -528,7 +528,7 @@ fi
 # in the future if desired
 %systemd_postun_with_restart pacemaker_remote.service
 # Explicitly take care of removing the flag-file(s) upon final removal
-if [ $1 -eq 0 ] ; then
+if [ "$1" -eq 0 ] ; then
     rm -f %{_localstatedir}/lib/rpm-state/%{name}/restart_pacemaker_remote
 fi
 %endif
@@ -545,7 +545,7 @@ fi
 %if %{defined _unitdir}
 %systemd_post crm_mon.service
 %endif
-if [ "$1" = "2" ]; then
+if [ "$1" -eq 2 ]; then
     # Package upgrade, not initial install:
     # Move any pre-2.0 logs to new location to ensure they get rotated
     { mv -fbS.rpmsave %{_var}/log/pacemaker.log* %{_var}/log/pacemaker \
