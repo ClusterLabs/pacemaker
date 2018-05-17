@@ -1,0 +1,3 @@
+Resource meta_attributes: res1 (meta=res1-meta_attributes): renaming resource-failure-stickiness as migration-threshold, redefined as 1, for matching -INFINITY
+Resource meta_attributes: res2 (meta=res2-meta_attributes): dropping resource-failure-stickiness
+Resource meta_attributes: ... migration-threshold can be configured instead

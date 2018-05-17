@@ -183,6 +183,8 @@
    Selector ctxt:  N/A
    Move ctxt:      N/A
    Related commit: c713bbe39
+                   +
+                   6052ad6da
    -->
   <cibtr:table for="resource-meta-attributes" msg-prefix="Resource meta_attributes">
     <cibtr:replace what="isolation"
@@ -201,6 +203,21 @@
                    with="target-role"
                    redefined-as="Stopped"
                    msg-extra="i.e. resource at hand disabled; isolation wrappers obsoleted with bundle resources"/>
+
+    <cibtr:replace what="resource-failure-stickiness"
+                   with="migration-threshold"
+                   in-case-of="-INFINITY"
+                   redefined-as="1"/>
+    <cibtr:replace what="resource-failure-stickiness"
+                   with=""
+                   msg-extra="migration-threshold can be configured instead"/>
+    <cibtr:replace what="resource_failure_stickiness"
+                   with="migration-threshold"
+                   in-case-of="-INFINITY"
+                   redefined-as="1"/>
+    <cibtr:replace what="resource_failure_stickiness"
+                   with=""
+                   msg-extra="migration-threshold can be configured instead"/>
   </cibtr:table>
 
   <!--
