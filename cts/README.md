@@ -282,3 +282,45 @@ without requiring a password to be entered each time:
 
   If this works without prompting for a password, you're in business.
   If not, look at the documentation for your version of ssh.
+
+
+## Note on the maintenance
+
+### Tests for scheduler
+
+The source `*.xml` files are preferably kept in sync with the newest
+major (and only major, which is enough) schema version, unless justified
+otherwise (e.g. testing a feature backed only in `pacemaker-next` special
+version of the schema), since these tests are not meant to double as
+schema upgrade ones (unless some cases expressly designated so).
+
+Currently and unless something goes wrong, the procedure of upgrading
+these tests en masse is as easy as:
+
+    cd "$(git rev-parse --show-toplevel)/cts"  # if not already
+    pushd "$(git rev-parse --show-toplevel)/xml"
+    ./regression.sh cts_scheduler -G
+    popd
+    git add --interactive .
+    git commit -m 'XML: upgrade-M.N.xsl: apply on scheduler CTS test cases'
+    git reset HEAD && git checkout .  # if some differences still remain
+    ./cts-scheduler  # absolutely vital to check nothing got broken!
+
+Now, sadly, there's no proved automated way to minimize instances like this:
+
+    <primitive id="rsc1" class="ocf" provider="heartbeat" type="apache">
+    </primitive>
+
+that may be left behind into more canonical:
+
+    <primitive id="rsc1" class="ocf" provider="heartbeat" type="apache"/>
+
+so manual editing is tasked, or perhaps `--format` or `--c14n`
+to `xmllint` will be of help (without any other side effects).
+
+If the overall process gets stuck anywhere, common sense to the rescue.
+The initial part of the above recipe can be repeated anytime to verify
+there's nothing to upgrade artificially like this, which is a desired
+state.  Note that `regression.sh` script performs validation of both
+the input and output, should the upgrade take place, implicitly, so
+there's no need of revalidation in the happy case.
