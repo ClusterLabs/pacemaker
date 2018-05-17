@@ -500,6 +500,15 @@
     no-denormalized-space is an internal criterium for the template)
     or, conventionally, the result tree fragment representing the
     output of the template at hand called with a simulation flag
+    * established signaling strings accompanying InnerSimulation=true:
+      - TRIGGER-MSG ... make the template execution emit messages
+                        describing changes being performed
+      - TRIGGER-RECURSION
+                    ... currently used in the oracle-like evaluation
+                        of what's the situation with the sibling
+                        elements as a recursion guard so that such
+                        nested runs won't revisit the new set of
+                        siblings per the respective nested context
 
  -->
 
@@ -579,9 +588,7 @@
                                   )
                                 )
                               ]"/>
-        <xsl:if test="$InverseMode = false()
-                      and
-                      $InnerSimulation">
+        <xsl:if test="$InnerPass = 'TRIGGER-MSG'">
           <xsl:call-template name="MapMsg">
             <xsl:with-param name="Context" select="@id"/>
             <xsl:with-param name="Replacement" select="$Replacement"/>
@@ -797,7 +804,7 @@
                                   )
                                 )
                               ]"/>
-        <xsl:if test="not($InnerSimulation)">
+        <xsl:if test="$InnerPass = 'TRIGGER-MSG'">
           <xsl:call-template name="MapMsg">
             <xsl:with-param name="Context" select="@id"/>
             <xsl:with-param name="Replacement" select="$Replacement"/>
@@ -939,7 +946,7 @@
                                   )
                                 )
                               ]"/>
-        <xsl:if test="not($InnerSimulation)">
+        <xsl:if test="$InnerPass = 'TRIGGER-MSG'">
           <xsl:call-template name="MapMsg">
             <xsl:with-param name="Context"
                             select="concat(../../@id,
@@ -1110,9 +1117,7 @@
                                   )
                                 )
                               ]"/>
-        <xsl:if test="not($InverseMode or $InnerSimulation)
-                      or
-                      $InnerPass = 'TRIGGER-MSG'">
+        <xsl:if test="$InnerPass = 'TRIGGER-MSG'">
           <xsl:call-template name="MapMsg">
             <xsl:with-param name="Context"
                             select="concat(../../@id,
@@ -1316,7 +1321,7 @@
                                 )
                               )
                             ]"/>
-      <xsl:if test="not($InverseMode or $InnerSimulation)">
+      <xsl:if test="$InnerPass = 'TRIGGER-MSG'">
         <xsl:call-template name="MapMsg">
           <xsl:with-param name="Context"
                                 select="concat(../@id,
@@ -1564,6 +1569,7 @@
         <xsl:with-param name="Source" select="$Source"/>
         <xsl:with-param name="InverseMode" select="$Variant"/>
         <xsl:with-param name="InnerSimulation" select="true()"/>
+        <xsl:with-param name="InnerPass" select="'TRIGGER-MSG'"/>
       </xsl:call-template>
     </xsl:variable>
     <xsl:if test="normalize-space($ProcessedPartial)
@@ -1600,6 +1606,7 @@
     <xsl:call-template name="ProcessClusterProperties">
       <xsl:with-param name="Source" select="."/>
       <xsl:with-param name="InnerSimulation" select="true()"/>
+      <xsl:with-param name="InnerPass" select="'TRIGGER-MSG'"/>
     </xsl:call-template>
   </xsl:variable>
   <xsl:if test="normalize-space($ProcessedClusterProperties)
@@ -1763,6 +1770,7 @@
             <xsl:call-template name="ProcessRscInstanceAttributes">
               <xsl:with-param name="Source" select="."/>
               <xsl:with-param name="InnerSimulation" select="true()"/>
+              <xsl:with-param name="InnerPass" select="'TRIGGER-MSG'"/>
             </xsl:call-template>
           </xsl:variable>
           <!-- cf. trick A. -->
@@ -1783,6 +1791,7 @@
             <xsl:call-template name="ProcessRscMetaAttributes">
               <xsl:with-param name="Source" select="."/>
               <xsl:with-param name="InnerSimulation" select="true()"/>
+              <xsl:with-param name="InnerPass" select="'TRIGGER-MSG'"/>
             </xsl:call-template>
           </xsl:variable>
           <!-- cf. trick A. -->
@@ -1814,6 +1823,7 @@
           <xsl:with-param name="Source" select="."/>
           <xsl:with-param name="InverseMode" select="true()"/>
           <xsl:with-param name="InnerSimulation" select="true()"/>
+          <xsl:with-param name="InnerPass" select="'TRIGGER-MSG'"/>
         </xsl:call-template>
       </xsl:for-each>
     </xsl:variable>

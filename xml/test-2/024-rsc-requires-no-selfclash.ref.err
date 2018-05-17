@@ -2,10 +2,10 @@ Resources-operation: myAddr1-start (rsc=myAddr1, meta=myAddr1-start-meta): movin
 Resources-operation: myAddr1-start (rsc=myAddr1): moving requires under meta_attributes as requires unless already defined there for matching start|promote
 Resources-operation: myAddr2-start (rsc=myAddr2, meta=myAddr2-start-meta): moving requires under meta_attributes as requires unless already defined there for matching start|promote
 Resources-operation: myAddr2-start (rsc=myAddr2): moving requires under meta_attributes as requires unless already defined there for matching start|promote
-Resources-operation: stateful1-promote (rsc=stateful1): moving requires under meta_attributes as requires unless already defined there for matching start|promote
-Resources-operation: stateful1-start (rsc=stateful1): moving requires under meta_attributes as requires unless already defined there for matching start|promote
 Resources-operation: stateful1-demote (rsc=stateful1, meta=stateful1-demote-meta): dropping requires
 Resources-operation: ... only start/promote operation taken into account
+Resources-operation: stateful1-promote (rsc=stateful1): moving requires under meta_attributes as requires unless already defined there for matching start|promote
+Resources-operation: stateful1-start (rsc=stateful1): moving requires under meta_attributes as requires unless already defined there for matching start|promote
 Resources-operation: stateful2-promote (rsc=stateful2, meta=stateful2-promote-meta1): moving requires under meta_attributes as requires unless already defined there for matching start|promote
 Resources-operation: stateful2-promote (rsc=stateful2, meta=stateful2-promote-meta1): moving requires under meta_attributes as requires unless already defined there for matching start|promote
 Resources-operation: stateful2-promote (rsc=stateful2, meta=stateful2-promote-meta2): moving requires under meta_attributes as requires unless already defined there for matching start|promote
