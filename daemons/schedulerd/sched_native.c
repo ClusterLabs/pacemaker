@@ -1203,8 +1203,7 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
             } else {
                 pe_proc_err("Resource %s (%s::%s) is active on %d nodes %s",
                             rsc->id, class, type, num_active_nodes, recovery2text(rsc->recovery_type));
-                crm_warn("See %s for more information.",
-                         "http://clusterlabs.org/wiki/FAQ#Resource_is_Too_Active");
+                crm_warn("See https://wiki.clusterlabs.org/wiki/FAQ#Resource_is_Too_Active for more information");
             }
 
             if (rsc->recovery_type == recovery_stop_start) {
