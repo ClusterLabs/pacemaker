@@ -990,37 +990,46 @@ lrmd_ipc_connect(lrmd_t * lrmd, int *fd)
 }
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
+static void
+copy_gnutls_datum(gnutls_datum_t *dest, gnutls_datum_t *source)
+{
+    dest->data = gnutls_malloc(source->size);
+    CRM_ASSERT(dest->data);
+    memcpy(dest->data, source->data, source->size);
+    dest->size = source->size;
+}
+
+static void
+clear_gnutls_datum(gnutls_datum_t *datum)
+{
+    gnutls_free(datum->data);
+    datum->data = NULL;
+    datum->size = 0;
+}
+
+#define KEY_READ_LEN 256
+
 static int
 set_key(gnutls_datum_t * key, const char *location)
 {
     FILE *stream;
-    int read_len = 256;
-    int cur_len = 0;
-    int buf_len = read_len;
-    static char *key_cache = NULL;
-    static size_t key_cache_len = 0;
-    static time_t key_cache_updated;
+    size_t buf_len = KEY_READ_LEN;
+    static gnutls_datum_t key_cache = { 0, };
+    static time_t key_cache_updated = 0;
 
     if (location == NULL) {
         return -1;
     }
 
-    if (key_cache) {
-        time_t now = time(NULL);
-
-        if ((now - key_cache_updated) < 60) {
-            key->data = gnutls_malloc(key_cache_len + 1);
-            key->size = key_cache_len;
-            memcpy(key->data, key_cache, key_cache_len);
-
-            crm_debug("using cached LRMD key");
+    if (key_cache.data != NULL) {
+        if ((time(NULL) - key_cache_updated) < 60) {
+            copy_gnutls_datum(key, &key_cache);
+            crm_debug("Using cached Pacemaker Remote key");
             return 0;
         } else {
-            key_cache_len = 0;
+            clear_gnutls_datum(&key_cache);
             key_cache_updated = 0;
-            free(key_cache);
-            key_cache = NULL;
-            crm_debug("clearing lrmd key cache");
+            crm_debug("Cleared Pacemaker Remote key cache");
         }
     }
 
@@ -1029,37 +1038,35 @@ set_key(gnutls_datum_t * key, const char *location)
         return -1;
     }
 
-    key->data = gnutls_malloc(read_len);
+    key->data = gnutls_malloc(buf_len);
+    key->size = 0;
     while (!feof(stream)) {
-        int next;
+        int next = fgetc(stream);
 
-        if (cur_len == buf_len) {
-            buf_len = cur_len + read_len;
-            key->data = gnutls_realloc(key->data, buf_len);
-        }
-        next = fgetc(stream);
-        if (next == EOF && feof(stream)) {
+        if (next == EOF) {
+            if (!feof(stream)) {
+                crm_err("Error reading Pacemaker Remote key; copy in memory may be corrupted");
+            }
             break;
         }
-
-        key->data[cur_len] = next;
-        cur_len++;
+        if (key->size == buf_len) {
+            buf_len = key->size + KEY_READ_LEN;
+            key->data = gnutls_realloc(key->data, buf_len);
+            CRM_ASSERT(key->data);
+        }
+        key->data[key->size++] = (unsigned char) next;
     }
     fclose(stream);
 
-    key->size = cur_len;
-    if (!cur_len) {
-        gnutls_free(key->data);
-        key->data = 0;
+    if (key->size == 0) {
+        clear_gnutls_datum(key);
         return -1;
     }
 
-    if (!key_cache) {
-        key_cache = calloc(1, key->size + 1);
-        memcpy(key_cache, key->data, key->size);
-
-        key_cache_len = key->size;
+    if (key_cache.data == NULL) {
+        copy_gnutls_datum(&key_cache, key);
         key_cache_updated = time(NULL);
+        crm_debug("Cached Pacemaker Remote key");
     }
 
     return 0;
