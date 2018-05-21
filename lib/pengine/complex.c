@@ -1,19 +1,8 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -980,4 +969,108 @@ common_free(resource_t * rsc)
     free(rsc->variant_opaque);
     free(rsc->pending_task);
     free(rsc);
+}
+
+/*!
+ * \brief
+ * \internal Find a node (and optionally count all) where resource is active
+ *
+ * \param[in]  rsc          Resource to check
+ * \param[out] count_all    If not NULL, will be set to count of active nodes
+ * \param[out] count_clean  If not NULL, will be set to count of clean nodes
+ *
+ * \return An active node (or NULL if resource is not active anywhere)
+ *
+ * \note The order of preference is: an active node that is the resource's
+ *       partial migration source; if the resource's "requires" is "quorum" or
+ *       "nothing", the first active node in the list that is clean and online;
+ *       the first active node in the list.
+ */
+pe_node_t *
+pe__find_active_on(const resource_t *rsc, unsigned int *count_all,
+                   unsigned int *count_clean)
+{
+    pe_node_t *active = NULL;
+    pe_node_t *node = NULL;
+    bool keep_looking = FALSE;
+    bool is_happy = FALSE;
+
+    if (count_all) {
+        *count_all = 0;
+    }
+    if (count_clean) {
+        *count_clean = 0;
+    }
+    if (rsc == NULL) {
+        return NULL;
+    }
+
+    for (GList *node_iter = rsc->running_on; node_iter != NULL;
+         node_iter = node_iter->next) {
+
+        node = node_iter->data;
+        keep_looking = FALSE;
+
+        is_happy = node->details->online && !node->details->unclean;
+
+        if (count_all) {
+            ++*count_all;
+        }
+        if (count_clean && is_happy) {
+            ++*count_clean;
+        }
+        if (count_all || count_clean) {
+            // If we're counting, we need to go through entire list
+            keep_looking = TRUE;
+        }
+
+        if (rsc->partial_migration_source != NULL) {
+            if (node->details == rsc->partial_migration_source->details) {
+                // This is the migration source
+                active = node;
+            } else {
+                keep_looking = TRUE;
+            }
+        } else if (is_not_set(rsc->flags, pe_rsc_needs_fencing)) {
+            if (is_happy && (!active || !active->details->online
+                             || active->details->unclean)) {
+                // This is the first clean node
+                active = node;
+            } else {
+                keep_looking = TRUE;
+            }
+        }
+        if (active == NULL) {
+            // This is first node in list
+            active = node;
+        }
+
+        if (keep_looking == FALSE) {
+            // Don't waste time iterating if we don't have to
+            break;
+        }
+    }
+    return active;
+}
+
+/*!
+ * \brief
+ * \internal Find and count active nodes according to "requires"
+ *
+ * \param[in]  rsc    Resource to check
+ * \param[out] count  If not NULL, will be set to count of active nodes
+ *
+ * \return An active node (or NULL if resource is not active anywhere)
+ *
+ * \note This is a convenience wrapper for pe__find_active_on() where the count
+ *       of all active nodes or only clean active nodes is desired according to
+ *       the "requires" meta-attribute.
+ */
+pe_node_t *
+pe__find_active_requires(const resource_t *rsc, unsigned int *count)
+{
+    if (rsc && is_not_set(rsc->flags, pe_rsc_needs_fencing)) {
+        return pe__find_active_on(rsc, NULL, count);
+    }
+    return pe__find_active_on(rsc, count, NULL);
 }
