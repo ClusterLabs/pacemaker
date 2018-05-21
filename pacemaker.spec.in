@@ -198,6 +198,10 @@ Requires:      resource-agents
 Requires:      %{name}-libs = %{version}-%{release}
 Requires:      %{name}-cluster-libs = %{version}-%{release}
 Requires:      %{name}-cli = %{version}-%{release}
+%if !%{defined _unitdir}
+Requires:      procps-ng
+Requires:      psmisc
+%endif
 %{?systemd_requires}
 
 # Pacemaker requires a minimum Python functionality
@@ -260,6 +264,8 @@ Summary:       Command line tools for controlling Pacemaker clusters
 Group:         System Environment/Daemons
 Requires:      %{name}-libs = %{version}-%{release}
 Requires:      perl-TimeDate
+Requires:      procps-ng
+Requires:      psmisc
 Requires(post):coreutils
 
 %description cli
@@ -308,6 +314,9 @@ Group:         System Environment/Daemons
 Requires:      %{name}-libs = %{version}-%{release}
 Requires:      %{name}-cli = %{version}-%{release}
 Requires:      resource-agents
+%if !%{defined _unitdir}
+Requires:      procps-ng
+%endif
 # -remote can be fully independent of systemd
 %{?systemd_ordering}%{!?systemd_ordering:%{?systemd_requires}}
 
@@ -345,6 +354,8 @@ Summary:       Test framework for cluster-related technologies like Pacemaker
 Group:         System Environment/Daemons
 Requires:      %{python_pkg} >= %{python_min}
 Requires:      %{name}-libs = %{version}-%{release}
+Requires:      procps-ng
+Requires:      psmisc
 BuildArch:     noarch
 
 # systemd python bindings are separate package in some distros

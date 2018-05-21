@@ -158,6 +158,7 @@ $(PACKAGE)-suse.spec: $(PACKAGE).spec.in GNUmakefile
 	    -e 's: publican::g'							\
 	    -e 's: 189: 90:g'							\
 	    -e 's:%{_libexecdir}/lcrso:%{_libdir}/lcrso:g'			\
+	    -e 's:procps-ng:procps:g'						\
 	    $@
 	@echo "Applied SUSE-specific modifications"
 
