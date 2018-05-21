@@ -1164,15 +1164,16 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
     }
 
     for (gIter = rsc->dangling_migrations; gIter != NULL; gIter = gIter->next) {
-        node_t *current = (node_t *) gIter->data;
+        node_t *dangling_source = (node_t *) gIter->data;
 
-        action_t *stop = stop_action(rsc, current, FALSE);
+        action_t *stop = stop_action(rsc, dangling_source, FALSE);
 
         set_bit(stop->flags, pe_action_dangle);
-        pe_rsc_trace(rsc, "Forcing a cleanup of %s on %s", rsc->id, current->details->uname);
+        pe_rsc_trace(rsc, "Forcing a cleanup of %s on %s",
+                     rsc->id, dangling_source->details->uname);
 
         if (is_set(data_set->flags, pe_flag_remove_after_stop)) {
-            DeleteRsc(rsc, current, FALSE, data_set);
+            DeleteRsc(rsc, dangling_source, FALSE, data_set);
         }
     }
 
