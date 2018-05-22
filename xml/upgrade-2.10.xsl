@@ -1377,9 +1377,6 @@
           </xsl:message>
         </xsl:when>
         <xsl:otherwise>
-          <!--xsl:attribute name="{name()}">
-            <xsl:value-of select="."/>
-          </xsl:attribute-->
           <xsl:copy/>
         </xsl:otherwise>
       </xsl:choose>
@@ -1389,9 +1386,7 @@
       <!-- B: special-casing meta_attributes -->
       <xsl:for-each select="$Source/node()">
         <xsl:choose>
-          <xsl:when test="self::text()
-                          and
-                          not($InverseMode)">
+          <xsl:when test="self::text()">
             <!-- cf. trick A. (consideration 1.) -->
             <xsl:choose>
               <xsl:when test="normalize-space($InnerPass)
