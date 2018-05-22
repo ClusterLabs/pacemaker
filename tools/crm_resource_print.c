@@ -68,6 +68,7 @@ cli_resource_print_cts(resource_t * rsc)
     const char *rtype = crm_element_value(rsc->xml, XML_ATTR_TYPE);
     const char *rprov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
     const char *rclass = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+    pe_node_t *node = pe__current_node(rsc);
 
     if (safe_str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH)) {
         xmlNode *op = NULL;
@@ -90,10 +91,8 @@ cli_resource_print_cts(resource_t * rsc)
         }
     }
 
-    if (rsc->running_on != NULL && g_list_length(rsc->running_on) == 1) {
-        node_t *tmp = rsc->running_on->data;
-
-        host = tmp->details->uname;
+    if (node != NULL) {
+        host = node->details->uname;
     }
 
     printf("Resource: %s %s %s %s %s %s %s %s %d %lld 0x%.16llx\n",
@@ -315,16 +314,15 @@ int
 cli_resource_print_attribute(resource_t *rsc, const char *attr, pe_working_set_t * data_set)
 {
     int rc = -ENXIO;
-    node_t *current = NULL;
+    unsigned int count = 0;
     GHashTable *params = NULL;
     const char *value = NULL;
+    node_t *current = pe__find_active_on(rsc, &count, NULL);
 
-    if (g_list_length(rsc->running_on) == 1) {
-        current = rsc->running_on->data;
-
-    } else if (g_list_length(rsc->running_on) > 1) {
+    if (count > 1) {
         CMD_ERR("%s is active on more than one node,"
                 " returning the default value for %s", rsc->id, crm_str(attr));
+        current = NULL;
     }
 
     params = crm_str_table_new();

@@ -473,11 +473,11 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
         node_t *node = pe_find_node(data_set->nodes, host_uname);
 
         if (node && is_remote_node(node)) {
-            if (node->details->remote_rsc == NULL || node->details->remote_rsc->running_on == NULL) {
+            node = pe__current_node(node->details->remote_rsc);
+            if (node == NULL) {
                 CMD_ERR("No lrmd connection detected to remote node %s", host_uname);
                 return -ENXIO;
             }
-            node = node->details->remote_rsc->running_on->data;
             router_node = node->details->uname;
         }
     }
@@ -1648,10 +1648,15 @@ cli_resource_move(resource_t *rsc, const char *rsc_id, const char *host_name,
                   cib_t *cib, pe_working_set_t *data_set)
 {
     int rc = -EINVAL;
-    int count = 0;
+    unsigned int count = 0;
     node_t *current = NULL;
     node_t *dest = pe_find_node(data_set->nodes, host_name);
     bool cur_is_dest = FALSE;
+
+    if (dest == NULL) {
+        CMD_ERR("Error performing operation: node '%s' is unknown", host_name);
+        return -ENXIO;
+    }
 
     if (scope_master && rsc->variant != pe_master) {
         resource_t *p = uber_parent(rsc);
@@ -1667,8 +1672,12 @@ cli_resource_move(resource_t *rsc, const char *rsc_id, const char *host_name,
         }
     }
 
+    current = pe__find_active_requires(rsc, &count);
+
     if(rsc->variant == pe_master) {
         GListPtr iter = NULL;
+        unsigned int master_count = 0;
+        pe_node_t *master_node = NULL;
 
         for(iter = rsc->children; iter; iter = iter->next) {
             resource_t *child = (resource_t *)iter->data;
@@ -1676,37 +1685,27 @@ cli_resource_move(resource_t *rsc, const char *rsc_id, const char *host_name,
 
             if(child_role == RSC_ROLE_MASTER) {
                 rsc = child;
-                count++;
+                master_node = pe__current_node(child);
+                master_count++;
             }
         }
-
-        if(scope_master == FALSE && count == 0) {
-            count = g_list_length(rsc->running_on);
+        if (scope_master || master_count) {
+            count = master_count;
+            current = master_node;
         }
 
-    } else if (pe_rsc_is_clone(rsc)) {
-        count = g_list_length(rsc->running_on);
-
-    } else if (g_list_length(rsc->running_on) > 1) {
-        CMD_ERR("Resource '%s' not moved: active on multiple nodes", rsc_id);
-        return rc;
     }
 
-    if(dest == NULL) {
-        CMD_ERR("Error performing operation: node '%s' is unknown", host_name);
-        return -ENXIO;
+    if (count > 1) {
+        if (pe_rsc_is_clone(rsc)) {
+            current = NULL;
+        } else {
+            CMD_ERR("Resource '%s' not moved: active on multiple nodes", rsc_id);
+            return rc;
+        }
     }
 
-    if(g_list_length(rsc->running_on) == 1) {
-        current = rsc->running_on->data;
-    }
-
-    if(current == NULL) {
-        /* Nothing to check */
-
-    } else if(scope_master && rsc->fns->state(rsc, TRUE) != RSC_ROLE_MASTER) {
-        crm_trace("%s is already active on %s but not in correct state", rsc_id, dest->details->uname);
-    } else if (safe_str_eq(current->details->uname, dest->details->uname)) {
+    if (current && (current->details == dest->details)) {
         cur_is_dest = TRUE;
         if (do_force) {
             crm_info("%s is already %s on %s, reinforcing placement with location constraint.",
@@ -1736,7 +1735,7 @@ cli_resource_move(resource_t *rsc, const char *rsc_id, const char *host_name,
             (void)cli_resource_ban(rsc_id, current->details->uname, NULL, cib);
 
         } else if(count > 1) {
-            CMD_ERR("Resource '%s' is currently %s in %d locations.  One may now move one to %s",
+            CMD_ERR("Resource '%s' is currently %s in %d locations. One may now move to %s",
                     rsc_id, scope_master?"promoted":"active", count, dest->details->uname);
             CMD_ERR("You can prevent '%s' from being %s at a specific location with:"
                     " --ban %s--host <name>", rsc_id, scope_master?"promoted":"active", scope_master?"--master ":"");
