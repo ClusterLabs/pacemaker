@@ -772,6 +772,7 @@ get_router_node(action_t *action)
     node_t *began_on = NULL;
     node_t *ended_on = NULL;
     node_t *router_node = NULL;
+    bool partial_migration = FALSE;
 
     if (safe_str_eq(action->task, CRM_OP_FENCE) || is_remote_node(action->node) == FALSE) {
         return NULL;
@@ -779,10 +780,13 @@ get_router_node(action_t *action)
 
     CRM_ASSERT(action->node->details->remote_rsc != NULL);
 
-    if (action->node->details->remote_rsc->running_on) {
-        began_on = action->node->details->remote_rsc->running_on->data;
-    }
+    began_on = pe__current_node(action->node->details->remote_rsc);
     ended_on = action->node->details->remote_rsc->allocated_to;
+    if (action->node->details->remote_rsc
+        && (action->node->details->remote_rsc->container == NULL)
+        && action->node->details->remote_rsc->partial_migration_target) {
+        partial_migration = TRUE;
+    }
 
     /* if there is only one location to choose from,
      * this is easy. Check for those conditions first */
@@ -806,6 +810,10 @@ get_router_node(action_t *action)
      *    are all required before the remote rsc stop action can occur.) In
      *    this case, we know these actions have to be routed through the initial
      *    cluster node the connection resource lived on before the move takes place.
+     *    The exception is a partial migration of a (non-guest) remote
+     *    connection resource; in that case, all actions (even these) will be
+     *    ordered after the connection's pseudo-start on the migration target,
+     *    so the target is the router node.
      *
      * 2. Everything else (start, promote, monitor, probe, refresh, clear failcount
      *    delete ....) must occur after the resource starts on the node it is
@@ -813,10 +821,10 @@ get_router_node(action_t *action)
      */
 
     /* 1. before connection rsc moves. */
-    if (safe_str_eq(action->task, "stop") ||
+    if ((safe_str_eq(action->task, "stop") ||
         safe_str_eq(action->task, "demote") ||
         safe_str_eq(action->task, "migrate_from") ||
-        safe_str_eq(action->task, "migrate_to")) {
+        safe_str_eq(action->task, "migrate_to")) && !partial_migration) {
 
         router_node = began_on;
 
@@ -1218,18 +1226,14 @@ action2xml(action_t * action, gboolean as_input, pe_working_set_t *data_set)
                 case stopped_rsc:
                 case action_demote:
                 case action_demoted:
-                    if(action->node->details->remote_rsc->container->running_on) {
-                        host = action->node->details->remote_rsc->container->running_on->data;
-                    }
+                    host = pe__current_node(action->node->details->remote_rsc->container);
                     break;
                 case start_rsc:
                 case started_rsc:
                 case monitor_rsc:
                 case action_promote:
                 case action_promoted:
-                    if(action->node->details->remote_rsc->container->allocated_to) {
-                        host = action->node->details->remote_rsc->container->allocated_to;
-                    }
+                    host = action->node->details->remote_rsc->container->allocated_to;
                     break;
                 default:
                     break;

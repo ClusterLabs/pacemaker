@@ -1074,14 +1074,14 @@ sort_rsc_process_order(gconstpointer a, gconstpointer b, gpointer data)
     r2_weight = -INFINITY;
 
     if (resource1->running_on) {
-        r1_node = g_list_nth_data(resource1->running_on, 0);
+        r1_node = pe__current_node(resource1);
         r1_node = g_hash_table_lookup(r1_nodes, r1_node->details->id);
         if (r1_node != NULL) {
             r1_weight = r1_node->weight;
         }
     }
     if (resource2->running_on) {
-        r2_node = g_list_nth_data(resource2->running_on, 0);
+        r2_node = pe__current_node(resource2);
         r2_node = g_hash_table_lookup(r2_nodes, r2_node->details->id);
         if (r2_node != NULL) {
             r2_weight = r2_node->weight;
@@ -1904,10 +1904,7 @@ get_remote_node_state(pe_node_t *node)
     remote_rsc = node->details->remote_rsc;
     CRM_ASSERT(remote_rsc);
 
-    if(remote_rsc->running_on) {
-        cluster_node = remote_rsc->running_on->data;
-    }
-
+    cluster_node = pe__current_node(remote_rsc);
 
     /* If the cluster node the remote connection resource resides on
      * is unclean or went offline, we can't process any operations
@@ -1968,11 +1965,14 @@ get_remote_node_state(pe_node_t *node)
     return remote_state_alive;
 }
 
+/*!
+ * \internal
+ * \brief Order actions on remote node relative to actions for the connection
+ */
 static void
 apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
 {
     resource_t *remote_rsc = NULL;
-    node_t *cluster_node = NULL;
     enum action_tasks task = text2task(action->task);
     enum remote_connection_state state = get_remote_node_state(action->node);
 
@@ -1987,10 +1987,6 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
 
     remote_rsc = action->node->details->remote_rsc;
     CRM_ASSERT(remote_rsc);
-
-    if(remote_rsc->running_on) {
-        cluster_node = remote_rsc->running_on->data;
-    }
 
     crm_trace("Order %s action %s relative to %s%s (state: %s)",
               action->task, action->uuid,
@@ -2072,6 +2068,8 @@ apply_remote_ordering(action_t *action, pe_working_set_t *data_set)
                                         pe_order_implies_then, data_set);
 
             } else {
+                node_t *cluster_node = pe__current_node(remote_rsc);
+
                 if(task == monitor_rsc && state == remote_state_failed) {
                     /* We would only be here if we do not know the
                      * state of the resource on the remote node.
