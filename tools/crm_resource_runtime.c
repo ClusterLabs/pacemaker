@@ -1790,7 +1790,7 @@ cli_resource_move(resource_t *rsc, const char *rsc_id, const char *host_name,
     node_t *dest = pe_find_node(data_set->nodes, host_name);
     bool cur_is_dest = FALSE;
 
-    if (scope_master && is_set(rsc->flags, pe_rsc_promotable)) {
+    if (scope_master && is_not_set(rsc->flags, pe_rsc_promotable)) {
         resource_t *p = uber_parent(rsc);
 
         if (is_set(p->flags, pe_rsc_promotable)) {
