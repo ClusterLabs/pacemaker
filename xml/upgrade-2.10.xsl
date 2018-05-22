@@ -225,12 +225,14 @@
                    template
    Object:         ./operations/op/@*
                    ./operations/op/meta_attributes/nvpair/@name
+                   ./operations/op/instance_attributes/nvpair/@name
    Selector ctxt:  ./operations/op/@name
    Move ctxt:      meta_attributes ~ ./meta_attributes/nvpair
    Related commit: 014a543d5
    -->
   <cibtr:table for="resources-operation" msg-prefix="Resources-operation"
                where-cases="meta_attributes">
+    <!-- keep this in sync with resource-operation-instance-attributes table -->
     <cibtr:replace what="requires"
                    with=""
                    msg-extra="only start/promote operation taken into account"/>
@@ -238,6 +240,35 @@
                    with="requires"
                    in-case-of="start|promote"
                    where="meta_attributes"/>
+  </cibtr:table>
+
+  <!--
+   Target tag:     primitive
+                   template
+   Object:         ./operations/op/instance_attributes/nvpair/@name
+   Selector ctxt:  ./operations/op/@name
+   Move ctxt:      per-resource-meta_attributes ~ ./meta_attributes/nvpair
+   Related commit: 023897afc
+                   3100c0e8b
+   -->
+  <cibtr:table for="resource-operation-instance-attributes"
+               msg-prefix="Resources-operation instance_attributes"
+               where-cases="per-resource-meta_attributes">
+    <!-- this is easier to solve through resources-operation table handling,
+         in the inverse mode, but for compatibility purposes, we need to have
+         it tracked here, so mark it the same way as if we were moving it over
+         to sibling per-op meta_attributes (while in fact we move it up to
+         per-resource meta_attributes, as if it was specified in per-op
+         meta_attributes already), just use a dedicated "where-case" other
+         than "meta_attributes" reserved for proper local move as mentioned;
+         otherwise keep it in sync with said table -->
+    <cibtr:replace what="requires"
+                   with=""
+                   msg-extra="only start/promote operation taken into account"/>
+    <cibtr:replace what="requires"
+                   with="requires"
+                   in-case-of="start|promote"
+                   where="per-resource-meta_attributes"/>
   </cibtr:table>
 
   <!--
@@ -286,6 +317,12 @@
               select="document('')/xsl:stylesheet
                         /cibtr:map/cibtr:table[
                           @for = 'resources-operation'
+                        ]"/>
+
+<xsl:variable name="MapResourcesOperationInstanceAttributes"
+              select="document('')/xsl:stylesheet
+                        /cibtr:map/cibtr:table[
+                          @for = 'resource-operation-instance-attributes'
                         ]"/>
 
 <xsl:variable name="MapConstraintsColocation"
@@ -1056,7 +1093,141 @@
 </xsl:template>
 
 <!--
+ Source ctxt:    (primitive|template)/operations/op/instance_attributes
+ Target ctxt:    (primitive|template)/operations/op/instance_attributes
+ Target-inv ctxt:N/A
+ Dependencies:   N/A
+ -->
+<xsl:template name="ProcessOpInstanceAttributes">
+  <xsl:param name="Source"/>
+  <xsl:param name="InnerSimulation" select="false()"/>
+  <xsl:param name="InnerPass">
+    <xsl:choose>
+      <xsl:when test="$InnerSimulation">
+        <xsl:value-of select="''"/>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:call-template name="ProcessOpInstanceAttributes">
+          <xsl:with-param name="Source" select="$Source"/>
+          <xsl:with-param name="InnerSimulation" select="true()"/>
+        </xsl:call-template>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:param>
+
+  <xsl:variable name="EnclosingTag" select="../../.."/>
+
+  <!-- B: special-casing nvpair -->
+  <xsl:for-each select="$Source/node()">
+    <xsl:choose>
+      <xsl:when test="self::text()">
+        <!-- cf. trick A. (consideration 1.) -->
+        <xsl:choose>
+          <xsl:when test="normalize-space($InnerPass)
+                          != $InnerPass
+                          and
+                          (
+                            not(following-sibling::nvpair)
+                            or
+                            generate-id(following-sibling::nvpair[1])
+                            != generate-id(following-sibling::*[1])
+                          )">
+            <xsl:value-of select="."/>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:value-of select="normalize-space(.)"/>
+          </xsl:otherwise>
+        </xsl:choose>
+      </xsl:when>
+      <xsl:when test="self::nvpair">
+        <xsl:variable name="Replacement"
+                      select="$MapResourcesOperationInstanceAttributes/cibtr:replace[
+                                @what = current()/@name
+                                and
+                                (
+                                  (
+                                    @in-case-of
+                                    and
+                                    contains(concat('|', @in-case-of, '|'),
+                                             concat('|', current()/../../@name, '|'))
+                                  )
+                                  or
+                                  (
+                                    not(@in-case-of)
+                                    and
+                                    not(
+                                      $MapResourcesOperationInstanceAttributes/cibtr:replace[
+                                        @what = current()/@name
+                                        and
+                                        @in-case-of
+                                        and
+                                        contains(concat('|', @in-case-of, '|'),
+                                                 concat('|', current()/../../@name, '|'))
+                                      ]
+                                    )
+                                  )
+                                )
+                              ]"/>
+        <xsl:if test="$InnerPass = 'TRIGGER-MSG'">
+          <xsl:call-template name="MapMsg">
+            <xsl:with-param name="Context"
+                            select="concat(../../@id,
+                                           ' (rsc=', $EnclosingTag/@id,
+                                           ', meta=', ../@id,
+                                           ')')"/>
+            <xsl:with-param name="Replacement" select="$Replacement"/>
+          </xsl:call-template>
+        </xsl:if>
+        <xsl:choose>
+          <xsl:when test="$Replacement
+                          and
+                          (
+                            not(string($Replacement/@with))
+                            or
+                            $Replacement/@where
+                          )">
+            <!-- drop (possibly just move over) -->
+            <xsl:variable name="SimulateAttrOverrides">
+              <xsl:for-each select="../../../op">
+                <xsl:call-template name="ProcessAttrOpMetaAttributes">
+                  <xsl:with-param name="Source" select="."/>
+                  <xsl:with-param name="InverseMode" select="true()"/>
+                  <xsl:with-param name="InnerSimulation" select="true()"/>
+                </xsl:call-template>
+              </xsl:for-each>
+            </xsl:variable>
+          </xsl:when>
+          <xsl:when test="$Replacement">
+            <xsl:message terminate="yes">
+              <xsl:value-of select="concat('INTERNAL ERROR: ',
+                                           $Replacement/../@msg-prefix,
+                                           ': no in-situ rename',
+                                           ' does not hold')"/>
+            </xsl:message>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:call-template name="HelperDenormalizedSpace">
+              <xsl:with-param name="Source" select="."/>
+              <xsl:with-param name="InnerSimulation" select="$InnerSimulation"/>
+            </xsl:call-template>
+            <xsl:call-template name="HelperIdentity"/>
+          </xsl:otherwise>
+        </xsl:choose>
+      </xsl:when>
+      <xsl:when test="self::comment()">
+        <!-- drop -->
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:call-template name="HelperIdentity"/>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:for-each>
+  <!-- E: special-casing nvpair -->
+</xsl:template>
+
+<!--
  Source ctxt:    (primitive|template)/operations/op/meta_attributes
+                 (primitive|template)/operations/op/instance_attributes (inverse only)
  Target ctxt:    (primitive|template)/operations/op/meta_attributes
  Target-inv ctxt:(primitive|template)/meta_attributes
  Dependencies:   ProcessAttrOpMetaAttributes
@@ -1153,65 +1324,83 @@
                             $Replacement/@where
                           )">
             <!-- drop (possibly just move over) -->
-            <xsl:variable name="SimulateAttrOverrides">
-              <xsl:for-each select="../../../op">
-                <xsl:call-template name="ProcessAttrOpMetaAttributes">
-                  <xsl:with-param name="Source" select="."/>
-                  <xsl:with-param name="InverseMode" select="true()"/>
-                  <xsl:with-param name="InnerSimulation" select="true()"/>
-                </xsl:call-template>
-              </xsl:for-each>
-            </xsl:variable>
-            <xsl:if test="$InverseMode
-                          and
-                          not(
-                            contains($SimulateAttrOverrides,
-                                     concat(@name, ' '))
-                          )">
-              <!-- do not override; do not collide with:
-                   - newly added from op/@* (see last condition above)
-                   - existing - actually subsumed with the previous point
-                   - successors sourced like this (see below) -->
-              <xsl:variable name="SimulateFollowingSiblings">
-                <!-- cf. similar handling in ProcessAttrOpMetaAttributes,
-                     but this is more convoluted -->
-                <xsl:for-each select="(../following-sibling::meta_attributes
-                                       |../../following-sibling::op/meta_attributes)[
-                                        not(rule)
-                                      ]">
-                  <xsl:call-template name="ProcessNonattrOpMetaAttributes">
+            <xsl:if test="$InverseMode">
+              <xsl:variable name="SimulateAttrOverrides">
+                <xsl:for-each select="../../../op">
+                  <xsl:call-template name="ProcessAttrOpMetaAttributes">
                     <xsl:with-param name="Source" select="."/>
                     <xsl:with-param name="InverseMode" select="true()"/>
                     <xsl:with-param name="InnerSimulation" select="true()"/>
                   </xsl:call-template>
                 </xsl:for-each>
               </xsl:variable>
-              <xsl:if test="$Replacement/@where = 'meta_attributes'
-                            and
-                            not(
-                              $EnclosingTag/meta_attributes[
-                                not(rule)
-                                and
-                                nvpair/@name = $Replacement/@with
-                              ]
-                            )
-                            and
-                            not(
-                              contains($SimulateFollowingSiblings,
+              <xsl:if test="not(
+                              contains($SimulateAttrOverrides,
                                        concat(@name, ' '))
                             )">
-                <!-- cf. trick C. (indicate for inverse mode) -->
-                <xsl:choose>
-                  <!-- instead of HelperDenormalizedSpace -->
-                  <xsl:when test="$InnerSimulation">
-                    <xsl:value-of select="concat(@name, ' ')"/>
-                  </xsl:when>
-                  <xsl:otherwise>
-                    <xsl:copy>
-                      <xsl:apply-templates select="@*"/>
-                    </xsl:copy>
-                  </xsl:otherwise>
-                </xsl:choose>
+                <!-- do not override; do not collide with:
+                     - newly added from op/@* (see last condition above)
+                     - existing - actually subsumed with the previous point
+                     - successors sourced like this (see below)
+                     and if coming from op/instance_attributes, add also
+                     - any meta_attributes sourced like this -->
+                <xsl:variable name="SimulateFollowingSiblings">
+                  <!-- cf. similar handling in ProcessAttrOpMetaAttributes,
+                       but this is more convoluted -->
+                  <xsl:if test="name(..) = 'meta_attributes'">
+                    <xsl:for-each select="(../following-sibling::meta_attributes
+                                           |../../following-sibling::op/meta_attributes)[
+                                            not(rule)
+                                          ]">
+                      <xsl:call-template name="ProcessNonattrOpMetaAttributes">
+                        <xsl:with-param name="Source" select="."/>
+                        <xsl:with-param name="InverseMode" select="true()"/>
+                        <xsl:with-param name="InnerSimulation" select="true()"/>
+                      </xsl:call-template>
+                    </xsl:for-each>
+                  </xsl:if>
+                  <xsl:if test="name(..) = 'instance_attributes'">
+                    <xsl:for-each select="(../following-sibling::instance_attributes
+                                           |../../following-sibling::op/instance_attributes
+                                           |../../meta_attributes
+                                           |../../../op/meta_attributes)[
+                                            not(rule)
+                                          ]">
+                      <xsl:call-template name="ProcessNonattrOpMetaAttributes">
+                        <xsl:with-param name="Source" select="."/>
+                        <xsl:with-param name="InverseMode" select="true()"/>
+                        <xsl:with-param name="InnerSimulation" select="true()"/>
+                      </xsl:call-template>
+                    </xsl:for-each>
+                  </xsl:if>
+                </xsl:variable>
+                <xsl:if test="$Replacement/@where = 'meta_attributes'
+                              and
+                              not(
+                                $EnclosingTag/meta_attributes[
+                                  not(rule)
+                                  and
+                                  nvpair/@name = $Replacement/@with
+                                ]
+                              )
+                              and
+                              not(
+                                contains($SimulateFollowingSiblings,
+                                         concat(@name, ' '))
+                              )">
+                  <!-- cf. trick C. (indicate for inverse mode) -->
+                  <xsl:choose>
+                    <!-- instead of HelperDenormalizedSpace -->
+                    <xsl:when test="$InnerSimulation">
+                      <xsl:value-of select="concat(@name, ' ')"/>
+                    </xsl:when>
+                    <xsl:otherwise>
+                      <xsl:copy>
+                        <xsl:apply-templates select="@*"/>
+                      </xsl:copy>
+                    </xsl:otherwise>
+                  </xsl:choose>
+                </xsl:if>
               </xsl:if>
             </xsl:if>
           </xsl:when>
@@ -1251,6 +1440,7 @@
  Target ctxt:    (primitive|template)/operations/op/meta_attributes
  Target-inv ctxt:(primitive|template)/meta_attributes
  Dependencies:   ProcessNonattrOpMetaAttributes [non-inverse only]
+                 ProcessOpInstanceAttributes [non-inverse only]
  -->
 <xsl:template name="ProcessAttrOpMetaAttributes">
   <xsl:param name="Source"/>
@@ -1420,9 +1610,10 @@
         </xsl:otherwise>
       </xsl:choose>
     </xsl:for-each>
+    <!-- E: special-casing @* -->
 
     <xsl:if test="not($InverseMode)">
-      <!-- B: special-casing meta_attributes -->
+      <!-- B: special-casing instance_attributes|meta_attributes -->
       <xsl:for-each select="$Source/node()">
         <xsl:choose>
           <xsl:when test="self::text()">
@@ -1443,6 +1634,35 @@
                 <xsl:value-of select="normalize-space(.)"/>
               </xsl:otherwise>
             </xsl:choose>
+          </xsl:when>
+          <xsl:when test="self::instance_attributes">
+            <xsl:variable name="ProcessedOpInstanceAttributes">
+              <xsl:call-template name="ProcessOpInstanceAttributes">
+                <xsl:with-param name="Source" select="."/>
+                <xsl:with-param name="InnerSimulation" select="true()"/>
+                <xsl:with-param name="InnerPass"
+                                select="substring-after(
+                                          concat(
+                                            string($InnerSimulation),
+                                            'TRIGGER-MSG'
+                                          ),
+                                         'true'
+                                        )"/>
+              </xsl:call-template>
+            </xsl:variable>
+            <!-- cf. trick A. -->
+            <xsl:if test="normalize-space($ProcessedOpInstanceAttributes)
+                          != $ProcessedOpInstanceAttributes">
+              <xsl:copy>
+                <xsl:apply-templates select="@*"/>
+                <xsl:call-template name="ProcessOpInstanceAttributes">
+                  <xsl:with-param name="Source" select="."/>
+                  <xsl:with-param name="InnerSimulation" select="$InnerSimulation"/>
+                  <!-- cf. trick E. -->
+                  <xsl:with-param name="InnerPass" select="$ProcessedOpInstanceAttributes"/>
+                </xsl:call-template>
+              </xsl:copy>
+            </xsl:if>
           </xsl:when>
           <xsl:when test="self::meta_attributes">
             <xsl:variable name="ProcessedOpMetaAttributes">
@@ -1478,8 +1698,8 @@
           </xsl:otherwise>
         </xsl:choose>
       </xsl:for-each>
+      <!-- E: special-casing instance_attributes|meta_attributes -->
     </xsl:if>
-    <!-- E: special-casing meta_attributes -->
     </xsl:element>
   </xsl:if>
 </xsl:template>
@@ -1859,8 +2079,10 @@
       <xsl:apply-templates select="text()[position() = last()]"/>
     </xsl:if>
 
-    <!-- ...directly by picking existing nvpairs of meta_attributes -->
-    <xsl:for-each select="operations/op/meta_attributes">
+    <!-- ...directly by picking existing nvpairs of
+         meta_attributes|instance_attributes -->
+    <xsl:for-each select="operations/op/meta_attributes
+                          |operations/op/instance_attributes">
       <xsl:variable name="ProcessedOpMetaAttributes">
         <xsl:call-template name="ProcessNonattrOpMetaAttributes">
           <xsl:with-param name="Source" select="."/>
@@ -1871,7 +2093,8 @@
       <!-- cf. trick A. -->
       <xsl:if test="normalize-space($ProcessedOpMetaAttributes)
                     != $ProcessedOpMetaAttributes">
-        <xsl:copy>
+        <!-- cannot xsl:copy, need to settle on meta_attributes -->
+        <meta_attributes>
           <xsl:apply-templates select="@*[
                                          name() != 'id'
                                        ]"/>
@@ -1888,7 +2111,7 @@
             <xsl:with-param name="InnerPass" select="$ProcessedOpMetaAttributes"/>
           </xsl:call-template>
           <xsl:apply-templates select="text()[position() = last()]"/>
-        </xsl:copy>
+        </meta_attributes>
         <xsl:apply-templates select="text()[position() = last()]"/>
       </xsl:if>
     </xsl:for-each>

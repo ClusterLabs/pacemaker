@@ -326,6 +326,26 @@
     </attribute>
   </define>
 
+  <!--
+   see above
+   NOTE: this is rather a grey area, but setting special parameters
+         just for the particular operation is currently not customary,
+         and unsupported by higher level tools, e.g. pcs:
+         https://bugzilla.redhat.com/show_bug.cgi?id=1469801
+         so take the liberty to exclude them for now
+   -->
+  <define name="op.instance_attributes.nvpair.name-unsupported">
+    <attribute name="name">
+      <data type="string">
+        <except>
+          <choice>
+            <value>requires</value>
+          </choice>
+        </except>
+      </data>
+    </attribute>
+  </define>
+
   <define name="element-resource-extra.op">
     <zeroOrMore>
       <choice>
@@ -339,7 +359,13 @@
           </grammar>
         </element>
         <element name="instance_attributes">
-          <externalRef href="nvset-3.0.rng"/>
+          <grammar>
+            <include href="nvset-3.0.rng">
+              <define name="element-nvset.name">
+                <parentRef name="op.instance_attributes.nvpair.name-unsupported"/>
+              </define>
+            </include>
+          </grammar>
         </element>
       </choice>
     </zeroOrMore>
