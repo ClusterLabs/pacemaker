@@ -360,65 +360,65 @@ static void
 do_local_notify(xmlNode * notify_src, const char *client_id,
                 gboolean sync_reply, gboolean from_peer)
 {
-    /* send callback to originating child */
-    crm_client_t *client_obj = NULL;
-    int local_rc = pcmk_ok;
+    int rc = 0;
+    int rid = 0;
     int call_id = 0;
+    int local_rc = pcmk_ok;
+    crm_client_t *client_obj = NULL;
+
+    CRM_ASSERT(notify_src && client_id);
 
     crm_element_value_int(notify_src, F_CIB_CALLID, &call_id);
 
-    if (client_id != NULL) {
-        client_obj = crm_client_get_by_id(client_id);
+    client_obj = crm_client_get_by_id(client_id);
+    if (client_obj == NULL) {
+        crm_debug("Could not send response %d: client %s not found",
+                  call_id, client_id);
+        return;
     }
 
-    if (client_obj == NULL) {
-        local_rc = -ECONNRESET;
-        crm_trace("No client to sent response %d to, F_CIB_CLIENTID not set.", call_id);
+    if (sync_reply) {
+        if (client_obj->ipcs) {
+            CRM_LOG_ASSERT(client_obj->request_id);
 
-    } else {
-        int rid = 0;
+            rid = client_obj->request_id;
+            client_obj->request_id = 0;
 
-        if (sync_reply) {
-            if (client_obj->ipcs) {
-                CRM_LOG_ASSERT(client_obj->request_id);
-
-                rid = client_obj->request_id;
-                client_obj->request_id = 0;
-
-                crm_trace("Sending response %d to %s %s",
-                          rid, client_obj->name,
-                          from_peer ? "(originator of delegated request)" : "");
-            } else {
-                crm_trace("Sending response [call %d] to %s %s",
-                          call_id, client_obj->name, from_peer ? "(originator of delegated request)" : "");
-            }
-
+            crm_trace("Sending response %d to %s %s",
+                      rid, client_obj->name,
+                      from_peer ? "(originator of delegated request)" : "");
         } else {
-            crm_trace("Sending event %d to %s %s",
+            crm_trace("Sending response [call %d] to %s %s",
                       call_id, client_obj->name, from_peer ? "(originator of delegated request)" : "");
         }
 
-        switch (client_obj->kind) {
-            case CRM_CLIENT_IPC:
-                if (crm_ipcs_send(client_obj, rid, notify_src, sync_reply?crm_ipc_flags_none:crm_ipc_server_event) < 0) {
-                    local_rc = -ENOMSG;
-                }
-                break;
-#ifdef HAVE_GNUTLS_GNUTLS_H
-            case CRM_CLIENT_TLS:
-#endif
-            case CRM_CLIENT_TCP:
-                crm_remote_send(client_obj->remote, notify_src);
-                break;
-            default:
-                crm_err("Unknown transport %d for %s", client_obj->kind, client_obj->name);
-        }
+    } else {
+        crm_trace("Sending event %d to %s %s",
+                  call_id, client_obj->name, from_peer ? "(originator of delegated request)" : "");
     }
 
-    if (local_rc != pcmk_ok && client_obj != NULL) {
-        crm_warn("%sSync reply to %s failed: %s",
-                 sync_reply ? "" : "A-",
-                 client_obj ? client_obj->name : "<unknown>", pcmk_strerror(local_rc));
+    switch (client_obj->kind) {
+        case CRM_CLIENT_IPC:
+            rc = crm_ipcs_send(client_obj, rid, notify_src, (sync_reply?
+                               crm_ipc_flags_none : crm_ipc_server_event));
+            if (rc < 0) {
+                local_rc = rc;
+            }
+            break;
+#ifdef HAVE_GNUTLS_GNUTLS_H
+        case CRM_CLIENT_TLS:
+#endif
+        case CRM_CLIENT_TCP:
+            crm_remote_send(client_obj->remote, notify_src);
+            break;
+        default:
+            crm_err("Unknown transport %d for %s", client_obj->kind, client_obj->name);
+    }
+
+    if (local_rc != pcmk_ok) {
+        crm_warn("%s reply to %s failed: %s " CRM_XS " rc=%d",
+                 (sync_reply? "Synchronous" : "Asynchronous"),
+                 client_obj->name, pcmk_strerror(local_rc), local_rc);
     }
 }
 
