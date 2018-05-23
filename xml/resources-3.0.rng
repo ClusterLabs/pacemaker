@@ -327,7 +327,8 @@
   </define>
 
   <!--
-   see above
+   see above and upgrade-2.10.xsl
+   - cibtr:table for="resources-operation-instance-attributes"
    NOTE: this is rather a grey area, but setting special parameters
          just for the particular operation is currently not customary,
          and unsupported by higher level tools, e.g. pcs:
@@ -339,6 +340,15 @@
       <data type="string">
         <except>
           <choice>
+            <value>interval-origin</value>
+            <value>start-delay</value>
+
+            <value>enabled</value>
+            <value>on-fail</value>
+            <value>record-pending</value>
+            <value>role</value>
+            <value>timeout</value>
+
             <value>requires</value>
           </choice>
         </except>
