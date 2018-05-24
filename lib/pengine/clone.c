@@ -629,3 +629,25 @@ clone_resource_state(const resource_t * rsc, gboolean current)
     pe_rsc_trace(rsc, "%s role: %s", rsc->id, role2text(clone_role));
     return clone_role;
 }
+
+/*!
+ * \internal
+ * \brief Check whether a clone has an instance for every node
+ *
+ * \param[in] rsc       Clone to check
+ * \param[in] data_set  Cluster state
+ */
+bool
+pe__is_universal_clone(pe_resource_t *rsc,
+                       pe_working_set_t *data_set)
+{
+    if (pe_rsc_is_clone(rsc)) {
+        clone_variant_data_t *clone_data = NULL;
+
+        get_clone_variant_data(clone_data, rsc);
+        if (clone_data->clone_max == g_list_length(data_set->nodes)) {
+            return TRUE;
+        }
+    }
+    return FALSE;
+}

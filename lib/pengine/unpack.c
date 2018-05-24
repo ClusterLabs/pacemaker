@@ -1653,6 +1653,22 @@ find_anonymous_clone(pe_working_set_t * data_set, node_t * node, resource_t * pa
         rsc = inactive_instance;
     }
 
+    /* If the resource has "requires" set to "quorum" or "nothing", and we don't
+     * have a clone instance for every node, we don't want to consume a valid
+     * instance number for unclean nodes. Such instances may appear to be active
+     * according to the history, but should be considered inactive, so we can
+     * start an instance elsewhere. Treat such instances as orphans.
+     *
+     * @TODO Ideally, we'd use an inactive instance number if it is not needed
+     * for any clean instances. However, we don't know that at this point.
+     */
+    if ((rsc != NULL) && is_not_set(rsc->flags, pe_rsc_needs_fencing)
+        && (!node->details->online || node->details->unclean)
+        && !pe__is_universal_clone(parent, data_set)) {
+
+        rsc = NULL;
+    }
+
     if (rsc == NULL) {
         rsc = create_anonymous_orphan(parent, rsc_id, node, data_set);
         pe_rsc_trace(parent, "Resource %s, orphan", rsc->id);
