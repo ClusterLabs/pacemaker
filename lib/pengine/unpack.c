@@ -1691,30 +1691,60 @@ create_fake_resource(const char *rsc_id, xmlNode * rsc_entry, pe_working_set_t *
 
 extern resource_t *create_child_clone(resource_t * rsc, int sub_id, pe_working_set_t * data_set);
 
+/*!
+ * \internal
+ * \brief Create orphan instance for anonymous clone resource history
+ */
+static pe_resource_t *
+create_anonymous_orphan(pe_resource_t *parent, const char *rsc_id,
+                        pe_node_t *node, pe_working_set_t *data_set)
+{
+    pe_resource_t *top = create_child_clone(parent, -1, data_set);
+
+    // find_rsc() because we might be a cloned group
+    pe_resource_t *orphan = top->fns->find_rsc(top, rsc_id, NULL, pe_find_clone);
+
+    pe_rsc_debug(parent, "Created orphan %s for %s: %s on %s",
+                 top->id, parent->id, rsc_id, node->details->uname);
+    return orphan;
+}
+
+/*!
+ * \internal
+ * \brief Check a node for an instance of an anonymous clone
+ *
+ * Return a child instance of the specified anonymous clone, in order of
+ * preference: (1) the instance running on the specified node, if any;
+ * (2) an inactive instance (i.e. within the total of clone-max instances);
+ * (3) a newly created orphan (i.e. clone-max instances are already active).
+ *
+ * \param[in] data_set  Cluster information
+ * \param[in] node      Node on which to check for instance
+ * \param[in] parent    Clone to check
+ * \param[in] rsc_id    ID of (clone or cloned) resource being searched for
+ */
 static resource_t *
 find_anonymous_clone(pe_working_set_t * data_set, node_t * node, resource_t * parent,
                      const char *rsc_id)
 {
     GListPtr rIter = NULL;
-    resource_t *rsc = NULL;
+    pe_resource_t *rsc = NULL;
+    pe_resource_t *inactive_instance = NULL;
     gboolean skip_inactive = FALSE;
 
     CRM_ASSERT(parent != NULL);
     CRM_ASSERT(pe_rsc_is_clone(parent));
     CRM_ASSERT(is_not_set(parent->flags, pe_rsc_unique));
 
-    /* Find an instance active (or partially active for grouped clones) on the specified node */
+    // Check for active (or partially active, for cloned groups) instance
     pe_rsc_trace(parent, "Looking for %s on %s in %s", rsc_id, node->details->uname, parent->id);
     for (rIter = parent->children; rsc == NULL && rIter; rIter = rIter->next) {
         GListPtr nIter = NULL;
         GListPtr locations = NULL;
         resource_t *child = rIter->data;
 
+        // Find node(s) where we already know this instance is active
         child->fns->location(child, &locations, TRUE);
-        if (locations == NULL) {
-            pe_rsc_trace(child, "Resource %s, skip inactive", child->id);
-            continue;
-        }
 
         for (nIter = locations; nIter && rsc == NULL; nIter = nIter->next) {
             node_t *childnode = nIter->data;
@@ -1723,7 +1753,7 @@ find_anonymous_clone(pe_working_set_t * data_set, node_t * node, resource_t * pa
                 /* ->find_rsc() because we might be a cloned group */
                 rsc = parent->fns->find_rsc(child, rsc_id, NULL, pe_find_clone);
                 if(rsc) {
-                    pe_rsc_trace(rsc, "Resource %s, active", rsc->id);
+                    pe_rsc_trace(parent, "Resource %s, active", rsc->id);
                 }
             }
 
@@ -1738,41 +1768,27 @@ find_anonymous_clone(pe_working_set_t * data_set, node_t * node, resource_t * pa
             }
         }
 
-        g_list_free(locations);
-    }
-
-    /* Find an inactive instance */
-    if (skip_inactive == FALSE) {
-        pe_rsc_trace(parent, "Looking for %s anywhere", rsc_id);
-        for (rIter = parent->children; rsc == NULL && rIter; rIter = rIter->next) {
-            GListPtr locations = NULL;
-            resource_t *child = rIter->data;
-
-            if (is_set(child->flags, pe_rsc_block)) {
-                pe_rsc_trace(child, "Skip: blocked in stopped state");
-                continue;
-            }
-
-            child->fns->location(child, &locations, TRUE);
-            if (locations == NULL) {
-                /* ->find_rsc() because we might be a cloned group */
-                rsc = parent->fns->find_rsc(child, rsc_id, NULL, pe_find_clone);
-                pe_rsc_trace(parent, "Resource %s, empty slot", rsc->id);
-            }
+        if (locations != NULL) {
             g_list_free(locations);
+        } else {
+            pe_rsc_trace(parent, "Resource %s, skip inactive", child->id);
+            if (!skip_inactive && !inactive_instance
+                && is_not_set(child->flags, pe_rsc_block)) {
+                // Remember one inactive instance in case we don't find active
+                inactive_instance = parent->fns->find_rsc(child, rsc_id, NULL,
+                                                          pe_find_clone);
+            }
         }
     }
 
+    if ((rsc == NULL) && !skip_inactive && (inactive_instance != NULL)) {
+        pe_rsc_trace(parent, "Resource %s, empty slot", inactive_instance->id);
+        rsc = inactive_instance;
+    }
+
     if (rsc == NULL) {
-        /* Create an extra orphan */
-        resource_t *top = create_child_clone(parent, -1, data_set);
-
-        /* ->find_rsc() because we might be a cloned group */
-        rsc = top->fns->find_rsc(top, rsc_id, NULL, pe_find_clone);
-        CRM_ASSERT(rsc != NULL);
-
-        pe_rsc_debug(parent, "Created orphan %s for %s: %s on %s", top->id, parent->id, rsc_id,
-                     node->details->uname);
+        rsc = create_anonymous_orphan(parent, rsc_id, node, data_set);
+        pe_rsc_trace(parent, "Resource %s, orphan", rsc->id);
     }
     return rsc;
 }
@@ -1820,7 +1836,7 @@ unpack_find_resource(pe_working_set_t * data_set, node_t * node, const char *rsc
 
     if (pe_rsc_is_anon_clone(parent)) {
 
-        if (parent && parent->parent) {
+        if (pe_rsc_is_bundled(parent)) {
             rsc = find_container_child(parent->parent, node);
         } else {
             char *base = clone_strip(rsc_id);
