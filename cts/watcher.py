@@ -70,9 +70,7 @@ class FileObj(SearchObj):
         for line in outLines:
             match = re.search("^CTSwatcher:Last read: (\d+)", line)
             if match:
-                last_offset = self.offset
                 self.offset = match.group(1)
-                #if last_offset == "EOF": self.debug("Got %d lines, new offset: %s" % (len(outLines), self.offset))
                 self.debug("Got %d lines, new offset: %s  %s" % (len(outLines), self.offset, repr(self.delegate)))
 
             elif re.search("^CTSwatcher:.*truncated", line):
@@ -89,7 +87,7 @@ class FileObj(SearchObj):
         self.delegate = delegate
         self.cache = []
 
-        if self.limit != None and self.offset > self.limit:
+        if (self.limit is not None) and (self.offset == "EOF" or self.offset > self.limit):
             if self.delegate:
                 self.delegate.async_complete(-1, -1, [], [])
             return None
@@ -111,9 +109,7 @@ class FileObj(SearchObj):
         for line in lines:
             match = re.search("^CTSwatcher:Last read: (\d+)", line)
             if match:
-                last_offset = self.offset
                 self.limit = int(match.group(1))
-                #if last_offset == "EOF": self.debug("Got %d lines, new offset: %s" % (len(lines), self.offset))
                 self.debug("Set limit to: %d" % self.limit)
 
         return
@@ -131,7 +127,6 @@ class JournalObj(SearchObj):
             match = re.search("^-- cursor: ([^.]+)", line)
             if match:
                 foundCursor = True
-                last_offset = self.offset
                 self.offset = match.group(1).strip()
                 self.debug("Got %d lines, new cursor: %s" % (len(outLines), self.offset))
             else:
@@ -146,7 +141,6 @@ class JournalObj(SearchObj):
             for line in outLines:
                 match = re.search("^-- cursor: ([^.]+)", line)
                 if match:
-                    last_offset = self.offset
                     self.offset = match.group(1).strip()
                     self.debug("Got %d lines, new cursor: %s" % (len(outLines), self.offset))
                 else:
