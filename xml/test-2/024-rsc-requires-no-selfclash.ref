@@ -48,7 +48,9 @@
         <instance_attributes id="myAddr2-params">
           <nvpair id="myAddr2-ip" name="ip" value="192.0.2.10"/>
         </instance_attributes>
-      <meta_attributes id="_2TO3_myAddr2-meta"><nvpair id="_2TO3_myAddr2-start-meta-requires" name="requires" value="nothing"/></meta_attributes></primitive>
+      <meta_attributes id="_2TO3_myAddr2-meta"><nvpair id="_2TO3_myAddr2-start-meta-requires" name="requires" value="nothing"/>
+      </meta_attributes>
+      </primitive>
 
       <!-- potential clash between multiple op[@name = 'start'
                                                or
@@ -72,7 +74,9 @@
             <!-- demote != promote -->
             <op id="stateful1-demote" interval="0" name="demote" timeout="40s"/>
           </operations>
-        <meta_attributes id="_2TO3_stateful1-meta"><nvpair id="_2TO3_stateful1-start-meta-requires" name="requires" value="fencing"/></meta_attributes></primitive>
+        <meta_attributes id="_2TO3_stateful1-meta"><nvpair id="_2TO3_stateful1-start-meta-requires" name="requires" value="fencing"/>
+        </meta_attributes>
+        </primitive>
       </clone>
 
       <!-- potential clash between multiple
@@ -101,7 +105,8 @@
         <meta_attributes id="_2TO3_stateful2-promote-meta3">
                 
               <nvpair id="stateful2-promote-requires3-1" name="requires" value="fencing"/>
-              </meta_attributes></primitive>
+              </meta_attributes>
+              </primitive>
       </clone>
 
     </resources>

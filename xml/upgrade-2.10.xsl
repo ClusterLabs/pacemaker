@@ -1815,7 +1815,9 @@
             <xsl:with-param name="InverseMode" select="true()"/>
           </xsl:call-template>
         </xsl:for-each>
+        <xsl:apply-templates select="text()[position() = last()]"/>
       </meta_attributes>
+      <xsl:apply-templates select="text()[position() = last()]"/>
     </xsl:if>
 
     <!-- ...directly by picking existing nvpairs of meta_attributes -->
@@ -1848,6 +1850,7 @@
           </xsl:call-template>
           <xsl:apply-templates select="text()[position() = last()]"/>
         </xsl:copy>
+        <xsl:apply-templates select="text()[position() = last()]"/>
       </xsl:if>
     </xsl:for-each>
   </xsl:copy>

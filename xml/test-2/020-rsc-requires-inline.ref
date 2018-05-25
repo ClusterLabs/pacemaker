@@ -20,7 +20,9 @@
         <instance_attributes id="myAddr-params">
           <nvpair id="myAddr-ip" name="ip" value="192.0.2.10"/>
         </instance_attributes>
-      <meta_attributes id="_2TO3_myAddr-meta"><nvpair id="_2TO3_myAddr-start-meta-requires" name="requires" value="nothing"/></meta_attributes></primitive>
+      <meta_attributes id="_2TO3_myAddr-meta"><nvpair id="_2TO3_myAddr-start-meta-requires" name="requires" value="nothing"/>
+      </meta_attributes>
+      </primitive>
 
       <primitive id="myHttpd" class="ocf" provider="heartbeat" type="apache">
         <operations>
