@@ -3025,6 +3025,33 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
     return TRUE;
 }
 
+/*!
+ * \internal
+ * \brief Check whether a resource is known on a particular node
+ *
+ * \param[in] rsc   Resource to check
+ * \param[in] node  Node to check
+ *
+ * \return TRUE if resource (or parent if an anonymous clone) is known
+ */
+static bool
+rsc_is_known_on(pe_resource_t *rsc, const pe_node_t *node)
+{
+   if (pe_hash_table_lookup(rsc->known_on, node->details->id)) {
+       return TRUE;
+
+   } else if ((rsc->variant == pe_native)
+              && pe_rsc_is_anon_clone(rsc->parent)
+              && pe_hash_table_lookup(rsc->parent->known_on, node->details->id)) {
+       /* We check only the parent, not the uber-parent, because we cannot
+        * assume that the resource is known if it is in an anonymously cloned
+        * group (which may be only partially known).
+        */
+       return TRUE;
+   }
+   return FALSE;
+}
+
 static void
 native_start_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_t * data_set)
 {
@@ -3047,7 +3074,7 @@ native_start_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set
 
         } else if (safe_str_eq(action->task, RSC_START)
                    && NULL != pe_hash_table_lookup(rsc->allowed_nodes, target->details->id)
-                   && NULL == pe_hash_table_lookup(rsc->known_on, target->details->id)) {
+                   && !rsc_is_known_on(rsc, target)) {
             /* if known == NULL, then we don't know if
              *   the resource is active on the node
              *   we're about to shoot
