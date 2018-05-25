@@ -3078,15 +3078,11 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_
     GListPtr gIter = NULL;
     GListPtr action_list = NULL;
 
-    action_t *start = NULL;
     resource_t *top = uber_parent(rsc);
     node_t *target;
 
     CRM_CHECK(stonith_op && stonith_op->node, return);
     target = stonith_op->node;
-
-    /* Check whether the resource has a pending start action */
-    start = find_first_action(rsc->actions, NULL, CRMD_ACTION_START, NULL);
 
     /* Get a list of stop actions potentially implied by the fencing */
     key = stop_key(rsc);
@@ -3096,24 +3092,23 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_
     for (gIter = action_list; gIter != NULL; gIter = gIter->next) {
         action_t *action = (action_t *) gIter->data;
 
-        if (is_set(rsc->flags, pe_rsc_failed)) {
-            crm_notice("Stop of failed resource %s is implicit after %s is fenced",
-                       rsc->id, target->details->uname);
-        } else {
-            crm_info("%s is implicit after %s is fenced",
-                     action->uuid, target->details->uname);
-        }
-
-        /* The stop would never complete and is now implied by the fencing,
-         * so convert it into a pseudo-action.
-         */
+        // The stop would never complete, so convert it into a pseudo-action.
         update_action_flags(action, pe_action_pseudo, __FUNCTION__, __LINE__);
         update_action_flags(action, pe_action_runnable, __FUNCTION__, __LINE__);
-        update_action_flags(action, pe_action_implied_by_stonith, __FUNCTION__, __LINE__);
 
-        if(start == NULL || start->needs > rsc_req_quorum) {
+        if (is_set(action->rsc->flags, pe_rsc_needs_fencing)) {
             enum pe_ordering flags = pe_order_optional;
             action_t *parent_stop = find_first_action(top->actions, NULL, RSC_STOP, NULL);
+
+            if (is_set(rsc->flags, pe_rsc_failed)) {
+                crm_notice("Stop of failed resource %s is implicit after %s is fenced",
+                           rsc->id, target->details->uname);
+            } else {
+                crm_info("%s is implicit after %s is fenced",
+                         action->uuid, target->details->uname);
+            }
+            update_action_flags(action, pe_action_implied_by_stonith,
+                                __FUNCTION__, __LINE__);
 
             if (target->details->remote_rsc) {
                 /* User constraints must not order a resource in a guest node
@@ -3127,6 +3122,14 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_
                 order_actions(stonith_op, action, flags);
             }
             order_actions(stonith_op, parent_stop, flags);
+        } else {
+            if (is_set(rsc->flags, pe_rsc_failed)) {
+                crm_notice("Stop of failed resource %s is implicit because %s will be fenced",
+                           rsc->id, target->details->uname);
+            } else {
+                crm_info("%s is implicit because %s will be fenced",
+                         action->uuid, target->details->uname);
+            }
         }
 
         if (is_set(rsc->flags, pe_rsc_notify)) {
@@ -3216,7 +3219,7 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_
             if (pe_rsc_is_bundled(rsc)) {
                 /* Do nothing, let the recovery be ordered after the parent's implied stop */
 
-            } else if (start == NULL || start->needs > rsc_req_quorum) {
+            } else if (is_set(rsc->flags, pe_rsc_needs_fencing)) {
                 order_actions(stonith_op, action, pe_order_preserve|pe_order_optional);
             }
         }
