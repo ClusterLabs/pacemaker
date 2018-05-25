@@ -25,7 +25,6 @@ _saxon_wrapper() {
 	{ saxon "-xsl:$1" "-s:$2" -versionmsg:off 2>&1 >&3 \
 	  | sed -e '/^Cannot find CatalogManager.properties$/d'; } 3>&- 3>&1 >&2
 }
-#_xalan_wrapper() { Xalan $2 $1; }
 XSLTPROCESSOR=${XSLTPROCESSOR:-xsltproc}
 test "${XSLTPROCESSOR}" != Xalan || XSLTPROCESSOR=_xalan_wrapper
 test "${XSLTPROCESSOR}" != saxon || XSLTPROCESSOR=_saxon_wrapper

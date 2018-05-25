@@ -10,6 +10,7 @@
     </nodes>
     <resources>
 
+      <!-- borrowed from 021-rsc-requires-nvpair -->
       <primitive id="myAddr" class="ocf" provider="heartbeat" type="IPaddr2">
         <operations>
           <op id="myAddr-monitor" name="monitor" interval="30s"/>
@@ -18,7 +19,7 @@
         <instance_attributes id="myAddr-params">
           <nvpair id="myAddr-ip" name="ip" value="192.0.2.10"/>
         </instance_attributes>
-      <meta_attributes id="_2TO3_myAddr-start-metaparams">
+      <meta_attributes id="_2TO3_myAddr-start-instanceparams">
               <!-- relying on order (+ colocation) to guarantee "requires"
                    transitively (unfencing/fencing/quorum)? -->
               

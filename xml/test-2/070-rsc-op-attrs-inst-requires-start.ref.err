@@ -1,0 +1,1 @@
+Resources-operation instance_attributes: myAddr-start (rsc=myAddr, meta=myAddr-start-instanceparams): moving requires under per-resource-meta_attributes as requires unless already defined there for matching start|promote

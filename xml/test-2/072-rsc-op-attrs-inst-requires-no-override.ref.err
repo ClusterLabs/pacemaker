@@ -1,0 +1,4 @@
+Resources-operation instance_attributes: myAddr-start (rsc=myAddr, meta=myAddr-start-instance): moving requires under per-resource-meta_attributes as requires unless already defined there for matching start|promote
+Resources-operation: myAddr-start (rsc=myAddr): moving requires under meta_attributes as requires unless already defined there for matching start|promote
+Resources-operation instance_attributes: stateful-promote (rsc=stateful, meta=stateful-promote-instance): moving requires under per-resource-meta_attributes as requires unless already defined there for matching start|promote
+Resources-operation: stateful-promote (rsc=stateful, meta=stateful-promote-meta): moving requires under meta_attributes as requires unless already defined there for matching start|promote

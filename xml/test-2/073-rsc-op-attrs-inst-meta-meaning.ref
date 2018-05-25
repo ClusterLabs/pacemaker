@@ -13,22 +13,31 @@
       <primitive id="myAddr" class="ocf" provider="heartbeat" type="IPaddr2">
         <operations>
           <op id="myAddr-monitor" name="monitor" interval="30s"/>
-          <op id="myAddr-start" name="start" interval="0" timeout="40s"/>
+          <op id="myAddr-start" name="start" interval="0" timeout="40s">
+            
+          <meta_attributes id="_2TO3_myAddr-start-meta">
+              <nvpair id="myAddr-start-instance-on-fail" name="on-fail" value="standby"/>
+              <nvpair id="myAddr-start-instance-record-pending" name="record-pending" value="true"/>
+          </meta_attributes>
+          </op>
         </operations>
         <instance_attributes id="myAddr-params">
           <nvpair id="myAddr-ip" name="ip" value="192.0.2.10"/>
         </instance_attributes>
-      <meta_attributes id="_2TO3_myAddr-start-metaparams">
-              <!-- relying on order (+ colocation) to guarantee "requires"
-                   transitively (unfencing/fencing/quorum)? -->
-              
-            <nvpair id="myAddr-start-requires" name="requires" value="nothing"/>
-            </meta_attributes>
-            </primitive>
+      </primitive>
 
       <primitive id="myHttpd" class="ocf" provider="heartbeat" type="apache">
         <operations>
-          <op id="myHttpd-monitor" name="monitor" interval="30s"/>
+          <op id="myHttpd-monitor" name="monitor" interval="30s">
+            <instance_attributes id="myHttpd-monitor-instance">
+              <nvpair id="myHttpd-monitor-instance-statusurl" name="statusurl" value="http://localhost/server-status"/>
+            </instance_attributes>
+            
+          <meta_attributes id="_2TO3_myHttpd-monitor-meta">
+            
+              <nvpair id="myHttpd-monitor-instance2-timeout" name="timeout" value="30"/>
+          </meta_attributes>
+          </op>
         </operations>
         <instance_attributes id="myHttpd-params">
           <nvpair id="myHttpd-configfile" name="configfile" value="/etc/httpd/conf/httpd.conf"/>
@@ -36,12 +45,7 @@
       </primitive>
 
     </resources>
-    <constraints>
-
-      <rsc_order id="order-addr-httpd" first="myAddr" then="myHttpd"/>
-      <rsc_colocation id="colocation-addr-httpd" rsc="myHttpd" with-rsc="myAddr" score="INFINITY"/>
-
-    </constraints>
+    <constraints/>
   </configuration>
   <status/>
 </cib>
