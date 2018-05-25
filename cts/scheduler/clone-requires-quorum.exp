@@ -1,0 +1,82 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="1"  transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <pseudo_event id="23" operation="stop" operation_key="dummy-crowd_stop_0" internal_operation_key="dummy-crowd:3_stop_0">
+        <attributes CRM_meta_clone="3" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-rhel7-5-reboot" on_node="rhel7-5" on_node_uuid="5"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="26" operation="stop" operation_key="dummy-crowd-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="1" priority="1000000">
+    <action_set>
+      <pseudo_event id="27" operation="stopped" operation_key="dummy-crowd-clone_stopped_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="23" operation="stop" operation_key="dummy-crowd_stop_0" internal_operation_key="dummy-crowd:3_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="26" operation="stop" operation_key="dummy-crowd-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <pseudo_event id="26" operation="stop" operation_key="dummy-crowd-clone_stop_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="90000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-rhel7-5-reboot" on_node="rhel7-5" on_node_uuid="5"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <pseudo_event id="44" operation="stonith_complete" operation_key="stonith_complete">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-rhel7-5-reboot" on_node="rhel7-5" on_node_uuid="5"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="4">
+    <action_set>
+      <pseudo_event id="10" operation="all_stopped" operation_key="all_stopped">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="23" operation="stop" operation_key="dummy-crowd_stop_0" internal_operation_key="dummy-crowd:3_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="44" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="5">
+    <action_set>
+      <crm_event id="1" operation="stonith" operation_key="stonith-rhel7-5-reboot" on_node="rhel7-5" on_node_uuid="5">
+        <attributes CRM_meta_cts_fencing="levels-and" CRM_meta_on_node="rhel7-5" CRM_meta_on_node_uuid="5" CRM_meta_stonith_action="reboot" />
+        <downed>
+          <node id="5"/>
+        </downed>
+      </crm_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+</transition_graph>

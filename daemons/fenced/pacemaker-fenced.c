@@ -1141,8 +1141,10 @@ stonith_cleanup(void)
         qb_ipcs_destroy(ipcs);
     }
 
-    g_hash_table_destroy(known_peer_names);
-    known_peer_names = NULL;
+    if (known_peer_names != NULL) {
+        g_hash_table_destroy(known_peer_names);
+        known_peer_names = NULL;
+    }
 
     crm_peer_destroy();
     crm_client_cleanup();
@@ -1150,8 +1152,12 @@ stonith_cleanup(void)
     free_topology_list();
     free_device_list();
     free_metadata_cache();
+
     free(stonith_our_uname);
+    stonith_our_uname = NULL;
+
     free_xml(local_cib);
+    local_cib = NULL;
 }
 
 /* *INDENT-OFF* */

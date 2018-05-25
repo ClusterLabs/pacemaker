@@ -1,20 +1,10 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+
 #ifndef PE_INTERNAL__H
 #  define PE_INTERNAL__H
 #  include <string.h>
@@ -119,6 +109,22 @@ enum pe_fc_flags_e {
 int pe_get_failcount(node_t *node, resource_t *rsc, time_t *last_failure,
                      uint32_t flags, xmlNode *xml_op,
                      pe_working_set_t *data_set);
+
+
+/* Functions for finding/counting a resource's active nodes */
+
+pe_node_t *pe__find_active_on(const pe_resource_t *rsc,
+                              unsigned int *count_all,
+                              unsigned int *count_clean);
+pe_node_t *pe__find_active_requires(const pe_resource_t *rsc,
+                                    unsigned int *count);
+
+static inline pe_node_t *
+pe__current_node(const pe_resource_t *rsc)
+{
+    return pe__find_active_on(rsc, NULL, NULL);
+}
+
 
 /* Binary like operators for lists of nodes */
 extern void node_list_exclude(GHashTable * list, GListPtr list2, gboolean merge_scores);
@@ -312,5 +318,7 @@ const char *pe_node_attribute_calculated(const pe_node_t *node,
                                          const char *name,
                                          const resource_t *rsc);
 const char *pe_node_attribute_raw(pe_node_t *node, const char *name);
+bool pe__is_universal_clone(pe_resource_t *rsc,
+                            pe_working_set_t *data_set);
 
 #endif
