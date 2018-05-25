@@ -743,6 +743,7 @@ do_test clone-interleave-1 "Clone-3 cannot start on pcmk-1 due to interleaved or
 do_test clone-interleave-2 "Clone-3 must stop on pcmk-1 due to interleaved ordering (no colocation)"
 do_test clone-interleave-3 "Clone-3 must be recovered on pcmk-1 due to interleaved ordering (no colocation)"
 do_test rebalance-unique-clones "Rebalance unique clone instances with no stickiness"
+do_test clone-requires-quorum "Clone with requires=quorum and instance on failed node"
 
 echo ""
 do_test cloned_start_one  "order first clone then clone... first clone_min=2"
