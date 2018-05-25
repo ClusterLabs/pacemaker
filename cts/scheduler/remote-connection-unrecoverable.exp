@@ -7,9 +7,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="1" operation="stonith" operation_key="stonith-node1-reboot" on_node="node1" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="7" operation="stop" operation_key="rsc1_stop_0"/>
       </trigger>
     </inputs>
