@@ -3104,6 +3104,7 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_
     char *key = NULL;
     GListPtr gIter = NULL;
     GListPtr action_list = NULL;
+    bool order_implicit = FALSE;
 
     resource_t *top = uber_parent(rsc);
     node_t *target;
@@ -3116,6 +3117,19 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_
     action_list = find_actions(rsc->actions, key, target);
     free(key);
 
+    // If resource requires fencing, implicit actions must occur after fencing
+    if (is_set(rsc->flags, pe_rsc_needs_fencing)) {
+        order_implicit = TRUE;
+    }
+
+    /* Implied stops and demotes of resources running on guest nodes are always
+     * ordered after fencing, even if the resource does not require fencing,
+     * because guest node "fencing" is actually just a resource stop.
+     */
+    if (is_container_remote_node(target)) {
+        order_implicit = TRUE;
+    }
+
     for (gIter = action_list; gIter != NULL; gIter = gIter->next) {
         action_t *action = (action_t *) gIter->data;
 
@@ -3123,7 +3137,7 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_
         update_action_flags(action, pe_action_pseudo, __FUNCTION__, __LINE__);
         update_action_flags(action, pe_action_runnable, __FUNCTION__, __LINE__);
 
-        if (is_set(action->rsc->flags, pe_rsc_needs_fencing)) {
+        if (order_implicit) {
             enum pe_ordering flags = pe_order_optional;
             action_t *parent_stop = find_first_action(top->actions, NULL, RSC_STOP, NULL);
 
@@ -3246,7 +3260,7 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_
             if (pe_rsc_is_bundled(rsc)) {
                 /* Do nothing, let the recovery be ordered after the parent's implied stop */
 
-            } else if (is_set(rsc->flags, pe_rsc_needs_fencing)) {
+            } else if (order_implicit) {
                 order_actions(stonith_op, action, pe_order_preserve|pe_order_optional);
             }
         }

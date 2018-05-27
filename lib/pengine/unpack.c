@@ -1659,11 +1659,15 @@ find_anonymous_clone(pe_working_set_t * data_set, node_t * node, resource_t * pa
      * according to the history, but should be considered inactive, so we can
      * start an instance elsewhere. Treat such instances as orphans.
      *
+     * An exception is instances running on guest nodes -- since guest node
+     * "fencing" is actually just a resource stop, requires shouldn't apply.
+     *
      * @TODO Ideally, we'd use an inactive instance number if it is not needed
      * for any clean instances. However, we don't know that at this point.
      */
     if ((rsc != NULL) && is_not_set(rsc->flags, pe_rsc_needs_fencing)
         && (!node->details->online || node->details->unclean)
+        && !is_container_remote_node(node)
         && !pe__is_universal_clone(parent, data_set)) {
 
         rsc = NULL;
