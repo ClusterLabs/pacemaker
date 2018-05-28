@@ -71,7 +71,7 @@
             <xsl:value-of select="','"/>
           </xsl:if>
         </xsl:if>
-	<xsl:choose>
+        <xsl:choose>
           <xsl:when test="string($Replacement/@in-case-of)">
             <xsl:value-of select="concat(' for matching ',
                                          $Replacement/@in-case-of)"/>
@@ -85,7 +85,7 @@
                                     ' prefix that will, meanwhile, get dropped'
                                   )"/>
           </xsl:when>
-	</xsl:choose>
+        </xsl:choose>
       </cibtr-2:noop>
       <xsl:if test="$Replacement/@msg-extra">
         <cibtr-2:noop>

@@ -321,7 +321,7 @@ test_runner_validate() {
 # -t= ... which conventional version to deem as the transform target
 # -B
 # -D
-# -G  ... see usage
+# -G ... see usage
 # stdin: input file per line
 test_runner() {
 	_tr_mode=0
@@ -407,7 +407,7 @@ tests="${tests} test2to3"
 
 # -B
 # -D
-# -G  ... see usage
+# -G ... see usage
 cts_scheduler() {
 	_tcp_mode=0
 	_tcp_ret=0
