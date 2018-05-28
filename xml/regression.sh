@@ -18,18 +18,21 @@ RNGVALIDATOR=${RNGVALIDATOR:-xmllint --noout --relaxng}
 # $1=stylesheet, $2=source
 # alt.: Xalan, saxon (note: only validates reliably with -B)
 _xalan_wrapper() {
-	{ Xalan "$2" "$1" 2>&1 >&3 \
+	{ ${_XSLTPROCESSOR} "$2" "$1" 2>&1 >&3 \
 	  | sed -e '/^Source tree node.*$/d' \
 	        -e 's|^XSLT message: \(.*\) (Occurred.*)|\1|'; } 3>&- 3>&1 >&2
 }
 # filtered out message: https://bugzilla.redhat.com/show_bug.cgi?id=1577367
 _saxon_wrapper() {
-	{ saxon "-xsl:$1" "-s:$2" -versionmsg:off 2>&1 >&3 \
+	{ ${_XSLTPROCESSOR} "-xsl:$1" "-s:$2" -versionmsg:off 2>&1 >&3 \
 	  | sed -e '/^Cannot find CatalogManager.properties$/d'; } 3>&- 3>&1 >&2
 }
-XSLTPROCESSOR=${XSLTPROCESSOR:-xsltproc}
-test "${XSLTPROCESSOR}" != Xalan || XSLTPROCESSOR=_xalan_wrapper
-test "${XSLTPROCESSOR}" != saxon || XSLTPROCESSOR=_saxon_wrapper
+XSLTPROCESSOR=${XSLTPROCESSOR:-xsltproc --nonet}
+_XSLTPROCESSOR=${XSLTPROCESSOR}
+case "${XSLTPROCESSOR}" in
+[Xx]alan*|*/[Xx]alan*) XSLTPROCESSOR=_xalan_wrapper;;
+saxon*|*/saxon*)       XSLTPROCESSOR=_saxon_wrapper;;
+esac
 
 tests=  # test* names (should go first) here will become preselected default
 
