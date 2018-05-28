@@ -16,11 +16,22 @@ DIFFPAGER=${DIFFPAGER:-less -LRX}
 # alt.: jing -i
 RNGVALIDATOR=${RNGVALIDATOR:-xmllint --noout --relaxng}
 # $1=stylesheet, $2=source
-# alt.: Xalan, saxon (note: only validates reliably with -B)
+# alt.: Xalan, saxon, sabcmd/Sablotron (note: only validates reliably with -B)
 _xalan_wrapper() {
 	{ ${_XSLTPROCESSOR} "$2" "$1" 2>&1 >&3 \
 	  | sed -e '/^Source tree node.*$/d' \
 	        -e 's|^XSLT message: \(.*\) (Occurred.*)|\1|'; } 3>&- 3>&1 >&2
+}
+# Sablotron doesn't translate '-' file specification to stdin
+# and limits the length of the output message
+_sabcmd_wrapper() {
+	_sabw_sheet=${1:?}
+	_sabw_source=${2:?}
+	test "${_sabw_sheet}" != - || _sabw_sheet=/dev/stdin
+	test "${_sabw_source}" != - || _sabw_source=/dev/stdin
+	{ ${_XSLTPROCESSOR} "${_sabw_sheet}" "${_sabw_source}" 2>&1 >&3 \
+	  | sed -e '/^Warning \[code:89\]/d' \
+	        -e 's|^  xsl:message (\(.*\))$|\1|'; } 3>&- 3>&1 >&2
 }
 # filtered out message: https://bugzilla.redhat.com/show_bug.cgi?id=1577367
 _saxon_wrapper() {
@@ -31,6 +42,7 @@ XSLTPROCESSOR=${XSLTPROCESSOR:-xsltproc --nonet}
 _XSLTPROCESSOR=${XSLTPROCESSOR}
 case "${XSLTPROCESSOR}" in
 [Xx]alan*|*/[Xx]alan*) XSLTPROCESSOR=_xalan_wrapper;;
+sabcmd*|*/sabcmd*)     XSLTPROCESSOR=_sabcmd_wrapper;;
 saxon*|*/saxon*)       XSLTPROCESSOR=_saxon_wrapper;;
 esac
 
