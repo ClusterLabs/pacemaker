@@ -113,6 +113,7 @@ test_cleaner() {
 }
 
 test_selfcheck() {
+	_tsc_ret=0
 	_tsc_template=
 	_tsc_validator=
 
@@ -127,9 +128,15 @@ test_selfcheck() {
 	_tsc_template="upgrade-${_tsc_template}.xsl"
 
 	# check schema (sub-grammar) for custom transformation mapping alone
-	${RNGVALIDATOR} 'http://relaxng.org/relaxng.rng' "${_tsc_validator}"
+	if ! ${RNGVALIDATOR} 'http://relaxng.org/relaxng.rng' "${_tsc_validator}"; then
+		_tsc_ret=$((_tsc_ret + 1))
+	fi
 	# check the overall XSLT per the main grammar + said sub-grammar
-	${RNGVALIDATOR} "xslt_${_tsc_validator}" "${_tsc_template}"
+	if ! ${RNGVALIDATOR} "xslt_${_tsc_validator}" "${_tsc_template}"; then
+		_tsc_ret=$((_tsc_ret + 1))
+	fi
+
+	log2_or_0_return ${_tsc_ret}
 }
 
 test_explanation() {
