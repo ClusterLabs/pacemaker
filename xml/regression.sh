@@ -122,14 +122,16 @@ test_browser() {
 	  || curl -Lo assets/diffview.js \
 	     'https://raw.githubusercontent.com/prettydiff/prettydiff/2.2.8/lib/diffview.js'
 
-	which python3 >/dev/null 2>/dev/null \
+	{ which python3 >/dev/null 2>/dev/null \
 	  && { python3 -m http.server "${HTTPPORT}" -b 127.0.0.1 \
-	       || emit_error "Python3 HTTP server shutdown/fail"; } \
-	  || { printf '%s %s\n' \
-	         'Python 2 backed HTTP server cannot listen at particular' \
-		 'address, discretion regarding firewall rules recommended!'
-	       python2 -m SimpleHTTPServer "${HTTPPORT}" \
-	       || emit_error "Python2 HTTP server shutdown/fail"; } &
+	       || emit_error "Python3 HTTP server fail"; return; } \
+	  || which python2 >/dev/null 2>/dev/null \
+	       && { printf '%s %s\n' \
+	            'Python 2 backed HTTP server cannot listen at particular' \
+	            'address, discretion regarding firewall rules recommended!'
+	            python2 -m SimpleHTTPServer "${HTTPPORT}" \
+	            || emit_error 'Python2 HTTP server fail'; return; } \
+	       || emit_error 'Cannot run Python based HTTP server' ; } &
 	_tb_serverpid=$!
 	${WEBBROWSER} "http://localhost:${HTTPPORT}/${_tb_first}" &
 	printf "When finished, just press Ctrl+C or kill %d, please\n" \
@@ -588,7 +590,7 @@ test_suite() {
 #       small ones for generic/global behaviour
 usage() {
 	printf \
-	  '%s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n' \
+	  '%s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n' \
 	  "usage: $0 [-{B,C,D,G,S,X}]* [-|{${tests## }}*]" \
 	  "- when no suites (arguments) provided, \"test*\" ones get used" \
 	  "- with '-' suite specification the actual ones grabbed on stdin" \
@@ -597,16 +599,19 @@ usage() {
 	  "- use '-D' to review originals vs. \"referential\" outcomes" \
 	  "- use '-G' to generate \"referential\" outcomes" \
 	  "- use '-S' for template self-check (requires net access)" \
+	  "- use '-W' to run browser-based, on-the-fly diff'ing test drive" \
 	  "- use '-X' to show explanatory details about the upgrade" \
 	  "- test specification can be granular, e.g. 'test2to3/022'"
 	printf \
-	  '\n%s\n  %s\n  %s\n  %s\n  %s\n  %s\n' \
+	  '\n%s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n' \
 	  'environment variables affecting the run + default/current values:' \
 	  "- DIFF (${DIFF}): tool to compute and show differences of 2 files" \
 	  "- DIFFOPTS (${DIFFOPTS}): options to the above tool" \
 	  "- DIFFPAGER (${DIFFPAGER}): possibly accompanying the above tool" \
 	  "- RNGVALIDATOR (${RNGVALIDATOR}): RelaxNG validator" \
-	  "- XSLTPROCESSOR (${_XSLTPROCESSOR}): XSLT 1.0 capable processor"
+	  "- XSLTPROCESSOR (${_XSLTPROCESSOR}): XSLT 1.0 capable processor" \
+	  "- HTTPPORT (${HTTPPORT}): port used by test drive HTTP server run" \
+	  "- WEBBROWSER (${WEBBROWSER}): used for in-browser test drive"
 }
 
 main() {

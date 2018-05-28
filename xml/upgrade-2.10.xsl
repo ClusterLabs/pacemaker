@@ -2512,6 +2512,14 @@
   </xsl:copy>
 </xsl:template>
 
+<!-- used in test files to allow in-browser on-the-fly upgrade reports -->
+<xsl:template match="processing-instruction()[
+                       name() = 'xml-stylesheet'
+                       and
+                       count(..|/) = 1
+                     ]"
+              mode="cibtr:main"/>
+
 <xsl:template match="@*|node()" mode="cibtr:main">
   <xsl:call-template name="cibtr:HelperIdentity"/>
 </xsl:template>
