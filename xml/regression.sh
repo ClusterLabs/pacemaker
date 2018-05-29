@@ -5,6 +5,8 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 set -eu
+test -d assets && test -d test-2 \
+  || { echo 'Run me from source-tree-like location'; exit 1; }
 # $1=reference (can be '-' for stdin), $2=investigated
 # alt.: wdiff, colordiff, ...
 DIFF=${DIFF:-diff}
