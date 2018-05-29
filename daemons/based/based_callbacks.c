@@ -360,10 +360,9 @@ static void
 do_local_notify(xmlNode * notify_src, const char *client_id,
                 gboolean sync_reply, gboolean from_peer)
 {
-    int rc = 0;
     int rid = 0;
     int call_id = 0;
-    int local_rc = pcmk_ok;
+    ssize_t rc = 0;
     crm_client_t *client_obj = NULL;
 
     CRM_ASSERT(notify_src && client_id);
@@ -402,7 +401,9 @@ do_local_notify(xmlNode * notify_src, const char *client_id,
             rc = crm_ipcs_send(client_obj, rid, notify_src, (sync_reply?
                                crm_ipc_flags_none : crm_ipc_server_event));
             if (rc < 0) {
-                local_rc = rc;
+                crm_warn("%s reply to %s failed: %s " CRM_XS " rc=%d",
+                         (sync_reply? "Synchronous" : "Asynchronous"),
+                         client_obj->name, pcmk_strerror(rc), rc);
             }
             break;
 #ifdef HAVE_GNUTLS_GNUTLS_H
@@ -413,12 +414,6 @@ do_local_notify(xmlNode * notify_src, const char *client_id,
             break;
         default:
             crm_err("Unknown transport %d for %s", client_obj->kind, client_obj->name);
-    }
-
-    if (local_rc != pcmk_ok) {
-        crm_warn("%s reply to %s failed: %s " CRM_XS " rc=%d",
-                 (sync_reply? "Synchronous" : "Asynchronous"),
-                 client_obj->name, pcmk_strerror(local_rc), local_rc);
     }
 }
 
