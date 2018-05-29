@@ -45,6 +45,8 @@ case "${XSLTPROCESSOR}" in
 sabcmd*|*/sabcmd*)     XSLTPROCESSOR=_sabcmd_wrapper;;
 saxon*|*/saxon*)       XSLTPROCESSOR=_saxon_wrapper;;
 esac
+HTTPPORT=${HTTPPORT:-8000}  # Python's default
+WEBBROWSER=${WEBBROWSER:-firefox}
 
 tests=  # test* names (should go first) here will become preselected default
 
@@ -105,6 +107,35 @@ log2_or_0_add() {
 #
 # test phases
 #
+
+# stdin: input file per line
+test_browser() {
+	_tb_cleanref=0
+	_tb_serverpid=
+
+	if ! read _tb_first; then
+		return 1
+	fi
+	cat >/dev/null 2>/dev/null  # read out the rest
+
+	test -f assets/diffview.js \
+	  || curl -Lo assets/diffview.js \
+	     'https://raw.githubusercontent.com/prettydiff/prettydiff/2.2.8/lib/diffview.js'
+
+	which python3 >/dev/null 2>/dev/null \
+	  && { python3 -m http.server "${HTTPPORT}" -b 127.0.0.1 \
+	       || emit_error "Python3 HTTP server shutdown/fail"; } \
+	  || { printf '%s %s\n' \
+	         'Python 2 backed HTTP server cannot listen at particular' \
+		 'address, discretion regarding firewall rules recommended!'
+	       python2 -m SimpleHTTPServer "${HTTPPORT}" \
+	       || emit_error "Python2 HTTP server shutdown/fail"; } &
+	_tb_serverpid=$!
+	${WEBBROWSER} "http://localhost:${HTTPPORT}/${_tb_first}" &
+	printf "When finished, just press Ctrl+C or kill %d, please\n" \
+	       "${_tb_serverpid}"
+	wait
+}
 
 # -r ... whether to remove referential files as well
 # stdin: input file per line
@@ -368,6 +399,7 @@ test2to3() {
 	      *\ -C\ *) test_cleaner;;
 	      *\ -S\ *) test_selfcheck -o=2.10;;
 	      *\ -X\ *) test_explanation -o=2.10;;
+	      *\ -W\ *) test_browser;;
 	      *) test_runner -o=2.10 -t=3.0 "$@" || return $?;;
 	      esac; }
 }
@@ -555,17 +587,26 @@ test_suite() {
 # NOTE: big letters are dedicated for per-test-set behaviour,
 #       small ones for generic/global behaviour
 usage() {
-	printf '%s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n' \
-	    "usage: $0 [-{B,C,D,G,S,X}]* [-|{${tests## }}*]" \
-	    "- when no suites (arguments) provided, \"test*\" ones get used" \
-	    "- with '-' suite specification the actual ones grabbed on stdin" \
-	    "- use '-B' to run validate-only check suppressing blanks first" \
-	    "- use '-C' to only cleanup ephemeral byproducts" \
-	    "- use '-D' to review originals vs. \"referential\" outcomes" \
-	    "- use '-G' to generate \"referential\" outcomes" \
-	    "- use '-S' for template self-check (requires net access)" \
-	    "- use '-X' to show explanatory details about the upgrade" \
-	    "- test specification can be granular, e.g. 'test2to3/022'"
+	printf \
+	  '%s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n' \
+	  "usage: $0 [-{B,C,D,G,S,X}]* [-|{${tests## }}*]" \
+	  "- when no suites (arguments) provided, \"test*\" ones get used" \
+	  "- with '-' suite specification the actual ones grabbed on stdin" \
+	  "- use '-B' to run validate-only check suppressing blanks first" \
+	  "- use '-C' to only cleanup ephemeral byproducts" \
+	  "- use '-D' to review originals vs. \"referential\" outcomes" \
+	  "- use '-G' to generate \"referential\" outcomes" \
+	  "- use '-S' for template self-check (requires net access)" \
+	  "- use '-X' to show explanatory details about the upgrade" \
+	  "- test specification can be granular, e.g. 'test2to3/022'"
+	printf \
+	  '\n%s\n  %s\n  %s\n  %s\n  %s\n  %s\n' \
+	  'environment variables affecting the run + default/current values:' \
+	  "- DIFF (${DIFF}): tool to compute and show differences of 2 files" \
+	  "- DIFFOPTS (${DIFFOPTS}): options to the above tool" \
+	  "- DIFFPAGER (${DIFFPAGER}): possibly accompanying the above tool" \
+	  "- RNGVALIDATOR (${RNGVALIDATOR}): RelaxNG validator" \
+	  "- XSLTPROCESSOR (${_XSLTPROCESSOR}): XSLT 1.0 capable processor"
 }
 
 main() {
