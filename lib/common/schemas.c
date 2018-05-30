@@ -829,7 +829,7 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
             } else {
                 crm_debug("Upgrading %s-style configuration to %s with %s",
                            known_schemas[lpc].name, known_schemas[next].name,
-                           known_schemas[lpc].transform ? known_schemas[lpc].transform : "no-op");
+                           known_schemas[lpc].transform);
 
 #if HAVE_LIBXSLT
                 upgrade = apply_transformation(xml, known_schemas[lpc].transform, to_logs);
