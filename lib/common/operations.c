@@ -49,10 +49,22 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, int *interval)
     char *mutable_key = NULL;
     char *mutable_key_ptr = NULL;
     int len = 0, offset = 0, ch = 0;
+    int local_interval_ms = 0;
 
-    CRM_CHECK(key != NULL, return FALSE);
+    // Initialize output variables in case of early return
+    if (rsc_id) {
+        *rsc_id = NULL;
+    }
+    if (op_type) {
+        *op_type = NULL;
+    }
+    if (interval) {
+        *interval = 0;
+    }
 
-    *interval = 0;
+    CRM_CHECK(key && *key, return FALSE);
+
+    // Parse interval at end of string
     len = strlen(key);
     offset = len - 1;
 
@@ -68,35 +80,35 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, int *interval)
             digits--;
             ch = ch * 10;
         }
-        *interval += ch;
+        local_interval_ms += ch;
         offset--;
     }
+    crm_trace("Operation key '%s' has interval %ums", key, local_interval_ms);
+    if (interval) {
+        *interval = local_interval_ms;
+    }
+ 
+    CRM_CHECK((offset != (len - 1)) && (key[offset] == '_'), return FALSE);
 
-    crm_trace("  Interval: %d", *interval);
-    CRM_CHECK(key[offset] == '_', return FALSE);
-
-    mutable_key = strdup(key);
-    mutable_key[offset] = 0;
+    mutable_key = strndup(key, offset);
     offset--;
 
     while (offset > 0 && key[offset] != '_') {
         offset--;
     }
 
-    CRM_CHECK(key[offset] == '_', free(mutable_key);
-              return FALSE);
+    CRM_CHECK(key[offset] == '_',
+              free(mutable_key); return FALSE);
 
     mutable_key_ptr = mutable_key + offset + 1;
 
     crm_trace("  Action: %s", mutable_key_ptr);
-
-    *op_type = strdup(mutable_key_ptr);
+    if (op_type) {
+        *op_type = strdup(mutable_key_ptr);
+    }
 
     mutable_key[offset] = 0;
     offset--;
-
-    CRM_CHECK(mutable_key != mutable_key_ptr, free(mutable_key);
-              return FALSE);
 
     notify = strstr(mutable_key, "_post_notify");
     if (notify && safe_str_eq(notify, "_post_notify")) {
@@ -109,7 +121,11 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, int *interval)
     }
 
     crm_trace("  Resource: %s", mutable_key);
-    *rsc_id = mutable_key;
+    if (rsc_id) {
+        *rsc_id = mutable_key;
+    } else {
+        free(mutable_key);
+    }
 
     return TRUE;
 }

@@ -3793,7 +3793,6 @@ handle_rsc_op(xmlNode * xml, const char *node_id)
     int rc = -1;
     int status = -1;
     int action = -1;
-    int interval = 0;
     int target_rc = -1;
     int transition_num = -1;
     gboolean notify = TRUE;
@@ -3837,7 +3836,7 @@ handle_rsc_op(xmlNode * xml, const char *node_id)
         return;
     }
 
-    if (parse_op_key(id, &rsc, &task, &interval) == FALSE) {
+    if (parse_op_key(id, &rsc, &task, NULL) == FALSE) {
         crm_err("Invalid event detected for %s", id);
         goto bail;
     }
