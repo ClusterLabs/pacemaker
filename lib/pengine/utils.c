@@ -427,17 +427,20 @@ custom_action(resource_t * rsc, char *key, const char *task,
         }
 
         action = g_list_nth_data(possible_matches, 0);
-        pe_rsc_trace(rsc, "Found existing action (%d) %s for %s on %s",
-                     action->id, task, rsc ? rsc->id : "<NULL>",
-                     on_node ? on_node->details->uname : "<NULL>");
+        pe_rsc_trace(rsc, "Found existing action %d (%s) for %s (%s) on %s",
+                     action->id, action->uuid,
+                     (rsc? rsc->id : "no resource"), task,
+                     (on_node? on_node->details->uname : "no node"));
         g_list_free(possible_matches);
     }
 
     if (action == NULL) {
         if (save_action) {
-            pe_rsc_trace(rsc, "Creating%s action %d: %s for %s on %s %d",
-                         optional ? "" : " mandatory", data_set->action_id, key,
-                         rsc ? rsc->id : "<NULL>", on_node ? on_node->details->uname : "<NULL>", optional);
+            pe_rsc_trace(rsc, "Creating %s action %d: %s for %s (%s) on %s",
+                         (optional? "optional" : " mandatory"),
+                         data_set->action_id, key,
+                         (rsc? rsc->id : "no resource"), task,
+                         (on_node? on_node->details->uname : "no node"));
         }
 
         action = calloc(1, sizeof(action_t));
@@ -456,11 +459,9 @@ custom_action(resource_t * rsc, char *key, const char *task,
 
         pe_set_action_bit(action, pe_action_runnable);
         if (optional) {
-            pe_rsc_trace(rsc, "Set optional on %s", action->uuid);
             pe_set_action_bit(action, pe_action_optional);
         } else {
             pe_clear_action_bit(action, pe_action_optional);
-            pe_rsc_trace(rsc, "Unset optional on %s", action->uuid);
         }
 
         action->extra = crm_str_table_new();
@@ -488,8 +489,8 @@ custom_action(resource_t * rsc, char *key, const char *task,
         }
     }
 
-    if (optional == FALSE) {
-        pe_rsc_trace(rsc, "Unset optional on %s", action->uuid);
+    if (!optional && is_set(action->flags, pe_action_optional)) {
+        pe_rsc_trace(rsc, "Unset optional on action %d", action->id);
         pe_clear_action_bit(action, pe_action_optional);
     }
 
