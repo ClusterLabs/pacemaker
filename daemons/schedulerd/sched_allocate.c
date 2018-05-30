@@ -1639,15 +1639,11 @@ find_actions_by_task(GListPtr actions, resource_t * rsc, const char *original_ke
     if (list == NULL) {
         /* we're potentially searching a child of the original resource */
         char *key = NULL;
-        char *tmp = NULL;
         char *task = NULL;
         guint interval_ms = 0;
 
-        if (parse_op_key(original_key, &tmp, &task, &interval_ms)) {
+        if (parse_op_key(original_key, NULL, &task, &interval_ms)) {
             key = generate_op_key(rsc->id, task, interval_ms);
-            /* crm_err("looking up %s instead of %s", key, original_key); */
-            /* slist_iter(action, action_t, actions, lpc, */
-            /*         crm_err("  - %s", action->uuid)); */
             list = find_actions(actions, key, NULL);
 
         } else {
@@ -1655,7 +1651,6 @@ find_actions_by_task(GListPtr actions, resource_t * rsc, const char *original_ke
         }
 
         free(key);
-        free(tmp);
         free(task);
     }
 
@@ -1737,11 +1732,10 @@ rsc_order_first(resource_t * lh_rsc, order_constraint_t * order, pe_working_set_
 
     if (lh_actions == NULL && lh_rsc != rh_rsc) {
         char *key = NULL;
-        char *rsc_id = NULL;
         char *op_type = NULL;
         guint interval_ms = 0;
 
-        parse_op_key(order->lh_action_task, &rsc_id, &op_type, &interval_ms);
+        parse_op_key(order->lh_action_task, NULL, &op_type, &interval_ms);
         key = generate_op_key(lh_rsc->id, op_type, interval_ms);
 
         if (lh_rsc->fns->state(lh_rsc, TRUE) == RSC_ROLE_STOPPED && safe_str_eq(op_type, RSC_STOP)) {
@@ -1762,7 +1756,6 @@ rsc_order_first(resource_t * lh_rsc, order_constraint_t * order, pe_working_set_
         }
 
         free(op_type);
-        free(rsc_id);
     }
 
     gIter = lh_actions;
