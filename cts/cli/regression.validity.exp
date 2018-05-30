@@ -220,9 +220,9 @@ update_validation 	debug: Testing 'pacemaker-1.2' validation (1 of X)
 element tags: Relax-NG validity error : Element configuration has extra content: tags
 update_validation 	trace: pacemaker-1.2 validation failed
 update_validation 	debug: Testing 'pacemaker-1.3' validation (2 of X)
-update_validation 	debug: Upgrading pacemaker-1.3-style configuration to pacemaker-2.0 with upgrade-1.3.xsl
-update_validation 	info: Transformation upgrade-1.3.xsl successful
+update_validation 	debug: pacemaker-1.3-style configuration is also valid for pacemaker-2.0
 update_validation 	debug: Testing 'pacemaker-2.0' validation (3 of X)
+update_validation 	debug: Configuration valid for schema: pacemaker-2.0
 update_validation 	debug: pacemaker-2.0-style configuration is also valid for pacemaker-2.1
 update_validation 	debug: Testing 'pacemaker-2.1' validation (4 of X)
 update_validation 	debug: Configuration valid for schema: pacemaker-2.1
@@ -253,9 +253,9 @@ update_validation 	debug: Configuration valid for schema: pacemaker-2.9
 update_validation 	debug: pacemaker-2.9-style configuration is also valid for pacemaker-2.10
 update_validation 	debug: Testing 'pacemaker-2.10' validation (13 of X)
 update_validation 	debug: Configuration valid for schema: pacemaker-2.10
-update_validation 	debug: Upgrading pacemaker-2.10-style configuration to pacemaker-3.0 with upgrade-2.10.xsl
-update_validation 	info: Transformation upgrade-2.10.xsl successful
+update_validation 	debug: pacemaker-2.10-style configuration is also valid for pacemaker-3.0
 update_validation 	debug: Testing 'pacemaker-3.0' validation (14 of X)
+update_validation 	debug: Configuration valid for schema: pacemaker-3.0
 update_validation 	trace: Stopping at pacemaker-3.0
 update_validation 	info: Transformed the configuration from pacemaker-1.2 to pacemaker-3.0
 unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined

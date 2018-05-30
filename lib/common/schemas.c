@@ -61,6 +61,7 @@ struct schema_s {
 
 static struct schema_s *known_schemas = NULL;
 static int xml_schema_max = 0;
+static bool silent_logging = FALSE;
 
 static void
 xml_log(int priority, const char *fmt, ...)
@@ -72,8 +73,10 @@ xml_log(int priority, const char *fmt, ...)
     va_list ap;
 
     va_start(ap, fmt);
-    /* XXX should not this enable dechunking as well? */
-    CRM_XML_LOG_BASE(priority, FALSE, 0, NULL, fmt, ap);
+    if (silent_logging == FALSE) {
+        /* XXX should not this enable dechunking as well? */
+        CRM_XML_LOG_BASE(priority, FALSE, 0, NULL, fmt, ap);
+    }
     va_end(ap);
 }
 
@@ -516,6 +519,16 @@ validate_with(xmlNode *xml, int method, gboolean to_logs)
     return valid;
 }
 
+static bool
+validate_with_silent(xmlNode *xml, int method)
+{
+    bool rc, sl_backup = silent_logging;
+    silent_logging = TRUE;
+    rc = validate_with(xml, method, TRUE);
+    silent_logging = sl_backup;
+    return rc;
+}
+
 static void
 dump_file(const char *filename)
 {
@@ -820,7 +833,13 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
                           known_schemas[lpc].name, lpc, next, max);
                 break;
 
-            } else if (known_schemas[lpc].transform == NULL) {
+            } else if (known_schemas[lpc].transform == NULL
+                       /* possibly avoid transforming when readily valid
+                          (in general more restricted when crossing the major
+                          version boundary, as X.0 "transitional" version is
+                          expected to be more strict than it's successors that
+                          may re-allow constructs from previous major line) */
+                       || validate_with_silent(xml, next)) {
                 crm_debug("%s-style configuration is also valid for %s",
                            known_schemas[lpc].name, known_schemas[next].name);
 
