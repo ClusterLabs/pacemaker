@@ -37,7 +37,6 @@ digraph "g" {
 "rsc2_stop_0 node1" -> "all_stopped" [ style = bold]
 "rsc2_stop_0 node1" -> "rsc2-master_stopped_0" [ style = bold]
 "rsc2_stop_0 node1" [ style=bold color="green" fontcolor="orange"]
-"stonith 'reboot' node1" -> "remote1_stop_0 node1" [ style = bold]
 "stonith 'reboot' node1" -> "rsc2-master_stop_0" [ style = bold]
 "stonith 'reboot' node1" -> "rsc2_demote_0 node1" [ style = bold]
 "stonith 'reboot' node1" -> "rsc2_stop_0 node1" [ style = bold]

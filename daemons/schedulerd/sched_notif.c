@@ -113,7 +113,7 @@ expand_node_list(GListPtr list, char **uname, char **metal)
             if(node->details->remote_rsc
                && node->details->remote_rsc->container
                && node->details->remote_rsc->container->running_on) {
-                node = node->details->remote_rsc->container->running_on->data;
+                node = pe__current_node(node->details->remote_rsc->container);
             }
 
             if (node->details->uname == NULL) {

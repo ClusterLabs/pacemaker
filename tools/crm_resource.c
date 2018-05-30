@@ -974,22 +974,26 @@ main(int argc, char **argv)
         rc = cli_resource_ban(rsc_id, dest->details->uname, NULL, cib_conn);
 
     } else if (rsc_cmd == 'B' || rsc_cmd == 'M') {
-        if (g_list_length(rsc->running_on) == 1) {
-            node_t *current = rsc->running_on->data;
+        pe_node_t *current = NULL;
+        unsigned int nactive = 0;
+
+        current = pe__find_active_requires(rsc, &nactive);
+
+        if (nactive == 1) {
             rc = cli_resource_ban(rsc_id, current->details->uname, NULL, cib_conn);
 
         } else if (is_set(rsc->flags, pe_rsc_promotable)) {
             int count = 0;
             GListPtr iter = NULL;
-            node_t *current = NULL;
 
+            current = NULL;
             for(iter = rsc->children; iter; iter = iter->next) {
                 resource_t *child = (resource_t *)iter->data;
                 enum rsc_role_e child_role = child->fns->state(child, TRUE);
 
                 if(child_role == RSC_ROLE_MASTER) {
                     count++;
-                    current = child->running_on->data;
+                    current = pe__current_node(child);
                 }
             }
 
@@ -999,7 +1003,8 @@ main(int argc, char **argv)
             } else {
                 rc = -EINVAL;
                 exit_code = CRM_EX_USAGE;
-                CMD_ERR("Resource '%s' not moved: active in %d locations (promoted in %d).", rsc_id, g_list_length(rsc->running_on), count);
+                CMD_ERR("Resource '%s' not moved: active in %d locations (promoted in %d).",
+                        rsc_id, nactive, count);
                 CMD_ERR("You can prevent '%s' from running on a specific location with: --ban --node <name>", rsc_id);
                 CMD_ERR("You can prevent '%s' from being promoted at a specific location with:"
                         " --ban --master --node <name>", rsc_id);
@@ -1008,7 +1013,7 @@ main(int argc, char **argv)
         } else {
             rc = -EINVAL;
             exit_code = CRM_EX_USAGE;
-            CMD_ERR("Resource '%s' not moved: active in %d locations.", rsc_id, g_list_length(rsc->running_on));
+            CMD_ERR("Resource '%s' not moved: active in %d locations.", rsc_id, nactive);
             CMD_ERR("You can prevent '%s' from running on a specific location with: --ban --node <name>", rsc_id);
         }
 
@@ -1112,13 +1117,13 @@ main(int argc, char **argv)
             node_t *node = pe_find_node(data_set.nodes, host_uname);
 
             if (node && is_remote_node(node)) {
-                if (node->details->remote_rsc == NULL || node->details->remote_rsc->running_on == NULL) {
+                node = pe__current_node(node->details->remote_rsc);
+                if (node == NULL) {
                     CMD_ERR("No cluster connection to Pacemaker Remote node %s detected",
                             host_uname);
                     rc = -ENXIO;
                     goto bail;
                 }
-                node = node->details->remote_rsc->running_on->data;
                 router_node = node->details->uname;
                 attr_options |= attrd_opt_remote;
             }

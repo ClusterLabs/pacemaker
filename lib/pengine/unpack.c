@@ -1558,30 +1558,60 @@ create_fake_resource(const char *rsc_id, xmlNode * rsc_entry, pe_working_set_t *
 
 extern resource_t *create_child_clone(resource_t * rsc, int sub_id, pe_working_set_t * data_set);
 
+/*!
+ * \internal
+ * \brief Create orphan instance for anonymous clone resource history
+ */
+static pe_resource_t *
+create_anonymous_orphan(pe_resource_t *parent, const char *rsc_id,
+                        pe_node_t *node, pe_working_set_t *data_set)
+{
+    pe_resource_t *top = create_child_clone(parent, -1, data_set);
+
+    // find_rsc() because we might be a cloned group
+    pe_resource_t *orphan = top->fns->find_rsc(top, rsc_id, NULL, pe_find_clone);
+
+    pe_rsc_debug(parent, "Created orphan %s for %s: %s on %s",
+                 top->id, parent->id, rsc_id, node->details->uname);
+    return orphan;
+}
+
+/*!
+ * \internal
+ * \brief Check a node for an instance of an anonymous clone
+ *
+ * Return a child instance of the specified anonymous clone, in order of
+ * preference: (1) the instance running on the specified node, if any;
+ * (2) an inactive instance (i.e. within the total of clone-max instances);
+ * (3) a newly created orphan (i.e. clone-max instances are already active).
+ *
+ * \param[in] data_set  Cluster information
+ * \param[in] node      Node on which to check for instance
+ * \param[in] parent    Clone to check
+ * \param[in] rsc_id    ID of (clone or cloned) resource being searched for
+ */
 static resource_t *
 find_anonymous_clone(pe_working_set_t * data_set, node_t * node, resource_t * parent,
                      const char *rsc_id)
 {
     GListPtr rIter = NULL;
-    resource_t *rsc = NULL;
+    pe_resource_t *rsc = NULL;
+    pe_resource_t *inactive_instance = NULL;
     gboolean skip_inactive = FALSE;
 
     CRM_ASSERT(parent != NULL);
     CRM_ASSERT(pe_rsc_is_clone(parent));
     CRM_ASSERT(is_not_set(parent->flags, pe_rsc_unique));
 
-    /* Find an instance active (or partially active for grouped clones) on the specified node */
+    // Check for active (or partially active, for cloned groups) instance
     pe_rsc_trace(parent, "Looking for %s on %s in %s", rsc_id, node->details->uname, parent->id);
     for (rIter = parent->children; rsc == NULL && rIter; rIter = rIter->next) {
         GListPtr nIter = NULL;
         GListPtr locations = NULL;
         resource_t *child = rIter->data;
 
+        // Find node(s) where we already know this instance is active
         child->fns->location(child, &locations, TRUE);
-        if (locations == NULL) {
-            pe_rsc_trace(child, "Resource %s, skip inactive", child->id);
-            continue;
-        }
 
         for (nIter = locations; nIter && rsc == NULL; nIter = nIter->next) {
             node_t *childnode = nIter->data;
@@ -1590,7 +1620,7 @@ find_anonymous_clone(pe_working_set_t * data_set, node_t * node, resource_t * pa
                 /* ->find_rsc() because we might be a cloned group */
                 rsc = parent->fns->find_rsc(child, rsc_id, NULL, pe_find_clone);
                 if(rsc) {
-                    pe_rsc_trace(rsc, "Resource %s, active", rsc->id);
+                    pe_rsc_trace(parent, "Resource %s, active", rsc->id);
                 }
             }
 
@@ -1605,41 +1635,47 @@ find_anonymous_clone(pe_working_set_t * data_set, node_t * node, resource_t * pa
             }
         }
 
-        g_list_free(locations);
-    }
-
-    /* Find an inactive instance */
-    if (skip_inactive == FALSE) {
-        pe_rsc_trace(parent, "Looking for %s anywhere", rsc_id);
-        for (rIter = parent->children; rsc == NULL && rIter; rIter = rIter->next) {
-            GListPtr locations = NULL;
-            resource_t *child = rIter->data;
-
-            if (is_set(child->flags, pe_rsc_block)) {
-                pe_rsc_trace(child, "Skip: blocked in stopped state");
-                continue;
-            }
-
-            child->fns->location(child, &locations, TRUE);
-            if (locations == NULL) {
-                /* ->find_rsc() because we might be a cloned group */
-                rsc = parent->fns->find_rsc(child, rsc_id, NULL, pe_find_clone);
-                pe_rsc_trace(parent, "Resource %s, empty slot", rsc->id);
-            }
+        if (locations != NULL) {
             g_list_free(locations);
+        } else {
+            pe_rsc_trace(parent, "Resource %s, skip inactive", child->id);
+            if (!skip_inactive && !inactive_instance
+                && is_not_set(child->flags, pe_rsc_block)) {
+                // Remember one inactive instance in case we don't find active
+                inactive_instance = parent->fns->find_rsc(child, rsc_id, NULL,
+                                                          pe_find_clone);
+            }
         }
     }
 
+    if ((rsc == NULL) && !skip_inactive && (inactive_instance != NULL)) {
+        pe_rsc_trace(parent, "Resource %s, empty slot", inactive_instance->id);
+        rsc = inactive_instance;
+    }
+
+    /* If the resource has "requires" set to "quorum" or "nothing", and we don't
+     * have a clone instance for every node, we don't want to consume a valid
+     * instance number for unclean nodes. Such instances may appear to be active
+     * according to the history, but should be considered inactive, so we can
+     * start an instance elsewhere. Treat such instances as orphans.
+     *
+     * An exception is instances running on guest nodes -- since guest node
+     * "fencing" is actually just a resource stop, requires shouldn't apply.
+     *
+     * @TODO Ideally, we'd use an inactive instance number if it is not needed
+     * for any clean instances. However, we don't know that at this point.
+     */
+    if ((rsc != NULL) && is_not_set(rsc->flags, pe_rsc_needs_fencing)
+        && (!node->details->online || node->details->unclean)
+        && !is_container_remote_node(node)
+        && !pe__is_universal_clone(parent, data_set)) {
+
+        rsc = NULL;
+    }
+
     if (rsc == NULL) {
-        /* Create an extra orphan */
-        resource_t *top = create_child_clone(parent, -1, data_set);
-
-        /* ->find_rsc() because we might be a cloned group */
-        rsc = top->fns->find_rsc(top, rsc_id, NULL, pe_find_clone);
-        CRM_ASSERT(rsc != NULL);
-
-        pe_rsc_debug(parent, "Created orphan %s for %s: %s on %s", top->id, parent->id, rsc_id,
-                     node->details->uname);
+        rsc = create_anonymous_orphan(parent, rsc_id, node, data_set);
+        pe_rsc_trace(parent, "Resource %s, orphan", rsc->id);
     }
     return rsc;
 }
@@ -1687,7 +1723,7 @@ unpack_find_resource(pe_working_set_t * data_set, node_t * node, const char *rsc
 
     if (pe_rsc_is_anon_clone(parent)) {
 
-        if (parent && parent->parent) {
+        if (pe_rsc_is_bundled(parent)) {
             rsc = find_container_child(parent->parent, node);
         } else {
             char *base = clone_strip(rsc_id);
@@ -2281,94 +2317,114 @@ find_lrm_op(const char *resource, const char *op, const char *node, const char *
     return get_xpath_object(xpath, data_set->input, LOG_DEBUG);
 }
 
+static bool
+stop_happened_after(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
+                    pe_working_set_t *data_set)
+{
+    xmlNode *stop_op = find_lrm_op(rsc->id, CRMD_ACTION_STOP, node->details->id,
+                                   NULL, data_set);
+
+    if (stop_op) {
+        int stop_id = 0;
+        int task_id = 0;
+
+        crm_element_value_int(stop_op, XML_LRM_ATTR_CALLID, &stop_id);
+        crm_element_value_int(xml_op, XML_LRM_ATTR_CALLID, &task_id);
+        if (stop_id > task_id) {
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
 static void
 unpack_rsc_migration(resource_t *rsc, node_t *node, xmlNode *xml_op, pe_working_set_t * data_set)
 {
-
-    /*
-     * The normal sequence is (now): migrate_to(Src) -> migrate_from(Tgt) -> stop(Src)
+    /* A successful migration sequence is:
+     *    migrate_to on source node
+     *    migrate_from on target node
+     *    stop on source node
      *
-     * So if a migrate_to is followed by a stop, then we don't need to care what
-     * happened on the target node
+     * If a migrate_to is followed by a stop, the entire migration (successful
+     * or failed) is complete, and we don't care what happened on the target.
      *
-     * Without the stop, we need to look for a successful migrate_from.
-     * This would also imply we're no longer running on the source
+     * If no migrate_from has happened, the migration is considered to be
+     * "partial". If the migrate_from failed, make sure the resource gets
+     * stopped on both source and target (if up).
      *
-     * Without the stop, and without a migrate_from op we make sure the resource
-     * gets stopped on both source and target (assuming the target is up)
-     *
+     * If the migrate_to and migrate_from both succeeded (which also implies the
+     * resource is no longer running on the source), but there is no stop, the
+     * migration is considered to be "dangling".
      */
-    int stop_id = 0;
-    int task_id = 0;
-    xmlNode *stop_op =
-        find_lrm_op(rsc->id, CRMD_ACTION_STOP, node->details->id, NULL, data_set);
+    int from_rc = 0;
+    int from_status = 0;
+    const char *migrate_source = NULL;
+    const char *migrate_target = NULL;
+    pe_node_t *target = NULL;
+    pe_node_t *source = NULL;
+    xmlNode *migrate_from = NULL;
 
-    if (stop_op) {
-        crm_element_value_int(stop_op, XML_LRM_ATTR_CALLID, &stop_id);
+    if (stop_happened_after(rsc, node, xml_op, data_set)) {
+        return;
     }
 
-    crm_element_value_int(xml_op, XML_LRM_ATTR_CALLID, &task_id);
+    // Clones are not allowed to migrate, so role can't be master
+    rsc->role = RSC_ROLE_STARTED;
 
-    if (stop_op == NULL || stop_id < task_id) {
-        int from_rc = 0, from_status = 0;
-        const char *migrate_source =
-            crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_SOURCE);
-        const char *migrate_target =
-            crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
+    migrate_source = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_SOURCE);
+    migrate_target = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
 
-        node_t *target = pe_find_node(data_set->nodes, migrate_target);
-        node_t *source = pe_find_node(data_set->nodes, migrate_source);
-        xmlNode *migrate_from =
-            find_lrm_op(rsc->id, CRMD_ACTION_MIGRATED, migrate_target, migrate_source,
-                        data_set);
+    target = pe_find_node(data_set->nodes, migrate_target);
+    source = pe_find_node(data_set->nodes, migrate_source);
 
-        rsc->role = RSC_ROLE_STARTED;       /* can be master? */
-        if (migrate_from) {
-            crm_element_value_int(migrate_from, XML_LRM_ATTR_RC, &from_rc);
-            crm_element_value_int(migrate_from, XML_LRM_ATTR_OPSTATUS, &from_status);
-            pe_rsc_trace(rsc, "%s op on %s exited with status=%d, rc=%d",
-                         ID(migrate_from), migrate_target, from_status, from_rc);
+    // Check whether there was a migrate_from action
+    migrate_from = find_lrm_op(rsc->id, CRMD_ACTION_MIGRATED, migrate_target,
+                               migrate_source, data_set);
+    if (migrate_from) {
+        crm_element_value_int(migrate_from, XML_LRM_ATTR_RC, &from_rc);
+        crm_element_value_int(migrate_from, XML_LRM_ATTR_OPSTATUS, &from_status);
+        pe_rsc_trace(rsc, "%s op on %s exited with status=%d, rc=%d",
+                     ID(migrate_from), migrate_target, from_status, from_rc);
+    }
+
+    if (migrate_from && from_rc == PCMK_OCF_OK
+        && from_status == PCMK_LRM_OP_DONE) {
+        /* The migrate_to and migrate_from both succeeded, so mark the migration
+         * as "dangling". This will be used to schedule a stop action on the
+         * source without affecting the target.
+         */
+        pe_rsc_trace(rsc, "Detected dangling migration op: %s on %s", ID(xml_op),
+                     migrate_source);
+        rsc->role = RSC_ROLE_STOPPED;
+        rsc->dangling_migrations = g_list_prepend(rsc->dangling_migrations, node);
+
+    } else if (migrate_from && (from_status != PCMK_LRM_OP_PENDING)) { // Failed
+        if (target && target->details->online) {
+            pe_rsc_trace(rsc, "Marking active on %s %p %d", migrate_target, target,
+                         target->details->online);
+            native_add_running(rsc, target, data_set);
         }
 
-        if (migrate_from && from_rc == PCMK_OCF_OK
-            && from_status == PCMK_LRM_OP_DONE) {
-            pe_rsc_trace(rsc, "Detected dangling migration op: %s on %s", ID(xml_op),
-                         migrate_source);
+    } else { // Pending, or complete but erased
+        if (target && target->details->online) {
+            pe_rsc_trace(rsc, "Marking active on %s %p %d", migrate_target, target,
+                         target->details->online);
 
-            /* all good
-             * just need to arrange for the stop action to get sent
-             * but _without_ affecting the target somehow
-             */
-            rsc->role = RSC_ROLE_STOPPED;
-            rsc->dangling_migrations = g_list_prepend(rsc->dangling_migrations, node);
-
-        } else if (migrate_from) {  /* Failed */
-            if (target && target->details->online) {
-                pe_rsc_trace(rsc, "Marking active on %s %p %d", migrate_target, target,
-                             target->details->online);
-                native_add_running(rsc, target, data_set);
+            native_add_running(rsc, target, data_set);
+            if (source && source->details->online) {
+                /* This is a partial migration: the migrate_to completed
+                 * successfully on the source, but the migrate_from has not
+                 * completed. Remember the source and target; if the newly
+                 * chosen target remains the same when we schedule actions
+                 * later, we may continue with the migration.
+                 */
+                rsc->partial_migration_target = target;
+                rsc->partial_migration_source = source;
             }
-
-        } else {    /* Pending or complete but erased */
-            if (target && target->details->online) {
-                pe_rsc_trace(rsc, "Marking active on %s %p %d", migrate_target, target,
-                             target->details->online);
-
-                native_add_running(rsc, target, data_set);
-                if (source && source->details->online) {
-                    /* If we make it here we have a partial migration.  The migrate_to
-                     * has completed but the migrate_from on the target has not. Hold on
-                     * to the target and source on the resource. Later on if we detect that
-                     * the resource is still going to run on that target, we may continue
-                     * the migration */
-                    rsc->partial_migration_target = target;
-                    rsc->partial_migration_source = source;
-                }
-            } else {
-                /* Consider it failed here - forces a restart, prevents migration */
-                set_bit(rsc->flags, pe_rsc_failed);
-                clear_bit(rsc->flags, pe_rsc_allow_migrate);
-            }
+        } else {
+            /* Consider it failed here - forces a restart, prevents migration */
+            set_bit(rsc->flags, pe_rsc_failed);
+            clear_bit(rsc->flags, pe_rsc_allow_migrate);
         }
     }
 }

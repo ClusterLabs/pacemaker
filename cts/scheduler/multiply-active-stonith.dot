@@ -1,0 +1,11 @@
+digraph "g" {
+"all_stopped" [ style=bold color="green" fontcolor="orange"]
+"fencer_monitor_60000 node3" [ style=bold color="green" fontcolor="black"]
+"rsc1_stop_0 node2" -> "all_stopped" [ style = bold]
+"rsc1_stop_0 node2" [ style=bold color="green" fontcolor="orange"]
+"stonith 'reboot' node2" -> "rsc1_stop_0 node2" [ style = bold]
+"stonith 'reboot' node2" -> "stonith_complete" [ style = bold]
+"stonith 'reboot' node2" [ style=bold color="green" fontcolor="black"]
+"stonith_complete" -> "all_stopped" [ style = bold]
+"stonith_complete" [ style=bold color="green" fontcolor="orange"]
+}

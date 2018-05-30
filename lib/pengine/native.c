@@ -17,6 +17,21 @@
 #define VARIANT_NATIVE 1
 #include "./variant.h"
 
+/*!
+ * \internal
+ * \brief Check whether a resource is active on multiple nodes
+ */
+static bool
+is_multiply_active(pe_resource_t *rsc)
+{
+    unsigned int count = 0;
+
+    if (rsc->variant == pe_native) {
+        pe__find_active_requires(rsc, &count);
+    }
+    return count > 1;
+}
+
 void
 native_add_running(resource_t * rsc, node_t * node, pe_working_set_t * data_set)
 {
@@ -58,7 +73,7 @@ native_add_running(resource_t * rsc, node_t * node, pe_working_set_t * data_set)
         return;
     }
 
-    if (rsc->variant == pe_native && g_list_length(rsc->running_on) > 1) {
+    if (is_multiply_active(rsc)) {
         switch (rsc->recovery_type) {
             case recovery_stop_only:
                 {
@@ -99,8 +114,8 @@ native_add_running(resource_t * rsc, node_t * node, pe_working_set_t * data_set)
                 }
                 break;
         }
-        crm_debug("%s is active on %d nodes including %s: %s",
-                  rsc->id, g_list_length(rsc->running_on), node->details->uname,
+        crm_debug("%s is active on multiple nodes including %s: %s",
+                  rsc->id, node->details->uname,
                   recovery2text(rsc->recovery_type));
 
     } else {
@@ -440,7 +455,7 @@ native_print_xml(resource_t * rsc, const char *pre_text, long options, void *pri
     if (options & pe_print_rsconly) {
         status_print("/>\n");
         /* do nothing */
-    } else if (g_list_length(rsc->running_on) > 0) {
+    } else if (rsc->running_on != NULL) {
         GListPtr gIter = rsc->running_on;
 
         status_print(">\n");
@@ -512,7 +527,7 @@ common_print(resource_t * rsc, const char *pre_text, const char *name, node_t *n
         } else if (is_set(rsc->flags, pe_rsc_failed)) {
             status_print("<font color=\"red\">");
 
-        } else if (rsc->variant == pe_native && g_list_length(rsc->running_on) == 0) {
+        } else if (rsc->variant == pe_native && (rsc->running_on == NULL)) {
             status_print("<font color=\"red\">");
 
         } else if (g_list_length(rsc->running_on) > 1) {
@@ -725,9 +740,7 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
         return;
     }
 
-    if (rsc->running_on != NULL) {
-        node = rsc->running_on->data;
-    }
+    node = pe__current_node(rsc);
     common_print(rsc, pre_text, rsc_printable_id(rsc), node, options, print_data);
 }
 
