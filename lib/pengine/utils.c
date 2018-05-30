@@ -881,24 +881,29 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
         g_hash_table_remove(action->meta, XML_ATTR_TIMEOUT);
     }
 
-    // <op> <meta_attributes> take precedence over defaults
-    unpack_instance_attributes(data_set->input, xml_obj, XML_TAG_META_SETS,
-                               NULL, action->meta, NULL, TRUE, data_set->now);
-
-#if ENABLE_VERSIONED_ATTRS
-    rsc_details = pe_rsc_action_details(action);
-    pe_unpack_versioned_attributes(data_set->input, xml_obj, XML_TAG_ATTR_SETS, NULL,
-                                   rsc_details->versioned_parameters, data_set->now);
-    pe_unpack_versioned_attributes(data_set->input, xml_obj, XML_TAG_META_SETS, NULL,
-                                   rsc_details->versioned_meta, data_set->now);
-#endif
-
-    /* Anything set as an <op> XML property has highest precedence.
-     * This ensures we use the name and interval from the <op> tag.
-     */
     if (xml_obj) {
         xmlAttrPtr xIter = NULL;
 
+        // <op> <meta_attributes> take precedence over defaults
+        unpack_instance_attributes(data_set->input, xml_obj, XML_TAG_META_SETS,
+                                   NULL, action->meta, NULL, TRUE,
+                                   data_set->now);
+
+#if ENABLE_VERSIONED_ATTRS
+        rsc_details = pe_rsc_action_details(action);
+        pe_unpack_versioned_attributes(data_set->input, xml_obj,
+                                       XML_TAG_ATTR_SETS, NULL,
+                                       rsc_details->versioned_parameters,
+                                       data_set->now);
+        pe_unpack_versioned_attributes(data_set->input, xml_obj,
+                                       XML_TAG_META_SETS, NULL,
+                                       rsc_details->versioned_meta,
+                                       data_set->now);
+#endif
+
+        /* Anything set as an <op> XML property has highest precedence.
+         * This ensures we use the name and interval from the <op> tag.
+         */
         for (xIter = xml_obj->properties; xIter; xIter = xIter->next) {
             const char *prop_name = (const char *)xIter->name;
             const char *prop_value = crm_element_value(xml_obj, prop_name);
@@ -914,13 +919,20 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
     value = g_hash_table_lookup(action->meta, field);
     if (value != NULL) {
         interval_ms = crm_parse_interval_spec(value);
-        if (interval_ms > 0) {
-            value_ms = crm_strdup_printf("%u", interval_ms);
-            g_hash_table_replace(action->meta, strdup(field), value_ms);
 
-        } else {
-            g_hash_table_remove(action->meta, field);
-        }
+    } else if ((xml_obj == NULL) && !strcmp(action->task, RSC_STATUS)) {
+        /* An orphaned recurring monitor will not have any XML. However, we
+         * want the interval to be set, so the action can be properly detected
+         * as a recurring monitor. Parse it from the key in this case.
+         */
+        parse_op_key(action->uuid, NULL, NULL, &interval_ms);
+    }
+    if (interval_ms > 0) {
+        value_ms = crm_strdup_printf("%u", interval_ms);
+        g_hash_table_replace(action->meta, strdup(field), value_ms);
+
+    } else if (value) {
+        g_hash_table_remove(action->meta, field);
     }
 
     // Handle timeout default, now that we know the interval
