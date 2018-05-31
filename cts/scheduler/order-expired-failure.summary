@@ -53,17 +53,11 @@ Transition Summary:
 
 Executing cluster transition:
  * Resource action: rabbitmq-bundle-0 monitor=30000 on controller-2
- * Resource action: rabbitmq-bundle-0 cancel=60000 on controller-2
  * Resource action: rabbitmq-bundle-1 monitor=30000 on controller-0
- * Resource action: rabbitmq-bundle-1 cancel=60000 on controller-0
  * Resource action: rabbitmq-bundle-2 monitor=30000 on controller-1
- * Resource action: rabbitmq-bundle-2 cancel=60000 on controller-1
  * Resource action: galera-bundle-0 monitor=30000 on controller-2
- * Resource action: galera-bundle-0 cancel=60000 on controller-2
  * Resource action: galera-bundle-1 monitor=30000 on controller-0
- * Resource action: galera-bundle-1 cancel=60000 on controller-0
  * Resource action: galera-bundle-2 monitor=30000 on controller-1
- * Resource action: galera-bundle-2 cancel=60000 on controller-1
  * Resource action: redis-bundle-0  monitor=30000 on controller-2
  * Resource action: redis-bundle-0  cancel=60000 on controller-2
  * Resource action: redis-bundle-1  monitor=30000 on controller-0

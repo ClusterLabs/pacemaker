@@ -1,10 +1,4 @@
 digraph "g" {
-"Cancel galera-bundle-0_monitor_60000 controller-2" [ style=bold color="green" fontcolor="black"]
-"Cancel galera-bundle-1_monitor_60000 controller-0" [ style=bold color="green" fontcolor="black"]
-"Cancel galera-bundle-2_monitor_60000 controller-1" [ style=bold color="green" fontcolor="black"]
-"Cancel rabbitmq-bundle-0_monitor_60000 controller-2" [ style=bold color="green" fontcolor="black"]
-"Cancel rabbitmq-bundle-1_monitor_60000 controller-0" [ style=bold color="green" fontcolor="black"]
-"Cancel rabbitmq-bundle-2_monitor_60000 controller-1" [ style=bold color="green" fontcolor="black"]
 "Cancel redis-bundle-0_monitor_60000 controller-2" [ style=bold color="green" fontcolor="black"]
 "Cancel redis-bundle-1_monitor_60000 controller-0" [ style=bold color="green" fontcolor="black"]
 "Cancel redis-bundle-2_monitor_60000 controller-1" [ style=bold color="green" fontcolor="black"]

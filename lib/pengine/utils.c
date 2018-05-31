@@ -427,17 +427,20 @@ custom_action(resource_t * rsc, char *key, const char *task,
         }
 
         action = g_list_nth_data(possible_matches, 0);
-        pe_rsc_trace(rsc, "Found existing action (%d) %s for %s on %s",
-                     action->id, task, rsc ? rsc->id : "<NULL>",
-                     on_node ? on_node->details->uname : "<NULL>");
+        pe_rsc_trace(rsc, "Found existing action %d (%s) for %s (%s) on %s",
+                     action->id, action->uuid,
+                     (rsc? rsc->id : "no resource"), task,
+                     (on_node? on_node->details->uname : "no node"));
         g_list_free(possible_matches);
     }
 
     if (action == NULL) {
         if (save_action) {
-            pe_rsc_trace(rsc, "Creating%s action %d: %s for %s on %s %d",
-                         optional ? "" : " mandatory", data_set->action_id, key,
-                         rsc ? rsc->id : "<NULL>", on_node ? on_node->details->uname : "<NULL>", optional);
+            pe_rsc_trace(rsc, "Creating %s action %d: %s for %s (%s) on %s",
+                         (optional? "optional" : " mandatory"),
+                         data_set->action_id, key,
+                         (rsc? rsc->id : "no resource"), task,
+                         (on_node? on_node->details->uname : "no node"));
         }
 
         action = calloc(1, sizeof(action_t));
@@ -456,11 +459,9 @@ custom_action(resource_t * rsc, char *key, const char *task,
 
         pe_set_action_bit(action, pe_action_runnable);
         if (optional) {
-            pe_rsc_trace(rsc, "Set optional on %s", action->uuid);
             pe_set_action_bit(action, pe_action_optional);
         } else {
             pe_clear_action_bit(action, pe_action_optional);
-            pe_rsc_trace(rsc, "Unset optional on %s", action->uuid);
         }
 
         action->extra = crm_str_table_new();
@@ -488,8 +489,8 @@ custom_action(resource_t * rsc, char *key, const char *task,
         }
     }
 
-    if (optional == FALSE) {
-        pe_rsc_trace(rsc, "Unset optional on %s", action->uuid);
+    if (!optional && is_set(action->flags, pe_action_optional)) {
+        pe_rsc_trace(rsc, "Unset optional on action %d", action->id);
         pe_clear_action_bit(action, pe_action_optional);
     }
 
@@ -880,24 +881,29 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
         g_hash_table_remove(action->meta, XML_ATTR_TIMEOUT);
     }
 
-    // <op> <meta_attributes> take precedence over defaults
-    unpack_instance_attributes(data_set->input, xml_obj, XML_TAG_META_SETS,
-                               NULL, action->meta, NULL, TRUE, data_set->now);
-
-#if ENABLE_VERSIONED_ATTRS
-    rsc_details = pe_rsc_action_details(action);
-    pe_unpack_versioned_attributes(data_set->input, xml_obj, XML_TAG_ATTR_SETS, NULL,
-                                   rsc_details->versioned_parameters, data_set->now);
-    pe_unpack_versioned_attributes(data_set->input, xml_obj, XML_TAG_META_SETS, NULL,
-                                   rsc_details->versioned_meta, data_set->now);
-#endif
-
-    /* Anything set as an <op> XML property has highest precedence.
-     * This ensures we use the name and interval from the <op> tag.
-     */
     if (xml_obj) {
         xmlAttrPtr xIter = NULL;
 
+        // <op> <meta_attributes> take precedence over defaults
+        unpack_instance_attributes(data_set->input, xml_obj, XML_TAG_META_SETS,
+                                   NULL, action->meta, NULL, TRUE,
+                                   data_set->now);
+
+#if ENABLE_VERSIONED_ATTRS
+        rsc_details = pe_rsc_action_details(action);
+        pe_unpack_versioned_attributes(data_set->input, xml_obj,
+                                       XML_TAG_ATTR_SETS, NULL,
+                                       rsc_details->versioned_parameters,
+                                       data_set->now);
+        pe_unpack_versioned_attributes(data_set->input, xml_obj,
+                                       XML_TAG_META_SETS, NULL,
+                                       rsc_details->versioned_meta,
+                                       data_set->now);
+#endif
+
+        /* Anything set as an <op> XML property has highest precedence.
+         * This ensures we use the name and interval from the <op> tag.
+         */
         for (xIter = xml_obj->properties; xIter; xIter = xIter->next) {
             const char *prop_name = (const char *)xIter->name;
             const char *prop_value = crm_element_value(xml_obj, prop_name);
@@ -913,13 +919,20 @@ unpack_operation(action_t * action, xmlNode * xml_obj, resource_t * container,
     value = g_hash_table_lookup(action->meta, field);
     if (value != NULL) {
         interval_ms = crm_parse_interval_spec(value);
-        if (interval_ms > 0) {
-            value_ms = crm_strdup_printf("%u", interval_ms);
-            g_hash_table_replace(action->meta, strdup(field), value_ms);
 
-        } else {
-            g_hash_table_remove(action->meta, field);
-        }
+    } else if ((xml_obj == NULL) && !strcmp(action->task, RSC_STATUS)) {
+        /* An orphaned recurring monitor will not have any XML. However, we
+         * want the interval to be set, so the action can be properly detected
+         * as a recurring monitor. Parse it from the key in this case.
+         */
+        parse_op_key(action->uuid, NULL, NULL, &interval_ms);
+    }
+    if (interval_ms > 0) {
+        value_ms = crm_strdup_printf("%u", interval_ms);
+        g_hash_table_replace(action->meta, strdup(field), value_ms);
+
+    } else if (value) {
+        g_hash_table_remove(action->meta, field);
     }
 
     // Handle timeout default, now that we know the interval
