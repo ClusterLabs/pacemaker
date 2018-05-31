@@ -1,3 +1,4 @@
+<?xml-stylesheet href="../assets/upgrade-2.10-htmldiff.xsl" type="text/xsl"?>
 <cib validate-with="pacemaker-2.0" admin_epoch="0" epoch="0" num_updates="0">
   <configuration>
     <crm_config>
