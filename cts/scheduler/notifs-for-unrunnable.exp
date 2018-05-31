@@ -1,46 +1,46 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
   <synapse id="0" priority="1000000">
     <action_set>
-      <pseudo_event id="63" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-post_notify_running_0">
+      <pseudo_event id="61" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-post_notify_running_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="62" operation="notify" operation_key="rabbitmq-bundle-clone_post_notify_running_0"/>
+        <pseudo_event id="60" operation="notify" operation_key="rabbitmq-bundle-clone_post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="1" priority="1000000">
     <action_set>
-      <pseudo_event id="62" operation="notify" operation_key="rabbitmq-bundle-clone_post_notify_running_0">
+      <pseudo_event id="60" operation="notify" operation_key="rabbitmq-bundle-clone_post_notify_running_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="59" operation="running" operation_key="rabbitmq-bundle-clone_running_0"/>
+        <pseudo_event id="57" operation="running" operation_key="rabbitmq-bundle-clone_running_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="61" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-pre_notify_start_0"/>
+        <pseudo_event id="59" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="2">
     <action_set>
-      <pseudo_event id="61" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-pre_notify_start_0">
+      <pseudo_event id="59" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-pre_notify_start_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="60" operation="notify" operation_key="rabbitmq-bundle-clone_pre_notify_start_0"/>
+        <pseudo_event id="58" operation="notify" operation_key="rabbitmq-bundle-clone_pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="3">
     <action_set>
-      <pseudo_event id="60" operation="notify" operation_key="rabbitmq-bundle-clone_pre_notify_start_0">
+      <pseudo_event id="58" operation="notify" operation_key="rabbitmq-bundle-clone_pre_notify_start_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -48,34 +48,34 @@
   </synapse>
   <synapse id="4" priority="1000000">
     <action_set>
-      <pseudo_event id="59" operation="running" operation_key="rabbitmq-bundle-clone_running_0">
+      <pseudo_event id="57" operation="running" operation_key="rabbitmq-bundle-clone_running_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="58" operation="start" operation_key="rabbitmq-bundle-clone_start_0"/>
+        <pseudo_event id="56" operation="start" operation_key="rabbitmq-bundle-clone_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="5">
     <action_set>
-      <pseudo_event id="58" operation="start" operation_key="rabbitmq-bundle-clone_start_0">
+      <pseudo_event id="56" operation="start" operation_key="rabbitmq-bundle-clone_start_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="48" operation="start" operation_key="rabbitmq-bundle_start_0"/>
+        <pseudo_event id="46" operation="start" operation_key="rabbitmq-bundle_start_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="61" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-pre_notify_start_0"/>
+        <pseudo_event id="59" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="6">
     <action_set>
-      <rsc_op id="42" operation="monitor" operation_key="rabbitmq-bundle-1_monitor_30000" on_node="controller-1" on_node_uuid="2">
+      <rsc_op id="3" operation="monitor" operation_key="rabbitmq-bundle-1_monitor_30000" on_node="controller-1" on_node_uuid="2">
         <primitive id="rabbitmq-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
         <attributes CRM_meta_container="rabbitmq-bundle-docker-1" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="30000" addr="controller-1"  port="3122"/>
       </rsc_op>
@@ -84,211 +84,175 @@
   </synapse>
   <synapse id="7">
     <action_set>
-      <rsc_op id="3" operation="cancel" operation_key="rabbitmq-bundle-1_monitor_60000" on_node="controller-1" on_node_uuid="2">
-        <primitive id="rabbitmq-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_call_id="12" CRM_meta_container="rabbitmq-bundle-docker-1" CRM_meta_interval="60000" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_operation="monitor" CRM_meta_timeout="30000" addr="controller-1"  port="3122"/>
-      </rsc_op>
-    </action_set>
-    <inputs/>
-  </synapse>
-  <synapse id="8">
-    <action_set>
-      <rsc_op id="47" operation="monitor" operation_key="rabbitmq-bundle-2_monitor_30000" on_node="controller-2" on_node_uuid="3">
+      <rsc_op id="16" operation="monitor" operation_key="rabbitmq-bundle-2_monitor_30000" on_node="controller-2" on_node_uuid="3">
         <primitive id="rabbitmq-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
         <attributes CRM_meta_container="rabbitmq-bundle-docker-2" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_timeout="30000" addr="controller-2"  port="3122"/>
       </rsc_op>
     </action_set>
     <inputs/>
   </synapse>
+  <synapse id="8" priority="1000000">
+    <action_set>
+      <pseudo_event id="96" operation="running" operation_key="galera-bundle-master_running_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="95" operation="start" operation_key="galera-bundle-master_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
   <synapse id="9">
     <action_set>
-      <rsc_op id="16" operation="cancel" operation_key="rabbitmq-bundle-2_monitor_60000" on_node="controller-2" on_node_uuid="3">
-        <primitive id="rabbitmq-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_call_id="12" CRM_meta_container="rabbitmq-bundle-docker-2" CRM_meta_interval="60000" CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_operation="monitor" CRM_meta_timeout="30000" addr="controller-2"  port="3122"/>
-      </rsc_op>
-    </action_set>
-    <inputs/>
-  </synapse>
-  <synapse id="10" priority="1000000">
-    <action_set>
-      <pseudo_event id="98" operation="running" operation_key="galera-bundle-master_running_0">
+      <pseudo_event id="95" operation="start" operation_key="galera-bundle-master_start_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="97" operation="start" operation_key="galera-bundle-master_start_0"/>
+        <pseudo_event id="80" operation="start" operation_key="galera-bundle_start_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="11">
+  <synapse id="10">
     <action_set>
-      <pseudo_event id="97" operation="start" operation_key="galera-bundle-master_start_0">
-        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_promoted_max="3" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="82" operation="start" operation_key="galera-bundle_start_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="12">
-    <action_set>
-      <rsc_op id="76" operation="monitor" operation_key="galera-bundle-1_monitor_30000" on_node="controller-1" on_node_uuid="2">
+      <rsc_op id="74" operation="monitor" operation_key="galera-bundle-1_monitor_30000" on_node="controller-1" on_node_uuid="2">
         <primitive id="galera-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
         <attributes CRM_meta_container="galera-bundle-docker-1" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="30000" addr="controller-1"  port="3123"/>
       </rsc_op>
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="13">
+  <synapse id="11">
     <action_set>
       <rsc_op id="8" operation="cancel" operation_key="galera-bundle-1_monitor_60000" on_node="controller-1" on_node_uuid="2">
         <primitive id="galera-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_call_id="13" CRM_meta_container="galera-bundle-docker-1" CRM_meta_interval="60000" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_operation="monitor" CRM_meta_timeout="30000" addr="controller-1"  port="3123"/>
+        <attributes CRM_meta_call_id="13" CRM_meta_container="galera-bundle-docker-1" CRM_meta_interval="60000" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_operation="monitor" CRM_meta_timeout="20000" addr="controller-1"  port="3123"/>
       </rsc_op>
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="14">
+  <synapse id="12">
     <action_set>
-      <rsc_op id="81" operation="monitor" operation_key="galera-bundle-2_monitor_30000" on_node="controller-2" on_node_uuid="3">
+      <rsc_op id="79" operation="monitor" operation_key="galera-bundle-2_monitor_30000" on_node="controller-2" on_node_uuid="3">
         <primitive id="galera-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
         <attributes CRM_meta_container="galera-bundle-docker-2" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_timeout="30000" addr="controller-2"  port="3123"/>
       </rsc_op>
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="15">
+  <synapse id="13">
     <action_set>
       <rsc_op id="20" operation="cancel" operation_key="galera-bundle-2_monitor_60000" on_node="controller-2" on_node_uuid="3">
         <primitive id="galera-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_call_id="13" CRM_meta_container="galera-bundle-docker-2" CRM_meta_interval="60000" CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_operation="monitor" CRM_meta_timeout="30000" addr="controller-2"  port="3123"/>
+        <attributes CRM_meta_call_id="13" CRM_meta_container="galera-bundle-docker-2" CRM_meta_interval="60000" CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_operation="monitor" CRM_meta_timeout="20000" addr="controller-2"  port="3123"/>
       </rsc_op>
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="16" priority="1000000">
+  <synapse id="14" priority="1000000">
     <action_set>
-      <pseudo_event id="139" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_running_0">
+      <pseudo_event id="135" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_running_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="confirmed-post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="138" operation="notify" operation_key="redis-bundle-master_post_notify_running_0"/>
+        <pseudo_event id="134" operation="notify" operation_key="redis-bundle-master_post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="17" priority="1000000">
+  <synapse id="15" priority="1000000">
     <action_set>
-      <pseudo_event id="138" operation="notify" operation_key="redis-bundle-master_post_notify_running_0">
+      <pseudo_event id="134" operation="notify" operation_key="redis-bundle-master_post_notify_running_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="running" CRM_meta_notify_key_type="post" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="135" operation="running" operation_key="redis-bundle-master_running_0"/>
+        <pseudo_event id="131" operation="running" operation_key="redis-bundle-master_running_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="137" operation="notified" operation_key="redis-bundle-master_confirmed-pre_notify_start_0"/>
+        <pseudo_event id="133" operation="notified" operation_key="redis-bundle-master_confirmed-pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="18">
+  <synapse id="16">
     <action_set>
-      <pseudo_event id="137" operation="notified" operation_key="redis-bundle-master_confirmed-pre_notify_start_0">
+      <pseudo_event id="133" operation="notified" operation_key="redis-bundle-master_confirmed-pre_notify_start_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="confirmed-pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="136" operation="notify" operation_key="redis-bundle-master_pre_notify_start_0"/>
+        <pseudo_event id="132" operation="notify" operation_key="redis-bundle-master_pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="19">
+  <synapse id="17">
     <action_set>
-      <pseudo_event id="136" operation="notify" operation_key="redis-bundle-master_pre_notify_start_0">
+      <pseudo_event id="132" operation="notify" operation_key="redis-bundle-master_pre_notify_start_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_key_operation="start" CRM_meta_notify_key_type="pre" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="20" priority="1000000">
+  <synapse id="18" priority="1000000">
     <action_set>
-      <pseudo_event id="135" operation="running" operation_key="redis-bundle-master_running_0">
+      <pseudo_event id="131" operation="running" operation_key="redis-bundle-master_running_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="134" operation="start" operation_key="redis-bundle-master_start_0"/>
+        <pseudo_event id="130" operation="start" operation_key="redis-bundle-master_start_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="21">
+  <synapse id="19">
     <action_set>
-      <pseudo_event id="134" operation="start" operation_key="redis-bundle-master_start_0">
+      <pseudo_event id="130" operation="start" operation_key="redis-bundle-master_start_0">
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="121" operation="start" operation_key="redis-bundle_start_0"/>
+        <pseudo_event id="117" operation="start" operation_key="redis-bundle_start_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="137" operation="notified" operation_key="redis-bundle-master_confirmed-pre_notify_start_0"/>
+        <pseudo_event id="133" operation="notified" operation_key="redis-bundle-master_confirmed-pre_notify_start_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="22">
+  <synapse id="20">
     <action_set>
-      <rsc_op id="115" operation="monitor" operation_key="redis-bundle-1_monitor_30000" on_node="controller-1" on_node_uuid="2">
+      <rsc_op id="2" operation="monitor" operation_key="redis-bundle-1_monitor_30000" on_node="controller-1" on_node_uuid="2">
         <primitive id="redis-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
         <attributes CRM_meta_container="redis-bundle-docker-1" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="30000" addr="controller-1"  port="3124"/>
       </rsc_op>
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="23">
+  <synapse id="21">
     <action_set>
-      <rsc_op id="2" operation="cancel" operation_key="redis-bundle-1_monitor_60000" on_node="controller-1" on_node_uuid="2">
-        <primitive id="redis-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_call_id="15" CRM_meta_container="redis-bundle-docker-1" CRM_meta_interval="60000" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_operation="monitor" CRM_meta_timeout="30000" addr="controller-1"  port="3124"/>
-      </rsc_op>
-    </action_set>
-    <inputs/>
-  </synapse>
-  <synapse id="24">
-    <action_set>
-      <rsc_op id="120" operation="monitor" operation_key="redis-bundle-2_monitor_30000" on_node="controller-2" on_node_uuid="3">
+      <rsc_op id="18" operation="monitor" operation_key="redis-bundle-2_monitor_30000" on_node="controller-2" on_node_uuid="3">
         <primitive id="redis-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
         <attributes CRM_meta_container="redis-bundle-docker-2" CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_timeout="30000" addr="controller-2"  port="3124"/>
       </rsc_op>
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="25">
+  <synapse id="22">
     <action_set>
-      <rsc_op id="18" operation="cancel" operation_key="redis-bundle-2_monitor_60000" on_node="controller-2" on_node_uuid="3">
-        <primitive id="redis-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
-        <attributes CRM_meta_call_id="15" CRM_meta_container="redis-bundle-docker-2" CRM_meta_interval="60000" CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_operation="monitor" CRM_meta_timeout="30000" addr="controller-2"  port="3124"/>
-      </rsc_op>
-    </action_set>
-    <inputs/>
-  </synapse>
-  <synapse id="26">
-    <action_set>
-      <rsc_op id="184" operation="stop" operation_key="stonith-fence_ipmilan-525400fec0c8_stop_0" on_node="controller-1" on_node_uuid="2">
+      <rsc_op id="180" operation="stop" operation_key="stonith-fence_ipmilan-525400fec0c8_stop_0" on_node="controller-1" on_node_uuid="2">
         <primitive id="stonith-fence_ipmilan-525400fec0c8" class="stonith" type="fence_ipmilan"/>
         <attributes CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000"  ipaddr="172.16.0.1" ipport="6231" lanplus="true" login="admin" passwd="****" pcmk_host_list="controller-2" privlvl="administrator"/>
       </rsc_op>
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="27">
+  <synapse id="23">
     <action_set>
       <rsc_op id="33" operation="start" operation_key="stonith-fence_ipmilan-525400fec0c8_start_0" on_node="controller-1" on_node_uuid="2">
         <primitive id="stonith-fence_ipmilan-525400fec0c8" class="stonith" type="fence_ipmilan"/>
@@ -297,11 +261,11 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="184" operation="stop" operation_key="stonith-fence_ipmilan-525400fec0c8_stop_0" on_node="controller-1" on_node_uuid="2"/>
+        <rsc_op id="180" operation="stop" operation_key="stonith-fence_ipmilan-525400fec0c8_stop_0" on_node="controller-1" on_node_uuid="2"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="28">
+  <synapse id="24">
     <action_set>
       <rsc_op id="1" operation="monitor" operation_key="stonith-fence_ipmilan-525400fec0c8_monitor_60000" on_node="controller-1" on_node_uuid="2">
         <primitive id="stonith-fence_ipmilan-525400fec0c8" class="stonith" type="fence_ipmilan"/>
@@ -314,16 +278,16 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="29">
+  <synapse id="25">
     <action_set>
-      <rsc_op id="185" operation="stop" operation_key="stonith-fence_ipmilan-5254002ff217_stop_0" on_node="controller-2" on_node_uuid="3">
+      <rsc_op id="181" operation="stop" operation_key="stonith-fence_ipmilan-5254002ff217_stop_0" on_node="controller-2" on_node_uuid="3">
         <primitive id="stonith-fence_ipmilan-5254002ff217" class="stonith" type="fence_ipmilan"/>
         <attributes CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000"  ipaddr="172.16.0.1" ipport="6232" lanplus="true" login="admin" passwd="****" pcmk_host_list="controller-1" privlvl="administrator"/>
       </rsc_op>
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="30">
+  <synapse id="26">
     <action_set>
       <rsc_op id="35" operation="start" operation_key="stonith-fence_ipmilan-5254002ff217_start_0" on_node="controller-2" on_node_uuid="3">
         <primitive id="stonith-fence_ipmilan-5254002ff217" class="stonith" type="fence_ipmilan"/>
@@ -332,11 +296,11 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="185" operation="stop" operation_key="stonith-fence_ipmilan-5254002ff217_stop_0" on_node="controller-2" on_node_uuid="3"/>
+        <rsc_op id="181" operation="stop" operation_key="stonith-fence_ipmilan-5254002ff217_stop_0" on_node="controller-2" on_node_uuid="3"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="31">
+  <synapse id="27">
     <action_set>
       <rsc_op id="15" operation="monitor" operation_key="stonith-fence_ipmilan-5254002ff217_monitor_60000" on_node="controller-2" on_node_uuid="3">
         <primitive id="stonith-fence_ipmilan-5254002ff217" class="stonith" type="fence_ipmilan"/>
@@ -349,16 +313,16 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="32">
+  <synapse id="28">
     <action_set>
-      <rsc_op id="186" operation="stop" operation_key="stonith-fence_ipmilan-5254008f971a_stop_0" on_node="controller-1" on_node_uuid="2">
+      <rsc_op id="182" operation="stop" operation_key="stonith-fence_ipmilan-5254008f971a_stop_0" on_node="controller-1" on_node_uuid="2">
         <primitive id="stonith-fence_ipmilan-5254008f971a" class="stonith" type="fence_ipmilan"/>
         <attributes CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000"  ipaddr="172.16.0.1" ipport="6235" lanplus="true" login="admin" passwd="****" pcmk_host_list="controller-0" privlvl="administrator"/>
       </rsc_op>
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="33">
+  <synapse id="29">
     <action_set>
       <rsc_op id="34" operation="start" operation_key="stonith-fence_ipmilan-5254008f971a_start_0" on_node="controller-1" on_node_uuid="2">
         <primitive id="stonith-fence_ipmilan-5254008f971a" class="stonith" type="fence_ipmilan"/>
@@ -367,11 +331,11 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="186" operation="stop" operation_key="stonith-fence_ipmilan-5254008f971a_stop_0" on_node="controller-1" on_node_uuid="2"/>
+        <rsc_op id="182" operation="stop" operation_key="stonith-fence_ipmilan-5254008f971a_stop_0" on_node="controller-1" on_node_uuid="2"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="34">
+  <synapse id="30">
     <action_set>
       <rsc_op id="11" operation="monitor" operation_key="stonith-fence_ipmilan-5254008f971a_monitor_60000" on_node="controller-1" on_node_uuid="2">
         <primitive id="stonith-fence_ipmilan-5254008f971a" class="stonith" type="fence_ipmilan"/>
@@ -384,67 +348,67 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="35" priority="1000000">
+  <synapse id="31" priority="1000000">
     <action_set>
-      <pseudo_event id="122" operation="running" operation_key="redis-bundle_running_0">
+      <pseudo_event id="118" operation="running" operation_key="redis-bundle_running_0">
         <attributes CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="139" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_running_0"/>
+        <pseudo_event id="135" operation="notified" operation_key="redis-bundle-master_confirmed-post_notify_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="32">
+    <action_set>
+      <pseudo_event id="117" operation="start" operation_key="redis-bundle_start_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="33" priority="1000000">
+    <action_set>
+      <pseudo_event id="81" operation="running" operation_key="galera-bundle_running_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="96" operation="running" operation_key="galera-bundle-master_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="34">
+    <action_set>
+      <pseudo_event id="80" operation="start" operation_key="galera-bundle_start_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="35" priority="1000000">
+    <action_set>
+      <pseudo_event id="47" operation="running" operation_key="rabbitmq-bundle_running_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="61" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-post_notify_running_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="36">
     <action_set>
-      <pseudo_event id="121" operation="start" operation_key="redis-bundle_start_0">
+      <pseudo_event id="46" operation="start" operation_key="rabbitmq-bundle_start_0">
         <attributes CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="37" priority="1000000">
-    <action_set>
-      <pseudo_event id="83" operation="running" operation_key="galera-bundle_running_0">
-        <attributes CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="98" operation="running" operation_key="galera-bundle-master_running_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="38">
-    <action_set>
-      <pseudo_event id="82" operation="start" operation_key="galera-bundle_start_0">
-        <attributes CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs/>
-  </synapse>
-  <synapse id="39" priority="1000000">
-    <action_set>
-      <pseudo_event id="49" operation="running" operation_key="rabbitmq-bundle_running_0">
-        <attributes CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="63" operation="notified" operation_key="rabbitmq-bundle-clone_confirmed-post_notify_running_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="40">
-    <action_set>
-      <pseudo_event id="48" operation="start" operation_key="rabbitmq-bundle_start_0">
-        <attributes CRM_meta_timeout="20000" />
-      </pseudo_event>
-    </action_set>
-    <inputs/>
-  </synapse>
-  <synapse id="41">
+  <synapse id="37">
     <action_set>
       <pseudo_event id="32" operation="all_stopped" operation_key="all_stopped">
         <attributes />
@@ -452,13 +416,13 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="184" operation="stop" operation_key="stonith-fence_ipmilan-525400fec0c8_stop_0" on_node="controller-1" on_node_uuid="2"/>
+        <rsc_op id="180" operation="stop" operation_key="stonith-fence_ipmilan-525400fec0c8_stop_0" on_node="controller-1" on_node_uuid="2"/>
       </trigger>
       <trigger>
-        <rsc_op id="185" operation="stop" operation_key="stonith-fence_ipmilan-5254002ff217_stop_0" on_node="controller-2" on_node_uuid="3"/>
+        <rsc_op id="181" operation="stop" operation_key="stonith-fence_ipmilan-5254002ff217_stop_0" on_node="controller-2" on_node_uuid="3"/>
       </trigger>
       <trigger>
-        <rsc_op id="186" operation="stop" operation_key="stonith-fence_ipmilan-5254008f971a_stop_0" on_node="controller-1" on_node_uuid="2"/>
+        <rsc_op id="182" operation="stop" operation_key="stonith-fence_ipmilan-5254008f971a_stop_0" on_node="controller-1" on_node_uuid="2"/>
       </trigger>
     </inputs>
   </synapse>
