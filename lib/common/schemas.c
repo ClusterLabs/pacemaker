@@ -193,6 +193,13 @@ schema_sort(const struct dirent **a, const struct dirent **b)
     return 0;
 }
 
+/*!
+ * \internal
+ * \brief Add given schema + auxiliary data to internal bookkeeping.
+ *
+ * \note When providing \p version, should not be called directly but
+ *       through \c add_schema_by_version.
+ */
 static void
 add_schema(enum schema_validator_e validator, const schema_version_t *version,
            const char *name, const char *location, const char *transform,
@@ -366,9 +373,9 @@ crm_schema_init(void)
 
     } else {
         for (lpc = 0; lpc < max; lpc++) {
+            bool transform_expected = FALSE;
             int next = 0;
             schema_version_t version = SCHEMA_ZERO;
-            char *transform = NULL;
 
             if (!version_from_filename(namelist[lpc]->d_name, &version)) {
                 // Shouldn't be possible, but makes static analysis happy
@@ -380,31 +387,17 @@ crm_schema_init(void)
                 schema_version_t next_version = SCHEMA_ZERO;
 
                 if (version_from_filename(namelist[lpc+1]->d_name, &next_version)
-                    && (version.v[0] < next_version.v[0])) {
-
-                    struct stat s;
-                    char *xslt = NULL;
-
-                    transform = schema_strdup_printf("upgrade-", version, ".xsl");
-                    xslt = get_schema_path(NULL, transform);
-                    if (stat(xslt, &s) != 0) {
-                        crm_err("Transform %s not found", xslt);
-                        free(transform);
-                        transform = NULL;
-                        next = -1;
-                    }
-                    free(xslt);
+                        && (version.v[0] < next_version.v[0])) {
+                    transform_expected = TRUE;
                 }
 
             } else {
                 next = -1;
             }
-            add_schema(schema_validator_rng, &version, NULL, NULL, transform,
-                       NULL, FALSE, next);
-            if (transform == NULL && next == -1) {
+            if (add_schema_by_version(&version, next, transform_expected)
+                    == -ENOENT) {
                 break;
             }
-            free(transform);
         }
 
         for (lpc = 0; lpc < max; lpc++) {
