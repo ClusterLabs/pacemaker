@@ -1,3 +1,15 @@
+* Thu May 31 2018 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.0-1
+- Update source tarball to revision: 364dfc4
+- Changesets: 54
+- Diff:       66 files changed, 2808 insertions(+), 723 deletions(-)
+
+- Changes since Pacemaker-2.0.0-rc4
+  + all: prefer appropriate node when multiply active
+  + scheduler: handle "requires" of "quorum" or "nothing" properly
+  + scheduler: ensure orphaned recurring monitors have interval set
+  + scheduler: handle pending migrations correctly when record-pending is true
+  + tools: correctly check crm_resource --move for master role
+
 * Tue May 15 2018 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.0-rc4
 - Update source tarball to revision: d0735e3
 - Changesets: 74
