@@ -569,7 +569,8 @@ crm_ipcs_flush_events(crm_client_t * c)
         struct iovec *event = NULL;
 
         if (c->event_queue) {
-            event = g_queue_pop_head(c->event_queue);
+            // We don't pop unless send is successful
+            event = g_queue_peek_head(c->event_queue);
         }
         if (event == NULL) { // Queue is empty
             break;
@@ -577,10 +578,9 @@ crm_ipcs_flush_events(crm_client_t * c)
 
         rc = qb_ipcs_event_sendv(c->ipcs, event, 2);
         if (rc < 0) {
-            // The event didn't get sent, so put it back
-            g_queue_push_head(c->event_queue, event);
             break;
         }
+        event = g_queue_pop_head(c->event_queue);
 
         sent++;
         header = event[0].iov_base;
@@ -1079,7 +1079,8 @@ crm_ipc_read(crm_ipc_t * client)
     crm_ipc_init();
 
     client->buffer[0] = 0;
-    client->msg_size = qb_ipcc_event_recv(client->ipc, client->buffer, client->buf_size - 1, 0);
+    client->msg_size = qb_ipcc_event_recv(client->ipc, client->buffer,
+                                          client->buf_size, 0);
     if (client->msg_size >= 0) {
         int rc = crm_ipc_decompress(client);
 

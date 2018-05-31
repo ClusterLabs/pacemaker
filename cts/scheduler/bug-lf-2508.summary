@@ -48,32 +48,32 @@ Transition Summary:
 
 Executing cluster transition:
  * Pseudo action:   Group01_start_0
+ * Pseudo action:   clnStonith1_stop_0
  * Resource action: prmStonith3-1:1 monitor=3600000 on srv01
+ * Pseudo action:   clnStonith3_stop_0
+ * Pseudo action:   clnStonith4_stop_0
  * Fencing srv02 (reboot)
  * Pseudo action:   Group02_stop_0
  * Pseudo action:   Dummy02_stop_0
- * Pseudo action:   clnStonith1_stop_0
- * Pseudo action:   clnStonith3_stop_0
- * Pseudo action:   clnStonith4_stop_0
- * Pseudo action:   stonith_complete
- * Resource action: Dummy01         start on srv01
- * Pseudo action:   Group02_stopped_0
- * Pseudo action:   Group02_start_0
- * Resource action: Dummy02         start on srv04
  * Pseudo action:   grpStonith1:1_stop_0
  * Pseudo action:   prmStonith1-3:1_stop_0
  * Pseudo action:   grpStonith3:0_stop_0
  * Pseudo action:   prmStonith3-3:1_stop_0
  * Pseudo action:   grpStonith4:1_stop_0
  * Pseudo action:   prmStonith4-3:1_stop_0
- * Pseudo action:   Group01_running_0
- * Resource action: Dummy01         monitor=10000 on srv01
- * Pseudo action:   Group02_running_0
- * Resource action: Dummy02         monitor=10000 on srv04
+ * Pseudo action:   stonith_complete
+ * Resource action: Dummy01         start on srv01
+ * Pseudo action:   Group02_stopped_0
+ * Pseudo action:   Group02_start_0
+ * Resource action: Dummy02         start on srv04
  * Pseudo action:   prmStonith1-1:1_stop_0
  * Pseudo action:   prmStonith3-1:1_stop_0
  * Pseudo action:   prmStonith4-1:1_stop_0
  * Pseudo action:   all_stopped
+ * Pseudo action:   Group01_running_0
+ * Resource action: Dummy01         monitor=10000 on srv01
+ * Pseudo action:   Group02_running_0
+ * Resource action: Dummy02         monitor=10000 on srv04
  * Pseudo action:   grpStonith1:1_stopped_0
  * Pseudo action:   clnStonith1_stopped_0
  * Pseudo action:   grpStonith3:0_stopped_0

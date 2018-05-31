@@ -181,6 +181,7 @@ lib/gnu/stdalign.h
 /cts/test-suite.log
 /xml/test-2/*.up
 /xml/test-2/*.up.err
+/xml/assets/diffview.js
 
 # Formerly built files (helps when jumping back and forth in checkout)
 /attrd

@@ -101,8 +101,6 @@ digraph "g" {
 "stonith 'reboot' node1" -> "imagestoreclone:0_stop_0 node1" [ style = bold]
 "stonith 'reboot' node1" -> "imagestorecloneset_stop_0" [ style = bold]
 "stonith 'reboot' node1" -> "stonith_complete" [ style = bold]
-"stonith 'reboot' node1" -> "stonithclone:0_stop_0 node1" [ style = bold]
-"stonith 'reboot' node1" -> "stonithcloneset_stop_0" [ style = bold]
 "stonith 'reboot' node1" [ style=bold color="green" fontcolor="black"]
 "stonith_complete" -> "all_stopped" [ style = bold]
 "stonith_complete" [ style=bold color="green" fontcolor="orange" ]

@@ -1,0 +1,14 @@
+digraph "g" {
+"all_stopped" [ style=bold color="green" fontcolor="orange"]
+"dummy-crowd-clone_stop_0" -> "dummy-crowd-clone_stopped_0" [ style = bold]
+"dummy-crowd-clone_stop_0" -> "dummy-crowd_stop_0 rhel7-5" [ style = bold]
+"dummy-crowd-clone_stop_0" [ style=bold color="green" fontcolor="orange"]
+"dummy-crowd-clone_stopped_0" [ style=bold color="green" fontcolor="orange"]
+"dummy-crowd_stop_0 rhel7-5" -> "all_stopped" [ style = bold]
+"dummy-crowd_stop_0 rhel7-5" -> "dummy-crowd-clone_stopped_0" [ style = bold]
+"dummy-crowd_stop_0 rhel7-5" [ style=bold color="green" fontcolor="orange"]
+"stonith 'reboot' rhel7-5" -> "stonith_complete" [ style = bold]
+"stonith 'reboot' rhel7-5" [ style=bold color="green" fontcolor="black"]
+"stonith_complete" -> "all_stopped" [ style = bold]
+"stonith_complete" [ style=bold color="green" fontcolor="orange"]
+}

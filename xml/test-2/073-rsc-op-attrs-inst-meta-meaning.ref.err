@@ -1,0 +1,4 @@
+Resources-operation instance_attributes: myAddr-start (rsc=myAddr, meta=myAddr-start-instance): moving on-fail under meta_attributes as on-fail unless already defined there
+Resources-operation instance_attributes: myAddr-start (rsc=myAddr, meta=myAddr-start-instance): moving record-pending under meta_attributes as record-pending unless already defined there
+Resources-operation instance_attributes: myHttpd-monitor (rsc=myHttpd, meta=myHttpd-monitor-instance): moving timeout under meta_attributes as timeout unless already defined there
+Resources-operation instance_attributes: myHttpd-monitor (rsc=myHttpd, meta=myHttpd-monitor-instance2): moving timeout under meta_attributes as timeout unless already defined there

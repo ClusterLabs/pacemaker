@@ -15,7 +15,6 @@ digraph "g" {
 "rsc_stonith_stop_0 node1" [ style=bold color="green" fontcolor="orange"]
 "stonith 'reboot' node1" -> "clone1_stop_0" [ style = bold]
 "stonith 'reboot' node1" -> "rsc1:1_stop_0 node1" [ style = bold]
-"stonith 'reboot' node1" -> "rsc_stonith_stop_0 node1" [ style = bold]
 "stonith 'reboot' node1" -> "stonith 'reboot' node2" [ style = bold]
 "stonith 'reboot' node1" [ style=bold color="green" fontcolor="black"]
 "stonith 'reboot' node2" -> "clone1_stop_0" [ style = bold]

@@ -1893,16 +1893,10 @@ get_node_display_name(node_t *node)
 
     /* Host is displayed only if this is a guest node */
     if (is_container_remote_node(node)) {
-        if (node->details->remote_rsc->running_on) {
-            /* running_on is a list, but guest nodes will have exactly one entry
-             * unless they are in the process of migrating, in which case they
-             * will have two; either way, we can use the first item in the list
-             */
-            node_t *host_node = (node_t *) node->details->remote_rsc->running_on->data;
+        node_t *host_node = pe__current_node(node->details->remote_rsc);
 
-            if (host_node && host_node->details) {
-                node_host = host_node->details->uname;
-            }
+        if (host_node && host_node->details) {
+            node_host = host_node->details->uname;
         }
         if (node_host == NULL) {
             node_host = ""; /* so we at least get "uname@" to indicate guest */
@@ -3301,7 +3295,6 @@ handle_rsc_op(xmlNode * xml, const char *node_id)
     int rc = -1;
     int status = -1;
     int action = -1;
-    guint interval_ms = 0;
     int target_rc = -1;
     int transition_num = -1;
     gboolean notify = TRUE;
@@ -3345,7 +3338,7 @@ handle_rsc_op(xmlNode * xml, const char *node_id)
         return;
     }
 
-    if (parse_op_key(id, &rsc, &task, &interval_ms) == FALSE) {
+    if (parse_op_key(id, &rsc, &task, NULL) == FALSE) {
         crm_err("Invalid event detected for %s", id);
         goto bail;
     }

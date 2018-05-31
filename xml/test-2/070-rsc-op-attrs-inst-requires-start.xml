@@ -1,0 +1,49 @@
+<?xml-stylesheet href="../assets/upgrade-2.10-htmldiff.xsl" type="text/xsl"?>
+<cib validate-with="pacemaker-2.0" admin_epoch="0" epoch="0" num_updates="0">
+  <configuration>
+    <crm_config/>
+    <nodes>
+
+      <node id="virt-063" uname="virt-063"/>
+      <node id="virt-064" uname="virt-064"/>
+      <node id="virt-069" uname="virt-069"/>
+
+    </nodes>
+    <resources>
+
+      <!-- borrowed from 021-rsc-requires-nvpair -->
+      <primitive id="myAddr" class="ocf" provider="heartbeat" type="IPaddr2">
+        <operations>
+          <op id="myAddr-monitor" name="monitor" interval="30s"/>
+          <op id="myAddr-start" name="start" interval="0" timeout="40s">
+            <instance_attributes id="myAddr-start-instanceparams">
+              <!-- relying on order (+ colocation) to guarantee "requires"
+                   transitively (unfencing/fencing/quorum)? -->
+              <nvpair id="myAddr-start-requires" name="requires" value="nothing"/>
+            </instance_attributes>
+          </op>
+        </operations>
+        <instance_attributes id="myAddr-params">
+          <nvpair id="myAddr-ip" name="ip" value="192.0.2.10"/>
+        </instance_attributes>
+      </primitive>
+
+      <primitive id="myHttpd" class="ocf" provider="heartbeat" type="apache">
+        <operations>
+          <op id="myHttpd-monitor" name="monitor" interval="30s"/>
+        </operations>
+        <instance_attributes id="myHttpd-params">
+          <nvpair id="myHttpd-configfile" name="configfile" value="/etc/httpd/conf/httpd.conf"/>
+        </instance_attributes>
+      </primitive>
+
+    </resources>
+    <constraints>
+
+      <rsc_order id="order-addr-httpd" first="myAddr" then="myHttpd"/>
+      <rsc_colocation id="colocation-addr-httpd" rsc="myHttpd" with-rsc="myAddr" score="INFINITY"/>
+
+    </constraints>
+  </configuration>
+  <status/>
+</cib>

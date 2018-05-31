@@ -1,0 +1,61 @@
+<?xml-stylesheet href="../assets/upgrade-2.10-htmldiff.xsl" type="text/xsl"?>
+<cib validate-with="pacemaker-2.0" admin_epoch="0" epoch="0" num_updates="0">
+  <configuration>
+    <crm_config/>
+    <nodes>
+
+      <node id="virt-063" uname="virt-063"/>
+      <node id="virt-064" uname="virt-064"/>
+      <node id="virt-069" uname="virt-069"/>
+
+    </nodes>
+    <resources>
+
+      <!-- possible override from op's instance attribute over
+           op attribute -->
+      <primitive id="myAddr" class="ocf" provider="heartbeat" type="IPaddr2">
+        <operations>
+          <op id="myAddr-monitor" name="monitor" interval="30s"/>
+          <op id="myAddr-start" name="start" interval="0" timeout="40s"
+              requires="nothing">
+            <instance_attributes id="myAddr-start-instance">
+              <nvpair id="myAddr-start-instance-requires" name="requires" value="quorum"/>
+            </instance_attributes>
+          </op>
+        </operations>
+        <instance_attributes id="myAddr-params">
+          <nvpair id="myAddr-ip" name="ip" value="192.0.2.10"/>
+        </instance_attributes>
+      </primitive>
+
+      <!-- possible override from op's instance attribute over
+           op's meta-attribute -->
+      <clone id="master">
+        <meta_attributes id="master-meta">
+          <nvpair id="master-promotable" name="promotable" value="true"/>
+          <nvpair id="master-promoted-node-max" name="promoted-node-max" value="1"/>
+          <nvpair id="master-clone-max" name="clone-max" value="3"/>
+          <nvpair id="master-promoted-max" name="promoted-max" value="1"/>
+          <nvpair id="master-clone-node-max" name="clone-node-max" value="1"/>
+        </meta_attributes>
+        <primitive id="stateful" class="ocf" type="Stateful" provider="pacemaker">
+          <operations>
+            <op id="stateful-monitor-15s" interval="15s" name="monitor" timeout="60s"/>
+            <op id="stateful-monitor-16s" interval="16s" name="monitor" timeout="60s" role="Master"/>
+            <op id="stateful-promote" interval="0" name="promote" timeout="40s">
+              <meta_attributes id="stateful-promote-meta">
+                <nvpair id="stateful-promote-meta-requires" name="requires" value="nothing"/>
+              </meta_attributes>
+              <instance_attributes id="stateful-promote-instance">
+                <nvpair id="stateful-promote-instance-requires" name="requires" value="quorum"/>
+              </instance_attributes>
+            </op>
+          </operations>
+        </primitive>
+      </clone>
+
+    </resources>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>

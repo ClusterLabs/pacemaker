@@ -156,9 +156,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="1" operation="stonith" operation_key="stonith-c001n02-reboot" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="47" operation="stop" operation_key="DoFencing_stop_0"/>
       </trigger>
     </inputs>
@@ -238,11 +235,7 @@
         <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
-    <inputs>
-      <trigger>
-        <crm_event id="1" operation="stonith" operation_key="stonith-c001n02-reboot" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
-      </trigger>
-    </inputs>
+    <inputs/>
   </synapse>
   <synapse id="23">
     <action_set>

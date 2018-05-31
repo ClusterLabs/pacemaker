@@ -78,6 +78,16 @@ one and must be named `upgrade-${Xold}.${Yold}.xsl`.
 
 See `xml/upgrade-1.3.xsl` for an example.
 
+Since `xml/upgrade-2.10.xsl`, rather self-descriptive approach is taken,
+separating metadata of the replacements and other modifications to
+perform from the actual executive parts, which is leveraged, e.g., with
+the on-the-fly overview as obtained with `./regression.sh -X test2to3`.
+Also this was the first time particular key names of `nvpair`s,
+i.e. below the granularity of the schemas so far, received attention,
+and consequently, no longer expected names became systemically banned
+in the after-upgrade schemas, using `<except>` construct in the
+data type specification pertaining the affected XML path.
+
 ### General Procedure
 
 1. Copy the most recent version of `${base}-*.rng` to `${base}-${X}.${Y}.rng` 
@@ -93,6 +103,8 @@ See `xml/upgrade-1.3.xsl` for an example.
    `diff tools/regression.validity.{out,exp}` to ensure the changes look correct,
    `cp tools/regression.validity.{out,exp}` to update the expected output,
    then commit the change.
+1. Similarly, with the new major version `${X}`, it's advisable to refresh
+   scheduler tests at some point, see the instructions in `cts/README.md`.
 
 ## Using a New Schema
 

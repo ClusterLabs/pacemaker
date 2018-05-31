@@ -94,7 +94,7 @@ native_choose_node(resource_t * rsc, node_t * prefer, pe_working_set_t * data_se
     if (length > 0) {
         nodes = g_hash_table_get_values(rsc->allowed_nodes);
         nodes = g_list_sort_with_data(nodes, sort_node_weight,
-                                      g_list_nth_data(rsc->running_on, 0));
+                                      pe__current_node(rsc));
 
         // First node in sorted list has the best score
         best = g_list_nth_data(nodes, 0);
@@ -150,7 +150,7 @@ native_choose_node(resource_t * rsc, node_t * prefer, pe_working_set_t * data_se
              * remaining unallocated instances to prefer a node that's already
              * running another instance.
              */
-            node_t *running = g_list_nth_data(rsc->running_on, 0);
+            node_t *running = pe__current_node(rsc);
 
             if (running && (can_run_resources(running) == FALSE)) {
                 pe_rsc_trace(rsc, "Current node for %s (%s) can't run resources",
@@ -526,16 +526,14 @@ native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
         node_t *assign_to = NULL;
 
         rsc->next_role = rsc->role;
-        if (rsc->running_on == NULL) {
+        assign_to = pe__current_node(rsc);
+        if (assign_to == NULL) {
             reason = "inactive";
         } else if (rsc->role == RSC_ROLE_MASTER) {
-            assign_to = rsc->running_on->data;
             reason = "master";
         } else if (is_set(rsc->flags, pe_rsc_failed)) {
-            assign_to = rsc->running_on->data;
             reason = "failed";
         } else {
-            assign_to = rsc->running_on->data;
             reason = "active";
         }
         pe_rsc_info(rsc, "Unmanaged resource %s allocated to %s: %s", rsc->id,
@@ -1132,7 +1130,9 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
     gboolean allow_migrate = is_set(rsc->flags, pe_rsc_allow_migrate) ? TRUE : FALSE;
 
     GListPtr gIter = NULL;
-    int num_active_nodes = 0;
+    unsigned int num_all_active = 0;
+    unsigned int num_clean_active = 0;
+    bool multiply_active = FALSE;
     enum rsc_role_e role = RSC_ROLE_UNKNOWN;
     enum rsc_role_e next_role = RSC_ROLE_UNKNOWN;
 
@@ -1150,73 +1150,73 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
     pe_rsc_trace(rsc, "Processing state transition for %s %p: %s->%s", rsc->id, rsc,
                  role2text(rsc->role), role2text(rsc->next_role));
 
-    if (rsc->running_on) {
-        current = rsc->running_on->data;
-    }
-
-    for (gIter = rsc->running_on; gIter != NULL; gIter = gIter->next) {
-        node_t *n = (node_t *) gIter->data;
-        if (rsc->partial_migration_source &&
-            (n->details == rsc->partial_migration_source->details)) {
-            current = rsc->partial_migration_source;
-        }
-        num_active_nodes++;
-    }
+    current = pe__find_active_on(rsc, &num_all_active, &num_clean_active);
 
     for (gIter = rsc->dangling_migrations; gIter != NULL; gIter = gIter->next) {
-        node_t *current = (node_t *) gIter->data;
+        node_t *dangling_source = (node_t *) gIter->data;
 
-        action_t *stop = stop_action(rsc, current, FALSE);
+        action_t *stop = stop_action(rsc, dangling_source, FALSE);
 
         set_bit(stop->flags, pe_action_dangle);
-        pe_rsc_trace(rsc, "Forcing a cleanup of %s on %s", rsc->id, current->details->uname);
+        pe_rsc_trace(rsc, "Forcing a cleanup of %s on %s",
+                     rsc->id, dangling_source->details->uname);
 
         if (is_set(data_set->flags, pe_flag_remove_after_stop)) {
-            DeleteRsc(rsc, current, FALSE, data_set);
+            DeleteRsc(rsc, dangling_source, FALSE, data_set);
         }
     }
 
-    if (num_active_nodes > 1) {
+    if ((num_all_active == 2) && (num_clean_active == 2) && chosen
+        && rsc->partial_migration_source && rsc->partial_migration_target
+        && (current->details == rsc->partial_migration_source->details)
+        && (chosen->details == rsc->partial_migration_target->details)) {
 
-        if (num_active_nodes == 2
-            && chosen
-            && rsc->partial_migration_target
-            && rsc->partial_migration_source
-            && (current->details == rsc->partial_migration_source->details)
-            && (chosen->details == rsc->partial_migration_target->details)) {
-            /* Here the chosen node is still the migration target from a partial
-             * migration. Attempt to continue the migration instead of recovering
-             * by stopping the resource everywhere and starting it on a single node. */
-            pe_rsc_trace(rsc,
-                         "Will attempt to continue with a partial migration to target %s from %s",
-                         rsc->partial_migration_target->details->id,
-                         rsc->partial_migration_source->details->id);
+        /* The chosen node is still the migration target from a partial
+         * migration. Attempt to continue the migration instead of recovering
+         * by stopping the resource everywhere and starting it on a single node.
+         */
+        pe_rsc_trace(rsc,
+                     "Will attempt to continue with a partial migration to target %s from %s",
+                     rsc->partial_migration_target->details->id,
+                     rsc->partial_migration_source->details->id);
+
+    } else if (is_not_set(rsc->flags, pe_rsc_needs_fencing)) {
+        /* If a resource has "requires" set to nothing or quorum, don't consider
+         * it active on unclean nodes (similar to how all resources behave when
+         * stonith-enabled is false). We can start such resources elsewhere
+         * before fencing completes, and if we considered the resource active on
+         * the failed node, we would attempt recovery for being active on
+         * multiple nodes.
+         */
+        multiply_active = (num_clean_active > 1);
+    } else {
+        multiply_active = (num_all_active > 1);
+    }
+
+    if (multiply_active) {
+        if (rsc->partial_migration_target && rsc->partial_migration_source) {
+            // Migration was in progress, but we've chosen a different target
+            crm_notice("Resource %s can no longer migrate to %s. Stopping on %s too",
+                       rsc->id, rsc->partial_migration_target->details->uname,
+                       rsc->partial_migration_source->details->uname);
+
         } else {
-            const char *type = crm_element_value(rsc->xml, XML_ATTR_TYPE);
-            const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
-
-            if(rsc->partial_migration_target && rsc->partial_migration_source) {
-                crm_notice("Resource %s can no longer migrate to %s. Stopping on %s too", rsc->id,
-                           rsc->partial_migration_target->details->uname,
-                           rsc->partial_migration_source->details->uname);
-
-            } else {
-                pe_proc_err("Resource %s (%s::%s) is active on %d nodes %s",
-                            rsc->id, class, type, num_active_nodes, recovery2text(rsc->recovery_type));
-                crm_warn("See %s for more information.",
-                         "http://clusterlabs.org/wiki/FAQ#Resource_is_Too_Active");
-            }
-
-            if (rsc->recovery_type == recovery_stop_start) {
-                need_stop = TRUE;
-            }
-
-            /* If by chance a partial migration is in process,
-             * but the migration target is not chosen still, clear all
-             * partial migration data.  */
-            rsc->partial_migration_source = rsc->partial_migration_target = NULL;
-            allow_migrate = FALSE;
+            // Resource was incorrectly multiply active
+            pe_proc_err("Resource %s is active on %u nodes (%s)",
+                        rsc->id, num_all_active,
+                        recovery2text(rsc->recovery_type));
+            crm_notice("See https://wiki.clusterlabs.org/wiki/FAQ#Resource_is_Too_Active for more information");
         }
+
+        if (rsc->recovery_type == recovery_stop_start) {
+            need_stop = TRUE;
+        }
+
+        /* If by chance a partial migration is in process, but the migration
+         * target is not chosen still, clear all partial migration data.
+         */
+        rsc->partial_migration_source = rsc->partial_migration_target = NULL;
+        allow_migrate = FALSE;
     }
 
     if (is_set(rsc->flags, pe_rsc_start_pending)) {
@@ -1309,7 +1309,7 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
                is_not_set(rsc->flags, pe_rsc_managed) ||
                is_set(rsc->flags, pe_rsc_failed) ||
                is_set(rsc->flags, pe_rsc_start_pending) ||
-               (current->details->unclean == TRUE) ||
+               (current && current->details->unclean) ||
                rsc->next_role < RSC_ROLE_STARTED) {
 
         allow_migrate = FALSE;
@@ -1802,7 +1802,9 @@ rsc_ticket_constraint(resource_t * rsc_lh, rsc_ticket_t * rsc_ticket, pe_working
                  rsc_lh->id, rsc_ticket->ticket->id, rsc_ticket->id,
                  role2text(rsc_ticket->role_lh));
 
-    if (rsc_ticket->ticket->granted == FALSE && g_list_length(rsc_lh->running_on) > 0) {
+    if ((rsc_ticket->ticket->granted == FALSE)
+        && (rsc_lh->running_on != NULL)) {
+
         GListPtr gIter = NULL;
 
         switch (rsc_ticket->loss_policy) {
@@ -1835,7 +1837,7 @@ rsc_ticket_constraint(resource_t * rsc_lh, rsc_ticket_t * rsc_ticket, pe_working
                 if (filter_rsc_ticket(rsc_lh, rsc_ticket) == FALSE) {
                     return;
                 }
-                if (g_list_length(rsc_lh->running_on) > 0) {
+                if (rsc_lh->running_on != NULL) {
                     clear_bit(rsc_lh->flags, pe_rsc_managed);
                     set_bit(rsc_lh->flags, pe_rsc_block);
                 }
@@ -1887,7 +1889,6 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
         } else if ((then_rsc_role >= RSC_ROLE_STARTED)
                    && safe_str_eq(then->task, RSC_START)
                    && then->node
-                   && then_rsc->running_on
                    && g_list_length(then_rsc->running_on) == 1
                    && then->node->details == ((node_t *) then_rsc->running_on->data)->details) {
             /* ignore... if 'then' is supposed to be started after 'first', but
@@ -2299,12 +2300,7 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
 
     next = rsc->allocated_to;
     if (rsc->running_on) {
-        if (g_list_length(rsc->running_on) > 1 && rsc->partial_migration_source) {
-            current = rsc->partial_migration_source;
-        } else {
-            current = rsc->running_on->data;
-        }
-
+        current = pe__current_node(rsc);
         if (rsc->role == RSC_ROLE_STOPPED) {
             /*
              * This can occur when resources are being recovered
@@ -3029,6 +3025,33 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
     return TRUE;
 }
 
+/*!
+ * \internal
+ * \brief Check whether a resource is known on a particular node
+ *
+ * \param[in] rsc   Resource to check
+ * \param[in] node  Node to check
+ *
+ * \return TRUE if resource (or parent if an anonymous clone) is known
+ */
+static bool
+rsc_is_known_on(pe_resource_t *rsc, const pe_node_t *node)
+{
+   if (pe_hash_table_lookup(rsc->known_on, node->details->id)) {
+       return TRUE;
+
+   } else if ((rsc->variant == pe_native)
+              && pe_rsc_is_anon_clone(rsc->parent)
+              && pe_hash_table_lookup(rsc->parent->known_on, node->details->id)) {
+       /* We check only the parent, not the uber-parent, because we cannot
+        * assume that the resource is known if it is in an anonymously cloned
+        * group (which may be only partially known).
+        */
+       return TRUE;
+   }
+   return FALSE;
+}
+
 static void
 native_start_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_t * data_set)
 {
@@ -3051,7 +3074,7 @@ native_start_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set
 
         } else if (safe_str_eq(action->task, RSC_START)
                    && NULL != pe_hash_table_lookup(rsc->allowed_nodes, target->details->id)
-                   && NULL == pe_hash_table_lookup(rsc->known_on, target->details->id)) {
+                   && !rsc_is_known_on(rsc, target)) {
             /* if known == NULL, then we don't know if
              *   the resource is active on the node
              *   we're about to shoot
@@ -3081,43 +3104,52 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_
     char *key = NULL;
     GListPtr gIter = NULL;
     GListPtr action_list = NULL;
+    bool order_implicit = FALSE;
 
-    action_t *start = NULL;
     resource_t *top = uber_parent(rsc);
     node_t *target;
 
     CRM_CHECK(stonith_op && stonith_op->node, return);
     target = stonith_op->node;
 
-    /* Check whether the resource has a pending start action */
-    start = find_first_action(rsc->actions, NULL, CRMD_ACTION_START, NULL);
-
     /* Get a list of stop actions potentially implied by the fencing */
     key = stop_key(rsc);
     action_list = find_actions(rsc->actions, key, target);
     free(key);
 
+    // If resource requires fencing, implicit actions must occur after fencing
+    if (is_set(rsc->flags, pe_rsc_needs_fencing)) {
+        order_implicit = TRUE;
+    }
+
+    /* Implied stops and demotes of resources running on guest nodes are always
+     * ordered after fencing, even if the resource does not require fencing,
+     * because guest node "fencing" is actually just a resource stop.
+     */
+    if (is_container_remote_node(target)) {
+        order_implicit = TRUE;
+    }
+
     for (gIter = action_list; gIter != NULL; gIter = gIter->next) {
         action_t *action = (action_t *) gIter->data;
 
-        if (is_set(rsc->flags, pe_rsc_failed)) {
-            crm_notice("Stop of failed resource %s is implicit after %s is fenced",
-                       rsc->id, target->details->uname);
-        } else {
-            crm_info("%s is implicit after %s is fenced",
-                     action->uuid, target->details->uname);
-        }
-
-        /* The stop would never complete and is now implied by the fencing,
-         * so convert it into a pseudo-action.
-         */
+        // The stop would never complete, so convert it into a pseudo-action.
         update_action_flags(action, pe_action_pseudo, __FUNCTION__, __LINE__);
         update_action_flags(action, pe_action_runnable, __FUNCTION__, __LINE__);
-        update_action_flags(action, pe_action_implied_by_stonith, __FUNCTION__, __LINE__);
 
-        if(start == NULL || start->needs > rsc_req_quorum) {
+        if (order_implicit) {
             enum pe_ordering flags = pe_order_optional;
             action_t *parent_stop = find_first_action(top->actions, NULL, RSC_STOP, NULL);
+
+            if (is_set(rsc->flags, pe_rsc_failed)) {
+                crm_notice("Stop of failed resource %s is implicit after %s is fenced",
+                           rsc->id, target->details->uname);
+            } else {
+                crm_info("%s is implicit after %s is fenced",
+                         action->uuid, target->details->uname);
+            }
+            update_action_flags(action, pe_action_implied_by_stonith,
+                                __FUNCTION__, __LINE__);
 
             if (target->details->remote_rsc) {
                 /* User constraints must not order a resource in a guest node
@@ -3131,6 +3163,14 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_
                 order_actions(stonith_op, action, flags);
             }
             order_actions(stonith_op, parent_stop, flags);
+        } else {
+            if (is_set(rsc->flags, pe_rsc_failed)) {
+                crm_notice("Stop of failed resource %s is implicit because %s will be fenced",
+                           rsc->id, target->details->uname);
+            } else {
+                crm_info("%s is implicit because %s will be fenced",
+                         action->uuid, target->details->uname);
+            }
         }
 
         if (is_set(rsc->flags, pe_rsc_notify)) {
@@ -3220,7 +3260,7 @@ native_stop_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_
             if (pe_rsc_is_bundled(rsc)) {
                 /* Do nothing, let the recovery be ordered after the parent's implied stop */
 
-            } else if (start == NULL || start->needs > rsc_req_quorum) {
+            } else if (order_implicit) {
                 order_actions(stonith_op, action, pe_order_preserve|pe_order_optional);
             }
         }

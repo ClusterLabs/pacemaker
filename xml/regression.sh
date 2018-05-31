@@ -5,6 +5,8 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 set -eu
+test -d assets && test -d test-2 \
+  || { echo 'Run me from source-tree-like location'; exit 1; }
 # $1=reference (can be '-' for stdin), $2=investigated
 # alt.: wdiff, colordiff, ...
 DIFF=${DIFF:-diff}
@@ -14,21 +16,37 @@ DIFFPAGER=${DIFFPAGER:-less -LRX}
 # alt.: jing -i
 RNGVALIDATOR=${RNGVALIDATOR:-xmllint --noout --relaxng}
 # $1=stylesheet, $2=source
-# alt.: Xalan, saxon (note: only validates reliably with -B)
+# alt.: Xalan, saxon, sabcmd/Sablotron (note: only validates reliably with -B)
 _xalan_wrapper() {
-	{ Xalan "$2" "$1" 2>&1 >&3 \
+	{ ${_XSLTPROCESSOR} "$2" "$1" 2>&1 >&3 \
 	  | sed -e '/^Source tree node.*$/d' \
 	        -e 's|^XSLT message: \(.*\) (Occurred.*)|\1|'; } 3>&- 3>&1 >&2
 }
+# Sablotron doesn't translate '-' file specification to stdin
+# and limits the length of the output message
+_sabcmd_wrapper() {
+	_sabw_sheet=${1:?}
+	_sabw_source=${2:?}
+	test "${_sabw_sheet}" != - || _sabw_sheet=/dev/stdin
+	test "${_sabw_source}" != - || _sabw_source=/dev/stdin
+	{ ${_XSLTPROCESSOR} "${_sabw_sheet}" "${_sabw_source}" 2>&1 >&3 \
+	  | sed -e '/^Warning \[code:89\]/d' \
+	        -e 's|^  xsl:message (\(.*\))$|\1|'; } 3>&- 3>&1 >&2
+}
 # filtered out message: https://bugzilla.redhat.com/show_bug.cgi?id=1577367
 _saxon_wrapper() {
-	{ saxon "-xsl:$1" "-s:$2" -versionmsg:off 2>&1 >&3 \
+	{ ${_XSLTPROCESSOR} "-xsl:$1" "-s:$2" -versionmsg:off 2>&1 >&3 \
 	  | sed -e '/^Cannot find CatalogManager.properties$/d'; } 3>&- 3>&1 >&2
 }
-#_xalan_wrapper() { Xalan $2 $1; }
-XSLTPROCESSOR=${XSLTPROCESSOR:-xsltproc}
-test "${XSLTPROCESSOR}" != Xalan || XSLTPROCESSOR=_xalan_wrapper
-test "${XSLTPROCESSOR}" != saxon || XSLTPROCESSOR=_saxon_wrapper
+XSLTPROCESSOR=${XSLTPROCESSOR:-xsltproc --nonet}
+_XSLTPROCESSOR=${XSLTPROCESSOR}
+case "${XSLTPROCESSOR}" in
+[Xx]alan*|*/[Xx]alan*) XSLTPROCESSOR=_xalan_wrapper;;
+sabcmd*|*/sabcmd*)     XSLTPROCESSOR=_sabcmd_wrapper;;
+saxon*|*/saxon*)       XSLTPROCESSOR=_saxon_wrapper;;
+esac
+HTTPPORT=${HTTPPORT:-8000}  # Python's default
+WEBBROWSER=${WEBBROWSER:-firefox}
 
 tests=  # test* names (should go first) here will become preselected default
 
@@ -90,6 +108,37 @@ log2_or_0_add() {
 # test phases
 #
 
+# stdin: input file per line
+test_browser() {
+	_tb_cleanref=0
+	_tb_serverpid=
+
+	if ! read _tb_first; then
+		return 1
+	fi
+	cat >/dev/null 2>/dev/null  # read out the rest
+
+	test -f assets/diffview.js \
+	  || curl -Lo assets/diffview.js \
+	     'https://raw.githubusercontent.com/prettydiff/prettydiff/2.2.8/lib/diffview.js'
+
+	{ which python3 >/dev/null 2>/dev/null \
+	  && { python3 -m http.server "${HTTPPORT}" -b 127.0.0.1 \
+	       || emit_error "Python3 HTTP server fail"; return; } \
+	  || which python2 >/dev/null 2>/dev/null \
+	       && { printf '%s %s\n' \
+	            'Python 2 backed HTTP server cannot listen at particular' \
+	            'address, discretion regarding firewall rules recommended!'
+	            python2 -m SimpleHTTPServer "${HTTPPORT}" \
+	            || emit_error 'Python2 HTTP server fail'; return; } \
+	       || emit_error 'Cannot run Python based HTTP server' ; } &
+	_tb_serverpid=$!
+	${WEBBROWSER} "http://localhost:${HTTPPORT}/${_tb_first}" &
+	printf "When finished, just press Ctrl+C or kill %d, please\n" \
+	       "${_tb_serverpid}"
+	wait
+}
+
 # -r ... whether to remove referential files as well
 # stdin: input file per line
 test_cleaner() {
@@ -112,6 +161,7 @@ test_cleaner() {
 }
 
 test_selfcheck() {
+	_tsc_ret=0
 	_tsc_template=
 	_tsc_validator=
 
@@ -126,9 +176,15 @@ test_selfcheck() {
 	_tsc_template="upgrade-${_tsc_template}.xsl"
 
 	# check schema (sub-grammar) for custom transformation mapping alone
-	${RNGVALIDATOR} 'http://relaxng.org/relaxng.rng' "${_tsc_validator}"
+	if ! ${RNGVALIDATOR} 'http://relaxng.org/relaxng.rng' "${_tsc_validator}"; then
+		_tsc_ret=$((_tsc_ret + 1))
+	fi
 	# check the overall XSLT per the main grammar + said sub-grammar
-	${RNGVALIDATOR} "xslt_${_tsc_validator}" "${_tsc_template}"
+	if ! ${RNGVALIDATOR} "xslt_${_tsc_validator}" "${_tsc_template}"; then
+		_tsc_ret=$((_tsc_ret + 1))
+	fi
+
+	log2_or_0_return ${_tsc_ret}
 }
 
 test_explanation() {
@@ -267,7 +323,7 @@ test_runner_validate() {
 # -t= ... which conventional version to deem as the transform target
 # -B
 # -D
-# -G  ... see usage
+# -G ... see usage
 # stdin: input file per line
 test_runner() {
 	_tr_mode=0
@@ -345,6 +401,7 @@ test2to3() {
 	      *\ -C\ *) test_cleaner;;
 	      *\ -S\ *) test_selfcheck -o=2.10;;
 	      *\ -X\ *) test_explanation -o=2.10;;
+	      *\ -W\ *) test_browser;;
 	      *) test_runner -o=2.10 -t=3.0 "$@" || return $?;;
 	      esac; }
 }
@@ -352,7 +409,7 @@ tests="${tests} test2to3"
 
 # -B
 # -D
-# -G  ... see usage
+# -G ... see usage
 cts_scheduler() {
 	_tcp_mode=0
 	_tcp_ret=0
@@ -532,17 +589,29 @@ test_suite() {
 # NOTE: big letters are dedicated for per-test-set behaviour,
 #       small ones for generic/global behaviour
 usage() {
-	printf '%s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n' \
-	    "usage: $0 [-{B,C,D,G,S,X}]* [-|{${tests## }}*]" \
-	    "- when no suites (arguments) provided, \"test*\" ones get used" \
-	    "- with '-' suite specification the actual ones grabbed on stdin" \
-	    "- use '-B' to run validate-only check suppressing blanks first" \
-	    "- use '-C' to only cleanup ephemeral byproducts" \
-	    "- use '-D' to review originals vs. \"referential\" outcomes" \
-	    "- use '-G' to generate \"referential\" outcomes" \
-	    "- use '-S' for template self-check (requires net access)" \
-	    "- use '-X' to show explanatory details about the upgrade" \
-	    "- test specification can be granular, e.g. 'test2to3/022'"
+	printf \
+	  '%s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n' \
+	  "usage: $0 [-{B,C,D,G,S,X}]* [-|{${tests## }}*]" \
+	  "- when no suites (arguments) provided, \"test*\" ones get used" \
+	  "- with '-' suite specification the actual ones grabbed on stdin" \
+	  "- use '-B' to run validate-only check suppressing blanks first" \
+	  "- use '-C' to only cleanup ephemeral byproducts" \
+	  "- use '-D' to review originals vs. \"referential\" outcomes" \
+	  "- use '-G' to generate \"referential\" outcomes" \
+	  "- use '-S' for template self-check (requires net access)" \
+	  "- use '-W' to run browser-based, on-the-fly diff'ing test drive" \
+	  "- use '-X' to show explanatory details about the upgrade" \
+	  "- test specification can be granular, e.g. 'test2to3/022'"
+	printf \
+	  '\n%s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n' \
+	  'environment variables affecting the run + default/current values:' \
+	  "- DIFF (${DIFF}): tool to compute and show differences of 2 files" \
+	  "- DIFFOPTS (${DIFFOPTS}): options to the above tool" \
+	  "- DIFFPAGER (${DIFFPAGER}): possibly accompanying the above tool" \
+	  "- RNGVALIDATOR (${RNGVALIDATOR}): RelaxNG validator" \
+	  "- XSLTPROCESSOR (${_XSLTPROCESSOR}): XSLT 1.0 capable processor" \
+	  "- HTTPPORT (${HTTPPORT}): port used by test drive HTTP server run" \
+	  "- WEBBROWSER (${WEBBROWSER}): used for in-browser test drive"
 }
 
 main() {
