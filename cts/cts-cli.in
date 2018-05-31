@@ -706,7 +706,7 @@ function test_validity() {
 
     $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow --validate-with pacemaker-1.2 2>&1
     export CIB_shadow=$shadow
-    export PCMK_trace_functions=update_validation,cli_config_update
+    export PCMK_trace_functions=apply_upgrade,update_validation,cli_config_update
     export PCMK_stderr=1
 
     cibadmin -C -o resources --xml-text '<primitive id="dummy1" class="ocf" provider="pacemaker" type="Dummy"/>'

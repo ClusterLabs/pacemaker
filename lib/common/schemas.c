@@ -812,7 +812,61 @@ apply_transformation(xmlNode *xml, const char *transform, gboolean to_logs)
 
     return out;
 }
-#endif
+
+/*!
+ * \internal
+ * \brief Possibly full enter->upgrade->leave trip per internal bookkeeping.
+ *
+ * \note Only emits warnings about enter/leave phases in case of issues.
+ */
+static xmlNode *
+apply_upgrade(xmlNode *xml, const struct schema_s *schema, gboolean to_logs)
+{
+    bool transform_onleave = schema->transform_onleave;
+    char *transform_leave;
+    xmlNode *upgrade = NULL,
+            *final = NULL;
+
+    if (schema->transform_enter) {
+        crm_debug("Upgrading %s-style configuration, pre-upgrade phase with %s",
+                  schema->name, schema->transform_enter);
+        upgrade = apply_transformation(xml, schema->transform_enter, to_logs);
+        if (upgrade == NULL) {
+            crm_warn("Upgrade-enter transformation %s failed",
+                     schema->transform_enter);
+            transform_onleave = FALSE;
+        }
+    }
+    if (upgrade == NULL) {
+        upgrade = xml;
+    }
+
+    crm_debug("Upgrading %s-style configuration, main phase with %s",
+              schema->name, schema->transform);
+    final = apply_transformation(upgrade, schema->transform, to_logs);
+
+    if (final != NULL && transform_onleave) {
+        free_xml(upgrade);
+        upgrade = final;
+        transform_leave = strdup(schema->transform_enter);
+        /* enter -> leave */
+        memcpy(strrchr(transform_leave, '-') + 1, "leave", 5);
+        crm_debug("Upgrading %s-style configuration, post-upgrade phase with %s",
+                  schema->name, transform_leave);
+        final = apply_transformation(upgrade, transform_leave, to_logs);
+        if (final == NULL) {
+            crm_warn("Upgrade-leave transformation %s failed", transform_leave);
+            final = upgrade;
+        } else {
+            free_xml(upgrade);
+        }
+        free(transform_leave);
+    }
+
+    return final;
+}
+
+#endif  /* HAVE_LIBXSLT */
 
 const char *
 get_schema_name(int version)
@@ -944,7 +998,7 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
                            known_schemas[lpc].transform);
 
 #if HAVE_LIBXSLT
-                upgrade = apply_transformation(xml, known_schemas[lpc].transform, to_logs);
+                upgrade = apply_upgrade(xml, &known_schemas[lpc], to_logs);
 #endif
                 if (upgrade == NULL) {
                     crm_err("Transformation %s failed",
