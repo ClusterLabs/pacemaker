@@ -57,6 +57,8 @@ struct schema_s {
     enum schema_validator_e validator;
     int after_transform;
     schema_version_t version;
+    char *transform_enter;
+    bool transform_onleave;
 };
 
 static struct schema_s *known_schemas = NULL;
@@ -194,6 +196,7 @@ schema_sort(const struct dirent **a, const struct dirent **b)
 static void
 add_schema(enum schema_validator_e validator, const schema_version_t *version,
            const char *name, const char *location, const char *transform,
+           const char *transform_enter, bool transform_onleave,
            int after_transform)
 {
     int last = xml_schema_max;
@@ -228,6 +231,10 @@ add_schema(enum schema_validator_e validator, const schema_version_t *version,
     if (transform) {
         known_schemas[last].transform = strdup(transform);
     }
+    if (transform_enter) {
+        known_schemas[last].transform_enter = strdup(transform_enter);
+    }
+    known_schemas[last].transform_onleave = transform_onleave;
     if (after_transform == 0) {
         after_transform = xml_schema_max;  /* upgrade is a one-way */
     }
@@ -248,6 +255,97 @@ add_schema(enum schema_validator_e validator, const schema_version_t *version,
                   last, known_schemas[last].name, known_schemas[last].location,
                   known_schemas[last].after_transform);
     }
+}
+
+/*!
+ * \internal
+ * \brief Add version-specified schema + auxiliary data to internal bookkeeping.
+ * \return \c -ENOENT when no upgrade schema associated, \c pcmk_ok otherwise.
+ *
+ * \note There's no reliance on the particular order of schemas entering here.
+ *
+ * \par A bit of theory
+ * We track 3 XSLT stylesheets that differ per usage:
+ * - "upgrade":
+ *   . sparsely spread over the sequence of all available schemas,
+ *     as they are only relevant when major version of the schema
+ *     is getting bumped -- in that case, it MUST be set
+ *   . name convention:  upgrade-X.Y.xsl
+ * - "upgrade-enter":
+ *   . may only accompany "upgrade" occurrence, but doesn't need to
+ *     be present anytime such one is, i.e., it MAY not be set when
+ *     "upgrade" is
+ *   . name convention:  upgrade-X.Y-enter.xsl,
+ *     when not present: upgrade-enter.xsl
+ * - "upgrade-leave":
+ *   . like "upgrade-enter", but SHOULD be present whenever
+ *     "upgrade-enter" is
+ *   . name convention:  (see "upgrade-enter")
+ */
+static int
+add_schema_by_version(const schema_version_t *version, int next,
+                      bool transform_expected)
+{
+    bool transform_onleave = FALSE;
+    int rc = pcmk_ok;
+    struct stat s;
+    char *xslt = NULL,
+         *transform_upgrade = NULL,
+         *transform_enter = NULL;
+
+    /* prologue for further transform_expected handling */
+    if (transform_expected) {
+        /* check if there's suitable "upgrade" stylesheet */
+        transform_upgrade = schema_strdup_printf("upgrade-", *version, ".xsl");
+        xslt = get_schema_path(NULL, transform_upgrade);
+    }
+
+    if (!transform_expected) {
+        /* jump directly to the end */
+
+    } else if (stat(xslt, &s) == 0) {
+        /* perhaps there's also a targeted "upgrade-enter" stylesheet */
+        transform_enter = schema_strdup_printf("upgrade-", *version, "-enter.xsl");
+        free(xslt);
+        xslt = get_schema_path(NULL, transform_enter);
+        if (stat(xslt, &s) != 0) {
+            /* or initially, at least a generic one */
+            crm_debug("Upgrade-enter transform %s not found", xslt);
+            free(xslt);
+            xslt = get_schema_path(NULL, "upgrade-enter.xsl");
+            if (stat(xslt, &s) != 0) {
+                crm_debug("Upgrade-enter transform %s not found, either", xslt);
+                free(xslt);
+                xslt = NULL;
+            }
+        }
+        /* xslt contains full path to "upgrade-enter" stylesheet */
+        if (xslt != NULL) {
+            /* then there should be "upgrade-leave" counterpart */
+            memcpy(strrchr(xslt, '-') + 1, "leave", 5);  /* enter -> leave */
+            transform_onleave = (stat(xslt, &s) == 0);
+            free(xslt);
+        } else {
+            free(transform_enter);
+            transform_enter = NULL;
+        }
+
+    } else {
+        crm_err("Upgrade transform %s not found", xslt);
+        free(xslt);
+        free(transform_upgrade);
+        transform_upgrade = NULL;
+        next = -1;
+        rc = -ENOENT;
+    }
+
+    add_schema(schema_validator_rng, version, NULL, NULL,
+               transform_upgrade, transform_enter, transform_onleave, next);
+
+    free(transform_upgrade);
+    free(transform_enter);
+
+    return rc;
 }
 
 /*!
@@ -302,7 +400,7 @@ crm_schema_init(void)
                 next = -1;
             }
             add_schema(schema_validator_rng, &version, NULL, NULL, transform,
-                       next);
+                       NULL, FALSE, next);
             if (transform == NULL && next == -1) {
                 break;
             }
@@ -316,10 +414,10 @@ crm_schema_init(void)
     }
 
     add_schema(schema_validator_rng, &zero, "pacemaker-next",
-               "pacemaker-next.rng", NULL, -1);
+               "pacemaker-next.rng", NULL, NULL, FALSE, -1);
 
     add_schema(schema_validator_none, &zero, "none",
-               "N/A", NULL, -1);
+               "N/A", NULL, NULL, FALSE, -1);
 }
 
 #if 0
@@ -472,6 +570,7 @@ crm_schema_cleanup(void)
         free(known_schemas[lpc].name);
         free(known_schemas[lpc].location);
         free(known_schemas[lpc].transform);
+        free(known_schemas[lpc].transform_enter);
     }
     free(known_schemas);
     known_schemas = NULL;
