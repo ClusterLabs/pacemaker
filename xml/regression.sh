@@ -448,6 +448,28 @@ test2to3enter() {
 }
 tests="${tests} test2to3enter"
 
+test2to3leave() {
+	_t23l_pattern=
+
+	while read _t23l_spec; do
+		_t23l_spec=${_t23l_spec%.xml}
+		_t23l_spec=${_t23l_spec%\*}
+		_t23l_pattern="${_t23l_pattern} -name ${_t23l_spec}*.xml -o"
+	done
+	test -z "${_t23l_pattern}" || _t23l_pattern="( ${_t23l_pattern%-o} )"
+
+	find test-2-leave -name test-2-leave -o -type d -prune \
+	  -o -name '*.xml' ${_t23l_pattern} -print | env LC_ALL=C sort \
+	  | { case " $* " in
+	      *\ -C\ *) test_cleaner;;
+	      *\ -S\ *) test_selfcheck -a=leave -o=2.10;;
+	      *\ -W\ *) emit_result "not implemented" "option -W";;
+	      *\ -X\ *) emit_result "not implemented" "option -X";;
+	      *) test_runner -a=2.10-leave -o=3.0 -t=3.0 "$@" || return $?;;
+	      esac; }
+}
+tests="${tests} test2to3leave"
+
 # -B
 # -D
 # -G ... see usage
