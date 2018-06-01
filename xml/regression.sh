@@ -160,6 +160,7 @@ test_cleaner() {
 	done
 }
 
+# -o= ... which conventional version to deem as the transform origin
 test_selfcheck() {
 	_tsc_ret=0
 	_tsc_template=
@@ -382,6 +383,10 @@ test_runner() {
 
 #
 # particular test variations
+# -C
+# -S
+# -X
+# -W ... see usage
 # stdin: granular test specification(s) if any
 #
 
@@ -423,6 +428,7 @@ cts_scheduler() {
 	  | { case " $* " in
 	      *\ -C\ *) test_cleaner -r;;
 	      *\ -S\ *) emit_result "not implemented" "option -S";;
+	      *\ -W\ *) emit_result "not implemented" "option -W";;
 	      *\ -X\ *) emit_result "not implemented" "option -X";;
 	      *)
 		while test $# -gt 0; do
@@ -590,8 +596,9 @@ test_suite() {
 #       small ones for generic/global behaviour
 usage() {
 	printf \
-	  '%s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n' \
-	  "usage: $0 [-{B,C,D,G,S,X}]* [-|{${tests## }}*]" \
+	  '%s\n%s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n' \
+	  "usage: $0 [-{B,C,D,G,S,X}]* \\" \
+          "       [-|{${tests## }}*]" \
 	  "- when no suites (arguments) provided, \"test*\" ones get used" \
 	  "- with '-' suite specification the actual ones grabbed on stdin" \
 	  "- use '-B' to run validate-only check suppressing blanks first" \
@@ -629,7 +636,7 @@ main() {
 	done
 
 	test_suite ${_main_pass} || _main_ret=$?
-	test ${_main_bailout} -eq 1 && return ${_main_ret} \
+	test ${_main_bailout} -ne 0 \
 	  || test_suite -C ${_main_pass} >/dev/null || true
 	test ${_main_ret} = 0 && emit_result ${_main_ret} "Overall suite" \
 	  || emit_result "at least 2^$((_main_ret - 1))" "Overall suite"
