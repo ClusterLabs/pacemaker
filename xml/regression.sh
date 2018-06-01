@@ -160,28 +160,38 @@ test_cleaner() {
 	done
 }
 
+# -a= ... action modifier to derive template name from (if any; enter/leave)
 # -o= ... which conventional version to deem as the transform origin
 test_selfcheck() {
 	_tsc_ret=0
+	_tsc_action=
 	_tsc_template=
 	_tsc_validator=
 
 	while test $# -gt 0; do
 		case "$1" in
+		-a=*) _tsc_action="${1#-a=}";;
 		-o=*) _tsc_template="${1#-o=}";;
 		esac
 		shift
 	done
 	_tsc_validator="${_tsc_template:?}"
 	_tsc_validator="cibtr-${_tsc_validator%%.*}.rng"
-	_tsc_template="upgrade-${_tsc_template}.xsl"
+	_tsc_action=${_tsc_action:+-${_tsc_action}}
+	_tsc_template="upgrade-${_tsc_template}${_tsc_action}.xsl"
 
 	# check schema (sub-grammar) for custom transformation mapping alone
-	if ! ${RNGVALIDATOR} 'http://relaxng.org/relaxng.rng' "${_tsc_validator}"; then
+        if test -z "${_tsc_action}" \
+	  && ! ${RNGVALIDATOR} 'http://relaxng.org/relaxng.rng' "${_tsc_validator}"; then
 		_tsc_ret=$((_tsc_ret + 1))
 	fi
+
 	# check the overall XSLT per the main grammar + said sub-grammar
-	if ! ${RNGVALIDATOR} "xslt_${_tsc_validator}" "${_tsc_template}"; then
+        if ! ${RNGVALIDATOR} \
+          "$(test -f "${_tsc_validator}" \
+             && echo "xslt_${_tsc_validator}" \
+             || echo 'http://www.thaiopensource.com/relaxng/xslt.rng')" \
+          "${_tsc_template}"; then
 		_tsc_ret=$((_tsc_ret + 1))
 	fi
 
@@ -320,6 +330,7 @@ test_runner_validate() {
 	fi
 }
 
+# -a= ... action modifier completing template name (e.g. 2.10-(enter|leave))
 # -o= ... which conventional version to deem as the transform origin
 # -t= ... which conventional version to deem as the transform target
 # -B
@@ -329,6 +340,7 @@ test_runner_validate() {
 test_runner() {
 	_tr_mode=0
 	_tr_ret=0
+	_tr_action=
 	_tr_schema_o=
 	_tr_schema_t=
 	_tr_target=
@@ -336,7 +348,8 @@ test_runner() {
 
 	while test $# -gt 0; do
 		case "$1" in
-		-o=*) _tr_template="upgrade-${1#-o=}.xsl"
+		-a=*) _tr_action="${1#-a=}";;
+		-o=*) _tr_template="${1#-o=}"
 		      _tr_schema_o="pacemaker-${1#-o=}.rng";;
 		-t=*) _tr_schema_t="pacemaker-${1#-t=}.rng";;
 		-G) _tr_mode=$((_tr_mode | (1 << 0)));;
@@ -345,6 +358,7 @@ test_runner() {
 		esac
 		shift
 	done
+	_tr_template="upgrade-${_tr_action:-${_tr_template:?}}.xsl"
 
 	if ! test -f "${_tr_schema_o:?}" || ! test -f "${_tr_schema_t:?}"; then
 		emit_error "Origin and/or target schema missing, rerun make"
