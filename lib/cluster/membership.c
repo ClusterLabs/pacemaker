@@ -61,6 +61,8 @@ GHashTable *crm_peer_cache = NULL;
  */
 GHashTable *crm_remote_peer_cache = NULL;
 
+GHashTable *crm_known_peer_cache = NULL;
+
 unsigned long long crm_peer_seq = 0;
 gboolean crm_have_quorum = FALSE;
 static gboolean crm_autoreap  = TRUE;
@@ -425,6 +427,10 @@ crm_peer_init(void)
     if (crm_remote_peer_cache == NULL) {
         crm_remote_peer_cache = g_hash_table_new_full(crm_strcase_hash, crm_strcase_equal, NULL, destroy_crm_node);
     }
+
+    if (crm_known_peer_cache == NULL) {
+        crm_known_peer_cache = g_hash_table_new_full(crm_strcase_hash, crm_strcase_equal, free, destroy_crm_node);
+    }
 }
 
 void
@@ -441,6 +447,13 @@ crm_peer_destroy(void)
         g_hash_table_destroy(crm_remote_peer_cache);
         crm_remote_peer_cache = NULL;
     }
+
+    if (crm_known_peer_cache != NULL) {
+        crm_trace("Destroying known peer cache with %d members", g_hash_table_size(crm_known_peer_cache));
+        g_hash_table_destroy(crm_known_peer_cache);
+        crm_known_peer_cache = NULL;
+    }
+
 }
 
 void (*crm_status_callback) (enum crm_status_type, crm_node_t *, const void *) = NULL;
@@ -1122,4 +1135,168 @@ int
 crm_terminate_member_no_mainloop(int nodeid, const char *uname, int *connection)
 {
     return stonith_api_kick(nodeid, uname, 120, TRUE);
+}
+
+static crm_node_t *
+crm_find_known_peer(const char *id, const char *uname)
+{
+    GHashTableIter iter;
+    crm_node_t *node = NULL;
+    crm_node_t *by_id = NULL;
+    crm_node_t *by_name = NULL;
+
+    if (uname) {
+        g_hash_table_iter_init(&iter, crm_known_peer_cache);
+        while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+            if (node->uname && strcasecmp(node->uname, uname) == 0) {
+                crm_trace("Name match: %s = %p", node->uname, node);
+                by_name = node;
+                break;
+            }
+        }
+    }
+
+    if (id) {
+        g_hash_table_iter_init(&iter, crm_known_peer_cache);
+        while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+            if(strcasecmp(node->uuid, id) == 0) {
+                crm_trace("ID match: %s= %p", id, node);
+                by_id = node;
+                break;
+            }
+        }
+    }
+
+    node = by_id; /* Good default */
+    if (by_id == by_name) {
+        /* Nothing to do if they match (both NULL counts) */
+        crm_trace("Consistent: %p for %s/%s", by_id, id, uname);
+
+    } else if (by_id == NULL && by_name) {
+        crm_trace("Only one: %p for %s/%s", by_name, id, uname);
+
+        if (id) {
+            node = NULL;
+
+        } else {
+            node = by_name;
+        }
+
+    } else if (by_name == NULL && by_id) {
+        crm_trace("Only one: %p for %s/%s", by_id, id, uname);
+
+        if (uname) {
+            node = NULL;
+        }
+
+    } else if (uname && by_id->uname
+               && safe_str_eq(uname, by_id->uname)) {
+        /* Multiple nodes have the same uname in the CIB.
+         * Return by_id. */
+
+    } else if (id && by_name->uuid
+               && safe_str_eq(id, by_name->uuid)) {
+        /* Multiple nodes have the same id in the CIB.
+         * Return by_name. */
+        node = by_name;
+
+    } else {
+        node = NULL;
+    }
+
+    if (node == NULL) {
+        crm_debug("Couldn't find node%s%s%s%s",
+                   id? " " : "",
+                   id? id : "",
+                   uname? " with name " : "",
+                   uname? uname : "");
+    }
+
+    return node;
+}
+
+static void
+known_peer_cache_refresh_helper(xmlNode *xml_node, void *user_data)
+{
+    const char *id = crm_element_value(xml_node, XML_ATTR_ID);
+    const char *uname = crm_element_value(xml_node, XML_ATTR_UNAME);
+    crm_node_t * node =  NULL;
+
+    CRM_CHECK(id != NULL && uname !=NULL, return);
+    node = crm_find_known_peer(id, uname);
+
+    if (node == NULL) {
+        char *uniqueid = crm_generate_uuid();
+
+        node = calloc(1, sizeof(crm_node_t));
+        CRM_ASSERT(node != NULL);
+
+        node->uname = strdup(uname);
+        CRM_ASSERT(node->uname != NULL);
+
+        node->uuid = strdup(id);
+        CRM_ASSERT(node->uuid != NULL);
+
+        g_hash_table_replace(crm_known_peer_cache, uniqueid, node);
+
+    } else if (is_set(node->flags, crm_node_dirty)) {
+        if (safe_str_neq(uname, node->uname)) {
+            free(node->uname);
+            node->uname = strdup(uname);
+            CRM_ASSERT(node->uname != NULL);
+        }
+
+        /* Node is in cache and hasn't been updated already, so mark it clean */
+        clear_bit(node->flags, crm_node_dirty);
+    }
+
+}
+
+#define XPATH_MEMBER_NODE_CONFIG \
+    "//" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_NODES \
+    "/" XML_CIB_TAG_NODE "[not(@type) or @type='member']"
+
+static void
+crm_known_peer_cache_refresh(xmlNode *cib)
+{
+    crm_peer_init();
+
+    g_hash_table_foreach(crm_known_peer_cache, mark_dirty, NULL);
+
+    crm_foreach_xpath_result(cib, XPATH_MEMBER_NODE_CONFIG,
+                             known_peer_cache_refresh_helper, NULL);
+
+    /* Remove all old cache entries that weren't seen in the CIB */
+    g_hash_table_foreach_remove(crm_known_peer_cache, is_dirty, NULL);
+}
+
+void
+crm_peer_caches_refresh(xmlNode *cib)
+{
+    crm_remote_peer_cache_refresh(cib);
+    crm_known_peer_cache_refresh(cib);
+}
+
+crm_node_t *
+crm_find_known_peer_full(unsigned int id, const char *uname, int flags)
+{
+    crm_node_t *node = NULL;
+    char *id_str = NULL;
+
+    CRM_ASSERT(id > 0 || uname != NULL);
+
+    node = crm_find_peer_full(id, uname, flags);
+
+    if (node || !(flags & CRM_GET_PEER_CLUSTER)) {
+        return node;
+    }
+
+    if (id > 0) {
+        id_str = crm_strdup_printf("%u", id);
+    }
+
+    node = crm_find_known_peer(id_str, uname);
+
+    free(id_str);
+    return node;
 }
