@@ -191,6 +191,56 @@ stonith_namespace2text(enum stonith_namespace namespace)
     return "unsupported";
 }
 
+/*!
+ * \brief Determine namespace of a fence agent
+ *
+ * \param[in] agent        Fence agent type
+ * \param[in] namespace_s  Name of agent namespace as string, if known
+ *
+ * \return Namespace of specified agent, as enum value
+ */
+enum stonith_namespace
+stonith_get_namespace(const char *agent, const char *namespace_s)
+{
+    if (safe_str_eq(namespace_s, "internal")) {
+        return st_namespace_internal;
+    }
+
+    if (is_redhat_agent(agent)) {
+        return st_namespace_rhcs;
+    }
+
+#if HAVE_STONITH_STONITH_H
+    {
+        Stonith *stonith_obj = NULL;
+
+        static gboolean need_init = TRUE;
+        static Stonith *(*st_new_fn) (const char *) = NULL;
+        static void (*st_del_fn) (Stonith *) = NULL;
+
+        if (need_init) {
+            need_init = FALSE;
+            st_new_fn =
+                find_library_function(&lha_agents_lib, LHA_STONITH_LIBRARY, "stonith_new", FALSE);
+            st_del_fn =
+                find_library_function(&lha_agents_lib, LHA_STONITH_LIBRARY, "stonith_delete",
+                                      FALSE);
+        }
+
+        if (lha_agents_lib && st_new_fn && st_del_fn) {
+            stonith_obj = (*st_new_fn) (agent);
+            if (stonith_obj) {
+                (*st_del_fn) (stonith_obj);
+                return st_namespace_lha;
+            }
+        }
+    }
+#endif
+
+    crm_err("Unknown fence agent: %s", agent);
+    return st_namespace_invalid;
+}
+
 static void
 log_action(stonith_action_t *action, pid_t pid)
 {
@@ -242,8 +292,8 @@ create_device_registration_xml(const char *id, const char *namespace, const char
     xmlNode *args = create_xml_node(data, XML_TAG_ATTRS);
 
 #if HAVE_STONITH_STONITH_H
-    namespace = get_stonith_provider(agent, namespace);
-    if (safe_str_eq(namespace, "heartbeat")) {
+    if (stonith_get_namespace(agent, namespace) == st_namespace_lha) {
+        namespace = stonith_text2namespace(st_namespace_lha);
         hash2field((gpointer) "plugin", (gpointer) agent, args);
         agent = "fence_legacy";
     }
@@ -1055,6 +1105,7 @@ stonith_api_device_list(stonith_t * stonith, int call_options, const char *names
                         stonith_key_value_t ** devices, int timeout)
 {
     int count = 0;
+    enum stonith_namespace ns = stonith_text2namespace(namespace);
 
     if (devices == NULL) {
         crm_err("Parameter error: stonith_api_device_list");
@@ -1062,7 +1113,7 @@ stonith_api_device_list(stonith_t * stonith, int call_options, const char *names
     }
 
     /* Include Heartbeat agents */
-    if (namespace == NULL || safe_str_eq("heartbeat", namespace)) {
+    if ((ns == st_namespace_any) || (ns == st_namespace_lha)) {
 #if HAVE_STONITH_STONITH_H
         static gboolean need_init = TRUE;
 
@@ -1100,7 +1151,7 @@ stonith_api_device_list(stonith_t * stonith, int call_options, const char *names
     }
 
     /* Include Red Hat agents, basically: ls -1 @sbin_dir@/fence_* */
-    if (namespace == NULL || safe_str_eq("redhat", namespace)) {
+    if ((ns == st_namespace_any) || (ns == st_namespace_rhcs)) {
         struct dirent **namelist;
         int file_num = scandir(RH_STONITH_DIR, &namelist, 0, alphasort);
 
@@ -1175,154 +1226,165 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
 {
     int rc = 0;
     char *buffer = NULL;
-    const char *provider = get_stonith_provider(agent, namespace);
+    enum stonith_namespace ns = stonith_get_namespace(agent, namespace);
 
-    crm_trace("looking up %s/%s metadata", agent, provider);
+    crm_trace("Looking up metadata for %s agent %s",
+              stonith_namespace2text(ns), agent);
 
     /* By having this in a library, we can access it from stonith_admin
      * when neither the executor nor the fencer are running, which is
      * important for higher-level tools.
      */
 
-    if (safe_str_eq(provider, "redhat")) {
-        stonith_action_t *action = stonith_action_create(agent, "metadata", NULL, 0, 5, NULL, NULL);
-        int exec_rc = stonith_action_execute(action, &rc, &buffer);
-        xmlNode *xml = NULL;
-        xmlNode *actions = NULL;
-        xmlXPathObject *xpathObj = NULL;
+    switch (ns) {
+        case st_namespace_rhcs:
+            {
+                stonith_action_t *action = stonith_action_create(agent, "metadata", NULL, 0, 5, NULL, NULL);
+                int exec_rc = stonith_action_execute(action, &rc, &buffer);
+                xmlNode *xml = NULL;
+                xmlNode *actions = NULL;
+                xmlXPathObject *xpathObj = NULL;
 
-        if (exec_rc < 0 || rc != 0 || buffer == NULL) {
-            crm_warn("Could not obtain metadata for %s", agent);
-            crm_debug("Query failed: %d %d: %s", exec_rc, rc, crm_str(buffer));
-            free(buffer);       /* Just in case */
-            return -EINVAL;
-        }
-
-        xml = string2xml(buffer);
-        if(xml == NULL) {
-            crm_warn("Metadata for %s is invalid", agent);
-            free(buffer);
-            return -EINVAL;
-        }
-
-        xpathObj = xpath_search(xml, "//actions");
-        if (numXpathResults(xpathObj) > 0) {
-            actions = getXpathResult(xpathObj, 0);
-        }
-
-        freeXpathObject(xpathObj);
-
-        /* Now fudge the metadata so that the start/stop actions appear */
-        xpathObj = xpath_search(xml, "//action[@name='stop']");
-        if (numXpathResults(xpathObj) <= 0) {
-            xmlNode *tmp = NULL;
-
-            tmp = create_xml_node(actions, "action");
-            crm_xml_add(tmp, "name", "stop");
-            crm_xml_add(tmp, "timeout", CRM_DEFAULT_OP_TIMEOUT_S);
-
-            tmp = create_xml_node(actions, "action");
-            crm_xml_add(tmp, "name", "start");
-            crm_xml_add(tmp, "timeout", CRM_DEFAULT_OP_TIMEOUT_S);
-        }
-
-        freeXpathObject(xpathObj);
-
-        /* Now fudge the metadata so that the port isn't required in the configuration */
-        xpathObj = xpath_search(xml, "//parameter[@name='port']");
-        if (numXpathResults(xpathObj) > 0) {
-            /* We'll fill this in */
-            xmlNode *tmp = getXpathResult(xpathObj, 0);
-
-            crm_xml_add(tmp, "required", "0");
-        }
-
-        freeXpathObject(xpathObj);
-        free(buffer);
-        buffer = dump_xml_formatted_with_text(xml);
-        free_xml(xml);
-        if (!buffer) {
-            return -EINVAL;
-        }
-
-    } else {
-#if !HAVE_STONITH_STONITH_H
-        return -EINVAL;         /* Heartbeat agents not supported */
-#else
-        static const char *no_parameter_info = "<!-- no value -->";
-
-        Stonith *stonith_obj = NULL;
-
-        static gboolean need_init = TRUE;
-        static Stonith *(*st_new_fn) (const char *) = NULL;
-        static const char *(*st_info_fn) (Stonith *, int) = NULL;
-        static void (*st_del_fn) (Stonith *) = NULL;
-        static void (*st_log_fn) (Stonith *, PILLogFun) = NULL;
-
-        if (need_init) {
-            need_init = FALSE;
-            st_new_fn =
-                find_library_function(&lha_agents_lib, LHA_STONITH_LIBRARY, "stonith_new", FALSE);
-            st_del_fn =
-                find_library_function(&lha_agents_lib, LHA_STONITH_LIBRARY, "stonith_delete",
-                                      FALSE);
-            st_log_fn =
-                find_library_function(&lha_agents_lib, LHA_STONITH_LIBRARY, "stonith_set_log",
-                                      FALSE);
-            st_info_fn =
-                find_library_function(&lha_agents_lib, LHA_STONITH_LIBRARY, "stonith_get_info",
-                                      FALSE);
-        }
-
-        if (lha_agents_lib && st_new_fn && st_del_fn && st_info_fn && st_log_fn) {
-            char *xml_meta_longdesc = NULL;
-            char *xml_meta_shortdesc = NULL;
-
-            char *meta_param = NULL;
-            char *meta_longdesc = NULL;
-            char *meta_shortdesc = NULL;
-
-            stonith_obj = (*st_new_fn) (agent);
-            if (stonith_obj) {
-                (*st_log_fn) (stonith_obj, (PILLogFun) & stonith_plugin);
-                meta_longdesc = strdup_null((*st_info_fn) (stonith_obj, ST_DEVICEDESCR));
-                if (meta_longdesc == NULL) {
-                    crm_warn("no long description in %s's metadata.", agent);
-                    meta_longdesc = strdup(no_parameter_info);
+                if (exec_rc < 0 || rc != 0 || buffer == NULL) {
+                    crm_warn("Could not obtain metadata for %s", agent);
+                    crm_debug("Query failed: %d %d: %s", exec_rc, rc, crm_str(buffer));
+                    free(buffer);       /* Just in case */
+                    return -EINVAL;
                 }
 
-                meta_shortdesc = strdup_null((*st_info_fn) (stonith_obj, ST_DEVICEID));
-                if (meta_shortdesc == NULL) {
-                    crm_warn("no short description in %s's metadata.", agent);
-                    meta_shortdesc = strdup(no_parameter_info);
+                xml = string2xml(buffer);
+                if(xml == NULL) {
+                    crm_warn("Metadata for %s is invalid", agent);
+                    free(buffer);
+                    return -EINVAL;
                 }
 
-                meta_param = strdup_null((*st_info_fn) (stonith_obj, ST_CONF_XML));
-                if (meta_param == NULL) {
-                    crm_warn("no list of parameters in %s's metadata.", agent);
-                    meta_param = strdup(no_parameter_info);
+                xpathObj = xpath_search(xml, "//actions");
+                if (numXpathResults(xpathObj) > 0) {
+                    actions = getXpathResult(xpathObj, 0);
                 }
-                (*st_del_fn) (stonith_obj);
-            } else {
-                return -EINVAL; /* Heartbeat agents not supported */
+
+                freeXpathObject(xpathObj);
+
+                /* Now fudge the metadata so that the start/stop actions appear */
+                xpathObj = xpath_search(xml, "//action[@name='stop']");
+                if (numXpathResults(xpathObj) <= 0) {
+                    xmlNode *tmp = NULL;
+
+                    tmp = create_xml_node(actions, "action");
+                    crm_xml_add(tmp, "name", "stop");
+                    crm_xml_add(tmp, "timeout", CRM_DEFAULT_OP_TIMEOUT_S);
+
+                    tmp = create_xml_node(actions, "action");
+                    crm_xml_add(tmp, "name", "start");
+                    crm_xml_add(tmp, "timeout", CRM_DEFAULT_OP_TIMEOUT_S);
+                }
+
+                freeXpathObject(xpathObj);
+
+                /* Now fudge the metadata so that the port isn't required in the configuration */
+                xpathObj = xpath_search(xml, "//parameter[@name='port']");
+                if (numXpathResults(xpathObj) > 0) {
+                    /* We'll fill this in */
+                    xmlNode *tmp = getXpathResult(xpathObj, 0);
+
+                    crm_xml_add(tmp, "required", "0");
+                }
+
+                freeXpathObject(xpathObj);
+                free(buffer);
+                buffer = dump_xml_formatted_with_text(xml);
+                free_xml(xml);
+                if (!buffer) {
+                    return -EINVAL;
+                }
             }
+            break;
 
-            xml_meta_longdesc =
-                (char *)xmlEncodeEntitiesReentrant(NULL, (const unsigned char *)meta_longdesc);
-            xml_meta_shortdesc =
-                (char *)xmlEncodeEntitiesReentrant(NULL, (const unsigned char *)meta_shortdesc);
+        case st_namespace_lha:
+#if !HAVE_STONITH_STONITH_H
+            return -EINVAL;         /* Heartbeat agents not supported */
+#else
+            {
+                static const char *no_parameter_info = "<!-- no value -->";
 
-            buffer = crm_strdup_printf(META_TEMPLATE, agent, xml_meta_longdesc,
-                                       xml_meta_shortdesc, meta_param);
+                Stonith *stonith_obj = NULL;
 
-            xmlFree(xml_meta_longdesc);
-            xmlFree(xml_meta_shortdesc);
+                static gboolean need_init = TRUE;
+                static Stonith *(*st_new_fn) (const char *) = NULL;
+                static const char *(*st_info_fn) (Stonith *, int) = NULL;
+                static void (*st_del_fn) (Stonith *) = NULL;
+                static void (*st_log_fn) (Stonith *, PILLogFun) = NULL;
 
-            free(meta_shortdesc);
-            free(meta_longdesc);
-            free(meta_param);
-        }
+                if (need_init) {
+                    need_init = FALSE;
+                    st_new_fn =
+                        find_library_function(&lha_agents_lib, LHA_STONITH_LIBRARY, "stonith_new", FALSE);
+                    st_del_fn =
+                        find_library_function(&lha_agents_lib, LHA_STONITH_LIBRARY, "stonith_delete",
+                                              FALSE);
+                    st_log_fn =
+                        find_library_function(&lha_agents_lib, LHA_STONITH_LIBRARY, "stonith_set_log",
+                                              FALSE);
+                    st_info_fn =
+                        find_library_function(&lha_agents_lib, LHA_STONITH_LIBRARY, "stonith_get_info",
+                                              FALSE);
+                }
+
+                if (lha_agents_lib && st_new_fn && st_del_fn && st_info_fn && st_log_fn) {
+                    char *xml_meta_longdesc = NULL;
+                    char *xml_meta_shortdesc = NULL;
+
+                    char *meta_param = NULL;
+                    char *meta_longdesc = NULL;
+                    char *meta_shortdesc = NULL;
+
+                    stonith_obj = (*st_new_fn) (agent);
+                    if (stonith_obj) {
+                        (*st_log_fn) (stonith_obj, (PILLogFun) & stonith_plugin);
+                        meta_longdesc = strdup_null((*st_info_fn) (stonith_obj, ST_DEVICEDESCR));
+                        if (meta_longdesc == NULL) {
+                            crm_warn("no long description in %s's metadata.", agent);
+                            meta_longdesc = strdup(no_parameter_info);
+                        }
+
+                        meta_shortdesc = strdup_null((*st_info_fn) (stonith_obj, ST_DEVICEID));
+                        if (meta_shortdesc == NULL) {
+                            crm_warn("no short description in %s's metadata.", agent);
+                            meta_shortdesc = strdup(no_parameter_info);
+                        }
+
+                        meta_param = strdup_null((*st_info_fn) (stonith_obj, ST_CONF_XML));
+                        if (meta_param == NULL) {
+                            crm_warn("no list of parameters in %s's metadata.", agent);
+                            meta_param = strdup(no_parameter_info);
+                        }
+                        (*st_del_fn) (stonith_obj);
+                    } else {
+                        return -EINVAL; /* Heartbeat agents not supported */
+                    }
+
+                    xml_meta_longdesc =
+                        (char *)xmlEncodeEntitiesReentrant(NULL, (const unsigned char *)meta_longdesc);
+                    xml_meta_shortdesc =
+                        (char *)xmlEncodeEntitiesReentrant(NULL, (const unsigned char *)meta_shortdesc);
+
+                    buffer = crm_strdup_printf(META_TEMPLATE, agent, xml_meta_longdesc,
+                                               xml_meta_shortdesc, meta_param);
+
+                    xmlFree(xml_meta_longdesc);
+                    xmlFree(xml_meta_shortdesc);
+
+                    free(meta_shortdesc);
+                    free(meta_longdesc);
+                    free(meta_param);
+                }
+            }
+            break;
 #endif
+        default:
+            // Do not provide meta-data for internal or unknown agents
+            break;
     }
 
     if (output) {
@@ -1531,47 +1593,13 @@ is_redhat_agent(const char *agent)
     return FALSE;
 }
 
+/*!
+ * \brief Deprecated (use stonith_get_namespace() instead)
+ */
 const char *
 get_stonith_provider(const char *agent, const char *provider)
 {
-    /* This function sucks */
-    if (is_redhat_agent(agent)) {
-        return "redhat";
-
-#if HAVE_STONITH_STONITH_H
-    } else {
-        Stonith *stonith_obj = NULL;
-
-        static gboolean need_init = TRUE;
-        static Stonith *(*st_new_fn) (const char *) = NULL;
-        static void (*st_del_fn) (Stonith *) = NULL;
-
-        if (need_init) {
-            need_init = FALSE;
-            st_new_fn =
-                find_library_function(&lha_agents_lib, LHA_STONITH_LIBRARY, "stonith_new", FALSE);
-            st_del_fn =
-                find_library_function(&lha_agents_lib, LHA_STONITH_LIBRARY, "stonith_delete",
-                                      FALSE);
-        }
-
-        if (lha_agents_lib && st_new_fn && st_del_fn) {
-            stonith_obj = (*st_new_fn) (agent);
-            if (stonith_obj) {
-                (*st_del_fn) (stonith_obj);
-                return "heartbeat";
-            }
-        }
-#endif
-    }
-
-    if (safe_str_eq(provider, "internal")) {
-        return provider;
-
-    } else {
-        crm_err("No such device: %s", agent);
-        return NULL;
-    }
+    return stonith_namespace2text(stonith_get_namespace(agent, provider));
 }
 
 static gint

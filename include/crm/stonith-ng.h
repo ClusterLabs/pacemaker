@@ -79,6 +79,8 @@ enum stonith_namespace {
 
 enum stonith_namespace stonith_text2namespace(const char *namespace_s);
 const char *stonith_namespace2text(enum stonith_namespace namespace);
+enum stonith_namespace stonith_get_namespace(const char *agent,
+                                             const char *namespace_s);
 
 typedef struct stonith_key_value_s {
     char *key;
@@ -385,6 +387,7 @@ void stonith_api_delete(stonith_t * st);
 
 void stonith_dump_pending_callbacks(stonith_t * st);
 
+// deprecated (use stonith_get_namespace() instead)
 const char *get_stonith_provider(const char *agent, const char *provider);
 
 bool stonith_dispatch(stonith_t * st);
