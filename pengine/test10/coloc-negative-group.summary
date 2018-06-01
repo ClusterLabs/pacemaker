@@ -11,6 +11,7 @@ Transition Summary:
 
 Executing cluster transition:
  * Resource action: res_Dummy_1     cancel=10000 on lenny-b
+ * Resource action: res_Dummy_2     cancel=10000 on lenny-b
  * Resource action: res_Dummy_3     cancel=10000 on lenny-a
 
 Revised cluster status:
