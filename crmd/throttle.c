@@ -449,8 +449,14 @@ throttle_init(void)
 void
 throttle_fini(void)
 {
-    mainloop_timer_del(throttle_timer); throttle_timer = NULL;
-    g_hash_table_destroy(throttle_records); throttle_records = NULL;
+    if (throttle_timer != NULL) {
+        mainloop_timer_del(throttle_timer);
+        throttle_timer = NULL;
+    }
+    if (throttle_records != NULL) {
+        g_hash_table_destroy(throttle_records);
+        throttle_records = NULL;
+    }
 }
 
 int

@@ -147,8 +147,6 @@ update_failcount(xmlNode * event, const char *event_node_uuid, int rc,
     CRM_CHECK(on_uname != NULL, return TRUE);
     CRM_CHECK(parse_op_key(id, &rsc_id, &task, &interval),
               crm_err("Couldn't parse: %s", ID(event)); goto bail);
-    CRM_CHECK(task != NULL, goto bail);
-    CRM_CHECK(rsc_id != NULL, goto bail);
 
     /* Decide whether update is necessary and what value to use */
     if ((interval > 0) || safe_str_eq(task, CRMD_ACTION_PROMOTE)

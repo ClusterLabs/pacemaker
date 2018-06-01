@@ -1058,7 +1058,8 @@ crm_ipc_read(crm_ipc_t * client)
     crm_ipc_init();
 
     client->buffer[0] = 0;
-    client->msg_size = qb_ipcc_event_recv(client->ipc, client->buffer, client->buf_size - 1, 0);
+    client->msg_size = qb_ipcc_event_recv(client->ipc, client->buffer,
+                                          client->buf_size, 0);
     if (client->msg_size >= 0) {
         int rc = crm_ipc_decompress(client);
 

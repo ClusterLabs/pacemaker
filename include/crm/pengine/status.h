@@ -30,6 +30,9 @@ typedef struct pe_action_s pe_action_t;
 typedef struct resource_s resource_t;
 typedef struct ticket_s ticket_t;
 
+// forward-compatible with Pacemaker 2.0.0
+typedef struct resource_s pe_resource_t;
+
 typedef enum no_quorum_policy_e {
     no_quorum_freeze,
     no_quorum_stop,

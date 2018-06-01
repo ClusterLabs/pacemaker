@@ -55,6 +55,25 @@ services_action_create(const char *name, const char *action, int interval, int t
                                    action, interval, timeout, NULL, 0);
 }
 
+static char *
+services__lsb_agent_path(const char *agent)
+{
+    return (*agent == '/')? strdup(agent)
+        : crm_strdup_printf("%s/%s", LSB_ROOT_DIR, agent);
+}
+
+static bool
+services__lsb_agent_exists(const char *agent)
+{
+    bool rc = FALSE;
+    struct stat st;
+    char *path = services__lsb_agent_path(agent);
+
+    rc = (stat(path, &st) == 0);
+    free(path);
+    return rc;
+}
+
 /*!
  * \brief Find first service class that can provide a specified agent
  *
@@ -74,18 +93,9 @@ resources_find_service_class(const char *agent)
      * - systemd
      * - upstart
      */
-    int rc = 0;
-    struct stat st;
-    char *path = NULL;
-
-#ifdef LSB_ROOT_DIR
-    rc = asprintf(&path, "%s/%s", LSB_ROOT_DIR, agent);
-    if (rc > 0 && stat(path, &st) == 0) {
-        free(path);
+    if (services__lsb_agent_exists(agent)) {
         return PCMK_RESOURCE_CLASS_LSB;
     }
-    free(path);
-#endif
 
 #if SUPPORT_SYSTEMD
     if (systemd_unit_exists(agent)) {
@@ -235,14 +245,7 @@ resources_action_create(const char *name, const char *standard, const char *prov
         op->opaque->args[1] = strdup(action);
 
     } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_LSB) == 0) {
-        if (op->agent[0] == '/') {
-            /* if given an absolute path, use that instead
-             * of tacking on the LSB_ROOT_DIR path to the front */
-            op->opaque->exec = strdup(op->agent);
-        } else if (asprintf(&op->opaque->exec, "%s/%s", LSB_ROOT_DIR, op->agent) == -1) {
-            crm_err("Internal error: cannot create agent path");
-            goto return_error;
-        }
+        op->opaque->exec = services__lsb_agent_path(op->agent);
         op->opaque->args[0] = strdup(op->opaque->exec);
         op->opaque->args[1] = strdup(op->action);
         op->opaque->args[2] = NULL;

@@ -2414,94 +2414,114 @@ find_lrm_op(const char *resource, const char *op, const char *node, const char *
     return get_xpath_object(xpath, data_set->input, LOG_DEBUG);
 }
 
+static bool
+stop_happened_after(pe_resource_t *rsc, pe_node_t *node, xmlNode *xml_op,
+                    pe_working_set_t *data_set)
+{
+    xmlNode *stop_op = find_lrm_op(rsc->id, CRMD_ACTION_STOP, node->details->id,
+                                   NULL, data_set);
+
+    if (stop_op) {
+        int stop_id = 0;
+        int task_id = 0;
+
+        crm_element_value_int(stop_op, XML_LRM_ATTR_CALLID, &stop_id);
+        crm_element_value_int(xml_op, XML_LRM_ATTR_CALLID, &task_id);
+        if (stop_id > task_id) {
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
 static void
 unpack_rsc_migration(resource_t *rsc, node_t *node, xmlNode *xml_op, pe_working_set_t * data_set)
 {
-
-    /*
-     * The normal sequence is (now): migrate_to(Src) -> migrate_from(Tgt) -> stop(Src)
+    /* A successful migration sequence is:
+     *    migrate_to on source node
+     *    migrate_from on target node
+     *    stop on source node
      *
-     * So if a migrate_to is followed by a stop, then we don't need to care what
-     * happened on the target node
+     * If a migrate_to is followed by a stop, the entire migration (successful
+     * or failed) is complete, and we don't care what happened on the target.
      *
-     * Without the stop, we need to look for a successful migrate_from.
-     * This would also imply we're no longer running on the source
+     * If no migrate_from has happened, the migration is considered to be
+     * "partial". If the migrate_from failed, make sure the resource gets
+     * stopped on both source and target (if up).
      *
-     * Without the stop, and without a migrate_from op we make sure the resource
-     * gets stopped on both source and target (assuming the target is up)
-     *
+     * If the migrate_to and migrate_from both succeeded (which also implies the
+     * resource is no longer running on the source), but there is no stop, the
+     * migration is considered to be "dangling".
      */
-    int stop_id = 0;
-    int task_id = 0;
-    xmlNode *stop_op =
-        find_lrm_op(rsc->id, CRMD_ACTION_STOP, node->details->id, NULL, data_set);
+    int from_rc = 0;
+    int from_status = 0;
+    const char *migrate_source = NULL;
+    const char *migrate_target = NULL;
+    pe_node_t *target = NULL;
+    pe_node_t *source = NULL;
+    xmlNode *migrate_from = NULL;
 
-    if (stop_op) {
-        crm_element_value_int(stop_op, XML_LRM_ATTR_CALLID, &stop_id);
+    if (stop_happened_after(rsc, node, xml_op, data_set)) {
+        return;
     }
 
-    crm_element_value_int(xml_op, XML_LRM_ATTR_CALLID, &task_id);
+    // Clones are not allowed to migrate, so role can't be master
+    rsc->role = RSC_ROLE_STARTED;
 
-    if (stop_op == NULL || stop_id < task_id) {
-        int from_rc = 0, from_status = 0;
-        const char *migrate_source =
-            crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_SOURCE);
-        const char *migrate_target =
-            crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
+    migrate_source = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_SOURCE);
+    migrate_target = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
 
-        node_t *target = pe_find_node(data_set->nodes, migrate_target);
-        node_t *source = pe_find_node(data_set->nodes, migrate_source);
-        xmlNode *migrate_from =
-            find_lrm_op(rsc->id, CRMD_ACTION_MIGRATED, migrate_target, migrate_source,
-                        data_set);
+    target = pe_find_node(data_set->nodes, migrate_target);
+    source = pe_find_node(data_set->nodes, migrate_source);
 
-        rsc->role = RSC_ROLE_STARTED;       /* can be master? */
-        if (migrate_from) {
-            crm_element_value_int(migrate_from, XML_LRM_ATTR_RC, &from_rc);
-            crm_element_value_int(migrate_from, XML_LRM_ATTR_OPSTATUS, &from_status);
-            pe_rsc_trace(rsc, "%s op on %s exited with status=%d, rc=%d",
-                         ID(migrate_from), migrate_target, from_status, from_rc);
+    // Check whether there was a migrate_from action
+    migrate_from = find_lrm_op(rsc->id, CRMD_ACTION_MIGRATED, migrate_target,
+                               migrate_source, data_set);
+    if (migrate_from) {
+        crm_element_value_int(migrate_from, XML_LRM_ATTR_RC, &from_rc);
+        crm_element_value_int(migrate_from, XML_LRM_ATTR_OPSTATUS, &from_status);
+        pe_rsc_trace(rsc, "%s op on %s exited with status=%d, rc=%d",
+                     ID(migrate_from), migrate_target, from_status, from_rc);
+    }
+
+    if (migrate_from && from_rc == PCMK_OCF_OK
+        && from_status == PCMK_LRM_OP_DONE) {
+        /* The migrate_to and migrate_from both succeeded, so mark the migration
+         * as "dangling". This will be used to schedule a stop action on the
+         * source without affecting the target.
+         */
+        pe_rsc_trace(rsc, "Detected dangling migration op: %s on %s", ID(xml_op),
+                     migrate_source);
+        rsc->role = RSC_ROLE_STOPPED;
+        rsc->dangling_migrations = g_list_prepend(rsc->dangling_migrations, node);
+
+    } else if (migrate_from && (from_status != PCMK_LRM_OP_PENDING)) { // Failed
+        if (target && target->details->online) {
+            pe_rsc_trace(rsc, "Marking active on %s %p %d", migrate_target, target,
+                         target->details->online);
+            native_add_running(rsc, target, data_set);
         }
 
-        if (migrate_from && from_rc == PCMK_OCF_OK
-            && from_status == PCMK_LRM_OP_DONE) {
-            pe_rsc_trace(rsc, "Detected dangling migration op: %s on %s", ID(xml_op),
-                         migrate_source);
+    } else { // Pending, or complete but erased
+        if (target && target->details->online) {
+            pe_rsc_trace(rsc, "Marking active on %s %p %d", migrate_target, target,
+                         target->details->online);
 
-            /* all good
-             * just need to arrange for the stop action to get sent
-             * but _without_ affecting the target somehow
-             */
-            rsc->role = RSC_ROLE_STOPPED;
-            rsc->dangling_migrations = g_list_prepend(rsc->dangling_migrations, node);
-
-        } else if (migrate_from) {  /* Failed */
-            if (target && target->details->online) {
-                pe_rsc_trace(rsc, "Marking active on %s %p %d", migrate_target, target,
-                             target->details->online);
-                native_add_running(rsc, target, data_set);
+            native_add_running(rsc, target, data_set);
+            if (source && source->details->online) {
+                /* This is a partial migration: the migrate_to completed
+                 * successfully on the source, but the migrate_from has not
+                 * completed. Remember the source and target; if the newly
+                 * chosen target remains the same when we schedule actions
+                 * later, we may continue with the migration.
+                 */
+                rsc->partial_migration_target = target;
+                rsc->partial_migration_source = source;
             }
-
-        } else {    /* Pending or complete but erased */
-            if (target && target->details->online) {
-                pe_rsc_trace(rsc, "Marking active on %s %p %d", migrate_target, target,
-                             target->details->online);
-
-                native_add_running(rsc, target, data_set);
-                if (source && source->details->online) {
-                    /* If we make it here we have a partial migration.  The migrate_to
-                     * has completed but the migrate_from on the target has not. Hold on
-                     * to the target and source on the resource. Later on if we detect that
-                     * the resource is still going to run on that target, we may continue
-                     * the migration */
-                    rsc->partial_migration_target = target;
-                    rsc->partial_migration_source = source;
-                }
-            } else {
-                /* Consider it failed here - forces a restart, prevents migration */
-                set_bit(rsc->flags, pe_rsc_failed);
-                clear_bit(rsc->flags, pe_rsc_allow_migrate);
-            }
+        } else {
+            /* Consider it failed here - forces a restart, prevents migration */
+            set_bit(rsc->flags, pe_rsc_failed);
+            clear_bit(rsc->flags, pe_rsc_allow_migrate);
         }
     }
 }
@@ -2638,9 +2658,21 @@ unpack_rsc_op_failure(resource_t * rsc, node_t * node, int rc, xmlNode * xml_op,
     }
 
     if (rc != PCMK_OCF_NOT_INSTALLED || is_set(data_set->flags, pe_flag_symmetric_cluster)) {
-        crm_warn("Processing failed op %s for %s on %s: %s (%d)",
-                 task, rsc->id, node->details->uname, services_ocf_exitcode_str(rc),
-                 rc);
+        crm_warn("Processing failed %s of %s on %s: %s " CRM_XS " rc=%d",
+                 (is_probe? "probe" : task), rsc->id, node->details->uname,
+                 services_ocf_exitcode_str(rc), rc);
+
+        if (is_probe && (rc != PCMK_OCF_OK)
+            && (rc != PCMK_OCF_NOT_RUNNING)
+            && (rc != PCMK_OCF_RUNNING_MASTER)) {
+
+            /* A failed (not just unexpected) probe result could mean the user
+             * didn't know resources will be probed even where they can't run.
+             */
+            crm_notice("If it is not possible for %s to run on %s, see "
+                       "the resource-discovery option for location constraints",
+                       rsc->id, node->details->uname);
+        }
 
         record_failed_op(xml_op, node, rsc, data_set);
 
@@ -2729,7 +2761,9 @@ unpack_rsc_op_failure(resource_t * rsc, node_t * node, int rc, xmlNode * xml_op,
         }
         crm_warn("Making sure %s doesn't come up again", fail_rsc->id);
         /* make sure it doesn't come up again */
-        g_hash_table_destroy(fail_rsc->allowed_nodes);
+        if (fail_rsc->allowed_nodes != NULL) {
+            g_hash_table_destroy(fail_rsc->allowed_nodes);
+        }
         fail_rsc->allowed_nodes = node_hash_from_list(data_set->nodes);
         g_hash_table_foreach(fail_rsc->allowed_nodes, set_node_score, &score);
     }

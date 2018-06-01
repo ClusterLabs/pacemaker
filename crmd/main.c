@@ -104,16 +104,17 @@ main(int argc, char **argv)
         crm_help('?', EX_USAGE);
     }
 
-    if (crm_is_writable(PE_STATE_DIR, NULL, CRM_DAEMON_USER, CRM_DAEMON_GROUP, FALSE) == FALSE) {
-        crm_err("Bad permissions on " PE_STATE_DIR ". Terminating");
-        fprintf(stderr, "ERROR: Bad permissions on " PE_STATE_DIR ". See logs for details\n");
+    if (pcmk__daemon_can_write(PE_STATE_DIR, NULL) == FALSE) {
+        crm_err("Terminating due to bad permissions on " PE_STATE_DIR);
+        fprintf(stderr,
+                "ERROR: Bad permissions on " PE_STATE_DIR " (see logs for details)\n");
         fflush(stderr);
         return 100;
 
-    } else if (crm_is_writable(CRM_CONFIG_DIR, NULL, CRM_DAEMON_USER, CRM_DAEMON_GROUP, FALSE) ==
-               FALSE) {
-        crm_err("Bad permissions on " CRM_CONFIG_DIR ". Terminating");
-        fprintf(stderr, "ERROR: Bad permissions on " CRM_CONFIG_DIR ". See logs for details\n");
+    } else if (pcmk__daemon_can_write(CRM_CONFIG_DIR, NULL) == FALSE) {
+        crm_err("Terminating due to bad permissions on " CRM_CONFIG_DIR);
+        fprintf(stderr,
+                "ERROR: Bad permissions on " CRM_CONFIG_DIR " (see logs for details)\n");
         fflush(stderr);
         return 100;
     }

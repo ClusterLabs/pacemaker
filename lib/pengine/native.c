@@ -17,6 +17,21 @@
 #define VARIANT_NATIVE 1
 #include "./variant.h"
 
+/*!
+ * \internal
+ * \brief Check whether a resource is active on multiple nodes
+ */
+static bool
+is_multiply_active(pe_resource_t *rsc)
+{
+    unsigned int count = 0;
+
+    if (rsc->variant == pe_native) {
+        pe__find_active_requires(rsc, &count);
+    }
+    return count > 1;
+}
+
 void
 native_add_running(resource_t * rsc, node_t * node, pe_working_set_t * data_set)
 {
@@ -58,7 +73,7 @@ native_add_running(resource_t * rsc, node_t * node, pe_working_set_t * data_set)
         return;
     }
 
-    if (rsc->variant == pe_native && g_list_length(rsc->running_on) > 1) {
+    if (is_multiply_active(rsc)) {
         switch (rsc->recovery_type) {
             case recovery_stop_only:
                 {
@@ -66,7 +81,9 @@ native_add_running(resource_t * rsc, node_t * node, pe_working_set_t * data_set)
                     node_t *local_node = NULL;
 
                     /* make sure it doesn't come up again */
-                    g_hash_table_destroy(rsc->allowed_nodes);
+                    if (rsc->allowed_nodes != NULL) {
+                        g_hash_table_destroy(rsc->allowed_nodes);
+                    }
                     rsc->allowed_nodes = node_hash_from_list(data_set->nodes);
                     g_hash_table_iter_init(&gIter, rsc->allowed_nodes);
                     while (g_hash_table_iter_next(&gIter, NULL, (void **)&local_node)) {
@@ -97,8 +114,8 @@ native_add_running(resource_t * rsc, node_t * node, pe_working_set_t * data_set)
                 }
                 break;
         }
-        crm_debug("%s is active on %d nodes including %s: %s",
-                  rsc->id, g_list_length(rsc->running_on), node->details->uname,
+        crm_debug("%s is active on multiple nodes including %s: %s",
+                  rsc->id, node->details->uname,
                   recovery2text(rsc->recovery_type));
 
     } else {

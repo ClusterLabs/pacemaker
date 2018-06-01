@@ -49,6 +49,43 @@ debug_log(int level, const char *str)
     fputs(str, stderr);
 }
 
+/*!
+ * \internal
+ * \brief Read (more) TLS handshake data from client
+ */
+static int
+remoted__read_handshake_data(crm_client_t *client)
+{
+    int rc = 0;
+
+    do {
+        rc = gnutls_handshake(*client->remote->tls_session);
+    } while (rc == GNUTLS_E_INTERRUPTED);
+
+    if (rc == GNUTLS_E_AGAIN) {
+        /* No more data is available at the moment. Just return for now;
+         * we'll get invoked again once the client sends more.
+         */
+        return 0;
+    } else if (rc != GNUTLS_E_SUCCESS) {
+        crm_err("TLS handshake with Pacemaker Remote failed: %s "
+                CRM_XS " rc=%d", gnutls_strerror(rc), rc);
+        return -1;
+    }
+
+    if (client->remote->auth_timeout) {
+        g_source_remove(client->remote->auth_timeout);
+    }
+    client->remote->auth_timeout = 0;
+
+    client->remote->tls_handshake_complete = TRUE;
+    crm_debug("TLS handshake with Pacemaker Remote completed");
+
+    // Alert other clients of the new connection
+    notify_of_new_client(client);
+    return 0;
+}
+
 static int
 lrmd_remote_client_msg(gpointer data)
 {
@@ -59,31 +96,7 @@ lrmd_remote_client_msg(gpointer data)
     crm_client_t *client = data;
 
     if (client->remote->tls_handshake_complete == FALSE) {
-        int rc = 0;
-
-        /* Muliple calls to handshake will be required, this callback
-         * will be invoked once the client sends more handshake data. */
-        do {
-            rc = gnutls_handshake(*client->remote->tls_session);
-
-            if (rc < 0 && rc != GNUTLS_E_AGAIN) {
-                crm_err("Remote lrmd tls handshake failed");
-                return -1;
-            }
-        } while (rc == GNUTLS_E_INTERRUPTED);
-
-        if (rc == 0) {
-            crm_debug("Remote lrmd tls handshake completed");
-            client->remote->tls_handshake_complete = TRUE;
-            if (client->remote->auth_timeout) {
-                g_source_remove(client->remote->auth_timeout);
-            }
-            client->remote->auth_timeout = 0;
-
-            /* Alert other clients of the new connection */
-            notify_of_new_client(client);
-        }
-        return 0;
+        return remoted__read_handshake_data(client);
     }
 
     rc = crm_remote_ready(client->remote, 0);
@@ -324,6 +337,7 @@ lrmd_init_remote_tls_server()
     if (rc != 0) {
         crm_warn("A cluster connection will not be possible until the key is available");
     }
+    gnutls_free(psk_key.data);
 
     memset(&hints, 0, sizeof(struct addrinfo));
     /* Bind to the wildcard address (INADDR_ANY or IN6ADDR_ANY_INIT).

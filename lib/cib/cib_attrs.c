@@ -471,17 +471,19 @@ get_uuid_from_result(xmlNode *result, char **uuid, int *is_remote)
  * - guest node in resources section
  * - orphaned remote node or bundle guest node in status section
  */
+#define XPATH_UPPER_TRANS "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+#define XPATH_LOWER_TRANS "abcdefghijklmnopqrstuvwxyz"
 #define XPATH_NODE \
     "/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_NODES \
-        "/" XML_CIB_TAG_NODE "[@" XML_ATTR_UNAME "='%s']" \
+        "/" XML_CIB_TAG_NODE "[translate(@" XML_ATTR_UNAME ",'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']" \
     "|/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_RESOURCES \
         "/" XML_CIB_TAG_RESOURCE \
-        "[@class='ocf'][@provider='pacemaker'][@type='remote'][@id='%s']" \
+        "[@class='ocf'][@provider='pacemaker'][@type='remote'][translate(@id,'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']" \
     "|/" XML_TAG_CIB "/" XML_CIB_TAG_CONFIGURATION "/" XML_CIB_TAG_RESOURCES \
         "/" XML_CIB_TAG_RESOURCE "/" XML_TAG_META_SETS "/" XML_CIB_TAG_NVPAIR \
-        "[@name='" XML_RSC_ATTR_REMOTE_NODE "'][@value='%s']" \
+        "[@name='" XML_RSC_ATTR_REMOTE_NODE "'][translate(@value,'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']" \
     "|/" XML_TAG_CIB "/" XML_CIB_TAG_STATUS "/" XML_CIB_TAG_STATE \
-        "[@" XML_NODE_IS_REMOTE "='true'][@" XML_ATTR_UUID "='%s']"
+        "[@" XML_NODE_IS_REMOTE "='true'][translate(@" XML_ATTR_UUID ",'" XPATH_UPPER_TRANS "','" XPATH_LOWER_TRANS "') ='%s']"
 
 int
 query_node_uuid(cib_t * the_cib, const char *uname, char **uuid, int *is_remote_node)
@@ -489,6 +491,7 @@ query_node_uuid(cib_t * the_cib, const char *uname, char **uuid, int *is_remote_
     int rc = pcmk_ok;
     char *xpath_string;
     xmlNode *xml_search = NULL;
+    char *host_lowercase = g_ascii_strdown(uname, -1);
 
     CRM_ASSERT(uname != NULL);
 
@@ -499,7 +502,7 @@ query_node_uuid(cib_t * the_cib, const char *uname, char **uuid, int *is_remote_
         *is_remote_node = FALSE;
     }
 
-    xpath_string = crm_strdup_printf(XPATH_NODE, uname, uname, uname, uname);
+    xpath_string = crm_strdup_printf(XPATH_NODE, host_lowercase, host_lowercase, host_lowercase, host_lowercase);
     if (cib_internal_op(the_cib, CIB_OP_QUERY, NULL, xpath_string, NULL,
                         &xml_search, cib_sync_call|cib_scope_local|cib_xpath,
                         NULL) == pcmk_ok) {
@@ -509,6 +512,7 @@ query_node_uuid(cib_t * the_cib, const char *uname, char **uuid, int *is_remote_
     }
     free(xpath_string);
     free_xml(xml_search);
+    free(host_lowercase);
 
     if (rc != pcmk_ok) {
         crm_debug("Could not map node name '%s' to a UUID: %s",

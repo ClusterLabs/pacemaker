@@ -1163,7 +1163,9 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
     gboolean allow_migrate = is_set(rsc->flags, pe_rsc_allow_migrate) ? TRUE : FALSE;
 
     GListPtr gIter = NULL;
-    int num_active_nodes = 0;
+    unsigned int num_all_active = 0;
+    unsigned int num_clean_active = 0;
+    bool multiply_active = FALSE;
     enum rsc_role_e role = RSC_ROLE_UNKNOWN;
     enum rsc_role_e next_role = RSC_ROLE_UNKNOWN;
 
@@ -1181,18 +1183,7 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
     pe_rsc_trace(rsc, "Processing state transition for %s %p: %s->%s", rsc->id, rsc,
                  role2text(rsc->role), role2text(rsc->next_role));
 
-    if (rsc->running_on) {
-        current = rsc->running_on->data;
-    }
-
-    for (gIter = rsc->running_on; gIter != NULL; gIter = gIter->next) {
-        node_t *n = (node_t *) gIter->data;
-        if (rsc->partial_migration_source &&
-            (n->details == rsc->partial_migration_source->details)) {
-            current = rsc->partial_migration_source;
-        }
-        num_active_nodes++;
-    }
+    current = pe__find_active_on(rsc, &num_all_active, &num_clean_active);
 
     for (gIter = rsc->dangling_migrations; gIter != NULL; gIter = gIter->next) {
         node_t *current = (node_t *) gIter->data;
@@ -1207,47 +1198,57 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
         }
     }
 
-    if (num_active_nodes > 1) {
+    if ((num_all_active == 2) && (num_clean_active == 2) && chosen
+        && rsc->partial_migration_source && rsc->partial_migration_target
+        && (current->details == rsc->partial_migration_source->details)
+        && (chosen->details == rsc->partial_migration_target->details)) {
 
-        if (num_active_nodes == 2
-            && chosen
-            && rsc->partial_migration_target
-            && rsc->partial_migration_source
-            && (current->details == rsc->partial_migration_source->details)
-            && (chosen->details == rsc->partial_migration_target->details)) {
-            /* Here the chosen node is still the migration target from a partial
-             * migration. Attempt to continue the migration instead of recovering
-             * by stopping the resource everywhere and starting it on a single node. */
-            pe_rsc_trace(rsc,
-                         "Will attempt to continue with a partial migration to target %s from %s",
-                         rsc->partial_migration_target->details->id,
-                         rsc->partial_migration_source->details->id);
+        /* The chosen node is still the migration target from a partial
+         * migration. Attempt to continue the migration instead of recovering
+         * by stopping the resource everywhere and starting it on a single node.
+         */
+        pe_rsc_trace(rsc,
+                     "Will attempt to continue with a partial migration to target %s from %s",
+                     rsc->partial_migration_target->details->id,
+                     rsc->partial_migration_source->details->id);
+
+    } else if (is_not_set(rsc->flags, pe_rsc_needs_fencing)) {
+        /* If a resource has "requires" set to nothing or quorum, don't consider
+         * it active on unclean nodes (similar to how all resources behave when
+         * stonith-enabled is false). We can start such resources elsewhere
+         * before fencing completes, and if we considered the resource active on
+         * the failed node, we would attempt recovery for being active on
+         * multiple nodes.
+         */
+        multiply_active = (num_clean_active > 1);
+    } else {
+        multiply_active = (num_all_active > 1);
+    }
+
+    if (multiply_active) {
+        if (rsc->partial_migration_target && rsc->partial_migration_source) {
+            // Migration was in progress, but we've chosen a different target
+            crm_notice("Resource %s can no longer migrate to %s. Stopping on %s too",
+                       rsc->id, rsc->partial_migration_target->details->uname,
+                       rsc->partial_migration_source->details->uname);
+
         } else {
-            const char *type = crm_element_value(rsc->xml, XML_ATTR_TYPE);
-            const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
-
-            if(rsc->partial_migration_target && rsc->partial_migration_source) {
-                crm_notice("Resource %s can no longer migrate to %s. Stopping on %s too", rsc->id,
-                           rsc->partial_migration_target->details->uname,
-                           rsc->partial_migration_source->details->uname);
-
-            } else {
-                pe_proc_err("Resource %s (%s::%s) is active on %d nodes %s",
-                            rsc->id, class, type, num_active_nodes, recovery2text(rsc->recovery_type));
-                crm_warn("See %s for more information.",
-                         "http://clusterlabs.org/wiki/FAQ#Resource_is_Too_Active");
-            }
-
-            if (rsc->recovery_type == recovery_stop_start) {
-                need_stop = TRUE;
-            }
-
-            /* If by chance a partial migration is in process,
-             * but the migration target is not chosen still, clear all
-             * partial migration data.  */
-            rsc->partial_migration_source = rsc->partial_migration_target = NULL;
-            allow_migrate = FALSE;
+            // Resource was incorrectly multiply active
+            pe_proc_err("Resource %s is active on %u nodes (%s)",
+                        rsc->id, num_all_active,
+                        recovery2text(rsc->recovery_type));
+            crm_notice("See https://wiki.clusterlabs.org/wiki/FAQ#Resource_is_Too_Active for more information");
         }
+
+        if (rsc->recovery_type == recovery_stop_start) {
+            need_stop = TRUE;
+        }
+
+        /* If by chance a partial migration is in process, but the migration
+         * target is not chosen still, clear all partial migration data.
+         */
+        rsc->partial_migration_source = rsc->partial_migration_target = NULL;
+        allow_migrate = FALSE;
     }
 
     if (is_set(rsc->flags, pe_rsc_start_pending)) {
@@ -1340,7 +1341,7 @@ native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
                is_not_set(rsc->flags, pe_rsc_managed) ||
                is_set(rsc->flags, pe_rsc_failed) ||
                is_set(rsc->flags, pe_rsc_start_pending) ||
-               (current->details->unclean == TRUE) ||
+               (current && current->details->unclean) ||
                rsc->next_role < RSC_ROLE_STARTED) {
 
         allow_migrate = FALSE;
@@ -2330,12 +2331,7 @@ LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal)
 
     next = rsc->allocated_to;
     if (rsc->running_on) {
-        if (g_list_length(rsc->running_on) > 1 && rsc->partial_migration_source) {
-            current = rsc->partial_migration_source;
-        } else {
-            current = rsc->running_on->data;
-        }
-
+        current = pe__current_node(rsc);
         if (rsc->role == RSC_ROLE_STOPPED) {
             /*
              * This can occur when resources are being recovered
