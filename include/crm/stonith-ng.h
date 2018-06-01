@@ -71,6 +71,22 @@ enum op_state
     st_failed,
 };
 
+// Supported fence agent interface standards
+enum stonith_namespace {
+    st_namespace_invalid,
+    st_namespace_any,
+    st_namespace_internal,  // Implemented internally by Pacemaker
+
+    /* Neither of these projects are active any longer, but the fence agent
+     * interfaces they created are still in use and supported by Pacemaker.
+     */
+    st_namespace_rhcs,      // Red Hat Cluster Suite compatible
+    st_namespace_lha,       // Linux-HA compatible
+};
+
+enum stonith_namespace stonith_text2namespace(const char *namespace_s);
+const char *stonith_namespace2text(enum stonith_namespace namespace);
+
 typedef struct stonith_key_value_s {
     char *key;
     char *value;
