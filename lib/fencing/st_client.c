@@ -145,6 +145,52 @@ static void stonith_send_notification(gpointer data, gpointer user_data);
 static int internal_stonith_action_execute(stonith_action_t * action);
 static void log_action(stonith_action_t *action, pid_t pid);
 
+/*!
+ * \brief Get agent namespace by name
+ *
+ * \param[in] namespace_s  Name of namespace as string
+ *
+ * \return Namespace as enum value
+ */
+enum stonith_namespace
+stonith_text2namespace(const char *namespace_s)
+{
+    if ((namespace_s == NULL) || !strcmp(namespace_s, "any")) {
+        return st_namespace_any;
+
+    } else if (!strcmp(namespace_s, "redhat")
+               || !strcmp(namespace_s, "stonith-ng")) {
+        return st_namespace_rhcs;
+
+    } else if (!strcmp(namespace_s, "internal")) {
+        return st_namespace_internal;
+
+    } else if (!strcmp(namespace_s, "heartbeat")) {
+        return st_namespace_lha;
+    }
+    return st_namespace_invalid;
+}
+
+/*!
+ * \brief Get agent namespace name
+ *
+ * \param[in] namespace  Namespace as enum value
+ *
+ * \return Namespace name as string
+ */
+const char *
+stonith_namespace2text(enum stonith_namespace namespace)
+{
+    switch (namespace) {
+        case st_namespace_any:      return "any";
+        case st_namespace_rhcs:     return "stonith-ng";
+        case st_namespace_internal: return "internal";
+        case st_namespace_lha:      return "heartbeat";
+        default:                    break;
+    }
+    return "unsupported";
+}
+
 static void
 log_action(stonith_action_t *action, pid_t pid)
 {
