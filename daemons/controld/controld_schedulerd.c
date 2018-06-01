@@ -357,6 +357,7 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     // Refresh the remote node cache when the scheduler is invoked
     crm_remote_peer_cache_refresh(output);
+    crm_known_peer_cache_refresh(output);
 
     crm_xml_add(output, XML_ATTR_DC_UUID, fsa_our_uuid);
     crm_xml_add_int(output, XML_ATTR_HAVE_QUORUM, fsa_has_quorum);

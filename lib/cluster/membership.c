@@ -50,6 +50,8 @@ GHashTable *crm_peer_cache = NULL;
  */
 GHashTable *crm_remote_peer_cache = NULL;
 
+GHashTable *crm_known_peer_cache = NULL;
+
 unsigned long long crm_peer_seq = 0;
 gboolean crm_have_quorum = FALSE;
 static gboolean crm_autoreap  = TRUE;
@@ -394,6 +396,10 @@ crm_peer_init(void)
     if (crm_remote_peer_cache == NULL) {
         crm_remote_peer_cache = g_hash_table_new_full(crm_strcase_hash, crm_strcase_equal, NULL, destroy_crm_node);
     }
+
+    if (crm_known_peer_cache == NULL) {
+        crm_known_peer_cache = g_hash_table_new_full(crm_strcase_hash, crm_strcase_equal, free, free);
+    }
 }
 
 void
@@ -410,6 +416,13 @@ crm_peer_destroy(void)
         g_hash_table_destroy(crm_remote_peer_cache);
         crm_remote_peer_cache = NULL;
     }
+
+    if (crm_known_peer_cache != NULL) {
+        crm_trace("Destroying known peer cache with %d members", g_hash_table_size(crm_known_peer_cache));
+        g_hash_table_destroy(crm_known_peer_cache);
+        crm_known_peer_cache = NULL;
+    }
+
 }
 
 void (*crm_status_callback) (enum crm_status_type, crm_node_t *, const void *) = NULL;
@@ -997,4 +1010,44 @@ int
 crm_terminate_member_no_mainloop(int nodeid, const char *uname, int *connection)
 {
     return stonith_api_kick(nodeid, uname, 120, TRUE);
+}
+
+void
+crm_known_peer_cache_refresh(xmlNode *cib)
+{
+    xmlNode *xml_nodes = get_xpath_object("//" XML_CIB_TAG_NODES, cib, LOG_TRACE);
+    xmlNode *xml_node = NULL;
+
+    g_hash_table_remove_all(crm_known_peer_cache);
+
+    for (xml_node = first_named_child(xml_nodes, XML_CIB_TAG_NODE);
+         xml_node != NULL;
+         xml_node = crm_next_same_xml(xml_node)) {
+
+        const char *id = crm_element_value(xml_node, XML_ATTR_ID);
+        const char *uname = crm_element_value(xml_node, XML_ATTR_UNAME);
+
+        if (id && uname) {
+            g_hash_table_replace(crm_known_peer_cache, strdup(id), strdup(uname));
+        }
+    }
+}
+
+const char *
+crm_known_peer_id(const char *peer_name)
+{
+    GHashTableIter iter;
+    const char *id = NULL;
+    const char *uname = NULL;
+
+    CRM_CHECK(peer_name != NULL, return NULL);
+
+    g_hash_table_iter_init(&iter, crm_known_peer_cache);
+    while (g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&uname)) {
+        if (safe_str_eq(peer_name, uname)) {
+            return id;
+        }
+    }
+
+    return NULL;
 }
