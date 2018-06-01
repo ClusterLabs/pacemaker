@@ -102,7 +102,7 @@ native_choose_node(resource_t * rsc, node_t * prefer, pe_working_set_t * data_se
     if (length > 0) {
         nodes = g_hash_table_get_values(rsc->allowed_nodes);
         nodes = g_list_sort_with_data(nodes, sort_node_weight,
-                                      g_list_nth_data(rsc->running_on, 0));
+                                      pe__current_node(rsc));
 
         // First node in sorted list has the best score
         best = g_list_nth_data(nodes, 0);
@@ -158,7 +158,7 @@ native_choose_node(resource_t * rsc, node_t * prefer, pe_working_set_t * data_se
              * remaining unallocated instances to prefer a node that's already
              * running another instance.
              */
-            node_t *running = g_list_nth_data(rsc->running_on, 0);
+            node_t *running = pe__current_node(rsc);
 
             if (running && (can_run_resources(running) == FALSE)) {
                 pe_rsc_trace(rsc, "Current node for %s (%s) can't run resources",
@@ -534,16 +534,14 @@ native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
         node_t *assign_to = NULL;
 
         rsc->next_role = rsc->role;
-        if (rsc->running_on == NULL) {
+        assign_to = pe__current_node(rsc);
+        if (assign_to == NULL) {
             reason = "inactive";
         } else if (rsc->role == RSC_ROLE_MASTER) {
-            assign_to = rsc->running_on->data;
             reason = "master";
         } else if (is_set(rsc->flags, pe_rsc_failed)) {
-            assign_to = rsc->running_on->data;
             reason = "failed";
         } else {
-            assign_to = rsc->running_on->data;
             reason = "active";
         }
         pe_rsc_info(rsc, "Unmanaged resource %s allocated to %s: %s", rsc->id,
@@ -1834,7 +1832,9 @@ rsc_ticket_constraint(resource_t * rsc_lh, rsc_ticket_t * rsc_ticket, pe_working
                  rsc_lh->id, rsc_ticket->ticket->id, rsc_ticket->id,
                  role2text(rsc_ticket->role_lh));
 
-    if (rsc_ticket->ticket->granted == FALSE && g_list_length(rsc_lh->running_on) > 0) {
+    if ((rsc_ticket->ticket->granted == FALSE)
+        && (rsc_lh->running_on != NULL)) {
+
         GListPtr gIter = NULL;
 
         switch (rsc_ticket->loss_policy) {
@@ -1867,7 +1867,7 @@ rsc_ticket_constraint(resource_t * rsc_lh, rsc_ticket_t * rsc_ticket, pe_working
                 if (filter_rsc_ticket(rsc_lh, rsc_ticket) == FALSE) {
                     return;
                 }
-                if (g_list_length(rsc_lh->running_on) > 0) {
+                if (rsc_lh->running_on != NULL) {
                     clear_bit(rsc_lh->flags, pe_rsc_managed);
                     set_bit(rsc_lh->flags, pe_rsc_block);
                 }
@@ -1919,7 +1919,6 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
         } else if ((then_rsc_role >= RSC_ROLE_STARTED)
                    && safe_str_eq(then->task, RSC_START)
                    && then->node
-                   && then_rsc->running_on
                    && g_list_length(then_rsc->running_on) == 1
                    && then->node->details == ((node_t *) then_rsc->running_on->data)->details) {
             /* ignore... if 'then' is supposed to be started after 'first', but

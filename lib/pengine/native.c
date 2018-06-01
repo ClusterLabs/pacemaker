@@ -457,7 +457,7 @@ native_print_xml(resource_t * rsc, const char *pre_text, long options, void *pri
     if (options & pe_print_rsconly) {
         status_print("/>\n");
         /* do nothing */
-    } else if (g_list_length(rsc->running_on) > 0) {
+    } else if (rsc->running_on != NULL) {
         GListPtr gIter = rsc->running_on;
 
         status_print(">\n");
@@ -529,7 +529,7 @@ common_print(resource_t * rsc, const char *pre_text, const char *name, node_t *n
         } else if (is_set(rsc->flags, pe_rsc_failed)) {
             status_print("<font color=\"red\">");
 
-        } else if (rsc->variant == pe_native && g_list_length(rsc->running_on) == 0) {
+        } else if (rsc->variant == pe_native && (rsc->running_on == NULL)) {
             status_print("<font color=\"red\">");
 
         } else if (g_list_length(rsc->running_on) > 1) {
@@ -742,9 +742,7 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
         return;
     }
 
-    if (rsc->running_on != NULL) {
-        node = rsc->running_on->data;
-    }
+    node = pe__current_node(rsc);
     common_print(rsc, pre_text, rsc_printable_id(rsc), node, options, print_data);
 }
 

@@ -807,11 +807,11 @@ container_fix_remote_addr_in(resource_t *rsc, xmlNode *xml, const char *field)
     }
 
     node = tuple->docker->allocated_to;
-    if(node == NULL && tuple->docker->running_on) {
+    if (node == NULL) {
         /* If it won't be running anywhere after the
          * transition, go with where it's running now.
          */
-        node = tuple->docker->running_on->data;
+        node = pe__current_node(tuple->docker);
     }
 
     if(node == NULL) {
@@ -1289,9 +1289,7 @@ tuple_print(container_grouping_t * tuple, const char *pre_text, long options, vo
         offset += snprintf(buffer + offset, LINE_MAX - offset, " (%s)", tuple->ipaddr);
     }
 
-    if (tuple->docker->running_on) {
-        node = tuple->docker->running_on->data;
-    }
+    node = pe__current_node(tuple->docker);
     common_print(rsc, pre_text, buffer, node, options, print_data);
 }
 

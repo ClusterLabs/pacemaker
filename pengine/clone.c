@@ -69,6 +69,10 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
     int rc = 0;
     node_t *node1 = NULL;
     node_t *node2 = NULL;
+    node_t *current_node1 = NULL;
+    node_t *current_node2 = NULL;
+    unsigned int nnodes1 = 0;
+    unsigned int nnodes2 = 0;
 
     gboolean can1 = TRUE;
     gboolean can2 = TRUE;
@@ -87,24 +91,22 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
      *  - inactive instances
      */
 
-    if (resource1->running_on && resource2->running_on) {
-        if (g_list_length(resource1->running_on) < g_list_length(resource2->running_on)) {
+    current_node1 = pe__find_active_on(resource1, &nnodes1, NULL);
+    current_node2 = pe__find_active_on(resource2, &nnodes2, NULL);
+
+    if (nnodes1 && nnodes2) {
+        if (nnodes1 < nnodes2) {
             crm_trace("%s < %s: running_on", resource1->id, resource2->id);
             return -1;
 
-        } else if (g_list_length(resource1->running_on) > g_list_length(resource2->running_on)) {
+        } else if (nnodes1 > nnodes2) {
             crm_trace("%s > %s: running_on", resource1->id, resource2->id);
             return 1;
         }
     }
 
-    if (resource1->running_on) {
-        node1 = resource1->running_on->data;
-    }
-    if (resource2->running_on) {
-        node2 = resource2->running_on->data;
-    }
-
+    node1 = current_node1;
+    node2 = current_node2;
     if (node1) {
         node_t *match = pe_hash_table_lookup(resource1->allowed_nodes, node1->details->id);
 
@@ -216,10 +218,10 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
         GHashTable *hash2 =
             g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, g_hash_destroy_str);
 
-        n = node_copy(resource1->running_on->data);
+        n = node_copy(current_node1);
         g_hash_table_insert(hash1, (gpointer) n->details->id, n);
 
-        n = node_copy(resource2->running_on->data);
+        n = node_copy(current_node2);
         g_hash_table_insert(hash2, (gpointer) n->details->id, n);
 
         if(resource1->parent) {
@@ -267,11 +269,8 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
         }
 
         /* Current location score */
-        node1 = g_list_nth_data(resource1->running_on, 0);
-        node1 = g_hash_table_lookup(hash1, node1->details->id);
-
-        node2 = g_list_nth_data(resource2->running_on, 0);
-        node2 = g_hash_table_lookup(hash2, node2->details->id);
+        node1 = g_hash_table_lookup(hash1, current_node1->details->id);
+        node2 = g_hash_table_lookup(hash2, current_node2->details->id);
 
         if (node1->weight < node2->weight) {
             if (node1->weight < 0) {
@@ -295,12 +294,8 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
         list1 = g_hash_table_get_values(hash1);
         list2 = g_hash_table_get_values(hash2);
 
-        list1 =
-            g_list_sort_with_data(list1, sort_node_weight,
-                                  g_list_nth_data(resource1->running_on, 0));
-        list2 =
-            g_list_sort_with_data(list2, sort_node_weight,
-                                  g_list_nth_data(resource2->running_on, 0));
+        list1 = g_list_sort_with_data(list1, sort_node_weight, current_node1);
+        list2 = g_list_sort_with_data(list2, sort_node_weight, current_node2);
         max = g_list_length(list1);
         if (max < g_list_length(list2)) {
             max = g_list_length(list2);
@@ -528,8 +523,8 @@ distribute_children(resource_t *rsc, GListPtr children, GListPtr nodes,
 
         if (child->running_on && is_set(child->flags, pe_rsc_provisional)
             && is_not_set(child->flags, pe_rsc_failed)) {
-            node_t *child_node = child->running_on->data;
-            node_t *local_node = parent_node_instance(child, child->running_on->data);
+            node_t *child_node = pe__current_node(child);
+            node_t *local_node = parent_node_instance(child, child_node);
 
             pe_rsc_trace(rsc, "Checking pre-allocation of %s to %s (%d remaining of %d)",
                          child->id, child_node->details->uname, max - allocated, max);
@@ -556,9 +551,9 @@ distribute_children(resource_t *rsc, GListPtr children, GListPtr nodes,
     for (GListPtr gIter = children; gIter != NULL; gIter = gIter->next) {
         resource_t *child = (resource_t *) gIter->data;
 
-        if (g_list_length(child->running_on) > 0) {
-            node_t *child_node = child->running_on->data;
-            node_t *local_node = parent_node_instance(child, child->running_on->data);
+        if (child->running_on != NULL) {
+            node_t *child_node = pe__current_node(child);
+            node_t *local_node = parent_node_instance(child, child_node);
 
             if (local_node == NULL) {
                 crm_err("%s is running on %s which isn't allowed",
