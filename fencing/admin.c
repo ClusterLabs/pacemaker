@@ -631,7 +631,8 @@ main(int argc, char **argv)
             }
             break;
         case 'R':
-            rc = st->cmds->register_device(st, st_opts, device, "stonith-ng", agent, params);
+            rc = st->cmds->register_device(st, st_opts, device, NULL, agent,
+                                           params);
             break;
         case 'D':
             rc = st->cmds->remove_device(st, st_opts, device);

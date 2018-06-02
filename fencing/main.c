@@ -676,7 +676,6 @@ static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
 
         const char *name = NULL;
         const char *agent = crm_element_value(rsc->xml, XML_EXPR_ATTR_TYPE);
-        const char *provider = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
         const char *rsc_provides = NULL;
 
         crm_debug("Device %s is allowed on %s: score=%d", rsc->id, stonith_our_uname, node->weight);
@@ -695,7 +694,8 @@ static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
         }
 
         remove = FALSE;
-        data = create_device_registration_xml(rsc_name(rsc), provider, agent, params, rsc_provides);
+        data = create_device_registration_xml(rsc_name(rsc), st_namespace_any,
+                                              agent, params, rsc_provides);
         stonith_device_register(data, NULL, TRUE);
 
         stonith_key_value_freeall(params, 1, 1);
@@ -1525,7 +1525,9 @@ main(int argc, char **argv)
 
         params = stonith_key_value_add(params, STONITH_ATTR_HOSTLIST, stonith_our_uname);
 
-        xml = create_device_registration_xml("watchdog", "internal", STONITH_WATCHDOG_AGENT, params, NULL);
+        xml = create_device_registration_xml("watchdog", st_namespace_internal,
+                                             STONITH_WATCHDOG_AGENT, params,
+                                             NULL);
         stonith_device_register(xml, NULL, FALSE);
 
         stonith_key_value_freeall(params, 1, 1);

@@ -1,20 +1,10 @@
-/* 
- * Copyright (C) 2011 Andrew Beekhof <andrew@beekhof.net>
- * 
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+/*
+ * Copyright 2011-2018 Andrew Beekhof <andrew@beekhof.net>
+ *
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+
 #ifndef STONITH_NG_INTERNAL__H
 #  define STONITH_NG_INTERNAL__H
 
@@ -47,8 +37,11 @@ xmlNode *create_level_registration_xml(const char *node, const char *pattern,
                                        int level,
                                        stonith_key_value_t *device_list);
 
-xmlNode *create_device_registration_xml(const char *id, const char *namespace, const char *agent,
-                                        stonith_key_value_t * params, const char *rsc_provides);
+xmlNode *create_device_registration_xml(const char *id,
+                                        enum stonith_namespace namespace,
+                                        const char *agent,
+                                        stonith_key_value_t *params,
+                                        const char *rsc_provides);
 
 #  define ST_LEVEL_MAX 10
 
