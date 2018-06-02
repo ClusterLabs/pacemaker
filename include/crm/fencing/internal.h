@@ -127,6 +127,13 @@ xmlNode *create_device_registration_xml(const char *id,
 
 #  define STONITH_WATCHDOG_AGENT  "#watchdog"
 
+#  ifdef HAVE_STONITH_STONITH_H
+// utilities from st_lha.c
+int stonith__list_lha_agents(stonith_key_value_t **devices);
+int stonith__lha_metadata(const char *agent, int timeout, char **output);
+bool stonith__agent_is_lha(const char *agent);
+#  endif
+
 // utilities from st_rhcs.c
 int stonith__list_rhcs_agents(stonith_key_value_t **devices);
 int stonith__rhcs_metadata(const char *agent, int timeout, char **output);
