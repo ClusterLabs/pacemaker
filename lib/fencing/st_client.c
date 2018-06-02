@@ -18,8 +18,6 @@
 #include <sys/wait.h>
 
 #include <glib.h>
-#include <dirent.h>
-#include <libgen.h>             /* Add it for compiling on OSX */
 
 #include <crm/crm.h>
 #include <crm/stonith-ng.h>
@@ -206,7 +204,7 @@ stonith_get_namespace(const char *agent, const char *namespace_s)
         return st_namespace_internal;
     }
 
-    if (is_redhat_agent(agent)) {
+    if (stonith__agent_is_rhcs(agent)) {
         return st_namespace_rhcs;
     }
 
@@ -1156,36 +1154,9 @@ stonith_api_device_list(stonith_t * stonith, int call_options, const char *names
 #endif
     }
 
-    /* Include Red Hat agents, basically: ls -1 @sbin_dir@/fence_* */
+    // Include Red Hat agents if requested
     if ((ns == st_namespace_any) || (ns == st_namespace_rhcs)) {
-        struct dirent **namelist;
-        int file_num = scandir(RH_STONITH_DIR, &namelist, 0, alphasort);
-
-        if (file_num > 0) {
-            struct stat prop;
-            char buffer[FILENAME_MAX + 1];
-
-            while (file_num--) {
-                if ('.' == namelist[file_num]->d_name[0]) {
-                    free(namelist[file_num]);
-                    continue;
-
-                } else if (!crm_starts_with(namelist[file_num]->d_name,
-                                            RH_STONITH_PREFIX)) {
-                    free(namelist[file_num]);
-                    continue;
-                }
-
-                snprintf(buffer, FILENAME_MAX, "%s/%s", RH_STONITH_DIR, namelist[file_num]->d_name);
-                if (stat(buffer, &prop) == 0 && S_ISREG(prop.st_mode)) {
-                    *devices = stonith_key_value_add(*devices, NULL, namelist[file_num]->d_name);
-                    count++;
-                }
-
-                free(namelist[file_num]);
-            }
-            free(namelist);
-        }
+        count += stonith__list_rhcs_agents(devices);
     }
 
     return count;
@@ -1230,6 +1201,10 @@ static int
 stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *agent,
                             const char *namespace, char **output, int timeout)
 {
+    /* By executing meta-data directly, we can get it from stonith_admin when
+     * the cluster is not running, which is important for higher-level tools.
+     */
+
     int rc = 0;
     char *buffer = NULL;
     enum stonith_namespace ns = stonith_get_namespace(agent, namespace);
@@ -1237,75 +1212,9 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
     crm_trace("Looking up metadata for %s agent %s",
               stonith_namespace2text(ns), agent);
 
-    /* By having this in a library, we can access it from stonith_admin
-     * when neither the executor nor the fencer are running, which is
-     * important for higher-level tools.
-     */
-
     switch (ns) {
         case st_namespace_rhcs:
-            {
-                stonith_action_t *action = stonith_action_create(agent, "metadata", NULL, 0, 5, NULL, NULL);
-                int exec_rc = stonith_action_execute(action, &rc, &buffer);
-                xmlNode *xml = NULL;
-                xmlNode *actions = NULL;
-                xmlXPathObject *xpathObj = NULL;
-
-                if (exec_rc < 0 || rc != 0 || buffer == NULL) {
-                    crm_warn("Could not obtain metadata for %s", agent);
-                    crm_debug("Query failed: %d %d: %s", exec_rc, rc, crm_str(buffer));
-                    free(buffer);       /* Just in case */
-                    return -EINVAL;
-                }
-
-                xml = string2xml(buffer);
-                if(xml == NULL) {
-                    crm_warn("Metadata for %s is invalid", agent);
-                    free(buffer);
-                    return -EINVAL;
-                }
-
-                xpathObj = xpath_search(xml, "//actions");
-                if (numXpathResults(xpathObj) > 0) {
-                    actions = getXpathResult(xpathObj, 0);
-                }
-
-                freeXpathObject(xpathObj);
-
-                /* Now fudge the metadata so that the start/stop actions appear */
-                xpathObj = xpath_search(xml, "//action[@name='stop']");
-                if (numXpathResults(xpathObj) <= 0) {
-                    xmlNode *tmp = NULL;
-
-                    tmp = create_xml_node(actions, "action");
-                    crm_xml_add(tmp, "name", "stop");
-                    crm_xml_add(tmp, "timeout", CRM_DEFAULT_OP_TIMEOUT_S);
-
-                    tmp = create_xml_node(actions, "action");
-                    crm_xml_add(tmp, "name", "start");
-                    crm_xml_add(tmp, "timeout", CRM_DEFAULT_OP_TIMEOUT_S);
-                }
-
-                freeXpathObject(xpathObj);
-
-                /* Now fudge the metadata so that the port isn't required in the configuration */
-                xpathObj = xpath_search(xml, "//parameter[@name='port']");
-                if (numXpathResults(xpathObj) > 0) {
-                    /* We'll fill this in */
-                    xmlNode *tmp = getXpathResult(xpathObj, 0);
-
-                    crm_xml_add(tmp, "required", "0");
-                }
-
-                freeXpathObject(xpathObj);
-                free(buffer);
-                buffer = dump_xml_formatted_with_text(xml);
-                free_xml(xml);
-                if (!buffer) {
-                    return -EINVAL;
-                }
-            }
-            break;
+            return stonith__rhcs_metadata(agent, timeout, output);
 
         case st_namespace_lha:
 #if !HAVE_STONITH_STONITH_H
@@ -1582,21 +1491,6 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
         }
     }
     return rc;
-}
-
-gboolean
-is_redhat_agent(const char *agent)
-{
-    int rc = 0;
-    struct stat prop;
-    char buffer[FILENAME_MAX + 1];
-
-    snprintf(buffer, FILENAME_MAX, "%s/%s", RH_STONITH_DIR, agent);
-    rc = stat(buffer, &prop);
-    if (rc >= 0 && S_ISREG(prop.st_mode)) {
-        return TRUE;
-    }
-    return FALSE;
 }
 
 /*!

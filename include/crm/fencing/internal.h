@@ -30,8 +30,6 @@ stonith_action_execute_async(stonith_action_t * action,
 int
  stonith_action_execute(stonith_action_t * action, int *agent_result, char **output);
 
-gboolean is_redhat_agent(const char *agent);
-
 xmlNode *create_level_registration_xml(const char *node, const char *pattern,
                                        const char *attr, const char *value,
                                        int level,
@@ -121,5 +119,10 @@ xmlNode *create_device_registration_xml(const char *id,
 #  define STONITH_OP_LEVEL_DEL       "st_level_remove"
 
 #  define STONITH_WATCHDOG_AGENT  "#watchdog"
+
+// utilities from st_rhcs.c
+int stonith__list_rhcs_agents(stonith_key_value_t **devices);
+int stonith__rhcs_metadata(const char *agent, int timeout, char **output);
+bool stonith__agent_is_rhcs(const char *agent);
 
 #endif
