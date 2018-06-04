@@ -550,6 +550,8 @@ main(int argc, char **argv)
     if (!no_connect) {
         rc = st->cmds->connect(st, async_fence_data.name, NULL);
         if (rc < 0) {
+            fprintf(stderr, "Could not connect to fencer: %s\n",
+                    pcmk_strerror(rc));
             goto done;
         }
     }
