@@ -20,6 +20,9 @@ stonith_action_t *stonith_action_create(const char *agent,
                                         uint32_t victim_nodeid,
                                         int timeout,
                                         GHashTable * device_args, GHashTable * port_map);
+void stonith__destroy_action(stonith_action_t *action);
+void stonith__action_result(stonith_action_t *action, int *rc, char **output,
+                            char **error_output);
 
 GPid
 stonith_action_execute_async(stonith_action_t * action,
@@ -27,8 +30,7 @@ stonith_action_execute_async(stonith_action_t * action,
                              void (*done) (GPid pid, int rc, const char *output,
                                            gpointer user_data));
 
-int
- stonith_action_execute(stonith_action_t * action, int *agent_result, char **output);
+int stonith__execute(stonith_action_t *action);
 
 xmlNode *create_level_registration_xml(const char *node, const char *pattern,
                                        const char *attr, const char *value,
