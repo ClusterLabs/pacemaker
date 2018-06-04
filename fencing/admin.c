@@ -422,6 +422,7 @@ main(int argc, char **argv)
     const char *longname = NULL;
 
     char action = 0;
+    int exit_code = 0;
     stonith_t *st = NULL;
     stonith_key_value_t *params = NULL;
     stonith_key_value_t *devices = NULL;
@@ -563,6 +564,7 @@ main(int argc, char **argv)
         if (rc < 0) {
             fprintf(stderr, "Could not connect to fencer: %s\n",
                     pcmk_strerror(rc));
+            exit_code = 1;
             goto done;
         }
     }
@@ -646,7 +648,8 @@ main(int argc, char **argv)
         case 'M':
             if (agent == NULL) {
                 printf("Please specify an agent to query using -a,--agent [value]\n");
-                return -1;
+                exit_code = 1;
+                goto done;
             } else {
                 char *buffer = NULL;
 
@@ -691,13 +694,13 @@ main(int argc, char **argv)
             break;
     }
 
+    crm_info("Command returned: %s (%d)", pcmk_strerror(rc), rc);
+    exit_code = (rc < 0)? 1 : 0;
+
   done:
     free(async_fence_data.name);
-    crm_info("Command returned: %s (%d)", pcmk_strerror(rc), rc);
-
     stonith_key_value_freeall(params, 1, 1);
     st->cmds->disconnect(st);
     stonith_api_delete(st);
-
-    return rc;
+    return exit_code;
 }
