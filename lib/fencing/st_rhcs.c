@@ -76,27 +76,38 @@ stonith__list_rhcs_agents(stonith_key_value_t **devices)
 int
 stonith__rhcs_metadata(const char *agent, int timeout, char **output)
 {
-    int rc = 0;
     char *buffer = NULL;
     xmlNode *xml = NULL;
     xmlNode *actions = NULL;
     xmlXPathObject *xpathObj = NULL;
     stonith_action_t *action = stonith_action_create(agent, "metadata", NULL, 0,
                                                      5, NULL, NULL);
-    int exec_rc = stonith_action_execute(action, &rc, &buffer);
+    int rc = stonith__execute(action);
 
-    if ((exec_rc < 0) || (rc != 0) || (buffer == NULL)) {
-        crm_warn("Could not obtain metadata for %s", agent);
-        crm_debug("Query failed: %d %d: %s", exec_rc, rc, crm_str(buffer));
-        free(buffer);
-        return -EINVAL;
+    if (rc < 0) {
+        crm_warn("Could not execute metadata action for %s: %s "
+                 CRM_XS " rc=%d", agent, pcmk_strerror(rc), rc);
+        stonith__destroy_action(action);
+        return rc;
+    }
+
+    stonith__action_result(action, &rc, &buffer, NULL);
+    stonith__destroy_action(action);
+    if (rc < 0) {
+        crm_warn("Metadata action for %s failed: %s " CRM_XS "rc=%d",
+                 agent, pcmk_strerror(rc), rc);
+        return rc;
+    }
+
+    if (buffer == NULL) {
+        crm_warn("Metadata action for %s returned no data", agent);
+        return -ENODATA;
     }
 
     xml = string2xml(buffer);
     if (xml == NULL) {
         crm_warn("Metadata for %s is invalid", agent);
-        free(buffer);
-        return -EINVAL;
+        return -pcmk_err_schema_validation;
     }
 
     xpathObj = xpath_search(xml, "//actions");
@@ -129,11 +140,10 @@ stonith__rhcs_metadata(const char *agent, int timeout, char **output)
     }
     freeXpathObject(xpathObj);
 
-    free(buffer);
     buffer = dump_xml_formatted_with_text(xml);
     free_xml(xml);
     if (buffer == NULL) {
-        return -EINVAL;
+        return -pcmk_err_schema_validation;
     }
     if (output) {
         *output = buffer;

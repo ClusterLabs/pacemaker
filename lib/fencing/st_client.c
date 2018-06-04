@@ -709,15 +709,63 @@ stonith_action_clear_tracking_data(stonith_action_t * action)
     action->last_timeout_signo = 0;
 }
 
-static void
-stonith_action_destroy(stonith_action_t * action)
+/*!
+ * \internal
+ * \brief Free all memory used by a stonith action
+ *
+ * \param[in,out] action  Action to free
+ */
+void
+stonith__destroy_action(stonith_action_t *action)
 {
-    stonith_action_clear_tracking_data(action);
-    free(action->agent);
-    free(action->args);
-    free(action->action);
-    free(action->victim);
-    free(action);
+    if (action) {
+        stonith_action_clear_tracking_data(action);
+        free(action->agent);
+        free(action->args);
+        free(action->action);
+        free(action->victim);
+        free(action);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Get the result of an executed stonith action
+ *
+ * \param[in,out] action        Executed action
+ * \param[out]    rc            Where to store result code (or NULL)
+ * \param[out]    output        Where to store standard output (or NULL)
+ * \param[out]    error_output  Where to store standard error output (or NULL)
+ *
+ * \note If output or error_output is not NULL, the caller is responsible for
+ *       freeing the memory.
+ */
+void
+stonith__action_result(stonith_action_t *action, int *rc, char **output,
+                       char **error_output)
+{
+    if (rc) {
+        *rc = pcmk_ok;
+    }
+    if (output) {
+        *output = NULL;
+    }
+    if (error_output) {
+        *error_output = NULL;
+    }
+    if (action != NULL) {
+        if (rc) {
+            *rc = action->rc;
+        }
+        if (output && action->output) {
+            *output = action->output;
+            action->output = NULL; // hand off memory management to caller
+        }
+        if (error_output && action->error) {
+            *error_output = action->error;
+            action->error = NULL; // hand off memory management to caller
+        }
+    }
 }
 
 #define FAILURE_MAX_RETRIES 2
@@ -871,7 +919,7 @@ stonith_action_async_done(mainloop_child_t * p, pid_t pid, int core, int signo, 
         action->done_cb(pid, action->rc, action->output, action->userdata);
     }
 
-    stonith_action_destroy(action);
+    stonith__destroy_action(action);
 }
 
 static int
@@ -977,6 +1025,7 @@ internal_stonith_action_execute(stonith_action_t * action)
                    action->agent, pcmk_strerror(rc), rc);
     }
 
+    errno = 0;
     do {
         crm_debug("sending args");
         ret = write(p_write_fd, action->args + total, len - total);
@@ -1126,38 +1175,26 @@ stonith_action_execute_async(stonith_action_t * action,
     return rc < 0 ? rc : action->pid;
 }
 
+/*!
+ * \internal
+ * \brief Execute a stonith action
+ *
+ * \param[in,out] action  Action to execute
+ *
+ * \return pcmk_ok on success, -errno otherwise
+ */
 int
-stonith_action_execute(stonith_action_t * action, int *agent_result, char **output)
+stonith__execute(stonith_action_t *action)
 {
-    int rc = 0;
+    int rc = pcmk_ok;
 
-    if (!action) {
-        return -1;
-    }
+    CRM_CHECK(action != NULL, return -EINVAL);
 
+    // Keep trying until success, max retries, or timeout
     do {
         rc = internal_stonith_action_execute(action);
-        if (rc == pcmk_ok) {
-            /* success! */
-            break;
-        }
-        /* keep retrying while we have time left */
-    } while (update_remaining_timeout(action));
+    } while ((rc != pcmk_ok) && update_remaining_timeout(action));
 
-    if (rc) {
-        /* error */
-        return rc;
-    }
-
-    if (agent_result) {
-        *agent_result = action->rc;
-    }
-    if (output) {
-        *output = action->output;
-        action->output = NULL;  /* handed it off, do not free */
-    }
-
-    stonith_action_destroy(action);
     return rc;
 }
 
