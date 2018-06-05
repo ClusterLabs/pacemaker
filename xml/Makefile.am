@@ -58,14 +58,15 @@ RNG_version_pairs_last  = $(wordlist \
 
 RNG_generated		= pacemaker.rng $(foreach base,$(RNG_versions),pacemaker-$(base).rng) versions.rng
 
-RNG_cfg_base	 	= options nodes resources constraints fencing acls tags alerts
-RNG_base	 	= cib $(RNG_cfg_base) status score rule nvset
-RNG_files	 	= $(foreach base,$(RNG_base),$(wildcard $(base)*.rng))
+RNG_cfg_base		= options nodes resources constraints fencing acls tags alerts
+RNG_base		= cib $(RNG_cfg_base) status score rule nvset
+RNG_files		= $(foreach base,$(RNG_base),$(wildcard $(base).rng $(base)-*.rng))
 
 # List of non-Pacemaker RNGs
 RNG_extra		= crm_mon.rng
 
-RNG_DATA		= $(RNG_files) $(RNG_generated) $(RNG_extra)
+dist_RNG_DATA		= $(RNG_files) $(RNG_extra)
+nodist_RNG_DATA		= $(RNG_generated)
 
 EXTRA_DIST		= best-match.sh
 
