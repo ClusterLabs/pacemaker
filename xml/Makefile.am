@@ -20,7 +20,10 @@ MAINTAINERCLEANFILES    = Makefile.in
 RNGdir			= $(CRM_SCHEMA_DIRECTORY)
 
 xsltdir			= $(RNGdir)
-xslt_DATA		= $(top_srcdir)/xml/upgrade-*.xsl
+dist_xslt_DATA		= $(top_srcdir)/xml/upgrade-1.3.xsl \
+			  $(top_srcdir)/xml/upgrade-2.10.xsl \
+			  $(top_srcdir)/xml/upgrade-*enter.xsl \
+			  $(top_srcdir)/xml/upgrade-*leave.xsl
 
 noinst_DATA		= context-of.xsl
 
