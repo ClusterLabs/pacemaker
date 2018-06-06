@@ -348,4 +348,7 @@ gboolean node_name_is_valid(const char *key, const char *name);
 crm_node_t * crm_find_peer_full(unsigned int id, const char *uname, int flags);
 crm_node_t * crm_find_peer(unsigned int id, const char *uname);
 
+void crm_known_peer_cache_refresh(xmlNode *cib);
+const char *crm_known_peer_id(const char *peer_name);
+
 #endif

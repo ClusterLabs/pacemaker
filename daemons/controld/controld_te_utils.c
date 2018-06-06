@@ -271,11 +271,24 @@ tengine_stonith_notify(stonith_t * st, stonith_event_t * st_event)
         const char *uuid = NULL;
         gboolean we_are_executioner = safe_str_eq(st_event->executioner, fsa_our_uname);
 
-        if (peer == NULL) {
-            return;
-        }
+        if (peer) {
+            uuid = crm_peer_uuid(peer);
 
-        uuid = crm_peer_uuid(peer);
+        } else {
+            uuid = crm_known_peer_id(st_event->target);
+
+            if (uuid) {
+               /* Known node according to the CIB, but not in the membership cache yet.
+                * Create a node entry for it in the membership cache. */
+                peer = crm_get_peer_full(0, st_event->target, CRM_GET_PEER_ANY);
+                if (peer == NULL) {
+                    return;
+                }
+
+            } else {
+                return;
+            }
+        }
 
         crm_trace("target=%s dc=%s", st_event->target, fsa_our_dc);
         if(AM_I_DC) {
