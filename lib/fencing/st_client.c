@@ -1146,6 +1146,10 @@ stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *a
 #endif
 
         default:
+            errno = EINVAL;
+            crm_perror(LOG_ERR,
+                       "Agent %s not found or does not support meta-data",
+                       agent);
             break;
     }
     return -EINVAL;
