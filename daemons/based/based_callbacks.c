@@ -401,9 +401,9 @@ do_local_notify(xmlNode * notify_src, const char *client_id,
             rc = crm_ipcs_send(client_obj, rid, notify_src, (sync_reply?
                                crm_ipc_flags_none : crm_ipc_server_event));
             if (rc < 0) {
-                crm_warn("%s reply to %s failed: %s " CRM_XS " rc=%d",
+                crm_warn("%s reply to %s failed: %s " CRM_XS " rc=%lld",
                          (sync_reply? "Synchronous" : "Asynchronous"),
-                         client_obj->name, pcmk_strerror(rc), rc);
+                         client_obj->name, pcmk_strerror(rc), (long long) rc);
             }
             break;
 #ifdef HAVE_GNUTLS_GNUTLS_H
