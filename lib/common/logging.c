@@ -716,8 +716,6 @@ crm_log_preinit(const char *entity, int argc, char **argv)
     if(have_logging == FALSE) {
         have_logging = TRUE;
 
-        crm_xml_init(); /* Sets buffer allocation strategy */
-
         if (crm_trace_nonlog == 0) {
             crm_trace_nonlog = g_quark_from_static_string("Pacemaker non-logging tracepoint");
         }
@@ -845,6 +843,8 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
     if (quiet == FALSE && crm_is_daemon == FALSE) {
         crm_log_args(argc, argv);
     }
+
+    crm_xml_init();  /* Sets buffer allocation strategy */
 
     if (crm_is_daemon) {
         const char *user = getenv("USER");

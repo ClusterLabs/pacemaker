@@ -171,7 +171,6 @@ main(int argc, char **argv)
 
     int option_index = 0;
 
-    crm_xml_init(); /* Sets buffer allocation strategy */
     crm_log_cli_init("cibadmin");
     set_crm_log_level(LOG_CRIT);
     crm_set_options(NULL, "command [options] [data]", long_options,
