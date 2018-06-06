@@ -205,7 +205,9 @@ stonith__lha_metadata(const char *agent, int timeout, char **output)
             }
             (*st_del_fn) (stonith_obj);
         } else {
-            return -EINVAL; /* Heartbeat agents not supported */
+            errno = EINVAL;
+            crm_perror(LOG_ERR, "Agent %s not found", agent);
+            return -EINVAL;
         }
 
         xml_meta_longdesc =
