@@ -336,7 +336,8 @@ class ClusterManager(UserDict):
             else:
                 self.ShouldBeStatus[node] = "down"
 
-            self.unisolate_node(node)
+            if self.Env["experimental-tests"]:
+                self.unisolate_node(node)
 
     def upcount(self):
         '''How many nodes are up?'''
