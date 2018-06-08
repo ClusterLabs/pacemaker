@@ -1,20 +1,10 @@
-/* 
- * Copyright (C) 2011 Andrew Beekhof <andrew@beekhof.net>
- * 
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+/*
+ * Copyright 2011-2018 Andrew Beekhof <andrew@beekhof.net>
+ *
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+
 #ifndef STONITH_NG_INTERNAL__H
 #  define STONITH_NG_INTERNAL__H
 
@@ -30,6 +20,9 @@ stonith_action_t *stonith_action_create(const char *agent,
                                         uint32_t victim_nodeid,
                                         int timeout,
                                         GHashTable * device_args, GHashTable * port_map);
+void stonith__destroy_action(stonith_action_t *action);
+void stonith__action_result(stonith_action_t *action, int *rc, char **output,
+                            char **error_output);
 
 GPid
 stonith_action_execute_async(stonith_action_t * action,
@@ -37,18 +30,18 @@ stonith_action_execute_async(stonith_action_t * action,
                              void (*done) (GPid pid, int rc, const char *output,
                                            gpointer user_data));
 
-int
- stonith_action_execute(stonith_action_t * action, int *agent_result, char **output);
-
-gboolean is_redhat_agent(const char *agent);
+int stonith__execute(stonith_action_t *action);
 
 xmlNode *create_level_registration_xml(const char *node, const char *pattern,
                                        const char *attr, const char *value,
                                        int level,
                                        stonith_key_value_t *device_list);
 
-xmlNode *create_device_registration_xml(const char *id, const char *namespace, const char *agent,
-                                        stonith_key_value_t * params, const char *rsc_provides);
+xmlNode *create_device_registration_xml(const char *id,
+                                        enum stonith_namespace namespace,
+                                        const char *agent,
+                                        stonith_key_value_t *params,
+                                        const char *rsc_provides);
 
 #  define ST_LEVEL_MAX 10
 
@@ -128,5 +121,23 @@ xmlNode *create_device_registration_xml(const char *id, const char *namespace, c
 #  define STONITH_OP_LEVEL_DEL       "st_level_remove"
 
 #  define STONITH_WATCHDOG_AGENT  "#watchdog"
+
+#  ifdef HAVE_STONITH_STONITH_H
+// utilities from st_lha.c
+int stonith__list_lha_agents(stonith_key_value_t **devices);
+int stonith__lha_metadata(const char *agent, int timeout, char **output);
+bool stonith__agent_is_lha(const char *agent);
+int stonith__lha_validate(stonith_t *st, int call_options, const char *target,
+                          const char *agent, GHashTable *params,
+                          int timeout, char **output, char **error_output);
+#  endif
+
+// utilities from st_rhcs.c
+int stonith__list_rhcs_agents(stonith_key_value_t **devices);
+int stonith__rhcs_metadata(const char *agent, int timeout, char **output);
+bool stonith__agent_is_rhcs(const char *agent);
+int stonith__rhcs_validate(stonith_t *st, int call_options, const char *target,
+                           const char *agent, GHashTable *params,
+                           int timeout, char **output, char **error_output);
 
 #endif
