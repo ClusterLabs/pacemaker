@@ -601,7 +601,7 @@ main(int argc, char **argv)
         if (rc < 0) {
             fprintf(stderr, "Could not connect to fencer: %s\n",
                     pcmk_strerror(rc));
-            exit_code = 1;
+            exit_code = rc;
             goto done;
         }
     }
@@ -685,7 +685,7 @@ main(int argc, char **argv)
         case 'M':
             if (agent == NULL) {
                 printf("Please specify an agent to query using -a,--agent [value]\n");
-                exit_code = 1;
+                exit_code = -1;
                 goto done;
             } else {
                 char *buffer = NULL;
@@ -732,7 +732,7 @@ main(int argc, char **argv)
         case 'K':
             if (agent == NULL) {
                 printf("Please specify an agent to validate with --agent\n");
-                exit_code = 1;
+                exit_code = -1;
                 goto done;
             }
             device = (devices? devices->key : NULL);
@@ -741,7 +741,7 @@ main(int argc, char **argv)
     }
 
     crm_info("Command returned: %s (%d)", pcmk_strerror(rc), rc);
-    exit_code = (rc < 0)? 1 : 0;
+    exit_code = rc;
 
   done:
     free(async_fence_data.name);
