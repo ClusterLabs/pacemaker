@@ -23,7 +23,7 @@
 #include <crm/common/util.h>
 #include <crm/common/cib_secrets.h>
 
-static int do_replace_secret_params(char *rsc_id, GHashTable *params, gboolean from_legacy_dir);
+static int do_replace_secret_params(const char *rsc_id, GHashTable *params, gboolean from_legacy_dir);
 static int is_magic_value(char *p);
 static int check_md5_hash(char *hash, char *value);
 static void add_secret_params(gpointer key, gpointer value, gpointer user_data);
@@ -86,7 +86,7 @@ read_local_file(char *local_file)
  */
 
 int
-replace_secret_params(char *rsc_id, GHashTable *params)
+replace_secret_params(const char *rsc_id, GHashTable *params)
 {
     if (do_replace_secret_params(rsc_id, params, FALSE) < 0
         && do_replace_secret_params(rsc_id, params, TRUE) < 0) {
@@ -97,7 +97,8 @@ replace_secret_params(char *rsc_id, GHashTable *params)
 }
 
 static int
-do_replace_secret_params(char *rsc_id, GHashTable *params, gboolean from_legacy_dir)
+do_replace_secret_params(const char *rsc_id, GHashTable *params,
+                         gboolean from_legacy_dir)
 {
     char local_file[FILENAME_MAX+1], *start_pname;
     char hash_file[FILENAME_MAX+1], *hash;

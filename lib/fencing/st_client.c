@@ -20,7 +20,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
 
@@ -29,8 +28,6 @@
 #include <sys/wait.h>
 
 #include <glib.h>
-#include <dirent.h>
-#include <libgen.h>             /* Add it for compiling on OSX */
 
 #include <crm/crm.h>
 #include <crm/stonith-ng.h>
@@ -38,13 +35,11 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 
-#ifdef HAVE_STONITH_STONITH_H
-#  include <stonith/stonith.h>
-#  define LHA_STONITH_LIBRARY "libstonith.so.1"
-static void *lha_agents_lib = NULL;
-#endif
-
 #include <crm/common/mainloop.h>
+
+#if SUPPORT_CIBSECRETS
+#  include <crm/common/cib_secrets.h>
+#endif
 
 CRM_TRACE_INIT_DATA(stonith);
 
@@ -123,28 +118,6 @@ struct timer_rec_s {
 typedef int (*stonith_op_t) (const char *, int, const char *, xmlNode *,
                              xmlNode *, xmlNode *, xmlNode **, xmlNode **);
 
-#if HAVE_STONITH_STONITH_H
-static const char META_TEMPLATE[] =
-    "<?xml version=\"1.0\"?>\n"
-    "<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"
-    "<resource-agent name=\"%s\">\n"
-    "  <version>1.0</version>\n"
-    "  <longdesc lang=\"en\">\n"
-    "%s\n"
-    "  </longdesc>\n"
-    "  <shortdesc lang=\"en\">%s</shortdesc>\n"
-    "%s\n"
-    "  <actions>\n"
-    "    <action name=\"start\"   timeout=\"20\" />\n"
-    "    <action name=\"stop\"    timeout=\"15\" />\n"
-    "    <action name=\"status\"  timeout=\"20\" />\n"
-    "    <action name=\"monitor\" timeout=\"20\" interval=\"3600\"/>\n"
-    "    <action name=\"meta-data\"  timeout=\"15\" />\n"
-    "  </actions>\n"
-    "  <special tag=\"heartbeat\">\n"
-    "    <version>2.0</version>\n" "  </special>\n" "</resource-agent>\n";
-#endif
-
 bool stonith_dispatch(stonith_t * st);
 int stonith_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata);
 void stonith_perform_callback(stonith_t * stonith, xmlNode * msg, int call_id, int rc);
@@ -157,6 +130,81 @@ static void stonith_connection_destroy(gpointer user_data);
 static void stonith_send_notification(gpointer data, gpointer user_data);
 static int internal_stonith_action_execute(stonith_action_t * action);
 static void log_action(stonith_action_t *action, pid_t pid);
+
+/*!
+ * \brief Get agent namespace by name
+ *
+ * \param[in] namespace_s  Name of namespace as string
+ *
+ * \return Namespace as enum value
+ */
+enum stonith_namespace
+stonith_text2namespace(const char *namespace_s)
+{
+    if ((namespace_s == NULL) || !strcmp(namespace_s, "any")) {
+        return st_namespace_any;
+
+    } else if (!strcmp(namespace_s, "redhat")
+               || !strcmp(namespace_s, "stonith-ng")) {
+        return st_namespace_rhcs;
+
+    } else if (!strcmp(namespace_s, "internal")) {
+        return st_namespace_internal;
+
+    } else if (!strcmp(namespace_s, "heartbeat")) {
+        return st_namespace_lha;
+    }
+    return st_namespace_invalid;
+}
+
+/*!
+ * \brief Get agent namespace name
+ *
+ * \param[in] namespace  Namespace as enum value
+ *
+ * \return Namespace name as string
+ */
+const char *
+stonith_namespace2text(enum stonith_namespace namespace)
+{
+    switch (namespace) {
+        case st_namespace_any:      return "any";
+        case st_namespace_rhcs:     return "stonith-ng";
+        case st_namespace_internal: return "internal";
+        case st_namespace_lha:      return "heartbeat";
+        default:                    break;
+    }
+    return "unsupported";
+}
+
+/*!
+ * \brief Determine namespace of a fence agent
+ *
+ * \param[in] agent        Fence agent type
+ * \param[in] namespace_s  Name of agent namespace as string, if known
+ *
+ * \return Namespace of specified agent, as enum value
+ */
+enum stonith_namespace
+stonith_get_namespace(const char *agent, const char *namespace_s)
+{
+    if (safe_str_eq(namespace_s, "internal")) {
+        return st_namespace_internal;
+    }
+
+    if (stonith__agent_is_rhcs(agent)) {
+        return st_namespace_rhcs;
+    }
+
+#if HAVE_STONITH_STONITH_H
+    if (stonith__agent_is_lha(agent)) {
+        return st_namespace_lha;
+    }
+#endif
+
+    crm_err("Unknown fence agent: %s", agent);
+    return st_namespace_invalid;
+}
 
 static void
 log_action(stonith_action_t *action, pid_t pid)
@@ -202,15 +250,18 @@ stonith_connection_destroy(gpointer user_data)
 }
 
 xmlNode *
-create_device_registration_xml(const char *id, const char *namespace, const char *agent,
-                               stonith_key_value_t * params, const char *rsc_provides)
+create_device_registration_xml(const char *id, enum stonith_namespace namespace,
+                               const char *agent, stonith_key_value_t *params,
+                               const char *rsc_provides)
 {
     xmlNode *data = create_xml_node(NULL, F_STONITH_DEVICE);
     xmlNode *args = create_xml_node(data, XML_TAG_ATTRS);
 
 #if HAVE_STONITH_STONITH_H
-    namespace = get_stonith_provider(agent, namespace);
-    if (safe_str_eq(namespace, "heartbeat")) {
+    if (namespace == st_namespace_any) {
+        namespace = stonith_get_namespace(agent, NULL);
+    }
+    if (namespace == st_namespace_lha) {
         hash2field((gpointer) "plugin", (gpointer) agent, args);
         agent = "fence_legacy";
     }
@@ -219,7 +270,9 @@ create_device_registration_xml(const char *id, const char *namespace, const char
     crm_xml_add(data, XML_ATTR_ID, id);
     crm_xml_add(data, F_STONITH_ORIGIN, __FUNCTION__);
     crm_xml_add(data, "agent", agent);
-    crm_xml_add(data, "namespace", namespace);
+    if ((namespace != st_namespace_any) && (namespace != st_namespace_invalid)) {
+        crm_xml_add(data, "namespace", stonith_namespace2text(namespace));
+    }
     if (rsc_provides) {
         crm_xml_add(data, "rsc_provides", rsc_provides);
     }
@@ -239,7 +292,8 @@ stonith_api_register_device(stonith_t * st, int call_options,
     int rc = 0;
     xmlNode *data = NULL;
 
-    data = create_device_registration_xml(id, namespace, agent, params, NULL);
+    data = create_device_registration_xml(id, stonith_text2namespace(namespace),
+                                          agent, params, NULL);
 
     rc = stonith_send_command(st, STONITH_OP_DEVICE_ADD, data, NULL, call_options, 0);
     free_xml(data);
@@ -659,15 +713,63 @@ stonith_action_clear_tracking_data(stonith_action_t * action)
     action->last_timeout_signo = 0;
 }
 
-static void
-stonith_action_destroy(stonith_action_t * action)
+/*!
+ * \internal
+ * \brief Free all memory used by a stonith action
+ *
+ * \param[in,out] action  Action to free
+ */
+void
+stonith__destroy_action(stonith_action_t *action)
 {
-    stonith_action_clear_tracking_data(action);
-    free(action->agent);
-    free(action->args);
-    free(action->action);
-    free(action->victim);
-    free(action);
+    if (action) {
+        stonith_action_clear_tracking_data(action);
+        free(action->agent);
+        free(action->args);
+        free(action->action);
+        free(action->victim);
+        free(action);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Get the result of an executed stonith action
+ *
+ * \param[in,out] action        Executed action
+ * \param[out]    rc            Where to store result code (or NULL)
+ * \param[out]    output        Where to store standard output (or NULL)
+ * \param[out]    error_output  Where to store standard error output (or NULL)
+ *
+ * \note If output or error_output is not NULL, the caller is responsible for
+ *       freeing the memory.
+ */
+void
+stonith__action_result(stonith_action_t *action, int *rc, char **output,
+                       char **error_output)
+{
+    if (rc) {
+        *rc = pcmk_ok;
+    }
+    if (output) {
+        *output = NULL;
+    }
+    if (error_output) {
+        *error_output = NULL;
+    }
+    if (action != NULL) {
+        if (rc) {
+            *rc = action->rc;
+        }
+        if (output && action->output) {
+            *output = action->output;
+            action->output = NULL; // hand off memory management to caller
+        }
+        if (error_output && action->error) {
+            *error_output = action->error;
+            action->error = NULL; // hand off memory management to caller
+        }
+    }
 }
 
 #define FAILURE_MAX_RETRIES 2
@@ -681,8 +783,9 @@ stonith_action_create(const char *agent,
     stonith_action_t *action;
 
     action = calloc(1, sizeof(stonith_action_t));
-    crm_debug("Initiating action %s for agent %s (target=%s)", _action, agent, victim);
     action->args = make_args(agent, _action, victim, victim_nodeid, device_args, port_map);
+    crm_debug("Preparing '%s' action for %s using agent %s",
+              _action, (victim? victim : "no target"), agent);
     action->agent = strdup(agent);
     action->action = strdup(_action);
     if (victim) {
@@ -821,7 +924,7 @@ stonith_action_async_done(mainloop_child_t * p, pid_t pid, int core, int signo, 
         action->done_cb(pid, action->rc, action->output, action->userdata);
     }
 
-    stonith_action_destroy(action);
+    stonith__destroy_action(action);
 }
 
 static int
@@ -927,6 +1030,7 @@ internal_stonith_action_execute(stonith_action_t * action)
                    action->agent, pcmk_strerror(rc), rc);
     }
 
+    errno = 0;
     do {
         crm_debug("sending args");
         ret = write(p_write_fd, action->args + total, len - total);
@@ -1076,38 +1180,26 @@ stonith_action_execute_async(stonith_action_t * action,
     return rc < 0 ? rc : action->pid;
 }
 
+/*!
+ * \internal
+ * \brief Execute a stonith action
+ *
+ * \param[in,out] action  Action to execute
+ *
+ * \return pcmk_ok on success, -errno otherwise
+ */
 int
-stonith_action_execute(stonith_action_t * action, int *agent_result, char **output)
+stonith__execute(stonith_action_t *action)
 {
-    int rc = 0;
+    int rc = pcmk_ok;
 
-    if (!action) {
-        return -1;
-    }
+    CRM_CHECK(action != NULL, return -EINVAL);
 
+    // Keep trying until success, max retries, or timeout
     do {
         rc = internal_stonith_action_execute(action);
-        if (rc == pcmk_ok) {
-            /* success! */
-            break;
-        }
-        /* keep retrying while we have time left */
-    } while (update_remaining_timeout(action));
+    } while ((rc != pcmk_ok) && update_remaining_timeout(action));
 
-    if (rc) {
-        /* error */
-        return rc;
-    }
-
-    if (agent_result) {
-        *agent_result = action->rc;
-    }
-    if (output) {
-        *output = action->output;
-        action->output = NULL;  /* handed it off, do not free */
-    }
-
-    stonith_action_destroy(action);
     return rc;
 }
 
@@ -1116,289 +1208,58 @@ stonith_api_device_list(stonith_t * stonith, int call_options, const char *names
                         stonith_key_value_t ** devices, int timeout)
 {
     int count = 0;
+    enum stonith_namespace ns = stonith_text2namespace(namespace);
 
     if (devices == NULL) {
         crm_err("Parameter error: stonith_api_device_list");
         return -EFAULT;
     }
 
-    /* Include Heartbeat agents */
-    if (namespace == NULL || safe_str_eq("heartbeat", namespace)) {
 #if HAVE_STONITH_STONITH_H
-        static gboolean need_init = TRUE;
-
-        char **entry = NULL;
-        char **type_list = NULL;
-        static char **(*type_list_fn) (void) = NULL;
-        static void (*type_free_fn) (char **) = NULL;
-
-        if (need_init) {
-            need_init = FALSE;
-            type_list_fn =
-                find_library_function(&lha_agents_lib, LHA_STONITH_LIBRARY, "stonith_types", FALSE);
-            type_free_fn =
-                find_library_function(&lha_agents_lib, LHA_STONITH_LIBRARY, "stonith_free_hostlist",
-                                      FALSE);
-        }
-
-        if (type_list_fn) {
-            type_list = (*type_list_fn) ();
-        }
-
-        for (entry = type_list; entry != NULL && *entry; ++entry) {
-            crm_trace("Added: %s", *entry);
-            *devices = stonith_key_value_add(*devices, NULL, *entry);
-            count++;
-        }
-        if (type_list && type_free_fn) {
-            (*type_free_fn) (type_list);
-        }
-#else
-        if (namespace != NULL) {
-            return -EINVAL;     /* Heartbeat agents not supported */
-        }
-#endif
+    // Include Linux-HA agents if requested
+    if ((ns == st_namespace_any) || (ns == st_namespace_lha)) {
+        count += stonith__list_lha_agents(devices);
     }
+#endif
 
-    /* Include Red Hat agents, basically: ls -1 @sbin_dir@/fence_* */
-    if (namespace == NULL || safe_str_eq("redhat", namespace)) {
-        struct dirent **namelist;
-        int file_num = scandir(RH_STONITH_DIR, &namelist, 0, alphasort);
-
-        if (file_num > 0) {
-            struct stat prop;
-            char buffer[FILENAME_MAX + 1];
-
-            while (file_num--) {
-                if ('.' == namelist[file_num]->d_name[0]) {
-                    free(namelist[file_num]);
-                    continue;
-
-                } else if (!crm_starts_with(namelist[file_num]->d_name,
-                                            RH_STONITH_PREFIX)) {
-                    free(namelist[file_num]);
-                    continue;
-                }
-
-                snprintf(buffer, FILENAME_MAX, "%s/%s", RH_STONITH_DIR, namelist[file_num]->d_name);
-                if (stat(buffer, &prop) == 0 && S_ISREG(prop.st_mode)) {
-                    *devices = stonith_key_value_add(*devices, NULL, namelist[file_num]->d_name);
-                    count++;
-                }
-
-                free(namelist[file_num]);
-            }
-            free(namelist);
-        }
+    // Include Red Hat agents if requested
+    if ((ns == st_namespace_any) || (ns == st_namespace_rhcs)) {
+        count += stonith__list_rhcs_agents(devices);
     }
 
     return count;
 }
 
-#if HAVE_STONITH_STONITH_H
-static inline char *
-strdup_null(const char *val)
-{
-    if (val) {
-        return strdup(val);
-    }
-    return NULL;
-}
-
-static void
-stonith_plugin(int priority, const char *fmt, ...) __attribute__((__format__ (__printf__, 2, 3)));
-
-static void
-stonith_plugin(int priority, const char *format, ...)
-{
-    int err = errno;
-
-    va_list ap;
-    int len = 0;
-    char *string = NULL;
-
-    va_start(ap, format);
-
-    len = vasprintf (&string, format, ap);
-    CRM_ASSERT(len > 0);
-
-    do_crm_log_alias(priority, __FILE__, __func__, __LINE__, "%s", string);
-
-    free(string);
-    errno = err;
-}
-#endif
-
 static int
 stonith_api_device_metadata(stonith_t * stonith, int call_options, const char *agent,
                             const char *namespace, char **output, int timeout)
 {
-    int rc = 0;
-    char *buffer = NULL;
-    const char *provider = get_stonith_provider(agent, namespace);
-
-    crm_trace("looking up %s/%s metadata", agent, provider);
-
-    /* By having this in a library, we can access it from stonith_admin
-     *  when neither lrmd or stonith-ng are running
-     * Important for the crm shell's validations...
+    /* By executing meta-data directly, we can get it from stonith_admin when
+     * the cluster is not running, which is important for higher-level tools.
      */
 
-    if (safe_str_eq(provider, "redhat")) {
-        stonith_action_t *action = stonith_action_create(agent, "metadata", NULL, 0, 5, NULL, NULL);
-        int exec_rc = stonith_action_execute(action, &rc, &buffer);
-        xmlNode *xml = NULL;
-        xmlNode *actions = NULL;
-        xmlXPathObject *xpathObj = NULL;
+    enum stonith_namespace ns = stonith_get_namespace(agent, namespace);
 
-        if (exec_rc < 0 || rc != 0 || buffer == NULL) {
-            crm_warn("Could not obtain metadata for %s", agent);
-            crm_debug("Query failed: %d %d: %s", exec_rc, rc, crm_str(buffer));
-            free(buffer);       /* Just in case */
-            return -EINVAL;
-        }
+    crm_trace("Looking up metadata for %s agent %s",
+              stonith_namespace2text(ns), agent);
 
-        xml = string2xml(buffer);
-        if(xml == NULL) {
-            crm_warn("Metadata for %s is invalid", agent);
-            free(buffer);
-            return -EINVAL;
-        }
+    switch (ns) {
+        case st_namespace_rhcs:
+            return stonith__rhcs_metadata(agent, timeout, output);
 
-        xpathObj = xpath_search(xml, "//actions");
-        if (numXpathResults(xpathObj) > 0) {
-            actions = getXpathResult(xpathObj, 0);
-        }
-
-        freeXpathObject(xpathObj);
-
-        /* Now fudge the metadata so that the start/stop actions appear */
-        xpathObj = xpath_search(xml, "//action[@name='stop']");
-        if (numXpathResults(xpathObj) <= 0) {
-            xmlNode *tmp = NULL;
-
-            tmp = create_xml_node(actions, "action");
-            crm_xml_add(tmp, "name", "stop");
-            crm_xml_add(tmp, "timeout", CRM_DEFAULT_OP_TIMEOUT_S);
-
-            tmp = create_xml_node(actions, "action");
-            crm_xml_add(tmp, "name", "start");
-            crm_xml_add(tmp, "timeout", CRM_DEFAULT_OP_TIMEOUT_S);
-        }
-
-        freeXpathObject(xpathObj);
-
-        /* Now fudge the metadata so that the port isn't required in the configuration */
-        xpathObj = xpath_search(xml, "//parameter[@name='port']");
-        if (numXpathResults(xpathObj) > 0) {
-            /* We'll fill this in */
-            xmlNode *tmp = getXpathResult(xpathObj, 0);
-
-            crm_xml_add(tmp, "required", "0");
-        }
-
-        freeXpathObject(xpathObj);
-        free(buffer);
-        buffer = dump_xml_formatted_with_text(xml);
-        free_xml(xml);
-        if (!buffer) {
-            return -EINVAL;
-        }
-
-    } else {
-#if !HAVE_STONITH_STONITH_H
-        return -EINVAL;         /* Heartbeat agents not supported */
-#else
-        int bufferlen = 0;
-        static const char *no_parameter_info = "<!-- no value -->";
-
-        Stonith *stonith_obj = NULL;
-
-        static gboolean need_init = TRUE;
-        static Stonith *(*st_new_fn) (const char *) = NULL;
-        static const char *(*st_info_fn) (Stonith *, int) = NULL;
-        static void (*st_del_fn) (Stonith *) = NULL;
-        static void (*st_log_fn) (Stonith *, PILLogFun) = NULL;
-
-        if (need_init) {
-            need_init = FALSE;
-            st_new_fn =
-                find_library_function(&lha_agents_lib, LHA_STONITH_LIBRARY, "stonith_new", FALSE);
-            st_del_fn =
-                find_library_function(&lha_agents_lib, LHA_STONITH_LIBRARY, "stonith_delete",
-                                      FALSE);
-            st_log_fn =
-                find_library_function(&lha_agents_lib, LHA_STONITH_LIBRARY, "stonith_set_log",
-                                      FALSE);
-            st_info_fn =
-                find_library_function(&lha_agents_lib, LHA_STONITH_LIBRARY, "stonith_get_info",
-                                      FALSE);
-        }
-
-        if (lha_agents_lib && st_new_fn && st_del_fn && st_info_fn && st_log_fn) {
-            char *xml_meta_longdesc = NULL;
-            char *xml_meta_shortdesc = NULL;
-
-            char *meta_param = NULL;
-            char *meta_longdesc = NULL;
-            char *meta_shortdesc = NULL;
-
-            stonith_obj = (*st_new_fn) (agent);
-            if (stonith_obj) {
-                (*st_log_fn) (stonith_obj, (PILLogFun) & stonith_plugin);
-                meta_longdesc = strdup_null((*st_info_fn) (stonith_obj, ST_DEVICEDESCR));
-                if (meta_longdesc == NULL) {
-                    crm_warn("no long description in %s's metadata.", agent);
-                    meta_longdesc = strdup(no_parameter_info);
-                }
-
-                meta_shortdesc = strdup_null((*st_info_fn) (stonith_obj, ST_DEVICEID));
-                if (meta_shortdesc == NULL) {
-                    crm_warn("no short description in %s's metadata.", agent);
-                    meta_shortdesc = strdup(no_parameter_info);
-                }
-
-                meta_param = strdup_null((*st_info_fn) (stonith_obj, ST_CONF_XML));
-                if (meta_param == NULL) {
-                    crm_warn("no list of parameters in %s's metadata.", agent);
-                    meta_param = strdup(no_parameter_info);
-                }
-                (*st_del_fn) (stonith_obj);
-            } else {
-                return -EINVAL; /* Heartbeat agents not supported */
-            }
-
-            xml_meta_longdesc =
-                (char *)xmlEncodeEntitiesReentrant(NULL, (const unsigned char *)meta_longdesc);
-            xml_meta_shortdesc =
-                (char *)xmlEncodeEntitiesReentrant(NULL, (const unsigned char *)meta_shortdesc);
-
-            bufferlen = strlen(META_TEMPLATE) + strlen(agent)
-                + strlen(xml_meta_longdesc) + strlen(xml_meta_shortdesc)
-                + strlen(meta_param) + 1;
-
-            buffer = calloc(1, bufferlen);
-            snprintf(buffer, bufferlen - 1, META_TEMPLATE,
-                     agent, xml_meta_longdesc, xml_meta_shortdesc, meta_param);
-
-            xmlFree(xml_meta_longdesc);
-            xmlFree(xml_meta_shortdesc);
-
-            free(meta_shortdesc);
-            free(meta_longdesc);
-            free(meta_param);
-        }
+#if HAVE_STONITH_STONITH_H
+        case st_namespace_lha:
+            return stonith__lha_metadata(agent, timeout, output);
 #endif
+
+        default:
+            errno = EINVAL;
+            crm_perror(LOG_ERR,
+                       "Agent %s not found or does not support meta-data",
+                       agent);
+            break;
     }
-
-    if (output) {
-        *output = buffer;
-
-    } else {
-        free(buffer);
-    }
-
-    return rc;
+    return -EINVAL;
 }
 
 static int
@@ -1580,62 +1441,13 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
     return rc;
 }
 
-gboolean
-is_redhat_agent(const char *agent)
-{
-    int rc = 0;
-    struct stat prop;
-    char buffer[FILENAME_MAX + 1];
-
-    snprintf(buffer, FILENAME_MAX, "%s/%s", RH_STONITH_DIR, agent);
-    rc = stat(buffer, &prop);
-    if (rc >= 0 && S_ISREG(prop.st_mode)) {
-        return TRUE;
-    }
-    return FALSE;
-}
-
+/*!
+ * \brief Deprecated (use stonith_get_namespace() instead)
+ */
 const char *
 get_stonith_provider(const char *agent, const char *provider)
 {
-    /* This function sucks */
-    if (is_redhat_agent(agent)) {
-        return "redhat";
-
-#if HAVE_STONITH_STONITH_H
-    } else {
-        Stonith *stonith_obj = NULL;
-
-        static gboolean need_init = TRUE;
-        static Stonith *(*st_new_fn) (const char *) = NULL;
-        static void (*st_del_fn) (Stonith *) = NULL;
-
-        if (need_init) {
-            need_init = FALSE;
-            st_new_fn =
-                find_library_function(&lha_agents_lib, LHA_STONITH_LIBRARY, "stonith_new", FALSE);
-            st_del_fn =
-                find_library_function(&lha_agents_lib, LHA_STONITH_LIBRARY, "stonith_delete",
-                                      FALSE);
-        }
-
-        if (lha_agents_lib && st_new_fn && st_del_fn) {
-            stonith_obj = (*st_new_fn) (agent);
-            if (stonith_obj) {
-                (*st_del_fn) (stonith_obj);
-                return "heartbeat";
-            }
-        }
-#endif
-    }
-
-    if (safe_str_eq(provider, "internal")) {
-        return provider;
-
-    } else {
-        crm_err("No such device: %s", agent);
-        return NULL;
-    }
+    return stonith_namespace2text(stonith_get_namespace(agent, provider));
 }
 
 static gint
@@ -2448,6 +2260,81 @@ stonith_api_delete(stonith_t * stonith)
     }
 }
 
+static int
+stonith_api_validate(stonith_t *st, int call_options, const char *rsc_id,
+                     const char *namespace_s, const char *agent,
+                     stonith_key_value_t *params, int timeout, char **output,
+                     char **error_output)
+{
+    /* Validation should be done directly via the agent, so we can get it from
+     * stonith_admin when the cluster is not running, which is important for
+     * higher-level tools.
+     */
+
+    int rc = pcmk_ok;
+
+    /* Use a dummy node name in case the agent requires a target. We assume the
+     * actual target doesn't matter for validation purposes (if in practice,
+     * that is incorrect, we will need to allow the caller to pass the target).
+     */
+    const char *target = "node1";
+
+    GHashTable *params_table = crm_str_table_new();
+
+    // Convert parameter list to a hash table
+    for (; params; params = params->next) {
+
+        // Strip out Pacemaker-implemented parameters
+        if (!crm_starts_with(params->key, "pcmk_")
+                && strcmp(params->key, "provides")
+                && strcmp(params->key, "stonith-timeout")) {
+            g_hash_table_insert(params_table, strdup(params->key),
+                                strdup(params->value));
+        }
+    }
+
+#if SUPPORT_CIBSECRETS
+    rc = replace_secret_params(rsc_id, params_table);
+    if (rc < 0) {
+        crm_warn("Could not replace secret parameters for validation of %s: %s",
+                 agent, pcmk_strerror(rc));
+    }
+#endif
+
+    if (output) {
+        *output = NULL;
+    }
+    if (error_output) {
+        *error_output = NULL;
+    }
+
+    switch (stonith_get_namespace(agent, namespace_s)) {
+        case st_namespace_rhcs:
+            rc = stonith__rhcs_validate(st, call_options, target, agent,
+                                        params_table, timeout, output,
+                                        error_output);
+            break;
+
+#if HAVE_STONITH_STONITH_H
+        case st_namespace_lha:
+            rc = stonith__lha_validate(st, call_options, target, agent,
+                                       params_table, timeout, output,
+                                       error_output);
+            break;
+#endif
+
+        default:
+            rc = -EINVAL;
+            errno = EINVAL;
+            crm_perror(LOG_ERR,
+                       "Agent %s not found or does not support validation",
+                       agent);
+            break;
+    }
+    g_hash_table_destroy(params_table);
+    return rc;
+}
+
 stonith_t *
 stonith_api_new(void)
 {
@@ -2495,6 +2382,8 @@ stonith_api_new(void)
     new_stonith->cmds->register_callback     = stonith_api_add_callback;
     new_stonith->cmds->remove_notification   = stonith_api_del_notification;
     new_stonith->cmds->register_notification = stonith_api_add_notification;
+
+    new_stonith->cmds->validate              = stonith_api_validate;
 /* *INDENT-ON* */
 
     return new_stonith;
@@ -2665,15 +2554,3 @@ stonith_api_time(uint32_t nodeid, const char *uname, bool in_progress)
     free(name);
     return when;
 }
-
-#if HAVE_STONITH_STONITH_H
-#  include <pils/plugin.h>
-
-const char *i_hate_pils(int rc);
-
-const char *
-i_hate_pils(int rc)
-{
-    return PIL_strerror(rc);
-}
-#endif

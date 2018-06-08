@@ -1058,6 +1058,7 @@ fi
 if test "$ac_cv_header_stonith_stonith_h" = "yes";  then
    PCMK_FEATURES="$PCMK_FEATURES lha-fencing"
 fi
+AM_CONDITIONAL([BUILD_LHA_SUPPORT], [test "$ac_cv_header_stonith_stonith_h" = "yes"])
 
 if test $HAVE_GLUE = 1; then
    dnl On Debian, AC_CHECK_LIBS fail if a library has any unresolved symbols
