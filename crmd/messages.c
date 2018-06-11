@@ -811,25 +811,6 @@ handle_request(xmlNode * stored_msg, enum crmd_fsa_cause cause)
         /*return I_SHUTDOWN; */
         return I_NULL;
 
-        /*========== (NOT_DC)-Only Actions ==========*/
-    } else if (AM_I_DC == FALSE && strcmp(op, CRM_OP_SHUTDOWN) == 0) {
-
-        const char *host_from = crm_element_value(stored_msg, F_CRM_HOST_FROM);
-        gboolean dc_match = safe_str_eq(host_from, fsa_our_dc);
-
-        if (dc_match || fsa_our_dc == NULL) {
-            if (is_set(fsa_input_register, R_SHUTDOWN) == FALSE) {
-                crm_err("We didn't ask to be shut down, yet our DC is telling us to.");
-                set_bit(fsa_input_register, R_STAYDOWN);
-                return I_STOP;
-            }
-            crm_info("Shutting down");
-            return I_STOP;
-
-        } else {
-            crm_warn("Discarding %s op from %s", op, host_from);
-        }
-
     } else if (strcmp(op, CRM_OP_PING) == 0) {
         /* eventually do some stuff to figure out
          * if we /are/ ok
@@ -882,6 +863,25 @@ handle_request(xmlNode * stored_msg, enum crmd_fsa_cause cause)
         xmlNode *xml = get_message_xml(stored_msg, F_CRM_DATA);
 
         remote_ra_process_maintenance_nodes(xml);
+
+        /*========== (NOT_DC)-Only Actions ==========*/
+    } else if (AM_I_DC == FALSE && strcmp(op, CRM_OP_SHUTDOWN) == 0) {
+
+        const char *host_from = crm_element_value(stored_msg, F_CRM_HOST_FROM);
+        gboolean dc_match = safe_str_eq(host_from, fsa_our_dc);
+
+        if (dc_match || fsa_our_dc == NULL) {
+            if (is_set(fsa_input_register, R_SHUTDOWN) == FALSE) {
+                crm_err("We didn't ask to be shut down, yet our DC is telling us to.");
+                set_bit(fsa_input_register, R_STAYDOWN);
+                return I_STOP;
+            }
+            crm_info("Shutting down");
+            return I_STOP;
+
+        } else {
+            crm_warn("Discarding %s op from %s", op, host_from);
+        }
 
     } else {
         crm_err("Unexpected request (%s) sent to %s", op, AM_I_DC ? "the DC" : "non-DC node");
