@@ -370,6 +370,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
     const char *sys_to = crm_element_value(msg, F_CRM_SYS_TO);
     const char *sys_from = crm_element_value(msg, F_CRM_SYS_FROM);
     const char *type = crm_element_value(msg, F_TYPE);
+    const char *task = crm_element_value(msg, F_CRM_TASK);
     const char *msg_error = NULL;
 
     crm_trace("Routing message %s", crm_element_value(msg, XML_ATTR_REFERENCE));
@@ -377,7 +378,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
     if (msg == NULL) {
         msg_error = "Cannot route empty message";
 
-    } else if (safe_str_eq(CRM_OP_HELLO, crm_element_value(msg, F_CRM_TASK))) {
+    } else if (safe_str_eq(task, CRM_OP_HELLO)) {
         /* quietly ignore */
         processing_complete = TRUE;
 
@@ -411,8 +412,17 @@ relay_message(xmlNode * msg, gboolean originated_locally)
         if (is_for_dc || is_for_te) {
             is_local = 0;
 
-        } else if (is_for_crm && originated_locally) {
-            is_local = 0;
+        } else if (is_for_crm) {
+            if (safe_str_eq(task, CRM_OP_NODE_INFO)) {
+                /* Node info requests do not specify a host, which is normally
+                 * treated as "all hosts", because the whole point is that the
+                 * client doesn't know the local node name. Always handle these
+                 * requests locally.
+                 */
+                is_local = 1;
+            } else {
+                is_local = !originated_locally;
+            }
 
         } else {
             is_local = 1;
@@ -724,6 +734,63 @@ handle_ping(xmlNode *msg)
     return I_NULL;
 }
 
+/*!
+ * \brief Handle a CRM_OP_NODE_INFO request
+ *
+ * \param[in] msg  Message XML
+ *
+ * \return Next FSA input
+ */
+static enum crmd_fsa_input
+handle_node_info_request(xmlNode *msg)
+{
+    const char *value = NULL;
+    crm_node_t *node = NULL;
+    int node_id = 0;
+    xmlNode *reply = NULL;
+
+    // Build reply
+
+    reply = create_xml_node(NULL, XML_CIB_TAG_NODE);
+    crm_xml_add(reply, XML_PING_ATTR_SYSFROM, CRM_SYSTEM_CRMD);
+
+    // Add whether current partition has quorum
+    crm_xml_add_boolean(reply, XML_ATTR_HAVE_QUORUM, fsa_has_quorum);
+
+    // Check whether client requested node info by ID and/or name
+    crm_element_value_int(msg, XML_ATTR_ID, &node_id);
+    if (node_id < 0) {
+        node_id = 0;
+    }
+    value = crm_element_value(msg, XML_ATTR_UNAME);
+
+    // Default to local node if none given
+    if ((node_id == 0) && (value == NULL)) {
+        value = fsa_our_uname;
+    }
+
+    node = crm_find_peer_full(node_id, value, CRM_GET_PEER_ANY);
+    if (node) {
+        crm_xml_add_int(reply, XML_ATTR_ID, node->id);
+        crm_xml_add(reply, XML_ATTR_UUID, node->uuid);
+        crm_xml_add(reply, XML_ATTR_UNAME, node->uname);
+        crm_xml_add(reply, XML_NODE_IS_PEER, node->state);
+        crm_xml_add_boolean(reply, XML_NODE_IS_REMOTE,
+                            node->flags & crm_remote_node);
+    }
+
+    // Send reply
+    msg = create_reply(msg, reply);
+    free_xml(reply);
+    if (msg) {
+        (void) relay_message(msg, TRUE);
+        free_xml(msg);
+    }
+
+    // Nothing further to do
+    return I_NULL;
+}
+
 enum crmd_fsa_input
 handle_request(xmlNode * stored_msg, enum crmd_fsa_cause cause)
 {
@@ -853,6 +920,9 @@ handle_request(xmlNode * stored_msg, enum crmd_fsa_cause cause)
 
     } else if (strcmp(op, CRM_OP_PING) == 0) {
         return handle_ping(stored_msg);
+
+    } else if (strcmp(op, CRM_OP_NODE_INFO) == 0) {
+        return handle_node_info_request(stored_msg);
 
     } else if (strcmp(op, CRM_OP_RM_NODE_CACHE) == 0) {
         int id = 0;
