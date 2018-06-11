@@ -473,7 +473,7 @@ admin_msg_callback(const char *buffer, ssize_t length, gpointer userdata)
 
     } else if (DO_HEALTH) {
         xmlNode *data = get_message_xml(xml, F_CRM_DATA);
-        const char *state = crm_element_value(data, "crmd_state");
+        const char *state = crm_element_value(data, XML_PING_ATTR_CRMDSTATE);
 
         printf("Status of %s@%s: %s (%s)\n",
                crm_element_value(data, XML_PING_ATTR_SYSFROM),
