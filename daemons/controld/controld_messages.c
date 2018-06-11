@@ -674,6 +674,46 @@ handle_remote_state(xmlNode *msg)
     return I_NULL;
 }
 
+/*!
+ * \brief Handle a CRM_OP_PING message
+ *
+ * \param[in] msg  Message XML
+ *
+ * \return Next FSA input
+ */
+static enum crmd_fsa_input
+handle_ping(xmlNode *msg)
+{
+    const char *value = NULL;
+    xmlNode *ping = NULL;
+
+    // Build reply
+
+    ping = create_xml_node(NULL, XML_CRM_TAG_PING);
+    value = crm_element_value(msg, F_CRM_SYS_TO);
+    crm_xml_add(ping, XML_PING_ATTR_SYSFROM, value);
+
+    // Add controller state
+    value = fsa_state2string(fsa_state);
+    crm_xml_add(ping, XML_PING_ATTR_CRMDSTATE, value);
+    crm_notice("Current ping state: %s", value); // CTS needs this
+
+    // Add controller health
+    // @TODO maybe do some checks to determine meaningful status
+    crm_xml_add(ping, XML_PING_ATTR_STATUS, "ok");
+
+    // Send reply
+    msg = create_reply(msg, ping);
+    free_xml(ping);
+    if (msg) {
+        (void) relay_message(msg, TRUE);
+        free_xml(msg);
+    }
+
+    // Nothing further to do
+    return I_NULL;
+}
+
 static void
 verify_feature_set(xmlNode *msg)
 {
@@ -828,26 +868,7 @@ handle_request(xmlNode * stored_msg, enum crmd_fsa_cause cause)
         return I_NULL;
 
     } else if (strcmp(op, CRM_OP_PING) == 0) {
-        /* eventually do some stuff to figure out
-         * if we /are/ ok
-         */
-        const char *sys_to = crm_element_value(stored_msg, F_CRM_SYS_TO);
-        xmlNode *ping = create_xml_node(NULL, XML_CRM_TAG_PING);
-
-        crm_xml_add(ping, XML_PING_ATTR_STATUS, "ok");
-        crm_xml_add(ping, XML_PING_ATTR_SYSFROM, sys_to);
-        crm_xml_add(ping, "crmd_state", fsa_state2string(fsa_state));
-
-        /* Ok, so technically not so interesting, but CTS needs to see this */
-        crm_notice("Current ping state: %s", fsa_state2string(fsa_state));
-
-        msg = create_reply(stored_msg, ping);
-        if (msg) {
-            (void)relay_message(msg, TRUE);
-        }
-
-        free_xml(ping);
-        free_xml(msg);
+        return handle_ping(stored_msg);
 
     } else if (strcmp(op, CRM_OP_RM_NODE_CACHE) == 0) {
         int id = 0;
