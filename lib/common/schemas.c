@@ -291,13 +291,11 @@ crm_schema_init(void)
                     xslt = get_schema_path(NULL, transform);
                     if (stat(xslt, &s) != 0) {
                         crm_err("Transform %s not found", xslt);
-                        free(xslt);
-                        add_schema(schema_validator_rng, &version, NULL, NULL,
-                                   NULL, -1);
-                        break;
-                    } else {
-                        free(xslt);
+                        free(transform);
+                        transform = NULL;
+                        next = -1;
                     }
+                    free(xslt);
                 }
 
             } else {
@@ -305,6 +303,9 @@ crm_schema_init(void)
             }
             add_schema(schema_validator_rng, &version, NULL, NULL, transform,
                        next);
+            if (transform == NULL && next == -1) {
+                break;
+            }
             free(transform);
         }
 
