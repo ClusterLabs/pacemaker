@@ -146,7 +146,7 @@ systemd_cleanup(void)
 
 /*!
  * \internal
- * \brief Check whether a file name represents a systemd unit
+ * \brief Check whether a file name represents a manageable systemd unit
  *
  * \param[in] name  File name to check
  *
@@ -419,13 +419,13 @@ systemd_unit_listall(void)
 
         match = systemd_unit_extension(value.str);
         if (match == NULL) {
-            // Unit files always have an extension, so skip if not present
-            crm_debug("ListUnitFiles entry '%s' does not have an extension",
+            // This is not a unit file type we know how to manage
+            crm_debug("ListUnitFiles entry '%s' is not supported as resource",
                       value.str);
             continue;
         }
 
-        // ListUnitFiles returns full path names
+        // ListUnitFiles returns full path names, we just want base name
         basename = strrchr(value.str, '/');
         if (basename) {
             basename = basename + 1;
@@ -433,21 +433,11 @@ systemd_unit_listall(void)
             basename = value.str;
         }
 
-        /* Unit files will include types (such as .target) that we can't manage,
-         * so filter the replies here.
-         */
         if (!strcmp(match, ".service")) {
             // Service is the "default" unit type, so strip it
             unit_name = strndup(basename, match - basename);
-
-        } else if (!strcmp(match, ".mount")
-                   || !strcmp(match, ".socket")) {
+        } else {
             unit_name = strdup(basename);
-        }
-        if (unit_name == NULL) {
-            crm_trace("ListUnitFiles entry '%s' is not manageable",
-                      value.str);
-            continue;
         }
 
         nfiles++;
