@@ -113,8 +113,16 @@ fatal() {
     exit 1
 }
 
+# check if process of given substring in its name does exist;
+# only look for processes originated by user 0 (by UID), "@CRM_DAEMON_USER@"
+# or effective user running this script, and/or group 0 (by GID),
+# "@CRM_DAEMON_GROUP@" or one of the groups the effective user belongs to
+# (there's no business in probing any other processes)
 is_running() {
-    ps -ef | egrep -qs $(echo "$1" | sed -e 's/^\(.\)/[\1]/')
+    ps -G "0 $(getent group '@CRM_DAEMON_GROUP@' 2>/dev/null | cut -d: -f3) \
+           $(id -G)" \
+       -u "0 @CRM_DAEMON_USER@ $(id -u)" \
+      | grep -Eqs  $(echo "$1" | sed -e 's/^\(.\)/[\1]/')
 }
 
 has_remoted() {
