@@ -158,7 +158,11 @@ systemd_unit_extension(const char *name)
     if (name) {
         const char *dot = strrchr(name, '.');
 
-        if (dot && (!strcmp(dot, ".service") || !strcmp(dot, ".socket"))) {
+        if (dot && (!strcmp(dot, ".service")
+                    || !strcmp(dot, ".socket")
+                    || !strcmp(dot, ".mount")
+                    || !strcmp(dot, ".timer")
+                    || !strcmp(dot, ".path"))) {
             return dot;
         }
     }
