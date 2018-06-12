@@ -476,7 +476,7 @@ crm_find_peer_full(unsigned int id, const char *uname, int flags)
 
     crm_peer_init();
 
-    if (flags & CRM_GET_PEER_REMOTE) {
+    if ((uname != NULL) && (flags & CRM_GET_PEER_REMOTE)) {
         node = g_hash_table_lookup(crm_remote_peer_cache, uname);
     }
 

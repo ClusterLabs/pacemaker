@@ -406,7 +406,6 @@ validate(stonith_t *st, const char *agent, const char *id,
     char *output = NULL;
     char *error_output = NULL;
 
-    // @TODO allow rsc_id for CIB secrets
     rc = st->cmds->validate(st, st_opt_sync_call, id, NULL, agent, params,
                             timeout, &output, &error_output);
 

@@ -87,7 +87,7 @@ class FileObj(SearchObj):
         self.delegate = delegate
         self.cache = []
 
-        if (self.limit is not None) and (self.offset == "EOF" or self.offset > self.limit):
+        if (self.limit is not None) and (self.offset == "EOF" or int(self.offset) > self.limit):
             if self.delegate:
                 self.delegate.async_complete(-1, -1, [], [])
             return None
