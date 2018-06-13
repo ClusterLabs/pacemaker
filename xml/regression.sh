@@ -261,8 +261,8 @@ EOF
 			cp -a "${_tru_target_err}" "${_tru_ref_err}"
 		fi
 		if test $((_tru_mode & (1 << 1))) -ne 0; then
-			"${DIFF}" ${DIFFOPTS} "${_tru_source}" "${_tru_ref}" \
-			  | ${DIFFPAGER} >&2
+			{ "${DIFF}" ${DIFFOPTS} "${_tru_source}" "${_tru_ref}" \
+			  && printf '\n(files match)\n'; } | ${DIFFPAGER} >&2
 			if test $? -ne 0; then
 				printf "\npager failure\n" >&2
 				return 1
