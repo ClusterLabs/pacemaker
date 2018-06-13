@@ -142,13 +142,16 @@ send_controller_hello(crm_ipc_t *controller)
 }
 
 static int
-send_node_info_request(crm_ipc_t *controller)
+send_node_info_request(crm_ipc_t *controller, uint32_t nodeid)
 {
     xmlNode *ping = NULL;
     int rc;
 
     ping = create_request(CRM_OP_NODE_INFO, NULL, NULL, CRM_SYSTEM_CRMD,
                           crm_system_name, pid_s);
+    if (nodeid > 0) {
+        crm_xml_add_int(ping, XML_ATTR_ID, nodeid);
+    }
     rc = crm_ipc_send(controller, ping, 0, 0, NULL);
     free_xml(ping);
     return (rc < 0)? rc : 0;
@@ -189,6 +192,7 @@ dispatch_controller(const char *buffer, ssize_t length, gpointer userdata)
 
     switch (command) {
         case 'n':
+        case 'N':
             value = crm_element_value(data, XML_ATTR_UNAME);
             if (value == NULL) {
                 fprintf(stderr, "Node is not known to cluster\n");
@@ -211,7 +215,7 @@ done:
 }
 
 static void
-run_controller_mainloop()
+run_controller_mainloop(uint32_t nodeid)
 {
     crm_ipc_t *controller = NULL;
     int rc;
@@ -225,7 +229,7 @@ run_controller_mainloop()
         crm_node_exit(crm_errno2exit(rc));
     }
 
-    rc = send_node_info_request(controller);
+    rc = send_node_info_request(controller, nodeid);
     if (rc < 0) {
         fprintf(stderr, "error: Could not ping controller: %s\n",
                 pcmk_strerror(rc));
@@ -248,7 +252,7 @@ print_node_name()
 
     } else {
         // Otherwise ask the controller
-        run_controller_mainloop();
+        run_controller_mainloop(0);
     }
 }
 
@@ -629,8 +633,7 @@ main(int argc, char **argv)
         print_node_name();
 
     } else if (command == 'N') {
-        fprintf(stdout, "%s\n", get_node_name(nodeid));
-        crm_node_exit(CRM_EX_OK);
+        run_controller_mainloop(nodeid);
     }
 
     try_stack = get_cluster_type();
