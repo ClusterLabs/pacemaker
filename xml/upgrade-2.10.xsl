@@ -4,6 +4,13 @@
  Part of pacemaker project
  SPDX-License-Identifier: GPL-2.0-or-later
  -->
+
+<!--
+ Not compatible with @id-ref occurrences!  Normalize generic 2.X-compatible
+ instances with upgrade-2.10-enter.xsl (optionally denormalize back akin
+ to the original with upgrade-2.10-leave.xsl once the upgrade is finished).
+-->
+
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                 xmlns:cibtr="http://clusterlabs.org/ns/pacemaker/cibtr-2"
                 exclude-result-prefixes="cibtr">
@@ -1951,21 +1958,15 @@
 
   <xsl:choose>
     <xsl:when test="$Source/*[name() = $Variant]/meta_attributes[
-                      not(@id-ref)
-                      and
                       not(rule)
                     ]">
       <xsl:call-template name="cibtr:ProcessClusterProperties">
         <xsl:with-param name="Source"
                         select="$Source/crm_config/cluster_property_set[
-                                  not(@id-ref)
-                                  and
                                   not(rule)
                                 ]"/>
         <xsl:with-param name="InverseMode"
                         select="$Source/*[name() = $Variant]/meta_attributes[
-                                  not(@id-ref)
-                                  and
                                   not(rule)
                                 ]"/>
         <xsl:with-param name="InnerSimulation" select="$InnerSimulation"/>
@@ -1975,8 +1976,6 @@
       <xsl:call-template name="cibtr:ProcessClusterProperties">
         <xsl:with-param name="Source"
                       select="$Source/crm_config/cluster_property_set[
-                                  not(@id-ref)
-                                  and
                                   not(rule)
                                 ]"/>
         <xsl:with-param name="InverseMode"
@@ -2015,8 +2014,6 @@
   </xsl:param>
 
   <xsl:for-each select="crm_config/cluster_property_set[
-                          not(@id-ref)
-                          and
                           rule
                         ]">
     <xsl:variable name="ProcessedPartial">
@@ -2194,9 +2191,6 @@
 
  2b.  drop (primitive|template)/operations/
         op/meta_attributes/nvpair[@requires]
-
- Not compatible with meta_attributes referenced via id-ref
- (would need external preprocessing).
  -->
 <xsl:template match="primitive|template" mode="cibtr:main">
   <xsl:copy>
@@ -2398,14 +2392,10 @@
               <xsl:copy>
                 <xsl:choose>
                   <xsl:when test="self::meta_attributes[
-                                    not(@id-ref)
-                                    and
                                     not(rule)
                                     and
                                     not(
                                       preceding-sibling::meta_attributes[
-                                        not(@id-ref)
-                                        and
                                         not(rule)
                                       ]
                                     )
