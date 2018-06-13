@@ -142,6 +142,117 @@ send_controller_hello(crm_ipc_t *controller)
 }
 
 static int
+send_node_info_request(crm_ipc_t *controller)
+{
+    xmlNode *ping = NULL;
+    int rc;
+
+    ping = create_request(CRM_OP_NODE_INFO, NULL, NULL, CRM_SYSTEM_CRMD,
+                          crm_system_name, pid_s);
+    rc = crm_ipc_send(controller, ping, 0, 0, NULL);
+    free_xml(ping);
+    return (rc < 0)? rc : 0;
+}
+
+static int
+dispatch_controller(const char *buffer, ssize_t length, gpointer userdata)
+{
+    xmlNode *message = string2xml(buffer);
+    xmlNode *data = NULL;
+    const char *value = NULL;
+
+    if (message == NULL) {
+        fprintf(stderr, "error: Could not understand reply from controller\n");
+        crm_node_exit(CRM_EX_PROTOCOL);
+        return 0;
+    }
+    crm_log_xml_trace(message, "controller reply");
+
+    exit_code = CRM_EX_PROTOCOL;
+
+    // Validate reply
+    value = crm_element_value(message, F_CRM_MSG_TYPE);
+    if (safe_str_neq(value, XML_ATTR_RESPONSE)) {
+        fprintf(stderr, "error: Message from controller was not a reply\n");
+        goto done;
+    }
+    value = crm_element_value(message, XML_ATTR_REFERENCE);
+    if (value == NULL) {
+        fprintf(stderr, "error: Controller reply did not specify original message\n");
+        goto done;
+    }
+    data = get_message_xml(message, F_CRM_DATA);
+    if (data == NULL) {
+        fprintf(stderr, "error: Controller reply did not contain any data\n");
+        goto done;
+    }
+
+    switch (command) {
+        case 'n':
+            value = crm_element_value(data, XML_ATTR_UNAME);
+            if (value == NULL) {
+                fprintf(stderr, "Node is not known to cluster\n");
+                exit_code = CRM_EX_NOHOST;
+            } else {
+                printf("%s\n", value);
+                exit_code = CRM_EX_OK;
+            }
+            break;
+        default:
+            fprintf(stderr, "internal error: Controller reply not expected\n");
+            exit_code = CRM_EX_SOFTWARE;
+            break;
+    }
+
+done:
+    free_xml(message);
+    crm_node_exit(exit_code);
+    return 0;
+}
+
+static void
+run_controller_mainloop()
+{
+    crm_ipc_t *controller = NULL;
+    int rc;
+
+    controller = new_mainloop_for_ipc(CRM_SYSTEM_CRMD, dispatch_controller);
+
+    rc = send_controller_hello(controller);
+    if (rc < 0) {
+        fprintf(stderr, "error: Could not register with controller: %s\n",
+                pcmk_strerror(rc));
+        crm_node_exit(crm_errno2exit(rc));
+    }
+
+    rc = send_node_info_request(controller);
+    if (rc < 0) {
+        fprintf(stderr, "error: Could not ping controller: %s\n",
+                pcmk_strerror(rc));
+        crm_node_exit(crm_errno2exit(rc));
+    }
+
+    // Run main loop to get controller reply via dispatch_controller()
+    run_mainloop_and_exit();
+}
+
+static void
+print_node_name()
+{
+    // Check environment first (i.e. when called by resource agent)
+    const char *name = getenv("OCF_RESKEY_" CRM_META "_" XML_LRM_ATTR_TARGET);
+
+    if (name != NULL) {
+        printf("%s\n", name);
+        crm_node_exit(CRM_EX_OK);
+
+    } else {
+        // Otherwise ask the controller
+        run_controller_mainloop();
+    }
+}
+
+static int
 cib_remove_node(uint32_t id, const char *name)
 {
     int rc;
@@ -515,12 +626,7 @@ main(int argc, char **argv)
     }
 
     if (command == 'n') {
-        const char *name = getenv("OCF_RESKEY_" CRM_META "_" XML_LRM_ATTR_TARGET);
-        if(name == NULL) {
-            name = get_local_node_name();
-        }
-        fprintf(stdout, "%s\n", name);
-        crm_node_exit(CRM_EX_OK);
+        print_node_name();
 
     } else if (command == 'N') {
         fprintf(stdout, "%s\n", get_node_name(nodeid));
