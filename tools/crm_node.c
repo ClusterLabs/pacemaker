@@ -150,6 +150,19 @@ run_mainloop_and_exit()
 }
 
 static int
+send_controller_hello(crm_ipc_t *controller)
+{
+    xmlNode *hello = NULL;
+    int rc;
+
+    pid_s = crm_getpid_s();
+    hello = create_hello_message(pid_s, crm_system_name, "1", "0");
+    rc = crm_ipc_send(controller, hello, 0, 0, NULL);
+    free_xml(hello);
+    return (rc < 0)? rc : 0;
+}
+
+static int
 cib_remove_node(uint32_t id, const char *name)
 {
     int rc;
@@ -196,10 +209,8 @@ tools_remove_node_cache(const char *node, const char *target)
     int n = 0;
     int rc = -1;
     char *name = NULL;
-    char *admin_uuid = NULL;
     crm_ipc_t *conn = crm_ipc_new(target, 0);
     xmlNode *cmd = NULL;
-    xmlNode *hello = NULL;
     char *endptr = NULL;
 
     if (!conn) {
@@ -213,18 +224,14 @@ tools_remove_node_cache(const char *node, const char *target)
     }
 
     if(safe_str_eq(target, CRM_SYSTEM_CRMD)) {
-        admin_uuid = crm_getpid_s();
-
-        hello = create_hello_message(admin_uuid, "crm_node", "0", "1");
-        rc = crm_ipc_send(conn, hello, 0, 0, NULL);
-
-        free_xml(hello);
+        // The controller requires a hello message before sending a request
+        rc = send_controller_hello(conn);
         if (rc < 0) {
-            free(admin_uuid);
+            fprintf(stderr, "error: Could not register with controller: %s\n",
+                    pcmk_strerror(rc));
             return rc;
         }
     }
-
 
     errno = 0;
     n = strtol(node, &endptr, 10);
@@ -256,7 +263,7 @@ tools_remove_node_cache(const char *node, const char *target)
 
     } else {
         cmd = create_request(CRM_OP_RM_NODE_CACHE,
-                             NULL, NULL, target, crm_system_name, admin_uuid);
+                             NULL, NULL, target, crm_system_name, pid_s);
         if (n) {
             crm_xml_set_id(cmd, "%u", n);
         }
@@ -274,7 +281,6 @@ tools_remove_node_cache(const char *node, const char *target)
         crm_ipc_close(conn);
         crm_ipc_destroy(conn);
     }
-    free(admin_uuid);
     free_xml(cmd);
     free(name);
     return rc > 0 ? 0 : rc;
