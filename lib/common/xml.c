@@ -4635,8 +4635,9 @@ int
 add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * update, gboolean as_diff)
 {
     xmlNode *a_child = NULL;
-    const char *object_id = NULL;
-    const char *object_name = NULL;
+    const char *object_name = NULL,
+               *object_href = NULL,
+               *object_href_val = NULL;
 
 #if XML_PARSE_DEBUG
     crm_log_xml_trace("update:", update);
@@ -4650,25 +4651,38 @@ add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * update, gboolean as
     }
 
     object_name = crm_element_name(update);
-    object_id = ID(update);
+    object_href_val = ID(update);
+    if (object_href_val != NULL) {
+        object_href = XML_ATTR_ID;
+    } else {
+        object_href_val = crm_element_value(update, XML_ATTR_IDREF);
+        object_href = (object_href_val == NULL) ? NULL : XML_ATTR_IDREF;
+    }
 
     CRM_CHECK(object_name != NULL, return 0);
     CRM_CHECK(target != NULL || parent != NULL, return 0);
 
     if (target == NULL) {
-        target = find_entity(parent, object_name, object_id);
+        target = find_entity_by_attr_or_just_name(parent, object_name,
+                                                  object_href, object_href_val);
     }
 
     if (target == NULL) {
         target = create_xml_node(parent, object_name);
         CRM_CHECK(target != NULL, return 0);
 #if XML_PARSER_DEBUG
-        crm_trace("Added  <%s%s%s/>", crm_str(object_name),
-                  object_id ? " id=" : "", object_id ? object_id : "");
+        crm_trace("Added  <%s%s%s%s%s/>", crm_str(object_name),
+                  object_href ? " " : "",
+                  object_href ? object_href : "",
+                  object_href ? "=" : "",
+                  object_href ? object_href_val : "");
 
     } else {
-        crm_trace("Found node <%s%s%s/> to update",
-                  crm_str(object_name), object_id ? " id=" : "", object_id ? object_id : "");
+        crm_trace("Found node <%s%s%s%s%s/> to update", crm_str(object_name),
+                  object_href ? " " : "",
+                  object_href ? object_href : "",
+                  object_href ? "=" : "",
+                  object_href ? object_href_val : "");
 #endif
     }
 
@@ -4694,13 +4708,21 @@ add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * update, gboolean as
 
     for (a_child = __xml_first_child(update); a_child != NULL; a_child = __xml_next(a_child)) {
 #if XML_PARSER_DEBUG
-        crm_trace("Updating child <%s id=%s>", crm_element_name(a_child), ID(a_child));
+        crm_trace("Updating child <%s%s%s%s%s/>", crm_str(object_name),
+                  object_href ? " " : "",
+                  object_href ? object_href : "",
+                  object_href ? "=" : "",
+                  object_href ? object_href_val : "");
 #endif
         add_xml_object(target, NULL, a_child, as_diff);
     }
 
 #if XML_PARSER_DEBUG
-    crm_trace("Finished with <%s id=%s>", crm_str(object_name), crm_str(object_id));
+    crm_trace("Finished with <%s%s%s%s%s/>", crm_str(object_name),
+              object_href ? " " : "",
+              object_href ? object_href : "",
+              object_href ? "=" : "",
+              object_href ? object_href_val : "");
 #endif
     return 0;
 }
