@@ -2258,23 +2258,43 @@ find_xml_node(xmlNode * root, const char *search_path, gboolean must_find)
     return NULL;
 }
 
-xmlNode *
-find_entity(xmlNode * parent, const char *node_name, const char *id)
+/* As the name suggests, the perfect match is required for both node
+   name and fully specified attribute, otherwise, when attribute not
+   specified, the outcome is the first node matching on the name. */
+static xmlNode *
+find_entity_by_attr_or_just_name(xmlNode *parent, const char *node_name,
+                                 const char *attr_n, const char *attr_v)
 {
-    xmlNode *a_child = NULL;
+    xmlNode *child;
 
-    for (a_child = __xml_first_child(parent); a_child != NULL; a_child = __xml_next(a_child)) {
-        /* Uncertain if node_name == NULL check is strictly necessary here */
-        if (node_name == NULL || strcmp((const char *)a_child->name, node_name) == 0) {
-            const char *cid = ID(a_child);
-            if (id == NULL || (cid != NULL && strcmp(id, cid) == 0)) {
-                return a_child;
+    /* ensure attr_v specified when attr_n is */
+    CRM_CHECK(attr_n == NULL || attr_v != NULL, return NULL);
+
+    for (child = __xml_first_child(parent); child != NULL; child = __xml_next(child)) {
+        /* XXX uncertain if the first check is strictly necessary here */
+        if (node_name == NULL || !strcmp((const char *) child->name, node_name)) {
+            if (attr_n == NULL
+                    || crm_str_eq(crm_element_value(child, attr_n), attr_v, TRUE)) {
+                return child;
             }
         }
     }
 
-    crm_trace("node <%s id=%s> not found in %s.", node_name, id, crm_element_name(parent));
+    crm_trace("node <%s%s%s%s%s> not found in %s", crm_str(node_name),
+              attr_n ? " " : "",
+              attr_n ? attr_n : "",
+              attr_n ? "=" : "",
+              attr_n ? attr_v : "",
+              crm_element_name(parent));
+
     return NULL;
+}
+
+xmlNode *
+find_entity(xmlNode *parent, const char *node_name, const char *id)
+{
+    return find_entity_by_attr_or_just_name(parent, node_name,
+                                            (id == NULL) ? id : XML_ATTR_ID, id);
 }
 
 void
