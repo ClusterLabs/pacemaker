@@ -4653,12 +4653,9 @@ add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * update, gboolean as
     object_id = ID(update);
 
     CRM_CHECK(object_name != NULL, return 0);
+    CRM_CHECK(target != NULL || parent != NULL, return 0);
 
-    if (target == NULL && object_id == NULL) {
-        /*  placeholder object */
-        target = find_xml_node(parent, object_name, FALSE);
-
-    } else if (target == NULL) {
+    if (target == NULL) {
         target = find_entity(parent, object_name, object_id);
     }
 
