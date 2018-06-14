@@ -732,7 +732,7 @@ color_promotable(resource_t *rsc, pe_working_set_t *data_set)
 
         chosen = child_rsc->fns->location(child_rsc, NULL, FALSE);
         if (show_scores) {
-            if (is_set(data_set->flags, pe_flag_sanitized)) {
+            if (is_set(data_set->flags, pe_flag_stdout)) {
                 printf("%s promotion score on %s: %s\n",
                        child_rsc->id,
                        (chosen? chosen->details->uname : "none"), score);

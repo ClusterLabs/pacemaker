@@ -118,14 +118,25 @@ query_attr_sum() {
 
 	# Extract the attribute values (one per line) from the output
 	QAS_VALUE=$(echo "$QAS_ALL" | sed -n -e \
-		's/.*<nvpair.*value="\([0-9][0-9]*\)".*>.*/\1/p')
+		's/.*<nvpair.*value="\([0-9][0-9]*\|INFINITY\)".*>.*/\1/p')
 
 	# Sum the values
 	QAS_SUM=0
 	for i in 0 $QAS_VALUE; do
-		QAS_SUM=$(($QAS_SUM + $i))
+		if [ "$i" = "INFINITY" ]; then
+			QAS_SUM="INFINITY"
+			break
+		else
+			QAS_SUM=$(($QAS_SUM + $i))
+		fi
 	done
-	echo $QAS_SUM
+	if [ "$QAS_SUM" = "INFINITY" ]; then
+		echo $QAS_SUM
+	elif [ "$QAS_SUM" -ge 1000000 ]; then
+		echo "INFINITY"
+	else
+		echo $QAS_SUM
+	fi
 }
 
 query_failcount() {
