@@ -2110,7 +2110,7 @@ fencing_action_digest_cmp(resource_t * rsc, node_t * node, pe_working_set_t * da
 
     } else if(digest_secure && data->digest_secure_calc) {
         if(strstr(digest_secure, search_secure)) {
-            if (is_set(data_set->flags, pe_flag_sanitized)) {
+            if (is_set(data_set->flags, pe_flag_stdout)) {
                 printf("Only 'private' parameters to %s for unfencing %s changed\n",
                        rsc->id, node->details->uname);
             }
@@ -2118,13 +2118,14 @@ fencing_action_digest_cmp(resource_t * rsc, node_t * node, pe_working_set_t * da
         }
     }
 
-    if (data->rc == RSC_DIGEST_ALL && is_set(data_set->flags, pe_flag_sanitized) && data->digest_secure_calc) {
-        if (is_set(data_set->flags, pe_flag_sanitized)) {
-            printf("Parameters to %s for unfencing %s changed, try '%s:%s:%s'\n",
-                   rsc->id, node->details->uname, rsc->id,
-                   (const char *) g_hash_table_lookup(rsc->meta, XML_ATTR_TYPE),
-                   data->digest_secure_calc);
-        }
+    if (is_set(data_set->flags, pe_flag_sanitized)
+        && is_set(data_set->flags, pe_flag_stdout)
+        && (data->rc == RSC_DIGEST_ALL)
+        && data->digest_secure_calc) {
+        printf("Parameters to %s for unfencing %s changed, try '%s:%s:%s'\n",
+               rsc->id, node->details->uname, rsc->id,
+               (const char *) g_hash_table_lookup(rsc->meta, XML_ATTR_TYPE),
+               data->digest_secure_calc);
     }
 
     free(key);
@@ -2236,8 +2237,7 @@ pe_fence_op(node_t * node, const char *op, bool optional, const char *reason, pe
                 if(data->rc == RSC_DIGEST_ALL) {
                     optional = FALSE;
                     crm_notice("Unfencing %s (remote): because the definition of %s changed", node->details->uname, match->id);
-                    if (is_set(data_set->flags, pe_flag_sanitized)) {
-                        /* Extra detail for those running from the commandline */
+                    if (is_set(data_set->flags, pe_flag_stdout)) {
                         fprintf(stdout, "  notice: Unfencing %s (remote): because the definition of %s changed\n", node->details->uname, match->id);
                     }
                 }
