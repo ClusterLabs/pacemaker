@@ -39,11 +39,6 @@ static struct crm_option long_options[] = {
     {"verbose",    0, 0, 'V', "\tIncrease debug output"},
     {"quiet",      0, 0, 'Q', "\tEssential output only"},
 
-    {"-spacer-",   1, 0, '-', "\nStack:"},
-#if SUPPORT_COROSYNC
-    {"corosync",   0, 0, 'C', "\tOnly try connecting to an Corosync-based cluster"},
-#endif
-
     {"-spacer-",      1, 0, '-', "\nCommands:"},
     {"name",	      0, 0, 'n', "\tDisplay the name used by the cluster for this node"},
     {"name-for-id",   1, 0, 'N', "\tDisplay the name used by the cluster for the node with the specified id"},
@@ -56,6 +51,10 @@ static struct crm_option long_options[] = {
 
     {"-spacer-", 1, 0, '-', "\nAdditional Options:"},
     {"force",	 0, 0, 'f'},
+#if SUPPORT_COROSYNC
+    { "corosync",   0, 0, 'C', NULL, pcmk_option_hidden },
+#endif
+
     // @TODO add timeout option for when IPC replies are needed
 
     {0, 0, 0, 0}
@@ -191,6 +190,16 @@ dispatch_controller(const char *buffer, ssize_t length, gpointer userdata)
     }
 
     switch (command) {
+        case 'i':
+            value = crm_element_value(data, XML_ATTR_ID);
+            if (value == NULL) {
+                fprintf(stderr, "error: Controller reply did not contain node ID\n");
+            } else {
+                printf("%s\n", value);
+                exit_code = CRM_EX_OK;
+            }
+            break;
+
         case 'n':
         case 'N':
             value = crm_element_value(data, XML_ATTR_UNAME);
@@ -432,11 +441,6 @@ node_mcp_dispatch(const char *buffer, ssize_t length, gpointer userdata)
                 if(safe_str_eq(peer->state, CRM_NODE_MEMBER)) {
                     fprintf(stdout, "%s ", peer->uname);
                 }
-
-            } else if (command == 'i') {
-                if(safe_str_eq(peer->state, CRM_NODE_MEMBER)) {
-                    fprintf(stdout, "%u ", peer->id);
-                }
             }
         }
 
@@ -477,7 +481,6 @@ try_pacemaker(int command, enum cluster_type_e stack)
             }
             break;
 
-        case 'i':
         case 'l':
         case 'p':
             /* Go to pacemakerd */
@@ -498,43 +501,6 @@ try_pacemaker(int command, enum cluster_type_e stack)
             break;
     }
 }
-
-#if SUPPORT_COROSYNC
-#  include <corosync/cpg.h>
-
-static void
-try_corosync(int command, enum cluster_type_e stack)
-{
-    int rc = 0;
-    unsigned int nodeid = 0;
-    cpg_handle_t c_handle = 0;
-
-    switch (command) {
-        case 'i':
-            /* Go direct to the CPG API */
-            rc = cpg_initialize(&c_handle, NULL);
-            if (rc != CS_OK) {
-                crm_err("Could not connect to the Cluster Process Group API: %d", rc);
-                return;
-            }
-
-            rc = cpg_local_get(c_handle, &nodeid);
-            if (rc != CS_OK) {
-                crm_err("Could not get local node id from the CPG API");
-                return;
-            }
-
-            printf("%u\n", nodeid);
-            cpg_finalize(c_handle);
-            crm_node_exit(CRM_EX_OK);
-
-        default:
-            break;
-    }
-}
-#endif
-
-int set_cluster_type(enum cluster_type_e type);
 
 int
 main(int argc, char **argv)
@@ -569,7 +535,7 @@ main(int argc, char **argv)
                 // currently unused
                 break;
             case 'C':
-                set_cluster_type(pcmk_cluster_corosync);
+                // unused and deprecated
                 break;
             case 'f':
                 force_flag = TRUE;
@@ -615,6 +581,7 @@ main(int argc, char **argv)
         case 'n':
             print_node_name();
             break;
+        case 'i':
         case 'q':
         case 'N':
             run_controller_mainloop(nodeid);
@@ -626,12 +593,6 @@ main(int argc, char **argv)
     try_stack = get_cluster_type();
     crm_debug("Attempting to process -%c command for cluster type: %s", command,
               name_for_cluster_type(try_stack));
-
-#if SUPPORT_COROSYNC
-    if (try_stack == pcmk_cluster_corosync) {
-        try_corosync(command, try_stack);
-    }
-#endif
 
     try_pacemaker(command, try_stack);
 
