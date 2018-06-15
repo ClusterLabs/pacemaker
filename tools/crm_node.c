@@ -13,7 +13,6 @@
 #include <sys/types.h>
 
 #include <crm/crm.h>
-#include <crm/cluster/internal.h>
 #include <crm/common/mainloop.h>
 #include <crm/msg_xml.h>
 #include <crm/cib.h>
@@ -270,7 +269,7 @@ print_node_name()
 }
 
 static int
-cib_remove_node(uint32_t id, const char *name)
+cib_remove_node(long id, const char *name)
 {
     int rc;
     cib_t *cib = NULL;
@@ -288,8 +287,8 @@ cib_remove_node(uint32_t id, const char *name)
 
     crm_xml_add(node, XML_ATTR_UNAME, name);
     crm_xml_add(node_state, XML_ATTR_UNAME, name);
-    if(id) {
-        crm_xml_set_id(node, "%u", id);
+    if (id > 0) {
+        crm_xml_set_id(node, "%ld", id);
         crm_xml_add(node_state, XML_ATTR_ID, ID(node));
     }
 
@@ -298,11 +297,13 @@ cib_remove_node(uint32_t id, const char *name)
 
     rc = cib->cmds->remove(cib, XML_CIB_TAG_NODES, node, cib_sync_call);
     if (rc != pcmk_ok) {
-        printf("Could not remove %s/%u from " XML_CIB_TAG_NODES ": %s", name, id, pcmk_strerror(rc));
+        printf("Could not remove %s[%ld] from " XML_CIB_TAG_NODES ": %s",
+                name, id, pcmk_strerror(rc));
     }
     rc = cib->cmds->remove(cib, XML_CIB_TAG_STATUS, node_state, cib_sync_call);
     if (rc != pcmk_ok) {
-        printf("Could not remove %s/%u from " XML_CIB_TAG_STATUS ": %s", name, id, pcmk_strerror(rc));
+        printf("Could not remove %s[%ld] from " XML_CIB_TAG_STATUS ": %s",
+                name, id, pcmk_strerror(rc));
     }
 
     cib->cmds->signoff(cib);
@@ -311,14 +312,11 @@ cib_remove_node(uint32_t id, const char *name)
 }
 
 static int
-tools_remove_node_cache(const char *node, const char *target)
+tools_remove_node_cache(const char *node_name, long nodeid, const char *target)
 {
-    int n = 0;
     int rc = -1;
-    char *name = NULL;
     crm_ipc_t *conn = crm_ipc_new(target, 0);
     xmlNode *cmd = NULL;
-    char *endptr = NULL;
 
     if (!conn) {
         return -ENOTCONN;
@@ -340,17 +338,8 @@ tools_remove_node_cache(const char *node, const char *target)
         }
     }
 
-    errno = 0;
-    n = strtol(node, &endptr, 10);
-    if (errno != 0 || endptr == node || *endptr != '\0') {
-        /* Argument was not a nodeid */
-        n = 0;
-        name = strdup(node);
-    } else {
-        name = get_node_name(n);
-    }
-
-    crm_trace("Removing %s aka. %s (%u) from the membership cache", name, node, n);
+    crm_trace("Removing %s[%ld] from the %s membership cache",
+              node_name, nodeid, target);
 
     if(safe_str_eq(target, T_ATTRD)) {
         cmd = create_xml_node(NULL, __FUNCTION__);
@@ -359,29 +348,27 @@ tools_remove_node_cache(const char *node, const char *target)
         crm_xml_add(cmd, F_ORIG, crm_system_name);
 
         crm_xml_add(cmd, F_ATTRD_TASK, ATTRD_OP_PEER_REMOVE);
-        crm_xml_add(cmd, F_ATTRD_HOST, name);
+        crm_xml_add(cmd, F_ATTRD_HOST, node_name);
 
-        if (n) {
-            char buffer[64];
-            if(snprintf(buffer, 63, "%d", n) > 0) {
-                crm_xml_add(cmd, F_ATTRD_HOST_ID, buffer);
-            }
+        if (nodeid > 0) {
+            crm_xml_add_int(cmd, F_ATTRD_HOST_ID, (int) nodeid);
         }
 
     } else {
         cmd = create_request(CRM_OP_RM_NODE_CACHE,
                              NULL, NULL, target, crm_system_name, pid_s);
-        if (n) {
-            crm_xml_set_id(cmd, "%u", n);
+        if (nodeid > 0) {
+            crm_xml_set_id(cmd, "%ld", nodeid);
         }
-        crm_xml_add(cmd, XML_ATTR_UNAME, name);
+        crm_xml_add(cmd, XML_ATTR_UNAME, node_name);
     }
 
     rc = crm_ipc_send(conn, cmd, 0, 0, NULL);
-    crm_debug("%s peer cache cleanup for %s (%u): %d", target, name, n, rc);
+    crm_debug("%s peer cache cleanup for %s (%ld): %d",
+              target, node_name, nodeid, rc);
 
     if (rc > 0) {
-        rc = cib_remove_node(n, name);
+        rc = cib_remove_node(nodeid, node_name);
     }
 
     if (conn) {
@@ -389,7 +376,6 @@ tools_remove_node_cache(const char *node, const char *target)
         crm_ipc_destroy(conn);
     }
     free_xml(cmd);
-    free(name);
     return rc > 0 ? 0 : rc;
 }
 
@@ -397,6 +383,9 @@ static void
 remove_node(const char *target_uname)
 {
     int d = 0;
+    long nodeid = 0;
+    const char *node_name = NULL;
+    char *endptr = NULL;
     const char *daemons[] = {
         CRM_SYSTEM_CRMD,
         "stonith-ng",
@@ -404,8 +393,18 @@ remove_node(const char *target_uname)
         CRM_SYSTEM_MCP,
     };
 
+    // Check whether node was specified by name or numeric ID
+    errno = 0;
+    nodeid = strtol(target_uname, &endptr, 10);
+    if ((errno != 0) || (endptr == target_uname) || (*endptr != '\0')
+        || (nodeid <= 0)) {
+        // It's not a positive integer, so assume it's a node name
+        nodeid = 0;
+        node_name = target_uname;
+    }
+
     for (d = 0; d < DIMOF(daemons); d++) {
-        if (tools_remove_node_cache(target_uname, daemons[d])) {
+        if (tools_remove_node_cache(node_name, nodeid, daemons[d])) {
             crm_err("Failed to connect to %s to remove node '%s'",
                     daemons[d], target_uname);
             crm_node_exit(CRM_EX_ERROR);
