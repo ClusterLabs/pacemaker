@@ -202,6 +202,19 @@ dispatch_controller(const char *buffer, ssize_t length, gpointer userdata)
                 exit_code = CRM_EX_OK;
             }
             break;
+
+        case 'q':
+            value = crm_element_value(data, XML_ATTR_HAVE_QUORUM);
+            if (value == NULL) {
+                fprintf(stderr, "error: Controller reply did not contain quorum status\n");
+            } else {
+                bool quorum = crm_is_true(value);
+
+                printf("%d\n", quorum);
+                exit_code = quorum? CRM_EX_OK : CRM_EX_QUORUM;
+            }
+            break;
+
         default:
             fprintf(stderr, "internal error: Controller reply not expected\n");
             exit_code = CRM_EX_SOFTWARE;
@@ -397,16 +410,8 @@ node_mcp_dispatch(const char *buffer, ssize_t length, gpointer userdata)
         xmlNode *node = NULL;
         GListPtr nodes = NULL;
         GListPtr iter = NULL;
-        const char *quorate = crm_element_value(msg, "quorate");
 
         crm_log_xml_trace(msg, "message");
-        if (command == 'q' && quorate != NULL) {
-            fprintf(stdout, "%s\n", quorate);
-            crm_node_exit(CRM_EX_OK);
-
-        } else if(command == 'q') {
-            crm_node_exit(CRM_EX_ERROR);
-        }
 
         for (node = __xml_first_child(msg); node != NULL; node = __xml_next(node)) {
             crm_node_t *peer = calloc(1, sizeof(crm_node_t));
@@ -474,7 +479,6 @@ try_pacemaker(int command, enum cluster_type_e stack)
 
         case 'i':
         case 'l':
-        case 'q':
         case 'p':
             /* Go to pacemakerd */
             {
@@ -496,38 +500,16 @@ try_pacemaker(int command, enum cluster_type_e stack)
 }
 
 #if SUPPORT_COROSYNC
-#  include <corosync/quorum.h>
 #  include <corosync/cpg.h>
 
 static void
 try_corosync(int command, enum cluster_type_e stack)
 {
     int rc = 0;
-    int quorate = 0;
-    uint32_t quorum_type = 0;
     unsigned int nodeid = 0;
     cpg_handle_t c_handle = 0;
-    quorum_handle_t q_handle = 0;
 
     switch (command) {
-        case 'q':
-            /* Go direct to the Quorum API */
-            rc = quorum_initialize(&q_handle, NULL, &quorum_type);
-            if (rc != CS_OK) {
-                crm_err("Could not connect to the Quorum API: %d", rc);
-                return;
-            }
-
-            rc = quorum_getquorate(q_handle, &quorate);
-            if (rc != CS_OK) {
-                crm_err("Could not obtain the current Quorum API state: %d", rc);
-                return;
-            }
-
-            printf("%d\n", quorate);
-            quorum_finalize(q_handle);
-            crm_node_exit(CRM_EX_OK);
-
         case 'i':
             /* Go direct to the CPG API */
             rc = cpg_initialize(&c_handle, NULL);
@@ -629,11 +611,16 @@ main(int argc, char **argv)
         crm_node_exit(CRM_EX_USAGE);
     }
 
-    if (command == 'n') {
-        print_node_name();
-
-    } else if (command == 'N') {
-        run_controller_mainloop(nodeid);
+    switch (command) {
+        case 'n':
+            print_node_name();
+            break;
+        case 'q':
+        case 'N':
+            run_controller_mainloop(nodeid);
+            break;
+        default:
+            break;
     }
 
     try_stack = get_cluster_type();
