@@ -416,57 +416,57 @@ remove_node(const char *target_uname)
 }
 
 static gint
-compare_node_uname(gconstpointer a, gconstpointer b)
+compare_node_xml(gconstpointer a, gconstpointer b)
 {
-    const crm_node_t *a_node = a;
-    const crm_node_t *b_node = b;
-    return strcmp(a_node->uname?a_node->uname:"", b_node->uname?b_node->uname:"");
+    const char *a_name = crm_element_value((xmlNode*) a, "uname");
+    const char *b_name = crm_element_value((xmlNode*) b, "uname");
+
+    return strcmp((a_name? a_name : ""), (b_name? b_name : ""));
 }
 
 static int
 node_mcp_dispatch(const char *buffer, ssize_t length, gpointer userdata)
 {
+    GList *nodes = NULL;
+    xmlNode *node = NULL;
     xmlNode *msg = string2xml(buffer);
+    const char *uname;
+    const char *state;
 
-    if (msg) {
-        xmlNode *node = NULL;
-        GListPtr nodes = NULL;
-        GListPtr iter = NULL;
-
-        crm_log_xml_trace(msg, "message");
-
-        for (node = __xml_first_child(msg); node != NULL; node = __xml_next(node)) {
-            crm_node_t *peer = calloc(1, sizeof(crm_node_t));
-
-            nodes = g_list_insert_sorted(nodes, peer, compare_node_uname);
-            peer->uname = (char*)crm_element_value_copy(node, "uname");
-            peer->state = (char*)crm_element_value_copy(node, "state");
-            crm_element_value_int(node, "id", (int*)&peer->id);
-        }
-
-        for(iter = nodes; iter; iter = iter->next) {
-            crm_node_t *peer = iter->data;
-            if (command == 'l') {
-                fprintf(stdout, "%u %s %s\n",
-                        peer->id, peer->uname, (peer->state? peer->state : ""));
-
-            } else if (command == 'p') {
-                if(safe_str_eq(peer->state, CRM_NODE_MEMBER)) {
-                    fprintf(stdout, "%s ", peer->uname);
-                }
-            }
-        }
-
-        g_list_free_full(nodes, free);
-        free_xml(msg);
-
-        if (command == 'p') {
-            fprintf(stdout, "\n");
-        }
-
-        crm_node_exit(CRM_EX_OK);
+    if (msg == NULL) {
+        fprintf(stderr, "error: Could not understand pacemakerd response\n");
+        crm_node_exit(CRM_EX_PROTOCOL);
+        return 0;
     }
 
+    crm_log_xml_trace(msg, "message");
+
+    for (node = __xml_first_child(msg); node != NULL; node = __xml_next(node)) {
+        nodes = g_list_insert_sorted(nodes, node, compare_node_xml);
+    }
+
+    for (GList *iter = nodes; iter; iter = iter->next) {
+        node = (xmlNode*) iter->data;
+        uname = crm_element_value(node, "uname");
+        state = crm_element_value(node, "state");
+
+        if (command == 'l') {
+            int id = 0;
+
+            crm_element_value_int(node, "id", &id);
+            printf("%d %s %s\n", id, (uname? uname : ""), (state? state : ""));
+
+        // This is CRM_NODE_MEMBER but we don't want to include cluster header
+        } else if ((command == 'p') && safe_str_eq(state, "member")) {
+            printf("%s ", (uname? uname : ""));
+        }
+    }
+    if (command == 'p') {
+        fprintf(stdout, "\n");
+    }
+
+    free_xml(msg);
+    crm_node_exit(CRM_EX_OK);
     return 0;
 }
 
@@ -498,7 +498,6 @@ main(int argc, char **argv)
     int option_index = 0;
     const char *target_uname = NULL;
 
-    crm_peer_init();
     crm_log_cli_init("crm_node");
     crm_set_options(NULL, "command [options]", long_options,
                     "Tool for displaying low-level node information");
