@@ -7,16 +7,10 @@
 
 #include <crm_internal.h>
 
-#include <sys/param.h>
 #include <stdio.h>
-#include <sys/types.h>
-#include <unistd.h>
-
 #include <stdlib.h>
 #include <errno.h>
-#include <fcntl.h>
-
-#include <libgen.h>             /* for basename() */
+#include <sys/types.h>
 
 #include <crm/crm.h>
 #include <crm/cluster/internal.h>
@@ -27,11 +21,9 @@
 
 static int command = 0;
 static char *pid_s = NULL;
-static const char *target_uname = NULL;
 static GMainLoop *mainloop = NULL;
 static crm_exit_t exit_code = CRM_EX_OK;
 
-/* *INDENT-OFF* */
 static struct crm_option long_options[] = {
     /* Top-level Options */
     {"help",       0, 0, '?', "\tThis text"},
@@ -59,7 +51,6 @@ static struct crm_option long_options[] = {
 
     {0, 0, 0, 0}
 };
-/* *INDENT-ON* */
 
 /*!
  * \internal
@@ -402,6 +393,28 @@ tools_remove_node_cache(const char *node, const char *target)
     return rc > 0 ? 0 : rc;
 }
 
+static void
+remove_node(const char *target_uname)
+{
+    int d = 0;
+    const char *daemons[] = {
+        CRM_SYSTEM_CRMD,
+        "stonith-ng",
+        T_ATTRD,
+        CRM_SYSTEM_MCP,
+    };
+
+    for (d = 0; d < DIMOF(daemons); d++) {
+        if (tools_remove_node_cache(target_uname, daemons[d])) {
+            crm_err("Failed to connect to %s to remove node '%s'",
+                    daemons[d], target_uname);
+            crm_node_exit(CRM_EX_ERROR);
+            return;
+        }
+    }
+    crm_node_exit(CRM_EX_OK);
+}
+
 static gint
 compare_node_uname(gconstpointer a, gconstpointer b)
 {
@@ -458,48 +471,20 @@ node_mcp_dispatch(const char *buffer, ssize_t length, gpointer userdata)
 }
 
 static void
-try_pacemaker(int command, enum cluster_type_e stack)
+run_pacemakerd_mainloop()
 {
-    switch (command) {
-        case 'R':
-            {
-                int lpc = 0;
-                const char *daemons[] = {
-                    CRM_SYSTEM_CRMD,
-                    "stonith-ng",
-                    T_ATTRD,
-                    CRM_SYSTEM_MCP,
-                };
+    crm_ipc_t *ipc = NULL;
+    xmlNode *poke = NULL;
 
-                for(lpc = 0; lpc < DIMOF(daemons); lpc++) {
-                    if (tools_remove_node_cache(target_uname, daemons[lpc])) {
-                        crm_err("Failed to connect to %s to remove node '%s'", daemons[lpc], target_uname);
-                        crm_node_exit(CRM_EX_ERROR);
-                    }
-                }
-                crm_node_exit(CRM_EX_OK);
-            }
-            break;
+    ipc = new_mainloop_for_ipc(CRM_SYSTEM_MCP, node_mcp_dispatch);
 
-        case 'l':
-        case 'p':
-            /* Go to pacemakerd */
-            {
-                crm_ipc_t *ipc = NULL;
-                xmlNode *poke = NULL;
+    // Sending anything will get us a list of nodes
+    poke = create_xml_node(NULL, "poke");
+    crm_ipc_send(ipc, poke, 0, 0, NULL);
+    free_xml(poke);
 
-                ipc = new_mainloop_for_ipc(CRM_SYSTEM_MCP, node_mcp_dispatch);
-
-                // Sending anything will get us a list of nodes
-                poke = create_xml_node(NULL, "poke");
-                crm_ipc_send(ipc, poke, 0, 0, NULL);
-                free_xml(poke);
-
-                // Handle reply via node_mcp_dispatch()
-                run_mainloop_and_exit();
-            }
-            break;
-    }
+    // Handle reply via node_mcp_dispatch()
+    run_mainloop_and_exit();
 }
 
 int
@@ -510,9 +495,8 @@ main(int argc, char **argv)
     uint32_t nodeid = 0;
     gboolean force_flag = FALSE;
     gboolean dangerous_cmd = FALSE;
-    enum cluster_type_e try_stack = pcmk_cluster_unknown;
-
     int option_index = 0;
+    const char *target_uname = NULL;
 
     crm_peer_init();
     crm_log_cli_init("crm_node");
@@ -581,21 +565,23 @@ main(int argc, char **argv)
         case 'n':
             print_node_name();
             break;
+        case 'R':
+            remove_node(target_uname);
+            break;
         case 'i':
         case 'q':
         case 'N':
             run_controller_mainloop(nodeid);
             break;
+        case 'l':
+        case 'p':
+            run_pacemakerd_mainloop();
+            break;
         default:
             break;
     }
 
-    try_stack = get_cluster_type();
-    crm_debug("Attempting to process -%c command for cluster type: %s", command,
-              name_for_cluster_type(try_stack));
-
-    try_pacemaker(command, try_stack);
-
-    // We only get here if command hasn't been handled
-    crm_node_exit(CRM_EX_ERROR);
+    fprintf(stderr, "error: Must specify a command option\n");
+    crm_node_exit(CRM_EX_USAGE);
+    return CRM_EX_USAGE;
 }
