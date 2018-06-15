@@ -66,10 +66,8 @@ crm_shadow_LDADD	= $(top_builddir)/lib/cib/libcib.la		\
 			  $(top_builddir)/lib/common/libcrmcommon.la
 
 crm_node_SOURCES	= crm_node.c
-crm_node_LDADD		= $(top_builddir)/lib/cluster/libcrmcluster.la	\
-			  $(top_builddir)/lib/cib/libcib.la		\
-			  $(top_builddir)/lib/common/libcrmcommon.la	\
-			  $(CLUSTERLIBS)
+crm_node_LDADD		= $(top_builddir)/lib/cib/libcib.la		\
+			  $(top_builddir)/lib/common/libcrmcommon.la
 
 crm_simulate_SOURCES	= crm_simulate.c fake_transition.c
 crm_simulate_CFLAGS	= -I$(top_srcdir)/daemons/schedulerd

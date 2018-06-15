@@ -611,7 +611,6 @@ exit 0
 
 %{_sbindir}/crm_attribute
 %{_sbindir}/crm_master
-%{_sbindir}/crm_node
 %{_sbindir}/fence_legacy
 %{_sbindir}/stonith_admin
 
@@ -622,7 +621,6 @@ exit 0
 %doc %{_mandir}/man7/ocf_pacemaker_o2cb.*
 %doc %{_mandir}/man7/ocf_pacemaker_remote.*
 %doc %{_mandir}/man8/crm_attribute.*
-%doc %{_mandir}/man8/crm_node.*
 %doc %{_mandir}/man8/crm_master.*
 %doc %{_mandir}/man8/fence_legacy.*
 %doc %{_mandir}/man8/pacemakerd.*
@@ -664,6 +662,7 @@ exit 0
 %{_sbindir}/crm_error
 %{_sbindir}/crm_failcount
 %{_sbindir}/crm_mon
+%{_sbindir}/crm_node
 %{_sbindir}/crm_resource
 %{_sbindir}/crm_standby
 %{_sbindir}/crm_verify
@@ -695,7 +694,6 @@ exit 0
 %exclude %{_mandir}/man7/ocf_pacemaker_remote.*
 %doc %{_mandir}/man8/*
 %exclude %{_mandir}/man8/crm_attribute.*
-%exclude %{_mandir}/man8/crm_node.*
 %exclude %{_mandir}/man8/crm_master.*
 %exclude %{_mandir}/man8/fence_legacy.*
 %exclude %{_mandir}/man8/pacemakerd.*

@@ -185,12 +185,35 @@ create_attribute(xmlNode *xml)
 void
 attrd_client_peer_remove(const char *client_name, xmlNode *xml)
 {
+    // Host and ID are not used in combination, rather host has precedence
     const char *host = crm_element_value(xml, F_ATTRD_HOST);
+    char *host_alloc = NULL;
+
+    if (host == NULL) {
+        int nodeid;
+
+        crm_element_value_int(xml, F_ATTRD_HOST_ID, &nodeid);
+        if (nodeid > 0) {
+            crm_node_t *node = crm_find_peer(nodeid, NULL);
+            char *host_alloc = NULL;
+
+            if (node && node->uname) {
+                // Use cached name if available
+                host = node->uname;
+            } else {
+                // Otherwise ask cluster layer
+                host_alloc = get_node_name(nodeid);
+                host = host_alloc;
+            }
+            crm_xml_add(xml, F_ATTRD_HOST, host);
+        }
+    }
 
     if (host) {
         crm_info("Client %s is requesting all values for %s be removed",
                  client_name, host);
         send_attrd_message(NULL, xml); /* ends up at attrd_peer_message() */
+        free(host_alloc);
     } else {
         crm_info("Ignoring request by client %s to remove all peer values without specifying peer",
                  client_name);
