@@ -471,6 +471,11 @@ crm_schema_cleanup(void)
     }
     free(known_schemas);
     known_schemas = NULL;
+
+    xsltCleanupGlobals();  /* XXX proper, explicit reshaking regarding
+                                  init/fini routines is pending (pair
+                                  of facade functions to express the
+                                  intentions in a clean way) */
 }
 
 static gboolean
