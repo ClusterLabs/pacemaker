@@ -324,7 +324,17 @@ __xml_private_free(xml_private_t *p)
 static void
 pcmkDeregisterNode(xmlNodePtr node)
 {
-    __xml_private_free(node->_private);
+    /* need to explicitly avoid our custom _private field cleanup when
+       called from internal XSLT cleanup (xsltApplyStylesheetInternal
+       -> xsltFreeTransformContext -> xsltFreeRVTs -> xmlFreeDoc)
+       onto result tree fragments, represented as standalone documents
+       with otherwise infeasible space-prefixed name (xsltInternals.h:
+       XSLT_MARK_RES_TREE_FRAG) and carrying it's own load at _private
+       field -- later assert on the XML_PRIVATE_MAGIC would explode */
+    if (node->type != XML_DOCUMENT_NODE || node->name == NULL
+            || node->name[0] != ' ') {
+        __xml_private_free(node->_private);
+    }
 }
 
 static void
