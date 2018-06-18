@@ -212,6 +212,15 @@ dispatch_controller(const char *buffer, ssize_t length, gpointer userdata)
     }
 
     switch (command) {
+        case 'i':
+            value = crm_element_value(data, XML_ATTR_ID);
+            if (value == NULL) {
+                fprintf(stderr, "error: Controller reply did not contain node ID\n");
+            } else {
+                printf("%s\n", value);
+                exit_code = pcmk_ok;
+            }
+            break;
         case 'n':
         case 'N':
             value = crm_element_value(data, XML_ATTR_UNAME);
@@ -935,8 +944,6 @@ try_corosync(int command, enum cluster_type_e stack)
     int rc = 0;
     int quorate = 0;
     uint32_t quorum_type = 0;
-    unsigned int nodeid = 0;
-    cpg_handle_t c_handle = 0;
     quorum_handle_t q_handle = 0;
 
     switch (command) {
@@ -957,24 +964,11 @@ try_corosync(int command, enum cluster_type_e stack)
             printf("%d\n", quorate);
             quorum_finalize(q_handle);
             crm_node_exit(pcmk_ok);
+            break;
 
         case 'i':
-            /* Go direct to the CPG API */
-            rc = cpg_initialize(&c_handle, NULL);
-            if (rc != CS_OK) {
-                crm_err("Could not connect to the Cluster Process Group API: %d", rc);
-                return;
-            }
-
-            rc = cpg_local_get(c_handle, &nodeid);
-            if (rc != CS_OK) {
-                crm_err("Could not get local node id from the CPG API");
-                return;
-            }
-
-            printf("%u\n", nodeid);
-            cpg_finalize(c_handle);
-            crm_node_exit(pcmk_ok);
+            run_controller_mainloop(0);
+            break;
 
         default:
             break;
@@ -1139,6 +1133,10 @@ main(int argc, char **argv)
 #ifdef SUPPORT_CS_QUORUM
     if (try_stack == pcmk_cluster_corosync) {
         try_corosync(command, try_stack);
+    }
+    if ((try_stack == pcmk_cluster_unknown) && (command == 'i')) {
+        // possibly a Pacemaker Remote node
+        run_controller_mainloop(0);
     }
 #endif
 
