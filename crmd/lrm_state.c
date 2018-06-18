@@ -545,6 +545,23 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
         crm_xml_add(request, XML_ACL_TAG_ROLE, "pacemaker-remote");
         crm_acl_get_set_user(request, F_LRMD_IPC_USER, lrm_state->node_name);
 #endif
+
+        /* Pacemaker Remote nodes don't know their own names (as known to the
+         * cluster). When getting a node info request with no name or ID, add
+         * the name, so we don't return info for ourselves instead of the
+         * Pacemaker Remote node.
+         */
+        if (safe_str_eq(crm_element_value(request, F_CRM_TASK),
+                        CRM_OP_NODE_INFO)) {
+            int node_id;
+
+            crm_element_value_int(request, XML_ATTR_ID, &node_id);
+            if ((node_id <= 0)
+                && (crm_element_value(request, XML_ATTR_UNAME) == NULL)) {
+                crm_xml_add(request, XML_ATTR_UNAME, lrm_state->node_name);
+            }
+        }
+
         crmd_proxy_dispatch(session, request);
 
         crm_element_value_int(msg, F_LRMD_IPC_MSG_FLAGS, &flags);
