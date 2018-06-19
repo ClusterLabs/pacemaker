@@ -77,6 +77,9 @@
         .count,.data { font-family: monospace;
                        background-color: #F8F8FF;
                        border: 1px solid #DCDCDC; }
+        .err_warning { color: red; background-color: #FFE4E1; }
+        .err_info { color: green; background-color: #FAFAD2; }
+        .err_debug { }
       </style>
       <script type="text/javascript">
         var global = { prettydiff: {} },  /* for diffview.js */
@@ -136,7 +139,12 @@
 
             /* fetch expected out-of-band messages */
             xhr1.onload = function() {
-              document.getElementById("expected-messages").innerText = this.responseText;
+              var formatted = this.responseText.replace(/^(WARNING|INFO|DEBUG)(: .*)$/gm,
+                                                        function(match, label, rest) {
+                return '&lt;span class="err_' + label.toLowerCase() + '"&gt;&lt;em&gt;'
+                        + label + '&lt;/em&gt;' + rest + '&lt;/span&gt;&lt;br/&gt;';
+              });
+              document.getElementById("expected-messages").innerHTML = formatted;
               document.querySelectorAll(["#expected-messages",
                                          "#expected-messages-ext",
                                          "#navigation"]).forEach(
@@ -250,9 +258,9 @@
           to check the actual messages from the in-browser transformation match the baseline:
         </span>
       </p>
-      <pre id="expected-messages" class="data possibly-revealed">
+      <p id="expected-messages" class="data possibly-revealed">
         Expected diagnostic messages to be loaded here.
-      </pre>
+      </p>
       <h3>Debugging</h3>
       <p>
         These are raw data (beware, already chewed with the
