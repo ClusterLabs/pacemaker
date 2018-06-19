@@ -17,6 +17,9 @@
 <xsl:output method="xml" encoding="UTF-8" indent="yes" omit-xml-declaration="yes"/>
 
 <xsl:param name="cibtr:cib-min-ver" select="'3.0'"/>
+<xsl:param name="cibtr:label-warning" select="'WARNING: '"/>
+<xsl:param name="cibtr:label-info"    select="'INFO: '"/>
+<xsl:param name="cibtr:label-debug"   select="'DEBUG: '"/>
 
 <!--
 
@@ -197,19 +200,23 @@
     <cibtr:replace what="isolation"
                    with="target-role"
                    redefined-as="Stopped"
-                   msg-extra="i.e. resource at hand disabled; isolation wrappers obsoleted with bundle resources"/>
+                   msg-extra="i.e. resource at hand disabled; isolation wrappers obsoleted with bundle resources"
+                   msg-severity="WARNING"/>
     <cibtr:replace what="isolation-host"
                    with="target-role"
                    redefined-as="Stopped"
-                   msg-extra="i.e. resource at hand disabled; isolation wrappers obsoleted with bundle resources"/>
+                   msg-extra="i.e. resource at hand disabled; isolation wrappers obsoleted with bundle resources"
+                   msg-severity="WARNING"/>
     <cibtr:replace what="isolation-instance"
                    with="target-role"
                    redefined-as="Stopped"
-                   msg-extra="i.e. resource at hand disabled; isolation wrappers obsoleted with bundle resources"/>
+                   msg-extra="i.e. resource at hand disabled; isolation wrappers obsoleted with bundle resources"
+                   msg-severity="WARNING"/>
     <cibtr:replace what="isolation-wrapper"
                    with="target-role"
                    redefined-as="Stopped"
-                   msg-extra="i.e. resource at hand disabled; isolation wrappers obsoleted with bundle resources"/>
+                   msg-extra="i.e. resource at hand disabled; isolation wrappers obsoleted with bundle resources"
+                   msg-severity="WARNING"/>
 
     <cibtr:replace what="resource-failure-stickiness"
                    with="migration-threshold"
@@ -399,6 +406,11 @@
  - Context: optional message prefix
  - Replacement: selected subset of cibtr:map's leaves
                 (it's considered a hard error if consists of more than 1 item)
+
+ Explanation wrt. how target severity gets selected, ordered by priority:
+ - $Replacement/@msg-severity (WARNING/INFO/DEBUG)
+ - $Replacement/@msg-extra defined -> INFO
+ - otherwise -> DEBUG
  -->
 <xsl:template name="cibtr:MapMsg">
   <xsl:param name="Context" select="''"/>
@@ -407,7 +419,7 @@
     <xsl:when test="not($Replacement)"/>
     <xsl:when test="count($Replacement) != 1">
       <xsl:message terminate="yes">
-        <xsl:value-of select="concat('INTERNAL ERROR:',
+        <xsl:value-of select="concat('INTERNAL ERROR: ',
                                      $Replacement/../@msg-prefix,
                                      ': count($Replacement) != 1',
                                      ' does not hold (',
@@ -419,78 +431,113 @@
                                                ($Replacement|$Replacement/..)
                                                  /@msg-prefix, ': '
                                              )"/>
-      <xsl:message>
-        <xsl:value-of select="$MsgPrefix"/>
-        <xsl:if test="$Context">
-          <xsl:value-of select="concat($Context, ': ')"/>
-        </xsl:if>
+      <xsl:variable name="MsgSeverity">
         <xsl:choose>
-          <xsl:when test="string($Replacement/@with)">
-            <xsl:choose>
-              <xsl:when test="string($Replacement/@where)">
-                <xsl:if test="not(
-                                contains(
-                                  concat('|', $Replacement/../@where-cases, '|'),
-                                  concat('|', $Replacement/@where, '|')
-                                )
-                              )">
-                  <xsl:message terminate="yes">
-                    <xsl:value-of select="concat('INTERNAL ERROR:',
-                                                 $Replacement/../@msg-prefix,
-                                                 ': $Replacement/@where (',
-                                                 $Replacement/@where, ') not in ',
-                                                 concat('|',
-                                                 $Replacement/../@where-cases,
-                                                 '|'))"/>
-                  </xsl:message>
-                </xsl:if>
-                <xsl:value-of select="concat('moving ', $Replacement/@what,
-                                             ' under ', $Replacement/@where)"/>
-              </xsl:when>
-              <xsl:when test="$Replacement/@with = $Replacement/@what">
-                <xsl:value-of select="concat('keeping ', $Replacement/@what)"/>
-              </xsl:when>
-              <xsl:otherwise>
-                <xsl:value-of select="concat('renaming ', $Replacement/@what)"/>
-              </xsl:otherwise>
-            </xsl:choose>
-            <xsl:value-of select="concat(' as ', $Replacement/@with)"/>
-            <xsl:if test="$Replacement/@where">
-              <xsl:value-of select="' unless already defined there'"/>
-            </xsl:if>
+          <xsl:when test="$Replacement/@msg-severity">
+            <xsl:value-of select="$Replacement/@msg-severity"/>
+          </xsl:when>
+          <xsl:when test="$Replacement/@msg-extra">
+            <xsl:value-of select="'INFO'"/>
           </xsl:when>
           <xsl:otherwise>
-            <xsl:value-of select="concat('dropping ', $Replacement/@what)"/>
+            <xsl:value-of select="'DEBUG'"/>
           </xsl:otherwise>
         </xsl:choose>
-        <xsl:if test="string($Replacement/@redefined-as)">
-          <xsl:value-of select="concat(', redefined as ',
-                                       $Replacement/@redefined-as)"/>
-          <xsl:if test="$Replacement/@in-case-of">
-            <xsl:value-of select="','"/>
-          </xsl:if>
-        </xsl:if>
+      </xsl:variable>
+      <xsl:variable name="MsgSeverityLabel">
         <xsl:choose>
-          <xsl:when test="string($Replacement/@in-case-of)">
-            <xsl:value-of select="concat(' for matching ',
-                                         $Replacement/@in-case-of)"/>
+          <xsl:when test="$MsgSeverity = 'WARNING'">
+            <xsl:value-of select="$cibtr:label-warning"/>
           </xsl:when>
-          <xsl:when test="$Replacement/@in-case-of">
-            <xsl:value-of select="' for matching &quot;empty string&quot;'"/>
+          <xsl:when test="$MsgSeverity = 'INFO'">
+            <xsl:value-of select="$cibtr:label-info"/>
           </xsl:when>
-          <xsl:when test="$Replacement/@in-case-of-droppable-prefix">
-            <xsl:value-of select="concat(' for matching ',
-                                    $Replacement/@in-case-of-droppable-prefix,
-                                    ' prefix that will, meanwhile, get dropped'
-                                  )"/>
+          <xsl:when test="$MsgSeverity = 'DEBUG'">
+            <xsl:value-of select="$cibtr:label-debug"/>
           </xsl:when>
+          <xsl:otherwise>
+            <xsl:message terminate="yes">
+              <xsl:value-of select="concat('INTERNAL ERROR: not a valid',
+                                           ' severity specification: ',
+                                           $MsgSeverity)"/>
+            </xsl:message>
+          </xsl:otherwise>
         </xsl:choose>
-      </xsl:message>
-      <xsl:if test="$Replacement/@msg-extra">
+      </xsl:variable>
+      <xsl:if test="string($MsgSeverityLabel) != string(false())">
         <xsl:message>
-          <xsl:value-of select="concat($MsgPrefix, '... ',
-                                       $Replacement/@msg-extra)"/>
+          <xsl:value-of select="concat($MsgSeverityLabel, $MsgPrefix)"/>
+          <xsl:if test="$Context">
+            <xsl:value-of select="concat($Context, ': ')"/>
+          </xsl:if>
+          <xsl:choose>
+            <xsl:when test="string($Replacement/@with)">
+              <xsl:choose>
+                <xsl:when test="string($Replacement/@where)">
+                  <xsl:if test="not(
+                                  contains(
+                                    concat('|', $Replacement/../@where-cases, '|'),
+                                    concat('|', $Replacement/@where, '|')
+                                  )
+                                )">
+                    <xsl:message terminate="yes">
+                      <xsl:value-of select="concat('INTERNAL ERROR:',
+                                                   $Replacement/../@msg-prefix,
+                                                   ': $Replacement/@where (',
+                                                   $Replacement/@where, ') not in ',
+                                                   concat('|',
+                                                   $Replacement/../@where-cases,
+                                                   '|'))"/>
+                    </xsl:message>
+                  </xsl:if>
+                  <xsl:value-of select="concat('moving ', $Replacement/@what,
+                                               ' under ', $Replacement/@where)"/>
+                </xsl:when>
+                <xsl:when test="$Replacement/@with = $Replacement/@what">
+                  <xsl:value-of select="concat('keeping ', $Replacement/@what)"/>
+                </xsl:when>
+                <xsl:otherwise>
+                  <xsl:value-of select="concat('renaming ', $Replacement/@what)"/>
+                </xsl:otherwise>
+              </xsl:choose>
+              <xsl:value-of select="concat(' as ', $Replacement/@with)"/>
+              <xsl:if test="$Replacement/@where">
+                <xsl:value-of select="' unless already defined there'"/>
+              </xsl:if>
+            </xsl:when>
+            <xsl:otherwise>
+              <xsl:value-of select="concat('dropping ', $Replacement/@what)"/>
+            </xsl:otherwise>
+          </xsl:choose>
+          <xsl:if test="string($Replacement/@redefined-as)">
+            <xsl:value-of select="concat(', redefined as ',
+                                         $Replacement/@redefined-as)"/>
+            <xsl:if test="$Replacement/@in-case-of">
+              <xsl:value-of select="','"/>
+            </xsl:if>
+          </xsl:if>
+          <xsl:choose>
+            <xsl:when test="string($Replacement/@in-case-of)">
+              <xsl:value-of select="concat(' for matching ',
+                                           $Replacement/@in-case-of)"/>
+            </xsl:when>
+            <xsl:when test="$Replacement/@in-case-of">
+              <xsl:value-of select="' for matching &quot;empty string&quot;'"/>
+            </xsl:when>
+            <xsl:when test="$Replacement/@in-case-of-droppable-prefix">
+              <xsl:value-of select="concat(' for matching ',
+                                      $Replacement/@in-case-of-droppable-prefix,
+                                      ' prefix that will, meanwhile, get dropped'
+                                    )"/>
+            </xsl:when>
+          </xsl:choose>
         </xsl:message>
+        <xsl:if test="$Replacement/@msg-extra">
+          <xsl:message>
+            <xsl:value-of select="concat($MsgSeverityLabel, $MsgPrefix, '... ',
+                                         $Replacement/@msg-extra)"/>
+          </xsl:message>
+        </xsl:if>
       </xsl:if>
     </xsl:otherwise>
   </xsl:choose>

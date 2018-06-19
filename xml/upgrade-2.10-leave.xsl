@@ -10,6 +10,7 @@
 		cibtr:filename="upgrade-2.10-leave.xsl">
 <xsl:output method="xml" encoding="UTF-8" indent="yes" omit-xml-declaration="yes"/>
 
+<xsl:param name="cibtr:label-debug"   select="'DEBUG: '"/>
 
 <!--
 
@@ -161,13 +162,16 @@
       </xsl:copy>
     </xsl:when>
     <xsl:when test="count($Original) = 0">
-      <xsl:message>
-        <xsl:value-of select="concat(name(), ': original element pointed to',
-                                     ' with @id-ref (',
-                                     substring-after(@id,
-                                                     $cibtr:WrapSpecificPrefixInitialRoot),
-                                     ') disappeared during upgrade')"/>
-      </xsl:message>
+      <xsl:if test="string($cibtr:label-debug) != string(false())">
+        <xsl:message>
+          <xsl:value-of select="concat($cibtr:label-debug, name(),
+                                       ': original element pointed to with',
+                                       ' @id-ref (',
+                                       substring-after(@id,
+                                                       $cibtr:WrapSpecificPrefixInitialRoot),
+                                       ') disappeared during upgrade')"/>
+        </xsl:message>
+      </xsl:if>
       <xsl:copy>
         <xsl:apply-templates select="@*|node()"
                              mode="cibtr:leave"/>

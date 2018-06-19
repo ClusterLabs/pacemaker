@@ -1,13 +1,13 @@
-Cluster properties: cluster-opts-cluster_recheck_interval: renaming cluster_recheck_interval as cluster-recheck-interval
-Cluster properties: cluster-opts-dc_deadtime: renaming dc_deadtime as dc-deadtime
-Cluster properties: cluster-opts-election_timeout: renaming election_timeout as election-timeout
-Cluster properties: cluster-opts-no_quorum_policy: renaming no_quorum_policy as no-quorum-policy
-Cluster properties: cluster-opts-remove_after_stop: renaming remove_after_stop as remove-after-stop
-Cluster properties: cluster-opts-shutdown_escalation: renaming shutdown_escalation as shutdown-escalation
-Cluster properties: cluster-opts-startup_fencing: renaming startup_fencing as startup-fencing
-Cluster properties: cluster-opts-stonith_action: renaming stonith_action as stonith-action
-Cluster properties: cluster-opts-stonith_enabled: renaming stonith_enabled as stonith-enabled
-Cluster properties: cluster-opts-stop_orphan_actions: renaming stop_orphan_actions as stop-orphan-actions
-Cluster properties: cluster-opts-stop_orphan_resources: renaming stop_orphan_resources as stop-orphan-resources
-Cluster properties: cluster-opts-symmetric_cluster: renaming symmetric_cluster as symmetric-cluster
-Cluster properties: cluster-opts-transition_idle_timeout: renaming transition_idle_timeout as cluster-delay
+DEBUG: Cluster properties: cluster-opts-cluster_recheck_interval: renaming cluster_recheck_interval as cluster-recheck-interval
+DEBUG: Cluster properties: cluster-opts-dc_deadtime: renaming dc_deadtime as dc-deadtime
+DEBUG: Cluster properties: cluster-opts-election_timeout: renaming election_timeout as election-timeout
+DEBUG: Cluster properties: cluster-opts-no_quorum_policy: renaming no_quorum_policy as no-quorum-policy
+DEBUG: Cluster properties: cluster-opts-remove_after_stop: renaming remove_after_stop as remove-after-stop
+DEBUG: Cluster properties: cluster-opts-shutdown_escalation: renaming shutdown_escalation as shutdown-escalation
+DEBUG: Cluster properties: cluster-opts-startup_fencing: renaming startup_fencing as startup-fencing
+DEBUG: Cluster properties: cluster-opts-stonith_action: renaming stonith_action as stonith-action
+DEBUG: Cluster properties: cluster-opts-stonith_enabled: renaming stonith_enabled as stonith-enabled
+DEBUG: Cluster properties: cluster-opts-stop_orphan_actions: renaming stop_orphan_actions as stop-orphan-actions
+DEBUG: Cluster properties: cluster-opts-stop_orphan_resources: renaming stop_orphan_resources as stop-orphan-resources
+DEBUG: Cluster properties: cluster-opts-symmetric_cluster: renaming symmetric_cluster as symmetric-cluster
+DEBUG: Cluster properties: cluster-opts-transition_idle_timeout: renaming transition_idle_timeout as cluster-delay

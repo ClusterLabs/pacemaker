@@ -1,3 +1,3 @@
-Cluster properties: cluster-opts-default-resource-failure-stickiness: moving default-resource-failure-stickiness under rsc_defaults as migration-threshold unless already defined there, redefined as 1, for matching -INFINITY
-Cluster properties: cluster-opts-default_resource_failure_stickiness: dropping default_resource_failure_stickiness
-Cluster properties: ... migration-threshold in rsc_defaults can be configured instead
+DEBUG: Cluster properties: cluster-opts-default-resource-failure-stickiness: moving default-resource-failure-stickiness under rsc_defaults as migration-threshold unless already defined there, redefined as 1, for matching -INFINITY
+INFO: Cluster properties: cluster-opts-default_resource_failure_stickiness: dropping default_resource_failure_stickiness
+INFO: Cluster properties: ... migration-threshold in rsc_defaults can be configured instead
