@@ -11,7 +11,7 @@
                 xmlns:exsl="http://exslt.org/common">
 <!-- NOTE: this is an exception from rule forbidding EXSLT's usage -->
 
-<xsl:include href="../upgrade-2.10.xsl"/>
+<xsl:include href="../upgrade-2.10-roundtrip.xsl"/>
 
 <!--
  we are embedding files from 3rd party project so as to reproduce the content
@@ -57,11 +57,10 @@
 
 <xsl:template match="/">
   <xsl:variable name="before-upgrade">
-    <xsl:apply-templates mode="identity"/>
+    <xsl:apply-templates select="." mode="identity"/>
   </xsl:variable>
-
   <xsl:variable name="after-upgrade">
-    <xsl:apply-templates mode="cibtr:main"/>
+    <xsl:apply-templates select="." mode="cibtr:roundtrip"/>
   </xsl:variable>
 
   <html>
