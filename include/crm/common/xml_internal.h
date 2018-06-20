@@ -57,6 +57,14 @@
  * as it's quite improbable.  Termination of the program in between the
  * same-message chunks will raise a flag with valgrind and the likes, though.
  *
+ * And lastly, regarding how dechunking combines with other non-message
+ * parameters -- for \p priority, most important running specification
+ * wins (possibly elevated to LOG_ERR in case of nonconformance with the
+ * newline-termination "protocol"), \p dechunk is expected to always be
+ * on once it was at the start, and the rest (\p postemit and \p prefix)
+ * are picked directly from the last chunk entry finalizing the message
+ * (also reasonable to always have it the same with all related entries).
+ *
  * \param[in] priority Syslog priority for the message to be logged
  * \param[in] dechunk  Whether to dechunk new-line terminated message
  * \param[in] postemit Code to be executed once message is sent out
@@ -75,19 +83,21 @@ do {                                                                            
         char *CXLB_buf = NULL;                                                  \
         static int CXLB_buffer_len = 0;                                         \
         static char *CXLB_buffer = NULL;                                        \
+        static uint8_t CXLB_priority = 0;                                       \
                                                                                 \
         CXLB_len = vasprintf(&CXLB_buf, (fmt), (ap));                           \
                                                                                 \
         if (CXLB_len <= 0 || CXLB_buf[CXLB_len - 1] == '\n' || !(dechunk)) {    \
             if (CXLB_len < 0) {                                                 \
                 CXLB_buf = (char *) "LOG CORRUPTION HAZARD"; /*we don't modify*/\
+                CXLB_priority = QB_MIN(CXLB_priority, LOG_ERR);                 \
             } else if (CXLB_len > 0 /* && (dechunk) */                          \
                        && CXLB_buf[CXLB_len - 1] == '\n') {                     \
                 CXLB_buf[CXLB_len - 1] = '\0';                                  \
             }                                                                   \
             if (CXLB_buffer) {                                                  \
                 qb_log_from_external_source(__FUNCTION__, __FILE__, "%s%s%s",   \
-                                            (priority), __LINE__, 0,            \
+                                            CXLB_priority, __LINE__, 0,         \
                                             (prefix) != NULL ? (prefix) : "",   \
                                             CXLB_buffer, CXLB_buf);             \
                 free(CXLB_buffer);                                              \
@@ -108,12 +118,14 @@ do {                                                                            
             CXLB_buffer_len = CXLB_len;                                         \
             CXLB_buffer = CXLB_buf;                                             \
             CXLB_buf = NULL;                                                    \
+            CXLB_priority = (priority);  /* remember as a running severest */   \
                                                                                 \
         } else {                                                                \
             CXLB_buffer = realloc(CXLB_buffer, 1 + CXLB_buffer_len + CXLB_len); \
             memcpy(CXLB_buffer + CXLB_buffer_len, CXLB_buf, CXLB_len);          \
             CXLB_buffer_len += CXLB_len;                                        \
             CXLB_buffer[CXLB_buffer_len] = '\0';                                \
+            CXLB_priority = QB_MIN(CXLB_priority, (priority));  /* severest? */ \
         }                                                                       \
         free(CXLB_buf);                                                         \
     }                                                                           \
