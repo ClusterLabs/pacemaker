@@ -726,13 +726,141 @@ static void
 cib_upgrade_err(void *ctx, const char *fmt, ...)
 G_GNUC_PRINTF(2, 3);
 
+/* With this arrangement, an attempt to identify the message severity
+   as explicitly signalled directly from XSLT is performed in rather
+   a smart way (no reliance on formatting string + arguments being
+   always specified as ["%s", purposeful_string], as it can also be
+   ["%s: %s", some_prefix, purposeful_string] etc. so every argument
+   pertaining %s specifier is investigated), and if such a mark found,
+   the respective level is determined and, when the messages are to go
+   to the native logs, the mark itself gets dropped
+   (by the means of string shift).
+
+   NOTE: whether the native logging is the right sink is decided per
+         the ctx parameter -- NULL denotes this case, otherwise it
+         carries a pointer to the numeric expression of the desired
+         target logging level (messages with higher level will be
+         suppressed)
+
+   NOTE: on some architectures, this string shift may not have any
+         effect, but that's an acceptable tradeoff
+
+   The logging level for not explicitly designated messages
+   (suspicious, likely internal errors or some runaways) is
+   LOG_WARNING.
+ */
 static void
 cib_upgrade_err(void *ctx, const char *fmt, ...)
 {
-    va_list ap;
+    va_list ap, aq;
+    char *arg_cur;
+
+    bool found = FALSE;
+    const char *fmt_iter = fmt;
+    uint8_t msg_log_level = LOG_WARNING;  /* default for runaway messages */
+    const unsigned * log_level = (const unsigned *) ctx;
+    enum {
+        escan_seennothing,
+        escan_seenpercent,
+    } scan_state = escan_seennothing;
 
     va_start(ap, fmt);
-    CRM_XML_LOG_BASE(LOG_WARNING, TRUE, 0, "CIB upgrade: ", fmt, ap);
+    va_copy(aq, ap);
+
+    while (!found && *fmt_iter != '\0') {
+        /* while casing schema borrowed from libqb:qb_vsnprintf_serialize */
+        switch (*fmt_iter++) {
+        case '%':
+            if (scan_state == escan_seennothing) {
+                scan_state = escan_seenpercent;
+            } else if (scan_state == escan_seenpercent) {
+                scan_state = escan_seennothing;
+            }
+            break;
+        case 's':
+            if (scan_state == escan_seenpercent) {
+                scan_state = escan_seennothing;
+                arg_cur = va_arg(aq, char *);
+                if (arg_cur != NULL) {
+                    switch (arg_cur[0]) {
+                    case 'W':
+                        if (!strncmp(arg_cur, "WARNING: ",
+                                     sizeof("WARNING: ") - 1)) {
+                            msg_log_level = LOG_WARNING;
+                        }
+                        if (ctx == NULL) {
+                            memmove(arg_cur, arg_cur + sizeof("WARNING: ") - 1,
+                                    strlen(arg_cur + sizeof("WARNING: ") - 1) + 1);
+                        }
+                        found = TRUE;
+                        break;
+                    case 'I':
+                        if (!strncmp(arg_cur, "INFO: ",
+                                     sizeof("INFO: ") - 1)) {
+                            msg_log_level = LOG_INFO;
+                        }
+                        if (ctx == NULL) {
+                            memmove(arg_cur, arg_cur + sizeof("INFO: ") - 1,
+                                    strlen(arg_cur + sizeof("INFO: ") - 1) + 1);
+                        }
+                        found = TRUE;
+                        break;
+                    case 'D':
+                        if (!strncmp(arg_cur, "DEBUG: ",
+                                     sizeof("DEBUG: ") - 1)) {
+                            msg_log_level = LOG_DEBUG;
+                        }
+                        if (ctx == NULL) {
+                            memmove(arg_cur, arg_cur + sizeof("DEBUG: ") - 1,
+                                    strlen(arg_cur + sizeof("DEBUG: ") - 1) + 1);
+                        }
+                        found = TRUE;
+                        break;
+                    }
+                }
+            }
+            break;
+        case '#': case '-': case ' ': case '+': case '\'': case 'I': case '.':
+        case '0': case '1': case '2': case '3': case '4':
+        case '5': case '6': case '7': case '8': case '9':
+        case '*':
+            break;
+        case 'l':
+        case 'z':
+        case 't':
+        case 'j':
+        case 'd': case 'i':
+        case 'o':
+        case 'u':
+        case 'x': case 'X':
+        case 'e': case 'E':
+        case 'f': case 'F':
+        case 'g': case 'G':
+        case 'a': case 'A':
+        case 'c':
+        case 'p':
+            if (scan_state == escan_seenpercent) {
+                (void) va_arg(aq, void *);  /* skip forward */
+                scan_state = escan_seennothing;
+            }
+            break;
+        default:
+            scan_state = escan_seennothing;
+            break;
+        }
+    }
+
+    if (log_level != NULL) {
+        /* intention of the following offset is:
+           cibadmin -V -> start showing INFO labelled messages */
+        if (*log_level + 4 >= msg_log_level) {
+            vfprintf(stderr, fmt, ap);
+        }
+    } else {
+        CRM_XML_LOG_BASE(msg_log_level, TRUE, 0, "CIB upgrade: ", fmt, ap);
+    }
+
+    va_end(aq);
     va_end(ap);
 }
 
@@ -780,7 +908,7 @@ apply_transformation(xmlNode *xml, const char *transform, gboolean to_logs)
     if (to_logs) {
         xsltSetGenericErrorFunc(NULL, cib_upgrade_err);
     } else {
-        xsltSetGenericErrorFunc((void *) stderr, (xmlGenericErrorFunc) fprintf);
+        xsltSetGenericErrorFunc(&crm_log_level, cib_upgrade_err);
     }
 
     xslt = xsltParseStylesheetFile((const xmlChar *)xform);

@@ -813,7 +813,7 @@ EOF
     test_assert $CRM_EX_OK
 
     desc="Upgrade to latest CIB schema (trigger 2.10.xsl + the wrapping)"
-    cmd="cibadmin --upgrade --force -V"
+    cmd="cibadmin --upgrade --force -V -V"
     test_assert $CRM_EX_OK
 
     desc="Query a resource instance attribute (shall survive)"
