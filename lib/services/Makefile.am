@@ -13,7 +13,7 @@ lib_LTLIBRARIES			= libcrmservice.la
 noinst_HEADERS			= pcmk-dbus.h upstart.h systemd.h \
 				  services_lsb.h services_private.h
 
-libcrmservice_la_LDFLAGS	= -version-info 8:1:0
+libcrmservice_la_LDFLAGS	= -version-info 28:0:0
 libcrmservice_la_CPPFLAGS	= -DOCF_ROOT_DIR=\"@OCF_ROOT_DIR@\" $(AM_CPPFLAGS)
 libcrmservice_la_CFLAGS		= $(GIO_CFLAGS)
 
