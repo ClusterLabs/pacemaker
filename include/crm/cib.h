@@ -60,7 +60,7 @@ enum cib_conn_type {
 /* *INDENT-OFF* */
 enum cib_call_options {
 	cib_none            = 0x00000000,
-	cib_verbose         = 0x00000001,
+	cib_verbose         = 0x00000001,  /* prefer stderr to logs */
 	cib_xpath           = 0x00000002,
 	cib_multiple        = 0x00000004,
 	cib_can_create      = 0x00000008,
