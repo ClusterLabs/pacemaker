@@ -366,18 +366,17 @@ pcmk_cpg_membership(cpg_handle_t handle,
         if(peer && peer->state && crm_is_peer_active(peer) == FALSE) {
             time_t now = time(NULL);
 
-            /* Co-opt the otherwise unused votes field */
-            if(peer->votes == 0) {
-                peer->votes = now;
+            if (peer->when_lost == 0) {
+                peer->when_lost = now;
 
-            } else if(now > (60 + peer->votes)) {
+            } else if (now > (peer->when_lost + 60)) {
                 /* On the other hand, if we're still getting messages, at a
                  * certain point we need to acknowledge our internal cache is
                  * probably wrong. Use 1 minute.
                  */
                 crm_err("Node %s[%u] appears to be online even though we think it is dead", peer->uname, peer->id);
                 if (crm_update_peer_state(__FUNCTION__, peer, CRM_NODE_MEMBER, 0)) {
-                    peer->votes = 0;
+                    peer->when_lost = 0;
                 }
             }
         }
