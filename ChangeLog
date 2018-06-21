@@ -1,3 +1,52 @@
+* Wed Jun 20 2018 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.19-rc1
+- Update source tarball to revision: ca6cf19
+- Changesets: 165
+- Diff:       96 files changed, 3636 insertions(+), 2318 deletions(-)
+
+- Features added since Pacemaker-1.1.18
+  + This is a maintenance release with selected changes backported from 2.0.0
+  + fencing: add stonith_admin --validate option
+  + pengine: deprecate stonith-action=poweroff
+  + libcrmservice: support mount, path, and timer systemd unit types
+
+- Changes since Pacemaker-1.1.18
+  + Restore systemd unit dependency on DBus (regression in 1.1.17)
+  + cib: handle mixed-case node names when modifying attributes (regression in 1.1.17)
+  + attrd: ensure node name is broadcast at start-up (regression in 1.1.18)
+  + pengine: unfence before probing or starting fence devices (regression in 1.1.18)
+  + tools: crm_master did not work without explicit --lifetime (regression in 1.1.18)
+  + all: prefer appropriate node when multiply active
+  + crmd: always write faked failures to CIB whenever possible
+  + crmd: avoid double free after ACL rejection of resource delete
+  + crmd: delete resource from lrmd when appropriate
+  + crmd: match only executed down events
+  + lrmd: handle systemd actions correctly when used with "service:"
+  + lrmd: always use most recent remote proxy
+  + pengine: find active instances properly according to requires
+  + pengine: fix precedence of operation meta-attributes
+  + pengine: handle unique bundle children correctly
+  + pengine: use correct default timeout for monitors and probes
+  + pengine: avoid potential use-of-NULL in unpack_simple_rsc_order()
+  + pengine: ensure stop operations occur after stopped remote connections have been brought up
+  + pengine: fix swapped warning message arguments leading to segfault
+  + pengine: only allowed nodes need to be considered when ordering resource startup after _all_ recovery
+  + pengine: ordering bundle child stops/demotes after container fencing causes graph loops
+  + pengine: passing boolean instead of a pointer
+  + pengine: remote connection resources are safe to to require only quorum
+  + pengine: correctly observe colocation constraints with bundles in the Master role
+  + pengine: do not perform notifications for events that can't be executed
+  + pengine: ensure failures that cause fencing are not removed until after fencing completes
+  + pengine: ensure orphaned recurring monitors have interval set
+  + libcrmcluster: avoid use-of-NULL when searching for remote node
+  + libcrmcommon: don't record pending notify actions as completed
+  + libcrmservice: find absolute paths when used with "service:"
+  + tools: crm_simulate -Ls should show promotion scores
+  + tools: prevent notify actions from causing crm_resource --wait to hang
+  + tools: ignore attribute placement when crm_diff compares in cib mode
+  + tools: cibsecret --help/--version doesn't require cluster to be running
+  + tools: crm_node -n/-N/-i should work on Pacemaker Remote nodes
+  + tools: treat INFINITY correctly in crm_failcount
+
 * Tue Nov 14 2017 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.18-1
 - Update source tarball to revision: a9fbd15
 - Changesets: 644

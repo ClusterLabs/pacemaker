@@ -9,7 +9,7 @@ include $(top_srcdir)/Makefile.common
 
 lib_LTLIBRARIES		= libstonithd.la
 
-libstonithd_la_LDFLAGS	= -version-info 4:4:2
+libstonithd_la_LDFLAGS	= -version-info 5:0:3
 
 libstonithd_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libstonithd_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
