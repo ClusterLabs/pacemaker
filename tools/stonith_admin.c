@@ -347,7 +347,7 @@ static int
 show_history(stonith_t *st, const char *target, int timeout, int quiet,
              int verbose)
 {
-    stonith_history_t *history, *hp, *latest = NULL;
+    stonith_history_t *history = NULL, *hp, *latest = NULL;
     int rc = 0;
 
     rc = st->cmds->history(st, st_opts,
@@ -395,6 +395,8 @@ show_history(stonith_t *st, const char *target, int timeout, int quiet,
             print_fence_event(latest);
         }
     }
+
+    stonith_history_free(history);
     return rc;
 }
 
