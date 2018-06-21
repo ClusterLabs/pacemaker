@@ -1441,6 +1441,19 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
     return rc;
 }
 
+void stonith_history_free(stonith_history_t *history)
+{
+    stonith_history_t *hp, *hp_old;
+
+    for (hp = history; hp; hp_old = hp, hp = hp->next, free(hp_old)) {
+        free(hp->target);
+        free(hp->action);
+        free(hp->origin);
+        free(hp->delegate);
+        free(hp->client);
+    }
+}
+
 /*!
  * \brief Deprecated (use stonith_get_namespace() instead)
  */
@@ -2494,7 +2507,7 @@ stonith_api_time(uint32_t nodeid, const char *uname, bool in_progress)
 
     time_t when = 0;
     stonith_t *st = NULL;
-    stonith_history_t *history, *hp = NULL;
+    stonith_history_t *history = NULL, *hp = NULL;
     enum stonith_call_options opts = st_opt_sync_call;
 
     st = stonith_api_new();
@@ -2535,6 +2548,8 @@ stonith_api_time(uint32_t nodeid, const char *uname, bool in_progress)
                 }
             }
         }
+
+        stonith_history_free(history);
 
         if(rc == pcmk_ok) {
             api_log(LOG_INFO, "Found %d entries for %u/%s: %d in progress, %d completed", entries, nodeid, uname, progress, completed);

@@ -427,6 +427,8 @@ stonith_key_value_t *stonith_key_value_add(stonith_key_value_t * kvp, const char
                                            const char *value);
 void stonith_key_value_freeall(stonith_key_value_t * kvp, int keys, int values);
 
+void stonith_history_free(stonith_history_t *history);
+
 /* Basic helpers that allows nodes to be fenced and the history to be
  * queried without mainloop or the caller understanding the full API
  *
