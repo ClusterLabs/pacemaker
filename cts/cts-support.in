@@ -28,6 +28,8 @@ DATA_DIR="@datadir@/pacemaker/tests/cts"
 DUMMY_DAEMON="pacemaker-cts-dummyd"
 DUMMY_DAEMON_UNIT="pacemaker-cts-dummyd@.service" 
 
+LSB_DUMMY="LSBDummy"
+
 # If the install directory doesn't exist, assume we're in a build directory.
 if [ ! -d "$DATA_DIR" ]; then
     # If readlink supports -e (i.e. GNU), use it.
@@ -62,7 +64,10 @@ support_uninstall() {
         systemctl daemon-reload # Ignore failure
     fi
 
-    for FILE in "$LIBEXEC_DIR/$DUMMY_DAEMON"; do
+    for FILE in \
+        "$LIBEXEC_DIR/$DUMMY_DAEMON" \
+        "$INIT_DIR/$LSB_DUMMY"
+    do
         if [ -e "$FILE" ]; then
             echo "Removing $FILE ..."
             rm -f "$FILE"
@@ -85,6 +90,11 @@ support_install() {
         install -m 0644 "$DUMMY_DAEMON_UNIT" "$UNIT_DIR" || return $CRM_EX_ERROR
         systemctl daemon-reload # Ignore failure
     fi
+
+    echo "Installing $LSB_DUMMY to $INIT_DIR ..."
+    mkdir -p "$INIT_DIR"
+    install -m 0755 "$LSB_DUMMY" "$INIT_DIR" || return $CRM_EX_ERROR
+
     return $CRM_EX_OK
 }
 

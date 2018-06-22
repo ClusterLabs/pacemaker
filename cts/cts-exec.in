@@ -557,22 +557,14 @@ done
         write_file(SBIN_DIR + "/fence_dummy_sleep", dummy_fence_sleep_agent, executable=True);
         write_file(SBIN_DIR + "/fence_dummy_monitor", dummy_fence_agent, executable=True);
 
-        if os.path.exists("%s/cts/LSBDummy" % BUILD_DIR):
-            os.system("cp %s/cts/LSBDummy /etc/init.d/LSBDummy" % BUILD_DIR)
-
+        # If we're in build directory, OCF agents aren't already installed
+        if os.path.exists("%s/cts/cts-exec.in" % BUILD_DIR):
             if not os.path.exists("@OCF_RA_DIR@/pacemaker"):
                 os.system("mkdir -p @OCF_RA_DIR@/pacemaker/")
-
-            # Install helper OCF agents
             for agent in ["Dummy", "Stateful", "ping"]:
                 os.system("cp %s/extra/resources/%s @OCF_RA_DIR@/pacemaker/%s" % (BUILD_DIR, agent, agent))
                 os.system("chmod a+x @OCF_RA_DIR@/pacemaker/%s" % (agent))
 
-        else:
-            # Assume it's installed
-            os.system("cp @datadir@/@PACKAGE@/tests/cts/LSBDummy /etc/init.d/LSBDummy")
-
-        os.system("chmod a+x /etc/init.d/LSBDummy")
         subprocess.call(["cts-support", "install"])
 
     def cleanup_test_environment(self):
@@ -581,7 +573,6 @@ done
         if self.need_authkey:
             os.system("rm -f /etc/pacemaker/authkey")
 
-        os.system("rm -f /etc/init.d/LSBDummy")
         os.system("rm -f " + SBIN_DIR + "/fence_dummy_monitor")
         os.system("rm -f " + SBIN_DIR + "/fence_dummy_sleep")
         subprocess.call(["cts-support", "uninstall"])
