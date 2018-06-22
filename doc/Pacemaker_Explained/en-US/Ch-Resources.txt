@@ -292,9 +292,9 @@ are specific to each resource agent.
 
 === Resource Meta-Attributes ===
 
-Meta-attributes are used by the cluster to decide how a resource should
-behave and can be easily set using the `--meta` option of the
-`crm_resource` command.
+Meta-attributes establish an administrative entry for adjusting how the given
+resource(s) shall be carried out within the cluster depending on circumstances.
+They can be easily set using the `--meta` option of the `crm_resource` command.
 
 .Meta-attributes of a Primitive Resource
 [width="95%",cols="2m,2,5<a",options="header",align="center"]
