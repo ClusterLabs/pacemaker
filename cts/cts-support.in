@@ -24,11 +24,13 @@ UNIT_DIR="@systemdunitdir@"
 LIBEXEC_DIR="@libexecdir@/pacemaker"
 INIT_DIR="@INITDIR@"
 DATA_DIR="@datadir@/pacemaker/tests/cts"
+UPSTART_DIR="/etc/init"
 
 DUMMY_DAEMON="pacemaker-cts-dummyd"
 DUMMY_DAEMON_UNIT="pacemaker-cts-dummyd@.service" 
 
 LSB_DUMMY="LSBDummy"
+UPSTART_DUMMY="pacemaker-cts-dummyd.conf"
 
 # If the install directory doesn't exist, assume we're in a build directory.
 if [ ! -d "$DATA_DIR" ]; then
@@ -66,6 +68,7 @@ support_uninstall() {
 
     for FILE in \
         "$LIBEXEC_DIR/$DUMMY_DAEMON" \
+        "$UPSTART_DIR/$UPSTART_DUMMY" \
         "$INIT_DIR/$LSB_DUMMY"
     do
         if [ -e "$FILE" ]; then
@@ -95,6 +98,10 @@ support_install() {
     mkdir -p "$INIT_DIR"
     install -m 0755 "$LSB_DUMMY" "$INIT_DIR" || return $CRM_EX_ERROR
 
+    if [ -d "$UPSTART_DIR" -a -f "$UPSTART_DUMMY" ]; then
+        echo "Installing $UPSTART_DUMMY to $UPSTART_DIR ..."
+        install -m 0644 "$UPSTART_DUMMY" "$UPSTART_DIR" || return $CRM_EX_ERROR
+    fi
     return $CRM_EX_OK
 }
 
