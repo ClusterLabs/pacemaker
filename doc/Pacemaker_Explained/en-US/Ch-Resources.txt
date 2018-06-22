@@ -292,9 +292,31 @@ are specific to each resource agent.
 
 === Resource Meta-Attributes ===
 
-Meta-attributes are used by the cluster to decide how a resource should
-behave and can be easily set using the `--meta` option of the
-`crm_resource` command.
+Meta-attributes establish an administrative entry for adjusting how the given
+resource(s) shall be carried out within the cluster depending on circumstances.
+They can be easily set using the `--meta` option of the `crm_resource` command.
+
+Beside those that Pacemaker responds to directly (listed in the table below),
+users can also set their own meta-attributes, either for merely administrative
+tracking of some sort, or as a comparison target (using +meta:+ prefix) in
+<<s-rules-nodeattrexprs-valuesource,+value-source+ node attribute expression>>.
+
+It's not hard to see this asks for collision issues in case future versions of
+Pacemaker happen to pick new names for native meta-attributes, simply because
+they weren't claimed before, and in turn, used to be free-to-posses with
+application-specific use.  To resolve this conflict, Pacemaker since version 2
+mandates any such application-specific meta-attributes to start with +x-+
+prefix.  Note that +X-+, as well as underscored variants +x_+, +X_+ are
+reserved at this time and not supported in any way, however, as the exact
+semantics hasn't been firmly settled, it's wise to complete the designated
+meta-attribute's prefix only with valid +C+ language identifiers to ensure
+the best forward compatibility.  Speaking of the naming conventions, now
+educated about the described namespace clash hazard and extrapolating, multiple
+application-specific annotations like this may eventually clash as well.
+Hence the suggested format for naming these is +x-appname_attrname+.
+Consequently, a special +appname+ in this scheme is reserved (shall not be
+reused by any other application) -- +constraints+, which is dedicated to
+said +value-source+ arrangement in the compatible constraints.
 
 .Meta-attributes of a Primitive Resource
 [width="95%",cols="2m,2,5<a",options="header",align="center"]
