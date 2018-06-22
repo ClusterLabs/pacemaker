@@ -203,6 +203,56 @@
                 </element>
             </optional>
             <optional>
+                <element name="fence_history">
+                    <zeroOrMore>
+                        <element name="fence_event">
+                            <!-- node to be fenced -->
+                            <attribute name="target"> <text/> </attribute>
+                            <!-- reboot, on, off -->
+                            <attribute name="action"> <text/> </attribute>
+                            <!-- failed, success, pending -->
+                            <attribute name="state"> <text/> </attribute>
+                            <optional>
+                                <!-- node from where action was triggered -->
+                                <attribute name="origin"> <text/> </attribute>
+                            </optional>
+                            <optional>
+                                <!-- originating entity on triggering node -->
+                                <attribute name="client"> <text/> </attribute>
+                            </optional>
+                            <optional>
+                                <!-- node the action is executed on -->
+                                <attribute name="delegate"> <text/> </attribute>
+                            </optional>
+                            <optional>
+                                <!-- stamp when action was declared failed or success -->
+                                <attribute name="completed"> <text/> </attribute>
+                            </optional>
+                            <optional>
+                                <!-- especially interesting in the pending case -->
+                                <attribute name="started"> <text/> </attribute>
+                            </optional>
+                            <optional>
+                                <!-- in case output is reduced to most recent -->
+                                <attribute name="last-failed"> <text/> </attribute>
+                            </optional>
+                            <optional>
+                                <!-- in case output is reduced to most recent -->
+                                <attribute name="last-successful"> <text/> </attribute>
+                            </optional>
+                            <optional>
+                                <!-- why was the fencing action triggered -->
+                                <attribute name="exec-reason"> <text/> </attribute>
+                            </optional>
+                            <optional>
+                                <!-- details on the execution like failure reason -->
+                                <attribute name="exec-details"> <text/> </attribute>
+                            </optional>
+                        </element>
+                    </zeroOrMore>
+                </element>
+            </optional>
+            <optional>
                 <element name="tickets">
                     <zeroOrMore>
                         <element name="ticket">
