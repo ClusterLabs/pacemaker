@@ -131,7 +131,8 @@ attributes defined by a node or nodes.
 
 |value-source
 |+literal+
-|How the +value+ is derived. Allowed values:
+| [[s-rules-nodeattrexprs-valuesource]]
+How the +value+ is derived. Allowed values:
 
 * +literal+: +value+ is a literal string to compare against
 * +param+: +value+ is the name of a resource parameter to compare against (only
