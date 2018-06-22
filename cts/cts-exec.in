@@ -570,9 +570,6 @@ done
         os.system("rm -f " + SBIN_DIR + "/fence_dummy_sleep")
         subprocess.call(["cts-support", "uninstall"])
 
-        if os.path.exists("/bin/systemctl"):
-            os.system("systemctl daemon-reload")
-
     def build_generic_tests(self):
         """ Register tests that apply to all resource classes """
 
