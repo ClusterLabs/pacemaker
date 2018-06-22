@@ -56,17 +56,17 @@ must_be_root() {
 support_uninstall() {
     must_be_root || return $CRM_EX_ERROR
 
-    if [ -d "$UNIT_DIR" ]; then
-        for FILE in  "$UNIT_DIR/$DUMMY_DAEMON_UNIT"; do
-            echo "Removing $FILE ..."
-            rm -f "$UNIT_DIR/$DUMMY_DAEMON_UNIT"
-        done
+    if [ -e "$UNIT_DIR/$DUMMY_DAEMON_UNIT" ]; then
+        echo "Removing $UNIT_DIR/$DUMMY_DAEMON_UNIT ..."
+        rm -f "$UNIT_DIR/$DUMMY_DAEMON_UNIT"
         systemctl daemon-reload # Ignore failure
     fi
 
     for FILE in "$LIBEXEC_DIR/$DUMMY_DAEMON"; do
-        echo "Removing $FILE ..."
-        rm -f "$FILE"
+        if [ -e "$FILE" ]; then
+            echo "Removing $FILE ..."
+            rm -f "$FILE"
+        fi
     done
 
     return $CRM_EX_OK
