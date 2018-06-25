@@ -1,4 +1,20 @@
-* Thu May 31 2018 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.0-1
+* Tue Jun 26 2018 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.0-rc6
+- Changesets: 98
+- Diff:       100 files changed, 3604 insertions(+), 1318 deletions(-)
+
+- Features added since Pacemaker-2.0.0-rc5
+  + Pre-2.0.0 configurations will be transformed automatically to new syntax
+  + mount, path, and timer systemd unit types are now supported as resources
+  + tools: add stonith_admin --validate option to check device configuration
+
+- Changes since Pacemaker-2.0.0-rc5
+  + tools: treat INFINITY correctly in crm_failcount (regression in 1.1.17)
+  + tools: show master scores with crm_simulate -sL (regression in 1.1.18)
+  + tools: clean up memory of stonith history in stonith_admin
+  + tools: crm_node now gets correct node name and ID on Pacemaker Remote nodes
+  + tools: crm_node is now in the pacemaker-cli package
+
+* Thu May 31 2018 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.0-rc5
 - Update source tarball to revision: 364dfc4
 - Changesets: 54
 - Diff:       66 files changed, 2808 insertions(+), 723 deletions(-)
