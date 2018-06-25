@@ -1,1 +1,1 @@
-Resources-operation: myAddr-start (rsc=myAddr): moving requires under meta_attributes as requires unless already defined there for matching start|promote
+DEBUG: Resources-operation: myAddr-start (rsc=myAddr): moving requires under meta_attributes as requires unless already defined there for matching start|promote

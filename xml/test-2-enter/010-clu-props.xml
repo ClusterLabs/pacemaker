@@ -1,0 +1,15 @@
+<cib validate-with="pacemaker-2.0" admin_epoch="0" epoch="0" num_updates="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cluster-opts">
+        <nvpair id="cluster-opts-stonith_enabled" name="stonith_enabled" value="off"/>
+      </cluster_property_set>
+      <!-- this doesn't make any sense, i.e., a design flaw -->
+      <cluster_property_set id-ref="cluster-opts"/>
+    </crm_config>
+    <nodes/>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>

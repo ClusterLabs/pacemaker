@@ -1,0 +1,39 @@
+<?xml-stylesheet href="../assets/upgrade-2.10-htmldiff.xsl" type="text/xsl"?>
+<cib validate-with="pacemaker-2.0" admin_epoch="0" epoch="0" num_updates="0">
+  <configuration>
+    <crm_config/>
+    <nodes>
+
+      <node id="virt-063" uname="virt-063"/>
+      <node id="virt-064" uname="virt-064"/>
+      <node id="virt-069" uname="virt-069"/>
+
+    </nodes>
+    <resources>
+
+      <primitive id="mySmartFuse" class="ocf" provider="experiment" type="SmartFuse">
+        <operations>
+          <op id="mySmartFuse-start" name="start" interval="0" timeout="40s"/>
+          <op id="mySmartFuse-monitor-inputpower" name="monitor" interval="30s">
+            <instance_attributes id="mySmartFuse-inputpower-instanceparams">
+              <nvpair id="mySmartFuse-inputpower-requires" name="requires" value="inputpower"/>
+            </instance_attributes>
+          </op>
+          <op id="mySmartFuse-monitor-outputpower" name="monitor" interval="2s">
+            <instance_attributes id="mySmartFuse-outputpower-instanceparams">
+              <nvpair id="mySmartFuse-outputpower-requires" name="requires" value="outputpower"/>
+            </instance_attributes>
+          </op>
+        </operations>
+        <instance_attributes id="mySmartFuse-params">
+          <nvpair id="mySmartFuse-params-ip" name="ip" value="192.0.2.10"/>
+        </instance_attributes>
+        <!-- a bit hairy but valid -->
+        <instance_attributes id-ref="mySmartFuse-outputpower-instanceparams"/>
+      </primitive>
+
+    </resources>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>

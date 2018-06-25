@@ -1,2 +1,2 @@
-Resources-operation instance_attributes: myAddr-stop (rsc=myAddr, meta=myAddr-stop-instanceparams): dropping requires
-Resources-operation instance_attributes: ... only start/promote operation taken into account
+INFO: Resources-operation instance_attributes: myAddr-stop (rsc=myAddr, meta=myAddr-stop-instanceparams): dropping requires
+INFO: Resources-operation instance_attributes: ... only start/promote operation taken into account

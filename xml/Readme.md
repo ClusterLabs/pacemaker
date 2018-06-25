@@ -88,6 +88,25 @@ and consequently, no longer expected names became systemically banned
 in the after-upgrade schemas, using `<except>` construct in the
 data type specification pertaining the affected XML path.
 
+The implied complexity also resulted in establishing a new compound,
+stepwise transformation, alleviating the procedural burden from the
+core upgrade recipe.  In particular, `id-ref` based syntactic
+simplification granted in the CIB format introduces nonnegligible
+internal "noise" because of the extra indirection encumbered with
+generally non-bijective character of such a scheme (context-dependent
+interpretation).  To reduce this strain, a symmetric arrangement is
+introduced as a pair of _enter_/_leave_ (pre-upgrade/post-upgrade)
+transformations where the latter is meant to eventually reversibly
+restore what the former intentionally simplified (normalized) for
+upgrade transformation's peruse.  It's optional (even the post-upgrade
+counterpart is optional alone) and depends on whether the suitable
+files are found along the upgrade transformation itself: e.g., for
+`upgrade-2.10.xsl`, such files are `upgrade-2.10-enter.xsl` and
+`upgrade-2.10-leave.xsl`.  Note that unfolding + refolding `id-ref`
+shortcuts is just a practically imposed individual case of how to
+reversibly make the configuration space tractable in the upgrade
+itself, allowing for more sophistication down the road.
+
 ### General Procedure
 
 1. Copy the most recent version of `${base}-*.rng` to `${base}-${X}.${Y}.rng` 
