@@ -89,6 +89,16 @@ static struct crm_option long_options[] = {
     {   "query", required_argument, NULL, 'Q',
         "Check the named device's status. Optional: --timeout."
     },
+    {   "history", required_argument, NULL, 'H',
+        "Show last successful fencing operation for named node\n"
+        "\t\t\t(or '*' for all nodes). Optional: --timeout, --quiet\n"
+        "\t\t\t(show only the operation's epoch timestamp),\n"
+        "\t\t\t--verbose (show all recorded and pending operations)."
+    },
+    {   "last", required_argument, NULL, 'h',
+        "Indicate when the named node was last fenced.\n"
+        "\t\t\tOptional: --as-node-id."
+    },
     {   "validate", no_argument, NULL, 'K',
         "\tValidate a fence device configuration.\n"
         "\t\t\tRequires: --agent. Optional: --option, --env-option,\n"
@@ -108,16 +118,6 @@ static struct crm_option long_options[] = {
     },
     {   "confirm", required_argument, NULL, 'C',
         "Tell cluster that named host is now safely down."
-    },
-    {   "history", required_argument, NULL, 'H',
-        "Show last successful fencing operation for named node\n"
-        "\t\t\t(or '*' for all nodes). Optional: --timeout, --quiet\n"
-        "\t\t\t(show only the operation's epoch timestamp),\n"
-        "\t\t\t--verbose (show all recorded and pending operations)."
-    },
-    {   "last", required_argument, NULL, 'h',
-        "Indicate when the named node was last fenced.\n"
-        "\t\t\tOptional: --as-node-id."
     },
 
     {   "-spacer-", no_argument, NULL, '-', "\nAdditional Options:" },
