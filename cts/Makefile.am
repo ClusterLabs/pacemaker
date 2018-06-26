@@ -39,11 +39,12 @@ ctslib_PYTHON	=	__init__.py		\
 			watcher.py
 
 ctsdir		= 	$(testdir)/cts
-cts_DATA	=	cts.supp		\
-			pacemaker-cts-dummyd@.service
+cts_DATA	=	pacemaker-cts-dummyd@.service
+
 if BUILD_UPSTART
 cts_DATA	+=	pacemaker-cts-dummyd.conf
 endif
+
 cts_SCRIPTS	=	cts			\
 			CTSlab.py		\
 			lxc_autogen.sh		\
