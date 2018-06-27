@@ -39,8 +39,12 @@ ctslib_PYTHON	=	__init__.py		\
 			watcher.py
 
 ctsdir		= 	$(testdir)/cts
-cts_DATA	=	cts.supp		\
-			pacemaker-cts-dummyd@.service
+cts_DATA	=	pacemaker-cts-dummyd@.service
+
+if BUILD_UPSTART
+cts_DATA	+=	pacemaker-cts-dummyd.conf
+endif
+
 cts_SCRIPTS	=	cts			\
 			CTSlab.py		\
 			lxc_autogen.sh		\
@@ -50,7 +54,8 @@ cts_SCRIPTS	=	cts			\
 
 clidir		= $(testdir)/cli
 cli_DATA	= cli/regression.dates.exp cli/regression.tools.exp \
-		  cli/regression.acls.exp cli/regression.validity.exp
+		  cli/regression.acls.exp cli/regression.validity.exp \
+		  cli/regression.upgrade.exp
 
 PE_TESTS	= $(wildcard scheduler/*.scores)
 pedir		= $(testdir)/scheduler

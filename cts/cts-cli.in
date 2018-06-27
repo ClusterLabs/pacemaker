@@ -16,7 +16,7 @@ USAGE_TEXT="Usage: cts-cli [<options>]
 Options:
  --help          Display this text, then exit
  -V, --verbose   Display any differences from expected output
- -t 'TEST [...]' Run only specified tests (default: 'dates tools acls validity')
+ -t 'TEST [...]' Run only specified tests (default: 'dates tools acls validity upgrade')
  -p DIR          Look for executables in DIR (may be specified multiple times)
  -v, --valgrind  Run all commands under valgrind
  -s              Save actual output as expected output"
@@ -35,7 +35,7 @@ num_errors=0
 num_passed=0
 GREP_OPTIONS=
 verbose=0
-tests="dates tools acls validity"
+tests="dates tools acls validity upgrade"
 do_save=0
 VALGRIND_CMD=
 VALGRIND_OPTS="
@@ -706,7 +706,7 @@ function test_validity() {
 
     $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow --validate-with pacemaker-1.2 2>&1
     export CIB_shadow=$shadow
-    export PCMK_trace_functions=update_validation,cli_config_update
+    export PCMK_trace_functions=apply_upgrade,update_validation,cli_config_update
     export PCMK_stderr=1
 
     cibadmin -C -o resources --xml-text '<primitive id="dummy1" class="ocf" provider="pacemaker" type="Dummy"/>'
@@ -772,6 +772,58 @@ function test_validity() {
     rm -f "$TMPGOOD" "$TMPBAD"
 }
 
+test_upgrade() {
+    local TMPXML=$(mktemp ${TMPDIR:-/tmp}/cts-cli.tools.xml.XXXXXXXXXX)
+    export CIB_shadow_dir="${shadow_dir}"
+
+    $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow --validate-with pacemaker-2.10 2>&1
+    export CIB_shadow=$shadow
+
+    desc="Set stonith-enabled=false"
+    cmd="crm_attribute -n stonith-enabled -v false"
+    test_assert $CRM_EX_OK
+
+    cat <<EOF > "$TMPXML"
+    <resources>
+      <primitive id="mySmartFuse" class="ocf" provider="experiment" type="SmartFuse">
+        <operations>
+          <op id="mySmartFuse-start" name="start" interval="0" timeout="40s"/>
+          <op id="mySmartFuse-monitor-inputpower" name="monitor" interval="30s">
+            <instance_attributes id="mySmartFuse-inputpower-instanceparams">
+              <nvpair id="mySmartFuse-inputpower-requires" name="requires" value="inputpower"/>
+            </instance_attributes>
+          </op>
+          <op id="mySmartFuse-monitor-outputpower" name="monitor" interval="2s">
+            <instance_attributes id="mySmartFuse-outputpower-instanceparams">
+              <nvpair id="mySmartFuse-outputpower-requires" name="requires" value="outputpower"/>
+            </instance_attributes>
+          </op>
+        </operations>
+        <instance_attributes id="mySmartFuse-params">
+          <nvpair id="mySmartFuse-params-ip" name="ip" value="192.0.2.10"/>
+        </instance_attributes>
+	<!-- a bit hairy but valid -->
+        <instance_attributes id-ref="mySmartFuse-outputpower-instanceparams"/>
+      </primitive>
+    </resources>
+EOF
+
+    desc="Configure the initial resource"
+    cmd="cibadmin -M -o resources --xml-file $TMPXML"
+    test_assert $CRM_EX_OK
+
+    desc="Upgrade to latest CIB schema (trigger 2.10.xsl + the wrapping)"
+    cmd="cibadmin --upgrade --force -V -V"
+    test_assert $CRM_EX_OK
+
+    desc="Query a resource instance attribute (shall survive)"
+    cmd="crm_resource -r mySmartFuse -g requires"
+    test_assert $CRM_EX_OK
+
+    unset CIB_shadow_dir
+    rm -f "$TMPXML"
+}
+
 # Process command-line arguments
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -815,6 +867,7 @@ for t in $tests; do
         tools) ;;
         acls) ;;
         validity) ;;
+        upgrade) ;;
         *)
             echo "error: unknown test $t"
             echo
@@ -850,6 +903,7 @@ for t in $tests; do
         -e 's/.*\(__xml_.*\)@.*\.c:[0-9][0-9]*)/\1/g' \
         -e 's/.*\(unpack_.*\)@.*\.c:[0-9][0-9]*)/\1/g' \
         -e 's/.*\(update_validation\)@.*\.c:[0-9][0-9]*)/\1/g' \
+        -e 's/.*\(apply_upgrade\)@.*\.c:[0-9][0-9]*)/\1/g' \
         -e 's/ last-rc-change=\"[0-9]*\"//'\
         -e 's|^/tmp/cts-cli\.validity\.bad.xml\.[^:]*:|validity.bad.xml:|'\
         -e 's/^Entity: line [0-9][0-9]*: //'\

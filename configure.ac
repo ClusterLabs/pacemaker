@@ -995,6 +995,7 @@ if test "$ac_cv_header_stonith_stonith_h" = "yes";  then
     AC_CHECK_LIB(plumb, G_main_add_IPC_Channel)
     PCMK_FEATURES="$PCMK_FEATURES lha-fencing"
 fi
+AM_CONDITIONAL([BUILD_LHA_SUPPORT], [test "$ac_cv_header_stonith_stonith_h" = "yes"])
 
 dnl ===============================================
 dnl Variables needed for substitution

@@ -83,7 +83,8 @@ class crm_common(ClusterManager):
         self.partitions_expected = 1
         for node in self.Env["nodes"]:
             self.ShouldBeStatus[node] = ""
-            self.unisolate_node(node)
+            if self.Env["experimental-tests"]:
+                self.unisolate_node(node)
             self.StataCM(node)
 
     def test_node_CM(self, node):

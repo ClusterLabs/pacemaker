@@ -336,7 +336,8 @@ class ClusterManager(UserDict):
             else:
                 self.ShouldBeStatus[node] = "down"
 
-            self.unisolate_node(node)
+            if self.Env["experimental-tests"]:
+                self.unisolate_node(node)
 
     def upcount(self):
         '''How many nodes are up?'''
@@ -509,22 +510,10 @@ class ClusterManager(UserDict):
             self.logger.log ("%s was already started" % (node))
             return 1
 
-        if not(self.Env["valgrind-tests"]):
-            startCmd = self.templates["StartCmd"]
-        else:
-            if self.Env["valgrind-prefix"]:
-                prefix = self.Env["valgrind-prefix"]
-            else:
-                prefix = "cts"
-
-            startCmd = """G_SLICE=always-malloc HA_VALGRIND_ENABLED='%s' VALGRIND_OPTS='%s --log-file=/tmp/%s-%s.valgrind' %s""" % (
-                self.Env["valgrind-procs"], self.Env["valgrind-opts"], prefix, """%p""", self.templates["StartCmd"])
-
         stonith = self.prepare_fencing_watcher(node)
-
         watch.setwatch()
 
-        if self.rsh(node, startCmd) != 0:
+        if self.rsh(node, self.templates["StartCmd"]) != 0:
             self.logger.log ("Warn: Start command failed on node %s" % (node))
             self.fencing_cleanup(node, stonith)
             return None
@@ -556,18 +545,7 @@ class ClusterManager(UserDict):
         else: self.debug("Starting %s on node %s" % (self["Name"], node))
 
         self.install_config(node)
-        if not(self.Env["valgrind-tests"]):
-            startCmd = self.templates["StartCmd"]
-        else:
-            if self.Env["valgrind-prefix"]:
-                prefix = self.Env["valgrind-prefix"]
-            else:
-                prefix = "cts"
-
-            startCmd = """G_SLICE=always-malloc HA_VALGRIND_ENABLED='%s' VALGRIND_OPTS='%s --log-file=/tmp/%s-%s.valgrind' %s""" % (
-                self.Env["valgrind-procs"], self.Env["valgrind-opts"], prefix, """%p""", self.templates["StartCmd"])
-
-        self.rsh(node, startCmd, synchronous=0)
+        self.rsh(node, self.templates["StartCmd"], synchronous=0)
         self.ShouldBeStatus[node] = "up"
         return 1
 

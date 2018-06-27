@@ -76,6 +76,16 @@
     </attribute>
   </define>
 
+  <define name="cibtr-2.replace.attr-msg-severity">
+    <attribute name="msg-severity">
+      <choice>
+        <value>WARNING</value>
+        <value>INFO</value>
+        <value>DEBUG</value>
+      </choice>
+    </attribute>
+  </define>
+
   <define name="cibtr-2.replace.attr-redefined-as">
     <attribute name="redefined-as">
       <data type="string">
@@ -117,6 +127,9 @@
     <ref name="cibtr-2.replace.attr-what"/>
     <optional>
       <ref name="cibtr-2.replace.attr-msg-extra"/>
+    </optional>
+    <optional>
+      <ref name="cibtr-2.replace.attr-msg-severity"/>
     </optional>
   </define>
 

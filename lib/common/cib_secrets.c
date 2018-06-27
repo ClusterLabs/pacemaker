@@ -87,7 +87,7 @@ read_local_file(char *local_file)
  */
 
 int
-replace_secret_params(char *rsc_id, GHashTable *params)
+replace_secret_params(const char *rsc_id, GHashTable *params)
 {
     char local_file[FILENAME_MAX+1], *start_pname;
     char hash_file[FILENAME_MAX+1], *hash;

@@ -539,8 +539,8 @@ crm_ipcs_flush_events_cb(gpointer data)
 static inline void
 delay_next_flush(crm_client_t *c, unsigned int queue_len)
 {
-    /* Delay a maximum of 5 seconds */
-    guint delay = (queue_len < 40)? (1000 + 100 * queue_len) : 5000;
+    /* Delay a maximum of 1.5 seconds */
+    guint delay = (queue_len < 5)? (1000 + 100 * queue_len) : 1500;
 
     c->event_timer = g_timeout_add(delay, crm_ipcs_flush_events_cb, c);
 }

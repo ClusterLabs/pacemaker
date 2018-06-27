@@ -844,12 +844,9 @@ class ValgrindTest(CTSTest):
         if not ret:
             return self.failure("Stop all nodes failed")
 
-        # Enable valgrind
-        self.logger.logPat = "/tmp/%s-*.valgrind" % self.name
-
-        self.Env["valgrind-prefix"] = self.name
-
-        self.rsh(node, "rm -f %s" % self.logger.logPat, None)
+        # @TODO Edit /etc/sysconfig/pacemaker on all nodes to enable valgrind,
+        # and clear any valgrind logs from previous runs. For now, we rely on
+        # the user to do this manually.
 
         ret = self.startall(None)
         if not ret:
@@ -858,10 +855,8 @@ class ValgrindTest(CTSTest):
         return self.success()
 
     def teardown(self, node):
-        # Disable valgrind
-        self.Env["valgrind-prefix"] = None
-
         # Return all nodes to normal
+        # @TODO Edit /etc/sysconfig/pacemaker on all nodes to disable valgrind
         ret = self.stopall(None)
         if not ret:
             return self.failure("Stop all nodes failed")

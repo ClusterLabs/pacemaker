@@ -179,8 +179,8 @@ lib/gnu/stdalign.h
 /cts/scheduler/bug-rh-1097457.trs
 /cts/scheduler/shadow.*
 /cts/test-suite.log
-/xml/test-2/*.up
-/xml/test-2/*.up.err
+/xml/test-*/*.up
+/xml/test-*/*.up.err
 /xml/assets/diffview.js
 
 # Formerly built files (helps when jumping back and forth in checkout)

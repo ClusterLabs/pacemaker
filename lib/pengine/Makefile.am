@@ -1,19 +1,8 @@
 #
-# Copyright (C) 2004 Andrew Beekhof
+# Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
 #
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License, or (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
 include $(top_srcdir)/Makefile.common
 
@@ -23,7 +12,7 @@ lib_LTLIBRARIES		= libpe_rules.la libpe_status.la
 ## SOURCES
 noinst_HEADERS		= unpack.h variant.h
 
-libpe_rules_la_LDFLAGS	= -version-info 6:1:4
+libpe_rules_la_LDFLAGS	= -version-info 26:0:0
 
 libpe_rules_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libpe_rules_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
@@ -31,7 +20,7 @@ libpe_rules_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
 libpe_rules_la_LIBADD	= $(top_builddir)/lib/common/libcrmcommon.la
 libpe_rules_la_SOURCES	= rules.c rules_alerts.c common.c
 
-libpe_status_la_LDFLAGS	= -version-info 17:0:0
+libpe_status_la_LDFLAGS	= -version-info 27:0:0
 
 libpe_status_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libpe_status_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)

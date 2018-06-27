@@ -1,3 +1,3 @@
-Resource instance_attributes: fence-vbox1-pcmk_arg_map: renaming pcmk_arg_map as pcmk_host_argument for matching port: prefix that will, meanwhile, get dropped
-Resource instance_attributes: fence-vbox2-pcmk_arg_map: dropping pcmk_arg_map
-Resource instance_attributes: fence-vbox3-pcmk_arg_map: dropping pcmk_arg_map
+DEBUG: Resource instance_attributes: fence-vbox1-pcmk_arg_map: renaming pcmk_arg_map as pcmk_host_argument for matching port: prefix that will, meanwhile, get dropped
+DEBUG: Resource instance_attributes: fence-vbox2-pcmk_arg_map: dropping pcmk_arg_map
+DEBUG: Resource instance_attributes: fence-vbox3-pcmk_arg_map: dropping pcmk_arg_map

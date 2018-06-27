@@ -64,6 +64,24 @@ enum op_state
     st_failed,
 };
 
+// Supported fence agent interface standards
+enum stonith_namespace {
+    st_namespace_invalid,
+    st_namespace_any,
+    st_namespace_internal,  // Implemented internally by Pacemaker
+
+    /* Neither of these projects are active any longer, but the fence agent
+     * interfaces they created are still in use and supported by Pacemaker.
+     */
+    st_namespace_rhcs,      // Red Hat Cluster Suite compatible
+    st_namespace_lha,       // Linux-HA compatible
+};
+
+enum stonith_namespace stonith_text2namespace(const char *namespace_s);
+const char *stonith_namespace2text(enum stonith_namespace namespace);
+enum stonith_namespace stonith_get_namespace(const char *agent,
+                                             const char *namespace_s);
+
 typedef struct stonith_key_value_s {
     char *key;
     char *value;
@@ -349,6 +367,29 @@ typedef struct stonith_api_operations_s
                                const char *attr, const char *value,
                                int level, stonith_key_value_t *device_list);
 
+    /*!
+     * \brief Validate an arbitrary stonith device configuration
+     *
+     * \param[in]  st            Stonithd connection to use
+     * \param[in]  call_options  Bitmask of stonith_call_options to use with fencer
+     * \param[in]  rsc_id        ID used to replace CIB secrets in params
+     * \param[in]  namespace_s   Namespace of fence agent to validate (optional)
+     * \param[in]  agent         Fence agent to validate
+     * \param[in]  params        Configuration parameters to pass to fence agent
+     * \param[in]  timeout       Fail if no response within this many seconds
+     * \param[out] output        If non-NULL, where to store any agent output
+     * \param[out] error_output  If non-NULL, where to store agent error output
+     *
+     * \return pcmk_ok if validation succeeds, -errno otherwise
+     *
+     * \note If pcmk_ok is returned, the caller is responsible for freeing
+     *       the output (if requested).
+     */
+    int (*validate)(stonith_t *st, int call_options, const char *rsc_id,
+                    const char *namespace_s, const char *agent,
+                    stonith_key_value_t *params, int timeout, char **output,
+                    char **error_output);
+
 } stonith_api_operations_t;
 
 struct stonith_s
@@ -369,6 +410,7 @@ void stonith_api_delete(stonith_t * st);
 
 void stonith_dump_pending_callbacks(stonith_t * st);
 
+// deprecated (use stonith_get_namespace() instead)
 const char *get_stonith_provider(const char *agent, const char *provider);
 
 bool stonith_dispatch(stonith_t * st);
@@ -376,6 +418,8 @@ bool stonith_dispatch(stonith_t * st);
 stonith_key_value_t *stonith_key_value_add(stonith_key_value_t * kvp, const char *key,
                                            const char *value);
 void stonith_key_value_freeall(stonith_key_value_t * kvp, int keys, int values);
+
+void stonith_history_free(stonith_history_t *history);
 
 /* Basic helpers that allows nodes to be fenced and the history to be
  * queried without mainloop or the caller understanding the full API
@@ -425,7 +469,7 @@ time_t stonith_api_time(uint32_t nodeid, const char *uname, bool in_progress);
 
  */
 
-#  define STONITH_LIBRARY "libstonithd.so.6"
+#  define STONITH_LIBRARY "libstonithd.so.26"
 
 typedef int (*st_api_kick_fn) (int nodeid, const char *uname, int timeout, bool off);
 typedef time_t (*st_api_time_fn) (int nodeid, const char *uname, bool in_progress);

@@ -95,8 +95,6 @@ A partially set up scenario is torn down if it fails during setup.
         self.ClusterManager.ns.WaitForAllNodesToComeUp(self.ClusterManager.Env["nodes"])
 
         self.audit()
-        if self.ClusterManager.Env["valgrind-tests"]:
-            self.ClusterManager.install_helper("cts.supp")
         self.ClusterManager.install_support()
 
         self.BadNews = LogWatcher(self.ClusterManager.Env["LogFileName"],

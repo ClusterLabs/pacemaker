@@ -160,27 +160,38 @@ test_cleaner() {
 	done
 }
 
+# -a= ... action modifier to derive template name from (if any; enter/leave)
+# -o= ... which conventional version to deem as the transform origin
 test_selfcheck() {
 	_tsc_ret=0
+	_tsc_action=
 	_tsc_template=
 	_tsc_validator=
 
 	while test $# -gt 0; do
 		case "$1" in
+		-a=*) _tsc_action="${1#-a=}";;
 		-o=*) _tsc_template="${1#-o=}";;
 		esac
 		shift
 	done
 	_tsc_validator="${_tsc_template:?}"
 	_tsc_validator="cibtr-${_tsc_validator%%.*}.rng"
-	_tsc_template="upgrade-${_tsc_template}.xsl"
+	_tsc_action=${_tsc_action:+-${_tsc_action}}
+	_tsc_template="upgrade-${_tsc_template}${_tsc_action}.xsl"
 
 	# check schema (sub-grammar) for custom transformation mapping alone
-	if ! ${RNGVALIDATOR} 'http://relaxng.org/relaxng.rng' "${_tsc_validator}"; then
+        if test -z "${_tsc_action}" \
+	  && ! ${RNGVALIDATOR} 'http://relaxng.org/relaxng.rng' "${_tsc_validator}"; then
 		_tsc_ret=$((_tsc_ret + 1))
 	fi
+
 	# check the overall XSLT per the main grammar + said sub-grammar
-	if ! ${RNGVALIDATOR} "xslt_${_tsc_validator}" "${_tsc_template}"; then
+        if ! ${RNGVALIDATOR} \
+          "$(test -f "${_tsc_validator}" \
+             && echo "xslt_${_tsc_validator}" \
+             || echo 'http://www.thaiopensource.com/relaxng/xslt.rng')" \
+          "${_tsc_template}"; then
 		_tsc_ret=$((_tsc_ret + 1))
 	fi
 
@@ -260,8 +271,8 @@ EOF
 			cp -a "${_tru_target_err}" "${_tru_ref_err}"
 		fi
 		if test $((_tru_mode & (1 << 1))) -ne 0; then
-			"${DIFF}" ${DIFFOPTS} "${_tru_source}" "${_tru_ref}" \
-			  | ${DIFFPAGER} >&2
+			{ "${DIFF}" ${DIFFOPTS} "${_tru_source}" "${_tru_ref}" \
+			  && printf '\n(files match)\n'; } | ${DIFFPAGER} >&2
 			if test $? -ne 0; then
 				printf "\npager failure\n" >&2
 				return 1
@@ -319,6 +330,7 @@ test_runner_validate() {
 	fi
 }
 
+# -a= ... action modifier completing template name (e.g. 2.10-(enter|leave))
 # -o= ... which conventional version to deem as the transform origin
 # -t= ... which conventional version to deem as the transform target
 # -B
@@ -328,6 +340,7 @@ test_runner_validate() {
 test_runner() {
 	_tr_mode=0
 	_tr_ret=0
+	_tr_action=
 	_tr_schema_o=
 	_tr_schema_t=
 	_tr_target=
@@ -335,7 +348,8 @@ test_runner() {
 
 	while test $# -gt 0; do
 		case "$1" in
-		-o=*) _tr_template="upgrade-${1#-o=}.xsl"
+		-a=*) _tr_action="${1#-a=}";;
+		-o=*) _tr_template="${1#-o=}"
 		      _tr_schema_o="pacemaker-${1#-o=}.rng";;
 		-t=*) _tr_schema_t="pacemaker-${1#-t=}.rng";;
 		-G) _tr_mode=$((_tr_mode | (1 << 0)));;
@@ -344,6 +358,7 @@ test_runner() {
 		esac
 		shift
 	done
+	_tr_template="upgrade-${_tr_action:-${_tr_template:?}}.xsl"
 
 	if ! test -f "${_tr_schema_o:?}" || ! test -f "${_tr_schema_t:?}"; then
 		emit_error "Origin and/or target schema missing, rerun make"
@@ -382,6 +397,10 @@ test_runner() {
 
 #
 # particular test variations
+# -C
+# -S
+# -X
+# -W ... see usage
 # stdin: granular test specification(s) if any
 #
 
@@ -407,6 +426,72 @@ test2to3() {
 }
 tests="${tests} test2to3"
 
+test2to3enter() {
+	_t23e_pattern=
+
+	while read _t23e_spec; do
+		_t23e_spec=${_t23e_spec%.xml}
+		_t23e_spec=${_t23e_spec%\*}
+		_t23e_pattern="${_t23e_pattern} -name ${_t23e_spec}*.xml -o"
+	done
+	test -z "${_t23e_pattern}" || _t23e_pattern="( ${_t23e_pattern%-o} )"
+
+	find test-2-enter -name test-2-enter -o -type d -prune \
+	  -o -name '*.xml' ${_t23e_pattern} -print | env LC_ALL=C sort \
+	  | { case " $* " in
+	      *\ -C\ *) test_cleaner;;
+	      *\ -S\ *) test_selfcheck -a=enter -o=2.10;;
+	      *\ -W\ *) emit_result "not implemented" "option -W";;
+	      *\ -X\ *) emit_result "not implemented" "option -X";;
+	      *) test_runner -a=2.10-enter -o=2.10 -t=2.10 "$@" || return $?;;
+	      esac; }
+}
+tests="${tests} test2to3enter"
+
+test2to3leave() {
+	_t23l_pattern=
+
+	while read _t23l_spec; do
+		_t23l_spec=${_t23l_spec%.xml}
+		_t23l_spec=${_t23l_spec%\*}
+		_t23l_pattern="${_t23l_pattern} -name ${_t23l_spec}*.xml -o"
+	done
+	test -z "${_t23l_pattern}" || _t23l_pattern="( ${_t23l_pattern%-o} )"
+
+	find test-2-leave -name test-2-leave -o -type d -prune \
+	  -o -name '*.xml' ${_t23l_pattern} -print | env LC_ALL=C sort \
+	  | { case " $* " in
+	      *\ -C\ *) test_cleaner;;
+	      *\ -S\ *) test_selfcheck -a=leave -o=2.10;;
+	      *\ -W\ *) emit_result "not implemented" "option -W";;
+	      *\ -X\ *) emit_result "not implemented" "option -X";;
+	      *) test_runner -a=2.10-leave -o=3.0 -t=3.0 "$@" || return $?;;
+	      esac; }
+}
+tests="${tests} test2to3leave"
+
+test2to3roundtrip() {
+	_t23rt_pattern=
+
+	while read _t23tr_spec; do
+		_t23rt_spec=${_t23rt_spec%.xml}
+		_t23rt_spec=${_t23rt_spec%\*}
+		_t23rt_pattern="${_t23rt_pattern} -name ${_t23rt_spec}*.xml -o"
+	done
+	test -z "${_t23rt_pattern}" || _t23rt_pattern="( ${_t23rt_pattern%-o} )"
+
+	find test-2-roundtrip -name test-2-roundtrip -o -type d -prune \
+	  -o -name '*.xml' ${_t23rt_pattern} -print | env LC_ALL=C sort \
+	  | { case " $* " in
+	      *\ -C\ *) test_cleaner;;
+	      *\ -S\ *) test_selfcheck -a=roundtrip -o=2.10;;
+	      *\ -W\ *) test_browser;;
+	      *\ -X\ *) emit_result "not implemented" "option -X";;
+	      *) test_runner -a=2.10-roundtrip -o=2.10 -t=3.0 "$@" || return $?;;
+	      esac; }
+}
+tests="${tests} test2to3roundtrip"
+
 # -B
 # -D
 # -G ... see usage
@@ -423,6 +508,7 @@ cts_scheduler() {
 	  | { case " $* " in
 	      *\ -C\ *) test_cleaner -r;;
 	      *\ -S\ *) emit_result "not implemented" "option -S";;
+	      *\ -W\ *) emit_result "not implemented" "option -W";;
 	      *\ -X\ *) emit_result "not implemented" "option -X";;
 	      *)
 		while test $# -gt 0; do
@@ -590,8 +676,9 @@ test_suite() {
 #       small ones for generic/global behaviour
 usage() {
 	printf \
-	  '%s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n' \
-	  "usage: $0 [-{B,C,D,G,S,X}]* [-|{${tests## }}*]" \
+	  '%s\n%s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n' \
+	  "usage: $0 [-{B,C,D,G,S,X}]* \\" \
+          "       [-|{${tests## }}*]" \
 	  "- when no suites (arguments) provided, \"test*\" ones get used" \
 	  "- with '-' suite specification the actual ones grabbed on stdin" \
 	  "- use '-B' to run validate-only check suppressing blanks first" \
@@ -629,7 +716,7 @@ main() {
 	done
 
 	test_suite ${_main_pass} || _main_ret=$?
-	test ${_main_bailout} -eq 1 && return ${_main_ret} \
+	test ${_main_bailout} -ne 0 \
 	  || test_suite -C ${_main_pass} >/dev/null || true
 	test ${_main_ret} = 0 && emit_result ${_main_ret} "Overall suite" \
 	  || emit_result "at least 2^$((_main_ret - 1))" "Overall suite"
