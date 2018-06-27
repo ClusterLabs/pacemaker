@@ -72,8 +72,10 @@ do_te_control(long long action,
         return;
     }
 
-    te_uuid = crm_generate_uuid();
-    crm_info("Registering TE UUID: %s", te_uuid);
+    if (te_uuid == NULL) {
+        te_uuid = crm_generate_uuid();
+        crm_info("Registering TE UUID: %s", te_uuid);
+    }
 
     if (fsa_cib_conn == NULL) {
         crm_err("Could not set CIB callbacks");
