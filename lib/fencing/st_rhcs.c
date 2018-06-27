@@ -96,6 +96,7 @@ stonith__rhcs_metadata(const char *agent, int timeout, char **output)
     if (rc < 0) {
         crm_warn("Metadata action for %s failed: %s " CRM_XS "rc=%d",
                  agent, pcmk_strerror(rc), rc);
+        free(buffer);
         return rc;
     }
 
@@ -105,6 +106,8 @@ stonith__rhcs_metadata(const char *agent, int timeout, char **output)
     }
 
     xml = string2xml(buffer);
+    free(buffer);
+    buffer = NULL;
     if (xml == NULL) {
         crm_warn("Metadata for %s is invalid", agent);
         return -pcmk_err_schema_validation;

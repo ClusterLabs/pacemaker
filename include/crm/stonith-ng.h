@@ -469,7 +469,7 @@ time_t stonith_api_time(uint32_t nodeid, const char *uname, bool in_progress);
 
  */
 
-#  define STONITH_LIBRARY "libstonithd.so.6"
+#  define STONITH_LIBRARY "libstonithd.so.26"
 
 typedef int (*st_api_kick_fn) (int nodeid, const char *uname, int timeout, bool off);
 typedef time_t (*st_api_time_fn) (int nodeid, const char *uname, bool in_progress);

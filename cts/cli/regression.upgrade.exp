@@ -58,11 +58,23 @@ A new shadow instance was created.  To begin using it paste the following into y
 =#=#=#= End test: Configure the initial resource - OK (0) =#=#=#=
 * Passed: cibadmin       - Configure the initial resource
 =#=#=#= Begin test: Upgrade to latest CIB schema (trigger 2.10.xsl + the wrapping) =#=#=#=
+update_validation 	debug: Testing 'pacemaker-2.10' validation (13 of X)
+update_validation 	debug: Upgrading pacemaker-2.10-style configuration to pacemaker-3.0 with upgrade-2.10.xsl
+apply_upgrade 	debug: Upgrading pacemaker-2.10-style configuration, pre-upgrade phase with upgrade-2.10-enter.xsl
+apply_upgrade 	debug: Upgrading pacemaker-2.10-style configuration, main phase with upgrade-2.10.xsl
 INFO: Resources-operation instance_attributes: mySmartFuse-monitor-inputpower (rsc=mySmartFuse, meta=mySmartFuse-inputpower-instanceparams): dropping requires
 INFO: Resources-operation instance_attributes: ... only start/promote operation taken into account
 INFO: Resources-operation instance_attributes: mySmartFuse-monitor-outputpower (rsc=mySmartFuse, meta=mySmartFuse-outputpower-instanceparams): dropping requires
 INFO: Resources-operation instance_attributes: ... only start/promote operation taken into account
+apply_upgrade 	debug: Upgrading pacemaker-2.10-style configuration, post-upgrade phase with upgrade-2.10-leave.xsl
 DEBUG: instance_attributes: original element pointed to with @id-ref (mySmartFuse-outputpower-instanceparams) disappeared during upgrade
+update_validation 	info: Transformation upgrade-2.10.xsl successful
+update_validation 	debug: Testing 'pacemaker-3.0' validation (14 of X)
+update_validation 	debug: pacemaker-3.0-style configuration is also valid for pacemaker-3.1
+update_validation 	debug: Testing 'pacemaker-3.1' validation (15 of X)
+update_validation 	debug: Configuration valid for schema: pacemaker-3.1
+update_validation 	trace: Stopping at pacemaker-3.1
+update_validation 	info: Transformed the configuration from pacemaker-2.10 to pacemaker-3.1
 =#=#=#= Current cib after: Upgrade to latest CIB schema (trigger 2.10.xsl + the wrapping) =#=#=#=
 <cib epoch="2" num_updates="0" admin_epoch="1">
   <configuration>

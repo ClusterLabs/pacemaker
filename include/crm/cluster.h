@@ -1,20 +1,10 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+
 #ifndef CRM_COMMON_CLUSTER__H
 #  define CRM_COMMON_CLUSTER__H
 
@@ -59,20 +49,20 @@ enum crm_node_flags
 /* *INDENT-ON* */
 
 typedef struct crm_peer_node_s {
-    uint32_t id;                /* Only used by corosync derivatives */
-    uint64_t last_seen;
-    uint64_t flags;             /* Specified by crm_node_flags enum */
+    char *uname;                // Node name as known to cluster
+    char *uuid;                 // Node UUID to ensure uniqueness
+    char *state;                // @TODO change to enum
+    uint64_t flags;             // Bitmask of crm_node_flags
+    uint64_t last_seen;         // Only needed by cluster nodes
+    uint32_t processes;         // @TODO most not needed, merge into flags
 
-    int32_t votes;              // Abused as time_t to expire peer-lost status
-    uint32_t processes;
+    // Currently only needed by corosync stack
+    uint32_t id;                // Node ID
+    time_t when_lost;           // When CPG membership was last lost
+
+    // Only used by controller
     enum crm_join_phase join;
-
-    char *uname;
-    char *uuid;
-    char *state;
     char *expected;
-
-    char *version;              /* Unused */
 } crm_node_t;
 
 void crm_peer_init(void);

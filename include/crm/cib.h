@@ -1,25 +1,8 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- */
-
-/**
- * \file
- * \brief Cluster Configuration
- * \ingroup cib
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #ifndef CIB__H
@@ -28,6 +11,12 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/**
+ * \file
+ * \brief Cluster Configuration
+ * \ingroup cib
+ */
 
 #  include <crm/common/ipc.h>
 #  include <crm/common/xml.h>
@@ -184,7 +173,7 @@ void remove_cib_op_callback(int call_id, gboolean all_callbacks);
 
 #  include <crm/cib/util.h>
 
-#  define CIB_LIBRARY "libcib.so.7"
+#  define CIB_LIBRARY "libcib.so.27"
 
 #ifdef __cplusplus
 }

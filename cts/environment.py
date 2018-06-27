@@ -45,10 +45,7 @@ class Environment(object):
         self["notification-agent"] = "/var/lib/pacemaker/notify.sh"
         self["notification-recipient"] = "/var/lib/pacemaker/notify.log"
         self["loop-minutes"] = 60
-        self["valgrind-prefix"] = None
         self["valgrind-procs"] = "pacemaker-attrd pacemaker-based pacemaker-controld pacemaker-execd pacemaker-fenced pacemaker-schedulerd"
-        self["valgrind-opts"] = """--leak-check=full --show-reachable=yes --trace-children=no --num-callers=25 --gen-suppressions=all --suppressions="""+CTSvars.CTS_home+"""/cts.supp"""
-
         self["experimental-tests"] = 0
         self["container-tests"] = 0
         self["valgrind-tests"] = 0

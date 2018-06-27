@@ -126,7 +126,7 @@ Valgrind is a program for detecting memory management problems (such as
 use-after-free errors). If you have valgrind installed, you can enable it by
 setting the following environment variables on all cluster nodes:
 
-    PCMK_valgrind_enabled=pacemaker-attrd,pacemaker-controld,pacemaker-execd,pacemaker-fenced,cib,pacemaker-schedulerd
+    PCMK_valgrind_enabled=pacemaker-attrd,pacemaker-based,pacemaker-controld,pacemaker-execd,pacemaker-fenced,pacemaker-schedulerd
     VALGRIND_OPTS="--leak-check=full --trace-children=no --num-callers=25
         --log-file=/var/lib/pacemaker/valgrind-%p
         --suppressions=/usr/share/pacemaker/tests/valgrind-pcmk.suppressions
@@ -134,7 +134,7 @@ setting the following environment variables on all cluster nodes:
 
 and running CTS with these options:
 
-    --valgrind-tests --valgrind-procs="pacemaker-attrd pacemaker-controld pacemaker-execd cib pacemaker-schedulerd pacemaker-fenced"
+    --valgrind-tests --valgrind-procs="pacemaker-attrd pacemaker-based pacemaker-controld pacemaker-execd pacemaker-schedulerd pacemaker-fenced"
 
 These options should only be set while specifically testing memory management,
 because they may slow down the cluster significantly, and they will disable
