@@ -1,4 +1,4 @@
-Resource meta_attributes: fake (meta=fake-meta_attributes): renaming isolation-wrapper as target-role, redefined as Stopped
-Resource meta_attributes: ... i.e. resource at hand disabled; isolation wrappers obsoleted with bundle resources
-Resource meta_attributes: fake (meta=fake-meta_attributes): renaming isolation-wrapper as target-role, redefined as Stopped
-Resource meta_attributes: ... i.e. resource at hand disabled; isolation wrappers obsoleted with bundle resources
+WARNING: Resource meta_attributes: fake (meta=fake-meta_attributes): renaming isolation-wrapper as target-role, redefined as Stopped
+WARNING: Resource meta_attributes: ... i.e. resource at hand disabled; isolation wrappers obsoleted with bundle resources
+WARNING: Resource meta_attributes: fake (meta=fake-meta_attributes): renaming isolation-wrapper as target-role, redefined as Stopped
+WARNING: Resource meta_attributes: ... i.e. resource at hand disabled; isolation wrappers obsoleted with bundle resources

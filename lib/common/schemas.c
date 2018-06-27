@@ -57,10 +57,13 @@ struct schema_s {
     enum schema_validator_e validator;
     int after_transform;
     schema_version_t version;
+    char *transform_enter;
+    bool transform_onleave;
 };
 
 static struct schema_s *known_schemas = NULL;
 static int xml_schema_max = 0;
+static bool silent_logging = FALSE;
 
 static void
 xml_log(int priority, const char *fmt, ...)
@@ -72,8 +75,10 @@ xml_log(int priority, const char *fmt, ...)
     va_list ap;
 
     va_start(ap, fmt);
-    /* XXX should not this enable dechunking as well? */
-    CRM_XML_LOG_BASE(priority, FALSE, 0, NULL, fmt, ap);
+    if (silent_logging == FALSE) {
+        /* XXX should not this enable dechunking as well? */
+        CRM_XML_LOG_BASE(priority, FALSE, 0, NULL, fmt, ap);
+    }
     va_end(ap);
 }
 
@@ -188,9 +193,17 @@ schema_sort(const struct dirent **a, const struct dirent **b)
     return 0;
 }
 
+/*!
+ * \internal
+ * \brief Add given schema + auxiliary data to internal bookkeeping.
+ *
+ * \note When providing \p version, should not be called directly but
+ *       through \c add_schema_by_version.
+ */
 static void
 add_schema(enum schema_validator_e validator, const schema_version_t *version,
            const char *name, const char *location, const char *transform,
+           const char *transform_enter, bool transform_onleave,
            int after_transform)
 {
     int last = xml_schema_max;
@@ -225,6 +238,10 @@ add_schema(enum schema_validator_e validator, const schema_version_t *version,
     if (transform) {
         known_schemas[last].transform = strdup(transform);
     }
+    if (transform_enter) {
+        known_schemas[last].transform_enter = strdup(transform_enter);
+    }
+    known_schemas[last].transform_onleave = transform_onleave;
     if (after_transform == 0) {
         after_transform = xml_schema_max;  /* upgrade is a one-way */
     }
@@ -249,6 +266,97 @@ add_schema(enum schema_validator_e validator, const schema_version_t *version,
 
 /*!
  * \internal
+ * \brief Add version-specified schema + auxiliary data to internal bookkeeping.
+ * \return \c -ENOENT when no upgrade schema associated, \c pcmk_ok otherwise.
+ *
+ * \note There's no reliance on the particular order of schemas entering here.
+ *
+ * \par A bit of theory
+ * We track 3 XSLT stylesheets that differ per usage:
+ * - "upgrade":
+ *   . sparsely spread over the sequence of all available schemas,
+ *     as they are only relevant when major version of the schema
+ *     is getting bumped -- in that case, it MUST be set
+ *   . name convention:  upgrade-X.Y.xsl
+ * - "upgrade-enter":
+ *   . may only accompany "upgrade" occurrence, but doesn't need to
+ *     be present anytime such one is, i.e., it MAY not be set when
+ *     "upgrade" is
+ *   . name convention:  upgrade-X.Y-enter.xsl,
+ *     when not present: upgrade-enter.xsl
+ * - "upgrade-leave":
+ *   . like "upgrade-enter", but SHOULD be present whenever
+ *     "upgrade-enter" is
+ *   . name convention:  (see "upgrade-enter")
+ */
+static int
+add_schema_by_version(const schema_version_t *version, int next,
+                      bool transform_expected)
+{
+    bool transform_onleave = FALSE;
+    int rc = pcmk_ok;
+    struct stat s;
+    char *xslt = NULL,
+         *transform_upgrade = NULL,
+         *transform_enter = NULL;
+
+    /* prologue for further transform_expected handling */
+    if (transform_expected) {
+        /* check if there's suitable "upgrade" stylesheet */
+        transform_upgrade = schema_strdup_printf("upgrade-", *version, ".xsl");
+        xslt = get_schema_path(NULL, transform_upgrade);
+    }
+
+    if (!transform_expected) {
+        /* jump directly to the end */
+
+    } else if (stat(xslt, &s) == 0) {
+        /* perhaps there's also a targeted "upgrade-enter" stylesheet */
+        transform_enter = schema_strdup_printf("upgrade-", *version, "-enter.xsl");
+        free(xslt);
+        xslt = get_schema_path(NULL, transform_enter);
+        if (stat(xslt, &s) != 0) {
+            /* or initially, at least a generic one */
+            crm_debug("Upgrade-enter transform %s not found", xslt);
+            free(xslt);
+            xslt = get_schema_path(NULL, "upgrade-enter.xsl");
+            if (stat(xslt, &s) != 0) {
+                crm_debug("Upgrade-enter transform %s not found, either", xslt);
+                free(xslt);
+                xslt = NULL;
+            }
+        }
+        /* xslt contains full path to "upgrade-enter" stylesheet */
+        if (xslt != NULL) {
+            /* then there should be "upgrade-leave" counterpart */
+            memcpy(strrchr(xslt, '-') + 1, "leave", 5);  /* enter -> leave */
+            transform_onleave = (stat(xslt, &s) == 0);
+            free(xslt);
+        } else {
+            free(transform_enter);
+            transform_enter = NULL;
+        }
+
+    } else {
+        crm_err("Upgrade transform %s not found", xslt);
+        free(xslt);
+        free(transform_upgrade);
+        transform_upgrade = NULL;
+        next = -1;
+        rc = -ENOENT;
+    }
+
+    add_schema(schema_validator_rng, version, NULL, NULL,
+               transform_upgrade, transform_enter, transform_onleave, next);
+
+    free(transform_upgrade);
+    free(transform_enter);
+
+    return rc;
+}
+
+/*!
+ * \internal
  * \brief Load pacemaker schemas into cache
  */
 void
@@ -265,9 +373,9 @@ crm_schema_init(void)
 
     } else {
         for (lpc = 0; lpc < max; lpc++) {
+            bool transform_expected = FALSE;
             int next = 0;
             schema_version_t version = SCHEMA_ZERO;
-            char *transform = NULL;
 
             if (!version_from_filename(namelist[lpc]->d_name, &version)) {
                 // Shouldn't be possible, but makes static analysis happy
@@ -279,30 +387,17 @@ crm_schema_init(void)
                 schema_version_t next_version = SCHEMA_ZERO;
 
                 if (version_from_filename(namelist[lpc+1]->d_name, &next_version)
-                    && (version.v[0] < next_version.v[0])) {
-
-                    struct stat s;
-                    char *xslt = NULL;
-
-                    transform = schema_strdup_printf("upgrade-", version, ".xsl");
-                    xslt = get_schema_path(NULL, transform);
-                    if (stat(xslt, &s) != 0) {
-                        crm_err("Transform %s not found", xslt);
-                        free(xslt);
-                        add_schema(schema_validator_rng, &version, NULL, NULL,
-                                   NULL, -1);
-                        break;
-                    } else {
-                        free(xslt);
-                    }
+                        && (version.v[0] < next_version.v[0])) {
+                    transform_expected = TRUE;
                 }
 
             } else {
                 next = -1;
             }
-            add_schema(schema_validator_rng, &version, NULL, NULL, transform,
-                       next);
-            free(transform);
+            if (add_schema_by_version(&version, next, transform_expected)
+                    == -ENOENT) {
+                break;
+            }
         }
 
         for (lpc = 0; lpc < max; lpc++) {
@@ -312,10 +407,10 @@ crm_schema_init(void)
     }
 
     add_schema(schema_validator_rng, &zero, "pacemaker-next",
-               "pacemaker-next.rng", NULL, -1);
+               "pacemaker-next.rng", NULL, NULL, FALSE, -1);
 
     add_schema(schema_validator_none, &zero, "none",
-               "N/A", NULL, -1);
+               "N/A", NULL, NULL, FALSE, -1);
 }
 
 #if 0
@@ -468,9 +563,15 @@ crm_schema_cleanup(void)
         free(known_schemas[lpc].name);
         free(known_schemas[lpc].location);
         free(known_schemas[lpc].transform);
+        free(known_schemas[lpc].transform_enter);
     }
     free(known_schemas);
     known_schemas = NULL;
+
+    xsltCleanupGlobals();  /* XXX proper, explicit reshaking regarding
+                                  init/fini routines is pending (pair
+                                  of facade functions to express the
+                                  intentions in a clean way) */
 }
 
 static gboolean
@@ -509,6 +610,16 @@ validate_with(xmlNode *xml, int method, gboolean to_logs)
 
     free(file);
     return valid;
+}
+
+static bool
+validate_with_silent(xmlNode *xml, int method)
+{
+    bool rc, sl_backup = silent_logging;
+    silent_logging = TRUE;
+    rc = validate_with(xml, method, TRUE);
+    silent_logging = sl_backup;
+    return rc;
 }
 
 static void
@@ -615,13 +726,141 @@ static void
 cib_upgrade_err(void *ctx, const char *fmt, ...)
 G_GNUC_PRINTF(2, 3);
 
+/* With this arrangement, an attempt to identify the message severity
+   as explicitly signalled directly from XSLT is performed in rather
+   a smart way (no reliance on formatting string + arguments being
+   always specified as ["%s", purposeful_string], as it can also be
+   ["%s: %s", some_prefix, purposeful_string] etc. so every argument
+   pertaining %s specifier is investigated), and if such a mark found,
+   the respective level is determined and, when the messages are to go
+   to the native logs, the mark itself gets dropped
+   (by the means of string shift).
+
+   NOTE: whether the native logging is the right sink is decided per
+         the ctx parameter -- NULL denotes this case, otherwise it
+         carries a pointer to the numeric expression of the desired
+         target logging level (messages with higher level will be
+         suppressed)
+
+   NOTE: on some architectures, this string shift may not have any
+         effect, but that's an acceptable tradeoff
+
+   The logging level for not explicitly designated messages
+   (suspicious, likely internal errors or some runaways) is
+   LOG_WARNING.
+ */
 static void
 cib_upgrade_err(void *ctx, const char *fmt, ...)
 {
-    va_list ap;
+    va_list ap, aq;
+    char *arg_cur;
+
+    bool found = FALSE;
+    const char *fmt_iter = fmt;
+    uint8_t msg_log_level = LOG_WARNING;  /* default for runaway messages */
+    const unsigned * log_level = (const unsigned *) ctx;
+    enum {
+        escan_seennothing,
+        escan_seenpercent,
+    } scan_state = escan_seennothing;
 
     va_start(ap, fmt);
-    CRM_XML_LOG_BASE(LOG_WARNING, TRUE, 0, "CIB upgrade: ", fmt, ap);
+    va_copy(aq, ap);
+
+    while (!found && *fmt_iter != '\0') {
+        /* while casing schema borrowed from libqb:qb_vsnprintf_serialize */
+        switch (*fmt_iter++) {
+        case '%':
+            if (scan_state == escan_seennothing) {
+                scan_state = escan_seenpercent;
+            } else if (scan_state == escan_seenpercent) {
+                scan_state = escan_seennothing;
+            }
+            break;
+        case 's':
+            if (scan_state == escan_seenpercent) {
+                scan_state = escan_seennothing;
+                arg_cur = va_arg(aq, char *);
+                if (arg_cur != NULL) {
+                    switch (arg_cur[0]) {
+                    case 'W':
+                        if (!strncmp(arg_cur, "WARNING: ",
+                                     sizeof("WARNING: ") - 1)) {
+                            msg_log_level = LOG_WARNING;
+                        }
+                        if (ctx == NULL) {
+                            memmove(arg_cur, arg_cur + sizeof("WARNING: ") - 1,
+                                    strlen(arg_cur + sizeof("WARNING: ") - 1) + 1);
+                        }
+                        found = TRUE;
+                        break;
+                    case 'I':
+                        if (!strncmp(arg_cur, "INFO: ",
+                                     sizeof("INFO: ") - 1)) {
+                            msg_log_level = LOG_INFO;
+                        }
+                        if (ctx == NULL) {
+                            memmove(arg_cur, arg_cur + sizeof("INFO: ") - 1,
+                                    strlen(arg_cur + sizeof("INFO: ") - 1) + 1);
+                        }
+                        found = TRUE;
+                        break;
+                    case 'D':
+                        if (!strncmp(arg_cur, "DEBUG: ",
+                                     sizeof("DEBUG: ") - 1)) {
+                            msg_log_level = LOG_DEBUG;
+                        }
+                        if (ctx == NULL) {
+                            memmove(arg_cur, arg_cur + sizeof("DEBUG: ") - 1,
+                                    strlen(arg_cur + sizeof("DEBUG: ") - 1) + 1);
+                        }
+                        found = TRUE;
+                        break;
+                    }
+                }
+            }
+            break;
+        case '#': case '-': case ' ': case '+': case '\'': case 'I': case '.':
+        case '0': case '1': case '2': case '3': case '4':
+        case '5': case '6': case '7': case '8': case '9':
+        case '*':
+            break;
+        case 'l':
+        case 'z':
+        case 't':
+        case 'j':
+        case 'd': case 'i':
+        case 'o':
+        case 'u':
+        case 'x': case 'X':
+        case 'e': case 'E':
+        case 'f': case 'F':
+        case 'g': case 'G':
+        case 'a': case 'A':
+        case 'c':
+        case 'p':
+            if (scan_state == escan_seenpercent) {
+                (void) va_arg(aq, void *);  /* skip forward */
+                scan_state = escan_seennothing;
+            }
+            break;
+        default:
+            scan_state = escan_seennothing;
+            break;
+        }
+    }
+
+    if (log_level != NULL) {
+        /* intention of the following offset is:
+           cibadmin -V -> start showing INFO labelled messages */
+        if (*log_level + 4 >= msg_log_level) {
+            vfprintf(stderr, fmt, ap);
+        }
+    } else {
+        CRM_XML_LOG_BASE(msg_log_level, TRUE, 0, "CIB upgrade: ", fmt, ap);
+    }
+
+    va_end(aq);
     va_end(ap);
 }
 
@@ -669,7 +908,7 @@ apply_transformation(xmlNode *xml, const char *transform, gboolean to_logs)
     if (to_logs) {
         xsltSetGenericErrorFunc(NULL, cib_upgrade_err);
     } else {
-        xsltSetGenericErrorFunc((void *) stderr, (xmlGenericErrorFunc) fprintf);
+        xsltSetGenericErrorFunc(&crm_log_level, cib_upgrade_err);
     }
 
     xslt = xsltParseStylesheetFile((const xmlChar *)xform);
@@ -701,7 +940,61 @@ apply_transformation(xmlNode *xml, const char *transform, gboolean to_logs)
 
     return out;
 }
-#endif
+
+/*!
+ * \internal
+ * \brief Possibly full enter->upgrade->leave trip per internal bookkeeping.
+ *
+ * \note Only emits warnings about enter/leave phases in case of issues.
+ */
+static xmlNode *
+apply_upgrade(xmlNode *xml, const struct schema_s *schema, gboolean to_logs)
+{
+    bool transform_onleave = schema->transform_onleave;
+    char *transform_leave;
+    xmlNode *upgrade = NULL,
+            *final = NULL;
+
+    if (schema->transform_enter) {
+        crm_debug("Upgrading %s-style configuration, pre-upgrade phase with %s",
+                  schema->name, schema->transform_enter);
+        upgrade = apply_transformation(xml, schema->transform_enter, to_logs);
+        if (upgrade == NULL) {
+            crm_warn("Upgrade-enter transformation %s failed",
+                     schema->transform_enter);
+            transform_onleave = FALSE;
+        }
+    }
+    if (upgrade == NULL) {
+        upgrade = xml;
+    }
+
+    crm_debug("Upgrading %s-style configuration, main phase with %s",
+              schema->name, schema->transform);
+    final = apply_transformation(upgrade, schema->transform, to_logs);
+
+    if (final != NULL && transform_onleave) {
+        free_xml(upgrade);
+        upgrade = final;
+        transform_leave = strdup(schema->transform_enter);
+        /* enter -> leave */
+        memcpy(strrchr(transform_leave, '-') + 1, "leave", 5);
+        crm_debug("Upgrading %s-style configuration, post-upgrade phase with %s",
+                  schema->name, transform_leave);
+        final = apply_transformation(upgrade, transform_leave, to_logs);
+        if (final == NULL) {
+            crm_warn("Upgrade-leave transformation %s failed", transform_leave);
+            final = upgrade;
+        } else {
+            free_xml(upgrade);
+        }
+        free(transform_leave);
+    }
+
+    return final;
+}
+
+#endif  /* HAVE_LIBXSLT */
 
 const char *
 get_schema_name(int version)
@@ -815,7 +1108,13 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
                           known_schemas[lpc].name, lpc, next, max);
                 break;
 
-            } else if (known_schemas[lpc].transform == NULL) {
+            } else if (known_schemas[lpc].transform == NULL
+                       /* possibly avoid transforming when readily valid
+                          (in general more restricted when crossing the major
+                          version boundary, as X.0 "transitional" version is
+                          expected to be more strict than it's successors that
+                          may re-allow constructs from previous major line) */
+                       || validate_with_silent(xml, next)) {
                 crm_debug("%s-style configuration is also valid for %s",
                            known_schemas[lpc].name, known_schemas[next].name);
 
@@ -824,10 +1123,10 @@ update_validation(xmlNode **xml_blob, int *best, int max, gboolean transform,
             } else {
                 crm_debug("Upgrading %s-style configuration to %s with %s",
                            known_schemas[lpc].name, known_schemas[next].name,
-                           known_schemas[lpc].transform ? known_schemas[lpc].transform : "no-op");
+                           known_schemas[lpc].transform);
 
 #if HAVE_LIBXSLT
-                upgrade = apply_transformation(xml, known_schemas[lpc].transform, to_logs);
+                upgrade = apply_upgrade(xml, &known_schemas[lpc], to_logs);
 #endif
                 if (upgrade == NULL) {
                     crm_err("Transformation %s failed",

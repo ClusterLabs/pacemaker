@@ -245,10 +245,7 @@ int get_attr_name(const char *input, size_t offset, size_t max);
 int get_attr_value(const char *input, size_t offset, size_t max);
 gboolean can_prune_leaf(xmlNode * xml_node);
 
-void diff_filter_context(int context, int upper_bound, int lower_bound,
-                         xmlNode * xml_node, xmlNode * parent);
-int in_upper_context(int depth, int context, xmlNode * xml_node);
-int add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * update, gboolean as_diff);
+static int add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * update, gboolean as_diff);
 
 static inline const char *
 crm_attr_value(const xmlAttr *attr)
@@ -324,7 +321,17 @@ __xml_private_free(xml_private_t *p)
 static void
 pcmkDeregisterNode(xmlNodePtr node)
 {
-    __xml_private_free(node->_private);
+    /* need to explicitly avoid our custom _private field cleanup when
+       called from internal XSLT cleanup (xsltApplyStylesheetInternal
+       -> xsltFreeTransformContext -> xsltFreeRVTs -> xmlFreeDoc)
+       onto result tree fragments, represented as standalone documents
+       with otherwise infeasible space-prefixed name (xsltInternals.h:
+       XSLT_MARK_RES_TREE_FRAG) and carrying it's own load at _private
+       field -- later assert on the XML_PRIVATE_MAGIC would explode */
+    if (node->type != XML_DOCUMENT_NODE || node->name == NULL
+            || node->name[0] != ' ') {
+        __xml_private_free(node->_private);
+    }
 }
 
 static void
@@ -2261,23 +2268,43 @@ find_xml_node(xmlNode * root, const char *search_path, gboolean must_find)
     return NULL;
 }
 
-xmlNode *
-find_entity(xmlNode * parent, const char *node_name, const char *id)
+/* As the name suggests, the perfect match is required for both node
+   name and fully specified attribute, otherwise, when attribute not
+   specified, the outcome is the first node matching on the name. */
+static xmlNode *
+find_entity_by_attr_or_just_name(xmlNode *parent, const char *node_name,
+                                 const char *attr_n, const char *attr_v)
 {
-    xmlNode *a_child = NULL;
+    xmlNode *child;
 
-    for (a_child = __xml_first_child(parent); a_child != NULL; a_child = __xml_next(a_child)) {
-        /* Uncertain if node_name == NULL check is strictly necessary here */
-        if (node_name == NULL || strcmp((const char *)a_child->name, node_name) == 0) {
-            const char *cid = ID(a_child);
-            if (id == NULL || (cid != NULL && strcmp(id, cid) == 0)) {
-                return a_child;
+    /* ensure attr_v specified when attr_n is */
+    CRM_CHECK(attr_n == NULL || attr_v != NULL, return NULL);
+
+    for (child = __xml_first_child(parent); child != NULL; child = __xml_next(child)) {
+        /* XXX uncertain if the first check is strictly necessary here */
+        if (node_name == NULL || !strcmp((const char *) child->name, node_name)) {
+            if (attr_n == NULL
+                    || crm_str_eq(crm_element_value(child, attr_n), attr_v, TRUE)) {
+                return child;
             }
         }
     }
 
-    crm_trace("node <%s id=%s> not found in %s.", node_name, id, crm_element_name(parent));
+    crm_trace("node <%s%s%s%s%s> not found in %s", crm_str(node_name),
+              attr_n ? " " : "",
+              attr_n ? attr_n : "",
+              attr_n ? "=" : "",
+              attr_n ? attr_v : "",
+              crm_element_name(parent));
+
     return NULL;
+}
+
+xmlNode *
+find_entity(xmlNode *parent, const char *node_name, const char *id)
+{
+    return find_entity_by_attr_or_just_name(parent, node_name,
+                                            (id == NULL) ? id : XML_ATTR_ID, id);
 }
 
 void
@@ -4312,69 +4339,6 @@ can_prune_leaf(xmlNode * xml_node)
     return can_prune;
 }
 
-void
-diff_filter_context(int context, int upper_bound, int lower_bound,
-                    xmlNode * xml_node, xmlNode * parent)
-{
-    xmlNode *us = NULL;
-    xmlNode *child = NULL;
-    xmlAttrPtr pIter = NULL;
-    xmlNode *new_parent = parent;
-    const char *name = crm_element_name(xml_node);
-
-    CRM_CHECK(xml_node != NULL && name != NULL, return);
-
-    us = create_xml_node(parent, name);
-    for (pIter = crm_first_attr(xml_node); pIter != NULL; pIter = pIter->next) {
-        const char *p_name = (const char *)pIter->name;
-        const char *p_value = crm_attr_value(pIter);
-
-        lower_bound = context;
-        crm_xml_add(us, p_name, p_value);
-    }
-
-    if (lower_bound >= 0 || upper_bound >= 0) {
-        crm_xml_add(us, XML_ATTR_ID, ID(xml_node));
-        new_parent = us;
-
-    } else {
-        upper_bound = in_upper_context(0, context, xml_node);
-        if (upper_bound >= 0) {
-            crm_xml_add(us, XML_ATTR_ID, ID(xml_node));
-            new_parent = us;
-        } else {
-            free_xml(us);
-            us = NULL;
-        }
-    }
-
-    for (child = __xml_first_child(us); child != NULL; child = __xml_next(child)) {
-        diff_filter_context(context, upper_bound - 1, lower_bound - 1, child, new_parent);
-    }
-}
-
-int
-in_upper_context(int depth, int context, xmlNode * xml_node)
-{
-    if (context == 0) {
-        return 0;
-    }
-
-    if (xml_node->properties) {
-        return depth;
-
-    } else if (depth < context) {
-        xmlNode *child = NULL;
-
-        for (child = __xml_first_child(xml_node); child != NULL; child = __xml_next(child)) {
-            if (in_upper_context(depth + 1, context, child)) {
-                return depth;
-            }
-        }
-    }
-    return 0;
-}
-
 static xmlNode *
 find_xml_comment(xmlNode * root, xmlNode * search_comment, gboolean exact)
 {
@@ -4641,12 +4605,13 @@ add_xml_comment(xmlNode * parent, xmlNode * target, xmlNode * update)
     return 0;
 }
 
-int
+static int
 add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * update, gboolean as_diff)
 {
     xmlNode *a_child = NULL;
-    const char *object_id = NULL;
-    const char *object_name = NULL;
+    const char *object_name = NULL,
+               *object_href = NULL,
+               *object_href_val = NULL;
 
 #if XML_PARSE_DEBUG
     crm_log_xml_trace("update:", update);
@@ -4660,28 +4625,38 @@ add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * update, gboolean as
     }
 
     object_name = crm_element_name(update);
-    object_id = ID(update);
+    object_href_val = ID(update);
+    if (object_href_val != NULL) {
+        object_href = XML_ATTR_ID;
+    } else {
+        object_href_val = crm_element_value(update, XML_ATTR_IDREF);
+        object_href = (object_href_val == NULL) ? NULL : XML_ATTR_IDREF;
+    }
 
     CRM_CHECK(object_name != NULL, return 0);
+    CRM_CHECK(target != NULL || parent != NULL, return 0);
 
-    if (target == NULL && object_id == NULL) {
-        /*  placeholder object */
-        target = find_xml_node(parent, object_name, FALSE);
-
-    } else if (target == NULL) {
-        target = find_entity(parent, object_name, object_id);
+    if (target == NULL) {
+        target = find_entity_by_attr_or_just_name(parent, object_name,
+                                                  object_href, object_href_val);
     }
 
     if (target == NULL) {
         target = create_xml_node(parent, object_name);
         CRM_CHECK(target != NULL, return 0);
 #if XML_PARSER_DEBUG
-        crm_trace("Added  <%s%s%s/>", crm_str(object_name),
-                  object_id ? " id=" : "", object_id ? object_id : "");
+        crm_trace("Added  <%s%s%s%s%s/>", crm_str(object_name),
+                  object_href ? " " : "",
+                  object_href ? object_href : "",
+                  object_href ? "=" : "",
+                  object_href ? object_href_val : "");
 
     } else {
-        crm_trace("Found node <%s%s%s/> to update",
-                  crm_str(object_name), object_id ? " id=" : "", object_id ? object_id : "");
+        crm_trace("Found node <%s%s%s%s%s/> to update", crm_str(object_name),
+                  object_href ? " " : "",
+                  object_href ? object_href : "",
+                  object_href ? "=" : "",
+                  object_href ? object_href_val : "");
 #endif
     }
 
@@ -4707,13 +4682,21 @@ add_xml_object(xmlNode * parent, xmlNode * target, xmlNode * update, gboolean as
 
     for (a_child = __xml_first_child(update); a_child != NULL; a_child = __xml_next(a_child)) {
 #if XML_PARSER_DEBUG
-        crm_trace("Updating child <%s id=%s>", crm_element_name(a_child), ID(a_child));
+        crm_trace("Updating child <%s%s%s%s%s/>", crm_str(object_name),
+                  object_href ? " " : "",
+                  object_href ? object_href : "",
+                  object_href ? "=" : "",
+                  object_href ? object_href_val : "");
 #endif
         add_xml_object(target, NULL, a_child, as_diff);
     }
 
 #if XML_PARSER_DEBUG
-    crm_trace("Finished with <%s id=%s>", crm_str(object_name), crm_str(object_id));
+    crm_trace("Finished with <%s%s%s%s%s/>", crm_str(object_name),
+              object_href ? " " : "",
+              object_href ? object_href : "",
+              object_href ? "=" : "",
+              object_href ? object_href_val : "");
 #endif
     return 0;
 }

@@ -355,6 +355,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
     const char *sys_to = crm_element_value(msg, F_CRM_SYS_TO);
     const char *sys_from = crm_element_value(msg, F_CRM_SYS_FROM);
     const char *type = crm_element_value(msg, F_TYPE);
+    const char *task = crm_element_value(msg, F_CRM_TASK);
     const char *msg_error = NULL;
 
     crm_trace("Routing message %s", crm_element_value(msg, XML_ATTR_REFERENCE));
@@ -362,7 +363,7 @@ relay_message(xmlNode * msg, gboolean originated_locally)
     if (msg == NULL) {
         msg_error = "Cannot route empty message";
 
-    } else if (safe_str_eq(CRM_OP_HELLO, crm_element_value(msg, F_CRM_TASK))) {
+    } else if (safe_str_eq(task, CRM_OP_HELLO)) {
         /* quietly ignore */
         processing_complete = TRUE;
 
@@ -396,8 +397,17 @@ relay_message(xmlNode * msg, gboolean originated_locally)
         if (is_for_dc || is_for_te) {
             is_local = 0;
 
-        } else if (is_for_crm && originated_locally) {
-            is_local = 0;
+        } else if (is_for_crm) {
+            if (safe_str_eq(task, CRM_OP_NODE_INFO)) {
+                /* Node info requests do not specify a host, which is normally
+                 * treated as "all hosts", because the whole point is that the
+                 * client doesn't know the local node name. Always handle these
+                 * requests locally.
+                 */
+                is_local = 1;
+            } else {
+                is_local = !originated_locally;
+            }
 
         } else {
             is_local = 1;
@@ -674,6 +684,103 @@ handle_remote_state(xmlNode *msg)
     return I_NULL;
 }
 
+/*!
+ * \brief Handle a CRM_OP_PING message
+ *
+ * \param[in] msg  Message XML
+ *
+ * \return Next FSA input
+ */
+static enum crmd_fsa_input
+handle_ping(xmlNode *msg)
+{
+    const char *value = NULL;
+    xmlNode *ping = NULL;
+
+    // Build reply
+
+    ping = create_xml_node(NULL, XML_CRM_TAG_PING);
+    value = crm_element_value(msg, F_CRM_SYS_TO);
+    crm_xml_add(ping, XML_PING_ATTR_SYSFROM, value);
+
+    // Add controller state
+    value = fsa_state2string(fsa_state);
+    crm_xml_add(ping, XML_PING_ATTR_CRMDSTATE, value);
+    crm_notice("Current ping state: %s", value); // CTS needs this
+
+    // Add controller health
+    // @TODO maybe do some checks to determine meaningful status
+    crm_xml_add(ping, XML_PING_ATTR_STATUS, "ok");
+
+    // Send reply
+    msg = create_reply(msg, ping);
+    free_xml(ping);
+    if (msg) {
+        (void) relay_message(msg, TRUE);
+        free_xml(msg);
+    }
+
+    // Nothing further to do
+    return I_NULL;
+}
+
+/*!
+ * \brief Handle a CRM_OP_NODE_INFO request
+ *
+ * \param[in] msg  Message XML
+ *
+ * \return Next FSA input
+ */
+static enum crmd_fsa_input
+handle_node_info_request(xmlNode *msg)
+{
+    const char *value = NULL;
+    crm_node_t *node = NULL;
+    int node_id = 0;
+    xmlNode *reply = NULL;
+
+    // Build reply
+
+    reply = create_xml_node(NULL, XML_CIB_TAG_NODE);
+    crm_xml_add(reply, XML_PING_ATTR_SYSFROM, CRM_SYSTEM_CRMD);
+
+    // Add whether current partition has quorum
+    crm_xml_add_boolean(reply, XML_ATTR_HAVE_QUORUM, fsa_has_quorum);
+
+    // Check whether client requested node info by ID and/or name
+    crm_element_value_int(msg, XML_ATTR_ID, &node_id);
+    if (node_id < 0) {
+        node_id = 0;
+    }
+    value = crm_element_value(msg, XML_ATTR_UNAME);
+
+    // Default to local node if none given
+    if ((node_id == 0) && (value == NULL)) {
+        value = fsa_our_uname;
+    }
+
+    node = crm_find_peer_full(node_id, value, CRM_GET_PEER_ANY);
+    if (node) {
+        crm_xml_add_int(reply, XML_ATTR_ID, node->id);
+        crm_xml_add(reply, XML_ATTR_UUID, node->uuid);
+        crm_xml_add(reply, XML_ATTR_UNAME, node->uname);
+        crm_xml_add(reply, XML_NODE_IS_PEER, node->state);
+        crm_xml_add_boolean(reply, XML_NODE_IS_REMOTE,
+                            node->flags & crm_remote_node);
+    }
+
+    // Send reply
+    msg = create_reply(msg, reply);
+    free_xml(reply);
+    if (msg) {
+        (void) relay_message(msg, TRUE);
+        free_xml(msg);
+    }
+
+    // Nothing further to do
+    return I_NULL;
+}
+
 static void
 verify_feature_set(xmlNode *msg)
 {
@@ -827,46 +934,11 @@ handle_request(xmlNode * stored_msg, enum crmd_fsa_cause cause)
         /*return I_SHUTDOWN; */
         return I_NULL;
 
-        /*========== (NOT_DC)-Only Actions ==========*/
-    } else if (AM_I_DC == FALSE && strcmp(op, CRM_OP_SHUTDOWN) == 0) {
-
-        const char *host_from = crm_element_value(stored_msg, F_CRM_HOST_FROM);
-        gboolean dc_match = safe_str_eq(host_from, fsa_our_dc);
-
-        if (dc_match || fsa_our_dc == NULL) {
-            if (is_set(fsa_input_register, R_SHUTDOWN) == FALSE) {
-                crm_err("We didn't ask to be shut down, yet our DC is telling us to.");
-                set_bit(fsa_input_register, R_STAYDOWN);
-                return I_STOP;
-            }
-            crm_info("Shutting down");
-            return I_STOP;
-
-        } else {
-            crm_warn("Discarding %s op from %s", op, host_from);
-        }
-
     } else if (strcmp(op, CRM_OP_PING) == 0) {
-        /* eventually do some stuff to figure out
-         * if we /are/ ok
-         */
-        const char *sys_to = crm_element_value(stored_msg, F_CRM_SYS_TO);
-        xmlNode *ping = create_xml_node(NULL, XML_CRM_TAG_PING);
+        return handle_ping(stored_msg);
 
-        crm_xml_add(ping, XML_PING_ATTR_STATUS, "ok");
-        crm_xml_add(ping, XML_PING_ATTR_SYSFROM, sys_to);
-        crm_xml_add(ping, "crmd_state", fsa_state2string(fsa_state));
-
-        /* Ok, so technically not so interesting, but CTS needs to see this */
-        crm_notice("Current ping state: %s", fsa_state2string(fsa_state));
-
-        msg = create_reply(stored_msg, ping);
-        if (msg) {
-            (void)relay_message(msg, TRUE);
-        }
-
-        free_xml(ping);
-        free_xml(msg);
+    } else if (strcmp(op, CRM_OP_NODE_INFO) == 0) {
+        return handle_node_info_request(stored_msg);
 
     } else if (strcmp(op, CRM_OP_RM_NODE_CACHE) == 0) {
         int id = 0;
@@ -898,6 +970,25 @@ handle_request(xmlNode * stored_msg, enum crmd_fsa_cause cause)
         xmlNode *xml = get_message_xml(stored_msg, F_CRM_DATA);
 
         remote_ra_process_maintenance_nodes(xml);
+
+        /*========== (NOT_DC)-Only Actions ==========*/
+    } else if (AM_I_DC == FALSE && strcmp(op, CRM_OP_SHUTDOWN) == 0) {
+
+        const char *host_from = crm_element_value(stored_msg, F_CRM_HOST_FROM);
+        gboolean dc_match = safe_str_eq(host_from, fsa_our_dc);
+
+        if (dc_match || fsa_our_dc == NULL) {
+            if (is_set(fsa_input_register, R_SHUTDOWN) == FALSE) {
+                crm_err("We didn't ask to be shut down, yet our DC is telling us to.");
+                set_bit(fsa_input_register, R_STAYDOWN);
+                return I_STOP;
+            }
+            crm_info("Shutting down");
+            return I_STOP;
+
+        } else {
+            crm_warn("Discarding %s op from %s", op, host_from);
+        }
 
     } else {
         crm_err("Unexpected request (%s) sent to %s", op, AM_I_DC ? "the DC" : "non-DC node");

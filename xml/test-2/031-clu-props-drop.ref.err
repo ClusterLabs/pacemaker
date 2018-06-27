@@ -1,10 +1,10 @@
-Cluster properties: cluster-opts-cluster-infrastructure: dropping cluster-infrastructure for matching heartbeat|openais|classic openais|classic openais (with plugin)|cman
-Cluster properties: ... corosync (2+) infrastructure can be used instead, though the value is not of significance
-Cluster properties: cluster-opts-default-migration-threshold: dropping default-migration-threshold
-Cluster properties: ... migration-threshold in rsc_defaults can be configured instead
-Cluster properties: cluster-opts-default_migration_threshold: dropping default_migration_threshold
-Cluster properties: ... migration-threshold in rsc_defaults can be configured instead
-Cluster properties: cluster-opts-expected-quorum-votes: dropping expected-quorum-votes
-Cluster properties: ... corosync (2+) infrastructure tracks quorum on its own
-Cluster properties: cluster-opts-notification-agent: dropping notification-agent
-Cluster properties: ... standalone alerts can be configured instead
+INFO: Cluster properties: cluster-opts-cluster-infrastructure: dropping cluster-infrastructure for matching heartbeat|openais|classic openais|classic openais (with plugin)|cman
+INFO: Cluster properties: ... corosync (2+) infrastructure can be used instead, though the value is not of significance
+INFO: Cluster properties: cluster-opts-default-migration-threshold: dropping default-migration-threshold
+INFO: Cluster properties: ... migration-threshold in rsc_defaults can be configured instead
+INFO: Cluster properties: cluster-opts-default_migration_threshold: dropping default_migration_threshold
+INFO: Cluster properties: ... migration-threshold in rsc_defaults can be configured instead
+INFO: Cluster properties: cluster-opts-expected-quorum-votes: dropping expected-quorum-votes
+INFO: Cluster properties: ... corosync (2+) infrastructure tracks quorum on its own
+INFO: Cluster properties: cluster-opts-notification-agent: dropping notification-agent
+INFO: Cluster properties: ... standalone alerts can be configured instead

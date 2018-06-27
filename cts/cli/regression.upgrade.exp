@@ -1,0 +1,141 @@
+Created new pacemaker configuration
+Setting up shadow instance
+A new shadow instance was created.  To begin using it paste the following into your shell:
+  CIB_shadow=cts-cli ; export CIB_shadow
+=#=#=#= Begin test: Set stonith-enabled=false =#=#=#=
+=#=#=#= Current cib after: Set stonith-enabled=false =#=#=#=
+<cib epoch="1" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Set stonith-enabled=false - OK (0) =#=#=#=
+* Passed: crm_attribute  - Set stonith-enabled=false
+=#=#=#= Begin test: Configure the initial resource =#=#=#=
+=#=#=#= Current cib after: Configure the initial resource =#=#=#=
+<cib epoch="2" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources>
+      <primitive id="mySmartFuse" class="ocf" provider="experiment" type="SmartFuse">
+        <operations>
+          <op id="mySmartFuse-start" name="start" interval="0" timeout="40s"/>
+          <op id="mySmartFuse-monitor-inputpower" name="monitor" interval="30s">
+            <instance_attributes id="mySmartFuse-inputpower-instanceparams">
+              <nvpair id="mySmartFuse-inputpower-requires" name="requires" value="inputpower"/>
+            </instance_attributes>
+          </op>
+          <op id="mySmartFuse-monitor-outputpower" name="monitor" interval="2s">
+            <instance_attributes id="mySmartFuse-outputpower-instanceparams">
+              <nvpair id="mySmartFuse-outputpower-requires" name="requires" value="outputpower"/>
+            </instance_attributes>
+          </op>
+        </operations>
+        <instance_attributes id="mySmartFuse-params">
+          <nvpair id="mySmartFuse-params-ip" name="ip" value="192.0.2.10"/>
+        </instance_attributes>
+        <!-- a bit hairy but valid -->
+        <instance_attributes id-ref="mySmartFuse-outputpower-instanceparams"/>
+      </primitive>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Configure the initial resource - OK (0) =#=#=#=
+* Passed: cibadmin       - Configure the initial resource
+=#=#=#= Begin test: Upgrade to latest CIB schema (trigger 2.10.xsl + the wrapping) =#=#=#=
+update_validation 	debug: Testing 'pacemaker-2.10' validation (13 of X)
+update_validation 	debug: Upgrading pacemaker-2.10-style configuration to pacemaker-3.0 with upgrade-2.10.xsl
+apply_upgrade 	debug: Upgrading pacemaker-2.10-style configuration, pre-upgrade phase with upgrade-2.10-enter.xsl
+apply_upgrade 	debug: Upgrading pacemaker-2.10-style configuration, main phase with upgrade-2.10.xsl
+INFO: Resources-operation instance_attributes: mySmartFuse-monitor-inputpower (rsc=mySmartFuse, meta=mySmartFuse-inputpower-instanceparams): dropping requires
+INFO: Resources-operation instance_attributes: ... only start/promote operation taken into account
+INFO: Resources-operation instance_attributes: mySmartFuse-monitor-outputpower (rsc=mySmartFuse, meta=mySmartFuse-outputpower-instanceparams): dropping requires
+INFO: Resources-operation instance_attributes: ... only start/promote operation taken into account
+apply_upgrade 	debug: Upgrading pacemaker-2.10-style configuration, post-upgrade phase with upgrade-2.10-leave.xsl
+DEBUG: instance_attributes: original element pointed to with @id-ref (mySmartFuse-outputpower-instanceparams) disappeared during upgrade
+update_validation 	info: Transformation upgrade-2.10.xsl successful
+update_validation 	debug: Testing 'pacemaker-3.0' validation (14 of X)
+update_validation 	debug: pacemaker-3.0-style configuration is also valid for pacemaker-3.1
+update_validation 	debug: Testing 'pacemaker-3.1' validation (15 of X)
+update_validation 	debug: Configuration valid for schema: pacemaker-3.1
+update_validation 	trace: Stopping at pacemaker-3.1
+update_validation 	info: Transformed the configuration from pacemaker-2.10 to pacemaker-3.1
+=#=#=#= Current cib after: Upgrade to latest CIB schema (trigger 2.10.xsl + the wrapping) =#=#=#=
+<cib epoch="2" num_updates="0" admin_epoch="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources>
+      <primitive id="mySmartFuse" class="ocf" provider="experiment" type="SmartFuse">
+        <operations>
+          <op id="mySmartFuse-start" name="start" interval="0" timeout="40s"/>
+          <op id="mySmartFuse-monitor-inputpower" name="monitor" interval="30s"/>
+          <op id="mySmartFuse-monitor-outputpower" name="monitor" interval="2s"/>
+        </operations>
+        <instance_attributes id="mySmartFuse-params">
+          <nvpair id="mySmartFuse-params-ip" name="ip" value="192.0.2.10"/>
+        </instance_attributes>
+        <!-- a bit hairy but valid -->
+        <instance_attributes id="_cibtr-2_mySmartFuse-outputpower-instanceparams">
+          <nvpair id="__cibtr-2_mySmartFuse-outputpower-instanceparams__mySmartFuse-outputpower-requires" name="requires" value="outputpower"/>
+        </instance_attributes>
+      </primitive>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Upgrade to latest CIB schema (trigger 2.10.xsl + the wrapping) - OK (0) =#=#=#=
+* Passed: cibadmin       - Upgrade to latest CIB schema (trigger 2.10.xsl + the wrapping)
+=#=#=#= Begin test: Query a resource instance attribute (shall survive) =#=#=#=
+outputpower
+=#=#=#= Current cib after: Query a resource instance attribute (shall survive) =#=#=#=
+<cib epoch="2" num_updates="0" admin_epoch="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources>
+      <primitive id="mySmartFuse" class="ocf" provider="experiment" type="SmartFuse">
+        <operations>
+          <op id="mySmartFuse-start" name="start" interval="0" timeout="40s"/>
+          <op id="mySmartFuse-monitor-inputpower" name="monitor" interval="30s"/>
+          <op id="mySmartFuse-monitor-outputpower" name="monitor" interval="2s"/>
+        </operations>
+        <instance_attributes id="mySmartFuse-params">
+          <nvpair id="mySmartFuse-params-ip" name="ip" value="192.0.2.10"/>
+        </instance_attributes>
+        <!-- a bit hairy but valid -->
+        <instance_attributes id="_cibtr-2_mySmartFuse-outputpower-instanceparams">
+          <nvpair id="__cibtr-2_mySmartFuse-outputpower-instanceparams__mySmartFuse-outputpower-requires" name="requires" value="outputpower"/>
+        </instance_attributes>
+      </primitive>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+=#=#=#= End test: Query a resource instance attribute (shall survive) - OK (0) =#=#=#=
+* Passed: crm_resource   - Query a resource instance attribute (shall survive)

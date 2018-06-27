@@ -34,7 +34,7 @@ noinst_HEADERS	= pacemaker-schedulerd.h \
 		  sched_utils.h
 		  
 
-libpengine_la_LDFLAGS	= -version-info 17:0:0
+libpengine_la_LDFLAGS	= -version-info 27:0:0
 
 libpengine_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libpengine_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)

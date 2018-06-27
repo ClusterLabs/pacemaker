@@ -258,20 +258,20 @@ gboolean validate_xml_verbose(xmlNode * xml_blob);
  *                           the validity of the result; if no validation
  *                           success was observed against possibly multiple
  *                           schemas, the value is less or equal the result
- *                           of <tt>get_schema_version</tt> applied on the
- *                           input \p xml_blob value (unless that function
- *                           maps it to -1, then 0 would be used instead)
+ *                           of \c get_schema_version applied on the input
+ *                           \p xml_blob value (unless that function maps it
+ *                           to -1, then 0 would be used instead)
  * \param[in]     max        When \p transform is positive, this allows to
  *                           set upper boundary schema (per its index in the
- *                           global schemas table) beyond which its forbidden
+ *                           global schemas table) beyond which it's forbidden
  *                           to update by the means of XSLT transformation
  * \param[in]     transform  Whether to employ XSLT-based transformation so
- *                           as allow overcoming possible incompatibilities
+ *                           as to allow overcoming possible incompatibilities
  *                           between major schema versions (see above)
  * \param[in]     to_logs    If true, output notable progress info to
  *                           internal log streams; if false, to stderr
  *
- * \return <tt>pcmk_ok</tt> if no non-recoverable error encountered (up to
+ * \return \c pcmk_ok if no non-recoverable error encountered (up to
  *         caller to evaluate if the update satisfies the requirements
  *         per returned \p best value), negative value carrying the reason
  *         otherwise

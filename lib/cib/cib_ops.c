@@ -108,7 +108,8 @@ cib_process_upgrade(const char *op, int options, const char *section, xmlNode * 
         max_version = get_schema_version(max);
     }
 
-    rc = update_validation(result_cib, &new_version, max_version, TRUE, TRUE);
+    rc = update_validation(result_cib, &new_version, max_version, TRUE,
+                           !(options & cib_verbose));
     if (new_version > current_version) {
         cib_update_counter(*result_cib, XML_ATTR_GENERATION_ADMIN, FALSE);
         cib_update_counter(*result_cib, XML_ATTR_GENERATION, TRUE);

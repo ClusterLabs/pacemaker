@@ -406,9 +406,7 @@ class CIB12(ConfigBase):
         g.commit()
 
         # LSB resource
-        lsb_agent = self.CM.install_helper("LSBDummy")
-
-        lsb = Resource(self.Factory, "lsb-dummy",lsb_agent,  "lsb")
+        lsb = Resource(self.Factory, "lsb-dummy", "LSBDummy", "lsb")
         lsb.add_op("monitor", "5s")
 
         # LSB with group

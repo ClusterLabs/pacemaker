@@ -812,6 +812,7 @@ main(int argc, char **argv)
     if(xml_file) {
         set_bit(data_set.flags, pe_flag_sanitized);
     }
+    set_bit(data_set.flags, pe_flag_stdout);
     cluster_status(&data_set);
 
     if (quiet == FALSE) {
@@ -850,6 +851,7 @@ main(int argc, char **argv)
         if(xml_file) {
             set_bit(data_set.flags, pe_flag_sanitized);
         }
+        set_bit(data_set.flags, pe_flag_stdout);
         cluster_status(&data_set);
     }
 
@@ -910,6 +912,7 @@ main(int argc, char **argv)
             get_date(&data_set);
 
             quiet_log("\nRevised cluster status:\n");
+            set_bit(data_set.flags, pe_flag_stdout);
             cluster_status(&data_set);
             print_cluster_status(&data_set, 0);
         }

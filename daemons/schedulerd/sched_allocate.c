@@ -287,7 +287,7 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
        && digest_secure
        && digest_data->digest_secure_calc
        && strcmp(digest_data->digest_secure_calc, digest_secure) == 0) {
-        if (is_set(data_set->flags, pe_flag_sanitized)) {
+        if (is_set(data_set->flags, pe_flag_stdout)) {
             printf("Only 'private' parameters to " CRM_OP_FMT " on %s changed: %s\n",
                    rsc->id, task, interval_ms, active_node->details->uname,
                    crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));

@@ -51,7 +51,7 @@ static struct crm_option long_options[] = {
 
     {   "register", required_argument, NULL, 'R',
         "Register the named stonith device. Requires: --agent.\n"
-        "\t\t\tOptional: any number of --option and/or --env entries."
+        "\t\t\tOptional: --option, --env-option."
     },
     {   "deregister", required_argument, NULL, 'D',
         "De-register the named stonith device."
@@ -89,6 +89,21 @@ static struct crm_option long_options[] = {
     {   "query", required_argument, NULL, 'Q',
         "Check the named device's status. Optional: --timeout."
     },
+    {   "history", required_argument, NULL, 'H',
+        "Show last successful fencing operation for named node\n"
+        "\t\t\t(or '*' for all nodes). Optional: --timeout, --quiet\n"
+        "\t\t\t(show only the operation's epoch timestamp),\n"
+        "\t\t\t--verbose (show all recorded and pending operations)."
+    },
+    {   "last", required_argument, NULL, 'h',
+        "Indicate when the named node was last fenced.\n"
+        "\t\t\tOptional: --as-node-id."
+    },
+    {   "validate", no_argument, NULL, 'K',
+        "\tValidate a fence device configuration.\n"
+        "\t\t\tRequires: --agent. Optional: --option, --env-option,\n"
+        "\t\t\t--quiet (print no output, only return status).\n"
+    },
 
     {   "-spacer-", no_argument, NULL, '-', "\nFencing Commands:" },
 
@@ -104,32 +119,24 @@ static struct crm_option long_options[] = {
     {   "confirm", required_argument, NULL, 'C',
         "Tell cluster that named host is now safely down."
     },
-    {   "history", required_argument, NULL, 'H',
-        "Show last successful fencing operation for named node\n"
-        "\t\t\t(or '*' for all nodes). Optional: --timeout, --quiet\n"
-        "\t\t\t(show only the operation's epoch timestamp),\n"
-        "\t\t\t--verbose (show all recorded and pending operations)."
-    },
-    {   "last", required_argument, NULL, 'h',
-        "Indicate when the named node was last fenced.\n"
-        "\t\t\tOptional: --as-node-id."
-    },
 
     {   "-spacer-", no_argument, NULL, '-', "\nAdditional Options:" },
 
     {   "agent", required_argument, NULL, 'a',
         "The agent to use (for example, fence_xvm;\n"
-        "\t\t\twith --register, --metadata)."
+        "\t\t\twith --register, --metadata, --validate)."
     },
     {   "option", required_argument, NULL, 'o',
         "Specify a device configuration parameter as NAME=VALUE\n"
-        "\t\t\t(with --register)."
+        "\t\t\t(may be specified multiple times; with --register,\n"
+        "\t\t\t--validate)."
     },
     {   "env-option", required_argument, NULL, 'e',
         "Specify a device configuration parameter with the\n"
         "\t\t\tspecified name, using the value of the\n"
         "\t\t\tenvironment variable of the same name prefixed with\n"
-        "\t\t\tOCF_RESKEY_ (with --register)."
+        "\t\t\tOCF_RESKEY_ (may be specified multiple times;\n"
+        "\t\t\twith --register, --validate)."
     },
     {   "tag", required_argument, NULL, 'T',
         "Identify fencing operations in logs with the specified\n"
@@ -137,8 +144,12 @@ static struct crm_option long_options[] = {
         "\t\t\tstonith_admin (used with most commands)."
     },
     {   "device", required_argument, NULL, 'v',
-        "A device to associate with a given host and\n"
-        "\t\t\tstonith level (with --register-level)."
+        "Device ID (with --register-level, device to associate with\n"
+        "\t\t\ta given host and level; may be specified multiple times)"
+#if SUPPORT_CIBSECRETS
+        "\n\t\t\t(with --validate, name to use to load CIB secrets)"
+#endif
+        "."
     },
     {   "index", required_argument, NULL, 'i',
         "The stonith level (1-9) (with --register-level,\n"
@@ -336,7 +347,7 @@ static int
 show_history(stonith_t *st, const char *target, int timeout, int quiet,
              int verbose)
 {
-    stonith_history_t *history, *hp, *latest = NULL;
+    stonith_history_t *history = NULL, *hp, *latest = NULL;
     int rc = 0;
 
     rc = st->cmds->history(st, st_opts,
@@ -384,6 +395,33 @@ show_history(stonith_t *st, const char *target, int timeout, int quiet,
             print_fence_event(latest);
         }
     }
+
+    stonith_history_free(history);
+    return rc;
+}
+
+static int
+validate(stonith_t *st, const char *agent, const char *id,
+         stonith_key_value_t *params, int timeout, int quiet)
+{
+    int rc = 1;
+    char *output = NULL;
+    char *error_output = NULL;
+
+    rc = st->cmds->validate(st, st_opt_sync_call, id, NULL, agent, params,
+                            timeout, &output, &error_output);
+
+    if (!quiet) {
+        printf("Validation of %s %s\n", agent, (rc? "failed" : "succeeded"));
+        if (output && *output) {
+            puts(output);
+            free(output);
+        }
+        if (error_output && *error_output) {
+            puts(error_output);
+            free(error_output);
+        }
+    }
     return rc;
 }
 
@@ -411,6 +449,7 @@ main(int argc, char **argv)
     const char *longname = NULL;
 
     char action = 0;
+    crm_exit_t exit_code = CRM_EX_OK;
     stonith_t *st = NULL;
     stonith_key_value_t *params = NULL;
     stonith_key_value_t *devices = NULL;
@@ -437,6 +476,7 @@ main(int argc, char **argv)
                 crm_help(flag, CRM_EX_OK);
                 break;
             case 'I':
+            case 'K':
                 no_connect = 1;
                 /* fall through */
             case 'L':
@@ -550,6 +590,9 @@ main(int argc, char **argv)
     if (!no_connect) {
         rc = st->cmds->connect(st, async_fence_data.name, NULL);
         if (rc < 0) {
+            fprintf(stderr, "Could not connect to fencer: %s\n",
+                    pcmk_strerror(rc));
+            exit_code = CRM_EX_DISCONNECT;
             goto done;
         }
     }
@@ -619,7 +662,8 @@ main(int argc, char **argv)
             }
             break;
         case 'R':
-            rc = st->cmds->register_device(st, st_opts, device, "stonith-ng", agent, params);
+            rc = st->cmds->register_device(st, st_opts, device, NULL, agent,
+                                           params);
             break;
         case 'D':
             rc = st->cmds->remove_device(st, st_opts, device);
@@ -631,7 +675,8 @@ main(int argc, char **argv)
         case 'M':
             if (agent == NULL) {
                 printf("Please specify an agent to query using -a,--agent [value]\n");
-                return CRM_EX_USAGE;
+                exit_code = CRM_EX_USAGE;
+                goto done;
             } else {
                 char *buffer = NULL;
 
@@ -674,15 +719,24 @@ main(int argc, char **argv)
         case 'H':
             rc = show_history(st, target, timeout, quiet, verbose);
             break;
+        case 'K':
+            if (agent == NULL) {
+                printf("Please specify an agent to validate with --agent\n");
+                exit_code = CRM_EX_USAGE;
+                goto done;
+            }
+            device = (devices? devices->key : NULL);
+            rc = validate(st, agent, device, params, timeout, quiet);
+            break;
     }
+
+    crm_info("Command returned: %s (%d)", pcmk_strerror(rc), rc);
+    exit_code = crm_errno2exit(rc);
 
   done:
     free(async_fence_data.name);
-    crm_info("Command returned: %s (%d)", pcmk_strerror(rc), rc);
-
     stonith_key_value_freeall(params, 1, 1);
     st->cmds->disconnect(st);
     stonith_api_delete(st);
-
-    return crm_errno2exit(rc);
+    return exit_code;
 }

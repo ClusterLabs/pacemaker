@@ -1392,3 +1392,16 @@ crm_parse_agent_spec(const char *spec, char **standard, char **provider,
     *type = strdup(spec);
     return pcmk_ok;
 }
+
+/*!
+ * \brief Get the local hostname
+ *
+ * \return Newly allocated string with name, or NULL (and set errno) on error
+ */
+char *
+pcmk_hostname()
+{
+    struct utsname hostinfo;
+
+    return (uname(&hostinfo) < 0)? NULL : strdup(hostinfo.nodename);
+}
