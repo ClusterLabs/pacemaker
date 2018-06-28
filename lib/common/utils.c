@@ -1127,27 +1127,6 @@ crm_acl_get_set_user(xmlNode * request, const char *field, const char *peer_user
 
     return requested_user;
 }
-
-void
-determine_request_user(const char *user, xmlNode * request, const char *field)
-{
-    /* Get our internal validation out of the way first */
-    CRM_CHECK(user != NULL && request != NULL && field != NULL, return);
-
-    /* If our peer is a privileged user, we might be doing something on behalf of someone else */
-    if (is_privileged(user) == FALSE) {
-        /* We're not a privileged user, set or overwrite any existing value for $field */
-        crm_xml_replace(request, field, user);
-
-    } else if (crm_element_value(request, field) == NULL) {
-        /* Even if we're privileged, make sure there is always a value set */
-        crm_xml_replace(request, field, user);
-
-/*  } else { Legal delegation */
-    }
-
-    crm_trace("Processing msg as user '%s'", crm_element_value(request, field));
-}
 #endif
 
 void *
