@@ -1474,7 +1474,7 @@ synthesize_lrmd_failure(lrm_state_t *lrm_state, xmlNode *action, int rc)
         lrmd_free_rsc_info(rsc_info);
         process_lrm_event(lrm_state, op, NULL);
 
-    } else {
+    } else if (controld_action_is_recordable(op->op_type)) {
         /* If we can't process the result normally, at least write it to the CIB
          * if possible, so the PE can act on it.
          */
