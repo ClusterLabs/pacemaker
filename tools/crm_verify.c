@@ -47,7 +47,7 @@ static struct crm_option long_options[] = {
     /* Top-level Options */
     {"help",           0, 0, '?', "\tThis text"},
     {"version",        0, 0, '$', "\tVersion information"  },
-    {"verbose",        0, 0, 'V', "\tSpecify multiple times to increase debug output.\n"},
+    {"verbose",        0, 0, 'V', "\tSpecify multiple times to increase debug output\n"},
     
     {"-spacer-",	1, 0, '-', "\nData sources:"},
     {"live-check",  0, 0, 'L', "Check the configuration used by the running cluster\n"},
@@ -261,7 +261,7 @@ main(int argc, char **argv)
     } else if (crm_config_warning) {
         fprintf(stderr, "Warnings found during check: config may not be valid\n");
         if (verbose == FALSE) {
-            fprintf(stderr, "  Use -VV for more details\n");
+            fprintf(stderr, "  Use -V -V for more details\n");
         }
         rc = -pcmk_err_generic;
     }
