@@ -958,7 +958,7 @@ action_timer_callback(gpointer data)
 
         if (timer->action->type != action_type_rsc) {
             send_update = FALSE;
-        } else if (safe_str_eq(task, RSC_CANCEL)) {
+        } else if (!controld_action_is_recordable(task)) {
             /* we don't need to update the CIB with these */
             send_update = FALSE;
         }
