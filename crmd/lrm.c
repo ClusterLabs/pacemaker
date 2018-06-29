@@ -2163,9 +2163,11 @@ record_pending_op(const char *node_name, lrmd_rsc_info_t *rsc, lrmd_event_data_t
     CRM_CHECK(rsc != NULL, return);
     CRM_CHECK(op != NULL, return);
 
+    // Never record certain operation types as pending
     if (op->op_type == NULL
         || safe_str_eq(op->op_type, CRMD_ACTION_CANCEL)
-        || safe_str_eq(op->op_type, CRMD_ACTION_DELETE)) {
+        || safe_str_eq(op->op_type, CRMD_ACTION_DELETE)
+        || safe_str_eq(op->op_type, CRMD_ACTION_NOTIFY)) {
         return;
     }
 
