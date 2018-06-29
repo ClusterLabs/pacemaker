@@ -293,8 +293,8 @@ te_crm_command(crm_graph_t * graph, crm_action_t * action)
     return TRUE;
 }
 
-gboolean
-cib_action_update(crm_action_t * action, int status, int op_rc)
+void
+controld_record_action_timeout(crm_action_t *action)
 {
     lrmd_event_data_t *op = NULL;
     xmlNode *state = NULL;
@@ -305,7 +305,6 @@ cib_action_update(crm_action_t * action, int status, int op_rc)
     int rc = pcmk_ok;
 
     const char *rsc_id = NULL;
-    const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
     const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
     const char *task_uuid = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
     const char *target_uuid = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
@@ -313,22 +312,17 @@ cib_action_update(crm_action_t * action, int status, int op_rc)
     int call_options = cib_quorum_override | cib_scope_local;
     int target_rc = get_target_rc(action);
 
-    if (status == PCMK_LRM_OP_PENDING) {
-        crm_debug("%s %d: Recording pending operation %s on %s",
-                  crm_element_name(action->xml), action->id, task_uuid, target);
-    } else {
-        crm_warn("%s %d: %s on %s timed out",
-                 crm_element_name(action->xml), action->id, task_uuid, target);
-    }
+    crm_warn("%s %d: %s on %s timed out",
+             crm_element_name(action->xml), action->id, task_uuid, target);
 
     action_rsc = find_xml_node(action->xml, XML_CIB_TAG_RESOURCE, TRUE);
     if (action_rsc == NULL) {
-        return FALSE;
+        return;
     }
 
     rsc_id = ID(action_rsc);
-    CRM_CHECK(rsc_id != NULL, crm_log_xml_err(action->xml, "Bad:action");
-              return FALSE);
+    CRM_CHECK(rsc_id != NULL,
+              crm_log_xml_err(action->xml, "Bad:action"); return);
 
 /*
   update the CIB
@@ -356,33 +350,32 @@ cib_action_update(crm_action_t * action, int status, int op_rc)
     crm_copy_xml_element(action_rsc, rsc, XML_AGENT_ATTR_CLASS);
     crm_copy_xml_element(action_rsc, rsc, XML_AGENT_ATTR_PROVIDER);
 
-    op = convert_graph_action(NULL, action, status, op_rc);
+    /* If the executor gets a timeout while waiting for the action to complete,
+     * that will be reported via the usual callback. This timeout means that we
+     * didn't hear from the executor or the controller that relayed the action
+     * to the executor.
+     *
+     * @TODO Using PCMK_OCF_UNKNOWN_ERROR instead of PCMK_OCF_TIMEOUT is one way
+     * to distinguish those situations, but perhaps PCMK_OCF_TIMEOUT would be
+     * preferable anyway.
+     */
+    op = convert_graph_action(NULL, action, PCMK_LRM_OP_TIMEOUT,
+                              PCMK_OCF_UNKNOWN_ERROR);
     op->call_id = -1;
     op->user_data = generate_transition_key(transition_graph->id, action->id, target_rc, te_uuid);
 
     xml_op = create_operation_update(rsc, op, CRM_FEATURE_SET, target_rc, target, __FUNCTION__, LOG_INFO);
     lrmd_free_event(op);
 
-    crm_trace("Updating CIB with \"%s\" (%s): %s %s on %s",
-              status < 0 ? "new action" : XML_ATTR_TIMEOUT,
-              crm_element_name(action->xml), crm_str(task), rsc_id, target);
-    crm_log_xml_trace(xml_op, "Op");
+    crm_log_xml_trace(xml_op, "Action timeout");
 
     rc = fsa_cib_conn->cmds->update(fsa_cib_conn, XML_CIB_TAG_STATUS, state, call_options);
-
-    crm_trace("Updating CIB with %s action %d: %s on %s (call_id=%d)",
-              services_lrm_status_str(status), action->id, task_uuid, target, rc);
-
     fsa_register_cib_callback(rc, FALSE, NULL, cib_action_updated);
     free_xml(state);
 
+    crm_trace("Sent CIB update (call ID %d) for timeout of action %d (%s on %s)",
+              rc, action->id, task_uuid, target);
     action->sent_update = TRUE;
-
-    if (rc < pcmk_ok) {
-        return FALSE;
-    }
-
-    return TRUE;
 }
 
 static gboolean
