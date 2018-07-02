@@ -356,11 +356,7 @@ native_pending_task(resource_t * rsc)
 {
     const char *pending_task = NULL;
 
-    if (safe_str_eq(rsc->pending_task, CRMD_ACTION_NOTIFY)) {
-        /* "Notifying" is not very useful to be shown. */
-        pending_task = NULL;
-
-    } else if (safe_str_eq(rsc->pending_task, CRMD_ACTION_STATUS)) {
+    if (safe_str_eq(rsc->pending_task, CRMD_ACTION_STATUS)) {
         pending_task = "Monitoring";
 
     /* Pending probes are not printed, even if pending
