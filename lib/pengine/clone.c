@@ -162,8 +162,9 @@ clone_unpack(resource_t * rsc, pe_working_set_t * data_set)
         clone_data->promoted_node_max = crm_parse_int(promoted_node_max, "1");
     }
 
-    clone_data->active_clones = 0;
-    clone_data->xml_obj_child = NULL;
+    // Implied by calloc()
+    /* clone_data->xml_obj_child = NULL; */
+
     clone_data->clone_node_max = crm_parse_int(max_clones_node, "1");
 
     if (max_clones) {
@@ -220,7 +221,6 @@ clone_unpack(resource_t * rsc, pe_working_set_t * data_set)
 
     pe_rsc_trace(rsc, "\tClone is unique (fixed): %s",
                  is_set(rsc->flags, pe_rsc_unique) ? "true" : "false");
-    clone_data->notify_confirm = is_set(rsc->flags, pe_rsc_notify);
     add_hash_param(rsc->meta, XML_RSC_ATTR_UNIQUE,
                    is_set(rsc->flags, pe_rsc_unique) ? XML_BOOLEAN_TRUE : XML_BOOLEAN_FALSE);
 
