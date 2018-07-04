@@ -1460,7 +1460,7 @@ synthesize_lrmd_failure(lrm_state_t *lrm_state, xmlNode *action, int rc)
         lrmd_free_rsc_info(rsc_info);
         process_lrm_event(lrm_state, op, NULL);
 
-    } else {
+    } else if (controld_action_is_recordable(op->op_type)) {
         /* If we can't process the result normally, at least write it to the CIB
          * if possible, so the scheduler can act on it.
          */
@@ -2151,9 +2151,9 @@ record_pending_op(const char *node_name, lrmd_rsc_info_t *rsc, lrmd_event_data_t
     CRM_CHECK(rsc != NULL, return);
     CRM_CHECK(op != NULL, return);
 
+    // Never record certain operation types as pending
     if ((op->op_type == NULL) || (op->params == NULL)
-        || safe_str_eq(op->op_type, CRMD_ACTION_CANCEL)
-        || safe_str_eq(op->op_type, CRMD_ACTION_DELETE)) {
+        || !controld_action_is_recordable(op->op_type)) {
         return;
     }
 
@@ -2538,11 +2538,10 @@ process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op, struct recurr
     }
 
     if (op->op_status != PCMK_LRM_OP_CANCELLED) {
-        if (safe_str_eq(op->op_type, RSC_NOTIFY) || safe_str_eq(op->op_type, RSC_METADATA)) {
-            /* Keep notify and meta-data ops out of the CIB */
-            send_direct_ack(NULL, NULL, NULL, op, op->rsc_id);
-        } else {
+        if (controld_action_is_recordable(op->op_type)) {
             update_id = do_update_resource(lrm_state->node_name, rsc, op);
+        } else {
+            send_direct_ack(NULL, NULL, NULL, op, op->rsc_id);
         }
     } else if (op->interval_ms == 0) {
         /* This will occur when "crm resource cleanup" is called while actions are in-flight */
