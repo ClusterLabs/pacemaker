@@ -1658,38 +1658,59 @@ stonith_get_metadata(const char *provider, const char *type, char **output)
 }
 
 static int
-lrmd_api_get_metadata(lrmd_t * lrmd,
-                      const char *class,
-                      const char *provider,
-                      const char *type, char **output, enum lrmd_call_options options)
+lrmd_api_get_metadata(lrmd_t *lrmd, const char *standard, const char *provider,
+                      const char *type, char **output,
+                      enum lrmd_call_options options)
 {
-    svc_action_t *action;
+    return lrmd->cmds->get_metadata_params(lrmd, standard, provider, type,
+                                           output, options, NULL);
+}
 
-    if (!class || !type) {
+static int
+lrmd_api_get_metadata_params(lrmd_t *lrmd, const char *standard,
+                             const char *provider, const char *type,
+                             char **output, enum lrmd_call_options options,
+                             lrmd_key_value_t *params)
+{
+    svc_action_t *action = NULL;
+    GHashTable *params_table = NULL;
+
+    if (!standard || !type) {
+        lrmd_key_value_freeall(params);
         return -EINVAL;
     }
 
-    if (safe_str_eq(class, PCMK_RESOURCE_CLASS_STONITH)) {
+    if (safe_str_eq(standard, PCMK_RESOURCE_CLASS_STONITH)) {
+        lrmd_key_value_freeall(params);
         return stonith_get_metadata(provider, type, output);
     }
 
-    action = resources_action_create(type, class, provider, type,
-                                     "meta-data", 0,
-                                     CRMD_METADATA_CALL_TIMEOUT, NULL, 0);
+    params_table = crm_str_table_new();
+    for (const lrmd_key_value_t *param = params; param; param = param->next) {
+        g_hash_table_insert(params_table, strdup(param->key), strdup(param->value));
+    }
+    action = resources_action_create(type, standard, provider, type,
+                                     CRMD_ACTION_METADATA, 0,
+                                     CRMD_METADATA_CALL_TIMEOUT, params_table,
+                                     0);
+    lrmd_key_value_freeall(params);
+
     if (action == NULL) {
-        crm_err("Unable to retrieve meta-data for %s:%s:%s", class, provider, type);
-        services_action_free(action);
+        crm_err("Unable to retrieve meta-data for %s:%s:%s",
+                standard, provider, type);
         return -EINVAL;
     }
 
-    if (!(services_action_sync(action))) {
-        crm_err("Failed to retrieve meta-data for %s:%s:%s", class, provider, type);
+    if (!services_action_sync(action)) {
+        crm_err("Failed to retrieve meta-data for %s:%s:%s",
+                standard, provider, type);
         services_action_free(action);
         return -EIO;
     }
 
     if (!action->stdout_data) {
-        crm_err("Failed to receive meta-data for %s:%s:%s", class, provider, type);
+        crm_err("Failed to receive meta-data for %s:%s:%s",
+                standard, provider, type);
         services_action_free(action);
         return -EIO;
     }
@@ -1924,6 +1945,7 @@ lrmd_api_new(void)
     new_lrmd->cmds->list_ocf_providers = lrmd_api_list_ocf_providers;
     new_lrmd->cmds->list_standards = lrmd_api_list_standards;
     new_lrmd->cmds->exec_alert = lrmd_api_exec_alert;
+    new_lrmd->cmds->get_metadata_params = lrmd_api_get_metadata_params;
 
     return new_lrmd;
 }
