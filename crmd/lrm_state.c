@@ -619,11 +619,31 @@ lrm_state_get_metadata(lrm_state_t * lrm_state,
                        const char *provider,
                        const char *agent, char **output, enum lrmd_call_options options)
 {
+    lrmd_key_value_t *params = NULL;
+
     if (!lrm_state->conn) {
         return -ENOTCONN;
     }
-    return ((lrmd_t *) lrm_state->conn)->cmds->get_metadata(lrm_state->conn, class, provider, agent,
-                                                            output, options);
+
+    /* Add the node name to the environment, as is done with normal resource
+     * action calls. Meta-data calls shouldn't need it, but some agents are
+     * written with an ocf_local_nodename call at the beginning regardless of
+     * action. Without the environment variable, the agent would try to contact
+     * the controller to get the node name -- but the controller would be
+     * blocking on the synchronous meta-data call.
+     *
+     * At this point, we have to assume that agents are unlikely to make other
+     * calls that require the controller, such as crm_node --quorum or
+     * --cluster-id.
+     *
+     * @TODO Make meta-data calls asynchronous. (This will be part of a larger
+     * project to make meta-data calls via the executor rather than directly.)
+     */
+    params = lrmd_key_value_add(params, CRM_META "_" XML_LRM_ATTR_TARGET,
+                                lrm_state->node_name);
+
+    return ((lrmd_t *) lrm_state->conn)->cmds->get_metadata_params(lrm_state->conn,
+            class, provider, agent, output, options, params);
 }
 
 int
