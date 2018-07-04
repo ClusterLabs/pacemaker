@@ -426,7 +426,7 @@ typedef struct lrmd_api_operations_s {
      * \brief Get resource metadata for a specified resource agent
      *
      * \param[in]  lrmd      Executor connection (unused)
-     * \param[in]  class     Resource agent class
+     * \param[in]  standard  Resource agent class
      * \param[in]  provider  Resource agent provider
      * \param[in]  agent     Resource agent type
      * \param[out] output    Metadata will be stored here (must not be NULL)
@@ -453,7 +453,7 @@ typedef struct lrmd_api_operations_s {
     /*!
      * \brief Retrieve a list of installed resource agents.
      *
-     * \note if class is not provided, all known agents will be returned
+     * \note if standard is not provided, all known agents will be returned
      * \note list must be freed using lrmd_list_freeall()
      *
      * \retval num items in list on success
@@ -502,6 +502,28 @@ typedef struct lrmd_api_operations_s {
     int (*exec_alert) (lrmd_t *lrmd, const char *alert_id,
                        const char *alert_path, int timeout, /* ms */
                        lrmd_key_value_t *params); /* ownership of params is given up to api here */
+
+    /*!
+     * \brief Get resource metadata for a resource agent, passing parameters
+     *
+     * \param[in]  lrmd      Executor connection (unused)
+     * \param[in]  standard  Resource agent class
+     * \param[in]  provider  Resource agent provider
+     * \param[in]  agent     Resource agent type
+     * \param[out] output    Metadata will be stored here (must not be NULL)
+     * \param[in]  options   Options to use with any executor API calls (unused)
+     * \param[in]  params    Parameters to pass to agent via environment
+     *
+     * \note This is identical to the get_metadata() API call, except parameters
+     *       will be passed to the resource agent via environment variables.
+     * \note The API will handle freeing params.
+     *
+     * \return lrmd_ok on success, negative error code on failure
+     */
+    int (*get_metadata_params) (lrmd_t *lrmd, const char *standard,
+                                const char *provider, const char *agent,
+                                char **output, enum lrmd_call_options options,
+                                lrmd_key_value_t *params);
 
 } lrmd_api_operations_t;
 
