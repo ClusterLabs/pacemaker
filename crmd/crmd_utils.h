@@ -107,6 +107,7 @@ void abort_for_stonith_failure(enum transition_action abort_action,
                                const char *target, xmlNode *reason);
 void crmd_peer_down(crm_node_t *peer, bool full);
 unsigned int cib_op_timeout(void);
+bool controld_action_is_recordable(const char *action);
 
 /* Convenience macro for registering a CIB callback
  * (assumes that data can be freed with free())

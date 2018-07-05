@@ -204,3 +204,23 @@ int crmd_cib_smart_opt()
     }
     return call_opt;
 }
+
+/*!
+ * \internal
+ * \brief Check whether an action type should be recorded in the CIB
+ *
+ * \param[in] action  Action type
+ *
+ * \return TRUE if action should be recorded, FALSE otherwise
+ */
+bool
+controld_action_is_recordable(const char *action)
+{
+    if (safe_str_eq(action, CRMD_ACTION_CANCEL)
+        || safe_str_eq(action, CRMD_ACTION_DELETE)
+        || safe_str_eq(action, CRMD_ACTION_NOTIFY)
+        || safe_str_eq(action, CRMD_ACTION_METADATA)) {
+        return FALSE;
+    }
+    return TRUE;
+}
