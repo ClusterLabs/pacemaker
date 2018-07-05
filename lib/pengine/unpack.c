@@ -1739,37 +1739,43 @@ find_anonymous_clone(pe_working_set_t * data_set, node_t * node, resource_t * pa
     // Check for active (or partially active, for cloned groups) instance
     pe_rsc_trace(parent, "Looking for %s on %s in %s", rsc_id, node->details->uname, parent->id);
     for (rIter = parent->children; rsc == NULL && rIter; rIter = rIter->next) {
-        GListPtr nIter = NULL;
         GListPtr locations = NULL;
         resource_t *child = rIter->data;
 
         // Find node(s) where we already know this instance is active
         child->fns->location(child, &locations, TRUE);
+        if (locations) {
+            /* We should never associate the same numbered anonymous clone
+             * instance with multiple nodes, and clone instances can't migrate,
+             * so there must be only one location, regardless of history.
+             */
+            CRM_LOG_ASSERT(locations->next == NULL);
 
-        for (nIter = locations; nIter && rsc == NULL; nIter = nIter->next) {
-            node_t *childnode = nIter->data;
-
-            if (childnode->details == node->details) {
-                /* ->find_rsc() because we might be a cloned group */
+            if (((pe_node_t *)locations->data)->details == node->details) {
+                /* This instance is active on the requested node, so check for
+                 * a corresponding configured resource. We use find_rsc()
+                 * because child may be a cloned group, and we need the
+                 * particular member corresponding to rsc_id.
+                 *
+                 * If the history entry is orphaned, rsc will be NULL.
+                 */
                 rsc = parent->fns->find_rsc(child, rsc_id, NULL, pe_find_clone);
-                if(rsc) {
+                if (rsc) {
                     pe_rsc_trace(parent, "Resource %s, active", rsc->id);
+
+                    /* Keep this block, it means we'll do the right thing if
+                     * anyone toggles the unique flag to 'off'
+                     */
+                    if (rsc->running_on) {
+                        crm_notice("/Anonymous/ clone %s is already running on %s",
+                                   parent->id, node->details->uname);
+                        skip_inactive = TRUE;
+                        rsc = NULL;
+                    }
                 }
             }
-
-            /* Keep this block, it means we'll do the right thing if
-             * anyone toggles the unique flag to 'off'
-             */
-            if (rsc && rsc->running_on) {
-                crm_notice("/Anonymous/ clone %s is already running on %s",
-                           parent->id, node->details->uname);
-                skip_inactive = TRUE;
-                rsc = NULL;
-            }
-        }
-
-        if (locations != NULL) {
             g_list_free(locations);
+
         } else {
             pe_rsc_trace(parent, "Resource %s, skip inactive", child->id);
             if (!skip_inactive && !inactive_instance
