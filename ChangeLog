@@ -1,164 +1,121 @@
-* Tue Jun 26 2018 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.0-rc6
-- Changesets: 98
-- Diff:       100 files changed, 3604 insertions(+), 1318 deletions(-)
-
-- Features added since Pacemaker-2.0.0-rc5
-  + Pre-2.0.0 configurations will be transformed automatically to new syntax
-  + mount, path, and timer systemd unit types are now supported as resources
-  + tools: add stonith_admin --validate option to check device configuration
-
-- Changes since Pacemaker-2.0.0-rc5
-  + tools: treat INFINITY correctly in crm_failcount (regression in 1.1.17)
-  + tools: show master scores with crm_simulate -sL (regression in 1.1.18)
-  + tools: clean up memory of stonith history in stonith_admin
-  + tools: crm_node now gets correct node name and ID on Pacemaker Remote nodes
-  + tools: crm_node is now in the pacemaker-cli package
-
-* Thu May 31 2018 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.0-rc5
-- Update source tarball to revision: 364dfc4
-- Changesets: 54
-- Diff:       66 files changed, 2808 insertions(+), 723 deletions(-)
-
-- Changes since Pacemaker-2.0.0-rc4
-  + all: prefer appropriate node when multiply active
-  + scheduler: handle "requires" of "quorum" or "nothing" properly
-  + scheduler: ensure orphaned recurring monitors have interval set
-  + scheduler: handle pending migrations correctly when record-pending is true
-  + tools: correctly check crm_resource --move for master role
-
-* Tue May 15 2018 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.0-rc4
-- Update source tarball to revision: d0735e3
-- Changesets: 74
-- Diff:       55 files changed, 930 insertions(+), 517 deletions(-)
-
-- Changes since Pacemaker-2.0.0-rc3
-  + Restore ability to do a rolling upgrade (regression in 2.0.0-rc3)
-  + Improved portability to BSD-based platforms
-  + controller,executor: avoid minor memory leaks
-  + executor: handle systemd actions correctly when used with "service:"
-  + libcrmservice: find absolute LSB paths when used with "service:"
-  + tools: cibsecret --help/--version doesn't require cluster to be running
-
-* Mon Apr 30 2018 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.0-rc3
-- Update source tarball to revision: 5aab21d
-- Changesets: 166
-- Diff:       289 files changed, 58655 insertions(+), 59505 deletions(-)
-
-- Features added since Pacemaker-2.0.0-rc2
-  + Daemons have been renamed to make logs more intuitive
-  + Tweak detail log message format for readability with new names
-  + alerts: add epoch and usec alert variables for improved SNMP alerts
-  + controller: rename "crmd-*" cluster options
-
-- Changes since Pacemaker-2.0.0-rc2
-  + CIB manager: don't use empty CIB if real CIB has bad permissions
-  + CIB manager: handle mixed-case node names when modifying attributes (regression in 1.1.17)
-  + controller: avoid double free after ACL rejection of resource delete
-  + controller: delete resource from lrmd when appropriate (regression in rc2)
-  + controller: don't record pending notify actions as completed
-  + scheduler: don't time out failures that cause fencing until fencing completes
-  + resources: drop broken configdir parameter from ocf:pacemaker:controld
-  + tools: ignore attribute placement when crm_diff compares in cib mode
-
-* Fri Apr 06 2018 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.0-rc2
-- Update source tarball to revision: 40519e2
-- Changesets: 192
-- Diff:       215 files changed, 7617 insertions(+), 4135 deletions(-)
-
-- Features added since Pacemaker-2.0.0-rc1
-  + libcrmcluster: prefer corosync name over ring0_addr
-  + libpe_status: deprecate stonith-action=poweroff
-  + pengine: deprecate require-all in rsc_order
-  + xml: allow local "kind" in resource_set within rsc_order
-  + xml: add transform for automatic upgrades to latest schema
-  + build: create /etc/pacemaker directory when installing
-
-- Changes since Pacemaker-2.0.0-rc1
-  + crmd: always write faked failures to CIB whenever possible
-  + libpe_status: handle unique bundle children correctly
-  + libpe_status: use correct default timeout for monitors
-  + pengine: "symmetrical" defaults to "false" for serialize orders
-  + pengine: avoid potential use-of-NULL in unpack_simple_rsc_order()
-  + pengine: fix swapped warning message arguments leading to segfault
-  + pengine: properly cancel recurring monitors
-  + pengine: do not schedule notifications for unrunnable actions
-
-* Fri Feb 16 2018 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.0-rc1
-- Update source tarball to revision: 8eec81f
-- Changesets: 267
-- Diff:       233 files changed, 6622 insertions(+), 28517 deletions(-)
-
+* Fri Jul 6 2018 Ken Gaillot <kgaillot@redhat.com> Pacemaker-2.0.0-1
+- Changesets: 885
+- Diff:       549 files changed, 89865 insertions(+), 95100 deletions(-)
 
 - Deprecated features removed since Pacemaker-1.1.18
   + All of these have newer forms, and the cluster will automatically convert
-    many older syntax usages in configurations to newer syntax as needed
+    most older syntax usage in saved configurations to newer syntax as needed
   + Drop support for heartbeat and corosync 1 (whether using CMAN or plugin)
   + Drop support for rolling upgrades from Pacemaker versions older than 1.1.11
-  + Drop support for PCMK_legacy and LRMD_MAX_CHILDREN environment variables
+  + Drop support for built-in SMTP and SNMP in crm_mon
   + Drop support for legacy option aliases including default-action-timeout,
     default-resource-stickiness, resource-failure-stickiness,
     default-resource-failure-stickiness, is-managed-default,
     and all names using underbar instead of dash
-  + Drop support for undocumented resource isolation feature
   + Drop support for "requires" operation meta-attribute
-  + Drop support for operation meta-attributes in instance_attributes
   + Drop support for the pcmk_*_cmd, pcmk_arg_map, and pcmk_poweroff_action
     fence resource parameters
+  + Drop support for deprecated command-line options to crmadmin,
+    crm_attribute, crm_resource, crm_verify, crm_mon, and stonith_admin
+  + Drop support for operation meta-attributes in instance_attributes
+  + Drop support for PCMK_legacy and LRMD_MAX_CHILDREN environment variables
+  + Drop support for undocumented resource isolation feature
   + Drop support for processing very old saved CIB files (including
     pre-0.6.0 start failure entries, pre-0.6.5 operation history entries,
     pre-0.7 transition keys, pre-1.1.4 migration history entries,
     pre-1.0 XML configuration schemas, pre-1.1.6 ticket state entries, and
     pre-1.1.7 failed recurring operation history entries)
-  + tools: drop support for deprecated command-line options to crmadmin,
-    crm_attribute, crm_resource, crm_verify, crm_mon, and stonith_admin
-  + tools: drop support for built-in SMTP and SNMP in crm_mon
 
 - Features added since Pacemaker-1.1.18
+  + The pacemaker daemons have been renamed to make logs more intuitive
+    and easier to search
   + The default location of the Pacemaker detail log is now
     /var/log/pacemaker/pacemaker.log (instead of being directly in /var/log),
     and Pacemaker will no longer use Corosync's logging preferences;
     configure script options are available to change default log locations
-  + The master XML tag is deprecated in favor of a new "promotable"
-    meta-attribute set to true with a standard clone tag, and the "master-max"
+  + The detail log's message format has been improved
+  + The master XML tag is deprecated in favor of using a standard clone tag
+    with a new "promotable" meta-attribute set to true, and the "master-max"
     and "master-node-max" master meta-attributes are deprecated in favor of
     new "promoted-max" and "promoted-node-max" clone meta-attributes;
     documentation now refers to these as promotable clones rather than
-    master/slave, stateful or multistate clones, and to promotion scores
-    instead of master scores
+    master/slave, stateful, or multistate clones, and refers to
+    promotion scores instead of master scores
+  + Administration-related documentation has been moved from the
+    "Pacemaker Explained" document to a new "Pacemaker Administration" document
   + record-pending now defaults to TRUE (pending actions are shown in status)
+  + All Python code in Pacemaker now supports both Python 2.7 and Python 3
+  + The command-line tools now return consistent, well-defined exit codes;
+    crm_error has an --exit option to list these
+  + Pacemaker's systemd unit files now remove systemd's spawned process limit
+  + mount, path, and timer systemd unit types are now supported as resources
   + A negative stonith-watchdog-timeout now tells the cluster to automatically
     calculate the value based on SBD_WATCHDOG_TIMEOUT (which was the behavior
     of 0 before 1.1.15; 0 retains its post-1.1.15 behavior of disabling use of
     the watchdog as a fencing device)
-  + The undocumented restart-type and role_after_failure resource
-    meta-attributes are now deprecated
-  + systemd unit file removes limit on spawned processes
-  + tools: all tools now return consistent, well-defined exit codes;
-    crm_error has a --exit option to list these
+  + The undocumented restart-type and role_after_failure
+    resource meta-attributes are now deprecated
+  + Regression testing code has been consolidated and overhauled
+    (the most obvious change is new command names)
+  + build: create /etc/pacemaker directory when installing
+  + build: improved portability to BSD-based platforms
   + tools: crm_resource --cleanup now cleans only failed operation history;
     crm_resource --reprobe retains the previous behavior of cleaning all
     operation history
-  + All Python code in Pacemaker now supports both Python 2.7 and Python 3
-  + Regression testing code has been consolidated and overhauled; most obvious
-    change is new command names
-  + Administration-related documentation has been moved from the
-    Pacemaker Explained document to a new Pacemaker Administration document
+  + tools: add stonith_admin --validate option to check device configuration
+  + tools: crm_node is now in the pacemaker-cli package (instead of pacemaker)
+  + alerts: add epoch and usec alert variables for improved SNMP alerts
+  + controller: deprecate "crmd-*" cluster options in favor of new names
+  + scheduler: deprecate stonith-action value "poweroff" (use "off" instead)
+  + scheduler: deprecate require-all in rsc_order
+  + libcrmcluster: prefer corosync name over ring0_addr
+  + xml: allow local "kind" in resource_set within rsc_order
 
 - Changes since Pacemaker-1.1.18
-  + Numerous changes to public API of libraries
   + Restore systemd unit dependency on DBus (regression in 1.1.17)
-  + attrd: ensure node name is broadcast at start-up (CLBZ#5330, regression in 1.1.18)
-  + crmd: quorum gain without a node join should cause new transition
-  + pengine: ensure stop operations occur after stopped remote connections have been brought up
-  + pengine: only allowed nodes need to be considered when ordering resource startup after _all_ recovery
-  + pengine: ordering bundle child stops/demotes after container fencing causes graph loops
-  + pengine: remote connection resources are safe to to require only quorum
-  + pengine: unfence before probing or starting fence devices (regression in 1.1.18)
-  + pengine: correctly observe colocation constraints with bundles in the Master role
-  + pengine: restart resource after failed demote when appropriate
-  + Pacemaker Remote: always use most recent remote proxy
-  + tools: prevent notify actions from causing crm_resource --wait to hang
+  + CIB: handle mixed-case node names when modifying attributes (regression in 1.1.17)
+  + scheduler: avoid crash when logging ignored failure timeout (regression in 1.1.17)
+  + attrd: ensure node name is broadcast at start-up (regression in 1.1.18)
+  + scheduler: unfence before probing or starting fence devices (regression in 1.1.18)
+  + tools: treat INFINITY correctly in crm_failcount (regression in 1.1.17)
+  + tools: show master scores with crm_simulate -sL (regression in 1.1.18)
   + tools: crm_master did not work without explicit --lifetime (regression in 1.1.18)
+  + Numerous changes to public C API of libraries
+  + Choose current node correctly when a resource is multiply active
+  + controller,executor,tools: avoid minor memory leaks
+  + CIB: don't use empty CIB if real CIB has bad permissions
+  + controller: avoid double free after ACL rejection of resource deletion
+  + controller: don't record pending clone notifications in CIB
+  + controller: always write faked failures to CIB whenever possible
+  + controller: quorum gain without a node join should cause new transition
+  + executor: handle systemd actions correctly when used with "service:"
+  + executor: find absolute LSB paths when used with "service:"
+  + scheduler: handle "requires" of "quorum" or "nothing" properly
+  + scheduler: ensure orphaned recurring monitors have interval set
+  + scheduler: handle pending migrations correctly when record-pending is true
+  + scheduler: don't time out failures that cause fencing until fencing completes
+  + scheduler: handle globally-unique bundle children correctly
+  + scheduler: use correct default timeout for monitors
+  + scheduler: "symmetrical" defaults to "false" for serialize orders
+  + scheduler: avoid potential use-of-NULL when unpacking ordering constraint
+  + scheduler: properly cancel recurring monitors
+  + scheduler: do not schedule notifications for unrunnable actions
+  + scheduler: ensure stops occur after stopped remote connections come back up
+  + scheduler: consider only allowed nodes when ordering start after all recovery
+  + scheduler: avoid graph loop from ordering bundle child stops/demotes after container fencing
+  + scheduler: remote connection resources are safe to require only quorum
+  + scheduler: correctly observe colocation with bundles in Master role
+  + scheduler: restart resource after failed demote when appropriate
+  + Pacemaker Remote: always use most recent remote proxy
+  + tools: crm_node now gets correct node name and ID on Pacemaker Remote nodes
+  + tools: correctly check crm_resource --move for master role
+  + tools: cibsecret --help/--version doesn't require cluster to be running
+  + tools: ignore attribute placement when crm_diff compares in cib mode
+  + tools: prevent notify actions from causing crm_resource --wait to hang
+  + resources: drop broken configdir parameter from ocf:pacemaker:controld
+
+- For further details, see:
+  https://wiki.clusterlabs.org/wiki/Pacemaker_2.0_Changes
 
 
 * Tue Nov 14 2017 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.18-1
