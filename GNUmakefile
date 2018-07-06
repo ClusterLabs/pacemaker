@@ -325,7 +325,7 @@ summary:
 	@printf "\n* `date +"%a %b %d %Y"` `git config user.name` <`git config user.email`> $(NEXT_RELEASE)-1"
 	@printf "\n- Changesets: `git log --pretty=oneline $(LAST_RELEASE)..HEAD | wc -l`"
 	@printf "\n- Diff:      "
-	@git diff -r $(LAST_RELEASE)..HEAD --stat include lib daemons tools xml | tail -n 1
+	@git diff $(LAST_RELEASE)..HEAD --shortstat include lib daemons tools xml
 
 rc-changes:
 	@make NEXT_RELEASE=$(shell echo $(LAST_RC) | sed s:-rc.*::) LAST_RELEASE=$(LAST_RC) changes
