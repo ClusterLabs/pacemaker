@@ -1606,37 +1606,60 @@ find_anonymous_clone(pe_working_set_t * data_set, node_t * node, resource_t * pa
     // Check for active (or partially active, for cloned groups) instance
     pe_rsc_trace(parent, "Looking for %s on %s in %s", rsc_id, node->details->uname, parent->id);
     for (rIter = parent->children; rsc == NULL && rIter; rIter = rIter->next) {
-        GListPtr nIter = NULL;
         GListPtr locations = NULL;
         resource_t *child = rIter->data;
 
-        // Find node(s) where we already know this instance is active
+        /* Check whether this instance is already known to be active anywhere.
+         *
+         * "Active" in this case means known to be active at this stage of
+         * unpacking. Because this function is called for a resource before the
+         * resource's individual operation history entries are unpacked,
+         * locations will generally be NULL.
+         *
+         * However, there are three exceptions:
+         * (1) when child is a cloned group and we have already unpacked the
+         *     history of another member of the group;
+         * (2) when we've already unpacked the history of another numbered
+         *     instance on the same node (which can happen if globally-unique
+         *     was flipped from true to false); and
+         * (3) when we re-run calculations on the same data set as part of a
+         *     simulation.
+         */
         child->fns->location(child, &locations, TRUE);
+        if (locations) {
+            /* We should never associate the same numbered anonymous clone
+             * instance with multiple nodes, and clone instances can't migrate,
+             * so there must be only one location, regardless of history.
+             */
+            CRM_LOG_ASSERT(locations->next == NULL);
 
-        for (nIter = locations; nIter && rsc == NULL; nIter = nIter->next) {
-            node_t *childnode = nIter->data;
-
-            if (childnode->details == node->details) {
-                /* ->find_rsc() because we might be a cloned group */
+            if (((pe_node_t *)locations->data)->details == node->details) {
+                /* This instance is active on the requested node, so check for
+                 * a corresponding configured resource. We use find_rsc()
+                 * because child may be a cloned group, and we need the
+                 * particular member corresponding to rsc_id.
+                 *
+                 * If the history entry is orphaned, rsc will be NULL.
+                 */
                 rsc = parent->fns->find_rsc(child, rsc_id, NULL, pe_find_clone);
-                if(rsc) {
+                if (rsc) {
                     pe_rsc_trace(parent, "Resource %s, active", rsc->id);
+
+                    /* If there are multiple active instances of an anonymous
+                     * clone in a single node's history (which can happen if
+                     * globally-unique is switched from true to false), we want
+                     * to consider the instances beyond the first as orphans.
+                     */
+                    if (rsc->running_on) {
+                        crm_notice("Now-anonymous clone %s has multiple instances active on %s",
+                                   parent->id, node->details->uname);
+                        skip_inactive = TRUE;
+                        rsc = NULL;
+                    }
                 }
             }
-
-            /* Keep this block, it means we'll do the right thing if
-             * anyone toggles the unique flag to 'off'
-             */
-            if (rsc && rsc->running_on) {
-                crm_notice("/Anonymous/ clone %s is already running on %s",
-                           parent->id, node->details->uname);
-                skip_inactive = TRUE;
-                rsc = NULL;
-            }
-        }
-
-        if (locations != NULL) {
             g_list_free(locations);
+
         } else {
             pe_rsc_trace(parent, "Resource %s, skip inactive", child->id);
             if (!skip_inactive && !inactive_instance

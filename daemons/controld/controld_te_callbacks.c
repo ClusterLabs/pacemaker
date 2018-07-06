@@ -937,13 +937,13 @@ action_timer_callback(gpointer data)
 
         if (timer->action->type != action_type_rsc) {
             send_update = FALSE;
-        } else if (safe_str_eq(task, RSC_CANCEL)) {
+        } else if (!controld_action_is_recordable(task)) {
             /* we don't need to update the CIB with these */
             send_update = FALSE;
         }
 
         if (send_update) {
-            cib_action_update(timer->action, PCMK_LRM_OP_TIMEOUT, PCMK_OCF_UNKNOWN_ERROR);
+            controld_record_action_timeout(timer->action);
         }
     }
 

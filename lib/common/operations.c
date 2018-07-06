@@ -431,8 +431,8 @@ create_operation_update(xmlNode * parent, lrmd_event_data_t * op, const char * c
         if (op->op_status != PCMK_LRM_OP_PENDING) {
             /* Ignore notify errors.
              *
-             * @TODO We really should keep the actual result here, and ignore it
-             * when processing the CIB diff.
+             * @TODO It might be better to keep the correct result here, and
+             * ignore it in process_graph_event().
              */
             op->op_status = PCMK_LRM_OP_DONE;
             op->rc = 0;

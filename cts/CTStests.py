@@ -865,6 +865,7 @@ class ValgrindTest(CTSTest):
 
     def find_leaks(self):
         # Check for leaks
+        # (no longer used but kept in case feature is restored)
         leaked = []
         self.stop = StopTest(self.CM)
 
@@ -888,9 +889,9 @@ class ValgrindTest(CTSTest):
         return leaked
 
     def __call__(self, node):
-        leaked = self.find_leaks()
-        if len(leaked) > 0:
-            return self.failure("Nodes %s leaked" % repr(leaked))
+        #leaked = self.find_leaks()
+        #if len(leaked) > 0:
+        #    return self.failure("Nodes %s leaked" % repr(leaked))
 
         return self.success()
 
@@ -905,6 +906,7 @@ class ValgrindTest(CTSTest):
 
 class StandbyLoopTest(ValgrindTest):
     '''Check for memory leaks by putting a node in and out of standby for an hour'''
+    # @TODO This is not a useful test for memory leaks
     def __init__(self, cm):
         ValgrindTest.__init__(self,cm)
         self.name = "StandbyLoop"
@@ -936,7 +938,7 @@ class StandbyLoopTest(ValgrindTest):
 
         return self.success()
 
-AllTestClasses.append(StandbyLoopTest)
+#AllTestClasses.append(StandbyLoopTest)
 
 
 class BandwidthTest(CTSTest):

@@ -328,8 +328,8 @@ add_schema_by_version(const schema_version_t *version, int next,
         }
         /* xslt contains full path to "upgrade-enter" stylesheet */
         if (xslt != NULL) {
-            /* then there should be "upgrade-leave" counterpart */
-            memcpy(strrchr(xslt, '-') + 1, "leave", 5);  /* enter -> leave */
+            /* then there should be "upgrade-leave" counterpart (enter->leave) */
+            memcpy(strrchr(xslt, '-') + 1, "leave", sizeof("leave") - 1);
             transform_onleave = (stat(xslt, &s) == 0);
             free(xslt);
         } else {
@@ -972,13 +972,16 @@ apply_upgrade(xmlNode *xml, const struct schema_s *schema, gboolean to_logs)
     crm_debug("Upgrading %s-style configuration, main phase with %s",
               schema->name, schema->transform);
     final = apply_transformation(upgrade, schema->transform, to_logs);
+    if (upgrade != xml) {
+        free_xml(upgrade);
+        upgrade = NULL;
+    }
 
     if (final != NULL && transform_onleave) {
-        free_xml(upgrade);
         upgrade = final;
         transform_leave = strdup(schema->transform_enter);
         /* enter -> leave */
-        memcpy(strrchr(transform_leave, '-') + 1, "leave", 5);
+        memcpy(strrchr(transform_leave, '-') + 1, "leave", sizeof("leave") - 1);
         crm_debug("Upgrading %s-style configuration, post-upgrade phase with %s",
                   schema->name, transform_leave);
         final = apply_transformation(upgrade, transform_leave, to_logs);

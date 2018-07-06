@@ -453,6 +453,7 @@ main(int argc, char **argv)
     gboolean use_tls = FALSE;
     crm_trigger_t *trig;
 
+    crm_log_cli_init("cts-exec-helper");
     crm_set_options(NULL, "mode [options]", long_options,
                     "Inject commands into the executor, and watch for events\n");
 
