@@ -499,7 +499,7 @@ dnl Ensure PYTHON is an absolute path
 AC_PATH_PROG([PYTHON], [$PYTHON])
 
 case "x$PYTHON" in
-    x*python3*)
+    x*python3*|x*platform-python*)
         dnl When used with Python 3, Pacemaker requires a minimum of 3.2
         AM_PATH_PYTHON([3.2])
         ;;
