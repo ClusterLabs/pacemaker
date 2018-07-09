@@ -468,7 +468,7 @@ static struct crm_option long_options[] = {
     {"op-inject",    1, 0, 'i', "\tGenerate a failure for the cluster to react to in the simulation"},
     {"-spacer-",     0, 0, '-', "\t\tValue is of the form ${resource}_${task}_${interval_in_ms}@${node}=${rc}."},
     {"-spacer-",     0, 0, '-', "\t\tEg. memcached_monitor_20000@bart.example.com=7"},
-    {"-spacer-",     0, 0, '-', "\t\tFor more information on OCF return codes, refer to: http://www.clusterlabs.org/doc/en-US/Pacemaker/1.1/html/Pacemaker_Explained/s-ocf-return-codes.html"},
+    {"-spacer-",     0, 0, '-', "\t\tFor more information on OCF return codes, refer to: https://clusterlabs.org/pacemaker/doc/en-US/Pacemaker/2.0/html/Pacemaker_Administration/ch07.html#s-ocf-return-codes"},
     {"op-fail",      1, 0, 'F', "\tIf the specified task occurs during the simulation, have it fail with return code ${rc}"},
     {"-spacer-",     0, 0, '-', "\t\tValue is of the form ${resource}_${task}_${interval_in_ms}@${node}=${rc}."},
     {"-spacer-",     0, 0, '-', "\t\tEg. memcached_stop_0@bart.example.com=1\n"},

@@ -88,7 +88,11 @@
 
 ## Values that differ by Python major version
 %if 0%{?python_major} > 2
+%if 0%{?rhel} > 7
+%global python_path %{__python3}
+%else
 %global python_path /usr/bin/python%{?python3_pkgversion}%{!?python3_pkgversion:3}
+%endif
 %global python_pkg python3
 %global python_min 3.2
 %define py_site %{?python3_sitelib}%{!?python3_sitelib:%(
