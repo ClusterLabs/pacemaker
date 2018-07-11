@@ -1,7 +1,6 @@
-* Wed Jun 20 2018 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.19-rc1
-- Update source tarball to revision: ca6cf19
-- Changesets: 165
-- Diff:       96 files changed, 3636 insertions(+), 2318 deletions(-)
+* Wed Jul 11 2018 Ken Gaillot <kgaillot@redhat.com> Pacemaker-1.1.19-1
+- Changesets: 184
+- Diff:       99 files changed, 3900 insertions(+), 2435 deletions(-)
 
 - Features added since Pacemaker-1.1.18
   + This is a maintenance release with selected changes backported from 2.0.0
@@ -19,6 +18,7 @@
   + crmd: always write faked failures to CIB whenever possible
   + crmd: avoid double free after ACL rejection of resource delete
   + crmd: delete resource from lrmd when appropriate
+  + crmd: don't record pending clone notifications in CIB
   + crmd: match only executed down events
   + lrmd: handle systemd actions correctly when used with "service:"
   + lrmd: always use most recent remote proxy
