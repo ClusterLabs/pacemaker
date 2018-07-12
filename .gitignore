@@ -128,7 +128,6 @@ doc/*/publish
 /daemons/pacemakerd/pacemakerd
 /daemons/schedulerd/pacemaker-schedulerd
 /daemons/schedulerd/pacemaker-schedulerd.xml
-/daemons/schedulerd/ptest
 doc/api/*
 doc/Clusters_from_Scratch.txt
 doc/Pacemaker_Explained.txt
