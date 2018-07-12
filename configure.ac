@@ -48,7 +48,7 @@ dnl   - Manually edit include/crm_config.h.in to have configure include
 dnl     new defines
 dnl   - Should not include HAVE_* defines
 dnl   - Safe to include anywhere
-AM_CONFIG_HEADER(include/config.h include/crm_config.h)
+AC_CONFIG_HEADERS([include/config.h include/crm_config.h])
 
 AC_ARG_WITH(version,
     [  --with-version=version   Override package version (if you are a packager needing to pretend) ],

@@ -336,7 +336,6 @@ nodes not running the full corosync/cluster stack.
 License:       GPLv2+ and LGPLv2+
 Summary:       Pacemaker development package
 Group:         Development/Libraries
-Requires:      %{name}-cts = %{version}-%{release}
 Requires:      %{name}-libs%{?_isa} = %{version}-%{release}
 Requires:      %{name}-cluster-libs%{?_isa} = %{version}-%{release}
 Requires:      libuuid-devel%{?_isa} libtool-ltdl-devel%{?_isa}
