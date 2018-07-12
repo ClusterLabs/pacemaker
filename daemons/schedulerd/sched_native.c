@@ -2678,116 +2678,6 @@ DeleteRsc(resource_t * rsc, node_t * node, gboolean optional, pe_working_set_t *
     return TRUE;
 }
 
-#include <../lib/pengine/unpack.h>
-#define set_char(x) last_rsc_id[lpc] = x; complete = TRUE;
-static char *
-increment_clone(char *last_rsc_id)
-{
-    int lpc = 0;
-    int len = 0;
-    char *tmp = NULL;
-    gboolean complete = FALSE;
-
-    CRM_CHECK(last_rsc_id != NULL, return NULL);
-    len = strlen(last_rsc_id);
-    lpc = len - 1;
-    while (complete == FALSE && lpc > 0) {
-        switch (last_rsc_id[lpc]) {
-            case 0:
-                lpc--;
-                break;
-            case '0':
-                set_char('1');
-                break;
-            case '1':
-                set_char('2');
-                break;
-            case '2':
-                set_char('3');
-                break;
-            case '3':
-                set_char('4');
-                break;
-            case '4':
-                set_char('5');
-                break;
-            case '5':
-                set_char('6');
-                break;
-            case '6':
-                set_char('7');
-                break;
-            case '7':
-                set_char('8');
-                break;
-            case '8':
-                set_char('9');
-                break;
-            case '9':
-                last_rsc_id[lpc] = '0';
-                lpc--;
-                break;
-            case ':':
-                tmp = last_rsc_id;
-                last_rsc_id = crm_strdup_printf("%s:10", tmp);
-                complete = TRUE;
-                free(tmp);
-                break;
-            default:
-                crm_err("Unexpected char: %c (%d)", last_rsc_id[lpc], lpc);
-                return NULL;
-                break;
-        }
-    }
-    return last_rsc_id;
-}
-
-static node_t *
-probe_anon_group_member(resource_t *rsc, node_t *node,
-                        pe_working_set_t *data_set)
-{
-    resource_t *top = uber_parent(rsc);
-
-    if (is_not_set(top->flags, pe_rsc_unique)) {
-        /* Annoyingly we also need to check any other clone instances
-         * Clumsy, but it will work.
-         *
-         * An alternative would be to update known_on for every peer
-         * during process_rsc_state()
-         *
-         * This code desperately needs optimization
-         * ptest -x with 100 nodes, 100 clones and clone-max=10:
-         *   No probes                          O(25s)
-         *   Detection without clone loop               O(3m)
-         *   Detection with clone loop                  O(8m)
-
-         ptest[32211]: 2010/02/18_14:27:55 CRIT: stage5: Probing for unknown resources
-         ptest[32211]: 2010/02/18_14:33:39 CRIT: stage5: Done
-         ptest[32211]: 2010/02/18_14:35:05 CRIT: stage7: Updating action states
-         ptest[32211]: 2010/02/18_14:35:05 CRIT: stage7: Done
-
-         */
-        char *clone_id = clone_zero(rsc->id);
-        resource_t *peer = pe_find_resource(top->children, clone_id);
-        node_t *running = NULL;
-
-        while (peer) {
-            running = pe_hash_table_lookup(peer->known_on, node->details->id);
-            if (running != NULL) {
-                /* we already know the status of the resource on this node */
-                pe_rsc_trace(rsc, "Skipping active clone: %s", rsc->id);
-                free(clone_id);
-                return running;
-            }
-            clone_id = increment_clone(clone_id);
-            peer = pe_find_resource(data_set->resources, clone_id);
-        }
-
-        free(clone_id);
-    }
-    return NULL;
-}
-
 gboolean
 native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
                     gboolean force, pe_working_set_t * data_set)
@@ -2857,20 +2747,8 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
         return FALSE;
     }
 
-    running = g_hash_table_lookup(rsc->known_on, node->details->id);
-    if (running == NULL && is_set(rsc->flags, pe_rsc_unique) == FALSE) {
-        /* Anonymous clones */
-        if (rsc->parent == top) {
-            running = g_hash_table_lookup(rsc->parent->known_on, node->details->id);
-
-        } else {
-            // Members of anonymous-cloned groups need special handling
-            running = probe_anon_group_member(rsc, node, data_set);
-        }
-    }
-
-    if (force == FALSE && running != NULL) {
-        /* we already know the status of the resource on this node */
+    // Check whether resource is already known on node
+    if (!force && g_hash_table_lookup(rsc->known_on, node->details->id)) {
         pe_rsc_trace(rsc, "Skipping known: %s on %s", rsc->id, node->details->uname);
         return FALSE;
     }
