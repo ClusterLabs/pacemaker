@@ -134,6 +134,13 @@ xmlNode *crm_create_op_xml(xmlNode *parent, const char *prefix,
                            const char *timeout);
 #define CRM_DEFAULT_OP_TIMEOUT_S "20s"
 
+// Public resource agent functions (from agents.c)
+char *crm_generate_ra_key(const char *standard, const char *provider,
+                          const char *type);
+bool crm_provider_required(const char *standard);
+int crm_parse_agent_spec(const char *spec, char **standard, char **provider,
+                         char **type);
+
 int compare_version(const char *version1, const char *version2);
 
 /* coverity[+kill] */
@@ -183,10 +190,5 @@ void crm_gnutls_global_init(void);
 
 int crm_exit(int rc);
 bool pcmk_acl_required(const char *user);
-
-char *crm_generate_ra_key(const char *class, const char *provider, const char *type);
-bool crm_provider_required(const char *standard);
-int crm_parse_agent_spec(const char *spec, char **standard, char **provider,
-                         char **type);
 
 #endif
