@@ -542,7 +542,7 @@ common_print(resource_t * rsc, const char *pre_text, const char *name, node_t *n
     }
     offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", name);
     offset += snprintf(buffer + offset, LINE_MAX - offset, "\t(%s", class);
-    if (crm_provider_required(class)) {
+    if (is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_provider)) {
         const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
         offset += snprintf(buffer + offset, LINE_MAX - offset, "::%s", prov);
     }
@@ -823,7 +823,7 @@ get_rscs_brief(GListPtr rsc_list, GHashTable * rsc_table, GHashTable * active_ta
         }
 
         offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", class);
-        if (crm_provider_required(class)) {
+        if (is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_provider)) {
             const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
             offset += snprintf(buffer + offset, LINE_MAX - offset, "::%s", prov);
         }
