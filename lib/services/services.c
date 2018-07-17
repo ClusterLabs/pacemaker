@@ -177,6 +177,7 @@ resources_action_create(const char *name, const char *standard, const char *prov
                         GHashTable * params, enum svc_action_flags flags)
 {
     svc_action_t *op = NULL;
+    uint32_t ra_caps = 0;
 
     /*
      * Do some up front sanity checks before we go off and
@@ -192,9 +193,10 @@ resources_action_create(const char *name, const char *standard, const char *prov
         crm_err("Cannot create operation for %s without resource class", name);
         goto return_error;
     }
+    ra_caps = pcmk_get_ra_caps(standard);
 
-    if (crm_provider_required(standard) && crm_strlen_zero(provider)) {
-        crm_err("Cannot create OCF operation for %s without provider", name);
+    if (is_set(ra_caps, pcmk_ra_cap_provider) && crm_strlen_zero(provider)) {
+        crm_err("Cannot create operation for %s without provider", name);
         goto return_error;
     }
 
@@ -223,32 +225,34 @@ resources_action_create(const char *name, const char *standard, const char *prov
     op->flags = flags;
     op->id = generate_op_key(name, action, interval);
 
-    if (safe_str_eq(action, "monitor") && (
-#if SUPPORT_HEARTBEAT
-        safe_str_eq(op->standard, PCMK_RESOURCE_CLASS_HB) ||
-#endif
-        safe_str_eq(op->standard, PCMK_RESOURCE_CLASS_LSB))) {
-        action = "status";
+    if (is_set(ra_caps, pcmk_ra_cap_status) && safe_str_eq(action, "monitor")) {
+        op->action = strdup("status");
+    } else {
+        op->action = strdup(action);
     }
-    op->action = strdup(action);
 
-    if (crm_provider_required(op->standard)) {
+    if (is_set(ra_caps, pcmk_ra_cap_provider)) {
         op->provider = strdup(provider);
-        op->params = params;
-        params = NULL;
+    }
 
+    if (is_set(ra_caps, pcmk_ra_cap_params)) {
+        op->params = params;
+        params = NULL; // so we don't free them in this function
+    }
+
+    if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_OCF) == 0) {
         if (asprintf(&op->opaque->exec, "%s/resource.d/%s/%s", OCF_ROOT_DIR, provider, agent) == -1) {
             crm_err("Internal error: cannot create agent path");
             goto return_error;
         }
         op->opaque->args[0] = strdup(op->opaque->exec);
-        op->opaque->args[1] = strdup(action);
+        op->opaque->args[1] = strdup(op->action);
 
     } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_LSB) == 0) {
         op->opaque->exec = services__lsb_agent_path(op->agent);
         op->opaque->args[0] = strdup(op->opaque->exec);
         op->opaque->args[1] = strdup(op->action);
-        op->opaque->args[2] = NULL;
+
 #if SUPPORT_HEARTBEAT
     } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_HB) == 0) {
         int index;
@@ -297,8 +301,6 @@ resources_action_create(const char *name, const char *standard, const char *prov
 #endif
 #if SUPPORT_NAGIOS
     } else if (strcasecmp(op->standard, PCMK_RESOURCE_CLASS_NAGIOS) == 0) {
-        int index = 0;
-
         if (op->agent[0] == '/') {
             /* if given an absolute path, use that instead
              * of tacking on the NAGIOS_PLUGIN_DIR path to the front */
@@ -310,20 +312,19 @@ resources_action_create(const char *name, const char *standard, const char *prov
         }
 
         op->opaque->args[0] = strdup(op->opaque->exec);
-        index = 1;
 
         if (safe_str_eq(op->action, "monitor") && op->interval == 0) {
             /* Invoke --version for a nagios probe */
-            op->opaque->args[index] = strdup("--version");
-            index++;
+            op->opaque->args[1] = strdup("--version");
 
-        } else if (params) {
+        } else if (op->params) {
             GHashTableIter iter;
             char *key = NULL;
             char *value = NULL;
+            int index = 1;
             static int args_size = sizeof(op->opaque->args) / sizeof(char *);
 
-            g_hash_table_iter_init(&iter, params);
+            g_hash_table_iter_init(&iter, op->params);
 
             while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value) &&
                    index <= args_size - 3) {
@@ -344,12 +345,16 @@ resources_action_create(const char *name, const char *standard, const char *prov
                 index += 2;
             }
         }
-        op->opaque->args[index] = NULL;
+
+        // Nagios actions don't need to keep the parameters
+        if (op->params != NULL) {
+            g_hash_table_destroy(op->params);
+            op->params = NULL;
+        }
 #endif
     } else {
         crm_err("Unknown resource standard: %s", op->standard);
-        services_action_free(op);
-        op = NULL;
+        goto return_error;
     }
 
     if(params) {
@@ -1417,7 +1422,7 @@ resources_list_standards(void)
 GList *
 resources_list_providers(const char *standard)
 {
-    if (crm_provider_required(standard)) {
+    if (is_set(pcmk_get_ra_caps(standard), pcmk_ra_cap_provider)) {
         return resources_os_list_ocf_providers();
     }
 

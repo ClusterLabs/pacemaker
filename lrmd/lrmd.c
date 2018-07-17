@@ -135,9 +135,7 @@ static const char *
 normalize_action_name(lrmd_rsc_t * rsc, const char *action)
 {
     if (safe_str_eq(action, "monitor") &&
-        (safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_LSB) ||
-         safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_SERVICE)
-         || safe_str_eq(rsc->class, PCMK_RESOURCE_CLASS_SYSTEMD))) {
+        is_set(pcmk_get_ra_caps(rsc->class), pcmk_ra_cap_status)) {
         return "status";
     }
     return action;

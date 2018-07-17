@@ -18,6 +18,52 @@
 #include <crm/crm.h>
 #include <crm/common/util.h>
 
+/*!
+ * \brief Get capabilities of a resource agent standard
+ *
+ * \param[in] standard  Standard name
+ *
+ * \return Bitmask of enum pcmk_ra_caps values
+ */
+uint32_t
+pcmk_get_ra_caps(const char *standard)
+{
+    /* @COMPAT This should probably be case-sensitive, but isn't,
+     * for backward compatibility.
+     */
+    if (standard == NULL) {
+        return pcmk_ra_cap_none;
+
+    } else if (!strcasecmp(standard, PCMK_RESOURCE_CLASS_OCF)) {
+        return pcmk_ra_cap_provider | pcmk_ra_cap_params
+               | pcmk_ra_cap_unique | pcmk_ra_cap_promotable;
+
+    } else if (!strcasecmp(standard, PCMK_RESOURCE_CLASS_STONITH)) {
+        /* @COMPAT Stonith resources can't really be unique clones, but we've
+         * allowed it in the past and have it in some scheduler regression tests
+         * (which were likely never used as real configurations).
+         *
+         * @TODO Remove pcmk_ra_cap_unique at the next major schema version
+         * bump, with a transform to remove globally-unique from the config.
+         */
+        return pcmk_ra_cap_params | pcmk_ra_cap_unique;
+
+    } else if (!strcasecmp(standard, PCMK_RESOURCE_CLASS_SYSTEMD)
+               || !strcasecmp(standard, PCMK_RESOURCE_CLASS_SERVICE)
+               || !strcasecmp(standard, PCMK_RESOURCE_CLASS_LSB)
+               || !strcasecmp(standard, PCMK_RESOURCE_CLASS_UPSTART)) {
+
+        /* Since service can map to LSB, systemd, or upstart, these should
+         * have identical capabilities
+         */
+        return pcmk_ra_cap_status;
+
+    } else if (!strcasecmp(standard, PCMK_RESOURCE_CLASS_NAGIOS)) {
+        return pcmk_ra_cap_params;
+    }
+    return pcmk_ra_cap_none;
+}
+
 char *
 crm_generate_ra_key(const char *standard, const char *provider,
                     const char *type)
@@ -33,6 +79,7 @@ crm_generate_ra_key(const char *standard, const char *provider,
 }
 
 /*!
+ * \deprecated
  * \brief Check whether a resource standard requires a provider to be specified
  *
  * \param[in] standard  Standard name
@@ -42,18 +89,7 @@ crm_generate_ra_key(const char *standard, const char *provider,
 bool
 crm_provider_required(const char *standard)
 {
-    CRM_CHECK(standard != NULL, return FALSE);
-
-    /* @TODO
-     * - this should probably be case-sensitive, but isn't,
-     *   for backward compatibility
-     * - it might be nice to keep standards' capabilities (supports provider,
-     *   can be promotable, etc.) as structured data somewhere
-     */
-    if (!strcasecmp(standard, PCMK_RESOURCE_CLASS_OCF)) {
-        return TRUE;
-    }
-    return FALSE;
+    return is_set(pcmk_get_ra_caps(standard), pcmk_ra_cap_provider);
 }
 
 /*!
@@ -89,7 +125,7 @@ crm_parse_agent_spec(const char *spec, char **standard, char **provider,
     *standard = strndup(spec, colon - spec);
     spec = colon + 1;
 
-    if (crm_provider_required(*standard)) {
+    if (is_set(pcmk_get_ra_caps(*standard), pcmk_ra_cap_provider)) {
         colon = strchr(spec, ':');
         if ((colon == NULL) || (colon == spec)) {
             free(*standard);
