@@ -1039,7 +1039,7 @@ class BandwidthTest(CTSTest):
                 linessplit = line.split(" ")
                 for j in range(len(linessplit)-1):
                     if linessplit[j] == "udp": break
-                    if linesplit[j] == "length:": break
+                    if linessplit[j] == "length:": break
                 try:
                     sum = int(linessplit[j+1]) + sum
                 except ValueError:
