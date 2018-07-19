@@ -27,7 +27,6 @@ eval set -- "$TEMP"
 
 progname=$(basename "$0")
 rsh="ssh -T"
-times=""
 tests=""
 nodes=""
 compress=1
@@ -243,10 +242,18 @@ EOF
 # check if files have same content in the cluster
 #
 cibdiff() {
-    d1=`dirname $1`
-    d2=`dirname $2`
-    if [ -f $d1/RUNNING -a -f $d2/RUNNING ] ||
-	[ -f $d1/STOPPED -a -f $d2/STOPPED ]; then
+    d1=$(dirname $1)
+    d2=$(dirname $2)
+
+    if [ -f "$d1/RUNNING" ] && [ ! -f "$d2/RUNNING" ]; then
+        DIFF_OK=0
+    elif [ -f "$d1/STOPPED" ] && [ ! -f "$d2/STOPPED" ]; then
+        DIFF_OK=0
+    else
+        DIFF_OK=1
+    fi
+
+    if [ $DIFF_OK -eq 1 ]; then
 	if which crm_diff > /dev/null 2>&1; then
 	    crm_diff -c -n $1 -o $2
 	else
@@ -277,7 +284,7 @@ esac
 # remove duplicates if files are same, make links instead
 #
 consolidate() {
-    for n in $NODES; do
+    for n in $nodes; do
 	if [ -f $1/$2 ]; then
 	    rm $1/$n/$2
 	else
@@ -290,7 +297,7 @@ consolidate() {
 analyze_one() {
     rc=0
     node0=""
-    for n in $NODES; do
+    for n in $nodes; do
 	if [ "$node0" ]; then
 	    diffcheck $1/$node0/$2 $1/$n/$2
 	    rc=$(($rc+$?))
