@@ -1,4 +1,10 @@
 #!@BASH_PATH@
+#
+# Copyright 2009-2018 Andrew Beekhof <andrew@beekhof.net>
+#
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
+#
 
 USAGE_TEXT="Usage: crm_standby <command> [options]
 
@@ -28,7 +34,7 @@ $USAGE_TEXT
 
 exit_usage() {
     if [ $# -gt 0 ]; then
-        echo "error: $@" >&2
+        echo "error:" "$@" >&2
     fi
     echo
     echo "$USAGE_TEXT"
