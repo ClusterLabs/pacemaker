@@ -1,31 +1,12 @@
 #!/bin/sh
 #
+# Ping OCF RA that utilizes the system ping 
 #
-#	Ping OCF RA that utilizes the system ping 
+# Copyright 2009-2018 Andrew Beekhof <andrew@beekhof.net>
 #
-# Copyright (c) 2009 Andrew Beekhof
-#                    All Rights Reserved.
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of version 2 of the GNU General Public License as
-# published by the Free Software Foundation.
-#
-# This program is distributed in the hope that it would be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-#
-# Further, this software is distributed without any warranty that it is
-# free of the rightful claim of any third person regarding infringement
-# or the like.  Any license provided herein, whether implied or
-# otherwise, applies only to this software file.  Patent licenses, if
-# any, provided herein do not apply to combinations of this program with
-# other software, or any other product whatsoever.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write the Free Software Foundation,
-# Inc., 59 Temple Place - Suite 330, Boston MA 02111-1307, USA.
-#
-
 #######################################################################
 # Initialization:
 
@@ -243,7 +224,6 @@ fping_check() {
 
     active=0
 
-    n=$OCF_RESKEY_attempts
     timeout=`expr $OCF_RESKEY_timeout \* 1000 / $OCF_RESKEY_attempts`
 
     cmd="$p_exe -r $OCF_RESKEY_attempts -t $timeout -B 1.0 $OCF_RESKEY_options $OCF_RESKEY_host_list"
@@ -318,7 +298,7 @@ ping_update() {
         return $rc
     fi
 
-    if [ -n "$OCF_RESKEY_failure_score" -a "$score" -lt "$OCF_RESKEY_failure_score" ]; then
+    if [ -n "$OCF_RESKEY_failure_score" ] && [ "$score" -lt "$OCF_RESKEY_failure_score" ]; then
         ocf_log warn "$OCF_RESKEY_name is less than failure_score($OCF_RESKEY_failure_score)"
         return 1
     fi
@@ -349,7 +329,7 @@ hosts_family() {
     for host in $OCF_RESKEY_host_list; do
         host_family $host
         f=$?        
-        if [ $family -ne 0 -a $f -ne 0 -a $f -ne $family ] ; then
+        if [ $family -ne 0 ] && [ $f -ne 0 ] && [ $f -ne $family ] ; then
             family=99
             break
         fi
