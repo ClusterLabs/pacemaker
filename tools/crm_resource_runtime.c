@@ -832,6 +832,8 @@ cli_resource_check(cib_t * cib_conn, resource_t *rsc)
 
     if(role_s) {
         enum rsc_role_e role = text2role(role_s);
+
+        free(role_s);
         if(role == RSC_ROLE_UNKNOWN) {
             // Treated as if unset
 
@@ -850,6 +852,7 @@ cli_resource_check(cib_t * cib_conn, resource_t *rsc)
         printf("%s  * The configuration prevents the cluster from stopping or starting '%s' (unmanaged)\n", need_nl == 0?"\n":"", parent->id);
         need_nl++;
     }
+    free(managed);
 
     if(need_nl) {
         printf("\n");
