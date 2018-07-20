@@ -214,10 +214,10 @@ EOF
 
 start_network_all()
 {
-	start_network $(this_node)
+	start_network "$(this_node)"
 	if [ $share_configs -eq 1 ]; then
 		for node in $(other_nodes); do
-			start_network $node
+			start_network "$node"
 		done
 	fi
 }
@@ -378,13 +378,13 @@ apply_cib_entries()
 {
 	cibadmin -Q > cur.cib
 	export CIB_file=cur.cib
-	for tmp in $(ls container*.cib); do
+	for tmp in container*.cib; do
 		cibadmin -o resources -Mc -x $tmp
 
 		remote_node=$(cat ${tmp} | grep remote-node | sed -n -e 's/^.*value=\"\(.*\)\".*/\1/p')
 		if [ $anywhere -eq 0 ]; then
 			tmp=$(echo $tmp | sed -e 's/\.cib//g')
-			crm_resource -M -r $tmp -H $(this_node)
+			crm_resource -M -r "$tmp" -H "$(this_node)"
 		fi
 		echo "<rsc_location id=\"lxc-ping-location-${remote_node}\" node=\"${remote_node}\" rsc=\"Connectivity\" score=\"-INFINITY\"/>" > tmp_constraint
 		# it's fine if applying this constraint fails. it's just to help with cts
@@ -427,10 +427,10 @@ restore_cib()
 	done
 	cibadmin -o resources -D -x lxc-ms.cib
 
-	for tmp in $(ls container*.cib); do
+	for tmp in container*.cib; do
 		tmp=$(echo $tmp | sed -e 's/\.cib//g')
-		crm_resource -U -r $tmp -H $(this_node)
-		crm_resource -D -r $tmp -t primitive
+		crm_resource -U -r "$tmp" -H "$(this_node)"
+		crm_resource -D -r "$tmp" -t primitive
 	done
 	# Make sure the version changes even if the content doesn't
 	cibadmin -B
@@ -472,7 +472,7 @@ EOF
 
 restore_libvirt()
 {
-	restore_network $(this_node)
+	restore_network "$(this_node)"
 	if [ $share_configs -eq 1 ]; then
 		for node in $(other_nodes); do
 			restore_network $node
@@ -482,7 +482,7 @@ restore_libvirt()
 
 restore_files()
 {
-	ls | grep -v "lxc.\.xml" | xargs rm -rf
+	find . -maxdepth 1 -not -name "lxc*.xml" -a -not -name . -exec rm -rf "{}" ";"
 	if [ $share_configs -eq 1 ]; then
 		for node in $(other_nodes); do
 			ssh $SSH_CMD_OPTS $node rm -rf \
@@ -493,7 +493,7 @@ restore_files()
 }
 
 make_directory $working_dir
-cd $working_dir
+cd $working_dir || exit 1
 
 # Generate files as requested
 if [ $download -eq 1 ]; then
