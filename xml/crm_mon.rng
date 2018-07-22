@@ -360,6 +360,7 @@
                 <choice>
                     <value>docker</value>
                     <value>rkt</value>
+                    <value>podman</value>
                 </choice>
             </attribute>
             <attribute name="image"> <text/> </attribute>

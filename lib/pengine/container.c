@@ -66,7 +66,7 @@ allocate_ip(container_variant_data_t *data, container_grouping_t *tuple, char *b
                     data->prefix, tuple->offset, tuple->ipaddr,
                     data->prefix, tuple->offset, data->prefix, tuple->offset);
 #else
-    if (data->type == PE_CONTAINER_TYPE_DOCKER) {
+    if (data->type == PE_CONTAINER_TYPE_DOCKER || data->type == PE_CONTAINER_TYPE_PODMAN) {
         if (data->add_host == FALSE) {
             return 0;
         }
@@ -321,6 +321,164 @@ create_docker_resource(
         // TODO: Other ops? Timeouts and intervals from underlying resource?
         crm_log_xml_trace(xml_docker, "Container-docker");
         if (common_unpack(xml_docker, &tuple->docker, parent, data_set) == FALSE) {
+            return FALSE;
+        }
+        parent->children = g_list_append(parent->children, tuple->docker);
+        return TRUE;
+}
+static bool
+create_podman_resource(resource_t *parent, container_variant_data_t *data, container_grouping_t *tuple,
+                       pe_working_set_t * data_set)
+{
+        int offset = 0, max = 4096;
+        char *buffer = calloc(1, max+1);
+
+        int doffset = 0, dmax = 1024;
+        char *dbuffer = calloc(1, dmax+1);
+
+        char *id = NULL;
+        xmlNode *xml_podman = NULL;
+        xmlNode *xml_obj = NULL;
+
+        id = crm_strdup_printf("%s-podman-%d", data->prefix, tuple->offset);
+        crm_xml_sanitize_id(id);
+        xml_podman = create_resource(id, "heartbeat", "podman");
+        free(id);
+
+        xml_obj = create_xml_node(xml_podman, XML_TAG_ATTR_SETS);
+        crm_xml_set_id(xml_obj, "%s-attributes-%d", data->prefix, tuple->offset);
+
+        crm_create_nvpair_xml(xml_obj, NULL, "image", data->image);
+        crm_create_nvpair_xml(xml_obj, NULL, "allow_pull", XML_BOOLEAN_TRUE);
+        crm_create_nvpair_xml(xml_obj, NULL, "force_kill", XML_BOOLEAN_FALSE);
+        crm_create_nvpair_xml(xml_obj, NULL, "reuse", XML_BOOLEAN_FALSE);
+
+        // FIXME: (bandini 2018-08) podman has no restart policies
+        //offset += snprintf(buffer+offset, max-offset, " --restart=no");
+
+        /* Set a container hostname only if we have an IP to map it to.
+         * The user can set -h or --uts=host themselves if they want a nicer
+         * name for logs, but this makes applications happy who need their
+         * hostname to match the IP they bind to.
+         */
+        if (data->ip_range_start != NULL) {
+            offset += snprintf(buffer+offset, max-offset, " -h %s-%d",
+                               data->prefix, tuple->offset);
+        }
+
+        offset += snprintf(buffer+offset, max-offset, " -e PCMK_stderr=1");
+
+        if(data->docker_network) {
+            // FIXME: (bandini 2018-08) podman has no support for --link-local-ip
+            //offset += snprintf(buffer+offset, max-offset, " --link-local-ip=%s", tuple->ipaddr);
+            offset += snprintf(buffer+offset, max-offset, " --net=%s", data->docker_network);
+        }
+
+        if(data->control_port) {
+            offset += snprintf(buffer+offset, max-offset, " -e PCMK_remote_port=%s", data->control_port);
+        } else {
+            offset += snprintf(buffer+offset, max-offset, " -e PCMK_remote_port=%d", DEFAULT_REMOTE_PORT);
+        }
+
+        for(GListPtr pIter = data->mounts; pIter != NULL; pIter = pIter->next) {
+            container_mount_t *mount = pIter->data;
+
+            if(mount->flags) {
+                char *source = crm_strdup_printf(
+                    "%s/%s-%d", mount->source, data->prefix, tuple->offset);
+
+                if(doffset > 0) {
+                    doffset += snprintf(dbuffer+doffset, dmax-doffset, ",");
+                }
+                doffset += snprintf(dbuffer+doffset, dmax-doffset, "%s", source);
+                offset += snprintf(buffer+offset, max-offset, " -v %s:%s", source, mount->target);
+                free(source);
+
+            } else {
+                offset += snprintf(buffer+offset, max-offset, " -v %s:%s", mount->source, mount->target);
+            }
+            if(mount->options) {
+                offset += snprintf(buffer+offset, max-offset, ":%s", mount->options);
+            }
+        }
+
+        for(GListPtr pIter = data->ports; pIter != NULL; pIter = pIter->next) {
+            container_port_t *port = pIter->data;
+
+            if(tuple->ipaddr) {
+                offset += snprintf(buffer+offset, max-offset, " -p %s:%s:%s",
+                                   tuple->ipaddr, port->source, port->target);
+            } else if(safe_str_neq(data->docker_network, "host")) {
+                // No need to do port mapping if net=host
+                offset += snprintf(buffer+offset, max-offset, " -p %s:%s", port->source, port->target);
+            }
+        }
+
+        if(data->docker_run_options) {
+            offset += snprintf(buffer+offset, max-offset, " %s", data->docker_run_options);
+        }
+
+        if(data->docker_host_options) {
+            offset += snprintf(buffer+offset, max-offset, " %s", data->docker_host_options);
+        }
+
+        crm_create_nvpair_xml(xml_obj, NULL, "run_opts", buffer);
+        free(buffer);
+
+        crm_create_nvpair_xml(xml_obj, NULL, "mount_points", dbuffer);
+        free(dbuffer);
+
+        if(tuple->child) {
+            if(data->docker_run_command) {
+                crm_create_nvpair_xml(xml_obj, NULL,
+                                      "run_cmd", data->docker_run_command);
+            } else {
+                crm_create_nvpair_xml(xml_obj, NULL,
+                                      "run_cmd", SBIN_DIR "/pacemaker-remoted");
+            }
+
+            /* TODO: Allow users to specify their own?
+             *
+             * We just want to know if the container is alive, we'll
+             * monitor the child independently
+             */
+            crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd", "/bin/true");
+        /* } else if(child && data->untrusted) {
+         * Support this use-case?
+         *
+         * The ability to have resources started/stopped by us, but
+         * unable to set attributes, etc.
+         *
+         * Arguably better to control API access this with ACLs like
+         * "normal" remote nodes
+         *
+         *     crm_create_nvpair_xml(xml_obj, NULL,
+         *                           "run_cmd",
+         *                           "/usr/libexec/pacemaker/pacemaker-execd");
+         *     crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd",
+         *         "/usr/libexec/pacemaker/lrmd_internal_ctl -c poke");
+         */
+        } else {
+            if(data->docker_run_command) {
+                crm_create_nvpair_xml(xml_obj, NULL,
+                                      "run_cmd", data->docker_run_command);
+            }
+
+            /* TODO: Allow users to specify their own?
+             *
+             * We don't know what's in the container, so we just want
+             * to know if it is alive
+             */
+            crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd", "/bin/true");
+        }
+
+
+        xml_obj = create_xml_node(xml_podman, "operations");
+        crm_create_op_xml(xml_obj, ID(xml_podman), "monitor", "60s", NULL);
+
+        // TODO: Other ops? Timeouts and intervals from underlying resource?
+        crm_log_xml_trace(xml_podman, "Container-podman");
+        if (common_unpack(xml_podman, &tuple->docker, parent, data_set) == FALSE) {
             return FALSE;
         }
         parent->children = g_list_append(parent->children, tuple->docker);
@@ -660,7 +818,11 @@ create_container(
 {
 
     if (data->type == PE_CONTAINER_TYPE_DOCKER &&
-          create_docker_resource(parent, data, tuple, data_set) == FALSE) {
+        create_docker_resource(parent, data, tuple, data_set) == FALSE) {
+        return FALSE;
+    }
+    if (data->type == PE_CONTAINER_TYPE_PODMAN &&
+        create_podman_resource(parent, data, tuple, data_set) == FALSE) {
         return FALSE;
     }
     if (data->type == PE_CONTAINER_TYPE_RKT &&
@@ -845,7 +1007,12 @@ container_unpack(resource_t * rsc, pe_working_set_t * data_set)
         if (xml_obj != NULL) {
             container_data->type = PE_CONTAINER_TYPE_RKT;
         } else {
-            return FALSE;
+            xml_obj = first_named_child(rsc->xml, "podman");
+            if (xml_obj != NULL) {
+                container_data->type = PE_CONTAINER_TYPE_PODMAN;
+            } else {
+                return FALSE;
+            }
         }
     }
 
@@ -1225,6 +1392,8 @@ container_type_as_string(enum container_type t)
         return PE_CONTAINER_TYPE_DOCKER_S;
     } else if (t == PE_CONTAINER_TYPE_RKT) {
         return PE_CONTAINER_TYPE_RKT_S;
+    } else if (t == PE_CONTAINER_TYPE_PODMAN) {
+        return PE_CONTAINER_TYPE_PODMAN_S;
     } else {
         return PE_CONTAINER_TYPE_UNKNOWN_S;
     }
