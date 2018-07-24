@@ -187,7 +187,8 @@ detect_daemon_dir() {
 }
 
 detect_cib_dir() {
-    if [ "-f ${local_state_dir}/lib/pacemaker/cib/cib.xml" ]; then
+    d="${local_state_dir}/lib/pacemaker/cib" 
+    if [ -f "$d/cib.xml" ]; then
         found_dir "config files" "$d"
         return
     fi
