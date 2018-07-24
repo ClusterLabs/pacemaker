@@ -124,6 +124,7 @@ while [ $# -gt 0 ] ; do
         --run)
             single_test=$(basename "$2" ".xml")
             shift 2
+            break # any remaining arguments will be passed to test command
             ;;
         -b|--binary)
             test_binary="$2"
