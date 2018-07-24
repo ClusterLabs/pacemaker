@@ -257,11 +257,10 @@ diffcheck() {
 	echo "$2 does not exist"
 	return 1
     }
-    case `basename $1` in
-	$CIB_F)  cibdiff $1 $2;;
-	$B_CONF) diff -u $1 $2;; # confdiff?
-	*)       diff -u $1 $2;;
-esac
+    case $(basename "$1") in
+        $CIB_F)  cibdiff $1 $2 ;;
+        *)       diff -u $1 $2 ;;
+    esac
 }
 
 #
@@ -293,7 +292,7 @@ analyze_one() {
 }
 
 analyze() {
-    flist="$MEMBERSHIP_F $CIB_F $CRM_MON_F $B_CONF $SYSINFO_F"
+    flist="$MEMBERSHIP_F $CIB_F $CRM_MON_F $SYSINFO_F"
     for f in $flist; do
 	printf "Diff $f... "
 	ls $1/*/$f >/dev/null 2>&1 || {
