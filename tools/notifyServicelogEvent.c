@@ -1,23 +1,14 @@
 /*
- * Copyright (C) 2009 International Business Machines, IBM, Mark Hamzy
+ * Copyright 2009-2018 International Business Machines, IBM, Mark Hamzy
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 /* gcc -o notifyServicelogEvent `pkg-config --cflags servicelog-1` `pkg-config --libs servicelog-1` notifyServicelogEvent.c
 */
+
+#include <crm_internal.h>
 
 #include <string.h>
 #include <stdio.h>
@@ -27,9 +18,10 @@
 #include <syslog.h>
 #include <unistd.h>
 #include <config.h>
+
 #include <crm/common/xml.h>
 #include <crm/common/util.h>
-#include <crm_internal.h>
+#include <crm/attrd.h>
 
 typedef enum { STATUS_GREEN = 1, STATUS_YELLOW, STATUS_RED } STATUS;
 
@@ -91,7 +83,7 @@ main(int argc, char *argv[])
     struct sl_event *event = NULL;
     uint64_t event_id = 0;
 
-    crm_log_init_quiet("notifyServicelogEvent", LOG_INFO, FALSE, TRUE, argc, argv);
+    crm_log_cli_init("notifyServicelogEvent");
     crm_set_options(NULL, "event_id ", long_options,
                     "Gets called upon events written to servicelog database");
 
