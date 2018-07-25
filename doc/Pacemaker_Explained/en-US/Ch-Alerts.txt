@@ -362,6 +362,13 @@ See their source code for the full set of instance attributes they support.
  (+resource+ alerts only)
  indexterm:[Environment Variable,CRM_alert_,status]
 
+|CRM_alert_exec_time
+|The (wall-clock) time, in milliseconds, that it took to execute the action. If
+ the action timed out, +CRM_alert_status+ will be 2, +CRM_alert_desc+ will be
+ "Timed Out", and this value will be the action timeout. May not be supported
+ on all platforms. (+resource+ alerts only)
+ indexterm:[Environment Variable,CRM_alert_,exec_time]
+
 |CRM_alert_attribute_name
 |The name of the node attribute that changed (+attribute+ alerts only)
  indexterm:[Environment Variable,CRM_alert_,attribute_name]
