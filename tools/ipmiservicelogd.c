@@ -9,13 +9,10 @@
  * Author: Intel Corporation
  *         Jeff Zheng <Jeff.Zheng@Intel.com>
  *
- * Copyright 2009 International Business Machines, IBM
+ * Copyright 2009-2018 International Business Machines, IBM
  *
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public License
- *  as published by the Free Software Foundation; either version 2 of
- *  the License, or (at your option) any later version.
- *
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  *
  *  THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED
  *  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
@@ -27,16 +24,18 @@
  *  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
  *  TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  *  USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this program; if not, write to the Free
- *  Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
 /* gcc -o ipmiservicelogd -g `pkg-config --cflags --libs OpenIPMI OpenIPMIposix servicelog-1` ipmiservicelogd.c
  */
 /* ./ipmiservicelogd smi 0
  */
+
+#include <crm_internal.h>
+
+#ifndef _GNU_SOURCE
+#  define _GNU_SOURCE
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -68,7 +67,7 @@
 
 static os_handler_t *os_hnd;
 
-char *getStringExecOutput(char *args[]);
+char *getStringExecOutput(const char *const args[]);
 char *getSerialNumber(void);
 char *getProductName(void);
 static void con_usage(const char *name, const char *help, void *cb_data);
@@ -91,7 +90,7 @@ void setup_done(ipmi_domain_t * domain, int err, unsigned int conn_num, unsigned
                 int still_connected, void *user_data);
 
 char *
-getStringExecOutput(char *args[])
+getStringExecOutput(const char *const args[])
 {
     int rc;
     pid_t pid;
@@ -201,7 +200,11 @@ getStringExecOutput(char *args[])
             crm_err("Error: child close (pipefd[1]) = %d", errno);
         }
 
-        rc = execvp(args[0], args);
+        /* execvp() takes (char *const *) for backward compatibility,
+         * but POSIX guarantees that it will not modify the strings,
+         * so the cast is safe
+         */
+        rc = execvp(args[0], (char *const *) args);
 
         if (rc == -1) {
             crm_err("Error: child execvp = %d", errno);
@@ -224,7 +227,7 @@ getStringExecOutput(char *args[])
 char *
 getSerialNumber(void)
 {
-    char *dmiArgs[] = {
+    const char *const dmiArgs[] = {
         "dmidecode",
         "--string",
         "system-serial-number",
@@ -237,7 +240,7 @@ getSerialNumber(void)
 char *
 getProductName(void)
 {
-    char *dmiArgs[] = {
+    const char *dmiArgs[] = {
         "dmidecode",
         "--string",
         "system-product-name",
@@ -313,8 +316,8 @@ ipmi2servicelog(struct sl_data_bmc *bmc_data)
     sl_event.machine_serial   = serial_number;
     sl_event.machine_model    = product_name;         /* it may not have the serial # within the first 20 chars */
     sl_event.nodename         = name.nodename;
-    sl_event.refcode          = "ipmi";
-    sl_event.description      = "ipmi event";
+    sl_event.refcode          = strdup("ipmi");
+    sl_event.description      = strdup("ipmi event");
     sl_event.serviceable      = 1;                    /* 1 or 0 */
     sl_event.predictive       = 0;                    /* 1 or 0 */
     sl_event.disposition      = SL_DISP_RECOVERABLE;  /* one of SL_DISP_* */
@@ -336,6 +339,8 @@ ipmi2servicelog(struct sl_data_bmc *bmc_data)
         crm_debug("Sending to servicelog database");
     }
 
+    free(sl_event.refcode);
+    free(sl_event.description);
     free(serial_number);
     free(product_name);
 
@@ -352,7 +357,6 @@ sensor_threshold_event_handler(ipmi_sensor_t * sensor,
                                double value, void *cb_data, ipmi_event_t * event)
 {
     ipmi_entity_t *ent = ipmi_sensor_get_entity(sensor);
-    int id, instance;
     char name[IPMI_ENTITY_NAME_LEN];
     struct sl_data_bmc bmc_data;
     uint32_t sel_id;
@@ -366,8 +370,6 @@ sensor_threshold_event_handler(ipmi_sensor_t * sensor,
     uint8_t event_type;
     int direction;
 
-    id = ipmi_entity_get_entity_id(ent);
-    instance = ipmi_entity_get_entity_instance(ent);
     ipmi_sensor_get_id(sensor, name, sizeof(name));
 
     ipmi_sensor_get_num(sensor, &sensor_lun, &sensor_number);
@@ -416,7 +418,6 @@ sensor_discrete_event_handler(ipmi_sensor_t * sensor,
                               int severity, int prev_severity, void *cb_data, ipmi_event_t * event)
 {
     ipmi_entity_t *ent = ipmi_sensor_get_entity(sensor);
-    int id, instance;
     char name[IPMI_ENTITY_NAME_LEN];
     struct sl_data_bmc bmc_data;
     uint32_t sel_id;
@@ -430,8 +431,6 @@ sensor_discrete_event_handler(ipmi_sensor_t * sensor,
     uint8_t event_type;
     int direction;
 
-    id = ipmi_entity_get_entity_id(ent);
-    instance = ipmi_entity_get_entity_instance(ent);
     ipmi_sensor_get_id(sensor, name, sizeof(name));
 
     ipmi_sensor_get_num(sensor, &sensor_lun, &sensor_number);
@@ -501,10 +500,7 @@ static void
 entity_change(enum ipmi_update_e op, ipmi_domain_t * domain, ipmi_entity_t * entity, void *cb_data)
 {
     int rv;
-    int id, instance;
 
-    id = ipmi_entity_get_entity_id(entity);
-    instance = ipmi_entity_get_entity_instance(entity);
     if (op == IPMI_ADDED) {
         /* Register callback so that when the status of a
            sensor changes, sensor_change is called */
@@ -564,8 +560,9 @@ main(int argc, char *argv[])
 #endif
 
     crm_make_daemon("ipmiservicelogd", TRUE, "/var/run/ipmiservicelogd.pid0");
-
-    crm_log_init("ipmiservicelogd", LOG_INFO, FALSE, TRUE, argc, argv);
+    crm_log_cli_init("ipmiservicelogd");
+    // Maybe this should log like a daemon instead?
+    // crm_log_init("ipmiservicelogd", LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
 
 #ifdef COMPLEX
     rv = ipmi_args_setup_con(args, os_hnd, NULL, &con);
