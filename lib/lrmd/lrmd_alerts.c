@@ -365,6 +365,12 @@ lrmd_send_resource_alert(lrmd_t *lrmd, GList *alert_list,
     params = alert_key2param_int(params, CRM_alert_status, op->op_status);
     params = alert_key2param_int(params, CRM_alert_rc, op->rc);
 
+    if(op->op_status == PCMK_LRM_OP_TIMEOUT) {
+        params = alert_key2param_int(params, CRM_alert_exec_time, op->timeout);
+    } else {
+        params = alert_key2param_int(params, CRM_alert_exec_time, op->exec_time);
+    }
+
     if (op->op_status == PCMK_LRM_OP_DONE) {
         params = alert_key2param(params, CRM_alert_desc, services_ocf_exitcode_str(op->rc));
     } else {
