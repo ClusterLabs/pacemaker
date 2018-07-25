@@ -1,12 +1,10 @@
 #!/bin/sh
 #
 
-PROG=`basename $0`
-DIR=`dirname $0`
 SSHOPTS="-l root -o PasswordAuthentication=no -o ConnectTimeout=5"
 
 msg() {
-	echo $@ >&2
+	echo "$@" >&2
 }
 usage() {
 	echo "usage: $0 <dir>"
@@ -68,36 +66,35 @@ fi
 CTSOPTS="$CTSOPTS $CTSTESTS"
 
 fibonacci() {
-	local limit=$1
-	local n=2 prev=1 tmp_n
-	while [ $n -le $limit ]; do
-		echo $n
-		tmp_n=$n
-		n=$((n+prev))
-		prev=$tmp_n
+	F_LIMIT=$1
+	F_N=2
+	F_N_PREV=1
+	while [ $F_N -le $F_LIMIT ]; do
+		echo $F_N
+		F_N_TMP=$F_N
+		F_N=$((F_N+F_N_PREV))
+		F_N_PREV=$F_N_TMP
 	done
-	[ $prev -ne $limit ] && echo $limit
+	[ $F_N_PREV -ne $F_LIMIT ] && echo $F_LIMIT
 }
 [ "$SERIES" ] ||
-	SERIES=$(fibonacci `echo $CTS_node_list | wc -w`)
+	SERIES=$(fibonacci "$(echo $CTS_node_list | wc -w)")
 
 get_nodes() {
-	local c_nodes
-	c_nodes=`echo $CTS_node_list | awk -v n=$1 '
+	GN_C_NODES=$(echo $CTS_node_list | awk -v n="$1" '
 		{ for( i=1; i<=NF; i++ ) node[cnt++]=$i }
 		END{for( i=0; i<n; i++ ) print node[i] }
-	'`
-	if [ `echo $c_nodes | wc -w` != $1 ]; then
+	')
+	if [ "$(echo $GN_C_NODES | wc -w)" != "$1" ]; then
 		msg "not enough nodes in $CTSCTRL"
 		exit 1
 	fi
-	echo $c_nodes
+	echo $GN_C_NODES
 }
 node_cleanup() {
 	msg "CIB cleanup ($nodes)"
-	local n
-	for n in $nodes; do
-		ssh $SSHOPTS $n 'rm @CRM_CONFIG_DIR@/*'
+	for NC_N in $nodes; do
+		ssh $SSHOPTS $NC_N 'rm @CRM_CONFIG_DIR@/*'
 	done
 }
 testnum() {
@@ -105,23 +102,23 @@ testnum() {
 }
 mkreports() {
 	msg "Creating reports for the CTS run"
-	local ctsdir=$1
-	grep "Running test " $ctsdir/ctsrun.out | tr -d \[\] |
+	MKR_CTS_DIR=$1
+	grep "Running test " $MKR_CTS_DIR/ctsrun.out | tr -d \[\] |
 	awk '{print $6,$NF}' |
 	while read type num; do
 		teststg="`testnum $num`-$type"
 		(
-		cd $ctsdir
-		crm_report $CRM_REPORT_OPTS -f cts:$num -n "$nodes" `pwd`/$teststg < /dev/null
+		cd $MKR_CTS_DIR || return
+		crm_report $CRM_REPORT_OPTS -f "cts:$num" -n "$nodes" "$(pwd)/$teststg" < /dev/null
 		)
 	done
 }
 runcts() {
-	local odir=$1
+	RC_ODIR="$1"
 	msg "Running CTS"
-	python $CTSDIR/CTSlab.py $CTSOPTS --nodes "$nodes" > $odir/ctsrun.out 2>&1 &
+	python "$CTSDIR/CTSlab.py" $CTSOPTS --nodes "$nodes" > "$RC_ODIR/ctsrun.out" 2>&1 &
 	ctspid=$!
-	tail -f $odir/ctsrun.out &
+	tail -f "$RC_ODIR/ctsrun.out" &
 	tailpid=$!
 	wait $ctspid
 	kill $tailpid >/dev/null 2>&1
@@ -129,21 +126,20 @@ runcts() {
 
 bench_re='CTS:.*runtime:'
 diginfo() {
-	local d v
-	local ctsdir=$1
-	local s="$2"
-	filter=$3
+	DI_CTS_DIR="$1"
+	DI_S="$2"
+	filter="$3"
 	(
-	cd $ctsdir
+	cd "$DI_CTS_DIR" || return
 	for r in [0-9]*.tar.bz2; do
 		tar xjf $r
-		d=`basename $r .tar.bz2`
-		for v in `grep $bench_re $d/ha-log.txt | eval $filter`; do
-			s="$s,$v"
+		DI_D=$(basename "$r" .tar.bz2)
+		for DI_V in $(grep "$bench_re" "$DI_D/ha-log.txt" | eval "$filter"); do
+			DI_S="$DI_S,$DI_V"
 		done
-		rm -r $d
+		rm -r "$DI_D"
 	done
-	echo $s
+	echo $DI_S
 	)
 }
 printheader() {
@@ -153,17 +149,16 @@ printstats() {
 	diginfo $1 "$clusize" "awk '{print \$(NF)}'"
 }
 printmedians() {
-	local f=$1
-	local s="$clusize"
-	local middle=$((RUNS/2 + 1))
-	set `head -1 $f | sed 's/,/ /g'`
-	local cols=$#
-	local i v
-	for i in `seq 2 $cols`; do
-		v=`awk -v i=$i -F, '{print $i}' < $f | sort -n | head -$middle | tail -1`
-		s="$s,$v"
+	PM_F="$1"
+	PM_S="$clusize"
+	PM_MIDDLE=$((RUNS/2 + 1))
+	set $(head -1 "$PM_F" | sed 's/,/ /g')
+	PM_COLS=$#
+	for PM_I in $(seq 2 $PM_COLS); do
+		PM_V=$(awk -v i=$PM_I -F, '{print $i}' < $PM_F | sort -n | head -$PM_MIDDLE | tail -1)
+		PM_S="$PM_S,$PM_V"
 	done
-	echo $s
+	echo $PM_S
 }
 
 rm -f $CSV
@@ -181,7 +176,7 @@ for clusize in $SERIES; do
 	rm -f $tmpf
 	node_cleanup
 	for i in `seq $RUNS`; do
-		> $CTS_logfile
+		true > $CTS_logfile
 		mkdir -p $outdir/$i
 		runcts $outdir/$i
 		mkreports $outdir/$i

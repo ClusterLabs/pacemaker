@@ -199,7 +199,7 @@ stateful_validate() {
 : ${master_score=10}
 
 : ${OCF_RESKEY_CRM_meta_interval=0}
-: ${OCF_RESKEY_CRM_notify_delay=0}
+: ${OCF_RESKEY_notify_delay=0}
 : ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
 
 if [ "x$OCF_RESKEY_state" = "x" ]; then

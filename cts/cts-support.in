@@ -37,14 +37,14 @@ if [ ! -d "$DATA_DIR" ]; then
     # If readlink supports -e (i.e. GNU), use it.
     readlink -e / >/dev/null 2>/dev/null
     if [ $? -eq 0 ]; then
-        DATA_DIR="$(dirname $(readlink -e $0))"
+        DATA_DIR="$(dirname "$(readlink -e "$0")")"
     else
-        DATA_DIR="$(dirname $0)"
+        DATA_DIR="$(dirname "$0")"
     fi
 fi
 
 usage() {
-    echo "Error: $@"
+    echo "Error:" "$@"
     echo "$USAGE_TEXT"
     exit $CRM_EX_USAGE
 }
@@ -82,7 +82,7 @@ support_uninstall() {
 
 support_install() {
     support_uninstall || return $CRM_EX_ERROR
-    cd "$DATA_DIR"
+    cd "$DATA_DIR" || return $CRM_EX_ERROR
     if [ -d "$UNIT_DIR" ]; then
 
         echo "Installing $DUMMY_DAEMON ..."

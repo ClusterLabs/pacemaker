@@ -5,7 +5,7 @@
 #	Starts crm_mon in background which logs cluster status as
 #	html to the specified file.
 #
-# Copyright (c) 2004 SUSE LINUX AG, Lars Marowsky-Brée
+# Copyright 2004-2018 SUSE LINUX AG, Lars Marowsky-Brée
 #                    All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -130,8 +130,6 @@ ClusterMon_exit() {
 }
 
 ClusterMon_start() {
-    cmd_prefix=""
-    cmd_suffix=""
     if [ ! -z $OCF_RESKEY_user ]; then
 	su - $OCF_RESKEY_user -c "$CMON_CMD"
     else

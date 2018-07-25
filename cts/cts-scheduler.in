@@ -26,9 +26,9 @@ CRM_SCHEMA_DIRECTORY="@CRM_SCHEMA_DIRECTORY@"
 # If readlink supports -e (i.e. GNU), use it
 readlink -e / >/dev/null 2>/dev/null
 if [ $? -eq 0 ]; then
-    test_home="$(dirname $(readlink -e $0))"
+    test_home="$(dirname "$(readlink -e "$0")")"
 else
-    test_home="$(dirname $0)"
+    test_home="$(dirname "$0")"
 fi
 
 io_dir="$test_home/scheduler"
@@ -124,6 +124,7 @@ while [ $# -gt 0 ] ; do
         --run)
             single_test=$(basename "$2" ".xml")
             shift 2
+            break # any remaining arguments will be passed to test command
             ;;
         -b|--binary)
             test_binary="$2"
@@ -181,7 +182,7 @@ info " "
 test_cmd="$VALGRIND_CMD $test_binary $testcmd_options"
 #echo $test_cmd
 
-if [ `whoami` != root ]; then
+if [ "$(whoami)" != "root" ]; then
     declare -x CIB_shadow_dir=/tmp
 fi
 
@@ -197,7 +198,6 @@ do_test() {
     output=$io_dir/${base}.out
     expected=$io_dir/${base}.exp
 
-    dot_png=$io_dir/${base}.png
     dot_expected=$io_dir/${base}.dot
     dot_output=$io_dir/${base}.pe.dot
 
@@ -227,26 +227,28 @@ do_test() {
         return $CRM_EX_NOINPUT;
     fi
 
-    if [ "$create_mode" != "true" -a ! -f $expected ]; then
+    if [ "$create_mode" != "true" ] && [ ! -f "$expected" ]; then
         error "no stored output";
         return $CRM_EX_NOINPUT;
     fi
 
 #    ../admin/crm_verify -X $input
     if [ ! -z "$single_test" ]; then
-        echo CIB_shadow_dir=$io_dir $test_cmd -x $input -D $dot_output -G $output -S $*
-        CIB_shadow_dir=$io_dir $test_cmd -x $input -D $dot_output -G $output -S $* 2>&1 | tee $summary_output
+        echo "CIB_shadow_dir=\"$io_dir\" $test_cmd -x \"$input\" -D \"$dot_output\" -G \"$output\" -S" "$@"
+        CIB_shadow_dir="$io_dir" $test_cmd -x "$input" -D "$dot_output" \
+            -G "$output" -S "$@" 2>&1 | tee "$summary_output"
     else
-        CIB_shadow_dir=$io_dir $test_cmd -x $input -S &> $summary_output
+        CIB_shadow_dir="$io_dir" $test_cmd -x "$input" -S &> "$summary_output"
     fi
 
-    CIB_shadow_dir=$io_dir $test_cmd -x $input -D $dot_output -G $output -SQ -s $* 2> $stderr_output > $score_output
+    CIB_shadow_dir="$io_dir" $test_cmd -x "$input" -D "$dot_output" \
+        -G "$output" -SQ -s "$@" 2> "$stderr_output" > "$score_output"
     rc=$?
 
     if [ $rc -ne $expected_rc ]; then
         failed "Test returned: $rc";
         did_fail=1
-        echo "CIB_shadow_dir=$io_dir $test_cmd -x $input -D $dot_output -G $output -SQ -s $*"
+        echo "CIB_shadow_dir=\"$io_dir\" $test_cmd -x \"$input\" -D \"$dot_output\" -G \"$output\" -SQ -s" "$@"
     fi
 
     if [ -z "$VALGRIND_SKIP_OUTPUT" ]; then
@@ -299,7 +301,7 @@ do_test() {
         return $CRM_EX_ERROR;
     else
         echo "digraph \"g\" {" > $dot_output.sort
-        LC_ALL=POSIX sort -u $dot_output | grep -v -e ^}$ -e digraph >> $dot_output.sort
+        LC_ALL=POSIX sort -u $dot_output | grep -v -e '^}$' -e digraph >> $dot_output.sort
         echo "}" >> $dot_output.sort
         mv -f $dot_output.sort $dot_output
     fi
@@ -388,12 +390,12 @@ function test_results {
 }
 
 # zero out the error log
-> $failed
+true > $failed
 
 if [ -n "$single_test" ]; then
-    do_test $single_test "Single shot" $*
+    do_test "$single_test" "Single shot" "$@"
     TEST_RC=$?
-    cat $failed
+    cat "$failed"
     exit $TEST_RC
 fi
 
@@ -1015,7 +1017,7 @@ do_test stopped-monitor-08 "Stopped Monitor - migrate"
 do_test stopped-monitor-09 "Stopped Monitor - unmanage started"
 do_test stopped-monitor-10 "Stopped Monitor - unmanaged started multi-up"
 do_test stopped-monitor-11 "Stopped Monitor - stop unmanaged started"
-do_test stopped-monitor-12 "Stopped Monitor - unmanaged started multi-up (targer-role="Stopped")"
+do_test stopped-monitor-12 "Stopped Monitor - unmanaged started multi-up (target-role=Stopped)"
 do_test stopped-monitor-20 "Stopped Monitor - initial stop"
 do_test stopped-monitor-21 "Stopped Monitor - stopped single-up"
 do_test stopped-monitor-22 "Stopped Monitor - stopped multi-up"
@@ -1023,7 +1025,7 @@ do_test stopped-monitor-23 "Stopped Monitor - start stopped"
 do_test stopped-monitor-24 "Stopped Monitor - unmanage stopped"
 do_test stopped-monitor-25 "Stopped Monitor - unmanaged stopped multi-up"
 do_test stopped-monitor-26 "Stopped Monitor - start unmanaged stopped"
-do_test stopped-monitor-27 "Stopped Monitor - unmanaged stopped multi-up (target-role="Started")"
+do_test stopped-monitor-27 "Stopped Monitor - unmanaged stopped multi-up (target-role=Started)"
 do_test stopped-monitor-30 "Stopped Monitor - new node started"
 do_test stopped-monitor-31 "Stopped Monitor - new node stopped"
 

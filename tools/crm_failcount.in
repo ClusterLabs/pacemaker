@@ -1,4 +1,10 @@
 #!@BASH_PATH@
+#
+# Copyright 2009-2018 Andrew Beekhof <andrew@beekhof.net>
+#
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
+#
 
 USAGE_TEXT="Usage: crm_failcount <command> [<options>]
 Common options:
@@ -24,13 +30,12 @@ $USAGE_TEXT"
 
 # These constants must track crm_exit_t values
 CRM_EX_OK=0
-CRM_EX_ERROR=1
 CRM_EX_USAGE=64
 CRM_EX_NOSUCH=105
 
 exit_usage() {
 	if [ $# -gt 0 ]; then
-		echo "error: $@" >&2
+		echo "error:" "$@" >&2
 	fi
 	echo
 	echo "$USAGE_TEXT"
@@ -38,7 +43,7 @@ exit_usage() {
 }
 
 warn() {
-	echo "warning: $@" >&2
+	echo "warning:" "$@" >&2
 }
 
 interval_re() {

@@ -2,7 +2,7 @@
 #
 # OCF resource agent for managing the DLM controld process
 #
-# Copyright (c) 2009 Novell, Inc
+# Copyright 2009-2018 Novell, Inc
 #                    All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -115,13 +115,12 @@ END
 
 check_uncontrolled_locks()
 {
-    local tmp
-    tmp=$(ls $DLM_SYSFS_DIR 2>&1)
+    CUL_TMP=$(ls $DLM_SYSFS_DIR 2>&1)
     if [ $? -eq 0 ]; then
-        if [ -n "$tmp" ]; then
+        if [ -n "$CUL_TMP" ]; then
 
             ocf_log err "Uncontrolled lockspace exists, system must reboot. Executing suicide fencing"
-            stonith_admin --reboot=$(crm_node -n) --tag controld
+            stonith_admin --reboot="$(crm_node -n)" --tag controld
 
             exit $OCF_ERR_GENERIC
         fi
@@ -174,9 +173,8 @@ controld_start() {
         controld_monitor; rc=$?
         case $rc in
           $OCF_SUCCESS)
-            local addr_list
-            addr_list="$(cat "${DLM_CONFIGFS_DIR}"/cluster/comms/*/addr_list 2>/dev/null)"
-            if [ $? -eq 0 ] && [ -n "$addr_list" ]; then
+            CS_ADDR_LIST="$(cat "${DLM_CONFIGFS_DIR}"/cluster/comms/*/addr_list 2>/dev/null)"
+            if [ $? -eq 0 ] && [ -n "$CS_ADDR_LIST" ]; then
                 return $OCF_SUCCESS
             fi
             ;;
@@ -219,33 +217,32 @@ controld_stop() {
 }
 
 controld_monitor() {
-    local rc
-    killall -0 ${OCF_RESKEY_daemon} >/dev/null 2>&1 ; rc=$?
+    killall -0 ${OCF_RESKEY_daemon} >/dev/null 2>&1 ; CM_RC=$?
 
-    case $rc in
+    case $CM_RC in
       0) smw=$(dlm_tool status -v | grep "stateful_merge_wait=" | cut -d= -f2)
          if [ -n "$smw" ] && [ $smw -eq 1 ]; then
              ocf_log err "DLM status is: stateful_merge_wait"
-             rc=$OCF_ERR_GENERIC
+             CM_RC=$OCF_ERR_GENERIC
          elif [ -z "$smw" ] && dlm_tool ls | grep -q "wait fencing" && \
               ! stonith_admin -H '*' -V | grep -q "wishes to"; then
              ocf_log err "DLM status is: wait fencing"
-             rc=$OCF_ERR_GENERIC
+             CM_RC=$OCF_ERR_GENERIC
          else
-             rc=$OCF_SUCCESS
+             CM_RC=$OCF_SUCCESS
          fi
          ;;
-      1) rc=$OCF_NOT_RUNNING;;
-      *) rc=$OCF_ERR_GENERIC;;
+      1) CM_RC=$OCF_NOT_RUNNING;;
+      *) CM_RC=$OCF_ERR_GENERIC;;
     esac
 
     # if the dlm is not successfully running, but
     # dlm lockspace bits are left over, we self must fence.
-    if [ $rc -ne $OCF_SUCCESS ]; then
+    if [ $CM_RC -ne $OCF_SUCCESS ]; then
         check_uncontrolled_locks
     fi
 
-    return $rc
+    return $CM_RC
 }
 
 controld_validate() {
@@ -267,23 +264,18 @@ controld_validate() {
 : ${OCF_RESKEY_sctp=false}
 : ${OCF_RESKEY_CRM_meta_globally_unique:="false"}
 
-case "$HA_quorum_type" in
-    pcmk) daemon_ext=".pcmk";;
-    *) daemon_ext="";;
-esac
-
 case "$OCF_RESOURCE_INSTANCE" in
     *[gG][fF][sS]*) 
         : ${OCF_RESKEY_args=-g 0}
-        : ${OCF_RESKEY_daemon=gfs_controld${daemon_ext}}
+        : ${OCF_RESKEY_daemon=gfs_controld}
         ;;
     *[dD][lL][mM]*)
         : ${OCF_RESKEY_args=-s 0}
-        : ${OCF_RESKEY_daemon=dlm_controld${daemon_ext}}
+        : ${OCF_RESKEY_daemon=dlm_controld}
         ;;
     *)
         : ${OCF_RESKEY_args=-s 0}
-        : ${OCF_RESKEY_daemon=dlm_controld${daemon_ext}}
+        : ${OCF_RESKEY_daemon=dlm_controld}
 esac
 
 case $__OCF_ACTION in

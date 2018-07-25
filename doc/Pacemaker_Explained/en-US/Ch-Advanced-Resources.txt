@@ -1418,13 +1418,15 @@ local node for cluster-defined attributes such as +#uname+.
 
 If +container-attribute-target+ is +host+, the cluster will pass additional
 environment variables to the primitive's resource agent that allow it to set
-node attributes appropriately: +container_attribute_target+ (identical to the
-meta-attribute value) and +physical_host+ (the name of the underlying host).
+node attributes appropriately: +CRM_meta_container_attribute_target+ (identical
+to the meta-attribute value) and +CRM_meta_physical_host+ (the name of the
+underlying host).
 
 [NOTE]
 ====
-It is up to the resource agent to check for the additional variables and use
-them when setting node attributes.
+When called by a resource agent, the attrd_updater and crm_attribute commands
+will automatically check those environment variables and set attributes
+appropriately.
 ====
 
 === Bundle Meta-Attributes ===
@@ -1440,8 +1442,10 @@ This includes options such as +priority+, +target-role+, and +is-managed+. See
 Restarting pacemaker while a bundle is unmanaged or the cluster is in
 maintenance mode may cause the bundle to fail.
 
-Bundles may not be cloned or included in groups. This includes the bundle's
-primitive and any resources implicitly created by Pacemaker for the bundle.
+Bundles may not be explicitly cloned or included in groups. This includes the
+bundle's primitive and any resources implicitly created by Pacemaker for the
+bundle. (If +replicas+ is greater than 1, the bundle will behave like a clone
+implicitly.)
 
 Bundles do not have instance attributes, utilization attributes, or operations,
 though a bundle's primitive may have them.

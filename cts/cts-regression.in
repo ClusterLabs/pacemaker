@@ -27,9 +27,9 @@ Tests (default tests are 'scheduler cli'):
 # If readlink supports -e (i.e. GNU), use it
 readlink -e / >/dev/null 2>/dev/null
 if [ $? -eq 0 ]; then
-    test_home="$(dirname $(readlink -e $0))"
+    test_home="$(dirname "$(readlink -e "$0")")"
 else
-    test_home="$(dirname $0)"
+    test_home="$(dirname "$0")"
 fi
 
 valgrind=""
@@ -53,7 +53,7 @@ function error() {
 function run_as_root() {
     CMD="$1"
     shift
-    ARGS="$@"
+    ARGS="$*" # assumes arguments don't need quoting
 
     # Test might not be executable if run from source directory
     chmod a+x $CMD
@@ -152,13 +152,12 @@ run_test() {
 }
 
 run_tests() {
-    TESTS="$@"
     local TEST
     local TEST_RC
     local FAILED
 
     FAILED=""
-    for TEST in $TESTS; do
+    for TEST in "$@"; do
         run_test $TEST
 	TEST_RC=$?
         if [ $TEST_RC -ne 0 ]; then

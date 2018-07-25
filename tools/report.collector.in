@@ -203,10 +203,7 @@ getconfig() {
 
     if is_running pacemaker-controld; then
         dump_status_and_config
-	case $cluster in
-	    corosync)         crm_node -p --corosync > $target/$MEMBERSHIP_F 2>&1;;
-	    *) 	              crm_node -p > $target/$MEMBERSHIP_F 2>&1;;
-	esac
+        crm_node -p > "$target/$MEMBERSHIP_F" 2>&1
 	echo "$host" > $target/RUNNING
 
     elif is_running pacemaker-remoted; then

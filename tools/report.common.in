@@ -119,9 +119,8 @@ fatal() {
 # "@CRM_DAEMON_GROUP@" or one of the groups the effective user belongs to
 # (there's no business in probing any other processes)
 is_running() {
-    ps -G "0 $(getent group '@CRM_DAEMON_GROUP@' 2>/dev/null | cut -d: -f3) \
-           $(id -G)" \
-       -u "0 @CRM_DAEMON_USER@ $(id -u)" \
+    ps -G "0 $(getent group '@CRM_DAEMON_GROUP@' 2>/dev/null | cut -d: -f3) $(id -G)" \
+       -u "0 @CRM_DAEMON_USER@ $(id -u)" -f \
       | grep -Eqs  $(echo "$1" | sed -e 's/^\(.\)/[\1]/')
 }
 
@@ -188,7 +187,8 @@ detect_daemon_dir() {
 }
 
 detect_cib_dir() {
-    if [ "-f ${local_state_dir}/lib/pacemaker/cib/cib.xml" ]; then
+    d="${local_state_dir}/lib/pacemaker/cib" 
+    if [ -f "$d/cib.xml" ]; then
         found_dir "config files" "$d"
         return
     fi

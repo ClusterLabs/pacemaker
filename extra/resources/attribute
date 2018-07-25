@@ -2,7 +2,7 @@
 #
 # ocf:pacemaker:attribute resource agent
 #
-# Copyright (C) 2016 Andrew Beekhof <andrew@beekhof.net>
+# Copyright 2016-2018 Andrew Beekhof <andrew@beekhof.net>
 #
 # This source code is licensed under GNU General Public License version 2 or
 # later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -126,7 +126,7 @@ validate() {
         ocf_exit_reason "state file '$OCF_RESKEY_state' does not have a valid directory"
         return $OCF_ERR_PERM
     fi
-    if [ ! -w "$VALIDATE_DIR" -o ! -x "$VALIDATE_DIR" ]; then
+    if [ ! -w "$VALIDATE_DIR" ] || [ ! -x "$VALIDATE_DIR" ]; then
         ocf_exit_reason "insufficient privileges on directory of state file '$OCF_RESKEY_state'"
         return $OCF_ERR_PERM
     fi
@@ -152,7 +152,7 @@ check_attribute() {
     CHECK_VALUE=$(get_attribute)
     CHECK_REASON=""
     if [ ! -f "$OCF_RESKEY_state" ]; then
-        if [ "$CHECK_VALUE" != "" -a "$CHECK_VALUE" != "$OCF_RESKEY_inactive_value" ]; then
+        if [ "$CHECK_VALUE" != "" ] && [ "$CHECK_VALUE" != "$OCF_RESKEY_inactive_value" ]; then
             CHECK_REASON="Node attribute $OCF_RESKEY_name='$CHECK_VALUE' differs from expected value '$OCF_RESKEY_inactive_value'"
             return $OCF_ERR_GENERIC
         fi

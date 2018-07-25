@@ -2315,7 +2315,7 @@ do_lrm_rsc_op(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *operat
         pending->op_key = strdup(op_id);
         pending->rsc_id = strdup(rsc->id);
         pending->start_time = time(NULL);
-        pending->user_data = strdup(op->user_data);
+        pending->user_data = op->user_data? strdup(op->user_data) : NULL;
         g_hash_table_replace(lrm_state->pending_ops, call_id_s, pending);
 
         if ((op->interval_ms > 0)

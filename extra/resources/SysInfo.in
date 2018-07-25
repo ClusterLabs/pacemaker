@@ -4,7 +4,7 @@
 #	SysInfo OCF Resource Agent
 #	It records (in the CIB) various attributes of a node
 #
-# Copyright (c) 2004 SUSE LINUX AG, Lars Marowsky-Brée
+# Copyright 2004-2018 SUSE LINUX AG, Lars Marowsky-Brée
 #                    All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -198,7 +198,7 @@ SysInfoStats() {
 	        # meminfo results are in kB
 		mem=`grep "SwapFree" /proc/meminfo | awk '{print $2"k"}'`
 		if [ ! -z $mem ]; then
-		    UpdateStat free_swap `SysInfo_mem_units $mem`
+		    UpdateStat free_swap "$(SysInfo_mem_units "$mem")"
 		fi
 		mem=`grep "Inactive" /proc/meminfo | awk '{print $2"k"}'`
 		mem_total=`grep "MemTotal" /proc/meminfo | awk '{print $2"k"}'`
@@ -227,8 +227,8 @@ SysInfoStats() {
 
     if [ ! -z "$mem" ]; then
         # Massage the memory values
- 	UpdateStat ram_total `SysInfo_mem_units $mem_total`
-	UpdateStat ram_free `SysInfo_mem_units $mem`
+ 	UpdateStat ram_total "$(SysInfo_mem_units "$mem_total")"
+	UpdateStat ram_free "$(SysInfo_mem_units "$mem")"
     fi
 
     # Portability notes:
@@ -287,7 +287,7 @@ SysInfo_hdd_units() {
 	[Pp]) echo $(($(SysInfo_megabytes "$1") / 1024 / 1024 / 1024));;
 	[Tt]) echo $(($(SysInfo_megabytes "$1") / 1024 / 1024));;
 	[Gg]) echo $(($(SysInfo_megabytes "$1") / 1024));;
-	[Mm]) echo $(SysInfo_megabytes "$1");;
+	[Mm]) echo "$(SysInfo_megabytes "$1")" ;;
 	[Kk]) echo $(($(SysInfo_megabytes "$1") * 1024));;
 	[Bb]) echo $(($(SysInfo_megabytes "$1") * 1024 * 1024));;
 	*) 
@@ -328,11 +328,7 @@ SysInfo_monitor() {
 	SysInfoStats
 	exit $OCF_SUCCESS
 
-    elif [ x$OCF_RESKEY_CRM_meta_globally_unique = xtrue  
-	    -o x$OCF_RESKEY_CRM_meta_globally_unique = xTrue
-	    -o x$OCF_RESKEY_CRM_meta_globally_unique = xyes
-	    -o x$OCF_RESKEY_CRM_meta_globally_unique = xYes
-	]; then
+    elif ocf_is_true "$OCF_RESKEY_CRM_meta_globally_unique"; then
 	SysInfoStats
 	exit $OCF_SUCCESS
     fi

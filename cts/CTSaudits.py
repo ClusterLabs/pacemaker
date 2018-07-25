@@ -178,7 +178,6 @@ class DiskAudit(ClusterAudit):
 
                         if answer and answer == "n":
                             raise ValueError("Disk full on %s" % (node))
-                            ret = 0
 
                     elif remaining_mb < 100 or used_percent > 90:
                         self.CM.log("WARN: Low on log disk space (%dMB) on %s" % (remaining_mb, node))

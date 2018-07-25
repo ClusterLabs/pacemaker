@@ -4,7 +4,7 @@
 # as a node attribute in the CIB based on the sum of speeds of its active (up,
 # link detected, not blocked) underlying interfaces.
 #
-# Copyright (c) 2011 Vladislav Bogdanov <bubble@hoster-ok.com>
+# Copyright 2011-2018 Vladislav Bogdanov <bubble@hoster-ok.com>
 # Partially based on 'ping' RA by Andrew Beekhof
 #
 # Change on 2017 by Tomer Azran <tomerazran@gmail.com>:
@@ -228,9 +228,6 @@ iface_get_speed() {
     local iface=$1
     local operstate
     local carrier
-    local bridge_iface_speed
-    local bond_iface_speed
-    local vlan_iface_speed
     local speed
 
     if [ ! -e "/sys/class/net/${iface}" ] ; then
@@ -252,7 +249,7 @@ iface_get_speed() {
         elif iface_is_bond ${iface} ; then
             bond_get_speed ${iface}
         elif iface_is_vlan ${iface} ; then
-            iface_get_speed $( vlan_get_phy ${iface} )
+            iface_get_speed "$(vlan_get_phy "${iface}")"
         elif iface_is_hfi1 "${iface}" ; then
             hfi1_get_speed "${iface}"
         else
@@ -313,7 +310,7 @@ bridge_get_root_ports() {
     root_ports=${root_ports# }
 
     if [ -n "$2" ] ; then # Record value in specified var. This expects we were called not in a sub-shell. 
-        eval $2=\${root_ports}
+        eval "$2=\${root_ports}"
     else # Expect sub-shell
         echo ${root_ports}
     fi
@@ -363,7 +360,6 @@ bridge_get_active_ports() {
 
 bridge_get_speed() {
     local iface=$1
-    local bridge_port_speed
     local aggregate_speed=0
 
     if ! iface_is_bridge ${iface} ; then
@@ -371,12 +367,12 @@ bridge_get_speed() {
         return
     fi
 
-    local ports=$( bridge_get_active_ports ${iface} ${OCF_RESKEY_bridge_ports} )
-    for port in ${ports} ; do
+    BGS_PORTS=$( bridge_get_active_ports "${iface}" "${OCF_RESKEY_bridge_ports}" )
+    for port in ${BGS_PORTS} ; do
         : $(( aggregate_speed += $( iface_get_speed ${port} ) ))
     done
     if [ -n "$2" ] ; then # Record value in specified var. This expects we were called not in a sub-shell. 
-        eval $2=\${aggregate_speed}
+        eval "$2=\${aggregate_speed}"
     else # Expect sub-shell
         echo ${aggregate_speed}
     fi
@@ -388,12 +384,13 @@ hfi1_get_speed() {
     local hfi1_value
     local hfi1_desc
 
-    # Currently (9/14/2017 Intel Omni Path v10.5.0.0.155) Intel doesn't have Dual/Multiple ports Host Channel Adapters
-    # and it's save to use such method to get a speed.
-    # Example of output:
+    # Currently (9/14/2017 Intel Omni Path v10.5.0.0.155), Intel doesn't have
+    # dual- or multiple-port Host Channel Adapters, and it's safe to use this
+    # method to get the speed. Example output:
     # [root@es-host0 ~]# cat /sys/class/net/ib0/device/infiniband/*/ports/*/rate
     # 100 Gb/sec (4X EDR)
     read hfi1_speed hfi1_value hfi1_desc < /sys/class/net/${iface}/device/infiniband/*/ports/*/rate
+    ocf_is_true ${OCF_RESKEY_debug} && ocf_log debug "Detected speed $hfi1_speed $hfi1_value $hfi1_desc" 
     
     # hfi1_value always in Gb/sec, so we need to convert hfi1_speed in Mb/sec
     echo $(( hfi1_speed * 1000 ))
@@ -404,7 +401,7 @@ bond_get_slaves() {
     local slaves
     read slaves < "/sys/class/net/${iface}/bonding/slaves"
     if [ -n "$2" ] ; then # Record value in specified var. This expects we were called not in a sub-shell. 
-        eval $2=\${slaves}
+        eval "$2=\${slaves}"
     else # Expect sub-shell
         echo ${slaves}
     fi
@@ -415,7 +412,7 @@ bond_get_active_iface() {
     local active
     read active < "/sys/class/net/${iface}/bonding/active_slave"
     if [ -n "$2" ] ; then # Record value in specified var. This expects we were called not in a sub-shell. 
-        eval $2=\${active}
+        eval "$2=\${active}"
     else # Expect sub-shell
         echo ${active}
     fi
@@ -424,6 +421,7 @@ bond_get_active_iface() {
 bond_is_balancing() {
     local iface=$1
     read mode mode_index < "/sys/class/net/${iface}/bonding/mode"
+    ocf_is_true ${OCF_RESKEY_debug} && ocf_log debug "Detected balancing $mode $mode_index"
     case ${mode} in
         "balance-rr"|"balance-xor"|"802.3ad"|"balance-tlb"|"balance-alb")
             return 0
@@ -437,7 +435,6 @@ bond_is_balancing() {
 bond_get_speed() {
     local iface=$1
     local aggregate_speed=0
-    local bond_slave_speed
     local active_iface
     local bond_slaves
 
@@ -459,7 +456,7 @@ bond_get_speed() {
         aggregate_speed=$( iface_get_speed $active_iface )
     fi
     if [ -n "$2" ] ; then # Record value in specified var. This expects we were called not in a sub-shell. 
-        eval $2=\${aggregate_speed}
+        eval "$2=\${aggregate_speed}"
     else # Expect sub-shell
         echo ${aggregate_speed}
     fi
@@ -506,7 +503,7 @@ case $__OCF_ACTION in
         ;;
 esac
 
-if [ `uname` != "Linux" ] ; then
+if [ "$(uname)" != "Linux" ] ; then
     ocf_log err "This RA works only on linux."
     exit $OCF_ERR_INSTALLED
 fi

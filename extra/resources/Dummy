@@ -134,24 +134,22 @@ $(env | sort)
 }
 
 dummy_start() {
-    local RETVAL
-
     dummy_monitor
 
-    RETVAL=$?
-    if [ $RETVAL -eq $OCF_SUCCESS ]; then
+    DS_RETVAL=$?
+    if [ $DS_RETVAL -eq $OCF_SUCCESS ]; then
         if [ "$(uname -n)" = "${OCF_RESKEY_fail_start_on}" ]; then
-            RETVAL=$OCF_ERR_GENERIC
+            DS_RETVAL=$OCF_ERR_GENERIC
         fi
-        return $RETVAL
+        return $DS_RETVAL
     fi
 
     touch "${OCF_RESKEY_state}"
-    RETVAL=$?
+    DS_RETVAL=$?
     if [ "$(uname -n)" = "${OCF_RESKEY_fail_start_on}" ]; then
-        RETVAL=$OCF_ERR_GENERIC
+        DS_RETVAL=$OCF_ERR_GENERIC
     fi
-    return $RETVAL
+    return $DS_RETVAL
 }
 
 dummy_stop() {
@@ -169,7 +167,7 @@ dummy_monitor() {
     # That is THREE states, not just yes/no.
 
     if [ $OCF_RESKEY_op_sleep -ne 0 ]; then
-        if [ "$1" = "" -a -f "${VERIFY_SERIALIZED_FILE}" ]; then
+        if [ "$1" = "" ] && [ -f "${VERIFY_SERIALIZED_FILE}" ]; then
             # two monitor ops have occurred at the same time.
             # This verifies a condition in pacemaker-execd regression tests.
             ocf_log err "$VERIFY_SERIALIZED_FILE exists already"
@@ -191,7 +189,7 @@ dummy_monitor() {
 
             20)
             # monitor level that fails intermittently
-            n=$(expr $(dd if=/dev/urandom bs=1 count=1 2>/dev/null | od | head -1 | cut -f2 -d' ') % 5)
+            n=$(expr "$(dd if=/dev/urandom bs=1 count=1 2>/dev/null | od | head -1 | cut -f2 -d' ')" % 5)
             if [ $n -eq 1 ]; then
                 ocf_exit_reason "smoke detected near CPU fan"
                 return $OCF_ERR_GENERIC

@@ -2,7 +2,7 @@
 #
 #	SystemHealth OCF RA.
 #
-# Copyright (c) 2009 International Business Machines (IBM), Mark Hamzy
+# Copyright 2009-2018 International Business Machines (IBM), Mark Hamzy
 #                    All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -157,7 +157,7 @@ SystemHealth_stop() {
 	    ocf_log err "servicelog_notify remove handler failed!"
 	fi
 
-	if [ $RC1 = 0 -a $RC2 = 0 ]; then
+	if [ $RC1 -eq 0 ] && [ $RC2 -eq 0 ]; then
 	    return $OCF_SUCCESS
 	else
 	    return $OCF_ERR_GENERIC
@@ -181,7 +181,7 @@ SystemHealth_monitor() {
 	return $OCF_NOT_RUNNING
     fi
 
-    ps -p `cat /var/run/ipmiservicelogd.pid0` > /dev/null 2>&1
+    ps -p "$(cat /var/run/ipmiservicelogd.pid0)" >/dev/null 2>&1
     RC=$?
 
     if [ $RC != 0 ]; then
