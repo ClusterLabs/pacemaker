@@ -21,6 +21,9 @@
 #include <crm/common/mainloop.h>
 #include <crm/cluster/internal.h>
 #include <crm/cluster.h>
+#ifdef SUPPORT_COROSYNC
+#include <corosync/cfg.h>
+#endif
 
 #include <dirent.h>
 #include <ctype.h>
@@ -140,6 +143,28 @@ pcmk_process_exit(pcmk_child_t * child)
         crm_notice("Respawning failed child process: %s", child->name);
         start_child(child);
     }
+}
+
+static void pcmk_exit_with_cluster(int exitcode)
+{
+#ifdef SUPPORT_COROSYNC
+    corosync_cfg_handle_t cfg_handle;
+    cs_error_t err;
+
+    if (exitcode == DAEMON_RESPAWN_STOP) {
+	    crm_info("Asking Corosync to shut down");
+	    err = corosync_cfg_initialize(&cfg_handle, NULL);
+	    if (err != CS_OK) {
+		    crm_warn("Unable to open handle to corosync to close it down. err=%d", err);
+	    }
+	    err = corosync_cfg_try_shutdown(cfg_handle, COROSYNC_CFG_SHUTDOWN_FLAG_IMMEDIATE);
+	    if (err != CS_OK) {
+		    crm_warn("Corosync shutdown failed. err=%d", err);
+	    }
+	    corosync_cfg_finalize(cfg_handle);
+    }
+#endif
+    crm_exit(exitcode);
 }
 
 static void
@@ -423,7 +448,7 @@ pcmk_shutdown_worker(gpointer user_data)
 
     if (fatal_error) {
         crm_notice("Attempting to inhibit respawning after fatal error");
-        crm_exit(DAEMON_RESPAWN_STOP);
+        pcmk_exit_with_cluster(DAEMON_RESPAWN_STOP);
     }
 
     return TRUE;
