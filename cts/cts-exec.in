@@ -14,6 +14,7 @@ import stat
 import sys
 import subprocess
 import shlex
+import shutil
 import time
 
 # Where to find test binaries
@@ -119,6 +120,7 @@ def output_from_command(command):
 def write_file(filename, contents, executable=False):
     """ Create a file. """
 
+    print("Installing %s ..." % (filename))
     f = io.open(filename, "w+")
     f.write(contents)
     f.close()
@@ -385,7 +387,7 @@ class Tests(object):
         self.tls = tls
         self.rsc_classes = output_from_command("crm_resource --list-standards")
         self.rsc_classes = self.rsc_classes[:-1] # Strip trailing empty line
-        self.need_authkey = 0
+        self.installed_files = []
         self.action_timeout = " -t 9000 "
         if self.tls:
             self.rsc_classes.remove("stonith")
@@ -498,9 +500,10 @@ class Tests(object):
         self.cleanup_test_environment()
 
         if self.tls and not os.path.isfile("/etc/pacemaker/authkey"):
-            self.need_authkey = 1
+            print("Installing /etc/pacemaker/authkey ...")
             os.system("mkdir -p /etc/pacemaker")
             os.system("dd if=/dev/urandom of=/etc/pacemaker/authkey bs=4096 count=1")
+            self.installed_files.append("/etc/pacemaker/authkey")
 
         dummy_fence_sleep_agent = ("""#!@PYTHON@
 import sys
@@ -550,24 +553,34 @@ done
         write_file(SBIN_DIR + "/fence_dummy_sleep", dummy_fence_sleep_agent, executable=True);
         write_file(SBIN_DIR + "/fence_dummy_monitor", dummy_fence_agent, executable=True);
 
-        # If we're in build directory, OCF agents aren't already installed
+        # If we're in build directory, install agents if not already installed
         if os.path.exists("%s/cts/cts-exec.in" % BUILD_DIR):
+
             if not os.path.exists("@OCF_RA_DIR@/pacemaker"):
-                os.system("mkdir -p @OCF_RA_DIR@/pacemaker/")
+                # @TODO remember which components were created and remove them
+                os.makedirs("@OCF_RA_DIR@/pacemaker", 0755)
+
             for agent in ["Dummy", "Stateful", "ping"]:
-                os.system("cp %s/extra/resources/%s @OCF_RA_DIR@/pacemaker/%s" % (BUILD_DIR, agent, agent))
-                os.system("chmod a+x @OCF_RA_DIR@/pacemaker/%s" % (agent))
+                agent_source = "%s/extra/resources/%s" % (BUILD_DIR, agent)
+                agent_dest = "@OCF_RA_DIR@/pacemaker/%s" % (agent)
+                if not os.path.exists(agent_dest):
+                    print("Installing %s ..." % (agent_dest))
+                    shutil.copyfile(agent_source, agent_dest)
+                    os.chmod(agent_dest, EXECMODE)
+                    self.installed_files.append(agent_dest)
 
         subprocess.call(["cts-support", "install"])
 
     def cleanup_test_environment(self):
         """ Clean up the host after executing desired tests """
 
-        if self.need_authkey:
-            os.system("rm -f /etc/pacemaker/authkey")
-
         os.system("rm -f " + SBIN_DIR + "/fence_dummy_monitor")
         os.system("rm -f " + SBIN_DIR + "/fence_dummy_sleep")
+
+        for installed_file in self.installed_files:
+            print("Removing %s ..." % (installed_file))
+            os.remove(installed_file)
+
         subprocess.call(["cts-support", "uninstall"])
 
     def build_generic_tests(self):
