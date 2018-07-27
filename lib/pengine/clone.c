@@ -17,8 +17,6 @@
 #define VARIANT_CLONE 1
 #include "./variant.h"
 
-void force_non_unique_clone(resource_t * rsc, const char *rid, pe_working_set_t * data_set);
-
 static void
 mark_as_orphan(resource_t * rsc)
 {
@@ -34,7 +32,7 @@ mark_as_orphan(resource_t * rsc)
 }
 
 void
-force_non_unique_clone(resource_t * rsc, const char *rid, pe_working_set_t * data_set)
+pe__force_anon(pe_resource_t *rsc, const char *rid, pe_working_set_t *data_set)
 {
     if (pe_rsc_is_clone(rsc)) {
         clone_variant_data_t *clone_data = NULL;

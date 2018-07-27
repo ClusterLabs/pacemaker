@@ -13,6 +13,7 @@
 #include <crm/pengine/internal.h>
 #include <unpack.h>
 #include <crm/msg_xml.h>
+#include <pe_status_private.h>
 
 #define VARIANT_NATIVE 1
 #include "./variant.h"
@@ -127,8 +128,6 @@ native_add_running(resource_t * rsc, node_t * node, pe_working_set_t * data_set)
     }
 }
 
-extern void force_non_unique_clone(resource_t * rsc, const char *rid, pe_working_set_t * data_set);
-
 gboolean
 native_unpack(resource_t * rsc, pe_working_set_t * data_set)
 {
@@ -146,7 +145,12 @@ native_unpack(resource_t * rsc, pe_working_set_t * data_set)
     if (is_not_set(ra_caps, pcmk_ra_cap_unique)
         && is_set(rsc->flags, pe_rsc_unique) && rsc->parent) {
 
-        force_non_unique_clone(parent, rsc->id, data_set);
+        /* @COMPAT We should probably reject this situation as an error (as we
+         * do for promotable below) rather than warn and convert, but that would
+         * be a backward-incompatible change that we should probably do with a
+         * transform at a schema major version bump.
+         */
+        pe__force_anon(parent, rsc->id, data_set);
     }
     if (is_not_set(ra_caps, pcmk_ra_cap_promotable)
         && is_set(parent->flags, pe_rsc_promotable)) {
