@@ -45,7 +45,8 @@ pe__force_anon(const char *standard, pe_resource_t *rsc, const char *rid,
                 rsc->id, standard, rid);
 
         clone_data->clone_node_max = 1;
-        clone_data->clone_max = g_list_length(data_set->nodes);
+        clone_data->clone_max = QB_MIN(clone_data->clone_max,
+                                       g_list_length(data_set->nodes));
         clear_bit_recursive(rsc, pe_rsc_unique);
     }
 }
