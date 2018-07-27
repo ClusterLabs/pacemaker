@@ -16,4 +16,8 @@ G_GNUC_INTERNAL
 pe_resource_t *pe__create_clone_child(pe_resource_t *rsc,
                                       pe_working_set_t *data_set);
 
+G_GNUC_INTERNAL
+void pe__force_anon(pe_resource_t *rsc, const char *rid,
+                    pe_working_set_t *data_set);
+
 #endif  // PE_STATUS_PRIVATE__H
