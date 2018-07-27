@@ -128,6 +128,17 @@ native_add_running(resource_t * rsc, node_t * node, pe_working_set_t * data_set)
     }
 }
 
+static void
+recursive_clear_unique(pe_resource_t *rsc)
+{
+    clear_bit(rsc->flags, pe_rsc_unique);
+    add_hash_param(rsc->meta, XML_RSC_ATTR_UNIQUE, XML_BOOLEAN_FALSE);
+
+    for (GList *child = rsc->children; child != NULL; child = child->next) {
+        recursive_clear_unique((pe_resource_t *) child->data);
+    }
+}
+
 gboolean
 native_unpack(resource_t * rsc, pe_working_set_t * data_set)
 {
@@ -143,7 +154,7 @@ native_unpack(resource_t * rsc, pe_working_set_t * data_set)
 
     // Only some agent standards support unique and promotable clones
     if (is_not_set(ra_caps, pcmk_ra_cap_unique)
-        && is_set(rsc->flags, pe_rsc_unique) && rsc->parent) {
+        && is_set(rsc->flags, pe_rsc_unique) && pe_rsc_is_clone(parent)) {
 
         /* @COMPAT We should probably reject this situation as an error (as we
          * do for promotable below) rather than warn and convert, but that would
@@ -151,6 +162,14 @@ native_unpack(resource_t * rsc, pe_working_set_t * data_set)
          * transform at a schema major version bump.
          */
         pe__force_anon(standard, parent, rsc->id, data_set);
+
+        /* Clear globally-unique on the parent and all its descendents unpacked
+         * so far (clearing the parent should make any future children unpacking
+         * correct). We have to clear this resource explicitly because it isn't
+         * hooked into the parent's children yet.
+         */
+        recursive_clear_unique(parent);
+        recursive_clear_unique(rsc);
     }
     if (is_not_set(ra_caps, pcmk_ra_cap_promotable)) {
         const char *stateful = g_hash_table_lookup(parent->meta, "stateful");
