@@ -32,16 +32,17 @@ mark_as_orphan(resource_t * rsc)
 }
 
 void
-pe__force_anon(pe_resource_t *rsc, const char *rid, pe_working_set_t *data_set)
+pe__force_anon(const char *standard, pe_resource_t *rsc, const char *rid,
+               pe_working_set_t *data_set)
 {
     if (pe_rsc_is_clone(rsc)) {
         clone_variant_data_t *clone_data = NULL;
 
         get_clone_variant_data(clone_data, rsc);
 
-        crm_config_warn("Clones %s contains non-OCF resource %s and so "
-                        "can only be used as an anonymous clone. "
-                        "Set the " XML_RSC_ATTR_UNIQUE " meta attribute to false", rsc->id, rid);
+        pe_warn("Ignoring " XML_RSC_ATTR_UNIQUE " for %s because %s resources "
+                "such as %s can be used only as anonymous clones",
+                rsc->id, standard, rid);
 
         clone_data->clone_node_max = 1;
         clone_data->clone_max = g_list_length(data_set->nodes);
