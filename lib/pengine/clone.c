@@ -212,9 +212,10 @@ clone_unpack(resource_t * rsc, pe_working_set_t * data_set)
         add_hash_param(rsc->meta, XML_RSC_ATTR_STICKINESS, "1");
     }
 
-    pe_rsc_trace(rsc, "\tClone is unique (fixed): %s",
-                 is_set(rsc->flags, pe_rsc_unique) ? "true" : "false");
     clone_data->notify_confirm = is_set(rsc->flags, pe_rsc_notify);
+    /* This ensures that the globally-unique value always exists for children to
+     * inherit when being unpacked, as well as in resource agents' environment.
+     */
     add_hash_param(rsc->meta, XML_RSC_ATTR_UNIQUE,
                    is_set(rsc->flags, pe_rsc_unique) ? XML_BOOLEAN_TRUE : XML_BOOLEAN_FALSE);
 
