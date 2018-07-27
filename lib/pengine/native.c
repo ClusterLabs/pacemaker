@@ -150,7 +150,7 @@ native_unpack(resource_t * rsc, pe_working_set_t * data_set)
          * be a backward-incompatible change that we should probably do with a
          * transform at a schema major version bump.
          */
-        pe__force_anon(parent, rsc->id, data_set);
+        pe__force_anon(standard, parent, rsc->id, data_set);
     }
     if (is_not_set(ra_caps, pcmk_ra_cap_promotable)) {
         const char *stateful = g_hash_table_lookup(parent->meta, "stateful");
