@@ -1382,7 +1382,6 @@ clone_create_probe(resource_t * rsc, node_t * node, action_t * complete,
         }
 
         /* Fall back to the first clone instance */
-        CRM_ASSERT(rsc->children);
         child = rsc->children->data;
         return child->cmds->create_probe(child, node, complete, force, data_set);
     }
@@ -1393,12 +1392,6 @@ clone_create_probe(resource_t * rsc, node_t * node, action_t * complete,
 
         if (child_rsc->cmds->create_probe(child_rsc, node, complete, force, data_set)) {
             any_created = TRUE;
-        }
-
-        if (any_created && is_not_set(rsc->flags, pe_rsc_unique)
-            && clone_data->clone_node_max == 1) {
-            /* only look for one copy (clone :0) */
-            break;
         }
     }
 
