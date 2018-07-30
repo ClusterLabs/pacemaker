@@ -1343,11 +1343,59 @@ find_instance_on(resource_t * rsc, node_t * node)
     return NULL;
 }
 
+// For unique clones, probe each instance separately
+static gboolean
+probe_unique_clone(pe_resource_t *rsc, pe_node_t *node, pe_action_t *complete,
+                   gboolean force, pe_working_set_t *data_set)
+{
+    gboolean any_created = FALSE;
+
+    for (GList *child_iter = rsc->children; child_iter != NULL;
+         child_iter = child_iter->next) {
+
+        resource_t *child = (resource_t *) child_iter->data;
+
+        any_created |= child->cmds->create_probe(child, node, complete, force,
+                                                 data_set);
+    }
+    return any_created;
+}
+
+// For anonymous clones, only a single instance needs to be probed
+static gboolean
+probe_anonymous_clone(pe_resource_t *rsc, pe_node_t *node,
+                      pe_action_t *complete, gboolean force,
+                      pe_working_set_t *data_set)
+{
+    // First, check if we probed an instance on this node last time
+    resource_t *child = find_instance_on(rsc, node);
+
+    // Otherwise, check if we plan to start an instance on this node
+    if (child == NULL) {
+        for (GList *child_iter = rsc->children; child_iter && !child;
+             child_iter = child_iter->next) {
+
+            node_t *local_node = NULL;
+            resource_t *child_rsc = (resource_t *) child_iter->data;
+
+            local_node = child_rsc->fns->location(child_rsc, NULL, FALSE);
+            if (local_node && (local_node->details == node->details)) {
+                child = child_rsc;
+            }
+        }
+    }
+
+    // Otherwise, use the first clone instance
+    if (child == NULL) {
+        child = rsc->children->data;
+    }
+    return child->cmds->create_probe(child, node, complete, force, data_set);
+}
+
 gboolean
 clone_create_probe(resource_t * rsc, node_t * node, action_t * complete,
                    gboolean force, pe_working_set_t * data_set)
 {
-    GListPtr gIter = NULL;
     gboolean any_created = FALSE;
 
     CRM_ASSERT(rsc);
@@ -1375,47 +1423,12 @@ clone_create_probe(resource_t * rsc, node_t * node, action_t * complete,
         }
     }
 
-    if (is_not_set(rsc->flags, pe_rsc_unique)) {
-        /* only look for one copy */
-        resource_t *child = NULL;
-
-        /* Try whoever we probed last time */
-        child = find_instance_on(rsc, node);
-        if (child) {
-            return child->cmds->create_probe(child, node, complete, force, data_set);
-        }
-
-        /* Try whoever we plan on starting there */
-        gIter = rsc->children;
-        for (; gIter != NULL; gIter = gIter->next) {
-            node_t *local_node = NULL;
-            resource_t *child_rsc = (resource_t *) gIter->data;
-
-            CRM_ASSERT(child_rsc);
-            local_node = child_rsc->fns->location(child_rsc, NULL, FALSE);
-            if (local_node == NULL) {
-                continue;
-            }
-
-            if (local_node->details == node->details) {
-                return child_rsc->cmds->create_probe(child_rsc, node, complete, force, data_set);
-            }
-        }
-
-        /* Fall back to the first clone instance */
-        child = rsc->children->data;
-        return child->cmds->create_probe(child, node, complete, force, data_set);
+    if (is_set(rsc->flags, pe_rsc_unique)) {
+        any_created = probe_unique_clone(rsc, node, complete, force, data_set);
+    } else {
+        any_created = probe_anonymous_clone(rsc, node, complete, force,
+                                            data_set);
     }
-
-    gIter = rsc->children;
-    for (; gIter != NULL; gIter = gIter->next) {
-        resource_t *child_rsc = (resource_t *) gIter->data;
-
-        if (child_rsc->cmds->create_probe(child_rsc, node, complete, force, data_set)) {
-            any_created = TRUE;
-        }
-    }
-
     return any_created;
 }
 
