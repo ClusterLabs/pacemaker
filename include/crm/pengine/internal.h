@@ -58,7 +58,6 @@ void verify_pe_options(GHashTable * options);
 
 void common_update_score(resource_t * rsc, const char *id, int score);
 void native_add_running(resource_t * rsc, node_t * node, pe_working_set_t * data_set);
-node_t *rsc_known_on(resource_t * rsc, GListPtr * list);
 
 gboolean native_unpack(resource_t * rsc, pe_working_set_t * data_set);
 gboolean group_unpack(resource_t * rsc, pe_working_set_t * data_set);

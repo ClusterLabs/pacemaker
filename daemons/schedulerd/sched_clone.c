@@ -1274,72 +1274,46 @@ clone_expand(resource_t * rsc, pe_working_set_t * data_set)
     clone_data->promote_notify = NULL;
 }
 
-node_t *
-rsc_known_on(resource_t * rsc, GListPtr * list)
+// Check whether a resource or any of its children is known on node
+static bool
+rsc_known_on(pe_resource_t *rsc, pe_node_t *node)
 {
-    GListPtr gIter = NULL;
-    node_t *one = NULL;
-    GListPtr result = NULL;
-
     if (rsc->children) {
+        for (GList *child_iter = rsc->children; child_iter != NULL;
+             child_iter = child_iter->next) {
 
-        gIter = rsc->children;
-        for (; gIter != NULL; gIter = gIter->next) {
-            resource_t *child = (resource_t *) gIter->data;
+            resource_t *child = (resource_t *) child_iter->data;
 
-            rsc_known_on(child, &result);
+            if (rsc_known_on(child, node)) {
+                return TRUE;
+            }
         }
 
     } else if (rsc->known_on) {
-        result = g_hash_table_get_values(rsc->known_on);
-    }
+        GHashTableIter iter;
+        node_t *known_node = NULL;
 
-    if (result && g_list_length(result) == 1) {
-        one = g_list_nth_data(result, 0);
-    }
-
-    if (list) {
-        GListPtr gIter = NULL;
-
-        gIter = result;
-        for (; gIter != NULL; gIter = gIter->next) {
-            node_t *node = (node_t *) gIter->data;
-
-            if (*list == NULL || pe_find_node_id(*list, node->details->id) == NULL) {
-                *list = g_list_prepend(*list, node);
+        g_hash_table_iter_init(&iter, rsc->known_on);
+        while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &known_node)) {
+            if (node->details == known_node->details) {
+                return TRUE;
             }
         }
     }
-
-    g_list_free(result);
-    return one;
+    return FALSE;
 }
 
-static resource_t *
-find_instance_on(resource_t * rsc, node_t * node)
+// Look for an instance of clone that is known on node
+static pe_resource_t *
+find_instance_on(pe_resource_t *clone, pe_node_t *node)
 {
-    GListPtr gIter = NULL;
-
-    gIter = rsc->children;
-    for (; gIter != NULL; gIter = gIter->next) {
-        GListPtr gIter2 = NULL;
-        GListPtr known_list = NULL;
+    for (GList *gIter = clone->children; gIter != NULL; gIter = gIter->next) {
         resource_t *child = (resource_t *) gIter->data;
 
-        rsc_known_on(child, &known_list);
-
-        gIter2 = known_list;
-        for (; gIter2 != NULL; gIter2 = gIter2->next) {
-            node_t *known = (node_t *) gIter2->data;
-
-            if (node->details == known->details) {
-                g_list_free(known_list);
-                return child;
-            }
+        if (rsc_known_on(child, node)) {
+            return child;
         }
-        g_list_free(known_list);
     }
-
     return NULL;
 }
 
@@ -1368,7 +1342,7 @@ probe_anonymous_clone(pe_resource_t *rsc, pe_node_t *node,
                       pe_working_set_t *data_set)
 {
     // First, check if we probed an instance on this node last time
-    resource_t *child = find_instance_on(rsc, node);
+    pe_resource_t *child = find_instance_on(rsc, node);
 
     // Otherwise, check if we plan to start an instance on this node
     if (child == NULL) {
