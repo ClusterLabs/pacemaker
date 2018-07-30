@@ -1325,10 +1325,8 @@ clone_create_probe(resource_t * rsc, node_t * node, action_t * complete,
 {
     GListPtr gIter = NULL;
     gboolean any_created = FALSE;
-    clone_variant_data_t *clone_data = NULL;
 
     CRM_ASSERT(rsc);
-    get_clone_variant_data(clone_data, rsc);
 
     rsc->children = g_list_sort(rsc->children, sort_rsc_id);
     if (rsc->children == NULL) {
@@ -1353,8 +1351,7 @@ clone_create_probe(resource_t * rsc, node_t * node, action_t * complete,
         }
     }
 
-    if (is_not_set(rsc->flags, pe_rsc_unique)
-        && clone_data->clone_node_max == 1) {
+    if (is_not_set(rsc->flags, pe_rsc_unique)) {
         /* only look for one copy */
         resource_t *child = NULL;
 
