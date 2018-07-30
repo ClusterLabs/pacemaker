@@ -242,7 +242,7 @@ getProductName(void)
 static void
 con_usage(const char *name, const char *help, void *cb_data)
 {
-    printf("\n%s%s", name, help);
+    printf("%s\n", help);
 }
 
 static void
@@ -250,7 +250,7 @@ usage(const char *progname)
 {
     printf("Usage:\n");
     printf(" %s <con_parms>\n", progname);
-    printf(" Where <con_parms> is one of:");
+    printf(" Where <con_parms> is one of:\n");
     ipmi_parse_args_iter_help(con_usage, NULL);
 }
 
@@ -538,6 +538,18 @@ main(int argc, char *argv[])
 
     /* Initialize the OpenIPMI library. */
     ipmi_init(os_hnd);
+
+    // Check for pacemaker-standard help and version options
+    if (argc > 1) {
+        for (char **arg = &argv[1]; *arg != NULL; ++arg) {
+            if (!strcmp(*arg, "--help") || !strcmp(*arg, "-?")) {
+                usage(argv[0]);
+                return CRM_EX_OK;
+            } else if (!strcmp(*arg, "--version") || !strcmp(*arg, "-$")) {
+                crm_help('$', CRM_EX_OK);
+            }
+        }
+    }
 
 #ifdef COMPLEX
     rv = ipmi_parse_args2(&curr_arg, argc, argv, &args);
