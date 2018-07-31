@@ -2084,6 +2084,7 @@ stonith_send_async_reply(async_command_t * cmd, const char *output, int rc, GPid
         crm_xml_add(notify_data, F_STONITH_ORIGIN, cmd->client);
 
         do_stonith_notify(0, T_STONITH_NOTIFY_FENCE, rc, notify_data);
+        do_stonith_notify(0, T_STONITH_NOTIFY_HISTORY, 0, NULL);
     }
 
     free_xml(reply);
@@ -2604,7 +2605,14 @@ handle_request(crm_client_t * client, uint32_t id, uint32_t flags, xmlNode * req
         }
 
     } else if (crm_str_eq(op, STONITH_OP_FENCE_HISTORY, TRUE)) {
-        rc = stonith_fence_history(request, &data);
+        rc = stonith_fence_history(request, &data, remote_peer, call_options);
+        if (call_options & st_opt_discard_reply) {
+            /* we don't expect answers to the broadcast
+             * we might have sent out
+             */
+            free_xml(data);
+            return pcmk_ok;
+        }
 
     } else if (crm_str_eq(op, STONITH_OP_DEVICE_ADD, TRUE)) {
         const char *device_id = NULL;
