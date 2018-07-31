@@ -226,6 +226,7 @@ mon_cib_connection_destroy(gpointer user_data)
          */
         st->cmds->remove_notification(st, T_STONITH_NOTIFY_DISCONNECT);
         st->cmds->remove_notification(st, T_STONITH_NOTIFY_FENCE);
+        st->cmds->remove_notification(st, T_STONITH_NOTIFY_HISTORY);
         if (st->state != stonith_disconnected) {
             st->cmds->disconnect(st);
         }
@@ -303,7 +304,7 @@ cib_connect(gboolean full)
             } else {
                 st->cmds->register_notification(st, T_STONITH_NOTIFY_DISCONNECT,
                                                 mon_st_callback_display);
-                st->cmds->register_notification(st, T_STONITH_NOTIFY_FENCE, mon_st_callback_display);
+                st->cmds->register_notification(st, T_STONITH_NOTIFY_HISTORY, mon_st_callback_display);
             }
         }
     }
@@ -4185,11 +4186,6 @@ mon_refresh_display(gpointer user_data)
     stonith_history_free(stonith_history);
     stonith_history = NULL;
     cleanup_alloc_calculations(&data_set);
-
-    /* poll for pending fence-actions as we don't get notifications so far */
-    if ((!one_shot) && (show & mon_show_fence_history)) {
-        kick_refresh(FALSE);
-    }
     return TRUE;
 }
 
@@ -4237,11 +4233,6 @@ void kick_refresh(gboolean data_updated)
         updates = 0;
 
     } else {
-        /* if nothing has been updated (e.g. fence-history polling for changes
-         * in pending actions since atm that doesn't generate notifications or
-         * cib update has gone wrong) it is enough to update at reconnect-rate
-         */
-        mainloop_timer_set_period(refresh_timer, data_updated?2000:reconnect_msec);
         mainloop_timer_start(refresh_timer);
     }
 }
@@ -4282,6 +4273,8 @@ clean_up(crm_exit_t exit_code)
     if (st != NULL) {
         if (st->state != stonith_disconnected) {
             st->cmds->remove_notification(st, T_STONITH_NOTIFY_DISCONNECT);
+            st->cmds->remove_notification(st, T_STONITH_NOTIFY_FENCE);
+            st->cmds->remove_notification(st, T_STONITH_NOTIFY_HISTORY);
             st->cmds->disconnect(st);
         }
         stonith_api_delete(st);
