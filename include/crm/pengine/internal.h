@@ -51,7 +51,7 @@ void add_hash_param(GHashTable * hash, const char *name, const char *value);
 
 char *native_parameter(resource_t * rsc, node_t * node, gboolean create, const char *name,
                        pe_working_set_t * data_set);
-node_t *native_location(resource_t * rsc, GListPtr * list, gboolean current);
+pe_node_t *native_location(const pe_resource_t *rsc, GList **list, int current);
 
 void pe_metadata(void);
 void verify_pe_options(GHashTable * options);

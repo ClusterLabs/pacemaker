@@ -786,8 +786,18 @@ native_resource_state(const resource_t * rsc, gboolean current)
     return role;
 }
 
-node_t *
-native_location(resource_t * rsc, GListPtr * list, gboolean current)
+/*!
+ * \internal
+ * \brief List nodes where a resource (or any of its children) is
+ *
+ * \param[in]  rsc      Resource to check
+ * \param[out] list     List to add result to
+ * \param[in]  current  0 = where known, 1 = running, 2 = running or pending
+ *
+ * \return If list contains only one node, that node
+ */
+pe_node_t *
+native_location(const pe_resource_t *rsc, GList **list, int current)
 {
     node_t *one = NULL;
     GListPtr result = NULL;
@@ -801,15 +811,22 @@ native_location(resource_t * rsc, GListPtr * list, gboolean current)
             child->fns->location(child, &result, current);
         }
 
-    } else if (current && rsc->running_on) {
-        result = g_list_copy(rsc->running_on);
+    } else if (current) {
+
+        if (rsc->running_on) {
+            result = g_list_copy(rsc->running_on);
+        }
+        if ((current == 2) && rsc->pending_node
+            && !pe_find_node_id(result, rsc->pending_node->details->id)) {
+                result = g_list_append(result, rsc->pending_node);
+        }
 
     } else if (current == FALSE && rsc->allocated_to) {
         result = g_list_append(NULL, rsc->allocated_to);
     }
 
-    if (result && g_list_length(result) == 1) {
-        one = g_list_nth_data(result, 0);
+    if (result && (result->next == NULL)) {
+        one = result->data;
     }
 
     if (list) {
