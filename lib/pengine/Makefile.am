@@ -10,7 +10,7 @@ include $(top_srcdir)/Makefile.common
 lib_LTLIBRARIES		= libpe_rules.la libpe_status.la
 
 ## SOURCES
-noinst_HEADERS		= unpack.h variant.h
+noinst_HEADERS		= unpack.h variant.h pe_status_private.h
 
 libpe_rules_la_LDFLAGS	= -version-info 26:0:0
 
