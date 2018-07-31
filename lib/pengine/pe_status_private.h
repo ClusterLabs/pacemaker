@@ -12,4 +12,8 @@
  * declared with G_GNUC_INTERNAL for efficiency.
  */
 
+G_GNUC_INTERNAL
+pe_resource_t *pe__create_clone_child(pe_resource_t *rsc,
+                                      pe_working_set_t *data_set);
+
 #endif  // PE_STATUS_PRIVATE__H

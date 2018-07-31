@@ -11,13 +11,13 @@
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>
 #include <unpack.h>
+#include <pe_status_private.h>
 #include <crm/msg_xml.h>
 
 #define VARIANT_CLONE 1
 #include "./variant.h"
 
 void force_non_unique_clone(resource_t * rsc, const char *rid, pe_working_set_t * data_set);
-resource_t *create_child_clone(resource_t * rsc, int sub_id, pe_working_set_t * data_set);
 
 static void
 mark_as_orphan(resource_t * rsc)
@@ -69,8 +69,8 @@ find_clone_instance(resource_t * rsc, const char *sub_id, pe_working_set_t * dat
     return child;
 }
 
-resource_t *
-create_child_clone(resource_t * rsc, int sub_id, pe_working_set_t * data_set)
+pe_resource_t *
+pe__create_clone_child(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
     gboolean as_orphan = FALSE;
     char *inc_num = NULL;
@@ -83,11 +83,13 @@ create_child_clone(resource_t * rsc, int sub_id, pe_working_set_t * data_set)
 
     CRM_CHECK(clone_data->xml_obj_child != NULL, return FALSE);
 
-    if (sub_id < 0) {
+    if (clone_data->total_clones >= clone_data->clone_max) {
+        // If we've already used all available instances, this is an orphan
         as_orphan = TRUE;
-        sub_id = clone_data->total_clones;
     }
-    inc_num = crm_itoa(sub_id);
+
+    // Allocate instance numbers in numerical order (starting at 0)
+    inc_num = crm_itoa(clone_data->total_clones);
     inc_max = crm_itoa(clone_data->clone_max);
 
     child_copy = copy_xml(clone_data->xml_obj_child);
@@ -224,18 +226,20 @@ clone_unpack(resource_t * rsc, pe_working_set_t * data_set)
     add_hash_param(rsc->meta, XML_RSC_ATTR_UNIQUE,
                    is_set(rsc->flags, pe_rsc_unique) ? XML_BOOLEAN_TRUE : XML_BOOLEAN_FALSE);
 
-    for (lpc = 0; lpc < clone_data->clone_max; lpc++) {
-        if (create_child_clone(rsc, lpc, data_set) == NULL) {
+    if (clone_data->clone_max <= 0) {
+        /* Create one child instance so that unpack_find_resource() will hook up
+         * any orphans up to the parent correctly.
+         */
+        if (pe__create_clone_child(rsc, data_set) == NULL) {
             return FALSE;
         }
-    }
 
-    if (clone_data->clone_max == 0) {
-        /* create one so that unpack_find_resource() will hook up
-         * any orphans up to the parent correctly
-         */
-        if (create_child_clone(rsc, -1, data_set) == NULL) {
-            return FALSE;
+    } else {
+        // Create a child instance for each available instance number
+        for (lpc = 0; lpc < clone_data->clone_max; lpc++) {
+            if (pe__create_clone_child(rsc, data_set) == NULL) {
+                return FALSE;
+            }
         }
     }
 
