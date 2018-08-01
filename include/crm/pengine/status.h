@@ -319,6 +319,8 @@ struct resource_s {
 
     pe_working_set_t *cluster;
 
+    pe_node_t *pending_node;    // Node on which pending_task is happening
+
 #if ENABLE_VERSIONED_ATTRS
     xmlNode *versioned_parameters;
 #endif
