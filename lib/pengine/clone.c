@@ -17,20 +17,6 @@
 #define VARIANT_CLONE 1
 #include "./variant.h"
 
-static void
-mark_as_orphan(resource_t * rsc)
-{
-    GListPtr gIter = rsc->children;
-
-    set_bit(rsc->flags, pe_rsc_orphan);
-
-    for (; gIter != NULL; gIter = gIter->next) {
-        resource_t *child = (resource_t *) gIter->data;
-
-        mark_as_orphan(child);
-    }
-}
-
 void
 pe__force_anon(const char *standard, pe_resource_t *rsc, const char *rid,
                pe_working_set_t *data_set)
@@ -107,7 +93,7 @@ pe__create_clone_child(pe_resource_t *rsc, pe_working_set_t *data_set)
     pe_rsc_trace(child_rsc, "Setting clone attributes for: %s", child_rsc->id);
     rsc->children = g_list_append(rsc->children, child_rsc);
     if (as_orphan) {
-        mark_as_orphan(child_rsc);
+        set_bit_recursive(child_rsc, pe_rsc_orphan);
     }
 
     add_hash_param(child_rsc->meta, XML_RSC_ATTR_INCARNATION_MAX, inc_max);
