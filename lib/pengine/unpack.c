@@ -1608,12 +1608,11 @@ find_anonymous_clone(pe_working_set_t * data_set, node_t * node, resource_t * pa
         GListPtr locations = NULL;
         resource_t *child = rIter->data;
 
-        /* Check whether this instance is already known to be active anywhere.
-         *
-         * "Active" in this case means known to be active at this stage of
-         * unpacking. Because this function is called for a resource before the
-         * resource's individual operation history entries are unpacked,
-         * locations will generally not contain the desired node.
+        /* Check whether this instance is already known to be active or pending
+         * anywhere, at this stage of unpacking. Because this function is called
+         * for a resource before the resource's individual operation history
+         * entries are unpacked, locations will generally not contain the
+         * desired node.
          *
          * However, there are three exceptions:
          * (1) when child is a cloned group and we have already unpacked the
@@ -1624,7 +1623,7 @@ find_anonymous_clone(pe_working_set_t * data_set, node_t * node, resource_t * pa
          * (3) when we re-run calculations on the same data set as part of a
          *     simulation.
          */
-        child->fns->location(child, &locations, TRUE);
+        child->fns->location(child, &locations, 2);
         if (locations) {
             /* We should never associate the same numbered anonymous clone
              * instance with multiple nodes, and clone instances can't migrate,
@@ -1669,6 +1668,14 @@ find_anonymous_clone(pe_working_set_t * data_set, node_t * node, resource_t * pa
                 // Remember one inactive instance in case we don't find active
                 inactive_instance = parent->fns->find_rsc(child, rsc_id, NULL,
                                                           pe_find_clone);
+
+                /* ... but don't use it if it was already associated with a
+                 * pending action on another node
+                 */
+                if (inactive_instance && inactive_instance->pending_node
+                    && (inactive_instance->pending_node->details != node->details)) {
+                    inactive_instance = NULL;
+                }
             }
         }
     }
