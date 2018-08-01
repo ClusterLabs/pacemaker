@@ -758,6 +758,12 @@ native_print(resource_t * rsc, const char *pre_text, long options, void *print_d
     }
 
     node = pe__current_node(rsc);
+
+    if (node == NULL) {
+        // This is set only if a non-probe action is pending on this node
+        node = rsc->pending_node;
+    }
+
     common_print(rsc, pre_text, rsc_printable_id(rsc), node, options, print_data);
 }
 
