@@ -3190,9 +3190,10 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
                      * native.c:native_pending_task().
                      */
                     /*rsc->pending_task = strdup("probe");*/
-
+                    /*rsc->pending_node = node;*/
                 } else {
                     rsc->pending_task = strdup(task);
+                    rsc->pending_node = node;
                 }
             }
             break;
