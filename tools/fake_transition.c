@@ -250,8 +250,8 @@ find_resource_xml(xmlNode * cib_node, const char *resource)
 
 
 static xmlNode *
-inject_resource(xmlNode * cib_node, const char *resource, const char *rclass, const char *rtype,
-                const char *rprovider)
+inject_resource(xmlNode * cib_node, const char *resource, const char *lrm_name,
+                const char *rclass, const char *rtype, const char *rprovider)
 {
     xmlNode *lrm = NULL;
     xmlNode *container = NULL;
@@ -260,7 +260,18 @@ inject_resource(xmlNode * cib_node, const char *resource, const char *rclass, co
 
     cib_resource = find_resource_xml(cib_node, resource);
     if (cib_resource != NULL) {
+        /* If an existing LRM history entry uses the resource name,
+         * continue using it, even if lrm_name is different.
+         */
         return cib_resource;
+    }
+
+    // Check for history entry under preferred name
+    if (strcmp(resource, lrm_name)) {
+        cib_resource = find_resource_xml(cib_node, lrm_name);
+        if (cib_resource != NULL) {
+            return cib_resource;
+        }
     }
 
     /* One day, add query for class, provider, type */
@@ -286,7 +297,7 @@ inject_resource(xmlNode * cib_node, const char *resource, const char *rclass, co
     }
 
     xpath = (char *)xmlGetNodePath(cib_node);
-    crm_info("Injecting new resource %s into %s '%s'", resource, xpath, ID(cib_node));
+    crm_info("Injecting new resource %s into %s '%s'", lrm_name, xpath, ID(cib_node));
     free(xpath);
 
     lrm = first_named_child(cib_node, XML_CIB_TAG_LRM);
@@ -303,7 +314,9 @@ inject_resource(xmlNode * cib_node, const char *resource, const char *rclass, co
     }
 
     cib_resource = create_xml_node(container, XML_LRM_TAG_RESOURCE);
-    crm_xml_add(cib_resource, XML_ATTR_ID, resource);
+
+    // If we're creating a new entry, use the preferred name
+    crm_xml_add(cib_resource, XML_ATTR_ID, lrm_name);
 
     crm_xml_add(cib_resource, XML_AGENT_ATTR_CLASS, rclass);
     crm_xml_add(cib_resource, XML_AGENT_ATTR_PROVIDER, rprovider);
@@ -564,7 +577,8 @@ modify_configuration(pe_working_set_t * data_set, cib_t *cib,
 
             update_failcounts(cib_node, resource, task, interval_ms, outcome);
 
-            cib_resource = inject_resource(cib_node, resource, rclass, rtype, rprovider);
+            cib_resource = inject_resource(cib_node, resource, resource,
+                                           rclass, rtype, rprovider);
             CRM_ASSERT(cib_resource != NULL);
 
             op = create_op(cib_resource, task, interval_ms, outcome);
@@ -609,6 +623,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
     const char *rclass = NULL;
     const char *resource = NULL;
     const char *rprovider = NULL;
+    const char *lrm_name = NULL;
     const char *operation = crm_element_value(action->xml, "operation");
     const char *target_rc_s = crm_meta_value(action->params, XML_ATTR_TE_TARGET_RC);
 
@@ -637,6 +652,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
      * If not found use the preferred name anyway
      */
     resource = crm_element_value(action_rsc, XML_ATTR_ID);
+    lrm_name = resource; // Preferred name when writing history
     if (pe_find_resource(fake_resource_list, resource) == NULL) {
         const char *longname = crm_element_value(action_rsc, XML_ATTR_ID_LONG);
 
@@ -664,7 +680,8 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
     cib_node = inject_node_state(fake_cib, node, (router_node? node : uuid));
     CRM_ASSERT(cib_node != NULL);
 
-    cib_resource = inject_resource(cib_node, resource, rclass, rtype, rprovider);
+    cib_resource = inject_resource(cib_node, resource, lrm_name,
+                                   rclass, rtype, rprovider);
     if (cib_resource == NULL) {
         crm_err("invalid resource in transition");
         free(node); free(uuid);
@@ -682,29 +699,44 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
 
     for (gIter = fake_op_fail_list; gIter != NULL; gIter = gIter->next) {
         char *spec = (char *)gIter->data;
-        char *key = crm_strdup_printf(CRM_OP_FMT "@%s=", resource, op->op_type,
-                                      op->interval_ms, node);
+        char *key = NULL;
+        const char *match_name = NULL;
 
+        // Allow user to specify anonymous clone with or without instance number
+        key = crm_strdup_printf(CRM_OP_FMT "@%s=", resource, op->op_type,
+                                op->interval_ms, node);
         if (strncasecmp(key, spec, strlen(key)) == 0) {
+            match_name = resource;
+        }
+        free(key);
+
+        if ((match_name == NULL) && strcmp(resource, lrm_name)) {
+            key = crm_strdup_printf(CRM_OP_FMT "@%s=", lrm_name, op->op_type,
+                                    op->interval_ms, node);
+            if (strncasecmp(key, spec, strlen(key)) == 0) {
+                match_name = lrm_name;
+            }
+            free(key);
+        }
+
+        if (match_name != NULL) {
+
             rc = sscanf(spec, "%*[^=]=%d", (int *) &op->rc);
-            // ${resource}_${task}_${interval_in_ms}@${node}=${rc}
+            // ${match_name}_${task}_${interval_in_ms}@${node}=${rc}
 
             if (rc != 1) {
                 fprintf(stderr,
                         "Invalid failed operation spec: %s. Result code must be integer\n",
                         spec);
-                free(key);
                 continue;
             }
             action->failed = TRUE;
             graph->abort_priority = INFINITY;
             printf("\tPretending action %d failed with rc=%d\n", action->id, op->rc);
-            update_failcounts(cib_node, resource, op->op_type, op->interval_ms,
-                              op->rc);
-            free(key);
+            update_failcounts(cib_node, match_name, op->op_type,
+                              op->interval_ms, op->rc);
             break;
         }
-        free(key);
     }
 
     inject_op(cib_resource, op, target_outcome);
