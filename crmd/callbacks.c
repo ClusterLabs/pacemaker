@@ -197,9 +197,15 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                     erase_status_tag(node->uname, XML_TAG_TRANSIENT_NODEATTRS, cib_scope_local);
                 }
 
-            } else if(AM_I_DC && appeared == FALSE) {
-                crm_info("Peer %s left us", node->uname);
-                erase_status_tag(node->uname, XML_TAG_TRANSIENT_NODEATTRS, cib_scope_local);
+            } else if(AM_I_DC) {
+                if (appeared == FALSE) {
+                    crm_info("Peer %s left us", node->uname);
+                    erase_status_tag(node->uname, XML_TAG_TRANSIENT_NODEATTRS, cib_scope_local);
+                } else {
+                    crm_info("New peer %s we want to sync fence history with",
+                             node->uname);
+                    te_trigger_stonith_history_sync();
+                }
             }
             break;
     }
