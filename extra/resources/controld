@@ -66,10 +66,10 @@ Any additional options to start the dlm_controld service with
 
 <parameter name="daemon" unique="1">
 <longdesc lang="en">
-The daemon to start - supports gfs_controld(.pcmk) and dlm_controld(.pcmk)
+The daemon to start - supports gfs_controld and dlm_controld
 </longdesc>
 <shortdesc lang="en">The daemon to start</shortdesc>
-<content type="string" default="dlm_controld.pcmk" />
+<content type="string" default="dlm_controld" />
 </parameter>
 
 <parameter name="allow_stonith_disabled">
