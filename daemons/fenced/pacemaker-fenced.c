@@ -40,14 +40,14 @@ char *stonith_our_uname = NULL;
 char *stonith_our_uuid = NULL;
 long stonith_watchdog_timeout_ms = 0;
 
-GMainLoop *mainloop = NULL;
+static GMainLoop *mainloop = NULL;
 
 gboolean stand_alone = FALSE;
-gboolean no_cib_connect = FALSE;
-gboolean stonith_shutdown_flag = FALSE;
+static gboolean no_cib_connect = FALSE;
+static gboolean stonith_shutdown_flag = FALSE;
 
-qb_ipcs_service_t *ipcs = NULL;
-xmlNode *local_cib = NULL;
+static qb_ipcs_service_t *ipcs = NULL;
+static xmlNode *local_cib = NULL;
 
 GHashTable *known_peer_names = NULL;
 

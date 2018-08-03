@@ -41,10 +41,10 @@
 
 #include <crm/common/mainloop.h>
 
-GMainLoop *mainloop = NULL;
-crm_trigger_t *trig = NULL;
-int mainloop_iter = 0;
-int callback_rc = 0;
+static GMainLoop *mainloop = NULL;
+static crm_trigger_t *trig = NULL;
+static int mainloop_iter = 0;
+static int callback_rc = 0;
 typedef void (*mainloop_test_iteration_cb) (int check_event);
 
 #define MAINLOOP_DEFAULT_TIMEOUT 2
@@ -85,11 +85,11 @@ static struct crm_option long_options[] = {
 };
 /* *INDENT-ON* */
 
-stonith_t *st = NULL;
-struct pollfd pollfd;
-int st_opts = st_opt_sync_call;
-int expected_notifications = 0;
-int verbose = 0;
+static stonith_t *st = NULL;
+static struct pollfd pollfd;
+static int st_opts = st_opt_sync_call;
+static int expected_notifications = 0;
+static int verbose = 0;
 
 static void
 dispatch_helper(int timeout)

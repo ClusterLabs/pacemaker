@@ -25,7 +25,7 @@ bool BE_QUIET = FALSE;
 bool scope_master = FALSE;
 int cib_options = cib_sync_call;
 
-GMainLoop *mainloop = NULL;
+static GMainLoop *mainloop = NULL;
 
 #define message_timeout_ms 60*1000
 

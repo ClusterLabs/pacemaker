@@ -75,7 +75,7 @@ static char *get_node_display_name(node_t *node);
                                | mon_show_tickets | mon_show_bans \
                                | mon_show_fence_history)
 
-unsigned int show = mon_show_default;
+static unsigned int show = mon_show_default;
 
 /*
  * Definitions indicating how to output
@@ -91,39 +91,39 @@ enum mon_output_format_e {
     mon_output_cgi
 } output_format = mon_output_console;
 
-char *output_filename = NULL;   /* if sending output to a file, its name */
+static char *output_filename = NULL;   /* if sending output to a file, its name */
 
 /* other globals */
-char *xml_file = NULL;
-char *pid_file = NULL;
+static char *xml_file = NULL;
+static char *pid_file = NULL;
 
-gboolean group_by_node = FALSE;
-gboolean inactive_resources = FALSE;
-int reconnect_msec = 5000;
-gboolean daemonize = FALSE;
-GMainLoop *mainloop = NULL;
-guint timer_id = 0;
-mainloop_timer_t *refresh_timer = NULL;
-GList *attr_list = NULL;
+static gboolean group_by_node = FALSE;
+static gboolean inactive_resources = FALSE;
+static int reconnect_msec = 5000;
+static gboolean daemonize = FALSE;
+static GMainLoop *mainloop = NULL;
+static guint timer_id = 0;
+static mainloop_timer_t *refresh_timer = NULL;
+static GList *attr_list = NULL;
 
-const char *external_agent = NULL;
-const char *external_recipient = NULL;
+static const char *external_agent = NULL;
+static const char *external_recipient = NULL;
 
-cib_t *cib = NULL;
-stonith_t *st = NULL;
-xmlNode *current_cib = NULL;
+static cib_t *cib = NULL;
+static stonith_t *st = NULL;
+static xmlNode *current_cib = NULL;
 
-gboolean one_shot = FALSE;
-gboolean has_warnings = FALSE;
-gboolean print_timing = FALSE;
-gboolean watch_fencing = FALSE;
-gboolean fence_history = FALSE;
-gboolean fence_full_history = FALSE;
-gboolean fence_connect = FALSE;
-int fence_history_level = 0;
-gboolean print_brief = FALSE;
-gboolean print_pending = TRUE;
-gboolean print_clone_detail = FALSE;
+static gboolean one_shot = FALSE;
+static gboolean has_warnings = FALSE;
+static gboolean print_timing = FALSE;
+static gboolean watch_fencing = FALSE;
+static gboolean fence_history = FALSE;
+static gboolean fence_full_history = FALSE;
+static gboolean fence_connect = FALSE;
+static int fence_history_level = 0;
+static gboolean print_brief = FALSE;
+static gboolean print_pending = TRUE;
+static gboolean print_clone_detail = FALSE;
 
 /* FIXME allow, detect, and correctly interpret glob pattern or regex? */
 const char *print_neg_location_prefix = "";

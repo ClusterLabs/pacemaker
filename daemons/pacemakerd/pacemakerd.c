@@ -28,16 +28,16 @@
 #include <dirent.h>
 #include <ctype.h>
 
-gboolean pcmk_quorate = FALSE;
-gboolean fatal_error = FALSE;
-GMainLoop *mainloop = NULL;
+static gboolean pcmk_quorate = FALSE;
+static gboolean fatal_error = FALSE;
+static GMainLoop *mainloop = NULL;
 
 #define PCMK_PROCESS_CHECK_INTERVAL 5
 
-const char *local_name = NULL;
-uint32_t local_nodeid = 0;
-crm_trigger_t *shutdown_trigger = NULL;
-const char *pid_file = "/var/run/pacemaker.pid";
+static const char *local_name = NULL;
+static uint32_t local_nodeid = 0;
+static crm_trigger_t *shutdown_trigger = NULL;
+static const char *pid_file = "/var/run/pacemaker.pid";
 
 typedef struct pcmk_child_s {
     int pid;
