@@ -13,20 +13,20 @@
 #include <crm/common/ipc.h>
 #include <crm/cib/internal.h>
 
-int message_timeout_ms = 30;
-int command_options = 0;
-int request_id = 0;
-int bump_log_num = 0;
+static int message_timeout_ms = 30;
+static int command_options = 0;
+static int request_id = 0;
+static int bump_log_num = 0;
 
-const char *host = NULL;
-const char *cib_user = NULL;
-const char *cib_action = NULL;
-const char *obj_type = NULL;
+static const char *host = NULL;
+static const char *cib_user = NULL;
+static const char *cib_action = NULL;
+static const char *obj_type = NULL;
 
-cib_t *the_cib = NULL;
-GMainLoop *mainloop = NULL;
-gboolean force_flag = FALSE;
-crm_exit_t exit_code = CRM_EX_OK;
+static cib_t *the_cib = NULL;
+static GMainLoop *mainloop = NULL;
+static gboolean force_flag = FALSE;
+static crm_exit_t exit_code = CRM_EX_OK;
 
 int do_init(void);
 int do_work(xmlNode *input, int command_options, xmlNode **output);

@@ -25,8 +25,8 @@
 
 #define OPTARGS	"hVc"
 
-GMainLoop *mainloop = NULL;
-qb_ipcs_service_t *ipcs = NULL;
+static GMainLoop *mainloop = NULL;
+static qb_ipcs_service_t *ipcs = NULL;
 
 void pengine_shutdown(int nsig);
 

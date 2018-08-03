@@ -26,10 +26,8 @@
 
 #include <pacemaker-based.h>
 
-extern gboolean cib_is_master;
-extern const char *cib_root;
 gboolean stand_alone = FALSE;
-extern int cib_status;
+
 extern int cib_perform_command(xmlNode * request, xmlNode ** reply, xmlNode ** cib_diff,
                                gboolean privileged);
 

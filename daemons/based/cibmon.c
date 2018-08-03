@@ -46,20 +46,20 @@
 #  include <getopt.h>
 #endif
 
-int max_failures = 30;
+static int max_failures = 30;
 
-gboolean log_diffs = FALSE;
-gboolean log_updates = FALSE;
+static gboolean log_diffs = FALSE;
+static gboolean log_updates = FALSE;
 
-GMainLoop *mainloop = NULL;
+static GMainLoop *mainloop = NULL;
 void usage(const char *cmd, crm_exit_t exit_status);
 void cib_connection_destroy(gpointer user_data);
 
 void cibmon_shutdown(int nsig);
 void cibmon_diff(const char *event, xmlNode * msg);
 
-cib_t *cib = NULL;
-xmlNode *cib_copy = NULL;
+static cib_t *cib = NULL;
+static xmlNode *cib_copy = NULL;
 
 #define OPTARGS	"V?m:du"
 

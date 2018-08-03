@@ -48,7 +48,7 @@ static struct crm_option long_options[] = {
 };
 /* *INDENT-ON* */
 
-cib_t *cib_conn = NULL;
+static cib_t *cib_conn = NULL;
 static int exec_call_id = 0;
 static int exec_call_opts = 0;
 extern void cleanup_alloc_calculations(pe_working_set_t * data_set);
@@ -75,8 +75,8 @@ static struct {
     lrmd_key_value_t *params;
 } options;
 
-GMainLoop *mainloop = NULL;
-lrmd_t *lrmd_conn = NULL;
+static GMainLoop *mainloop = NULL;
+static lrmd_t *lrmd_conn = NULL;
 
 static char event_buf_v0[1024];
 

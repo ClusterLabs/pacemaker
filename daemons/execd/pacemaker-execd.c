@@ -27,9 +27,9 @@
 #  define ENABLE_PCMK_REMOTE
 #endif
 
-GMainLoop *mainloop = NULL;
+static GMainLoop *mainloop = NULL;
 static qb_ipcs_service_t *ipcs = NULL;
-stonith_t *stonith_api = NULL;
+static stonith_t *stonith_api = NULL;
 int lrmd_call_id = 0;
 
 #ifdef ENABLE_PCMK_REMOTE

@@ -37,7 +37,7 @@ crm_cluster_t crm_cluster;
 GMainLoop *mainloop = NULL;
 const char *cib_root = NULL;
 char *cib_our_uname = NULL;
-gboolean preserve_status = FALSE;
+static gboolean preserve_status = FALSE;
 
 /* volatile because it may be changed in a signal handler */
 volatile gboolean cib_writes_enabled = TRUE;

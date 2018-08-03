@@ -173,9 +173,9 @@ static struct crm_option long_options[] = {
 };
 /* *INDENT-ON* */
 
-int st_opts = st_opt_sync_call | st_opt_allow_suicide;
+static int st_opts = st_opt_sync_call | st_opt_allow_suicide;
 
-GMainLoop *mainloop = NULL;
+static GMainLoop *mainloop = NULL;
 struct {
     stonith_t *st;
     const char *target;
