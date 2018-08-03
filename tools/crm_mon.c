@@ -137,7 +137,7 @@ gboolean watch_fencing = FALSE;
 gboolean fence_history = FALSE;
 gboolean fence_full_history = FALSE;
 gboolean fence_connect = FALSE;
-int fence_history_level = 0;
+int fence_history_level = 1;
 gboolean print_brief = FALSE;
 gboolean print_pending = TRUE;
 gboolean print_clone_detail = FALSE;
@@ -782,6 +782,11 @@ main(int argc, char **argv)
                 ++argerr;
                 break;
         }
+    }
+
+    if (watch_fencing) {
+        /* don't moan as fence_history_level == 1 is default */
+        fence_history_level = 0;
     }
 
     switch (fence_history_level) {
