@@ -1406,7 +1406,7 @@ fence_guest(pe_node_t *node, pe_action_t *done, pe_working_set_t *data_set)
      */
     const char *fence_action = "off";
 
-    /* Check whether guest's container resource is has any explicit stop or
+    /* Check whether guest's container resource has any explicit stop or
      * start (the stop may be implied by fencing of the guest's host).
      */
     if (container) {
@@ -1418,7 +1418,7 @@ fence_guest(pe_node_t *node, pe_action_t *done, pe_working_set_t *data_set)
     }
 
     /* Create a fence pseudo-event, so we have an event to order actions
-     * against, and crmd can always detect it.
+     * against, and the controller can always detect it.
      */
     stonith_op = pe_fence_op(node, fence_action, FALSE, "guest is unclean", data_set);
     update_action_flags(stonith_op, pe_action_pseudo | pe_action_runnable,
