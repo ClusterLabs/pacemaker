@@ -18,6 +18,7 @@
 #include <crm/pengine/rules.h>
 #include <crm/pengine/internal.h>
 #include <unpack.h>
+#include <pe_status_private.h>
 
 CRM_TRACE_INIT_DATA(pe_status);
 
@@ -1556,8 +1557,6 @@ create_fake_resource(const char *rsc_id, xmlNode * rsc_entry, pe_working_set_t *
     return rsc;
 }
 
-extern resource_t *create_child_clone(resource_t * rsc, int sub_id, pe_working_set_t * data_set);
-
 /*!
  * \internal
  * \brief Create orphan instance for anonymous clone resource history
@@ -1566,7 +1565,7 @@ static pe_resource_t *
 create_anonymous_orphan(pe_resource_t *parent, const char *rsc_id,
                         pe_node_t *node, pe_working_set_t *data_set)
 {
-    pe_resource_t *top = create_child_clone(parent, -1, data_set);
+    pe_resource_t *top = pe__create_clone_child(parent, data_set);
 
     // find_rsc() because we might be a cloned group
     pe_resource_t *orphan = top->fns->find_rsc(top, rsc_id, NULL, pe_find_clone);

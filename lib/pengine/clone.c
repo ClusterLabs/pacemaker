@@ -11,43 +11,28 @@
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>
 #include <unpack.h>
+#include <pe_status_private.h>
 #include <crm/msg_xml.h>
 
 #define VARIANT_CLONE 1
 #include "./variant.h"
 
-void force_non_unique_clone(resource_t * rsc, const char *rid, pe_working_set_t * data_set);
-resource_t *create_child_clone(resource_t * rsc, int sub_id, pe_working_set_t * data_set);
-
-static void
-mark_as_orphan(resource_t * rsc)
-{
-    GListPtr gIter = rsc->children;
-
-    set_bit(rsc->flags, pe_rsc_orphan);
-
-    for (; gIter != NULL; gIter = gIter->next) {
-        resource_t *child = (resource_t *) gIter->data;
-
-        mark_as_orphan(child);
-    }
-}
-
 void
-force_non_unique_clone(resource_t * rsc, const char *rid, pe_working_set_t * data_set)
+pe__force_anon(const char *standard, pe_resource_t *rsc, const char *rid,
+               pe_working_set_t *data_set)
 {
     if (pe_rsc_is_clone(rsc)) {
         clone_variant_data_t *clone_data = NULL;
 
         get_clone_variant_data(clone_data, rsc);
 
-        crm_config_warn("Clones %s contains non-OCF resource %s and so "
-                        "can only be used as an anonymous clone. "
-                        "Set the " XML_RSC_ATTR_UNIQUE " meta attribute to false", rsc->id, rid);
+        pe_warn("Ignoring " XML_RSC_ATTR_UNIQUE " for %s because %s resources "
+                "such as %s can be used only as anonymous clones",
+                rsc->id, standard, rid);
 
         clone_data->clone_node_max = 1;
-        clone_data->clone_max = g_list_length(data_set->nodes);
-        clear_bit_recursive(rsc, pe_rsc_unique);
+        clone_data->clone_max = QB_MIN(clone_data->clone_max,
+                                       g_list_length(data_set->nodes));
     }
 }
 
@@ -69,8 +54,8 @@ find_clone_instance(resource_t * rsc, const char *sub_id, pe_working_set_t * dat
     return child;
 }
 
-resource_t *
-create_child_clone(resource_t * rsc, int sub_id, pe_working_set_t * data_set)
+pe_resource_t *
+pe__create_clone_child(pe_resource_t *rsc, pe_working_set_t *data_set)
 {
     gboolean as_orphan = FALSE;
     char *inc_num = NULL;
@@ -83,11 +68,13 @@ create_child_clone(resource_t * rsc, int sub_id, pe_working_set_t * data_set)
 
     CRM_CHECK(clone_data->xml_obj_child != NULL, return FALSE);
 
-    if (sub_id < 0) {
+    if (clone_data->total_clones >= clone_data->clone_max) {
+        // If we've already used all available instances, this is an orphan
         as_orphan = TRUE;
-        sub_id = clone_data->total_clones;
     }
-    inc_num = crm_itoa(sub_id);
+
+    // Allocate instance numbers in numerical order (starting at 0)
+    inc_num = crm_itoa(clone_data->total_clones);
     inc_max = crm_itoa(clone_data->clone_max);
 
     child_copy = copy_xml(clone_data->xml_obj_child);
@@ -106,7 +93,7 @@ create_child_clone(resource_t * rsc, int sub_id, pe_working_set_t * data_set)
     pe_rsc_trace(child_rsc, "Setting clone attributes for: %s", child_rsc->id);
     rsc->children = g_list_append(rsc->children, child_rsc);
     if (as_orphan) {
-        mark_as_orphan(child_rsc);
+        set_bit_recursive(child_rsc, pe_rsc_orphan);
     }
 
     add_hash_param(child_rsc->meta, XML_RSC_ATTR_INCARNATION_MAX, inc_max);
@@ -219,23 +206,26 @@ clone_unpack(resource_t * rsc, pe_working_set_t * data_set)
         add_hash_param(rsc->meta, XML_RSC_ATTR_STICKINESS, "1");
     }
 
-    pe_rsc_trace(rsc, "\tClone is unique (fixed): %s",
-                 is_set(rsc->flags, pe_rsc_unique) ? "true" : "false");
+    /* This ensures that the globally-unique value always exists for children to
+     * inherit when being unpacked, as well as in resource agents' environment.
+     */
     add_hash_param(rsc->meta, XML_RSC_ATTR_UNIQUE,
                    is_set(rsc->flags, pe_rsc_unique) ? XML_BOOLEAN_TRUE : XML_BOOLEAN_FALSE);
 
-    for (lpc = 0; lpc < clone_data->clone_max; lpc++) {
-        if (create_child_clone(rsc, lpc, data_set) == NULL) {
+    if (clone_data->clone_max <= 0) {
+        /* Create one child instance so that unpack_find_resource() will hook up
+         * any orphans up to the parent correctly.
+         */
+        if (pe__create_clone_child(rsc, data_set) == NULL) {
             return FALSE;
         }
-    }
 
-    if (clone_data->clone_max == 0) {
-        /* create one so that unpack_find_resource() will hook up
-         * any orphans up to the parent correctly
-         */
-        if (create_child_clone(rsc, -1, data_set) == NULL) {
-            return FALSE;
+    } else {
+        // Create a child instance for each available instance number
+        for (lpc = 0; lpc < clone_data->clone_max; lpc++) {
+            if (pe__create_clone_child(rsc, data_set) == NULL) {
+                return FALSE;
+            }
         }
     }
 

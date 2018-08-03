@@ -13,6 +13,7 @@
 #include <crm/pengine/internal.h>
 #include <unpack.h>
 #include <crm/msg_xml.h>
+#include <pe_status_private.h>
 
 #define VARIANT_NATIVE 1
 #include "./variant.h"
@@ -127,37 +128,57 @@ native_add_running(resource_t * rsc, node_t * node, pe_working_set_t * data_set)
     }
 }
 
-extern void force_non_unique_clone(resource_t * rsc, const char *rid, pe_working_set_t * data_set);
+static void
+recursive_clear_unique(pe_resource_t *rsc)
+{
+    clear_bit(rsc->flags, pe_rsc_unique);
+    add_hash_param(rsc->meta, XML_RSC_ATTR_UNIQUE, XML_BOOLEAN_FALSE);
+
+    for (GList *child = rsc->children; child != NULL; child = child->next) {
+        recursive_clear_unique((pe_resource_t *) child->data);
+    }
+}
 
 gboolean
 native_unpack(resource_t * rsc, pe_working_set_t * data_set)
 {
     resource_t *parent = uber_parent(rsc);
     native_variant_data_t *native_data = NULL;
-    const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+    const char *standard = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+    uint32_t ra_caps = pcmk_get_ra_caps(standard);
 
     pe_rsc_trace(rsc, "Processing resource %s...", rsc->id);
 
     native_data = calloc(1, sizeof(native_variant_data_t));
     rsc->variant_opaque = native_data;
 
-    // Cloned LSB primitives must be anonymous
-    if (is_set(rsc->flags, pe_rsc_unique) && rsc->parent
-        && safe_str_eq(class, PCMK_RESOURCE_CLASS_LSB)) {
+    // Only some agent standards support unique and promotable clones
+    if (is_not_set(ra_caps, pcmk_ra_cap_unique)
+        && is_set(rsc->flags, pe_rsc_unique) && pe_rsc_is_clone(parent)) {
 
-        force_non_unique_clone(parent, rsc->id, data_set);
+        /* @COMPAT We should probably reject this situation as an error (as we
+         * do for promotable below) rather than warn and convert, but that would
+         * be a backward-incompatible change that we should probably do with a
+         * transform at a schema major version bump.
+         */
+        pe__force_anon(standard, parent, rsc->id, data_set);
+
+        /* Clear globally-unique on the parent and all its descendents unpacked
+         * so far (clearing the parent should make any future children unpacking
+         * correct). We have to clear this resource explicitly because it isn't
+         * hooked into the parent's children yet.
+         */
+        recursive_clear_unique(parent);
+        recursive_clear_unique(rsc);
     }
-
-    // Only OCF primitives can be promotable clones
-    if (is_set(parent->flags, pe_rsc_promotable)
-        && safe_str_neq(class, PCMK_RESOURCE_CLASS_OCF)) {
+    if (is_not_set(ra_caps, pcmk_ra_cap_promotable)
+        && is_set(parent->flags, pe_rsc_promotable)) {
 
         pe_err("Resource %s is of type %s and therefore "
                "cannot be used as a promotable clone resource",
-               rsc->id, class);
+               rsc->id, standard);
         return FALSE;
     }
-
     return TRUE;
 }
 
@@ -542,7 +563,7 @@ common_print(resource_t * rsc, const char *pre_text, const char *name, node_t *n
     }
     offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", name);
     offset += snprintf(buffer + offset, LINE_MAX - offset, "\t(%s", class);
-    if (crm_provider_required(class)) {
+    if (is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_provider)) {
         const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
         offset += snprintf(buffer + offset, LINE_MAX - offset, "::%s", prov);
     }
@@ -823,7 +844,7 @@ get_rscs_brief(GListPtr rsc_list, GHashTable * rsc_table, GHashTable * active_ta
         }
 
         offset += snprintf(buffer + offset, LINE_MAX - offset, "%s", class);
-        if (crm_provider_required(class)) {
+        if (is_set(pcmk_get_ra_caps(class), pcmk_ra_cap_provider)) {
             const char *prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
             offset += snprintf(buffer + offset, LINE_MAX - offset, "::%s", prov);
         }
