@@ -234,10 +234,6 @@ te_crm_command(crm_graph_t * graph, crm_action_t * action)
               crm_err("Corrupted command (id=%s) %s: no node", crm_str(id), crm_str(task));
               return FALSE);
 
-    crm_info("Executing crm-event (%s): %s on %s%s%s",
-             crm_str(id), crm_str(task), on_node,
-             is_local ? " (local)" : "", no_wait ? " - no waiting" : "");
-
     if (safe_str_eq(router_node, fsa_our_uname)) {
         is_local = TRUE;
     }
@@ -246,6 +242,10 @@ te_crm_command(crm_graph_t * graph, crm_action_t * action)
     if (crm_is_true(value)) {
         no_wait = TRUE;
     }
+
+    crm_info("Executing crm-event (%s)%s%s: %s on %s",
+             crm_str(id), (is_local? " locally" : ""),
+             (no_wait? " without waiting" : ""), crm_str(task), on_node);
 
     if (is_local && safe_str_eq(task, CRM_OP_SHUTDOWN)) {
         /* defer until everything else completes */

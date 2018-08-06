@@ -1667,7 +1667,7 @@ if test "x${enable_quiet}" = "xyes"; then
     QUIET_MAKE_OPTS="--quiet"
 fi
 
-AC_MSG_RESULT(Supress make details: ${enable_quiet})
+AC_MSG_RESULT(Suppress make details: ${enable_quiet})
 
 dnl Put the above variables to use
 LIBTOOL="${LIBTOOL} --tag=CC \$(QUIET_LIBTOOL_OPTS)"

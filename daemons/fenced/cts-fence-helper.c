@@ -63,14 +63,10 @@ typedef void (*mainloop_test_iteration_cb) (int check_event);
 
 /* *INDENT-OFF* */
 enum test_modes {
-    /* class dev test using a very specific environment */
-    test_standard = 0,
-    /* watch notifications only */
-    test_passive,
-    /* sanity test stonith client api using fence_dummy */
-    test_api_sanity,
-    /* sanity test mainloop code with async respones. */
-    test_api_mainloop,
+    test_standard = 0,  // test using a specific developer environment
+    test_passive,       // watch notifications only
+    test_api_sanity,    // sanity-test stonith client API using fence_dummy
+    test_api_mainloop,  // sanity-test mainloop code with async responses
 };
 
 static struct crm_option long_options[] = {

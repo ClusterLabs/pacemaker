@@ -503,8 +503,8 @@ make_args(const char *agent, const char *action, const char *victim, uint32_t vi
             alias = g_hash_table_lookup(port_map, victim);
         }
 
-        /* Always supply the node's name too:
-         *    https://fedorahosted.org/cluster/wiki/FenceAgentAPI
+        /* Always supply the node's name, too:
+         * https://github.com/ClusterLabs/fence-agents/blob/master/doc/FenceAgentAPI.md
          */
         append_arg("nodename", victim, &arg_list);
         if (victim_nodeid) {

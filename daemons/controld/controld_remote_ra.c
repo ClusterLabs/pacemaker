@@ -649,7 +649,8 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
             cmd->rc = PCMK_OCF_UNKNOWN_ERROR;
             cmd->op_status = PCMK_LRM_OP_ERROR;
             report_remote_ra_result(cmd);
-            crm_err("remote-node %s unexpectedly disconneced during monitor operation", lrm_state->node_name);
+            crm_err("Remote connection to %s unexpectedly dropped during monitor",
+                    lrm_state->node_name);
         }
         cmd_handled = TRUE;
 
