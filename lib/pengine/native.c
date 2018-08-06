@@ -134,33 +134,30 @@ native_unpack(resource_t * rsc, pe_working_set_t * data_set)
 {
     resource_t *parent = uber_parent(rsc);
     native_variant_data_t *native_data = NULL;
-    const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+    const char *standard = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+    uint32_t ra_caps = pcmk_get_ra_caps(standard);
 
     pe_rsc_trace(rsc, "Processing resource %s...", rsc->id);
 
     native_data = calloc(1, sizeof(native_variant_data_t));
     rsc->variant_opaque = native_data;
 
-    if (is_set(rsc->flags, pe_rsc_unique) && rsc->parent) {
+    // Only some agent standards support unique and promotable clones
+    if (is_not_set(ra_caps, pcmk_ra_cap_unique)
+        && is_set(rsc->flags, pe_rsc_unique) && rsc->parent) {
 
-        if (safe_str_eq(class, PCMK_RESOURCE_CLASS_LSB)) {
-            resource_t *top = uber_parent(rsc);
-
-            force_non_unique_clone(top, rsc->id, data_set);
-        }
+        force_non_unique_clone(parent, rsc->id, data_set);
     }
-
-    if (safe_str_eq(class, PCMK_RESOURCE_CLASS_OCF) == FALSE) {
+    if (is_not_set(ra_caps, pcmk_ra_cap_promotable)) {
         const char *stateful = g_hash_table_lookup(parent->meta, "stateful");
 
         if (safe_str_eq(stateful, XML_BOOLEAN_TRUE)) {
             pe_err
                 ("Resource %s is of type %s and therefore cannot be used as a master/slave resource",
-                 rsc->id, class);
+                 rsc->id, standard);
             return FALSE;
         }
     }
-
     return TRUE;
 }
 
