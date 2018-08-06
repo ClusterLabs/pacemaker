@@ -273,10 +273,10 @@ resources_action_create(const char *name, const char *standard, const char *prov
         /* The "heartbeat" agent class only has positional arguments,
          * which we keyed by their decimal position number. */
         param_num = 1;
-        if (params) {
+        if (op->params) {
             for (index = 1; index <= MAX_ARGC - 3; index++ ) {
                 snprintf(buf_tmp, sizeof(buf_tmp), "%d", index);
-                value_tmp = g_hash_table_lookup(params, buf_tmp);
+                value_tmp = g_hash_table_lookup(op->params, buf_tmp);
                 if (value_tmp == NULL) {
                     /* maybe: strdup("") ??
                      * But the old lrmd did simply continue as well. */
@@ -284,6 +284,10 @@ resources_action_create(const char *name, const char *standard, const char *prov
                 }
                 op->opaque->args[param_num++] = strdup(value_tmp);
             }
+
+            // Heartbeat actions don't need to keep the parameters
+            g_hash_table_destroy(op->params);
+            op->params = NULL;
         }
 
         /* Add operation code as the last argument, */

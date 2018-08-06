@@ -58,6 +58,12 @@ pcmk_get_ra_caps(const char *standard)
          */
         return pcmk_ra_cap_status;
 
+    } else if (!strcasecmp(standard, PCMK_RESOURCE_CLASS_HB)) {
+        /* @COMPAT Heartbeat resources likely can't really be unique clones, but
+         * we've allowed it in the past and have it in some PE regression tests.
+         */
+        return pcmk_ra_cap_params | pcmk_ra_cap_status | pcmk_ra_cap_unique;
+
     } else if (!strcasecmp(standard, PCMK_RESOURCE_CLASS_NAGIOS)) {
         return pcmk_ra_cap_params;
     }
