@@ -509,32 +509,20 @@ case "x$PYTHON" in
         ;;
 esac
 
-AC_CHECK_PROGS(MAKE, gmake make)
-AC_PATH_PROGS(HTML2TXT, lynx w3m)
-AC_PATH_PROGS(HELP2MAN, help2man)
-AC_PATH_PROGS(POD2MAN, pod2man, pod2man)
-AC_PATH_PROGS(ASCIIDOC, asciidoc)
-AC_PATH_PROGS(PUBLICAN, publican)
-AC_PATH_PROGS(INKSCAPE, inkscape)
-AC_PATH_PROGS(XSLTPROC, xsltproc)
-AC_PATH_PROGS(XMLCATALOG, xmlcatalog)
-AC_PATH_PROGS(FOP, fop)
-AC_PATH_PROGS(SSH, ssh, /usr/bin/ssh)
-AC_PATH_PROGS(SCP, scp, /usr/bin/scp)
-AC_PATH_PROGS(TAR, tar)
-AC_PATH_PROGS(MD5, md5)
+AC_PATH_PROG([HELP2MAN], [help2man])
+AC_PATH_PROG([ASCIIDOC], [asciidoc])
+AC_PATH_PROG([PUBLICAN], [publican])
+AC_PATH_PROG([INKSCAPE], [inkscape])
+AC_PATH_PROG([XSLTPROC], [xsltproc])
+AC_PATH_PROG([XMLCATALOG], [xmlcatalog])
 dnl BASH is already an environment variable, so use something else
 AC_PATH_PROG([BASH_PATH], [bash])
-AC_PATH_PROGS(TEST, test)
 PKG_PROG_PKG_CONFIG
 AC_PATH_PROGS(VALGRIND_BIN, valgrind, /usr/bin/valgrind)
 AC_DEFINE_UNQUOTED(VALGRIND_BIN, "$VALGRIND_BIN", Valgrind command)
 
 if test x"${LIBTOOL}" = x""; then
     AC_MSG_ERROR(You need (g)libtool installed in order to build ${PACKAGE})
-fi
-if test x"${MAKE}" = x""; then
-    AC_MSG_ERROR(You need (g)make installed in order to build ${PACKAGE})
 fi
 
 dnl Bash is needed for building man pages and running regression tests
@@ -1663,20 +1651,19 @@ dnl Options for cleaning up the compiler output
 QUIET_LIBTOOL_OPTS=""
 QUIET_MAKE_OPTS=""
 if test "x${enable_quiet}" = "xyes"; then
-    QUIET_LIBTOOL_OPTS="--quiet"
-    QUIET_MAKE_OPTS="--quiet"
+    QUIET_LIBTOOL_OPTS="--silent"
+    QUIET_MAKE_OPTS="-s"  # POSIX compliant
 fi
 
 AC_MSG_RESULT(Suppress make details: ${enable_quiet})
 
 dnl Put the above variables to use
 LIBTOOL="${LIBTOOL} --tag=CC \$(QUIET_LIBTOOL_OPTS)"
-MAKE="${MAKE} \$(QUIET_MAKE_OPTS)"
+MAKEFLAGS="${MAKEFLAGS} ${QUIET_MAKE_OPTS}"
 
 AC_SUBST(CC)
-AC_SUBST(MAKE)
+AC_SUBST(MAKEFLAGS)
 AC_SUBST(LIBTOOL)
-AC_SUBST(QUIET_MAKE_OPTS)
 AC_SUBST(QUIET_LIBTOOL_OPTS)
 AC_DEFINE_UNQUOTED(CRM_FEATURES, "$PCMK_FEATURES", Set of enabled features)
 AC_SUBST(PCMK_FEATURES)
