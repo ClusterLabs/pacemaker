@@ -605,7 +605,7 @@ AC_CHECK_PROGS(MAKE, gmake make)
 AC_PATH_PROGS(HTML2TXT, lynx w3m)
 AC_PATH_PROGS(HELP2MAN, help2man)
 AC_PATH_PROGS(POD2MAN, pod2man, pod2man)
-AC_PATH_PROGS(ASCIIDOC, asciidoc)
+AC_PATH_PROGS([ASCIIDOC_CONV], [asciidoc asciidoctor])
 AC_PATH_PROGS(PUBLICAN, publican)
 AC_PATH_PROGS(INKSCAPE, inkscape)
 AC_PATH_PROGS(XSLTPROC, xsltproc)
@@ -667,8 +667,9 @@ if test x"${MANPAGE_XSLT}" != x""; then
    PCMK_FEATURES="$PCMK_FEATURES agent-manpages"
 fi
 
-AM_CONDITIONAL(BUILD_ASCIIDOC, test x"${ASCIIDOC}" != x"")
-if test x"${ASCIIDOC}" != x""; then
+AM_CONDITIONAL([IS_ASCIIDOC], [echo "${ASCIIDOC_CONV}" | grep -Eq 'asciidoc$'])
+AM_CONDITIONAL([BUILD_ASCIIDOC], [test "x${ASCIIDOC_CONV}" != x])
+if test "x${ASCIIDOC_CONV}" != x; then
    PCMK_FEATURES="$PCMK_FEATURES ascii-docs"
 fi
 
