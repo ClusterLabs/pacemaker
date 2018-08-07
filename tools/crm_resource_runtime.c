@@ -558,15 +558,142 @@ rsc_fail_name(resource_t *rsc)
     return is_set(rsc->flags, pe_rsc_unique)? strdup(name) : clone_strip(name);
 }
 
+static int
+clear_rsc_history(crm_ipc_t *crmd_channel, const char *host_uname,
+                  const char *rsc_id, pe_working_set_t *data_set)
+{
+    int rc = pcmk_ok;
+
+    /* Erase the resource's entire LRM history in the CIB, even if we're only
+     * clearing a single operation's fail count. If we erased only entries for a
+     * single operation, we might wind up with a wrong idea of the current
+     * resource state, and we might not re-probe the resource.
+     */
+    rc = send_lrm_rsc_op(crmd_channel, CRM_OP_LRM_DELETE, host_uname, rsc_id,
+                         TRUE, data_set);
+    if (rc != pcmk_ok) {
+        return rc;
+    }
+    crmd_replies_needed++;
+
+    crm_trace("Processing %d mainloop inputs", crmd_replies_needed);
+    while (g_main_context_iteration(NULL, FALSE)) {
+        crm_trace("Processed mainloop input, %d still remaining",
+                  crmd_replies_needed);
+    }
+
+    if (crmd_replies_needed < 0) {
+        crmd_replies_needed = 0;
+    }
+    return rc;
+}
+
+static int
+clear_rsc_failures(crm_ipc_t *crmd_channel, const char *node_name,
+                   const char *rsc_id, const char *operation,
+                   const char *interval, pe_working_set_t *data_set)
+{
+    int rc = pcmk_ok;
+    const char *failed_value = NULL;
+    const char *failed_id = NULL;
+    const char *interval_ms_str = NULL;
+    GHashTable *rscs = NULL;
+    GHashTableIter iter;
+
+    /* Create a hash table to use as a set of resources to clean. This lets us
+     * clean each resource only once (per node) regardless of how many failed
+     * operations it has.
+     */
+    rscs = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, NULL);
+
+    // Normalize interval to milliseconds for comparison to history entry
+    if (operation) {
+        interval_ms_str = crm_strdup_printf("%llu", crm_get_interval(interval));
+    }
+
+    for (xmlNode *xml_op = __xml_first_child(data_set->failed); xml_op != NULL;
+         xml_op = __xml_next(xml_op)) {
+
+        failed_id = crm_element_value(xml_op, XML_LRM_ATTR_RSCID);
+        if (failed_id == NULL) {
+            // Malformed history entry, should never happen
+            continue;
+        }
+
+        // No resource specified means all resources match
+        if (rsc_id) {
+            resource_t *fail_rsc = pe_find_resource_with_flags(data_set->resources,
+                                                               failed_id,
+                                                               pe_find_renamed|pe_find_anon);
+
+            if (!fail_rsc || safe_str_neq(rsc_id, fail_rsc->id)) {
+                continue;
+            }
+        }
+
+        // Host name should always have been provided by this point
+        failed_value = crm_element_value(xml_op, XML_ATTR_UNAME);
+        if (safe_str_neq(node_name, failed_value)) {
+            continue;
+        }
+
+        // No operation specified means all operations match
+        if (operation) {
+            failed_value = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
+            if (safe_str_neq(operation, failed_value)) {
+                continue;
+            }
+
+            // Interval (if operation was specified) defaults to 0 (not all)
+            failed_value = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
+            if (safe_str_neq(interval_ms_str, failed_value)) {
+                continue;
+            }
+        }
+
+        /* not available until glib 2.32
+        g_hash_table_add(rscs, (gpointer) failed_id);
+        */
+        g_hash_table_insert(rscs, (gpointer) failed_id, (gpointer) failed_id);
+    }
+
+    g_hash_table_iter_init(&iter, rscs);
+    while (g_hash_table_iter_next(&iter, (gpointer *) &failed_id, NULL)) {
+        crm_debug("Erasing failures of %s on %s", failed_id, node_name);
+        rc = clear_rsc_history(crmd_channel, node_name, failed_id, data_set);
+        if (rc != pcmk_ok) {
+            return rc;
+        }
+    }
+    g_hash_table_destroy(rscs);
+    return rc;
+}
+
+static int
+clear_rsc_fail_attrs(resource_t *rsc, const char *operation,
+                     const char *interval, node_t *node)
+{
+    int rc = pcmk_ok;
+    int attr_options = attrd_opt_none;
+    char *rsc_name = rsc_fail_name(rsc);
+
+    if (is_remote_node(node)) {
+        attr_options |= attrd_opt_remote;
+    }
+    rc = attrd_clear_delegate(NULL, node->details->uname, rsc_name, operation,
+                              interval, NULL, attr_options);
+    free(rsc_name);
+    return rc;
+}
+
 int
 cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
                     resource_t *rsc, const char *operation,
-                    const char *interval, pe_working_set_t *data_set)
+                    const char *interval, bool just_failures,
+                    pe_working_set_t *data_set)
 {
     int rc = pcmk_ok;
     node_t *node = NULL;
-    char *rsc_name = NULL;
-    int attr_options = attrd_opt_none;
 
     if (rsc == NULL) {
         return -ENXIO;
@@ -578,8 +705,8 @@ cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
             resource_t *child = (resource_t *) lpc->data;
 
             rc = cli_resource_delete(crmd_channel, host_uname, child, operation,
-                                     interval, data_set);
-            if(rc != pcmk_ok) {
+                                     interval, just_failures, data_set);
+            if (rc != pcmk_ok) {
                 return rc;
             }
         }
@@ -611,8 +738,13 @@ cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
             node = (node_t *) lpc->data;
 
             if (node->details->online) {
-                cli_resource_delete(crmd_channel, node->details->uname, rsc,
-                                    operation, interval, data_set);
+                rc = cli_resource_delete(crmd_channel, node->details->uname,
+                                         rsc, operation, interval,
+                                         just_failures, data_set);
+            }
+            if (rc != pcmk_ok) {
+                g_list_free(nodes);
+                return rc;
             }
         }
 
@@ -637,48 +769,91 @@ cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
     if (crmd_channel == NULL) {
         printf("Dry run: skipping clean-up of %s on %s due to CIB_file\n",
                rsc->id, host_uname);
-        return rc;
-     }
+        return pcmk_ok;
+    }
 
-    /* Erase the resource's entire LRM history in the CIB, even if we're only
-     * clearing a single operation's fail count. If we erased only entries for a
-     * single operation, we might wind up with a wrong idea of the current
-     * resource state, and we might not re-probe the resource.
-     */
-    rc = send_lrm_rsc_op(crmd_channel, CRM_OP_LRM_DELETE, host_uname, rsc->id,
-                         TRUE, data_set);
+    rc = clear_rsc_fail_attrs(rsc, operation, interval, node);
     if (rc != pcmk_ok) {
-        printf("Unable to clean up %s history on %s: %s\n",
-               rsc->id, host_uname, pcmk_strerror(rc));
+        printf("Unable to clean up %s failures on %s: %s\n",
+                rsc->id, host_uname, pcmk_strerror(rc));
         return rc;
     }
-    crmd_replies_needed++;
 
-    crm_trace("Processing %d mainloop inputs", crmd_replies_needed);
-    while(g_main_context_iteration(NULL, FALSE)) {
-        crm_trace("Processed mainloop input, %d still remaining",
-                  crmd_replies_needed);
+    if (just_failures) {
+        rc = clear_rsc_failures(crmd_channel, host_uname, rsc->id, operation,
+                                interval, data_set);
+    } else {
+        rc = clear_rsc_history(crmd_channel, host_uname, rsc->id, data_set);
     }
-
-    if(crmd_replies_needed < 0) {
-        crmd_replies_needed = 0;
-    }
-
-    rsc_name = rsc_fail_name(rsc);
-    if (is_remote_node(node)) {
-        attr_options |= attrd_opt_remote;
-    }
-    rc = attrd_clear_delegate(NULL, host_uname, rsc_name, operation, interval,
-                              NULL, attr_options);
     if (rc != pcmk_ok) {
-        printf("Cleaned %s history on %s, but unable to clear failures: %s\n",
+        printf("Cleaned %s failures on %s, but unable to clean history: %s\n",
                rsc->id, host_uname, pcmk_strerror(rc));
     } else {
         printf("Cleaned up %s on %s\n", rsc->id, host_uname);
     }
-    free(rsc_name);
-
     return rc;
+}
+
+int
+cli_cleanup_all(crm_ipc_t *crmd_channel, const char *node_name,
+                const char *operation, const char *interval,
+                pe_working_set_t *data_set)
+{
+    int rc = pcmk_ok;
+    int attr_options = attrd_opt_none;
+    const char *display_name = node_name? node_name : "all nodes";
+
+    if (crmd_channel == NULL) {
+        printf("Dry run: skipping clean-up of %s due to CIB_file\n",
+               display_name);
+        return pcmk_ok;
+    }
+    crmd_replies_needed = 0;
+
+    if (node_name) {
+        node_t *node = pe_find_node(data_set->nodes, node_name);
+
+        if (node == NULL) {
+            CMD_ERR("Unknown node: %s", node_name);
+            return -ENXIO;
+        }
+        if (is_remote_node(node)) {
+            attr_options |= attrd_opt_remote;
+        }
+    }
+
+    rc = attrd_clear_delegate(NULL, node_name, NULL, operation, interval,
+                              NULL, attr_options);
+    if (rc != pcmk_ok) {
+        printf("Unable to clean up all failures on %s: %s\n",
+                display_name, pcmk_strerror(rc));
+        return rc;
+    }
+
+    if (node_name) {
+        rc = clear_rsc_failures(crmd_channel, node_name, NULL,
+                                operation, interval, data_set);
+        if (rc != pcmk_ok) {
+            printf("Cleaned all resource failures on %s, but unable to clean history: %s\n",
+                   node_name, pcmk_strerror(rc));
+            return rc;
+        }
+    } else {
+        for (GList *iter = data_set->nodes; iter; iter = iter->next) {
+            pe_node_t *node = (pe_node_t *) iter->data;
+
+            rc = clear_rsc_failures(crmd_channel, node->details->uname, NULL,
+                                    operation, interval, data_set);
+            if (rc != pcmk_ok) {
+                printf("Cleaned all resource failures on all nodes, but unable to clean history: %s\n",
+                       pcmk_strerror(rc));
+                return rc;
+            }
+        }
+    }
+
+    printf("Cleaned up all resources on %s\n", display_name);
+    return pcmk_ok;
 }
 
 void

@@ -214,15 +214,17 @@ static struct crm_option long_options[] = {
         "cleanup", no_argument, NULL, 'C',
 #if 0
         // new behavior disabled until 2.0.0
-        "\t\tDelete failed operations from a resource's history allowing its current state to be rechecked.\n"
+        "\t\tIf resource has any past failures, clear its history and fail count.\n"
         "\t\t\t\tOptionally filtered by --resource, --node, --operation, and --interval (otherwise all).\n"
+        "\t\t\t\t--operation and --interval apply to fail counts, but entire history is always cleared,\n"
+        "\t\t\t\tto allow current state to be rechecked.\n"
     },
     {
         "refresh", no_argument, NULL, 'R',
 #endif
         "\t\tDelete resource's history (including failures) so its current state is rechecked.\n"
-        "\t\t\t\tOptionally filtered by --resource, --node, --operation, and --interval (otherwise all).\n"
-        "\t\t\t\tUnless --force is specified, resource's group or clone (if any) will also be cleaned"
+        "\t\t\t\tOptionally filtered by --resource and --node (otherwise all).\n"
+        "\t\t\t\tUnless --force is specified, resource's group or clone (if any) will also be refreshed."
     },
     {
         "set-parameter", required_argument, NULL, 'p',
@@ -350,11 +352,13 @@ static struct crm_option long_options[] = {
     },
     {
         "operation", required_argument, NULL, 'n',
-        "\tOperation to clear instead of all (with -C -r)"
+        "\tOperation to clear instead of all (with -C -r)",
+        pcmk_option_hidden // only used with 2.0 -C behavior
     },
     {
         "interval", required_argument, NULL, 'I',
-        "\tInterval of operation to clear (default 0) (with -C -r -n)"
+        "\tInterval of operation to clear (default 0) (with -C -r -n)",
+        pcmk_option_hidden // only used with 2.0 -C behavior
     },
     {
         "set-name", required_argument, NULL, 's',
@@ -442,7 +446,6 @@ main(int argc, char **argv)
     bool require_resource = TRUE; /* whether command requires that resource be specified */
     bool require_dataset = TRUE;  /* whether command requires populated dataset instance */
     bool require_crmd = FALSE;    /* whether command requires connection to CRMd */
-    bool just_errors = TRUE;      /* whether cleanup command deletes all history or just errors */
 
     int rc = pcmk_ok;
     int is_ocf_rc = 0;
@@ -627,6 +630,7 @@ main(int argc, char **argv)
                 timeout_ms = crm_get_msec(optarg);
                 break;
 
+            case 'C':
             case 'R':
             case 'P':
                 crm_log_args(argc, argv);
@@ -634,19 +638,7 @@ main(int argc, char **argv)
                 if (cib_file == NULL) {
                     require_crmd = TRUE;
                 }
-                just_errors = FALSE;
-                rsc_cmd = 'C';
-                find_flags = pe_find_renamed|pe_find_anon;
-                break;
-
-            case 'C':
-                crm_log_args(argc, argv);
-                require_resource = FALSE;
-                if (cib_file == NULL) {
-                    require_crmd = TRUE;
-                }
-                just_errors = FALSE; // disable until 2.0.0
-                rsc_cmd = 'C';
+                rsc_cmd = 'R'; // disable new behavior until 2.0
                 find_flags = pe_find_renamed|pe_find_anon;
                 break;
 
@@ -1101,56 +1093,19 @@ main(int argc, char **argv)
         rc = cli_resource_delete_attribute(rsc, rsc_id, prop_set, prop_id,
                                            prop_name, cib_conn, &data_set);
 
-    } else if (rsc_cmd == 'C' && just_errors) {
-        crmd_replies_needed = 0;
-        for (xmlNode *xml_op = __xml_first_child(data_set.failed); xml_op != NULL;
-             xml_op = __xml_next(xml_op)) {
-
-            const char *node = crm_element_value(xml_op, XML_ATTR_UNAME);
-            const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
-            const char *task_interval = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
-            const char *resource_name = crm_element_value(xml_op, XML_LRM_ATTR_RSCID);
-
-            if(resource_name == NULL) {
-                continue;
-            } else if(host_uname && safe_str_neq(host_uname, node)) {
-                continue;
-            } else if(rsc_id && safe_str_neq(rsc_id, resource_name)) {
-                continue;
-            } else if(operation && safe_str_neq(operation, task)) {
-                continue;
-            } else if(interval && safe_str_neq(interval, task_interval)) {
-                continue;
-            }
-
-            crm_debug("Erasing %s failure for %s (%s detected) on %s",
-                      task, rsc->id, resource_name, node);
-            rc = cli_resource_delete(crmd_channel, node, rsc, task,
-                                     task_interval, &data_set);
-        }
-
-        if(rsc && (rc == pcmk_ok) && (BE_QUIET == FALSE)) {
-            /* Now check XML_RSC_ATTR_TARGET_ROLE and XML_RSC_ATTR_MANAGED */
-            cli_resource_check(cib_conn, rsc);
-        }
-
-        if (rc == pcmk_ok) {
-            start_mainloop();
-        }
-
     } else if ((rsc_cmd == 'C') && rsc) {
-        if(do_force == FALSE) {
+        if (do_force == FALSE) {
             rsc = uber_parent(rsc);
         }
-
-        crm_debug("Re-checking the state of %s (%s requested) on %s",
-                  rsc->id, rsc_id, host_uname);
         crmd_replies_needed = 0;
-        rc = cli_resource_delete(crmd_channel, host_uname, rsc, operation,
-                                 interval, &data_set);
 
-        if(rc == pcmk_ok && BE_QUIET == FALSE) {
-            /* Now check XML_RSC_ATTR_TARGET_ROLE and XML_RSC_ATTR_MANAGED */
+        crm_debug("Erasing failures of %s (%s requested) on %s",
+                  rsc->id, rsc_id, (host_uname? host_uname: "all nodes"));
+        rc = cli_resource_delete(crmd_channel, host_uname, rsc,
+                                 operation, interval, TRUE, &data_set);
+
+        if ((rc == pcmk_ok) && !BE_QUIET) {
+            // Show any reasons why resource might stay stopped
             cli_resource_check(cib_conn, rsc);
         }
 
@@ -1159,6 +1114,29 @@ main(int argc, char **argv)
         }
 
     } else if (rsc_cmd == 'C') {
+        rc = cli_cleanup_all(crmd_channel, host_uname, operation, interval,
+                             &data_set);
+        if (rc == pcmk_ok) {
+            start_mainloop();
+        }
+
+     } else if ((rsc_cmd == 'R') && rsc) {
+         if (do_force == FALSE) {
+             rsc = uber_parent(rsc);
+         }
+         crmd_replies_needed = 0;
+
+         crm_debug("Re-checking the state of %s (%s requested) on %s",
+                   rsc->id, rsc_id, (host_uname? host_uname: "all nodes"));
+         rc = cli_resource_delete(crmd_channel, host_uname, rsc,
+                                  NULL, 0, FALSE, &data_set);
+
+         if ((rc == pcmk_ok) && !BE_QUIET) {
+             // Show any reasons why resource might stay stopped
+             cli_resource_check(cib_conn, rsc);
+         }
+
+    } else if (rsc_cmd == 'R') {
 #if HAVE_ATOMIC_ATTRD
         const char *router_node = host_uname;
         xmlNode *msg_data = NULL;
@@ -1213,8 +1191,8 @@ main(int argc, char **argv)
         crmd_replies_needed = 0;
         for (rIter = data_set.resources; rIter; rIter = rIter->next) {
             rsc = rIter->data;
-            cli_resource_delete(crmd_channel, host_uname, rsc, NULL, NULL,
-                                &data_set);
+            cli_resource_delete(crmd_channel, host_uname, rsc, NULL, 0,
+                                FALSE, &data_set);
         }
 
         start_mainloop();

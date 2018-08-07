@@ -780,7 +780,6 @@ container_fix_remote_addr(resource_t *rsc)
     }
 
     for (int lpc = 0; lpc < DIMOF(attr_list); lpc++) {
-        name = attr_list[lpc];
         value = crm_element_value(rsc->xml, attr_list[lpc]);
         if (safe_str_eq(value, value_list[lpc]) == FALSE) {
             return FALSE;
