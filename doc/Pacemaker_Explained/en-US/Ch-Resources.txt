@@ -90,9 +90,10 @@ indexterm:[Resource,LSB]
 indexterm:[LSB,Resources]
 indexterm:[Linux Standard Base,Resources]
 
-LSB resource agents are those found in +/etc/init.d+.
+'LSB' resource agents are rather known as 'init scripts' (service startup
+scripts), located in +/etc/init.d+.
 
-Generally, they are provided by the OS distribution and, in order to be used
+Commonly, they are provided by the OS distribution and, in order to be used
 with the cluster, they must conform to the LSB Spec.
 footnote:[
 See
@@ -102,15 +103,43 @@ for the LSB Spec as it relates to init scripts.
 
 [WARNING]
 ====
-Many distributions claim LSB compliance but ship with broken init
-scripts.  For details on how to check whether your init script is
-LSB-compatible, see the 'Resource Agents' chapter of 'Pacemaker
-Administration'. Common problematic violations of the LSB standard include:
+Many distributions or particular software packages claim LSB compliance
+but ship with broken init scripts.  For details on how to check whether
+your init script is LSB-compatible, see the 'Resource Agents' chapter of
+'Pacemaker Administration'. Common problematic violations of the LSB
+standard include:
 
-* Not implementing the status operation at all
-* Not observing the correct exit status codes for `start/stop/status` actions
+* Not implementing the +status+ operation at all
+* Not observing the correct exit status codes for
+  +start+/+stop+/+status+ actions
 * Starting a started resource returns an error
 * Stopping a stopped resource returns an error
+
+Since the LSB standard is pragmatic enough so as _not_ to elaborate
+on clean and reliable (busy-waiting-free) service dependency chains beyond
+symbolic system facilities names to order against (one of the strongest
+guarantees set forth is with _syslog_ in particular, denoting that,
+when satisfied, it's actually _operational_ -- something not demanded
+universally with the standard) and because explicit dependency-based
+ordering is crucial for stacked HA applications, additionally this
+imminent setback, possibly rooted deeper in the lack of synchronization
+after initial forking in daemons themselves (something that currently
+spoils also Pacemaker's own user-facing ones) and hence nothing init
+scripts alone could be blamed for, stands out:
+
+* Insufficient causality discreetness on either service start-up (for
+  the dependency chains, it's rather essential the service is also
+  _operational_, with the minimal viable interpretation being that
+  subsequent +status+ returns success but preferably in the strict
+  sense, once the respective init script invocation finishes with
+  success) or shutdown (ditto with no child processes left behind)
+footnote:[
+There's an inherent difference between _started_ and _ready_ state
+of the service at hand, see discussion at
+https://jdebp.eu/FGA/unix-daemon-readiness-protocol-problems.html
+also showing how suitably prepared <<s-resource-supported-systemd,systemd
+resources>> may possibly improve on this through a native arrangement scheme.
+]
 ====
 
 [IMPORTANT]
@@ -119,6 +148,7 @@ Remember to make sure the computer is _not_ configured to start any
 services at boot time -- that should be controlled by the cluster.
 ====
 
+[[s-resource-supported-systemd]]
 === Systemd ===
 indexterm:[Resource,Systemd]
 indexterm:[Systemd,Resources]
