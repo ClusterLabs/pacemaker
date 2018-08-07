@@ -396,9 +396,10 @@ indexterm:[Resource,Option,requires]
  node is marked ineligible to host this resource. A value of 0 indicates that
  this feature is disabled (the node will never be marked ineligible); by
  constrast, the cluster treats INFINITY (the default) as a very large but
- finite number. This option has an effect only if the failed operation has
- on-fail=restart (the default), and additionally for failed start operations,
- if the cluster property start-failure-is-fatal is false.
+ finite number. This option has an effect only if the failed operation
+ specifies +on-fail+ as +restart+ (the default), and additionally for
+ failed +start+ operations, if the cluster property +start-failure-is-fatal+
+ is +false+.
  indexterm:[migration-threshold,Resource Option]
  indexterm:[Resource,Option,migration-threshold]
 
@@ -672,7 +673,7 @@ you need to add a +monitor+ operation to the resource's definition.
  indexterm:[Action,Property,timeout]
 
 |on-fail
-|restart '(except for stop operations, which default to' fence 'when
+|restart '(except for +stop+ operations, which default to' fence 'when
  STONITH is enabled and' block 'otherwise)'
 |The action to take if this action ever fails. Allowed values:
 
@@ -689,7 +690,7 @@ indexterm:[Action,Property,on-fail]
 |enabled
 |TRUE
 |If +false+, ignore this operation definition.  This is typically used to pause
- a particular recurring monitor operation;  for instance, it can complement
+ a particular recurring +monitor+ operation; for instance, it can complement
  the respective resource being unmanaged (+is-managed=false+), as this alone
  will <<s-monitoring-unmanaged,not block any configured monitoring>>.
  Disabling the operation does not suppress all actions of the given type.
@@ -709,7 +710,7 @@ indexterm:[Action,Property,on-fail]
 |role
 |
 |Run the operation only on node(s) that the cluster thinks should be in
- the specified role. This only makes sense for recurring monitor operations.
+ the specified role. This only makes sense for recurring +monitor+ operations.
  Allowed (case-sensitive) values: +Stopped+, +Started+, and in the
  case of <<s-resource-promotable,promotable clone resources>>, +Slave+ and +Master+.
  indexterm:[role,Action Property]
@@ -720,21 +721,21 @@ indexterm:[Action,Property,on-fail]
 [[s-resource-monitoring]]
 === Monitoring Resources for Failure ===
 
-When Pacemaker first starts a resource, it runs one-time monitor operations
+When Pacemaker first starts a resource, it runs one-time +monitor+ operations
 (referred to as 'probes') to ensure the resource is running where it's
 supposed to be, and not running where it's not supposed to be. (This behavior
 can be affected by the +resource-discovery+ location constraint property.)
 
 Other than those initial probes, Pacemaker will not (by default) check that
 the resource continues to stay healthy. As in the example above, you must
-configure monitor operations explicitly to perform these checks.
+configure +monitor+ operations explicitly to perform these checks.
 
-By default, a monitor operation will ensure that the resource is running
+By default, a +monitor+ operation will ensure that the resource is running
 where it is supposed to. The +target-role+ property can be used for further
 checking.
 
-For example, if a resource has one monitor operation with
-+interval=10 role=Started+ and a second monitor operation with
+For example, if a resource has one +monitor+ operation with
++interval=10 role=Started+ and a second +monitor+ operation with
 +interval=11 role=Stopped+, the cluster will run the first monitor on any nodes
 it thinks 'should' be running the resource, and the second monitor on any nodes
 that it thinks 'should not' be running the resource (for the truly paranoid,
@@ -743,7 +744,7 @@ who want to know when an administrator manually starts a service by mistake).
 [[s-monitoring-unmanaged]]
 === Monitoring Resources When Administration is Disabled ===
 
-Recurring monitor operations behave differently under various administrative
+Recurring +monitor+ operations behave differently under various administrative
 settings:
 
 * When a resource is unmanaged (by setting +is-managed=false+): No monitors
@@ -760,14 +761,15 @@ may require the resource's +target-role+ to be set to +Stopped+ then +Started+
 to be recovered.
 
 * When a node is put into standby: All resources will be moved away from the
-  node, and all monitor operations will be stopped on the node, except those
-  with +role=Stopped+. Monitor operations with +role=Stopped+ will be started
-  on the node if appropriate.
+  node, and all +monitor+ operations will be stopped on the node, except those
+  specifying +role+ as +Stopped+. Such rather atypical monitoring will
+  consequently be started on the node if appropriate.
 
 * When the cluster is put into maintenance mode: All resources will be marked
   as unmanaged. All monitor operations will be stopped, except those with
-  +role=Stopped+. As with single unmanaged resources, starting a resource
-  on a node other than where the cluster expects it to be will cause problems.
+  specifying +role+ as +Stopped+. As with single unmanaged resources, starting
+  a resource on a node other than where the cluster expects it to be will
+  cause problems.
 
 [[s-operation-defaults]]
 === Setting Global Defaults for Operations ===
@@ -812,8 +814,8 @@ then you can create an entry for them and specify a longer timeout.
 === Multiple Monitor Operations ===
 
 Provided no two operations (for a single resource) have the same name
-and interval, you can have as many monitor operations as you like.  In
-this way, you can do a superficial health check every minute and
+and interval, you can have as many +monitor+ operations as you like.
+In this way, you can do a superficial health check every minute and
 progressively more intense ones at higher intervals.
 
 To tell the resource agent what kind of check to perform, you need to
@@ -854,7 +856,7 @@ resource agent to look for the parameter and decide how to use it.
 
 The easiest way to stop a recurring monitor is to just delete it.
 However, there can be times when you only want to disable it
-temporarily.  In such cases, simply add +enabled="false"+ to the
+temporarily.  In such cases, simply add +enabled=false+ to the
 operation's definition.
 
 .Example of an OCF resource with a disabled health check
