@@ -352,11 +352,13 @@ static struct crm_option long_options[] = {
     },
     {
         "operation", required_argument, NULL, 'n',
-        "\tOperation to clear instead of all (with -C -r)"
+        "\tOperation to clear instead of all (with -C -r)",
+        pcmk_option_hidden // only used with 2.0 -C behavior
     },
     {
         "interval", required_argument, NULL, 'I',
-        "\tInterval of operation to clear (default 0) (with -C -r -n)"
+        "\tInterval of operation to clear (default 0) (with -C -r -n)",
+        pcmk_option_hidden // only used with 2.0 -C behavior
     },
     {
         "set-name", required_argument, NULL, 's',
@@ -1091,17 +1093,16 @@ main(int argc, char **argv)
         rc = cli_resource_delete_attribute(rsc, rsc_id, prop_set, prop_id,
                                            prop_name, cib_conn, &data_set);
 
-    } else if ((rsc_cmd == 'R') && rsc) {
+    } else if ((rsc_cmd == 'C') && rsc) {
         if (do_force == FALSE) {
             rsc = uber_parent(rsc);
         }
         crmd_replies_needed = 0;
 
-        crm_debug("%s of %s (%s requested) on %s",
-                  (just_errors? "Clearing failures" : "Re-checking the state"),
-                  rsc->id, rsc_id, (host_uname? host_uname : "all hosts"));
-        rc = cli_resource_delete(crmd_channel, host_uname, rsc, NULL, 0,
-                                 &data_set);
+        crm_debug("Erasing failures of %s (%s requested) on %s",
+                  rsc->id, rsc_id, (host_uname? host_uname: "all nodes"));
+        rc = cli_resource_delete(crmd_channel, host_uname, rsc,
+                                 operation, interval, TRUE, &data_set);
 
         if ((rc == pcmk_ok) && !BE_QUIET) {
             // Show any reasons why resource might stay stopped
@@ -1118,6 +1119,22 @@ main(int argc, char **argv)
         if (rc == pcmk_ok) {
             start_mainloop();
         }
+
+     } else if ((rsc_cmd == 'R') && rsc) {
+         if (do_force == FALSE) {
+             rsc = uber_parent(rsc);
+         }
+         crmd_replies_needed = 0;
+
+         crm_debug("Re-checking the state of %s (%s requested) on %s",
+                   rsc->id, rsc_id, (host_uname? host_uname: "all nodes"));
+         rc = cli_resource_delete(crmd_channel, host_uname, rsc,
+                                  NULL, 0, FALSE, &data_set);
+
+         if ((rc == pcmk_ok) && !BE_QUIET) {
+             // Show any reasons why resource might stay stopped
+             cli_resource_check(cib_conn, rsc);
+         }
 
     } else if (rsc_cmd == 'R') {
 #if HAVE_ATOMIC_ATTRD
@@ -1174,8 +1191,8 @@ main(int argc, char **argv)
         crmd_replies_needed = 0;
         for (rIter = data_set.resources; rIter; rIter = rIter->next) {
             rsc = rIter->data;
-            cli_resource_delete(crmd_channel, host_uname, rsc, NULL, NULL,
-                                &data_set);
+            cli_resource_delete(crmd_channel, host_uname, rsc, NULL, 0,
+                                FALSE, &data_set);
         }
 
         start_mainloop();
