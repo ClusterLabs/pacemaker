@@ -651,7 +651,10 @@ clear_rsc_failures(crm_ipc_t *crmd_channel, const char *node_name,
             }
         }
 
+        /* not available until glib 2.32
         g_hash_table_add(rscs, (gpointer) failed_id);
+        */
+        g_hash_table_insert(rscs, (gpointer) failed_id, (gpointer) failed_id);
     }
 
     g_hash_table_iter_init(&iter, rscs);
