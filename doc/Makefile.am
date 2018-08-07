@@ -87,7 +87,11 @@ endif
 EXTRA_DIST	= $(docbook:%=%.xml)
 
 %.html: %.txt
-	$(AM_V_ASCII)$(ASCIIDOC) --unsafe --backend=xhtml11 $<
+if IS_ASCIIDOC
+	$(AM_V_ASCII)$(ASCIIDOC_CONV) --unsafe --backend=xhtml11 $<
+else
+	$(AM_V_ASCII)$(ASCIIDOC_CONV) --backend=html5 $<
+endif
 
 # publican-clusterlabs/xsl/{html,html-single,pdf}.xsl refer to URIs
 # requiring Internet access, hence we shadow that with a XML catalog-based

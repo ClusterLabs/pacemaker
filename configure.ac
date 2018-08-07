@@ -509,8 +509,8 @@ case "x$PYTHON" in
         ;;
 esac
 
+AC_PATH_PROGS([ASCIIDOC_CONV], [asciidoc asciidoctor])
 AC_PATH_PROG([HELP2MAN], [help2man])
-AC_PATH_PROG([ASCIIDOC], [asciidoc])
 AC_PATH_PROG([PUBLICAN], [publican])
 AC_PATH_PROG([INKSCAPE], [inkscape])
 AC_PATH_PROG([XSLTPROC], [xsltproc])
@@ -564,8 +564,9 @@ if test x"${MANPAGE_XSLT}" != x""; then
     PCMK_FEATURES="$PCMK_FEATURES agent-manpages"
 fi
 
-AM_CONDITIONAL(BUILD_ASCIIDOC, test x"${ASCIIDOC}" != x"")
-if test x"${ASCIIDOC}" != x""; then
+AM_CONDITIONAL([IS_ASCIIDOC], [echo "${ASCIIDOC_CONV}" | grep -Eq 'asciidoc$'])
+AM_CONDITIONAL([BUILD_ASCIIDOC], [test "x${ASCIIDOC_CONV}" != x])
+if test "x${ASCIIDOC_CONV}" != x; then
     PCMK_FEATURES="$PCMK_FEATURES ascii-docs"
 fi
 
