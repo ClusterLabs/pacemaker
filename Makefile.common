@@ -54,11 +54,11 @@ endif
 # Build docbook from asciidoc because XML is a PITA to edit
 #
 # Build each chapter as a book (since the numbering isn't right for
-# articles and only books can have appendicies) and then strip out the
+# articles and only books can have appendices) and then strip out the
 # bits we don't want/need
 #
 %.xml:  %.txt
-	$(AM_V_ASCII)asciidoc -b docbook -a cli_name=$(ASCIIDOC_CLI_TYPE) -a $(ASCIIDOC_CLI_TYPE)=true -d book -o $@ $<
+	$(AM_V_ASCII)$(ASCIIDOC) -b docbook -d book -o $@ $<
 	$(AM_V_at)sed -i 's///' $@
 	$(AM_V_at)sed -i 's///' $@                 # Fix line endings
 	$(AM_V_at)sed -i 's/\ lang="en"//' $@        # Never specify a language in the chapters
