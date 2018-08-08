@@ -1,3 +1,4 @@
+:compat-mode: legacy
 = The Cluster Layer =
 
 == Pacemaker and the Cluster Layer ==

@@ -1,3 +1,4 @@
+:compat-mode: legacy
 = Advanced Configuration =
 
 [[s-recurring-start]]

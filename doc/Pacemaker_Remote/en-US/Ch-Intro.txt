@@ -1,3 +1,4 @@
+:compat-mode: legacy
 = Scaling a Pacemaker Cluster =
 
 == Overview ==

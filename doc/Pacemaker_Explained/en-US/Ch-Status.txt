@@ -1,3 +1,4 @@
+:compat-mode: legacy
 = Status -- Here be dragons =
 
 Most users never need to understand the contents of the status section

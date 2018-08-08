@@ -1,3 +1,4 @@
+:compat-mode: legacy
 = Monitoring a Pacemaker Cluster =
 
 == Using crm_mon ==

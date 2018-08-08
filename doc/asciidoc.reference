@@ -26,7 +26,10 @@ Quotes:
 
 Command:     `some-tool --with option`
 Newly introduced term:
-             'some text' (another form of emphasis as of this edit)
+             'some text' (another form of emphasis as of this edit,
+                          but not compatible with newer revision
+                          of the standard/Asciidoctor outside of
+                          legacy compatibility mode)
 
 File:        mono
 Literal:     mono

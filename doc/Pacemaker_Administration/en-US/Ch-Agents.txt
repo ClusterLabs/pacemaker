@@ -1,3 +1,4 @@
+:compat-mode: legacy
 = Resource Agents =
 
 == OCF Resource Agents ==

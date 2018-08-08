@@ -1,3 +1,4 @@
+:compat-mode: legacy
 = Configuring Pacemaker =
 
 == How Should the Configuration be Updated? ==

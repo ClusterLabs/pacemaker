@@ -1,3 +1,4 @@
+:compat-mode: legacy
 = Configuration Explained =
 
 The walk-through examples use some of these options, but don't explain exactly

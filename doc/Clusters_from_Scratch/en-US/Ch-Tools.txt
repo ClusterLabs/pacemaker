@@ -1,3 +1,4 @@
+:compat-mode: legacy
 = Pacemaker Tools =
 
 == Simplify administration using a cluster shell ==

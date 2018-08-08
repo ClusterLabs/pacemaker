@@ -1,3 +1,4 @@
+:compat-mode: legacy
 = Cluster-Wide Configuration =
 
 == Configuration Layout ==

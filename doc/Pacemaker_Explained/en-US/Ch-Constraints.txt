@@ -1,3 +1,4 @@
+:compat-mode: legacy
 = Resource Constraints =
 
 indexterm:[Resource,Constraints]

@@ -1,3 +1,4 @@
+:compat-mode: legacy
 = Multi-Site Clusters and Tickets =
 
 Apart from local clusters, Pacemaker also supports multi-site clusters.

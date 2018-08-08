@@ -1,3 +1,4 @@
+:compat-mode: legacy
 = Cluster Resources =
 
 [[s-resource-primitive]]
