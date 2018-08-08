@@ -64,7 +64,7 @@ configuration database which is, by design, mostly ignorant of the content it
 holds.  So the decision was made to place them in an easy-to-find location.
 
 .CIB Properties
-[width="95%",cols="2m,5<",options="header",align="center"]
+[width="95%",cols="2m,<5",options="header",align="center"]
 |=========================================================
 |Field |Description
 
@@ -141,7 +141,7 @@ their default values, by running the `man pacemaker-schedulerd` and
 `man pacemaker-controld` commands.
 
 .Cluster Options
-[width="95%",cols="5m,2,11<a",options="header",align="center"]
+[width="95%",cols="5m,2,<11",options="header",align="center"]
 |=========================================================
 |Option |Default |Description
 
@@ -160,7 +160,8 @@ The messaging stack on which Pacemaker is currently running.
 Determined automatically by the cluster.
 Used for informational and diagnostic purposes.
 
-| no-quorum-policy | stop |
+| no-quorum-policy | stop
+a|
 indexterm:[no-quorum-policy,Cluster Option]
 indexterm:[Cluster,Option,no-quorum-policy]
 What to do when the cluster does not have quorum.  Allowed values:

@@ -68,3 +68,29 @@ Section anchors:
 References to section anchors:
 
 <<s-name>> or <<s-name,Alternate Text>>
+
+
+Tables:
+
+Typically styled like this:
+[width="95%",cols="1m,<4m,<6",options="header",align="center"]
+
+It's vital that column alignment/style, if any, goes first/last in the proper
+column specifier (as a whole possibly preceded with column multiplier),
+otherwise Asciidoctor will end up with invalid DocBook sources:
+- correct: 1m,<4m,<6
+- bad:     1m,4<m,6<
+
+Avoid "a" (asciidoc) style for the columns, since it will prevent any
+reference anchors being placed there.  However, if the particular cell
+is to carry a list (inherently a block element) or a comment that should
+be omitted from the output, it needs to be turned into asciidoc style like
+this (note the initial 'a'):
+
+|col1-per-row
+|col2-per-row
+|Details for col1 + col2 per row combo:
+a|Hence either:
+
+* foo
+* bar

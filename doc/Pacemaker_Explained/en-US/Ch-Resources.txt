@@ -244,7 +244,7 @@ These values tell the cluster which resource agent to use for the resource,
 where to find that resource agent and what standards it conforms to.
 
 .Properties of a Primitive Resource
-[width="95%",cols="1m,6<",options="header",align="center"]
+[width="95%",cols="1m,<6",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -327,7 +327,7 @@ behave and can be easily set using the `--meta` option of the
 `crm_resource` command.
 
 .Meta-attributes of a Primitive Resource
-[width="95%",cols="2m,2,5<a",options="header",align="center"]
+[width="95%",cols="2m,2,<5",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -343,7 +343,7 @@ indexterm:[Resource,Option,priority]
 
 |target-role
 |Started
-|What state should the cluster attempt to keep this resource in? Allowed values:
+a|What state should the cluster attempt to keep this resource in? Allowed values:
 
 * +Stopped:+ Force the resource to be stopped
 * +Started:+ Allow the resource to be started (and in the case of
@@ -372,7 +372,7 @@ indexterm:[Resource,Option,target-role]
 |+quorum+ for resources with a +class+ of +stonith+,
  otherwise +unfencing+ if unfencing is active in the cluster,
  otherwise +fencing+ if +stonith-enabled+ is true, otherwise +quorum+
-|Conditions under which the resource can be started
+a|Conditions under which the resource can be started
 Allowed values:
 
 * +nothing:+ can always be started
@@ -416,7 +416,7 @@ indexterm:[Resource,Option,requires]
 
 |multiple-active
 |stop_start
-|What should the cluster do if it ever finds the resource active on
+a|What should the cluster do if it ever finds the resource active on
  more than one node? Allowed values:
 
 * +block:+ mark the resource as unmanaged
@@ -638,7 +638,7 @@ you need to add a +monitor+ operation to the resource's definition.
 =====
 
 .Properties of an Operation
-[width="95%",cols="2m,3,6<a",options="header",align="center"]
+[width="95%",cols="2m,3,<6",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -675,7 +675,7 @@ you need to add a +monitor+ operation to the resource's definition.
 |on-fail
 |restart '(except for +stop+ operations, which default to' fence 'when
  STONITH is enabled and' block 'otherwise)'
-|The action to take if this action ever fails. Allowed values:
+a|The action to take if this action ever fails. Allowed values:
 
 * +ignore:+ Pretend the resource did not fail.
 * +block:+ Don't perform any further operations on the resource.

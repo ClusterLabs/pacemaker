@@ -72,7 +72,7 @@ See the table below or run `man pacemaker-fenced` to see special instance attrib
 that may be set for any fencing resource, regardless of fence agent.
 
 .Additional Properties of Fencing Resources
-[width="95%",cols="5m,2,3,10<a",options="header",align="center"]
+[width="95%",cols="5m,2,3,<10",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -83,7 +83,7 @@ that may be set for any fencing resource, regardless of fence agent.
 |stonith-timeout
 |NA
 |NA
-|Older versions used this to override the default period to wait for a STONITH (reboot, on, off) action to complete for this device.
+a|Older versions used this to override the default period to wait for a STONITH (reboot, on, off) action to complete for this device.
  It has been replaced by the +pcmk_reboot_timeout+ and +pcmk_off_timeout+ properties.
  indexterm:[stonith-timeout,Fencing]
  indexterm:[Fencing,Property,stonith-timeout]
@@ -125,7 +125,7 @@ that may be set for any fencing resource, regardless of fence agent.
 |pcmk_host_check
 |string
 |dynamic-list
-|How to determine which machines are controlled by the device.
+a|How to determine which machines are controlled by the device.
  Allowed values:
 
 * +dynamic-list:+ query the device
@@ -596,7 +596,7 @@ Some possible uses of topologies include:
 * Initiate a kdump and then poweroff the node
 
 .Properties of Fencing Levels
-[width="95%",cols="1m,3<",options="header",align="center"]
+[width="95%",cols="1m,<3",options="header",align="center"]
 |=========================================================
 
 |Field

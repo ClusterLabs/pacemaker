@@ -74,7 +74,7 @@ mount, an IP address, and an application that uses them.
 
 === Group Properties ===
 .Properties of a Group Resource
-[width="95%",cols="3m,5<",options="header",align="center"]
+[width="95%",cols="3m,<5",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -188,7 +188,7 @@ to manage entering and exiting the special role.
 === Clone Properties ===
 
 .Properties of a Clone Resource
-[width="95%",cols="3m,5<",options="header",align="center"]
+[width="95%",cols="3m,<5",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -207,7 +207,7 @@ to manage entering and exiting the special role.
 +priority, target-role, is-managed+
 
 .Clone-specific configuration options
-[width="95%",cols="1m,1,3<",options="header",align="center"]
+[width="95%",cols="1m,1,<3",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -369,7 +369,7 @@ master role, and colocation constraints may contain +rsc-role+ and/or
 +with-rsc-role+ fields.
           
 .Additional colocation constraint options for promotable clone resources
-[width="95%",cols="1m,1,3<",options="header",align="center"]
+[width="95%",cols="1m,1,<3",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -434,7 +434,7 @@ Placement is then performed as normal.
 ==== Using Promotable Clone Resources in Colocation Sets ====
 
 .Additional colocation set options relevant to promotable clone resources
-[width="95%",cols="1m,1,6<",options="header",align="center"]
+[width="95%",cols="1m,1,<6",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -476,7 +476,7 @@ and +B+'s masters.
 ==== Using Promotable Clone Resources in Ordered Sets ====
 
 .Additional ordered set options relevant to promotable clone resources
-[width="95%",cols="1m,1,3<",options="header",align="center"]
+[width="95%",cols="1m,1,<3",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -581,7 +581,7 @@ on the agent to report its status (including role) accurately and does
 not indicate to the agent what role it currently believes it to be in.
 
 .Role implications of OCF return codes
-[width="95%",cols="1,1<",options="header",align="center"]
+[width="95%",cols="1,<1",options="header",align="center"]
 |=========================================================
 
 |Monitor Return Code
@@ -617,7 +617,7 @@ additional context, can be used to calculate the current state of the cluster
 and what is about to happen to it.
 
 .Environment variables supplied with Clone notify actions
-[width="95%",cols="5,3<",options="header",align="center"]
+[width="95%",cols="5,<3",options="header",align="center"]
 |=========================================================
 
 |Variable
@@ -730,7 +730,7 @@ OCF_RESKEY_CRM_meta_notify_start_uname="sles-1 sles-3 sles-2"
 ==== Extra Notifications for Promotable Clones ====
 
 .Extra environment variables supplied for promotable clones
-[width="95%",cols="5,3<",options="header",align="center"]
+[width="95%",cols="5,<3",options="header",align="center"]
 |=========================================================
 
 |_OCF_RESKEY_CRM_meta_notify_master_resource_
@@ -993,7 +993,7 @@ association with Docker, Inc. is implied.]
 === Bundle Properties ===
 
 .Properties of a Bundle
-[width="95%",cols="3m,5<",options="header",align="center"]
+[width="95%",cols="3m,<5",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -1024,7 +1024,7 @@ a bundle's Docker container. The user must ensure that resource agent is
 installed on every node allowed to run the bundle.
 
 .Properties of a Bundle's Docker Element
-[width="95%",cols="3m,4,5<",options="header",align="center"]
+[width="95%",cols="3m,4,<5",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -1099,7 +1099,7 @@ a bundle's rkt container. The user must ensure that resource agent is
 installed on every node allowed to run the bundle.
 
 .Properties of a Bundle's rkt Element
-[width="95%",cols="3m,4,5<",options="header",align="center"]
+[width="95%",cols="3m,4,<5",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -1168,7 +1168,7 @@ A bundle may optionally contain one +<network>+ element.
 indexterm:[bundle,network]
 
 .Properties of a Bundle's Network Element
-[width="95%",cols="2m,1,4<",options="header",align="center"]
+[width="95%",cols="2m,1,<4",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -1236,7 +1236,7 @@ Additionally, a +<network>+ element may optionally contain one or more
 indexterm:[bundle,network,port-mapping]
 
 .Properties of a Bundle's Port-Mapping Element
-[width="95%",cols="2m,1,4<",options="header",align="center"]
+[width="95%",cols="2m,1,<4",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -1292,7 +1292,7 @@ elements.
 indexterm:[bundle,storage,storage-mapping]
 
 .Properties of a Bundle's Storage-Mapping Element
-[width="95%",cols="2m,1,4<",options="header",align="center"]
+[width="95%",cols="2m,1,<4",options="header",align="center"]
 |=========================================================
 
 |Field

@@ -360,7 +360,7 @@ variables and runs the same commands as when working on a cluster
 node.
 
 .Environment Variables Used to Connect to Remote Instances of the CIB
-[width="95%",cols="1m,1,3<",options="header",align="center"]
+[width="95%",cols="1m,1,<3",options="header",align="center"]
 |=========================================================
 
 |Environment Variable
@@ -412,7 +412,7 @@ to set the +remote-tls-port+ (encrypted) or +remote-clear-port+
 +num_updates+ and +epoch+).
 
 .Extra top-level CIB properties for remote access
-[width="95%",cols="1m,1,3<",options="header",align="center"]
+[width="95%",cols="1m,1,<3",options="header",align="center"]
 |=========================================================
 
 |Field
