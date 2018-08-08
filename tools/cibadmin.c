@@ -197,6 +197,17 @@ print_xml_output(xmlNode * xml)
     }
 }
 
+// Upgrade requested but already at latest schema
+static void
+report_schema_unchanged()
+{
+    const char *err = pcmk_strerror(pcmk_err_schema_unchanged);
+
+    crm_info("Upgrade unnecessary: %s\n", err);
+    printf("Upgrade unnecessary: %s\n", err);
+    exit_code = 0;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -472,10 +483,7 @@ main(int argc, char **argv)
 
     } else if ((exit_code == -pcmk_err_schema_unchanged)
                && crm_str_eq(cib_action, CIB_OP_UPGRADE, TRUE)) {
-
-        // Already at latest schema
-        crm_info("Upgrade unnecessary: %s\n", pcmk_strerror(exit_code));
-        printf("Upgrade unnecessary: %s\n", pcmk_strerror(exit_code));
+        report_schema_unchanged();
         exit_code = 0;
 
     } else if (exit_code < 0) {
@@ -569,7 +577,10 @@ cibadmin_op_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void 
 {
     exit_code = rc;
 
-    if (rc != 0) {
+    if (rc == -pcmk_err_schema_unchanged) {
+        report_schema_unchanged();
+
+    } else if (rc != pcmk_ok) {
         crm_warn("Call %s failed (%d): %s", cib_action, rc, pcmk_strerror(rc));
         fprintf(stderr, "Call %s failed (%d): %s\n", cib_action, rc, pcmk_strerror(rc));
         print_xml_output(output);
