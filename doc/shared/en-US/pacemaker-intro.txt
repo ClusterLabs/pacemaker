@@ -140,7 +140,7 @@ The Pacemaker daemons were renamed in version 2.0. You may still find
 references to the old names, especially in documentation targeted to version
 1.1.
 
-[cols="1,2",options="header",align="center"]
+[width="95%",cols="1,2",options="header",align="center"]
 |=========================================================
 | Old name | New name
 | attrd | pacemaker-attrd
