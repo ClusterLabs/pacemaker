@@ -418,7 +418,8 @@ static struct crm_option long_options[] = {
     {"tickets",        0, 0, 'c', "\t\tDisplay cluster tickets"},
     {"watch-fencing",  0, 0, 'W', "\tListen for fencing events. For use with --external-agent, --mail-to and/or --snmp-traps where supported"},
     {"fence-history",  2, 0, 'm', "Show fence history\n"
-                                  "\t\t\t\t\t0=off, 1=failures, 2=add successes and pending (default without value),\n"
+                                  "\t\t\t\t\t0=off, 1=failures and pending (default without option),\n"
+                                  "\t\t\t\t\t2=add successes (default without value for option),\n"
                                   "\t\t\t\t\t3=show full history without reduction to most recent of each flavor"},
     {"neg-locations",  2, 0, 'L', "Display negative location constraints [optionally filtered by id prefix]"},
     {"show-node-attributes", 0, 0, 'A', "Display node attributes" },
@@ -3323,6 +3324,61 @@ print_failed_stonith_actions(FILE *stream, stonith_history_t *history)
 
 /*!
  * \internal
+ * \brief Print pending stonith actions
+ *
+ * \param[in] stream     File stream to display output to
+ * \param[in] history    List of stonith actions
+ *
+ */
+static void
+print_stonith_pending(FILE *stream, stonith_history_t *history)
+{
+    /* xml-output always shows the full history
+     * so we'll never have to show pending-actions
+     * separately
+     */
+    if (history && (history->state != st_failed) &&
+        (history->state != st_done)) {
+        stonith_history_t *hp;
+
+        /* Print section heading */
+        switch (output_format) {
+            case mon_output_plain:
+            case mon_output_console:
+                print_as("\nPending Fencing Actions:\n");
+                break;
+
+            case mon_output_html:
+            case mon_output_cgi:
+                fprintf(stream, " <hr />\n <h2>Pending Fencing Actions</h2>\n <ul>\n");
+                break;
+
+            default:
+                break;
+        }
+
+        for (hp = history; hp; hp = hp->next) {
+            if ((hp->state == st_failed) || (hp->state == st_done)) {
+                break;
+            }
+            print_stonith_action(stream, hp);
+        }
+
+        /* End section */
+        switch (output_format) {
+            case mon_output_html:
+            case mon_output_cgi:
+                fprintf(stream, " </ul>\n");
+                break;
+
+        default:
+            break;
+        }
+    }
+}
+
+/*!
+ * \internal
  * \brief Print a section for stonith-history
  *
  * \param[in] stream     File stream to display output to
@@ -3559,8 +3615,12 @@ print_status(pe_working_set_t * data_set,
     }
 
     /* Print stonith history */
-    if (fence_history && (show & mon_show_fence_history)) {
-        print_stonith_history(stdout, stonith_history);
+    if (fence_history) {
+        if (show & mon_show_fence_history) {
+            print_stonith_history(stdout, stonith_history);
+        } else {
+            print_stonith_pending(stdout, stonith_history);
+        }
     }
 
 #if CURSES_ENABLED
@@ -3798,8 +3858,12 @@ print_html_status(pe_working_set_t * data_set,
     }
 
     /* Print stonith history */
-    if (fence_history && (show & mon_show_fence_history)) {
-        print_stonith_history(stream, stonith_history);
+    if (fence_history) {
+        if (show & mon_show_fence_history) {
+            print_stonith_history(stream, stonith_history);
+        } else {
+            print_stonith_pending(stdout, stonith_history);
+        }
     }
 
     /* Print tickets if requested */
