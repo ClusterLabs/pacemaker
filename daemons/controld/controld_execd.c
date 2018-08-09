@@ -1540,6 +1540,7 @@ fail_lrm_resource(xmlNode *xml, lrm_state_t *lrm_state, const char *user_name,
 
     if (get_lrm_resource(lrm_state, xml_rsc, TRUE, &rsc) == pcmk_ok) {
         crm_info("Failing resource %s...", rsc->id);
+        op->exit_reason = strdup("Simulated failure");
         process_lrm_event(lrm_state, op, NULL);
         op->op_status = PCMK_LRM_OP_DONE;
         op->rc = PCMK_OCF_OK;

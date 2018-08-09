@@ -1,20 +1,10 @@
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+
 #ifndef CIB_INTERNAL__H
 #  define CIB_INTERNAL__H
 #  include <crm/cib.h>
@@ -46,6 +36,7 @@
 #  define F_CIB_SECTION   "cib_section"
 #  define F_CIB_HOST	"cib_host"
 #  define F_CIB_RC	"cib_rc"
+#  define F_CIB_UPGRADE_RC      "cib_upgrade_rc"
 #  define F_CIB_DELEGATED	"cib_delegated_from"
 #  define F_CIB_OBJID	"cib_object"
 #  define F_CIB_OBJTYPE	"cib_object_type"

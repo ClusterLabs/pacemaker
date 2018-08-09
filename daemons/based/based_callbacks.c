@@ -701,10 +701,18 @@ parse_peer_options_v2(int call_type, xmlNode * request,
          * limit on how far newer nodes will go
          */
         const char *max = crm_element_value(request, F_CIB_SCHEMA_MAX);
+        const char *upgrade_rc = crm_element_value(request, F_CIB_UPGRADE_RC);
 
-        crm_trace("Parsing %s operation%s for %s with max=%s",
-                  op, is_reply?" reply":"", cib_is_master?"master":"slave", max);
-        if(max == NULL && cib_is_master) {
+        crm_trace("Parsing %s operation%s for %s with max=%s and upgrade_rc=%s",
+                  op, (is_reply? " reply" : ""),
+                  (cib_is_master? "master" : "slave"),
+                  (max? max : "none"), (upgrade_rc? upgrade_rc : "none"));
+
+        if (upgrade_rc != NULL) {
+            // Our upgrade request was rejected by DC, notify clients of result
+            crm_xml_add(request, F_CIB_RC, upgrade_rc);
+
+        } else if ((max == NULL) && cib_is_master) {
             /* We are the DC, check if this upgrade is allowed */
             goto skip_is_reply;
 
@@ -713,7 +721,8 @@ parse_peer_options_v2(int call_type, xmlNode * request,
             goto skip_is_reply;
 
         } else {
-            return FALSE; /* Ignore */
+            // Ignore broadcast client requests when we're not DC
+            return FALSE;
         }
 
     } else if (crm_is_true(update)) {

@@ -211,6 +211,11 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
     *answer = NULL;
 
     if(crm_element_value(req, F_CIB_SCHEMA_MAX)) {
+        /* The originator of an upgrade request sends it to the DC, without
+         * F_CIB_SCHEMA_MAX. If an upgrade is needed, the DC re-broadcasts the
+         * request with F_CIB_SCHEMA_MAX, and each node performs the upgrade
+         * (and notifies its local clients) here.
+         */
         return cib_process_upgrade(
             op, options, section, req, input, existing_cib, result_cib, answer);
 
@@ -220,6 +225,9 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
         xmlNode *scratch = copy_xml(existing_cib);
         const char *host = crm_element_value(req, F_ORIG);
         const char *value = crm_element_value(existing_cib, XML_ATTR_VALIDATION);
+        const char *client_id = crm_element_value(req, F_CIB_CLIENTID);
+        const char *call_opts = crm_element_value(req, F_CIB_CALLOPTS);
+        const char *call_id = crm_element_value(req, F_CIB_CALLID);
 
         crm_trace("Processing \"%s\" event", op);
         if (value != NULL) {
@@ -237,9 +245,9 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
             crm_xml_add(up, F_CIB_OPERATION, CIB_OP_UPGRADE);
             crm_xml_add(up, F_CIB_SCHEMA_MAX, get_schema_name(new_version));
             crm_xml_add(up, F_CIB_DELEGATED, host);
-            crm_xml_add(up, F_CIB_CLIENTID, crm_element_value(req, F_CIB_CLIENTID));
-            crm_xml_add(up, F_CIB_CALLOPTS, crm_element_value(req, F_CIB_CALLOPTS));
-            crm_xml_add(up, F_CIB_CALLID, crm_element_value(req, F_CIB_CALLID));
+            crm_xml_add(up, F_CIB_CLIENTID, client_id);
+            crm_xml_add(up, F_CIB_CALLOPTS, call_opts);
+            crm_xml_add(up, F_CIB_CALLID, call_id);
 
             if (cib_legacy_mode() && cib_is_master) {
                 rc = cib_process_upgrade(
@@ -255,6 +263,32 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
             rc = -pcmk_err_schema_unchanged;
         }
 
+        if (rc != pcmk_ok) {
+            // Notify originating peer so it can notify its local clients
+            crm_node_t *origin = crm_find_peer(0, host);
+
+            crm_info("Rejecting upgrade request from %s: %s "
+                     CRM_XS " rc=%d peer=%s", host, pcmk_strerror(rc), rc,
+                     (origin? origin->uname : "lost"));
+
+            if (origin) {
+                xmlNode *up = create_xml_node(NULL, __FUNCTION__);
+
+                crm_xml_add(up, F_TYPE, "cib");
+                crm_xml_add(up, F_CIB_OPERATION, CIB_OP_UPGRADE);
+                crm_xml_add(up, F_CIB_DELEGATED, host);
+                crm_xml_add(up, F_CIB_ISREPLY, host);
+                crm_xml_add(up, F_CIB_CLIENTID, client_id);
+                crm_xml_add(up, F_CIB_CALLOPTS, call_opts);
+                crm_xml_add(up, F_CIB_CALLID, call_id);
+                crm_xml_add_int(up, F_CIB_UPGRADE_RC, rc);
+                if (send_cluster_message(origin, crm_msg_cib, up, TRUE)
+                    == FALSE) {
+                    crm_warn("Could not send CIB upgrade result to %s", host);
+                }
+                free_xml(up);
+            }
+        }
         free_xml(scratch);
     }
     return rc;
