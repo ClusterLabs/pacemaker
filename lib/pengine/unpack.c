@@ -1587,7 +1587,7 @@ create_anonymous_orphan(pe_resource_t *parent, const char *rsc_id,
  * \param[in] data_set  Cluster information
  * \param[in] node      Node on which to check for instance
  * \param[in] parent    Clone to check
- * \param[in] rsc_id    ID of (clone or cloned) resource being searched for
+ * \param[in] rsc_id    Name of cloned resource in history (without instance)
  */
 static resource_t *
 find_anonymous_clone(pe_working_set_t * data_set, node_t * node, resource_t * parent,
@@ -1613,11 +1613,11 @@ find_anonymous_clone(pe_working_set_t * data_set, node_t * node, resource_t * pa
          * "Active" in this case means known to be active at this stage of
          * unpacking. Because this function is called for a resource before the
          * resource's individual operation history entries are unpacked,
-         * locations will generally be NULL.
+         * locations will generally not contain the desired node.
          *
          * However, there are three exceptions:
          * (1) when child is a cloned group and we have already unpacked the
-         *     history of another member of the group;
+         *     history of another member of the group on the same node;
          * (2) when we've already unpacked the history of another numbered
          *     instance on the same node (which can happen if globally-unique
          *     was flipped from true to false); and
@@ -1633,27 +1633,30 @@ find_anonymous_clone(pe_working_set_t * data_set, node_t * node, resource_t * pa
             CRM_LOG_ASSERT(locations->next == NULL);
 
             if (((pe_node_t *)locations->data)->details == node->details) {
-                /* This instance is active on the requested node, so check for
-                 * a corresponding configured resource. We use find_rsc()
-                 * because child may be a cloned group, and we need the
-                 * particular member corresponding to rsc_id.
+                /* This child instance is active on the requested node, so check
+                 * for a corresponding configured resource. We use find_rsc()
+                 * instead of child because child may be a cloned group, and we
+                 * need the particular member corresponding to rsc_id.
                  *
                  * If the history entry is orphaned, rsc will be NULL.
                  */
                 rsc = parent->fns->find_rsc(child, rsc_id, NULL, pe_find_clone);
                 if (rsc) {
-                    pe_rsc_trace(parent, "Resource %s, active", rsc->id);
-
-                    /* If there are multiple active instances of an anonymous
-                     * clone in a single node's history (which can happen if
-                     * globally-unique is switched from true to false), we want
-                     * to consider the instances beyond the first as orphans.
+                    /* If there are multiple instance history entries for an
+                     * anonymous clone in a single node's history (which can
+                     * happen if globally-unique is switched from true to
+                     * false), we want to consider the instances beyond the
+                     * first as orphans, even if there are inactive instance
+                     * numbers available.
                      */
                     if (rsc->running_on) {
-                        crm_notice("Now-anonymous clone %s has multiple instances active on %s",
+                        crm_notice("Active (now-)anonymous clone %s has "
+                                   "multiple (orphan) instance histories on %s",
                                    parent->id, node->details->uname);
                         skip_inactive = TRUE;
                         rsc = NULL;
+                    } else {
+                        pe_rsc_trace(parent, "Resource %s, active", rsc->id);
                     }
                 }
             }
@@ -1722,20 +1725,16 @@ unpack_find_resource(pe_working_set_t * data_set, node_t * node, const char *rsc
 
         if (clone0 && is_not_set(clone0->flags, pe_rsc_unique)) {
             rsc = clone0;
+            parent = uber_parent(clone0);
+            crm_trace("%s found as %s (%s)", rsc_id, clone0_id, parent->id);
         } else {
-            crm_trace("%s is not known as %s either", rsc_id, clone0_id);
+            crm_trace("%s is not known as %s either (orphan)",
+                      rsc_id, clone0_id);
         }
-
-        /* Grab the parent clone even if this a different unique instance,
-         * so we can remember the clone name, which will be the same.
-         */
-        parent = uber_parent(clone0);
         free(clone0_id);
 
-        crm_trace("%s not found: %s", rsc_id, parent ? parent->id : "orphan");
-
     } else if (rsc->variant > pe_native) {
-        crm_trace("%s is no longer a primitive resource, the lrm_resource entry is obsolete",
+        crm_trace("Resource history for %s is orphaned because it is no longer primitive",
                   rsc_id);
         return NULL;
 
