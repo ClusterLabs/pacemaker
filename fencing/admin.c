@@ -617,6 +617,10 @@ main(int argc, char **argv)
         ++argerr;
     }
 
+    if (action == 0) {
+        ++argerr;
+    }
+
     if (argerr) {
         crm_help('?', EX_USAGE);
     }
