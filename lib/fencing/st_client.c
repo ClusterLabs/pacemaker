@@ -1416,7 +1416,7 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
 
     if (rc == 0) {
         xmlNode *op = NULL;
-        xmlNode *reply = get_xpath_object("//" F_STONITH_HISTORY_LIST, output, LOG_ERR);
+        xmlNode *reply = get_xpath_object("//" F_STONITH_HISTORY_LIST, output, LOG_TRACE);
 
         for (op = __xml_first_child(reply); op != NULL; op = __xml_next(op)) {
             stonith_history_t *kvp;
