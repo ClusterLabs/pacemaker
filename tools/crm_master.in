@@ -19,6 +19,7 @@ Commands:
  -D, --delete 		Delete the promotion score
 
 Additional Options:
+ -r, --resource=RSC     ID of resource to act on
  -N, --node=NODE	Use promotion score on named node (instead of local node)
  -l, --lifetime=VALUE	Until when should the setting take effect
                      	(valid values: reboot, forever)

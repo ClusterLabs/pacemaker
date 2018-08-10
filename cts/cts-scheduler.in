@@ -400,11 +400,6 @@ if [ -n "$single_test" ]; then
 fi
 
 DO_VERSIONED_TESTS=0
-create_mode=true
-# info Creating the following tests from $io_dir
-# do_test order-expired-failure "Order failcount cleanup after remote fencing"
-
-create_mode=false
 
 info Performing the following tests from $io_dir
 echo ""
