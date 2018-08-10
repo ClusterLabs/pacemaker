@@ -61,7 +61,7 @@ static struct crm_option long_options[] = {
         "\tCleanup wherever appropriate."
     },
     {   "broadcast", no_argument, NULL, 'b',
-        "\tBroadcast wherever appropriate."
+        "Broadcast wherever appropriate."
     },
     {   "-spacer-", no_argument, NULL, '-', "\nDevice definition commands:" },
 
