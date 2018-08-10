@@ -558,7 +558,7 @@ done
 
             if not os.path.exists("@OCF_RA_DIR@/pacemaker"):
                 # @TODO remember which components were created and remove them
-                os.makedirs("@OCF_RA_DIR@/pacemaker", 0755)
+                os.makedirs("@OCF_RA_DIR@/pacemaker", 0o755)
 
             for agent in ["Dummy", "Stateful", "ping"]:
                 agent_source = "%s/extra/resources/%s" % (BUILD_DIR, agent)
