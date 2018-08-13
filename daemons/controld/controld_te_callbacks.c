@@ -27,8 +27,8 @@ crm_trigger_t *transition_trigger = NULL;
 
 static unsigned long int stonith_max_attempts = 10;
 
-/* #define rsc_op_template "//"XML_TAG_DIFF_ADDED"//"XML_TAG_CIB"//"XML_CIB_TAG_STATE"[@uname='%s']"//"XML_LRM_TAG_RSC_OP"[@id='%s]" */
-#define rsc_op_template "//"XML_TAG_DIFF_ADDED"//"XML_TAG_CIB"//"XML_LRM_TAG_RSC_OP"[@id='%s']"
+/* #define RSC_OP_TEMPLATE "//"XML_TAG_DIFF_ADDED"//"XML_TAG_CIB"//"XML_CIB_TAG_STATE"[@uname='%s']"//"XML_LRM_TAG_RSC_OP"[@id='%s]" */
+#define RSC_OP_TEMPLATE "//"XML_TAG_DIFF_ADDED"//"XML_TAG_CIB"//"XML_LRM_TAG_RSC_OP"[@id='%s']"
 
 static const char *
 get_node_id(xmlNode * rsc_op)
@@ -191,9 +191,9 @@ te_update_diff_v1(const char *event, xmlNode *diff)
 
         op_id = ID(match);
 
-        path_max = strlen(rsc_op_template) + strlen(op_id) + 1;
+        path_max = strlen(RSC_OP_TEMPLATE) + strlen(op_id) + 1;
         rsc_op_xpath = calloc(1, path_max);
-        snprintf(rsc_op_xpath, path_max, rsc_op_template, op_id);
+        snprintf(rsc_op_xpath, path_max, RSC_OP_TEMPLATE, op_id);
 
         op_match = xpath_search(diff, rsc_op_xpath);
         if (numXpathResults(op_match) == 0) {

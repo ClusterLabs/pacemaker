@@ -108,13 +108,13 @@ stonith_proxy_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 static int32_t
 cib_proxy_accept_rw(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
-    return ipc_proxy_accept(c, uid, gid, cib_channel_rw);
+    return ipc_proxy_accept(c, uid, gid, CIB_CHANNEL_RW);
 }
 
 static int32_t
 cib_proxy_accept_ro(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
 {
-    return ipc_proxy_accept(c, uid, gid, cib_channel_ro);
+    return ipc_proxy_accept(c, uid, gid, CIB_CHANNEL_RO);
 }
 
 static void

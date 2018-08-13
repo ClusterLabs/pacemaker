@@ -297,7 +297,7 @@ election_check(election_t *e)
     return FALSE;
 }
 
-#define loss_dampen 2           /* in seconds */
+#define LOSS_DAMPEN 2           /* in seconds */
 
 /*	A_ELECTION_COUNT	*/
 enum election_result
@@ -466,7 +466,7 @@ election_count_vote(election_t *e, xmlNode *vote, bool can_win)
                    election_id, election_owner, op, from, reason);
 
         if (last_election_loss == 0
-            || tm_now - last_election_loss > (time_t) loss_dampen) {
+            || tm_now - last_election_loss > (time_t) LOSS_DAMPEN) {
 
             last_election_loss = 0;
             election_timeout_stop(e);
@@ -477,7 +477,7 @@ election_count_vote(election_t *e, xmlNode *vote, bool can_win)
         }
 
         crm_info("Election %d ignore: We already lost an election less than %ds ago (%s)",
-                 election_id, loss_dampen, ctime(&last_election_loss));
+                 election_id, LOSS_DAMPEN, ctime(&last_election_loss));
     }
 
     novote = create_request(CRM_OP_NOVOTE, NULL, from,

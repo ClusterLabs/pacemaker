@@ -73,9 +73,9 @@
 #  define T_CIB_UPDATE_CONFIRM	"cib_update_confirmation"
 #  define T_CIB_REPLACE_NOTIFY	"cib_refresh_notify"
 
-#  define cib_channel_ro		"cib_ro"
-#  define cib_channel_rw		"cib_rw"
-#  define cib_channel_shm		"cib_shm"
+#  define CIB_CHANNEL_RO		"cib_ro"
+#  define CIB_CHANNEL_RW		"cib_rw"
+#  define CIB_CHANNEL_SHM		"cib_shm"
 
 gboolean cib_diff_version_details(xmlNode * diff, int *admin_epoch, int *epoch, int *updates,
                                   int *_admin_epoch, int *_epoch, int *_updates);

@@ -84,8 +84,6 @@ do_election_check(long long action,
     return;
 }
 
-#define loss_dampen 2           /* in seconds */
-
 /*	A_ELECTION_COUNT	*/
 void
 do_election_count_vote(long long action,

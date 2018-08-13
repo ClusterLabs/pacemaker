@@ -27,14 +27,14 @@ int cib_options = cib_sync_call;
 
 static GMainLoop *mainloop = NULL;
 
-#define message_timeout_ms 60*1000
+#define MESSAGE_TIMEOUT_MS 60*1000
 
 static gboolean
 resource_ipc_timeout(gpointer data)
 {
     fprintf(stderr, "No messages received in %d seconds.. aborting\n",
-            (int)message_timeout_ms / 1000);
-    crm_err("No messages received in %d seconds", (int)message_timeout_ms / 1000);
+            (int)MESSAGE_TIMEOUT_MS / 1000);
+    crm_err("No messages received in %d seconds", (int)MESSAGE_TIMEOUT_MS / 1000);
     return crm_exit(CRM_EX_TIMEOUT);
 }
 
@@ -58,7 +58,7 @@ start_mainloop(void)
     crm_debug("Waiting for %d replies from the controller",
               crmd_replies_needed);
 
-    g_timeout_add(message_timeout_ms, resource_ipc_timeout, NULL);
+    g_timeout_add(MESSAGE_TIMEOUT_MS, resource_ipc_timeout, NULL);
     g_main_loop_run(mainloop);
 }
 

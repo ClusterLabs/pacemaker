@@ -24,8 +24,8 @@
 #include <crm/common/ipc.h>
 #include <crm/common/xml.h>
 
-#define cib_flag_dirty 0x00001
-#define cib_flag_live  0x00002
+#define CIB_FLAG_DIRTY 0x00001
+#define CIB_FLAG_LIVE  0x00002
 
 typedef struct cib_file_opaque_s {
     int flags;
@@ -472,7 +472,7 @@ cib_file_new(const char *cib_location)
     }
     private->flags = 0;
     if (cib_file_is_live(cib_location)) {
-        set_bit(private->flags, cib_flag_live);
+        set_bit(private->flags, CIB_FLAG_LIVE);
         crm_trace("File %s detected as live CIB", cib_location);
     }
     private->filename = strdup(cib_location);
@@ -668,10 +668,10 @@ cib_file_signoff(cib_t * cib)
     cib->type = cib_no_connection;
 
     /* If the in-memory CIB has been changed, write it to disk */
-    if (is_set(private->flags, cib_flag_dirty)) {
+    if (is_set(private->flags, CIB_FLAG_DIRTY)) {
 
         /* If this is the live CIB, write it out with a digest */
-        if (is_set(private->flags, cib_flag_live)) {
+        if (is_set(private->flags, CIB_FLAG_LIVE)) {
             if (cib_file_write_live(private->filename) < 0) {
                 rc = pcmk_err_generic;
             }
@@ -687,7 +687,7 @@ cib_file_signoff(cib_t * cib)
 
         if (rc == pcmk_ok) {
             crm_info("Wrote CIB to %s", private->filename);
-            clear_bit(private->flags, cib_flag_dirty);
+            clear_bit(private->flags, CIB_FLAG_DIRTY);
         } else {
             crm_err("Could not write CIB to %s", private->filename);
         }
@@ -826,7 +826,7 @@ cib_file_perform_op_delegate(cib_t * cib, const char *op, const char *host, cons
         xml_log_patchset(LOG_DEBUG, "cib:diff", cib_diff);
         free_xml(in_mem_cib);
         in_mem_cib = result_cib;
-        set_bit(private->flags, cib_flag_dirty);
+        set_bit(private->flags, CIB_FLAG_DIRTY);
     }
 
     free_xml(cib_diff);

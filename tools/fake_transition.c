@@ -41,11 +41,9 @@ gboolean bringing_nodes_online = FALSE;
               }                                   \
     } while(0)
 
-#define new_node_template "//"XML_CIB_TAG_NODE"[@uname='%s']"
-#define node_template "//"XML_CIB_TAG_STATE"[@uname='%s']"
-#define rsc_template "//"XML_CIB_TAG_STATE"[@uname='%s']//"XML_LRM_TAG_RESOURCE"[@id='%s']"
-#define op_template  "//"XML_CIB_TAG_STATE"[@uname='%s']//"XML_LRM_TAG_RESOURCE"[@id='%s']/"XML_LRM_TAG_RSC_OP"[@id='%s']"
-/* #define op_template  "//"XML_CIB_TAG_STATE"[@uname='%s']//"XML_LRM_TAG_RESOURCE"[@id='%s']/"XML_LRM_TAG_RSC_OP"[@id='%s' and @"XML_LRM_ATTR_CALLID"='%d']" */
+#define NEW_NODE_TEMPLATE "//"XML_CIB_TAG_NODE"[@uname='%s']"
+#define NODE_TEMPLATE "//"XML_CIB_TAG_STATE"[@uname='%s']"
+#define RSC_TEMPLATE "//"XML_CIB_TAG_STATE"[@uname='%s']//"XML_LRM_TAG_RESOURCE"[@id='%s']"
 
 
 static void
@@ -105,7 +103,7 @@ static void
 create_node_entry(cib_t * cib_conn, const char *node)
 {
     int rc = pcmk_ok;
-    char *xpath = crm_strdup_printf(new_node_template, node);
+    char *xpath = crm_strdup_printf(NEW_NODE_TEMPLATE, node);
 
     rc = cib_conn->cmds->query(cib_conn, xpath, NULL, cib_xpath | cib_sync_call | cib_scope_local);
 
@@ -170,7 +168,7 @@ inject_node_state(cib_t * cib_conn, const char *node, const char *uuid)
 {
     int rc = pcmk_ok;
     xmlNode *cib_object = NULL;
-    char *xpath = crm_strdup_printf(node_template, node);
+    char *xpath = crm_strdup_printf(NODE_TEMPLATE, node);
 
     if (bringing_nodes_online) {
         create_node_entry(cib_conn, node);
@@ -241,7 +239,7 @@ find_resource_xml(xmlNode * cib_node, const char *resource)
 {
     xmlNode *match = NULL;
     const char *node = crm_element_value(cib_node, XML_ATTR_UNAME);
-    char *xpath = crm_strdup_printf(rsc_template, node, resource);
+    char *xpath = crm_strdup_printf(RSC_TEMPLATE, node, resource);
 
     match = get_xpath_object(xpath, cib_node, LOG_TRACE);
     free(xpath);
