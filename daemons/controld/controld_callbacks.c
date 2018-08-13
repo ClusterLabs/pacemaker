@@ -254,8 +254,7 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
 
         /* Update the CIB node state */
         update = create_node_state_update(node, flags, NULL, __FUNCTION__);
-        fsa_cib_anon_update(XML_CIB_TAG_STATUS, update,
-                            cib_scope_local | cib_quorum_override | cib_can_create);
+        fsa_cib_anon_update(XML_CIB_TAG_STATUS, update);
         free_xml(update);
     }
 

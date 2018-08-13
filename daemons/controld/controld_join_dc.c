@@ -592,8 +592,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
     set_uuid(tmp1, XML_ATTR_UUID, join_node);
     crm_xml_add(tmp1, XML_ATTR_UNAME, join_to);
 
-    fsa_cib_anon_update(XML_CIB_TAG_NODES, tmp1,
-                        cib_scope_local | cib_quorum_override | cib_can_create);
+    fsa_cib_anon_update(XML_CIB_TAG_NODES, tmp1);
     free_xml(tmp1);
 
     join_node = crm_get_peer(0, join_to);
