@@ -769,8 +769,10 @@ lrmd_api_is_connected(lrmd_t * lrmd)
  * \param[in]  op            Name of API command to send
  * \param[in]  data          Command data XML to add to the sent command
  * \param[out] output_data   If expecting a reply, it will be stored here
- * \param[in]  timeout       Timeout in milliseconds (if 0, defaults to 1000);
- *                           will be added to the command XML
+ * \param[in]  timeout       Timeout in milliseconds (if 0, defaults to
+ *                           a sensible value per the type of connection,
+ *                           standard vs. pacemaker remote);
+ *                           also propagated to the command XML
  * \param[in]  call_options  Call options to pass to server when sending
  * \param[in]  expect_reply  If TRUE, wait for a reply from the server;
  *                           must be TRUE for IPC (as opposed to TLS) clients
