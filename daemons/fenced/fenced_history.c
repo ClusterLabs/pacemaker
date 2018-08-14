@@ -242,7 +242,7 @@ stonith_merge_in_history_list(GHashTable *history)
 
         updated = TRUE;
         g_hash_table_iter_steal(&iter);
-        CRM_LOG_ASSERT(g_hash_table_insert(stonith_remote_op_list, op->id, op));
+        g_hash_table_insert(stonith_remote_op_list, op->id, op);
     }
     if (updated) {
         do_stonith_notify(0, T_STONITH_NOTIFY_HISTORY, 0, NULL);
