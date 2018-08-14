@@ -11,6 +11,7 @@
 #include <crm/common/xml.h>
 #include <crm/common/util.h>
 
+#include <ctype.h>
 #include <glib.h>
 
 #include <crm/pengine/rules.h>
@@ -215,10 +216,44 @@ node_list_dup(GListPtr list1, gboolean reset, gboolean filter)
 gint
 sort_node_uname(gconstpointer a, gconstpointer b)
 {
-    const node_t *node_a = a;
-    const node_t *node_b = b;
+    const char *name_a = ((const node_t *) a)->details->uname;
+    const char *name_b = ((const node_t *) b)->details->uname;
 
-    return strcmp(node_a->details->uname, node_b->details->uname);
+    while (*name_a && *name_b) {
+        if (isdigit(*name_a) && isdigit(*name_b)) {
+            // If node names contain a number, sort numerically
+            char *end_a = NULL;
+            char *end_b = NULL;
+            long num_a = strtol(name_a, &end_a, 10);
+            long num_b = strtol(name_b, &end_b, 10);
+
+            if (num_a < num_b) {
+                return -1;
+            } else if (num_a > num_b) {
+                return 1;
+            }
+            name_a = end_a;
+            name_b = end_b;
+        } else {
+            // Compare non-digits case-insensitively
+            int lower_a = tolower(*name_a);
+            int lower_b = tolower(*name_b);
+
+            if (lower_a < lower_b) {
+                return -1;
+            } else if (lower_a > lower_b) {
+                return 1;
+            }
+            ++name_a;
+            ++name_b;
+        }
+    }
+    if (!*name_a && *name_b) {
+        return -1;
+    } else if (*name_a && !*name_b) {
+        return 1;
+    }
+    return 0;
 }
 
 void
