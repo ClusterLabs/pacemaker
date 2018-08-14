@@ -53,8 +53,6 @@ Transition Summary:
  * Stop    child_DoFencing:2	(c001n05)  	due to node availability
  * Stop    child_DoFencing:3	(c001n06)  	due to node availability
  * Stop    child_DoFencing:4	(c001n07)  	due to node availability
- * Stop       ocf_msdummy:10                ( Slave c001n02 )   due to node availability
- * Stop       ocf_msdummy:11                ( Slave c001n02 )   due to node availability
  * Stop       ocf_msdummy:2                 ( Slave c001n04 )   due to node availability
  * Stop       ocf_msdummy:3                 ( Slave c001n04 )   due to node availability
  * Stop       ocf_msdummy:4                 ( Slave c001n05 )   due to node availability
@@ -63,6 +61,8 @@ Transition Summary:
  * Stop       ocf_msdummy:7                 ( Slave c001n06 )   due to node availability
  * Stop       ocf_msdummy:8                 ( Slave c001n07 )   due to node availability
  * Stop       ocf_msdummy:9                 ( Slave c001n07 )   due to node availability
+ * Stop       ocf_msdummy:10                ( Slave c001n02 )   due to node availability
+ * Stop       ocf_msdummy:11                ( Slave c001n02 )   due to node availability
 
 Executing cluster transition:
  * Pseudo action:   group-1_stop_0
@@ -83,8 +83,6 @@ Executing cluster transition:
  * Resource action: child_DoFencing:4 stop on c001n06
  * Resource action: child_DoFencing:5 stop on c001n07
  * Pseudo action:   DoFencing_stopped_0
- * Resource action: ocf_msdummy:10  stop on c001n02
- * Resource action: ocf_msdummy:11  stop on c001n02
  * Resource action: ocf_msdummy:2   stop on c001n04
  * Resource action: ocf_msdummy:3   stop on c001n04
  * Resource action: ocf_msdummy:4   stop on c001n05
@@ -93,6 +91,8 @@ Executing cluster transition:
  * Resource action: ocf_msdummy:7   stop on c001n06
  * Resource action: ocf_msdummy:8   stop on c001n07
  * Resource action: ocf_msdummy:9   stop on c001n07
+ * Resource action: ocf_msdummy:10  stop on c001n02
+ * Resource action: ocf_msdummy:11  stop on c001n02
  * Pseudo action:   master_rsc_1_stopped_0
  * Cluster action:  do_shutdown on c001n07
  * Cluster action:  do_shutdown on c001n06
