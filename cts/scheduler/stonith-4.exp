@@ -7,7 +7,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="3" operation="stonith" operation_key="stonith-pcmk-8-reboot" on_node="pcmk-8" on_node_uuid="108"/>
+        <crm_event id="4" operation="stonith" operation_key="stonith-pcmk-10-reboot" on_node="pcmk-10" on_node_uuid="110"/>
       </trigger>
     </inputs>
   </synapse>
@@ -32,7 +32,11 @@
         </downed>
       </crm_event>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <crm_event id="3" operation="stonith" operation_key="stonith-pcmk-8-reboot" on_node="pcmk-8" on_node_uuid="108"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="3">
     <action_set>
@@ -73,11 +77,6 @@
         </downed>
       </crm_event>
     </action_set>
-    <inputs>
-      <trigger>
-        <crm_event id="4" operation="stonith" operation_key="stonith-pcmk-10-reboot" on_node="pcmk-10" on_node_uuid="110"/>
-      </trigger>
-    </inputs>
+    <inputs/>
   </synapse>
 </transition_graph>
-
