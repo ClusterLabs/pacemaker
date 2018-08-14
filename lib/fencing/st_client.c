@@ -1438,6 +1438,9 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
             last = kvp;
         }
     }
+
+    free_xml(output);
+
     return rc;
 }
 
