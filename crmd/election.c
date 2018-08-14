@@ -248,8 +248,7 @@ do_dc_release(long long action,
             crm_update_peer_expected(__FUNCTION__, node, CRMD_JOINSTATE_DOWN);
             update = create_node_state_update(node, node_update_expected, NULL,
                                               __FUNCTION__);
-            fsa_cib_anon_update(XML_CIB_TAG_STATUS, update,
-                                cib_scope_local | cib_quorum_override | cib_can_create);
+            fsa_cib_anon_update(XML_CIB_TAG_STATUS, update);
             free_xml(update);
         }
         register_fsa_input(C_FSA_INTERNAL, I_RELEASE_SUCCESS, NULL);

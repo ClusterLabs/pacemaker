@@ -22,6 +22,7 @@
 #  include <crm/transition.h>
 #  include <crm/common/xml.h>
 #  include <crm/cib/internal.h> /* For CIB_OP_MODIFY */
+#  include "crmd_fsa.h"     // For fsa_cib_conn
 #  include "crmd_alerts.h"
 
 #  define CLIENT_EXIT_WAIT 30
@@ -48,14 +49,16 @@
 		crm_err("No CIB connection available");			\
 	}
 
-#  define fsa_cib_anon_update(section, data, options)			\
-	if(fsa_cib_conn != NULL) {					\
-	    fsa_cib_conn->cmds->modify(					\
-		fsa_cib_conn, section, data, options);			\
-									\
-	} else {							\
-		crm_err("No CIB connection available");			\
-	}
+static inline void
+fsa_cib_anon_update(const char *section, xmlNode *data) {
+    if (fsa_cib_conn == NULL) {
+        crm_err("No CIB connection available");
+    } else {
+        int opts = cib_scope_local | cib_quorum_override | cib_can_create;
+
+        fsa_cib_conn->cmds->modify(fsa_cib_conn, section, data, opts);
+    }
+}
 
 extern gboolean fsa_has_quorum;
 extern int last_peer_update;
