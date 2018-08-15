@@ -459,12 +459,16 @@ AC_CACHE_VAL(
     [pcmk_cv_decl_inttypes],
     [
         AC_CHECK_DECLS(
-            [PRIu64],
-            [pcmk_cv_decl_inttypes="PRIu64"],
+            [PRIu64, PRIu32, PRIx32],
+            [pcmk_cv_decl_inttypes="PRIu64 PRIu32 PRIx32"],
             [
                 # test shall only react on "no" cached result & error out respectively
                 if test "x$ac_cv_have_decl_PRIu64" = xno; then
                     AC_MSG_ERROR([lack of inttypes.h based specifier serving uint64_t (PRIu64)])
+                elif test "x$ac_cv_have_decl_PRIu32" = xno; then
+                    AC_MSG_ERROR([lack of inttypes.h based specifier serving uint32_t (PRIu32)])
+                elif test "x$ac_cv_have_decl_PRIx32" = xno; then
+                    AC_MSG_ERROR([lack of inttypes.h based hexa specifier serving uint32_t (PRIx32)])
                 fi
             ],
             [[#include <inttypes.h>]]
@@ -474,6 +478,8 @@ AC_CACHE_VAL(
 (
     set $pcmk_cv_decl_inttypes
     AC_DEFINE_UNQUOTED([U64T], [$1], [Correct format specifier for U64T])
+    AC_DEFINE_UNQUOTED([U32T], [$2], [Correct format specifier for U32T])
+    AC_DEFINE_UNQUOTED([X32T], [$3], [Correct format specifier for X32T])
 )
 
 dnl ===============================================

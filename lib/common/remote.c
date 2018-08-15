@@ -19,11 +19,11 @@
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
 #include <netdb.h>
-
 #include <stdlib.h>
 #include <errno.h>
-#include <glib.h>
+#include <inttypes.h>  /* X32T ~ PRIx32 */
 
+#include <glib.h>
 #include <bzlib.h>
 
 #include <crm/common/ipcs.h>
@@ -107,9 +107,8 @@ crm_remote_header(crm_remote_t * remote)
 
         CRM_LOG_ASSERT(endian == ENDIAN_LOCAL);
         if(endian != ENDIAN_LOCAL) {
-            /* XXX preprocessor conditionalizing based on, e.g., sizeof and/or
-                   inttypes.h/stdint.h to get character string literals fit */
-            crm_err("Invalid message detected, endian mismatch: %x is neither %x nor the swab'd %x",
+            crm_err("Invalid message detected, endian mismatch: %" X32T
+                    " is neither %" X32T " nor the swab'd %" X32T,
                     ENDIAN_LOCAL, header->endian, endian);
             return NULL;
         }
