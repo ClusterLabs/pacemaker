@@ -140,7 +140,6 @@ class RemoteExec(object):
     '''
 
     def __init__(self, rsh, silent=False):
-        self.async = []
         self.rsh = rsh
         self.silent = silent
         self.logger = LogFactory()
