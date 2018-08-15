@@ -450,33 +450,31 @@ case "$host_cpu" in
         ;;
 esac
 
-AC_MSG_CHECKING(which format is needed to print uint64_t)
-
-cc_temp_flags "-Wall $WERROR"
-
-AC_COMPILE_IFELSE(
-    [AC_LANG_PROGRAM(
-        [
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
-        ],
-        [
-int max = 512;
-uint64_t bignum = 42;
-char *buffer = malloc(max);
-const char *random = "random";
-snprintf(buffer, max-1, "<quorum id=%lu quorate=%s/>", bignum, random);
-fprintf(stderr, "Result: %s\n", buffer);
-        ]
-    )],
-    [U64T="%lu"],
-    [U64T="%llu"]
+# C99 doesn't guarantee uint64_t type and related format specifiers, but
+# prerequisites, corosync + libqb, use that widely, so the target platforms
+# are already pre-constrained to those "64bit-clean" (doesn't imply native
+# bit width) and hence we deliberately refrain from artificial surrogates
+# (sans manipulation through cached values).
+AC_CACHE_VAL(
+    [pcmk_cv_decl_inttypes],
+    [
+        AC_CHECK_DECLS(
+            [PRIu64],
+            [pcmk_cv_decl_inttypes="PRIu64"],
+            [
+                # test shall only react on "no" cached result & error out respectively
+                if test "x$ac_cv_have_decl_PRIu64" = xno; then
+                    AC_MSG_ERROR([lack of inttypes.h based specifier serving uint64_t (PRIu64)])
+                fi
+            ],
+            [[#include <inttypes.h>]]
+        )
+    ]
 )
-cc_restore_flags
-
-AC_MSG_RESULT($U64T)
-AC_DEFINE_UNQUOTED(U64T, "$U64T", Correct printf format for logging uint64_t)
+(
+    set $pcmk_cv_decl_inttypes
+    AC_DEFINE_UNQUOTED([U64T], [$1], [Correct format specifier for U64T])
+)
 
 dnl ===============================================
 dnl Program Paths
