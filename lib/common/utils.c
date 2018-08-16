@@ -1261,28 +1261,33 @@ uid2username(uid_t uid)
     struct passwd *pwent = getpwuid(uid);
 
     if (pwent == NULL) {
-        crm_perror(LOG_ERR, "Cannot get password entry of uid: %d", uid);
+        crm_perror(LOG_INFO, "Cannot get user details for user ID %d", uid);
         return NULL;
-
-    } else {
-        return strdup(pwent->pw_name);
     }
+    return strdup(pwent->pw_name);
 }
 
 const char *
 crm_acl_get_set_user(xmlNode * request, const char *field, const char *peer_user)
 {
-    /* field is only checked for backwards compatibility */
     static const char *effective_user = NULL;
     const char *requested_user = NULL;
     const char *user = NULL;
 
     if(effective_user == NULL) {
         effective_user = uid2username(geteuid());
+        if (effective_user == NULL) {
+            return NULL;
+        }
     }
 
     requested_user = crm_element_value(request, XML_ACL_TAG_USER);
     if(requested_user == NULL) {
+        /* @COMPAT rolling upgrades <=1.1.11
+         *
+         * field is checked for backward compatibility with older versions that
+         * did not use XML_ACL_TAG_USER.
+         */
         requested_user = crm_element_value(request, field);
     }
 
