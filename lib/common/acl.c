@@ -662,7 +662,9 @@ crm_acl_get_set_user(xmlNode *request, const char *field, const char *peer_user)
     if (effective_user == NULL) {
         effective_user = uid2username(geteuid());
         if (effective_user == NULL) {
-            return NULL;
+            effective_user = strdup("#unprivileged");
+            CRM_CHECK(effective_user != NULL, return NULL);
+            crm_err("Unable to determine effective user, assuming unprivileged for ACLs");
         }
     }
 
