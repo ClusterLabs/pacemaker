@@ -62,7 +62,7 @@ stonithd_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la	\
 			$(top_builddir)/pengine/libpengine.la		\
 			$(CRYPTOLIB) $(CLUSTERLIBS)
 
-stonithd_SOURCES	= main.c commands.c remote.c
+stonithd_SOURCES	= main.c commands.c remote.c history.c
 
 if BUILD_STONITH_CONFIG
 BUILT_SOURCES 		= standalone_config.h

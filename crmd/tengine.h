@@ -71,6 +71,8 @@ extern void abort_transition_graph(int abort_priority, enum transition_action ab
 
 extern gboolean te_connect_stonith(gpointer user_data);
 
+extern void te_trigger_stonith_history_sync(void);
+
 extern crm_trigger_t *transition_trigger;
 extern crm_trigger_t *stonith_reconnect;
 
