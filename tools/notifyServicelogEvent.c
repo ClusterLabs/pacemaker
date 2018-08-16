@@ -18,7 +18,7 @@
 #include <syslog.h>
 #include <unistd.h>
 #include <config.h>
-#include <inttypes.h>  /* U64T ~ PRIu64 */
+#include <inttypes.h>  /* U64T ~ PRIu64, U64TS ~ SCNu64 */
 
 #include <crm/common/xml.h>
 #include <crm/common/util.h>
@@ -118,7 +118,7 @@ main(int argc, char *argv[])
 
     openlog("notifyServicelogEvent", LOG_NDELAY, LOG_USER);
 
-    if (sscanf(argv[optind], "%" U64T, &event_id) != 1) {
+    if (sscanf(argv[optind], "%" U64TS, &event_id) != 1) {
         crm_err("Error: could not read event_id from args!");
 
         rc = 1;
