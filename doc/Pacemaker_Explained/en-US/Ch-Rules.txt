@@ -171,7 +171,7 @@ special, built-in node attributes for each node that can also be used.
 |The value of the +cluster-name+ cluster property, if set
 
 |#site-name
-|The value of the +site-name+ cluster property, if set, otherwise identical to
+|The value of the +site-name+ node attribute, if set, otherwise identical to
  +#cluster-name+
 
 |#role
