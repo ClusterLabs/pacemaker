@@ -506,21 +506,6 @@ class Tests(object):
             os.system("dd if=/dev/urandom of=/etc/pacemaker/authkey bs=4096 count=1")
             self.installed_files.append("/etc/pacemaker/authkey")
 
-        dummy_fence_sleep_agent = ("""#!@PYTHON@
-import sys
-import time
-def main():
-    for line in sys.stdin:
-        if line.count("monitor") > 0:
-            time.sleep(30000)
-            sys.exit(0)
-    sys.exit(1)
-if __name__ == "__main__":
-    main()
-""")
-
-        write_file(SBIN_DIR + "/fence_dummy_sleep", dummy_fence_sleep_agent, executable=True);
-
         # If we're in build directory, install agents if not already installed
         if os.path.exists("%s/cts/cts-exec.in" % BUILD_DIR):
 
@@ -541,8 +526,6 @@ if __name__ == "__main__":
 
     def cleanup_test_environment(self):
         """ Clean up the host after executing desired tests """
-
-        os.system("rm -f " + SBIN_DIR + "/fence_dummy_sleep")
 
         for installed_file in self.installed_files:
             print("Removing %s ..." % (installed_file))
@@ -682,10 +665,12 @@ if __name__ == "__main__":
 
         ### stonith start timeout test  ###
         test = self.new_test("stonith_start_timeout", "Force start timeout to occur, verify start failure.")
-        test.add_cmd("-c register_rsc -r \"test_rsc\" -C \"stonith\" -P \"pacemaker\" -T \"fence_dummy_sleep\" "
-                     + self.action_timeout +
-                     "-l \"NEW_EVENT event_type:register rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
-        test.add_cmd("-c exec -r \"test_rsc\" -a \"start\" -t 1000 -w") # -t must be less than self.action_timeout
+        test.add_cmd('-c register_rsc -r test_rsc ' +
+                     '-C stonith -P pacemaker -T fence_dummy ' +
+                     self.action_timeout +
+                     '-l "NEW_EVENT event_type:register rsc_id:test_rsc action:none rc:ok op_status:complete"')
+        test.add_cmd('-c exec -r test_rsc -a start -k monitor_delay -v 30 ' +
+                     '-t 1000 -w') # -t must be less than self.action_timeout
         test.add_cmd('-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:unknown error op_status:Timed Out" '
                      + self.action_timeout)
         test.add_cmd("-c exec -r test_rsc -a stop " + self.action_timeout +
