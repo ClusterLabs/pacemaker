@@ -57,7 +57,6 @@ update_attrd_helper(const char *host, const char *name, const char *value,
                     gboolean is_remote_node, char command)
 {
     int rc;
-    int max = 5;
     int attrd_opts = attrd_opt_none;
 
     if (is_remote_node) {
@@ -68,11 +67,11 @@ update_attrd_helper(const char *host, const char *name, const char *value,
         attrd_ipc = crm_ipc_new(T_ATTRD, 0);
     }
 
-    do {
+    for (int attempt = 1; attempt <= 4; ++attempt) {
         if (crm_ipc_connected(attrd_ipc) == FALSE) {
             crm_ipc_close(attrd_ipc);
-            crm_info("Connecting to attribute manager ... %d retries remaining",
-                     max);
+            crm_info("Connecting to attribute manager (attempt %d of 4)",
+                     attempt);
             if (crm_ipc_connect(attrd_ipc) == FALSE) {
                 crm_perror(LOG_INFO, "Connection to attribute manager failed");
             }
@@ -97,9 +96,14 @@ update_attrd_helper(const char *host, const char *name, const char *value,
             crm_ipc_close(attrd_ipc);
         }
 
-        sleep(5 - max);
-
-    } while (max--);
+        /* @TODO If the attribute manager remains unavailable the entire time,
+         * this function takes more than 6 seconds. Maybe set a timer for
+         * retries, to let the main loop do other work.
+         */
+        if (attempt < 4) {
+            sleep(attempt);
+        }
+    }
 
     if (rc != pcmk_ok) {
         log_attrd_error(host, name, value, is_remote_node, command, rc);
