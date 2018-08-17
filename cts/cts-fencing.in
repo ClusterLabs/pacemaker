@@ -1309,7 +1309,7 @@ logging {
             killall("corosync")
             self.start_corosync()
 
-        os.system("cp %s @sbindir@/fence_dummy" % FENCE_DUMMY)
+        subprocess.call(["cts-support", "install"])
 
         # modifies dummy agent to do require unfencing
         os.system("sed 's/on_target=/automatic=/g' %s > @sbindir@/fence_dummy_auto_unfence" % FENCE_DUMMY)
@@ -1335,7 +1335,7 @@ logging {
         if self.autogen_corosync_cfg:
             os.system("rm -f /etc/corosync/corosync.conf")
 
-        os.system("rm -f @sbindir@/fence_dummy")
+        subprocess.call(["cts-support", "uninstall"])
         os.system("rm -f @sbindir@/fence_dummy_auto_unfence")
         os.system("rm -f @sbindir@/fence_dummy_no_reboot")
 

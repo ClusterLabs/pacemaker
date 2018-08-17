@@ -347,22 +347,6 @@ class ClusterManager(UserDict):
             count = count + 1
         return count
 
-    def install_helper(self, filename, destdir=None, nodes=None, sourcedir=None):
-        if sourcedir == None:
-            sourcedir = CTSvars.CTS_home
-        file_with_path = "%s/%s" % (sourcedir, filename)
-        if not nodes:
-            nodes = self.Env["nodes"]
-
-        if not destdir:
-            destdir = CTSvars.CTS_home
-
-        self.debug("Installing %s to %s on %s" % (filename, destdir, repr(self.Env["nodes"])))
-        for node in nodes:
-            self.rsh(node, "mkdir -p %s" % destdir)
-            self.rsh.cp(file_with_path, "root@%s:%s/%s" % (node, destdir, filename))
-        return file_with_path
-
     def install_support(self, command="install"):
         for node in self.Env["nodes"]:
             self.rsh(node, CTSvars.CRM_DAEMON_DIR + "/cts-support " + command)
