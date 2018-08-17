@@ -456,16 +456,17 @@ $f"
             # If we have enough hits, print them and return.
             found=$(($found+1))
             if [ $found -ge $max ]; then
-                debug "Pattern \'$pattern\' found in: [ $logfiles ]"
-                IFS=$SAVE_IFS
-                echo "$logfiles"
-                return
+                break
             fi
         fi
     done 2>/dev/null
     IFS=$SAVE_IFS
-
-    debug "Pattern \'$pattern\' not found in any system logs"
+    if [ -z "$logfiles" ]; then
+        debug "Pattern \'$pattern\' not found in any system logs"
+    else
+        debug "Pattern \'$pattern\' found in: [ $logfiles ]"
+        echo "$logfiles"
+    fi
 }
 
 node_events() {
