@@ -588,7 +588,7 @@ get_logfiles() {
     pattern="Starting Pacemaker"
 
     # - make sure we get something from the scheduler
-    pattern="$pattern\\|Calculated Transition"
+    pattern="$pattern\\|Calculated transition"
 
     # - cib and pacemaker-execd updates
     # (helpful on non-DC nodes and when cluster has been up for a long time)
