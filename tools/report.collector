@@ -664,7 +664,7 @@ get_logfiles() {
     pattern="Starting Pacemaker"
 
     # - make sure we get something from the Policy Engine
-    pattern="$pattern\\|Calculated Transition"
+    pattern="$pattern\\|Calculated transition"
 
     # - cib and lrmd updates (helpful on non-DC nodes or when the cluster has been up for a long time)
     pattern="$pattern\\|cib_perform_op\\|process_lrm_event"
