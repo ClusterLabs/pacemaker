@@ -48,7 +48,7 @@ parse_cli_lifetime(const char *input)
     crm_time_log(LOG_INFO, "later   ", later,
                  crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
     crm_time_log(LOG_INFO, "duration", duration, crm_time_log_date | crm_time_log_timeofday);
-    later_s = crm_time_as_string(later, crm_time_log_date | crm_time_log_timeofday);
+    later_s = crm_time_as_string(later, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
     printf("Migration will take effect until: %s\n", later_s);
 
     crm_time_free(duration);
