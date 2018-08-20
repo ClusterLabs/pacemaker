@@ -172,6 +172,8 @@ crm_trigger_t *refresh_trigger = NULL;
 /* Define exit codes for monitoring-compatible output */
 #define MON_STATUS_OK   (0)
 #define MON_STATUS_WARN (1)
+#define MON_STATUS_CRIT (2)
+#define MON_STATUS_UNKNOWN (3)
 
 /* Convenience macro for prettifying output (e.g. "node" vs "nodes") */
 #define s_if_plural(i) (((i) == 1)? "" : "s")
@@ -883,7 +885,7 @@ main(int argc, char **argv)
 
         do {
             if (!one_shot) {
-                print_as("Attempting connection to the cluster...\n");
+                print_as("Waiting until cluster is available on this node ...\n");
             }
             exit_code = cib_connect(!one_shot);
 
@@ -904,10 +906,16 @@ main(int argc, char **argv)
 
         if (exit_code != pcmk_ok) {
             if (output_format == mon_output_monitor) {
-                printf("CLUSTER WARN: Connection to cluster failed: %s\n", pcmk_strerror(exit_code));
-                clean_up(MON_STATUS_WARN);
+                printf("CLUSTER CRIT: Connection to cluster failed: %s\n",
+                       pcmk_strerror(exit_code));
+                clean_up(MON_STATUS_CRIT);
             } else {
-                print_as("\nConnection to cluster failed: %s\n", pcmk_strerror(exit_code));
+                if (exit_code == -ENOTCONN) {
+                    print_as("\nError: cluster is not available on this node\n");
+                } else {
+                    print_as("\nConnection to cluster failed: %s\n",
+                             pcmk_strerror(exit_code));
+                }
             }
             if (output_format == mon_output_console) {
                 sleep(2);
