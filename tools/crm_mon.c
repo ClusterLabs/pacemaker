@@ -136,8 +136,13 @@ const char *print_neg_location_prefix = "";
 long last_refresh = 0;
 crm_trigger_t *refresh_trigger = NULL;
 
-/* Define exit codes for monitoring-compatible output */
-#define MON_STATUS_WARN CRM_EX_ERROR
+/* Define exit codes for monitoring-compatible output
+ * For nagios plugins, the possibilities are
+ * OK=0, WARN=1, CRIT=2, and UNKNOWN=3
+ */
+#define MON_STATUS_WARN    CRM_EX_ERROR
+#define MON_STATUS_CRIT    CRM_EX_INVALID_PARAM
+#define MON_STATUS_UNKNOWN CRM_EX_UNIMPLEMENT_FEATURE
 
 /* Convenience macro for prettifying output (e.g. "node" vs "nodes") */
 #define s_if_plural(i) (((i) == 1)? "" : "s")
@@ -819,7 +824,7 @@ main(int argc, char **argv)
 
         do {
             if (!one_shot) {
-                print_as("Attempting connection to the cluster...\n");
+                print_as("Waiting until cluster is available on this node ...\n");
             }
             rc = cib_connect(!one_shot);
 
@@ -840,10 +845,16 @@ main(int argc, char **argv)
 
         if (rc != pcmk_ok) {
             if (output_format == mon_output_monitor) {
-                printf("CLUSTER WARN: Connection to cluster failed: %s\n", pcmk_strerror(rc));
-                clean_up(MON_STATUS_WARN);
+                printf("CLUSTER CRIT: Connection to cluster failed: %s\n",
+                       pcmk_strerror(rc));
+                clean_up(MON_STATUS_CRIT);
             } else {
-                print_as("\nConnection to cluster failed: %s\n", pcmk_strerror(rc));
+                if (rc == -ENOTCONN) {
+                    print_as("\nError: cluster is not available on this node\n");
+                } else {
+                    print_as("\nConnection to cluster failed: %s\n",
+                             pcmk_strerror(rc));
+                }
             }
             if (output_format == mon_output_console) {
                 sleep(2);
