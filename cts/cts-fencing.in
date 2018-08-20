@@ -20,8 +20,6 @@ import time
 BUILD_DIR = "@abs_top_builddir@"
 TEST_DIR = sys.path[0]
 
-FENCE_DUMMY = ""
-
 # These values must be kept in sync with include/crm/crm.h
 class CrmExit:
     OK                   =   0
@@ -65,8 +63,6 @@ class CrmExit:
 def update_path():
     """ Set the PATH environment variable appropriately for the tests """
 
-    global FENCE_DUMMY
-
     new_path = os.environ['PATH']
     if os.path.exists("%s/cts-fencing.in" % TEST_DIR):
         print("Running tests from the source tree: %s (%s)" % (BUILD_DIR, TEST_DIR))
@@ -74,13 +70,11 @@ def update_path():
         new_path = "%s/daemons/fenced:%s" % (BUILD_DIR, new_path)
         new_path = "%s/tools:%s" % (BUILD_DIR, new_path) # For stonith_admin
         new_path = "%s/cts:%s" % (BUILD_DIR, new_path)   # For cts-support
-        FENCE_DUMMY = "%s/cts/fence_dummy" % (BUILD_DIR)
 
     else:
         print("Running tests from the install tree: @CRM_DAEMON_DIR@ (not %s)" % TEST_DIR)
         # For pacemaker-fenced, cts-fence-helper, and cts-support
         new_path = "@CRM_DAEMON_DIR@:%s" % (new_path)
-        FENCE_DUMMY = "@datadir@/@PACKAGE@/tests/cts/fence_dummy"
 
     print('Using PATH="{}"'.format(new_path))
     os.environ['PATH'] = new_path
@@ -1311,14 +1305,6 @@ logging {
 
         subprocess.call(["cts-support", "install"])
 
-        # modifies dummy agent to do require unfencing
-        os.system("sed 's/on_target=/automatic=/g' %s > @sbindir@/fence_dummy_auto_unfence" % FENCE_DUMMY)
-        os.system("chmod 711 @sbindir@/fence_dummy_auto_unfence")
-
-        # modifies dummy agent to not advertise reboot
-        os.system("sed 's/^.*<action.*name.*reboot.*>.*//g' %s > @sbindir@/fence_dummy_no_reboot" % FENCE_DUMMY)
-        os.system("chmod 711 @sbindir@/fence_dummy_no_reboot")
-
     def cleanup_environment(self, use_corosync):
         """ Clean up the host after executing desired tests """
 
@@ -1336,8 +1322,6 @@ logging {
             os.system("rm -f /etc/corosync/corosync.conf")
 
         subprocess.call(["cts-support", "uninstall"])
-        os.system("rm -f @sbindir@/fence_dummy_auto_unfence")
-        os.system("rm -f @sbindir@/fence_dummy_no_reboot")
 
 class TestOptions(object):
     """ Option handler """
