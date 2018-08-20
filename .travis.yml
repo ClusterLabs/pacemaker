@@ -88,14 +88,21 @@ script:
   || { make && ./cts/cts-regression -V cli scheduler exec; }
 - test $MAINT_EXTRA -ne 0 || test ${CC} != cov-build
   || export CC=gcc; bash ./travisci_build_coverity_scan.sh
-- test $MAINT_EXTRA -eq 0 || ( cd xml;
-    ./regression.sh && ./regression.sh -B && ./regression.sh -S && {
-      schemas=; for schema in *.rng; do
-        case ${schema} in *cibtr*) ;; *) schemas="${schemas} ${schema}";; esac;
-      done;
-      xmllint --noout --relaxng 'http://relaxng.org/relaxng.rng' ${schemas};
-    }
-  )
+- test $MAINT_EXTRA -eq 0 ||
+  { { echo 'looking for presence of control characters...';
+      { git ls-files
+        | xargs grep -Ensv "^([^[:cntrl:]]*|$(printf '\t'))*$"||:; } 2>/dev/null
+        | { ! grep -Ev '^Binary file' && echo 'ALL OK'; };
+    } && (
+      cd xml;
+      ./regression.sh && ./regression.sh -B && ./regression.sh -S && {
+        schemas=; for schema in *.rng; do
+          case ${schema} in *cibtr*);; *)schemas="${schemas} ${schema}";; esac;
+        done;
+        xmllint --noout --relaxng 'http://relaxng.org/relaxng.rng' ${schemas};
+      }
+    );
+  }
 
 #after_script:
 #after_success:

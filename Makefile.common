@@ -58,9 +58,8 @@ endif
 # bits we don't want/need
 #
 %.xml:  %.txt
-	$(AM_V_ASCII)$(ASCIIDOC) -b docbook -d book -o $@ $<
-	$(AM_V_at)sed -i 's///' $@
-	$(AM_V_at)sed -i 's///' $@                 # Fix line endings
+	$(AM_V_ASCII)$(ASCIIDOC) -b docbook -d book -o $@-t $<
+	$(AM_V_at)tr -d '\036\r' <$@-t >$@; rm "$@-t"# Fix line endings
 	$(AM_V_at)sed -i 's/\ lang="en"//' $@        # Never specify a language in the chapters
 	$(AM_V_at)sed -i 's/simpara/para/g' $@       # publican doesn't correctly render footnotes with simpara
 	$(AM_V_at)sed -i 's/.*<date>.*//g' $@	       # Remove dangling tag
