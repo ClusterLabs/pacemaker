@@ -15,7 +15,12 @@ import subprocess
 import shlex
 import time
 
-FENCE_DUMMY = "@datadir@/@PACKAGE@/tests/cts/fence_dummy"
+# Where to find test binaries
+# Prefer the source tree if available
+BUILD_DIR = "@abs_top_builddir@"
+TEST_DIR = sys.path[0]
+
+FENCE_DUMMY = ""
 
 # These values must be kept in sync with include/crm/crm.h
 class CrmExit:
@@ -55,6 +60,30 @@ class CrmExit:
     OLD                  = 110
     TIMEOUT              = 124
     MAX                  = 255
+
+
+def update_path():
+    """ Set the PATH environment variable appropriately for the tests """
+
+    global FENCE_DUMMY
+
+    new_path = os.environ['PATH']
+    if os.path.exists("%s/cts-fencing.in" % TEST_DIR):
+        print("Running tests from the source tree: %s (%s)" % (BUILD_DIR, TEST_DIR))
+        # For pacemaker-fenced and cts-fence-helper
+        new_path = "%s/daemons/fenced:%s" % (BUILD_DIR, new_path)
+        new_path = "%s/tools:%s" % (BUILD_DIR, new_path) # For stonith_admin
+        new_path = "%s/cts:%s" % (BUILD_DIR, new_path)   # For cts-support
+        FENCE_DUMMY = "%s/cts/fence_dummy" % (BUILD_DIR)
+
+    else:
+        print("Running tests from the install tree: @CRM_DAEMON_DIR@ (not %s)" % TEST_DIR)
+        # For pacemaker-fenced, cts-fence-helper, and cts-support
+        new_path = "@CRM_DAEMON_DIR@:%s" % (new_path)
+        FENCE_DUMMY = "@datadir@/@PACKAGE@/tests/cts/fence_dummy"
+
+    print('Using PATH="{}"'.format(new_path))
+    os.environ['PATH'] = new_path
 
 
 def pipe_output(pipes, stdout=True, stderr=False):
@@ -193,7 +222,7 @@ class Test(object):
         if os.path.exists("/tmp/stonith-regression.log"):
             os.remove('/tmp/stonith-regression.log')
 
-        cmd = "@CRM_DAEMON_DIR@/pacemaker-fenced %s -l /tmp/stonith-regression.log" % self.stonith_options
+        cmd = "pacemaker-fenced %s -l /tmp/stonith-regression.log" % self.stonith_options
         self.stonith_process = subprocess.Popen(shlex.split(cmd))
 
         time.sleep(1)
@@ -497,10 +526,10 @@ class Tests(object):
             verbose_arg = "-V"
 
         test = self.new_test("standalone_low_level_api_test", "Sanity test client api in standalone mode.")
-        test.add_cmd("@CRM_DAEMON_DIR@/cts-fence-helper", "-t %s" % (verbose_arg))
+        test.add_cmd("cts-fence-helper", "-t %s" % (verbose_arg))
 
         test = self.new_test("cpg_low_level_api_test", "Sanity test client api using mainloop and cpg.", 1)
-        test.add_cmd("@CRM_DAEMON_DIR@/cts-fence-helper", "-m %s" % (verbose_arg))
+        test.add_cmd("cts-fence-helper", "-m %s" % (verbose_arg))
 
     def build_custom_timeout_tests(self):
         """ Register tests to verify custom timeout usage """
@@ -1372,6 +1401,8 @@ class TestOptions(object):
 
 def main(argv):
     """ Run fencing regression tests as specified by arguments """
+
+    update_path()
 
     opts = TestOptions()
     opts.build_options(argv)
