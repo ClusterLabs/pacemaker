@@ -163,6 +163,8 @@ ALL_OPT = {
         }
 }
 
+auto_unfence = False
+no_reboot = False
 
 def agent():
     """ Return name this file was run as. """
@@ -222,13 +224,14 @@ def metadata(avail_opt, options):
 
     print("""<?xml version="1.0" ?>
 <resource-agent name="%s" shortdesc="%s" version="%s">
-<version>%s</version>
-<longdesc>%s</longdesc>
-<parameters>""" % (agent(), SHORT_DESC, AGENT_VERSION, OCF_VERSION, LONG_DESC))
+  <version>%s</version>
+  <longdesc>%s</longdesc>
+  <parameters>""" % (agent(), SHORT_DESC, AGENT_VERSION, OCF_VERSION, LONG_DESC))
 
     for option, dummy in sorted_options(avail_opt):
         if "shortdesc" in ALL_OPT[option]:
-            print("\t<parameter name=\"" + option + "\" unique=\"0\" required=\"" + ALL_OPT[option]["required"] + "\">")
+            print('    <parameter name="' + option + '" unique="0" ' +
+                  'required="' + ALL_OPT[option]["required"] + '">')
 
             default = ""
             default_name_arg = "-" + ALL_OPT[option]["getopt"][:-1]
@@ -253,27 +256,31 @@ def metadata(avail_opt, options):
             if None != res:
                 mixed = res.group(1)
             mixed = mixed.replace("<", "&lt;").replace(">", "&gt;")
-            print("\t\t<getopt mixed=\"" + mixed + "\" />")
+            print('      <getopt mixed="' + mixed + '" />')
 
             if ALL_OPT[option]["getopt"].count(":") > 0:
-                print("\t\t<content type=\"string\" "+default+" />")
+                print('      <content type="string" ' + default + ' />')
             else:
-                print("\t\t<content type=\"boolean\" "+default+" />")
+                print('      <content type="boolean" ' + default + ' />')
 
-            print("\t\t<shortdesc lang=\"en\">" + ALL_OPT[option]["shortdesc"] + "</shortdesc>")
-            print("\t</parameter>")
+            print('      <shortdesc lang="en">' + ALL_OPT[option]["shortdesc"] + '</shortdesc>')
+            print('    </parameter>')
 
-    print("""</parameters>
-<actions>
-\t<action name="on" on_target="1" />
-\t<action name="off" />
-\t<action name="reboot" />
-\t<action name="status" />
-\t<action name="monitor" />
-\t<action name="metadata" />
-\t<action name="list" />
-</actions>
-</resource-agent>""")
+    print('  </parameters>\n  <actions>')
+    if auto_unfence:
+        attr_name = 'automatic'
+    else:
+        attr_name = 'on_target'
+    print('    <action name="on" ' + attr_name + '="1" />')
+    print('    <action name="off" />')
+    if not no_reboot:
+        print('    <action name="reboot" />')
+    print('    <action name="status" />')
+    print('    <action name="monitor" />')
+    print('    <action name="metadata" />')
+    print('    <action name="list" />')
+    print('  </actions>')
+    print('</resource-agent>')
 
 
 def option_longopt(option):
@@ -415,6 +422,16 @@ def write_options(options):
 
 def main():
     """ Make it so! """
+
+    global auto_unfence
+    global no_reboot
+
+    # Meta-data can't take parameters, so we simulate different meta-data
+    # behavior based on the executable name (which can be a symbolic link).
+    if (sys.argv[0].endswith("_auto_unfence")):
+        auto_unfence = True
+    elif (sys.argv[0].endswith("_no_reboot")):
+        no_reboot = True
 
     device_opt = ALL_OPT.keys()
 
