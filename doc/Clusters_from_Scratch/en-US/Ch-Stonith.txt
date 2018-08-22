@@ -1,3 +1,4 @@
+:compat-mode: legacy
 = Configure STONITH =
 
 == What is STONITH? ==

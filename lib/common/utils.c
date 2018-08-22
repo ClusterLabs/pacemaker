@@ -987,9 +987,9 @@ void cib_ipc_servers_init(qb_ipcs_service_t **ipcs_ro,
         struct qb_ipcs_service_handlers *ro_cb,
         struct qb_ipcs_service_handlers *rw_cb)
 {
-    *ipcs_ro = mainloop_add_ipc_server(cib_channel_ro, QB_IPC_NATIVE, ro_cb);
-    *ipcs_rw = mainloop_add_ipc_server(cib_channel_rw, QB_IPC_NATIVE, rw_cb);
-    *ipcs_shm = mainloop_add_ipc_server(cib_channel_shm, QB_IPC_SHM, rw_cb);
+    *ipcs_ro = mainloop_add_ipc_server(CIB_CHANNEL_RO, QB_IPC_NATIVE, ro_cb);
+    *ipcs_rw = mainloop_add_ipc_server(CIB_CHANNEL_RW, QB_IPC_NATIVE, rw_cb);
+    *ipcs_shm = mainloop_add_ipc_server(CIB_CHANNEL_SHM, QB_IPC_SHM, rw_cb);
 
     if (*ipcs_ro == NULL || *ipcs_rw == NULL || *ipcs_shm == NULL) {
         crm_err("Failed to create the CIB manager: exiting and inhibiting respawn");

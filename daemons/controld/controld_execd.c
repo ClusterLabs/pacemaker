@@ -920,7 +920,7 @@ lrm_remove_deleted_op(gpointer key, gpointer value, gpointer user_data)
  *
  * Avoids refreshing the entire LRM section of this host
  */
-#define rsc_template "//"XML_CIB_TAG_STATE"[@uname='%s']//"XML_LRM_TAG_RESOURCE"[@id='%s']"
+#define RSC_TEMPLATE "//"XML_CIB_TAG_STATE"[@uname='%s']//"XML_LRM_TAG_RESOURCE"[@id='%s']"
 
 static int
 delete_rsc_status(lrm_state_t * lrm_state, const char *rsc_id, int call_options,
@@ -931,7 +931,7 @@ delete_rsc_status(lrm_state_t * lrm_state, const char *rsc_id, int call_options,
 
     CRM_CHECK(rsc_id != NULL, return -ENXIO);
 
-    rsc_xpath = crm_strdup_printf(rsc_template, lrm_state->node_name, rsc_id);
+    rsc_xpath = crm_strdup_printf(RSC_TEMPLATE, lrm_state->node_name, rsc_id);
 
     rc = cib_internal_op(fsa_cib_conn, CIB_OP_DELETE, NULL, rsc_xpath,
                          NULL, NULL, call_options | cib_xpath, user_name);

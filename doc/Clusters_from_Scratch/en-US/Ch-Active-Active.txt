@@ -1,3 +1,4 @@
+:compat-mode: legacy
 = Convert Cluster to Active/Active =
 
 The primary requirement for an Active/Active cluster is that the data

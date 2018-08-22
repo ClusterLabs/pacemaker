@@ -54,21 +54,29 @@ endif
 # Build docbook from asciidoc because XML is a PITA to edit
 #
 # Build each chapter as a book (since the numbering isn't right for
-# articles and only books can have appendicies) and then strip out the
+# articles and only books can have appendices) and then strip out the
 # bits we don't want/need
 #
+# XXX Sequence of tr/sed commands should be replaced with a single XSLT
+#
 %.xml:  %.txt
-	$(AM_V_ASCII)asciidoc -b docbook -a cli_name=$(ASCIIDOC_CLI_TYPE) -a $(ASCIIDOC_CLI_TYPE)=true -d book -o $@ $<
-	$(AM_V_at)sed -i 's///' $@
-	$(AM_V_at)sed -i 's///' $@                 # Fix line endings
-	$(AM_V_at)sed -i 's/\ lang="en"//' $@        # Never specify a language in the chapters
-	$(AM_V_at)sed -i 's/simpara/para/g' $@       # publican doesn't correctly render footnotes with simpara
-	$(AM_V_at)sed -i 's/.*<date>.*//g' $@	       # Remove dangling tag
-	$(AM_V_at)sed -i 's/.*preface>//g' $@        # Remove preface elements
-	$(AM_V_at)sed -i 's:<title></title>::g' $@   # Remove empty title
-	$(AM_V_at)sed -i 's/chapter/section/g' $@    # Chapters become sections, so that books can become chapters
-	$(AM_V_at)sed -i 's/<.*bookinfo.*>//g' $@    # Strip out bookinfo, we don't need it
-	-grep -qis "<appendix" $@ && sed -i 's/.*book>//' $@         # We just want the appendix tag
-	-grep -vqis "<appendix" $@ && sed -i 's/book>/chapter>/g' $@ # Rename to chapter
+if IS_ASCIIDOC
+	$(AM_V_ASCII)$(ASCIIDOC_CONV) -b docbook -d book -o $@-tt $<
+else
+	$(AM_V_ASCII)$(ASCIIDOC_CONV) -b docbook45 -d book -o $@-tt $<
+endif
+	$(AM_V_at)tr -d '\036\r' <$@-tt >$@-t; rm -f $@-tt  # Fix line endings
+	$(AM_V_at)sed -i 's/\ lang="en"//' $@-t      # Never specify a language in the chapters
+	$(AM_V_at)sed -i 's/simpara/para/g' $@-t     # publican doesn't correctly render footnotes with simpara
+	$(AM_V_at)sed -i 's/.*<date>.*//g' $@-t      # Remove dangling tag
+	$(AM_V_at)sed -i 's/.*preface>//g' $@-t      # Remove preface elements
+	$(AM_V_at)sed -i 's:<title></title>::g' $@-t # Remove empty title
+	$(AM_V_at)sed -i 's/chapter/section/g' $@-t  # Chapters become sections, so that books can become chapters
+	$(AM_V_at)sed -i 's/<.*bookinfo.*>//g' $@-t  # Strip out bookinfo, we don't need it
+	$(AM_V_at)! grep -q "<appendix" $@-t || sed -i \
+	  's/.*book>//;tb;bf;:b;N;s/.*<title>.*<\/title>.*//;tb;/<appendix/{:i;n;/<\/appendix/{p;d};bi};bb;:f;p;d' \
+	  $@-t  # We just want the appendix tag (asciidoctor adds non-empty book-level title)
+	$(AM_V_at)sed -i 's/book>/chapter>/g' $@-t   # Rename to chapter (won't trigger if previous sed did)
+	$(AM_V_GEN)mv $@-t $@
 
 #	echo Rebuilt $@ from $<

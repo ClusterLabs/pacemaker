@@ -1,3 +1,4 @@
+:compat-mode: legacy
 = Resource Agents =
 
 == OCF Resource Agents ==
@@ -160,7 +161,7 @@ Although counterintuitive, even actions that return 0
 the expected return value.
 
 .OCF Return Codes and their Recovery Types
-[width="95%",cols="1m,4<m,6<,1m",options="header",align="center"]
+[width="95%",cols="1m,<4m,<6,1m",options="header",align="center"]
 |=========================================================
 
 |RC

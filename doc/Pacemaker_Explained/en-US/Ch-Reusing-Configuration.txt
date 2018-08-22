@@ -1,3 +1,4 @@
+:compat-mode: legacy
 = Reusing Parts of the Configuration =
 
 Pacemaker provides multiple ways to simplify the configuration XML by reusing

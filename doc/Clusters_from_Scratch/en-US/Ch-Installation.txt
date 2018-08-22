@@ -1,3 +1,4 @@
+:compat-mode: legacy
 = Installation =
 
 == Install &DISTRO; &DISTRO_VERSION; ==

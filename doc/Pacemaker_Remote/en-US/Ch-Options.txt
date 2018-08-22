@@ -1,3 +1,4 @@
+:compat-mode: legacy
 = Configuration Explained =
 
 The walk-through examples use some of these options, but don't explain exactly
@@ -25,7 +26,7 @@ Below are the metadata options available to enable a resource as a guest node
 and define its connection parameters.
 
 .Meta-attributes for configuring VM resources as guest nodes
-[width="95%",cols="2m,1,4<",options="header",align="center"]
+[width="95%",cols="2m,1,<4",options="header",align="center"]
 |=========================================================
 
 |Option

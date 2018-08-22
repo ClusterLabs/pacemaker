@@ -1,3 +1,4 @@
+:compat-mode: legacy
 = Status -- Here be dragons =
 
 Most users never need to understand the contents of the status section
@@ -31,7 +32,7 @@ section from authoritative sources, so any changes should be done
 with the tools appropriate to those sources.
       
 .Authoritative Sources for State Information
-[width="95%",cols="1m,1<",options="header",align="center"]
+[width="95%",cols="1m,<1",options="header",align="center"]
 |=========================================================
 
 | CIB Object | Authoritative Source
@@ -50,7 +51,7 @@ as the resource manager for the older Heartbeat project. They have remained
 unchanged to preserve compatibility with older versions.
       
 .Node Status Fields
-[width="95%",cols="1m,4<",options="header",align="center"]
+[width="95%",cols="1m,<4",options="header",align="center"]
 |=========================================================
 
 |Field |Description
@@ -155,7 +156,7 @@ Additionally, we store the last job for every combination of
 this tuple are used to create the id of the +lrm_rsc_op+ object.
 
 .Contents of an +lrm_rsc_op+ job
-[width="95%",cols="2m,5<",options="header",align="center"]
+[width="95%",cols="2m,<5",options="header",align="center"]
 |=========================================================
 
 |Field

@@ -1,3 +1,4 @@
+:compat-mode: legacy
 = Guest Node Quick Example =
 
 If you already know how to use Pacemaker, you'll likely be able to grasp this

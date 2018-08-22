@@ -1,3 +1,4 @@
+:compat-mode: legacy
 = Utilization and Placement Strategy =
 
 [[s-utilization]]

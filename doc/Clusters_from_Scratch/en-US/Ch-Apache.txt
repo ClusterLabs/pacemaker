@@ -1,3 +1,4 @@
+:compat-mode: legacy
 = Add Apache HTTP Server as a Cluster Service  =
 
 indexterm:[Apache HTTP Server]

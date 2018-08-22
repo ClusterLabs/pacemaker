@@ -1,3 +1,4 @@
+:compat-mode: legacy
 = Replicate Storage Using DRBD =
 
 Even if you're serving up static websites, having to manually synchronize

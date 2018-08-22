@@ -1,3 +1,4 @@
+:compat-mode: legacy
 [appendix]
 
 [[ap-faq]]

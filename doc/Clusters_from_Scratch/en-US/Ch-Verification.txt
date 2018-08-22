@@ -1,3 +1,4 @@
+:compat-mode: legacy
 = Start and Verify Cluster =
 
 == Start the Cluster ==

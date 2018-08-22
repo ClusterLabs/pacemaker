@@ -1,3 +1,4 @@
+:compat-mode: legacy
 = Alerts =
 
 //// 
@@ -75,7 +76,7 @@ to affect how Pacemaker calls them.
 
 .Meta-Attributes of an Alert
 
-[width="95%",cols="m,1,2<a",options="header",align="center"]
+[width="95%",cols="m,1,<2",options="header",align="center"]
 |=========================================================
 
 |Meta-Attribute
@@ -273,7 +274,7 @@ See their source code for the full set of instance attributes they support.
 
 .Environment variables passed to alert agents
 
-[width="95%",cols="m,2<a",options="header",align="center"]
+[width="95%",cols="m,<2",options="header",align="center"]
 |=========================================================
 
 |Environment Variable

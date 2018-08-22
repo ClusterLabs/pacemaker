@@ -1,3 +1,4 @@
+:compat-mode: legacy
 = Create an Active/Passive Cluster =
 
 == Explore the Existing Configuration ==

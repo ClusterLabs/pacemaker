@@ -53,7 +53,7 @@ typedef struct pcmk_child_s {
 } pcmk_child_t;
 
 /* Index into the array below */
-#define pcmk_child_controld  3
+#define PCMK_CHILD_CONTROLD  3
 
 static pcmk_child_t pcmk_children[] = {
     {
@@ -421,7 +421,7 @@ pcmk_shutdown_worker(gpointer user_data)
                     next_log = now + 30;
                     child->respawn = FALSE;
                     stop_child(child, SIGTERM);
-                    if (phase < pcmk_children[pcmk_child_controld].start_seq) {
+                    if (phase < pcmk_children[PCMK_CHILD_CONTROLD].start_seq) {
                         g_timeout_add(180000 /* 3m */ , escalate_shutdown, child);
                     }
 
