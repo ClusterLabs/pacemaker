@@ -243,7 +243,8 @@ cli_resource_update_attribute(resource_t *rsc, const char *requested_name,
             if (rc == pcmk_ok && BE_QUIET == FALSE) {
                 printf("WARNING: There is already a meta attribute for '%s' called '%s' (id=%s)\n",
                        uber_parent(rsc)->id, attr_name, local_attr_id);
-                printf("         Delete '%s' first or use --force to override\n", local_attr_id);
+                printf("         Delete '%s' first or use the force option to override\n",
+                       local_attr_id);
             }
             free(local_attr_id);
             if (rc == pcmk_ok) {
@@ -428,7 +429,7 @@ send_lrm_rsc_op(crm_ipc_t * crmd_channel, const char *op,
         return -EINVAL;
 
     } else if (host_uname == NULL) {
-        CMD_ERR("Please supply a node name with --node");
+        CMD_ERR("Please specify a node name");
         return -EINVAL;
     } else {
         node_t *node = pe_find_node(data_set->nodes, host_uname);
@@ -1618,7 +1619,8 @@ wait_till_stable(int timeout_ms, cib_t * cib)
                                                          "dc-version");
 
             if (safe_str_neq(dc_version, PACEMAKER_VERSION "-" BUILD_VERSION)) {
-                printf("warning: --wait command may not work properly in mixed-version cluster\n");
+                printf("warning: wait option may not work properly in "
+                       "mixed-version cluster\n");
                 printed_version_warning = TRUE;
             }
         }
@@ -1661,7 +1663,8 @@ cli_resource_execute(resource_t *rsc, const char *requested_name,
             if(rc > 0 && do_force == FALSE) {
                 CMD_ERR("It is not safe to %s %s here: the cluster claims it is already active",
                         action, rsc->id);
-                CMD_ERR("Try setting target-role=stopped first or specifying --force");
+                CMD_ERR("Try setting target-role=Stopped first or specifying "
+                        "the force option");
                 crm_exit(CRM_EX_UNSAFE);
             }
         }
@@ -1673,7 +1676,8 @@ cli_resource_execute(resource_t *rsc, const char *requested_name,
     }
 
     if(rsc->variant == pe_group) {
-        CMD_ERR("Sorry, --%s doesn't support group resources", rsc_action);
+        CMD_ERR("Sorry, the %s option doesn't support group resources",
+                rsc_action);
         crm_exit(CRM_EX_UNIMPLEMENT_FEATURE);
     }
 
@@ -1682,7 +1686,8 @@ cli_resource_execute(resource_t *rsc, const char *requested_name,
     rtype = crm_element_value(rsc->xml, XML_ATTR_TYPE);
 
     if (safe_str_eq(rclass, PCMK_RESOURCE_CLASS_STONITH)) {
-        CMD_ERR("Sorry, --%s doesn't support %s resources yet", rsc_action, rclass);
+        CMD_ERR("Sorry, the %s option doesn't support %s resources yet",
+                rsc_action, rclass);
         crm_exit(CRM_EX_UNIMPLEMENT_FEATURE);
     }
 
@@ -1804,13 +1809,12 @@ cli_resource_move(resource_t *rsc, const char *rsc_id, const char *host_name,
         resource_t *p = uber_parent(rsc);
 
         if (is_set(p->flags, pe_rsc_promotable)) {
-            CMD_ERR("Using parent '%s' for --move command instead of '%s'.", rsc->id, rsc_id);
+            CMD_ERR("Using parent '%s' for move instead of '%s'.", rsc->id, rsc_id);
             rsc_id = p->id;
             rsc = p;
 
         } else {
-            CMD_ERR("Ignoring '--master' option: %s is not a promotable resource",
-                    rsc_id);
+            CMD_ERR("Ignoring master option: %s is not promotable", rsc_id);
             scope_master = FALSE;
         }
     }
@@ -1875,10 +1879,13 @@ cli_resource_move(resource_t *rsc, const char *rsc_id, const char *host_name,
             (void)cli_resource_ban(rsc_id, current->details->uname, NULL, cib);
 
         } else if(count > 1) {
-            CMD_ERR("Resource '%s' is currently %s in %d locations. One may now move to %s",
-                    rsc_id, scope_master?"promoted":"active", count, dest->details->uname);
-            CMD_ERR("You can prevent '%s' from being %s at a specific location with:"
-                    " --ban %s--host <name>", rsc_id, scope_master?"promoted":"active", scope_master?"--master ":"");
+            CMD_ERR("Resource '%s' is currently %s in %d locations. "
+                    "One may now move to %s",
+                    rsc_id, (scope_master? "promoted" : "active"),
+                    count, dest->details->uname);
+            CMD_ERR("To prevent '%s' from being %s at a specific location, "
+                    "specify a node.",
+                    rsc_id, (scope_master? "promoted" : "active"));
 
         } else {
             crm_trace("Not banning %s from its current location: not active", rsc_id);
