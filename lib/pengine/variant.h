@@ -71,12 +71,14 @@ typedef struct
 enum container_type {
         PE_CONTAINER_TYPE_UNKNOWN,
         PE_CONTAINER_TYPE_DOCKER,
-        PE_CONTAINER_TYPE_RKT
+        PE_CONTAINER_TYPE_RKT,
+        PE_CONTAINER_TYPE_PODMAN
 };
 
 #define PE_CONTAINER_TYPE_UNKNOWN_S "unknown"
 #define PE_CONTAINER_TYPE_DOCKER_S  "Docker"
 #define PE_CONTAINER_TYPE_RKT_S     "rkt"
+#define PE_CONTAINER_TYPE_PODMAN_S  "podman"
 
 typedef struct container_variant_data_s {
         int promoted_max;
