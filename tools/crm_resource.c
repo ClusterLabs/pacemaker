@@ -39,14 +39,14 @@ int cib_options = cib_sync_call;
 
 GMainLoop *mainloop = NULL;
 
-#define message_timeout_ms 60*1000
+#define MESSAGE_TIMEOUT_S 60
 
 static gboolean
 resource_ipc_timeout(gpointer data)
 {
-    fprintf(stderr, "No messages received in %d seconds.. aborting\n",
-            (int)message_timeout_ms / 1000);
-    crm_err("No messages received in %d seconds", (int)message_timeout_ms / 1000);
+    fprintf(stderr, "Aborting because no messages received in %d seconds\n",
+            MESSAGE_TIMEOUT_S);
+    crm_err("No messages received in %d seconds", MESSAGE_TIMEOUT_S);
     return crm_exit(-1);
 }
 
@@ -65,10 +65,12 @@ start_mainloop(void)
     }
 
     mainloop = g_main_new(FALSE);
-    fprintf(stderr, "Waiting for %d replies from the CRMd", crmd_replies_needed);
-    crm_debug("Waiting for %d replies from the CRMd", crmd_replies_needed);
+    fprintf(stderr, "Waiting for %d repl%s from the CRMd",
+            crmd_replies_needed, (crmd_replies_needed == 1)? "y" : "ies");
+    crm_debug("Waiting for %d repl%s from the CRMd",
+              crmd_replies_needed, (crmd_replies_needed == 1)? "y" : "ies");
 
-    g_timeout_add(message_timeout_ms, resource_ipc_timeout, NULL);
+    g_timeout_add(MESSAGE_TIMEOUT_S * 1000, resource_ipc_timeout, NULL);
     g_main_run(mainloop);
 }
 
@@ -1037,14 +1039,17 @@ main(int argc, char **argv)
             } else {
                 CMD_ERR("Resource '%s' not moved: active in %d locations (promoted in %d).",
                         rsc_id, nactive, count);
-                CMD_ERR("You can prevent '%s' from running on a specific location with: --ban --node <name>", rsc_id);
-                CMD_ERR("You can prevent '%s' from being promoted at a specific location with:"
-                        " --ban --master --node <name>", rsc_id);
+                CMD_ERR("To prevent '%s' from running on a specific location, "
+                        "specify a node.", rsc_id);
+                CMD_ERR("To prevent '%s' from being promoted at a specific "
+                        "location, specify a node and the master option.",
+                        rsc_id);
             }
 
         } else {
             CMD_ERR("Resource '%s' not moved: active in %d locations.", rsc_id, nactive);
-            CMD_ERR("You can prevent '%s' from running on a specific location with: --ban --node <name>", rsc_id);
+            CMD_ERR("To prevent '%s' from running on a specific location, "
+                    "specify a node.", rsc_id);
         }
 
     } else if (rsc_cmd == 'G') {
@@ -1231,7 +1236,7 @@ main(int argc, char **argv)
 
     if (rc == -pcmk_err_no_quorum) {
         CMD_ERR("Error performing operation: %s", pcmk_strerror(rc));
-        CMD_ERR("Try using -f");
+        CMD_ERR("To ignore quorum, use the force option");
 
     } else if (rc != pcmk_ok && !is_ocf_rc) {
         CMD_ERR("Error performing operation: %s", pcmk_strerror(rc));

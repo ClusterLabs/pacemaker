@@ -1,20 +1,8 @@
-
 /*
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_resource.h>
@@ -89,13 +77,12 @@ cli_resource_ban(const char *rsc_id, const char *host, GListPtr allnodes, cib_t 
         CMD_ERR("WARNING: Creating rsc_location constraint '%s'"
                 " with a score of -INFINITY for resource %s"
                 " on %s.", ID(location), rsc_id, host);
-        CMD_ERR("\tThis will prevent %s from %s"
-                " on %s until the constraint is removed using"
-                " the 'crm_resource --clear' command or manually"
-                " with cibadmin", rsc_id, scope_master?"being promoted":"running", host);
+        CMD_ERR("\tThis will prevent %s from %s on %s until the constraint "
+                "is removed using the clear option or by editing the CIB "
+                "with an appropriate tool",
+                rsc_id, (scope_master? "being promoted" : "running"), host);
         CMD_ERR("\tThis will be the case even if %s is"
                 " the last node in the cluster", host);
-        CMD_ERR("\tThis message can be disabled with --quiet");
     }
 
     crm_xml_add(location, XML_LOC_ATTR_SOURCE, rsc_id);
