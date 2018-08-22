@@ -6,7 +6,7 @@ Online: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
  ip-192.0.2.12	(ocf::heartbeat:IPaddr2):	Started overcloud-controller-0 
  Clone Set: haproxy-clone [haproxy]
      Started: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
- Master/Slave Set: galera-master [galera]
+ Clone Set: galera-master [galera] (promotable)
      Masters: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
  Clone Set: memcached-clone [memcached]
      Started: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
@@ -14,7 +14,7 @@ Online: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
      Started: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
  Clone Set: openstack-core-clone [openstack-core]
      Stopped (disabled): [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
- Master/Slave Set: redis-master [redis]
+ Clone Set: redis-master [redis] (promotable)
      Masters: [ overcloud-controller-1 ]
      Slaves: [ overcloud-controller-0 overcloud-controller-2 ]
  ip-192.0.2.11	(ocf::heartbeat:IPaddr2):	Started overcloud-controller-1 
@@ -95,7 +95,7 @@ Online: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
  ip-192.0.2.12	(ocf::heartbeat:IPaddr2):	Started overcloud-controller-0 
  Clone Set: haproxy-clone [haproxy]
      Started: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
- Master/Slave Set: galera-master [galera]
+ Clone Set: galera-master [galera] (promotable)
      Masters: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
  Clone Set: memcached-clone [memcached]
      Started: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
@@ -103,7 +103,7 @@ Online: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
      Started: [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
  Clone Set: openstack-core-clone [openstack-core]
      Stopped (disabled): [ overcloud-controller-0 overcloud-controller-1 overcloud-controller-2 ]
- Master/Slave Set: redis-master [redis]
+ Clone Set: redis-master [redis] (promotable)
      Masters: [ overcloud-controller-1 ]
      Slaves: [ overcloud-controller-0 overcloud-controller-2 ]
  ip-192.0.2.11	(ocf::heartbeat:IPaddr2):	Started overcloud-controller-1 

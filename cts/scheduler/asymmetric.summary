@@ -2,7 +2,7 @@
 Current cluster status:
 Online: [ puma1 puma3 ]
 
- Master/Slave Set: ms_drbd_poolA [ebe3fb6e-7778-426e-be58-190ab1ff3dd3]
+ Clone Set: ms_drbd_poolA [ebe3fb6e-7778-426e-be58-190ab1ff3dd3] (promotable)
      Masters: [ puma3 ]
      Slaves: [ puma1 ]
  vpool_ip_poolA	(ocf::heartbeat:IPaddr2):	Stopped 
@@ -19,7 +19,7 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ puma1 puma3 ]
 
- Master/Slave Set: ms_drbd_poolA [ebe3fb6e-7778-426e-be58-190ab1ff3dd3]
+ Clone Set: ms_drbd_poolA [ebe3fb6e-7778-426e-be58-190ab1ff3dd3] (promotable)
      Masters: [ puma3 ]
      Slaves: [ puma1 ]
  vpool_ip_poolA	(ocf::heartbeat:IPaddr2):	Stopped 

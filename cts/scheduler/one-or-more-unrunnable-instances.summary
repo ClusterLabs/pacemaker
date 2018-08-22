@@ -22,7 +22,7 @@ RemoteOnline: [ mrg-07 mrg-08 mrg-09 ]
  vip-ceilometer	(ocf::heartbeat:IPaddr2):	Started rdo7-node2
  vip-qpid	(ocf::heartbeat:IPaddr2):	Started rdo7-node3
  vip-node	(ocf::heartbeat:IPaddr2):	Started rdo7-node1
- Master/Slave Set: galera-master [galera]
+ Clone Set: galera-master [galera] (promotable)
      Masters: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
      Stopped: [ mrg-07 mrg-08 mrg-09 ]
  Clone Set: rabbitmq-server-clone [rabbitmq-server]
@@ -88,7 +88,7 @@ RemoteOnline: [ mrg-07 mrg-08 mrg-09 ]
      Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
  Clone Set: nova-conductor-clone [nova-conductor]
      Stopped: [ mrg-07 mrg-08 mrg-09 rdo7-node1 rdo7-node2 rdo7-node3 ]
- Master/Slave Set: redis-master [redis]
+ Clone Set: redis-master [redis] (promotable)
      Masters: [ rdo7-node1 ]
      Slaves: [ rdo7-node2 rdo7-node3 ]
      Stopped: [ mrg-07 mrg-08 mrg-09 ]
@@ -586,7 +586,7 @@ RemoteOnline: [ mrg-07 mrg-08 mrg-09 ]
  vip-ceilometer	(ocf::heartbeat:IPaddr2):	Started rdo7-node2
  vip-qpid	(ocf::heartbeat:IPaddr2):	Started rdo7-node3
  vip-node	(ocf::heartbeat:IPaddr2):	Started rdo7-node1
- Master/Slave Set: galera-master [galera]
+ Clone Set: galera-master [galera] (promotable)
      Masters: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
      Stopped: [ mrg-07 mrg-08 mrg-09 ]
  Clone Set: rabbitmq-server-clone [rabbitmq-server]
@@ -673,7 +673,7 @@ RemoteOnline: [ mrg-07 mrg-08 mrg-09 ]
  Clone Set: nova-conductor-clone [nova-conductor]
      Started: [ rdo7-node1 rdo7-node2 rdo7-node3 ]
      Stopped: [ mrg-07 mrg-08 mrg-09 ]
- Master/Slave Set: redis-master [redis]
+ Clone Set: redis-master [redis] (promotable)
      Masters: [ rdo7-node1 ]
      Slaves: [ rdo7-node2 rdo7-node3 ]
      Stopped: [ mrg-07 mrg-08 mrg-09 ]

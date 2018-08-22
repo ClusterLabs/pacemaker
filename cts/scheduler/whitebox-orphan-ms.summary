@@ -12,7 +12,7 @@ Containers: [ lxc1:container1 lxc2:container2 ]
  migrator	(ocf::pacemaker:Dummy):	Started 18node1 
  Clone Set: Connectivity [ping-1]
      Started: [ 18node1 18node2 18node3 ]
- Master/Slave Set: master-1 [stateful-1]
+ Clone Set: master-1 [stateful-1] (promotable)
      Masters: [ 18node1 ]
      Slaves: [ 18node2 18node3 ]
  Resource Group: group-1
@@ -75,7 +75,7 @@ Online: [ 18node1 18node2 18node3 ]
  migrator	(ocf::pacemaker:Dummy):	Started 18node1 
  Clone Set: Connectivity [ping-1]
      Started: [ 18node1 18node2 18node3 ]
- Master/Slave Set: master-1 [stateful-1]
+ Clone Set: master-1 [stateful-1] (promotable)
      Masters: [ 18node1 ]
      Slaves: [ 18node2 18node3 ]
  Resource Group: group-1

@@ -3,7 +3,7 @@ Current cluster status:
 Online: [ alice.demo bob.demo ]
 
  dummy1	(ocf::heartbeat:Dummy):	Stopped 
- Master/Slave Set: ms_stateful [stateful]
+ Clone Set: ms_stateful [stateful] (promotable)
      Stopped: [ alice.demo bob.demo ]
  Clone Set: cl_dummy2 [dummy2]
      Stopped: [ alice.demo bob.demo ]
@@ -35,7 +35,7 @@ Revised cluster status:
 Online: [ alice.demo bob.demo ]
 
  dummy1	(ocf::heartbeat:Dummy):	Stopped 
- Master/Slave Set: ms_stateful [stateful]
+ Clone Set: ms_stateful [stateful] (promotable)
      Slaves: [ alice.demo bob.demo ]
  Clone Set: cl_dummy2 [dummy2]
      Stopped: [ alice.demo bob.demo ]

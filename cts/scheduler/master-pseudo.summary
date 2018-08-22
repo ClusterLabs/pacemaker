@@ -4,7 +4,7 @@ Node raki.linbit: standby
 Online: [ sambuca.linbit ]
 
  ip_float_right	(ocf::heartbeat:IPaddr2):	Stopped 
- Master/Slave Set: ms_drbd_float [drbd_float]
+ Clone Set: ms_drbd_float [drbd_float] (promotable)
      Slaves: [ sambuca.linbit ]
  Resource Group: nfsexport
      ip_nfs	(ocf::heartbeat:IPaddr2):	Stopped 
@@ -51,7 +51,7 @@ Node raki.linbit: standby
 Online: [ sambuca.linbit ]
 
  ip_float_right	(ocf::heartbeat:IPaddr2):	Started sambuca.linbit
- Master/Slave Set: ms_drbd_float [drbd_float]
+ Clone Set: ms_drbd_float [drbd_float] (promotable)
      Masters: [ sambuca.linbit ]
  Resource Group: nfsexport
      ip_nfs	(ocf::heartbeat:IPaddr2):	Started sambuca.linbit

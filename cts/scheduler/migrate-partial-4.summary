@@ -22,27 +22,27 @@ Online: [ lustre01-left lustre02-left lustre03-left lustre04-left ]
  Resource Group: booth
      ip-booth	(ocf::heartbeat:IPaddr2):	Started lustre02-left
      boothd	(ocf::pacemaker:booth-site):	Started lustre02-left
- Master/Slave Set: ms-drbd-mgs [drbd-mgs]
+ Clone Set: ms-drbd-mgs [drbd-mgs] (promotable)
      Stopped: [ lustre01-left lustre02-left lustre03-left lustre04-left ]
- Master/Slave Set: ms-drbd-testfs-mdt0000 [drbd-testfs-mdt0000]
+ Clone Set: ms-drbd-testfs-mdt0000 [drbd-testfs-mdt0000] (promotable)
      Stopped: [ lustre01-left lustre02-left lustre03-left lustre04-left ]
- Master/Slave Set: ms-drbd-testfs-mdt0000-left [drbd-testfs-mdt0000-left]
+ Clone Set: ms-drbd-testfs-mdt0000-left [drbd-testfs-mdt0000-left] (promotable)
      Stopped: [ lustre01-left lustre02-left lustre03-left lustre04-left ]
- Master/Slave Set: ms-drbd-testfs-ost0000 [drbd-testfs-ost0000]
+ Clone Set: ms-drbd-testfs-ost0000 [drbd-testfs-ost0000] (promotable)
      Stopped: [ lustre01-left lustre02-left lustre03-left lustre04-left ]
- Master/Slave Set: ms-drbd-testfs-ost0000-left [drbd-testfs-ost0000-left]
+ Clone Set: ms-drbd-testfs-ost0000-left [drbd-testfs-ost0000-left] (promotable)
      Stopped: [ lustre01-left lustre02-left lustre03-left lustre04-left ]
- Master/Slave Set: ms-drbd-testfs-ost0001 [drbd-testfs-ost0001]
+ Clone Set: ms-drbd-testfs-ost0001 [drbd-testfs-ost0001] (promotable)
      Stopped: [ lustre01-left lustre02-left lustre03-left lustre04-left ]
- Master/Slave Set: ms-drbd-testfs-ost0001-left [drbd-testfs-ost0001-left]
+ Clone Set: ms-drbd-testfs-ost0001-left [drbd-testfs-ost0001-left] (promotable)
      Stopped: [ lustre01-left lustre02-left lustre03-left lustre04-left ]
- Master/Slave Set: ms-drbd-testfs-ost0002 [drbd-testfs-ost0002]
+ Clone Set: ms-drbd-testfs-ost0002 [drbd-testfs-ost0002] (promotable)
      Stopped: [ lustre01-left lustre02-left lustre03-left lustre04-left ]
- Master/Slave Set: ms-drbd-testfs-ost0002-left [drbd-testfs-ost0002-left]
+ Clone Set: ms-drbd-testfs-ost0002-left [drbd-testfs-ost0002-left] (promotable)
      Stopped: [ lustre01-left lustre02-left lustre03-left lustre04-left ]
- Master/Slave Set: ms-drbd-testfs-ost0003 [drbd-testfs-ost0003]
+ Clone Set: ms-drbd-testfs-ost0003 [drbd-testfs-ost0003] (promotable)
      Stopped: [ lustre01-left lustre02-left lustre03-left lustre04-left ]
- Master/Slave Set: ms-drbd-testfs-ost0003-left [drbd-testfs-ost0003-left]
+ Clone Set: ms-drbd-testfs-ost0003-left [drbd-testfs-ost0003-left] (promotable)
      Stopped: [ lustre01-left lustre02-left lustre03-left lustre04-left ]
 
 Transition Summary:
@@ -100,26 +100,26 @@ Online: [ lustre01-left lustre02-left lustre03-left lustre04-left ]
  Resource Group: booth
      ip-booth	(ocf::heartbeat:IPaddr2):	Started lustre02-left
      boothd	(ocf::pacemaker:booth-site):	Started lustre02-left
- Master/Slave Set: ms-drbd-mgs [drbd-mgs]
+ Clone Set: ms-drbd-mgs [drbd-mgs] (promotable)
      Slaves: [ lustre01-left lustre02-left ]
- Master/Slave Set: ms-drbd-testfs-mdt0000 [drbd-testfs-mdt0000]
+ Clone Set: ms-drbd-testfs-mdt0000 [drbd-testfs-mdt0000] (promotable)
      Stopped: [ lustre01-left lustre02-left lustre03-left lustre04-left ]
- Master/Slave Set: ms-drbd-testfs-mdt0000-left [drbd-testfs-mdt0000-left]
+ Clone Set: ms-drbd-testfs-mdt0000-left [drbd-testfs-mdt0000-left] (promotable)
      Stopped: [ lustre01-left lustre02-left lustre03-left lustre04-left ]
- Master/Slave Set: ms-drbd-testfs-ost0000 [drbd-testfs-ost0000]
+ Clone Set: ms-drbd-testfs-ost0000 [drbd-testfs-ost0000] (promotable)
      Stopped: [ lustre01-left lustre02-left lustre03-left lustre04-left ]
- Master/Slave Set: ms-drbd-testfs-ost0000-left [drbd-testfs-ost0000-left]
+ Clone Set: ms-drbd-testfs-ost0000-left [drbd-testfs-ost0000-left] (promotable)
      Stopped: [ lustre01-left lustre02-left lustre03-left lustre04-left ]
- Master/Slave Set: ms-drbd-testfs-ost0001 [drbd-testfs-ost0001]
+ Clone Set: ms-drbd-testfs-ost0001 [drbd-testfs-ost0001] (promotable)
      Stopped: [ lustre01-left lustre02-left lustre03-left lustre04-left ]
- Master/Slave Set: ms-drbd-testfs-ost0001-left [drbd-testfs-ost0001-left]
+ Clone Set: ms-drbd-testfs-ost0001-left [drbd-testfs-ost0001-left] (promotable)
      Stopped: [ lustre01-left lustre02-left lustre03-left lustre04-left ]
- Master/Slave Set: ms-drbd-testfs-ost0002 [drbd-testfs-ost0002]
+ Clone Set: ms-drbd-testfs-ost0002 [drbd-testfs-ost0002] (promotable)
      Stopped: [ lustre01-left lustre02-left lustre03-left lustre04-left ]
- Master/Slave Set: ms-drbd-testfs-ost0002-left [drbd-testfs-ost0002-left]
+ Clone Set: ms-drbd-testfs-ost0002-left [drbd-testfs-ost0002-left] (promotable)
      Stopped: [ lustre01-left lustre02-left lustre03-left lustre04-left ]
- Master/Slave Set: ms-drbd-testfs-ost0003 [drbd-testfs-ost0003]
+ Clone Set: ms-drbd-testfs-ost0003 [drbd-testfs-ost0003] (promotable)
      Stopped: [ lustre01-left lustre02-left lustre03-left lustre04-left ]
- Master/Slave Set: ms-drbd-testfs-ost0003-left [drbd-testfs-ost0003-left]
+ Clone Set: ms-drbd-testfs-ost0003-left [drbd-testfs-ost0003-left] (promotable)
      Stopped: [ lustre01-left lustre02-left lustre03-left lustre04-left ]
 

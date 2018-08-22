@@ -2,7 +2,7 @@
 Current cluster status:
 Online: [ c6 c7 c8 ]
 
- Master/Slave Set: ms_drbd-dtest1 [p_drbd-dtest1]
+ Clone Set: ms_drbd-dtest1 [p_drbd-dtest1] (promotable)
      Slaves: [ c6 c7 ]
  p_dtest1	(ocf::heartbeat:Dummy):	Stopped 
 
@@ -29,7 +29,7 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ c6 c7 c8 ]
 
- Master/Slave Set: ms_drbd-dtest1 [p_drbd-dtest1]
+ Clone Set: ms_drbd-dtest1 [p_drbd-dtest1] (promotable)
      Masters: [ c7 ]
      Slaves: [ c6 ]
  p_dtest1	(ocf::heartbeat:Dummy):	Started c7 

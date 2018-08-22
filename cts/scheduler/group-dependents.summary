@@ -25,7 +25,7 @@ Online: [ asttest1 asttest2 ]
  Clone Set: cl_route [ip_voip_route_default]
      Started: [ asttest1 asttest2 ]
  fs_drbd	(ocf::heartbeat:Filesystem):	Started asttest1 
- Master/Slave Set: ms_drbd [drbd]
+ Clone Set: ms_drbd [drbd] (promotable)
      Masters: [ asttest1 ]
      Slaves: [ asttest2 ]
 
@@ -189,7 +189,7 @@ Online: [ asttest1 asttest2 ]
  Clone Set: cl_route [ip_voip_route_default]
      Started: [ asttest1 asttest2 ]
  fs_drbd	(ocf::heartbeat:Filesystem):	Started asttest2 
- Master/Slave Set: ms_drbd [drbd]
+ Clone Set: ms_drbd [drbd] (promotable)
      Masters: [ asttest2 ]
      Slaves: [ asttest1 ]
 

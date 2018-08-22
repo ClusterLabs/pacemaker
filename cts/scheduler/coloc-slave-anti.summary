@@ -4,7 +4,7 @@ Online: [ pollux sirius ]
 
  Clone Set: pingd-clone [pingd-1]
      Started: [ pollux sirius ]
- Master/Slave Set: drbd-msr [drbd-r0]
+ Clone Set: drbd-msr [drbd-r0] (promotable)
      Masters: [ pollux ]
      Slaves: [ sirius ]
  Resource Group: group-1
@@ -34,7 +34,7 @@ Online: [ pollux sirius ]
 
  Clone Set: pingd-clone [pingd-1]
      Started: [ pollux sirius ]
- Master/Slave Set: drbd-msr [drbd-r0]
+ Clone Set: drbd-msr [drbd-r0] (promotable)
      Masters: [ pollux ]
      Slaves: [ sirius ]
  Resource Group: group-1

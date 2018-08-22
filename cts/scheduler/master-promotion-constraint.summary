@@ -7,7 +7,7 @@ Online: [ hex-13 hex-14 ]
  Resource Group: g0
      d0	(ocf::pacemaker:Dummy):	Stopped ( disabled ) 
      d1	(ocf::pacemaker:Dummy):	Stopped ( disabled ) 
- Master/Slave Set: ms0 [s0]
+ Clone Set: ms0 [s0] (promotable)
      Masters: [ hex-14 ]
      Slaves: [ hex-13 ]
 
@@ -28,6 +28,6 @@ Online: [ hex-13 hex-14 ]
  Resource Group: g0
      d0	(ocf::pacemaker:Dummy):	Stopped ( disabled ) 
      d1	(ocf::pacemaker:Dummy):	Stopped ( disabled ) 
- Master/Slave Set: ms0 [s0]
+ Clone Set: ms0 [s0] (promotable)
      Slaves: [ hex-13 hex-14 ]
 

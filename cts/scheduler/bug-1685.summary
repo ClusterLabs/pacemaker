@@ -2,7 +2,7 @@
 Current cluster status:
 Online: [ redun1 redun2 ]
 
- Master/Slave Set: shared_storage [prim_shared_storage]
+ Clone Set: shared_storage [prim_shared_storage] (promotable)
      Slaves: [ redun1 redun2 ]
  shared_filesystem	(ocf::heartbeat:Filesystem):	Stopped 
 
@@ -29,7 +29,7 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ redun1 redun2 ]
 
- Master/Slave Set: shared_storage [prim_shared_storage]
+ Clone Set: shared_storage [prim_shared_storage] (promotable)
      Masters: [ redun2 ]
      Slaves: [ redun1 ]
  shared_filesystem	(ocf::heartbeat:Filesystem):	Started redun2

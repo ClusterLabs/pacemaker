@@ -14,10 +14,10 @@ RemoteOnline: [ galera-0 galera-1 galera-2 messaging-0 messaging-1 messaging-2 ]
  Clone Set: rabbitmq-clone [rabbitmq]
      Started: [ messaging-0 messaging-1 messaging-2 ]
      Stopped: [ controller-0 controller-1 controller-2 galera-0 galera-1 galera-2 ]
- Master/Slave Set: galera-master [galera]
+ Clone Set: galera-master [galera] (promotable)
      Masters: [ galera-0 galera-1 ]
      Stopped: [ controller-0 controller-1 controller-2 galera-2 messaging-0 messaging-1 messaging-2 ]
- Master/Slave Set: redis-master [redis]
+ Clone Set: redis-master [redis] (promotable)
      redis	(ocf::heartbeat:redis):	Slave controller-1 (UNCLEAN)
      Masters: [ controller-0 ]
      Slaves: [ controller-2 ]
@@ -124,10 +124,10 @@ RemoteOFFLINE: [ galera-2 messaging-1 ]
  Clone Set: rabbitmq-clone [rabbitmq]
      Started: [ messaging-0 messaging-2 ]
      Stopped: [ controller-0 controller-1 controller-2 galera-0 galera-1 galera-2 messaging-1 ]
- Master/Slave Set: galera-master [galera]
+ Clone Set: galera-master [galera] (promotable)
      Masters: [ galera-0 galera-1 ]
      Stopped: [ controller-0 controller-1 controller-2 galera-2 messaging-0 messaging-1 messaging-2 ]
- Master/Slave Set: redis-master [redis]
+ Clone Set: redis-master [redis] (promotable)
      Masters: [ controller-0 ]
      Slaves: [ controller-2 ]
      Stopped: [ controller-1 galera-0 galera-1 galera-2 messaging-0 messaging-1 messaging-2 ]

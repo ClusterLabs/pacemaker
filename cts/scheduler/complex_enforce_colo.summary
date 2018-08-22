@@ -20,7 +20,7 @@ Online: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
  vip-horizon	(ocf::heartbeat:IPaddr2):	Started rhos6-node1 
  vip-heat	(ocf::heartbeat:IPaddr2):	Started rhos6-node2 
  vip-ceilometer	(ocf::heartbeat:IPaddr2):	Started rhos6-node3 
- Master/Slave Set: galera-master [galera]
+ Clone Set: galera-master [galera] (promotable)
      Masters: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
  Clone Set: rabbitmq-server-clone [rabbitmq-server]
      Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
@@ -370,7 +370,7 @@ Online: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
  vip-horizon	(ocf::heartbeat:IPaddr2):	Started rhos6-node1 
  vip-heat	(ocf::heartbeat:IPaddr2):	Started rhos6-node2 
  vip-ceilometer	(ocf::heartbeat:IPaddr2):	Started rhos6-node3 
- Master/Slave Set: galera-master [galera]
+ Clone Set: galera-master [galera] (promotable)
      Masters: [ rhos6-node1 rhos6-node2 rhos6-node3 ]
  Clone Set: rabbitmq-server-clone [rabbitmq-server]
      Started: [ rhos6-node1 rhos6-node2 rhos6-node3 ]

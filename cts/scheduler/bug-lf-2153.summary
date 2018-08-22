@@ -3,7 +3,7 @@ Current cluster status:
 Node bob (9a4cafd3-fcfc-4de9-9440-10bc8822d9af): standby
 Online: [ alice ]
 
- Master/Slave Set: ms_drbd_iscsivg01 [res_drbd_iscsivg01]
+ Clone Set: ms_drbd_iscsivg01 [res_drbd_iscsivg01] (promotable)
      Masters: [ alice ]
      Slaves: [ bob ]
  Clone Set: cl_tgtd [res_tgtd]
@@ -41,7 +41,7 @@ Revised cluster status:
 Node bob (9a4cafd3-fcfc-4de9-9440-10bc8822d9af): standby
 Online: [ alice ]
 
- Master/Slave Set: ms_drbd_iscsivg01 [res_drbd_iscsivg01]
+ Clone Set: ms_drbd_iscsivg01 [res_drbd_iscsivg01] (promotable)
      Masters: [ alice ]
      Stopped: [ bob ]
  Clone Set: cl_tgtd [res_tgtd]

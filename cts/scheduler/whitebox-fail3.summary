@@ -5,10 +5,10 @@ Online: [ dvossel-laptop2 ]
  vm	(ocf::heartbeat:VirtualDomain):	Stopped 
  vm2	(ocf::heartbeat:VirtualDomain):	Stopped 
  FAKE	(ocf::pacemaker:Dummy):	Started dvossel-laptop2 
- Master/Slave Set: W-master [W]
+ Clone Set: W-master [W] (promotable)
      Masters: [ dvossel-laptop2 ]
      Stopped: [ 18builder 18node1 ]
- Master/Slave Set: X-master [X]
+ Clone Set: X-master [X] (promotable)
      Masters: [ dvossel-laptop2 ]
      Stopped: [ 18builder 18node1 ]
 
@@ -43,11 +43,11 @@ Containers: [ 18builder:vm ]
  vm	(ocf::heartbeat:VirtualDomain):	Started dvossel-laptop2 
  vm2	(ocf::heartbeat:VirtualDomain):	Stopped 
  FAKE	(ocf::pacemaker:Dummy):	Started 18builder 
- Master/Slave Set: W-master [W]
+ Clone Set: W-master [W] (promotable)
      Masters: [ dvossel-laptop2 ]
      Slaves: [ 18builder ]
      Stopped: [ 18node1 ]
- Master/Slave Set: X-master [X]
+ Clone Set: X-master [X] (promotable)
      Masters: [ dvossel-laptop2 ]
      Slaves: [ 18builder ]
      Stopped: [ 18node1 ]

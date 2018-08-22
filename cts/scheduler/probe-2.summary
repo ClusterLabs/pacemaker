@@ -7,14 +7,14 @@ Online: [ wc01 ]
      fs_www_data	(ocf::heartbeat:Filesystem):	Started wc01
      nfs-kernel-server	(lsb:nfs-kernel-server):	Started wc01
      intip_nfs	(ocf::heartbeat:IPaddr2):	Started wc01
- Master/Slave Set: ms_drbd_mysql [drbd_mysql]
+ Clone Set: ms_drbd_mysql [drbd_mysql] (promotable)
      Masters: [ wc02 ]
      Slaves: [ wc01 ]
  Resource Group: group_mysql
      fs_mysql	(ocf::heartbeat:Filesystem):	Started wc02
      intip_sql	(ocf::heartbeat:IPaddr2):	Started wc02
      mysql-server	(ocf::heartbeat:mysql):	Started wc02
- Master/Slave Set: ms_drbd_www [drbd_www]
+ Clone Set: ms_drbd_www [drbd_www] (promotable)
      Masters: [ wc01 ]
      Slaves: [ wc02 ]
  Clone Set: clone_nfs-common [group_nfs-common]
@@ -134,14 +134,14 @@ Online: [ wc01 ]
      fs_www_data	(ocf::heartbeat:Filesystem):	Started wc01
      nfs-kernel-server	(lsb:nfs-kernel-server):	Started wc01
      intip_nfs	(ocf::heartbeat:IPaddr2):	Started wc01
- Master/Slave Set: ms_drbd_mysql [drbd_mysql]
+ Clone Set: ms_drbd_mysql [drbd_mysql] (promotable)
      Masters: [ wc01 ]
      Stopped: [ wc02 ]
  Resource Group: group_mysql
      fs_mysql	(ocf::heartbeat:Filesystem):	Started wc01
      intip_sql	(ocf::heartbeat:IPaddr2):	Started wc01
      mysql-server	(ocf::heartbeat:mysql):	Started wc01
- Master/Slave Set: ms_drbd_www [drbd_www]
+ Clone Set: ms_drbd_www [drbd_www] (promotable)
      Masters: [ wc01 ]
      Stopped: [ wc02 ]
  Clone Set: clone_nfs-common [group_nfs-common]

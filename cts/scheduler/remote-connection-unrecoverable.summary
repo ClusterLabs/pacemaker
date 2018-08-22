@@ -7,7 +7,7 @@ RemoteOnline: [ remote1 ]
  remote1	(ocf::pacemaker:remote):	Started node1 (UNCLEAN)
  killer	(stonith:fence_xvm):	Started node2
  rsc1	(ocf::pacemaker:Dummy):	Started remote1
- Master/Slave Set: rsc2-master [rsc2]
+ Clone Set: rsc2-master [rsc2] (promotable)
      rsc2	(ocf::pacemaker:Stateful):	Master node1 (UNCLEAN)
      Masters: [ node2 ]
      Stopped: [ remote1 ]
@@ -48,7 +48,7 @@ RemoteOFFLINE: [ remote1 ]
  remote1	(ocf::pacemaker:remote):	Stopped
  killer	(stonith:fence_xvm):	Started node2
  rsc1	(ocf::pacemaker:Dummy):	Started node2
- Master/Slave Set: rsc2-master [rsc2]
+ Clone Set: rsc2-master [rsc2] (promotable)
      Masters: [ node2 ]
      Stopped: [ node1 remote1 ]
 
