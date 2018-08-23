@@ -81,10 +81,18 @@
 %endif
 %endif
 
-## Turn off auto-compilation of Python files outside site-packages directory,
-## so that the -libs-devel package is multilib-compliant (no *.py[co] files)
+## Turn off auto-compilation of Python files outside Python specific paths,
+## so there's no risk that unexpected "__python" macro gets picked to do the
+## RPM-native byte-compiling there (only "{_datadir}/pacemaker/tests" affected)
+## -- distro-dependent tricks or automake's fallback to be applied there
+%if %{defined _python_bytecompile_extra}
+%global _python_bytecompile_extra 0
+%else
+### the statement effectively means no RPM-native byte-compiling will occur at
+### all, so distro-dependent tricks for Python-specific packages to be applied
 %global __os_install_post %(echo '%{__os_install_post}' | {
                             sed -e 's!/usr/lib[^[:space:]]*/brp-python-bytecompile[[:space:]].*$!!g'; })
+%endif
 
 ## Values that differ by Python major version
 %if 0%{?python_major} > 2
@@ -442,7 +450,13 @@ make %{_smp_mflags} V=1 all
 exit $?  # TODO remove when rpm<4.14 compatibility irrelevant
 
 %install
-make DESTDIR=%{buildroot} docdir=%{pcmk_docdir} V=1 install
+# skip automake-native Python byte-compilation, since RPM-native one (possibly
+# distro-confined to Python-specific directories, which is currently the only
+# relevant place, anyway) assures proper intrinsic alignment with wider system
+# (such as with py_byte_compile macro, which is concurrent Fedora/EL specific)
+make install \
+  DESTDIR=%{buildroot} V=1 docdir=%{pcmk_docdir} \
+  %{?_python_bytecompile_extra:%{?py_byte_compile:am__py_compile=true}}
 
 mkdir -p ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig
 install -m 644 daemons/pacemakerd/pacemaker.sysconfig ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig/pacemaker
@@ -473,6 +487,14 @@ rm -f %{buildroot}/%{_sbindir}/ipmiservicelogd
 %if %{defined _unitdir}
 rm -f %{buildroot}/%{_initrddir}/pacemaker
 rm -f %{buildroot}/%{_initrddir}/pacemaker_remote
+%endif
+
+# Byte-compile Python sources where suitable and the distro procedures known
+%if %{defined py_byte_compile} && %{defined python_path}
+%{py_byte_compile %{python_path} %{buildroot}%{_datadir}/pacemaker/tests}
+%if !%{defined _python_bytecompile_extra}
+%{py_byte_compile %{python_path} %{buildroot}%{py_site}/cts}
+%endif
 %endif
 
 %if %{with coverage}
