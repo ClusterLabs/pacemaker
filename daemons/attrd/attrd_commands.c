@@ -846,7 +846,6 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
         }
 
         if (a->timeout_ms != dampen) {
-            mainloop_timer_stop(a->timer);
             mainloop_timer_del(a->timer);
             a->timeout_ms = dampen;
             if (dampen > 0) {
@@ -914,7 +913,7 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
         a->changed = TRUE;
 
         // Write out new value or start dampening timer
-        if (a->timer) {
+        if (a->timeout_ms && a->timer) {
             crm_trace("Delayed write out (%dms) for %s", a->timeout_ms, attr);
             mainloop_timer_start(a->timer);
         } else {
@@ -1013,7 +1012,7 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
 
     if(a == NULL) {
         crm_info("Attribute %s no longer exists", name);
-        goto done;
+        return;
     }
 
     a->update = 0;
@@ -1025,7 +1024,13 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
         case pcmk_ok:
             level = LOG_INFO;
             last_cib_op_done = call_id;
+            if (a->timer && !a->timeout_ms) {
+                // Remove temporary dampening for failed writes
+                mainloop_timer_del(a->timer);
+                a->timer = NULL;
+            }
             break;
+
         case -pcmk_err_diff_failed:    /* When an attr changes while the CIB is syncing */
         case -ETIME:           /* When an attr changes while there is a DC election */
         case -ENXIO:           /* When an attr changes while the CIB is syncing a
@@ -1046,9 +1051,33 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
             a->changed = TRUE; /* Attempt write out again */
         }
     }
-  done:
-    if(a && a->changed && election_state(writer) == election_won) {
-        write_attribute(a);
+
+    if (a->changed && (election_state(writer) == election_won)) {
+        /* If we're re-attempting a write because the original failed, delay
+         * the next attempt so we don't potentially flood the CIB manager
+         * and logs with a zillion attempts per second.
+         *
+         * @TODO We could elect a new writer instead. However, we'd have to
+         * somehow downgrade our vote, and we'd still need something like this
+         * if all peers similarly fail to write this attribute (which may
+         * indicate a corrupted attribute entry rather than a CIB issue).
+         */
+        if (a->timer) {
+            // Attribute has a dampening value, so use that as delay
+            if (!mainloop_timer_running(a->timer)) {
+                crm_trace("Delayed re-attempted write (%dms) for %s",
+                          a->timeout_ms, name);
+                mainloop_timer_start(a->timer);
+            }
+        } else {
+            /* Set a temporary dampening of 2 seconds (timer will continue
+             * to exist until the attribute's dampening gets set or the
+             * write succeeds).
+             */
+            a->timer = mainloop_timer_add(a->id, 2000, FALSE,
+                                          attribute_timer_cb, a);
+            mainloop_timer_start(a->timer);
+        }
     }
 }
 
