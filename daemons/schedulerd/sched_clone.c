@@ -23,11 +23,23 @@ sort_rsc_id(gconstpointer a, gconstpointer b)
 {
     const resource_t *resource1 = (const resource_t *)a;
     const resource_t *resource2 = (const resource_t *)b;
+    long num1, num2;
 
     CRM_ASSERT(resource1 != NULL);
     CRM_ASSERT(resource2 != NULL);
 
-    return strcmp(resource1->id, resource2->id);
+    /*
+     * Sort clone instances numerically by instance number, so instance :10
+     * comes after :9.
+     */
+    num1 = strtol(strrchr(resource1->id, ':') + 1, NULL, 10);
+    num2 = strtol(strrchr(resource2->id, ':') + 1, NULL, 10);
+    if (num1 < num2) {
+        return -1;
+    } else if (num1 > num2) {
+        return 1;
+    }
+    return 0;
 }
 
 static node_t *

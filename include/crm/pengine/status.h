@@ -290,6 +290,8 @@ struct pe_resource_s {
     pe_resource_t *container;
     GListPtr fillers;
 
+    pe_node_t *pending_node;    // Node on which pending_task is happening
+
 #if ENABLE_VERSIONED_ATTRS
     xmlNode *versioned_parameters;
 #endif
