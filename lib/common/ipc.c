@@ -279,6 +279,58 @@ crm_client_disconnect_all(qb_ipcs_service_t *service)
 }
 
 /*!
+ * \internal
+ * \brief Allocate a new crm_client_t object based on an IPC connection
+ *
+ * \param[in] c           IPC connection (or NULL to allocate generic client)
+ * \param[in] key         Connection table key (or NULL to use sane default)
+ * \param[in] uid_client  UID corresponding to c (ignored if c is NULL)
+ *
+ * \return Pointer to new crm_client_t (or NULL on error)
+ */
+static crm_client_t *
+client_from_connection(qb_ipcs_connection_t *c, void *key, uid_t uid_client)
+{
+    crm_client_t *client = calloc(1, sizeof(crm_client_t));
+
+    if (client == NULL) {
+        crm_perror(LOG_ERR, "Allocating client");
+        return NULL;
+    }
+
+    if (c) {
+#if ENABLE_ACL
+        client->user = uid2username(uid_client);
+        if (client->user == NULL) {
+            client->user = strdup("#unprivileged");
+            CRM_CHECK(client->user != NULL, free(client); return NULL);
+            crm_err("Unable to enforce ACLs for user ID %d, assuming unprivileged",
+                    uid_client);
+        }
+#endif
+        client->ipcs = c;
+        client->kind = CRM_CLIENT_IPC;
+        client->pid = crm_ipcs_client_pid(c);
+        if (key == NULL) {
+            key = c;
+        }
+    }
+
+    client->id = crm_generate_uuid();
+    if (client->id == NULL) {
+        crm_err("Could not generate UUID for client");
+        free(client->user);
+        free(client);
+        return NULL;
+    }
+    if (key == NULL) {
+        key = client->id;
+    }
+    g_hash_table_insert(client_connections, key, client);
+    return client;
+}
+
+/*!
  * \brief Allocate a new crm_client_t object and generate its ID
  *
  * \param[in] key  What to use as connections hash table key (NULL to use ID)
@@ -288,11 +340,9 @@ crm_client_disconnect_all(qb_ipcs_service_t *service)
 crm_client_t *
 crm_client_alloc(void *key)
 {
-    crm_client_t *client = calloc(1, sizeof(crm_client_t));
+    crm_client_t *client = client_from_connection(NULL, key, 0);
 
     CRM_ASSERT(client != NULL);
-    client->id = crm_generate_uuid();
-    g_hash_table_insert(client_connections, (key? key : client->id), client);
     return client;
 }
 
@@ -304,18 +354,16 @@ crm_client_new(qb_ipcs_connection_t * c, uid_t uid_client, gid_t gid_client)
 
     crm_client_t *client = NULL;
 
-    CRM_LOG_ASSERT(c);
-    if (c == NULL) {
-        return NULL;
-    }
+    CRM_CHECK(c != NULL, return NULL);
 
     if (uid_cluster == 0) {
         if (crm_user_lookup(CRM_DAEMON_USER, &uid_cluster, &gid_cluster) < 0) {
-            static bool have_error = FALSE;
-            if(have_error == FALSE) {
+            static bool need_log = TRUE;
+
+            if (need_log) {
                 crm_warn("Could not find user and group IDs for user %s",
                          CRM_DAEMON_USER);
-                have_error = TRUE;
+                need_log = FALSE;
             }
         }
     }
@@ -329,10 +377,10 @@ crm_client_new(qb_ipcs_connection_t * c, uid_t uid_client, gid_t gid_client)
     crm_client_init();
 
     /* TODO: Do our own auth checking, return NULL if unauthorized */
-    client = crm_client_alloc(c);
-    client->ipcs = c;
-    client->kind = CRM_CLIENT_IPC;
-    client->pid = crm_ipcs_client_pid(c);
+    client = client_from_connection(c, NULL, uid_client);
+    if (client == NULL) {
+        return NULL;
+    }
 
     if ((uid_client == 0) || (uid_client == uid_cluster)) {
         /* Remember when a connection came from root or hacluster */
@@ -341,9 +389,6 @@ crm_client_new(qb_ipcs_connection_t * c, uid_t uid_client, gid_t gid_client)
 
     crm_debug("Connecting %p for uid=%d gid=%d pid=%u id=%s", c, uid_client, gid_client, client->pid, client->id);
 
-#if ENABLE_ACL
-    client->user = uid2username(uid_client);
-#endif
     return client;
 }
 
