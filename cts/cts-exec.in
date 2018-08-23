@@ -472,7 +472,8 @@ class Tests(object):
             "lsb_cancel_line"   : '-c cancel -r lsb_test_rsc -a status -i 2s ' + self.action_timeout,
             "lsb_cancel_event"  : "-l \"NEW_EVENT event_type:exec_complete rsc_id:lsb_test_rsc action:status rc:ok op_status:Cancelled\" ",
 
-            "stonith_reg_line"      : "-c register_rsc -r stonith_test_rsc "+self.action_timeout+" -C stonith -P pacemaker -T fence_dummy_monitor",
+            "stonith_reg_line"      : "-c register_rsc -r stonith_test_rsc " + self.action_timeout +
+				      " -C stonith -P pacemaker -T fence_dummy",
             "stonith_reg_event"     : "-l \"NEW_EVENT event_type:register rsc_id:stonith_test_rsc action:none rc:ok op_status:complete\" ",
             "stonith_unreg_line"    : "-c unregister_rsc -r \"stonith_test_rsc\" "+self.action_timeout,
             "stonith_unreg_event"   : "-l \"NEW_EVENT event_type:unregister rsc_id:stonith_test_rsc action:none rc:ok op_status:complete\"",
@@ -505,54 +506,6 @@ class Tests(object):
             os.system("dd if=/dev/urandom of=/etc/pacemaker/authkey bs=4096 count=1")
             self.installed_files.append("/etc/pacemaker/authkey")
 
-        dummy_fence_sleep_agent = ("""#!@PYTHON@
-import sys
-import time
-def main():
-    for line in sys.stdin:
-        if line.count("monitor") > 0:
-            time.sleep(30000)
-            sys.exit(0)
-    sys.exit(1)
-if __name__ == "__main__":
-    main()
-""")
-        dummy_fence_agent = ("""#!/bin/sh
-while read line; do
-    case ${line} in
-    *monitor*) exit 0;;
-    *metadata*)
-        echo '<resource-agent name="fence_dummy_monitor" shortdesc="Dummy Fence agent for testing">'
-        echo '  <longdesc>dummy description.</longdesc>'
-        echo '  <vendor-url>http://www.example.com</vendor-url>'
-        echo '  <parameters>'
-        echo '    <parameter name="action" unique="0" required="1">'
-        echo '      <getopt mixed="-o, --action=[action]"/>'
-        echo '      <content type="string" default="reboot"/>'
-        echo '      <shortdesc lang="en">Fencing Action</shortdesc>'
-        echo '    </parameter>'
-        echo '    <parameter name="port" unique="0" required="0">'
-        echo '      <getopt mixed="-n, --plug=[id]"/>'
-        echo '      <content type="string"/>'
-        echo '      <shortdesc lang="en">Physical plug number or name of virtual machine</shortdesc>'
-        echo '    </parameter>'
-        echo '  </parameters>'
-        echo '  <actions>'
-        echo '    <action name="on"/>'
-        echo '    <action name="off"/>'
-        echo '    <action name="monitor"/>'
-        echo '    <action name="metadata"/>'
-        echo '  </actions>'
-        echo '</resource-agent>'
-        exit 0;;
-    esac
-    exit 1
-done
-""")
-
-        write_file(SBIN_DIR + "/fence_dummy_sleep", dummy_fence_sleep_agent, executable=True);
-        write_file(SBIN_DIR + "/fence_dummy_monitor", dummy_fence_agent, executable=True);
-
         # If we're in build directory, install agents if not already installed
         if os.path.exists("%s/cts/cts-exec.in" % BUILD_DIR):
 
@@ -573,9 +526,6 @@ done
 
     def cleanup_test_environment(self):
         """ Clean up the host after executing desired tests """
-
-        os.system("rm -f " + SBIN_DIR + "/fence_dummy_monitor")
-        os.system("rm -f " + SBIN_DIR + "/fence_dummy_sleep")
 
         for installed_file in self.installed_files:
             print("Removing %s ..." % (installed_file))
@@ -715,10 +665,12 @@ done
 
         ### stonith start timeout test  ###
         test = self.new_test("stonith_start_timeout", "Force start timeout to occur, verify start failure.")
-        test.add_cmd("-c register_rsc -r \"test_rsc\" -C \"stonith\" -P \"pacemaker\" -T \"fence_dummy_sleep\" "
-                     + self.action_timeout +
-                     "-l \"NEW_EVENT event_type:register rsc_id:test_rsc action:none rc:ok op_status:complete\" ")
-        test.add_cmd("-c exec -r \"test_rsc\" -a \"start\" -t 1000 -w") # -t must be less than self.action_timeout
+        test.add_cmd('-c register_rsc -r test_rsc ' +
+                     '-C stonith -P pacemaker -T fence_dummy ' +
+                     self.action_timeout +
+                     '-l "NEW_EVENT event_type:register rsc_id:test_rsc action:none rc:ok op_status:complete"')
+        test.add_cmd('-c exec -r test_rsc -a start -k monitor_delay -v 30 ' +
+                     '-t 1000 -w') # -t must be less than self.action_timeout
         test.add_cmd('-l "NEW_EVENT event_type:exec_complete rsc_id:test_rsc action:start rc:unknown error op_status:Timed Out" '
                      + self.action_timeout)
         test.add_cmd("-c exec -r test_rsc -a stop " + self.action_timeout +
@@ -1057,8 +1009,8 @@ done
 
         ### get stonith metadata ###
         test = self.new_test("get_stonith_metadata", "Retrieve stonith metadata for a resource")
-        test.add_cmd_check_stdout("-c metadata -C \"stonith\" -P \"pacemaker\" -T \"fence_dummy_monitor\"",
-                                  "resource-agent name=\"fence_dummy_monitor\"")
+        test.add_cmd_check_stdout("-c metadata -C \"stonith\" -P \"pacemaker\" -T \"fence_dummy\"",
+                                  "resource-agent name=\"fence_dummy\"")
 
         ### get metadata ###
         if "systemd" in self.rsc_classes:
@@ -1090,29 +1042,29 @@ done
         test.add_cmd_check_stdout("-c list_agents -C ocf", "", "pacemaker-cts-dummyd@")           ### should not exist
 
         test.add_cmd_check_stdout("-c list_agents -C ocf", "", "pacemaker-cts-dummyd@")           ### should not exist
-        test.add_cmd_check_stdout("-c list_agents -C lsb", "", "fence_dummy_monitor")             ### should not exist
-        test.add_cmd_check_stdout("-c list_agents -C service", "", "fence_dummy_monitor")         ### should not exist
-        test.add_cmd_check_stdout("-c list_agents -C ocf", "", "fence_dummy_monitor")             ### should not exist
+        test.add_cmd_check_stdout("-c list_agents -C lsb", "", "fence_dummy")                     ### should not exist
+        test.add_cmd_check_stdout("-c list_agents -C service", "", "fence_dummy")                 ### should not exist
+        test.add_cmd_check_stdout("-c list_agents -C ocf", "", "fence_dummy")                     ### should not exist
 
         if "systemd" in self.rsc_classes:
             test.add_cmd_check_stdout("-c list_agents ", "pacemaker-cts-dummyd@")             ### systemd ###
             test.add_cmd_check_stdout("-c list_agents -C service", "LSBDummy")
             test.add_cmd_check_stdout("-c list_agents -C systemd", "", "Stateful")            ### should not exist
             test.add_cmd_check_stdout("-c list_agents -C systemd", "pacemaker-cts-dummyd@")
-            test.add_cmd_check_stdout("-c list_agents -C systemd", "", "fence_dummy_monitor") ### should not exist
+            test.add_cmd_check_stdout("-c list_agents -C systemd", "", "fence_dummy")         ### should not exist
 
         if "upstart" in self.rsc_classes:
             test.add_cmd_check_stdout("-c list_agents ", "pacemaker-cts-dummyd")              ### upstart ###
             test.add_cmd_check_stdout("-c list_agents -C service", "LSBDummy")
             test.add_cmd_check_stdout("-c list_agents -C upstart", "", "Stateful")            ### should not exist
             test.add_cmd_check_stdout("-c list_agents -C upstart", "pacemaker-cts-dummyd")
-            test.add_cmd_check_stdout("-c list_agents -C upstart", "", "fence_dummy_monitor") ### should not exist
+            test.add_cmd_check_stdout("-c list_agents -C upstart", "", "fence_dummy")         ### should not exist
 
         if "stonith" in self.rsc_classes:
-            test.add_cmd_check_stdout("-c list_agents -C stonith", "fence_dummy_monitor")     ### stonith ###
+            test.add_cmd_check_stdout("-c list_agents -C stonith", "fence_dummy")             ### stonith ###
             test.add_cmd_check_stdout("-c list_agents -C stonith", "", "pacemaker-cts-dummyd@") ### should not exist
             test.add_cmd_check_stdout("-c list_agents -C stonith", "", "Stateful")            ### should not exist
-            test.add_cmd_check_stdout("-c list_agents ", "fence_dummy_monitor")
+            test.add_cmd_check_stdout("-c list_agents ", "fence_dummy")
 
     def print_list(self):
         """ List all registered tests """
