@@ -23,6 +23,8 @@
 
 #include <internal.h>
 
+#define MAX_STONITH_HISTORY 500
+
 /*!
  * \internal
  * \brief Send a broadcast to all nodes to trigger cleanup or
@@ -77,15 +79,16 @@ stonith_remove_history_entry (gpointer key,
 
 /*!
  * \internal
- * \brief Send out a cleanup broadcast and do a local history-cleanup
+ * \brief Send out a cleanup broadcast or do a local history-cleanup
  *
- * \param[in] request   The request message that triggered cleanup
  * \param[in] target    Cleanup can be limited to certain fence-targets
+ * \param[in] broadcast Send out a cleanup broadcast
  */
 static void
-stonith_fence_history_cleanup(xmlNode *request, const char *target)
+stonith_fence_history_cleanup(const char *target,
+                              gboolean broadcast)
 {
-    if (crm_element_value(request, F_STONITH_CALLID)) {
+    if (broadcast) {
         stonith_send_broadcast_history(NULL,
                                        st_opt_cleanup | st_opt_discard_reply,
                                        target);
@@ -95,6 +98,108 @@ stonith_fence_history_cleanup(xmlNode *request, const char *target)
                              stonith_remove_history_entry,
                              (gpointer) target);
         do_stonith_notify(0, T_STONITH_NOTIFY_HISTORY, 0, NULL);
+    }
+}
+
+/* keeping the length of fence-history within bounds
+ * =================================================
+ *
+ * If things are really running wild a lot of fencing-attempts
+ * might fill up the hash-map, eventually using up a lot
+ * of memory and creating huge history-sync messages.
+ * Before the history being synced across nodes at least
+ * the reboot of a cluster-node helped keeping the
+ * history within bounds even though not in a reliable
+ * manner.
+ *
+ * stonith_remote_op_list isn't sorted for time-stamps
+ * thus it would be kind of expensive to delete e.g.
+ * the oldest entry if it would grow past MAX_STONITH_HISTORY
+ * entries.
+ * It is more efficient to purge MAX_STONITH_HISTORY/2
+ * entries whenever the list grows beyond MAX_STONITH_HISTORY.
+ * (sort for age + purge the MAX_STONITH_HISTORY/2 oldest)
+ * That done on a per-node-base might raise the
+ * probability of large syncs to occur.
+ * Things like introducing a broadcast to purge
+ * MAX_STONITH_HISTORY/2 entries or not sync above a certain
+ * threshold coming to mind ...
+ * Simplest thing though is to purge the full history
+ * throughout the cluster once MAX_STONITH_HISTORY is reached.
+ * On the other hand this leads to purging the history in
+ * situations where it would be handy to have it probably.
+ */
+
+
+static int
+op_time_sort(const void *a_voidp, const void *b_voidp)
+{
+    const remote_fencing_op_t **a = (const remote_fencing_op_t **) a_voidp;
+    const remote_fencing_op_t **b = (const remote_fencing_op_t **) b_voidp;
+    gboolean a_pending = ((*a)->state != st_failed) && ((*a)->state != st_done);
+    gboolean b_pending = ((*b)->state != st_failed) && ((*b)->state != st_done);
+
+    if (a_pending && b_pending) {
+        return 0;
+    } else if (a_pending) {
+        return -1;
+    } else if (b_pending) {
+        return 1;
+    } else if ((*b)->completed == (*a)->completed) {
+        return 0;
+    } else if ((*b)->completed > (*a)->completed) {
+        return 1;
+    }
+
+    return -1;
+}
+
+
+/*!
+ * \internal
+ * \brief Do a local history-trim to MAX_STONITH_HISTORY / 2 entries
+ *        once over MAX_STONITH_HISTORY
+ */
+void
+stonith_fence_history_trim(void)
+{
+    guint num_ops;
+
+    if (!stonith_remote_op_list) {
+        return;
+    }
+    num_ops = g_hash_table_size(stonith_remote_op_list);
+    if (num_ops > MAX_STONITH_HISTORY) {
+        remote_fencing_op_t *ops[num_ops];
+        remote_fencing_op_t *op = NULL;
+        GHashTableIter iter;
+        int i;
+
+        crm_trace("Fencing History growing beyond limit of %d so purge "
+                  "half of failed/successful attempts", MAX_STONITH_HISTORY);
+
+        /* write all ops into an array */
+        i = 0;
+        g_hash_table_iter_init(&iter, stonith_remote_op_list);
+        while (g_hash_table_iter_next(&iter, NULL, (void **)&op)) {
+            ops[i++] = op;
+        }
+        /* run quicksort over the array so that we get pending ops
+         * first and then sorted most recent to oldest
+         */
+        qsort(ops, num_ops, sizeof(remote_fencing_op_t *), op_time_sort);
+        /* purgest oldest half of the history entries */
+        for (i = MAX_STONITH_HISTORY / 2; i < num_ops; i++) {
+            /* keep pending ops even if they shouldn't fill more than
+             * half of our buffer
+             */
+            if ((ops[i]->state == st_failed) || (ops[i]->state == st_done)) {
+                g_hash_table_remove(stonith_remote_op_list, ops[i]->id);
+            }
+        }
+        /* we've just purged valid data from the list so there is no need
+         * to create a notification - if displayed it can stay
+         */
     }
 }
 
@@ -243,7 +348,16 @@ stonith_merge_in_history_list(GHashTable *history)
         updated = TRUE;
         g_hash_table_iter_steal(&iter);
         g_hash_table_insert(stonith_remote_op_list, op->id, op);
+        /* we could trim the history here but if we bail
+         * out after trim we might miss more recent entries
+         * of those that might still be in the list
+         * if we don't bail out trimming once is more
+         * efficient and memory overhead is minimal as
+         * we are just moving pointers from one hash to
+         * another
+         */
     }
+    stonith_fence_history_trim();
     if (updated) {
         do_stonith_notify(0, T_STONITH_NOTIFY_HISTORY, 0, NULL);
     }
@@ -289,7 +403,8 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
         crm_trace("Cleaning up operations on %s in %p", target,
                   stonith_remote_op_list);
 
-        stonith_fence_history_cleanup(msg, target);
+        stonith_fence_history_cleanup(target,
+            crm_element_value(msg, F_STONITH_CALLID) != NULL);
     } else if (options & st_opt_broadcast) {
         if (crm_element_value(msg, F_STONITH_CALLID)) {
             /* this is coming from the stonith-API

@@ -1066,6 +1066,9 @@ create_remote_stonith_op(const char *client, xmlNode * request, gboolean peer)
         do_stonith_notify(0, T_STONITH_NOTIFY_HISTORY, 0, NULL);
     }
 
+    /* safe to trim as long as that doesn't touch pending ops */
+    stonith_fence_history_trim();
+
     return op;
 }
 

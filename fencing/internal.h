@@ -227,6 +227,8 @@ void free_device(gpointer data);
 
 void free_topology_entry(gpointer data);
 
+void stonith_fence_history_trim(void);
+
 bool fencing_peer_active(crm_node_t *peer);
 
 int stonith_manual_ack(xmlNode * msg, remote_fencing_op_t * op);
