@@ -7,7 +7,7 @@ Online: [ rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
  rsc_rhel7-1	(ocf::heartbeat:IPaddr2):	Started rhel7-1 ( UNCLEAN ) 
  container1	(ocf::heartbeat:VirtualDomain):	FAILED rhel7-1 (UNCLEAN)
  container2	(ocf::heartbeat:VirtualDomain):	FAILED rhel7-1 (UNCLEAN)
- Master/Slave Set: lxc-ms-master [lxc-ms]
+ Clone Set: lxc-ms-master [lxc-ms] (promotable)
      Stopped: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 rhel7-5 ]
 
 Transition Summary:
@@ -76,7 +76,7 @@ Containers: [ lxc1:container1 lxc2:container2 ]
  rsc_rhel7-1	(ocf::heartbeat:IPaddr2):	Started rhel7-5 
  container1	(ocf::heartbeat:VirtualDomain):	Started rhel7-2 
  container2	(ocf::heartbeat:VirtualDomain):	Started rhel7-3 
- Master/Slave Set: lxc-ms-master [lxc-ms]
+ Clone Set: lxc-ms-master [lxc-ms] (promotable)
      Masters: [ lxc1 ]
      Slaves: [ lxc2 ]
 

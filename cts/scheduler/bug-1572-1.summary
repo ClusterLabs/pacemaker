@@ -2,7 +2,7 @@
 Current cluster status:
 Online: [ arc-dknightlx arc-tkincaidlx.wsicorp.com ]
 
- Master/Slave Set: ms_drbd_7788 [rsc_drbd_7788]
+ Clone Set: ms_drbd_7788 [rsc_drbd_7788] (promotable)
      Masters: [ arc-tkincaidlx.wsicorp.com ]
      Slaves: [ arc-dknightlx ]
  Resource Group: grp_pgsql_mirror
@@ -75,7 +75,7 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ arc-dknightlx arc-tkincaidlx.wsicorp.com ]
 
- Master/Slave Set: ms_drbd_7788 [rsc_drbd_7788]
+ Clone Set: ms_drbd_7788 [rsc_drbd_7788] (promotable)
      Masters: [ arc-tkincaidlx.wsicorp.com ]
      Stopped: [ arc-dknightlx ]
  Resource Group: grp_pgsql_mirror

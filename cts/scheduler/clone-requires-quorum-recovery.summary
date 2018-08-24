@@ -11,7 +11,7 @@ Online: [ rhel7-1 rhel7-2 rhel7-3 rhel7-4 ]
      dummy-crowd	(ocf::pacemaker:Dummy):	 ORPHANED Started rhel7-5 (UNCLEAN)
      Started: [ rhel7-1 rhel7-4 ]
      Stopped: [ rhel7-2 rhel7-3 ]
- Master/Slave Set: dummy-boss-clone [dummy-boss]
+ Clone Set: dummy-boss-clone [dummy-boss] (promotable)
      Masters: [ rhel7-3 ]
      Slaves: [ rhel7-2 rhel7-4 ]
 
@@ -42,7 +42,7 @@ OFFLINE: [ rhel7-5 ]
  dummy-solo	(ocf::pacemaker:Dummy):	Started rhel7-3
  Clone Set: dummy-crowd-clone [dummy-crowd]
      Started: [ rhel7-1 rhel7-2 rhel7-4 ]
- Master/Slave Set: dummy-boss-clone [dummy-boss]
+ Clone Set: dummy-boss-clone [dummy-boss] (promotable)
      Masters: [ rhel7-3 ]
      Slaves: [ rhel7-2 rhel7-4 ]
 

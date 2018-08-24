@@ -13,7 +13,7 @@ Containers: [ pgsr01:prmDB1 ]
  Resource Group: master-group
      vip-master	(ocf::heartbeat:Dummy):	FAILED pgsr02
      vip-rep	(ocf::heartbeat:Dummy):	FAILED pgsr02
- Master/Slave Set: msPostgresql [pgsql]
+ Clone Set: msPostgresql [pgsql] (promotable)
      Masters: [ pgsr01 ]
      Stopped: [ bl460g8n3 bl460g8n4 ]
 
@@ -97,7 +97,7 @@ Containers: [ pgsr01:prmDB1 ]
  Resource Group: master-group
      vip-master	(ocf::heartbeat:Dummy):	FAILED[ pgsr01 pgsr02 ]
      vip-rep	(ocf::heartbeat:Dummy):	FAILED[ pgsr01 pgsr02 ]
- Master/Slave Set: msPostgresql [pgsql]
+ Clone Set: msPostgresql [pgsql] (promotable)
      Masters: [ pgsr01 ]
      Stopped: [ bl460g8n3 bl460g8n4 ]
 

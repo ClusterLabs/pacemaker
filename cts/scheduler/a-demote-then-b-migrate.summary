@@ -2,7 +2,7 @@
 Current cluster status:
 Online: [ node1 node2 ]
 
- Master/Slave Set: ms1 [rsc1]
+ Clone Set: ms1 [rsc1] (promotable)
      Masters: [ node1 ]
      Slaves: [ node2 ]
  rsc2	(ocf::pacemaker:Dummy):	Started node1 
@@ -49,7 +49,7 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ node1 node2 ]
 
- Master/Slave Set: ms1 [rsc1]
+ Clone Set: ms1 [rsc1] (promotable)
      Masters: [ node2 ]
      Slaves: [ node1 ]
  rsc2	(ocf::pacemaker:Dummy):	Started node2 

@@ -4,7 +4,7 @@ Current cluster status:
 Online: [ vbox4 ]
 OFFLINE: [ vbox3 ]
 
- Master/Slave Set: drbd [drbd0]
+ Clone Set: drbd [drbd0] (promotable)
      Stopped: [ vbox3 vbox4 ]
  Clone Set: cman_clone [cman]
      Stopped: [ vbox3 vbox4 ]
@@ -44,7 +44,7 @@ Revised cluster status:
 Online: [ vbox4 ]
 OFFLINE: [ vbox3 ]
 
- Master/Slave Set: drbd [drbd0]
+ Clone Set: drbd [drbd0] (promotable)
      Slaves: [ vbox4 ]
      Stopped: [ vbox3 ]
  Clone Set: cman_clone [cman]

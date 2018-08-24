@@ -7,7 +7,7 @@ Online: [ cxa1 cxb1 ]
  cyrus_syslogd	(ocf::heartbeat:syslogd):	Stopped 
  cyrus_filesys	(ocf::heartbeat:Filesystem):	Stopped 
  cyrus_volgroup	(ocf::heartbeat:VolGroup):	Stopped 
- Master/Slave Set: cyrus_drbd [cyrus_drbd_node]
+ Clone Set: cyrus_drbd [cyrus_drbd_node] (promotable)
      Masters: [ cxa1 ]
      Slaves: [ cxb1 ]
  named_address	(ocf::heartbeat:IPaddr2):	Started cxa1
@@ -15,7 +15,7 @@ Online: [ cxa1 cxb1 ]
  named_volgroup	(ocf::heartbeat:VolGroup):	Stopped 
  named_daemon	(ocf::heartbeat:recursor):	Stopped 
  named_syslogd	(ocf::heartbeat:syslogd):	Stopped 
- Master/Slave Set: named_drbd [named_drbd_node]
+ Clone Set: named_drbd [named_drbd_node] (promotable)
      Slaves: [ cxa1 cxb1 ]
  Clone Set: pingd_clone [pingd_node]
      Started: [ cxa1 cxb1 ]
@@ -51,7 +51,7 @@ Online: [ cxa1 cxb1 ]
  cyrus_syslogd	(ocf::heartbeat:syslogd):	Stopped 
  cyrus_filesys	(ocf::heartbeat:Filesystem):	Stopped 
  cyrus_volgroup	(ocf::heartbeat:VolGroup):	Stopped 
- Master/Slave Set: cyrus_drbd [cyrus_drbd_node]
+ Clone Set: cyrus_drbd [cyrus_drbd_node] (promotable)
      Masters: [ cxa1 ]
      Slaves: [ cxb1 ]
  named_address	(ocf::heartbeat:IPaddr2):	Started cxb1
@@ -59,7 +59,7 @@ Online: [ cxa1 cxb1 ]
  named_volgroup	(ocf::heartbeat:VolGroup):	Stopped 
  named_daemon	(ocf::heartbeat:recursor):	Stopped 
  named_syslogd	(ocf::heartbeat:syslogd):	Stopped 
- Master/Slave Set: named_drbd [named_drbd_node]
+ Clone Set: named_drbd [named_drbd_node] (promotable)
      Masters: [ cxb1 ]
      Slaves: [ cxa1 ]
  Clone Set: pingd_clone [pingd_node]

@@ -2,10 +2,10 @@
 Current cluster status:
 Online: [ sles236 sles238 ]
 
- Master/Slave Set: ms-drbd0 [drbd0]
+ Clone Set: ms-drbd0 [drbd0] (promotable)
      Masters: [ sles236 ]
      Stopped: [ sles238 ]
- Master/Slave Set: ms-drbd1 [drbd1]
+ Clone Set: ms-drbd1 [drbd1] (promotable)
      Masters: [ sles236 ]
      Slaves: [ sles238 ]
 
@@ -27,10 +27,10 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ sles236 sles238 ]
 
- Master/Slave Set: ms-drbd0 [drbd0]
+ Clone Set: ms-drbd0 [drbd0] (promotable)
      Masters: [ sles236 ]
      Slaves: [ sles238 ]
- Master/Slave Set: ms-drbd1 [drbd1]
+ Clone Set: ms-drbd1 [drbd1] (promotable)
      Masters: [ sles236 ]
      Slaves: [ sles238 ]
 

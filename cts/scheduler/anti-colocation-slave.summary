@@ -3,7 +3,7 @@ Current cluster status:
 Online: [ sle12sp2-1 sle12sp2-2 ]
 
  st_sbd	(stonith:external/sbd):	Started sle12sp2-1 
- Master/Slave Set: ms1 [state1]
+ Clone Set: ms1 [state1] (promotable)
      Masters: [ sle12sp2-1 ]
      Slaves: [ sle12sp2-2 ]
  dummy1	(ocf::pacemaker:Dummy):	Started sle12sp2-1 
@@ -28,7 +28,7 @@ Revised cluster status:
 Online: [ sle12sp2-1 sle12sp2-2 ]
 
  st_sbd	(stonith:external/sbd):	Started sle12sp2-1 
- Master/Slave Set: ms1 [state1]
+ Clone Set: ms1 [state1] (promotable)
      Masters: [ sle12sp2-2 ]
      Slaves: [ sle12sp2-1 ]
  dummy1	(ocf::pacemaker:Dummy):	Started sle12sp2-2 

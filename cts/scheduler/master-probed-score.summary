@@ -3,7 +3,7 @@
 Current cluster status:
 Online: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.edu ]
 
- Master/Slave Set: AdminClone [AdminDrbd]
+ Clone Set: AdminClone [AdminDrbd] (promotable)
      Stopped: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.edu ]
  CronAmbientTemperature	(ocf::heartbeat:symlink):	Stopped 
  StonithHypatia	(stonith:fence_nut):	Stopped 
@@ -291,7 +291,7 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.edu ]
 
- Master/Slave Set: AdminClone [AdminDrbd]
+ Clone Set: AdminClone [AdminDrbd] (promotable)
      Masters: [ hypatia-corosync.nevis.columbia.edu orestes-corosync.nevis.columbia.edu ]
  CronAmbientTemperature	(ocf::heartbeat:symlink):	Started hypatia-corosync.nevis.columbia.edu
  StonithHypatia	(stonith:fence_nut):	Started orestes-corosync.nevis.columbia.edu

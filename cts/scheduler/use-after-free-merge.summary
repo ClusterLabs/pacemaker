@@ -7,7 +7,7 @@ Online: [ hex-13 hex-14 ]
  Resource Group: g0
      d0	(ocf::heartbeat:Dummy):	Stopped ( disabled ) 
      d1	(ocf::heartbeat:Dummy):	Stopped ( disabled ) 
- Master/Slave Set: ms0 [s0]
+ Clone Set: ms0 [s0] (promotable)
      Stopped: [ hex-13 hex-14 ]
 
 Transition Summary:
@@ -37,6 +37,6 @@ Online: [ hex-13 hex-14 ]
  Resource Group: g0
      d0	(ocf::heartbeat:Dummy):	Stopped ( disabled ) 
      d1	(ocf::heartbeat:Dummy):	Stopped ( disabled ) 
- Master/Slave Set: ms0 [s0]
+ Clone Set: ms0 [s0] (promotable)
      Slaves: [ hex-13 hex-14 ]
 

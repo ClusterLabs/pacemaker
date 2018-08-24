@@ -15,7 +15,7 @@ Online: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
  migrator	(ocf::pacemaker:Dummy):	Started pcmk-4
  Clone Set: Connectivity [ping-1]
      Started: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
- Master/Slave Set: master-1 [stateful-1]
+ Clone Set: master-1 [stateful-1] (promotable)
      stateful-1	(ocf::pacemaker:Stateful):	FAILED pcmk-1 
      Slaves: [ pcmk-2 pcmk-3 pcmk-4 ]
 
@@ -68,7 +68,7 @@ Online: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
  migrator	(ocf::pacemaker:Dummy):	Started pcmk-4
  Clone Set: Connectivity [ping-1]
      Started: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]
- Master/Slave Set: master-1 [stateful-1]
+ Clone Set: master-1 [stateful-1] (promotable)
      Masters: [ pcmk-2 ]
      Slaves: [ pcmk-1 pcmk-3 pcmk-4 ]
 

@@ -371,7 +371,6 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
     char *list_text = NULL;
     char *child_text = NULL;
     char *stopped_list = NULL;
-    const char *type = "Clone";
 
     GListPtr master_list = NULL;
     GListPtr started_list = NULL;
@@ -393,12 +392,9 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
 
     child_text = crm_concat(pre_text, "   ", ' ');
 
-    if (is_set(rsc->flags, pe_rsc_promotable)) {
-        type = "Master/Slave";
-    }
-
-    status_print("%s%s Set: %s [%s]%s%s",
-                 pre_text ? pre_text : "", type, rsc->id, ID(clone_data->xml_obj_child),
+    status_print("%sClone Set: %s [%s]%s%s%s",
+                 pre_text ? pre_text : "", rsc->id, ID(clone_data->xml_obj_child),
+                 is_set(rsc->flags, pe_rsc_promotable) ? " (promotable)" : "",
                  is_set(rsc->flags, pe_rsc_unique) ? " (unique)" : "",
                  is_set(rsc->flags, pe_rsc_managed) ? "" : " (unmanaged)");
 

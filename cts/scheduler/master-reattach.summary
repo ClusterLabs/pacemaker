@@ -2,7 +2,7 @@
 Current cluster status:
 Online: [ dktest1 dktest2 ]
 
- Master/Slave Set: ms-drbd1 [drbd1] (unmanaged)
+ Clone Set: ms-drbd1 [drbd1] (promotable) (unmanaged)
      drbd1	(ocf::heartbeat:drbd):	Master dktest1 ( unmanaged ) 
      drbd1	(ocf::heartbeat:drbd):	Slave dktest2 ( unmanaged ) 
  Resource Group: apache
@@ -22,7 +22,7 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ dktest1 dktest2 ]
 
- Master/Slave Set: ms-drbd1 [drbd1] (unmanaged)
+ Clone Set: ms-drbd1 [drbd1] (promotable) (unmanaged)
      drbd1	(ocf::heartbeat:drbd):	Master dktest1 ( unmanaged ) 
      drbd1	(ocf::heartbeat:drbd):	Slave dktest2 ( unmanaged ) 
  Resource Group: apache

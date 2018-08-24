@@ -13,7 +13,7 @@ RemoteOnline: [ remote1 ]
  migrator	(ocf::pacemaker:Dummy):	Started 18node1 
  Clone Set: Connectivity [ping-1]
      Started: [ 18node1 18node3 remote1 ]
- Master/Slave Set: master-1 [stateful-1]
+ Clone Set: master-1 [stateful-1] (promotable)
      Masters: [ 18node1 ]
      Slaves: [ 18node3 ]
      Stopped: [ 18node2 ]
@@ -56,7 +56,7 @@ RemoteOFFLINE: [ remote1 ]
  Clone Set: Connectivity [ping-1]
      Started: [ 18node1 18node3 ]
      Stopped: [ 18node2 ]
- Master/Slave Set: master-1 [stateful-1]
+ Clone Set: master-1 [stateful-1] (promotable)
      Masters: [ 18node1 ]
      Slaves: [ 18node3 ]
      Stopped: [ 18node2 ]

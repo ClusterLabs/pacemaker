@@ -6,7 +6,7 @@ Online: [ bl460g1n13 bl460g1n14 ]
      dummy01	(ocf::pacemaker:Dummy):	FAILED bl460g1n13 
      dummy02	(ocf::pacemaker:Dummy):	Started bl460g1n13
      dummy03	(ocf::pacemaker:Dummy):	Stopped 
- Master/Slave Set: msDRBD [prmDRBD]
+ Clone Set: msDRBD [prmDRBD] (promotable)
      Masters: [ bl460g1n13 ]
      Slaves: [ bl460g1n14 ]
 
@@ -65,7 +65,7 @@ Online: [ bl460g1n13 bl460g1n14 ]
      dummy01	(ocf::pacemaker:Dummy):	Started bl460g1n14
      dummy02	(ocf::pacemaker:Dummy):	Started bl460g1n14
      dummy03	(ocf::pacemaker:Dummy):	Started bl460g1n14
- Master/Slave Set: msDRBD [prmDRBD]
+ Clone Set: msDRBD [prmDRBD] (promotable)
      Masters: [ bl460g1n14 ]
      Slaves: [ bl460g1n13 ]
 

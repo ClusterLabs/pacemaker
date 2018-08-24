@@ -3,7 +3,7 @@ Current cluster status:
 Online: [ dktest1sles10 dktest2sles10 ]
 
  stonith-1	(stonith:dummy):	Stopped 
- Master/Slave Set: ms-drbd1 [drbd1]
+ Clone Set: ms-drbd1 [drbd1] (promotable)
      Masters: [ dktest2sles10 ]
      Stopped: [ dktest1sles10 ]
  testip	(ocf::heartbeat:IPaddr2):	Started dktest2sles10
@@ -53,7 +53,7 @@ Revised cluster status:
 Online: [ dktest1sles10 dktest2sles10 ]
 
  stonith-1	(stonith:dummy):	Started dktest1sles10
- Master/Slave Set: ms-drbd1 [drbd1]
+ Clone Set: ms-drbd1 [drbd1] (promotable)
      Slaves: [ dktest1sles10 ]
      Stopped: [ dktest2sles10 ]
  testip	(ocf::heartbeat:IPaddr2):	Stopped 

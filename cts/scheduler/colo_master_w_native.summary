@@ -3,7 +3,7 @@ Current cluster status:
 Online: [ node1 node2 ]
 
  A	(ocf::pacemaker:Dummy):	Started node1
- Master/Slave Set: MS_RSC [MS_RSC_NATIVE]
+ Clone Set: MS_RSC [MS_RSC_NATIVE] (promotable)
      Masters: [ node2 ]
      Slaves: [ node1 ]
 
@@ -41,7 +41,7 @@ Revised cluster status:
 Online: [ node1 node2 ]
 
  A	(ocf::pacemaker:Dummy):	Started node1
- Master/Slave Set: MS_RSC [MS_RSC_NATIVE]
+ Clone Set: MS_RSC [MS_RSC_NATIVE] (promotable)
      Masters: [ node1 ]
      Slaves: [ node2 ]
 

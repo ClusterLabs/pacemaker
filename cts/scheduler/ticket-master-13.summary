@@ -3,7 +3,7 @@ Current cluster status:
 Online: [ node1 node2 ]
 
  rsc_stonith	(stonith:null):	Started node1
- Master/Slave Set: ms1 [rsc1]
+ Clone Set: ms1 [rsc1] (promotable)
      Stopped: [ node1 node2 ]
 
 Transition Summary:
@@ -14,6 +14,6 @@ Revised cluster status:
 Online: [ node1 node2 ]
 
  rsc_stonith	(stonith:null):	Started node1
- Master/Slave Set: ms1 [rsc1]
+ Clone Set: ms1 [rsc1] (promotable)
      Stopped: [ node1 node2 ]
 

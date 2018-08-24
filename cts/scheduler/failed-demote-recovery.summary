@@ -5,7 +5,7 @@ Online: [ fastvm-rhel-7-4-95 fastvm-rhel-7-4-96 ]
 
  fence-fastvm-rhel-7-4-95	(stonith:fence_xvm):	Started fastvm-rhel-7-4-96
  fence-fastvm-rhel-7-4-96	(stonith:fence_xvm):	Started fastvm-rhel-7-4-95
- Master/Slave Set: DB2_HADR-master [DB2_HADR]
+ Clone Set: DB2_HADR-master [DB2_HADR] (promotable)
      DB2_HADR	(ocf::heartbeat:db2):	FAILED fastvm-rhel-7-4-96
      Slaves: [ fastvm-rhel-7-4-95 ]
 
@@ -42,6 +42,6 @@ Online: [ fastvm-rhel-7-4-95 fastvm-rhel-7-4-96 ]
 
  fence-fastvm-rhel-7-4-95	(stonith:fence_xvm):	Started fastvm-rhel-7-4-96
  fence-fastvm-rhel-7-4-96	(stonith:fence_xvm):	Started fastvm-rhel-7-4-95
- Master/Slave Set: DB2_HADR-master [DB2_HADR]
+ Clone Set: DB2_HADR-master [DB2_HADR] (promotable)
      Slaves: [ fastvm-rhel-7-4-95 fastvm-rhel-7-4-96 ]
 

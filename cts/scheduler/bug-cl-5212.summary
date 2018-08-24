@@ -10,7 +10,7 @@ Online: [ srv03 ]
      prmStonith2-1	(stonith:external/ssh):	Started srv01 (UNCLEAN)
  Resource Group: grpStonith3
      prmStonith3-1	(stonith:external/ssh):	Started srv01 (UNCLEAN)
- Master/Slave Set: msPostgresql [pgsql]
+ Clone Set: msPostgresql [pgsql] (promotable)
      pgsql	(ocf::pacemaker:Stateful):	Slave srv02 ( UNCLEAN ) 
      pgsql	(ocf::pacemaker:Stateful):	Master srv01 (UNCLEAN)
      Slaves: [ srv03 ]
@@ -56,7 +56,7 @@ Online: [ srv03 ]
      prmStonith2-1	(stonith:external/ssh):	Started srv01 (UNCLEAN)
  Resource Group: grpStonith3
      prmStonith3-1	(stonith:external/ssh):	Started srv01 (UNCLEAN)
- Master/Slave Set: msPostgresql [pgsql]
+ Clone Set: msPostgresql [pgsql] (promotable)
      pgsql	(ocf::pacemaker:Stateful):	Slave srv02 ( UNCLEAN ) 
      pgsql	(ocf::pacemaker:Stateful):	Master srv01 (UNCLEAN)
      Slaves: [ srv03 ]

@@ -2,7 +2,7 @@
 Current cluster status:
 Online: [ sles11-a sles11-b ]
 
- Master/Slave Set: ms_res_Stateful_1 [res_Stateful_1]
+ Clone Set: ms_res_Stateful_1 [res_Stateful_1] (promotable)
      Masters: [ sles11-a sles11-b ]
 
 Transition Summary:
@@ -16,7 +16,7 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ sles11-a sles11-b ]
 
- Master/Slave Set: ms_res_Stateful_1 [res_Stateful_1]
+ Clone Set: ms_res_Stateful_1 [res_Stateful_1] (promotable)
      Masters: [ sles11-b ]
      Slaves: [ sles11-a ]
 

@@ -17,21 +17,21 @@ Online: [ s01-0 s01-1 ]
  Resource Group: iscsi-pool-1-vips
      vip-237	(ocf::heartbeat:IPaddr2):	Started s01-1
      vip-238	(ocf::heartbeat:IPaddr2):	Started s01-1
- Master/Slave Set: ms-drbd-pool-0 [drbd-pool-0]
+ Clone Set: ms-drbd-pool-0 [drbd-pool-0] (promotable)
      Masters: [ s01-0 ]
      Slaves: [ s01-1 ]
- Master/Slave Set: ms-drbd-pool-1 [drbd-pool-1]
+ Clone Set: ms-drbd-pool-1 [drbd-pool-1] (promotable)
      Masters: [ s01-1 ]
      Slaves: [ s01-0 ]
- Master/Slave Set: ms-iscsi-pool-0-vips-fw [iscsi-pool-0-vips-fw]
+ Clone Set: ms-iscsi-pool-0-vips-fw [iscsi-pool-0-vips-fw] (promotable)
      Masters: [ s01-0 ]
      Slaves: [ s01-1 ]
- Master/Slave Set: ms-iscsi-pool-1-vips-fw [iscsi-pool-1-vips-fw]
+ Clone Set: ms-iscsi-pool-1-vips-fw [iscsi-pool-1-vips-fw] (promotable)
      Masters: [ s01-1 ]
      Slaves: [ s01-0 ]
  Clone Set: cl-o2cb [o2cb]
      Stopped (disabled): [ s01-0 s01-1 ]
- Master/Slave Set: ms-drbd-s01-service [drbd-s01-service]
+ Clone Set: ms-drbd-s01-service [drbd-s01-service] (promotable)
      Masters: [ s01-0 s01-1 ]
  Clone Set: cl-s01-service-fs [s01-service-fs]
      Started: [ s01-0 s01-1 ]
@@ -42,7 +42,7 @@ Online: [ s01-0 s01-1 ]
  Resource Group: http-server
      vip-233	(ocf::heartbeat:IPaddr2):	Started s01-0
      nginx	(lsb:nginx):	Stopped ( disabled ) 
- Master/Slave Set: ms-drbd-s01-logs [drbd-s01-logs]
+ Clone Set: ms-drbd-s01-logs [drbd-s01-logs] (promotable)
      Masters: [ s01-0 s01-1 ]
  Clone Set: cl-s01-logs-fs [s01-logs-fs]
      Started: [ s01-0 s01-1 ]
@@ -64,26 +64,26 @@ Online: [ s01-0 s01-1 ]
  Resource Group: iscsi-vds-dom0-stateless-0-vips
      vip-227	(ocf::heartbeat:IPaddr2):	Stopped 
      vip-228	(ocf::heartbeat:IPaddr2):	Stopped 
- Master/Slave Set: ms-drbd-vds-dom0-stateless-0 [drbd-vds-dom0-stateless-0]
+ Clone Set: ms-drbd-vds-dom0-stateless-0 [drbd-vds-dom0-stateless-0] (promotable)
      Masters: [ s01-0 ]
      Slaves: [ s01-1 ]
- Master/Slave Set: ms-iscsi-vds-dom0-stateless-0-vips-fw [iscsi-vds-dom0-stateless-0-vips-fw]
+ Clone Set: ms-iscsi-vds-dom0-stateless-0-vips-fw [iscsi-vds-dom0-stateless-0-vips-fw] (promotable)
      Slaves: [ s01-0 s01-1 ]
  Clone Set: cl-dlm [dlm]
      Started: [ s01-0 s01-1 ]
- Master/Slave Set: ms-drbd-vds-tftpboot [drbd-vds-tftpboot]
+ Clone Set: ms-drbd-vds-tftpboot [drbd-vds-tftpboot] (promotable)
      Masters: [ s01-0 s01-1 ]
  Clone Set: cl-vds-tftpboot-fs [vds-tftpboot-fs]
      Stopped (disabled): [ s01-0 s01-1 ]
  Clone Set: cl-gfs2 [gfs2]
      Started: [ s01-0 s01-1 ]
- Master/Slave Set: ms-drbd-vds-http [drbd-vds-http]
+ Clone Set: ms-drbd-vds-http [drbd-vds-http] (promotable)
      Masters: [ s01-0 s01-1 ]
  Clone Set: cl-vds-http-fs [vds-http-fs]
      Started: [ s01-0 s01-1 ]
  Clone Set: cl-clvmd [clvmd]
      Started: [ s01-0 s01-1 ]
- Master/Slave Set: ms-drbd-s01-vm-data [drbd-s01-vm-data]
+ Clone Set: ms-drbd-s01-vm-data [drbd-s01-vm-data] (promotable)
      Masters: [ s01-0 s01-1 ]
  Clone Set: cl-s01-vm-data-metadata-fs [s01-vm-data-metadata-fs]
      Started: [ s01-0 s01-1 ]
@@ -125,21 +125,21 @@ Online: [ s01-0 s01-1 ]
  Resource Group: iscsi-pool-1-vips
      vip-237	(ocf::heartbeat:IPaddr2):	Started s01-1
      vip-238	(ocf::heartbeat:IPaddr2):	Started s01-1
- Master/Slave Set: ms-drbd-pool-0 [drbd-pool-0]
+ Clone Set: ms-drbd-pool-0 [drbd-pool-0] (promotable)
      Masters: [ s01-0 ]
      Slaves: [ s01-1 ]
- Master/Slave Set: ms-drbd-pool-1 [drbd-pool-1]
+ Clone Set: ms-drbd-pool-1 [drbd-pool-1] (promotable)
      Masters: [ s01-1 ]
      Slaves: [ s01-0 ]
- Master/Slave Set: ms-iscsi-pool-0-vips-fw [iscsi-pool-0-vips-fw]
+ Clone Set: ms-iscsi-pool-0-vips-fw [iscsi-pool-0-vips-fw] (promotable)
      Masters: [ s01-0 ]
      Slaves: [ s01-1 ]
- Master/Slave Set: ms-iscsi-pool-1-vips-fw [iscsi-pool-1-vips-fw]
+ Clone Set: ms-iscsi-pool-1-vips-fw [iscsi-pool-1-vips-fw] (promotable)
      Masters: [ s01-1 ]
      Slaves: [ s01-0 ]
  Clone Set: cl-o2cb [o2cb]
      Stopped (disabled): [ s01-0 s01-1 ]
- Master/Slave Set: ms-drbd-s01-service [drbd-s01-service]
+ Clone Set: ms-drbd-s01-service [drbd-s01-service] (promotable)
      Masters: [ s01-0 s01-1 ]
  Clone Set: cl-s01-service-fs [s01-service-fs]
      Started: [ s01-0 s01-1 ]
@@ -150,7 +150,7 @@ Online: [ s01-0 s01-1 ]
  Resource Group: http-server
      vip-233	(ocf::heartbeat:IPaddr2):	Started s01-0
      nginx	(lsb:nginx):	Stopped ( disabled ) 
- Master/Slave Set: ms-drbd-s01-logs [drbd-s01-logs]
+ Clone Set: ms-drbd-s01-logs [drbd-s01-logs] (promotable)
      Masters: [ s01-0 s01-1 ]
  Clone Set: cl-s01-logs-fs [s01-logs-fs]
      Started: [ s01-0 s01-1 ]
@@ -172,26 +172,26 @@ Online: [ s01-0 s01-1 ]
  Resource Group: iscsi-vds-dom0-stateless-0-vips
      vip-227	(ocf::heartbeat:IPaddr2):	Stopped 
      vip-228	(ocf::heartbeat:IPaddr2):	Stopped 
- Master/Slave Set: ms-drbd-vds-dom0-stateless-0 [drbd-vds-dom0-stateless-0]
+ Clone Set: ms-drbd-vds-dom0-stateless-0 [drbd-vds-dom0-stateless-0] (promotable)
      Masters: [ s01-0 ]
      Slaves: [ s01-1 ]
- Master/Slave Set: ms-iscsi-vds-dom0-stateless-0-vips-fw [iscsi-vds-dom0-stateless-0-vips-fw]
+ Clone Set: ms-iscsi-vds-dom0-stateless-0-vips-fw [iscsi-vds-dom0-stateless-0-vips-fw] (promotable)
      Slaves: [ s01-0 s01-1 ]
  Clone Set: cl-dlm [dlm]
      Started: [ s01-0 s01-1 ]
- Master/Slave Set: ms-drbd-vds-tftpboot [drbd-vds-tftpboot]
+ Clone Set: ms-drbd-vds-tftpboot [drbd-vds-tftpboot] (promotable)
      Masters: [ s01-0 s01-1 ]
  Clone Set: cl-vds-tftpboot-fs [vds-tftpboot-fs]
      Stopped (disabled): [ s01-0 s01-1 ]
  Clone Set: cl-gfs2 [gfs2]
      Started: [ s01-0 s01-1 ]
- Master/Slave Set: ms-drbd-vds-http [drbd-vds-http]
+ Clone Set: ms-drbd-vds-http [drbd-vds-http] (promotable)
      Masters: [ s01-0 s01-1 ]
  Clone Set: cl-vds-http-fs [vds-http-fs]
      Started: [ s01-0 s01-1 ]
  Clone Set: cl-clvmd [clvmd]
      Started: [ s01-0 s01-1 ]
- Master/Slave Set: ms-drbd-s01-vm-data [drbd-s01-vm-data]
+ Clone Set: ms-drbd-s01-vm-data [drbd-s01-vm-data] (promotable)
      Masters: [ s01-0 s01-1 ]
  Clone Set: cl-s01-vm-data-metadata-fs [s01-vm-data-metadata-fs]
      Started: [ s01-0 s01-1 ]

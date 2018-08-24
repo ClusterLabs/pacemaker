@@ -954,7 +954,7 @@ Set 'dummy' option: id=dummy-instance_attributes-delay set=dummy-instance_attrib
 * Passed: crm_resource   - List the configured resources
 =#=#=#= Begin test: Require a destination when migrating a resource that is stopped =#=#=#=
 Resource 'dummy' not moved: active in 0 locations.
-You can prevent 'dummy' from running on a specific location with: --ban --node <name>
+To prevent 'dummy' from running on a specific location, specify a node.
 Error performing operation: Invalid argument
 =#=#=#= Current cib after: Require a destination when migrating a resource that is stopped =#=#=#=
 <cib epoch="17" num_updates="0" admin_epoch="1">
@@ -1200,9 +1200,8 @@ Error performing operation: Situation already as requested
 * Passed: crm_resource   - Try to move a resource to its existing location
 =#=#=#= Begin test: Move a resource from its existing location =#=#=#=
 WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score of -INFINITY for resource dummy on node1.
-	This will prevent dummy from running on node1 until the constraint is removed using the 'crm_resource --clear' command or manually with cibadmin
+	This will prevent dummy from running on node1 until the constraint is removed using the clear option or by editing the CIB with an appropriate tool
 	This will be the case even if node1 is the last node in the cluster
-	This message can be disabled with --quiet
 =#=#=#= Current cib after: Move a resource from its existing location =#=#=#=
 <cib epoch="19" num_updates="0" admin_epoch="1">
   <configuration>
@@ -1892,9 +1891,8 @@ Online: [ node1 node2 node3 ]
 * Passed: crm_simulate   - Create two more nodes and bring them online
 =#=#=#= Begin test: Ban dummy from node1 =#=#=#=
 WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score of -INFINITY for resource dummy on node1.
-	This will prevent dummy from running on node1 until the constraint is removed using the 'crm_resource --clear' command or manually with cibadmin
+	This will prevent dummy from running on node1 until the constraint is removed using the clear option or by editing the CIB with an appropriate tool
 	This will be the case even if node1 is the last node in the cluster
-	This message can be disabled with --quiet
 =#=#=#= Current cib after: Ban dummy from node1 =#=#=#=
 <cib epoch="23" num_updates="0" admin_epoch="1">
   <configuration>
@@ -1977,9 +1975,8 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
 * Passed: crm_resource   - Ban dummy from node1
 =#=#=#= Begin test: Ban dummy from node2 =#=#=#=
 WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node2' with a score of -INFINITY for resource dummy on node2.
-	This will prevent dummy from running on node2 until the constraint is removed using the 'crm_resource --clear' command or manually with cibadmin
+	This will prevent dummy from running on node2 until the constraint is removed using the clear option or by editing the CIB with an appropriate tool
 	This will be the case even if node2 is the last node in the cluster
-	This message can be disabled with --quiet
 =#=#=#= Current cib after: Ban dummy from node2 =#=#=#=
 <cib epoch="24" num_updates="0" admin_epoch="1">
   <configuration>

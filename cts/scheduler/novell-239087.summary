@@ -3,7 +3,7 @@ Current cluster status:
 Online: [ xen-1 xen-2 ]
 
  fs_1	(ocf::heartbeat:Filesystem):	Started xen-1
- Master/Slave Set: ms-drbd0 [drbd0]
+ Clone Set: ms-drbd0 [drbd0] (promotable)
      Masters: [ xen-1 ]
      Slaves: [ xen-2 ]
 
@@ -15,7 +15,7 @@ Revised cluster status:
 Online: [ xen-1 xen-2 ]
 
  fs_1	(ocf::heartbeat:Filesystem):	Started xen-1
- Master/Slave Set: ms-drbd0 [drbd0]
+ Clone Set: ms-drbd0 [drbd0] (promotable)
      Masters: [ xen-1 ]
      Slaves: [ xen-2 ]
 

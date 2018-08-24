@@ -2,7 +2,7 @@
 Current cluster status:
 Online: [ node-a node-b ]
 
- Master/Slave Set: ms-sf [group] (unique)
+ Clone Set: ms-sf [group] (promotable) (unique)
      Resource Group: group:0
          stateful-1:0	(ocf::heartbeat:Stateful):	Slave node-b 
          stateful-2:0	(ocf::heartbeat:Stateful):	Slave node-b 
@@ -46,7 +46,7 @@ Executing cluster transition:
 Revised cluster status:
 Online: [ node-a node-b ]
 
- Master/Slave Set: ms-sf [group] (unique)
+ Clone Set: ms-sf [group] (promotable) (unique)
      Resource Group: group:0
          stateful-1:0	(ocf::heartbeat:Stateful):	Slave node-b 
          stateful-2:0	(ocf::heartbeat:Stateful):	Slave node-b 

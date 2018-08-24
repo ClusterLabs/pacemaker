@@ -3,7 +3,7 @@ Current cluster status:
 Node node1: standby
 Online: [ node2 ]
 
- Master/Slave Set: ms-rsc [rsc]
+ Clone Set: ms-rsc [rsc] (promotable)
      Masters: [ node1 ]
      Slaves: [ node2 ]
  rsc1	(ocf::pacemaker:Dummy):	Started node1
@@ -39,7 +39,7 @@ Revised cluster status:
 Node node1: standby
 Online: [ node2 ]
 
- Master/Slave Set: ms-rsc [rsc]
+ Clone Set: ms-rsc [rsc] (promotable)
      Masters: [ node2 ]
      Stopped: [ node1 ]
  rsc1	(ocf::pacemaker:Dummy):	Started node2

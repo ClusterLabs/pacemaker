@@ -6,13 +6,13 @@ Online: [ ha1.test.anchor.net.au ha2.test.anchor.net.au ]
  child1-service	(ocf::pacemaker:Dummy):	Started ha2.test.anchor.net.au ( disabled ) 
  child2-service	(ocf::pacemaker:Dummy):	Started ha2.test.anchor.net.au 
  parent-service	(ocf::pacemaker:Dummy):	Started ha2.test.anchor.net.au 
- Master/Slave Set: child1 [stateful-child1]
+ Clone Set: child1 [stateful-child1] (promotable)
      Masters: [ ha2.test.anchor.net.au ]
      Slaves: [ ha1.test.anchor.net.au ]
- Master/Slave Set: child2 [stateful-child2]
+ Clone Set: child2 [stateful-child2] (promotable)
      Masters: [ ha2.test.anchor.net.au ]
      Slaves: [ ha1.test.anchor.net.au ]
- Master/Slave Set: parent [stateful-parent]
+ Clone Set: parent [stateful-parent] (promotable)
      Masters: [ ha2.test.anchor.net.au ]
      Slaves: [ ha1.test.anchor.net.au ]
 
@@ -29,13 +29,13 @@ Online: [ ha1.test.anchor.net.au ha2.test.anchor.net.au ]
  child1-service	(ocf::pacemaker:Dummy):	Stopped ( disabled ) 
  child2-service	(ocf::pacemaker:Dummy):	Started ha2.test.anchor.net.au 
  parent-service	(ocf::pacemaker:Dummy):	Started ha2.test.anchor.net.au 
- Master/Slave Set: child1 [stateful-child1]
+ Clone Set: child1 [stateful-child1] (promotable)
      Masters: [ ha2.test.anchor.net.au ]
      Slaves: [ ha1.test.anchor.net.au ]
- Master/Slave Set: child2 [stateful-child2]
+ Clone Set: child2 [stateful-child2] (promotable)
      Masters: [ ha2.test.anchor.net.au ]
      Slaves: [ ha1.test.anchor.net.au ]
- Master/Slave Set: parent [stateful-parent]
+ Clone Set: parent [stateful-parent] (promotable)
      Masters: [ ha2.test.anchor.net.au ]
      Slaves: [ ha1.test.anchor.net.au ]
 
