@@ -903,16 +903,16 @@ if test X"$CURSESLIBS" != X"" && cc_supports_flag -Wcast-qual; then
                          ],
                          [printw((const char *)"Test");]
         )],
-        [ac_cv_compatible_printw=yes],
-        [ac_cv_compatible_printw=no]
+        [pcmk_cv_compatible_printw=yes],
+        [pcmk_cv_compatible_printw=no]
     )
 
     LIBS=$ac_save_LIBS
     cc_restore_flags
 
-    AC_MSG_RESULT([$ac_cv_compatible_printw])
+    AC_MSG_RESULT([$pcmk_cv_compatible_printw])
 
-    if test "$ac_cv_compatible_printw" = no; then
+    if test "$pcmk_cv_compatible_printw" = no; then
         AC_MSG_WARN([The printw() function of your ncurses or curses library is old, we will disable usage of the library. If you want to use this library anyway, please update to newer version of the library, ncurses 5.4 or later is recommended. You can get the library from http://www.gnu.org/software/ncurses/.])
         AC_MSG_NOTICE([Disabling curses])
         AC_DEFINE(HAVE_INCOMPATIBLE_PRINTW, 1, [Do we have incompatible printw() in curses library?])
