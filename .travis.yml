@@ -34,6 +34,10 @@ env:
 
     # -- END Coverity Scan ENV
 
+cache:
+  directories:
+  - xml/.relaxng.org
+
 # sudo add-apt-repository ppa:hotot-team
 before_install:
  - sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu/ trusty main"
@@ -99,7 +103,10 @@ script:
         schemas=; for schema in *.rng; do
           case ${schema} in *cibtr*);; *)schemas="${schemas} ${schema}";; esac;
         done;
-        xmllint --noout --relaxng 'http://relaxng.org/relaxng.rng' ${schemas};
+        test -s .relaxng.org/relaxng.rng 2>/dev/null
+          || curl --create-dirs -Lo .relaxng.org/relaxng.rng
+             'http://relaxng.org/relaxng.rng';
+        xmllint --noout --relaxng .relaxng.org/relaxng.rng ${schemas};
       }
     );
   }
