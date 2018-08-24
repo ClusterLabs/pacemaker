@@ -900,6 +900,10 @@ main(int argc, char **argv)
                     refresh();
                 }
 #endif
+            } else {
+                if (output_format == mon_output_html) {
+                    print_as("Writing html to %s ...\n", output_filename);
+                }
             }
 
         } while (exit_code == -ENOTCONN);
