@@ -375,11 +375,11 @@ function test_results {
     if [ $num_failed -ne 0 ]; then
         if [ -s "$failed" ]; then
             if [ $verbose -eq 1 ]; then
-                error "Results of $num_failed failed tests (out of $num_tests)...."
+                error "Results of $num_failed failed tests (out of $num_tests):"
                 cat $failed
             else
-                error "Results of $num_failed failed tests (out of $num_tests) are in $failed...."
-                error "Use $0 -V to display them automatically."
+                error "Results of $num_failed failed tests (out of $num_tests) are in $failed"
+                error "Use -V to display them after running the tests"
             fi
         else
             error "$num_failed (of $num_tests) tests failed (no diff results)"
