@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <inttypes.h>  /* U32T ~ PRIu32, X32T ~ PRIx32 */
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
@@ -123,7 +124,8 @@ st_ipc_dispatch(qb_ipcs_connection_t * qbc, void *data, size_t size)
     }
 
     crm_element_value_int(request, F_STONITH_CALLOPTS, &call_options);
-    crm_trace("Flags %u/%u for command %u from %s", flags, call_options, id, crm_client_name(c));
+    crm_trace("Flags %" X32T "/%u for command %" U32T " from %s",
+              flags, call_options, id, crm_client_name(c));
 
     if (is_set(call_options, st_opt_sync_call)) {
         CRM_ASSERT(flags & crm_ipc_client_response);

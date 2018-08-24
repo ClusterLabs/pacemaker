@@ -450,33 +450,41 @@ case "$host_cpu" in
         ;;
 esac
 
-AC_MSG_CHECKING(which format is needed to print uint64_t)
-
-cc_temp_flags "-Wall $WERROR"
-
-AC_COMPILE_IFELSE(
-    [AC_LANG_PROGRAM(
-        [
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
-        ],
-        [
-int max = 512;
-uint64_t bignum = 42;
-char *buffer = malloc(max);
-const char *random = "random";
-snprintf(buffer, max-1, "<quorum id=%lu quorate=%s/>", bignum, random);
-fprintf(stderr, "Result: %s\n", buffer);
-        ]
-    )],
-    [U64T="%lu"],
-    [U64T="%llu"]
+# C99 doesn't guarantee uint64_t type and related format specifiers, but
+# prerequisites, corosync + libqb, use that widely, so the target platforms
+# are already pre-constrained to those "64bit-clean" (doesn't imply native
+# bit width) and hence we deliberately refrain from artificial surrogates
+# (sans manipulation through cached values).
+AC_CACHE_VAL(
+    [pcmk_cv_decl_inttypes],
+    [
+        AC_CHECK_DECLS(
+            [PRIu64, PRIu32, PRIx32,
+             SCNu64],
+            [pcmk_cv_decl_inttypes="PRIu64 PRIu32 PRIx32 SCNu64"],
+            [
+                # test shall only react on "no" cached result & error out respectively
+                if test "x$ac_cv_have_decl_PRIu64" = xno; then
+                    AC_MSG_ERROR([lack of inttypes.h based specifier serving uint64_t (PRIu64)])
+                elif test "x$ac_cv_have_decl_PRIu32" = xno; then
+                    AC_MSG_ERROR([lack of inttypes.h based specifier serving uint32_t (PRIu32)])
+                elif test "x$ac_cv_have_decl_PRIx32" = xno; then
+                    AC_MSG_ERROR([lack of inttypes.h based hexa specifier serving uint32_t (PRIx32)])
+                elif test "x$ac_cv_have_decl_SCNu64" = xno; then
+                    AC_MSG_ERROR([lack of inttypes.h based specifier gathering uint64_t (SCNu64)])
+                fi
+            ],
+            [[#include <inttypes.h>]]
+        )
+    ]
 )
-cc_restore_flags
-
-AC_MSG_RESULT($U64T)
-AC_DEFINE_UNQUOTED(U64T, "$U64T", Correct printf format for logging uint64_t)
+(
+    set $pcmk_cv_decl_inttypes
+    AC_DEFINE_UNQUOTED([U64T],  [$1], [Correct format specifier for U64T])
+    AC_DEFINE_UNQUOTED([U32T],  [$2], [Correct format specifier for U32T])
+    AC_DEFINE_UNQUOTED([X32T],  [$3], [Correct format specifier for X32T])
+    AC_DEFINE_UNQUOTED([U64TS], [$4], [Correct format specifier for U64TS])
+)
 
 dnl ===============================================
 dnl Program Paths
@@ -892,16 +900,16 @@ if test X"$CURSESLIBS" != X"" && cc_supports_flag -Wcast-qual; then
                          ],
                          [printw((const char *)"Test");]
         )],
-        [ac_cv_compatible_printw=yes],
-        [ac_cv_compatible_printw=no]
+        [pcmk_cv_compatible_printw=yes],
+        [pcmk_cv_compatible_printw=no]
     )
 
     LIBS=$ac_save_LIBS
     cc_restore_flags
 
-    AC_MSG_RESULT([$ac_cv_compatible_printw])
+    AC_MSG_RESULT([$pcmk_cv_compatible_printw])
 
-    if test "$ac_cv_compatible_printw" = no; then
+    if test "$pcmk_cv_compatible_printw" = no; then
         AC_MSG_WARN([The printw() function of your ncurses or curses library is old, we will disable usage of the library. If you want to use this library anyway, please update to newer version of the library, ncurses 5.4 or later is recommended. You can get the library from http://www.gnu.org/software/ncurses/.])
         AC_MSG_NOTICE([Disabling curses])
         AC_DEFINE(HAVE_INCOMPATIBLE_PRINTW, 1, [Do we have incompatible printw() in curses library?])

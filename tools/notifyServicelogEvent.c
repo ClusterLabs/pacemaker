@@ -18,6 +18,7 @@
 #include <syslog.h>
 #include <unistd.h>
 #include <config.h>
+#include <inttypes.h>  /* U64T ~ PRIu64, U64TS ~ SCNu64 */
 
 #include <crm/common/xml.h>
 #include <crm/common/util.h>
@@ -117,7 +118,7 @@ main(int argc, char *argv[])
 
     openlog("notifyServicelogEvent", LOG_NDELAY, LOG_USER);
 
-    if (sscanf(argv[optind], U64T, &event_id) != 1) {
+    if (sscanf(argv[optind], "%" U64TS, &event_id) != 1) {
         crm_err("Error: could not read event_id from args!");
 
         rc = 1;
@@ -149,7 +150,7 @@ main(int argc, char *argv[])
         const char *health_component = "#health-ipmi";
         const char *health_status = NULL;
 
-        crm_debug("Event id = " U64T ", Log timestamp = %s, Event timestamp = %s",
+        crm_debug("Event id = %" U64T ", Log timestamp = %s, Event timestamp = %s",
                   event_id, ctime(&(event->time_logged)), ctime(&(event->time_event)));
 
         status = event2status(event);
