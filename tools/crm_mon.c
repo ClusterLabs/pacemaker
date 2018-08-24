@@ -3426,7 +3426,11 @@ print_status(pe_working_set_t * data_set,
 
         } else if (node->details->standby) {
             if (node->details->online) {
-                node_mode = "standby";
+                if (node->details->running_rsc) {
+                    node_mode = "standby (with active resources)";
+                } else {
+                    node_mode = "standby";
+                }
             } else {
                 node_mode = "OFFLINE (standby)";
             }
@@ -3733,7 +3737,9 @@ print_html_status(pe_working_set_t * data_set,
         if (node->details->standby_onfail && node->details->online) {
             fprintf(stream, "<font color=\"orange\">standby (on-fail)</font>\n");
         } else if (node->details->standby && node->details->online) {
-            fprintf(stream, "<font color=\"orange\">standby</font>\n");
+
+            fprintf(stream, "<font color=\"orange\">standby%s</font>\n",
+                node->details->running_rsc?" (with active resources)":"");
         } else if (node->details->standby) {
             fprintf(stream, "<font color=\"red\">OFFLINE (standby)</font>\n");
         } else if (node->details->maintenance && node->details->online) {
