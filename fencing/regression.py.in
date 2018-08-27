@@ -1207,6 +1207,7 @@ logging {
             killall("corosync")
             self.start_corosync()
 
+        os.system("rm -f /usr/sbin/fence_dummy /usr/sbin/fence_dummy_auto_unfence /usr/sbin/fence_dummy_no_reboot");
         os.system("cp %s /usr/sbin/fence_dummy" % FENCE_DUMMY)
 
         # modifies dummy agent to do require unfencing
