@@ -1089,6 +1089,9 @@ main(int argc, char **argv)
     } else if (rsc_cmd == 'C') {
         rc = cli_cleanup_all(crmd_channel, host_uname, operation, interval_spec,
                              &data_set);
+        if (rc == pcmk_ok) {
+            start_mainloop();
+        }
 
     } else if ((rsc_cmd == 'R') && rsc) {
         if (do_force == FALSE) {
