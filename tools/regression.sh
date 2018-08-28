@@ -429,7 +429,7 @@ function restore_epoch() {
 
 function test_acl_loop() {
     # Make sure we're rejecting things for the right reasons
-    export PCMK_trace_functions=__xml_acl_check,__xml_acl_post_process
+    export PCMK_trace_functions=pcmk__check_acl,pcmk__post_process_acl
     export PCMK_stderr=1
 
     CIB_user=root cibadmin --replace --xml-text '<resources/>'
@@ -757,12 +757,11 @@ for t in $tests; do
         -e 's/crm_feature_set="[^"]*" //'\
         -e 's/validate-with="[^"]*" //'\
         -e 's/Created new pacemaker-.* configuration/Created new pacemaker configuration/'\
-        -e 's/.*__xml_acl_check/__xml_acl_check/g'\
-        -e 's/.*__xml_acl_post_process/__xml_acl_post_process/g'\
         -e 's/.*error: unpack_resources:/error: unpack_resources:/g'\
         -e 's/ last-rc-change=\"[0-9]*\"//'\
         -e 's|^/tmp/[0-9][0-9]*\.||'\
         -e 's/^Entity: line [0-9][0-9]*: //'\
+        -e 's/acl\.c:\([0-9][0-9]*\)/acl.c:NNN/' \
         -e 's/schemas\.c:\([0-9][0-9]*\)/schemas.c:NNN/' \
         -e 's/constraints\.:\([0-9][0-9]*\)/constraints.:NNN/' \
         -e 's/\(validation ([0-9][0-9]* of \)[0-9][0-9]*\().*\)/\1X\2/' \

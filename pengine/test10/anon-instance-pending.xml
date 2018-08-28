@@ -1,0 +1,436 @@
+<cib crm_feature_set="3.0.14" validate-with="pacemaker-2.9" epoch="1" num_updates="89" admin_epoch="0" have-quorum="1">
+  <configuration>
+    <crm_config/>
+    <nodes>
+      <node id="1" uname="node1"/>
+      <node id="2" uname="node2"/>
+      <node id="3" uname="node3"/>
+      <node id="4" uname="node4"/>
+      <node id="5" uname="node5"/>
+      <node id="6" uname="node6"/>
+      <node id="7" uname="node7"/>
+      <node id="8" uname="node8"/>
+      <node id="9" uname="node9"/>
+      <node id="10" uname="node10"/>
+      <node id="11" uname="node11"/>
+    </nodes>
+    <resources>
+      <primitive class="stonith" id="Fencing" type="fence_imaginary"/>
+      <!-- clone1 tests a pending start on node4 with node1-2 slave, node3 master, and node5-11 stopped -->
+      <master id="clone1">
+        <primitive id="clone1rsc" class="ocf" provider="pacemaker" type="Stateful">
+          <operations>
+            <op id="clone1rsc-monitor-interval-10s" interval="10s" name="monitor"/>
+            <op id="clone1rsc-monitor-interval-9s" interval="9s" name="monitor" role="Master"/>
+          </operations>
+        </primitive>
+      </master>
+      <!-- clone2 tests pending start on node4 with node2 started and rest stopped -->
+      <clone id="clone2">
+        <primitive id="clone2rsc" class="ocf" provider="pacemaker" type="Dummy">
+          <operations>
+            <op id="clone2rsc-monitor-interval-10s" interval="10s" name="monitor"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="clone2-meta_attributes">
+          <nvpair id="clone2-max" name="clone-max" value="5"/>
+        </meta_attributes>
+      </clone>
+      <!-- clone3 tests pending probe on node2, with node3 started and rest stopped -->
+      <clone id="clone3">
+        <primitive id="clone3rsc" class="ocf" provider="pacemaker" type="Dummy">
+          <operations>
+            <op id="clone3rsc-monitor-interval-10s" interval="10s" name="monitor"/>
+          </operations>
+        </primitive>
+      </clone>
+      <!-- clone4 tests four started, one stop pending, one orphan started -->
+      <clone id="clone4">
+        <primitive id="clone4rsc" class="ocf" provider="pacemaker" type="Dummy">
+          <operations>
+            <op id="clone4rsc-monitor-interval-10s" interval="10s" name="monitor"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="clone4-meta_attributes">
+          <nvpair id="clone4-max" name="clone-max" value="5"/>
+        </meta_attributes>
+      </clone>
+      <clone id="clone5">
+        <group id="clone5group">
+          <primitive id="clone5rsc1" class="ocf" provider="pacemaker" type="Dummy">
+            <operations>
+              <op id="clone5rsc1-monitor-interval-10s" interval="10s" name="monitor"/>
+            </operations>
+          </primitive>
+          <primitive id="clone5rsc2" class="ocf" provider="pacemaker" type="Dummy">
+            <operations>
+              <op id="clone5rsc2-monitor-interval-10s" interval="10s" name="monitor"/>
+            </operations>
+          </primitive>
+          <primitive id="clone5rsc3" class="ocf" provider="pacemaker" type="Dummy">
+            <operations>
+              <op id="clone5rsc3-monitor-interval-10s" interval="10s" name="monitor"/>
+            </operations>
+          </primitive>
+        </group>
+      </clone>
+    </resources>
+    <constraints/>
+    <rsc_defaults/>
+  </configuration>
+  <status>
+    <node_state id="1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member">
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="Fencing" class="stonith" type="fence_imaginary">
+            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone1rsc" class="ocf" provider="pacemaker" type="Stateful">
+            <lrm_rsc_op id="clone1rsc_last_0" operation_key="clone1rsc_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1533854283" last-rc-change="1533854283" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clone1rsc_monitor_10000" operation_key="clone1rsc_monitor_10000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="10000" last-rc-change="1533854283" exec-time="0" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="clone2rsc" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone2rsc_last_0" operation_key="clone2rsc_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone3rsc" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone3rsc_last_0" operation_key="clone3rsc_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone4rsc" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone4rsc_last_0" operation_key="clone4rsc_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1533865629" last-rc-change="1533865629" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clone4rsc_monitor_10000" operation_key="clone4rsc_monitor_10000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="10000" last-rc-change="1533865629" exec-time="0" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="clone5rsc1" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone5rsc1_last_0" operation_key="clone5rsc1_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1534276424" last-rc-change="1534276424" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clone5rsc1_monitor_10000" operation_key="clone5rsc1_monitor_10000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="10000" last-rc-change="1534276424" exec-time="0" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="clone5rsc2" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone5rsc2_last_0" operation_key="clone5rsc2_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1534276424" last-rc-change="1534276424" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clone5rsc2_monitor_10000" operation_key="clone5rsc2_monitor_10000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="10000" last-rc-change="1534276424" exec-time="0" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="clone5rsc3" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone5rsc3_last_0" operation_key="clone5rsc3_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1534276424" last-rc-change="1534276424" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clone5rsc3_monitor_10000" operation_key="clone5rsc3_monitor_10000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="10000" last-rc-change="1534276424" exec-time="0" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="2" uname="node2" in_ccm="true" crmd="online" join="member" expected="member">
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="Fencing" class="stonith" type="fence_imaginary">
+            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone1rsc" class="ocf" provider="pacemaker" type="Stateful">
+            <lrm_rsc_op id="clone1rsc_last_0" operation_key="clone1rsc_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1533854283" last-rc-change="1533854283" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clone1rsc_monitor_10000" operation_key="clone1rsc_monitor_10000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="10000" last-rc-change="1533854283" exec-time="0" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="clone2rsc" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone2rsc_last_0" operation_key="clone2rsc_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1533862751" last-rc-change="1533862751" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clone2rsc_monitor_10000" operation_key="clone2rsc_monitor_10000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="10000" last-rc-change="1533862751" exec-time="0" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="clone3rsc" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone3rsc_last_0" operation_key="clone3rsc_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="-1" rc-code="193" op-status="-1" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone4rsc" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone4rsc_last_0" operation_key="clone4rsc_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone5rsc1" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone5rsc1_last_0" operation_key="clone5rsc1_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1534276424" last-rc-change="1534276424" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clone5rsc1_monitor_10000" operation_key="clone5rsc1_monitor_10000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="10000" last-rc-change="1534276424" exec-time="0" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="clone5rsc2" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone5rsc2_last_0" operation_key="clone5rsc2_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1534276424" last-rc-change="1534276424" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clone5rsc2_monitor_10000" operation_key="clone5rsc2_monitor_10000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="10000" last-rc-change="1534276424" exec-time="0" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="clone5rsc3" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone5rsc3_last_0" operation_key="clone5rsc3_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1534276424" last-rc-change="1534276424" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clone5rsc3_monitor_10000" operation_key="clone5rsc3_monitor_10000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="10000" last-rc-change="1534276424" exec-time="0" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="3" uname="node3" in_ccm="true" crmd="online" join="member" expected="member">
+      <transient_attributes id="3">
+        <instance_attributes id="status-3">
+          <nvpair id="status-3-master-clone1rsc" name="master-clone1rsc" value="10"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="3">
+        <lrm_resources>
+          <lrm_resource id="Fencing" class="stonith" type="fence_imaginary">
+            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone1rsc" class="ocf" provider="pacemaker" type="Stateful">
+            <lrm_rsc_op id="clone1rsc_last_0" operation_key="clone1rsc_promote_0" operation="promote" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="0" last-run="1533854163" last-rc-change="1533854163" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clone1rsc_monitor_9000" operation_key="clone1rsc_monitor_9000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="4:-1:8:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:8;4:-1:8:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="4" rc-code="8" op-status="0" interval="9000" last-rc-change="1533854163" exec-time="0" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="clone2rsc" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone2rsc_last_0" operation_key="clone2rsc_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone3rsc" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone3rsc_last_0" operation_key="clone3rsc_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1533863961" last-rc-change="1533863961" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clone3rsc_monitor_10000" operation_key="clone3rsc_monitor_10000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="10000" last-rc-change="1533863961" exec-time="0" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="clone4rsc" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone4rsc_last_0" operation_key="clone4rsc_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone5rsc1" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone5rsc1_last_0" operation_key="clone5rsc1_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1534276424" last-rc-change="1534276424" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clone5rsc1_monitor_10000" operation_key="clone5rsc1_monitor_10000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="10000" last-rc-change="1534276424" exec-time="0" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="clone5rsc2" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone5rsc2_last_0" operation_key="clone5rsc2_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="-1" rc-code="193" op-status="-1" interval="0" last-run="1534276424" last-rc-change="1534276424" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone5rsc3" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone5rsc3_last_0" operation_key="clone5rsc3_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="4" uname="node4" in_ccm="true" crmd="online" join="member" expected="member">
+      <lrm id="4">
+        <lrm_resources>
+          <lrm_resource id="Fencing" class="stonith" type="fence_imaginary">
+            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone1rsc" class="ocf" provider="pacemaker" type="Stateful">
+            <lrm_rsc_op id="clone1rsc_last_0" operation_key="clone1rsc_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="-1" rc-code="0" op-status="-1" interval="0" last-run="1533854283" last-rc-change="1533854283" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone2rsc" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone2rsc_last_0" operation_key="clone2rsc_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="-1" rc-code="193" op-status="-1" interval="0" last-run="1533862751" last-rc-change="1533862751" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone3rsc" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone3rsc_last_0" operation_key="clone3rsc_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone4rsc" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone4rsc_last_0" operation_key="clone4rsc_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone5rsc1" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone5rsc1_last_0" operation_key="clone5rsc1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone5rsc2" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone5rsc2_last_0" operation_key="clone5rsc2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone5rsc3" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone5rsc3_last_0" operation_key="clone5rsc3_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="5" uname="node5" in_ccm="true" crmd="online" join="member" expected="member">
+      <lrm id="5">
+        <lrm_resources>
+          <lrm_resource id="Fencing" class="stonith" type="fence_imaginary">
+            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone1rsc" class="ocf" provider="pacemaker" type="Stateful">
+            <lrm_rsc_op id="clone1rsc_last_0" operation_key="clone1rsc_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone2rsc" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone2rsc_last_0" operation_key="clone2rsc_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone3rsc" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone3rsc_last_0" operation_key="clone3rsc_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone4rsc" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone4rsc_last_0" operation_key="clone4rsc_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1533865629" last-rc-change="1533865629" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clone4rsc_monitor_10000" operation_key="clone4rsc_monitor_10000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="10000" last-rc-change="1533865629" exec-time="0" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="clone5rsc1" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone5rsc1_last_0" operation_key="clone5rsc1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone5rsc2" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone5rsc2_last_0" operation_key="clone5rsc2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone5rsc3" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone5rsc3_last_0" operation_key="clone5rsc3_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="6" uname="node6" in_ccm="true" crmd="online" join="member" expected="member">
+      <lrm id="6">
+        <lrm_resources>
+          <lrm_resource id="Fencing" class="stonith" type="fence_imaginary">
+            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone1rsc" class="ocf" provider="pacemaker" type="Stateful">
+            <lrm_rsc_op id="clone1rsc_last_0" operation_key="clone1rsc_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone2rsc" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone2rsc_last_0" operation_key="clone2rsc_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone3rsc" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone3rsc_last_0" operation_key="clone3rsc_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone4rsc" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone4rsc_last_0" operation_key="clone4rsc_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1533865629" last-rc-change="1533865629" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clone4rsc_monitor_10000" operation_key="clone4rsc_monitor_10000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="10000" last-rc-change="1533865629" exec-time="0" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="clone5rsc1" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone5rsc1_last_0" operation_key="clone5rsc1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone5rsc2" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone5rsc2_last_0" operation_key="clone5rsc2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone5rsc3" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone5rsc3_last_0" operation_key="clone5rsc3_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="7" uname="node7" in_ccm="true" crmd="online" join="member" expected="member">
+      <lrm id="7">
+        <lrm_resources>
+          <lrm_resource id="Fencing" class="stonith" type="fence_imaginary">
+            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone1rsc" class="ocf" provider="pacemaker" type="Stateful">
+            <lrm_rsc_op id="clone1rsc_last_0" operation_key="clone1rsc_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone2rsc" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone2rsc_last_0" operation_key="clone2rsc_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone3rsc" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone3rsc_last_0" operation_key="clone3rsc_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone4rsc" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone4rsc_last_0" operation_key="clone4rsc_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1533865629" last-rc-change="1533865629" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clone4rsc_monitor_10000" operation_key="clone4rsc_monitor_10000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="10000" last-rc-change="1533865629" exec-time="0" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="clone5rsc1" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone5rsc1_last_0" operation_key="clone5rsc1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone5rsc2" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone5rsc2_last_0" operation_key="clone5rsc2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone5rsc3" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone5rsc3_last_0" operation_key="clone5rsc3_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="8" uname="node8" in_ccm="true" crmd="online" join="member" expected="member">
+      <lrm id="8">
+        <lrm_resources>
+          <lrm_resource id="Fencing" class="stonith" type="fence_imaginary">
+            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone1rsc" class="ocf" provider="pacemaker" type="Stateful">
+            <lrm_rsc_op id="clone1rsc_last_0" operation_key="clone1rsc_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone2rsc" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone2rsc_last_0" operation_key="clone2rsc_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone3rsc" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone3rsc_last_0" operation_key="clone3rsc_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone4rsc" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone4rsc_last_0" operation_key="clone4rsc_stop_0" operation="stop" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="4:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;4:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="-1" rc-code="193" op-status="-1" interval="0" last-run="1533865953" last-rc-change="1533865953" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clone4rsc_monitor_10000" operation_key="clone4rsc_monitor_10000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="10000" last-rc-change="1533865629" exec-time="0" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="clone5rsc1" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone5rsc1_last_0" operation_key="clone5rsc1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone5rsc2" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone5rsc2_last_0" operation_key="clone5rsc2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone5rsc3" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone5rsc3_last_0" operation_key="clone5rsc3_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="9" uname="node9" in_ccm="true" crmd="online" join="member" expected="member">
+      <lrm id="9">
+        <lrm_resources>
+          <lrm_resource id="Fencing" class="stonith" type="fence_imaginary">
+            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone1rsc" class="ocf" provider="pacemaker" type="Stateful">
+            <lrm_rsc_op id="clone1rsc_last_0" operation_key="clone1rsc_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone2rsc" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone2rsc_last_0" operation_key="clone2rsc_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone3rsc" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone3rsc_last_0" operation_key="clone3rsc_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone4rsc" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone4rsc_last_0" operation_key="clone4rsc_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1533865629" last-rc-change="1533865629" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clone4rsc_monitor_10000" operation_key="clone4rsc_monitor_10000" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;3:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="3" rc-code="0" op-status="0" interval="10000" last-rc-change="1533865629" exec-time="0" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="clone5rsc1" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone5rsc1_last_0" operation_key="clone5rsc1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone5rsc2" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone5rsc2_last_0" operation_key="clone5rsc2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone5rsc3" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone5rsc3_last_0" operation_key="clone5rsc3_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="10" uname="node10" in_ccm="true" crmd="online" join="member" expected="member">
+      <lrm id="10">
+        <lrm_resources>
+          <lrm_resource id="Fencing" class="stonith" type="fence_imaginary">
+            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone1rsc" class="ocf" provider="pacemaker" type="Stateful">
+            <lrm_rsc_op id="clone1rsc_last_0" operation_key="clone1rsc_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone2rsc" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone2rsc_last_0" operation_key="clone2rsc_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone3rsc" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone3rsc_last_0" operation_key="clone3rsc_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone4rsc" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone4rsc_last_0" operation_key="clone4rsc_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone5rsc1" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone5rsc1_last_0" operation_key="clone5rsc1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone5rsc2" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone5rsc2_last_0" operation_key="clone5rsc2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone5rsc3" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone5rsc3_last_0" operation_key="clone5rsc3_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="11" uname="node11" in_ccm="true" crmd="online" join="member" expected="member">
+      <lrm id="11">
+        <lrm_resources>
+          <lrm_resource id="Fencing" class="stonith" type="fence_imaginary">
+            <lrm_rsc_op id="Fencing_last_0" operation_key="Fencing_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone1rsc" class="ocf" provider="pacemaker" type="Stateful">
+            <lrm_rsc_op id="clone1rsc_last_0" operation_key="clone1rsc_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone2rsc" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone2rsc_last_0" operation_key="clone2rsc_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone3rsc" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone3rsc_last_0" operation_key="clone3rsc_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone4rsc" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone4rsc_last_0" operation_key="clone4rsc_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone5rsc1" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone5rsc1_last_0" operation_key="clone5rsc1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone5rsc2" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone5rsc2_last_0" operation_key="clone5rsc2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clone5rsc3" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="clone5rsc3_last_0" operation_key="clone5rsc3_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.1.0" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" exit-reason="" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1533332251" last-rc-change="1533332251" exec-time="0" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

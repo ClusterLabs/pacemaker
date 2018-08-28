@@ -30,6 +30,8 @@ lib_LTLIBRARIES	= libcrmcommon.la
 
 CFLAGS		= $(CFLAGS_COPY:-Wcast-qual=) -fPIC
 
+noinst_HEADERS		= crmcommon_private.h
+
 libcrmcommon_la_LDFLAGS	= -version-info 12:0:9
 
 libcrmcommon_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
@@ -40,7 +42,7 @@ libcrmcommon_la_LIBADD	= @LIBADD_DL@ $(GNUTLSLIBS)
 libcrmcommon_la_SOURCES	= compat.c digest.c ipc.c io.c procfs.c utils.c xml.c	\
 			  iso8601.c remote.c mainloop.c logging.c watchdog.c	\
 			  schemas.c strings.c xpath.c attrd_client.c alerts.c	\
-			  operations.c agents.c
+			  operations.c acl.c agents.c
 if BUILD_CIBSECRETS
 libcrmcommon_la_SOURCES	+= cib_secrets.c
 endif

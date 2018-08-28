@@ -405,51 +405,57 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
     for (; gIter != NULL; gIter = gIter->next) {
         gboolean print_full = FALSE;
         resource_t *child_rsc = (resource_t *) gIter->data;
+        gboolean partially_active = child_rsc->fns->active(child_rsc, FALSE);
 
         if (options & pe_print_clone_details) {
             print_full = TRUE;
         }
 
-        if (child_rsc->fns->active(child_rsc, FALSE) == FALSE) {
-            /* Inactive clone */
-            if (is_set(child_rsc->flags, pe_rsc_orphan)) {
-                continue;
-
-            } else if (is_set(rsc->flags, pe_rsc_unique)) {
+        if (is_set(rsc->flags, pe_rsc_unique)) {
+            // Print individual instance when unique (except stopped orphans)
+            if (partially_active || is_not_set(rsc->flags, pe_rsc_orphan)) {
                 print_full = TRUE;
+            }
 
-            } else if (is_not_set(options, pe_print_clone_active)) {
+        // Everything else in this block is for anonymous clones
+
+        } else if (is_set(options, pe_print_pending)
+                   && (child_rsc->pending_task != NULL)
+                   && strcmp(child_rsc->pending_task, "probe")) {
+            // Print individual instance when non-probe action is pending
+            print_full = TRUE;
+
+        } else if (partially_active == FALSE) {
+            // List stopped instances when requested (except orphans)
+            if (is_not_set(child_rsc->flags, pe_rsc_orphan)
+                && is_not_set(options, pe_print_clone_active)) {
                 stopped_list = add_list_element(stopped_list, child_rsc->id);
             }
 
-        } else if (is_set_recursive(child_rsc, pe_rsc_unique, TRUE)
-                   || is_set_recursive(child_rsc, pe_rsc_orphan, TRUE)
+        } else if (is_set_recursive(child_rsc, pe_rsc_orphan, TRUE)
                    || is_set_recursive(child_rsc, pe_rsc_managed, FALSE) == FALSE
                    || is_set_recursive(child_rsc, pe_rsc_failed, TRUE)) {
 
-            /* Unique, unmanaged or failed clone */
-            print_full = TRUE;
-
-        } else if (is_set(options, pe_print_pending) && child_rsc->pending_task != NULL) {
-            /* In a pending state */
+            // Print individual instance when active orphaned/unmanaged/failed
             print_full = TRUE;
 
         } else if (child_rsc->fns->active(child_rsc, TRUE)) {
-            /* Fully active anonymous clone */
+            // Instance of fully active anonymous clone
+
             node_t *location = child_rsc->fns->location(child_rsc, NULL, TRUE);
 
             if (location) {
+                // Instance is active on a single node
+
                 enum rsc_role_e a_role = child_rsc->fns->state(child_rsc, TRUE);
 
                 if (location->details->online == FALSE && location->details->unclean) {
                     print_full = TRUE;
 
                 } else if (a_role > RSC_ROLE_SLAVE) {
-                    /* And active on a single node as master */
                     master_list = g_list_append(master_list, location);
 
                 } else {
-                    /* And active on a single node as started/slave */
                     started_list = g_list_append(started_list, location);
                 }
 
@@ -459,7 +465,7 @@ clone_print(resource_t * rsc, const char *pre_text, long options, void *print_da
             }
 
         } else {
-            /* Partially active anonymous clone */
+            // Instance of partially active anonymous clone
             print_full = TRUE;
         }
 

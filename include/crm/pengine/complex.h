@@ -1,20 +1,10 @@
-/* 
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+/*
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ *
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+
 #ifndef PENGINE_COMPLEX__H
 #  define PENGINE_COMPLEX__H
 
@@ -47,7 +37,7 @@ typedef struct resource_object_functions_s {
     void (*print) (resource_t *, const char *, long, void *);
      gboolean(*active) (resource_t *, gboolean);
     enum rsc_role_e (*state) (const resource_t *, gboolean);
-    node_t *(*location) (resource_t *, GListPtr *, gboolean);
+    pe_node_t *(*location) (const pe_resource_t*, GList**, int);
     void (*free) (resource_t *);
 } resource_object_functions_t;
 

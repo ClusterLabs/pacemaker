@@ -162,8 +162,8 @@ create_attribute(xmlNode *xml)
     crm_element_value_int(xml, F_ATTRD_IS_PRIVATE, &a->is_private);
 
 #if ENABLE_ACL
-    crm_trace("Performing all %s operations as user '%s'", a->id, a->user);
     a->user = crm_element_value_copy(xml, F_ATTRD_USER);
+    crm_trace("Performing all %s operations as user '%s'", a->id, a->user);
 #endif
 
     if(value) {
@@ -177,7 +177,7 @@ create_attribute(xmlNode *xml)
         a->timeout_ms = dampen;
         a->timer = mainloop_timer_add(a->id, a->timeout_ms, FALSE, attribute_timer_cb, a);
     } else if (dampen < 0) {
-	crm_warn("Ignoring invalid delay %s for attribute %s", value, a->id);
+        crm_warn("Ignoring invalid delay %s for attribute %s", value, a->id);
     }
 
     g_hash_table_replace(attributes, a->id, a);
@@ -291,7 +291,7 @@ attrd_client_update(xmlNode *xml)
         election_vote(writer);
     }
 
-    crm_debug("Broadcasting %s[%s] = %s%s", attr, host, value,
+    crm_debug("Broadcasting %s[%s]=%s%s", attr, host, value,
               ((election_state(writer) == election_won)? " (writer)" : ""));
 
     free(host);
@@ -863,7 +863,6 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
         }
 
         if (a->timeout_ms != dampen) {
-            mainloop_timer_stop(a->timer);
             mainloop_timer_del(a->timer);
             a->timeout_ms = dampen;
             if (dampen > 0) {
@@ -931,7 +930,7 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
         a->changed = TRUE;
 
         // Write out new value or start dampening timer
-        if (a->timer) {
+        if (a->timeout_ms && a->timer) {
             crm_trace("Delayed write out (%dms) for %s", a->timeout_ms, attr);
             mainloop_timer_start(a->timer);
         } else {
@@ -1030,7 +1029,7 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
 
     if(a == NULL) {
         crm_info("Attribute %s no longer exists", name);
-        goto done;
+        return;
     }
 
     a->update = 0;
@@ -1042,7 +1041,13 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
         case pcmk_ok:
             level = LOG_INFO;
             last_cib_op_done = call_id;
+            if (a->timer && !a->timeout_ms) {
+                // Remove temporary dampening for failed writes
+                mainloop_timer_del(a->timer);
+                a->timer = NULL;
+            }
             break;
+
         case -pcmk_err_diff_failed:    /* When an attr changes while the CIB is syncing */
         case -ETIME:           /* When an attr changes while there is a DC election */
         case -ENXIO:           /* When an attr changes while the CIB is syncing a
@@ -1052,20 +1057,45 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
             break;
     }
 
-    do_crm_log(level, "Update %d for %s: %s (%d)", call_id, name, pcmk_strerror(rc), rc);
+    do_crm_log(level, "CIB update %d result for %s: %s " CRM_XS " rc=%d",
+               call_id, a->id, pcmk_strerror(rc), rc);
 
     g_hash_table_iter_init(&iter, a->values);
     while (g_hash_table_iter_next(&iter, (gpointer *) & peer, (gpointer *) & v)) {
-        do_crm_log(level, "Update %d for %s[%s]=%s: %s (%d)", call_id, a->id, peer, v->requested, pcmk_strerror(rc), rc);
+        do_crm_log(level, "* %s[%s]=%s", a->id, peer, v->requested);
         free(v->requested);
         v->requested = NULL;
         if (rc != pcmk_ok) {
             a->changed = TRUE; /* Attempt write out again */
         }
     }
-  done:
-    if(a && a->changed && election_state(writer) == election_won) {
-        write_attribute(a);
+
+    if (a->changed && (election_state(writer) == election_won)) {
+        /* If we're re-attempting a write because the original failed, delay
+         * the next attempt so we don't potentially flood the CIB manager
+         * and logs with a zillion attempts per second.
+         *
+         * @TODO We could elect a new writer instead. However, we'd have to
+         * somehow downgrade our vote, and we'd still need something like this
+         * if all peers similarly fail to write this attribute (which may
+         * indicate a corrupted attribute entry rather than a CIB issue).
+         */
+        if (a->timer) {
+            // Attribute has a dampening value, so use that as delay
+            if (!mainloop_timer_running(a->timer)) {
+                crm_trace("Delayed re-attempted write (%dms) for %s",
+                          a->timeout_ms, name);
+                mainloop_timer_start(a->timer);
+            }
+        } else {
+            /* Set a temporary dampening of 2 seconds (timer will continue
+             * to exist until the attribute's dampening gets set or the
+             * write succeeds).
+             */
+            a->timer = mainloop_timer_add(a->id, 2000, FALSE,
+                                          attribute_timer_cb, a);
+            mainloop_timer_start(a->timer);
+        }
     }
 }
 
@@ -1162,6 +1192,8 @@ send_alert_attributes_value(attribute_t *a, GHashTable *t)
     }
 }
 
+#define s_if_plural(i) (((i) == 1)? "" : "s")
+
 void
 write_attribute(attribute_t *a)
 {
@@ -1218,14 +1250,14 @@ write_attribute(attribute_t *a)
 
         /* If the value's peer info does not correspond to a peer, ignore it */
         if (peer == NULL) {
-            crm_notice("Update error (peer not found): %s[%s]=%s failed (host=%p)",
-                       a->id, v->nodename, v->current, peer);
+            crm_notice("Cannot update %s[%s]=%s because peer not known",
+                       a->id, v->nodename, v->current);
             continue;
         }
 
         /* If we're just learning the peer's node id, remember it */
         if (peer->id && (v->nodeid == 0)) {
-            crm_trace("Updating value's nodeid");
+            crm_trace("Learned ID %u for node %s", peer->id, v->nodename);
             v->nodeid = peer->id;
         }
 
@@ -1238,14 +1270,16 @@ write_attribute(attribute_t *a)
         /* If the peer is found, but its uuid is unknown, defer write */
         if (peer->uuid == NULL) {
             a->unknown_peer_uuids = TRUE;
-            crm_notice("Update %s[%s]=%s postponed: unknown peer UUID, will retry if UUID is learned",
-                       a->id, v->nodename, v->current, peer);
+            crm_notice("Cannot update %s[%s]=%s because peer UUID not known "
+                       "(will retry if learned)",
+                       a->id, v->nodename, v->current);
             continue;
         }
 
         /* Add this value to status update XML */
-        crm_debug("Update: %s[%s]=%s (%s %u %u %s)", a->id, v->nodename,
-                  v->current, peer->uuid, peer->id, v->nodeid, peer->uname);
+        crm_debug("Updating %s[%s]=%s (peer known as %s, UUID %s, ID %u/%u)",
+                  a->id, v->nodename, v->current,
+                  peer->uname, peer->uuid, peer->id, v->nodeid);
         build_update_element(xml_top, a, peer->uuid, v->current);
         cib_updates++;
 
@@ -1266,8 +1300,8 @@ write_attribute(attribute_t *a)
 
     if (private_updates) {
         crm_info("Processed %d private change%s for %s, id=%s, set=%s",
-                 private_updates, ((private_updates == 1)? "" : "s"),
-                 a->id, (a->uuid? a->uuid : "<n/a>"), a->set);
+                 private_updates, s_if_plural(private_updates),
+                 a->id, (a->uuid? a->uuid : "n/a"), (a->set? a->set : "n/a"));
     }
     if (cib_updates) {
         crm_log_xml_trace(xml_top, __FUNCTION__);
@@ -1275,8 +1309,9 @@ write_attribute(attribute_t *a)
         a->update = cib_internal_op(the_cib, CIB_OP_MODIFY, NULL, XML_CIB_TAG_STATUS, xml_top, NULL,
                                     flags, a->user);
 
-        crm_info("Sent update %d with %d changes for %s, id=%s, set=%s",
-                 a->update, cib_updates, a->id, (a->uuid? a->uuid : "<n/a>"), a->set);
+        crm_info("Sent CIB request %d with %d change%s for %s (id %s, set %s)",
+                 a->update, cib_updates, s_if_plural(cib_updates),
+                 a->id, (a->uuid? a->uuid : "n/a"), (a->set? a->set : "n/a"));
 
         the_cib->cmds->register_callback_full(the_cib, a->update, 120, FALSE,
                                               strdup(a->id),
@@ -1284,7 +1319,6 @@ write_attribute(attribute_t *a)
                                               attrd_cib_callback, free);
         /* Transmit alert of the attribute */
         send_alert_attributes_value(a, alert_attribute_value);
-
     }
 
     g_hash_table_destroy(alert_attribute_value);
