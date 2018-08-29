@@ -112,21 +112,6 @@ peer2text(enum crm_proc_flag proc)
     return text;
 }
 
-static inline enum crm_proc_flag
-text2proc(const char *proc)
-{
-    /* We only care about these two so far */
-
-    if (proc && strcmp(proc, "pacemaker-based") == 0) {
-        return crm_proc_based;
-
-    } else if (proc && strcmp(proc, "pacemaker-controld") == 0) {
-        return crm_proc_controld;
-    }
-
-    return crm_proc_none;
-}
-
 static inline const char *
 ais_dest(const AIS_Host *host)
 {
