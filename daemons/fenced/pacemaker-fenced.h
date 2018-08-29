@@ -235,6 +235,8 @@ void *create_remote_stonith_op(const char *client, xmlNode * request, gboolean p
 int stonith_fence_history(xmlNode *msg, xmlNode **output,
                           const char *remote_peer, int options);
 
+void stonith_fence_history_trim(void);
+
 bool fencing_peer_active(crm_node_t *peer);
 
 int stonith_manual_ack(xmlNode * msg, remote_fencing_op_t * op);
