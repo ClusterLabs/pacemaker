@@ -1223,7 +1223,8 @@ attrd_ipc_server_init(qb_ipcs_service_t **ipcs, struct qb_ipcs_service_handlers 
 void
 stonith_ipc_server_init(qb_ipcs_service_t **ipcs, struct qb_ipcs_service_handlers *cb)
 {
-    *ipcs = mainloop_add_ipc_server("stonith-ng", QB_IPC_NATIVE, cb);
+    *ipcs = mainloop_add_ipc_server_with_prio("stonith-ng", QB_IPC_NATIVE, cb,
+                                              QB_LOOP_HIGH);
 
     if (*ipcs == NULL) {
         crm_err("Failed to create stonith-ng servers: exiting and inhibiting respawn.");
