@@ -77,10 +77,8 @@ void
 peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *data)
 {
     uint32_t old = 0;
-    uint32_t changed = 0;
     bool appeared = FALSE;
     bool is_remote = is_set(node->flags, crm_remote_node);
-    const char *status = NULL;
 
     /* The controller waits to receive some information from the membership
      * layer before declaring itself operational. If this is being called for a
@@ -123,30 +121,33 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
             break;
 
         case crm_status_processes:
-            if (data) {
-                old = *(const uint32_t *)data;
-                changed = node->processes ^ old;
-            }
+            CRM_CHECK(data != NULL, return);
+            old = *(const uint32_t *)data;
+            appeared = is_set(node->processes, crm_get_cluster_proc());
 
-            status = (node->processes & proc_flags) ? ONLINESTATUS : OFFLINESTATUS;
-            crm_info("Client %s/%s now has status [%s] (DC=%s, changed=%6x)",
-                     node->uname, peer2text(proc_flags), status,
-                     AM_I_DC ? "true" : crm_str(fsa_our_dc), changed);
+            crm_info("Node %s is %s a peer " CRM_XS " DC=%s old=0x%07x new=0x%07x",
+                     node->uname, (appeared? "now" : "no longer"),
+                     (AM_I_DC? "true" : (fsa_our_dc? fsa_our_dc : "<none>")),
+                     old, node->processes);
 
-            if ((changed & proc_flags) == 0) {
-                /* Peer process did not change */
-                crm_trace("No change %6x %6x %6x", old, node->processes, proc_flags);
+            if (is_not_set((node->processes ^ old), crm_get_cluster_proc())) {
+                /* Peer status did not change. This should not be possible,
+                 * since we don't track process flags other than peer status.
+                 */
+                crm_trace("Process flag 0x%7x did not change from 0x%7x to 0x%7x",
+                          crm_get_cluster_proc(), old, node->processes);
                 return;
+
             } else if (is_not_set(fsa_input_register, R_CIB_CONNECTED)) {
-                crm_trace("Not connected");
+                crm_trace("Ignoring peer status change because not connected to CIB");
                 return;
+
             } else if (fsa_state == S_STOPPING) {
-                crm_trace("Stopping");
+                crm_trace("Ignoring peer status change because stopping");
                 return;
             }
 
-            appeared = (node->processes & proc_flags) != 0;
-            if (safe_str_eq(node->uname, fsa_our_uname) && (node->processes & proc_flags) == 0) {
+            if (safe_str_eq(node->uname, fsa_our_uname) && !appeared) {
                 /* Did we get evicted? */
                 crm_notice("Our peer connection failed");
                 register_fsa_input(C_CRMD_STATUS_CALLBACK, I_ERROR, NULL);
@@ -169,13 +170,10 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 }
 
             } else if(AM_I_DC) {
-                if (appeared == FALSE) {
-                    crm_info("Peer %s left us", node->uname);
-                    erase_status_tag(node->uname, XML_TAG_TRANSIENT_NODEATTRS, cib_scope_local);
-                } else {
-                    crm_info("New peer %s we want to sync fence history with",
-                             node->uname);
+                if (appeared) {
                     te_trigger_stonith_history_sync();
+                } else {
+                    erase_status_tag(node->uname, XML_TAG_TRANSIENT_NODEATTRS, cib_scope_local);
                 }
             }
             break;

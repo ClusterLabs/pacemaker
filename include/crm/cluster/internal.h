@@ -79,10 +79,6 @@ peer2text(enum crm_proc_flag proc)
 {
     const char *text = "unknown";
 
-    if (proc == (crm_proc_controld | crm_get_cluster_proc())) {
-        return "peer";
-    }
-
     switch (proc) {
         case crm_proc_none:
             text = "none";
