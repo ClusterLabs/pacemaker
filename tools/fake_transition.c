@@ -650,6 +650,7 @@ exec_rsc_action(crm_graph_t * graph, crm_action_t * action)
      * If not found use the preferred name anyway
      */
     resource = crm_element_value(action_rsc, XML_ATTR_ID);
+    CRM_ASSERT(resource != NULL); // makes static analysis happy
     lrm_name = resource; // Preferred name when writing history
     if (pe_find_resource(fake_resource_list, resource) == NULL) {
         const char *longname = crm_element_value(action_rsc, XML_ATTR_ID_LONG);

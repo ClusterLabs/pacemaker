@@ -117,7 +117,7 @@ support_install() {
     mkdir -p "$INIT_DIR"
     install -m 0755 "$LSB_DUMMY" "$INIT_DIR" || return $CRM_EX_ERROR
 
-    if [ -d "$UPSTART_DIR" -a -f "$UPSTART_DUMMY" ]; then
+    if [ -d "$UPSTART_DIR" ] && [ -f "$UPSTART_DUMMY" ]; then
         echo "Installing $UPSTART_DUMMY to $UPSTART_DIR ..."
         install -m 0644 "$UPSTART_DUMMY" "$UPSTART_DIR" || return $CRM_EX_ERROR
     fi

@@ -60,6 +60,14 @@ static int do_update(char command, const char *attr_node, const char *attr_name,
                      const char *attr_value, const char *attr_section,
                      const char *attr_set, const char *attr_dampen, int attr_options);
 
+// Free memory at exit to make analyzers happy
+#define cleanup_memory() \
+    free(attr_dampen); \
+    free(attr_name); \
+    free(attr_node); \
+    free(attr_section); \
+    free(attr_set);
+
 int
 main(int argc, char **argv)
 {
@@ -68,12 +76,12 @@ main(int argc, char **argv)
     int attr_options = attrd_opt_none;
     int flag;
     crm_exit_t exit_code = CRM_EX_OK;
-    const char *attr_node = NULL;
-    const char *attr_name = NULL;
+    char *attr_node = NULL;
+    char *attr_name = NULL;
+    char *attr_set = NULL;
+    char *attr_section = NULL;
+    char *attr_dampen = NULL;
     const char *attr_value = NULL;
-    const char *attr_set = NULL;
-    const char *attr_section = NULL;
-    const char *attr_dampen = NULL;
     char command = 'Q';
 
     gboolean query_all = FALSE;
@@ -83,7 +91,7 @@ main(int argc, char **argv)
                     "Tool for updating cluster node attributes");
 
     if (argc < 2) {
-        crm_help('?', CRM_EX_USAGE);
+        return crm_help('?', CRM_EX_USAGE);
     }
 
     while (1) {
@@ -97,7 +105,8 @@ main(int argc, char **argv)
                 break;
             case '?':
             case '$':
-                crm_help(flag, CRM_EX_OK);
+                cleanup_memory();
+                return crm_help(flag, CRM_EX_OK);
                 break;
             case 'n':
                 attr_name = strdup(optarg);
@@ -152,7 +161,8 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', CRM_EX_USAGE);
+        cleanup_memory();
+        return crm_help('?', CRM_EX_USAGE);
     }
 
     if (command == 'Q') {
@@ -163,12 +173,13 @@ main(int argc, char **argv)
          * However, it's not a big problem, because pacemaker-attrd will learn
          * and remember a node's "remoteness".
          */
-
-        attr_node = attrd_get_target(attr_node);
-        exit_code = crm_errno2exit(do_update(command, attr_node, attr_name,
+        exit_code = crm_errno2exit(do_update(command,
+                                   attrd_get_target(attr_node), attr_name,
                                    attr_value, attr_section, attr_set,
                                    attr_dampen, attr_options));
     }
+
+    cleanup_memory();
     return crm_exit(exit_code);
 }
 
