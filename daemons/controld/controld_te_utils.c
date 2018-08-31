@@ -367,7 +367,7 @@ te_trigger_stonith_history_sync(void)
     /* as we are finally checking the stonith-connection
      * in do_stonith_history_sync we should be fine
      * leaving stonith_history_sync_time & stonith_history_sync_trigger
-     * arround
+     * around
      */
     if (stonith_history_sync_trigger == NULL) {
         stonith_history_sync_trigger =
@@ -381,6 +381,7 @@ te_trigger_stonith_history_sync(void)
                                FALSE, stonith_history_sync_set_trigger,
                                NULL);
     }
+    crm_info("Fence history will be synchronized cluster-wide within 5 seconds");
     mainloop_timer_start(stonith_history_sync_timer);
 }
 

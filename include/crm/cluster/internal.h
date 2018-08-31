@@ -79,10 +79,6 @@ peer2text(enum crm_proc_flag proc)
 {
     const char *text = "unknown";
 
-    if (proc == (crm_proc_controld | crm_get_cluster_proc())) {
-        return "peer";
-    }
-
     switch (proc) {
         case crm_proc_none:
             text = "none";
@@ -110,21 +106,6 @@ peer2text(enum crm_proc_flag proc)
             break;
     }
     return text;
-}
-
-static inline enum crm_proc_flag
-text2proc(const char *proc)
-{
-    /* We only care about these two so far */
-
-    if (proc && strcmp(proc, "pacemaker-based") == 0) {
-        return crm_proc_based;
-
-    } else if (proc && strcmp(proc, "pacemaker-controld") == 0) {
-        return crm_proc_controld;
-    }
-
-    return crm_proc_none;
 }
 
 static inline const char *

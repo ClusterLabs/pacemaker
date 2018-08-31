@@ -163,7 +163,7 @@ create_node_state_update(crm_node_t *node, int flags, xmlNode *parent,
     if (!is_set(node->flags, crm_remote_node)) {
         if (flags & node_update_peer) {
             value = OFFLINESTATUS;
-            if (node->processes & proc_flags) {
+            if (is_set(node->processes, crm_get_cluster_proc())) {
                 value = ONLINESTATUS;
             }
             crm_xml_add(node_state, XML_NODE_IS_PEER, value);

@@ -895,8 +895,11 @@ crm_update_peer_state_iter(const char *source, crm_node_t * node, const char *st
               return NULL);
 
     is_member = safe_str_eq(state, CRM_NODE_MEMBER);
-    if (membership && is_member) {
-        node->last_seen = membership;
+    if (is_member) {
+        node->when_lost = 0;
+        if (membership) {
+            node->last_seen = membership;
+        }
     }
 
     if (state && safe_str_neq(node->state, state)) {
