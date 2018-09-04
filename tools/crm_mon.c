@@ -94,7 +94,6 @@ enum mon_output_format_e {
 static char *output_filename = NULL;   /* if sending output to a file, its name */
 
 /* other globals */
-static char *xml_file = NULL;
 static char *pid_file = NULL;
 
 static gboolean group_by_node = FALSE;
@@ -124,6 +123,7 @@ static int fence_history_level = 1;
 static gboolean print_brief = FALSE;
 static gboolean print_pending = TRUE;
 static gboolean print_clone_detail = FALSE;
+static gboolean console_initialized = FALSE;
 
 /* FIXME allow, detect, and correctly interpret glob pattern or regex? */
 const char *print_neg_location_prefix = "";
@@ -576,6 +576,7 @@ main(int argc, char **argv)
     int flag;
     int argerr = 0;
     int option_index = 0;
+    int rc = pcmk_ok;
 
     pid_file = strdup("/tmp/ClusterMon.pid");
     crm_log_cli_init("crm_mon");
@@ -673,7 +674,7 @@ main(int argc, char **argv)
                 if(optarg == NULL) {
                     crm_help(flag, CRM_EX_USAGE);
                 }
-                xml_file = strdup(optarg);
+                setenv("CIB_file", optarg, 1);
                 one_shot = TRUE;
                 break;
             case 'h':
@@ -731,6 +732,46 @@ main(int argc, char **argv)
         fence_history_level = 0;
     }
 
+    /* create the cib-object early to be able to do further
+     * decisions based on the cib-source
+     */
+    cib = cib_new();
+
+    if (cib == NULL) {
+        rc = -EINVAL;
+    } else {
+        switch (cib->variant) {
+
+            case cib_native:
+                /* cib & fencing - everything available */
+                break;
+
+            case cib_file:
+                /* Don't try to connect to fencing as we
+                 * either don't have a running cluster or
+                 * the fencing-information would possibly
+                 * not match the cib data from a file.
+                 * As we don't expect cib-updates coming
+                 * in enforce one-shot. */
+                fence_history_level = 0;
+                one_shot = TRUE;
+                break;
+
+            case cib_remote:
+                /* updates coming in but no fencing */
+                fence_history_level = 0;
+                break;
+
+            case cib_undefined:
+            case cib_database:
+            default:
+                /* something is odd */
+                rc = -EINVAL;
+                crm_err("Invalid cib-source");
+                break;
+        }
+    }
+
     switch (fence_history_level) {
         case 3:
             fence_full_history = TRUE;
@@ -750,7 +791,7 @@ main(int argc, char **argv)
     if (output_format == mon_output_cgi) {
         argerr += (optind < argc);
         argerr += (output_filename != NULL);
-        argerr += (xml_file != NULL);
+        argerr += ((cib) && (cib->variant == cib_file));
         argerr += (external_agent != NULL);
         argerr += (daemonize == TRUE);  /* paranoia */
 
@@ -762,12 +803,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        if (output_format == mon_output_cgi) {
-            fprintf(stdout, "Content-Type: text/plain\n"
-                            "Status: 500\n\n");
-            return CRM_EX_USAGE;
-        }
-        crm_help('?', CRM_EX_USAGE);
+        clean_up(CRM_EX_USAGE);
     }
 
     /* XML output always prints everything */
@@ -789,12 +825,27 @@ main(int argc, char **argv)
 
         if ((output_format != mon_output_html) && (output_format != mon_output_xml)
             && !external_agent) {
-            printf
-                ("Looks like you forgot to specify one or more of: --as-html, --as-xml, --external-agent\n");
-            crm_help('?', CRM_EX_USAGE);
+            printf ("Looks like you forgot to specify one or more of: "
+                    "--as-html, --as-xml, --external-agent\n");
+            clean_up(CRM_EX_USAGE);
         }
 
-        crm_make_daemon(crm_system_name, TRUE, pid_file);
+        if (cib) {
+            /* to be on the safe side don't have cib-object around
+             * when we are forking
+             */
+            cib_delete(cib);
+            cib = NULL;
+            crm_make_daemon(crm_system_name, TRUE, pid_file);
+            cib = cib_new();
+            if (cib == NULL) {
+                rc = -EINVAL;
+            }
+            /* otherwise assume we've got the same cib-object we've just destroyed
+             * in our parent
+             */
+        }
+
 
     } else if (output_format == mon_output_console) {
 #if CURSES_ENABLED
@@ -802,6 +853,7 @@ main(int argc, char **argv)
         cbreak();
         noecho();
         crm_enable_stderr(FALSE);
+        console_initialized = TRUE;
 #else
         one_shot = TRUE;
         output_format = mon_output_plain;
@@ -811,16 +863,8 @@ main(int argc, char **argv)
     }
 
     crm_info("Starting %s", crm_system_name);
-    if (xml_file != NULL) {
-        current_cib = filename2xml(xml_file);
-        mon_refresh_display(NULL);
-        return CRM_EX_OK;
-    }
 
-    if (current_cib == NULL) {
-        int rc = pcmk_ok;
-
-        cib = cib_new();
+    if (cib) {
 
         do {
             if (!one_shot) {
@@ -846,29 +890,29 @@ main(int argc, char **argv)
             }
 
         } while (rc == -ENOTCONN);
+    }
 
-        if (rc != pcmk_ok) {
-            if (output_format == mon_output_monitor) {
-                printf("CLUSTER CRIT: Connection to cluster failed: %s\n",
-                       pcmk_strerror(rc));
-                clean_up(MON_STATUS_CRIT);
+    if (rc != pcmk_ok) {
+        if (output_format == mon_output_monitor) {
+            printf("CLUSTER CRIT: Connection to cluster failed: %s\n",
+                    pcmk_strerror(rc));
+            clean_up(MON_STATUS_CRIT);
+        } else {
+            if (rc == -ENOTCONN) {
+                print_as("\nError: cluster is not available on this node\n");
             } else {
-                if (rc == -ENOTCONN) {
-                    print_as("\nError: cluster is not available on this node\n");
-                } else {
-                    print_as("\nConnection to cluster failed: %s\n",
-                             pcmk_strerror(rc));
-                }
+                print_as("\nConnection to cluster failed: %s\n",
+                            pcmk_strerror(rc));
             }
-            if (output_format == mon_output_console) {
-                sleep(2);
-            }
-            clean_up(crm_errno2exit(rc));
         }
+        if (output_format == mon_output_console) {
+            sleep(2);
+        }
+        clean_up(crm_errno2exit(rc));
     }
 
     if (one_shot) {
-        return CRM_EX_OK;
+        clean_up(CRM_EX_OK);
     }
 
     mainloop = g_main_loop_new(NULL, FALSE);
@@ -4340,17 +4384,19 @@ mon_st_callback_display(stonith_t * st, stonith_event_t * e)
 }
 
 /*
- * De-init ncurses, disconnect from the CIB manager, and deallocate memory.
+ * De-init ncurses, disconnect from the CIB manager, disconnect fencing,
+ * deallocate memory and show usage-message if requested.
  */
 static void
 clean_up(crm_exit_t exit_code)
 {
 #if CURSES_ENABLED
-    if (output_format == mon_output_console) {
+    if (console_initialized) {
         output_format = mon_output_plain;
         echo();
         nocbreak();
         endwin();
+        console_initialized = FALSE;
     }
 #endif
 
@@ -4372,8 +4418,15 @@ clean_up(crm_exit_t exit_code)
     }
 
     free(output_filename);
-    free(xml_file);
     free(pid_file);
 
+    if (exit_code == CRM_EX_USAGE) {
+        if (output_format == mon_output_cgi) {
+            fprintf(stdout, "Content-Type: text/plain\n"
+                            "Status: 500\n\n");
+        } else {
+            crm_help('?', CRM_EX_USAGE);
+        }
+    }
     crm_exit(exit_code);
 }
