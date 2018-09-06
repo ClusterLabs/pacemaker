@@ -228,7 +228,13 @@ cib_tls_signon(cib_t * cib, crm_remote_t * connection, gboolean event_channel)
         }
 
         /* bind the socket to GnuTls lib */
-        connection->tls_session = crm_create_anon_tls_session(sock, GNUTLS_CLIENT, anon_cred_c);
+        connection->tls_session = pcmk__new_tls_session(sock, GNUTLS_CLIENT,
+                                                        GNUTLS_CRD_ANON,
+                                                        anon_cred_c);
+        if (connection->tls_session == NULL) {
+            cib_tls_close(cib);
+            return -1;
+        }
 
         if (crm_initiate_client_tls_handshake(connection, DEFAULT_CLIENT_HANDSHAKE_TIMEOUT) != 0) {
             crm_err("Session creation for %s:%d failed", private->server, private->port);

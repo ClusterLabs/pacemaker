@@ -27,6 +27,8 @@
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
 
+#  include <gnutls/gnutls.h>
+
 // Hidden in liblrmd
 extern int lrmd_tls_set_key(gnutls_datum_t *key);
 
@@ -212,9 +214,9 @@ lrmd_remote_listen(gpointer data)
         return TRUE;
     }
 
-    session = create_psk_tls_session(csock, GNUTLS_SERVER, psk_cred_s);
+    session = pcmk__new_tls_session(csock, GNUTLS_SERVER, GNUTLS_CRD_PSK,
+                                    psk_cred_s);
     if (session == NULL) {
-        crm_err("TLS session creation failed");
         close(csock);
         return TRUE;
     }

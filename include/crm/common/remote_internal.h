@@ -26,7 +26,11 @@ int crm_remote_accept(int ssock);
 void crm_sockaddr2str(void *sa, char *s);
 
 #  ifdef HAVE_GNUTLS_GNUTLS_H
+#    include <gnutls/gnutls.h>
 
+gnutls_session_t *pcmk__new_tls_session(int csock, unsigned int conn_type,
+                                        gnutls_credentials_type_t cred_type,
+                                        void *credentials);
 /*!
  * \internal
  * \brief Initiate the client handshake after establishing the tcp socket
@@ -36,28 +40,6 @@ void crm_sockaddr2str(void *sa, char *s);
  *        until the timeout period is reached.
  */
 int crm_initiate_client_tls_handshake(crm_remote_t *remote, int timeout_ms);
-
-/*!
- * \internal
- * \brief Create client or server session for anon DH encryption credentials
- *
- * \param[in] credentials  gnutls_anon_server_credentials_t or gnutls_anon_client_credentials_t
- *
- * \return Pointer to new session object on success, NULL otherwise
- */
-void *crm_create_anon_tls_session(int sock, int type, void *credentials);
-
-/*!
- * \internal
- * \brief Create client or server session for PSK credentials
- *
- * \param[in] sock         Socket the session will use for transport
- * \param[in] type         GNUTLS_SERVER or GNUTLS_CLIENT
- * \param[in] credentials  gnutls_psk_server_credentials_t or gnutls_psk_client_credentials_t
- *
- * \return Pointer to new session object on success, NULL otherwise
- */
-void *create_psk_tls_session(int csock, int type, void *credentials);
 
 #  endif    // HAVE_GNUTLS_GNUTLS_H
 #endif      // PCMK__REMOTE__H

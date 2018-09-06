@@ -156,54 +156,71 @@ crm_initiate_client_tls_handshake(crm_remote_t * remote, int timeout_ms)
     return rc;
 }
 
-void *
-crm_create_anon_tls_session(int csock, int type /* GNUTLS_SERVER, GNUTLS_CLIENT */ ,
-                            void *credentials)
+/*!
+ * \internal
+ * \brief Initialize a new TLS session
+ *
+ * \param[in] csock       Connected socket for TLS session
+ * \param[in] conn_type   GNUTLS_SERVER or GNUTLS_CLIENT
+ * \param[in] cred_type   GNUTLS_CRD_ANON or GNUTLS_CRD_PSK
+ * \param[in] credentials TLS session credentials
+ *
+ * \return Pointer to newly created session object, or NULL on error
+ */
+gnutls_session_t *
+pcmk__new_tls_session(int csock, unsigned int conn_type,
+                      gnutls_credentials_type_t cred_type, void *credentials)
 {
-    gnutls_session_t *session = gnutls_malloc(sizeof(gnutls_session_t));
+    int rc = GNUTLS_E_SUCCESS;
+    const char *prio = NULL;
+    gnutls_session_t *session = NULL;
 
-    gnutls_init(session, type);
-
-    // http://www.manpagez.com/info/gnutls/gnutls-2.10.4/gnutls_81.php#Echo-Server-with-anonymous-authentication
-    gnutls_priority_set_direct(*session, PCMK_GNUTLS_PRIORITIES ":+ANON-DH",
-                               NULL);
-
-    gnutls_transport_set_ptr(*session, (gnutls_transport_ptr_t) GINT_TO_POINTER(csock));
-    switch (type) {
-        case GNUTLS_SERVER:
-            gnutls_credentials_set(*session, GNUTLS_CRD_ANON,
-                                   (gnutls_anon_server_credentials_t) credentials);
-            break;
-        case GNUTLS_CLIENT:
-            gnutls_credentials_set(*session, GNUTLS_CRD_ANON,
-                                   (gnutls_anon_client_credentials_t) credentials);
-            break;
+    if (cred_type == GNUTLS_CRD_ANON) {
+        // http://www.manpagez.com/info/gnutls/gnutls-2.10.4/gnutls_81.php#Echo-Server-with-anonymous-authentication
+        prio = PCMK_GNUTLS_PRIORITIES ":+ANON-DH";
+    } else {
+        prio = PCMK_GNUTLS_PRIORITIES ":+DHE-PSK:+PSK";
     }
 
-    return session;
-}
-
-void *
-create_psk_tls_session(int csock, int type /* GNUTLS_SERVER, GNUTLS_CLIENT */ , void *credentials)
-{
-    gnutls_session_t *session = gnutls_malloc(sizeof(gnutls_session_t));
-
-    gnutls_init(session, type);
-    gnutls_priority_set_direct(*session,
-                               PCMK_GNUTLS_PRIORITIES ":+DHE-PSK:+PSK", NULL);
-    gnutls_transport_set_ptr(*session, (gnutls_transport_ptr_t) GINT_TO_POINTER(csock));
-    switch (type) {
-        case GNUTLS_SERVER:
-            gnutls_credentials_set(*session, GNUTLS_CRD_PSK,
-                                   (gnutls_psk_server_credentials_t) credentials);
-            break;
-        case GNUTLS_CLIENT:
-            gnutls_credentials_set(*session, GNUTLS_CRD_PSK,
-                                   (gnutls_psk_client_credentials_t) credentials);
-            break;
+    session = gnutls_malloc(sizeof(gnutls_session_t));
+    if (session == NULL) {
+        rc = GNUTLS_E_MEMORY_ERROR;
+        goto error;
     }
 
+    rc = gnutls_init(session, conn_type);
+    if (rc != GNUTLS_E_SUCCESS) {
+        goto error;
+    }
+
+    /* @TODO On the server side, it would be more efficient to cache the
+     * priority with gnutls_priority_init2() and set it with
+     * gnutls_priority_set() for all sessions.
+     */
+    rc = gnutls_priority_set_direct(*session, prio, NULL);
+    if (rc != GNUTLS_E_SUCCESS) {
+        goto error;
+    }
+
+    gnutls_transport_set_ptr(*session,
+                             (gnutls_transport_ptr_t) GINT_TO_POINTER(csock));
+
+    rc = gnutls_credentials_set(*session, cred_type, credentials);
+    if (rc != GNUTLS_E_SUCCESS) {
+        goto error;
+    }
     return session;
+
+error:
+    crm_err("Could not initialize %s TLS %s session: %s "
+            CRM_XS " rc=%d priority='%s'",
+            (cred_type == GNUTLS_CRD_ANON)? "anonymous" : "PSK",
+            (conn_type == GNUTLS_SERVER)? "server" : "client",
+            gnutls_strerror(rc), rc, prio);
+    if (session != NULL) {
+        gnutls_free(session);
+    }
+    return NULL;
 }
 
 static int
