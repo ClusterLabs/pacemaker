@@ -71,8 +71,8 @@ debug_log(int level, const char *str)
 
 int num_clients;
 int authenticate_user(const char *user, const char *passwd);
-int cib_remote_listen(gpointer data);
-int cib_remote_msg(gpointer data);
+static int cib_remote_listen(gpointer data);
+static int cib_remote_msg(gpointer data);
 
 static void
 remote_connection_destroy(gpointer user_data)
@@ -270,7 +270,7 @@ remote_auth_timeout_cb(gpointer data)
     return FALSE;
 }
 
-int
+static int
 cib_remote_listen(gpointer data)
 {
     int csock = 0;
@@ -455,7 +455,7 @@ cib_handle_remote_msg(crm_client_t * client, xmlNode * command)
     cib_common_callback_worker(0, 0, command, client, TRUE);
 }
 
-int
+static int
 cib_remote_msg(gpointer data)
 {
     xmlNode *command = NULL;
@@ -467,29 +467,29 @@ cib_remote_msg(gpointer data)
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
     if (client->kind == CRM_CLIENT_TLS && (client->remote->tls_handshake_complete == FALSE)) {
-        int rc = 0;
-
-        /* Muliple calls to handshake will be required, this callback
-         * will be invoked once the client sends more handshake data. */
-        do {
-            rc = gnutls_handshake(*client->remote->tls_session);
-
-            if (rc < 0 && rc != GNUTLS_E_AGAIN) {
-                crm_err("TLS handshake with remote CIB manager failed");
-                return -1;
-            }
-        } while (rc == GNUTLS_E_INTERRUPTED);
+        int rc = pcmk__read_handshake_data(client);
 
         if (rc == 0) {
-            crm_debug("TLS handshake with remote CIB manager completed");
-            client->remote->tls_handshake_complete = TRUE;
-            if (client->remote->auth_timeout) {
-                g_source_remove(client->remote->auth_timeout);
-            }
-            /* after handshake, clients must send auth in a few seconds */
-            client->remote->auth_timeout =
-                g_timeout_add(REMOTE_AUTH_TIMEOUT, remote_auth_timeout_cb, client);
+            /* No more data is available at the moment. Just return for now;
+             * we'll get invoked again once the client sends more.
+             */
+            return 0;
+        } else if (rc < 0) {
+            crm_err("TLS handshake with remote CIB client failed: %s "
+                    CRM_XS " rc=%d", gnutls_strerror(rc), rc);
+            return -1;
         }
+
+        crm_debug("TLS handshake with remote CIB client completed");
+        client->remote->tls_handshake_complete = TRUE;
+        if (client->remote->auth_timeout) {
+            g_source_remove(client->remote->auth_timeout);
+        }
+
+        // Require the client to authenticate within this time
+        client->remote->auth_timeout = g_timeout_add(REMOTE_AUTH_TIMEOUT,
+                                                     remote_auth_timeout_cb,
+                                                     client);
         return 0;
     }
 #endif
@@ -540,7 +540,7 @@ cib_remote_msg(gpointer data)
     }
 
     if (disconnected) {
-        crm_trace("Disconnected while receiving message from remote CIB manager");
+        crm_trace("Disconnected while receiving message from remote CIB client");
         return -1;
     }
 
