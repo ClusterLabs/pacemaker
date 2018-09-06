@@ -23,7 +23,6 @@ the status of the Apache server.
 ====
 Do *not* enable the httpd service. Services that are intended to
 be managed via the cluster software should never be managed by the OS.
-
 It is often useful, however, to manually start the service, verify that
 it works, then stop it again, before adding it to the cluster. This
 allows you to resolve any non-cluster-related problems before continuing.
@@ -97,6 +96,7 @@ tutorial, we will adjust the global operation timeout default to 240 seconds.
 
 ----
 [root@pcmk-1 ~]# pcs resource op defaults timeout=240s
+Warning: Defaults do not apply to resources which override them with their own defined values
 [root@pcmk-1 ~]# pcs resource op defaults
 timeout: 240s
 ----
@@ -115,9 +115,9 @@ After a short delay, we should see the cluster start Apache.
 [root@pcmk-1 ~]# pcs status
 Cluster name: mycluster
 Stack: corosync
-Current DC: pcmk-2 (version 1.1.16-12.el7_4.5-94ff4df) - partition with quorum
-Last updated: Fri Jan 12 12:40:41 2018
-Last change: Fri Jan 12 12:40:05 2018
+Current DC: pcmk-2 (version 1.1.18-11.el7_5.3-2b07d5c5a9) - partition with quorum
+Last updated: Mon Sep 10 17:06:22 2018
+Last change: Mon Sep 10 17:05:41 2018 by root via cibadmin on pcmk-1
 
 2 nodes configured
 2 resources configured
@@ -126,8 +126,8 @@ Online: [ pcmk-1 pcmk-2 ]
 
 Full list of resources:
 
- ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2 
- WebSite	(ocf::heartbeat:apache):	Started pcmk-1 
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2
+ WebSite	(ocf::heartbeat:apache):	Started pcmk-1
 
 Daemon Status:
   corosync: active/disabled
@@ -193,9 +193,9 @@ Ticket Constraints:
 [root@pcmk-1 ~]# pcs status
 Cluster name: mycluster
 Stack: corosync
-Current DC: pcmk-2 (version 1.1.16-12.el7_4.5-94ff4df) - partition with quorum
-Last updated: Fri Jan 12 13:57:58 2018
-Last change: Fri Jan 12 13:57:22 2018
+Current DC: pcmk-2 (version 1.1.18-11.el7_5.3-2b07d5c5a9) - partition with quorum
+Last updated: Mon Sep 10 17:08:54 2018
+Last change: Mon Sep 10 17:08:27 2018 by root via cibadmin on pcmk-1
 
 2 nodes configured
 2 resources configured
@@ -204,8 +204,8 @@ Online: [ pcmk-1 pcmk-2 ]
 
 Full list of resources:
 
- ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2 
- WebSite	(ocf::heartbeat:apache):	Started pcmk-2 
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2
+ WebSite	(ocf::heartbeat:apache):	Started pcmk-2
 
 Daemon Status:
   corosync: active/disabled
@@ -247,13 +247,18 @@ Ticket Constraints:
 == Prefer One Node Over Another ==
 
 Pacemaker does not rely on any sort of hardware symmetry between nodes,
-so it may well be that one machine is more powerful than the other. In
-such cases, it makes sense to host the resources on the more powerful node if
-it is available. To do this, we create a location constraint.
+so it may well be that one machine is more powerful than the other.
+
+In such cases, you may want to host the resources on the more powerful node
+when it is available, to have the best performance -- or you may want to host
+the resources on the _less_ powerful node when it's available, so you don't
+have to worry about whether you can handle the load after a failover.
+
+To do this, we create a location constraint.
 
 In the location constraint below, we are saying the WebSite resource
 prefers the node pcmk-1 with a score of 50.  Here, the score indicates
-how badly we'd like the resource to run at this location.
+how strongly we'd like the resource to run at this location.
 
 -----
 [root@pcmk-1 ~]# pcs constraint location WebSite prefers pcmk-1=50
@@ -269,9 +274,9 @@ Ticket Constraints:
 [root@pcmk-1 ~]# pcs status
 Cluster name: mycluster
 Stack: corosync
-Current DC: pcmk-2 (version 1.1.16-12.el7_4.5-94ff4df) - partition with quorum
-Last updated: Fri Jan 12 14:11:49 2018
-Last change: Fri Jan 12 14:11:20 2018
+Current DC: pcmk-2 (version 1.1.18-11.el7_5.3-2b07d5c5a9) - partition with quorum
+Last updated: Mon Sep 10 17:21:41 2018
+Last change: Mon Sep 10 17:21:14 2018 by root via cibadmin on pcmk-1
 
 2 nodes configured
 2 resources configured
@@ -280,8 +285,8 @@ Online: [ pcmk-1 pcmk-2 ]
 
 Full list of resources:
 
- ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2 
- WebSite	(ocf::heartbeat:apache):	Started pcmk-2 
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2
+ WebSite	(ocf::heartbeat:apache):	Started pcmk-2
 
 Daemon Status:
   corosync: active/disabled
@@ -303,8 +308,8 @@ To see the current placement scores, you can use a tool called crm_simulate.
 Current cluster status:
 Online: [ pcmk-1 pcmk-2 ]
 
- ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2 
- WebSite	(ocf::heartbeat:apache):	Started pcmk-2 
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2
+ WebSite	(ocf::heartbeat:apache):	Started pcmk-2
 
 Allocation scores:
 native_color: ClusterIP allocation score on pcmk-1: 50
@@ -319,15 +324,21 @@ Transition Summary:
 
 There are always times when an administrator needs to override the
 cluster and force resources to move to a specific location. In this example,
-we will force the WebSite to move to pcmk-1 by
-updating our previous location constraint with a score of INFINITY.
+we will force the WebSite to move to pcmk-1.
+
+We will use the *pcs resource move* command to create a temporary constraint
+with a score of INFINITY. While we could update our existing constraint,
+using *move* allows to easily get rid of the temporary constraint later.
+If desired, we could even give a lifetime for the constraint, so it would
+expire automatically -- but we don't that in this example.
 
 -----
-[root@pcmk-1 ~]# pcs constraint location WebSite prefers pcmk-1=INFINITY
+[root@pcmk-1 ~]# pcs resource move WebSite pcmk-1
 [root@pcmk-1 ~]# pcs constraint
 Location Constraints:
   Resource: WebSite
-    Enabled on: pcmk-1 (score:INFINITY)
+    Enabled on: pcmk-1 (score:50)
+    Enabled on: pcmk-1 (score:INFINITY) (role: Started)
 Ordering Constraints:
   start ClusterIP then start WebSite (kind:Mandatory)
 Colocation Constraints:
@@ -336,9 +347,9 @@ Ticket Constraints:
 [root@pcmk-1 ~]# pcs status
 Cluster name: mycluster
 Stack: corosync
-Current DC: pcmk-2 (version 1.1.16-12.el7_4.5-94ff4df) - partition with quorum
-Last updated: Fri Jan 12 14:19:34 2018
-Last change: Fri Jan 12 14:18:37 2018
+Current DC: pcmk-2 (version 1.1.18-11.el7_5.3-2b07d5c5a9) - partition with quorum
+Last updated: Mon Sep 10 17:28:55 2018
+Last change: Mon Sep 10 17:28:27 2018 by root via crm_resource on pcmk-1
 
 2 nodes configured
 2 resources configured
@@ -347,8 +358,8 @@ Online: [ pcmk-1 pcmk-2 ]
 
 Full list of resources:
 
- ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1 
- WebSite	(ocf::heartbeat:apache):	Started pcmk-1 
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1
+ WebSite	(ocf::heartbeat:apache):	Started pcmk-1
 
 Daemon Status:
   corosync: active/disabled
@@ -358,27 +369,18 @@ Daemon Status:
 
 Once we've finished whatever activity required us to move the
 resources to pcmk-1 (in our case nothing), we can then allow the cluster
-to resume normal operation by removing the new constraint. Since we previously
-configured a default stickiness, the resources will remain on pcmk-1.
+to resume normal operation by removing the new constraint. Due to our first
+location constraint and our default stickiness, the resources will remain on
+pcmk-1.
 
-First, use the `--full` option to get the constraint's ID:
+We will use the *pcs resource clear* command, which removes all temporary
+constraints previously created by *pcs resource move* or *pcs resource ban*.
 -----
-[root@pcmk-1 ~]# pcs constraint --full
-Location Constraints:
-  Resource: WebSite
-    Enabled on: pcmk-1 (score:INFINITY) (id:location-WebSite-pcmk-1-INFINITY)
-Ordering Constraints:
-  start ClusterIP then start WebSite (kind:Mandatory) (id:order-ClusterIP-WebSite-mandatory)
-Colocation Constraints:
-  WebSite with ClusterIP (score:INFINITY) (id:colocation-WebSite-ClusterIP-INFINITY)
-Ticket Constraints:
------
-
-Then remove the desired contraint using its ID:
------
-[root@pcmk-1 ~]# pcs constraint remove location-WebSite-pcmk-1-INFINITY
+[root@pcmk-1 ~]# pcs resource clear WebSite
 [root@pcmk-1 ~]# pcs constraint
 Location Constraints:
+  Resource: WebSite
+    Enabled on: pcmk-1 (score:50)
 Ordering Constraints:
   start ClusterIP then start WebSite (kind:Mandatory)
 Colocation Constraints:
@@ -386,17 +388,17 @@ Colocation Constraints:
 Ticket Constraints:
 -----
 
-Note that the location constraint is now gone. If we check the cluster
+Note that the INFINITY location constraint is now gone. If we check the cluster
 status, we can also see that (as expected) the resources are still active
 on pcmk-1.
 
 -----
-# pcs status
+[root@pcmk-1 ~]# pcs status
 Cluster name: mycluster
 Stack: corosync
-Current DC: pcmk-2 (version 1.1.16-12.el7_4.5-94ff4df) - partition with quorum
-Last updated: Fri Jan 12 14:25:21 2018
-Last change: Fri Jan 12 14:24:29 2018
+Current DC: pcmk-2 (version 1.1.18-11.el7_5.3-2b07d5c5a9) - partition with quorum
+Last updated: Mon Sep 10 17:31:47 2018
+Last change: Mon Sep 10 17:31:04 2018 by root via crm_resource on pcmk-1
 
 2 nodes configured
 2 resources configured
@@ -405,11 +407,17 @@ Online: [ pcmk-1 pcmk-2 ]
 
 Full list of resources:
 
- ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1 
- WebSite	(ocf::heartbeat:apache):	Started pcmk-1 
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1
+ WebSite	(ocf::heartbeat:apache):	Started pcmk-1
 
 Daemon Status:
   corosync: active/disabled
   pacemaker: active/disabled
   pcsd: active/enabled
 -----
+
+To remove the constraint with the score of 50, we would first get the
+constraint's ID using *pcs constraint --full*, then remove it with
+*pcs constraint remove* and the ID. We won't show those steps here,
+but feel free to try it on your own, with the help of the pcs man page
+if necessary.

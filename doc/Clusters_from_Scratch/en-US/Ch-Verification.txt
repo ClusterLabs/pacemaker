@@ -62,24 +62,25 @@ address (not a 127.0.0.x loopback address) listed as the *id*, and *no
 faults* for the status.
 
 If you see something different, you might want to start by checking
-the node's network, firewall and selinux configurations.
+the node's network, firewall and SELinux configurations.
 
 Next, check the membership and quorum APIs:
 
 ----
-[root@pcmk-1 ~]# corosync-cmapctl  | grep members 
+[root@pcmk-1 ~]# corosync-cmapctl | grep members 
 runtime.totem.pg.mrp.srp.members.1.config_version (u64) = 0
 runtime.totem.pg.mrp.srp.members.1.ip (str) = r(0) ip(192.168.122.101) 
 runtime.totem.pg.mrp.srp.members.1.join_count (u32) = 1
 runtime.totem.pg.mrp.srp.members.1.status (str) = joined
 runtime.totem.pg.mrp.srp.members.2.config_version (u64) = 0
 runtime.totem.pg.mrp.srp.members.2.ip (str) = r(0) ip(192.168.122.102) 
-runtime.totem.pg.mrp.srp.members.2.join_count (u32) = 2
+runtime.totem.pg.mrp.srp.members.2.join_count (u32) = 1
 runtime.totem.pg.mrp.srp.members.2.status (str) = joined
 
 [root@pcmk-1 ~]# pcs status corosync 
+
 Membership information
- --------------------------
+\----------------------
     Nodeid      Votes Name
          1          1 pcmk-1 (local)
          2          1 pcmk-2
@@ -115,16 +116,17 @@ If that looks OK, check the `pcs status` output:
 Cluster name: mycluster
 WARNING: no stonith devices and stonith-enabled is not false
 Stack: corosync
-Current DC: pcmk-2 (version 1.1.16-12.el7_4.5-94ff4df) - partition with quorum
-Last updated: Fri Jan 12 16:15:29 2018
-Last change: Fri Jan 12 15:49:47 2018
+Current DC: pcmk-2 (version 1.1.18-11.el7_5.3-2b07d5c5a9) - partition with quorum
+Last updated: Mon Sep 10 16:37:34 2018
+Last change: Mon Sep 10 16:30:53 2018 by hacluster via crmd on pcmk-2
 
 2 nodes configured
 0 resources configured
 
 Online: [ pcmk-1 pcmk-2 ]
 
-No active resources
+No resources
+
 
 Daemon Status:
   corosync: active/disabled
@@ -132,10 +134,11 @@ Daemon Status:
   pcsd: active/enabled
 ----
 
-Finally, ensure there are no startup errors (aside from messages relating
-to not having STONITH configured, which are OK at this point):
+Finally, ensure there are no start-up errors from corosync or pacemaker (aside
+from messages relating to not having STONITH configured, which are OK at this
+point):
 ----
-[root@pcmk-1 ~]# journalctl | grep -i error
+[root@pcmk-1 ~]# journalctl -b | grep -i error
 ----
 
 [NOTE]

@@ -24,29 +24,30 @@ The DLM needs to run on both nodes, so we'll start by creating a resource for
 it (using the *ocf:pacemaker:controld* resource script), and clone it:
 ----
 [root@pcmk-1 ~]# pcs cluster cib dlm_cfg
-[root@pcmk-1 ~]# pcs -f dlm_cfg resource create dlm ocf:pacemaker:controld op monitor interval=60s
+[root@pcmk-1 ~]# pcs -f dlm_cfg resource create dlm \
+	ocf:pacemaker:controld op monitor interval=60s
 [root@pcmk-1 ~]# pcs -f dlm_cfg resource clone dlm clone-max=2 clone-node-max=1
 [root@pcmk-1 ~]# pcs -f dlm_cfg resource show
- ClusterIP	(ocf::heartbeat:IPaddr2):	Started 
- WebSite	(ocf::heartbeat:apache):	Started 
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1
+ WebSite	(ocf::heartbeat:apache):	Started pcmk-1
  Master/Slave Set: WebDataClone [WebData]
-     Masters: [ pcmk-2 ]
-     Slaves: [ pcmk-1 ]
- WebFS	(ocf::heartbeat:Filesystem):	Started 
+     Masters: [ pcmk-1 ]
+     Slaves: [ pcmk-2 ]
+ WebFS	(ocf::heartbeat:Filesystem):	Started pcmk-1
  Clone Set: dlm-clone [dlm]
      Stopped: [ pcmk-1 pcmk-2 ]
 ----
 
 Activate our new configuration, and see how the cluster responds:
 ----
-[root@pcmk-1 ~]# pcs cluster cib-push dlm_cfg
+[root@pcmk-1 ~]# pcs cluster cib-push dlm_cfg --config
 CIB updated
 [root@pcmk-1 ~]# pcs status
 Cluster name: mycluster
 Stack: corosync
-Current DC: pcmk-1 (version 1.1.16-12.el7_4.5-94ff4df) - partition with quorum
-Last updated: Fri Jan 12 11:19:36 2018
-Last change: Fri Jan 12 11:19:28 2018
+Current DC: pcmk-1 (version 1.1.18-11.el7_5.3-2b07d5c5a9) - partition with quorum
+Last updated: Tue Sep 11 10:18:30 2018
+Last change: Tue Sep 11 10:16:49 2018 by hacluster via crmd on pcmk-2
 
 2 nodes configured
 8 resources configured
@@ -55,13 +56,13 @@ Online: [ pcmk-1 pcmk-2 ]
 
 Full list of resources:
 
- ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2 
- WebSite	(ocf::heartbeat:apache):	Started pcmk-2 
+ ipmi-fencing   (stonith:fence_ipmilan):        Started pcmk-1
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1
+ WebSite	(ocf::heartbeat:apache):	Started pcmk-1
  Master/Slave Set: WebDataClone [WebData]
-     Masters: [ pcmk-2 ]
-     Slaves: [ pcmk-1 ]
- WebFS	(ocf::heartbeat:Filesystem):	Started pcmk-2 
- ipmi-fencing   (stonith:fence_ipmilan):        Started pcmk-1 
+     Masters: [ pcmk-1 ]
+     Slaves: [ pcmk-2 ]
+ WebFS	(ocf::heartbeat:Filesystem):	Started pcmk-1
  Clone Set: dlm-clone [dlm]
      Started: [ pcmk-1 pcmk-2 ]
 
@@ -82,18 +83,18 @@ are not only stopped, but stopped in the correct order.
 ----
 [root@pcmk-1 ~]# pcs resource disable WebFS
 [root@pcmk-1 ~]# pcs resource
- ClusterIP	(ocf::heartbeat:IPaddr2):	Started 
- WebSite	(ocf::heartbeat:apache):	Stopped 
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1
+ WebSite	(ocf::heartbeat:apache):	Stopped
  Master/Slave Set: WebDataClone [WebData]
-     Masters: [ pcmk-2 ]
-     Slaves: [ pcmk-1 ]
- WebFS	(ocf::heartbeat:Filesystem):	Stopped 
+     Masters: [ pcmk-1 ]
+     Slaves: [ pcmk-2 ]
+ WebFS	(ocf::heartbeat:Filesystem):	Stopped (disabled)
  Clone Set: dlm-clone [dlm]
      Started: [ pcmk-1 pcmk-2 ]
 ----
 
 You can see that both Apache and WebFS have been stopped,
-and that *pcmk-2* is the current master for the DRBD device.
+and that *pcmk-1* is the current master for the DRBD device.
 
 Now we can create a new GFS2 filesystem on the DRBD device.
 
@@ -113,19 +114,24 @@ Otherwise, you will receive the message:
 ===========
 
 -----
-[root@pcmk-2 ~]# mkfs.gfs2 -p lock_dlm -j 2 -t mycluster:web /dev/drbd1
+[root@pcmk-1 ~]# mkfs.gfs2 -p lock_dlm -j 2 -t mycluster:web /dev/drbd1
 It appears to contain an existing filesystem (xfs)
 This will destroy any data on /dev/drbd1
-Are you sure you want to proceed? [y/n]y
+Are you sure you want to proceed? [y/n] y
+Discarding device contents (may take a while on large devices): Done
+Adding journals: Done 
+Building resource groups: Done 
+Creating quota file: Done
+Writing superblock and syncing: Done
 Device:                    /dev/drbd1
 Block size:                4096
-Device size:               1.00 GB (262127 blocks)
-Filesystem size:           1.00 GB (262126 blocks)
+Device size:               0.50 GB (131059 blocks)
+Filesystem size:           0.50 GB (131056 blocks)
 Journals:                  2
-Resource groups:           5
+Resource groups:           3
 Locking protocol:          "lock_dlm"
 Lock table:                "mycluster:web"
-UUID:                      9a72c488-d8a7-24c9-ceee-add7a8ca52c2
+UUID:                      0bcbffab-cada-4105-94d1-be8a26669ee0
 -----
 
 The `mkfs.gfs2` command required a number of additional parameters:
@@ -149,15 +155,15 @@ Now we can (re-)populate the new filesystem with data
 (web pages). We'll create yet another variation on our home page.
 
 -----
-[root@pcmk-2 ~]# mount /dev/drbd1 /mnt
-[root@pcmk-2 ~]# cat <<-END >/mnt/index.html
+[root@pcmk-1 ~]# mount /dev/drbd1 /mnt
+[root@pcmk-1 ~]# cat <<-END >/mnt/index.html
 <html>
 <body>My Test Site - GFS2</body>
 </html>
 END
-[root@pcmk-2 ~]# chcon -R --reference=/var/www/html /mnt
-[root@pcmk-2 ~]# umount /dev/drbd1
-[root@pcmk-2 ~]# drbdadm verify wwwdata
+[root@pcmk-1 ~]# chcon -R --reference=/var/www/html /mnt
+[root@pcmk-1 ~]# umount /dev/drbd1
+[root@pcmk-1 ~]# drbdadm verify wwwdata
 -----
 
 == Reconfigure the Cluster for GFS2 ==
@@ -168,10 +174,11 @@ With the WebFS resource stopped, let's update the configuration.
 [root@pcmk-1 ~]# pcs resource show WebFS
  Resource: WebFS (class=ocf provider=heartbeat type=Filesystem)
   Attributes: device=/dev/drbd1 directory=/var/www/html fstype=xfs
-  Meta Attrs: target-role=Stopped
-  Operations: start interval=0s timeout=60 (WebFS-start-timeout-60)
-              stop interval=0s timeout=60 (WebFS-stop-timeout-60)
-              monitor interval=20 timeout=40 (WebFS-monitor-interval-20)
+  Meta Attrs: target-role=Stopped 
+  Operations: monitor interval=20 timeout=40 (WebFS-monitor-interval-20)
+              notify interval=0s timeout=60 (WebFS-notify-interval-0s)
+              start interval=0s timeout=60 (WebFS-start-interval-0s)
+              stop interval=0s timeout=60 (WebFS-stop-interval-0s)
 ----
 
 The fstype option needs to be updated to *gfs2* instead of *xfs*.
@@ -180,11 +187,12 @@ The fstype option needs to be updated to *gfs2* instead of *xfs*.
 [root@pcmk-1 ~]# pcs resource update WebFS fstype=gfs2
 [root@pcmk-1 ~]# pcs resource show WebFS
  Resource: WebFS (class=ocf provider=heartbeat type=Filesystem)
-  Attributes: device=/dev/drbd1 directory=/var/www/html fstype=gfs2 
+  Attributes: device=/dev/drbd1 directory=/var/www/html fstype=gfs2
   Meta Attrs: target-role=Stopped 
-  Operations: start interval=0s timeout=60 (WebFS-start-timeout-60)
-              stop interval=0s timeout=60 (WebFS-stop-timeout-60)
-              monitor interval=20 timeout=40 (WebFS-monitor-interval-20)
+  Operations: monitor interval=20 timeout=40 (WebFS-monitor-interval-20)
+              notify interval=0s timeout=60 (WebFS-notify-interval-0s)
+              start interval=0s timeout=60 (WebFS-start-interval-0s)
+              stop interval=0s timeout=60 (WebFS-stop-interval-0s)
 ----
 
 GFS2 requires that DLM be running, so we also need to set up new colocation
@@ -256,33 +264,33 @@ will be hashed; each node will process a certain range of hashes.
 
 Load our configuration to the cluster, and see how it responds.
 -----
-[root@pcmk-1 ~]# pcs cluster cib-push loadbalance_cfg
+[root@pcmk-1 ~]# pcs cluster cib-push loadbalance_cfg --config
 CIB updated
 [root@pcmk-1 ~]# pcs status
 Cluster name: mycluster
 Stack: corosync
-Current DC: pcmk-1 (version 1.1.16-12.el7_4.5-94ff4df) - partition with quorum
-Last updated: Fri Jan 12 11:32:07 2018
-Last change: Fri Jan 12 11:32:04 2018
+Current DC: pcmk-1 (version 1.1.18-11.el7_5.3-2b07d5c5a9) - partition with quorum
+Last updated: Tue Sep 11 10:36:38 2018
+Last change: Tue Sep 11 10:36:33 2018 by root via cibadmin on pcmk-1
 
 2 nodes configured
-9 resources configured
+9 resources configured (1 DISABLED)
 
 Online: [ pcmk-1 pcmk-2 ]
 
 Full list of resources:
 
- WebSite	(ocf::heartbeat:apache):	Stopped 
+ ipmi-fencing   (stonith:fence_ipmilan):        Started pcmk-1 
+ WebSite	(ocf::heartbeat:apache):	Stopped
  Master/Slave Set: WebDataClone [WebData]
      Masters: [ pcmk-1 ]
      Slaves: [ pcmk-2 ]
- WebFS	(ocf::heartbeat:Filesystem):	Stopped 
- ipmi-fencing   (stonith:fence_ipmilan):        Started pcmk-1 
+ WebFS	(ocf::heartbeat:Filesystem):	Stopped (disabled)
  Clone Set: dlm-clone [dlm]
      Started: [ pcmk-1 pcmk-2 ]
  Clone Set: ClusterIP-clone [ClusterIP] (unique)
-     ClusterIP:0	(ocf::heartbeat:IPaddr2):	Started pcmk-1 
-     ClusterIP:1	(ocf::heartbeat:IPaddr2):	Started pcmk-2 
+     ClusterIP:0	(ocf::heartbeat:IPaddr2):	Started pcmk-2
+     ClusterIP:1	(ocf::heartbeat:IPaddr2):	Started pcmk-1
 
 Daemon Status:
   corosync: active/disabled
@@ -326,13 +334,13 @@ Tell the cluster that it is now allowed to promote both instances to be DRBD
 Primary (aka. master).
 
 -----
-[root@pcmk-1 ~]# pcs -f active_cfg resource update WebDataClone master-max=2 
+[root@pcmk-1 ~]# pcs -f active_cfg resource update WebDataClone master-max=2
 -----
 
 Finally, load our configuration to the cluster, and re-enable the WebFS resource
 (which we disabled earlier).
 -----
-[root@pcmk-1 ~]# pcs cluster cib-push active_cfg
+[root@pcmk-1 ~]# pcs cluster cib-push active_cfg --config
 CIB updated
 [root@pcmk-1 ~]# pcs resource enable WebFS
 -----
@@ -345,8 +353,8 @@ After all the processes are started, the status should look similar to this.
  Clone Set: dlm-clone [dlm]
      Started: [ pcmk-1 pcmk-2 ]
  Clone Set: ClusterIP-clone [ClusterIP] (unique)
-     ClusterIP:0	(ocf::heartbeat:IPaddr2):	Started 
-     ClusterIP:1	(ocf::heartbeat:IPaddr2):	Started 
+     ClusterIP:0	(ocf::heartbeat:IPaddr2):	Started pcmk-2
+     ClusterIP:1	(ocf::heartbeat:IPaddr2):	Started pcmk-1
  Clone Set: WebFS-clone [WebFS]
      Started: [ pcmk-1 pcmk-2 ]
  Clone Set: WebSite-clone [WebSite]

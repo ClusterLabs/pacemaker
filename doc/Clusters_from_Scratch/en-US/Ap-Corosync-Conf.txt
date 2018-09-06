@@ -5,29 +5,32 @@
 .Sample +corosync.conf+ for two-node cluster created by `pcs`.
 .....
 totem {
-version: 2
-secauth: off
-cluster_name: mycluster
-transport: udpu
+    version: 2
+    cluster_name: mycluster
+    secauth: off
+    transport: udpu
 }
 
 nodelist {
-  node {
+    node {
         ring0_addr: pcmk-1
         nodeid: 1
-       }
-  node {
+    }
+
+    node {
         ring0_addr: pcmk-2
         nodeid: 2
-       }
+    }
 }
 
 quorum {
-provider: corosync_votequorum
-two_node: 1
+    provider: corosync_votequorum
+    two_node: 1
 }
 
 logging {
-to_syslog: yes
+    to_logfile: yes
+    logfile: /var/log/cluster/corosync.log
+    to_syslog: yes
 }
 .....

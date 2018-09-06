@@ -18,15 +18,10 @@ line tool.
 They even allow you to queue up several changes at once and commit
 them all at once.
 
-Two popular command-line shells are `pcs` and
-`crmsh`.  This edition of Clusters from Scratch is based on `pcs`.
-
-[NOTE]
-===========
-The two shells share many concepts but the scope, layout and syntax
-does differ, so make sure you read the version of this guide that
-corresponds to the software installed on your system.
-===========
+Two popular command-line shells are `pcs` and `crmsh`. Clusters from Scratch is
+based on `pcs` because it comes with CentOS, but both have similar
+functionality. Choosing a shell or GUI is a matter of personal preference and
+what comes with (and perhaps is supported by) your choice of operating system.
 
 == Explore pcs ==
 
@@ -43,9 +38,13 @@ Options:
     -h, --help         Display usage and exit.
     -f file            Perform actions on file instead of active CIB.
     --debug            Print all network traffic and external commands run.
-    --version          Print pcs version information.
+    --version          Print pcs version information. List pcs capabilities if
+                       --full is specified.
     --request-timeout  Timeout for each outgoing request to another node in
                        seconds. Default is 60s.
+    --force            Override checks and errors, the exact behavior depends on
+                       the command. WARNING: Using the --force option is
+                       strongly discouraged unless you know what you are doing.
 
 Commands:
     cluster     Configure cluster options and nodes.
@@ -126,8 +125,8 @@ installation, run:
 
 ----
 [root@pcmk-1 ~]# pacemakerd --features
-Pacemaker 1.1.16-12.el7_4.5 (Build: 94ff4df)
- Supporting v3.0.12:  generated-manpages agent-manpages ncurses libqb-logging libqb-ipc systemd nagios  corosync-native atomic-attrd acls
+Pacemaker 1.1.18-11.el7_5.3 (Build: 2b07d5c5a9)
+ Supporting v3.0.14:  generated-manpages agent-manpages ncurses libqb-logging libqb-ipc systemd nagios  corosync-native atomic-attrd acls
 ----
 
 [NOTE]
