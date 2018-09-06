@@ -329,11 +329,11 @@ cib_remote_listen(gpointer data)
         new_client->kind = CRM_CLIENT_TLS;
 
         /* create gnutls session for the server socket */
-        new_client->remote->tls_session =
-            crm_create_anon_tls_session(csock, GNUTLS_SERVER, anon_cred_s);
-
+        new_client->remote->tls_session = pcmk__new_tls_session(csock,
+                                                                GNUTLS_SERVER,
+                                                                GNUTLS_CRD_ANON,
+                                                                anon_cred_s);
         if (new_client->remote->tls_session == NULL) {
-            crm_err("TLS session creation failed");
             close(csock);
             return TRUE;
         }
