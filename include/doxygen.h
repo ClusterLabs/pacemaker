@@ -42,7 +42,7 @@
  *  - \ref fencing
  *
  * Contributing to the Pacemaker Project:
- * - <a href="http://clusterlabs.org/doc/en-US/Pacemaker/1.1-pcs/html-single/Pacemaker_Development/">Pacemaker Development</a>
+ * - <a href="https://clusterlabs.org/doc/en-US/Pacemaker/2.0/html-single/Pacemaker_Development/">Pacemaker Development</a>
  */
 
 #endif                          /* DOXYGEN__H */
