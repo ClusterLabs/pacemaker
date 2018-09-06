@@ -329,8 +329,9 @@ lrmd_init_remote_tls_server()
     crm_gnutls_global_init();
     gnutls_global_set_log_function(debug_log);
 
-    gnutls_dh_params_init(&dh_params);
-    gnutls_dh_params_generate2(dh_params, 1024);
+    if (pcmk__init_tls_dh(&dh_params) != GNUTLS_E_SUCCESS) {
+        return -1;
+    }
     gnutls_psk_allocate_server_credentials(&psk_cred_s);
     gnutls_psk_set_server_credentials_function(psk_cred_s, lrmd_tls_server_key_cb);
     gnutls_psk_set_server_dh_params(psk_cred_s, dh_params);

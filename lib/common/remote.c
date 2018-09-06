@@ -242,6 +242,59 @@ error:
     return NULL;
 }
 
+/*!
+ * \internal
+ * \brief Initialize Diffie-Hellman parameters for a TLS server
+ *
+ * \param[out] dh_params  Parameter object to initialize
+ *
+ * \return GNUTLS_E_SUCCESS on success, GnuTLS error code on error
+ * \todo The current best practice is to allow the client and server to
+ *       negotiate the Diffie-Hellman parameters via a TLS extension (RFC 7919).
+ *       However, we have to support both older versions of GnuTLS (<3.6) that
+ *       don't support the extension on our side, and older Pacemaker versions
+ *       that don't support the extension on the other side. The next best
+ *       practice would be to use a known good prime (see RFC 5114 section 2.2),
+ *       possibly stored in a file distributed with Pacemaker.
+ */
+int
+pcmk__init_tls_dh(gnutls_dh_params_t *dh_params)
+{
+    int rc = GNUTLS_E_SUCCESS;
+    unsigned int dh_bits = 0;
+
+    rc = gnutls_dh_params_init(dh_params);
+    if (rc != GNUTLS_E_SUCCESS) {
+        goto error;
+    }
+
+#ifdef HAVE_GNUTLS_SEC_PARAM_TO_PK_BITS
+    dh_bits = gnutls_sec_param_to_pk_bits(GNUTLS_PK_DH,
+                                          GNUTLS_SEC_PARAM_NORMAL);
+    if (dh_bits == 0) {
+        rc = GNUTLS_E_DH_PRIME_UNACCEPTABLE;
+        goto error;
+    }
+#else
+    dh_bits = 1024;
+#endif
+
+    crm_info("Generating Diffie-Hellman parameters with %u-bit prime for TLS",
+             dh_bits);
+    rc = gnutls_dh_params_generate2(*dh_params, dh_bits);
+    if (rc != GNUTLS_E_SUCCESS) {
+        goto error;
+    }
+
+    return rc;
+
+error:
+    crm_err("Could not initialize Diffie-Hellman parameters for TLS: %s "
+            CRM_XS " rc=%d", gnutls_strerror(rc), rc);
+    CRM_ASSERT(rc == GNUTLS_E_SUCCESS);
+    return rc;
+}
+
 static int
 crm_send_tls(gnutls_session_t * session, const char *buf, size_t len)
 {

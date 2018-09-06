@@ -68,7 +68,6 @@ int init_remote_listener(int port, gboolean encrypted);
 void cib_remote_connection_destroy(gpointer user_data);
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
-#  define DH_BITS 1024
 gnutls_dh_params_t dh_params;
 gnutls_anon_server_credentials_t anon_cred_s;
 static void
@@ -119,8 +118,9 @@ init_remote_listener(int port, gboolean encrypted)
         crm_gnutls_global_init();
         /* gnutls_global_set_log_level (10); */
         gnutls_global_set_log_function(debug_log);
-        gnutls_dh_params_init(&dh_params);
-        gnutls_dh_params_generate2(dh_params, DH_BITS);
+        if (pcmk__init_tls_dh(&dh_params) != GNUTLS_E_SUCCESS) {
+            return -1;
+        }
         gnutls_anon_allocate_server_credentials(&anon_cred_s);
         gnutls_anon_set_server_dh_params(anon_cred_s, dh_params);
 #endif

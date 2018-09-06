@@ -1713,6 +1713,7 @@ if test -n "$LIBGNUTLS_CONFIG"; then
 fi
 AC_CHECK_LIB(gnutls, gnutls_init)
 AC_CHECK_FUNCS(gnutls_priority_set_direct)
+ AC_CHECK_FUNCS([gnutls_sec_param_to_pk_bits]) dnl since 2.12.0 (2011-03-24)
 
 AC_SUBST(GNUTLSHEAD)
 AC_SUBST(GNUTLSLIBS)
