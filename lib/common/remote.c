@@ -158,6 +158,60 @@ crm_initiate_client_tls_handshake(crm_remote_t * remote, int timeout_ms)
 
 /*!
  * \internal
+ * \brief Set minimum prime size required by TLS client
+ *
+ * \param[in] session  TLS session to affect
+ */
+static void
+pcmk__set_minimum_dh_bits(gnutls_session_t *session)
+{
+    const char *dh_min_bits_s = getenv("PCMK_dh_min_bits");
+
+    if (dh_min_bits_s) {
+        int dh_min_bits = crm_parse_int(dh_min_bits_s, "0");
+
+        /* This function is deprecated since GnuTLS 3.1.7, in favor of letting
+         * the priority string imply the DH requirements, but this is the only
+         * way to give the user control over compatibility with older servers.
+         */
+        if (dh_min_bits > 0) {
+            crm_info("Requiring server use a Diffie-Hellman prime of at least %d bits",
+                     dh_min_bits);
+            gnutls_dh_set_prime_bits(*session, dh_min_bits);
+        }
+    }
+}
+
+static unsigned int
+pcmk__bound_dh_bits(unsigned int dh_bits)
+{
+    const char *dh_min_bits_s = getenv("PCMK_dh_min_bits");
+    const char *dh_max_bits_s = getenv("PCMK_dh_max_bits");
+    int dh_min_bits = 0;
+    int dh_max_bits = 0;
+
+    if (dh_min_bits_s) {
+        dh_min_bits = crm_parse_int(dh_min_bits_s, "0");
+    }
+    if (dh_max_bits_s) {
+        dh_max_bits = crm_parse_int(dh_max_bits_s, "0");
+        if ((dh_min_bits > 0) && (dh_max_bits > 0)
+            && (dh_max_bits < dh_min_bits)) {
+            crm_warn("Ignoring PCMK_dh_max_bits because it is less than PCMK_dh_min_bits");
+            dh_max_bits = 0;
+        }
+    }
+    if ((dh_min_bits > 0) && (dh_bits < dh_min_bits)) {
+        return dh_min_bits;
+    }
+    if ((dh_max_bits > 0) && (dh_bits > dh_max_bits)) {
+        return dh_max_bits;
+    }
+    return dh_bits;
+}
+
+/*!
+ * \internal
  * \brief Initialize a new TLS session
  *
  * \param[in] csock       Connected socket for TLS session
@@ -200,6 +254,9 @@ pcmk__new_tls_session(int csock, unsigned int conn_type,
     rc = gnutls_priority_set_direct(*session, prio, NULL);
     if (rc != GNUTLS_E_SUCCESS) {
         goto error;
+    }
+    if (conn_type == GNUTLS_CLIENT) {
+        pcmk__set_minimum_dh_bits(session);
     }
 
     gnutls_transport_set_ptr(*session,
@@ -259,6 +316,7 @@ pcmk__init_tls_dh(gnutls_dh_params_t *dh_params)
 #else
     dh_bits = 1024;
 #endif
+    dh_bits = pcmk__bound_dh_bits(dh_bits);
 
     crm_info("Generating Diffie-Hellman parameters with %u-bit prime for TLS",
              dh_bits);

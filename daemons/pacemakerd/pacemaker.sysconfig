@@ -93,6 +93,25 @@
 # value must be the same on all nodes. The default is "3121".
 # PCMK_remote_port=3121
 
+# Set bounds on the bit length of the prime number generated for Diffie-Hellman
+# parameters needed by TLS connections. The default is not to set any bounds.
+#
+# If these values are specified, the server (Pacemaker Remote daemon, or CIB
+# manager configured to accept remote clients) will use these values to provide
+# a floor and/or ceiling for the value recommended by the GnuTLS library. The
+# library will only accept a limited number of specific values, which vary by
+# library version, so setting these is recommended only when required for
+# compatibility with specific client versions.
+#
+# If PCMK_dh_min_bits is specified, the client (connecting cluster node or
+# remote CIB command) will require that the server use a prime of at least this
+# size. This is only recommended when the value must be lowered in order for
+# the client's GnuTLS library to accept a connection to an older server.
+# The client side does not use PCMK_dh_max_bits.
+# 
+# PCMK_dh_min_bits=1024
+# PCMK_dh_max_bits=2048
+
 #==#==# IPC
 
 # Force use of a particular class of IPC connection.
