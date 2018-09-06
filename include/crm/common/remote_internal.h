@@ -32,6 +32,7 @@ gnutls_session_t *pcmk__new_tls_session(int csock, unsigned int conn_type,
                                         gnutls_credentials_type_t cred_type,
                                         void *credentials);
 int pcmk__init_tls_dh(gnutls_dh_params_t *dh_params);
+int pcmk__read_handshake_data(crm_client_t *client);
 
 /*!
  * \internal

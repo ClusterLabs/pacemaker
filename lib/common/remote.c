@@ -295,6 +295,40 @@ error:
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Process handshake data from TLS client
+ *
+ * Read as much TLS handshake data as is available.
+ *
+ * \param[in] client  Client connection
+ *
+ * \retval GnuTLS error code on error
+ * \retval 0 if more data is needed
+ * \retval 1 if handshake is successfully completed
+ */
+int
+pcmk__read_handshake_data(crm_client_t *client)
+{
+    int rc = 0;
+
+    CRM_ASSERT(client && client->remote && client->remote->tls_session);
+
+    do {
+        rc = gnutls_handshake(*client->remote->tls_session);
+    } while (rc == GNUTLS_E_INTERRUPTED);
+
+    if (rc == GNUTLS_E_AGAIN) {
+        /* No more data is available at the moment. This function should be
+         * invoked again once the client sends more.
+         */
+        return 0;
+    } else if (rc != GNUTLS_E_SUCCESS) {
+        return rc;
+    }
+    return 1;
+}
+
 static int
 crm_send_tls(gnutls_session_t * session, const char *buf, size_t len)
 {

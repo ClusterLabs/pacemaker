@@ -63,18 +63,14 @@ debug_log(int level, const char *str)
 static int
 remoted__read_handshake_data(crm_client_t *client)
 {
-    int rc = 0;
+    int rc = pcmk__read_handshake_data(client);
 
-    do {
-        rc = gnutls_handshake(*client->remote->tls_session);
-    } while (rc == GNUTLS_E_INTERRUPTED);
-
-    if (rc == GNUTLS_E_AGAIN) {
+    if (rc == 0) {
         /* No more data is available at the moment. Just return for now;
          * we'll get invoked again once the client sends more.
          */
         return 0;
-    } else if (rc != GNUTLS_E_SUCCESS) {
+    } else if (rc < 0) {
         crm_err("TLS handshake with Pacemaker Remote failed: %s "
                 CRM_XS " rc=%d", gnutls_strerror(rc), rc);
         return -1;
