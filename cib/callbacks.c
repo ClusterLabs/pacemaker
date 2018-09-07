@@ -33,6 +33,7 @@
 #include <crm/cluster/internal.h>
 
 #include <crm/common/xml.h>
+#include <crm/common/remote_internal.h>
 
 #include <cibio.h>
 #include <callbacks.h>

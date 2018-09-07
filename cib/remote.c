@@ -37,6 +37,7 @@
 #include <crm/common/ipc.h>
 #include <crm/common/ipcs.h>
 #include <crm/common/xml.h>
+#include <crm/common/remote_internal.h>
 #include <crm/cib/internal.h>
 
 #include "callbacks.h"

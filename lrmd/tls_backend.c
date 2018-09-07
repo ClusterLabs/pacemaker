@@ -27,6 +27,7 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/mainloop.h>
+#include <crm/common/remote_internal.h>
 
 #include <lrmd_private.h>
 
@@ -37,6 +38,10 @@
 #include <arpa/inet.h>
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
+
+// Hidden in liblrmd
+extern int lrmd_tls_set_key(gnutls_datum_t *key);
+
 #  define LRMD_REMOTE_AUTH_TIMEOUT 10000
 gnutls_psk_server_credentials_t psk_cred_s;
 gnutls_dh_params_t dh_params;

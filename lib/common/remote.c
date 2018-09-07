@@ -40,6 +40,7 @@
 #include <crm/common/ipcs.h>
 #include <crm/common/xml.h>
 #include <crm/common/mainloop.h>
+#include <crm/common/remote_internal.h>
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
 #  undef KEYFILE
