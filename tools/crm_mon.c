@@ -825,10 +825,10 @@ main(int argc, char **argv)
         }
         crm_enable_stderr(FALSE);
 
-        if ((output_format != mon_output_html) && (output_format != mon_output_xml)
+        if ((output_format != mon_output_html)
             && !external_agent) {
             printf ("Looks like you forgot to specify one or more of: "
-                    "--as-html, --as-xml, --external-agent\n");
+                    "--as-html, --external-agent\n");
             clean_up(CRM_EX_USAGE);
         }
 
