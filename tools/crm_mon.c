@@ -123,7 +123,9 @@ static int fence_history_level = 1;
 static gboolean print_brief = FALSE;
 static gboolean print_pending = TRUE;
 static gboolean print_clone_detail = FALSE;
-static gboolean console_initialized = FALSE;
+#if CURSES_ENABLED
+static gboolean curses_console_initialized = FALSE;
+#endif
 
 /* FIXME allow, detect, and correctly interpret glob pattern or regex? */
 const char *print_neg_location_prefix = "";
@@ -853,7 +855,7 @@ main(int argc, char **argv)
         cbreak();
         noecho();
         crm_enable_stderr(FALSE);
-        console_initialized = TRUE;
+        curses_console_initialized = TRUE;
 #else
         one_shot = TRUE;
         output_format = mon_output_plain;
@@ -4391,12 +4393,12 @@ static void
 clean_up(crm_exit_t exit_code)
 {
 #if CURSES_ENABLED
-    if (console_initialized) {
+    if (curses_console_initialized) {
         output_format = mon_output_plain;
         echo();
         nocbreak();
         endwin();
-        console_initialized = FALSE;
+        curses_console_initialized = FALSE;
     }
 #endif
 
