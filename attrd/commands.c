@@ -54,7 +54,7 @@ int last_cib_op_done = 0;
 char *peer_writer = NULL;
 GHashTable *attributes = NULL;
 
-void write_attribute(attribute_t *a);
+void write_attribute(attribute_t *a, bool ignore_delay);
 void write_or_elect_attribute(attribute_t *a);
 void attrd_current_only_attribute_update(crm_node_t *peer, xmlNode *xml);
 void attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter);
@@ -370,19 +370,8 @@ attrd_client_clear_failure(xmlNode *xml)
 void
 attrd_client_refresh(void)
 {
-    GHashTableIter iter;
-    attribute_t *a = NULL;
-
-    /* 'refresh' forces a write of the current value of all attributes
-     * Cancel any existing timers, we're writing it NOW
-     */
-    g_hash_table_iter_init(&iter, attributes);
-    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & a)) {
-        mainloop_timer_stop(a->timer);
-    }
-
     crm_info("Updating all attributes");
-    write_attributes(TRUE);
+    write_attributes(TRUE, TRUE);
 }
 
 /*!
@@ -953,7 +942,7 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
         crm_trace("Learned %s has node id %s",
                   known_peer->uname, known_peer->uuid);
         if (election_state(writer) == election_won) {
-            write_attributes(FALSE);
+            write_attributes(FALSE, FALSE);
         }
     }
 }
@@ -963,7 +952,7 @@ write_or_elect_attribute(attribute_t *a)
 {
     enum election_result rc = election_state(writer);
     if(rc == election_won) {
-        write_attribute(a);
+        write_attribute(a, FALSE);
 
     } else if(rc == election_in_progress) {
         crm_trace("Election in progress to determine who will write out %s", a->id);
@@ -987,7 +976,7 @@ attrd_election_cb(gpointer user_data)
     attrd_peer_sync(NULL, NULL);
 
     /* Update the CIB after an election */
-    write_attributes(TRUE);
+    write_attributes(TRUE, FALSE);
     return FALSE;
 }
 
@@ -1100,7 +1089,7 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
 }
 
 void
-write_attributes(bool all)
+write_attributes(bool all, bool ignore_delay)
 {
     GHashTableIter iter;
     attribute_t *a = NULL;
@@ -1114,7 +1103,7 @@ write_attributes(bool all)
         }
 
         if(all || a->changed) {
-            write_attribute(a);
+            write_attribute(a, ignore_delay);
         } else {
             crm_debug("Skipping unchanged attribute %s", a->id);
         }
@@ -1195,7 +1184,7 @@ send_alert_attributes_value(attribute_t *a, GHashTable *t)
 #define s_if_plural(i) (((i) == 1)? "" : "s")
 
 void
-write_attribute(attribute_t *a)
+write_attribute(attribute_t *a, bool ignore_delay)
 {
     int private_updates = 0, cib_updates = 0;
     xmlNode *xml_top = NULL;
@@ -1224,8 +1213,16 @@ write_attribute(attribute_t *a)
             return;
 
         } else if (mainloop_timer_running(a->timer)) {
-            crm_info("Write out of '%s' delayed: timer is running", a->id);
-            return;
+            if (ignore_delay) {
+                /* 'refresh' forces a write of the current value of all attributes
+                 * Cancel any existing timers, we're writing it NOW
+                 */
+                mainloop_timer_stop(a->timer);
+                crm_debug("Write out of '%s': timer is running but ignore delay", a->id);
+            } else {
+                crm_info("Write out of '%s' delayed: timer is running", a->id);
+                return;
+            }
         }
 
         /* Initialize the status update XML */
