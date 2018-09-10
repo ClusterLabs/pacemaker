@@ -890,8 +890,7 @@ main(int argc, char **argv)
         if ((output_format != mon_output_html) && (output_format != mon_output_xml)
             && !snmp_target && !crm_mail_to && !external_agent) {
             printf ("Looks like you forgot to specify one or more of: "
-                    "--as-html, --as-xml, --external-agent, "
-                    "--mail-to, --snmp-target\n");
+                    "--as-html, --external-agent, --mail-to, --snmp-target\n");
             clean_up(EX_USAGE);
         }
 
