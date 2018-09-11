@@ -40,8 +40,17 @@ generated_docs	=
 generated_mans	=
 
 ASCIIDOC_CLI_TYPE := pcs
+
+# What formats to build: pdf,html,html-single,html-desktop,epub
 DOCBOOK_FORMATS := html-desktop
+
+# What languages to build
 DOCBOOK_LANGS   := en-US
+
+# What languages to build for uploading to website
+# (currently only en-US because translations aren't up-to-date)
+UPLOAD_LANGS    = en-US
+
 DOTs = $(wildcard */en-US/images/*.dot)
 SVG = $(wildcard */en-US/images/pcmk-*.svg) $(DOTs:%.dot=%.svg)
 
@@ -268,7 +277,7 @@ www-cli:
 		sed -i.sed 's@brand:.*@brand: clusterlabs@' $$book/publican.cfg;				\
 		sed -i.sed 's@version:.*@version: $(PACKAGE_SERIES)-$(ASCIIDOC_CLI_TYPE)@' $$book/publican.cfg;	\
 	done
-	make DOCBOOK_FORMATS="pdf,html,html-single,epub" DOCBOOK_LANGS="all" ASCIIDOC_CLI_TYPE=$(ASCIIDOC_CLI_TYPE) all-local
+	make DOCBOOK_FORMATS="pdf,html,html-single,epub" DOCBOOK_LANGS="$(UPLOAD_LANGS)" ASCIIDOC_CLI_TYPE=$(ASCIIDOC_CLI_TYPE) all-local
 	echo Uploading current $(PACKAGE_SERIES)-$(ASCIIDOC_CLI_TYPE) documentation set to clusterlabs.org
 if BUILD_DOCBOOK
 	for book in $(docbook); do 									\
