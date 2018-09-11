@@ -25,11 +25,11 @@ pe_enable_legacy_alerts(const char *script, const char *target)
     static bool need_warning = TRUE;
 
     free(notify_script);
-    notify_script = (script && strcmp(script, "/dev/null"))?
+    notify_script = (script && *script && strcmp(script, "/dev/null"))?
                     strdup(script) : NULL;
 
     free(notify_target);
-    notify_target = target? strdup(target): NULL;
+    notify_target = target && *target? strdup(target): NULL;
 
     if (notify_script || notify_target) {
         if (need_warning) {
