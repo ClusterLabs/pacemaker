@@ -15,6 +15,7 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/mainloop.h>
+#include <crm/common/remote_internal.h>
 
 #include <netdb.h>
 #include <sys/socket.h>
@@ -25,6 +26,12 @@
 #include "pacemaker-execd.h"
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
+
+#  include <gnutls/gnutls.h>
+
+// Hidden in liblrmd
+extern int lrmd_tls_set_key(gnutls_datum_t *key);
+
 #  define LRMD_REMOTE_AUTH_TIMEOUT 10000
 gnutls_psk_server_credentials_t psk_cred_s;
 gnutls_dh_params_t dh_params;
@@ -44,19 +51,15 @@ debug_log(int level, const char *str)
 static int
 remoted__read_handshake_data(crm_client_t *client)
 {
-    int rc = 0;
+    int rc = pcmk__read_handshake_data(client);
 
-    do {
-        rc = gnutls_handshake(*client->remote->tls_session);
-    } while (rc == GNUTLS_E_INTERRUPTED);
-
-    if (rc == GNUTLS_E_AGAIN) {
+    if (rc == 0) {
         /* No more data is available at the moment. Just return for now;
          * we'll get invoked again once the client sends more.
          */
         return 0;
-    } else if (rc != GNUTLS_E_SUCCESS) {
-        crm_err("TLS handshake with Pacemaker Remote failed: %s "
+    } else if (rc < 0) {
+        crm_err("TLS handshake with remote client failed: %s "
                 CRM_XS " rc=%d", gnutls_strerror(rc), rc);
         return -1;
     }
@@ -67,7 +70,7 @@ remoted__read_handshake_data(crm_client_t *client)
     client->remote->auth_timeout = 0;
 
     client->remote->tls_handshake_complete = TRUE;
-    crm_debug("TLS handshake with Pacemaker Remote completed");
+    crm_notice("Remote client connection accepted");
 
     // Alert other clients of the new connection
     notify_of_new_client(client);
@@ -92,7 +95,7 @@ lrmd_remote_client_msg(gpointer data)
         /* no msg to read */
         return 0;
     } else if (rc < 0) {
-        crm_info("Client disconnected while polling it");
+        crm_info("Remote client disconnected while polling it");
         return -1;
     }
 
@@ -101,7 +104,7 @@ lrmd_remote_client_msg(gpointer data)
     request = crm_remote_parse_buffer(client->remote);
     while (request) {
         crm_element_value_int(request, F_LRMD_REMOTE_MSG_ID, &id);
-        crm_trace("processing request from remote client with remote msg id %d", id);
+        crm_trace("Processing remote client request %d", id);
         if (!client->name) {
             const char *value = crm_element_value(request, F_LRMD_CLIENTNAME);
 
@@ -127,7 +130,7 @@ lrmd_remote_client_msg(gpointer data)
     }
 
     if (disconnected) {
-        crm_info("Client disconnected while reading from it");
+        crm_info("Remote client disconnected while reading from it");
         return -1;
     }
 
@@ -207,9 +210,9 @@ lrmd_remote_listen(gpointer data)
         return TRUE;
     }
 
-    session = create_psk_tls_session(csock, GNUTLS_SERVER, psk_cred_s);
+    session = pcmk__new_tls_session(csock, GNUTLS_SERVER, GNUTLS_CRD_PSK,
+                                    psk_cred_s);
     if (session == NULL) {
-        crm_err("TLS session creation failed");
         close(csock);
         return TRUE;
     }
@@ -218,10 +221,13 @@ lrmd_remote_listen(gpointer data)
     new_client->remote = calloc(1, sizeof(crm_remote_t));
     new_client->kind = CRM_CLIENT_TLS;
     new_client->remote->tls_session = session;
-    new_client->remote->auth_timeout =
-        g_timeout_add(LRMD_REMOTE_AUTH_TIMEOUT, lrmd_auth_timeout_cb, new_client);
-    crm_notice("Client connection to Pacemaker Remote established "
-               CRM_XS " %p id: %s", new_client, new_client->id);
+
+    // Require the client to authenticate within this time
+    new_client->remote->auth_timeout = g_timeout_add(LRMD_REMOTE_AUTH_TIMEOUT,
+                                                     lrmd_auth_timeout_cb,
+                                                     new_client);
+    crm_info("Remote client pending authentication "
+             CRM_XS " %p id: %s", new_client, new_client->id);
 
     new_client->remote->source =
         mainloop_add_fd("pacemaker-remote-client", G_PRIORITY_DEFAULT, csock,
@@ -232,7 +238,7 @@ lrmd_remote_listen(gpointer data)
 static void
 lrmd_remote_connection_destroy(gpointer user_data)
 {
-    crm_notice("Remote tls server disconnected");
+    crm_notice("TLS server session ended");
     return;
 }
 
@@ -251,10 +257,11 @@ bind_and_listen(struct addrinfo *addr)
     char buffer[INET6_ADDRSTRLEN] = { 0, };
 
     crm_sockaddr2str(addr->ai_addr, buffer);
-    crm_trace("Attempting to bind on address %s", buffer);
+    crm_trace("Attempting to bind to address %s", buffer);
 
     fd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
     if (fd < 0) {
+        crm_perror(LOG_ERR, "Listener socket creation failed");
         return -1;
     }
 
@@ -262,7 +269,7 @@ bind_and_listen(struct addrinfo *addr)
     optval = 1;
     rc = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
     if (rc < 0) {
-        crm_perror(LOG_INFO, "Couldn't allow the reuse of local addresses by our remote listener, bind address %s", buffer);
+        crm_perror(LOG_ERR, "Local address reuse not allowed on %s", buffer);
         close(fd);
         return -1;
     }
@@ -271,25 +278,23 @@ bind_and_listen(struct addrinfo *addr)
         optval = 0;
         rc = setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, &optval, sizeof(optval));
         if (rc < 0) {
-            crm_perror(LOG_INFO, "Couldn't disable IPV6 only on address %s", buffer);
+            crm_perror(LOG_INFO, "Couldn't disable IPV6-only on %s", buffer);
             close(fd);
             return -1;
         }
     }
 
     if (bind(fd, addr->ai_addr, addr->ai_addrlen) != 0) {
+        crm_perror(LOG_ERR, "Cannot bind to %s", buffer);
         close(fd);
         return -1;
     }
 
     if (listen(fd, 10) == -1) {
-        crm_err("Can not start listen on address %s", buffer);
+        crm_perror(LOG_ERR, "Cannot listen on %s", buffer);
         close(fd);
         return -1;
     }
-
-    crm_notice("Listening on address %s", buffer);
-
     return fd;
 }
 
@@ -312,8 +317,9 @@ lrmd_init_remote_tls_server()
     crm_gnutls_global_init();
     gnutls_global_set_log_function(debug_log);
 
-    gnutls_dh_params_init(&dh_params);
-    gnutls_dh_params_generate2(dh_params, 1024);
+    if (pcmk__init_tls_dh(&dh_params) != GNUTLS_E_SUCCESS) {
+        return -1;
+    }
     gnutls_psk_allocate_server_credentials(&psk_cred_s);
     gnutls_psk_set_server_credentials_function(psk_cred_s, lrmd_tls_server_key_cb);
     gnutls_psk_set_server_dh_params(psk_cred_s, dh_params);
@@ -365,7 +371,6 @@ lrmd_init_remote_tls_server()
     }
 
     if (ssock < 0) {
-        crm_err("unable to bind to address");
         goto init_remote_cleanup;
     }
 
@@ -373,14 +378,16 @@ lrmd_init_remote_tls_server()
                     &remote_listen_fd_callbacks);
 
     rc = ssock;
+
   init_remote_cleanup:
     if (rc < 0) {
         close(ssock);
         ssock = 0;
+    } else {
+        crm_debug("Started TLS listener on port %d", port);
     }
     freeaddrinfo(res);
     return rc;
-
 }
 
 void

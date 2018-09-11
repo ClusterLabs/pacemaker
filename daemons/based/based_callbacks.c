@@ -23,8 +23,11 @@
 #include <crm/cluster/internal.h>
 
 #include <crm/common/xml.h>
+#include <crm/common/remote_internal.h>
 
 #include <pacemaker-based.h>
+
+#define EXIT_ESCALATION_MS 10000
 
 static unsigned long cib_local_bcast_num = 0;
 
@@ -1488,7 +1491,7 @@ initiate_exit(void)
     send_cluster_message(NULL, crm_msg_cib, leaving, TRUE);
     free_xml(leaving);
 
-    g_timeout_add(crm_get_msec("5s"), cib_force_exit, NULL);
+    g_timeout_add(EXIT_ESCALATION_MS, cib_force_exit, NULL);
 }
 
 extern int remote_fd;

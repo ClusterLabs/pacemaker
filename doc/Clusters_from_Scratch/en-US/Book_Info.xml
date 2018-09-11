@@ -14,7 +14,7 @@
 		changes (OS, pacemaker, corosync, pcs), and PUBSNUMBER for
 		simple textual changes (corrections, translations, etc.).
 	-->
-	<edition>9</edition>
+	<edition>10</edition>
 	<pubsnumber>1</pubsnumber>
 	<abstract>
 		<para>
@@ -35,7 +35,7 @@
 				</listitem>
 				<listitem>
 					<para>
-						Pacemaker 1.1.16
+						Pacemaker 1.1.18
 						<footnote><para>While this guide is part of the document set for
 						Pacemaker 2.0, it demonstrates the version available in
 						the standard &DISTRO; repositories</para></footnote>

@@ -26,6 +26,7 @@
 #include <crm/common/ipc.h>
 #include <crm/common/ipcs.h>
 #include <crm/common/xml.h>
+#include <crm/common/remote_internal.h>
 #include <crm/cib/internal.h>
 
 #include "pacemaker-based.h"
@@ -57,7 +58,6 @@ int init_remote_listener(int port, gboolean encrypted);
 void cib_remote_connection_destroy(gpointer user_data);
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
-#  define DH_BITS 1024
 gnutls_dh_params_t dh_params;
 gnutls_anon_server_credentials_t anon_cred_s;
 static void
@@ -71,16 +71,16 @@ debug_log(int level, const char *str)
 
 int num_clients;
 int authenticate_user(const char *user, const char *passwd);
-int cib_remote_listen(gpointer data);
-int cib_remote_msg(gpointer data);
+static int cib_remote_listen(gpointer data);
+static int cib_remote_msg(gpointer data);
 
 static void
 remote_connection_destroy(gpointer user_data)
 {
+    crm_info("No longer listening for remote connections");
     return;
 }
 
-#define ERROR_SUFFIX "  Shutting down remote listener"
 int
 init_remote_listener(int port, gboolean encrypted)
 {
@@ -104,17 +104,18 @@ init_remote_listener(int port, gboolean encrypted)
         crm_warn("TLS support is not available");
         return 0;
 #else
-        crm_notice("Starting a tls listener on port %d.", port);
+        crm_notice("Starting TLS listener on port %d", port);
         crm_gnutls_global_init();
         /* gnutls_global_set_log_level (10); */
         gnutls_global_set_log_function(debug_log);
-        gnutls_dh_params_init(&dh_params);
-        gnutls_dh_params_generate2(dh_params, DH_BITS);
+        if (pcmk__init_tls_dh(&dh_params) != GNUTLS_E_SUCCESS) {
+            return -1;
+        }
         gnutls_anon_allocate_server_credentials(&anon_cred_s);
         gnutls_anon_set_server_dh_params(anon_cred_s, dh_params);
 #endif
     } else {
-        crm_warn("Starting a plain_text listener on port %d.", port);
+        crm_warn("Starting plain-text listener on port %d", port);
     }
 #ifndef HAVE_PAM
     crm_warn("PAM is _not_ enabled!");
@@ -123,13 +124,13 @@ init_remote_listener(int port, gboolean encrypted)
     /* create server socket */
     ssock = malloc(sizeof(int));
     if(ssock == NULL) {
-        crm_perror(LOG_ERR, "Can not create server socket." ERROR_SUFFIX);
+        crm_perror(LOG_ERR, "Listener socket allocation failed");
         return -1;
     }
 
     *ssock = socket(AF_INET, SOCK_STREAM, 0);
     if (*ssock == -1) {
-        crm_perror(LOG_ERR, "Can not create server socket." ERROR_SUFFIX);
+        crm_perror(LOG_ERR, "Listener socket creation failed");
         free(ssock);
         return -1;
     }
@@ -138,7 +139,8 @@ init_remote_listener(int port, gboolean encrypted)
     optval = 1;
     rc = setsockopt(*ssock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
     if (rc < 0) {
-        crm_perror(LOG_INFO, "Couldn't allow the reuse of local addresses by our remote listener");
+        crm_perror(LOG_WARNING,
+                   "Local address reuse not allowed on listener socket");
     }
 
     /* bind server socket */
@@ -147,19 +149,20 @@ init_remote_listener(int port, gboolean encrypted)
     saddr.sin_addr.s_addr = INADDR_ANY;
     saddr.sin_port = htons(port);
     if (bind(*ssock, (struct sockaddr *)&saddr, sizeof(saddr)) == -1) {
-        crm_perror(LOG_ERR, "Can not bind server socket." ERROR_SUFFIX);
+        crm_perror(LOG_ERR, "Cannot bind to listener socket");
         close(*ssock);
         free(ssock);
         return -2;
     }
     if (listen(*ssock, 10) == -1) {
-        crm_perror(LOG_ERR, "Can not start listen." ERROR_SUFFIX);
+        crm_perror(LOG_ERR, "Cannot listen on socket");
         close(*ssock);
         free(ssock);
         return -3;
     }
 
     mainloop_add_fd("cib-remote", G_PRIORITY_DEFAULT, *ssock, ssock, &remote_listen_fd_callbacks);
+    crm_debug("Started listener on port %d", port);
 
     return *ssock;
 }
@@ -269,7 +272,7 @@ remote_auth_timeout_cb(gpointer data)
     return FALSE;
 }
 
-int
+static int
 cib_remote_listen(gpointer data)
 {
     int csock = 0;
@@ -318,11 +321,11 @@ cib_remote_listen(gpointer data)
         new_client->kind = CRM_CLIENT_TLS;
 
         /* create gnutls session for the server socket */
-        new_client->remote->tls_session =
-            crm_create_anon_tls_session(csock, GNUTLS_SERVER, anon_cred_s);
-
+        new_client->remote->tls_session = pcmk__new_tls_session(csock,
+                                                                GNUTLS_SERVER,
+                                                                GNUTLS_CRD_ANON,
+                                                                anon_cred_s);
         if (new_client->remote->tls_session == NULL) {
-            crm_err("TLS session creation failed");
             close(csock);
             return TRUE;
         }
@@ -332,9 +335,12 @@ cib_remote_listen(gpointer data)
         new_client->remote->tcp_socket = csock;
     }
 
-    /* clients have a few seconds to perform handshake. */
-    new_client->remote->auth_timeout =
-        g_timeout_add(REMOTE_AUTH_TIMEOUT, remote_auth_timeout_cb, new_client);
+    // Require the client to authenticate within this time
+    new_client->remote->auth_timeout = g_timeout_add(REMOTE_AUTH_TIMEOUT,
+                                                     remote_auth_timeout_cb,
+                                                     new_client);
+    crm_info("Remote CIB client pending authentication "
+             CRM_XS " %p id: %s", new_client, new_client->id);
 
     new_client->remote->source =
         mainloop_add_fd("cib-remote-client", G_PRIORITY_DEFAULT, csock, new_client,
@@ -454,7 +460,7 @@ cib_handle_remote_msg(crm_client_t * client, xmlNode * command)
     cib_common_callback_worker(0, 0, command, client, TRUE);
 }
 
-int
+static int
 cib_remote_msg(gpointer data)
 {
     xmlNode *command = NULL;
@@ -466,29 +472,29 @@ cib_remote_msg(gpointer data)
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
     if (client->kind == CRM_CLIENT_TLS && (client->remote->tls_handshake_complete == FALSE)) {
-        int rc = 0;
-
-        /* Muliple calls to handshake will be required, this callback
-         * will be invoked once the client sends more handshake data. */
-        do {
-            rc = gnutls_handshake(*client->remote->tls_session);
-
-            if (rc < 0 && rc != GNUTLS_E_AGAIN) {
-                crm_err("TLS handshake with remote CIB manager failed");
-                return -1;
-            }
-        } while (rc == GNUTLS_E_INTERRUPTED);
+        int rc = pcmk__read_handshake_data(client);
 
         if (rc == 0) {
-            crm_debug("TLS handshake with remote CIB manager completed");
-            client->remote->tls_handshake_complete = TRUE;
-            if (client->remote->auth_timeout) {
-                g_source_remove(client->remote->auth_timeout);
-            }
-            /* after handshake, clients must send auth in a few seconds */
-            client->remote->auth_timeout =
-                g_timeout_add(REMOTE_AUTH_TIMEOUT, remote_auth_timeout_cb, client);
+            /* No more data is available at the moment. Just return for now;
+             * we'll get invoked again once the client sends more.
+             */
+            return 0;
+        } else if (rc < 0) {
+            crm_err("TLS handshake with remote CIB client failed: %s "
+                    CRM_XS " rc=%d", gnutls_strerror(rc), rc);
+            return -1;
         }
+
+        crm_debug("TLS handshake with remote CIB client completed");
+        client->remote->tls_handshake_complete = TRUE;
+        if (client->remote->auth_timeout) {
+            g_source_remove(client->remote->auth_timeout);
+        }
+
+        // Require the client to authenticate within this time
+        client->remote->auth_timeout = g_timeout_add(REMOTE_AUTH_TIMEOUT,
+                                                     remote_auth_timeout_cb,
+                                                     client);
         return 0;
     }
 #endif
@@ -508,7 +514,7 @@ cib_remote_msg(gpointer data)
             return -1;
         }
 
-        crm_debug("remote connection authenticated successfully");
+        crm_notice("Remote CIB client connection accepted");
         client->remote->authenticated = TRUE;
         g_source_remove(client->remote->auth_timeout);
         client->remote->auth_timeout = 0;
@@ -532,14 +538,14 @@ cib_remote_msg(gpointer data)
 
     command = crm_remote_parse_buffer(client->remote);
     while (command) {
-        crm_trace("command received");
+        crm_trace("Remote client message received");
         cib_handle_remote_msg(client, command);
         free_xml(command);
         command = crm_remote_parse_buffer(client->remote);
     }
 
     if (disconnected) {
-        crm_trace("Disconnected while receiving message from remote CIB manager");
+        crm_trace("Remote CIB client disconnected while reading from it");
         return -1;
     }
 

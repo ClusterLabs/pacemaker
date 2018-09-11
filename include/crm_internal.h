@@ -168,55 +168,6 @@ crm_set_bit(const char *function, int line, const char *target, long long word, 
 
 char *generate_hash_key(const char *crm_msg_reference, const char *sys);
 
-/*! remote tcp/tls helper functions */
-typedef struct crm_remote_s crm_remote_t;
-
-int crm_remote_send(crm_remote_t * remote, xmlNode * msg);
-int crm_remote_ready(crm_remote_t * remote, int total_timeout /*ms */ );
-gboolean crm_remote_recv(crm_remote_t * remote, int total_timeout /*ms */ , int *disconnected);
-xmlNode *crm_remote_parse_buffer(crm_remote_t * remote);
-int crm_remote_tcp_connect(const char *host, int port);
-int crm_remote_tcp_connect_async(const char *host, int port, int timeout,       /*ms */
-                                 int *timer_id, void *userdata, void (*callback) (void *userdata, int sock));
-int crm_remote_accept(int ssock);
-void crm_sockaddr2str(void *sa, char *s);
-
-#  ifdef HAVE_GNUTLS_GNUTLS_H
-/*!
- * \internal
- * \brief Initiate the client handshake after establishing the tcp socket.
- * \note This is a blocking function, it will block until the entire handshake
- *       is complete or until the timeout period is reached.
- * \retval 0 success
- * \retval negative, failure
- */
-int crm_initiate_client_tls_handshake(crm_remote_t * remote, int timeout_ms);
-
-/*!
- * \internal
- * \brief Create client or server session for anon DH encryption credentials
- * \param sock, the socket the session will use for transport
- * \param type, GNUTLS_SERVER or GNUTLS_CLIENT
- * \param credentials, gnutls_anon_server_credentials_t or gnutls_anon_client_credentials_t
- *
- * \retval gnutls_session_t * on success
- * \retval NULL on failure
- */
-void *crm_create_anon_tls_session(int sock, int type, void *credentials);
-
-/*!
- * \internal
- * \brief Create client or server session for PSK credentials
- * \param sock, the socket the session will use for transport
- * \param type, GNUTLS_SERVER or GNUTLS_CLIENT
- * \param credentials, gnutls_psk_server_credentials_t or gnutls_osk_client_credentials_t
- *
- * \retval gnutls_session_t * on success
- * \retval NULL on failure
- */
-void *create_psk_tls_session(int csock, int type, void *credentials);
-#  endif
-
 const char *daemon_option(const char *option);
 void set_daemon_option(const char *option, const char *value);
 gboolean daemon_option_enabled(const char *daemon, const char *option);

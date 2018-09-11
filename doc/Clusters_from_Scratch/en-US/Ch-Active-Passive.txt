@@ -14,9 +14,9 @@ The first few lines of output should look like this:
 Cluster name: mycluster
 WARNING: no stonith devices and stonith-enabled is not false
 Stack: corosync
-Current DC: pcmk-2 (version 1.1.16-12.el7_4.5-94ff4df) - partition with quorum
-Last updated: Fri Jan 12 16:15:29 2018
-Last change: Fri Jan 12 15:49:47 2018
+Current DC: pcmk-2 (version 1.1.18-11.el7_5.3-2b07d5c5a9) - partition with quorum
+Last updated: Mon Sep 10 16:41:46 2018
+Last change: Mon Sep 10 16:30:53 2018 by hacluster via crmd on pcmk-2
 
 2 nodes configured
 0 resources configured
@@ -34,12 +34,12 @@ configuration and status by using the `pcs cluster cib` command.
 ----
 [source,XML]
 ----
-<cib crm_feature_set="3.0.12" validate-with="pacemaker-2.8" epoch="5" num_updates="8" admin_epoch="0" cib-last-written="Fri Jan 12 15:49:47 2018" have-quorum="1" dc-uuid="2">
+<cib crm_feature_set="3.0.14" validate-with="pacemaker-2.10" epoch="5" num_updates="4" admin_epoch="0" cib-last-written="Mon Sep 10 16:30:53 2018" update-origin="pcmk-2" update-client="crmd" update-user="hacluster" have-quorum="1" dc-uuid="2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
-        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.16-12.el7_4.5-94ff4df"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.18-11.el7_5.3-2b07d5c5a9"/>
         <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="mycluster"/>
       </cluster_property_set>
@@ -52,27 +52,15 @@ configuration and status by using the `pcs cluster cib` command.
     <constraints/>
   </configuration>
   <status>
-    <node_state id="2" uname="pcmk-2" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
-      <lrm id="2">
-        <lrm_resources/>
-      </lrm>
-      <transient_attributes id="2">
-        <instance_attributes id="status-2">
-          <nvpair id="status-2-shutdown" name="shutdown" value="0"/>
-          <nvpair id="status-2-probe_complete" name="probe_complete" value="true"/>
-        </instance_attributes>
-      </transient_attributes>
-    </node_state>
     <node_state id="1" uname="pcmk-1" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
       <lrm id="1">
         <lrm_resources/>
       </lrm>
-      <transient_attributes id="1">
-        <instance_attributes id="status-1">
-          <nvpair id="status-1-shutdown" name="shutdown" value="0"/>
-          <nvpair id="status-1-probe_complete" name="probe_complete" value="true"/>
-        </instance_attributes>
-      </transient_attributes>
+    </node_state>
+    <node_state id="2" uname="pcmk-2" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
+      <lrm id="2">
+        <lrm_resources/>
+      </lrm>
     </node_state>
   </status>
 </cib>
@@ -94,11 +82,10 @@ As you can see, the tool has found some errors.
 
 In order to guarantee the safety of your data,
 footnote:[If the data is corrupt, there is little point in continuing to make it available]
-the default for STONITH
-footnote:[A common node fencing mechanism. Used to ensure data integrity by powering off "bad" nodes]
-in Pacemaker is *enabled*. However, it also knows when no STONITH configuration has been
-supplied and reports this as a problem (since the cluster would not be
-able to make progress if a situation requiring node fencing arose).
+fencing (also called STONITH) is enabled by default. However, it also knows
+when no STONITH configuration has been supplied and reports this as a problem
+(since the cluster will not be able to make progress if a situation requiring
+node fencing arises).
 
 We will disable this feature for now and configure it later.
 
@@ -117,9 +104,7 @@ With the new cluster option set, the configuration is now valid.
 The use of `stonith-enabled=false` is completely inappropriate for a
 production cluster. It tells the cluster to simply pretend that failed nodes
 are safely powered off. Some vendors will refuse to support clusters that have
-STONITH disabled.
-
-We disable STONITH here only to defer the discussion of its
+STONITH disabled. We disable STONITH here only to defer the discussion of its
 configuration, which can differ widely from one installation to the
 next. See <<_what_is_stonith>> for information on why STONITH is important
 and details on how to configure it.
@@ -182,11 +167,11 @@ a specific OCF provider (the *IPaddr2* part of *ocf:heartbeat:IPaddr2*), run:
 ----
 [root@pcmk-1 ~]# pcs resource agents ocf:heartbeat
 apache
+aws-vpc-move-ip
+awseip
+awsvip
+azure-lb
 clvm
-conntrackd
-CTDB
-db2
-Delay
 .
 . (skipping lots of resources to save space)
 .
@@ -203,18 +188,18 @@ status to see that it is now active:
 [root@pcmk-1 ~]# pcs status
 Cluster name: mycluster
 Stack: corosync
-Current DC: pcmk-1 (version 1.1.16-12.el7_4.5-94ff4df) - partition with quorum
-Last updated: Fri Jan 12 17:44:40 2018
-Last change: Fri Jan 12 17:44:26 2018
+Current DC: pcmk-2 (version 1.1.18-11.el7_5.3-2b07d5c5a9) - partition with quorum
+Last updated: Mon Sep 10 16:55:26 2018
+Last change: Mon Sep 10 16:53:42 2018 by root via cibadmin on pcmk-1
 
 2 nodes configured
-1 resources configured
+1 resource configured
 
 Online: [ pcmk-1 pcmk-2 ]
 
 Full list of resources:
 
- ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1 
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1
 
 Daemon Status:
   corosync: active/disabled
@@ -233,18 +218,18 @@ First, find the node on which the IP address is running.
 [root@pcmk-1 ~]# pcs status
 Cluster name: mycluster
 Stack: corosync
-Current DC: pcmk-1 (version 1.1.16-12.el7_4.5-94ff4df) - partition with quorum
-Last updated: Fri Jan 12 17:44:40 2018
-Last change: Fri Jan 12 17:44:26 2018
+Current DC: pcmk-2 (version 1.1.18-11.el7_5.3-2b07d5c5a9) - partition with quorum
+Last updated: Mon Sep 10 16:55:26 2018
+Last change: Mon Sep 10 16:53:42 2018 by root via cibadmin on pcmk-1
 
 2 nodes configured
-1 resources configured
+1 resource configured
 
 Online: [ pcmk-1 pcmk-2 ]
 
 Full list of resources:
 
- ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1 
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-1
 ----
 
 You can see that the status of the *ClusterIP* resource
@@ -275,19 +260,19 @@ Go to the other node, and check the cluster status.
 [root@pcmk-2 ~]# pcs status
 Cluster name: mycluster
 Stack: corosync
-Current DC: pcmk-2 (version 1.1.16-12.el7_4.5-94ff4df) - partition with quorum
-Last updated: Fri Jan 12 18:30:56 2018
-Last change: Fri Jan 12 17:44:26 2018
+Current DC: pcmk-2 (version 1.1.18-11.el7_5.3-2b07d5c5a9) - partition with quorum
+Last updated: Mon Sep 10 16:57:22 2018
+Last change: Mon Sep 10 16:53:42 2018 by root via cibadmin on pcmk-1
 
 2 nodes configured
-1 resources configured
+1 resource configured
 
 Online: [ pcmk-2 ]
 OFFLINE: [ pcmk-1 ]
 
 Full list of resources:
 
- ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2 
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2
 
 Daemon Status:
   corosync: active/disabled
@@ -326,7 +311,6 @@ stop all resources, in order to prevent data corruption.
 Two-node clusters are a special case. By the above definition,
 a two-node cluster would only have quorum when both nodes are
 running. This would make the creation of a two-node cluster pointless,
-footnote:[Some would argue that two-node clusters are always pointless, but that is an argument for another time]
 but corosync has the ability to treat two-node clusters as if only one node
 is required for quorum.
 
@@ -347,18 +331,18 @@ pcmk-1: Starting Cluster...
 [root@pcmk-1 ~]# pcs status
 Cluster name: mycluster
 Stack: corosync
-Current DC: pcmk-2 (version 1.1.16-12.el7_4.5-94ff4df) - partition with quorum
-Last updated: Fri Jan 12 18:50:11 2018
-Last change: Fri Jan 12 17:44:26 2018
+Current DC: pcmk-2 (version 1.1.18-11.el7_5.3-2b07d5c5a9) - partition with quorum
+Last updated: Mon Sep 10 17:00:04 2018
+Last change: Mon Sep 10 16:53:42 2018 by root via cibadmin on pcmk-1
 
 2 nodes configured
-1 resources configured
+1 resource configured
 
 Online: [ pcmk-1 pcmk-2 ]
 
 Full list of resources:
 
- ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2 
+ ClusterIP	(ocf::heartbeat:IPaddr2):	Started pcmk-2
 
 Daemon Status:
   corosync: active/disabled
@@ -387,6 +371,7 @@ resource, but it is often sufficient to change the default.
 
 ----
 [root@pcmk-1 ~]# pcs resource defaults resource-stickiness=100
+Warning: Defaults do not apply to resources which override them with their own defined values
 [root@pcmk-1 ~]# pcs resource defaults
 resource-stickiness: 100
 ----

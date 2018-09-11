@@ -23,6 +23,7 @@
 #include <crm/msg_xml.h>
 
 #include <crm/common/xml.h>
+#include <crm/common/remote_internal.h>
 #include <pacemaker-based.h>
 
 int pending_updates = 0;
