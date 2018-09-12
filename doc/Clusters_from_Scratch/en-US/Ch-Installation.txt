@@ -5,7 +5,7 @@
 === Boot the Install Image ===
 
 Download the 4GB
-http://isoredirect.centos.org/centos/7/isos/x86_64/CentOS-7-x86_64-DVD-1503-01.iso[&DISTRO;
+http://isoredirect.centos.org/centos/7/isos/x86_64/CentOS-7-x86_64-DVD-1804.iso[&DISTRO;
 &DISTRO_VERSION; DVD ISO]. Use the image to boot a virtual machine, or
 burn it to a DVD or USB drive and boot a physical server from that.
 
@@ -36,7 +36,10 @@ In the *NETWORK & HOSTNAME* section:
 - Select your network device, press *Configure...*, and manually assign a fixed
   IP address. For this example, we'll use 192.168.122.101 under *IPv4 Settings*
   (with an appropriate netmask, gateway and DNS server).
-- Flip the switch to turn your network device on.
+- Flip the switch to turn your network device on, and press *Done*.
+
+.&DISTRO; &DISTRO_VERSION; Network Interface Screen
+image::images/Editing-eth0.png["&DISTRO; &DISTRO_VERSION; Editing eth0",align="center",scaledwidth="100%"]
 
 [IMPORTANT]
 ===========
@@ -63,6 +66,11 @@ mountpoints automatically. Select the +/+ mountpoint, and reduce the desired
 capacity by 1GiB or so. Select *Modify...* by the volume group name, and change
 the *Size policy:* to *As large as possible*, to make the reclaimed space
 available inside the LVM volume group. We'll add the additional volume later.
+
+.&DISTRO; &DISTRO_VERSION; Manual Partitioning Screen
+image::images/Partitioning.png["&DISTRO; &DISTRO_VERSION; Partitioning",align="center",scaledwidth="100%"]
+
+Press *Done*, then *Accept changes*.
 
 === Configure Time Synchronization ===
 
@@ -99,16 +107,17 @@ Ensure that the machine has the static IP address you configured earlier.
 
 -----
 [root@pcmk-1 ~]# ip addr
-1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
     link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
     inet 127.0.0.1/8 scope host lo
-    inet6 ::1/128 scope host
        valid_lft forever preferred_lft forever
-2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP qlen 1000
-    link/ether 52:54:00:d7:d6:08 brd ff:ff:ff:ff:ff:ff
-    inet 192.168.122.101/24 brd 192.168.122.255 scope global eth0
+    inet6 ::1/128 scope host 
        valid_lft forever preferred_lft forever
-    inet6 fe80::5054:ff:fed7:d608/64 scope link
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
+    link/ether 52:54:00:8e:eb:41 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.122.101/24 brd 192.168.122.255 scope global noprefixroute eth0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::e45:c99b:34c0:c657/64 scope link noprefixroute 
        valid_lft forever preferred_lft forever
 -----
 
@@ -132,8 +141,8 @@ Next, ensure that the routes are as expected:
 
 -----
 [root@pcmk-1 ~]# ip route
-default via 192.168.122.1 dev eth0  proto static  metric 100
-192.168.122.0/24 dev eth0  proto kernel  scope link  src 192.168.122.101  metric 100
+default via 192.168.122.1 dev eth0 proto static metric 100 
+192.168.122.0/24 dev eth0 proto kernel scope link src 192.168.122.101 metric 100 
 -----
 
 If there is no line beginning with *default via*, then you may need to add a line such as
@@ -150,23 +159,23 @@ testing whether we can reach the gateway we configured.
 -----
 [root@pcmk-1 ~]# ping -c 1 192.168.122.1
 PING 192.168.122.1 (192.168.122.1) 56(84) bytes of data.
-64 bytes from 192.168.122.1: icmp_req=1 ttl=64 time=0.249 ms
+64 bytes from 192.168.122.1: icmp_seq=1 ttl=64 time=0.254 ms
 
- --- 192.168.122.1 ping statistics ---
+--- 192.168.122.1 ping statistics ---
 1 packets transmitted, 1 received, 0% packet loss, time 0ms
-rtt min/avg/max/mdev = 0.249/0.249/0.249/0.000 ms
+rtt min/avg/max/mdev = 0.254/0.254/0.254/0.000 ms
 -----
 
 Now try something external; choose a location you know should be available.
 
 -----
-[root@pcmk-1 ~]# ping -c 1 www.google.com
-PING www.l.google.com (173.194.72.106) 56(84) bytes of data.
-64 bytes from tf-in-f106.1e100.net (173.194.72.106): icmp_req=1 ttl=41 time=167 ms
+[root@pcmk-1 ~]# ping -c 1 www.clusterlabs.org
+PING oss-uk-1.clusterlabs.org (109.74.197.241) 56(84) bytes of data.
+64 bytes from oss-uk-1.clusterlabs.org (109.74.197.241): icmp_seq=1 ttl=49 time=333 ms
 
- --- www.l.google.com ping statistics ---
+--- oss-uk-1.clusterlabs.org ping statistics ---
 1 packets transmitted, 1 received, 0% packet loss, time 0ms
-rtt min/avg/max/mdev = 167.618/167.618/167.618/0.000 ms
+rtt min/avg/max/mdev = 333.204/333.204/333.204/0.000 ms
 -----
 
 === Login Remotely ===
@@ -231,6 +240,8 @@ Now, check that the machine is using the correct name:
 [root@pcmk-1 ~]# uname -n
 pcmk-1
 ----
+
+You may want to reboot to ensure all updates take effect.
 
 == Repeat for Second Node ==
 
@@ -328,14 +339,15 @@ Install the key on the other node:
 ----
 [root@pcmk-1 ~]# scp -r ~/.ssh pcmk-2:
 The authenticity of host 'pcmk-2 (192.168.122.102)' can't be established.
-ECDSA key fingerprint is a4:f5:b2:34:9d:86:2b:34:a2:87:37:b9:ca:68:52:ec.
+ECDSA key fingerprint is SHA256:63xNPkPYq98rYznf3T9QYJAzlaGiAsSgFVNHOZjPWqc.
+ECDSA key fingerprint is MD5:d9:bf:6e:32:88:be:47:3d:96:f1:96:27:65:05:0b:c3.
 Are you sure you want to continue connecting (yes/no)? yes
 Warning: Permanently added 'pcmk-2,192.168.122.102' (ECDSA) to the list of known hosts.
 root@pcmk-2's password:
-id_dsa.pub                           100%  616     0.6KB/s   00:00
-id_dsa                               100%  672     0.7KB/s   00:00
-known_hosts                          100%  400     0.4KB/s   00:00
-authorized_keys                      100%  616     0.6KB/s   00:00
+id_dsa
+id_dsa.pub
+authorized_keys
+known_hosts
 ----
 
 Test that you can now run commands remotely, without being prompted:
@@ -410,7 +422,7 @@ Start and enable the daemon by issuing the following commands on each node:
 ----
 # systemctl start pcsd.service
 # systemctl enable pcsd.service
-ln -s '/usr/lib/systemd/system/pcsd.service' '/etc/systemd/system/multi-user.target.wants/pcsd.service'
+Created symlink from /etc/systemd/system/multi-user.target.wants/pcsd.service to /usr/lib/systemd/system/pcsd.service.
 ----
 
 The installed packages will create a *hacluster* user with a disabled password.
@@ -437,7 +449,7 @@ different machine from the one you're logged into, you can use
 the `--stdin` option for `passwd`:
 
 ----
-[root@pcmk-1 ~]# ssh pcmk-2 -- 'echo redhat1 | passwd --stdin hacluster'
+[root@pcmk-1 ~]# ssh pcmk-2 -- 'echo mysupersecretpassword | passwd --stdin hacluster'
 ----
 ===========
 
@@ -449,21 +461,33 @@ On either node, use `pcs cluster auth` to authenticate as the *hacluster* user:
 [root@pcmk-1 ~]# pcs cluster auth pcmk-1 pcmk-2
 Username: hacluster
 Password:
-pcmk-1: Authorized
 pcmk-2: Authorized
+pcmk-1: Authorized
 ----
 
 Next, use `pcs cluster setup` on the same node to generate and synchronize the
 corosync configuration:
 ----
 [root@pcmk-1 ~]# pcs cluster setup --name mycluster pcmk-1 pcmk-2
-Shutting down pacemaker/corosync services...
-Redirecting to /bin/systemctl stop  pacemaker.service
-Redirecting to /bin/systemctl stop  corosync.service
-Killing any remaining services...
-Removing all cluster configuration files...
+Destroying cluster on nodes: pcmk-1, pcmk-2...
+pcmk-2: Stopping Cluster (pacemaker)...
+pcmk-1: Stopping Cluster (pacemaker)...
+pcmk-1: Successfully destroyed cluster
+pcmk-2: Successfully destroyed cluster
+
+Sending 'pacemaker_remote authkey' to 'pcmk-1', 'pcmk-2'
+pcmk-2: successful distribution of the file 'pacemaker_remote authkey'
+pcmk-1: successful distribution of the file 'pacemaker_remote authkey'
+Sending cluster config files to the nodes...
 pcmk-1: Succeeded
 pcmk-2: Succeeded
+
+Synchronizing pcsd certificates on nodes pcmk-1, pcmk-2...
+pcmk-2: Success
+pcmk-1: Success
+Restarting pcsd on the nodes in order to reload the certificates...
+pcmk-2: Success
+pcmk-1: Success
 ----
 
 If you received an authorization error for either of those commands, make
@@ -472,18 +496,18 @@ with the same password.
 
 [NOTE]
 ======
-Early versions of pcs required that `--name` be omitted from the above command.
-
 If you are not using `pcs` for cluster administration,
 follow whatever procedures are appropriate for your tools
 to create a corosync.conf and copy it to all nodes.
 
 The `pcs` command will configure corosync to use UDP unicast transport; if you
 choose to use multicast instead, choose a multicast address carefully.
-footnote:[For some subtle issues, see the now-defunct http://web.archive.org/web/20101211210054/http://29west.com/docs/THPM/multicast-address-assignment.html or the more detailed treatment in
-http://www.cisco.com/c/dam/en/us/support/docs/ip/ip-multicast/ipmlt_wp.pdf[Cisco's
-Guidelines for Enterprise IP Multicast Address Allocation] paper.]
+footnote:[For some subtle issues, see
+http://web.archive.org/web/20101211210054/http://29west.com/docs/THPM/multicast-address-assignment.html[Topics
+in High-Performance Messaging: Multicast Address Assignment] or the more detailed treatment in
+https://www.cisco.com/c/dam/en/us/support/docs/ip/ip-multicast/ipmlt_wp.pdf[Cisco's
+Guidelines for Enterprise IP Multicast Address Allocation].]
 ======
 
-The final /etc/corosync.conf configuration on each node should look
+The final corosync.conf configuration on each node should look
 something like the sample in <<ap-corosync-conf>>.

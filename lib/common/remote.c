@@ -40,6 +40,7 @@
 #include <crm/common/ipcs.h>
 #include <crm/common/xml.h>
 #include <crm/common/mainloop.h>
+#include <crm/common/remote_internal.h>
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
 #  undef KEYFILE
@@ -165,61 +166,225 @@ crm_initiate_client_tls_handshake(crm_remote_t * remote, int timeout_ms)
     return rc;
 }
 
-void *
-crm_create_anon_tls_session(int csock, int type /* GNUTLS_SERVER, GNUTLS_CLIENT */ ,
-                            void *credentials)
+/*!
+ * \internal
+ * \brief Set minimum prime size required by TLS client
+ *
+ * \param[in] session  TLS session to affect
+ */
+static void
+pcmk__set_minimum_dh_bits(gnutls_session_t *session)
 {
-    gnutls_session_t *session = gnutls_malloc(sizeof(gnutls_session_t));
+    const char *dh_min_bits_s = getenv("PCMK_dh_min_bits");
 
-    gnutls_init(session, type);
-#  ifdef HAVE_GNUTLS_PRIORITY_SET_DIRECT
-/*      http://www.manpagez.com/info/gnutls/gnutls-2.10.4/gnutls_81.php#Echo-Server-with-anonymous-authentication */
-    gnutls_priority_set_direct(*session, "NORMAL:+ANON-DH", NULL);
-/*	gnutls_priority_set_direct (*session, "NONE:+VERS-TLS-ALL:+CIPHER-ALL:+MAC-ALL:+SIGN-ALL:+COMP-ALL:+ANON-DH", NULL); */
-#  else
-    gnutls_set_default_priority(*session);
-    gnutls_kx_set_priority(*session, anon_tls_kx_order);
-#  endif
-    gnutls_transport_set_ptr(*session, (gnutls_transport_ptr_t) GINT_TO_POINTER(csock));
-    switch (type) {
-        case GNUTLS_SERVER:
-            gnutls_credentials_set(*session, GNUTLS_CRD_ANON,
-                                   (gnutls_anon_server_credentials_t) credentials);
-            break;
-        case GNUTLS_CLIENT:
-            gnutls_credentials_set(*session, GNUTLS_CRD_ANON,
-                                   (gnutls_anon_client_credentials_t) credentials);
-            break;
+    if (dh_min_bits_s) {
+        int dh_min_bits = crm_parse_int(dh_min_bits_s, "0");
+
+        /* This function is deprecated since GnuTLS 3.1.7, in favor of letting
+         * the priority string imply the DH requirements, but this is the only
+         * way to give the user control over compatibility with older servers.
+         */
+        if (dh_min_bits > 0) {
+            crm_info("Requiring server use a Diffie-Hellman prime of at least %d bits",
+                     dh_min_bits);
+            gnutls_dh_set_prime_bits(*session, dh_min_bits);
+        }
     }
-
-    return session;
 }
 
-void *
-create_psk_tls_session(int csock, int type /* GNUTLS_SERVER, GNUTLS_CLIENT */ , void *credentials)
+static unsigned int
+pcmk__bound_dh_bits(unsigned int dh_bits)
 {
-    gnutls_session_t *session = gnutls_malloc(sizeof(gnutls_session_t));
+    const char *dh_min_bits_s = getenv("PCMK_dh_min_bits");
+    const char *dh_max_bits_s = getenv("PCMK_dh_max_bits");
+    int dh_min_bits = 0;
+    int dh_max_bits = 0;
 
-    gnutls_init(session, type);
+    if (dh_min_bits_s) {
+        dh_min_bits = crm_parse_int(dh_min_bits_s, "0");
+    }
+    if (dh_max_bits_s) {
+        dh_max_bits = crm_parse_int(dh_max_bits_s, "0");
+        if ((dh_min_bits > 0) && (dh_max_bits > 0)
+            && (dh_max_bits < dh_min_bits)) {
+            crm_warn("Ignoring PCMK_dh_max_bits because it is less than PCMK_dh_min_bits");
+            dh_max_bits = 0;
+        }
+    }
+    if ((dh_min_bits > 0) && (dh_bits < dh_min_bits)) {
+        return dh_min_bits;
+    }
+    if ((dh_max_bits > 0) && (dh_bits > dh_max_bits)) {
+        return dh_max_bits;
+    }
+    return dh_bits;
+}
+
+/*!
+ * \internal
+ * \brief Initialize a new TLS session
+ *
+ * \param[in] csock       Connected socket for TLS session
+ * \param[in] conn_type   GNUTLS_SERVER or GNUTLS_CLIENT
+ * \param[in] cred_type   GNUTLS_CRD_ANON or GNUTLS_CRD_PSK
+ * \param[in] credentials TLS session credentials
+ *
+ * \return Pointer to newly created session object, or NULL on error
+ */
+gnutls_session_t *
+pcmk__new_tls_session(int csock, unsigned int conn_type,
+                      gnutls_credentials_type_t cred_type, void *credentials)
+{
+    int rc = GNUTLS_E_SUCCESS;
 #  ifdef HAVE_GNUTLS_PRIORITY_SET_DIRECT
-    gnutls_priority_set_direct(*session, "NORMAL:+DHE-PSK:+PSK", NULL);
-#  else
-    gnutls_set_default_priority(*session);
-    gnutls_kx_set_priority(*session, psk_tls_kx_order);
+    const char *prio = NULL;
 #  endif
-    gnutls_transport_set_ptr(*session, (gnutls_transport_ptr_t) GINT_TO_POINTER(csock));
-    switch (type) {
-        case GNUTLS_SERVER:
-            gnutls_credentials_set(*session, GNUTLS_CRD_PSK,
-                                   (gnutls_psk_server_credentials_t) credentials);
-            break;
-        case GNUTLS_CLIENT:
-            gnutls_credentials_set(*session, GNUTLS_CRD_PSK,
-                                   (gnutls_psk_client_credentials_t) credentials);
-            break;
+    gnutls_session_t *session = NULL;
+
+#  ifdef HAVE_GNUTLS_PRIORITY_SET_DIRECT
+    if (cred_type == GNUTLS_CRD_ANON) {
+        // http://www.manpagez.com/info/gnutls/gnutls-2.10.4/gnutls_81.php#Echo-Server-with-anonymous-authentication
+        prio = "NORMAL:+ANON-DH";
+    } else {
+        prio = "NORMAL:+DHE-PSK:+PSK";
+    }
+#  endif
+
+    session = gnutls_malloc(sizeof(gnutls_session_t));
+    if (session == NULL) {
+        rc = GNUTLS_E_MEMORY_ERROR;
+        goto error;
     }
 
+    rc = gnutls_init(session, conn_type);
+    if (rc != GNUTLS_E_SUCCESS) {
+        goto error;
+    }
+
+#  ifdef HAVE_GNUTLS_PRIORITY_SET_DIRECT
+    /* @TODO On the server side, it would be more efficient to cache the
+     * priority with gnutls_priority_init2() and set it with
+     * gnutls_priority_set() for all sessions.
+     */
+    rc = gnutls_priority_set_direct(*session, prio, NULL);
+    if (rc != GNUTLS_E_SUCCESS) {
+        goto error;
+    }
+    if (conn_type == GNUTLS_CLIENT) {
+        pcmk__set_minimum_dh_bits(session);
+    }
+#  else
+    gnutls_set_default_priority(*session);
+    gnutls_kx_set_priority(*session, (cred_type == GNUTLS_CRD_ANON)? anon_tls_kx_order : psk_tls_kx_order);
+#  endif
+
+    gnutls_transport_set_ptr(*session,
+                             (gnutls_transport_ptr_t) GINT_TO_POINTER(csock));
+
+    rc = gnutls_credentials_set(*session, cred_type, credentials);
+    if (rc != GNUTLS_E_SUCCESS) {
+        goto error;
+    }
     return session;
+
+error:
+    crm_err("Could not initialize %s TLS %s session: %s "
+            CRM_XS " rc=%d priority='%s'",
+            (cred_type == GNUTLS_CRD_ANON)? "anonymous" : "PSK",
+            (conn_type == GNUTLS_SERVER)? "server" : "client",
+            gnutls_strerror(rc), rc, prio);
+    if (session != NULL) {
+        gnutls_free(session);
+    }
+    return NULL;
+}
+
+/*!
+ * \internal
+ * \brief Initialize Diffie-Hellman parameters for a TLS server
+ *
+ * \param[out] dh_params  Parameter object to initialize
+ *
+ * \return GNUTLS_E_SUCCESS on success, GnuTLS error code on error
+ * \todo The current best practice is to allow the client and server to
+ *       negotiate the Diffie-Hellman parameters via a TLS extension (RFC 7919).
+ *       However, we have to support both older versions of GnuTLS (<3.6) that
+ *       don't support the extension on our side, and older Pacemaker versions
+ *       that don't support the extension on the other side. The next best
+ *       practice would be to use a known good prime (see RFC 5114 section 2.2),
+ *       possibly stored in a file distributed with Pacemaker.
+ */
+int
+pcmk__init_tls_dh(gnutls_dh_params_t *dh_params)
+{
+    int rc = GNUTLS_E_SUCCESS;
+    unsigned int dh_bits = 0;
+
+    rc = gnutls_dh_params_init(dh_params);
+    if (rc != GNUTLS_E_SUCCESS) {
+        goto error;
+    }
+
+#ifdef HAVE_GNUTLS_SEC_PARAM_TO_PK_BITS
+    dh_bits = gnutls_sec_param_to_pk_bits(GNUTLS_PK_DH,
+                                          GNUTLS_SEC_PARAM_NORMAL);
+    if (dh_bits == 0) {
+        rc = GNUTLS_E_DH_PRIME_UNACCEPTABLE;
+        goto error;
+    }
+#else
+    dh_bits = 1024;
+#endif
+    dh_bits = pcmk__bound_dh_bits(dh_bits);
+
+    crm_info("Generating Diffie-Hellman parameters with %u-bit prime for TLS",
+             dh_bits);
+    rc = gnutls_dh_params_generate2(*dh_params, dh_bits);
+    if (rc != GNUTLS_E_SUCCESS) {
+        goto error;
+    }
+
+    return rc;
+
+error:
+    crm_err("Could not initialize Diffie-Hellman parameters for TLS: %s "
+            CRM_XS " rc=%d", gnutls_strerror(rc), rc);
+    CRM_ASSERT(rc == GNUTLS_E_SUCCESS);
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief Process handshake data from TLS client
+ *
+ * Read as much TLS handshake data as is available.
+ *
+ * \param[in] client  Client connection
+ *
+ * \retval GnuTLS error code on error
+ * \retval 0 if more data is needed
+ * \retval 1 if handshake is successfully completed
+ */
+int
+pcmk__read_handshake_data(crm_client_t *client)
+{
+    int rc = 0;
+
+    CRM_ASSERT(client && client->remote && client->remote->tls_session);
+
+    do {
+        rc = gnutls_handshake(*client->remote->tls_session);
+    } while (rc == GNUTLS_E_INTERRUPTED);
+
+    if (rc == GNUTLS_E_AGAIN) {
+        /* No more data is available at the moment. This function should be
+         * invoked again once the client sends more.
+         */
+        return 0;
+    } else if (rc != GNUTLS_E_SUCCESS) {
+        return rc;
+    }
+    return 1;
 }
 
 static int

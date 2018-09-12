@@ -27,6 +27,7 @@
 #  include <sys/types.h>
 #  include <stdlib.h>
 #  include <stdbool.h>
+#  include <stdint.h> // uint32_t
 #  include <limits.h>
 #  include <signal.h>
 #  include <sysexits.h>

@@ -15,10 +15,10 @@
 		simple textual changes (corrections, translations, etc.).
 	-->
 	<edition>9</edition>
-	<pubsnumber>0</pubsnumber>
+	<pubsnumber>2</pubsnumber>
 	<abstract>
 		<para>
-			The purpose of this document is to provide a start-to-finish guide to building an example active/passive cluster with Pacemaker and show how it can be converted to an active/active one.
+			This document provides a step-by-step guide to building a simple high-availability cluster using Pacemaker.
 		</para>
 		<para>
 			The example cluster will use:
@@ -35,7 +35,7 @@
 				</listitem>
 				<listitem>
 					<para>
-						Pacemaker to perform resource management,
+						Pacemaker 1.1.18
 					</para>
 				</listitem>
 				<listitem>
