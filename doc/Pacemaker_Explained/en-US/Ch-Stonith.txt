@@ -90,12 +90,13 @@ a|Older versions used this to override the default period to wait for a STONITH 
  indexterm:[Fencing,Property,stonith-timeout]
 
 ////
+ (not yet implemented)
  priority
  integer
  0
  The priority of the STONITH resource. Devices are tried in order of highest priority to lowest.
- indexterm:[priority,Fencing]
- indexterm:[Fencing,Property,priority]
+ indexterm  priority,Fencing 
+ indexterm  Fencing,Property,priority 
 ////
 
 |provides
@@ -103,8 +104,8 @@ a|Older versions used this to override the default period to wait for a STONITH 
 |
 |Any special capability provided by the fence device. Currently, only one such
  capability is meaningful: +unfencing+ (see <<s-unfencing>>).
- indexterm:[priority,Fencing]
- indexterm:[Fencing,Property,priority]
+ indexterm:[provides,Fencing]
+ indexterm:[Fencing,Property,provides]
 
 |pcmk_host_map
 |string
@@ -129,8 +130,9 @@ a|Older versions used this to override the default period to wait for a STONITH 
 a|How to determine which machines are controlled by the device.
  Allowed values:
 
-* +dynamic-list:+ query the device
+* +dynamic-list:+ query the device via the "list" command
 * +static-list:+ check the +pcmk_host_list+ attribute
+* +status:+ query the device via the "status" command
 * +none:+ assume every device can fence every machine
 
 indexterm:[pcmk_host_check,Fencing]
