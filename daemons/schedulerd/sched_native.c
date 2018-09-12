@@ -1888,11 +1888,15 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
              * then is already stopped, there is nothing to be done when non-symmetrical.  */
         } else if ((then_rsc_role >= RSC_ROLE_STARTED)
                    && safe_str_eq(then->task, RSC_START)
+                   && is_set(then->flags, pe_action_optional)
                    && then->node
                    && g_list_length(then_rsc->running_on) == 1
                    && then->node->details == ((node_t *) then_rsc->running_on->data)->details) {
-            /* ignore... if 'then' is supposed to be started after 'first', but
-             * then is already started, there is nothing to be done when non-symmetrical.  */
+            /* Ignore. If 'then' is supposed to be started after 'first', but
+             * 'then' is already started, there is nothing to be done when
+             * asymmetrical -- unless the start is mandatory, which indicates
+             * the resource is restarting, and the ordering is still needed.
+             */
         } else if (!(first->flags & pe_action_runnable)) {
             /* prevent 'then' action from happening if 'first' is not runnable and
              * 'then' has not yet occurred. */
