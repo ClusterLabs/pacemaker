@@ -594,6 +594,10 @@ find_syslog() {
     # Always include system logs (if we can find them)
     msg="Mark:pcmk:`perl -e 'print time()'`"
     logger -p "$priority" "$msg" >/dev/null 2>&1
+
+    # Force buffer flush
+    killall -HUP rsyslogd >/dev/null 2>&1
+
     sleep 2 # Give syslog time to catch up in case it's busy
     findmsg 1 "$msg"
 }
