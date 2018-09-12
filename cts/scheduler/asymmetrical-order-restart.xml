@@ -1,0 +1,101 @@
+<cib crm_feature_set="3.0.12" validate-with="pacemaker-2.8" epoch="2959" num_updates="2" admin_epoch="0" cib-last-written="Thu Aug  9 14:55:18 2018" update-origin="cesr109-p16" update-client="cibadmin" have-quorum="1" dc-uuid="5" update-user="root" execution-date="1533840941">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.16-12.el7-94ff4df"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="cesr"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1533321619"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="5" uname="cesr105-p16"/>
+      <node id="9" uname="cesr109-p16"/>
+    </nodes>
+    <resources>
+      <primitive class="stonith" id="cesr104ipmi" type="fence_ipmilan">
+        <instance_attributes id="cesr104ipmi-instance_attributes">
+          <nvpair id="cesr104ipmi-instance_attributes-ipaddr" name="ipaddr" value="192.168.48.21"/>
+          <nvpair id="cesr104ipmi-instance_attributes-login" name="login" value="admin"/>
+          <nvpair id="cesr104ipmi-instance_attributes-passwd" name="passwd" value="****"/>
+          <nvpair id="cesr104ipmi-instance_attributes-pcmk_host_list" name="pcmk_host_list" value="cesr104-p16"/>
+        </instance_attributes>
+        <operations>
+          <op id="cesr104ipmi-monitor-interval-60s" interval="60s" name="monitor"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="sleep_a" provider="classe" type="anything">
+        <meta_attributes id="sleep_a-meta_attributes">
+          <nvpair id="sleep_a-meta_attributes-target-role" name="target-role" value="Stopped"/>
+        </meta_attributes>
+        <instance_attributes id="sleep_a-instance_attributes">
+          <nvpair id="sleep_a-instance_attributes-binfile" name="binfile" value="/usr/bin/sleep"/>
+          <nvpair id="sleep_a-instance_attributes-cmdline_options" name="cmdline_options" value="infinity"/>
+        </instance_attributes>
+        <operations>
+          <op id="sleep_a-monitor-interval-10" interval="10" name="monitor" timeout="20s"/>
+          <op id="sleep_a-start-interval-0s" interval="0s" name="start" timeout="20s"/>
+          <op id="sleep_a-stop-interval-0s" interval="0s" name="stop" on-fail="block"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="sleep_b" provider="classe" type="anything">
+        <instance_attributes id="sleep_b-instance_attributes">
+          <nvpair id="sleep_b-instance_attributes-binfile" name="binfile" value="/usr/bin/sleep"/>
+          <nvpair id="sleep_b-instance_attributes-cmdline_options" name="cmdline_options" value="infinity"/>
+        </instance_attributes>
+        <operations>
+          <op id="sleep_b-monitor-interval-10" interval="10" name="monitor" timeout="20s"/>
+          <op id="sleep_b-start-interval-0s" interval="0s" name="start" timeout="20s"/>
+          <op id="sleep_b-stop-interval-0s" interval="0s" name="stop" on-fail="block"/>
+        </operations>
+      </primitive>
+    </resources>
+    <constraints>
+      <rsc_order first="sleep_a" first-action="start" id="order-sleep_a-sleep_b-mandatory" kind="Mandatory" symmetrical="false" then="sleep_b" then-action="start"/>
+    </constraints>
+    <rsc_defaults/>
+  </configuration>
+  <status>
+    <node_state id="9" uname="cesr109-p16" crmd="online" crm-debug-origin="do_update_resource" in_ccm="true" join="member" expected="member">
+      <transient_attributes id="9"/>
+      <lrm id="9">
+        <lrm_resources>
+          <lrm_resource id="cesr104ipmi" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="cesr104ipmi_last_0" operation_key="cesr104ipmi_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="972:0:7:540ff5bf-81ee-4648-97cb-e922b82b370c" transition-magic="0:7;972:0:7:540ff5bf-81ee-4648-97cb-e922b82b370c" on_node="cesr109-p16" call-id="177725" rc-code="7" op-status="0" interval="0" last-run="1533238089" last-rc-change="1533238089" exec-time="0" queue-time="0" op-digest="27327e4075d439328e30c2d3f8a846b7" op-secure-params=" passwd  password " op-secure-digest="d14015b540c7f9c28236b218d7e48232"/>
+          </lrm_resource>
+          <lrm_resource id="sleep_a" type="anything" class="ocf" provider="classe">
+            <lrm_rsc_op id="sleep_a_last_0" operation_key="sleep_a_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="577:10170:0:540ff5bf-81ee-4648-97cb-e922b82b370c" transition-magic="0:0;577:10170:0:540ff5bf-81ee-4648-97cb-e922b82b370c" on_node="cesr109-p16" call-id="197446" rc-code="0" op-status="0" interval="0" last-run="1533840919" last-rc-change="1533840919" exec-time="18" queue-time="0" op-digest="db273079d7571b20fbc4e8d197325b97" op-secure-params=" user " op-secure-digest="db273079d7571b20fbc4e8d197325b97"/>
+            <lrm_rsc_op id="sleep_a_monitor_10000" operation_key="sleep_a_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="579:10168:0:540ff5bf-81ee-4648-97cb-e922b82b370c" transition-magic="0:0;579:10168:0:540ff5bf-81ee-4648-97cb-e922b82b370c" on_node="cesr109-p16" call-id="197442" rc-code="0" op-status="0" interval="10000" last-rc-change="1533840815" exec-time="13" queue-time="0" op-digest="2badf37d75e8cf97cf6621545dc5e4ac" op-secure-params=" user " op-secure-digest="db273079d7571b20fbc4e8d197325b97"/>
+          </lrm_resource>
+          <lrm_resource id="sleep_b" type="anything" class="ocf" provider="classe">
+            <lrm_rsc_op id="sleep_b_last_0" operation_key="sleep_b_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="580:10169:0:540ff5bf-81ee-4648-97cb-e922b82b370c" transition-magic="0:0;580:10169:0:540ff5bf-81ee-4648-97cb-e922b82b370c" on_node="cesr109-p16" call-id="197443" rc-code="0" op-status="0" interval="0" last-run="1533840820" last-rc-change="1533840820" exec-time="108" queue-time="0" op-digest="db273079d7571b20fbc4e8d197325b97" op-secure-params=" user " op-secure-digest="db273079d7571b20fbc4e8d197325b97"/>
+            <lrm_rsc_op id="sleep_b_monitor_10000" operation_key="sleep_b_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="581:10169:0:540ff5bf-81ee-4648-97cb-e922b82b370c" transition-magic="0:0;581:10169:0:540ff5bf-81ee-4648-97cb-e922b82b370c" on_node="cesr109-p16" call-id="197444" rc-code="0" op-status="0" interval="10000" last-rc-change="1533840820" exec-time="12" queue-time="0" op-digest="2badf37d75e8cf97cf6621545dc5e4ac" op-secure-params=" user " op-secure-digest="db273079d7571b20fbc4e8d197325b97"/>
+            <lrm_rsc_op id="sleep_b_last_failure_0" operation_key="sleep_b_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="581:10169:0:540ff5bf-81ee-4648-97cb-e922b82b370c" transition-magic="0:1;581:10169:0:540ff5bf-81ee-4648-97cb-e922b82b370c" on_node="cesr109-p16" call-id="197444" rc-code="1" op-status="0" interval="10000" last-rc-change="1533840940" exec-time="0" queue-time="0" op-digest="2badf37d75e8cf97cf6621545dc5e4ac" op-secure-params=" user " op-secure-digest="db273079d7571b20fbc4e8d197325b97"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="5" uname="cesr105-p16" crmd="online" crm-debug-origin="do_update_resource" in_ccm="true" join="member" expected="member">
+      <transient_attributes id="5">
+	      <instance_attributes id="status-5"/>
+      </transient_attributes>
+      <lrm id="5">
+        <lrm_resources>
+          <lrm_resource id="cesr104ipmi" type="fence_ipmilan" class="stonith">
+            <lrm_rsc_op id="cesr104ipmi_last_0" operation_key="cesr104ipmi_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="1166:0:0:540ff5bf-81ee-4648-97cb-e922b82b370c" transition-magic="0:0;1166:0:0:540ff5bf-81ee-4648-97cb-e922b82b370c" on_node="cesr105-p16" call-id="4457" rc-code="0" op-status="0" interval="0" last-run="1533238090" last-rc-change="1533238090" exec-time="231" queue-time="0" op-digest="27327e4075d439328e30c2d3f8a846b7" op-secure-params=" passwd  password " op-secure-digest="d14015b540c7f9c28236b218d7e48232"/>
+            <lrm_rsc_op id="cesr104ipmi_monitor_60000" operation_key="cesr104ipmi_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="1167:0:0:540ff5bf-81ee-4648-97cb-e922b82b370c" transition-magic="0:0;1167:0:0:540ff5bf-81ee-4648-97cb-e922b82b370c" on_node="cesr105-p16" call-id="4458" rc-code="0" op-status="0" interval="60000" last-rc-change="1533238091" exec-time="228" queue-time="0" op-digest="c6a98d44de37b274ba6bda6460f92bd4" op-secure-params=" passwd  password " op-secure-digest="d14015b540c7f9c28236b218d7e48232"/>
+          </lrm_resource>
+          <lrm_resource id="sleep_a" type="anything" class="ocf" provider="classe">
+            <lrm_rsc_op id="sleep_a_last_0" operation_key="sleep_a_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="577:10168:0:540ff5bf-81ee-4648-97cb-e922b82b370c" transition-magic="0:0;577:10168:0:540ff5bf-81ee-4648-97cb-e922b82b370c" on_node="cesr105-p16" call-id="5342" rc-code="0" op-status="0" interval="0" last-run="1533840815" last-rc-change="1533840815" exec-time="18" queue-time="0" op-digest="db273079d7571b20fbc4e8d197325b97" op-secure-params=" user " op-secure-digest="db273079d7571b20fbc4e8d197325b97"/>
+            <lrm_rsc_op id="sleep_a_monitor_10000" operation_key="sleep_a_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="582:10164:0:540ff5bf-81ee-4648-97cb-e922b82b370c" transition-magic="0:0;582:10164:0:540ff5bf-81ee-4648-97cb-e922b82b370c" on_node="cesr105-p16" call-id="5334" rc-code="0" op-status="0" interval="10000" last-rc-change="1533839147" exec-time="14" queue-time="0" op-digest="2badf37d75e8cf97cf6621545dc5e4ac" op-secure-params=" user " op-secure-digest="db273079d7571b20fbc4e8d197325b97"/>
+          </lrm_resource>
+          <lrm_resource id="sleep_b" type="anything" class="ocf" provider="classe">
+            <lrm_rsc_op id="sleep_b_last_0" operation_key="sleep_b_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="579:10169:0:540ff5bf-81ee-4648-97cb-e922b82b370c" transition-magic="0:0;579:10169:0:540ff5bf-81ee-4648-97cb-e922b82b370c" on_node="cesr105-p16" call-id="5344" rc-code="0" op-status="0" interval="0" last-run="1533840820" last-rc-change="1533840820" exec-time="18" queue-time="0" op-digest="db273079d7571b20fbc4e8d197325b97" op-secure-params=" user " op-secure-digest="db273079d7571b20fbc4e8d197325b97"/>
+            <lrm_rsc_op id="sleep_b_monitor_10000" operation_key="sleep_b_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.12" transition-key="585:10165:0:540ff5bf-81ee-4648-97cb-e922b82b370c" transition-magic="0:0;585:10165:0:540ff5bf-81ee-4648-97cb-e922b82b370c" on_node="cesr105-p16" call-id="5340" rc-code="0" op-status="0" interval="10000" last-rc-change="1533839154" exec-time="13" queue-time="0" op-digest="2badf37d75e8cf97cf6621545dc5e4ac" op-secure-params=" user " op-secure-digest="db273079d7571b20fbc4e8d197325b97"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

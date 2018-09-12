@@ -1,0 +1,15 @@
+digraph "g" {
+"all_stopped" [ style=bold color="green" fontcolor="orange"]
+"cesr104ipmi_monitor_60000 cesr105-p16" [ style=bold color="green" fontcolor="black"]
+"cesr104ipmi_start_0 cesr105-p16" -> "cesr104ipmi_monitor_60000 cesr105-p16" [ style = bold]
+"cesr104ipmi_start_0 cesr105-p16" [ style=bold color="green" fontcolor="black"]
+"cesr104ipmi_stop_0 cesr105-p16" -> "all_stopped" [ style = bold]
+"cesr104ipmi_stop_0 cesr105-p16" -> "cesr104ipmi_start_0 cesr105-p16" [ style = bold]
+"cesr104ipmi_stop_0 cesr105-p16" [ style=bold color="green" fontcolor="black"]
+"sleep_b_monitor_10000 cesr109-p16" [ style=dashed color="red" fontcolor="black"]
+"sleep_b_start_0 cesr109-p16" -> "sleep_b_monitor_10000 cesr109-p16" [ style = dashed]
+"sleep_b_start_0 cesr109-p16" [ style=dashed color="red" fontcolor="black"]
+"sleep_b_stop_0 cesr109-p16" -> "all_stopped" [ style = bold]
+"sleep_b_stop_0 cesr109-p16" -> "sleep_b_start_0 cesr109-p16" [ style = dashed]
+"sleep_b_stop_0 cesr109-p16" [ style=bold color="green" fontcolor="black"]
+}

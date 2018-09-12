@@ -928,6 +928,7 @@ do_test bug-5069-op-disabled "Test on-fail-ignore with failure when monitor is d
 do_test obsolete-lrm-resource "cl#5115 - Do not use obsolete lrm_resource sections"
 do_test expire-non-blocked-failure "Ignore failure-timeout only if the failed operation has on-fail=block"
 do_test asymmetrical-order-move "Respect asymmetrical ordering when trying to move resources"
+do_test asymmetrical-order-restart "Respect asymmetrical ordering when restarting dependent resource"
 do_test start-then-stop-with-unfence "Avoid graph loop with start-then-stop constraint plus unfencing"
 do_test order-expired-failure "Order failcount cleanup after remote fencing"
 
