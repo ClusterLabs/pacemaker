@@ -40,6 +40,7 @@
 
 extern void cleanup_alloc_calculations(pe_working_set_t * data_set);
 
+static void clean_up_connections(void);
 static void clean_up(crm_exit_t exit_code);
 void crm_diff_update(const char *event, xmlNode * msg);
 gboolean mon_refresh_display(gpointer user_data);
@@ -358,7 +359,7 @@ cib_connect(gboolean full)
                 if (output_format == mon_output_console) {
                     sleep(2);
                 }
-                clean_up(crm_errno2exit(rc));
+                clean_up_connections();
             }
         }
     }
@@ -4385,6 +4386,27 @@ mon_st_callback_display(stonith_t * st, stonith_event_t * e)
     }
 }
 
+static void
+clean_up_connections(void)
+{
+    if (cib != NULL) {
+        cib->cmds->signoff(cib);
+        cib_delete(cib);
+        cib = NULL;
+    }
+
+    if (st != NULL) {
+        if (st->state != stonith_disconnected) {
+            st->cmds->remove_notification(st, T_STONITH_NOTIFY_DISCONNECT);
+            st->cmds->remove_notification(st, T_STONITH_NOTIFY_FENCE);
+            st->cmds->remove_notification(st, T_STONITH_NOTIFY_HISTORY);
+            st->cmds->disconnect(st);
+        }
+        stonith_api_delete(st);
+        st = NULL;
+    }
+}
+
 /*
  * De-init ncurses, disconnect from the CIB manager, disconnect fencing,
  * deallocate memory and show usage-message if requested.
@@ -4402,23 +4424,7 @@ clean_up(crm_exit_t exit_code)
     }
 #endif
 
-    if (cib != NULL) {
-        cib->cmds->signoff(cib);
-        cib_delete(cib);
-        cib = NULL;
-    }
-
-    if (st != NULL) {
-        if (st->state != stonith_disconnected) {
-            st->cmds->remove_notification(st, T_STONITH_NOTIFY_DISCONNECT);
-            st->cmds->remove_notification(st, T_STONITH_NOTIFY_FENCE);
-            st->cmds->remove_notification(st, T_STONITH_NOTIFY_HISTORY);
-            st->cmds->disconnect(st);
-        }
-        stonith_api_delete(st);
-        st = NULL;
-    }
-
+    clean_up_connections();
     free(output_filename);
     free(pid_file);
 
