@@ -1316,11 +1316,14 @@ main(int argc, char **argv)
         printf(" <shortdesc lang=\"en\">Instance attributes available for all \"stonith\"-class resources</shortdesc>\n");
         printf(" <parameters>\n");
 
+#if 0
+        // priority is not implemented yet
         printf("  <parameter name=\"priority\" unique=\"0\">\n");
-        printf
-            ("    <shortdesc lang=\"en\">The priority of the stonith resource. Devices are tried in order of highest priority to lowest.</shortdesc>\n");
+        printf("    <shortdesc lang=\"en\">Devices that are not in a topology "
+               "are tried in order of highest to lowest integer priority</shortdesc>\n");
         printf("    <content type=\"integer\" default=\"0\"/>\n");
         printf("  </parameter>\n");
+#endif
 
         printf("  <parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_HOSTARG);
         printf
@@ -1351,9 +1354,11 @@ main(int argc, char **argv)
         printf("  <parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_HOSTCHECK);
         printf
             ("    <shortdesc lang=\"en\">How to determine which machines are controlled by the device.</shortdesc>\n");
-        printf
-            ("    <longdesc lang=\"en\">Allowed values: dynamic-list (query the device), static-list (check the %s attribute), none (assume every device can fence every machine)</longdesc>\n",
-             STONITH_ATTR_HOSTLIST);
+        printf("    <longdesc lang=\"en\">Allowed values: dynamic-list "
+               "(query the device via the 'list' command), static-list "
+               "(check the " STONITH_ATTR_HOSTLIST " attribute), status "
+               "(query the device via the 'status' command), none (assume "
+               "every device can fence every machine)</longdesc>\n");
         printf("    <content type=\"string\" default=\"dynamic-list\"/>\n");
         printf("  </parameter>\n");
 
@@ -1494,6 +1499,5 @@ main(int argc, char **argv)
     g_main_loop_run(mainloop);
 
     stonith_cleanup();
-    crm_info("Done");
     return crm_exit(CRM_EX_OK);
 }

@@ -22,11 +22,11 @@ include $(top_srcdir)/Makefile.common
 helpdir		= $(datadir)/$(PACKAGE)
 
 ascii		= crm_fencing.txt acls.txt
-docbook		= Clusters_from_Scratch \
-	Pacemaker_Administration \
-	Pacemaker_Development \
-	Pacemaker_Explained \
-	Pacemaker_Remote
+docbook		=	Clusters_from_Scratch		\
+			Pacemaker_Administration	\
+			Pacemaker_Development		\
+			Pacemaker_Explained		\
+			Pacemaker_Remote
 doc_DATA	= $(ascii) $(generated_docs)
 
 # toplevel rsync destination for www targets (without trailing slash)
@@ -50,20 +50,36 @@ DOCBOOK_LANGS   := en-US
 # (currently only en-US because translations aren't up-to-date)
 UPLOAD_LANGS    = en-US
 
-DOTs = $(wildcard */en-US/images/*.dot)
-SVG = $(wildcard */en-US/images/pcmk-*.svg) $(DOTs:%.dot=%.svg)
+# @TODO We could simplify this (and .gitignore) by establishing a convention
+# that original image source begins with an uppercase letter and generated
+# files with lowercase.
 
-generated_PNGS = $(SVG:%.svg=%-small.png) $(SVG:%.svg=%.png)  $(SVG:%.svg=%-large.png) 	\
-	Pacemaker_Explained/en-US/images/Policy-Engine-big.png  \
-	Pacemaker_Explained/en-US/images/Policy-Engine-small.png
-PNGS = $(generated_PNGS) \
-	Pacemaker_Remote/en-US/images/pcmk-ha-cluster-stack.png \
-	Pacemaker_Remote/en-US/images/pcmk-ha-remote-stack.png
+# Scheduler transition graphs
+# @TODO Add original XML, and generate DOTs via crm_simulate
+DOTS = $(wildcard shared/en-US/images/*.dot)
 
-BRAND_PNGS = publican-clusterlabs/en-US/images/title_logo.png			\
-	publican-clusterlabs/en-US/images/image_left.png			\
-	publican-clusterlabs/en-US/images/image_right.png			\
-	publican-clusterlabs/en-US/images/h1-bg.png
+# Vector sources for images
+# @TODO Generate transition SVGs from DOTs via dot
+SVGS =	$(wildcard shared/en-US/images/pcmk-*.svg)	\
+	$(DOTS:%.dot=%.svg)
+
+# Final images
+PNGS_ORIGINAL =	Pacemaker_Remote/en-US/images/pcmk-ha-cluster-stack.png	\
+		Pacemaker_Remote/en-US/images/pcmk-ha-remote-stack.png	\
+		shared/en-US/images/Console.png				\
+		shared/en-US/images/Editing-eth0.png			\
+		shared/en-US/images/Installer.png			\
+		shared/en-US/images/Network.png				\
+		shared/en-US/images/Partitioning.png			\
+		shared/en-US/images/Welcome.png				\
+		shared/en-US/images/resource-set.png			\
+		shared/en-US/images/three-sets-complex.png		\
+		shared/en-US/images/three-sets.png			\
+		shared/en-US/images/two-sets.png
+PNGS_GENERATED =	$(SVGS:%.svg=%-small.png)	\
+			$(SVGS:%.svg=%.png)		\
+			$(SVGS:%.svg=%-large.png)
+PNGS = $(PNGS_ORIGINAL) $(PNGS_GENERATED)
 
 graphics: $(PNGS)
 
@@ -280,14 +296,24 @@ install-data-local: all-local
 	done
 endif
 
-brand:  $(BRAND_PNGS) $(wildcard publican-clusterlabs/en-US/*.xml)
+BRAND_DEPS =	$(wildcard publican-clusterlabs/en-US/*.png)	\
+		$(wildcard publican-clusterlabs/en-US/*.xml)
+
+brand-build: $(BRAND_DEPS)
 	cd publican-clusterlabs && publican build --formats=xml --langs=all --publish
+
+brand: brand-build
 	echo "Installing..."
 	cd publican-clusterlabs && sudo publican install_brand --path=$(datadir)/publican/Common_Content
 
-#	find publican-clusterlabs -name "*.noarch.rpm" -exec rm -f \{\} \;
-#	cd publican-clusterlabs && $(PUBLICAN) package --binary
-#	find publican-clusterlabs -name "*.noarch.rpm" -exec sudo rpm -Uvh --force \{\} \;
+brand-rpm-clean:
+	find publican-clusterlabs -name "*.noarch.rpm" -exec rm -f \{\} \;
+
+brand-rpm-build: brand-rpm-clean brand-build
+	cd publican-clusterlabs && $(PUBLICAN) package --binary
+
+brand-rpm-install: brand-rpm-build
+	find publican-clusterlabs -name "*.noarch.rpm" -exec sudo rpm -Uvh --force \{\} \;
 
 pdf:
 	make DOCBOOK_FORMATS="pdf" all-local
@@ -308,7 +334,8 @@ endif
 	rsync $(RSYNC_OPTS) $(generated_docs) $(ascii) "$(RSYNC_DEST)/$(PACKAGE)/doc/"
 
 clean-local:
-	-rm -rf $(generated_docs) $(generated_mans) $(docbook_build) $(generated_PNGS)
+	-rm -f $(PNGS_GENERATED)
+	-rm -rf $(generated_docs) $(generated_mans) $(docbook_build)
 	-rm -rf $(SHARED_XML) $(CFS_XML) $(PE_XML) $(PR_XML)
 	-rm -rf  publican-catalog-fallback publican-catalog
 	for book in $(docbook); do rm -rf $$book/tmp $$book/publish; done

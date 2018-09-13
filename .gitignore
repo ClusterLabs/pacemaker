@@ -112,7 +112,8 @@ publican.cfg
 *.8
 *.8.xml
 *.8.html
-doc/*/en-US/images/*.png
+doc/shared/en-US/images/pcmk-*.png
+doc/shared/en-US/images/Policy-Engine-*.png
 doc/*/tmp/**
 doc/*/publish
 /daemons/attrd/pacemaker-attrd

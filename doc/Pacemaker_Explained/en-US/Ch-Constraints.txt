@@ -293,7 +293,7 @@ indexterm:[Constraints,Ordering,then]
  indexterm:[Constraints,Ordering,then-action]
 
 |kind
-|
+|Mandatory
 a|How to enforce the constraint. Allowed values:
 
 * +Optional:+ Just a suggestion. Only applies if both resources are
