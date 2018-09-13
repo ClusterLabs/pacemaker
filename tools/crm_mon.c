@@ -40,13 +40,14 @@
 
 extern void cleanup_alloc_calculations(pe_working_set_t * data_set);
 
+static void clean_up_connections(void);
 static void clean_up(crm_exit_t exit_code);
-void crm_diff_update(const char *event, xmlNode * msg);
-gboolean mon_refresh_display(gpointer user_data);
-int cib_connect(gboolean full);
-void mon_st_callback_event(stonith_t * st, stonith_event_t * e);
-void mon_st_callback_display(stonith_t * st, stonith_event_t * e);
-void kick_refresh(gboolean data_updated);
+static void crm_diff_update(const char *event, xmlNode * msg);
+static gboolean mon_refresh_display(gpointer user_data);
+static int cib_connect(gboolean full);
+static void mon_st_callback_event(stonith_t * st, stonith_event_t * e);
+static void mon_st_callback_display(stonith_t * st, stonith_event_t * e);
+static void kick_refresh(gboolean data_updated);
 static char *get_node_display_name(node_t *node);
 
 /*
@@ -283,7 +284,7 @@ mon_winresize(int nsig)
 }
 #endif
 
-int
+static int
 cib_connect(gboolean full)
 {
     int rc = pcmk_ok;
@@ -358,7 +359,7 @@ cib_connect(gboolean full)
                 if (output_format == mon_output_console) {
                     sleep(2);
                 }
-                clean_up(crm_errno2exit(rc));
+                clean_up_connections();
             }
         }
     }
@@ -2107,7 +2108,8 @@ get_node_display_name(node_t *node)
  * \param[in] node       Node affected by constraint
  * \param[in] location   Constraint to print
  */
-static void print_ban(FILE *stream, node_t *node, rsc_to_node_t *location)
+static void
+print_ban(FILE *stream, node_t *node, rsc_to_node_t *location)
 {
     char *node_name = NULL;
 
@@ -2150,7 +2152,8 @@ static void print_ban(FILE *stream, node_t *node, rsc_to_node_t *location)
  * \param[in] stream     File stream to display output to
  * \param[in] data_set   Working set corresponding to CIB status to display
  */
-static void print_neg_locations(FILE *stream, pe_working_set_t *data_set)
+static void
+print_neg_locations(FILE *stream, pe_working_set_t *data_set)
 {
     GListPtr gIter, gIter2;
 
@@ -4038,7 +4041,8 @@ mon_trigger_refresh(gpointer user_data)
 }
 
 #define NODE_PATT "/lrm[@id="
-static char *get_node_from_xpath(const char *xpath) 
+static char *
+get_node_from_xpath(const char *xpath)
 {
     char *nodeid = NULL;
     char *tmp = strstr(xpath, NODE_PATT);
@@ -4055,7 +4059,8 @@ static char *get_node_from_xpath(const char *xpath)
     return nodeid;
 }
 
-static void crm_diff_update_v2(const char *event, xmlNode * msg) 
+static void
+crm_diff_update_v2(const char *event, xmlNode * msg)
 {
     xmlNode *change = NULL;
     xmlNode *diff = get_message_xml(msg, F_CIB_UPDATE_RESULT);
@@ -4156,7 +4161,8 @@ static void crm_diff_update_v2(const char *event, xmlNode * msg)
     }
 }
 
-static void crm_diff_update_v1(const char *event, xmlNode * msg) 
+static void
+crm_diff_update_v1(const char *event, xmlNode * msg)
 {
     /* Process operation updates */
     xmlXPathObject *xpathObj = xpath_search(msg,
@@ -4172,7 +4178,7 @@ static void crm_diff_update_v1(const char *event, xmlNode * msg)
     freeXpathObject(xpathObj);
 }
 
-void
+static void
 crm_diff_update(const char *event, xmlNode * msg)
 {
     int rc = -1;
@@ -4232,7 +4238,7 @@ crm_diff_update(const char *event, xmlNode * msg)
     kick_refresh(cib_updated);
 }
 
-gboolean
+static gboolean
 mon_refresh_display(gpointer user_data)
 {
     xmlNode *cib_copy = copy_xml(current_cib);
@@ -4325,7 +4331,7 @@ mon_refresh_display(gpointer user_data)
     return TRUE;
 }
 
-void
+static void
 mon_st_callback_event(stonith_t * st, stonith_event_t * e)
 {
     if (st->state == stonith_disconnected) {
@@ -4340,7 +4346,8 @@ mon_st_callback_event(stonith_t * st, stonith_event_t * e)
     }
 }
 
-void kick_refresh(gboolean data_updated)
+static void
+kick_refresh(gboolean data_updated)
 {
     static int updates = 0;
     long now = time(NULL);
@@ -4373,7 +4380,7 @@ void kick_refresh(gboolean data_updated)
     }
 }
 
-void
+static void
 mon_st_callback_display(stonith_t * st, stonith_event_t * e)
 {
     if (st->state == stonith_disconnected) {
@@ -4382,6 +4389,27 @@ mon_st_callback_display(stonith_t * st, stonith_event_t * e)
     } else {
         print_dot();
         kick_refresh(TRUE);
+    }
+}
+
+static void
+clean_up_connections(void)
+{
+    if (cib != NULL) {
+        cib->cmds->signoff(cib);
+        cib_delete(cib);
+        cib = NULL;
+    }
+
+    if (st != NULL) {
+        if (st->state != stonith_disconnected) {
+            st->cmds->remove_notification(st, T_STONITH_NOTIFY_DISCONNECT);
+            st->cmds->remove_notification(st, T_STONITH_NOTIFY_FENCE);
+            st->cmds->remove_notification(st, T_STONITH_NOTIFY_HISTORY);
+            st->cmds->disconnect(st);
+        }
+        stonith_api_delete(st);
+        st = NULL;
     }
 }
 
@@ -4402,23 +4430,7 @@ clean_up(crm_exit_t exit_code)
     }
 #endif
 
-    if (cib != NULL) {
-        cib->cmds->signoff(cib);
-        cib_delete(cib);
-        cib = NULL;
-    }
-
-    if (st != NULL) {
-        if (st->state != stonith_disconnected) {
-            st->cmds->remove_notification(st, T_STONITH_NOTIFY_DISCONNECT);
-            st->cmds->remove_notification(st, T_STONITH_NOTIFY_FENCE);
-            st->cmds->remove_notification(st, T_STONITH_NOTIFY_HISTORY);
-            st->cmds->disconnect(st);
-        }
-        stonith_api_delete(st);
-        st = NULL;
-    }
-
+    clean_up_connections();
     free(output_filename);
     free(pid_file);
 
