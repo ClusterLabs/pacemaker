@@ -138,17 +138,6 @@ crmd_init(void)
     if (state == S_PENDING || state == S_STARTING) {
         /* Create the mainloop and run it... */
         crm_trace("Starting %s's mainloop", crm_system_name);
-
-#ifdef REALTIME_SUPPORT
-        static int crm_realtime = 1;
-
-        if (crm_realtime == 1) {
-            cl_enable_realtime();
-        } else if (crm_realtime == 0) {
-            cl_disable_realtime();
-        }
-        cl_make_realtime(SCHED_RR, 5, 64, 64);
-#endif
         g_main_loop_run(crmd_mainloop);
         if (is_set(fsa_input_register, R_STAYDOWN)) {
             crm_info("Inhibiting automated respawn");
