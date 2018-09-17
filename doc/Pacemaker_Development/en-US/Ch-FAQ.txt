@@ -18,7 +18,7 @@ Where is the source code for Pacemaker?::
  the http://schacon.github.io/git/gittutorial.html[gittutorial(7) man page]
  is an excellent starting point. If you're familiar with using Git from the
  command line, you can create a local copy of the Pacemaker source code with:
- `git clone https://github.com/ClusterLabs/pacemaker.git pacemaker`
+ `git clone https://github.com/ClusterLabs/pacemaker.git
 
 What are the different Git branches and repositories used for?::
  indexterm:[branches]
