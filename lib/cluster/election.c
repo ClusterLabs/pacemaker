@@ -20,20 +20,18 @@
 
 #define STORM_INTERVAL   2      /* in seconds */
 
-struct election_s
-{
-        enum election_result state;
-        guint count;
-        char *name;
-        char *uname;
-        GSourceFunc cb;
-        GHashTable *voted;
-        mainloop_timer_t *timeout; /* When to stop if not everyone casts a vote */
+struct election_s {
+    enum election_result state;
+    guint count;        // How many times local node has voted
+    char *name;         // Descriptive name for this election
+    char *uname;        // Local node's name
+    GSourceFunc cb;     // Function to call if election is won
+    GHashTable *voted;  // Key = node name, value = how node voted
+    mainloop_timer_t *timeout; // When to abort if all votes not received
 };
 
 static void election_complete(election_t *e)
 {
-    crm_info("Election %s complete", e->name);
     e->state = election_won;
 
     if(e->cb) {
@@ -47,7 +45,7 @@ static gboolean election_timer_cb(gpointer user_data)
 {
     election_t *e = user_data;
 
-    crm_info("Election %s %p timed out", e->name, e);
+    crm_info("%s timed out, declaring local node as winner", e->name);
     election_complete(e);
     return FALSE;
 }
@@ -80,21 +78,31 @@ election_state(election_t *e)
 election_t *
 election_init(const char *name, const char *uname, guint period_ms, GSourceFunc cb)
 {
+    election_t *e = NULL;
+
     static guint count = 0;
-    election_t *e = calloc(1, sizeof(election_t));
 
-    if(e != NULL) {
-        if(name) {
-            e->name = crm_strdup_printf("election-%s", name);
-        } else {
-            e->name = crm_strdup_printf("election-%u", count++);
-        }
+    CRM_CHECK(uname != NULL, return NULL);
 
-        e->cb = cb;
-        e->uname = strdup(uname);
-        e->timeout = mainloop_timer_add(e->name, period_ms, FALSE, election_timer_cb, e);
-        crm_trace("Created %s %p", e->name, e);
+    e = calloc(1, sizeof(election_t));
+    if (e == NULL) {
+        crm_perror(LOG_CRIT, "Cannot create election");
+        return NULL;
     }
+
+    e->uname = strdup(uname);
+    if (e->uname == NULL) {
+        crm_perror(LOG_CRIT, "Cannot create election");
+        free(e);
+        return NULL;
+    }
+
+    e->name = name? crm_strdup_printf("election-%s", name)
+                  : crm_strdup_printf("election-%u", count++);
+    e->cb = cb;
+    e->timeout = mainloop_timer_add(e->name, period_ms, FALSE,
+                                    election_timer_cb, e);
+    crm_trace("Created %s", e->name);
     return e;
 }
 
@@ -111,6 +119,7 @@ void
 election_remove(election_t *e, const char *uname)
 {
     if(e && uname && e->voted) {
+        crm_trace("Discarding %s (no-)vote from lost peer %s", e->name, uname);
         g_hash_table_remove(e->voted, uname);
     }
 }
@@ -273,14 +282,15 @@ election_vote(election_t *e)
     xmlNode *vote = NULL;
     crm_node_t *our_node;
 
-    if(e == NULL) {
-        crm_trace("Not voting in election: not initialized");
+    if (e == NULL) {
+        crm_trace("Election vote requested, but no election available");
         return;
     }
 
     our_node = crm_get_peer(0, e->uname);
-    if (our_node == NULL || crm_is_peer_active(our_node) == FALSE) {
-        crm_trace("Cannot vote yet: %p", our_node);
+    if ((our_node == NULL) || (crm_is_peer_active(our_node) == FALSE)) {
+        crm_trace("Cannot vote in %s yet: local node not connected to cluster",
+                  e->name);
         return;
     }
 
@@ -298,7 +308,7 @@ election_vote(election_t *e)
     send_cluster_message(NULL, crm_msg_crmd, vote, TRUE);
     free_xml(vote);
 
-    crm_debug("Started election %d", e->count);
+    crm_debug("Started %s round %d", e->name, e->count);
     if (e->voted) {
         g_hash_table_destroy(e->voted);
         e->voted = NULL;
@@ -330,7 +340,7 @@ election_check(election_t *e)
     int num_members = crm_active_peers();
 
     if(e == NULL) {
-        crm_trace("not initialized");
+        crm_trace("Election check requested, but no election available");
         return FALSE;
     }
 
@@ -349,26 +359,28 @@ election_check(election_t *e)
             const crm_node_t *node;
             char *key = NULL;
 
+            crm_warn("Received too many votes in %s", e->name);
             g_hash_table_iter_init(&gIter, crm_peer_cache);
             while (g_hash_table_iter_next(&gIter, NULL, (gpointer *) & node)) {
                 if (crm_is_peer_active(node)) {
-                    crm_err("member: %s proc=%.32x", node->uname, node->processes);
+                    crm_warn("* expected vote: %s", node->uname);
                 }
             }
 
             g_hash_table_iter_init(&gIter, e->voted);
             while (g_hash_table_iter_next(&gIter, (gpointer *) & key, NULL)) {
-                crm_err("voted: %s", key);
+                crm_warn("* actual vote: %s", key);
             }
 
         }
 
+        crm_info("%s won by local node", e->name);
         election_complete(e);
         return TRUE;
 
     } else {
-        crm_debug("Still waiting on %d non-votes (%d total)",
-                  num_members - voted_size, num_members);
+        crm_debug("%s still waiting on %d of %d votes",
+                  e->name, num_members - voted_size, num_members);
     }
 
     return FALSE;
@@ -404,39 +416,40 @@ election_count_vote(election_t *e, xmlNode *vote, bool can_win)
     const char *reason = "unknown";
     const char *election_owner = NULL;
     crm_node_t *our_node = NULL, *your_node = NULL;
-
-    static int election_wins = 0;
-
     xmlNode *novote = NULL;
     time_t tm_now = time(NULL);
+
+    // @TODO these should be in election_t
+    static int election_wins = 0;
     static time_t expires = 0;
     static time_t last_election_loss = 0;
 
-    /* if the membership copy is NULL we REALLY shouldn't be voting
-     * the question is how we managed to get here.
-     */
-
     CRM_CHECK(vote != NULL, return election_error);
-
-    if(e == NULL) {
-        crm_info("Not voting in election: not initialized");
-        return election_lost;
-
-    } else if(crm_peer_cache == NULL) {
-        crm_info("Not voting in election: no peer cache");
-        return election_lost;
-    }
 
     op = crm_element_value(vote, F_CRM_TASK);
     from = crm_element_value(vote, F_CRM_HOST_FROM);
     election_owner = crm_element_value(vote, F_CRM_ELECTION_OWNER);
     crm_element_value_int(vote, F_CRM_ELECTION_ID, &election_id);
 
+    if (e == NULL) {
+        crm_info("Cannot count %s from %s because no election available",
+                 op, from);
+        return election_lost;
+    }
+
+    /* If the membership cache is NULL, we REALLY shouldn't be voting --
+     * the question is how we managed to get here.
+     */
+    if (crm_peer_cache == NULL) {
+        crm_info("Cannot count %s %s from %s because no peer information available",
+                 e->name, op, from);
+        return election_lost;
+    }
+
     your_node = crm_get_peer(0, from);
     our_node = crm_get_peer(0, e->uname);
 
     if (e->voted == NULL) {
-        crm_debug("Created voted hash");
         e->voted = crm_str_table_new();
     }
 
@@ -509,21 +522,12 @@ election_count_vote(election_t *e, xmlNode *vote, bool can_win)
         } else if (age > 0) {
             reason = "Uptime";
 
-        } else if (e->uname == NULL) {
-            reason = "Unknown host name";
-            we_lose = TRUE;
-
         } else if (strcasecmp(e->uname, from) > 0) {
             reason = "Host name";
             we_lose = TRUE;
 
         } else {
             reason = "Host name";
-            CRM_ASSERT(strcasecmp(e->uname, from) < 0);
-/* can't happen...
- *	} else if(strcasecmp(e->uname, from) == 0) {
- *
- */
         }
     }
 
@@ -539,8 +543,8 @@ election_count_vote(election_t *e, xmlNode *vote, bool can_win)
          */
         election_wins++;
         if (election_wins > (peers * peers)) {
-            crm_warn("Election storm detected: %d elections in %d seconds", election_wins,
-                     STORM_INTERVAL);
+            crm_warn("%s election storm detected: %d wins in %d seconds",
+                     e->name, election_wins, STORM_INTERVAL);
             election_wins = 0;
             expires = tm_now + STORM_INTERVAL;
             crm_write_blackbox(0, NULL);
@@ -548,16 +552,17 @@ election_count_vote(election_t *e, xmlNode *vote, bool can_win)
     }
 
     if (done) {
-        do_crm_log(log_level + 1, "Election %d (current: %d, owner: %s): Processed %s from %s (%s)",
-                   election_id, e->count, election_owner, op, from, reason);
+        do_crm_log(log_level + 1,
+                   "Processed %s round %d %s (current round %d) from %s (%s)",
+                   e->name, election_id, op, e->count, from, reason);
         return e->state;
 
     } else if (we_lose == FALSE) {
-        do_crm_log(log_level, "Election %d (owner: %s) pass: %s from %s (%s)",
-                   election_id, election_owner, op, from, reason);
-
         if (last_election_loss == 0
             || tm_now - last_election_loss > (time_t) LOSS_DAMPEN) {
+
+            do_crm_log(log_level, "%s round %d (owner node ID %s) pass: %s from %s (%s)",
+                       e->name, election_id, election_owner, op, from, reason);
 
             last_election_loss = 0;
             election_timeout_stop(e);
@@ -565,17 +570,25 @@ election_count_vote(election_t *e, xmlNode *vote, bool can_win)
             /* Start a new election by voting down this, and other, peers */
             e->state = election_start;
             return e->state;
-        }
+        } else {
+            char *loss_time = ctime(&last_election_loss);
 
-        crm_info("Election %d ignore: We already lost an election less than %ds ago (%s)",
-                 election_id, LOSS_DAMPEN, ctime(&last_election_loss));
+            if (loss_time) {
+                // Show only HH:MM:SS
+                loss_time += 11;
+                loss_time[8] = '\0';
+            }
+            crm_info("Ignoring %s round %d (owner node ID %s) pass vs %s because we lost less than %ds ago at %s",
+                     e->name, election_id, election_owner, from, LOSS_DAMPEN,
+                     loss_time? loss_time : "unknown");
+        }
     }
 
     novote = create_request(CRM_OP_NOVOTE, NULL, from,
                             CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
 
-    do_crm_log(log_level, "Election %d (owner: %s) lost: %s from %s (%s)",
-               election_id, election_owner, op, from, reason);
+    do_crm_log(log_level, "%s round %d (owner node ID %s) lost: %s from %s (%s)",
+               e->name, election_id, election_owner, op, from, reason);
 
     election_timeout_stop(e);
 
