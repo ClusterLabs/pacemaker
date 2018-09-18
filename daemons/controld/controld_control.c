@@ -46,11 +46,9 @@ crm_trigger_t *config_read = NULL;
 bool no_quorum_suicide_escalation = FALSE;
 
 static gboolean
-election_timeout_popped(gpointer data)
+election_win_cb(gpointer data)
 {
-    /* Not everyone voted */
-    crm_info("Election failed: Declaring ourselves the winner");
-    register_fsa_input(C_TIMER_POPPED, I_ELECTION_DC, NULL);
+    register_fsa_input(C_FSA_INTERNAL, I_ELECTION_DC, NULL);
     return FALSE;
 }
 
@@ -84,7 +82,8 @@ do_ha_control(long long action,
             registered = crm_connect_corosync(cluster);
 #endif
         }
-        fsa_election = election_init(NULL, cluster->uname, 60000/*60s*/, election_timeout_popped);
+        fsa_election = election_init("DC", cluster->uname, 60000 /*60s*/,
+                                     election_win_cb);
         fsa_our_uname = cluster->uname;
         fsa_our_uuid = cluster->uuid;
         if(cluster->uuid == NULL) {

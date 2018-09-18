@@ -120,10 +120,8 @@ do_election_count_vote(long long action,
             }
             break;
 
-        case election_in_progress:
-            break;
         default:
-            crm_err("Unhandled election result: %d", rc);
+            crm_trace("Election message resulted in state %d", rc);
     }
 }
 
