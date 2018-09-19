@@ -359,9 +359,7 @@ CLANG_checkers =
 # --inconclusive --std=posix
 CPPCHECK_ARGS ?=
 cppcheck:
-	for d in replace lib daemons tools; \
-		do cppcheck $(CPPCHECK_ARGS) -q $$d; \
-	done
+	cppcheck $(CPPCHECK_ARGS) -I include --max-configs=25 -q replace lib daemons tools
 
 clang:
 	test -e $(CLANG_analyzer)
