@@ -89,11 +89,11 @@ This option is advanced use only.
 </parameters>
 
 <actions>
-<action name="start"        timeout="90" />
-<action name="stop"         timeout="100" />
-<action name="monitor"      timeout="20" interval="10" depth="0" start-delay="0" />
-<action name="meta-data"    timeout="5" />
-<action name="validate-all"   timeout="30" />
+<action name="start"        timeout="90s" />
+<action name="stop"         timeout="100s" />
+<action name="monitor"      timeout="20s" interval="10s" depth="0" start-delay="0s" />
+<action name="meta-data"    timeout="5s" />
+<action name="validate-all"   timeout="30s" />
 </actions>
 </resource-agent>
 END

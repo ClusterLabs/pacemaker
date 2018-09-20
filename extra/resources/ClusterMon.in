@@ -101,11 +101,11 @@ Location to write HTML output to.
 </parameters>
 
 <actions>
-<action name="start"   timeout="20" />
-<action name="stop"    timeout="20" />
-<action name="monitor" depth="0"  timeout="20" interval="10" />
-<action name="meta-data"  timeout="5" />
-<action name="validate-all"  timeout="30" />
+<action name="start"   timeout="20s" />
+<action name="stop"    timeout="20s" />
+<action name="monitor" depth="0"  timeout="20s" interval="10s" />
+<action name="meta-data"  timeout="5s" />
+<action name="validate-all"  timeout="30s" />
 </actions>
 </resource-agent>
 END
