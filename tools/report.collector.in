@@ -821,8 +821,11 @@ for f in "$cf" "$CIB_F" "$CIB_F.live" pengine/*; do
 done
 
 # For convenience, generate human-readable version of CIB and any XML errors
-# in it (AFTER sanitizing, so we don't need to sanitize this output)
-get_readable_cib "$REPORT_HOME/$REPORT_TARGET"
+# in it (AFTER sanitizing, so we don't need to sanitize this output).
+# sosreport does this itself, so we do not need to when run by sosreport.
+if [ "$SOS_MODE" != "1" ]; then
+    get_readable_cib "$REPORT_HOME/$REPORT_TARGET"
+fi
 
 collect_logs "$LOG_START" "$LOG_END" $logfiles
 
