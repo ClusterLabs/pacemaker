@@ -419,11 +419,11 @@ Number of seconds to allow the control daemon to come up
 
   </parameters>
   <actions>
-    <action name="start"         timeout="90" />
-    <action name="stop"          timeout="100" />
-    <action name="monitor"       timeout="20" depth="0"/>
-    <action name="meta-data"     timeout="5" />
-    <action name="validate-all"  timeout="30" />
+    <action name="start"         timeout="90s" />
+    <action name="stop"          timeout="100s" />
+    <action name="monitor"       timeout="20s" depth="0"/>
+    <action name="meta-data"     timeout="5s" />
+    <action name="validate-all"  timeout="30s" />
   </actions>
 </resource-agent>
 END

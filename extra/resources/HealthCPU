@@ -70,11 +70,11 @@ the #health-cpu will go red if the %idle of the CPU falls below 10%.
 </parameters>
 
 <actions>
-<action name="start"        timeout="10" />
-<action name="stop"         timeout="10" />
-<action name="monitor"      timeout="10" interval="10" start-delay="0" />
-<action name="meta-data"    timeout="5" />
-<action name="validate-all"   timeout="10" />
+<action name="start"        timeout="10s" />
+<action name="stop"         timeout="10s" />
+<action name="monitor"      timeout="10s" interval="10s" start-delay="0s" />
+<action name="meta-data"    timeout="5s" />
+<action name="validate-all"   timeout="10s" />
 </actions>
 </resource-agent>
 END

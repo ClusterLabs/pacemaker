@@ -51,12 +51,12 @@ the health of a system via IPMI.
 </parameters>
 
 <actions>
-<action name="start"		timeout="20" />
-<action name="stop"		timeout="20" />
-<action name="monitor"		timeout="20" />
-<action name="reload"		timeout="20" />
-<action name="meta-data"	timeout="5" />
-<action name="validate-all"	timeout="20" />
+<action name="start"		timeout="20s" />
+<action name="stop"		timeout="20s" />
+<action name="monitor"		timeout="20s" />
+<action name="reload"		timeout="20s" />
+<action name="meta-data"	timeout="5s" />
+<action name="validate-all"	timeout="20s" />
 </actions>
 </resource-agent>
 END
