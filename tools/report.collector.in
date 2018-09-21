@@ -561,34 +561,41 @@ find_syslog() {
     findmsg 1 "$msg"
 }
 
+get_logfiles_cs() {
+    if [ ! -f "$cf_file" ]; then
+        return
+    fi
+
+    debug "Reading $cf_type log settings from $cf_file"
+
+    # The default value of to_syslog is yes.
+    if ! iscfvarfalse $cf_type to_syslog "$cf_file"; then
+        facility_cs=$(getcfvar $cf_type syslog_facility "$cf_file")
+        if [ -z "$facility_cs" ]; then
+            facility_cs="daemon"
+        fi
+
+        find_syslog "$facility_cs.info"
+    fi
+    if [ "$SOS_MODE" = "1" ]; then
+        return
+    fi
+
+    if iscfvartrue $cf_type to_logfile "$cf_file"; then
+        logfile=$(getcfvar $cf_type logfile "$cf_file")
+        if [ -f "$logfile" ]; then
+            debug "Log settings found for cluster type $cf_type: $logfile"
+            echo "$logfile"
+        fi
+    fi
+}
+
 get_logfiles() {
     cf_type=$1
     cf_file="$2"
 
     case $cf_type in
-        corosync)
-            if [ -f "$cf_file" ]; then
-                debug "Reading $cf_type log settings from $cf_file"
-
-                # The default value of to_syslog is yes.
-                if ! iscfvarfalse $cf_type to_syslog "$cf_file"; then
-                    facility_cs=$(getcfvar $cf_type syslog_facility "$cf_file")
-                    if [ -z "$facility_cs" ]; then
-                        facility_cs="daemon"
-                    fi
-
-                    find_syslog "$facility_cs.info"
-                fi
-
-                if iscfvartrue $cf_type to_logfile "$cf_file"; then
-                    logfile=$(getcfvar $cf_type logfile "$cf_file")
-                    if [ -f "$logfile" ]; then
-                        debug "Log settings found for cluster type $cf_type: $logfile"
-                        echo "$logfile"
-                    fi
-                fi
-            fi
-            ;;
+        corosync) get_logfiles_cs;;
     esac
 
     . @CONFIGDIR@/pacemaker
@@ -599,6 +606,9 @@ get_logfiles() {
     fi
     if [ "$facility" != "$facility_cs" ]&&[ "$facility" != none ]; then
         find_syslog "$facility.notice"
+    fi
+    if [ "$SOS_MODE" = "1" ]; then
+        return
     fi
 
     logfile="$PCMK_logfile"
