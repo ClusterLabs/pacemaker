@@ -41,7 +41,7 @@
 extern void cleanup_alloc_calculations(pe_working_set_t * data_set);
 
 static void clean_up_connections(void);
-static void clean_up(crm_exit_t exit_code);
+static crm_exit_t clean_up(crm_exit_t exit_code);
 static void crm_diff_update(const char *event, xmlNode * msg);
 static gboolean mon_refresh_display(gpointer user_data);
 static int cib_connect(gboolean full);
@@ -669,20 +669,20 @@ main(int argc, char **argv)
             case 'p':
                 free(pid_file);
                 if(optarg == NULL) {
-                    crm_help(flag, CRM_EX_USAGE);
+                    return crm_help(flag, CRM_EX_USAGE);
                 }
                 pid_file = strdup(optarg);
                 break;
             case 'x':
                 if(optarg == NULL) {
-                    crm_help(flag, CRM_EX_USAGE);
+                    return crm_help(flag, CRM_EX_USAGE);
                 }
                 setenv("CIB_file", optarg, 1);
                 one_shot = TRUE;
                 break;
             case 'h':
                 if(optarg == NULL) {
-                    crm_help(flag, CRM_EX_USAGE);
+                    return crm_help(flag, CRM_EX_USAGE);
                 }
                 argerr += (output_format != mon_output_console);
                 output_format = mon_output_html;
@@ -721,7 +721,7 @@ main(int argc, char **argv)
                 break;
             case '$':
             case '?':
-                crm_help(flag, CRM_EX_OK);
+                return crm_help(flag, CRM_EX_OK);
                 break;
             default:
                 printf("Argument code 0%o (%c) is not (?yet?) supported\n", flag, flag);
@@ -806,7 +806,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        clean_up(CRM_EX_USAGE);
+        return clean_up(CRM_EX_USAGE);
     }
 
     /* XML output always prints everything */
@@ -830,7 +830,7 @@ main(int argc, char **argv)
             && !external_agent) {
             printf ("Looks like you forgot to specify one or more of: "
                     "--as-html, --external-agent\n");
-            clean_up(CRM_EX_USAGE);
+            return clean_up(CRM_EX_USAGE);
         }
 
         if (cib) {
@@ -899,7 +899,7 @@ main(int argc, char **argv)
         if (output_format == mon_output_monitor) {
             printf("CLUSTER CRIT: Connection to cluster failed: %s\n",
                     pcmk_strerror(rc));
-            clean_up(MON_STATUS_CRIT);
+            return clean_up(MON_STATUS_CRIT);
         } else {
             if (rc == -ENOTCONN) {
                 print_as("\nError: cluster is not available on this node\n");
@@ -911,11 +911,11 @@ main(int argc, char **argv)
         if (output_format == mon_output_console) {
             sleep(2);
         }
-        clean_up(crm_errno2exit(rc));
+        return clean_up(crm_errno2exit(rc));
     }
 
     if (one_shot) {
-        clean_up(CRM_EX_OK);
+        return clean_up(CRM_EX_OK);
     }
 
     mainloop = g_main_loop_new(NULL, FALSE);
@@ -938,8 +938,7 @@ main(int argc, char **argv)
 
     crm_info("Exiting %s", crm_system_name);
 
-    clean_up(CRM_EX_OK);
-    return CRM_EX_OK; // Should never be reached
+    return clean_up(CRM_EX_OK);
 }
 
 #define mon_warn(fmt...) do {			\
@@ -4302,6 +4301,7 @@ mon_refresh_display(gpointer user_data)
             if (print_html_status(&data_set, output_filename, stonith_history) != 0) {
                 fprintf(stderr, "Critical: Unable to output html file\n");
                 clean_up(CRM_EX_CANTCREAT);
+                return FALSE;
             }
             break;
 
@@ -4313,6 +4313,7 @@ mon_refresh_display(gpointer user_data)
             print_simple_status(&data_set, stonith_history);
             if (has_warnings) {
                 clean_up(MON_STATUS_WARN);
+                return FALSE;
             }
             break;
 
@@ -4416,8 +4417,12 @@ clean_up_connections(void)
 /*
  * De-init ncurses, disconnect from the CIB manager, disconnect fencing,
  * deallocate memory and show usage-message if requested.
+ *
+ * We don't actually return, but nominally returning crm_exit_t allows a usage
+ * like "return clean_up(exit_code);" which helps static analysis understand the
+ * code flow.
  */
-static void
+static crm_exit_t
 clean_up(crm_exit_t exit_code)
 {
 #if CURSES_ENABLED
@@ -4439,8 +4444,8 @@ clean_up(crm_exit_t exit_code)
             fprintf(stdout, "Content-Type: text/plain\n"
                             "Status: 500\n\n");
         } else {
-            crm_help('?', CRM_EX_USAGE);
+            return crm_help('?', CRM_EX_USAGE);
         }
     }
-    crm_exit(exit_code);
+    return crm_exit(exit_code);
 }
