@@ -1055,7 +1055,7 @@ main(int argc, char **argv)
                 break;
             case '$':
             case '?':
-                crm_help(flag, EX_OK);
+                return crm_help(flag, EX_OK);
                 break;
             case 'Q':
                 // currently unused
@@ -1079,6 +1079,9 @@ main(int argc, char **argv)
                 command = flag;
                 dangerous_cmd = TRUE;
                 target_uname = optarg;
+                if (optarg == NULL) {
+                    ++argerr;
+                }
                 break;
             case 'N':
                 command = flag;
@@ -1103,7 +1106,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        crm_help('?', EX_USAGE);
+        return crm_help('?', EX_USAGE);
     }
 
     if (dangerous_cmd && force_flag == FALSE) {

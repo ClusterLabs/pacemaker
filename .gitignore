@@ -94,7 +94,8 @@ fencing/regression.py
 *.8.xml
 *.8.html
 attrd/attrd
-doc/*/en-US/images/*.png
+doc/shared/en-US/images/pcmk-*.png
+doc/shared/en-US/images/Policy-Engine-*.png
 doc/*/tmp/**
 doc/*/publish
 cib/cib

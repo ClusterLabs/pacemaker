@@ -52,7 +52,7 @@
 extern void cleanup_alloc_calculations(pe_working_set_t * data_set);
 
 void clean_up_connections(void);
-void clean_up(int rc);
+static int clean_up(int rc);
 void crm_diff_update(const char *event, xmlNode * msg);
 gboolean mon_refresh_display(gpointer user_data);
 int cib_connect(gboolean full);
@@ -868,7 +868,7 @@ main(int argc, char **argv)
     }
 
     if (argerr) {
-        clean_up(EX_USAGE);
+        return clean_up(EX_USAGE);
     }
 
     /* XML output always prints everything */
@@ -892,7 +892,7 @@ main(int argc, char **argv)
             && !snmp_target && !crm_mail_to && !external_agent) {
             printf ("Looks like you forgot to specify one or more of: "
                     "--as-html, --external-agent, --mail-to, --snmp-target\n");
-            clean_up(EX_USAGE);
+            return clean_up(EX_USAGE);
         }
 
         if (cib) {
@@ -958,7 +958,7 @@ main(int argc, char **argv)
         if (output_format == mon_output_monitor) {
             printf("CLUSTER CRIT: Connection to cluster failed: %s\n",
                    pcmk_strerror(exit_code));
-            clean_up(MON_STATUS_CRIT);
+            return clean_up(MON_STATUS_CRIT);
         } else {
             if (exit_code == -ENOTCONN) {
                 print_as("\nError: cluster is not available on this node\n");
@@ -970,11 +970,11 @@ main(int argc, char **argv)
         if (output_format == mon_output_console) {
             sleep(2);
         }
-        clean_up(-exit_code);
+        return clean_up(-exit_code);
     }
 
     if (one_shot) {
-        clean_up(0);
+        return clean_up(0);
     }
 
     mainloop = g_main_new(FALSE);
@@ -997,8 +997,7 @@ main(int argc, char **argv)
 
     crm_info("Exiting %s", crm_system_name);
 
-    clean_up(0);
-    return 0;                   /* never reached */
+    return clean_up(0);
 }
 
 #define mon_warn(fmt...) do {			\
@@ -4791,6 +4790,7 @@ mon_refresh_display(gpointer user_data)
             if (print_html_status(&data_set, output_filename, stonith_history) != 0) {
                 fprintf(stderr, "Critical: Unable to output html file\n");
                 clean_up(EX_USAGE);
+                return FALSE;
             }
             break;
 
@@ -4802,6 +4802,7 @@ mon_refresh_display(gpointer user_data)
             print_simple_status(&data_set, stonith_history);
             if (has_warnings) {
                 clean_up(MON_STATUS_WARN);
+                return FALSE;
             }
             break;
 
@@ -4913,8 +4914,12 @@ clean_up_connections(void)
 /*
  * De-init ncurses, disconnect from the CIB manager, disconnect fencing,
  * deallocate memory and show usage-message if requested.
+ *
+ * We don't actually return, but nominally returning crm_exit_t allows a usage
+ * like "return clean_up(exit_code);" which helps static analysis understand the
+ * code flow.
  */
-void
+static int
 clean_up(int exit_code)
 {
 #if ENABLE_SNMP
@@ -4946,8 +4951,8 @@ clean_up(int exit_code)
             fprintf(stdout, "Content-Type: text/plain\n"
                             "Status: 500\n\n");
         } else {
-            crm_help('?', EX_USAGE);
+            return crm_help('?', EX_USAGE);
         }
     }
-    crm_exit(exit_code);
+    return crm_exit(exit_code);
 }

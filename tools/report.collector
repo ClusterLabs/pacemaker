@@ -581,7 +581,54 @@ iscfvarset() {
 }
 
 iscfvartrue() {
-    getcfvar $1 $2 $3 | egrep -qsi "^(true|y|yes|on|1)"
+    getcfvar $1 $2 $3 | grep -E -qsi "^(true|y|yes|on|1)"
+}
+
+iscfvarfalse() {
+    getcfvar $1 $2 $3 | grep -E -qsi "^(false|n|no|off|0)"
+}
+
+find_syslog() {
+    priority="$1"
+
+    # Always include system logs (if we can find them)
+    msg="Mark:pcmk:`perl -e 'print time()'`"
+    logger -p "$priority" "$msg" >/dev/null 2>&1
+
+    # Force buffer flush
+    killall -HUP rsyslogd >/dev/null 2>&1
+
+    sleep 2 # Give syslog time to catch up in case it's busy
+    findmsg 1 "$msg"
+}
+
+get_logfiles_cs() {
+    if [ ! -f "$cf_file" ]; then
+        return
+    fi
+
+    debug "Reading $cf_type log settings from $cf_file"
+
+    # The default value of to_syslog is yes.
+    if ! iscfvarfalse $cf_type to_syslog "$cf_file"; then
+        facility_cs=$(getcfvar $cf_type syslog_facility "$cf_file")
+        if [ -z "$facility_cs" ]; then
+            facility_cs="daemon"
+        fi
+
+        find_syslog "$facility_cs.info"
+    fi
+    if [ "$SOS_MODE" = "1" ]; then
+        return
+    fi
+
+    if iscfvartrue $cf_type to_logfile "$cf_file"; then
+        logfile=$(getcfvar $cf_type logfile "$cf_file")
+        if [ -f "$logfile" ]; then
+            debug "Log settings found for cluster type $cf_type: $logfile"
+            echo "$logfile"
+        fi
+    fi
 }
 
 uselogd() {
@@ -605,7 +652,6 @@ get_logfiles() {
     cf_type=$1
     cf_file="$2"
     cf_logd="$3"
-    facility_var="logfacility"
 
     if [ -f "$cf_logd" ]; then
 	# TODO: this call is broken, it expects args
@@ -616,17 +662,7 @@ get_logfiles() {
     fi
 
     case $cf_type in
-	cman|openais|corosync)
-            if [ -f "$cf_file" ]; then
-                debug "Reading $cf_type log settings from $cf_file"
-                if iscfvartrue $cf_type to_syslog "$cf_file"; then
-                    facility_var=syslog_facility
-                fi
-                if iscfvartrue $cf_type to_logfile "$cf_file"; then
-                    logfile=$(getcfvar $cf_type logfile "$cf_file")
-                fi
-            fi
-	    ;;
+        cman|openais|corosync) get_logfiles_cs;;
 	heartbeat|logd)
             if [ -f "$cf_file" ]; then
                 debug "Reading $cf_type log settings from $cf_file"
@@ -636,8 +672,25 @@ get_logfiles() {
                     logfile=$(getcfvar $cf_type logfile "$cf_file")
                 fi
             fi
+            cs_facility=$(getcfvar $cf_type logfacility "$cf_file")
+            [ "" = "$cs_facility" ] && cs_facility="daemon"
+            find_syslog "$facility_cs.info"
 	    ;;
     esac
+
+#    . @CONFIGDIR@/pacemaker
+#
+#    facility="$PCMK_logfacility"
+#    if [ -z "$facility" ]; then
+        facility="daemon"
+#    fi
+
+    if [ "$facility" != "$facility_cs" ]&&[ "$facility" != none ]; then
+        find_syslog "$facility.notice"
+    fi
+    if [ "$SOS_MODE" = "1" ]; then
+        return
+    fi
 
     if [ -z "$logfile" ]; then
         logfile="/var/log/pacemaker.log"
@@ -647,24 +700,13 @@ get_logfiles() {
 	echo $logfile
     fi
 
-    if [ "x$facility" = x ]; then
-	facility=`getcfvar $cf_type $facility_var $cf_file`
-	[ "" = "$facility" ] && facility="daemon"
-    fi
-
-    # Always include system logs (if we can find them)
-    msg="Mark:pcmk:`perl -e 'print time()'`"
-    logger -p $facility.info $msg >/dev/null 2>&1
-    sleep 2 # Give syslog time to catch up in case it's busy
-    findmsg 1 "$msg"
-
     # Look for detail logs:
 
     # - initial pacemakerd logs and tracing might go to a different file
     pattern="Starting Pacemaker"
 
     # - make sure we get something from the Policy Engine
-    pattern="$pattern\\|Calculated Transition"
+    pattern="$pattern\\|Calculated transition"
 
     # - cib and lrmd updates (helpful on non-DC nodes or when the cluster has been up for a long time)
     pattern="$pattern\\|cib_perform_op\\|process_lrm_event"

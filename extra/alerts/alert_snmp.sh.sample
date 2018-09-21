@@ -1,23 +1,12 @@
 #!/bin/sh
 #
-# Description:  Manages a SNMP trap, provided by NTT OSSC as an
-#               script under Heartbeat/LinuxHA control
+# Copyright 2016-2018 NIPPON TELEGRAPH AND TELEPHONE CORPORATION
 #
-# Copyright (c) 2016 NIPPON TELEGRAPH AND TELEPHONE CORPORATION
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
 #
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
+# Description:  Manages a SNMP trap, provided by NTT OSSC as a
+#               script under Pacemaker control
 #
 ##############################################################################
 # This sample script assumes that only users who already have
@@ -41,6 +30,10 @@
 #   </alerts>
 # </configuration>
 # ================================
+#
+# This uses the official Pacemaker MIB.
+# 1.3.6.1.4.1.32723 has been assigned to the project by IANA:
+# http://www.iana.org/assignments/enterprise-numbers
 
 if [ -z "$CRM_alert_version" ]; then
     echo "$0 must be run by Pacemaker version 1.1.15 or later"
@@ -52,7 +45,7 @@ if [ -z "$CRM_alert_recipient" ]; then
     exit 0
 fi
 
-#
+# Defaults for user-configurable values
 trap_binary_default="/usr/bin/snmptrap"
 trap_version_default="2c"
 trap_options_default=""
@@ -63,7 +56,10 @@ trap_resource_tasks_default="all"
 trap_monitor_success_default="false"
 trap_add_hires_timestamp_oid_default="true"
 trap_snmp_persistent_dir_default="/var/lib/pacemaker/snmp"
+trap_ignore_int32_default=2147483647  # maximum Integer32 value
+trap_ignore_string_default="n/a"      # doesn't conflict with valid XML IDs
 
+# Ensure all user-provided variables have values.
 : ${trap_binary=${trap_binary_default}}
 : ${trap_version=${trap_version_default}}
 : ${trap_options=${trap_options_default}}
@@ -74,10 +70,19 @@ trap_snmp_persistent_dir_default="/var/lib/pacemaker/snmp"
 : ${trap_monitor_success=${trap_monitor_success_default}}
 : ${trap_add_hires_timestamp_oid=${trap_add_hires_timestamp_oid_default}}
 : ${trap_snmp_persistent_dir=${trap_snmp_persistent_dir_default}}
+: ${trap_ignore_int32=${trap_ignore_int32_default}}
+: ${trap_ignore_string=${trap_ignore_string_default}}
 
-if [ "${trap_add_hires_timestamp_oid}" = "true" ]; then
-    hires_timestamp="HOST-RESOURCES-MIB::hrSystemDate s ${CRM_alert_timestamp}"
-fi
+# Ensure all cluster-provided variables have values, regardless of alert type.
+: ${CRM_alert_node=${trap_ignore_string}}
+: ${CRM_alert_rsc=${trap_ignore_string}}
+: ${CRM_alert_task=${trap_ignore_string}}
+: ${CRM_alert_desc=${trap_ignore_string}}
+: ${CRM_alert_status=${trap_ignore_int32}}
+: ${CRM_alert_rc=${trap_ignore_int32}}
+: ${CRM_alert_target_rc=${trap_ignore_int32}}
+: ${CRM_alert_attribute_name=${trap_ignore_string}}
+: ${CRM_alert_attribute_value=${trap_ignore_string}}
 
 is_in_list() {
     item_list=`echo "$1" | tr ',' ' '`
@@ -95,6 +100,32 @@ is_in_list() {
     return 1
 }
 
+send_pacemaker_trap() {
+    PREFIX="PACEMAKER-MIB::pacemakerNotification"
+
+    OUTPUT=$("${trap_binary}" -v "${trap_version}" ${trap_options} \
+        -c "${trap_community}" "${CRM_alert_recipient}" "" \
+        "${PREFIX}Trap" \
+        "${PREFIX}Node"             s "${CRM_alert_node}" \
+        "${PREFIX}Resource"         s "${CRM_alert_rsc}" \
+        "${PREFIX}Operation"        s "${CRM_alert_task}" \
+        "${PREFIX}Description"      s "${CRM_alert_desc}" \
+        "${PREFIX}Status"           i "${CRM_alert_status}" \
+        "${PREFIX}ReturnCode"       i "${CRM_alert_rc}" \
+        "${PREFIX}TargetReturnCode" i "${CRM_alert_target_rc}" \
+        "${PREFIX}AttributeName"    s "${CRM_alert_attribute_name}" \
+        "${PREFIX}AttributeValue"   s "${CRM_alert_attribute_value}" \
+        ${hires_timestamp} 2>&1)
+
+    if [ $? -ne 0 ]; then
+        echo "${trap_binary} returned error : rc=$? $OUTPUT"
+    fi
+}
+
+if [ "${trap_add_hires_timestamp_oid}" = "true" ]; then
+    hires_timestamp="HOST-RESOURCES-MIB::hrSystemDate s ${CRM_alert_timestamp}"
+fi
+
 if [ -z ${SNMP_PERSISTENT_DIR} ]; then
     export SNMP_PERSISTENT_DIR="${trap_snmp_persistent_dir}"
     # mkdir for snmp trap tools.
@@ -103,77 +134,36 @@ if [ -z ${SNMP_PERSISTENT_DIR} ]; then
     fi
 fi
 
-rc=0
 case "$CRM_alert_kind" in
     node)
-        is_in_list "${trap_node_states}" "${CRM_alert_desc}"
-        [ $? -ne 0 ] && exit 0
-
-        output=`"${trap_binary}" -v "${trap_version}" ${trap_options} \
-        -c "${trap_community}" "${CRM_alert_recipient}" "" \
-        PACEMAKER-MIB::pacemakerNotificationTrap \
-        PACEMAKER-MIB::pacemakerNotificationNode s "${CRM_alert_node}" \
-        PACEMAKER-MIB::pacemakerNotificationDescription s "${CRM_alert_desc}" \
-        ${hires_timestamp} 2>&1`
-        rc=$?
+        if is_in_list "${trap_node_states}" "${CRM_alert_desc}"; then
+            send_pacemaker_trap
+        fi
         ;;
+
     fencing)
-        is_in_list "${trap_fencing_tasks}" "${CRM_alert_task}"
-        [ $? -ne 0 ] && exit 0
-
-        output=`"${trap_binary}" -v "${trap_version}" ${trap_options} \
-        -c "${trap_community}" "${CRM_alert_recipient}" "" \
-        PACEMAKER-MIB::pacemakerNotificationTrap \
-        PACEMAKER-MIB::pacemakerNotificationNode s "${CRM_alert_node}" \
-        PACEMAKER-MIB::pacemakerNotificationOperation s "${CRM_alert_task}" \
-        PACEMAKER-MIB::pacemakerNotificationDescription s "${CRM_alert_desc}" \
-        PACEMAKER-MIB::pacemakerNotificationReturnCode i ${CRM_alert_rc} \
-        ${hires_timestamp} 2>&1`
-        rc=$?
+        if is_in_list "${trap_fencing_tasks}" "${CRM_alert_task}"; then
+            send_pacemaker_trap
+        fi
         ;;
+
     resource)
-        is_in_list "${trap_resource_tasks}" "${CRM_alert_task}"
-        [ $? -ne 0 ] && exit 0
+        if is_in_list "${trap_resource_tasks}" "${CRM_alert_task}" && \
+           [ "${CRM_alert_desc}" != "Cancelled" ] ; then
 
-        case "${CRM_alert_desc}" in
-        Cancelled) ;;
-        *)
-            if [ "${trap_monitor_success}" = "false" ] \
-                && [ "${CRM_alert_rc}" = "${CRM_alert_target_rc}" ] \
-                && [ "${CRM_alert_task}" = "monitor" ]; then
-                    exit
+            if [ "${trap_monitor_success}" = "false" ] && \
+               [ "${CRM_alert_rc}" = "${CRM_alert_target_rc}" ] && \
+               [ "${CRM_alert_task}" = "monitor" ]; then
+                exit 0
             fi
+            send_pacemaker_trap
+        fi
+        ;;
 
-            output=`"${trap_binary}" -v "${trap_version}" ${trap_options} \
-            -c "${trap_community}" "${CRM_alert_recipient}" "" \
-            PACEMAKER-MIB::pacemakerNotificationTrap \
-            PACEMAKER-MIB::pacemakerNotificationNode s "${CRM_alert_node}" \
-            PACEMAKER-MIB::pacemakerNotificationResource s "${CRM_alert_rsc}" \
-            PACEMAKER-MIB::pacemakerNotificationOperation s "${CRM_alert_task}" \
-            PACEMAKER-MIB::pacemakerNotificationDescription s "${CRM_alert_desc}" \
-            PACEMAKER-MIB::pacemakerNotificationStatus i ${CRM_alert_status} \
-            PACEMAKER-MIB::pacemakerNotificationReturnCode i ${CRM_alert_rc} \
-            PACEMAKER-MIB::pacemakerNotificationTargetReturnCode i ${CRM_alert_target_rc} \
-            ${hires_timestamp} 2>&1`
-            rc=$?
-            ;;
-        esac
-        ;;
     attribute)
-        output=`"${trap_binary}" -v "${trap_version}" ${trap_options} \
-        -c "${trap_community}" "${CRM_alert_recipient}" "" \
-        PACEMAKER-MIB::pacemakerNotificationTrap \
-        PACEMAKER-MIB::pacemakerNotificationNode s "${CRM_alert_node}" \
-        PACEMAKER-MIB::pacemakerNotificationAttributeName s "${CRM_alert_attribute_name}" \
-        PACEMAKER-MIB::pacemakerNotificationAttributeValue s "${CRM_alert_attribute_value}" \
-        ${hires_timestamp} 2>&1`
-        rc=$?
+        send_pacemaker_trap
         ;;
+
     *)
         ;;
 esac
-
-if [ $rc -ne 0 ]; then
-    echo "${trap_binary} returned error : rc=${rc} ${output}"
-fi
-
