@@ -280,7 +280,6 @@ crmd_exit(crm_exit_t exit_code)
     crm_timer_stop(integration_timer);
     crm_timer_stop(finalization_timer);
     crm_timer_stop(election_trigger);
-    election_timeout_stop(fsa_election);
     crm_timer_stop(shutdown_escalation_timer);
     crm_timer_stop(wait_timer);
     crm_timer_stop(recheck_timer);
