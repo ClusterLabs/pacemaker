@@ -1,20 +1,10 @@
 /*
- * Copyright (C) 2009 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2009-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+
 #ifndef CRM_COMMON_ELECTION__H
 #  define CRM_COMMON_ELECTION__H
 
@@ -25,18 +15,53 @@ extern "C" {
 /**
  * \file
  * \brief Functions for conducting elections
+ *
+ * An election is useful for a daemon that runs on all nodes but needs any one
+ * instance to perform a special role.
+ *
+ * Elections are closely tied to the cluster peer cache. Peers in the cache that
+ * are active members are eligible to vote. Elections are named for logging
+ * purposes, but only one election may exist at any time, so typically an
+ * election would be created at daemon start-up and freed at shutdown.
+ *
+ * Pacemaker's election procedure has been heavily adapted from the
+ * Invitation Algorithm variant of the Garcia-Molina Bully Algorithm:
+ *
+ *   https://en.wikipedia.org/wiki/Bully_algorithm
+ *
+ * Elections are conducted via cluster messages. There are two types of
+ * messages: a "vote" is a declaration of the voting node's candidacy, and is
+ * always broadcast; a "no-vote" is a concession by the responding node, and is
+ * always a reply to the preferred node's vote. (These correspond to "invite"
+ * and "accept" in the traditional algorithm.)
+ *
+ * A vote together with any no-vote replies to it is considered an election
+ * round. Rounds are numbered with a simple counter unique to each node
+ * (this would be the group number in the traditional algorithm). Concurrent
+ * election rounds are possible.
+ *
+ * An election round is started when any node broadcasts a vote. When a node
+ * receives another node's vote, it compares itself against the sending node
+ * according to certain metrics, and either starts a new round (if it prefers
+ * itself) or replies to the other node with a no-vote (if it prefers that
+ * node).
+ *
+ * If a node receives no-votes from all other active nodes, it declares itself
+ * the winner. The library API does not notify other nodes of this; callers
+ * must implement that if desired.
+ *
  * \ingroup core
  */
 
 typedef struct election_s election_t;
 
-enum election_result
-{
-    election_start = 0,
-    election_in_progress,
-    election_lost,
-    election_won,
-    election_error,
+/*! Possible election states */
+enum election_result {
+    election_start = 0,     /*! new election needed */
+    election_in_progress,   /*! election started but not all peers have voted */
+    election_lost,          /*! local node lost most recent election */
+    election_won,           /*! local node won most recent election */
+    election_error,         /*! election message or election object invalid */
 };
 
 void election_fini(election_t *e);

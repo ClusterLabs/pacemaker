@@ -61,6 +61,22 @@ election_state(election_t *e)
     return election_error;
 }
 
+/*!
+ * \brief Create a new election object
+ *
+ * Every node that wishes to participate in an election must create an election
+ * object. Typically, this should be done once, at start-up. A caller should
+ * only create a single election object.
+ *
+ * \param[in] name       Label for election (for logging)
+ * \param[in] uname      Local node's name
+ * \param[in] period_ms  How long to wait for all peers to vote
+ * \param[in] cb         Function to call if local node wins election
+ *
+ * \return Newly allocated election object on success, NULL on error
+ * \note The caller is responsible for freeing the returned value using
+ *       election_fini().
+ */
 election_t *
 election_init(const char *name, const char *uname, guint period_ms, GSourceFunc cb)
 {
@@ -82,6 +98,15 @@ election_init(const char *name, const char *uname, guint period_ms, GSourceFunc 
     return e;
 }
 
+/*!
+ * \brief Disregard any previous vote by specified peer
+ *
+ * This discards any recorded vote from a specified peer. Election users should
+ * call this whenever a voting peer becomes inactive.
+ *
+ * \param[in] e      Election object
+ * \param[in] uname  Name of peer to disregard
+ */
 void
 election_remove(election_t *e, const char *uname)
 {
@@ -90,6 +115,11 @@ election_remove(election_t *e, const char *uname)
     }
 }
 
+/*!
+ * \brief Stop election timer and disregard all votes
+ *
+ * \param[in] e      Election object
+ */
 void
 election_reset(election_t *e)
 {
@@ -104,6 +134,14 @@ election_reset(election_t *e)
     }
 }
 
+/*!
+ * \brief Free an election object
+ *
+ * Free all memory associated with an election object, stopping its
+ * election timer (if running).
+ *
+ * \param[in] e      Election object
+ */
 void
 election_fini(election_t *e)
 {
@@ -125,6 +163,11 @@ election_timeout_start(election_t *e)
     }
 }
 
+/*!
+ * \brief Stop an election's timer, if running
+ *
+ * \param[in] e      Election object
+ */
 void
 election_timeout_stop(election_t *e)
 {
@@ -133,6 +176,12 @@ election_timeout_stop(election_t *e)
     }
 }
 
+/*!
+ * \brief Change an election's timeout (restarting timer if running)
+ *
+ * \param[in] e      Election object
+ * \param[in] period New timeout
+ */
 void
 election_timeout_set_period(election_t *e, guint period)
 {
@@ -204,6 +253,19 @@ crm_compare_age(struct timeval your_age)
     return 0;
 }
 
+/*!
+ * \brief Start a new election by offering local node's candidacy
+ *
+ * Broadcast a "vote" election message containing the local node's ID,
+ * (incremented) election counter, and uptime, and start the election timer.
+ *
+ * \param[in] e      Election object
+ * \note Any nodes agreeing to the candidacy will send a "no-vote" reply, and if
+ *       all active peers do so, or if the election times out, the local node
+ *       wins the election. (If we lose to any peer vote, we will stop the
+ *       timer, so a timeout means we did not lose -- either some peer did not
+ *       vote, or we did not call election_check() in time.)
+ */
 void
 election_vote(election_t *e)
 {
@@ -246,6 +308,21 @@ election_vote(election_t *e)
     return;
 }
 
+/*!
+ * \brief Check whether local node has won an election
+ *
+ * If all known peers have sent no-vote messages, stop the election timer, set
+ * the election state to won, and call any registered win callback.
+ *
+ * \param[in] e      Election object
+ *
+ * \return TRUE if local node has won, FALSE otherwise
+ * \note If all known peers have sent no-vote messages, but the election owner
+ *       does not call this function, the election will not be won (and the
+ *       callback will not be called) until the election times out.
+ * \note This should be called when election_count_vote() returns
+ *       \c election_in_progress.
+ */
 bool
 election_check(election_t *e)
 {
@@ -299,7 +376,21 @@ election_check(election_t *e)
 
 #define LOSS_DAMPEN 2           /* in seconds */
 
-/*	A_ELECTION_COUNT	*/
+/*!
+ * \brief Process an election message (vote or no-vote) from a peer
+ *
+ * \param[in] e        Election object
+ * \param[in] vote     Election message XML from peer
+ * \param[in] can_win  Whether to consider the local node eligible for winning
+ *
+ * \return Election state after new vote is considered
+ * \note If the peer message is a vote, and we prefer the peer to win, this will
+ *       send a no-vote reply to the peer.
+ * \note The situations "we lost to this vote" from "this is a late no-vote
+ *       after we've already lost" both return election_lost. If a caller needs
+ *       to distinguish them, it should save the current state before calling
+ *       this function, and then compare the result.
+ */
 enum election_result
 election_count_vote(election_t *e, xmlNode *vote, bool can_win)
 {

@@ -78,21 +78,8 @@ enum crmd_fsa_state {
       If the election algorithm is triggered, we enter the S_ELECTION state
       from where we can either go back to the S_NOT_DC state or progress
       to the S_INTEGRATION state (or S_RELEASE_DC if we used to be the DC
-      but aren't anymore).
-
-      The election algorithm has been adapted from
-      http://www.cs.indiana.edu/cgi-bin/techreports/TRNNN.cgi?trnum=TR521
-
-      Loosely known as the Bully Algorithm, its major points are:
-      - Election is initiated by any node (N) that notices that the controller
-        is no longer responding
-      - Concurrent multiple elections are possible
-      - Algorithm:
-        + N sends ELECTION messages to all nodes that occur earlier in the
-          cluster layer's membership list
-        + If no one responds, N wins and becomes controller
-        + N sends out CONTROLLER messages to all other nodes in the partition
-        + If one of higher-ups answers, it takes over. N is done.
+      but aren't anymore). See the libcrmcluster API documentation for more
+      information about the election algorithm.
 
       Once the election is complete, if we are the DC, we enter the
       S_INTEGRATION state which is a DC-in-waiting style state.  We are
