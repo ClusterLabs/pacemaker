@@ -568,11 +568,15 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
             case election_start:
                 free(peer_writer);
                 peer_writer = NULL;
+                crm_debug("Unsetting writer (was %s) and starting new election",
+                          peer_writer? peer_writer : "unset");
                 election_vote(writer);
                 break;
             case election_lost:
                 free(peer_writer);
                 peer_writer = strdup(peer->uname);
+                crm_debug("Election lost, presuming %s is writer for now",
+                          peer_writer);
                 break;
             default:
                 election_check(writer);
@@ -610,19 +614,16 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
     }
 
     crm_element_value_int(xml, F_ATTRD_WRITER, &peer_state);
-    if(election_state(writer) == election_won
-       && peer_state == election_won
-       && safe_str_neq(peer->uname, attrd_cluster->uname)) {
-        crm_notice("Detected another attribute writer: %s", peer->uname);
-        election_vote(writer);
+    if (peer_state == election_won) {
+        if ((election_state(writer) == election_won)
+           && safe_str_neq(peer->uname, attrd_cluster->uname)) {
+            crm_notice("Detected another attribute writer (%s), starting new election",
+                       peer->uname);
+            election_vote(writer);
 
-    } else if(peer_state == election_won) {
-        if(peer_writer == NULL) {
-            peer_writer = strdup(peer->uname);
-            crm_notice("Recorded attribute writer: %s", peer->uname);
-
-        } else if(safe_str_neq(peer->uname, peer_writer)) {
-            crm_notice("Recorded new attribute writer: %s (was %s)", peer->uname, peer_writer);
+        } else if (safe_str_neq(peer->uname, peer_writer)) {
+            crm_notice("Recorded new attribute writer: %s (was %s)",
+                       peer->uname, (peer_writer? peer_writer : "unset"));
             free(peer_writer);
             peer_writer = strdup(peer->uname);
         }
@@ -969,6 +970,8 @@ write_or_elect_attribute(attribute_t *a)
 gboolean
 attrd_election_cb(gpointer user_data)
 {
+    crm_notice("Recorded local node as attribute writer (was %s)",
+               (peer_writer? peer_writer : "unset"));
     free(peer_writer);
     peer_writer = strdup(attrd_cluster->uname);
 
