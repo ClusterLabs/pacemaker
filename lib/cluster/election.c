@@ -412,9 +412,10 @@ election_count_vote(election_t *e, xmlNode *vote, bool can_win)
     gboolean done = FALSE;
     gboolean we_lose = FALSE;
     const char *op = NULL;
-    const char *from = NULL;
     const char *reason = "unknown";
-    const char *election_owner = NULL;
+    const char *from = NULL;            // voter's uname
+    const char *election_owner = NULL;  // owner's uuid
+    bool we_are_owner = FALSE;
     crm_node_t *our_node = NULL, *your_node = NULL;
     xmlNode *novote = NULL;
     time_t tm_now = time(NULL);
@@ -431,10 +432,31 @@ election_count_vote(election_t *e, xmlNode *vote, bool can_win)
     election_owner = crm_element_value(vote, F_CRM_ELECTION_OWNER);
     crm_element_value_int(vote, F_CRM_ELECTION_ID, &election_id);
 
+    if ((op == NULL) || (from == NULL) || (election_owner == NULL)
+        || (election_id < 0)) {
+
+        crm_warn("Invalid %s message from %s in %s ",
+                 (op? op : "election"),
+                 (from? from : "unspecified node"),
+                 (e? e->name : "election"));
+        return election_error;
+    }
+
+    /* There are two types of election ops: a vote is a declaration of the
+     * voter's candidacy in a new election; a no-vote is a vote for the
+     * recipient to win an existing election.
+     */
+    if (!crm_str_eq(op, CRM_OP_VOTE, TRUE)
+        && !crm_str_eq(op, CRM_OP_NOVOTE, TRUE)) {
+        crm_info("Cannot process %s message from %s because %s is not a known election op",
+                 (e? e->name : "election"), from, op);
+        return election_error;
+    }
+
     if (e == NULL) {
         crm_info("Cannot count %s from %s because no election available",
                  op, from);
-        return election_lost;
+        return election_error;
     }
 
     /* If the membership cache is NULL, we REALLY shouldn't be voting --
@@ -443,11 +465,12 @@ election_count_vote(election_t *e, xmlNode *vote, bool can_win)
     if (crm_peer_cache == NULL) {
         crm_info("Cannot count %s %s from %s because no peer information available",
                  e->name, op, from);
-        return election_lost;
+        return election_error;
     }
 
     your_node = crm_get_peer(0, from);
     our_node = crm_get_peer(0, e->uname);
+    we_are_owner = our_node && crm_str_eq(our_node->uuid, election_owner, TRUE);
 
     if (e->voted == NULL) {
         e->voted = crm_str_table_new();
@@ -462,7 +485,7 @@ election_count_vote(election_t *e, xmlNode *vote, bool can_win)
         log_level = LOG_ERR;
         we_lose = TRUE;
 
-    } else if (election_id != e->count && crm_str_eq(our_node->uuid, election_owner, TRUE)) {
+    } else if (we_are_owner && (election_id != e->count)) {
         log_level = LOG_TRACE;
         reason = "Superseded";
         done = TRUE;
@@ -474,10 +497,17 @@ election_count_vote(election_t *e, xmlNode *vote, bool can_win)
         done = TRUE;
 
     } else if (crm_str_eq(op, CRM_OP_NOVOTE, TRUE)) {
-        char *op_copy = strdup(op);
-        char *uname_copy = strdup(from);
+        char *op_copy = NULL;
+        char *uname_copy = NULL;
 
-        CRM_ASSERT(crm_str_eq(our_node->uuid, election_owner, TRUE));
+        if (!we_are_owner) {
+            crm_warn("Cannot count %s %s from %s because we are not election owner (%s)",
+                     e->name, op, from, election_owner);
+            return election_error;
+        }
+
+        op_copy = strdup(op);
+        uname_copy = strdup(from);
 
         /* update the list of nodes that have voted */
         g_hash_table_replace(e->voted, uname_copy, op_copy);
@@ -498,10 +528,16 @@ election_count_vote(election_t *e, xmlNode *vote, bool can_win)
 
         age = crm_compare_age(your_age);
         if (crm_str_eq(from, e->uname, TRUE)) {
-            char *op_copy = strdup(op);
-            char *uname_copy = strdup(from);
+            char *op_copy = NULL;
+            char *uname_copy = NULL;
 
-            CRM_ASSERT(crm_str_eq(our_node->uuid, election_owner, TRUE));
+            if (!we_are_owner) {
+                crm_warn("Cannot count our own %s %s because we are not election owner (%s)",
+                         e->name, op, election_owner);
+                return election_error;
+            }
+            op_copy = strdup(op);
+            uname_copy = strdup(from);
 
             /* update ourselves in the list of nodes that have voted */
             g_hash_table_replace(e->voted, uname_copy, op_copy);
