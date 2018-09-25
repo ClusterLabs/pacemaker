@@ -1757,6 +1757,12 @@ cli_resource_execute(resource_t *rsc, const char *requested_name,
         setenv("OCF_TRACE_RA", "1", 1);
     }
 
+    /* A resource agent using the standard ocf-shellfuncs library will not print
+     * messages to stderr if it doesn't have a controlling terminal (e.g. if
+     * crm_resource is called via script or ssh). This forces it to do so.
+     */
+    setenv("OCF_TRACE_FILE", "/dev/stderr", 0);
+
     if (override_hash) {
         GHashTableIter iter;
         char *name = NULL;
