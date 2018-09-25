@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -463,7 +465,7 @@ validate_with_relaxng(xmlDocPtr doc, gboolean to_logs, const char *relaxng_file,
         ctx = *cached_ctx;
 
     } else {
-        crm_info("Creating RNG parser context");
+        crm_debug("Creating RNG parser context");
         ctx = calloc(1, sizeof(relaxng_ctx_cache_t));
 
         xmlLoadExtDtdDefaultValue = 1;
