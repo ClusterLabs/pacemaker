@@ -306,10 +306,6 @@ get_time() {
 	'
 }
 
-get_time_() {
-    warning "Unknown time format used by: $*"
-}
-
 get_time_syslog() {
     awk '{print $1,$2,$3}'
 }
@@ -357,12 +353,27 @@ get_time_format() {
     echo $func
 }
 
+get_time_from_line() {
+    GTFL_FORMAT="$1"
+    shift
+    if [ "$GTFL_FORMAT" = "" ]; then
+        GTFL_FORMAT=$(get_time_format_for_string "$@")
+    fi
+    case $GTFL_FORMAT in
+        syslog|legacy|iso8601)
+            get_time $(echo "$@" | get_time_${GTFL_FORMAT})
+            ;;
+        *)
+            warning "Unknown time format in: $@"
+            ;;
+    esac
+}
+
 get_first_time() {
     l=""
     format=$1
     while read l; do
-	t=$(echo $l | get_time_$format)
-	ts=$(get_time $t)
+        ts=$(get_time_from_line "$format" "$l")
 	if [ "x$ts" != x ]; then
 	    echo "$ts"
 	    return
@@ -375,8 +386,7 @@ get_last_time() {
     best=`date +%s` # Now
     format=$1
     while read l; do
-	t=$(echo $l | get_time_$format)
-	ts=$(get_time $t)
+        ts=$(get_time_from_line "$format" "$l")
 	if [ "x$ts" != x ]; then
 	    best=$ts
 	fi
@@ -385,10 +395,7 @@ get_last_time() {
 }
 
 linetime() {
-    l=`tail -n +$2 $1 | grep -a ":[0-5][0-9]:" | head -n 1`
-    format=`get_time_format_for_string $l`
-    t=`echo $l | get_time_$format`
-    get_time "$t"
+    get_time_from_line "" $(tail -n +$2 $1 | grep -a ":[0-5][0-9]:" | head -n 1)
 }
 
 #
