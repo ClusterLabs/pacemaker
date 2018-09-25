@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -32,10 +34,6 @@
 #include <sys/stat.h>
 
 qb_ipcs_service_t *ipcs = NULL;
-
-#if SUPPORT_COROSYNC
-extern gboolean crm_connect_corosync(crm_cluster_t * cluster);
-#endif
 
 void crm_shutdown(int nsig);
 gboolean crm_read_options(gpointer user_data);
@@ -72,7 +70,7 @@ do_ha_control(long long action,
 
         if (is_corosync_cluster()) {
 #if SUPPORT_COROSYNC
-            registered = crm_connect_corosync(cluster);
+            registered = crmd_connect_corosync(cluster);
 #endif
         }
         controld_election_init(cluster->uname);
