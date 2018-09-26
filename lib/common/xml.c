@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2019 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -3754,9 +3756,6 @@ subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
 
         /* We already have everything we need... */
         goto done;
-
-    } else if (id) {
-        xmlSetProp(diff, (pcmkXmlStr) XML_ATTR_ID, (pcmkXmlStr) id);
     }
 
     /* changes to name/value pairs */
@@ -3766,6 +3765,8 @@ subtract_xml_object(xmlNode * parent, xmlNode * left, xmlNode * right,
         xml_private_t *p = NULL;
 
         if (strcmp(prop_name, XML_ATTR_ID) == 0) {
+            /* id already obtained when present ~ this case, so just reuse */
+            xmlSetProp(diff, (pcmkXmlStr) XML_ATTR_ID, (pcmkXmlStr) id);
             continue;
         }
 
