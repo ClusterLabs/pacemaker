@@ -2121,6 +2121,7 @@ extra/Makefile							\
 	extra/logrotate/pacemaker				\
 tools/Makefile							\
 	tools/crm_report					\
+        tools/report.collector                                  \
         tools/report.common                                     \
 	tools/cibsecret						\
 	tools/crm_mon.service					\

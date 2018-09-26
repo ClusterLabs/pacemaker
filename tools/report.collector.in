@@ -678,13 +678,12 @@ get_logfiles() {
 	    ;;
     esac
 
-#    . @CONFIGDIR@/pacemaker
-#
-#    facility="$PCMK_logfacility"
-#    if [ -z "$facility" ]; then
-        facility="daemon"
-#    fi
+    . @CONFIGDIR@/pacemaker
 
+    facility="$PCMK_logfacility"
+    if [ -z "$facility" ]; then
+        facility="daemon"
+    fi
     if [ "$facility" != "$facility_cs" ]&&[ "$facility" != none ]; then
         find_syslog "$facility.notice"
     fi
