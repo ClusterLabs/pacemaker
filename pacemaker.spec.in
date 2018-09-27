@@ -96,26 +96,20 @@
 
 ## Values that differ by Python major version
 %if 0%{?python_major} > 2
-%if 0%{?rhel} > 7
-%global python_path %{__python3}
-%else
-%global python_path /usr/bin/python%{?python3_pkgversion}%{!?python3_pkgversion:3}
-%endif
-%global python_pkg python3
-%global python_min 3.2
-%define py_site %{?python3_sitelib}%{!?python3_sitelib:%(
-  python3 -c 'from distutils.sysconfig import get_python_lib as gpl; print(gpl(1))' 2>/dev/null)}
+%global python_name python3
+%global python_path %{?__python3}%{!?__python3:/usr/bin/python%{?python3_pkgversion}%{!?python3_pkgversion:3}}
+%define python_site %{?python3_sitelib}%{!?python3_sitelib:%(
+  %{python_path} -c 'from distutils.sysconfig import get_python_lib as gpl; print(gpl(1))' 2>/dev/null)}
 %else
 %if 0%{?python_major} > 1
-%global python_path /usr/bin/python%{?python2_pkgversion}%{!?python2_pkgversion:2}
-%global python_pkg python2
-%global python_min 2.7
-%define py_site %{?python2_sitelib}%{!?python2_sitelib:%(
-  python2 -c 'from distutils.sysconfig import get_python_lib as gpl; print(gpl(1))' 2>/dev/null)}
+%global python_name python2
+%global python_path %{?__python2}%{!?__python2:/usr/bin/python%{?python2_pkgversion}%{!?python2_pkgversion:2}}
+%define python_site %{?python2_sitelib}%{!?python2_sitelib:%(
+  %{python_path} -c 'from distutils.sysconfig import get_python_lib as gpl; print(gpl(1))' 2>/dev/null)}
 %else
-%global python_min 2.7
-%global python_pkg python
-%define py_site %{?python_sitelib}%{!?python_sitelib:%(
+%global python_name python
+%global python_path %{?__python}%{!?__python:/usr/bin/python%{?python_pkgversion}}
+%define python_site %{?python_sitelib}%{!?python_sitelib:%(
   python -c 'from distutils.sysconfig import get_python_lib as gpl; print(gpl(1))' 2>/dev/null)}
 %endif
 %endif
@@ -216,9 +210,8 @@ Requires:      psmisc
 %endif
 %{?systemd_requires}
 
-# Pacemaker requires a minimum Python functionality
-Requires:      %{python_pkg} >= %{python_min}
-BuildRequires: %{python_pkg}-devel >= %{python_min}
+Requires:      %{python_path}
+BuildRequires: %{python_name}-devel
 
 # Pacemaker requires a minimum libqb functionality
 Requires:      libqb >= 0.13.0
@@ -363,7 +356,7 @@ for developing tools for Pacemaker.
 License:       GPLv2+ and LGPLv2+
 Summary:       Test framework for cluster-related technologies like Pacemaker
 Group:         System Environment/Daemons
-Requires:      %{python_pkg} >= %{python_min}
+Requires:      %{python_path}
 Requires:      %{name}-libs = %{version}-%{release}
 Requires:      procps-ng
 Requires:      psmisc
@@ -373,7 +366,7 @@ BuildArch:     noarch
 %if %{defined systemd_requires}
 
 %if 0%{?fedora} > 22 || 0%{?rhel} > 7
-Requires:      %{python_pkg}-systemd
+Requires:      %{python_name}-systemd
 %else
 %if 0%{?fedora} > 20 || 0%{?rhel} > 6
 Requires:      systemd-python
@@ -422,7 +415,7 @@ export LDFLAGS_HARDENED_LIB="%{?_hardening_ldflags}"
 ./autogen.sh
 
 %{configure}                                                                    \
-        %{?python_path:        PYTHON=%{python_path}}                           \
+        PYTHON=%{python_path}                                                   \
         %{!?with_hardening:    --disable-hardening}                             \
         %{!?with_legacy_links: --disable-legacy-links}                          \
         %{?with_profiling:     --with-profiling}                                \
@@ -490,10 +483,10 @@ rm -f %{buildroot}/%{_initrddir}/pacemaker_remote
 %endif
 
 # Byte-compile Python sources where suitable and the distro procedures known
-%if %{defined py_byte_compile} && %{defined python_path}
+%if %{defined py_byte_compile}
 %{py_byte_compile %{python_path} %{buildroot}%{_datadir}/pacemaker/tests}
 %if !%{defined _python_bytecompile_extra}
-%{py_byte_compile %{python_path} %{buildroot}%{py_site}/cts}
+%{py_byte_compile %{python_path} %{buildroot}%{python_site}/cts}
 %endif
 %endif
 
@@ -787,7 +780,7 @@ exit 0
 %license licenses/CC-BY-SA-4.0
 
 %files cts
-%{py_site}/cts
+%{python_site}/cts
 %{_datadir}/pacemaker/tests
 
 %{_libexecdir}/pacemaker/cts-log-watcher
