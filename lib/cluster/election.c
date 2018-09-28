@@ -388,6 +388,129 @@ election_check(election_t *e)
 
 #define LOSS_DAMPEN 2           /* in seconds */
 
+struct vote {
+    const char *op;
+    const char *from;
+    const char *version;
+    const char *election_owner;
+    int election_id;
+    struct timeval age;
+};
+
+/*!
+ * \brief Unpack an election message
+ *
+ * \param[in] e        Election object
+ * \param[in] message  Election message XML
+ * \param[out] vote    Parsed fields from message
+ *
+ * \return TRUE if election message and election are valid, FALSE otherwise
+ * \note The parsed struct's pointer members are valid only for the lifetime of
+ *       the message argument.
+ */
+static bool
+parse_election_message(election_t *e, xmlNode *message, struct vote *vote)
+{
+    CRM_CHECK(message && vote, return FALSE);
+
+    vote->election_id = -1;
+    vote->age.tv_sec = -1;
+    vote->age.tv_usec = -1;
+
+    vote->op = crm_element_value(message, F_CRM_TASK);
+    vote->from = crm_element_value(message, F_CRM_HOST_FROM);
+    vote->version = crm_element_value(message, F_CRM_VERSION);
+    vote->election_owner = crm_element_value(message, F_CRM_ELECTION_OWNER);
+
+    crm_element_value_int(message, F_CRM_ELECTION_ID, &(vote->election_id));
+
+    if ((vote->op == NULL) || (vote->from == NULL) || (vote->version == NULL)
+        || (vote->election_owner == NULL) || (vote->election_id < 0)) {
+
+        crm_warn("Invalid %s message from %s in %s ",
+                 (vote->op? vote->op : "election"),
+                 (vote->from? vote->from : "unspecified node"),
+                 (e? e->name : "election"));
+        return FALSE;
+    }
+
+    // Op-specific validation
+
+    if (crm_str_eq(vote->op, CRM_OP_VOTE, TRUE)) {
+        // Only vote ops have uptime
+        int age_s = -1;
+        int age_us = -1;
+
+        // @TODO add functions to parse time_t / suseconds_t directly from XML
+        crm_element_value_int(message, F_CRM_ELECTION_AGE_S, &age_s);
+        crm_element_value_int(message, F_CRM_ELECTION_AGE_US, &age_us);
+
+        if ((age_s < 0) || (age_us < 0)) {
+            crm_warn("Cannot count %s %s from %s because it is missing uptime",
+                     (e? e->name : "election"), vote->op, vote->from);
+            return FALSE;
+        }
+        vote->age.tv_sec = age_s;
+        vote->age.tv_usec = age_us;
+
+    } else if (!crm_str_eq(vote->op, CRM_OP_NOVOTE, TRUE)) {
+        crm_info("Cannot process %s message from %s because %s is not a known election op",
+                 (e? e->name : "election"), vote->from, vote->op);
+        return FALSE;
+    }
+
+    // Election validation
+
+    if (e == NULL) {
+        crm_info("Cannot count %s from %s because no election available",
+                 vote->op, vote->from);
+        return FALSE;
+    }
+
+    /* If the membership cache is NULL, we REALLY shouldn't be voting --
+     * the question is how we managed to get here.
+     */
+    if (crm_peer_cache == NULL) {
+        crm_info("Cannot count %s %s from %s because no peer information available",
+                 e->name, vote->op, vote->from);
+        return FALSE;
+    }
+    return TRUE;
+}
+
+static void
+record_vote(election_t *e, struct vote *vote)
+{
+    char *voter_copy = NULL;
+    char *vote_copy = NULL;
+
+    CRM_ASSERT(e && vote && vote->from && vote->op);
+    if (e->voted == NULL) {
+        e->voted = crm_str_table_new();
+    }
+
+    voter_copy = strdup(vote->from);
+    vote_copy = strdup(vote->op);
+    CRM_ASSERT(voter_copy && vote_copy);
+
+    g_hash_table_replace(e->voted, voter_copy, vote_copy);
+}
+
+static void
+send_no_vote(crm_node_t *peer, struct vote *vote)
+{
+    // @TODO probably shouldn't hardcode CRM_SYSTEM_CRMD and crm_msg_crmd
+
+    xmlNode *novote = create_request(CRM_OP_NOVOTE, NULL, vote->from,
+                                     CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
+
+    crm_xml_add(novote, F_CRM_ELECTION_OWNER, vote->election_owner);
+    crm_xml_add_int(novote, F_CRM_ELECTION_ID, vote->election_id);
+
+    send_cluster_message(peer, crm_msg_crmd, novote, TRUE);
+    free_xml(novote);
+}
+
 /*!
  * \brief Process an election message (vote or no-vote) from a peer
  *
@@ -404,77 +527,31 @@ election_check(election_t *e)
  *       this function, and then compare the result.
  */
 enum election_result
-election_count_vote(election_t *e, xmlNode *vote, bool can_win)
+election_count_vote(election_t *e, xmlNode *message, bool can_win)
 {
-    int age = 0;
-    int election_id = -1;
     int log_level = LOG_INFO;
     gboolean done = FALSE;
     gboolean we_lose = FALSE;
-    const char *op = NULL;
     const char *reason = "unknown";
-    const char *from = NULL;            // voter's uname
-    const char *election_owner = NULL;  // owner's uuid
     bool we_are_owner = FALSE;
     crm_node_t *our_node = NULL, *your_node = NULL;
-    xmlNode *novote = NULL;
     time_t tm_now = time(NULL);
+    struct vote vote;
 
     // @TODO these should be in election_t
     static int election_wins = 0;
     static time_t expires = 0;
     static time_t last_election_loss = 0;
 
-    CRM_CHECK(vote != NULL, return election_error);
-
-    op = crm_element_value(vote, F_CRM_TASK);
-    from = crm_element_value(vote, F_CRM_HOST_FROM);
-    election_owner = crm_element_value(vote, F_CRM_ELECTION_OWNER);
-    crm_element_value_int(vote, F_CRM_ELECTION_ID, &election_id);
-
-    if ((op == NULL) || (from == NULL) || (election_owner == NULL)
-        || (election_id < 0)) {
-
-        crm_warn("Invalid %s message from %s in %s ",
-                 (op? op : "election"),
-                 (from? from : "unspecified node"),
-                 (e? e->name : "election"));
+    CRM_CHECK(message != NULL, return election_error);
+    if (parse_election_message(e, message, &vote) == FALSE) {
         return election_error;
     }
 
-    /* There are two types of election ops: a vote is a declaration of the
-     * voter's candidacy in a new election; a no-vote is a vote for the
-     * recipient to win an existing election.
-     */
-    if (!crm_str_eq(op, CRM_OP_VOTE, TRUE)
-        && !crm_str_eq(op, CRM_OP_NOVOTE, TRUE)) {
-        crm_info("Cannot process %s message from %s because %s is not a known election op",
-                 (e? e->name : "election"), from, op);
-        return election_error;
-    }
-
-    if (e == NULL) {
-        crm_info("Cannot count %s from %s because no election available",
-                 op, from);
-        return election_error;
-    }
-
-    /* If the membership cache is NULL, we REALLY shouldn't be voting --
-     * the question is how we managed to get here.
-     */
-    if (crm_peer_cache == NULL) {
-        crm_info("Cannot count %s %s from %s because no peer information available",
-                 e->name, op, from);
-        return election_error;
-    }
-
-    your_node = crm_get_peer(0, from);
+    your_node = crm_get_peer(0, vote.from);
     our_node = crm_get_peer(0, e->uname);
-    we_are_owner = our_node && crm_str_eq(our_node->uuid, election_owner, TRUE);
-
-    if (e->voted == NULL) {
-        e->voted = crm_str_table_new();
-    }
+    we_are_owner = (our_node != NULL)
+                   && crm_str_eq(our_node->uuid, vote.election_owner, TRUE);
 
     if(can_win == FALSE) {
         reason = "Not eligible";
@@ -485,7 +562,7 @@ election_count_vote(election_t *e, xmlNode *vote, bool can_win)
         log_level = LOG_ERR;
         we_lose = TRUE;
 
-    } else if (we_are_owner && (election_id != e->count)) {
+    } else if (we_are_owner && (vote.election_id != e->count)) {
         log_level = LOG_TRACE;
         reason = "Superseded";
         done = TRUE;
@@ -496,69 +573,40 @@ election_count_vote(election_t *e, xmlNode *vote, bool can_win)
         log_level = LOG_WARNING;
         done = TRUE;
 
-    } else if (crm_str_eq(op, CRM_OP_NOVOTE, TRUE)) {
-        char *op_copy = NULL;
-        char *uname_copy = NULL;
-
+    } else if (crm_str_eq(vote.op, CRM_OP_NOVOTE, TRUE)
+               || crm_str_eq(vote.from, e->uname, TRUE)) {
+        /* Receiving our own broadcast vote, or a no-vote from peer, is a vote
+         * for us to win
+         */
         if (!we_are_owner) {
             crm_warn("Cannot count %s %s from %s because we are not election owner (%s)",
-                     e->name, op, from, election_owner);
+                     e->name, vote.op, vote.from, vote.election_owner);
             return election_error;
         }
-
-        op_copy = strdup(op);
-        uname_copy = strdup(from);
-
-        /* update the list of nodes that have voted */
-        g_hash_table_replace(e->voted, uname_copy, op_copy);
+        record_vote(e, &vote);
         reason = "Recorded";
         done = TRUE;
 
     } else {
-        struct timeval your_age;
-        const char *your_version = crm_element_value(vote, F_CRM_VERSION);
-        int tv_sec = 0;
-        int tv_usec = 0;
+        // A peer vote requires a comparison to determine which node is better
+        int age_result = crm_compare_age(vote.age);
+        int version_result = compare_version(vote.version, CRM_FEATURE_SET);
 
-        crm_element_value_int(vote, F_CRM_ELECTION_AGE_S, &tv_sec);
-        crm_element_value_int(vote, F_CRM_ELECTION_AGE_US, &tv_usec);
-
-        your_age.tv_sec = tv_sec;
-        your_age.tv_usec = tv_usec;
-
-        age = crm_compare_age(your_age);
-        if (crm_str_eq(from, e->uname, TRUE)) {
-            char *op_copy = NULL;
-            char *uname_copy = NULL;
-
-            if (!we_are_owner) {
-                crm_warn("Cannot count our own %s %s because we are not election owner (%s)",
-                         e->name, op, election_owner);
-                return election_error;
-            }
-            op_copy = strdup(op);
-            uname_copy = strdup(from);
-
-            /* update ourselves in the list of nodes that have voted */
-            g_hash_table_replace(e->voted, uname_copy, op_copy);
-            reason = "Recorded";
-            done = TRUE;
-
-        } else if (compare_version(your_version, CRM_FEATURE_SET) < 0) {
+        if (version_result < 0) {
             reason = "Version";
             we_lose = TRUE;
 
-        } else if (compare_version(your_version, CRM_FEATURE_SET) > 0) {
+        } else if (version_result > 0) {
             reason = "Version";
 
-        } else if (age < 0) {
+        } else if (age_result < 0) {
             reason = "Uptime";
             we_lose = TRUE;
 
-        } else if (age > 0) {
+        } else if (age_result > 0) {
             reason = "Uptime";
 
-        } else if (strcasecmp(e->uname, from) > 0) {
+        } else if (strcasecmp(e->uname, vote.from) > 0) {
             reason = "Host name";
             we_lose = TRUE;
 
@@ -590,7 +638,8 @@ election_count_vote(election_t *e, xmlNode *vote, bool can_win)
     if (done) {
         do_crm_log(log_level + 1,
                    "Processed %s round %d %s (current round %d) from %s (%s)",
-                   e->name, election_id, op, e->count, from, reason);
+                   e->name, vote.election_id, vote.op, e->count, vote.from,
+                   reason);
         return e->state;
 
     } else if (we_lose == FALSE) {
@@ -598,7 +647,8 @@ election_count_vote(election_t *e, xmlNode *vote, bool can_win)
             || tm_now - last_election_loss > (time_t) LOSS_DAMPEN) {
 
             do_crm_log(log_level, "%s round %d (owner node ID %s) pass: %s from %s (%s)",
-                       e->name, election_id, election_owner, op, from, reason);
+                       e->name, vote.election_id, vote.election_owner, vote.op,
+                       vote.from, reason);
 
             last_election_loss = 0;
             election_timeout_stop(e);
@@ -615,26 +665,19 @@ election_count_vote(election_t *e, xmlNode *vote, bool can_win)
                 loss_time[8] = '\0';
             }
             crm_info("Ignoring %s round %d (owner node ID %s) pass vs %s because we lost less than %ds ago at %s",
-                     e->name, election_id, election_owner, from, LOSS_DAMPEN,
-                     loss_time? loss_time : "unknown");
+                     e->name, vote.election_id, vote.election_owner, vote.from,
+                     LOSS_DAMPEN, (loss_time? loss_time : "unknown"));
         }
     }
 
-    novote = create_request(CRM_OP_NOVOTE, NULL, from,
-                            CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
+    last_election_loss = tm_now;
 
     do_crm_log(log_level, "%s round %d (owner node ID %s) lost: %s from %s (%s)",
-               e->name, election_id, election_owner, op, from, reason);
+               e->name, vote.election_id, vote.election_owner, vote.op,
+               vote.from, reason);
 
     election_timeout_stop(e);
-
-    crm_xml_add(novote, F_CRM_ELECTION_OWNER, election_owner);
-    crm_xml_add_int(novote, F_CRM_ELECTION_ID, election_id);
-
-    send_cluster_message(your_node, crm_msg_crmd, novote, TRUE);
-    free_xml(novote);
-
-    last_election_loss = tm_now;
+    send_no_vote(your_node, &vote);
     e->state = election_lost;
     return e->state;
 }
