@@ -987,24 +987,44 @@ attrd_election_cb(gpointer user_data)
 void
 attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *data)
 {
-    if ((kind == crm_status_nstate) || (kind == crm_status_rstate)) {
-        if (safe_str_eq(peer->state, CRM_NODE_MEMBER)) {
-            /* If we're the writer, send new peers a list of all attributes
-             * (unless it's a remote node, which doesn't run its own attrd)
-             */
-            if ((election_state(writer) == election_won)
-                && !is_set(peer->flags, crm_remote_node)) {
-                attrd_peer_sync(peer, NULL);
+    bool remove_voter = FALSE;
+
+    switch (kind) {
+        case crm_status_uname:
+            break;
+
+        case crm_status_processes:
+            if (is_not_set(peer->processes, crm_get_cluster_proc())) {
+                remove_voter = TRUE;
             }
-        } else {
-            /* Remove all attribute values associated with lost nodes */
-            attrd_peer_remove(peer->uname, FALSE, "loss");
-            if (peer_writer && safe_str_eq(peer->uname, peer_writer)) {
-                free(peer_writer);
-                peer_writer = NULL;
-                crm_notice("Lost attribute writer %s", peer->uname);
+            break;
+
+        case crm_status_nstate:
+        case crm_status_rstate:
+            if (safe_str_eq(peer->state, CRM_NODE_MEMBER)) {
+                /* If we're the writer, send new peers a list of all attributes
+                 * (unless it's a remote node, which doesn't run its own attrd)
+                 */
+                if ((election_state(writer) == election_won)
+                    && !is_set(peer->flags, crm_remote_node)) {
+                    attrd_peer_sync(peer, NULL);
+                }
+            } else {
+                // Remove all attribute values associated with lost nodes
+                attrd_peer_remove(peer->uname, FALSE, "loss");
+                if (peer_writer && safe_str_eq(peer->uname, peer_writer)) {
+                    free(peer_writer);
+                    peer_writer = NULL;
+                    crm_notice("Lost attribute writer %s", peer->uname);
+                }
+                remove_voter = TRUE;
             }
-        }
+            break;
+    }
+
+    // In case an election is in progress, remove any vote by the node
+    if (remove_voter) {
+        election_remove(writer, peer->uname);
     }
 }
 
