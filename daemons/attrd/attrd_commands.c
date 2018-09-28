@@ -41,7 +41,6 @@
 #define ATTRD_PROTOCOL_VERSION "2"
 
 int last_cib_op_done = 0;
-char *peer_writer = NULL;
 GHashTable *attributes = NULL;
 
 void write_attribute(attribute_t *a, bool ignore_delay);
@@ -56,8 +55,7 @@ send_attrd_message(crm_node_t * node, xmlNode * data)
 {
     crm_xml_add(data, F_TYPE, T_ATTRD);
     crm_xml_add(data, F_ATTRD_VERSION, ATTRD_PROTOCOL_VERSION);
-    crm_xml_add_int(data, F_ATTRD_WRITER, election_state(writer));
-
+    attrd_xml_add_writer(data);
     return send_cluster_message(node, crm_msg_attrd, data, TRUE);
 }
 
@@ -65,7 +63,7 @@ static gboolean
 attribute_timer_cb(gpointer data)
 {
     attribute_t *a = data;
-    crm_trace("Dampen interval expired for %s in state %d", a->id, election_state(writer));
+    crm_trace("Dampen interval expired for %s", a->id);
     write_or_elect_attribute(a);
     return FALSE;
 }
@@ -298,13 +296,10 @@ attrd_client_update(xmlNode *xml)
         }
     }
 
-    if ((peer_writer == NULL) && (election_state(writer) != election_in_progress)) {
-        crm_info("Starting an election to determine the writer");
-        election_vote(writer);
-    }
+    attrd_start_election_if_needed();
 
     crm_debug("Broadcasting %s[%s]=%s%s", attr, host, value,
-              ((election_state(writer) == election_won)? " (writer)" : ""));
+              (attrd_election_won()? " (writer)" : ""));
 
     free(host);
 
@@ -565,52 +560,17 @@ attrd_broadcast_protocol()
 void
 attrd_peer_message(crm_node_t *peer, xmlNode *xml)
 {
-    int peer_state = 0;
     const char *op = crm_element_value(xml, F_ATTRD_TASK);
     const char *election_op = crm_element_value(xml, F_CRM_TASK);
     const char *host = crm_element_value(xml, F_ATTRD_HOST);
+    bool peer_won = FALSE;
 
-    if(election_op) {
-        enum election_result rc = 0;
-
-        crm_xml_add(xml, F_CRM_HOST_FROM, peer->uname);
-        rc = election_count_vote(writer, xml, TRUE);
-        switch(rc) {
-            case election_start:
-                free(peer_writer);
-                peer_writer = NULL;
-                crm_debug("Unsetting writer (was %s) and starting new election",
-                          peer_writer? peer_writer : "unset");
-                election_vote(writer);
-                break;
-            case election_lost:
-                free(peer_writer);
-                peer_writer = strdup(peer->uname);
-                crm_debug("Election lost, presuming %s is writer for now",
-                          peer_writer);
-                break;
-            default:
-                election_check(writer);
-                break;
-        }
+    if (election_op) {
+        attrd_handle_election_op(peer, xml);
         return;
     }
 
-    crm_element_value_int(xml, F_ATTRD_WRITER, &peer_state);
-    if (peer_state == election_won) {
-        if ((election_state(writer) == election_won)
-           && safe_str_neq(peer->uname, attrd_cluster->uname)) {
-            crm_notice("Detected another attribute writer (%s), starting new election",
-                       peer->uname);
-            election_vote(writer);
-
-        } else if (safe_str_neq(peer->uname, peer_writer)) {
-            crm_notice("Recorded new attribute writer: %s (was %s)",
-                       peer->uname, (peer_writer? peer_writer : "unset"));
-            free(peer_writer);
-            peer_writer = strdup(peer->uname);
-        }
-    }
+    peer_won = attrd_check_for_new_writer(peer, xml);
 
     if (safe_str_eq(op, ATTRD_OP_UPDATE) || safe_str_eq(op, ATTRD_OP_UPDATE_BOTH) || safe_str_eq(op, ATTRD_OP_UPDATE_DELAY)) {
         attrd_peer_update(peer, xml, host, FALSE);
@@ -634,7 +594,7 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
         crm_info("Processing %s from %s", op, peer->uname);
 
         /* Clear the seen flag for attribute processing held only in the own node. */
-        if (peer_state == election_won) {
+        if (peer_won) {
             clear_attribute_value_seen();
         }
 
@@ -643,7 +603,7 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
             attrd_peer_update(peer, child, host, TRUE);
         }
 
-        if (peer_state == election_won) {
+        if (peer_won) {
             /* Synchronize if there is an attribute held only by own node that Writer does not have. */
             attrd_current_only_attribute_update(peer, xml);
         }
@@ -889,7 +849,7 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
         build_attribute_xml(sync, attr, a->set, a->uuid, a->timeout_ms, a->user,
                             a->is_private, v->nodename, v->nodeid, v->current);
 
-        crm_xml_add_int(sync, F_ATTRD_WRITER, election_state(writer));
+        attrd_xml_add_writer(sync);
 
         /* Broadcast in case any other nodes had the inconsistent value */
         send_attrd_message(NULL, sync);
@@ -925,7 +885,7 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
 
         crm_trace("Learned %s has node id %s",
                   known_peer->uname, known_peer->uuid);
-        if (election_state(writer) == election_won) {
+        if (attrd_election_won()) {
             write_attributes(FALSE, FALSE);
         }
     }
@@ -934,29 +894,17 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
 void
 write_or_elect_attribute(attribute_t *a)
 {
-    enum election_result rc = election_state(writer);
-    if(rc == election_won) {
+    if (attrd_election_won()) {
         write_attribute(a, FALSE);
-
-    } else if(rc == election_in_progress) {
-        crm_trace("Election in progress to determine who will write out %s", a->id);
-
-    } else if(peer_writer == NULL) {
-        crm_info("Starting an election to determine who will write out %s", a->id);
-        election_vote(writer);
-
     } else {
-        crm_trace("%s will write out %s, we are in state %d", peer_writer, a->id, rc);
+        attrd_start_election_if_needed();
     }
 }
 
 gboolean
 attrd_election_cb(gpointer user_data)
 {
-    crm_notice("Recorded local node as attribute writer (was %s)",
-               (peer_writer? peer_writer : "unset"));
-    free(peer_writer);
-    peer_writer = strdup(attrd_cluster->uname);
+    attrd_declare_winner();
 
     /* Update the peers after an election */
     attrd_peer_sync(NULL, NULL);
@@ -987,18 +935,13 @@ attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *da
                 /* If we're the writer, send new peers a list of all attributes
                  * (unless it's a remote node, which doesn't run its own attrd)
                  */
-                if ((election_state(writer) == election_won)
+                if (attrd_election_won()
                     && !is_set(peer->flags, crm_remote_node)) {
                     attrd_peer_sync(peer, NULL);
                 }
             } else {
                 // Remove all attribute values associated with lost nodes
                 attrd_peer_remove(peer->uname, FALSE, "loss");
-                if (peer_writer && safe_str_eq(peer->uname, peer_writer)) {
-                    free(peer_writer);
-                    peer_writer = NULL;
-                    crm_notice("Lost attribute writer %s", peer->uname);
-                }
                 remove_voter = TRUE;
             }
             break;
@@ -1006,7 +949,7 @@ attrd_peer_change_cb(enum crm_status_type kind, crm_node_t *peer, const void *da
 
     // In case an election is in progress, remove any vote by the node
     if (remove_voter) {
-        election_remove(writer, peer->uname);
+        attrd_remove_voter(peer);
     }
 }
 
@@ -1064,7 +1007,7 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
         }
     }
 
-    if (a->changed && (election_state(writer) == election_won)) {
+    if (a->changed && attrd_election_won()) {
         /* If we're re-attempting a write because the original failed, delay
          * the next attempt so we don't potentially flood the CIB manager
          * and logs with a zillion attempts per second.
