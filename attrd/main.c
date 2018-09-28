@@ -35,17 +35,14 @@
 #include <crm/common/iso8601.h>
 #include <crm/common/ipc.h>
 #include <crm/common/ipcs.h>
-#include <crm/cluster/internal.h>
-#include <crm/cluster/election.h>
-
 #include <crm/common/xml.h>
+#include <crm/cluster/internal.h>
 
 #include <crm/attrd.h>
 #include <internal.h>
 
 lrmd_t *the_lrmd = NULL;
 crm_cluster_t *attrd_cluster = NULL;
-election_t *writer = NULL;
 crm_trigger_t *attrd_config_read = NULL;
 static int attrd_exit_status = pcmk_ok;
 
@@ -96,7 +93,7 @@ static void
 attrd_cib_replaced_cb(const char *event, xmlNode * msg)
 {
     crm_notice("Updating all attributes after %s event", event);
-    if(election_state(writer) == election_won) {
+    if (attrd_election_won()) {
         write_attributes(TRUE, FALSE);
     }
 }
@@ -380,7 +377,7 @@ main(int argc, char **argv)
     }
     crm_info("Cluster connection active");
 
-    writer = election_init(T_ATTRD, attrd_cluster->uname, 120000, attrd_election_cb);
+    attrd_election_init();
 
     attrd_exit_status = attrd_cib_connect(10);
     if (attrd_exit_status != pcmk_ok) {
@@ -395,7 +392,7 @@ main(int argc, char **argv)
   done:
     crm_info("Shutting down attribute manager");
 
-    election_fini(writer);
+    attrd_election_fini();
     if (ipcs) {
         crm_client_disconnect_all(ipcs);
         qb_ipcs_destroy(ipcs);
