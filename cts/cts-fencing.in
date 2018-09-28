@@ -21,7 +21,7 @@ BUILD_DIR = "@abs_top_builddir@"
 TEST_DIR = sys.path[0]
 
 # These values must be kept in sync with include/crm/crm.h
-class CrmExit:
+class CrmExit(object):
     OK                   =   0
     ERROR                =   1
     INVALID_PARAM        =   2
