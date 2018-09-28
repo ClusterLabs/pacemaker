@@ -59,14 +59,20 @@ attrd_handle_election_op(const crm_node_t *peer, xmlNode *xml)
                       peer_writer? peer_writer : "unset");
             election_vote(writer);
             break;
+
         case election_lost:
             free(peer_writer);
             peer_writer = strdup(peer->uname);
             crm_debug("Election lost, presuming %s is writer for now",
                       peer_writer);
             break;
-        default:
+
+        case election_in_progress:
             election_check(writer);
+            break;
+
+        default:
+            crm_info("Ignoring election op from %s due to error", peer->uname);
             break;
     }
 }
