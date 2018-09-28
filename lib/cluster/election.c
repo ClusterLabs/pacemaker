@@ -294,6 +294,7 @@ election_vote(election_t *e)
         return;
     }
 
+    election_reset(e);
     e->state = election_in_progress;
     vote = create_request(CRM_OP_VOTE, NULL, NULL, CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
 
@@ -309,11 +310,6 @@ election_vote(election_t *e)
     free_xml(vote);
 
     crm_debug("Started %s round %d", e->name, e->count);
-    if (e->voted) {
-        g_hash_table_destroy(e->voted);
-        e->voted = NULL;
-    }
-
     election_timeout_start(e);
     return;
 }
