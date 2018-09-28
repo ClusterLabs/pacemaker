@@ -678,13 +678,12 @@ get_logfiles() {
 	    ;;
     esac
 
-#    . @CONFIGDIR@/pacemaker
-#
-#    facility="$PCMK_logfacility"
-#    if [ -z "$facility" ]; then
-        facility="daemon"
-#    fi
+    . @CONFIGDIR@/pacemaker
 
+    facility="$PCMK_logfacility"
+    if [ -z "$facility" ]; then
+        facility="daemon"
+    fi
     if [ "$facility" != "$facility_cs" ]&&[ "$facility" != none ]; then
         find_syslog "$facility.notice"
     fi
@@ -692,12 +691,19 @@ get_logfiles() {
         return
     fi
 
-    if [ -z "$logfile" ]; then
-        logfile="/var/log/pacemaker.log"
-        debug "Log settings not found for cluster type $cf_type, assuming $logfile"
-    fi
-    if [ -f "$logfile" ]; then
-	echo $logfile
+    logfile="$PCMK_logfile"
+    if [ "$logfile" != none ]; then
+        if [ -z "$logfile" ]; then
+            logfile="/var/log/pacemaker.log"
+            if [ -f "$logfile" ]; then
+                debug "Log settings not found for Pacemaker, assuming $logfile"
+                echo "$logfile"
+            fi
+
+        elif [ -f "$logfile" ]; then
+            debug "Log settings found for Pacemaker: $logfile"
+            echo "$logfile"
+        fi
     fi
 
     # Look for detail logs:
