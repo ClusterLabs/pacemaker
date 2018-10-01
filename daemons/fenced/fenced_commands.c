@@ -2298,22 +2298,19 @@ stonith_fence(xmlNode * msg)
 
     } else {
         const char *host = crm_element_value(dev, F_STONITH_TARGET);
-        char *nodename = NULL;
 
         if (cmd->options & st_opt_cs_nodeid) {
             int nodeid = crm_atoi(host, NULL);
+            crm_node_t *node = crm_find_known_peer_full(nodeid, NULL, CRM_GET_PEER_ANY);
 
-            nodename = stonith_get_peer_name(nodeid);
-            if (nodename) {
-                host = nodename;
+            if (node) {
+                host = node->uname;
             }
         }
 
         /* If we get to here, then self-fencing is implicitly allowed */
         get_capable_devices(host, cmd->action, cmd->default_timeout,
                             TRUE, cmd, stonith_fence_get_devices_cb);
-
-        free(nodename);
     }
 
     return -EINPROGRESS;
