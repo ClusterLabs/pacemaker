@@ -16,10 +16,57 @@
 #include <crm/cluster/internal.h>
 #include <crm/cluster/election.h>
 #include <crm/crm.h>
+#include <pacemaker-controld.h>
 #include <controld_fsa.h>
 #include <controld_messages.h>
 #include <controld_callbacks.h>
 #include <controld_transition.h>
+
+static election_t *fsa_election = NULL;
+
+static gboolean
+election_win_cb(gpointer data)
+{
+    register_fsa_input(C_FSA_INTERNAL, I_ELECTION_DC, NULL);
+    return FALSE;
+}
+
+void
+controld_election_init(const char *uname)
+{
+    fsa_election = election_init("DC", uname, 60000 /*60s*/, election_win_cb);
+}
+
+void
+controld_remove_voter(const char *uname)
+{
+    election_remove(fsa_election, uname);
+}
+
+void
+controld_stop_election_timeout()
+{
+    election_timeout_stop(fsa_election);
+}
+
+void
+controld_election_fini()
+{
+    election_fini(fsa_election);
+    fsa_election = NULL;
+}
+
+void
+controld_set_election_period(const char *value)
+{
+    election_timeout_set_period(fsa_election, crm_get_msec(value));
+}
+
+void
+controld_stop_election_timer()
+{
+    election_timeout_stop(fsa_election);
+}
 
 /*	A_ELECTION_VOTE	*/
 void
