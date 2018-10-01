@@ -333,16 +333,20 @@ bool
 election_check(election_t *e)
 {
     int voted_size = 0;
-    int num_members = crm_active_peers();
+    int num_members = 0;
 
     if(e == NULL) {
         crm_trace("Election check requested, but no election available");
         return FALSE;
     }
-
-    if (e->voted) {
-        voted_size = g_hash_table_size(e->voted);
+    if (e->voted == NULL) {
+        crm_trace("%s check requested, but no votes received yet", e->name);
+        return FALSE;
     }
+
+    voted_size = g_hash_table_size(e->voted);
+    num_members = crm_active_peers();
+
     /* in the case of #voted > #members, it is better to
      *   wait for the timeout and give the cluster time to
      *   stabilize
@@ -575,9 +579,16 @@ election_count_vote(election_t *e, xmlNode *message, bool can_win)
          * for us to win
          */
         if (!we_are_owner) {
-            crm_warn("Cannot count %s %s from %s because we are not election owner (%s)",
-                     e->name, vote.op, vote.from, vote.election_owner);
+            crm_warn("Cannot count %s round %d %s from %s because we are not election owner (%s)",
+                     e->name, vote.election_id, vote.op, vote.from,
+                     vote.election_owner);
             return election_error;
+        }
+        if (e->state != election_in_progress) {
+            // Should only happen if we already lost
+            crm_debug("Not counting %s round %d %s from %s because no election in progress",
+                      e->name, vote.election_id, vote.op, vote.from);
+            return e->state;
         }
         record_vote(e, &vote);
         reason = "Recorded";
@@ -672,7 +683,7 @@ election_count_vote(election_t *e, xmlNode *message, bool can_win)
                e->name, vote.election_id, vote.election_owner, vote.op,
                vote.from, reason);
 
-    election_timeout_stop(e);
+    election_reset(e);
     send_no_vote(your_node, &vote);
     e->state = election_lost;
     return e->state;
