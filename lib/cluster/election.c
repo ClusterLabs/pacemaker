@@ -628,6 +628,7 @@ election_count_vote(election_t *e, xmlNode *message, bool can_win)
 
     } else if (done == FALSE && we_lose == FALSE) {
         int peers = 1 + g_hash_table_size(crm_peer_cache);
+        static bool wrote_blackbox = FALSE; // @TODO move to election_t
 
         /* If every node has to vote down every other node, thats N*(N-1) total elections
          * Allow some leeway before _really_ complaining
@@ -638,7 +639,19 @@ election_count_vote(election_t *e, xmlNode *message, bool can_win)
                      e->name, election_wins, STORM_INTERVAL);
             election_wins = 0;
             expires = tm_now + STORM_INTERVAL;
-            crm_write_blackbox(0, NULL);
+            if (wrote_blackbox == FALSE) {
+                /* It's questionable whether a black box (from every node in the
+                 * cluster) would be truly helpful in diagnosing an election
+                 * storm. It's also highly doubtful a production environment
+                 * would get multiple election storms from distinct causes, so
+                 * saving one blackbox per process lifetime should be
+                 * sufficient. Alternatives would be to save a timestamp of the
+                 * last blackbox write instead of a boolean, and write a new one
+                 * if some amount of time has passed; or to save a storm count,
+                 * write a blackbox on every Nth occurrence.
+                 */
+                crm_write_blackbox(0, NULL);
+            }
         }
     }
 
