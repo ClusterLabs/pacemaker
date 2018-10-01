@@ -48,6 +48,7 @@ void
 attrd_handle_election_op(const crm_node_t *peer, xmlNode *xml)
 {
     enum election_result rc = 0;
+    enum election_result previous = election_state(writer);
 
     crm_xml_add(xml, F_CRM_HOST_FROM, peer->uname);
     rc = election_count_vote(writer, xml, TRUE);
@@ -61,10 +62,22 @@ attrd_handle_election_op(const crm_node_t *peer, xmlNode *xml)
             break;
 
         case election_lost:
-            free(peer_writer);
-            peer_writer = strdup(peer->uname);
-            crm_debug("Election lost, presuming %s is writer for now",
-                      peer_writer);
+            /* Losing to this peer does not mean this peer definitely won
+             * (another peer may eventually win). However if we don't already
+             * have a writer, we tentatively record this peer as writer so that
+             * we don't enter "peer_writer == NULL" blocks after this point
+             * (which might start new elections).
+             *
+             * However, we don't do this if the state was already lost, because
+             * we may just be getting the current state back when processing a
+             * late no-vote.
+             */
+            if ((peer_writer == NULL) || (previous != election_lost)) {
+                free(peer_writer);
+                peer_writer = strdup(peer->uname);
+                crm_debug("Election lost, presuming %s is writer for now",
+                          peer_writer);
+            }
             break;
 
         case election_in_progress:
