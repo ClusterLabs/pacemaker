@@ -32,6 +32,7 @@
 
 #include <crm/cluster.h>
 
+#include <crmd.h>
 #include <crmd_messages.h>
 #include <crmd_fsa.h>
 #include <tengine.h>
@@ -50,8 +51,6 @@ char *fsa_cluster_name = NULL;
 #if SUPPORT_HEARTBEAT
 ll_cluster_t *fsa_cluster_conn;
 #endif
-
-election_t *fsa_election = NULL;
 
 fsa_timer_t *wait_timer = NULL;        /* How long to wait before retrying to connect to the cib/lrmd/ccm */
 fsa_timer_t *recheck_timer = NULL;     /* Periodically re-run the PE to account for time based rules/preferences */
@@ -508,11 +507,8 @@ do_state_transition(long long actions,
                state_from, state_to, input, fsa_cause2string(cause),
                msg_data->origin);
 
-    /* the last two clauses might cause trouble later */
     if (next_state != S_ELECTION && cur_state != S_RELEASE_DC) {
-        election_timeout_stop(fsa_election);
-/* 	} else { */
-/* 		crm_timer_start(election_timeout); */
+        controld_stop_election_timer();
     }
 #if 0
     if ((fsa_input_register & R_SHUTDOWN)) {

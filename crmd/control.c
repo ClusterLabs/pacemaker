@@ -61,13 +61,6 @@ crm_trigger_t *fsa_source = NULL;
 crm_trigger_t *config_read = NULL;
 bool no_quorum_suicide_escalation = FALSE;
 
-static gboolean
-election_win_cb(gpointer data)
-{
-    register_fsa_input(C_FSA_INTERNAL, I_ELECTION_DC, NULL);
-    return FALSE;
-}
-
 /*	 A_HA_CONNECT	*/
 void
 do_ha_control(long long action,
@@ -134,8 +127,7 @@ do_ha_control(long long action,
             }
 #endif
         }
-        fsa_election = election_init("DC", cluster->uname, 60000 /*60s*/,
-                                     election_win_cb);
+        controld_election_init(cluster->uname);
         fsa_our_uname = cluster->uname;
         fsa_our_uuid = cluster->uuid;
         if(cluster->uuid == NULL) {
@@ -353,9 +345,7 @@ crmd_exit(int rc)
     free(cib_subsystem); cib_subsystem = NULL;
 
     metadata_cache_fini();
-
-    election_fini(fsa_election);
-    fsa_election = NULL;
+    controld_election_fini();
 
     /* Tear down the CIB connection, but don't free it yet -- it could be used
      * when we drain the mainloop later.
@@ -1067,7 +1057,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     crm_debug("Shutdown escalation occurs after: %dms", shutdown_escalation_timer->period_ms);
 
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_ELECTION_FAIL);
-    election_timeout_set_period(fsa_election, crm_get_msec(value));
+    controld_set_election_period(value);
 
     value = crmd_pref(config_hash, XML_CONFIG_ATTR_RECHECK);
     recheck_timer->period_ms = crm_get_msec(value);
