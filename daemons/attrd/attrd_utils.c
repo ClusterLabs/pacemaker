@@ -175,11 +175,10 @@ attrd_init_ipc(qb_ipcs_service_t **ipcs, qb_ipcs_msg_process_fn dispatch_fn)
 void
 attrd_cib_disconnect()
 {
-    if (the_cib) {
-        the_cib->cmds->signoff(the_cib);
-        cib_delete(the_cib);
-        the_cib = NULL;
-    }
+    CRM_CHECK(the_cib != NULL, return);
+    the_cib->cmds->signoff(the_cib);
+    cib_delete(the_cib);
+    the_cib = NULL;
 }
 
 /* strlen("value") */

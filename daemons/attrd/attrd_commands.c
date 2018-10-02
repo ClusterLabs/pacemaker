@@ -1163,11 +1163,8 @@ write_attribute(attribute_t *a, bool ignore_delay)
     if (!a->is_private) {
 
         /* Defer the write if now's not a good time */
-        if (the_cib == NULL) {
-            crm_info("Write out of '%s' delayed: cib not connected", a->id);
-            return;
-
-        } else if (a->update && (a->update < last_cib_op_done)) {
+        CRM_CHECK(the_cib != NULL, return);
+        if (a->update && (a->update < last_cib_op_done)) {
             crm_info("Write out of '%s' continuing: update %d considered lost", a->id, a->update);
 
         } else if (a->update) {

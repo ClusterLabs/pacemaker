@@ -198,6 +198,22 @@ attrd_cib_connect(int max_retry)
         goto cleanup;
     }
 
+    return pcmk_ok;
+
+  cleanup:
+    the_cib->cmds->signoff(the_cib);
+    cib_delete(the_cib);
+    the_cib = NULL;
+    return -ENOTCONN;
+}
+
+/*!
+ * \internal
+ * \brief Prepare the CIB after cluster is connected
+ */
+static void
+attrd_cib_init()
+{
     // We have no attribute values in memory, wipe the CIB to match
     attrd_erase_attrs();
 
@@ -206,21 +222,6 @@ attrd_cib_connect(int max_retry)
 
     // Always read the CIB at start-up
     mainloop_set_trigger(attrd_config_read);
-
-    /* Set a private attribute for ourselves with the protocol version we
-     * support. This lets all nodes determine the minimum supported version
-     * across all nodes. It also ensures that the writer learns our node name,
-     * so it can send our attributes to the CIB.
-     */
-    attrd_broadcast_protocol();
-
-    return pcmk_ok;
-
-  cleanup:
-    the_cib->cmds->signoff(the_cib);
-    cib_delete(the_cib);
-    the_cib = NULL;
-    return -ENOTCONN;
 }
 
 static int32_t
@@ -361,19 +362,32 @@ main(int argc, char **argv)
     crm_info("Starting up");
     attributes = g_hash_table_new_full(crm_str_hash, g_str_equal, NULL, free_attribute);
 
+    /* Connect to the CIB before connecting to the cluster or listening for IPC.
+     * This allows us to assume the CIB is connected whenever we process a
+     * cluster or IPC message (which also avoids start-up race conditions).
+     */
+    if (attrd_cib_connect(10) != pcmk_ok) {
+        attrd_exit_status = CRM_EX_FATAL;
+        goto done;
+    }
+    crm_info("CIB connection active");
+
     if (attrd_cluster_connect() != pcmk_ok) {
         attrd_exit_status = CRM_EX_FATAL;
         goto done;
     }
     crm_info("Cluster connection active");
 
+    // Initialization that requires the cluster to be connected
     attrd_election_init();
+    attrd_cib_init();
 
-    if (attrd_cib_connect(10) != pcmk_ok) {
-        attrd_exit_status = CRM_EX_FATAL;
-        goto done;
-    }
-    crm_info("CIB connection active");
+    /* Set a private attribute for ourselves with the protocol version we
+     * support. This lets all nodes determine the minimum supported version
+     * across all nodes. It also ensures that the writer learns our node name,
+     * so it can send our attributes to the CIB.
+     */
+    attrd_broadcast_protocol();
 
     attrd_init_ipc(&ipcs, attrd_ipc_dispatch);
     crm_info("Accepting attribute updates");
