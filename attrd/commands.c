@@ -1036,7 +1036,13 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
     }
 
     if (a->changed && attrd_election_won()) {
-        /* If we're re-attempting a write because the original failed, delay
+        if (rc == pcmk_ok) {
+            /* We deferred a write of a new update because this update was in
+             * progress. Write out the new value without additional delay.
+             */
+            write_attribute(a, FALSE);
+
+        /* We're re-attempting a write because the original failed; delay
          * the next attempt so we don't potentially flood the CIB manager
          * and logs with a zillion attempts per second.
          *
@@ -1045,7 +1051,7 @@ attrd_cib_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
          * if all peers similarly fail to write this attribute (which may
          * indicate a corrupted attribute entry rather than a CIB issue).
          */
-        if (a->timer) {
+        } else if (a->timer) {
             // Attribute has a dampening value, so use that as delay
             if (!mainloop_timer_running(a->timer)) {
                 crm_trace("Delayed re-attempted write (%dms) for %s",
@@ -1085,7 +1091,7 @@ write_attributes(bool all, bool ignore_delay)
             /* When forced write flag is set, ignore delay. */
             write_attribute(a, (a->force_write ? TRUE : ignore_delay));
         } else {
-            crm_debug("Skipping unchanged attribute %s", a->id);
+            crm_trace("Skipping unchanged attribute %s", a->id);
         }
     }
 }
