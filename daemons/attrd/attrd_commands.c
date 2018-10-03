@@ -297,8 +297,6 @@ attrd_client_update(xmlNode *xml)
         }
     }
 
-    attrd_start_election_if_needed();
-
     crm_debug("Broadcasting %s[%s]=%s%s", attr, host, value,
               (attrd_election_won()? " (writer)" : ""));
 
