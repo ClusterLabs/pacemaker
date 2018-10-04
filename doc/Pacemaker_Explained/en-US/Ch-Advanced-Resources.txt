@@ -734,42 +734,42 @@ OCF_RESKEY_CRM_meta_notify_start_uname="sles-1 sles-3 sles-2"
 [width="95%",cols="5,<3",options="header",align="center"]
 |=========================================================
 
-|_OCF_RESKEY_CRM_meta_notify_master_resource_
+|OCF_RESKEY_CRM_meta_notify_master_resource
 |Resources that are running in +Master+ mode
  indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,master_resource]
  indexterm:[master_resource,Notification Environment Variable]
 
-|_OCF_RESKEY_CRM_meta_notify_slave_resource_
+|OCF_RESKEY_CRM_meta_notify_slave_resource
 |Resources that are running in +Slave+ mode
  indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,slave_resource]
  indexterm:[slave_resource,Notification Environment Variable]
    
-|_OCF_RESKEY_CRM_meta_notify_promote_resource_
+|OCF_RESKEY_CRM_meta_notify_promote_resource
 |Resources to be promoted
  indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,promote_resource]
  indexterm:[promote_resource,Notification Environment Variable]
    
-|_OCF_RESKEY_CRM_meta_notify_demote_resource_
+|OCF_RESKEY_CRM_meta_notify_demote_resource
 |Resources to be demoted
  indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,demote_resource]
  indexterm:[demote_resource,Notification Environment Variable]
 
-|_OCF_RESKEY_CRM_meta_notify_promote_uname_
+|OCF_RESKEY_CRM_meta_notify_promote_uname
 |Nodes on which resources will be promoted
  indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,promote_uname]
  indexterm:[promote_uname,Notification Environment Variable]
 
-|_OCF_RESKEY_CRM_meta_notify_demote_uname_
+|OCF_RESKEY_CRM_meta_notify_demote_uname
 |Nodes on which resources will be demoted
  indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,demote_uname]
  indexterm:[demote_uname,Notification Environment Variable]
 
-|_OCF_RESKEY_CRM_meta_notify_master_uname_
+|OCF_RESKEY_CRM_meta_notify_master_uname
 |Nodes on which resources are running in +Master+ mode
  indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,master_uname]
  indexterm:[master_uname,Notification Environment Variable]
 
-|_OCF_RESKEY_CRM_meta_notify_slave_uname_
+|OCF_RESKEY_CRM_meta_notify_slave_uname
 |Nodes on which resources are running in +Slave+ mode
  indexterm:[Environment Variable,OCF_RESKEY_CRM_meta_notify_,slave_uname]
  indexterm:[slave_uname,Notification Environment Variable]
