@@ -577,7 +577,7 @@ systemd_async_dispatch(DBusPendingCall *pending, void *user_data)
 #define SYSTEMD_OVERRIDE_TEMPLATE                           \
     "[Unit]\n"                                              \
     "Description=Cluster Controlled %s\n"                   \
-    "Before=pacemaker.service\n"                            \
+    "Before=pacemaker.service pacemaker_remote.service\n"   \
     "\n"                                                    \
     "[Service]\n"                                           \
     "Restart=no\n"
