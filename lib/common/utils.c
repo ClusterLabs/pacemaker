@@ -427,7 +427,7 @@ crm_user_lookup(const char *name, uid_t * uid, gid_t * gid)
 }
 
 static int
-crm_version_helper(const char *text, char **end_text)
+crm_version_helper(const char *text, const char **end_text)
 {
     int atoi_result = -1;
 
@@ -436,7 +436,13 @@ crm_version_helper(const char *text, char **end_text)
     errno = 0;
 
     if (text != NULL && text[0] != 0) {
-        atoi_result = (int)strtol(text, end_text, 10);
+        /* seemingly sacrificing const-correctness -- because while strtol
+           doesn't modify the input, it doesn't want to artificially taint the
+           "end_text" pointer-to-pointer-to-first-char-in-string with constness
+           in case the input wasn't actually constant -- by semantic definition
+           not a single character will get modified so it shall be perfectly
+           safe to make compiler happy with dropping "const" qualifier here */
+        atoi_result = (int) strtol(text, (char **) end_text, 10);
 
         if (errno == EINVAL) {
             crm_err("Conversion of '%s' %c failed", text, text[0]);
@@ -456,8 +462,7 @@ compare_version(const char *version1, const char *version2)
 {
     int rc = 0;
     int lpc = 0;
-    char *ver1_copy = NULL, *ver2_copy = NULL;
-    char *rest1 = NULL, *rest2 = NULL;
+    const char *ver1_iter, *ver2_iter;
 
     if (version1 == NULL && version2 == NULL) {
         return 0;
@@ -467,10 +472,8 @@ compare_version(const char *version1, const char *version2)
         return 1;
     }
 
-    ver1_copy = strdup(version1);
-    ver2_copy = strdup(version2);
-    rest1 = ver1_copy;
-    rest2 = ver2_copy;
+    ver1_iter = version1;
+    ver2_iter = version2;
 
     while (1) {
         int digit1 = 0;
@@ -478,16 +481,16 @@ compare_version(const char *version1, const char *version2)
 
         lpc++;
 
-        if (rest1 == rest2) {
+        if (ver1_iter == ver2_iter) {
             break;
         }
 
-        if (rest1 != NULL) {
-            digit1 = crm_version_helper(rest1, &rest1);
+        if (ver1_iter != NULL) {
+            digit1 = crm_version_helper(ver1_iter, &ver1_iter);
         }
 
-        if (rest2 != NULL) {
-            digit2 = crm_version_helper(rest2, &rest2);
+        if (ver2_iter != NULL) {
+            digit2 = crm_version_helper(ver2_iter, &ver2_iter);
         }
 
         if (digit1 < digit2) {
@@ -499,23 +502,20 @@ compare_version(const char *version1, const char *version2)
             break;
         }
 
-        if (rest1 != NULL && rest1[0] == '.') {
-            rest1++;
+        if (ver1_iter != NULL && *ver1_iter == '.') {
+            ver1_iter++;
         }
-        if (rest1 != NULL && rest1[0] == 0) {
-            rest1 = NULL;
+        if (ver1_iter != NULL && *ver1_iter == '\0') {
+            ver1_iter = NULL;
         }
 
-        if (rest2 != NULL && rest2[0] == '.') {
-            rest2++;
+        if (ver2_iter != NULL && *ver2_iter == '.') {
+            ver2_iter++;
         }
-        if (rest2 != NULL && rest2[0] == 0) {
-            rest2 = NULL;
+        if (ver2_iter != NULL && *ver2_iter == 0) {
+            ver2_iter = NULL;
         }
     }
-
-    free(ver1_copy);
-    free(ver2_copy);
 
     if (rc == 0) {
         crm_trace("%s == %s (%d)", version1, version2, lpc);
