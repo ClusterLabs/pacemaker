@@ -3331,6 +3331,54 @@ crm_element_value_ms(const xmlNode *data, const char *name, guint *dest)
     return errno? -1 : 0;
 }
 
+/*!
+ * \brief Parse a time value from XML
+ *
+ * \param[in]  xml        XML to parse
+ * \param[in]  name_sec   Name of XML attribute for seconds
+ * \param[in]  name_usec  Name of XML attribute for microseconds
+ * \param[out] dest       Where to store result
+ *
+ * \return 0 on success, -errno on error
+ * \note Values default to 0 if XML or XML attribute does not exist
+ */
+int
+crm_element_value_timeval(const xmlNode *xml, const char *name_sec,
+                          const char *name_usec, struct timeval *dest)
+{
+    const char *value_s = NULL;
+    long long value_i = 0;
+
+    CRM_CHECK(dest != NULL, return -EINVAL);
+    dest->tv_sec = 0;
+    dest->tv_usec = 0;
+
+    if (xml == NULL) {
+        return 0;
+    }
+
+    // Parse seconds
+    value_s = crm_element_value(xml, name_sec);
+    if (value_s) {
+        value_i = crm_parse_ll(value_s, NULL);
+        if (errno) {
+            return -errno;
+        }
+        dest->tv_sec = (time_t) value_i;
+    }
+
+    // Parse microseconds
+    value_s = crm_element_value(xml, name_usec);
+    if (value_s) {
+        value_i = crm_parse_ll(value_s, NULL);
+        if (errno) {
+            return -errno;
+        }
+        dest->tv_usec = (suseconds_t) value_i;
+    }
+    return 0;
+}
+
 char *
 crm_element_value_copy(const xmlNode *data, const char *name)
 {
