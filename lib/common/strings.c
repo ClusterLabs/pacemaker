@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <limits.h>
 #include <bzlib.h>
 #include <sys/types.h>
 
@@ -121,29 +122,46 @@ crm_int_helper(const char *text, char **end_text)
     return result;
 }
 
+/*!
+ * \brief Parse a long long integer value from a string
+ *
+ * \param[in] text          The string to parse
+ * \param[in] default_text  Default string to parse if text is NULL
+ *
+ * \return Parsed value on success, -1 (and set errno) on error
+ */
+long long
+crm_parse_ll(const char *text, const char *default_text)
+{
+    if (text == NULL) {
+        text = default_text;
+        if (text == NULL) {
+            crm_err("No default conversion value supplied");
+            errno = EINVAL;
+            return -1;
+        }
+    }
+    return crm_int_helper(text, NULL);
+}
+
+/*!
+ * \brief Parse an integer value from a string
+ *
+ * \param[in] text          The string to parse
+ * \param[in] default_text  Default string to parse if text is NULL
+ *
+ * \return Parsed value on success, -1 (and set errno) on error
+ */
 int
 crm_parse_int(const char *text, const char *default_text)
 {
-    int atoi_result = -1;
+    long long result = crm_parse_ll(text, default_text);
 
-    if (text != NULL) {
-        atoi_result = crm_int_helper(text, NULL);
-        if (errno == 0) {
-            return atoi_result;
-        }
+    if ((result < INT_MIN) || (result > INT_MAX)) {
+        errno = ERANGE;
+        return -1;
     }
-
-    if (default_text != NULL) {
-        atoi_result = crm_int_helper(default_text, NULL);
-        if (errno == 0) {
-            return atoi_result;
-        }
-
-    } else {
-        crm_err("No default conversion value supplied");
-    }
-
-    return -1;
+    return (int) result;
 }
 
 gboolean
