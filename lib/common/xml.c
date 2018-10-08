@@ -3274,9 +3274,10 @@ xml_has_children(const xmlNode * xml_root)
 int
 crm_element_value_int(xmlNode * data, const char *name, int *dest)
 {
-    const char *value = crm_element_value(data, name);
+    const char *value = NULL;
 
     CRM_CHECK(dest != NULL, return -1);
+    value = crm_element_value(data, name);
     if (value) {
         *dest = crm_int_helper(value, NULL);
         return 0;
