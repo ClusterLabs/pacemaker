@@ -376,6 +376,50 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
     return did_change;
 }
 
+/*!
+ * \internal
+ * \brief Do deferred action checks after allocation
+ *
+ * \param[in] data_set  Working set for cluster
+ */
+static void
+check_params(pe_resource_t *rsc, pe_node_t *node, xmlNode *rsc_op,
+             enum pe_check_parameters check, pe_working_set_t *data_set)
+{
+    const char *reason = NULL;
+    op_digest_cache_t *digest_data = NULL;
+
+    switch (check) {
+        case pe_check_active:
+            if (check_action_definition(rsc, node, rsc_op, data_set)
+                && pe_get_failcount(node, rsc, NULL, pe_fc_effective, NULL,
+                                    data_set)) {
+
+                reason = "action definition changed";
+            }
+            break;
+
+        case pe_check_last_failure:
+            digest_data = rsc_action_digest_cmp(rsc, rsc_op, node, data_set);
+            switch (digest_data->rc) {
+                case RSC_DIGEST_UNKNOWN:
+                    crm_trace("Resource %s history entry %s on %s has no digest to compare",
+                              rsc->id, ID(rsc_op), node->details->id);
+                    break;
+                case RSC_DIGEST_MATCH:
+                    break;
+                default:
+                    reason = "resource parameters have changed";
+                    break;
+            }
+            break;
+    }
+
+    if (reason) {
+        pe__clear_failcount(rsc, node, reason, data_set);
+    }
+}
+
 static void
 check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_working_set_t * data_set)
 {
@@ -458,10 +502,23 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
                    || safe_str_eq(task, RSC_START)
                    || safe_str_eq(task, RSC_PROMOTE)
                    || safe_str_eq(task, RSC_MIGRATED)) {
+
             /* If a resource operation failed, and the operation's definition
              * has changed, clear any fail count so they can be retried fresh.
              */
-            if (check_action_definition(rsc, node, rsc_op, data_set)
+
+            if (container_fix_remote_addr(rsc)) {
+                /* We haven't allocated resources to nodes yet, so if the
+                 * REMOTE_CONTAINER_HACK is used, we may calculate the digest
+                 * based on the literal "#uname" value rather than the properly
+                 * substituted value. That would mistakenly make the action
+                 * definition appear to have been changed. Defer the check until
+                 * later in this case.
+                 */
+                pe__add_param_check(rsc_op, rsc, node, pe_check_active,
+                                    data_set);
+
+            } else if (check_action_definition(rsc, node, rsc_op, data_set)
                 && pe_get_failcount(node, rsc, NULL, pe_fc_effective, NULL,
                                     data_set)) {
                 pe__clear_failcount(rsc, node, "action definition changed",
@@ -721,7 +778,14 @@ common_apply_stickiness(resource_t * rsc, node_t * node, pe_working_set_t * data
     /* Check the migration threshold only if a failcount clear action
      * has not already been placed for this resource on the node.
      * There is no sense in potentially forcing the resource from this
-     * node if the failcount is being reset anyway. */
+     * node if the failcount is being reset anyway.
+     *
+     * @TODO A clear_failcount operation can be scheduled in stage4() via
+     * check_actions_for(), or in stage5() via check_params(). This runs in
+     * stage2(), so it cannot detect those, meaning we might check the migration
+     * threshold when we shouldn't -- worst case, we stop or move the resource,
+     * then move it back next transition.
+     */
     if (failcount_clear_action_exists(node, rsc) == FALSE) {
         check_migration_threshold(rsc, node, data_set);
     }
@@ -1291,6 +1355,10 @@ stage5(pe_working_set_t * data_set)
 
         dump_node_capacity(show_utilization ? 0 : utilization_log_level, "Remaining", node);
     }
+
+    // Process deferred action checks
+    pe__foreach_param_check(data_set, check_params);
+    pe__free_param_checks(data_set);
 
     if (is_set(data_set->flags, pe_flag_startup_probes)) {
         crm_trace("Calculating needed probes");

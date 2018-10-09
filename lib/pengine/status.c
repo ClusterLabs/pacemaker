@@ -215,6 +215,7 @@ cleanup_calculations(pe_working_set_t * data_set)
     crm_trace("deleting nodes");
     pe_free_nodes(data_set->nodes);
 
+    pe__free_param_checks(data_set);
     free_xml(data_set->graph);
     crm_time_free(data_set->now);
     free_xml(data_set->input);

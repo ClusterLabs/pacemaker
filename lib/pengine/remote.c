@@ -1,20 +1,10 @@
 /*
- * Copyright (C) 2013 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2013-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+
 #include <crm_internal.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
@@ -213,4 +203,62 @@ pe_create_remote_xml(xmlNode *parent, const char *uname,
         }
     }
     return remote;
+}
+
+// History entry to be checked for fail count clearing
+struct check_op {
+    xmlNode *rsc_op;    // History entry XML
+    pe_resource_t *rsc; // Known resource corresponding to history entry
+    pe_node_t *node;    // Known node corresponding to history entry
+    enum pe_check_parameters check_type; // What needs checking
+};
+
+void
+pe__add_param_check(xmlNode *rsc_op, pe_resource_t *rsc, pe_node_t *node,
+                   enum pe_check_parameters flag, pe_working_set_t *data_set)
+{
+    struct check_op *check_op = NULL;
+
+    CRM_CHECK(data_set && rsc_op && rsc && node, return);
+
+    check_op = calloc(1, sizeof(struct check_op));
+    CRM_ASSERT(check_op != NULL);
+
+    crm_trace("Deferring checks of %s until after allocation", ID(rsc_op));
+    check_op->rsc_op = rsc_op;
+    check_op->rsc = rsc;
+    check_op->node = node;
+    check_op->check_type = flag;
+    data_set->param_check = g_list_prepend(data_set->param_check, check_op);
+}
+
+/*!
+ * \internal
+ * \brief Call a function for each action to be checked for addr substitution
+ *
+ * \param[in] data_set  Working set for cluster
+ * \param[in] cb        Function to be called
+ */
+void
+pe__foreach_param_check(pe_working_set_t *data_set,
+                       void (*cb)(pe_resource_t*, pe_node_t*, xmlNode*,
+                                  enum pe_check_parameters, pe_working_set_t*))
+{
+    CRM_CHECK(data_set && cb, return);
+
+    for (GList *item = data_set->param_check; item != NULL; item = item->next) {
+        struct check_op *check_op = item->data;
+
+        cb(check_op->rsc, check_op->node, check_op->rsc_op,
+           check_op->check_type, data_set);
+    }
+}
+
+void
+pe__free_param_checks(pe_working_set_t *data_set)
+{
+    if (data_set && data_set->param_check) {
+        g_list_free_full(data_set->param_check, free);
+        data_set->param_check = NULL;
+    }
 }

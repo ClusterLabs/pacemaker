@@ -136,7 +136,20 @@ typedef struct pe_working_set_s {
     int blocked_resources;
     int disabled_resources;
 
+    GList *param_check; // History entries that need to be checked
 } pe_working_set_t;
+
+enum pe_check_parameters {
+    /* Clear fail count if parameters changed for un-expired start or monitor
+     * last_failure.
+     */
+    pe_check_last_failure,
+
+    /* Clear fail count if parameters changed for start, monitor, promote, or
+     * migrate_from actions for active resources.
+     */
+    pe_check_active,
+};
 
 struct node_shared_s {
     const char *id;

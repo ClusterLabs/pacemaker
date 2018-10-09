@@ -332,5 +332,11 @@ bool container_fix_remote_addr(resource_t *rsc);
 const char *container_fix_remote_addr_in(resource_t *rsc, xmlNode *xml, const char *field);
 const char *pe_node_attribute_calculated(pe_node_t *node, const char *name, resource_t *rsc);
 const char *pe_node_attribute_raw(pe_node_t *node, const char *name);
-
+void pe__add_param_check(xmlNode *rsc_op, pe_resource_t *rsc, pe_node_t *node,
+                         enum pe_check_parameters, pe_working_set_t *data_set);
+void pe__foreach_param_check(pe_working_set_t *data_set,
+                             void (*cb)(pe_resource_t*, pe_node_t*, xmlNode*,
+                                        enum pe_check_parameters,
+                                        pe_working_set_t*));
+void pe__free_param_checks(pe_working_set_t *data_set);
 #endif
