@@ -376,7 +376,6 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
     return did_change;
 }
 
-
 static void
 check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_working_set_t * data_set)
 {
@@ -392,7 +391,6 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
     xmlNode *rsc_op = NULL;
     GListPtr op_list = NULL;
     GListPtr sorted_op_list = NULL;
-    gboolean did_change = FALSE;
 
     CRM_CHECK(node != NULL, return);
 
@@ -445,7 +443,6 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
             continue;
         }
 
-        did_change = FALSE;
         task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
 
         interval_s = crm_element_value(rsc_op, XML_LRM_ATTR_INTERVAL);
@@ -453,6 +450,7 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
 
         if (interval > 0 &&
             (is_set(rsc->flags, pe_rsc_maintenance) || node->details->maintenance)) {
+            // Maintenance mode cancels recurring operations
             CancelXmlOp(rsc, rsc_op, node, "maintenance mode", data_set);
 
         } else if ((interval > 0)
@@ -460,28 +458,18 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
                    || safe_str_eq(task, RSC_START)
                    || safe_str_eq(task, RSC_PROMOTE)
                    || safe_str_eq(task, RSC_MIGRATED)) {
-            did_change = check_action_definition(rsc, node, rsc_op, data_set);
-        }
-
-        if (did_change && pe_get_failcount(node, rsc, NULL, pe_fc_effective,
-                                           NULL, data_set)) {
-
-            char *key = NULL;
-            action_t *action_clear = NULL;
-
-            key = generate_op_key(rsc->id, CRM_OP_CLEAR_FAILCOUNT, 0);
-            action_clear =
-                custom_action(rsc, key, CRM_OP_CLEAR_FAILCOUNT, node, FALSE, TRUE, data_set);
-            set_bit(action_clear->flags, pe_action_runnable);
-
-            crm_notice("Clearing failure of %s on %s "
-                       "because action definition changed " CRM_XS " %s",
-                       rsc->id, node->details->uname, action_clear->uuid);
+            /* If a resource operation failed, and the operation's definition
+             * has changed, clear any fail count so they can be retried fresh.
+             */
+            if (check_action_definition(rsc, node, rsc_op, data_set)
+                && pe_get_failcount(node, rsc, NULL, pe_fc_effective, NULL,
+                                    data_set)) {
+                pe__clear_failcount(rsc, node, "action definition changed",
+                                    data_set);
+            }
         }
     }
-
     g_list_free(sorted_op_list);
-
 }
 
 static GListPtr
@@ -1254,16 +1242,10 @@ cleanup_orphans(resource_t * rsc, pe_working_set_t * data_set)
             && pe_get_failcount(node, rsc, NULL, pe_fc_effective, NULL,
                                 data_set)) {
 
-            char *key = generate_op_key(rsc->id, CRM_OP_CLEAR_FAILCOUNT, 0);
-            action_t *clear_op = custom_action(rsc, key, CRM_OP_CLEAR_FAILCOUNT,
-                                               node, FALSE, TRUE, data_set);
+            pe_action_t *clear_op = NULL;
 
-            add_hash_param(clear_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
-
-            pe_rsc_info(rsc,
-                        "Clearing failure of %s on %s because it is orphaned "
-                        CRM_XS " %s",
-                        rsc->id, node->details->uname, clear_op->uuid);
+            clear_op = pe__clear_failcount(rsc, node, "it is orphaned",
+                                           data_set);
 
             /* We can't use order_action_then_stop() here because its
              * pe_order_preserve breaks things

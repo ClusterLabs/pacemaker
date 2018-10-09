@@ -3031,14 +3031,8 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
 
     if (clear_reason != NULL) {
         node_t *remote_node = pe_find_node(data_set->nodes, rsc->id);
-        char *key = generate_op_key(rsc->id, CRM_OP_CLEAR_FAILCOUNT, 0);
-        action_t *clear_op = custom_action(rsc, key, CRM_OP_CLEAR_FAILCOUNT,
-                                           node, FALSE, TRUE, data_set);
-
-        add_hash_param(clear_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
-
-        crm_notice("Clearing failure of %s on %s because %s " CRM_XS " %s",
-                   rsc->id, node->details->uname, clear_reason, clear_op->uuid);
+        pe_action_t *clear_op = pe__clear_failcount(rsc, node, clear_reason,
+                                                    data_set);
 
         if (is_set(data_set->flags, pe_flag_stonith_enabled)
             && rsc->remote_reconnect_interval

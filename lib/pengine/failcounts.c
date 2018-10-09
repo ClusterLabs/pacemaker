@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2017 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2008-2018 Andrew Beekhof <andrew@beekhof.net>
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -318,4 +318,32 @@ pe_get_failcount(node_t *node, resource_t *rsc, time_t *last_failure,
 
 
     return failcount;
+}
+
+/*!
+ * \brief Schedule a controller operation to clear a fail count
+ *
+ * \param[in] rsc       Resource with failure
+ * \param[in] node      Node failure occurred on
+ * \param[in] reason    Readable description why needed (for logging)
+ * \param[in] data_set  Working set for cluster
+ *
+ * \return Scheduled action
+ */
+pe_action_t *
+pe__clear_failcount(pe_resource_t *rsc, pe_node_t *node,
+                    const char *reason, pe_working_set_t *data_set)
+{
+    char *key = NULL;
+    action_t *clear = NULL;
+
+    CRM_CHECK(rsc && node && reason && data_set, return NULL);
+
+    key = generate_op_key(rsc->id, CRM_OP_CLEAR_FAILCOUNT, 0);
+    clear = custom_action(rsc, key, CRM_OP_CLEAR_FAILCOUNT, node, FALSE, TRUE,
+                          data_set);
+    add_hash_param(clear->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
+    crm_notice("Clearing failure of %s on %s because %s " CRM_XS " %s",
+               rsc->id, node->details->uname, reason, clear->uuid);
+    return clear;
 }
