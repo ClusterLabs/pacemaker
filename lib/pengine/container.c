@@ -972,11 +972,12 @@ container_fix_remote_addr_in(resource_t *rsc, xmlNode *xml, const char *field)
     }
 
     if(node == NULL) {
-        crm_trace("Cannot fix address for %s", tuple->remote->id);
+        crm_trace("Cannot determine address for bundle connection %s", rsc->id);
         return NULL;
     }
 
-    crm_trace("Fixing addr for %s on %s", rsc->id, node->details->uname);
+    crm_trace("Setting address for bundle connection %s to bundle host %s",
+              rsc->id, node->details->uname);
     if(xml != NULL && field != NULL) {
         crm_xml_add(xml, field, node->details->uname);
     }
