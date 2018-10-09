@@ -262,9 +262,6 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
     const char *digest_secure = NULL;
 
     CRM_CHECK(active_node != NULL, return FALSE);
-    if (safe_str_eq(task, RSC_STOP)) {
-        return FALSE;
-    }
 
     interval_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
     interval = crm_parse_int(interval_s, "0");
@@ -395,7 +392,6 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
     xmlNode *rsc_op = NULL;
     GListPtr op_list = NULL;
     GListPtr sorted_op_list = NULL;
-    gboolean is_probe = FALSE;
     gboolean did_change = FALSE;
 
     CRM_CHECK(node != NULL, return);
@@ -449,22 +445,20 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
             continue;
         }
 
-        is_probe = FALSE;
         did_change = FALSE;
         task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
 
         interval_s = crm_element_value(rsc_op, XML_LRM_ATTR_INTERVAL);
         interval = crm_parse_int(interval_s, "0");
 
-        if (interval == 0 && safe_str_eq(task, RSC_STATUS)) {
-            is_probe = TRUE;
-        }
-
         if (interval > 0 &&
             (is_set(rsc->flags, pe_rsc_maintenance) || node->details->maintenance)) {
             CancelXmlOp(rsc, rsc_op, node, "maintenance mode", data_set);
 
-        } else if (is_probe || safe_str_eq(task, RSC_START) || safe_str_eq(task, RSC_PROMOTE) || interval > 0
+        } else if ((interval > 0)
+                   || safe_str_eq(task, RSC_STATUS)
+                   || safe_str_eq(task, RSC_START)
+                   || safe_str_eq(task, RSC_PROMOTE)
                    || safe_str_eq(task, RSC_MIGRATED)) {
             did_change = check_action_definition(rsc, node, rsc_op, data_set);
         }
