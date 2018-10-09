@@ -2857,22 +2857,24 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
     }
 
     if (expired) {
-        if (failure_timeout > 0) {
-            if (pe_get_failcount(node, rsc, &last_failure, pe_fc_default,
-                                 xml_op, data_set)) {
+        if (pe_get_failcount(node, rsc, &last_failure, pe_fc_default, xml_op,
+                             data_set)) {
 
-                if (pe_get_failcount(node, rsc, &last_failure, pe_fc_effective,
-                                     xml_op, data_set) == 0) {
-                    clear_reason = "it expired";
-                } else {
-                    expired = FALSE;
-                }
+            // There is a fail count ignoring timeout
 
-            } else if (rsc->remote_reconnect_ms
-                       && strstr(ID(xml_op), "last_failure")) {
-                /* always clear last failure when reconnect interval is set */
-                clear_reason = "reconnect interval is set";
+            if (pe_get_failcount(node, rsc, &last_failure, pe_fc_effective,
+                                 xml_op, data_set) == 0) {
+                // There is no fail count considering timeout
+                clear_reason = "it expired";
+
+            } else {
+                expired = FALSE;
             }
+
+        } else if (rsc->remote_reconnect_ms
+                   && strstr(ID(xml_op), "last_failure")) {
+            // Always clear last failure when reconnect interval is set
+            clear_reason = "reconnect interval is set";
         }
 
     } else if (strstr(ID(xml_op), "last_failure") &&
@@ -3107,11 +3109,6 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
         pe_rsc_trace(rsc, "Node %s (where %s is running) is unclean."
                      " Further action depends on the value of the stop's on-fail attribute",
                      node->details->uname, rsc->id);
-    }
-
-    if (status == PCMK_LRM_OP_ERROR) {
-        /* Older versions set this if rc != 0 but it's up to us to decide */
-        status = PCMK_LRM_OP_DONE;
     }
 
     if(status != PCMK_LRM_OP_NOT_INSTALLED) {
