@@ -2881,19 +2881,29 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
     } else if (strstr(ID(xml_op), "last_failure") &&
                ((strcmp(task, "start") == 0) || (strcmp(task, "monitor") == 0))) {
 
-        op_digest_cache_t *digest_data = NULL;
+        if (container_fix_remote_addr(rsc)) {
+            /* We haven't allocated resources yet, so we can't reliably
+             * substitute addr parameters for the REMOTE_CONTAINER_HACK.
+             * When that's needed, defer the check until later.
+             */
+            pe__add_param_check(xml_op, rsc, node, pe_check_last_failure,
+                                data_set);
 
-        digest_data = rsc_action_digest_cmp(rsc, xml_op, node, data_set);
+        } else {
+            op_digest_cache_t *digest_data = NULL;
 
-        if (digest_data->rc == RSC_DIGEST_UNKNOWN) {
-            crm_trace("rsc op %s/%s on node %s does not have a op digest to compare against", rsc->id,
-                      key, node->details->id);
-        } else if(container_fix_remote_addr(rsc) && digest_data->rc != RSC_DIGEST_MATCH) {
-            // We can't sanely check the changing 'addr' attribute. Yet
-            crm_trace("Ignoring rsc op %s/%s on node %s", rsc->id, key, node->details->id);
-
-        } else if (digest_data->rc != RSC_DIGEST_MATCH) {
-            clear_reason = "resource parameters have changed";
+            digest_data = rsc_action_digest_cmp(rsc, xml_op, node, data_set);
+            switch (digest_data->rc) {
+                case RSC_DIGEST_UNKNOWN:
+                    crm_trace("Resource %s history entry %s on %s has no digest to compare",
+                              rsc->id, key, node->details->id);
+                    break;
+                case RSC_DIGEST_MATCH:
+                    break;
+                default:
+                    clear_reason = "resource parameters have changed";
+                    break;
+            }
         }
     }
 
