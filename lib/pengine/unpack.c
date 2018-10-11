@@ -1140,6 +1140,21 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
     // Now catch any nodes we didn't see
     unpack_node_loop(status, is_set(data_set->flags, pe_flag_stonith_enabled), data_set);
 
+    /* Now that we know where resources are, we can schedule stops of containers
+     * with failed bundle connections
+     */
+    if (data_set->stop_needed != NULL) {
+        for (GList *item = data_set->stop_needed; item; item = item->next) {
+            pe_resource_t *container = item->data;
+            pe_node_t *node = pe__current_node(container);
+
+            if (node) {
+                stop_action(container, node, FALSE);
+            }
+        }
+        g_list_free(data_set->stop_needed);
+    }
+
     for (GListPtr gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         node_t *this_node = gIter->data;
 
@@ -1927,7 +1942,15 @@ process_rsc_state(resource_t * rsc, node_t * node,
         case action_fail_restart_container:
             set_bit(rsc->flags, pe_rsc_failed);
 
-            if (rsc->container) {
+            if (rsc->container && pe_rsc_is_bundled(rsc)) {
+                /* A bundle's remote connection can run on a different node than
+                 * the bundle's container. We don't necessarily know where the
+                 * container is running yet, so remember it and add a stop
+                 * action for it later.
+                 */
+                data_set->stop_needed = g_list_prepend(data_set->stop_needed,
+                                                       rsc->container);
+            } else if (rsc->container) {
                 stop_action(rsc->container, node, FALSE);
             } else if (rsc->role != RSC_ROLE_STOPPED && rsc->role != RSC_ROLE_UNKNOWN) {
                 stop_action(rsc, node, FALSE);

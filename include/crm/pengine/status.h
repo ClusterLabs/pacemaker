@@ -134,6 +134,7 @@ struct pe_working_set_s {
     int disabled_resources;
 
     GList *param_check; // History entries that need to be checked
+    GList *stop_needed; // Containers that need stop actions
 };
 
 enum pe_check_parameters {
