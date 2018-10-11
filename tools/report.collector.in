@@ -469,6 +469,7 @@ sys_stats() {
     }
     lsscsi
     lspci
+    lsblk
     mount
     df
     set +x
