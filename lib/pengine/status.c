@@ -216,6 +216,7 @@ cleanup_calculations(pe_working_set_t * data_set)
     pe_free_nodes(data_set->nodes);
 
     pe__free_param_checks(data_set);
+    g_list_free(data_set->stop_needed);
     free_xml(data_set->graph);
     crm_time_free(data_set->now);
     free_xml(data_set->input);
