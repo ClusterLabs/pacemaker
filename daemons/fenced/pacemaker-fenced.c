@@ -637,6 +637,7 @@ static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
 
     } else {
         /* Our node is allowed, so update the device information */
+        int rc;
         xmlNode *data;
         GHashTableIter gIter;
         stonith_key_value_t *params = NULL;
@@ -663,9 +664,9 @@ static void cib_device_update(resource_t *rsc, pe_working_set_t *data_set)
         remove = FALSE;
         data = create_device_registration_xml(rsc_name(rsc), st_namespace_any,
                                               agent, params, rsc_provides);
-        stonith_device_register(data, NULL, TRUE);
-
         stonith_key_value_freeall(params, 1, 1);
+        rc = stonith_device_register(data, NULL, TRUE);
+        CRM_ASSERT(rc == pcmk_ok);
         free_xml(data);
     }
 
@@ -1469,6 +1470,7 @@ main(int argc, char **argv)
     init_topology_list();
 
     if(stonith_watchdog_timeout_ms > 0) {
+        int rc;
         xmlNode *xml;
         stonith_key_value_t *params = NULL;
 
@@ -1477,10 +1479,13 @@ main(int argc, char **argv)
         xml = create_device_registration_xml("watchdog", st_namespace_internal,
                                              STONITH_WATCHDOG_AGENT, params,
                                              NULL);
-        stonith_device_register(xml, NULL, FALSE);
-
         stonith_key_value_freeall(params, 1, 1);
+        rc = stonith_device_register(xml, NULL, FALSE);
         free_xml(xml);
+        if (rc != pcmk_ok) {
+            crm_crit("Cannot register watchdog pseudo fence agent");
+            crm_exit(CRM_EX_FATAL);
+        }
     }
 
     stonith_ipc_server_init(&ipcs, &ipc_callbacks);
