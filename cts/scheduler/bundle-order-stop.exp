@@ -1,7 +1,7 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
   <synapse id="0">
     <action_set>
-      <rsc_op id="135" operation="notify" operation_key="rabbitmq_pre_notify_stop_0" internal_operation_key="rabbitmq:0_pre_notify_stop_0" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0" router_node="undercloud">
+      <rsc_op id="138" operation="notify" operation_key="rabbitmq_pre_notify_stop_0" internal_operation_key="rabbitmq:0_pre_notify_stop_0" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0" router_node="undercloud">
         <primitive id="rabbitmq" long-id="rabbitmq:0" class="ocf" provider="heartbeat" type="rabbitmq-cluster"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="true" CRM_meta_notify_active_resource="rabbitmq:0" CRM_meta_notify_active_uname="rabbitmq-bundle-0" CRM_meta_notify_all_uname="galera-bundle-0 rabbitmq-bundle-0 redis-bundle-0 undercloud" CRM_meta_notify_available_uname="rabbitmq-bundle-0 undercloud" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="stop" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="rabbitmq:0" CRM_meta_notify_stop_uname="rabbitmq-bundle-0" CRM_meta_notify_type="pre" CRM_meta_on_node="rabbitmq-bundle-0" CRM_meta_on_node_uuid="rabbitmq-bundle-0" CRM_meta_physical_host="undercloud" CRM_meta_timeout="20000"  set_policy="ha-all ^(?!amq\.).* {&quot;ha-mode&quot;:&quot;all&quot;}"/>
       </rsc_op>
@@ -66,7 +66,7 @@
         <pseudo_event id="35" operation="notify" operation_key="rabbitmq-bundle-clone_pre_notify_stop_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="135" operation="notify" operation_key="rabbitmq_pre_notify_stop_0" internal_operation_key="rabbitmq:0_pre_notify_stop_0" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0" router_node="undercloud"/>
+        <rsc_op id="138" operation="notify" operation_key="rabbitmq_pre_notify_stop_0" internal_operation_key="rabbitmq:0_pre_notify_stop_0" on_node="rabbitmq-bundle-0" on_node_uuid="rabbitmq-bundle-0" router_node="undercloud"/>
       </trigger>
     </inputs>
   </synapse>
@@ -278,7 +278,7 @@
   </synapse>
   <synapse id="19" priority="1000000">
     <action_set>
-      <rsc_op id="138" operation="notify" operation_key="redis_post_notify_demote_0" internal_operation_key="redis:0_post_notify_demote_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="undercloud">
+      <rsc_op id="141" operation="notify" operation_key="redis_post_notify_demote_0" internal_operation_key="redis:0_post_notify_demote_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="undercloud">
         <primitive id="redis" long-id="redis:0" class="ocf" provider="heartbeat" type="redis"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="redis:0" CRM_meta_notify_active_uname="redis-bundle-0" CRM_meta_notify_all_uname="galera-bundle-0 rabbitmq-bundle-0 redis-bundle-0 undercloud" CRM_meta_notify_available_uname="redis-bundle-0 undercloud" CRM_meta_notify_demote_resource="redis:0" CRM_meta_notify_demote_uname="redis-bundle-0" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="demoted" CRM_meta_notify_key_type="post" CRM_meta_notify_master_resource="redis:0" CRM_meta_notify_master_uname="redis-bundle-0" CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="redis:0" CRM_meta_notify_stop_uname="redis-bundle-0" CRM_meta_notify_type="post" CRM_meta_on_node="redis-bundle-0" CRM_meta_on_node_uuid="redis-bundle-0" CRM_meta_physical_host="undercloud" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
       </rsc_op>
@@ -291,7 +291,7 @@
   </synapse>
   <synapse id="20">
     <action_set>
-      <rsc_op id="137" operation="notify" operation_key="redis_pre_notify_demote_0" internal_operation_key="redis:0_pre_notify_demote_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="undercloud">
+      <rsc_op id="140" operation="notify" operation_key="redis_pre_notify_demote_0" internal_operation_key="redis:0_pre_notify_demote_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="undercloud">
         <primitive id="redis" long-id="redis:0" class="ocf" provider="heartbeat" type="redis"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="redis:0" CRM_meta_notify_active_uname="redis-bundle-0" CRM_meta_notify_all_uname="galera-bundle-0 rabbitmq-bundle-0 redis-bundle-0 undercloud" CRM_meta_notify_available_uname="redis-bundle-0 undercloud" CRM_meta_notify_demote_resource="redis:0" CRM_meta_notify_demote_uname="redis-bundle-0" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="demote" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="redis:0" CRM_meta_notify_master_uname="redis-bundle-0" CRM_meta_notify_operation="demote" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="redis:0" CRM_meta_notify_stop_uname="redis-bundle-0" CRM_meta_notify_type="pre" CRM_meta_on_node="redis-bundle-0" CRM_meta_on_node_uuid="redis-bundle-0" CRM_meta_physical_host="undercloud" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
       </rsc_op>
@@ -304,7 +304,7 @@
   </synapse>
   <synapse id="21">
     <action_set>
-      <rsc_op id="136" operation="notify" operation_key="redis_pre_notify_stop_0" internal_operation_key="redis:0_pre_notify_stop_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="undercloud">
+      <rsc_op id="139" operation="notify" operation_key="redis_pre_notify_stop_0" internal_operation_key="redis:0_pre_notify_stop_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="undercloud">
         <primitive id="redis" long-id="redis:0" class="ocf" provider="heartbeat" type="redis"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource="redis:0" CRM_meta_notify_active_uname="redis-bundle-0" CRM_meta_notify_all_uname="galera-bundle-0 rabbitmq-bundle-0 redis-bundle-0 undercloud" CRM_meta_notify_available_uname="redis-bundle-0 undercloud" CRM_meta_notify_demote_resource="redis:0" CRM_meta_notify_demote_uname="redis-bundle-0" CRM_meta_notify_inactive_resource=" " CRM_meta_notify_key_operation="stop" CRM_meta_notify_key_type="pre" CRM_meta_notify_master_resource="redis:0" CRM_meta_notify_master_uname="redis-bundle-0" CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="redis:0" CRM_meta_notify_stop_uname="redis-bundle-0" CRM_meta_notify_type="pre" CRM_meta_on_node="redis-bundle-0" CRM_meta_on_node_uuid="redis-bundle-0" CRM_meta_physical_host="undercloud" CRM_meta_promoted_max="1" CRM_meta_promoted_node_max="1" CRM_meta_timeout="20000"  wait_last_known_master="true"/>
       </rsc_op>
@@ -370,7 +370,7 @@
         <pseudo_event id="95" operation="notify" operation_key="redis-bundle-master_post_notify_demoted_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="138" operation="notify" operation_key="redis_post_notify_demote_0" internal_operation_key="redis:0_post_notify_demote_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="undercloud"/>
+        <rsc_op id="141" operation="notify" operation_key="redis_post_notify_demote_0" internal_operation_key="redis:0_post_notify_demote_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="undercloud"/>
       </trigger>
     </inputs>
   </synapse>
@@ -400,7 +400,7 @@
         <pseudo_event id="93" operation="notify" operation_key="redis-bundle-master_pre_notify_demote_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="137" operation="notify" operation_key="redis_pre_notify_demote_0" internal_operation_key="redis:0_pre_notify_demote_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="undercloud"/>
+        <rsc_op id="140" operation="notify" operation_key="redis_pre_notify_demote_0" internal_operation_key="redis:0_pre_notify_demote_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="undercloud"/>
       </trigger>
     </inputs>
   </synapse>
@@ -480,7 +480,7 @@
         <pseudo_event id="81" operation="notify" operation_key="redis-bundle-master_pre_notify_stop_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="136" operation="notify" operation_key="redis_pre_notify_stop_0" internal_operation_key="redis:0_pre_notify_stop_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="undercloud"/>
+        <rsc_op id="139" operation="notify" operation_key="redis_pre_notify_stop_0" internal_operation_key="redis:0_pre_notify_stop_0" on_node="redis-bundle-0" on_node_uuid="redis-bundle-0" router_node="undercloud"/>
       </trigger>
     </inputs>
   </synapse>
