@@ -19,6 +19,7 @@
 #  endif
 
 GHashTable *rsc_list;
+extern int disable_sbd_check;
 
 typedef struct lrmd_rsc_s {
     char *rsc_id;

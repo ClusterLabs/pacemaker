@@ -1599,6 +1599,8 @@ process_lrmd_get_recurring(xmlNode *request, int call_id)
     return reply;
 }
 
+static bool sbd_check_logged = FALSE;
+
 void
 process_lrmd_message(crm_client_t * client, uint32_t id, xmlNode * request)
 {
@@ -1644,10 +1646,19 @@ process_lrmd_message(crm_client_t * client, uint32_t id, xmlNode * request)
         do_notify = 1;
         do_reply = 1;
     } else if (crm_str_eq(op, LRMD_OP_CHECK, TRUE)) {
-        xmlNode *data = get_message_xml(request, F_LRMD_CALLDATA); 
-        const char *timeout = crm_element_value(data, F_LRMD_WATCHDOG);
-        CRM_LOG_ASSERT(data != NULL);
-        check_sbd_timeout(timeout);
+        if(disable_sbd_check) {
+            if(sbd_check_logged == FALSE) {
+                crm_warn("Explicitly ignoring SBD check, this is only safe inside bundles");
+                sbd_check_logged = TRUE;
+            }
+
+        } else {
+            xmlNode *data = get_message_xml(request, F_LRMD_CALLDATA); 
+            const char *timeout = crm_element_value(data, F_LRMD_WATCHDOG);
+            CRM_LOG_ASSERT(data != NULL);
+            check_sbd_timeout(timeout);
+        }
+
     } else if (crm_str_eq(op, LRMD_OP_ALERT_EXEC, TRUE)) {
         rc = process_lrmd_alert_exec(client, id, request);
         do_reply = 1;
