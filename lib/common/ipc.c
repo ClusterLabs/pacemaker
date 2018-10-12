@@ -1,5 +1,7 @@
 /*
- * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2004-2019 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -302,7 +304,16 @@ client_from_connection(qb_ipcs_connection_t *c, void *key, uid_t uid_client)
 #if ENABLE_ACL
         client->user = uid2username(uid_client);
         if (client->user == NULL) {
-            client->user = strdup("#unprivileged");
+            /* getpwuid in uid2username is relatively fragile, so allow
+               deep HA tweakers to reuse very very unlikely system-clashing
+               pseudo-user so that some fail-safe opt-in static privileges
+               could actually be meaningfully defined in CIB, since this
+               pseudo-user conforms to NCName lexical requirement (for
+               possible future ID datatype compatibility in XML, not now
+               as of this change) while -- as mentioned -- the probability
+               of having this user on the system & in CRM_DAEMON_GROUP
+               by accident is approaching zero (~ on purpose: nonsensical) */
+            client->user = strdup("__PCMK-UNPRIVILEGED-USER__");
             CRM_CHECK(client->user != NULL, free(client); return NULL);
             crm_err("Unable to enforce ACLs for user ID %d, assuming unprivileged",
                     uid_client);
