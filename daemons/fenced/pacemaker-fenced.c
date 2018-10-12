@@ -50,8 +50,6 @@ static gboolean stonith_shutdown_flag = FALSE;
 static qb_ipcs_service_t *ipcs = NULL;
 static xmlNode *local_cib = NULL;
 
-GHashTable *known_peer_names = NULL;
-
 static cib_t *cib_api = NULL;
 static void *cib_library = NULL;
 
@@ -1049,6 +1047,8 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
         stonith_enabled_saved = FALSE; /* Trigger a full refresh below */
     }
 
+    crm_peer_caches_refresh(local_cib);
+
     stonith_enabled_xml = get_xpath_object("//nvpair[@name='stonith-enabled']", local_cib, LOG_TRACE);
     if (stonith_enabled_xml) {
         stonith_enabled_s = crm_element_value(stonith_enabled_xml, XML_NVPAIR_ATTR_VALUE);
@@ -1103,6 +1103,8 @@ init_cib_cache_cb(xmlNode * msg, int call_id, int rc, xmlNode * output, void *us
     have_cib_devices = TRUE;
     local_cib = copy_xml(output);
 
+    crm_peer_caches_refresh(local_cib);
+
     fencing_topology_init();
     cib_devices_update();
 }
@@ -1145,11 +1147,6 @@ stonith_cleanup(void)
 
     if (ipcs) {
         qb_ipcs_destroy(ipcs);
-    }
-
-    if (known_peer_names != NULL) {
-        g_hash_table_destroy(known_peer_names);
-        known_peer_names = NULL;
     }
 
     crm_peer_destroy();
@@ -1239,17 +1236,11 @@ static void
 st_peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *data)
 {
     if ((type != crm_status_processes) && !is_set(node->flags, crm_remote_node)) {
-        xmlNode *query = NULL;
-
-        if (node->id && node->uname) {
-            g_hash_table_insert(known_peer_names, GUINT_TO_POINTER(node->id), strdup(node->uname));
-        }
-
         /*
          * This is a hack until we can send to a nodeid and/or we fix node name lookups
          * These messages are ignored in stonith_peer_callback()
          */
-        query = create_xml_node(NULL, "stonith_command");
+        xmlNode *query = create_xml_node(NULL, "stonith_command");
 
         crm_xml_add(query, F_XML_TAGNAME, "stonith_command");
         crm_xml_add(query, F_TYPE, T_STONITH_NG);
@@ -1444,7 +1435,6 @@ main(int argc, char **argv)
     mainloop_add_signal(SIGTERM, stonith_shutdown);
 
     crm_peer_init();
-    known_peer_names = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, free);
 
     if (stand_alone == FALSE) {
 

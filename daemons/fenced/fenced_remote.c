@@ -931,30 +931,6 @@ stonith_manual_ack(xmlNode * msg, remote_fencing_op_t * op)
     return -EINPROGRESS;
 }
 
-char *
-stonith_get_peer_name(unsigned int nodeid)
-{
-    crm_node_t *node = crm_find_peer(nodeid, NULL);
-    char *nodename = NULL;
-
-    if (node && node->uname) {
-        return strdup(node->uname);
-
-    } else if ((nodename = get_node_name(nodeid))) {
-        return nodename;
-
-    } else {
-        const char *last_known_name = g_hash_table_lookup(known_peer_names, GUINT_TO_POINTER(nodeid));
-
-        if (last_known_name) {
-            crm_debug("Use the last known name %s for nodeid %u", last_known_name, nodeid);
-            return strdup(last_known_name);
-        }
-    }
-
-    return NULL;
-}
-
 /*!
  * \internal
  * \brief Create a new remote stonith operation
@@ -1035,14 +1011,14 @@ create_remote_stonith_op(const char *client, xmlNode * request, gboolean peer)
 
     if (op->call_options & st_opt_cs_nodeid) {
         int nodeid = crm_atoi(op->target, NULL);
-        char *nodename = stonith_get_peer_name(nodeid);
+        crm_node_t *node = crm_find_known_peer_full(nodeid, NULL, CRM_GET_PEER_ANY);
 
         /* Ensure the conversion only happens once */
         op->call_options &= ~st_opt_cs_nodeid;
 
-        if (nodename) {
+        if (node && node->uname) {
             free(op->target);
-            op->target = nodename;
+            op->target = strdup(node->uname);
 
         } else {
             crm_warn("Could not expand nodeid '%s' into a host name", op->target);
