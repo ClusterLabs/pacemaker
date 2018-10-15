@@ -278,7 +278,6 @@ container_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
         order_start_start(rsc, tuple->docker, pe_order_runnable_left | pe_order_implies_first_printed);
 
         if(tuple->child) {
-            new_rsc_order(tuple->docker, RSC_STATUS, tuple->remote, RSC_STOP, pe_order_optional, data_set);
             order_stop_stop(rsc, tuple->child, pe_order_implies_first_printed);
         }
         order_stop_stop(rsc, tuple->docker, pe_order_implies_first_printed);
