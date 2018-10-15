@@ -1417,11 +1417,29 @@ fence_guest(pe_node_t *node, pe_action_t *done, pe_working_set_t *data_set)
                  node->details->uname, stonith_op->id,
                  container->id, stop->id);
     } else {
-        crm_info("Implying guest node %s is down (action %d) ",
-                 node->details->uname, stonith_op->id);
-    }
+        /* If we're fencing the guest node but there's no stop for the guest
+         * resource, we must think the guest is already stopped. However, we may
+         * think so because its resource history was just cleaned. To avoid
+         * unnecessarily considering the guest node down if it's really up,
+         * order the pseudo-fencing after any stop of the connection resource,
+         * which will be ordered after any container (re-)probe.
+         */
+        stop = find_first_action(node->details->remote_rsc->actions, NULL,
+                                 RSC_STOP, NULL);
 
-    /* @TODO: Order pseudo-fence after any (optional) fence of guest's host */
+        if (stop) {
+            order_actions(stop, stonith_op, pe_order_optional);
+            crm_info("Implying guest node %s is down (action %d) "
+                     "after connection is stopped (action %d)",
+                     node->details->uname, stonith_op->id, stop->id);
+        } else {
+            /* Not sure why we're fencing, but everything must already be
+             * cleanly stopped.
+             */
+            crm_info("Implying guest node %s is down (action %d) ",
+                     node->details->uname, stonith_op->id);
+        }
+    }
 
     /* Order/imply other actions relative to pseudo-fence as with real fence */
     stonith_constraints(node, stonith_op, data_set);
