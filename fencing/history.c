@@ -384,17 +384,16 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
     int rc = 0;
     const char *target = NULL;
     xmlNode *dev = get_xpath_object("//@" F_STONITH_TARGET, msg, LOG_TRACE);
-    char *nodename = NULL;
     xmlNode *out_history = NULL;
 
     if (dev) {
         target = crm_element_value(dev, F_STONITH_TARGET);
         if (target && (options & st_opt_cs_nodeid)) {
             int nodeid = crm_atoi(target, NULL);
+            crm_node_t *node = crm_find_known_peer_full(nodeid, NULL, CRM_GET_PEER_ANY);
 
-            nodename = stonith_get_peer_name(nodeid);
-            if (nodename) {
-                target = nodename;
+            if (node) {
+                target = node->uname;
             }
         }
     }
@@ -463,7 +462,6 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
                   stonith_remote_op_list);
         *output = stonith_local_history_diff(NULL, FALSE, target);
     }
-    free(nodename);
     free_xml(out_history);
     return rc;
 }
