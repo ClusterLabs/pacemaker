@@ -18,6 +18,41 @@
 #include <crm/pengine/internal.h>
 #include <unpack.h>
 
+/*!
+ * \brief Create a new working set
+ *
+ * \return New, initialized working set on success, else NULL (and set errno)
+ * \note Only pe_working_set_t objects created with this function (as opposed
+ *       to statically declared or directly allocated) should be used with the
+ *       functions in this library, to allow for future extensions to the
+ *       data type. The caller is responsible for freeing the memory with
+ *       pe_free_working_set() when the instance is no longer needed.
+ */
+pe_working_set_t *
+pe_new_working_set()
+{
+    pe_working_set_t *data_set = calloc(1, sizeof(pe_working_set_t));
+
+    if (data_set != NULL) {
+        set_working_set_defaults(data_set);
+    }
+    return data_set;
+}
+
+/*!
+ * \brief Free a working set
+ *
+ * \param[in] data_set  Working set to free
+ */
+void
+pe_free_working_set(pe_working_set_t *data_set)
+{
+    if (data_set != NULL) {
+        pe_reset_working_set(data_set);
+        free(data_set);
+    }
+}
+
 /*
  * Unpack everything
  * At the end you'll have:

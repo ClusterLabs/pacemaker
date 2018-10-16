@@ -433,6 +433,8 @@ typedef struct pe_action_wrapper_s {
 
 const char *rsc_printable_id(pe_resource_t *rsc);
 gboolean cluster_status(pe_working_set_t * data_set);
+pe_working_set_t *pe_new_working_set(void);
+void pe_free_working_set(pe_working_set_t *data_set);
 void set_working_set_defaults(pe_working_set_t * data_set);
 void cleanup_calculations(pe_working_set_t * data_set);
 void pe_reset_working_set(pe_working_set_t *data_set);
