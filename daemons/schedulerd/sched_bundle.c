@@ -856,8 +856,15 @@ container_expand(resource_t * rsc, pe_working_set_t * data_set)
                           tuple->remote->id, calculated_addr);
                 g_hash_table_replace(tuple->remote->parameters, strdup("addr"), strdup(calculated_addr));
             } else {
-                crm_err("Could not determine address for bundle connection %s",
-                        tuple->remote->id);
+                /* The only way to get here is if the remote connection is
+                 * neither currently running nor scheduled to run. That means we
+                 * won't be doing any operations that require addr (only start
+                 * requires it; we additionally use it to compare digests when
+                 * unpacking status, promote, and migrate_from history, but
+                 * that's already happened by this point).
+                 */
+                crm_info("Unable to determine address for bundle %s remote connection",
+                         rsc->id);
             }
         }
         if(tuple->ip) {
