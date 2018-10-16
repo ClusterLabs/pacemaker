@@ -12,6 +12,12 @@
 extern "C" {
 #endif
 
+/*!
+ * \file
+ * \brief Cluster status and scheduling
+ * \ingroup pengine
+ */
+
 #  include <glib.h>
 #  include <stdbool.h>
 #  include <crm/common/iso8601.h>
