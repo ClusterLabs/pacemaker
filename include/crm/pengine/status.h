@@ -18,6 +18,12 @@
 #ifndef PENGINE_STATUS__H
 #  define PENGINE_STATUS__H
 
+/*!
+ * \file
+ * \brief Cluster status and scheduling
+ * \ingroup pengine
+ */
+
 #  include <glib.h>
 #  include <stdbool.h>
 #  include <crm/common/iso8601.h>
