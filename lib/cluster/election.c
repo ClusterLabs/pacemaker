@@ -438,20 +438,13 @@ parse_election_message(election_t *e, xmlNode *message, struct vote *vote)
 
     if (crm_str_eq(vote->op, CRM_OP_VOTE, TRUE)) {
         // Only vote ops have uptime
-        int age_s = -1;
-        int age_us = -1;
-
-        // @TODO add functions to parse time_t / suseconds_t directly from XML
-        crm_element_value_int(message, F_CRM_ELECTION_AGE_S, &age_s);
-        crm_element_value_int(message, F_CRM_ELECTION_AGE_US, &age_us);
-
-        if ((age_s < 0) || (age_us < 0)) {
+        crm_element_value_timeval(message, F_CRM_ELECTION_AGE_S,
+                                  F_CRM_ELECTION_AGE_US, &(vote->age));
+        if ((vote->age.tv_sec < 0) || (vote->age.tv_usec < 0)) {
             crm_warn("Cannot count %s %s from %s because it is missing uptime",
                      (e? e->name : "election"), vote->op, vote->from);
             return FALSE;
         }
-        vote->age.tv_sec = age_s;
-        vote->age.tv_usec = age_us;
 
     } else if (!crm_str_eq(vote->op, CRM_OP_NOVOTE, TRUE)) {
         crm_info("Cannot process %s message from %s because %s is not a known election op",
