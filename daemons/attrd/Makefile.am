@@ -24,7 +24,7 @@ pacemaker_attrd_LDADD	= $(top_builddir)/lib/cluster/libcrmcluster.la	\
 			  $(CLUSTERLIBS)
 
 pacemaker_attrd_SOURCES	= pacemaker-attrd.c attrd_commands.c 	\
-			  attrd_utils.c attrd_alerts.c
+			  attrd_utils.c attrd_alerts.c attrd_elections.c
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~
