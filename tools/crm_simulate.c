@@ -892,20 +892,19 @@ main(int argc, char **argv)
     }
 
     if (simulate) {
-        rc = run_simulation(&data_set, global_cib, op_fail, quiet);
+        rc = run_simulation(data_set, global_cib, op_fail, quiet);
         if(quiet == FALSE) {
-            get_date(&data_set);
+            get_date(data_set);
 
             quiet_log("\nRevised cluster status:\n");
-            set_bit(data_set.flags, pe_flag_stdout);
-            cluster_status(&data_set);
-            print_cluster_status(&data_set, 0);
+            set_bit(data_set->flags, pe_flag_stdout);
+            cluster_status(data_set);
+            print_cluster_status(data_set, 0);
         }
     }
 
   done:
-    pe_reset_working_set(&data_set);
-
+    pe_free_working_set(data_set);
     global_cib->cmds->signoff(global_cib);
     cib_delete(global_cib);
     free(use_date);
