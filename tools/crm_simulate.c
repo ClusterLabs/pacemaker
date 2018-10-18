@@ -505,10 +505,9 @@ static struct crm_option long_options[] = {
 /* *INDENT-ON* */
 
 static void
-profile_one(const char *xml_file)
+profile_one(const char *xml_file, pe_working_set_t *data_set)
 {
     xmlNode *cib_object = NULL;
-    pe_working_set_t data_set;
 
     printf("* Testing %s\n", xml_file);
     cib_object = filename2xml(xml_file);
@@ -526,12 +525,10 @@ profile_one(const char *xml_file)
         return;
     }
 
-    set_working_set_defaults(&data_set);
-
-    data_set.input = cib_object;
-    get_date(&data_set);
-    do_calculations(&data_set, cib_object, NULL);
-    pe_reset_working_set(&data_set);
+    data_set->input = cib_object;
+    get_date(data_set);
+    do_calculations(data_set, cib_object, NULL);
+    pe_reset_working_set(data_set);
 }
 
 #ifndef FILENAME_MAX
@@ -539,7 +536,7 @@ profile_one(const char *xml_file)
 #endif
 
 static int
-profile_all(const char *dir)
+profile_all(const char *dir, pe_working_set_t *data_set)
 {
     struct dirent **namelist;
 
@@ -563,7 +560,7 @@ profile_all(const char *dir)
             lpc++;
             snprintf(buffer, sizeof(buffer), "%s/%s", dir, namelist[file_num]->d_name);
             if (stat(buffer, &prop) == 0 && S_ISREG(prop.st_mode)) {
-                profile_one(buffer);
+                profile_one(buffer, data_set);
             }
             free(namelist[file_num]);
         }
@@ -605,7 +602,7 @@ main(int argc, char **argv)
     gboolean all_actions = FALSE;
     gboolean have_stdout = FALSE;
 
-    pe_working_set_t data_set;
+    pe_working_set_t *data_set = NULL;
 
     const char *xml_file = "-";
     const char *quorum = NULL;
@@ -778,8 +775,15 @@ main(int argc, char **argv)
         crm_help('?', EX_USAGE);
     }
 
+    data_set = pe_new_working_set();
+    if (data_set == NULL) {
+        crm_perror(LOG_ERR, "Could not allocate working set");
+        rc = -ENOMEM;
+        goto done;
+    }
+
     if (test_dir != NULL) {
-        return profile_all(test_dir);
+        return profile_all(test_dir, data_set);
     }
 
     setup_input(xml_file, store ? xml_file : output_file);
@@ -787,40 +791,40 @@ main(int argc, char **argv)
     global_cib = cib_new();
     global_cib->cmds->signon(global_cib, crm_system_name, cib_command);
 
-    set_working_set_defaults(&data_set);
-
     rc = global_cib->cmds->query(global_cib, NULL, &input, cib_sync_call | cib_scope_local);
     CRM_ASSERT(rc == pcmk_ok);
 
-    data_set.input = input;
-    get_date(&data_set);
+    data_set->input = input;
+    get_date(data_set);
     if(xml_file) {
-        set_bit(data_set.flags, pe_flag_sanitized);
+        set_bit(data_set->flags, pe_flag_sanitized);
     }
-    set_bit(data_set.flags, pe_flag_stdout);
-    cluster_status(&data_set);
+    set_bit(data_set->flags, pe_flag_stdout);
+    cluster_status(data_set);
 
     if (quiet == FALSE) {
         int options = print_pending ? pe_print_pending : 0;
 
-        if(is_set(data_set.flags, pe_flag_maintenance_mode)) {
+        if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
             quiet_log("\n              *** Resource management is DISABLED ***");
             quiet_log("\n  The cluster will not attempt to start, stop or recover services");
             quiet_log("\n");
         }
 
-        if(data_set.disabled_resources || data_set.blocked_resources) {
+        if (data_set->disabled_resources || data_set->blocked_resources) {
             quiet_log("%d of %d resources DISABLED and %d BLOCKED from being started due to failures\n",
-                      data_set.disabled_resources, count_resources(&data_set, NULL), data_set.blocked_resources);
+                      data_set->disabled_resources,
+                      count_resources(data_set, NULL),
+                      data_set->blocked_resources);
         }
 
         quiet_log("\nCurrent cluster status:\n");
-        print_cluster_status(&data_set, options);
+        print_cluster_status(data_set, options);
     }
 
     if (modified) {
         quiet_log("Performing requested modifications\n");
-        modify_configuration(&data_set, global_cib, quorum, watchdog, node_up, node_down, node_fail, op_inject,
+        modify_configuration(data_set, global_cib, quorum, watchdog, node_up, node_down, node_fail, op_inject,
                              ticket_grant, ticket_revoke, ticket_standby, ticket_activate);
 
         rc = global_cib->cmds->query(global_cib, NULL, &input, cib_sync_call);
@@ -829,15 +833,15 @@ main(int argc, char **argv)
             goto done;
         }
 
-        cleanup_calculations(&data_set);
-        data_set.input = input;
-        get_date(&data_set);
+        cleanup_calculations(data_set);
+        data_set->input = input;
+        get_date(data_set);
 
         if(xml_file) {
-            set_bit(data_set.flags, pe_flag_sanitized);
+            set_bit(data_set->flags, pe_flag_sanitized);
         }
-        set_bit(data_set.flags, pe_flag_stdout);
-        cluster_status(&data_set);
+        set_bit(data_set->flags, pe_flag_stdout);
+        cluster_status(data_set);
     }
 
     if (input_file != NULL) {
@@ -860,15 +864,15 @@ main(int argc, char **argv)
             printf("Utilization information:\n");
         }
 
-        do_calculations(&data_set, input, local_date);
+        do_calculations(data_set, input, local_date);
         input = NULL;           /* Don't try and free it twice */
 
         if (graph_file != NULL) {
-            write_xml_file(data_set.graph, graph_file, FALSE);
+            write_xml_file(data_set->graph, graph_file, FALSE);
         }
 
         if (dot_file != NULL) {
-            create_dotfile(&data_set, dot_file, all_actions);
+            create_dotfile(data_set, dot_file, all_actions);
         }
 
         if (quiet == FALSE) {
@@ -878,11 +882,11 @@ main(int argc, char **argv)
                       || modified ? "\n" : "");
             fflush(stdout);
 
-            LogNodeActions(&data_set, TRUE);
-            for (gIter = data_set.resources; gIter != NULL; gIter = gIter->next) {
+            LogNodeActions(data_set, TRUE);
+            for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
                 resource_t *rsc = (resource_t *) gIter->data;
 
-                LogActions(rsc, &data_set, TRUE);
+                LogActions(rsc, data_set, TRUE);
             }
         }
     }
