@@ -224,6 +224,8 @@ attrd_cib_init()
     mainloop_set_trigger(attrd_config_read);
 }
 
+static qb_ipcs_service_t *ipcs = NULL;
+
 static int32_t
 attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 {
@@ -289,6 +291,16 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     return 0;
 }
 
+void
+attrd_ipc_fini()
+{
+    if (ipcs != NULL) {
+        crm_client_disconnect_all(ipcs);
+        qb_ipcs_destroy(ipcs);
+        ipcs = NULL;
+    }
+}
+
 static int
 attrd_cluster_connect()
 {
@@ -323,7 +335,6 @@ main(int argc, char **argv)
     int flag = 0;
     int index = 0;
     int argerr = 0;
-    qb_ipcs_service_t *ipcs = NULL;
 
     attrd_init_mainloop();
     crm_log_preinit(NULL, argc, argv);
@@ -397,14 +408,10 @@ main(int argc, char **argv)
     crm_info("Shutting down attribute manager");
 
     attrd_election_fini();
-    if (ipcs) {
-        crm_client_disconnect_all(ipcs);
-        qb_ipcs_destroy(ipcs);
-        g_hash_table_destroy(attributes);
-    }
-
+    attrd_ipc_fini();
     attrd_lrmd_disconnect();
     attrd_cib_disconnect();
+    g_hash_table_destroy(attributes);
 
     return crm_exit(attrd_exit_status);
 }

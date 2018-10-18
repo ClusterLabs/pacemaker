@@ -22,6 +22,7 @@ gboolean attrd_shutting_down(void);
 void attrd_shutdown(int nsig);
 void attrd_init_ipc(qb_ipcs_service_t **ipcs,
                     qb_ipcs_msg_process_fn dispatch_fn);
+void attrd_ipc_fini(void);
 
 void attrd_cib_disconnect(void);
 
