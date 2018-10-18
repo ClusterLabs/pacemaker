@@ -1249,3 +1249,47 @@ mainloop_timer_del(mainloop_timer_t *t)
     }
 }
 
+/*
+ * Helpers to make sure certain events aren't lost at shutdown
+ */
+
+static gboolean
+drain_timeout_cb(gpointer user_data)
+{
+    bool *timeout_popped = (bool*) user_data;
+
+    *timeout_popped = TRUE;
+    return FALSE;
+}
+
+/*!
+ * \brief Process main loop events while a certain condition is met
+ *
+ * \param[in] mloop     Main loop to process
+ * \param[in] timer_ms  Don't process longer than this amount of time
+ * \param[in] check     Function that returns TRUE if events should be processed
+ *
+ * \note This function is intended to be called at shutdown if certain important
+ *       events should not be missed. The caller would likely quit the main loop
+ *       or exit after calling this function.
+ */
+void
+pcmk_drain_main_loop(GMainLoop *mloop, guint timer_ms, bool (*check)(void))
+{
+    bool timeout_popped = FALSE;
+    guint timer = 0;
+    GMainContext *ctx = NULL;
+
+    CRM_CHECK(mloop && check, return);
+
+    ctx = g_main_loop_get_context(mloop);
+    if (ctx) {
+        timer = g_timeout_add(timer_ms, drain_timeout_cb, &timeout_popped);
+        while (!timeout_popped && check()) {
+            g_main_context_iteration(ctx, TRUE);
+        }
+    }
+    if (!timeout_popped && (timer > 0)) {
+        g_source_remove(timer);
+    }
+}
