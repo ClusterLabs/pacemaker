@@ -3172,13 +3172,6 @@ rsc_stonith_ordering(resource_t * rsc, action_t * stonith_op, pe_working_set_t *
     }
 }
 
-enum stack_activity {
-    stack_stable = 0,
-    stack_starting = 1,
-    stack_stopping = 2,
-    stack_middle = 4,
-};
-
 void
 ReloadRsc(resource_t * rsc, node_t *node, pe_working_set_t * data_set)
 {

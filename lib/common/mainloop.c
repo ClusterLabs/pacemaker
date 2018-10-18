@@ -1137,8 +1137,6 @@ struct mainloop_timer_s {
         void *userdata;
 };
 
-struct mainloop_timer_s mainloop;
-
 static gboolean mainloop_timer_cb(gpointer user_data)
 {
     int id = 0;
