@@ -588,6 +588,14 @@ attrd_peer_message(crm_node_t *peer, xmlNode *xml)
         }
     }
 
+    if (attrd_shutting_down()) {
+        /* If we're shutting down, we want to continue responding to election
+         * ops as long as we're a cluster member (because our vote may be
+         * needed). Ignore all other messages.
+         */
+        return;
+    }
+
     peer_won = attrd_check_for_new_writer(peer, xml);
 
     if (safe_str_eq(op, ATTRD_OP_UPDATE) || safe_str_eq(op, ATTRD_OP_UPDATE_BOTH) || safe_str_eq(op, ATTRD_OP_UPDATE_DELAY)) {
