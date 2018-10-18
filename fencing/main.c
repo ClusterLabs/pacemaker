@@ -61,6 +61,7 @@ gboolean stonith_shutdown_flag = FALSE;
 
 qb_ipcs_service_t *ipcs = NULL;
 xmlNode *local_cib = NULL;
+static pe_working_set_t *fenced_data_set = NULL;
 
 static cib_t *cib_api = NULL;
 static void *cib_library = NULL;
@@ -721,27 +722,26 @@ static void
 cib_devices_update(void)
 {
     GListPtr gIter = NULL;
-    pe_working_set_t data_set;
 
     crm_info("Updating devices to version %s.%s.%s",
              crm_element_value(local_cib, XML_ATTR_GENERATION_ADMIN),
              crm_element_value(local_cib, XML_ATTR_GENERATION),
              crm_element_value(local_cib, XML_ATTR_NUMUPDATES));
 
-    set_working_set_defaults(&data_set);
-    data_set.input = local_cib;
-    data_set.now = crm_time_new(NULL);
-    data_set.flags |= pe_flag_quick_location;
-    data_set.localhost = stonith_our_uname;
+    CRM_ASSERT(fenced_data_set != NULL);
+    fenced_data_set->input = local_cib;
+    fenced_data_set->now = crm_time_new(NULL);
+    fenced_data_set->flags |= pe_flag_quick_location;
+    fenced_data_set->localhost = stonith_our_uname;
 
-    cluster_status(&data_set);
-    do_calculations(&data_set, NULL, NULL);
+    cluster_status(fenced_data_set);
+    do_calculations(fenced_data_set, NULL, NULL);
 
-    for (gIter = data_set.resources; gIter != NULL; gIter = gIter->next) {
-        cib_device_update(gIter->data, &data_set);
+    for (gIter = fenced_data_set->resources; gIter != NULL; gIter = gIter->next) {
+        cib_device_update(gIter->data, fenced_data_set);
     }
-    data_set.input = NULL; /* Wasn't a copy */
-    pe_reset_working_set(&data_set);
+    fenced_data_set->input = NULL; // Wasn't a copy, so don't let API free it
+    pe_reset_working_set(fenced_data_set);
 }
 
 static void
@@ -1463,6 +1463,9 @@ main(int argc, char **argv)
 
     crm_peer_init();
 
+    fenced_data_set = pe_new_working_set();
+    CRM_ASSERT(fenced_data_set != NULL);
+
     if (stand_alone == FALSE) {
 #if SUPPORT_HEARTBEAT
         cluster.hb_conn = NULL;
@@ -1558,5 +1561,6 @@ main(int argc, char **argv)
 #endif
 
 
+    pe_free_working_set(fenced_data_set);
     return crm_exit(rc);
 }
