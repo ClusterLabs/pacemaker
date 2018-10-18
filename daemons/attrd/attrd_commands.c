@@ -1277,7 +1277,8 @@ write_attribute(attribute_t *a, bool ignore_delay)
                  a->update, cib_updates, s_if_plural(cib_updates),
                  a->id, (a->uuid? a->uuid : "n/a"), (a->set? a->set : "n/a"));
 
-        the_cib->cmds->register_callback_full(the_cib, a->update, 120, FALSE,
+        the_cib->cmds->register_callback_full(the_cib, a->update,
+                                              CIB_OP_TIMEOUT_S, FALSE,
                                               strdup(a->id),
                                               "attrd_cib_callback",
                                               attrd_cib_callback, free);

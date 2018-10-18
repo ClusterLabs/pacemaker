@@ -111,6 +111,8 @@ GHashTable *attributes;
 #define attrd_send_ack(client, id, flags) \
     crm_ipcs_send_ack((client), (id), (flags), "ack", __FUNCTION__, __LINE__)
 
+#define CIB_OP_TIMEOUT_S 120
+
 void write_attributes(bool all, bool ignore_delay);
 void attrd_broadcast_protocol(void);
 void attrd_peer_message(crm_node_t *client, xmlNode *msg);
