@@ -700,7 +700,7 @@ static struct crm_option long_options[] = {
 int
 main(int argc, char **argv)
 {
-    pe_working_set_t data_set;
+    pe_working_set_t *data_set = NULL;
     xmlNode *cib_xml_copy = NULL;
     xmlNode *cib_constraints = NULL;
 
@@ -834,13 +834,18 @@ main(int argc, char **argv)
         crm_help('?', EX_USAGE);
     }
 
-    set_working_set_defaults(&data_set);
+    data_set = pe_new_working_set();
+    if (data_set == NULL) {
+        crm_perror(LOG_CRIT, "Could not allocate working set");
+        rc = -ENOMEM;
+        goto bail;
+    }
 
     cib_conn = cib_new();
     if (cib_conn == NULL) {
         rc = -ENOTCONN;
         CMD_ERR("Error initiating the connection to the CIB service: %s\n", pcmk_strerror(rc));
-        return rc;
+        goto bail;
     }
 
     rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
@@ -864,15 +869,15 @@ main(int argc, char **argv)
         goto bail;
     }
 
-    data_set.input = cib_xml_copy;
-    data_set.now = crm_time_new(NULL);
+    data_set->input = cib_xml_copy;
+    data_set->now = crm_time_new(NULL);
 
-    cluster_status(&data_set);
+    cluster_status(data_set);
 
     /* For recording the tickets that are referenced in rsc_ticket constraints
      * but have never been granted yet. */
-    cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set.input);
-    unpack_constraints(cib_constraints, &data_set);
+    cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set->input);
+    unpack_constraints(cib_constraints, data_set);
 
     if (ticket_cmd == 'l' || ticket_cmd == 'L' || ticket_cmd == 'w') {
         gboolean raw = FALSE;
@@ -885,7 +890,7 @@ main(int argc, char **argv)
         }
 
         if (ticket_id) {
-            ticket_t *ticket = find_ticket(ticket_id, &data_set);
+            ticket_t *ticket = find_ticket(ticket_id, data_set);
 
             if (ticket == NULL) {
                 rc = -ENXIO;
@@ -894,7 +899,7 @@ main(int argc, char **argv)
             rc = print_ticket(ticket, raw, details);
 
         } else {
-            rc = print_ticket_list(&data_set, raw, details);
+            rc = print_ticket_list(data_set, raw, details);
         }
 
     } else if (ticket_cmd == 'q') {
@@ -912,7 +917,7 @@ main(int argc, char **argv)
             goto bail;
         }
 
-        rc = get_ticket_state_attr(ticket_id, get_attr_name, &value, &data_set);
+        rc = get_ticket_state_attr(ticket_id, get_attr_name, &value, data_set);
         if (rc == pcmk_ok) {
             fprintf(stdout, "%s\n", value);
         } else if (rc == -ENXIO && attr_default) {
@@ -930,7 +935,7 @@ main(int argc, char **argv)
         if (do_force == FALSE) {
             ticket_t *ticket = NULL;
 
-            ticket = find_ticket(ticket_id, &data_set);
+            ticket = find_ticket(ticket_id, data_set);
             if (ticket == NULL) {
                 rc = -ENXIO;
                 goto bail;
@@ -971,7 +976,7 @@ main(int argc, char **argv)
             goto bail;
         }
 
-        rc = modify_ticket_state(ticket_id, attr_delete, attr_set, cib_conn, &data_set);
+        rc = modify_ticket_state(ticket_id, attr_delete, attr_set, cib_conn, data_set);
         
         if (rc != pcmk_ok) {
             goto bail;
@@ -1011,8 +1016,10 @@ main(int argc, char **argv)
     }
     attr_delete = NULL;
 
+    pe_free_working_set(data_set);
+    data_set = NULL;
+
     if (cib_conn != NULL) {
-        pe_reset_working_set(&data_set);
         cib_conn->cmds->signoff(cib_conn);
         cib_delete(cib_conn);
     }
