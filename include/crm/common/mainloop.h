@@ -1,20 +1,10 @@
 /*
- * Copyright (C) 2009 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2009-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+
 #ifndef CRM_COMMON_MAINLOOP__H
 #  define CRM_COMMON_MAINLOOP__H
 
@@ -124,6 +114,9 @@ const char *mainloop_child_name(mainloop_child_t * child);
 pid_t mainloop_child_pid(mainloop_child_t * child);
 void mainloop_clear_child_userdata(mainloop_child_t * child);
 gboolean mainloop_child_kill(pid_t pid);
+
+void pcmk_drain_main_loop(GMainLoop *mloop, guint timer_ms,
+                          bool (*check)(void));
 
 #  define G_PRIORITY_MEDIUM (G_PRIORITY_HIGH/2)
 
