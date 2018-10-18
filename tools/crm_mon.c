@@ -115,6 +115,7 @@ gboolean daemonize = FALSE;
 GMainLoop *mainloop = NULL;
 guint timer_id = 0;
 mainloop_timer_t *refresh_timer = NULL;
+static pe_working_set_t *mon_data_set = NULL;
 GList *attr_list = NULL;
 
 const char *crm_mail_host = NULL;
@@ -4729,7 +4730,6 @@ gboolean
 mon_refresh_display(gpointer user_data)
 {
     xmlNode *cib_copy = copy_xml(current_cib);
-    pe_working_set_t data_set;
     stonith_history_t *stonith_history = NULL;
 
     last_refresh = time(NULL);
@@ -4771,22 +4771,27 @@ mon_refresh_display(gpointer user_data)
         return FALSE;
     }
 
-    set_working_set_defaults(&data_set);
-    data_set.input = cib_copy;
-    cluster_status(&data_set);
+    if (mon_data_set == NULL) {
+        mon_data_set = pe_new_working_set();
+        CRM_ASSERT(mon_data_set != NULL);
+    }
+
+    mon_data_set->input = cib_copy;
+    cluster_status(mon_data_set);
 
     /* Unpack constraints if any section will need them
      * (tickets may be referenced in constraints but not granted yet,
      * and bans need negative location constraints) */
     if (show & (mon_show_bans | mon_show_tickets)) {
-        xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set.input);
-        unpack_constraints(cib_constraints, &data_set);
+        xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS,
+                                                   mon_data_set->input);
+        unpack_constraints(cib_constraints, mon_data_set);
     }
 
     switch (output_format) {
         case mon_output_html:
         case mon_output_cgi:
-            if (print_html_status(&data_set, output_filename, stonith_history) != 0) {
+            if (print_html_status(mon_data_set, output_filename, stonith_history) != 0) {
                 fprintf(stderr, "Critical: Unable to output html file\n");
                 clean_up(EX_USAGE);
                 return FALSE;
@@ -4794,11 +4799,11 @@ mon_refresh_display(gpointer user_data)
             break;
 
         case mon_output_xml:
-            print_xml_status(&data_set, stonith_history);
+            print_xml_status(mon_data_set, stonith_history);
             break;
 
         case mon_output_monitor:
-            print_simple_status(&data_set, stonith_history);
+            print_simple_status(mon_data_set, stonith_history);
             if (has_warnings) {
                 clean_up(MON_STATUS_WARN);
                 return FALSE;
@@ -4807,7 +4812,7 @@ mon_refresh_display(gpointer user_data)
 
         case mon_output_plain:
         case mon_output_console:
-            print_status(&data_set, stonith_history);
+            print_status(mon_data_set, stonith_history);
             break;
 
         case mon_output_none:
@@ -4816,7 +4821,7 @@ mon_refresh_display(gpointer user_data)
 
     stonith_history_free(stonith_history);
     stonith_history = NULL;
-    pe_reset_working_set(&data_set);
+    pe_reset_working_set(mon_data_set);
     return TRUE;
 }
 
@@ -4944,6 +4949,9 @@ clean_up(int exit_code)
 
     free(output_filename);
     free(pid_file);
+
+    pe_free_working_set(mon_data_set);
+    mon_data_set = NULL;
 
     if (exit_code == EX_USAGE) {
         if (output_format == mon_output_cgi) {
