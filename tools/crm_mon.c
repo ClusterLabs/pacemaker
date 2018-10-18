@@ -934,7 +934,7 @@ main(int argc, char **argv)
     refresh_trigger = mainloop_add_trigger(G_PRIORITY_LOW, mon_refresh_display, NULL);
 
     g_main_loop_run(mainloop);
-    g_main_destroy(mainloop);
+    g_main_loop_unref(mainloop);
 
     crm_info("Exiting %s", crm_system_name);
 

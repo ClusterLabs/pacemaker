@@ -1526,7 +1526,7 @@ terminate_cib(const char *caller, int fast)
         cib_ipc_servers_destroy(ipcs_ro, ipcs_rw, ipcs_shm);
         crm_exit(fast);
 
-    } else if ((mainloop != NULL) && g_main_is_running(mainloop)) {
+    } else if ((mainloop != NULL) && g_main_loop_is_running(mainloop)) {
         /* Quit via returning from the main loop. If fast == -1, we skip the
          * disconnect here, and it will be done when the main loop returns
          * (this allows the peer status callback to avoid messing with the

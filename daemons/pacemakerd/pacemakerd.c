@@ -1130,7 +1130,7 @@ main(int argc, char **argv)
         ipcs = NULL;
     }
 
-    g_main_destroy(mainloop);
+    g_main_loop_unref(mainloop);
 
     cluster_disconnect_cpg(&cluster);
     cluster_disconnect_cfg();
