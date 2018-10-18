@@ -81,8 +81,12 @@ attrd_cpg_destroy(gpointer unused)
 static void
 attrd_cib_replaced_cb(const char *event, xmlNode * msg)
 {
-    crm_notice("Updating all attributes after %s event", event);
+    if (attrd_shutting_down()) {
+        return;
+    }
+
     if (attrd_election_won()) {
+        crm_notice("Updating all attributes after %s event", event);
         write_attributes(TRUE, FALSE);
     }
 }

@@ -127,7 +127,7 @@ attrd_read_options(gpointer user_data)
 void
 attrd_cib_updated_cb(const char *event, xmlNode * msg)
 {
-    if (crm_patchset_contains_alert(msg, FALSE)) {
+    if (!attrd_shutting_down() && crm_patchset_contains_alert(msg, FALSE)) {
         mainloop_set_trigger(attrd_config_read);
     }
 }

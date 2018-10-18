@@ -32,7 +32,9 @@ void
 attrd_start_election_if_needed()
 {
     if ((peer_writer == NULL)
-        && (election_state(writer) != election_in_progress)) {
+        && (election_state(writer) != election_in_progress)
+        && !attrd_shutting_down()) {
+
         crm_info("Starting an election to determine the writer");
         election_vote(writer);
     }
@@ -51,7 +53,10 @@ attrd_handle_election_op(const crm_node_t *peer, xmlNode *xml)
     enum election_result previous = election_state(writer);
 
     crm_xml_add(xml, F_CRM_HOST_FROM, peer->uname);
-    rc = election_count_vote(writer, xml, TRUE);
+
+    // Don't become writer if we're shutting down
+    rc = election_count_vote(writer, xml, !attrd_shutting_down());
+
     switch(rc) {
         case election_start:
             free(peer_writer);
