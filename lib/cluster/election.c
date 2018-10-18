@@ -250,11 +250,11 @@ crm_compare_age(struct timeval your_age)
         crm_debug("Lose: %ld vs %ld (seconds)", (long)our_age.tv_sec, (long)your_age.tv_sec);
         return -1;
     } else if (our_age.tv_usec > your_age.tv_usec) {
-        crm_debug("Win: %ld.%ld vs %ld.%ld (usec)",
+        crm_debug("Win: %ld.%06ld vs %ld.%06ld (usec)",
                   (long)our_age.tv_sec, (long)our_age.tv_usec, (long)your_age.tv_sec, (long)your_age.tv_usec);
         return 1;
     } else if (our_age.tv_usec < your_age.tv_usec) {
-        crm_debug("Lose: %ld.%ld vs %ld.%ld (usec)",
+        crm_debug("Lose: %ld.%06ld vs %ld.%06ld (usec)",
                   (long)our_age.tv_sec, (long)our_age.tv_usec, (long)your_age.tv_sec, (long)your_age.tv_usec);
         return -1;
     }
