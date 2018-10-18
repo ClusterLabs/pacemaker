@@ -21,6 +21,7 @@
 #include <crm/common/ipcs.h>
 #include <crm/common/mainloop.h>
 #include <crm/pengine/internal.h>
+#include <sched_allocate.h>
 #include <crm/msg_xml.h>
 
 #define OPTARGS	"hVc"
@@ -171,6 +172,7 @@ main(int argc, char **argv)
     mainloop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(mainloop);
 
+    libpengine_fini();
     crm_info("Exiting %s", crm_system_name);
     return crm_exit(CRM_EX_OK);
 }
@@ -179,5 +181,6 @@ void
 pengine_shutdown(int nsig)
 {
     mainloop_del_ipc_server(ipcs);
+    libpengine_fini();
     crm_exit(CRM_EX_OK);
 }
