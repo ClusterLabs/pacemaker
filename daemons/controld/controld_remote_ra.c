@@ -525,12 +525,13 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
     }
     ra_data = lrm_state->remote_ra_data;
 
-    /* Another client has connected to the remote daemon,
-     * determine if this is expected. */
     if (op->type == lrmd_event_new_client) {
-        /* great, we new this was coming */
+        // Another client has connected to the remote daemon
+
         if (ra_data->migrate_status == expect_takeover) {
+            // Great, we knew this was coming
             ra_data->migrate_status = takeover_complete;
+
         } else {
             crm_err("Unexpected pacemaker_remote client takeover for %s. Disconnecting", op->remote_nodename);
             /* In this case, lrmd_tls_connection_destroy() will be called under the control of mainloop. */

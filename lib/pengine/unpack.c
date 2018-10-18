@@ -2251,7 +2251,8 @@ handle_orphaned_container_fillers(xmlNode * lrm_rsc_list, pe_working_set_t * dat
             continue;
         }
 
-        pe_rsc_trace(rsc, "Mapped orphaned rsc %s's container to  %s", rsc->id, container_id);
+        pe_rsc_trace(rsc, "Mapped container of orphaned resource %s to %s",
+                     rsc->id, container_id);
         rsc->container = container;
         container->fillers = g_list_append(container->fillers, rsc);
     }

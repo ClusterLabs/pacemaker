@@ -118,7 +118,7 @@ crm_timer_popped(gpointer data)
                  crmd_join_phase_count(crm_join_welcomed),
                  crmd_join_phase_count(crm_join_integrated));
         if (crmd_join_phase_count(crm_join_welcomed) == 0) {
-            /* If we don't even have ourself, start again */
+            // If we don't even have ourselves, start again
             register_fsa_error_adv(C_FSA_INTERNAL, I_ELECTION, NULL, NULL, __FUNCTION__);
 
         } else {

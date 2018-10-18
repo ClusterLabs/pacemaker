@@ -2812,7 +2812,7 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
                 /* For safety, we order the 'rsc' start after 'remote'
                  * has been probed.
                  *
-                 * Using 'top' helps for groups, but in we may need to
+                 * Using 'top' helps for groups, but we may need to
                  * follow the start's ordering chain backwards.
                  */
                 custom_action_order(remote, generate_op_key(remote->id, RSC_STATUS, 0), NULL,

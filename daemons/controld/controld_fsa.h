@@ -87,7 +87,7 @@ enum crmd_fsa_state {
       up-to-date picture of the cluster.  There may of course be times
       when this fails, so we should go back to the S_RECOVERY stage and
       check everything is ok.  We may also end up here if a new node came
-      online, since each node is authorative on itself and we would want
+      online, since each node is authoritative about itself, and we would want
       to incorporate its information into the CIB.
 
       Once we have the latest CIB, we then enter the S_POLICY_ENGINE state

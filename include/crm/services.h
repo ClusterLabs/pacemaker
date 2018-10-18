@@ -1,19 +1,8 @@
 /*
- * Copyright (C) 2010 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2010-2018 Andrew Beekhof <andrew@beekhof.net>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
 #ifndef __PCMK_SERVICES__
@@ -57,10 +46,10 @@ extern "C" {
 #define PCMK_RESOURCE_CLASS_NAGIOS  "nagios"
 #define PCMK_RESOURCE_CLASS_STONITH "stonith"
 
-/* This is the string passed in the OCF_EXIT_REASON_PREFIX
- * environment variable. The stderr output that occurs
- * after this prefix is encountered is considered the exit
- * reason for a completed operationt */
+/* This is the string passed in the OCF_EXIT_REASON_PREFIX environment variable.
+ * The stderr output that occurs after this prefix is encountered is considered
+ * the exit reason for a completed operation.
+ */
 #define PCMK_OCF_REASON_PREFIX "ocf-exit-reason:"
 
 // Agent version to use if agent doesn't specify one

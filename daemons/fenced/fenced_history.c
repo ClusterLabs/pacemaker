@@ -342,7 +342,7 @@ stonith_merge_in_history_list(GHashTable *history)
             g_hash_table_lookup(stonith_remote_op_list, op->id);
 
         if (stored_op) {
-            continue; /* skip over existant - state-merging migh be desirable */
+            continue; // Skip existent (@TODO state-merging might be desirable)
         }
 
         updated = TRUE;
