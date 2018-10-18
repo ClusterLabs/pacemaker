@@ -80,7 +80,8 @@ int cli_resource_delete(crm_ipc_t *crmd_channel, const char *host_uname,
 int cli_cleanup_all(crm_ipc_t *crmd_channel, const char *node_name,
                     const char *operation, const char *interval,
                     pe_working_set_t *data_set);
-int cli_resource_restart(resource_t * rsc, const char *host, int timeout_ms, cib_t * cib);
+int cli_resource_restart(pe_resource_t *rsc, const char *host, int timeout_ms,
+                         cib_t *cib);
 int cli_resource_move(resource_t *rsc, const char *rsc_id,
                       const char *host_name, cib_t *cib,
                       pe_working_set_t *data_set);
