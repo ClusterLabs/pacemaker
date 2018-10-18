@@ -30,6 +30,7 @@
 #include <crm/common/ipcs.h>
 #include <crm/common/mainloop.h>
 #include <crm/pengine/internal.h>
+#include <allocate.h>
 #include <crm/msg_xml.h>
 
 #if HAVE_LIBXML2
@@ -184,6 +185,7 @@ main(int argc, char **argv)
     mainloop = g_main_new(FALSE);
     g_main_run(mainloop);
 
+    libpengine_fini();
     crm_info("Exiting %s", crm_system_name);
     return crm_exit(pcmk_ok);
 }
@@ -192,5 +194,6 @@ void
 pengine_shutdown(int nsig)
 {
     mainloop_del_ipc_server(ipcs);
+    libpengine_fini();
     crm_exit(pcmk_ok);
 }

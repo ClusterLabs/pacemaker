@@ -178,4 +178,5 @@ void master_promotion_constraints(resource_t * rsc, pe_working_set_t * data_set)
 void clone_create_pseudo_actions(
     resource_t * rsc, GListPtr children, notify_data_t **start_notify, notify_data_t **stop_notify,  pe_working_set_t * data_set);
 
+void libpengine_fini(void);
 #endif
