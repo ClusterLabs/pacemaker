@@ -1172,6 +1172,7 @@ write_attribute(attribute_t *a, bool ignore_delay)
         CRM_CHECK(the_cib != NULL, return);
         if (a->update && (a->update < last_cib_op_done)) {
             crm_info("Write out of '%s' continuing: update %d considered lost", a->id, a->update);
+            a->update = 0; // Don't log this message again
 
         } else if (a->update) {
             crm_info("Write out of '%s' delayed: update %d in progress", a->id, a->update);
