@@ -2066,7 +2066,7 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
 }
 
 void
-native_rsc_location(resource_t * rsc, rsc_to_node_t * constraint)
+native_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
 {
     GListPtr gIter = NULL;
     GHashTableIter iter;
