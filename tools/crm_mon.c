@@ -2162,7 +2162,8 @@ get_node_display_name(node_t *node)
  * \param[in] node       Node affected by constraint
  * \param[in] location   Constraint to print
  */
-static void print_ban(FILE *stream, node_t *node, rsc_to_node_t *location)
+static void
+print_ban(FILE *stream, pe_node_t *node, pe__location_t *location)
 {
     char *node_name = NULL;
 
@@ -2231,7 +2232,7 @@ static void print_neg_locations(FILE *stream, pe_working_set_t *data_set)
 
     /* Print each ban */
     for (gIter = data_set->placement_constraints; gIter != NULL; gIter = gIter->next) {
-        rsc_to_node_t *location = (rsc_to_node_t *) gIter->data;
+        pe__location_t *location = gIter->data;
         if (!g_str_has_prefix(location->id, print_neg_location_prefix))
             continue;
         for (gIter2 = location->node_list_rh; gIter2 != NULL; gIter2 = gIter2->next) {

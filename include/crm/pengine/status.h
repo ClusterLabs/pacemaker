@@ -298,9 +298,10 @@ struct resource_s {
 
     unsigned long long flags;
 
+    // These fields should be treated as internal to Pacemaker
     GListPtr rsc_cons_lhs;      /* rsc_colocation_t* */
     GListPtr rsc_cons;          /* rsc_colocation_t* */
-    GListPtr rsc_location;      /* rsc_to_node_t*    */
+    GListPtr rsc_location;      // List of pe__location_t*
     GListPtr actions;           /* action_t*         */
     GListPtr rsc_tickets;       /* rsc_ticket*       */
 

@@ -423,7 +423,7 @@ group_update_actions(action_t * first, action_t * then, node_t * node, enum pe_a
 }
 
 void
-group_rsc_location(resource_t * rsc, rsc_to_node_t * constraint)
+group_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
 {
     GListPtr gIter = rsc->children;
     GListPtr saved = constraint->node_list_rh;

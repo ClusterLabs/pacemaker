@@ -796,7 +796,7 @@ container_update_actions(action_t * first, action_t * then, node_t * node, enum 
 }
 
 void
-container_rsc_location(resource_t * rsc, rsc_to_node_t * constraint)
+container_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
 {
     container_variant_data_t *container_data = NULL;
     get_container_variant_data(container_data, rsc);

@@ -1174,7 +1174,7 @@ clone_action_flags(action_t * action, node_t * node)
 }
 
 void
-clone_rsc_location(resource_t * rsc, rsc_to_node_t * constraint)
+clone_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
 {
     GListPtr gIter = rsc->children;
 

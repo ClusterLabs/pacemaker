@@ -214,7 +214,7 @@ cli_resource_print_location(resource_t * rsc, const char *prefix)
     }
 
     for (lpc = list; lpc != NULL; lpc = lpc->next) {
-        rsc_to_node_t *cons = (rsc_to_node_t *) lpc->data;
+        pe__location_t *cons = lpc->data;
 
         GListPtr lpc2 = NULL;
 

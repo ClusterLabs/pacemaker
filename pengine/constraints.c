@@ -41,9 +41,11 @@ enum pe_order_kind {
 enum pe_ordering get_flags(const char *id, enum pe_order_kind kind,
                            const char *action_first, const char *action_then, gboolean invert);
 enum pe_ordering get_asymmetrical_flags(enum pe_order_kind kind);
-static rsc_to_node_t *generate_location_rule(resource_t * rsc, xmlNode * rule_xml,
-                                             const char *discovery, pe_working_set_t * data_set,
-                                             pe_match_data_t * match_data);
+static pe__location_t *generate_location_rule(pe_resource_t *rsc,
+                                              xmlNode *rule_xml,
+                                              const char *discovery,
+                                              pe_working_set_t *data_set,
+                                              pe_match_data_t *match_data);
 
 gboolean
 unpack_constraints(xmlNode * xml_constraints, pe_working_set_t * data_set)
@@ -722,7 +724,7 @@ unpack_rsc_location(xmlNode * xml_obj, resource_t * rsc_lh, const char * role,
                     const char * score, pe_working_set_t * data_set, pe_match_data_t * match_data)
 {
     gboolean empty = TRUE;
-    rsc_to_node_t *location = NULL;
+    pe__location_t *location = NULL;
     const char *id_lh = crm_element_value(xml_obj, XML_LOC_ATTR_SOURCE);
     const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
     const char *node = crm_element_value(xml_obj, XML_CIB_TAG_NODE);
@@ -975,9 +977,10 @@ get_node_score(const char *rule, const char *score, gboolean raw, node_t * node,
     return score_f;
 }
 
-static rsc_to_node_t *
-generate_location_rule(resource_t * rsc, xmlNode * rule_xml, const char *discovery, pe_working_set_t * data_set,
-                       pe_match_data_t * match_data)
+static pe__location_t *
+generate_location_rule(pe_resource_t *rsc, xmlNode *rule_xml,
+                       const char *discovery, pe_working_set_t *data_set,
+                       pe_match_data_t *match_data)
 {
     const char *rule_id = NULL;
     const char *score = NULL;
@@ -992,7 +995,7 @@ generate_location_rule(resource_t * rsc, xmlNode * rule_xml, const char *discove
     gboolean raw_score = TRUE;
     gboolean score_allocated = FALSE;
 
-    rsc_to_node_t *location_rule = NULL;
+    pe__location_t *location_rule = NULL;
 
     rule_xml = expand_idref(rule_xml, data_set->input);
     rule_id = crm_element_value(rule_xml, XML_ATTR_ID);
@@ -1325,7 +1328,7 @@ task_from_action_or_key(action_t *action, const char *key)
  * migration actions to ensure start/stop ordering is preserved during
  * a migration */
 static void
-handle_migration_ordering(order_constraint_t *order, pe_working_set_t *data_set)
+handle_migration_ordering(pe__ordering_t *order, pe_working_set_t *data_set)
 {
     char *lh_task = NULL;
     char *rh_task = NULL;
@@ -1450,7 +1453,7 @@ custom_action_order(resource_t * lh_rsc, char *lh_action_task, action_t * lh_act
                     resource_t * rh_rsc, char *rh_action_task, action_t * rh_action,
                     enum pe_ordering type, pe_working_set_t * data_set)
 {
-    order_constraint_t *order = NULL;
+    pe__ordering_t *order = NULL;
 
     if (lh_rsc == NULL && lh_action) {
         lh_rsc = lh_action->rsc;
@@ -1467,7 +1470,7 @@ custom_action_order(resource_t * lh_rsc, char *lh_action_task, action_t * lh_act
         return -1;
     }
 
-    order = calloc(1, sizeof(order_constraint_t));
+    order = calloc(1, sizeof(pe__ordering_t));
 
     crm_trace("Creating[%d] %s %s %s - %s %s %s", data_set->order_id,
               lh_rsc?lh_rsc->id:"NA", lh_action_task, lh_action?lh_action->uuid:"NA",
@@ -2884,7 +2887,7 @@ unpack_rsc_ticket(xmlNode * xml_obj, pe_working_set_t * data_set)
 }
 
 gboolean
-is_active(rsc_to_node_t * cons)
+is_active(pe__location_t *cons)
 {
     return TRUE;
 }

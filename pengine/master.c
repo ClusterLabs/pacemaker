@@ -142,7 +142,7 @@ static void apply_master_location(resource_t *child, GListPtr location_constrain
     CRM_CHECK(child && chosen, return);
     for (GListPtr gIter = location_constraints; gIter; gIter = gIter->next) {
         pe_node_t *cons_node = NULL;
-        rsc_to_node_t *cons = (rsc_to_node_t *) gIter->data;
+        pe__location_t *cons = gIter->data;
 
         if (cons->role_filter == RSC_ROLE_MASTER) {
             pe_rsc_trace(child, "Applying %s to %s", cons->id, child->id);

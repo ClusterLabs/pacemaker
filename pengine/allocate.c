@@ -656,7 +656,7 @@ apply_placement_constraints(pe_working_set_t * data_set)
     crm_trace("Applying constraints...");
 
     for (gIter = data_set->placement_constraints; gIter != NULL; gIter = gIter->next) {
-        rsc_to_node_t *cons = (rsc_to_node_t *) gIter->data;
+        pe__location_t *cons = gIter->data;
 
         cons->rsc_lh->cmds->rsc_location(cons->rsc_lh, cons);
     }
@@ -1747,7 +1747,8 @@ find_actions_by_task(GListPtr actions, resource_t * rsc, const char *original_ke
 }
 
 static void
-rsc_order_then(action_t * lh_action, resource_t * rsc, order_constraint_t * order)
+rsc_order_then(pe_action_t *lh_action, pe_resource_t *rsc,
+               pe__ordering_t *order)
 {
     GListPtr gIter = NULL;
     GListPtr rh_actions = NULL;
@@ -1802,7 +1803,8 @@ rsc_order_then(action_t * lh_action, resource_t * rsc, order_constraint_t * orde
 }
 
 static void
-rsc_order_first(resource_t * lh_rsc, order_constraint_t * order, pe_working_set_t * data_set)
+rsc_order_first(pe_resource_t *lh_rsc, pe__ordering_t *order,
+                pe_working_set_t *data_set)
 {
     GListPtr gIter = NULL;
     GListPtr lh_actions = NULL;
@@ -2400,7 +2402,7 @@ stage7(pe_working_set_t * data_set)
     data_set->ordering_constraints = g_list_reverse(data_set->ordering_constraints);
 
     for (gIter = data_set->ordering_constraints; gIter != NULL; gIter = gIter->next) {
-        order_constraint_t *order = (order_constraint_t *) gIter->data;
+        pe__ordering_t *order = gIter->data;
         resource_t *rsc = order->lh_rsc;
 
         crm_trace("Applying ordering constraint: %d", order->id);
