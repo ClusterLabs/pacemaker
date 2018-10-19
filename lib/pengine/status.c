@@ -157,6 +157,52 @@ pe_free_nodes(GListPtr nodes)
     }
 }
 
+static void
+pe__free_ordering(GListPtr constraints)
+{
+    GListPtr iterator = constraints;
+
+    while (iterator != NULL) {
+        pe__ordering_t *order = iterator->data;
+
+        iterator = iterator->next;
+
+        free(order->lh_action_task);
+        free(order->rh_action_task);
+        free(order);
+    }
+    if (constraints != NULL) {
+        g_list_free(constraints);
+    }
+}
+
+static void
+pe__free_location(GListPtr constraints)
+{
+    GListPtr iterator = constraints;
+
+    while (iterator != NULL) {
+        pe__location_t *cons = iterator->data;
+
+        iterator = iterator->next;
+
+        g_list_free_full(cons->node_list_rh, free);
+        free(cons->id);
+        free(cons);
+    }
+    if (constraints != NULL) {
+        g_list_free(constraints);
+    }
+}
+
+/*!
+ * \brief Reset working set to default state without freeing it or constraints
+ *
+ * \param[in,out] data_set  Working set to reset
+ *
+ * \deprecated This function is deprecated as part of the API;
+ *             pe_reset_working_set() should be used instead.
+ */
 void
 cleanup_calculations(pe_working_set_t * data_set)
 {
@@ -208,6 +254,41 @@ cleanup_calculations(pe_working_set_t * data_set)
         );
     CRM_CHECK(data_set->placement_constraints == NULL,;
         );
+}
+
+/*!
+ * \brief Reset a working set to default state without freeing it
+ *
+ * \param[in,out] data_set  Working set to reset
+ */
+void
+pe_reset_working_set(pe_working_set_t *data_set)
+{
+    if (data_set == NULL) {
+        return;
+    }
+
+    crm_trace("Deleting %d ordering constraints",
+              g_list_length(data_set->ordering_constraints));
+    pe__free_ordering(data_set->ordering_constraints);
+    data_set->ordering_constraints = NULL;
+
+    crm_trace("Deleting %d location constraints",
+              g_list_length(data_set->placement_constraints));
+    pe__free_location(data_set->placement_constraints);
+    data_set->placement_constraints = NULL;
+
+    crm_trace("Deleting %d colocation constraints",
+              g_list_length(data_set->colocation_constraints));
+    g_list_free_full(data_set->colocation_constraints, free);
+    data_set->colocation_constraints = NULL;
+
+    crm_trace("Deleting %d ticket constraints",
+              g_list_length(data_set->ticket_constraints));
+    g_list_free_full(data_set->ticket_constraints, free);
+    data_set->ticket_constraints = NULL;
+
+    cleanup_calculations(data_set);
 }
 
 void

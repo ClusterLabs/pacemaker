@@ -51,7 +51,6 @@ static struct crm_option long_options[] = {
 static cib_t *cib_conn = NULL;
 static int exec_call_id = 0;
 static int exec_call_opts = 0;
-extern void cleanup_alloc_calculations(pe_working_set_t * data_set);
 static gboolean start_test(gpointer user_data);
 static void try_connect(void);
 
@@ -437,8 +436,7 @@ generate_params(void)
     }
 
   param_gen_bail:
-
-    cleanup_alloc_calculations(&data_set);
+    pe_reset_working_set(&data_set);
     return rc;
 }
 

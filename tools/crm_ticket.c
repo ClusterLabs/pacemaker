@@ -43,8 +43,6 @@ char ticket_cmd = 'S';
 char *xml_file = NULL;
 int cib_options = cib_sync_call;
 
-extern void cleanup_alloc_calculations(pe_working_set_t * data_set);
-
 #define CMD_ERR(fmt, args...) do {		\
 	crm_warn(fmt, ##args);			\
 	fprintf(stderr, fmt, ##args);		\
@@ -888,7 +886,7 @@ main(int argc, char **argv)
     attr_delete = NULL;
 
     if (cib_conn != NULL) {
-        cleanup_alloc_calculations(&data_set);
+        pe_reset_working_set(&data_set);
         cib_conn->cmds->signoff(cib_conn);
         cib_delete(cib_conn);
     }

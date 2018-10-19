@@ -132,8 +132,6 @@ void LogNodeActions(pe_working_set_t * data_set, gboolean terminal);
 void LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal);
 void container_LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolean terminal);
 
-extern void cleanup_alloc_calculations(pe_working_set_t * data_set);
-
 extern void rsc_stonith_ordering(resource_t * rsc, action_t * stonith_op,
                                  pe_working_set_t * data_set);
 

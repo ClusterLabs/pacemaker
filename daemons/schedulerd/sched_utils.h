@@ -17,9 +17,6 @@ pe__location_t *rsc2node_new(const char *id, pe_resource_t *rsc, int weight,
                              const char *discovery_mode, pe_node_t *node,
                              pe_working_set_t *data_set);
 
-extern void pe_free_rsc_to_node(GListPtr constraints);
-extern void pe_free_ordering(GListPtr constraints);
-
 extern gboolean rsc_colocation_new(const char *id, const char *node_attr, int score,
                                    resource_t * rsc_lh, resource_t * rsc_rh,
                                    const char *state_lh, const char *state_rh,

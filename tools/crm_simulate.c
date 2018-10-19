@@ -39,8 +39,6 @@ extern gboolean bringing_nodes_online;
 	}					\
     } while(0)
 
-extern void cleanup_alloc_calculations(pe_working_set_t * data_set);
-
 extern xmlNode *do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, crm_time_t * now);
 
 char *use_date = NULL;
@@ -537,8 +535,7 @@ profile_one(const char *xml_file)
     data_set.input = cib_object;
     get_date(&data_set);
     do_calculations(&data_set, cib_object, NULL);
-
-    cleanup_alloc_calculations(&data_set);
+    pe_reset_working_set(&data_set);
 }
 
 #ifndef FILENAME_MAX
@@ -919,7 +916,7 @@ main(int argc, char **argv)
     }
 
   done:
-    cleanup_alloc_calculations(&data_set);
+    pe_reset_working_set(&data_set);
 
     global_cib->cmds->signoff(global_cib);
     cib_delete(global_cib);

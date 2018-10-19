@@ -173,7 +173,7 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender)
         }
 
         free_xml(reply);
-        cleanup_alloc_calculations(&data_set);
+        pe_reset_working_set(&data_set);
 
         if (was_processing_error) {
             crm_err("Calculated transition %d (with errors), saving inputs in %s",

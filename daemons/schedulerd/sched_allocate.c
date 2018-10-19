@@ -2497,33 +2497,3 @@ LogNodeActions(pe_working_set_t * data_set, gboolean terminal)
         free(task);
     }
 }
-
-void
-cleanup_alloc_calculations(pe_working_set_t * data_set)
-{
-    if (data_set == NULL) {
-        return;
-    }
-
-    crm_trace("deleting %d order cons: %p",
-              g_list_length(data_set->ordering_constraints), data_set->ordering_constraints);
-    pe_free_ordering(data_set->ordering_constraints);
-    data_set->ordering_constraints = NULL;
-
-    crm_trace("deleting %d node cons: %p",
-              g_list_length(data_set->placement_constraints), data_set->placement_constraints);
-    pe_free_rsc_to_node(data_set->placement_constraints);
-    data_set->placement_constraints = NULL;
-
-    crm_trace("deleting %d inter-resource cons: %p",
-              g_list_length(data_set->colocation_constraints), data_set->colocation_constraints);
-    g_list_free_full(data_set->colocation_constraints, free);
-    data_set->colocation_constraints = NULL;
-
-    crm_trace("deleting %d ticket deps: %p",
-              g_list_length(data_set->ticket_constraints), data_set->ticket_constraints);
-    g_list_free_full(data_set->ticket_constraints, free);
-    data_set->ticket_constraints = NULL;
-
-    cleanup_calculations(data_set);
-}
