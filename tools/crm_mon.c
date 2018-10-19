@@ -49,8 +49,6 @@
 #include <../pengine/pengine.h>
 #include <crm/stonith-ng.h>
 
-extern void cleanup_alloc_calculations(pe_working_set_t * data_set);
-
 void clean_up_connections(void);
 static int clean_up(int rc);
 void crm_diff_update(const char *event, xmlNode * msg);
@@ -4818,7 +4816,7 @@ mon_refresh_display(gpointer user_data)
 
     stonith_history_free(stonith_history);
     stonith_history = NULL;
-    cleanup_alloc_calculations(&data_set);
+    pe_reset_working_set(&data_set);
     return TRUE;
 }
 

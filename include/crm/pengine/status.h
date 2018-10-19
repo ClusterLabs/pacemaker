@@ -487,6 +487,7 @@ const char *rsc_printable_id(resource_t *rsc);
 gboolean cluster_status(pe_working_set_t * data_set);
 void set_working_set_defaults(pe_working_set_t * data_set);
 void cleanup_calculations(pe_working_set_t * data_set);
+void pe_reset_working_set(pe_working_set_t *data_set);
 resource_t *pe_find_resource(GListPtr rsc_list, const char *id_rh);
 resource_t *pe_find_resource_with_flags(GListPtr rsc_list, const char *id, enum pe_find flags);
 node_t *pe_find_node(GListPtr node_list, const char *uname);

@@ -1127,7 +1127,7 @@ update_dataset(cib_t *cib, pe_working_set_t * data_set, bool simulate)
     cib_t *shadow_cib = NULL;
     int rc;
 
-    cleanup_alloc_calculations(data_set);
+    pe_reset_working_set(data_set);
     rc = update_working_set_from_cib(data_set, cib);
     if (rc != pcmk_ok) {
         return rc;
@@ -1514,7 +1514,7 @@ done:
     if (restart_target_active) {
         g_list_free_full(restart_target_active, free);
     }
-    cleanup_alloc_calculations(&data_set);
+    pe_reset_working_set(&data_set);
     free(rsc_id);
     return rc;
 }
@@ -1622,7 +1622,7 @@ wait_till_stable(int timeout_ms, cib_t * cib)
             crm_info("Waiting up to %d seconds for cluster actions to complete", time_diff);
         } else {
             print_pending_actions(data_set.actions);
-            cleanup_alloc_calculations(&data_set);
+            pe_reset_working_set(&data_set);
             return -ETIME;
         }
         if (rc == pcmk_ok) { /* this avoids sleep on first loop iteration */
@@ -1630,10 +1630,10 @@ wait_till_stable(int timeout_ms, cib_t * cib)
         }
 
         /* Get latest transition graph */
-        cleanup_alloc_calculations(&data_set);
+        pe_reset_working_set(&data_set);
         rc = update_working_set_from_cib(&data_set, cib);
         if (rc != pcmk_ok) {
-            cleanup_alloc_calculations(&data_set);
+            pe_reset_working_set(&data_set);
             return rc;
         }
         do_calculations(&data_set, data_set.input, NULL);

@@ -40,7 +40,6 @@ gboolean USE_LIVE_CIB = FALSE;
 char *cib_save = NULL;
 void usage(const char *cmd, int exit_status);
 extern gboolean stage0(pe_working_set_t * data_set);
-extern void cleanup_alloc_calculations(pe_working_set_t * data_set);
 extern xmlNode *do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, crm_time_t * now);
 
 /* *INDENT-OFF* */
@@ -243,13 +242,13 @@ main(int argc, char **argv)
     } else if (status != NULL || USE_LIVE_CIB) {
         /* live queries will always have a status section and can do a full simulation */
         do_calculations(&data_set, cib_object, NULL);
-        cleanup_alloc_calculations(&data_set);
+        pe_reset_working_set(&data_set);
 
     } else {
         data_set.now = crm_time_new(NULL);
         data_set.input = cib_object;
         stage0(&data_set);
-        cleanup_alloc_calculations(&data_set);
+        pe_reset_working_set(&data_set);
     }
 
     if (crm_config_error) {

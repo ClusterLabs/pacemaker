@@ -1227,7 +1227,7 @@ main(int argc, char **argv)
     free(our_pid);
 
     if (data_set.input != NULL) {
-        cleanup_alloc_calculations(&data_set);
+        pe_reset_working_set(&data_set);
     }
     if (cib_conn != NULL) {
         cib_conn->cmds->signoff(cib_conn);

@@ -741,7 +741,7 @@ cib_devices_update(void)
         cib_device_update(gIter->data, &data_set);
     }
     data_set.input = NULL; /* Wasn't a copy */
-    cleanup_alloc_calculations(&data_set);
+    pe_reset_working_set(&data_set);
 }
 
 static void
