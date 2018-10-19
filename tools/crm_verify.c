@@ -248,14 +248,14 @@ main(int argc, char **argv)
         if (verbose == FALSE) {
             fprintf(stderr, "  -V may provide more details\n");
         }
-        rc = -pcmk_err_generic;
+        rc = -pcmk_err_schema_validation;
 
     } else if (crm_config_warning) {
         fprintf(stderr, "Warnings found during check: config may not be valid\n");
         if (verbose == FALSE) {
             fprintf(stderr, "  Use -V -V for more details\n");
         }
-        rc = -pcmk_err_generic;
+        rc = -pcmk_err_schema_validation;
     }
 
     if (USE_LIVE_CIB && cib_conn) {
@@ -264,5 +264,5 @@ main(int argc, char **argv)
     }
 
   done:
-    return rc;
+    return crm_exit(crm_errno2exit(rc));
 }
