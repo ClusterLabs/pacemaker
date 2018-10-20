@@ -412,21 +412,25 @@ group_action_flags(action_t * action, node_t * node)
 }
 
 enum pe_graph_flags
-group_update_actions(action_t * first, action_t * then, node_t * node, enum pe_action_flags flags,
-                     enum pe_action_flags filter, enum pe_ordering type)
+group_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
+                     enum pe_action_flags flags, enum pe_action_flags filter,
+                     enum pe_ordering type, pe_working_set_t *data_set)
 {
     GListPtr gIter = then->rsc->children;
     enum pe_graph_flags changed = pe_graph_none;
 
     CRM_ASSERT(then->rsc != NULL);
-    changed |= native_update_actions(first, then, node, flags, filter, type);
+    changed |= native_update_actions(first, then, node, flags, filter, type,
+                                     data_set);
 
     for (; gIter != NULL; gIter = gIter->next) {
         resource_t *child = (resource_t *) gIter->data;
         action_t *child_action = find_first_action(child->actions, NULL, then->task, node);
 
         if (child_action) {
-            changed |= child->cmds->update_actions(first, child_action, node, flags, filter, type);
+            changed |= child->cmds->update_actions(first, child_action, node,
+                                                   flags, filter, type,
+                                                   data_set);
         }
     }
 

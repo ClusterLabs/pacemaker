@@ -31,8 +31,11 @@ struct resource_alloc_functions_s {
     void (*rsc_location) (pe_resource_t *, pe__location_t *);
 
     enum pe_action_flags (*action_flags) (action_t *, node_t *);
-    enum pe_graph_flags (*update_actions) (action_t *, action_t *, node_t *, enum pe_action_flags,
-                                           enum pe_action_flags, enum pe_ordering);
+    enum pe_graph_flags (*update_actions) (pe_action_t *, pe_action_t *,
+                                           pe_node_t *, enum pe_action_flags,
+                                           enum pe_action_flags,
+                                           enum pe_ordering,
+                                           pe_working_set_t *data_set);
 
     void (*expand) (resource_t *, pe_working_set_t *);
     void (*append_meta) (resource_t * rsc, xmlNode * xml);
@@ -146,16 +149,24 @@ void container_LogActions(resource_t * rsc, pe_working_set_t * data_set, gboolea
 extern void rsc_stonith_ordering(resource_t * rsc, action_t * stonith_op,
                                  pe_working_set_t * data_set);
 
-extern enum pe_graph_flags native_update_actions(action_t * first, action_t * then, node_t * node,
-                                                 enum pe_action_flags flags,
-                                                 enum pe_action_flags filter,
-                                                 enum pe_ordering type);
-extern enum pe_graph_flags group_update_actions(action_t * first, action_t * then, node_t * node,
-                                                enum pe_action_flags flags,
-                                                enum pe_action_flags filter, enum pe_ordering type);
-extern enum pe_graph_flags container_update_actions(action_t * first, action_t * then, node_t * node,
-                                                    enum pe_action_flags flags,
-                                                    enum pe_action_flags filter, enum pe_ordering type);
+enum pe_graph_flags native_update_actions(pe_action_t *first, pe_action_t *then,
+                                          pe_node_t *node,
+                                          enum pe_action_flags flags,
+                                          enum pe_action_flags filter,
+                                          enum pe_ordering type,
+                                          pe_working_set_t *data_set);
+enum pe_graph_flags group_update_actions(pe_action_t *first, pe_action_t *then,
+                                         pe_node_t *node,
+                                         enum pe_action_flags flags,
+                                         enum pe_action_flags filter,
+                                         enum pe_ordering type,
+                                         pe_working_set_t *data_set);
+enum pe_graph_flags container_update_actions(pe_action_t *first,
+                                             pe_action_t *then, pe_node_t *node,
+                                             enum pe_action_flags flags,
+                                             enum pe_action_flags filter,
+                                             enum pe_ordering type,
+                                             pe_working_set_t *data_set);
 
 gboolean update_action_flags(action_t * action, enum pe_action_flags flags, const char *source, int line);
 gboolean update_action(action_t * action);

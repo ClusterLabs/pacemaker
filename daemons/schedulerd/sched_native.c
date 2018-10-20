@@ -1879,8 +1879,9 @@ native_action_flags(action_t * action, node_t * node)
 }
 
 enum pe_graph_flags
-native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_action_flags flags,
-                      enum pe_action_flags filter, enum pe_ordering type)
+native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
+                      enum pe_action_flags flags, enum pe_action_flags filter,
+                      enum pe_ordering type, pe_working_set_t *data_set)
 {
     /* flags == get_action_flags(first, then_node) called from update_action() */
     enum pe_graph_flags changed = pe_graph_none;

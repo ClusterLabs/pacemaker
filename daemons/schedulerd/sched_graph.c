@@ -173,7 +173,7 @@ rsc_expand_action(action_t * action)
 static enum pe_graph_flags
 graph_update_action(action_t * first, action_t * then, node_t * node,
                     enum pe_action_flags first_flags, enum pe_action_flags then_flags,
-                    action_wrapper_t *order)
+                    action_wrapper_t *order, pe_working_set_t *data_set)
 {
     enum pe_graph_flags changed = pe_graph_none;
     enum pe_ordering type = order->type;
@@ -204,9 +204,9 @@ graph_update_action(action_t * first, action_t * then, node_t * node,
     if (type & pe_order_implies_then) {
         processed = TRUE;
         if (then->rsc) {
-            changed |=
-                then->rsc->cmds->update_actions(first, then, node, first_flags & pe_action_optional,
-                                                pe_action_optional, pe_order_implies_then);
+            changed |= then->rsc->cmds->update_actions(first, then, node,
+                first_flags & pe_action_optional, pe_action_optional,
+                pe_order_implies_then, data_set);
 
         } else if (is_set(first_flags, pe_action_optional) == FALSE) {
             if (update_action_flags(then, pe_action_optional | pe_action_clear, __FUNCTION__, __LINE__)) {
@@ -224,8 +224,9 @@ graph_update_action(action_t * first, action_t * then, node_t * node,
         enum pe_action_flags restart = (pe_action_optional | pe_action_runnable);
 
         processed = TRUE;
-        changed |=
-            then->rsc->cmds->update_actions(first, then, node, first_flags, restart, pe_order_restart);
+        changed |= then->rsc->cmds->update_actions(first, then, node,
+                                                   first_flags, restart,
+                                                   pe_order_restart, data_set);
         if (changed) {
             pe_rsc_trace(then->rsc, "restart: %s then %s: changed", first->uuid, then->uuid);
         } else {
@@ -236,9 +237,9 @@ graph_update_action(action_t * first, action_t * then, node_t * node,
     if (type & pe_order_implies_first) {
         processed = TRUE;
         if (first->rsc) {
-            changed |=
-                first->rsc->cmds->update_actions(first, then, node, first_flags,
-                                                 pe_action_optional, pe_order_implies_first);
+            changed |= first->rsc->cmds->update_actions(first, then, node,
+                first_flags, pe_action_optional, pe_order_implies_first,
+                data_set);
 
         } else if (is_set(first_flags, pe_action_optional) == FALSE) {
             pe_rsc_trace(first->rsc, "first unrunnable: %s (%d) then %s (%d)",
@@ -261,9 +262,9 @@ graph_update_action(action_t * first, action_t * then, node_t * node,
     if (type & pe_order_implies_first_master) {
         processed = TRUE;
         if (then->rsc) {
-            changed |=
-                then->rsc->cmds->update_actions(first, then, node, first_flags & pe_action_optional,
-                                                pe_action_optional, pe_order_implies_first_master);
+            changed |= then->rsc->cmds->update_actions(first, then, node,
+                first_flags & pe_action_optional, pe_action_optional,
+                pe_order_implies_first_master, data_set);
         }
 
         if (changed) {
@@ -279,9 +280,9 @@ graph_update_action(action_t * first, action_t * then, node_t * node,
     if (type & pe_order_one_or_more) {
         processed = TRUE;
         if (then->rsc) {
-            changed |=
-                then->rsc->cmds->update_actions(first, then, node, first_flags,
-                                                pe_action_runnable, pe_order_one_or_more);
+            changed |= then->rsc->cmds->update_actions(first, then, node,
+                first_flags, pe_action_runnable, pe_order_one_or_more,
+                data_set);
 
         } else if (is_set(first_flags, pe_action_runnable)) {
             /* alright. a "first" action is considered runnable, incremente
@@ -315,8 +316,9 @@ graph_update_action(action_t * first, action_t * then, node_t * node,
 
         } else {
             pe_rsc_trace(then->rsc, "Enforcing %s then %s", first->uuid, then->uuid);
-            changed |= then->rsc->cmds->update_actions(first, then, node, first_flags,
-                                                       pe_action_runnable, pe_order_runnable_left);
+            changed |= then->rsc->cmds->update_actions(first, then, node,
+                first_flags, pe_action_runnable, pe_order_runnable_left,
+                data_set);
         }
 
         if (changed) {
@@ -329,9 +331,9 @@ graph_update_action(action_t * first, action_t * then, node_t * node,
     if (type & pe_order_runnable_left) {
         processed = TRUE;
         if (then->rsc) {
-            changed |=
-                then->rsc->cmds->update_actions(first, then, node, first_flags,
-                                                pe_action_runnable, pe_order_runnable_left);
+            changed |= then->rsc->cmds->update_actions(first, then, node,
+                first_flags, pe_action_runnable, pe_order_runnable_left,
+                data_set);
 
         } else if (is_set(first_flags, pe_action_runnable) == FALSE) {
             pe_rsc_trace(then->rsc, "then unrunnable: %s then %s", first->uuid, then->uuid);
@@ -349,9 +351,9 @@ graph_update_action(action_t * first, action_t * then, node_t * node,
     if (type & pe_order_implies_first_migratable) {
         processed = TRUE;
         if (then->rsc) {
-            changed |=
-                then->rsc->cmds->update_actions(first, then, node, first_flags,
-                                                pe_action_optional, pe_order_implies_first_migratable);
+            changed |= then->rsc->cmds->update_actions(first, then, node,
+                first_flags, pe_action_optional,
+                pe_order_implies_first_migratable, data_set);
         }
         if (changed) {
             pe_rsc_trace(then->rsc, "optional: %s then %s: changed", first->uuid, then->uuid);
@@ -363,9 +365,9 @@ graph_update_action(action_t * first, action_t * then, node_t * node,
     if (type & pe_order_pseudo_left) {
         processed = TRUE;
         if (then->rsc) {
-            changed |=
-                then->rsc->cmds->update_actions(first, then, node, first_flags,
-                                                pe_action_optional, pe_order_pseudo_left);
+            changed |= then->rsc->cmds->update_actions(first, then, node,
+                first_flags, pe_action_optional, pe_order_pseudo_left,
+                data_set);
         }
         if (changed) {
             pe_rsc_trace(then->rsc, "optional: %s then %s: changed", first->uuid, then->uuid);
@@ -377,9 +379,8 @@ graph_update_action(action_t * first, action_t * then, node_t * node,
     if (type & pe_order_optional) {
         processed = TRUE;
         if (then->rsc) {
-            changed |=
-                then->rsc->cmds->update_actions(first, then, node, first_flags,
-                                                pe_action_runnable, pe_order_optional);
+            changed |= then->rsc->cmds->update_actions(first, then, node,
+                first_flags, pe_action_runnable, pe_order_optional, data_set);
         }
         if (changed) {
             pe_rsc_trace(then->rsc, "optional: %s then %s: changed", first->uuid, then->uuid);
@@ -391,9 +392,9 @@ graph_update_action(action_t * first, action_t * then, node_t * node,
     if (type & pe_order_asymmetrical) {
         processed = TRUE;
         if (then->rsc) {
-            changed |=
-                then->rsc->cmds->update_actions(first, then, node, first_flags,
-                                                pe_action_runnable, pe_order_asymmetrical);
+            changed |= then->rsc->cmds->update_actions(first, then, node,
+                first_flags, pe_action_runnable, pe_order_asymmetrical,
+                data_set);
         }
 
         if (changed) {
@@ -511,6 +512,7 @@ update_action(action_t * then)
     GListPtr lpc = NULL;
     enum pe_graph_flags changed = pe_graph_none;
     int last_flags = then->flags;
+    pe_working_set_t *data_set = pe_dataset; // @TODO
 
     crm_trace("Processing %s (%s %s %s)",
               then->uuid,
@@ -629,7 +631,8 @@ update_action(action_t * then)
              *
              */
             node_t *node = then->node;
-            changed |= graph_update_action(first, then, node, first_flags, then_flags, other);
+            changed |= graph_update_action(first, then, node, first_flags,
+                                           then_flags, other, data_set);
 
             /* 'first' was for a complex resource (clone, group, etc),
              * create a new dependency if necessary

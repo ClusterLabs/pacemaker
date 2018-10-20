@@ -700,9 +700,10 @@ container_update_interleave_actions(pe_action_t *first, pe_action_t *then,
                 changed |= (pe_graph_updated_first | pe_graph_updated_then);
             }
             if(first_action && then_action) {
-                changed |= then_child->cmds->update_actions(first_action, then_action, node,
-                                                            first_child->cmds->action_flags(first_action, node),
-                                                            filter, type);
+                changed |= then_child->cmds->update_actions(first_action,
+                    then_action, node,
+                    first_child->cmds->action_flags(first_action, node),
+                    filter, type, data_set);
             } else {
                 crm_err("Nothing found either for %s (%p) or %s (%p) %s",
                         first_child->id, first_action,
@@ -749,11 +750,12 @@ bool can_interleave_actions(pe_action_t *first, pe_action_t *then)
 }
 
 enum pe_graph_flags
-container_update_actions(action_t * first, action_t * then, node_t * node, enum pe_action_flags flags,
-                     enum pe_action_flags filter, enum pe_ordering type)
+container_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
+                         enum pe_action_flags flags,
+                         enum pe_action_flags filter, enum pe_ordering type,
+                         pe_working_set_t *data_set)
 {
     enum pe_graph_flags changed = pe_graph_none;
-    pe_working_set_t *data_set = pe_dataset; // @TODO
 
     crm_trace("%s -> %s", first->uuid, then->uuid);
 
@@ -766,7 +768,8 @@ container_update_actions(action_t * first, action_t * then, node_t * node, enum 
         GListPtr children = NULL;
 
         // Handle the 'primitive' ordering case
-        changed |= native_update_actions(first, then, node, flags, filter, type);
+        changed |= native_update_actions(first, then, node, flags, filter,
+                                         type, data_set);
 
         // Now any children (or containers in the case of a bundle)
         children = get_containers_or_children(then->rsc);
@@ -779,8 +782,8 @@ container_update_actions(action_t * first, action_t * then, node_t * node, enum 
                 enum pe_action_flags then_child_flags = then_child->cmds->action_flags(then_child_action, node);
 
                 if (is_set(then_child_flags, pe_action_runnable)) {
-                    then_child_changed |=
-                        then_child->cmds->update_actions(first, then_child_action, node, flags, filter, type);
+                    then_child_changed |= then_child->cmds->update_actions(first,
+                        then_child_action, node, flags, filter, type, data_set);
                 }
                 changed |= then_child_changed;
                 if (then_child_changed & pe_graph_updated_then) {
