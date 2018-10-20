@@ -1031,13 +1031,13 @@ clone_rsc_colocation_lh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation
 }
 
 void
-clone_rsc_colocation_rh(resource_t *rsc_lh, resource_t *rsc_rh,
-                        rsc_colocation_t *constraint)
+clone_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
+                        rsc_colocation_t *constraint,
+                        pe_working_set_t *data_set)
 {
     GListPtr gIter = NULL;
     gboolean do_interleave = FALSE;
     const char *interleave_s = NULL;
-    pe_working_set_t *data_set = pe_dataset; // @TODO
 
     CRM_CHECK(constraint != NULL, return);
     CRM_CHECK(rsc_lh != NULL, pe_err("rsc_lh was NULL for %s", constraint->id); return);
@@ -1054,7 +1054,7 @@ clone_rsc_colocation_rh(resource_t *rsc_lh, resource_t *rsc_rh,
         } else if (constraint->role_rh == RSC_ROLE_UNKNOWN) {
             pe_rsc_trace(rsc_rh, "Handling %s as a clone colocation", constraint->id);
         } else {
-            promotable_colocation_rh(rsc_lh, rsc_rh, constraint);
+            promotable_colocation_rh(rsc_lh, rsc_rh, constraint, data_set);
             return;
         }
     }
@@ -1120,7 +1120,8 @@ clone_rsc_colocation_rh(resource_t *rsc_lh, resource_t *rsc_rh,
     for (; gIter != NULL; gIter = gIter->next) {
         resource_t *child_rsc = (resource_t *) gIter->data;
 
-        child_rsc->cmds->rsc_colocation_rh(rsc_lh, child_rsc, constraint);
+        child_rsc->cmds->rsc_colocation_rh(rsc_lh, child_rsc, constraint,
+                                           data_set);
     }
 }
 

@@ -319,7 +319,9 @@ group_rsc_colocation_lh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation
 }
 
 void
-group_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * constraint)
+group_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
+                        rsc_colocation_t *constraint,
+                        pe_working_set_t *data_set)
 {
     GListPtr gIter = rsc_rh->children;
     group_variant_data_t *group_data = NULL;
@@ -336,12 +338,16 @@ group_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation
     } else if (group_data->colocated && group_data->first_child) {
         if (constraint->score >= INFINITY) {
             /* Ensure RHS is _fully_ up before can start LHS */
-            group_data->last_child->cmds->rsc_colocation_rh(rsc_lh, group_data->last_child,
-                                                            constraint);
+            group_data->last_child->cmds->rsc_colocation_rh(rsc_lh,
+                                                            group_data->last_child,
+                                                            constraint,
+                                                            data_set);
         } else {
             /* A partially active RHS is fine */
-            group_data->first_child->cmds->rsc_colocation_rh(rsc_lh, group_data->first_child,
-                                                             constraint);
+            group_data->first_child->cmds->rsc_colocation_rh(rsc_lh,
+                                                             group_data->first_child,
+                                                             constraint,
+                                                             data_set);
         }
 
         return;
@@ -355,7 +361,8 @@ group_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation
     for (; gIter != NULL; gIter = gIter->next) {
         resource_t *child_rsc = (resource_t *) gIter->data;
 
-        child_rsc->cmds->rsc_colocation_rh(rsc_lh, child_rsc, constraint);
+        child_rsc->cmds->rsc_colocation_rh(rsc_lh, child_rsc, constraint,
+                                           data_set);
     }
 }
 

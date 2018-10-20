@@ -947,10 +947,10 @@ node_hash_update_one(GHashTable * hash, node_t * other, const char *attr, int sc
 
 void
 promotable_colocation_rh(resource_t *rsc_lh, resource_t *rsc_rh,
-                         rsc_colocation_t *constraint)
+                         rsc_colocation_t *constraint,
+                         pe_working_set_t *data_set)
 {
     GListPtr gIter = NULL;
-    pe_working_set_t *data_set = pe_dataset; // @TODO
 
     if (is_set(rsc_lh->flags, pe_rsc_provisional)) {
         GListPtr rhs = NULL;

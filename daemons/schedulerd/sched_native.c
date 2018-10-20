@@ -1539,6 +1539,8 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
 void
 native_rsc_colocation_lh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * constraint)
 {
+    pe_working_set_t *data_set = pe_dataset; // @TODO
+
     if (rsc_lh == NULL) {
         pe_err("rsc_lh was NULL for %s", constraint->id);
         return;
@@ -1551,7 +1553,7 @@ native_rsc_colocation_lh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocatio
     pe_rsc_trace(rsc_lh, "Processing colocation constraint between %s and %s", rsc_lh->id,
                  rsc_rh->id);
 
-    rsc_rh->cmds->rsc_colocation_rh(rsc_lh, rsc_rh, constraint);
+    rsc_rh->cmds->rsc_colocation_rh(rsc_lh, rsc_rh, constraint, data_set);
 }
 
 enum filter_colocation_res
@@ -1739,7 +1741,9 @@ colocation_match(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * co
 }
 
 void
-native_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * constraint)
+native_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
+                         rsc_colocation_t *constraint,
+                         pe_working_set_t *data_set)
 {
     enum filter_colocation_res filter_results;
 

@@ -24,7 +24,8 @@ struct resource_alloc_functions_s {
     void (*internal_constraints) (resource_t *, pe_working_set_t *);
 
     void (*rsc_colocation_lh) (resource_t *, resource_t *, rsc_colocation_t *);
-    void (*rsc_colocation_rh) (resource_t *, resource_t *, rsc_colocation_t *);
+    void (*rsc_colocation_rh) (pe_resource_t *, pe_resource_t *,
+                               rsc_colocation_t *, pe_working_set_t *);
 
     void (*rsc_location) (pe_resource_t *, pe__location_t *);
 
@@ -56,8 +57,9 @@ extern void native_create_actions(resource_t * rsc, pe_working_set_t * data_set)
 extern void native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set);
 extern void native_rsc_colocation_lh(resource_t * lh_rsc, resource_t * rh_rsc,
                                      rsc_colocation_t * constraint);
-extern void native_rsc_colocation_rh(resource_t * lh_rsc, resource_t * rh_rsc,
-                                     rsc_colocation_t * constraint);
+void native_rsc_colocation_rh(pe_resource_t *lh_rsc, pe_resource_t *rh_rsc,
+                              rsc_colocation_t *constraint,
+                              pe_working_set_t *data_set);
 extern void rsc_ticket_constraint(resource_t * lh_rsc, rsc_ticket_t * rsc_ticket,
                                   pe_working_set_t * data_set);
 extern enum pe_action_flags native_action_flags(action_t * action, node_t * node);
@@ -73,8 +75,9 @@ extern void group_create_actions(resource_t * rsc, pe_working_set_t * data_set);
 extern void group_internal_constraints(resource_t * rsc, pe_working_set_t * data_set);
 extern void group_rsc_colocation_lh(resource_t * lh_rsc, resource_t * rh_rsc,
                                     rsc_colocation_t * constraint);
-extern void group_rsc_colocation_rh(resource_t * lh_rsc, resource_t * rh_rsc,
-                                    rsc_colocation_t * constraint);
+void group_rsc_colocation_rh(pe_resource_t *lh_rsc, pe_resource_t *rh_rsc,
+                             rsc_colocation_t *constraint,
+                             pe_working_set_t *data_set);
 extern enum pe_action_flags group_action_flags(action_t * action, node_t * node);
 void group_rsc_location(pe_resource_t *rsc, pe__location_t *constraint);
 extern void group_expand(resource_t * rsc, pe_working_set_t * data_set);
@@ -85,8 +88,9 @@ extern void container_create_actions(resource_t * rsc, pe_working_set_t * data_s
 extern void container_internal_constraints(resource_t * rsc, pe_working_set_t * data_set);
 extern void container_rsc_colocation_lh(resource_t * lh_rsc, resource_t * rh_rsc,
                                     rsc_colocation_t * constraint);
-extern void container_rsc_colocation_rh(resource_t * lh_rsc, resource_t * rh_rsc,
-                                    rsc_colocation_t * constraint);
+void container_rsc_colocation_rh(pe_resource_t *lh_rsc, pe_resource_t *rh_rsc,
+                                 rsc_colocation_t *constraint,
+                                 pe_working_set_t *data_set);
 void container_rsc_location(pe_resource_t *rsc, pe__location_t *constraint);
 extern enum pe_action_flags container_action_flags(action_t * action, node_t * node);
 extern void container_expand(resource_t * rsc, pe_working_set_t * data_set);
@@ -99,8 +103,9 @@ extern void clone_create_actions(resource_t * rsc, pe_working_set_t * data_set);
 extern void clone_internal_constraints(resource_t * rsc, pe_working_set_t * data_set);
 extern void clone_rsc_colocation_lh(resource_t * lh_rsc, resource_t * rh_rsc,
                                     rsc_colocation_t * constraint);
-extern void clone_rsc_colocation_rh(resource_t * lh_rsc, resource_t * rh_rsc,
-                                    rsc_colocation_t * constraint);
+void clone_rsc_colocation_rh(pe_resource_t *lh_rsc, pe_resource_t *rh_rsc,
+                             rsc_colocation_t *constraint,
+                             pe_working_set_t *data_set);
 void clone_rsc_location(pe_resource_t *rsc, pe__location_t *constraint);
 extern enum pe_action_flags clone_action_flags(action_t * action, node_t * node);
 extern void clone_expand(resource_t * rsc, pe_working_set_t * data_set);
@@ -114,7 +119,8 @@ void create_promotable_actions(resource_t *rsc, pe_working_set_t *data_set);
 void promote_demote_constraints(resource_t *rsc, pe_working_set_t *data_set);
 void promotable_constraints(resource_t *rsc, pe_working_set_t *data_set);
 void promotable_colocation_rh(resource_t *lh_rsc, resource_t *rh_rsc,
-                              rsc_colocation_t *constraint);
+                              rsc_colocation_t *constraint,
+                              pe_working_set_t *data_set);
 
 /* extern resource_object_functions_t resource_variants[]; */
 extern resource_alloc_functions_t resource_class_alloc_functions[];

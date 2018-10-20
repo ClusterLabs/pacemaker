@@ -429,11 +429,12 @@ int copies_per_node(resource_t * rsc)
 }
 
 void
-container_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc, rsc_colocation_t * constraint)
+container_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc,
+                            rsc_colocation_t *constraint,
+                            pe_working_set_t *data_set)
 {
     GListPtr allocated_rhs = NULL;
     container_variant_data_t *container_data = NULL;
-    pe_working_set_t *data_set = pe_dataset; // @TODO
 
     CRM_CHECK(constraint != NULL, return);
     CRM_CHECK(rsc_lh != NULL, pe_err("rsc_lh was NULL for %s", constraint->id); return);
@@ -472,7 +473,8 @@ container_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc, rsc_colocatio
         container_grouping_t *tuple = (container_grouping_t *)gIter->data;
 
         if (constraint->score < INFINITY) {
-            tuple->docker->cmds->rsc_colocation_rh(rsc_lh, tuple->docker, constraint);
+            tuple->docker->cmds->rsc_colocation_rh(rsc_lh, tuple->docker,
+                                                   constraint, data_set);
 
         } else {
             node_t *chosen = tuple->docker->fns->location(tuple->docker, NULL, FALSE);
