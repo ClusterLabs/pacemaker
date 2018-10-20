@@ -281,7 +281,9 @@ group_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
 }
 
 void
-group_rsc_colocation_lh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * constraint)
+group_rsc_colocation_lh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
+                        rsc_colocation_t *constraint,
+                        pe_working_set_t *data_set)
 {
     GListPtr gIter = NULL;
     group_variant_data_t *group_data = NULL;
@@ -301,8 +303,9 @@ group_rsc_colocation_lh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation
     get_group_variant_data(group_data, rsc_lh);
 
     if (group_data->colocated) {
-        group_data->first_child->cmds->rsc_colocation_lh(group_data->first_child, rsc_rh,
-                                                         constraint);
+        group_data->first_child->cmds->rsc_colocation_lh(group_data->first_child,
+                                                         rsc_rh, constraint,
+                                                         data_set);
         return;
 
     } else if (constraint->score >= INFINITY) {
@@ -314,7 +317,8 @@ group_rsc_colocation_lh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation
     for (; gIter != NULL; gIter = gIter->next) {
         resource_t *child_rsc = (resource_t *) gIter->data;
 
-        child_rsc->cmds->rsc_colocation_lh(child_rsc, rsc_rh, constraint);
+        child_rsc->cmds->rsc_colocation_lh(child_rsc, rsc_rh, constraint,
+                                           data_set);
     }
 }
 

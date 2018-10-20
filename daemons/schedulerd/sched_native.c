@@ -475,7 +475,7 @@ native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
             archive = node_hash_dup(rsc->allowed_nodes);
         }
         rsc_rh->cmds->allocate(rsc_rh, NULL, data_set);
-        rsc->cmds->rsc_colocation_lh(rsc, rsc_rh, constraint);
+        rsc->cmds->rsc_colocation_lh(rsc, rsc_rh, constraint, data_set);
         if (archive && can_run_any(rsc->allowed_nodes) == FALSE) {
             pe_rsc_info(rsc, "%s: Rolling back scores from %s", rsc->id, rsc_rh->id);
             g_hash_table_destroy(rsc->allowed_nodes);
@@ -1537,10 +1537,10 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
 }
 
 void
-native_rsc_colocation_lh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * constraint)
+native_rsc_colocation_lh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
+                         rsc_colocation_t *constraint,
+                         pe_working_set_t *data_set)
 {
-    pe_working_set_t *data_set = pe_dataset; // @TODO
-
     if (rsc_lh == NULL) {
         pe_err("rsc_lh was NULL for %s", constraint->id);
         return;

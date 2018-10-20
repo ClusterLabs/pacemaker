@@ -387,7 +387,9 @@ find_compatible_tuple(resource_t *rsc_lh, resource_t * rsc, enum rsc_role_e filt
 }
 
 void
-container_rsc_colocation_lh(resource_t * rsc, resource_t * rsc_rh, rsc_colocation_t * constraint)
+container_rsc_colocation_lh(pe_resource_t *rsc, pe_resource_t *rsc_rh,
+                            rsc_colocation_t *constraint,
+                            pe_working_set_t *data_set)
 {
     /* -- Never called --
      *
@@ -452,7 +454,8 @@ container_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc,
 
         if (rh_child) {
             pe_rsc_debug(rsc, "Pairing %s with %s", rsc_lh->id, rh_child->id);
-            rsc_lh->cmds->rsc_colocation_lh(rsc_lh, rh_child, constraint);
+            rsc_lh->cmds->rsc_colocation_lh(rsc_lh, rh_child, constraint,
+                                            data_set);
 
         } else if (constraint->score >= INFINITY) {
             crm_notice("Cannot pair %s with instance of %s", rsc_lh->id, rsc->id);

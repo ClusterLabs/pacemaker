@@ -23,7 +23,8 @@ struct resource_alloc_functions_s {
      gboolean(*create_probe) (resource_t *, node_t *, action_t *, gboolean, pe_working_set_t *);
     void (*internal_constraints) (resource_t *, pe_working_set_t *);
 
-    void (*rsc_colocation_lh) (resource_t *, resource_t *, rsc_colocation_t *);
+    void (*rsc_colocation_lh) (pe_resource_t *, pe_resource_t *,
+                               rsc_colocation_t *, pe_working_set_t *);
     void (*rsc_colocation_rh) (pe_resource_t *, pe_resource_t *,
                                rsc_colocation_t *, pe_working_set_t *);
 
@@ -55,8 +56,9 @@ extern GHashTable *group_merge_weights(resource_t * rsc, const char *rhs, GHashT
 extern node_t *native_color(resource_t * rsc, node_t * preferred, pe_working_set_t * data_set);
 extern void native_create_actions(resource_t * rsc, pe_working_set_t * data_set);
 extern void native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set);
-extern void native_rsc_colocation_lh(resource_t * lh_rsc, resource_t * rh_rsc,
-                                     rsc_colocation_t * constraint);
+void native_rsc_colocation_lh(pe_resource_t *lh_rsc, pe_resource_t *rh_rsc,
+                              rsc_colocation_t *constraint,
+                              pe_working_set_t *data_set);
 void native_rsc_colocation_rh(pe_resource_t *lh_rsc, pe_resource_t *rh_rsc,
                               rsc_colocation_t *constraint,
                               pe_working_set_t *data_set);
@@ -73,8 +75,9 @@ extern void native_append_meta(resource_t * rsc, xmlNode * xml);
 extern node_t *group_color(resource_t * rsc, node_t * preferred, pe_working_set_t * data_set);
 extern void group_create_actions(resource_t * rsc, pe_working_set_t * data_set);
 extern void group_internal_constraints(resource_t * rsc, pe_working_set_t * data_set);
-extern void group_rsc_colocation_lh(resource_t * lh_rsc, resource_t * rh_rsc,
-                                    rsc_colocation_t * constraint);
+void group_rsc_colocation_lh(pe_resource_t *lh_rsc, pe_resource_t *rh_rsc,
+                             rsc_colocation_t *constraint,
+                             pe_working_set_t *data_set);
 void group_rsc_colocation_rh(pe_resource_t *lh_rsc, pe_resource_t *rh_rsc,
                              rsc_colocation_t *constraint,
                              pe_working_set_t *data_set);
@@ -86,8 +89,9 @@ extern void group_append_meta(resource_t * rsc, xmlNode * xml);
 extern node_t *container_color(resource_t * rsc, node_t * preferred, pe_working_set_t * data_set);
 extern void container_create_actions(resource_t * rsc, pe_working_set_t * data_set);
 extern void container_internal_constraints(resource_t * rsc, pe_working_set_t * data_set);
-extern void container_rsc_colocation_lh(resource_t * lh_rsc, resource_t * rh_rsc,
-                                    rsc_colocation_t * constraint);
+void container_rsc_colocation_lh(pe_resource_t *lh_rsc, pe_resource_t *rh_rsc,
+                                 rsc_colocation_t *constraint,
+                                 pe_working_set_t *data_set);
 void container_rsc_colocation_rh(pe_resource_t *lh_rsc, pe_resource_t *rh_rsc,
                                  rsc_colocation_t *constraint,
                                  pe_working_set_t *data_set);
@@ -101,8 +105,9 @@ extern void container_append_meta(resource_t * rsc, xmlNode * xml);
 extern node_t *clone_color(resource_t * rsc, node_t * preferred, pe_working_set_t * data_set);
 extern void clone_create_actions(resource_t * rsc, pe_working_set_t * data_set);
 extern void clone_internal_constraints(resource_t * rsc, pe_working_set_t * data_set);
-extern void clone_rsc_colocation_lh(resource_t * lh_rsc, resource_t * rh_rsc,
-                                    rsc_colocation_t * constraint);
+void clone_rsc_colocation_lh(pe_resource_t *lh_rsc, pe_resource_t *rh_rsc,
+                             rsc_colocation_t *constraint,
+                             pe_working_set_t *data_set);
 void clone_rsc_colocation_rh(pe_resource_t *lh_rsc, pe_resource_t *rh_rsc,
                              rsc_colocation_t *constraint,
                              pe_working_set_t *data_set);

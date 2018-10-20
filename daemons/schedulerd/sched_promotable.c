@@ -710,7 +710,8 @@ color_promotable(resource_t *rsc, pe_working_set_t *data_set)
         for (gIter2 = child_rsc->rsc_cons; gIter2 != NULL; gIter2 = gIter2->next) {
             rsc_colocation_t *cons = (rsc_colocation_t *) gIter2->data;
 
-            child_rsc->cmds->rsc_colocation_lh(child_rsc, cons->rsc_rh, cons);
+            child_rsc->cmds->rsc_colocation_lh(child_rsc, cons->rsc_rh, cons,
+                                               data_set);
         }
 
         child_rsc->sort_index = child_rsc->priority;

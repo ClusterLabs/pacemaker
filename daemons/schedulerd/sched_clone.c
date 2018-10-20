@@ -1021,7 +1021,9 @@ find_compatible_child(pe_resource_t *local_child, pe_resource_t *rsc,
 }
 
 void
-clone_rsc_colocation_lh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * constraint)
+clone_rsc_colocation_lh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
+                        rsc_colocation_t *constraint,
+                        pe_working_set_t *data_set)
 {
     /* -- Never called --
      *
@@ -1085,7 +1087,8 @@ clone_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
 
         if (rh_child) {
             pe_rsc_debug(rsc_rh, "Pairing %s with %s", rsc_lh->id, rh_child->id);
-            rsc_lh->cmds->rsc_colocation_lh(rsc_lh, rh_child, constraint);
+            rsc_lh->cmds->rsc_colocation_lh(rsc_lh, rh_child, constraint,
+                                            data_set);
 
         } else if (constraint->score >= INFINITY) {
             crm_notice("Cannot pair %s with instance of %s", rsc_lh->id, rsc_rh->id);
