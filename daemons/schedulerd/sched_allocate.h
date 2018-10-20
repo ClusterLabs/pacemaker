@@ -169,7 +169,7 @@ enum pe_graph_flags container_update_actions(pe_action_t *first,
                                              pe_working_set_t *data_set);
 
 gboolean update_action_flags(action_t * action, enum pe_action_flags flags, const char *source, int line);
-gboolean update_action(action_t * action);
+gboolean update_action(pe_action_t *action, pe_working_set_t *data_set);
 void complex_set_cmds(resource_t * rsc);
 
 void clone_create_pseudo_actions(

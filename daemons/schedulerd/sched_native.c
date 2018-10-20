@@ -23,7 +23,6 @@
 #define VARIANT_NATIVE 1
 #include <lib/pengine/variant.h>
 
-gboolean update_action(action_t * then);
 void native_rsc_colocation_rh_must(resource_t * rsc_lh, gboolean update_lh,
                                    resource_t * rsc_rh, gboolean update_rh);
 
@@ -2054,7 +2053,7 @@ native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
 
         if(then->rsc && then->rsc->parent) {
             /* "X_stop then X_start" doesn't get handled for cloned groups unless we do this */
-            update_action(then);
+            update_action(then, data_set);
         }
     }
 

@@ -18,7 +18,7 @@
 #include <sched_allocate.h>
 #include <sched_utils.h>
 
-void update_colo_start_chain(action_t * action);
+void update_colo_start_chain(pe_action_t *action, pe_working_set_t *data_set);
 gboolean rsc_update_action(action_t * first, action_t * then, enum pe_ordering type);
 
 static enum pe_action_flags
@@ -446,7 +446,8 @@ graph_update_action(action_t * first, action_t * then, node_t * node,
 }
 
 static void
-mark_start_blocked(resource_t *rsc, resource_t *reason)
+mark_start_blocked(pe_resource_t *rsc, pe_resource_t *reason,
+                   pe_working_set_t *data_set)
 {
     GListPtr gIter = rsc->actions;
     char *reason_text = crm_strdup_printf("colocation with %s", reason->id);
@@ -459,15 +460,15 @@ mark_start_blocked(resource_t *rsc, resource_t *reason)
         }
         if (is_set(action->flags, pe_action_runnable)) {
             pe_action_set_flag_reason(__FUNCTION__, __LINE__, action, NULL, reason_text, pe_action_runnable, FALSE);
-            update_colo_start_chain(action);
-            update_action(action);
+            update_colo_start_chain(action, data_set);
+            update_action(action, data_set);
         }
     }
     free(reason_text);
 }
 
 void
-update_colo_start_chain(action_t *action)
+update_colo_start_chain(pe_action_t *action, pe_working_set_t *data_set)
 {
     GListPtr gIter = NULL;
     resource_t *rsc = NULL;
@@ -501,18 +502,17 @@ update_colo_start_chain(action_t *action)
     for (gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
         rsc_colocation_t *colocate_with = (rsc_colocation_t *)gIter->data;
         if (colocate_with->score == INFINITY) {
-            mark_start_blocked(colocate_with->rsc_lh, action->rsc);
+            mark_start_blocked(colocate_with->rsc_lh, action->rsc, data_set);
         }
     }
 }
 
 gboolean
-update_action(action_t * then)
+update_action(pe_action_t *then, pe_working_set_t *data_set)
 {
     GListPtr lpc = NULL;
     enum pe_graph_flags changed = pe_graph_none;
     int last_flags = then->flags;
-    pe_working_set_t *data_set = pe_dataset; // @TODO
 
     crm_trace("Processing %s (%s %s %s)",
               then->uuid,
@@ -664,9 +664,9 @@ update_action(action_t * then)
             for (lpc2 = first->actions_after; lpc2 != NULL; lpc2 = lpc2->next) {
                 action_wrapper_t *other = (action_wrapper_t *) lpc2->data;
 
-                update_action(other->action);
+                update_action(other->action, data_set);
             }
-            update_action(first);
+            update_action(first, data_set);
         }
     }
 
@@ -688,13 +688,13 @@ update_action(action_t * then)
                   uname : "");
 
         if (is_set(last_flags, pe_action_runnable) && is_not_set(then->flags, pe_action_runnable)) {
-            update_colo_start_chain(then);
+            update_colo_start_chain(then, data_set);
         }
-        update_action(then);
+        update_action(then, data_set);
         for (lpc = then->actions_after; lpc != NULL; lpc = lpc->next) {
             action_wrapper_t *other = (action_wrapper_t *) lpc->data;
 
-            update_action(other->action);
+            update_action(other->action, data_set);
         }
     }
 

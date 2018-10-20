@@ -1769,8 +1769,8 @@ rsc_order_first(pe_resource_t *lh_rsc, pe__ordering_t *order,
     g_list_free(lh_actions);
 }
 
-extern gboolean update_action(action_t * action);
-extern void update_colo_start_chain(action_t * action);
+extern void update_colo_start_chain(pe_action_t *action,
+                                    pe_working_set_t *data_set);
 
 static int
 is_recurring_action(action_t *action) 
@@ -2328,7 +2328,7 @@ stage7(pe_working_set_t * data_set)
     for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
         action_t *action = (action_t *) gIter->data;
 
-        update_colo_start_chain(action);
+        update_colo_start_chain(action, data_set);
     }
 
     crm_trace("Ordering probes");
@@ -2338,7 +2338,7 @@ stage7(pe_working_set_t * data_set)
     for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
         action_t *action = (action_t *) gIter->data;
 
-        update_action(action);
+        update_action(action, data_set);
     }
 
     LogNodeActions(data_set, FALSE);
