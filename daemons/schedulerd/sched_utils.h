@@ -26,7 +26,8 @@ extern gboolean rsc_ticket_new(const char *id, resource_t * rsc_lh, ticket_t * t
                                const char *state_lh, const char *loss_policy,
                                pe_working_set_t * data_set);
 
-extern gint sort_node_weight(gconstpointer a, gconstpointer b, gpointer data_set);
+GList *sort_nodes_by_weight(GList *nodes, pe_node_t *active_node,
+                            pe_working_set_t *data_set);
 
 extern gboolean can_run_resources(const node_t * node);
 extern gboolean native_assign_node(resource_t * rsc, GListPtr candidates, node_t * chosen,
@@ -38,7 +39,10 @@ extern void log_action(unsigned int log_level, const char *pre_text,
 
 gboolean can_run_any(GHashTable * nodes);
 bool can_interleave_actions(pe_action_t *first, pe_action_t *then);
-resource_t *find_compatible_child(resource_t * local_child, resource_t * rsc, enum rsc_role_e filter, gboolean current);
+pe_resource_t *find_compatible_child(pe_resource_t *local_child,
+                                     pe_resource_t *rsc, enum rsc_role_e filter,
+                                     gboolean current,
+                                     pe_working_set_t *data_set);
 resource_t *find_compatible_child_by_node(resource_t * local_child, node_t * local_node, resource_t * rsc,
                                           enum rsc_role_e filter, gboolean current);
 gboolean is_child_compatible(resource_t *child_rsc, node_t * local_node, enum rsc_role_e filter, gboolean current);

@@ -93,8 +93,7 @@ native_choose_node(resource_t * rsc, node_t * prefer, pe_working_set_t * data_se
     }
     if (length > 0) {
         nodes = g_hash_table_get_values(rsc->allowed_nodes);
-        nodes = g_list_sort_with_data(nodes, sort_node_weight,
-                                      pe__current_node(rsc));
+        nodes = sort_nodes_by_weight(nodes, pe__current_node(rsc), data_set);
 
         // First node in sorted list has the best score
         best = g_list_nth_data(nodes, 0);

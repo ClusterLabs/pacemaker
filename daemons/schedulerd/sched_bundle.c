@@ -119,7 +119,7 @@ container_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
     dump_node_scores(show_scores ? 0 : scores_log_level, rsc, __FUNCTION__, rsc->allowed_nodes);
 
     nodes = g_hash_table_get_values(rsc->allowed_nodes);
-    nodes = g_list_sort_with_data(nodes, sort_node_weight, NULL);
+    nodes = sort_nodes_by_weight(nodes, NULL, data_set);
     containers = g_list_sort_with_data(containers, sort_clone_instance, data_set);
     distribute_children(rsc, containers, nodes,
                         container_data->replicas, container_data->replicas_per_host, data_set);
@@ -357,7 +357,7 @@ find_compatible_tuple_by_node(resource_t * rsc_lh, node_t * candidate, resource_
 
 static resource_t *
 find_compatible_tuple(resource_t *rsc_lh, resource_t * rsc, enum rsc_role_e filter,
-                      gboolean current)
+                      gboolean current, pe_working_set_t *data_set)
 {
     GListPtr scratch = NULL;
     resource_t *pair = NULL;
@@ -369,7 +369,7 @@ find_compatible_tuple(resource_t *rsc_lh, resource_t * rsc, enum rsc_role_e filt
     }
 
     scratch = g_hash_table_get_values(rsc_lh->allowed_nodes);
-    scratch = g_list_sort_with_data(scratch, sort_node_weight, NULL);
+    scratch = sort_nodes_by_weight(scratch, NULL, data_set);
 
     for (GListPtr gIter = scratch; gIter != NULL; gIter = gIter->next) {
         node_t *node = (node_t *) gIter->data;
@@ -433,6 +433,7 @@ container_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc, rsc_colocatio
 {
     GListPtr allocated_rhs = NULL;
     container_variant_data_t *container_data = NULL;
+    pe_working_set_t *data_set = pe_dataset; // @TODO
 
     CRM_CHECK(constraint != NULL, return);
     CRM_CHECK(rsc_lh != NULL, pe_err("rsc_lh was NULL for %s", constraint->id); return);
@@ -444,7 +445,9 @@ container_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc, rsc_colocatio
         return;
 
     } else if(constraint->rsc_lh->variant > pe_group) {
-        resource_t *rh_child = find_compatible_tuple(rsc_lh, rsc, RSC_ROLE_UNKNOWN, FALSE);
+        resource_t *rh_child = find_compatible_tuple(rsc_lh, rsc,
+                                                     RSC_ROLE_UNKNOWN, FALSE,
+                                                     data_set);
 
         if (rh_child) {
             pe_rsc_debug(rsc, "Pairing %s with %s", rsc_lh->id, rh_child->id);
@@ -577,8 +580,11 @@ tuple_for_docker(resource_t *rsc, resource_t *docker, node_t *node)
 }
 
 static enum pe_graph_flags
-container_update_interleave_actions(action_t * first, action_t * then, node_t * node, enum pe_action_flags flags,
-                     enum pe_action_flags filter, enum pe_ordering type)
+container_update_interleave_actions(pe_action_t *first, pe_action_t *then,
+                                    pe_node_t *node, enum pe_action_flags flags,
+                                    enum pe_action_flags filter,
+                                    enum pe_ordering type,
+                                    pe_working_set_t *data_set)
 {
     GListPtr gIter = NULL;
     GListPtr children = NULL;
@@ -593,8 +599,11 @@ container_update_interleave_actions(action_t * first, action_t * then, node_t * 
 
     children = get_containers_or_children(then->rsc);
     for (gIter = children; gIter != NULL; gIter = gIter->next) {
-        resource_t *then_child = (resource_t *) gIter->data;
-        resource_t *first_child = find_compatible_child(then_child, first->rsc, RSC_ROLE_UNKNOWN, current);
+        pe_resource_t *then_child = gIter->data;
+        pe_resource_t *first_child = find_compatible_child(then_child,
+                                                           first->rsc,
+                                                           RSC_ROLE_UNKNOWN,
+                                                           current, data_set);
         if (first_child == NULL && current) {
             crm_trace("Ignore");
 
@@ -739,11 +748,13 @@ container_update_actions(action_t * first, action_t * then, node_t * node, enum 
                      enum pe_action_flags filter, enum pe_ordering type)
 {
     enum pe_graph_flags changed = pe_graph_none;
+    pe_working_set_t *data_set = pe_dataset; // @TODO
 
     crm_trace("%s -> %s", first->uuid, then->uuid);
 
     if(can_interleave_actions(first, then)) {
-        changed = container_update_interleave_actions(first, then, node, flags, filter, type);
+        changed = container_update_interleave_actions(first, then, node, flags,
+                                                      filter, type, data_set);
 
     } else if(then->rsc) {
         GListPtr gIter = NULL;

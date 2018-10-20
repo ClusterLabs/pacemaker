@@ -305,8 +305,8 @@ sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
         list1 = g_hash_table_get_values(hash1);
         list2 = g_hash_table_get_values(hash2);
 
-        list1 = g_list_sort_with_data(list1, sort_node_weight, current_node1);
-        list2 = g_list_sort_with_data(list2, sort_node_weight, current_node2);
+        list1 = sort_nodes_by_weight(list1, current_node1, data_set);
+        list2 = sort_nodes_by_weight(list2, current_node2, data_set);
         max = g_list_length(list1);
         if (max < g_list_length(list2)) {
             max = g_list_length(list2);
@@ -634,7 +634,7 @@ clone_color(resource_t *rsc, node_t *prefer, pe_working_set_t *data_set)
     dump_node_scores(show_scores ? 0 : scores_log_level, rsc, __FUNCTION__, rsc->allowed_nodes);
 
     nodes = g_hash_table_get_values(rsc->allowed_nodes);
-    nodes = g_list_sort_with_data(nodes, sort_node_weight, NULL);
+    nodes = sort_nodes_by_weight(nodes, NULL, data_set);
     rsc->children = g_list_sort_with_data(rsc->children, sort_clone_instance, data_set);
     distribute_children(rsc, rsc->children, nodes, clone_data->clone_max, clone_data->clone_node_max, data_set);
     g_list_free(nodes);
@@ -986,8 +986,10 @@ is_child_compatible(resource_t *child_rsc, node_t * local_node, enum rsc_role_e 
     return FALSE;
 }
 
-resource_t *
-find_compatible_child(resource_t * local_child, resource_t * rsc, enum rsc_role_e filter, gboolean current)
+pe_resource_t *
+find_compatible_child(pe_resource_t *local_child, pe_resource_t *rsc,
+                      enum rsc_role_e filter, gboolean current,
+                      pe_working_set_t *data_set)
 {
     resource_t *pair = NULL;
     GListPtr gIter = NULL;
@@ -1000,7 +1002,7 @@ find_compatible_child(resource_t * local_child, resource_t * rsc, enum rsc_role_
     }
 
     scratch = g_hash_table_get_values(local_child->allowed_nodes);
-    scratch = g_list_sort_with_data(scratch, sort_node_weight, NULL);
+    scratch = sort_nodes_by_weight(scratch, NULL, data_set);
 
     gIter = scratch;
     for (; gIter != NULL; gIter = gIter->next) {
@@ -1035,6 +1037,7 @@ clone_rsc_colocation_rh(resource_t *rsc_lh, resource_t *rsc_rh,
     GListPtr gIter = NULL;
     gboolean do_interleave = FALSE;
     const char *interleave_s = NULL;
+    pe_working_set_t *data_set = pe_dataset; // @TODO
 
     CRM_CHECK(constraint != NULL, return);
     CRM_CHECK(rsc_lh != NULL, pe_err("rsc_lh was NULL for %s", constraint->id); return);
@@ -1077,7 +1080,8 @@ clone_rsc_colocation_rh(resource_t *rsc_lh, resource_t *rsc_rh,
     } else if (do_interleave) {
         resource_t *rh_child = NULL;
 
-        rh_child = find_compatible_child(rsc_lh, rsc_rh, RSC_ROLE_UNKNOWN, FALSE);
+        rh_child = find_compatible_child(rsc_lh, rsc_rh, RSC_ROLE_UNKNOWN,
+                                         FALSE, data_set);
 
         if (rh_child) {
             pe_rsc_debug(rsc_rh, "Pairing %s with %s", rsc_lh->id, rh_child->id);

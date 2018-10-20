@@ -950,6 +950,7 @@ promotable_colocation_rh(resource_t *rsc_lh, resource_t *rsc_rh,
                          rsc_colocation_t *constraint)
 {
     GListPtr gIter = NULL;
+    pe_working_set_t *data_set = pe_dataset; // @TODO
 
     if (is_set(rsc_lh->flags, pe_rsc_provisional)) {
         GListPtr rhs = NULL;
@@ -982,7 +983,9 @@ promotable_colocation_rh(resource_t *rsc_lh, resource_t *rsc_rh,
         g_list_free(rhs);
 
     } else if (constraint->role_lh == RSC_ROLE_MASTER) {
-        resource_t *rh_child = find_compatible_child(rsc_lh, rsc_rh, constraint->role_rh, FALSE);
+        pe_resource_t *rh_child = find_compatible_child(rsc_lh, rsc_rh,
+                                                        constraint->role_rh,
+                                                        FALSE, data_set);
 
         if (rh_child == NULL && constraint->score >= INFINITY) {
             pe_rsc_trace(rsc_lh, "%s can't be promoted %s", rsc_lh->id, constraint->id);

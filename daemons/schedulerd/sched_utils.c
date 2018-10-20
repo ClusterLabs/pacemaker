@@ -81,16 +81,21 @@ can_run_resources(const node_t * node)
     return TRUE;
 }
 
+struct node_weight_s {
+    pe_node_t *active;
+    pe_working_set_t *data_set;
+};
+
 /* return -1 if 'a' is more preferred
  * return  1 if 'b' is more preferred
  */
 
-gint
+static gint
 sort_node_weight(gconstpointer a, gconstpointer b, gpointer data)
 {
     const node_t *node1 = (const node_t *)a;
     const node_t *node2 = (const node_t *)b;
-    const node_t *active = (node_t *) data;
+    struct node_weight_s *nw = data;
 
     int node1_weight = 0;
     int node2_weight = 0;
@@ -129,11 +134,11 @@ sort_node_weight(gconstpointer a, gconstpointer b, gpointer data)
     crm_trace("%s (%d) == %s (%d) : weight",
               node1->details->uname, node1_weight, node2->details->uname, node2_weight);
 
-    if (safe_str_eq(pe_dataset->placement_strategy, "minimal")) {
+    if (safe_str_eq(nw->data_set->placement_strategy, "minimal")) {
         goto equal;
     }
 
-    if (safe_str_eq(pe_dataset->placement_strategy, "balanced")) {
+    if (safe_str_eq(nw->data_set->placement_strategy, "balanced")) {
         result = compare_capacity(node1, node2);
         if (result < 0) {
             crm_trace("%s > %s : capacity (%d)",
@@ -160,12 +165,12 @@ sort_node_weight(gconstpointer a, gconstpointer b, gpointer data)
         return 1;
     }
 
-    if (active && active->details == node1->details) {
+    if (nw->active && nw->active->details == node1->details) {
         crm_trace("%s (%d) > %s (%d) : active",
                   node1->details->uname, node1->details->num_resources,
                   node2->details->uname, node2->details->num_resources);
         return -1;
-    } else if (active && active->details == node2->details) {
+    } else if (nw->active && nw->active->details == node2->details) {
         crm_trace("%s (%d) < %s (%d) : active",
                   node1->details->uname, node1->details->num_resources,
                   node2->details->uname, node2->details->num_resources);
@@ -174,6 +179,15 @@ sort_node_weight(gconstpointer a, gconstpointer b, gpointer data)
   equal:
     crm_trace("%s = %s", node1->details->uname, node2->details->uname);
     return strcmp(node1->details->uname, node2->details->uname);
+}
+
+GList *
+sort_nodes_by_weight(GList *nodes, pe_node_t *active_node,
+                     pe_working_set_t *data_set)
+{
+    struct node_weight_s nw = { active_node, data_set };
+
+    return g_list_sort_with_data(nodes, sort_node_weight, &nw);
 }
 
 void

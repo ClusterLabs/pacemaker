@@ -1236,8 +1236,7 @@ stage5(pe_working_set_t * data_set)
     if (safe_str_neq(data_set->placement_strategy, "default")) {
         GListPtr nodes = g_list_copy(data_set->nodes);
 
-        nodes = g_list_sort_with_data(nodes, sort_node_weight, NULL);
-
+        nodes = sort_nodes_by_weight(nodes, NULL, data_set);
         data_set->resources =
             g_list_sort_with_data(data_set->resources, sort_rsc_process_order, nodes);
 
