@@ -114,8 +114,6 @@ gboolean common_unpack(xmlNode * xml_obj, resource_t ** rsc, resource_t * parent
                        pe_working_set_t * data_set);
 void common_free(resource_t * rsc);
 
-extern pe_working_set_t *pe_dataset;
-
 extern node_t *node_copy(const node_t *this_node);
 extern time_t get_effective_time(pe_working_set_t * data_set);
 
