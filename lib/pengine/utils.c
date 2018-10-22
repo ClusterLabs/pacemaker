@@ -1930,7 +1930,8 @@ rsc_action_digest(resource_t * rsc, const char *task, const char *key,
 
         // REMOTE_CONTAINER_HACK: Allow remote nodes that start containers with pacemaker remote inside
         if (container_fix_remote_addr_in(rsc, data->params_all, "addr")) {
-            crm_trace("Fixed addr for %s on %s", rsc->id, node->details->uname);
+            crm_trace("Set address for bundle connection %s (on %s)",
+                      rsc->id, node->details->uname);
         }
 
         g_hash_table_foreach(local_rsc_params, hash2field, data->params_all);

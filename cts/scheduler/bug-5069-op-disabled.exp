@@ -3,7 +3,7 @@
     <action_set>
       <crm_event id="3" operation="clear_failcount" operation_key="A_clear_failcount_0" on_node="fc16-builder2" on_node_uuid="fc16-builder2">
         <primitive id="A" class="ocf" provider="pacemaker" type="Dummy"/>
-        <attributes CRM_meta_on_node="fc16-builder2" CRM_meta_on_node_uuid="fc16-builder2" CRM_meta_timeout="20000" />
+        <attributes CRM_meta_on_node="fc16-builder2" CRM_meta_on_node_uuid="fc16-builder2" CRM_meta_op_no_wait="true" CRM_meta_timeout="20000" />
       </crm_event>
     </action_set>
     <inputs/>

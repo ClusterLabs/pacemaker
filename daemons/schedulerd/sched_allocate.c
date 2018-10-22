@@ -233,9 +233,6 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
     const char *digest_secure = NULL;
 
     CRM_CHECK(active_node != NULL, return FALSE);
-    if (safe_str_eq(task, RSC_STOP)) {
-        return FALSE;
-    }
 
     interval_ms_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL_MS);
     interval_ms = crm_parse_ms(interval_ms_s);
@@ -350,7 +347,6 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
     return did_change;
 }
 
-
 static void
 check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_working_set_t * data_set)
 {
@@ -366,8 +362,6 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
     xmlNode *rsc_op = NULL;
     GListPtr op_list = NULL;
     GListPtr sorted_op_list = NULL;
-    gboolean is_probe = FALSE;
-    gboolean did_change = FALSE;
 
     CRM_CHECK(node != NULL, return);
 
@@ -420,47 +414,33 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
             continue;
         }
 
-        is_probe = FALSE;
-        did_change = FALSE;
         task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
 
         interval_ms_s = crm_element_value(rsc_op, XML_LRM_ATTR_INTERVAL_MS);
         interval_ms = crm_parse_ms(interval_ms_s);
 
-        if ((interval_ms == 0) && safe_str_eq(task, RSC_STATUS)) {
-            is_probe = TRUE;
-        }
-
         if ((interval_ms > 0) &&
             (is_set(rsc->flags, pe_rsc_maintenance) || node->details->maintenance)) {
+            // Maintenance mode cancels recurring operations
             CancelXmlOp(rsc, rsc_op, node, "maintenance mode", data_set);
 
-        } else if (is_probe || (interval_ms > 0)
+        } else if ((interval_ms > 0)
+                   || safe_str_eq(task, RSC_STATUS)
                    || safe_str_eq(task, RSC_START)
                    || safe_str_eq(task, RSC_PROMOTE)
                    || safe_str_eq(task, RSC_MIGRATED)) {
-            did_change = check_action_definition(rsc, node, rsc_op, data_set);
-        }
-
-        if (did_change && pe_get_failcount(node, rsc, NULL, pe_fc_effective,
-                                           NULL, data_set)) {
-
-            char *key = NULL;
-            action_t *action_clear = NULL;
-
-            key = generate_op_key(rsc->id, CRM_OP_CLEAR_FAILCOUNT, 0);
-            action_clear =
-                custom_action(rsc, key, CRM_OP_CLEAR_FAILCOUNT, node, FALSE, TRUE, data_set);
-            set_bit(action_clear->flags, pe_action_runnable);
-
-            crm_notice("Clearing failure of %s on %s "
-                       "because action definition changed " CRM_XS " %s",
-                       rsc->id, node->details->uname, action_clear->uuid);
+            /* If a resource operation failed, and the operation's definition
+             * has changed, clear any fail count so they can be retried fresh.
+             */
+            if (check_action_definition(rsc, node, rsc_op, data_set)
+                && pe_get_failcount(node, rsc, NULL, pe_fc_effective, NULL,
+                                    data_set)) {
+                pe__clear_failcount(rsc, node, "action definition changed",
+                                    data_set);
+            }
         }
     }
-
     g_list_free(sorted_op_list);
-
 }
 
 static GListPtr
@@ -1233,16 +1213,10 @@ cleanup_orphans(resource_t * rsc, pe_working_set_t * data_set)
             && pe_get_failcount(node, rsc, NULL, pe_fc_effective, NULL,
                                 data_set)) {
 
-            char *key = generate_op_key(rsc->id, CRM_OP_CLEAR_FAILCOUNT, 0);
-            action_t *clear_op = custom_action(rsc, key, CRM_OP_CLEAR_FAILCOUNT,
-                                               node, FALSE, TRUE, data_set);
+            pe_action_t *clear_op = NULL;
 
-            add_hash_param(clear_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
-
-            pe_rsc_info(rsc,
-                        "Clearing failure of %s on %s because it is orphaned "
-                        CRM_XS " %s",
-                        rsc->id, node->details->uname, clear_op->uuid);
+            clear_op = pe__clear_failcount(rsc, node, "it is orphaned",
+                                           data_set);
 
             /* We can't use order_action_then_stop() here because its
              * pe_order_preserve breaks things
@@ -1443,11 +1417,29 @@ fence_guest(pe_node_t *node, pe_action_t *done, pe_working_set_t *data_set)
                  node->details->uname, stonith_op->id,
                  container->id, stop->id);
     } else {
-        crm_info("Implying guest node %s is down (action %d) ",
-                 node->details->uname, stonith_op->id);
-    }
+        /* If we're fencing the guest node but there's no stop for the guest
+         * resource, we must think the guest is already stopped. However, we may
+         * think so because its resource history was just cleaned. To avoid
+         * unnecessarily considering the guest node down if it's really up,
+         * order the pseudo-fencing after any stop of the connection resource,
+         * which will be ordered after any container (re-)probe.
+         */
+        stop = find_first_action(node->details->remote_rsc->actions, NULL,
+                                 RSC_STOP, NULL);
 
-    /* @TODO: Order pseudo-fence after any (optional) fence of guest's host */
+        if (stop) {
+            order_actions(stop, stonith_op, pe_order_optional);
+            crm_info("Implying guest node %s is down (action %d) "
+                     "after connection is stopped (action %d)",
+                     node->details->uname, stonith_op->id, stop->id);
+        } else {
+            /* Not sure why we're fencing, but everything must already be
+             * cleanly stopped.
+             */
+            crm_info("Implying guest node %s is down (action %d) ",
+                     node->details->uname, stonith_op->id);
+        }
+    }
 
     /* Order/imply other actions relative to pseudo-fence as with real fence */
     stonith_constraints(node, stonith_op, data_set);

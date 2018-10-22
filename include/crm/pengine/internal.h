@@ -109,6 +109,9 @@ int pe_get_failcount(node_t *node, resource_t *rsc, time_t *last_failure,
                      uint32_t flags, xmlNode *xml_op,
                      pe_working_set_t *data_set);
 
+pe_action_t *pe__clear_failcount(pe_resource_t *rsc, pe_node_t *node,
+                                 const char *reason,
+                                 pe_working_set_t *data_set);
 
 /* Functions for finding/counting a resource's active nodes */
 
