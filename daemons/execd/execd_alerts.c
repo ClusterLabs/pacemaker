@@ -143,13 +143,14 @@ err:
 }
 
 static bool
-drain_check()
+drain_check(guint remaining_timeout_ms)
 {
     if (inflight_alerts != NULL) {
         guint count = g_hash_table_size(inflight_alerts);
 
         if (count > 0) {
-            crm_trace("%d alerts pending", count);
+            crm_trace("%d alerts pending (%.3fs timeout remaining)",
+                      count, remaining_timeout_ms / 1000.0);
             return TRUE;
         }
     }
@@ -162,7 +163,8 @@ lrmd_drain_alerts(GMainLoop *mloop)
     if (inflight_alerts != NULL) {
         guint timer_ms = max_inflight_timeout() + 5000;
 
-        crm_trace("Draining in-flight alerts (timeout %u)", timer_ms);
+        crm_trace("Draining in-flight alerts (timeout %.3fs)",
+                  timer_ms / 1000.0);
         draining_alerts = TRUE;
         pcmk_drain_main_loop(mloop, timer_ms, drain_check);
         g_hash_table_destroy(inflight_alerts);
