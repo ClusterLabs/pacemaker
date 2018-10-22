@@ -1271,10 +1271,11 @@ drain_timeout_cb(gpointer user_data)
  *
  * \note This function is intended to be called at shutdown if certain important
  *       events should not be missed. The caller would likely quit the main loop
- *       or exit after calling this function.
+ *       or exit after calling this function. The check() function will be
+ *       passed the remaining timeout in milliseconds.
  */
 void
-pcmk_drain_main_loop(GMainLoop *mloop, guint timer_ms, bool (*check)(void))
+pcmk_drain_main_loop(GMainLoop *mloop, guint timer_ms, bool (*check)(guint))
 {
     bool timeout_popped = FALSE;
     guint timer = 0;
@@ -1284,8 +1285,11 @@ pcmk_drain_main_loop(GMainLoop *mloop, guint timer_ms, bool (*check)(void))
 
     ctx = g_main_loop_get_context(mloop);
     if (ctx) {
+        time_t start_time = time(NULL);
+
         timer = g_timeout_add(timer_ms, drain_timeout_cb, &timeout_popped);
-        while (!timeout_popped && check()) {
+        while (!timeout_popped
+               && check(timer_ms - (time(NULL) - start_time) * 1000)) {
             g_main_context_iteration(ctx, TRUE);
         }
     }
