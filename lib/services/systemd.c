@@ -650,8 +650,9 @@ systemd_remove_override(const char *agent, int timeout)
     int rc = unlink(override_file);
 
     if (rc < 0) {
-            crm_perror(LOG_WARNING, "Cannot remove systemd override file %s",
-                       override_file);
+        // Stop may be called when already stopped, which is fine
+        crm_perror(LOG_DEBUG, "Cannot remove systemd override file %s",
+                   override_file);
     } else {
         systemd_daemon_reload(timeout);
     }
