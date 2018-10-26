@@ -596,12 +596,9 @@ crm_find_peer(unsigned int id, const char *uname)
     } else {
         /* Simple merge */
 
-        /* Only corosync based clusters use nodeid's
-         *
-         * The functions that call crm_update_peer_state() only know nodeid
-         * so 'by_id' is authorative when merging
-         *
-         * Same for crm_update_peer_proc()
+        /* Only corosync-based clusters use node IDs. The functions that call
+         * crm_update_peer_state() and crm_update_peer_proc() only know nodeid,
+         * so 'by_id' is authoritative when merging.
          */
         crm_dump_peer_hash(LOG_DEBUG, __FUNCTION__);
 

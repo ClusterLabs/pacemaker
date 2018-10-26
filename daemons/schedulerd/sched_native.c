@@ -2823,7 +2823,7 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
                 /* For safety, we order the 'rsc' start after 'remote'
                  * has been probed.
                  *
-                 * Using 'top' helps for groups, but in we may need to
+                 * Using 'top' helps for groups, but we may need to
                  * follow the start's ordering chain backwards.
                  */
                 custom_action_order(remote, generate_op_key(remote->id, RSC_STATUS, 0), NULL,
@@ -3182,13 +3182,6 @@ rsc_stonith_ordering(resource_t * rsc, action_t * stonith_op, pe_working_set_t *
         native_stop_constraints(rsc, stonith_op, data_set);
     }
 }
-
-enum stack_activity {
-    stack_stable = 0,
-    stack_starting = 1,
-    stack_stopping = 2,
-    stack_middle = 4,
-};
 
 void
 ReloadRsc(resource_t * rsc, node_t *node, pe_working_set_t * data_set)

@@ -871,7 +871,7 @@ do_read_config(long long action,
 void
 crm_shutdown(int nsig)
 {
-    if (crmd_mainloop != NULL && g_main_is_running(crmd_mainloop)) {
+    if (crmd_mainloop != NULL && g_main_loop_is_running(crmd_mainloop)) {
         if (is_set(fsa_input_register, R_SHUTDOWN)) {
             crm_err("Escalating the shutdown");
             register_fsa_input_before(C_SHUTDOWN, I_ERROR, NULL);

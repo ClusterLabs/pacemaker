@@ -1115,7 +1115,7 @@ stonith_shutdown(int nsig)
     stonith_shutdown_flag = TRUE;
     crm_info("Terminating with %d clients",
              crm_hash_table_size(client_connections));
-    if (mainloop != NULL && g_main_is_running(mainloop)) {
+    if (mainloop != NULL && g_main_loop_is_running(mainloop)) {
         g_main_loop_quit(mainloop);
     } else {
         stonith_cleanup();
