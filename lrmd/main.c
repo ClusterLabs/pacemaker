@@ -301,7 +301,7 @@ lrmd_exit(gpointer data)
     g_hash_table_destroy(rsc_list);
 
     if (mainloop) {
-        lrmd_drain_alerts(g_main_loop_get_context(mainloop));
+        lrmd_drain_alerts(mainloop);
     }
 
     crm_exit(pcmk_ok);

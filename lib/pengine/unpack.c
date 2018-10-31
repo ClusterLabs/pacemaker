@@ -2990,21 +2990,24 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
     }
 
     if (expired) {
-        if (failure_timeout > 0) {
-            if (pe_get_failcount(node, rsc, &last_failure, pe_fc_default,
-                                 xml_op, data_set)) {
+        if (pe_get_failcount(node, rsc, &last_failure, pe_fc_default, xml_op,
+                             data_set)) {
 
-                if (pe_get_failcount(node, rsc, &last_failure, pe_fc_effective,
-                                     xml_op, data_set) == 0) {
-                    clear_reason = "it expired";
-                } else {
-                    expired = FALSE;
-                }
+            // There is a fail count ignoring timeout
 
-            } else if (rsc->remote_reconnect_interval && strstr(ID(xml_op), "last_failure")) {
-                /* always clear last failure when reconnect interval is set */
-                clear_reason = "reconnect interval is set";
+            if (pe_get_failcount(node, rsc, &last_failure, pe_fc_effective,
+                                 xml_op, data_set) == 0) {
+                // There is no fail count considering timeout
+                clear_reason = "it expired";
+
+            } else {
+                expired = FALSE;
             }
+
+        } else if (rsc->remote_reconnect_interval
+                   && strstr(ID(xml_op), "last_failure")) {
+            // Always clear last failure when reconnect interval is set
+            clear_reason = "reconnect interval is set";
         }
 
     } else if (strstr(ID(xml_op), "last_failure") &&
@@ -3028,14 +3031,8 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
 
     if (clear_reason != NULL) {
         node_t *remote_node = pe_find_node(data_set->nodes, rsc->id);
-        char *key = generate_op_key(rsc->id, CRM_OP_CLEAR_FAILCOUNT, 0);
-        action_t *clear_op = custom_action(rsc, key, CRM_OP_CLEAR_FAILCOUNT,
-                                           node, FALSE, TRUE, data_set);
-
-        add_hash_param(clear_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
-
-        crm_notice("Clearing failure of %s on %s because %s " CRM_XS " %s",
-                   rsc->id, node->details->uname, clear_reason, clear_op->uuid);
+        pe_action_t *clear_op = pe__clear_failcount(rsc, node, clear_reason,
+                                                    data_set);
 
         if (is_set(data_set->flags, pe_flag_stonith_enabled)
             && rsc->remote_reconnect_interval
@@ -3238,11 +3235,6 @@ unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, xmlNode ** last
         pe_rsc_trace(rsc, "Node %s (where %s is running) is unclean."
                      " Further action depends on the value of the stop's on-fail attribute",
                      node->details->uname, rsc->id);
-    }
-
-    if (status == PCMK_LRM_OP_ERROR) {
-        /* Older versions set this if rc != 0 but it's up to us to decide */
-        status = PCMK_LRM_OP_DONE;
     }
 
     if(status != PCMK_LRM_OP_NOT_INSTALLED) {

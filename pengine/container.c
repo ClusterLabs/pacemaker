@@ -845,10 +845,12 @@ container_expand(resource_t * rsc, pe_working_set_t * data_set)
             const char *calculated_addr = container_fix_remote_addr_in(tuple->remote, nvpair, "value");
 
             if (calculated_addr) {
-                crm_trace("Fixed addr for %s on %s", tuple->remote->id, calculated_addr);
+                crm_trace("Set address for bundle connection %s to bundle host %s",
+                          tuple->remote->id, calculated_addr);
                 g_hash_table_replace(tuple->remote->parameters, strdup("addr"), strdup(calculated_addr));
             } else {
-                crm_err("Could not fix addr for %s", tuple->remote->id);
+                crm_err("Could not determine address for bundle connection %s",
+                        tuple->remote->id);
             }
         }
         if(tuple->ip) {

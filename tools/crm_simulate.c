@@ -56,6 +56,10 @@ get_date(pe_working_set_t * data_set)
 
     if (use_date) {
         data_set->now = crm_time_new(use_date);
+        quiet_log(" + Setting effective cluster time: %s", use_date);
+        crm_time_log(LOG_NOTICE, "Pretending 'now' is", data_set->now,
+                     crm_time_log_date | crm_time_log_timeofday);
+
 
     } else if(original_date) {
         char *when = NULL;
@@ -469,7 +473,9 @@ static struct crm_option long_options[] = {
     {"-spacer-",     0, 0, '-', "\t\tValue is of the form ${resource}_${task}_${interval}@${node}=${rc}."},
     {"-spacer-",     0, 0, '-', "\t\tEg. memcached_stop_0@bart.example.com=1\n"},
     {"-spacer-",     0, 0, '-', "\t\tThe transition will normally stop at the failed action.  Save the result with --save-output and re-run with --xml-file"},
-    {"set-datetime", 1, 0, 't', "Set date/time"},
+    {   "set-datetime", required_argument, NULL, 't',
+        "Set date/time (ISO 8601 format, see https://en.wikipedia.org/wiki/ISO_8601)"
+    },
     {"quorum",       1, 0, 'q', "\tSpecify a value for quorum"},
     {"watchdog",     1, 0, 'w', "\tAssume a watchdog device is active"},
     {"ticket-grant",     1, 0, 'g', "Grant a ticket"},
@@ -785,12 +791,6 @@ main(int argc, char **argv)
     global_cib->cmds->signon(global_cib, crm_system_name, cib_command);
 
     set_working_set_defaults(&data_set);
-
-    if (data_set.now != NULL) {
-        quiet_log(" + Setting effective cluster time: %s", use_date);
-        crm_time_log(LOG_WARNING, "Set fake 'now' to", data_set.now,
-                     crm_time_log_date | crm_time_log_timeofday);
-    }
 
     rc = global_cib->cmds->query(global_cib, NULL, &input, cib_sync_call | cib_scope_local);
     CRM_ASSERT(rc == pcmk_ok);

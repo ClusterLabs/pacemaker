@@ -26,10 +26,57 @@
 #include <crm/cluster/internal.h>
 #include <crm/cluster/election.h>
 #include <crm/crm.h>
+#include <crmd.h>
 #include <crmd_fsa.h>
 #include <crmd_messages.h>
 #include <crmd_callbacks.h>
 #include <tengine.h>
+
+static election_t *fsa_election = NULL;
+
+static gboolean
+election_win_cb(gpointer data)
+{
+    register_fsa_input(C_FSA_INTERNAL, I_ELECTION_DC, NULL);
+    return FALSE;
+}
+
+void
+controld_election_init(const char *uname)
+{
+    fsa_election = election_init("DC", uname, 60000 /*60s*/, election_win_cb);
+}
+
+void
+controld_remove_voter(const char *uname)
+{
+    election_remove(fsa_election, uname);
+}
+
+void
+controld_stop_election_timeout()
+{
+    election_timeout_stop(fsa_election);
+}
+
+void
+controld_election_fini()
+{
+    election_fini(fsa_election);
+    fsa_election = NULL;
+}
+
+void
+controld_set_election_period(const char *value)
+{
+    election_timeout_set_period(fsa_election, crm_get_msec(value));
+}
+
+void
+controld_stop_election_timer()
+{
+    election_timeout_stop(fsa_election);
+}
 
 /*	A_ELECTION_VOTE	*/
 void
@@ -84,14 +131,11 @@ do_election_check(long long action,
                   enum crmd_fsa_state cur_state,
                   enum crmd_fsa_input current_input, fsa_data_t * msg_data)
 {
-    if (fsa_state != S_ELECTION) {
+    if (fsa_state == S_ELECTION) {
+        election_check(fsa_election);
+    } else {
         crm_debug("Ignoring election check because we are not in an election");
-
-    } else if(election_check(fsa_election)) {
-        register_fsa_input(C_FSA_INTERNAL, I_ELECTION_DC, NULL);
     }
-
-    return;
 }
 
 #define loss_dampen 2           /* in seconds */
@@ -132,10 +176,8 @@ do_election_count_vote(long long action,
             }
             break;
 
-        case election_in_progress:
-            break;
         default:
-            crm_err("Unhandled election result: %d", rc);
+            crm_trace("Election message resulted in state %d", rc);
     }
 }
 

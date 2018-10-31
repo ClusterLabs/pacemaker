@@ -146,6 +146,8 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 if (!is_remote) {
                     remove_stonith_cleanup(node->uname);
                 }
+            } else {
+                controld_remove_voter(node->uname);
             }
 
             crmd_alert_node_event(node);
@@ -166,7 +168,13 @@ peer_update_callback(enum crm_status_type type, crm_node_t * node, const void *d
                 /* Peer process did not change */
                 crm_trace("No change %6x %6x %6x", old, node->processes, proc_flags);
                 return;
-            } else if (is_not_set(fsa_input_register, R_CIB_CONNECTED)) {
+            }
+
+            if (!appeared) {
+                controld_remove_voter(node->uname);
+            }
+
+            if (is_not_set(fsa_input_register, R_CIB_CONNECTED)) {
                 crm_trace("Not connected");
                 return;
             } else if (fsa_state == S_STOPPING) {

@@ -1486,6 +1486,26 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
     if (rsc->container) {
         resource_t *remote_rsc = NULL;
 
+        if (rsc->is_remote_node) {
+            // rsc is the implicit remote connection for a guest or bundle node
+
+            /* Do not allow a guest resource to live on a Pacemaker Remote node,
+             * to avoid nesting remotes. However, allow bundles to run on remote
+             * nodes.
+             */
+            if (is_not_set(rsc->flags, pe_rsc_allow_remote_remotes)) {
+                rsc_avoids_remote_nodes(rsc->container);
+            }
+
+            /* If someone cleans up a guest or bundle node's container, we will
+             * likely schedule a (re-)probe of the container and recovery of the
+             * connection. Order the connection stop after the container probe,
+             * so that if we detect the container running, we will trigger a new
+             * transition and avoid the unnecessary recovery.
+             */
+            new_rsc_order(rsc->container, RSC_STATUS, rsc, RSC_STOP,
+                          pe_order_optional, data_set);
+
         /* A user can specify that a resource must start on a Pacemaker Remote
          * node by explicitly configuring it with the container=NODENAME
          * meta-attribute. This is of questionable merit, since location
@@ -1493,16 +1513,15 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
          * we check whether a resource (that is not itself a remote connection)
          * has container set to a remote node or guest node resource.
          */
-        if (rsc->container->is_remote_node) {
+        } else if (rsc->container->is_remote_node) {
             remote_rsc = rsc->container;
-        } else if (rsc->is_remote_node == FALSE) {
+        } else  {
             remote_rsc = rsc_contains_remote_node(data_set, rsc->container);
         }
 
         if (remote_rsc) {
-            /* The container represents a Pacemaker Remote node, so force the
-             * resource on the Pacemaker Remote node instead of colocating the
-             * resource with the container resource.
+            /* Force the resource on the Pacemaker Remote node instead of
+             * colocating the resource with the container resource.
              */
             GHashTableIter iter;
             node_t *node = NULL;
@@ -1512,6 +1531,7 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
                     node->weight = -INFINITY;
                 }
             }
+
         } else {
             /* This resource is either a filler for a container that does NOT
              * represent a Pacemaker Remote node, or a Pacemaker Remote
@@ -1544,15 +1564,6 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
         /* don't allow remote nodes to run stonith devices
          * or remote connection resources.*/
         rsc_avoids_remote_nodes(rsc);
-    }
-
-    /* If this is a guest node's implicit remote connection, do not allow the
-     * guest resource to live on a Pacemaker Remote node, to avoid nesting
-     * remotes. However, allow bundles to run on remote nodes.
-     */
-    if (rsc->is_remote_node && rsc->container
-        && is_not_set(rsc->flags, pe_rsc_allow_remote_remotes)) {
-        rsc_avoids_remote_nodes(rsc->container);
     }
 }
 

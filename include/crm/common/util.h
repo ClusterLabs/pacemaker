@@ -63,6 +63,7 @@ char *crm_itoa_stack(int an_int, char *buf, size_t len);
 char *crm_itoa(int an_int);
 gboolean crm_is_true(const char *s);
 int crm_str_to_boolean(const char *s, int *ret);
+long long crm_parse_ll(const char *text, const char *default_text);
 int crm_parse_int(const char *text, const char *default_text);
 char * crm_strip_trailing_newline(char *str);
 gboolean crm_str_eq(const char *a, const char *b, gboolean use_case);
