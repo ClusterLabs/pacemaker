@@ -36,7 +36,6 @@ static GMainLoop *mainloop = NULL;
 static qb_ipcs_service_t *ipcs = NULL;
 static stonith_t *stonith_api = NULL;
 int lrmd_call_id = 0;
-int disable_sbd_check = 0;
 
 #ifdef ENABLE_PCMK_REMOTE
 /* whether shutdown request has been sent */
@@ -508,7 +507,6 @@ static struct crm_option long_options[] = {
     {"help",    0, 0,    '?', "\tThis text"},
     {"version", 0, 0,    '$', "\tVersion information"  },
     {"verbose", 0, 0,    'V', "\tIncrease debug output"},
-    {"disable-sbd-check", 0, 0,    'D', "\tDisable the check for sbd - only safe for bundles"},
 
     {"logfile", 1, 0,    'l', "\tSend logs to the additional named logfile"},
 #ifdef ENABLE_PCMK_REMOTE
@@ -555,9 +553,6 @@ main(int argc, char **argv, char **envp)
                 break;
             case 'V':
                 bump_log_num++;
-                break;
-            case 'D':
-                disable_sbd_check = 1;
                 break;
             case '?':
             case '$':
