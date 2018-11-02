@@ -510,6 +510,23 @@ drbd_info() {
         echo
     }
 
+    if which drbdadm >/dev/null 2>&1; then
+        echo "--- drbdadm dump:"
+        drbdadm dump 2>&1
+        echo
+
+        echo "--- drbdadm status:"
+        drbdadm status 2>&1
+        echo
+
+        echo "--- drbdadm show-gi:"
+        for res in $(drbdsetup status | grep -e ^\\S | awk '{ print $1 }'); do
+            echo "$res:"
+            drbdadm show-gi $res 2>&1
+            echo
+        done
+    fi
+
     if which drbd-overview >/dev/null 2>&1; then
         echo "--- drbd-overview:"
         drbd-overview 2>&1
@@ -524,15 +541,6 @@ drbd_info() {
         echo "--- drbdsetup events2:"
         drbdsetup events2 --timestamps --statistics --now 2>&1
         echo
-    fi
-
-    if which drbdadm >/dev/null 2>&1; then
-        echo "--- drbdadm show-gi:"
-        for res in $(drbdsetup status | grep -e ^\\S | awk '{ print $1 }'); do
-            echo "$res:"
-            drbdadm show-gi $res 2>&1
-            echo
-        done
     fi
 }
 
