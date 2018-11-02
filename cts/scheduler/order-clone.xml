@@ -106,17 +106,17 @@
       </clone>
     </resources>
     <constraints>
-      <rsc_order first="dlm-clone" id="o2cb-order" score="INFINITY" then="o2cb-clone"/>
-      <rsc_order first="dlm-clone" id="clvm-order" score="INFINITY" then="clvm-clone"/>
-      <rsc_order first="vg1-clone" id="fs1-order" score="INFINITY" then="fs1-clone"/>
-      <rsc_order first="clvm-clone" id="vg1-order" score="INFINITY" then="vg1-clone"/>
-      <rsc_order first="fs1-clone" id="fs2-order" score="INFINITY" then="fs2-clone"/>
+      <rsc_order first="dlm-clone" id="o2cb-order" then="o2cb-clone"/>
+      <rsc_order first="dlm-clone" id="clvm-order" then="clvm-clone"/>
+      <rsc_order first="vg1-clone" id="fs1-order" then="fs1-clone"/>
+      <rsc_order first="clvm-clone" id="vg1-order" then="vg1-clone"/>
+      <rsc_order first="fs1-clone" id="fs2-order" then="fs2-clone"/>
       <rsc_colocation id="o2cb-colo" rsc="dlm-clone" score="INFINITY" with-rsc="o2cb-clone"/>
       <rsc_colocation id="clvm-colo" rsc="dlm-clone" score="INFINITY" with-rsc="clvm-clone"/>
       <rsc_colocation id="vg1-colo" rsc="clvm-clone" score="INFINITY" with-rsc="vg1-clone"/>
       <rsc_colocation id="fs1-colo" rsc="vg1-clone" score="INFINITY" with-rsc="fs1-clone"/>
       <rsc_colocation id="fs2-colo" rsc="vg1-clone" score="INFINITY" with-rsc="fs2-clone"/>
-      <rsc_order first="o2cb-clone" id="vg1-order-2" score="INFINITY" then="vg1-clone"/>
+      <rsc_order first="o2cb-clone" id="vg1-order-2" then="vg1-clone"/>
       <rsc_colocation id="vg1-colo-2" rsc="o2cb-clone" score="INFINITY" with-rsc="vg1-clone"/>
     </constraints>
     <op_defaults>

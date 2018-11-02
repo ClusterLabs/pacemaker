@@ -27,7 +27,7 @@
       </group>
     </resources>
     <constraints>
-      <rsc_order id="order1" first="rsc1" then="rsc2" then-action="start" first-action="start" score="0"/>
+      <rsc_order id="order1" first="rsc1" then="rsc2" then-action="start" first-action="start" kind="Optional"/>
       <rsc_location id="run_rsc1" rsc="rsc1">
         <rule id="can1-1" score="1">
           <expression id="expression.id21956" attribute="#uname" operation="eq" value="node2"/>

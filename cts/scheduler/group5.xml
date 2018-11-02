@@ -21,8 +21,8 @@
       <primitive id="rsc3" class="ocf" provider="heartbeat" type="apache"/>
     </resources>
     <constraints>
-      <rsc_order id="order1" first="rsc1" then="rsc2" then-action="start" first-action="start" score="0"/>
-      <rsc_order id="order2" first="rsc2" then="rsc3" score="0"/>
+      <rsc_order id="order1" first="rsc1" then="rsc2" then-action="start" first-action="start" kind="Optional"/>
+      <rsc_order id="order2" first="rsc2" then="rsc3" kind="Optional"/>
       <rsc_location id="run_rsc1" rsc="rsc1">
         <rule id="can1-1" score="1">
           <expression id="expression.id21954" attribute="#uname" operation="eq" value="node2"/>

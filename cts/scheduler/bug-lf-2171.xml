@@ -77,7 +77,7 @@
       </group>
     </resources>
     <constraints>
-      <rsc_order first="cl_res_Dummy1" id="o_Dummy1-first" score="INFINITY" then="gr_Dummy"/>
+      <rsc_order first="cl_res_Dummy1" id="o_Dummy1-first" then="gr_Dummy"/>
     </constraints>
   </configuration>
   <status>

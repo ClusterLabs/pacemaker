@@ -112,8 +112,8 @@
       </group>
     </resources>
     <constraints>
-      <rsc_order first="cl_tgtd" id="o_tgtd_before_iscsivg01" score="INFINITY" then="rg_iscsivg01"/>
-      <!--rsc_order first="ms_drbd_iscsivg01" first-action="promote" id="o_drbd_before_iscsivg01" score="INFINITY" then="rg_iscsivg01" then-action="start"/-->
+      <rsc_order first="cl_tgtd" id="o_tgtd_before_iscsivg01" then="rg_iscsivg01"/>
+      <!--rsc_order first="ms_drbd_iscsivg01" first-action="promote" id="o_drbd_before_iscsivg01" then="rg_iscsivg01" then-action="start"/-->
       <rsc_colocation id="c_iscsivg01_on_drbd" rsc="rg_iscsivg01" score="INFINITY" with-rsc="ms_drbd_iscsivg01" with-rsc-role="Master"/>
       <rsc_colocation id="c_iscsivg01_on_tgtd" rsc="rg_iscsivg01" score="INFINITY" with-rsc="cl_tgtd"/>
       <rsc_location id="l_iscsivg01_on_alice" rsc="rg_iscsivg01">

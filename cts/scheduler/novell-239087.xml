@@ -65,9 +65,9 @@
       </clone>
     </resources>
     <constraints>
-      <rsc_order id="drbd_before_fs" first="ms-drbd0" then="fs_1" then-action="start" first-action="promote" score="0"/>
+      <rsc_order id="drbd_before_fs" first="ms-drbd0" then="fs_1" then-action="start" first-action="promote" kind="Optional"/>
       <rsc_colocation id="fs_on_drbd0" rsc="fs_1" with-rsc="ms-drbd0" with-rsc-role="Master" score="INFINITY"/>
-      <rsc_order id="promote_after_demote" first="ms-drbd0" then="ms-drbd0" then-action="promote" first-action="demote" score="0"/>
+      <rsc_order id="promote_after_demote" first="ms-drbd0" then="ms-drbd0" then-action="promote" first-action="demote" kind="Optional"/>
     </constraints>
   </configuration>
   <status>

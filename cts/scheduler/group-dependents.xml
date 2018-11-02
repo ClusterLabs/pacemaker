@@ -250,12 +250,12 @@
       </group>
     </resources>
     <constraints>
-      <rsc_order first="ms_drbd" first-action="promote" id="fs_order" score="INFINITY" then="fs_drbd" then-action="start"/>
+      <rsc_order first="ms_drbd" first-action="promote" id="fs_order" then="fs_drbd" then-action="start"/>
       <rsc_colocation id="fs_colocation" rsc="fs_drbd" score="INFINITY" with-rsc="ms_drbd" with-rsc-role="Master"/>
       <rsc_colocation id="ip_colocation" rsc="ip_voip_addresses_p" score="INFINITY" with-rsc="fs_drbd"/>
-      <rsc_order first="fs_drbd" first-action="start" id="ip_order" score="INFINITY" then="ip_voip_addresses_p" then-action="start"/>
-      <rsc_order first="ip_voip_routes" first-action="start" id="voip_order" score="INFINITY" then="voip" then-action="start"/>
-      <rsc_order first="ip_voip_addresses_p" first-action="start" id="ip_route_order" score="INFINITY" then="ip_voip_routes" then-action="start"/>
+      <rsc_order first="fs_drbd" first-action="start" id="ip_order" then="ip_voip_addresses_p" then-action="start"/>
+      <rsc_order first="ip_voip_routes" first-action="start" id="voip_order" then="voip" then-action="start"/>
+      <rsc_order first="ip_voip_addresses_p" first-action="start" id="ip_route_order" then="ip_voip_routes" then-action="start"/>
       <rsc_colocation id="ip_route_colocation" rsc="ip_voip_routes" score="INFINITY" with-rsc="ip_voip_addresses_p"/>
       <rsc_colocation id="voip_colocation" rsc="voip" score="INFINITY" with-rsc="ip_voip_addresses_p"/>
       <rsc_location id="loc_voip_asttest1" node="asttest1" rsc="voip" score="2"/>

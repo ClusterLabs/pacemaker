@@ -159,8 +159,8 @@
         </rule>
       </rsc_location>
       <rsc_colocation id="rsc_colocation-master-group-msPostgresql-1" score="INFINITY" rsc="master-group" with-rsc="msPostgresql" with-rsc-role="Master"/>
-      <rsc_order id="rsc_order-msPostgresql-master-group-1" score="INFINITY" symmetrical="false" first="msPostgresql" first-action="promote" then="master-group" then-action="start"/>
-      <rsc_order id="rsc_order-msPostgresql-master-group-2" score="0" symmetrical="false" first="msPostgresql" first-action="demote" then="master-group" then-action="stop"/>
+      <rsc_order id="rsc_order-msPostgresql-master-group-1" symmetrical="false" first="msPostgresql" first-action="promote" then="master-group" then-action="start"/>
+      <rsc_order id="rsc_order-msPostgresql-master-group-2" kind="Optional" symmetrical="false" first="msPostgresql" first-action="demote" then="master-group" then-action="stop"/>
     </constraints>
     <fencing-topology>
       <fencing-level devices="prmStonith1-2" index="1" target="bl460g8n3" id="fencing"/>

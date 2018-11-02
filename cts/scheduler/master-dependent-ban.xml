@@ -57,7 +57,7 @@
       <rsc_location id="l_drbd-dtest1" node="c8" rsc="ms_drbd-dtest1" score="-INFINITY"/>
       <rsc_location id="l_p_dtest1" node="c8" rsc="p_dtest1" score="-INFINITY"/>
       <rsc_colocation id="co_dtest1" rsc="p_dtest1" score="INFINITY" with-rsc="ms_drbd-dtest1" with-rsc-role="Master"/>
-      <rsc_order first="ms_drbd-dtest1" first-action="promote" id="o_dtest1" score="INFINITY" then="p_dtest1" then-action="start"/>
+      <rsc_order first="ms_drbd-dtest1" first-action="promote" id="o_dtest1" then="p_dtest1" then-action="start"/>
       <rsc_location id="cli-ban-p_dtest1-on-c6" rsc="p_dtest1" node="c6" score="-INFINITY"/>
     </constraints>
   </configuration>

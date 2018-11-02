@@ -144,11 +144,11 @@
     </resources>
     <constraints>
       <rsc_colocation id="vm-fs-with-base" score="INFINITY" rsc="c-vm-fs" with-rsc="base-clone"/>
-      <rsc_order id="base-then-vm-fs" score="INFINITY" first="base-clone" then="c-vm-fs"/>
-      <rsc_order id="xen-f-after-vm-fs" score="INFINITY" first="c-vm-fs" then="xen-f"/>
+      <rsc_order id="base-then-vm-fs" first="base-clone" then="c-vm-fs"/>
+      <rsc_order id="xen-f-after-vm-fs" first="c-vm-fs" then="xen-f"/>
       <rsc_location id="xen-f-pref" rsc="xen-f" score="100" node="castor"/>
       <rsc_location id="sle12-kvm-pref" rsc="sle12-kvm" score="100" node="castor"/>
-      <rsc_order id="sle12-kvm-after-vm-fs" score="INFINITY" first="c-vm-fs" then="sle12-kvm"/>
+      <rsc_order id="sle12-kvm-after-vm-fs" first="c-vm-fs" then="sle12-kvm"/>
       <rsc_location id="cli-ban-sle12-kvm-on-castor" rsc="sle12-kvm" role="Started" node="castor" score="-INFINITY"/>
     </constraints>
     <rsc_defaults>

@@ -29,7 +29,7 @@
       </group>
     </resources>
     <constraints>
-      <rsc_order id="order2" first="rsc2" then="rsc3" score="0"/>
+      <rsc_order id="order2" first="rsc2" then="rsc3" kind="Optional"/>
       <rsc_colocation id="coloc1" rsc="rsc2" with-rsc="rsc3" score="INFINITY"/>
     </constraints>
   </configuration>

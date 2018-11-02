@@ -944,54 +944,54 @@
       <rsc_colocation id="iscsi-pool-0-vips-fw-with-vips" rsc="ms-iscsi-pool-0-vips-fw" rsc-role="Master" score="INFINITY" with-rsc="iscsi-pool-0-vips"/>
       <rsc_colocation id="iscsi-pool-1-target-with-drbd-master" rsc="iscsi-pool-1-target-all" score="INFINITY" with-rsc="ms-drbd-pool-1" with-rsc-role="Master"/>
       <rsc_colocation id="iscsi-pool-1-vips-fw-with-vips" rsc="ms-iscsi-pool-1-vips-fw" rsc-role="Master" score="INFINITY" with-rsc="iscsi-pool-1-vips"/>
-      <rsc_order first="ms-drbd-pool-0" first-action="promote" id="iscsi-pool-0-target-after-drbd" score="INFINITY" then="iscsi-pool-0-target-all" then-action="start"/>
-      <rsc_order first="iscsi-pool-0-target-all" first-action="start" id="iscsi-pool-0-vips-fw-after-target" score="INFINITY" then="ms-iscsi-pool-0-vips-fw" then-action="promote"/>
-      <rsc_order first="iscsi-pool-0-vips" first-action="start" id="iscsi-pool-0-vips-fw-after-vips" score="INFINITY" then="ms-iscsi-pool-0-vips-fw" then-action="promote"/>
-      <rsc_order first="ms-drbd-pool-1" first-action="promote" id="iscsi-pool-1-target-after-drbd" score="INFINITY" then="iscsi-pool-1-target-all" then-action="start"/>
-      <rsc_order first="iscsi-pool-1-target-all" first-action="start" id="iscsi-pool-1-vips-fw-after-target" score="INFINITY" then="ms-iscsi-pool-1-vips-fw" then-action="promote"/>
-      <rsc_order first="iscsi-pool-1-vips" first-action="start" id="iscsi-pool-1-vips-fw-after-vips" score="INFINITY" then="ms-iscsi-pool-1-vips-fw" then-action="promote"/>
+      <rsc_order first="ms-drbd-pool-0" first-action="promote" id="iscsi-pool-0-target-after-drbd" then="iscsi-pool-0-target-all" then-action="start"/>
+      <rsc_order first="iscsi-pool-0-target-all" first-action="start" id="iscsi-pool-0-vips-fw-after-target" then="ms-iscsi-pool-0-vips-fw" then-action="promote"/>
+      <rsc_order first="iscsi-pool-0-vips" first-action="start" id="iscsi-pool-0-vips-fw-after-vips" then="ms-iscsi-pool-0-vips-fw" then-action="promote"/>
+      <rsc_order first="ms-drbd-pool-1" first-action="promote" id="iscsi-pool-1-target-after-drbd" then="iscsi-pool-1-target-all" then-action="start"/>
+      <rsc_order first="iscsi-pool-1-target-all" first-action="start" id="iscsi-pool-1-vips-fw-after-target" then="ms-iscsi-pool-1-vips-fw" then-action="promote"/>
+      <rsc_order first="iscsi-pool-1-vips" first-action="start" id="iscsi-pool-1-vips-fw-after-vips" then="ms-iscsi-pool-1-vips-fw" then-action="promote"/>
       <rsc_colocation id="iscsi-pool-1-vips-with-target" rsc="iscsi-pool-1-vips" score="INFINITY" with-rsc="iscsi-pool-1-target-all"/>
       <rsc_colocation id="iscsi-pool-0-vips-with-target" rsc="iscsi-pool-0-vips" score="INFINITY" with-rsc="iscsi-pool-0-target-all"/>
       <rsc_colocation id="s01-service-fs-with-drbd-master" rsc="cl-s01-service-fs" score="INFINITY" with-rsc="ms-drbd-s01-service" with-rsc-role="Master"/>
-      <rsc_order first="cl-ietd" first-action="start" id="iscsi-pool-0-target-after-ietd" score="INFINITY" then="iscsi-pool-0-target-all" then-action="start"/>
-      <rsc_order first="cl-ietd" first-action="start" id="iscsi-pool-1-target-after-ietd" score="INFINITY" then="iscsi-pool-1-target-all" then-action="start"/>
+      <rsc_order first="cl-ietd" first-action="start" id="iscsi-pool-0-target-after-ietd" then="iscsi-pool-0-target-all" then-action="start"/>
+      <rsc_order first="cl-ietd" first-action="start" id="iscsi-pool-1-target-after-ietd" then="iscsi-pool-1-target-all" then-action="start"/>
       <rsc_colocation id="iscsi-pool-1-target-with-ietd" rsc="iscsi-pool-1-target-all" score="INFINITY" with-rsc="cl-ietd"/>
       <rsc_colocation id="iscsi-pool-0-target-with-ietd" rsc="iscsi-pool-0-target-all" score="INFINITY" with-rsc="cl-ietd"/>
       <rsc_colocation id="dhcpd-with-service-fs" rsc="cl-dhcpd" score="INFINITY" with-rsc="cl-s01-service-fs"/>
       <rsc_colocation id="http-server-with-service-fs" rsc="http-server" score="INFINITY" with-rsc="cl-s01-service-fs"/>
-      <rsc_order first="ms-drbd-s01-service" first-action="promote" id="s01-service-fs-after-drbd" score="INFINITY" then="cl-s01-service-fs" then-action="start"/>
-      <rsc_order first="cl-s01-service-fs" first-action="start" id="dhcpd-after-service-fs" score="INFINITY" then="cl-dhcpd" then-action="start"/>
-      <rsc_order first="cl-s01-service-fs" first-action="start" id="http-server-after-service-fs" score="INFINITY" then="http-server" then-action="start"/>
+      <rsc_order first="ms-drbd-s01-service" first-action="promote" id="s01-service-fs-after-drbd" then="cl-s01-service-fs" then-action="start"/>
+      <rsc_order first="cl-s01-service-fs" first-action="start" id="dhcpd-after-service-fs" then="cl-dhcpd" then-action="start"/>
+      <rsc_order first="cl-s01-service-fs" first-action="start" id="http-server-after-service-fs" then="http-server" then-action="start"/>
       <rsc_colocation id="s01-logs-fs-with-drbd-master" rsc="cl-s01-logs-fs" score="INFINITY" with-rsc="ms-drbd-s01-logs" with-rsc-role="Master"/>
-      <rsc_order first="ms-drbd-s01-logs" first-action="promote" id="s01-logs-fs-after-drbd" score="INFINITY" then="cl-s01-logs-fs" then-action="start"/>
+      <rsc_order first="ms-drbd-s01-logs" first-action="promote" id="s01-logs-fs-after-drbd" then="cl-s01-logs-fs" then-action="start"/>
       <rsc_colocation id="syslog-server-with-logs-fs" rsc="syslog-server" score="INFINITY" with-rsc="cl-s01-logs-fs"/>
       <rsc_colocation id="syslog-server-with-service-fs" rsc="syslog-server" score="INFINITY" with-rsc="cl-s01-service-fs"/>
-      <rsc_order first="cl-s01-service-fs" first-action="start" id="syslog-server-after-service-fs" score="INFINITY" then="syslog-server" then-action="start"/>
-      <rsc_order first="cl-s01-logs-fs" first-action="start" id="syslog-server-after-logs-fs" score="INFINITY" then="syslog-server" then-action="start"/>
+      <rsc_order first="cl-s01-service-fs" first-action="start" id="syslog-server-after-service-fs" then="syslog-server" then-action="start"/>
+      <rsc_order first="cl-s01-logs-fs" first-action="start" id="syslog-server-after-logs-fs" then="syslog-server" then-action="start"/>
       <rsc_colocation id="tftp-server-with-xinetd" rsc="tftp-server" score="INFINITY" with-rsc="cl-xinetd"/>
-      <rsc_order first="cl-xinetd" first-action="start" id="tftp-server-after-xinetd" score="INFINITY" then="tftp-server" then-action="start"/>
+      <rsc_order first="cl-xinetd" first-action="start" id="tftp-server-after-xinetd" then="tftp-server" then-action="start"/>
       <rsc_colocation id="iscsi-vds-dom0-stateless-0-target-with-ietd" rsc="iscsi-vds-dom0-stateless-0-target-all" score="INFINITY" with-rsc="cl-ietd"/>
       <rsc_colocation id="iscsi-vds-dom0-stateless-0-target-with-drbd-master" rsc="iscsi-vds-dom0-stateless-0-target-all" score="INFINITY" with-rsc="ms-drbd-vds-dom0-stateless-0" with-rsc-role="Master"/>
       <rsc_colocation id="iscsi-vds-dom0-stateless-0-vips-fw-with-vips" rsc="ms-iscsi-vds-dom0-stateless-0-vips-fw" rsc-role="Master" score="INFINITY" with-rsc="iscsi-vds-dom0-stateless-0-vips"/>
       <rsc_colocation id="iscsi-vds-dom0-stateless-0-vips-with-target" rsc="iscsi-vds-dom0-stateless-0-vips" score="INFINITY" with-rsc="iscsi-vds-dom0-stateless-0-target-all"/>
-      <rsc_order first="iscsi-vds-dom0-stateless-0-vips" first-action="start" id="iscsi-vds-dom0-stateless-0-vips-fw-after-vips" score="INFINITY" then="ms-iscsi-vds-dom0-stateless-0-vips-fw" then-action="promote"/>
-      <rsc_order first="iscsi-vds-dom0-stateless-0-target-all" first-action="start" id="iscsi-vds-dom0-stateless-0-vips-fw-after-target" score="INFINITY" then="ms-iscsi-vds-dom0-stateless-0-vips-fw" then-action="promote"/>
-      <rsc_order first="cl-ietd" first-action="start" id="iscsi-vds-dom0-stateless-0-target-after-ietd" score="INFINITY" then="iscsi-vds-dom0-stateless-0-target-all" then-action="start"/>
-      <rsc_order first="ms-drbd-vds-dom0-stateless-0" first-action="promote" id="iscsi-vds-dom0-stateless-0-target-after-drbd" score="INFINITY" then="iscsi-vds-dom0-stateless-0-target-all" then-action="start"/>
+      <rsc_order first="iscsi-vds-dom0-stateless-0-vips" first-action="start" id="iscsi-vds-dom0-stateless-0-vips-fw-after-vips" then="ms-iscsi-vds-dom0-stateless-0-vips-fw" then-action="promote"/>
+      <rsc_order first="iscsi-vds-dom0-stateless-0-target-all" first-action="start" id="iscsi-vds-dom0-stateless-0-vips-fw-after-target" then="ms-iscsi-vds-dom0-stateless-0-vips-fw" then-action="promote"/>
+      <rsc_order first="cl-ietd" first-action="start" id="iscsi-vds-dom0-stateless-0-target-after-ietd" then="iscsi-vds-dom0-stateless-0-target-all" then-action="start"/>
+      <rsc_order first="ms-drbd-vds-dom0-stateless-0" first-action="promote" id="iscsi-vds-dom0-stateless-0-target-after-drbd" then="iscsi-vds-dom0-stateless-0-target-all" then-action="start"/>
       <rsc_colocation id="o2cb-with-dlm" rsc="cl-o2cb" score="INFINITY" with-rsc="cl-dlm"/>
-      <rsc_order first="cl-dlm" first-action="start" id="o2cb-after-dlm" score="INFINITY" then="cl-o2cb" then-action="start"/>
+      <rsc_order first="cl-dlm" first-action="start" id="o2cb-after-dlm" then="cl-o2cb" then-action="start"/>
       <rsc_colocation id="vds-tftpboot-fs-with-drbd-master" rsc="cl-vds-tftpboot-fs" score="INFINITY" with-rsc="ms-drbd-vds-tftpboot" with-rsc-role="Master"/>
       <rsc_colocation id="vds-tftpboot-fs-with-o2cb" rsc="cl-vds-tftpboot-fs" score="INFINITY" with-rsc="cl-o2cb"/>
-      <rsc_order first="cl-o2cb" first-action="start" id="vds-tftpboot-fs-after-o2cb" score="INFINITY" then="cl-vds-tftpboot-fs" then-action="start"/>
-      <rsc_order first="ms-drbd-vds-tftpboot" first-action="promote" id="vds-tftpboot-fs-after-drbd" score="INFINITY" then="cl-vds-tftpboot-fs" then-action="start"/>
+      <rsc_order first="cl-o2cb" first-action="start" id="vds-tftpboot-fs-after-o2cb" then="cl-vds-tftpboot-fs" then-action="start"/>
+      <rsc_order first="ms-drbd-vds-tftpboot" first-action="promote" id="vds-tftpboot-fs-after-drbd" then="cl-vds-tftpboot-fs" then-action="start"/>
       <rsc_colocation id="tftp-server-with-tftpboot-fs" rsc="tftp-server" score="INFINITY" with-rsc="cl-vds-tftpboot-fs"/>
-      <rsc_order first="cl-vds-tftpboot-fs" first-action="start" id="tftp-server-after-tftpboot-fs" score="INFINITY" then="tftp-server" then-action="start"/>
+      <rsc_order first="cl-vds-tftpboot-fs" first-action="start" id="tftp-server-after-tftpboot-fs" then="tftp-server" then-action="start"/>
       <rsc_colocation id="gfs2-with-dlm" rsc="cl-gfs2" score="INFINITY" with-rsc="cl-dlm"/>
-      <rsc_order first="cl-dlm" first-action="start" id="gfs2-after-dlm" score="INFINITY" then="cl-gfs2" then-action="start"/>
+      <rsc_order first="cl-dlm" first-action="start" id="gfs2-after-dlm" then="cl-gfs2" then-action="start"/>
       <rsc_colocation id="vds-http-fs-with-drbd-master" rsc="cl-vds-http-fs" score="INFINITY" with-rsc="ms-drbd-vds-http" with-rsc-role="Master"/>
       <rsc_colocation id="vds-http-fs-with-gfs2" rsc="cl-vds-http-fs" score="INFINITY" with-rsc="cl-gfs2"/>
-      <rsc_order first="ms-drbd-vds-http" first-action="promote" id="vds-http-fs-after-drbd" score="INFINITY" then="cl-vds-http-fs" then-action="start"/>
-      <rsc_order first="cl-gfs2" first-action="start" id="vds-http-fs-after-gfs2" score="INFINITY" then="cl-vds-http-fs" then-action="start"/>
+      <rsc_order first="ms-drbd-vds-http" first-action="promote" id="vds-http-fs-after-drbd" then="cl-vds-http-fs" then-action="start"/>
+      <rsc_order first="cl-gfs2" first-action="start" id="vds-http-fs-after-gfs2" then="cl-vds-http-fs" then-action="start"/>
       <rsc_location id="conn-tftp-server" rsc="tftp-server">
         <rule boolean-op="or" id="conn-tftp-server-rule" score="-INFINITY">
           <expression attribute="pingd" id="conn-tftp-server-expression" operation="not_defined"/>
@@ -1037,33 +1037,33 @@
       <rsc_location id="loc-stonith-s01-0" node="s01-0" rsc="stonith-s01-0" score="-INFINITY"/>
       <rsc_location id="loc-stonith-s01-1" node="s01-1" rsc="stonith-s01-1" score="-INFINITY"/>
       <rsc_colocation id="clvmd-with-dlm" rsc="cl-clvmd" score="INFINITY" with-rsc="cl-dlm"/>
-      <rsc_order first="cl-dlm" first-action="start" id="clvmd-after-dlm" score="INFINITY" then="cl-clvmd" then-action="start"/>
+      <rsc_order first="cl-dlm" first-action="start" id="clvmd-after-dlm" then="cl-clvmd" then-action="start"/>
       <rsc_colocation id="s01-vm-data-metadata-fs-with-vg" rsc="cl-s01-vm-data-metadata-fs" score="INFINITY" with-rsc="cl-vg-s01-vm-data"/>
       <rsc_colocation id="vg-s01-vm-data-with-clvmd" rsc="cl-vg-s01-vm-data" score="INFINITY" with-rsc="cl-clvmd"/>
       <rsc_colocation id="vg-s01-vm-data-with-drbd-master" rsc="cl-vg-s01-vm-data" score="INFINITY" with-rsc="ms-drbd-s01-vm-data" with-rsc-role="Master"/>
-      <rsc_order first="cl-vg-s01-vm-data" first-action="start" id="s01-vm-data-metadata-fs-after-vg" score="INFINITY" then="cl-s01-vm-data-metadata-fs" then-action="start"/>
-      <rsc_order first="cl-clvmd" first-action="start" id="vg-s01-vm-data-after-clvmd" score="INFINITY" then="cl-vg-s01-vm-data" then-action="start"/>
-      <rsc_order first="ms-drbd-s01-vm-data" first-action="promote" id="vg-s01-vm-data-after-drbd" score="INFINITY" then="cl-vg-s01-vm-data" then-action="start"/>
+      <rsc_order first="cl-vg-s01-vm-data" first-action="start" id="s01-vm-data-metadata-fs-after-vg" then="cl-s01-vm-data-metadata-fs" then-action="start"/>
+      <rsc_order first="cl-clvmd" first-action="start" id="vg-s01-vm-data-after-clvmd" then="cl-vg-s01-vm-data" then-action="start"/>
+      <rsc_order first="ms-drbd-s01-vm-data" first-action="promote" id="vg-s01-vm-data-after-drbd" then="cl-vg-s01-vm-data" then-action="start"/>
       <rsc_colocation id="dhcpd-with-drbdlinks-s01-service" rsc="cl-dhcpd" score="INFINITY" with-rsc="cl-drbdlinks-s01-service"/>
       <rsc_colocation id="drbdlinks-s01-service-with-service-fs" rsc="cl-drbdlinks-s01-service" score="INFINITY" with-rsc="cl-s01-service-fs"/>
       <rsc_colocation id="http-server-with-drbdlinks-s01-service" rsc="http-server" score="INFINITY" with-rsc="cl-drbdlinks-s01-service"/>
-      <rsc_order first="cl-drbdlinks-s01-service" first-action="start" id="dhcpd-after-drbdlinks-s01-service" score="INFINITY" then="cl-dhcpd" then-action="start"/>
-      <rsc_order first="cl-s01-service-fs" first-action="start" id="drbdlinks-s01-service-after-service-fs" score="INFINITY" then="cl-drbdlinks-s01-service" then-action="start"/>
-      <rsc_order first="cl-drbdlinks-s01-service" first-action="start" id="http-server-after-drbdlinks-s01-service" score="INFINITY" then="http-server" then-action="start"/>
+      <rsc_order first="cl-drbdlinks-s01-service" first-action="start" id="dhcpd-after-drbdlinks-s01-service" then="cl-dhcpd" then-action="start"/>
+      <rsc_order first="cl-s01-service-fs" first-action="start" id="drbdlinks-s01-service-after-service-fs" then="cl-drbdlinks-s01-service" then-action="start"/>
+      <rsc_order first="cl-drbdlinks-s01-service" first-action="start" id="http-server-after-drbdlinks-s01-service" then="http-server" then-action="start"/>
       <rsc_colocation id="s01-logs-fs-with-gfs2" rsc="cl-s01-logs-fs" score="INFINITY" with-rsc="cl-gfs2"/>
       <rsc_colocation id="s01-service-fs-with-gfs2" rsc="cl-s01-service-fs" score="INFINITY" with-rsc="cl-gfs2"/>
-      <rsc_order first="cl-gfs2" first-action="start" id="s01-logs-fs-after-gfs2" score="INFINITY" then="cl-s01-logs-fs" then-action="start"/>
-      <rsc_order first="cl-gfs2" first-action="start" id="s01-service-fs-after-gfs2" score="INFINITY" then="cl-s01-service-fs" then-action="start"/>
+      <rsc_order first="cl-gfs2" first-action="start" id="s01-logs-fs-after-gfs2" then="cl-s01-logs-fs" then-action="start"/>
+      <rsc_order first="cl-gfs2" first-action="start" id="s01-service-fs-after-gfs2" then="cl-s01-service-fs" then-action="start"/>
       <rsc_colocation id="mgmt-vm-with-storage-pool" rsc="mgmt-vm" score="INFINITY" with-rsc="cl-s01-vm-data-storage-pool"/>
       <rsc_colocation id="s01-vm-data-storage-pool-with-libvirtd" rsc="cl-s01-vm-data-storage-pool" score="INFINITY" with-rsc="cl-libvirtd"/>
       <rsc_colocation id="s01-vm-data-storage-pool-with-metadata-fs" rsc="cl-s01-vm-data-storage-pool" score="INFINITY" with-rsc="cl-s01-vm-data-metadata-fs"/>
-      <rsc_order first="cl-s01-vm-data-storage-pool" first-action="start" id="mgmt-vm-after-storage-pool" score="INFINITY" then="mgmt-vm" then-action="start"/>
-      <rsc_order first="cl-libvirtd" first-action="start" id="s01-vm-data-storage-pool-after-libvirtd" score="INFINITY" then="cl-s01-vm-data-storage-pool" then-action="start"/>
-      <rsc_order first="cl-vg-s01-vm-data" first-action="start" id="s01-vm-data-storage-pool-after-vg-s01-vm-data" score="INFINITY" then="cl-s01-vm-data-storage-pool" then-action="start"/>
-      <rsc_order first="cl-s01-vm-data-metadata-fs" first-action="start" id="s01-vm-data-storage-pool-start-after-metadata-fs" score="INFINITY" then="cl-s01-vm-data-storage-pool" then-action="start"/>
+      <rsc_order first="cl-s01-vm-data-storage-pool" first-action="start" id="mgmt-vm-after-storage-pool" then="mgmt-vm" then-action="start"/>
+      <rsc_order first="cl-libvirtd" first-action="start" id="s01-vm-data-storage-pool-after-libvirtd" then="cl-s01-vm-data-storage-pool" then-action="start"/>
+      <rsc_order first="cl-vg-s01-vm-data" first-action="start" id="s01-vm-data-storage-pool-after-vg-s01-vm-data" then="cl-s01-vm-data-storage-pool" then-action="start"/>
+      <rsc_order first="cl-s01-vm-data-metadata-fs" first-action="start" id="s01-vm-data-storage-pool-start-after-metadata-fs" then="cl-s01-vm-data-storage-pool" then-action="start"/>
       <rsc_colocation id="s01-vm-data-metadata-fs-with-gfs2" rsc="cl-s01-vm-data-metadata-fs" score="INFINITY" with-rsc="cl-gfs2"/>
       <rsc_colocation id="s01-vm-data-storage-pool-with-vg" rsc="cl-s01-vm-data-storage-pool" score="INFINITY" with-rsc="cl-vg-s01-vm-data"/>
-      <rsc_order first="cl-gfs2" first-action="start" id="s01-vm-data-metadata-fs-after-gfs2" score="INFINITY" then="cl-s01-vm-data-metadata-fs" then-action="start"/>
+      <rsc_order first="cl-gfs2" first-action="start" id="s01-vm-data-metadata-fs-after-gfs2" then="cl-s01-vm-data-metadata-fs" then-action="start"/>
       <rsc_location id="cli-standby-mgmt-vm" rsc="mgmt-vm">
         <rule id="cli-standby-rule-mgmt-vm" score="-INFINITY" boolean-op="and">
           <expression id="cli-standby-expr-mgmt-vm" attribute="#uname" operation="eq" value="s01-0" type="string"/>

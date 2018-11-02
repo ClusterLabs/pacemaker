@@ -282,13 +282,13 @@
       <rsc_location id="loc-stonith-xvm-sd01-1" rsc="stonith-xvm-sd01-1" score="-INFINITY" node="sd01-1"/>
       <rsc_colocation id="cdev-pool-0-iscsi-target-with-ietd" score="INFINITY" rsc="cdev-pool-0-iscsi-export" with-rsc="cl-ietd"/>
       <rsc_colocation id="cdev-pool-0-iscsi-target-with-storage" score="INFINITY" rsc="cdev-pool-0-iscsi-export" with-rsc="ms-cdev-pool-0-drbd" with-rsc-role="Master"/>
-      <rsc_order id="cdev-pool-0-iscsi-target-after-ietd" score="INFINITY" first="cl-ietd" first-action="start" then="cdev-pool-0-iscsi-export" then-action="start"/>
-      <rsc_order id="cdev-pool-0-iscsi-target-after-storage" score="INFINITY" first="ms-cdev-pool-0-drbd" first-action="promote" then="cdev-pool-0-iscsi-export" then-action="start"/>
+      <rsc_order id="cdev-pool-0-iscsi-target-after-ietd" first="cl-ietd" first-action="start" then="cdev-pool-0-iscsi-export" then-action="start"/>
+      <rsc_order id="cdev-pool-0-iscsi-target-after-storage" first="ms-cdev-pool-0-drbd" first-action="promote" then="cdev-pool-0-iscsi-export" then-action="start"/>
       <rsc_colocation id="cdev-pool-0-iscsi-vips-fw-with-vips" score="INFINITY" rsc="ms-cdev-pool-0-iscsi-vips-fw" rsc-role="Master" with-rsc="cdev-pool-0-iscsi-vips" with-rsc-role="Started"/>
       <rsc_colocation id="cdev-pool-0-iscsi-vips-with-target" score="INFINITY" rsc="cdev-pool-0-iscsi-vips" with-rsc="cdev-pool-0-iscsi-export"/>
-      <rsc_order id="cdev-pool-0-iscsi-vips-after-target" score="INFINITY" first="cdev-pool-0-iscsi-export" first-action="start" then="cdev-pool-0-iscsi-vips" then-action="start"/>
-      <rsc_order id="cdev-pool-0-iscsi-vips-fw-after-target" score="INFINITY" first="cdev-pool-0-iscsi-export" first-action="start" then="ms-cdev-pool-0-iscsi-vips-fw" then-action="promote"/>
-      <rsc_order id="cdev-pool-0-iscsi-vips-fw-after-vips" score="INFINITY" first="cdev-pool-0-iscsi-vips" first-action="start" then="ms-cdev-pool-0-iscsi-vips-fw" then-action="promote"/>
+      <rsc_order id="cdev-pool-0-iscsi-vips-after-target" first="cdev-pool-0-iscsi-export" first-action="start" then="cdev-pool-0-iscsi-vips" then-action="start"/>
+      <rsc_order id="cdev-pool-0-iscsi-vips-fw-after-target" first="cdev-pool-0-iscsi-export" first-action="start" then="ms-cdev-pool-0-iscsi-vips-fw" then-action="promote"/>
+      <rsc_order id="cdev-pool-0-iscsi-vips-fw-after-vips" first="cdev-pool-0-iscsi-vips" first-action="start" then="ms-cdev-pool-0-iscsi-vips-fw" then-action="promote"/>
       <rsc_location id="cli-prefer-cdev-pool-0-iscsi-export" rsc="cdev-pool-0-iscsi-export" role="Started" node="sd01-0" score="INFINITY"/>
     </constraints>
     <fencing-topology>

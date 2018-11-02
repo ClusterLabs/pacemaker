@@ -100,9 +100,9 @@
       </clone>
     </resources>
     <constraints>
-      <rsc_order first="cl_bird" id="order_bird" score="INFINITY" symmetrical="true" then="svc"/>
-      <rsc_order first="cl_bird6" id="order_bird6" score="INFINITY" symmetrical="true" then="svc"/>
-      <rsc_order first="cl_tomcat_nms" id="order_tomcat_nms" score="INFINITY" symmetrical="true" then="svc"/>
+      <rsc_order first="cl_bird" id="order_bird" symmetrical="true" then="svc"/>
+      <rsc_order first="cl_bird6" id="order_bird6" symmetrical="true" then="svc"/>
+      <rsc_order first="cl_tomcat_nms" id="order_tomcat_nms" symmetrical="true" then="svc"/>
       <rsc_colocation id="colo_tomcat_nms" rsc="svc" score="INFINITY" with-rsc="cl_tomcat_nms"/>
       <rsc_colocation id="colo_bird6" rsc="svc" score="INFINITY" with-rsc="cl_bird6"/>
       <rsc_colocation id="colo_bird" rsc="svc" score="INFINITY" with-rsc="cl_bird"/>

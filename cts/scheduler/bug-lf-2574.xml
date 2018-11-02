@@ -83,10 +83,10 @@
       <rsc_colocation id="rsc_colocation-clnPingd-clnDummy1-1" rsc="clnPingd" score="INFINITY" with-rsc="clnDummy1"/>
       <rsc_colocation id="rsc_colocation-main_rsc-clnDummy3-1" rsc="main_rsc" score="INFINITY" with-rsc="clnPingd"/>
       <rsc_colocation id="rsc_colocation-main_rsc2-clnDummy3-1" rsc="main_rsc2" score="INFINITY" with-rsc="clnPingd"/>
-      <rsc_order first="clnDummy1" id="rsc_order-clnDummy1-main_rsc" score="0" symmetrical="false" then="main_rsc"/>
-      <rsc_order first="clnDummy1" id="rsc_order-clnDummy1-main_rsc2" score="0" symmetrical="false" then="main_rsc2"/>
-      <rsc_order first="clnPingd" id="rsc_order-clnPingd-main_rsc" score="0" symmetrical="false" then="main_rsc"/>
-      <rsc_order first="clnPingd" id="rsc_order-clnPingd-main_rsc2" score="0" symmetrical="false" then="main_rsc2"/>
+      <rsc_order first="clnDummy1" id="rsc_order-clnDummy1-main_rsc" kind="Optional" symmetrical="false" then="main_rsc"/>
+      <rsc_order first="clnDummy1" id="rsc_order-clnDummy1-main_rsc2" kind="Optional" symmetrical="false" then="main_rsc2"/>
+      <rsc_order first="clnPingd" id="rsc_order-clnPingd-main_rsc" kind="Optional" symmetrical="false" then="main_rsc"/>
+      <rsc_order first="clnPingd" id="rsc_order-clnPingd-main_rsc2" kind="Optional" symmetrical="false" then="main_rsc2"/>
     </constraints>
     <rsc_defaults>
       <meta_attributes id="rsc-options">

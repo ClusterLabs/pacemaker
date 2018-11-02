@@ -98,9 +98,9 @@
           <expression attribute="ROLE_storage" operation="ne" value="true" id="expression.id22437"/>
         </rule>
       </rsc_location>
-      <rsc_order id="e83470b8-5d7d-4507-bc8e-24842af2135a" first="ms_drbd_poolA" then="vpool_ip_poolA" then-action="start" first-action="promote" score="INFINITY"/>
+      <rsc_order id="e83470b8-5d7d-4507-bc8e-24842af2135a" first="ms_drbd_poolA" then="vpool_ip_poolA" then-action="start" first-action="promote"/>
       <rsc_colocation id="rsc_colocation.auto-1" rsc="vpool_ip_poolA" with-rsc="ms_drbd_poolA" with-rsc-role="Master" score="INFINITY"/>
-      <rsc_order id="rsc_order.auto-2" first="vpool_ip_poolA" then="drbd_target_poolA" then-action="start" first-action="start" score="INFINITY"/>
+      <rsc_order id="rsc_order.auto-2" first="vpool_ip_poolA" then="drbd_target_poolA" then-action="start" first-action="start"/>
       <rsc_colocation id="rsc_colocation.auto-2" rsc="drbd_target_poolA" with-rsc="vpool_ip_poolA" score="INFINITY"/>
     </constraints>
   </configuration>

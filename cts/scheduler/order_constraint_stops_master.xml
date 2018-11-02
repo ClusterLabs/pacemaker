@@ -51,7 +51,7 @@
       </primitive>
     </resources>
     <constraints>
-      <rsc_order first="NATIVE_RSC_B" first-action="start" then="MASTER_RSC_A" then-action="start" id="promote_then_start" score="INFINITY"/>
+      <rsc_order first="NATIVE_RSC_B" first-action="start" then="MASTER_RSC_A" then-action="start" id="promote_then_start"/>
       <rsc_location id="A-placement" rsc="MASTER_RSC_A">
         <rule boolean-op="or" id="rule-A-placement" score="-INFINITY">
           <expression attribute="give-me-A" id="whatever1" operation="not_defined"/>

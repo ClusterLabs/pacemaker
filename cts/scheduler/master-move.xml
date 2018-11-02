@@ -71,7 +71,7 @@
         </rule>
       </rsc_location>
       <rsc_colocation id="rsc_colocation-1" rsc="grpDRBD" score="INFINITY" with-rsc="msDRBD" with-rsc-role="Master"/>
-      <rsc_order first="msDRBD" first-action="promote" id="rsc_order-1" score="0" then="grpDRBD" then-action="start"/>
+      <rsc_order first="msDRBD" first-action="promote" id="rsc_order-1" kind="Optional" then="grpDRBD" then-action="start"/>
     </constraints>
     <rsc_defaults>
       <meta_attributes id="rsc-options">

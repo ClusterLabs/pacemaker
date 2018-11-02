@@ -55,7 +55,7 @@
       </clone>
     </resources>
     <constraints>
-      <rsc_order first="g0" id="promote-after-g0" score="INFINITY" then="ms0" then-action="promote"/>
+      <rsc_order first="g0" id="promote-after-g0" then="ms0" then-action="promote"/>
       <rsc_colocation id="master-with-g0" rsc="ms0" rsc-role="Master" score="INFINITY" with-rsc="g0"/>
     </constraints>
     <rsc_defaults/>

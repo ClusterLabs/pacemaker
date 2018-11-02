@@ -71,7 +71,7 @@
       </clone>
     </resources>
     <constraints>
-      <rsc_order first="cl_tomcat" id="order_tomcat" score="INFINITY" then="svc-cse"/>
+      <rsc_order first="cl_tomcat" id="order_tomcat" then="svc-cse"/>
       <rsc_colocation id="colo_tomcat" rsc="svc-cse" score="INFINITY" with-rsc="cl_tomcat"/>
     </constraints>
   </configuration>

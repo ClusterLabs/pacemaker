@@ -87,10 +87,10 @@
       </clone>
     </resources>
     <constraints>
-      <rsc_order id="order1" first="rsc1" then="rsc2" score="0"/>
-      <rsc_order id="order2" first="rsc3" then="rsc4" score="0"/>
-      <rsc_order id="order3" first="rsc5" then="rsc6" score="0"/>
-      <rsc_order id="order4" first="rsc7" then="rsc8" score="0"/>
+      <rsc_order id="order1" first="rsc1" then="rsc2" kind="Optional"/>
+      <rsc_order id="order2" first="rsc3" then="rsc4" kind="Optional"/>
+      <rsc_order id="order3" first="rsc5" then="rsc6" kind="Optional"/>
+      <rsc_order id="order4" first="rsc7" then="rsc8" kind="Optional"/>
     </constraints>
   </configuration>
   <status>

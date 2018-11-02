@@ -233,8 +233,8 @@
         </rule>
       </rsc_location>
       <rsc_colocation id="c-fs-libvirt-VM-cvmh-with-gpfs" rsc="c-fs-bind-libvirt-VM-cvmh" score="INFINITY" with-rsc="c-fs-gpfs"/>
-      <rsc_order first="c-fs-gpfs" id="o-fs-libvirt-VM-cvmh-after-gpfs" score="INFINITY" then="c-fs-bind-libvirt-VM-cvmh"/>
-      <rsc_order id="o-libvirtd-after-storage" score="INFINITY">
+      <rsc_order first="c-fs-gpfs" id="o-fs-libvirt-VM-cvmh-after-gpfs" then="c-fs-bind-libvirt-VM-cvmh"/>
+      <rsc_order id="o-libvirtd-after-storage">
         <resource_set id="o-libvirtd-after-storage-0" sequential="false">
           <resource_ref id="c-fs-libvirt-VM-xcm"/>
           <resource_ref id="c-fs-bind-libvirt-VM-cvmh"/>
@@ -252,11 +252,11 @@
           <resource_ref id="c-fs-bind-libvirt-VM-cvmh"/>
         </resource_set>
       </rsc_colocation>
-      <rsc_order first="c-p-libvirtd" id="o-vm-compute-test" score="INFINITY" then="vm-compute-test"/>
+      <rsc_order first="c-p-libvirtd" id="o-vm-compute-test" then="vm-compute-test"/>
       <rsc_colocation id="colo-vm-compute-test" rsc="vm-compute-test" score="INFINITY" with-rsc="c-p-libvirtd"/>
-      <rsc_order first="c-p-libvirtd" id="o-vm-swbuildsl6" score="INFINITY" then="vm-swbuildsl6"/>
+      <rsc_order first="c-p-libvirtd" id="o-vm-swbuildsl6" then="vm-swbuildsl6"/>
       <rsc_colocation id="colo-vm-swbuildsl6" rsc="vm-swbuildsl6" score="INFINITY" with-rsc="c-p-libvirtd"/>
-      <rsc_order first="vm-compute-test" id="o-vm-swbuildsl6-after-compute-test" score="INFINITY" then="vm-swbuildsl6"/>
+      <rsc_order first="vm-compute-test" id="o-vm-swbuildsl6-after-compute-test" then="vm-swbuildsl6"/>
       <rsc_location id="cli-prefer-vm-swbuildsl6" rsc="vm-swbuildsl6">
         <rule id="cli-prefer-rule-vm-swbuildsl6" score="INFINITY" boolean-op="and">
           <expression id="cli-prefer-expr-vm-swbuildsl6" attribute="#uname" operation="eq" value="cvmh04" type="string"/>

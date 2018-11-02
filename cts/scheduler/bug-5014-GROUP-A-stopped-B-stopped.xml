@@ -39,7 +39,7 @@
       </group>
     </resources>
     <constraints>
-      <rsc_order first="group1" first-action="start" id="after1then2" score="INFINITY" symmetrical="false" then="group2" then-action="start"/>
+      <rsc_order first="group1" first-action="start" id="after1then2" symmetrical="false" then="group2" then-action="start"/>
     </constraints>
   </configuration>
   <status>

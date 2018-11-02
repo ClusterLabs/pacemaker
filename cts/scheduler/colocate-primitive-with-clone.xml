@@ -557,23 +557,23 @@
       <rsc_colocation id="rsc_colocation02-3-2" rsc="OVDBgroup02-3" with-rsc="clnDiskd1" score="1000"/>
       <rsc_colocation id="rsc_colocation02-3-3" rsc="OVDBgroup02-3" with-rsc="clnG3dummy1" score="1000"/>
       <rsc_colocation id="rsc_colocation02-3-4" rsc="OVDBgroup02-3" with-rsc="clnG3dummy2" score="1000"/>
-      <rsc_order id="order-1-1" first="clnPingd" then="UMgroup01" score="0" symmetrical="false"/>
-      <rsc_order id="order-1-2" first="clnDiskd1" then="UMgroup01" score="0" symmetrical="false"/>
-      <rsc_order id="order-1-3" first="clnG3dummy1" then="UMgroup01" score="0" symmetrical="false"/>
-      <rsc_order id="order-1-4" first="clnG3dummy2" then="UMgroup01" score="0" symmetrical="false"/>
-      <rsc_order id="order-1-5" first="clnUMgroup01" then="UMgroup01" score="0"/>
-      <rsc_order id="order-2-1-1" first="clnPingd" then="OVDBgroup02-1" score="0" symmetrical="false"/>
-      <rsc_order id="order-2-1-2" first="clnDiskd1" then="OVDBgroup02-1" score="0" symmetrical="false"/>
-      <rsc_order id="order-2-1-3" first="clnG3dummy1" then="OVDBgroup02-1" score="0" symmetrical="false"/>
-      <rsc_order id="order-2-1-4" first="clnG3dummy2" then="OVDBgroup02-1" score="0" symmetrical="false"/>
-      <rsc_order id="order-2-2-1" first="clnPingd" then="OVDBgroup02-2" score="0" symmetrical="false"/>
-      <rsc_order id="order-2-2-2" first="clnDiskd1" then="OVDBgroup02-2" score="0" symmetrical="false"/>
-      <rsc_order id="order-2-2-3" first="clnG3dummy1" then="OVDBgroup02-2" score="0" symmetrical="false"/>
-      <rsc_order id="order-2-2-4" first="clnG3dummy2" then="OVDBgroup02-2" score="0" symmetrical="false"/>
-      <rsc_order id="order-2-3-1" first="clnPingd" then="OVDBgroup02-3" score="0" symmetrical="false"/>
-      <rsc_order id="order-2-3-2" first="clnDiskd1" then="OVDBgroup02-3" score="0" symmetrical="false"/>
-      <rsc_order id="order-2-3-3" first="clnG3dummy1" then="OVDBgroup02-3" score="0" symmetrical="false"/>
-      <rsc_order id="order-2-3-4" first="clnG3dummy2" then="OVDBgroup02-3" score="0" symmetrical="false"/>
+      <rsc_order id="order-1-1" first="clnPingd" then="UMgroup01" kind="Optional" symmetrical="false"/>
+      <rsc_order id="order-1-2" first="clnDiskd1" then="UMgroup01" kind="Optional" symmetrical="false"/>
+      <rsc_order id="order-1-3" first="clnG3dummy1" then="UMgroup01" kind="Optional" symmetrical="false"/>
+      <rsc_order id="order-1-4" first="clnG3dummy2" then="UMgroup01" kind="Optional" symmetrical="false"/>
+      <rsc_order id="order-1-5" first="clnUMgroup01" then="UMgroup01" kind="Optional"/>
+      <rsc_order id="order-2-1-1" first="clnPingd" then="OVDBgroup02-1" kind="Optional" symmetrical="false"/>
+      <rsc_order id="order-2-1-2" first="clnDiskd1" then="OVDBgroup02-1" kind="Optional" symmetrical="false"/>
+      <rsc_order id="order-2-1-3" first="clnG3dummy1" then="OVDBgroup02-1" kind="Optional" symmetrical="false"/>
+      <rsc_order id="order-2-1-4" first="clnG3dummy2" then="OVDBgroup02-1" kind="Optional" symmetrical="false"/>
+      <rsc_order id="order-2-2-1" first="clnPingd" then="OVDBgroup02-2" kind="Optional" symmetrical="false"/>
+      <rsc_order id="order-2-2-2" first="clnDiskd1" then="OVDBgroup02-2" kind="Optional" symmetrical="false"/>
+      <rsc_order id="order-2-2-3" first="clnG3dummy1" then="OVDBgroup02-2" kind="Optional" symmetrical="false"/>
+      <rsc_order id="order-2-2-4" first="clnG3dummy2" then="OVDBgroup02-2" kind="Optional" symmetrical="false"/>
+      <rsc_order id="order-2-3-1" first="clnPingd" then="OVDBgroup02-3" kind="Optional" symmetrical="false"/>
+      <rsc_order id="order-2-3-2" first="clnDiskd1" then="OVDBgroup02-3" kind="Optional" symmetrical="false"/>
+      <rsc_order id="order-2-3-3" first="clnG3dummy1" then="OVDBgroup02-3" kind="Optional" symmetrical="false"/>
+      <rsc_order id="order-2-3-4" first="clnG3dummy2" then="OVDBgroup02-3" kind="Optional" symmetrical="false"/>
     </constraints>
   </configuration>
   <status>
