@@ -720,10 +720,10 @@ handle_remote_ra_start(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd, int timeo
     int timeout_used = timeout_ms > MAX_START_TIMEOUT_MS ? MAX_START_TIMEOUT_MS : timeout_ms;
 
     for (tmp = cmd->params; tmp; tmp = tmp->next) {
-        if (safe_str_eq(tmp->key, "addr") || safe_str_eq(tmp->key, "server")) {
+        if (safe_str_eq(tmp->key, XML_RSC_ATTR_REMOTE_RA_ADDR) ||
+            safe_str_eq(tmp->key, XML_RSC_ATTR_REMOTE_RA_SERVER)) {
             server = tmp->value;
-        }
-        if (safe_str_eq(tmp->key, "port")) {
+        } else if (safe_str_eq(tmp->key, XML_RSC_ATTR_REMOTE_RA_PORT)) {
             port = atoi(tmp->value);
         }
     }
