@@ -233,6 +233,9 @@
 #  define XML_RSC_ATTR_REMOTE_NODE  	"remote-node"
 #  define XML_RSC_ATTR_CLEAR_OP         "clear_failure_op"
 #  define XML_RSC_ATTR_CLEAR_INTERVAL   "clear_failure_interval"
+#  define XML_RSC_ATTR_REMOTE_RA_ADDR   "addr"
+#  define XML_RSC_ATTR_REMOTE_RA_SERVER "server"
+#  define XML_RSC_ATTR_REMOTE_RA_PORT   "port"
 
 #  define XML_REMOTE_ATTR_RECONNECT_INTERVAL "reconnect_interval"
 
