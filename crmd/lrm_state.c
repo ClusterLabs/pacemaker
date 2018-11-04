@@ -500,11 +500,15 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
         const char *channel = crm_element_value(msg, F_LRMD_IPC_IPC_SERVER);
 
         proxy = crmd_remote_proxy_new(lrmd, lrm_state->node_name, session, channel);
-        if (proxy != NULL) {
-            /* Look up stonith-watchdog-timeout and send to the remote peer for validation */
-            int rc = fsa_cib_conn->cmds->query(fsa_cib_conn, XML_CIB_TAG_CRMCONFIG, NULL, cib_scope_local);
-            fsa_cib_conn->cmds->register_callback_full(fsa_cib_conn, rc, 10, FALSE, lrmd,
-                                                       "remote_config_check", remote_config_check, NULL);
+        if (!remote_ra_controlling_guest(lrm_state)) {
+            if (proxy != NULL) {
+                /* Look up stonith-watchdog-timeout and send to the remote peer for validation */
+                int rc = fsa_cib_conn->cmds->query(fsa_cib_conn, XML_CIB_TAG_CRMCONFIG, NULL, cib_scope_local);
+                fsa_cib_conn->cmds->register_callback_full(fsa_cib_conn, rc, 10, FALSE, lrmd,
+                                                        "remote_config_check", remote_config_check, NULL);
+            }
+        } else {
+            crm_debug("Skipping remote_config_check for guest-nodes");
         }
 
     } else if (safe_str_eq(op, LRMD_IPC_OP_SHUTDOWN_REQ)) {
