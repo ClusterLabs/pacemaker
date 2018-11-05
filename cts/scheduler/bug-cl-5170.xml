@@ -70,7 +70,7 @@
       </clone>
     </resources>
     <constraints>
-      <rsc_order first="cl_tomcat_nms" id="order_tomcat_nms" score="INFINITY" symmetrical="true" then="svc"/>
+      <rsc_order first="cl_tomcat_nms" id="order_tomcat_nms" symmetrical="true" then="svc"/>
       <rsc_colocation id="colo_tomcat_nms" rsc="svc" score="INFINITY" with-rsc="cl_tomcat_nms"/>
     </constraints>
   </configuration>

@@ -18,10 +18,10 @@
       <primitive id="rscC" class="ocf" provider="heartbeat" type="apache"/>
     </resources>
     <constraints>
-      <rsc_order id="order1" first="rsc1" then="rsc2" then-action="start" first-action="start" score="0"/>
-      <rsc_order id="order2" first="rsc1" then="rsc3" then-action="start" first-action="start" score="100"/>
-      <rsc_order id="order3" first="rscA" then="rscB" then-action="start" first-action="start" score="0"/>
-      <rsc_order id="order4" first="rscA" then="rscC" then-action="start" first-action="start" score="100"/>
+      <rsc_order id="order1" first="rsc1" then="rsc2" then-action="start" first-action="start" kind="Optional"/>
+      <rsc_order id="order2" first="rsc1" then="rsc3" then-action="start" first-action="start"/>
+      <rsc_order id="order3" first="rscA" then="rscB" then-action="start" first-action="start" kind="Optional"/>
+      <rsc_order id="order4" first="rscA" then="rscC" then-action="start" first-action="start"/>
     </constraints>
   </configuration>
   <status>

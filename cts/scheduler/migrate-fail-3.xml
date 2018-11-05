@@ -50,7 +50,7 @@
     </resources>
     <constraints>
       <rsc_colocation id="colo-vm" rsc="test-vm" score="INFINITY" with-rsc="c-clusterfs"/>
-      <rsc_order first="c-clusterfs" id="order-vm" score="INFINITY" then="test-vm"/>
+      <rsc_order first="c-clusterfs" id="order-vm" then="test-vm"/>
       <rsc_location id="cli-prefer-test-vm" rsc="test-vm">
         <rule id="cli-prefer-rule-test-vm" score="-INFINITY" boolean-op="and">
           <expression id="cli-prefer-expr-test-vm" attribute="#uname" operation="eq" value="hex-14" type="string"/>

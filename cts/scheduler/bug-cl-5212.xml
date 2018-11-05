@@ -125,7 +125,7 @@
       <rsc_colocation id="rsc_colocation-msPostgresql-clnPingd-1" score="INFINITY" rsc="msPostgresql" rsc-role="Master" with-rsc="clnPingd">
         <!--### Resource Colocation ###-->
       </rsc_colocation>
-      <rsc_order id="rsc_order-clnPingd-msPostgresql-1" score="0" first="clnPingd" then="msPostgresql" symmetrical="false">
+      <rsc_order id="rsc_order-clnPingd-msPostgresql-1" kind="Optional" first="clnPingd" then="msPostgresql" symmetrical="false">
         <!--### Resource Order ###-->
       </rsc_order>
     </constraints>

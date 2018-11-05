@@ -44,7 +44,7 @@
           <expression attribute="#uname" id="pref-ms-rsc-1-expression-1" operation="eq" value="node2"/>
         </rule>
       </rsc_location>
-      <rsc_order id="order-1" score="INFINITY">
+      <rsc_order id="order-1">
         <resource_set id="order-1-1" action="promote">
           <resource_ref id="ms-rsc"/>
         </resource_set>

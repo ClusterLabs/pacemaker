@@ -241,17 +241,17 @@
       <rsc_colocation id="grp3_colocation-7" rsc="grpPostgreSQLDB3" score="INFINITY" with-rsc="clnPingd"/>
       <rsc_colocation id="grp3_colocation-8" rsc="grpPostgreSQLDB3" score="INFINITY" with-rsc="clnDiskd1"/>
       <rsc_colocation id="grp3_colocation-9" rsc="grpPostgreSQLDB3" score="INFINITY" with-rsc="clnDiskd2"/>
-      <rsc_order first="clnPingd" id="grp1_order-1" score="0" then="grpPostgreSQLDB1">
+      <rsc_order first="clnPingd" id="grp1_order-1" kind="Optional" then="grpPostgreSQLDB1">
         <!--### Resource Order ###-->
       </rsc_order>
-      <rsc_order first="clnDiskd1" id="grp1_order-2" score="0" then="grpPostgreSQLDB1"/>
-      <rsc_order first="clnDiskd2" id="grp1_order-3" score="0" then="grpPostgreSQLDB1"/>
-      <rsc_order first="clnPingd" id="grp2_order-4" score="0" then="grpPostgreSQLDB2"/>
-      <rsc_order first="clnDiskd1" id="grp2_order-5" score="0" then="grpPostgreSQLDB2"/>
-      <rsc_order first="clnDiskd2" id="grp2_order-6" score="0" then="grpPostgreSQLDB2"/>
-      <rsc_order first="clnPingd" id="grp3_order-7" score="0" then="grpPostgreSQLDB3"/>
-      <rsc_order first="clnDiskd1" id="grp3_order-8" score="0" then="grpPostgreSQLDB3"/>
-      <rsc_order first="clnDiskd2" id="grp3_order-9" score="0" then="grpPostgreSQLDB3"/>
+      <rsc_order first="clnDiskd1" id="grp1_order-2" kind="Optional" then="grpPostgreSQLDB1"/>
+      <rsc_order first="clnDiskd2" id="grp1_order-3" kind="Optional" then="grpPostgreSQLDB1"/>
+      <rsc_order first="clnPingd" id="grp2_order-4" kind="Optional" then="grpPostgreSQLDB2"/>
+      <rsc_order first="clnDiskd1" id="grp2_order-5" kind="Optional" then="grpPostgreSQLDB2"/>
+      <rsc_order first="clnDiskd2" id="grp2_order-6" kind="Optional" then="grpPostgreSQLDB2"/>
+      <rsc_order first="clnPingd" id="grp3_order-7" kind="Optional" then="grpPostgreSQLDB3"/>
+      <rsc_order first="clnDiskd1" id="grp3_order-8" kind="Optional" then="grpPostgreSQLDB3"/>
+      <rsc_order first="clnDiskd2" id="grp3_order-9" kind="Optional" then="grpPostgreSQLDB3"/>
     </constraints>
     <rsc_defaults>
       <meta_attributes id="rsc-options">

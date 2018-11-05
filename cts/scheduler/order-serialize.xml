@@ -203,7 +203,7 @@
       <rsc_location id="edge_prefer_xen-a" node="xen-a" rsc="edge" score="5000"/>
       <rsc_location id="sysadmin_prefer_xen-b" node="xen-b" rsc="sysadmin" score="5000"/>
       <rsc_location id="base_prefer_xen-a" node="xen-a" rsc="base" score="5000"/>
-      <rsc_order first="db" id="db_before_dbreplica" score="0" symmetrical="false" then="dbreplica"/>
+      <rsc_order first="db" id="db_before_dbreplica" kind="Optional" symmetrical="false" then="dbreplica"/>
       <rsc_order first="dbreplica" id="dbreplica_before_core-101" kind="Serialize" symmetrical="false" then="core-101"/>
       <rsc_order first="core-101" id="core-101_before_core-200" kind="Serialize" symmetrical="false" then="core-200"/>
       <rsc_order first="core-200" id="core-200_before_sysadmin" kind="Serialize" symmetrical="false" then="sysadmin"/>

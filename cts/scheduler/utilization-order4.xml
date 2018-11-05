@@ -225,11 +225,11 @@
       <rsc_colocation id="degllx62-vm-with-nfs" rsc="degllx62-vm" score="INFINITY" with-rsc="clone-nfs"/>
       <rsc_colocation id="degllx63-vm-with-nfs" rsc="degllx63-vm" score="INFINITY" with-rsc="clone-nfs"/>
       <rsc_colocation id="degllx64-vm-with-nfs" rsc="degllx64-vm" score="INFINITY" with-rsc="clone-nfs"/>
-      <rsc_order first="clone-nfs" id="nfs-before-degllx61-vm" score="INFINITY" then="degllx61-vm"/>
-      <rsc_order first="clone-nfs" id="nfs-before-degllx62-vm" score="INFINITY" then="degllx62-vm"/>
-      <rsc_order first="clone-nfs" id="nfs-before-degllx63-vm" score="INFINITY" then="degllx63-vm"/>
-      <rsc_order first="clone-nfs" id="nfs-before-degllx64-vm" score="INFINITY" then="degllx64-vm"/>
-      <rsc_order first="clone-ping" id="ping-before-nfs" score="INFINITY" then="clone-nfs"/>
+      <rsc_order first="clone-nfs" id="nfs-before-degllx61-vm" then="degllx61-vm"/>
+      <rsc_order first="clone-nfs" id="nfs-before-degllx62-vm" then="degllx62-vm"/>
+      <rsc_order first="clone-nfs" id="nfs-before-degllx63-vm" then="degllx63-vm"/>
+      <rsc_order first="clone-nfs" id="nfs-before-degllx64-vm" then="degllx64-vm"/>
+      <rsc_order first="clone-ping" id="ping-before-nfs" then="clone-nfs"/>
     </constraints>
     <op_defaults>
       <meta_attributes id="op_defaults-options">

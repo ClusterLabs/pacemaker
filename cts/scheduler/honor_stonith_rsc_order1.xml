@@ -20,7 +20,7 @@
       <primitive class="ocf" id="A" provider="pacemaker" type="Dummy"/>
     </resources>
     <constraints>
-      <rsc_order first="S_GROUP" id="S_B-before-S_A" score="INFINITY" then="S_CLONE"/>
+      <rsc_order first="S_GROUP" id="S_B-before-S_A" then="S_CLONE"/>
     </constraints>
   </configuration>
   <status>

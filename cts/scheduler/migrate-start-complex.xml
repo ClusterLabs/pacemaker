@@ -58,9 +58,9 @@
       <rsc_colocation id="domU-test01-iscsi1-colocation1" rsc="domU-test01" score="+INFINITY" with-rsc="clone-dom0-iscsi1"/>
       <rsc_colocation id="bottom-colocation1" rsc="domU-test01" with-rsc="clone-bottom" score="+INFINITY"/>
       <rsc_colocation id="colocation-2" rsc="top" with-rsc="domU-test01" score="INFINITY"/>
-      <rsc_order id="bottom-order1" first="clone-bottom" score="0" then="domU-test01"/>
-      <rsc_order first="clone-dom0-iscsi1" id="domU-test01-iscsi1-order1" score="0" then="domU-test01"/>
-      <rsc_order id="order-2" first="domU-test01" then="top" score="INFINITY"/>
+      <rsc_order id="bottom-order1" first="clone-bottom" kind="Optional" then="domU-test01"/>
+      <rsc_order first="clone-dom0-iscsi1" id="domU-test01-iscsi1-order1" kind="Optional" then="domU-test01"/>
+      <rsc_order id="order-2" first="domU-test01" then="top"/>
       <rsc_location id="run-on-01" rsc="domU-test01" score="INFINITY" node="dom0-01"/>
     </constraints>
     <op_defaults/>

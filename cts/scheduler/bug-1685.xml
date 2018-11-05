@@ -57,7 +57,7 @@
     </resources>
     <constraints>
       <rsc_colocation id="colocation_shared_filesystem_shared_storage-master" rsc="shared_filesystem" with-rsc="shared_storage" with-rsc-role="Master" score="INFINITY"/>
-      <rsc_order id="order_shared_filesystem_after_shared_storage-promote" first="shared_storage" then="shared_filesystem" then-action="start" first-action="promote" score="INFINITY"/>
+      <rsc_order id="order_shared_filesystem_after_shared_storage-promote" first="shared_storage" then="shared_filesystem" then-action="start" first-action="promote"/>
     </constraints>
   </configuration>
   <status>

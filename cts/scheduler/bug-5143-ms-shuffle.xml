@@ -225,10 +225,10 @@
       <rsc_colocation id="colo-fs-2" rsc="fs2" score="INFINITY" with-rsc="baseclone"/>
       <rsc_location id="loc-drbd-r0" node="hex-3" rsc="ms-r0" score="-INFINITY"/>
       <rsc_colocation id="colo-r0" rsc="r0-group" score="INFINITY" with-rsc="ms-r0" with-rsc-role="Master"/>
-      <rsc_order first="ms-r0" first-action="promote" id="order-r0" score="INFINITY" then="r0-group" then-action="start"/>
+      <rsc_order first="ms-r0" first-action="promote" id="order-r0" then="r0-group" then-action="start"/>
       <rsc_location id="loc-drbd-r1" node="hex-1" rsc="ms-r1" score="-INFINITY"/>
-      <rsc_order first="fs2" id="order-dummy3" score="0" then="dummy3"/>
-      <rsc_order first="fs-xfs-1" id="order-dummy4" score="INFINITY" then="dummy4"/>
+      <rsc_order first="fs2" id="order-dummy3" kind="Optional" then="dummy3"/>
+      <rsc_order first="fs-xfs-1" id="order-dummy4" then="dummy4"/>
       <rsc_colocation id="colo-dummy3" rsc="dummy3" score="INFINITY" with-rsc="fs2"/>
       <rsc_colocation id="colo-dummy4" rsc="dummy4" score="INFINITY" with-rsc="fs-xfs-1"/>
       <rsc_colocation id="colo-dummy3-versus-dummy4" rsc="dummy3" score="-INFINITY" with-rsc="dummy4"/>

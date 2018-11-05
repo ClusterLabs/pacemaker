@@ -138,14 +138,15 @@ get_ordering_type(xmlNode * xml_obj)
         kind_e = pe_order_kind_mandatory;
 
         if (score) {
+            // @COMPAT deprecated informally since 1.0.7, formally since 2.0.1
             int score_i = char2score(score);
 
             if (score_i == 0) {
                 kind_e = pe_order_kind_optional;
             }
-
-            /* } else if(rsc_then->variant == pe_native && rsc_first->variant >= pe_clone) { */
-            /*     kind_e = pe_order_kind_optional; */
+            pe_warn_once(pe_wo_order_score,
+                         "Support for 'score' in rsc_order is deprecated "
+                         "and will be removed in a future release (use 'kind' instead)");
         }
 
     } else if (safe_str_eq(kind, "Mandatory")) {

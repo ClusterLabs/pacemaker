@@ -215,7 +215,7 @@
           <resource_ref id="baseclone"/>
         </resource_set>
       </rsc_colocation>
-      <rsc_order id="order-vm" score="+INFINITY">
+      <rsc_order id="order-vm">
         <resource_set id="order-vm-0">
           <resource_ref id="baseclone"/>
         </resource_set>
