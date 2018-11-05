@@ -483,6 +483,7 @@ do_test notify-2 "Notify simple, confirm"
 do_test notify-3 "Notify move, confirm"
 do_test novell-239079 "Notification priority"
 #do_test notify-2 "Notify - 764"
+do_test route-remote-notify "Route remote notify actions through correct cluster node"
 
 echo ""
 do_test 594 "OSDL #594 - Unrunnable actions scheduled in transition"
