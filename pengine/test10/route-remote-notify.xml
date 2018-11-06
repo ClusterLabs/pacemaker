@@ -1,0 +1,487 @@
+<cib crm_feature_set="3.0.14" validate-with="pacemaker-2.10" epoch="74" num_updates="5" admin_epoch="0" cib-last-written="Wed Oct 31 11:26:39 2018" update-origin="controller-0" update-client="cibadmin" update-user="root" have-quorum="1" dc-uuid="3" execution-date="1540986692">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.19-8.el7-c3c624ea3d"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
+        <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="tripleo_cluster"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="controller-0">
+        <instance_attributes id="nodes-1">
+          <nvpair id="nodes-1-rabbitmq-role" name="rabbitmq-role" value="true"/>
+          <nvpair id="nodes-1-rmq-node-attr-last-known-rabbitmq" name="rmq-node-attr-last-known-rabbitmq" value="rabbit@controller-0"/>
+          <nvpair id="nodes-1-haproxy-role" name="haproxy-role" value="true"/>
+          <nvpair id="nodes-1-cinder-volume-role" name="cinder-volume-role" value="true"/>
+        </instance_attributes>
+      </node>
+      <node id="2" uname="controller-1">
+        <instance_attributes id="nodes-2">
+          <nvpair id="nodes-2-rabbitmq-role" name="rabbitmq-role" value="true"/>
+          <nvpair id="nodes-2-rmq-node-attr-last-known-rabbitmq" name="rmq-node-attr-last-known-rabbitmq" value="rabbit@controller-1"/>
+          <nvpair id="nodes-2-haproxy-role" name="haproxy-role" value="true"/>
+          <nvpair id="nodes-2-cinder-volume-role" name="cinder-volume-role" value="true"/>
+        </instance_attributes>
+      </node>
+      <node id="3" uname="controller-2">
+        <instance_attributes id="nodes-3">
+          <nvpair id="nodes-3-rabbitmq-role" name="rabbitmq-role" value="true"/>
+          <nvpair id="nodes-3-rmq-node-attr-last-known-rabbitmq" name="rmq-node-attr-last-known-rabbitmq" value="rabbit@controller-2"/>
+          <nvpair id="nodes-3-haproxy-role" name="haproxy-role" value="true"/>
+          <nvpair id="nodes-3-cinder-volume-role" name="cinder-volume-role" value="true"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <bundle id="rabbitmq-bundle">
+        <docker image="192.168.24.1:8787/rhosp13/openstack-rabbitmq:pcmklatest" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="3" run-command="/bin/bash /usr/local/bin/kolla_start"/>
+        <network control-port="3122"/>
+        <storage>
+          <storage-mapping id="rabbitmq-cfg-files" options="ro" source-dir="/var/lib/kolla/config_files/rabbitmq.json" target-dir="/var/lib/kolla/config_files/config.json"/>
+          <storage-mapping id="rabbitmq-cfg-data" options="ro" source-dir="/var/lib/config-data/puppet-generated/rabbitmq/" target-dir="/var/lib/kolla/config_files/src"/>
+          <storage-mapping id="rabbitmq-hosts" options="ro" source-dir="/etc/hosts" target-dir="/etc/hosts"/>
+          <storage-mapping id="rabbitmq-localtime" options="ro" source-dir="/etc/localtime" target-dir="/etc/localtime"/>
+          <storage-mapping id="rabbitmq-lib" options="rw" source-dir="/var/lib/rabbitmq" target-dir="/var/lib/rabbitmq"/>
+          <storage-mapping id="rabbitmq-pki-extracted" options="ro" source-dir="/etc/pki/ca-trust/extracted" target-dir="/etc/pki/ca-trust/extracted"/>
+          <storage-mapping id="rabbitmq-pki-ca-bundle-crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.crt" target-dir="/etc/pki/tls/certs/ca-bundle.crt"/>
+          <storage-mapping id="rabbitmq-pki-ca-bundle-trust-crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.trust.crt" target-dir="/etc/pki/tls/certs/ca-bundle.trust.crt"/>
+          <storage-mapping id="rabbitmq-pki-cert" options="ro" source-dir="/etc/pki/tls/cert.pem" target-dir="/etc/pki/tls/cert.pem"/>
+          <storage-mapping id="rabbitmq-log" options="rw" source-dir="/var/log/containers/rabbitmq" target-dir="/var/log/rabbitmq"/>
+          <storage-mapping id="rabbitmq-dev-log" options="rw" source-dir="/dev/log" target-dir="/dev/log"/>
+        </storage>
+        <primitive class="ocf" id="rabbitmq" provider="heartbeat" type="rabbitmq-cluster">
+          <instance_attributes id="rabbitmq-instance_attributes">
+            <nvpair id="rabbitmq-instance_attributes-set_policy" name="set_policy" value="ha-all ^(?!amq\.).* {&quot;ha-mode&quot;:&quot;all&quot;}"/>
+          </instance_attributes>
+          <meta_attributes id="rabbitmq-meta_attributes">
+            <nvpair id="rabbitmq-meta_attributes-container-attribute-target" name="container-attribute-target" value="host"/>
+            <nvpair id="rabbitmq-meta_attributes-notify" name="notify" value="true"/>
+          </meta_attributes>
+          <operations>
+            <op id="rabbitmq-monitor-interval-10s" interval="10s" name="monitor" timeout="40s"/>
+            <op id="rabbitmq-start-interval-0s" interval="0s" name="start" timeout="200s"/>
+            <op id="rabbitmq-stop-interval-0s" interval="0s" name="stop" timeout="200s"/>
+          </operations>
+        </primitive>
+      </bundle>
+      <primitive class="ocf" id="ip-192.168.24.12" provider="heartbeat" type="IPaddr2">
+        <instance_attributes id="ip-192.168.24.12-instance_attributes">
+          <nvpair id="ip-192.168.24.12-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
+          <nvpair id="ip-192.168.24.12-instance_attributes-ip" name="ip" value="192.168.24.12"/>
+        </instance_attributes>
+        <meta_attributes id="ip-192.168.24.12-meta_attributes">
+          <nvpair id="ip-192.168.24.12-meta_attributes-resource-stickiness" name="resource-stickiness" value="INFINITY"/>
+        </meta_attributes>
+        <operations>
+          <op id="ip-192.168.24.12-monitor-interval-10s" interval="10s" name="monitor" timeout="20s"/>
+          <op id="ip-192.168.24.12-start-interval-0s" interval="0s" name="start" timeout="20s"/>
+          <op id="ip-192.168.24.12-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="ip-10.0.0.101" provider="heartbeat" type="IPaddr2">
+        <instance_attributes id="ip-10.0.0.101-instance_attributes">
+          <nvpair id="ip-10.0.0.101-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
+          <nvpair id="ip-10.0.0.101-instance_attributes-ip" name="ip" value="10.0.0.101"/>
+        </instance_attributes>
+        <meta_attributes id="ip-10.0.0.101-meta_attributes">
+          <nvpair id="ip-10.0.0.101-meta_attributes-resource-stickiness" name="resource-stickiness" value="INFINITY"/>
+        </meta_attributes>
+        <operations>
+          <op id="ip-10.0.0.101-monitor-interval-10s" interval="10s" name="monitor" timeout="20s"/>
+          <op id="ip-10.0.0.101-start-interval-0s" interval="0s" name="start" timeout="20s"/>
+          <op id="ip-10.0.0.101-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="ip-172.17.1.20" provider="heartbeat" type="IPaddr2">
+        <instance_attributes id="ip-172.17.1.20-instance_attributes">
+          <nvpair id="ip-172.17.1.20-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
+          <nvpair id="ip-172.17.1.20-instance_attributes-ip" name="ip" value="172.17.1.20"/>
+        </instance_attributes>
+        <meta_attributes id="ip-172.17.1.20-meta_attributes">
+          <nvpair id="ip-172.17.1.20-meta_attributes-resource-stickiness" name="resource-stickiness" value="INFINITY"/>
+        </meta_attributes>
+        <operations>
+          <op id="ip-172.17.1.20-monitor-interval-10s" interval="10s" name="monitor" timeout="20s"/>
+          <op id="ip-172.17.1.20-start-interval-0s" interval="0s" name="start" timeout="20s"/>
+          <op id="ip-172.17.1.20-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="ip-172.17.1.11" provider="heartbeat" type="IPaddr2">
+        <instance_attributes id="ip-172.17.1.11-instance_attributes">
+          <nvpair id="ip-172.17.1.11-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
+          <nvpair id="ip-172.17.1.11-instance_attributes-ip" name="ip" value="172.17.1.11"/>
+        </instance_attributes>
+        <meta_attributes id="ip-172.17.1.11-meta_attributes">
+          <nvpair id="ip-172.17.1.11-meta_attributes-resource-stickiness" name="resource-stickiness" value="INFINITY"/>
+        </meta_attributes>
+        <operations>
+          <op id="ip-172.17.1.11-monitor-interval-10s" interval="10s" name="monitor" timeout="20s"/>
+          <op id="ip-172.17.1.11-start-interval-0s" interval="0s" name="start" timeout="20s"/>
+          <op id="ip-172.17.1.11-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="ip-172.17.3.16" provider="heartbeat" type="IPaddr2">
+        <instance_attributes id="ip-172.17.3.16-instance_attributes">
+          <nvpair id="ip-172.17.3.16-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
+          <nvpair id="ip-172.17.3.16-instance_attributes-ip" name="ip" value="172.17.3.16"/>
+        </instance_attributes>
+        <meta_attributes id="ip-172.17.3.16-meta_attributes">
+          <nvpair id="ip-172.17.3.16-meta_attributes-resource-stickiness" name="resource-stickiness" value="INFINITY"/>
+        </meta_attributes>
+        <operations>
+          <op id="ip-172.17.3.16-monitor-interval-10s" interval="10s" name="monitor" timeout="20s"/>
+          <op id="ip-172.17.3.16-start-interval-0s" interval="0s" name="start" timeout="20s"/>
+          <op id="ip-172.17.3.16-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="ip-172.17.4.15" provider="heartbeat" type="IPaddr2">
+        <instance_attributes id="ip-172.17.4.15-instance_attributes">
+          <nvpair id="ip-172.17.4.15-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
+          <nvpair id="ip-172.17.4.15-instance_attributes-ip" name="ip" value="172.17.4.15"/>
+        </instance_attributes>
+        <meta_attributes id="ip-172.17.4.15-meta_attributes">
+          <nvpair id="ip-172.17.4.15-meta_attributes-resource-stickiness" name="resource-stickiness" value="INFINITY"/>
+        </meta_attributes>
+        <operations>
+          <op id="ip-172.17.4.15-monitor-interval-10s" interval="10s" name="monitor" timeout="20s"/>
+          <op id="ip-172.17.4.15-start-interval-0s" interval="0s" name="start" timeout="20s"/>
+          <op id="ip-172.17.4.15-stop-interval-0s" interval="0s" name="stop" timeout="20s"/>
+        </operations>
+      </primitive>
+      <bundle id="haproxy-bundle">
+        <docker image="192.168.24.1:8787/rhosp13/openstack-haproxy:pcmklatest" network="host" options="--user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="3" run-command="/bin/bash /usr/local/bin/kolla_start"/>
+        <storage>
+          <storage-mapping id="haproxy-cfg-files" options="ro" source-dir="/var/lib/kolla/config_files/haproxy.json" target-dir="/var/lib/kolla/config_files/config.json"/>
+          <storage-mapping id="haproxy-cfg-data" options="ro" source-dir="/var/lib/config-data/puppet-generated/haproxy/" target-dir="/var/lib/kolla/config_files/src"/>
+          <storage-mapping id="haproxy-hosts" options="ro" source-dir="/etc/hosts" target-dir="/etc/hosts"/>
+          <storage-mapping id="haproxy-localtime" options="ro" source-dir="/etc/localtime" target-dir="/etc/localtime"/>
+          <storage-mapping id="haproxy-var-lib" options="rw" source-dir="/var/lib/haproxy" target-dir="/var/lib/haproxy"/>
+          <storage-mapping id="haproxy-pki-extracted" options="ro" source-dir="/etc/pki/ca-trust/extracted" target-dir="/etc/pki/ca-trust/extracted"/>
+          <storage-mapping id="haproxy-pki-ca-bundle-crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.crt" target-dir="/etc/pki/tls/certs/ca-bundle.crt"/>
+          <storage-mapping id="haproxy-pki-ca-bundle-trust-crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.trust.crt" target-dir="/etc/pki/tls/certs/ca-bundle.trust.crt"/>
+          <storage-mapping id="haproxy-pki-cert" options="ro" source-dir="/etc/pki/tls/cert.pem" target-dir="/etc/pki/tls/cert.pem"/>
+          <storage-mapping id="haproxy-dev-log" options="rw" source-dir="/dev/log" target-dir="/dev/log"/>
+          <storage-mapping id="haproxy-cert" options="ro" source-dir="/etc/pki/tls/private/overcloud_endpoint.pem" target-dir="/var/lib/kolla/config_files/src-tls/etc/pki/tls/private/overcloud_endpoint.pem"/>
+        </storage>
+      </bundle>
+      <bundle id="openstack-cinder-volume">
+        <docker image="192.168.24.1:8787/rhosp13/openstack-cinder-volume:pcmklatest" network="host" options="--ipc=host --privileged=true --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS" replicas="1" run-command="/bin/bash /usr/local/bin/kolla_start"/>
+        <storage>
+          <storage-mapping id="cinder-volume-etc-hosts" options="ro" source-dir="/etc/hosts" target-dir="/etc/hosts"/>
+          <storage-mapping id="cinder-volume-etc-localtime" options="ro" source-dir="/etc/localtime" target-dir="/etc/localtime"/>
+          <storage-mapping id="cinder-volume-etc-pki-ca-trust-extracted" options="ro" source-dir="/etc/pki/ca-trust/extracted" target-dir="/etc/pki/ca-trust/extracted"/>
+          <storage-mapping id="cinder-volume-etc-pki-ca-trust-source-anchors" options="ro" source-dir="/etc/pki/ca-trust/source/anchors" target-dir="/etc/pki/ca-trust/source/anchors"/>
+          <storage-mapping id="cinder-volume-etc-pki-tls-certs-ca-bundle.crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.crt" target-dir="/etc/pki/tls/certs/ca-bundle.crt"/>
+          <storage-mapping id="cinder-volume-etc-pki-tls-certs-ca-bundle.trust.crt" options="ro" source-dir="/etc/pki/tls/certs/ca-bundle.trust.crt" target-dir="/etc/pki/tls/certs/ca-bundle.trust.crt"/>
+          <storage-mapping id="cinder-volume-etc-pki-tls-cert.pem" options="ro" source-dir="/etc/pki/tls/cert.pem" target-dir="/etc/pki/tls/cert.pem"/>
+          <storage-mapping id="cinder-volume-dev-log" options="rw" source-dir="/dev/log" target-dir="/dev/log"/>
+          <storage-mapping id="cinder-volume-etc-ssh-ssh_known_hosts" options="ro" source-dir="/etc/ssh/ssh_known_hosts" target-dir="/etc/ssh/ssh_known_hosts"/>
+          <storage-mapping id="cinder-volume-etc-puppet" options="ro" source-dir="/etc/puppet" target-dir="/etc/puppet"/>
+          <storage-mapping id="cinder-volume-var-lib-kolla-config_files-cinder_volume.json" options="ro" source-dir="/var/lib/kolla/config_files/cinder_volume.json" target-dir="/var/lib/kolla/config_files/config.json"/>
+          <storage-mapping id="cinder-volume-var-lib-config-data-puppet-generated-cinder-" options="ro" source-dir="/var/lib/config-data/puppet-generated/cinder/" target-dir="/var/lib/kolla/config_files/src"/>
+          <storage-mapping id="cinder-volume-etc-iscsi" options="ro" source-dir="/etc/iscsi" target-dir="/var/lib/kolla/config_files/src-iscsid"/>
+          <storage-mapping id="cinder-volume-etc-ceph" options="ro" source-dir="/etc/ceph" target-dir="/var/lib/kolla/config_files/src-ceph"/>
+          <storage-mapping id="cinder-volume-lib-modules" options="ro" source-dir="/lib/modules" target-dir="/lib/modules"/>
+          <storage-mapping id="cinder-volume-dev-" options="rw" source-dir="/dev/" target-dir="/dev/"/>
+          <storage-mapping id="cinder-volume-run-" options="rw" source-dir="/run/" target-dir="/run/"/>
+          <storage-mapping id="cinder-volume-sys" options="rw" source-dir="/sys" target-dir="/sys"/>
+          <storage-mapping id="cinder-volume-var-lib-cinder" options="rw" source-dir="/var/lib/cinder" target-dir="/var/lib/cinder"/>
+          <storage-mapping id="cinder-volume-var-log-containers-cinder" options="rw" source-dir="/var/log/containers/cinder" target-dir="/var/log/cinder"/>
+        </storage>
+      </bundle>
+    </resources>
+    <constraints>
+      <rsc_location id="location-rabbitmq-bundle" resource-discovery="exclusive" rsc="rabbitmq-bundle">
+        <rule id="location-rabbitmq-bundle-rule" score="0">
+          <expression attribute="rabbitmq-role" id="location-rabbitmq-bundle-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-ip-192.168.24.12" resource-discovery="exclusive" rsc="ip-192.168.24.12">
+        <rule id="location-ip-192.168.24.12-rule" score="0">
+          <expression attribute="haproxy-role" id="location-ip-192.168.24.12-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-ip-10.0.0.101" resource-discovery="exclusive" rsc="ip-10.0.0.101">
+        <rule id="location-ip-10.0.0.101-rule" score="0">
+          <expression attribute="haproxy-role" id="location-ip-10.0.0.101-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-ip-172.17.1.20" resource-discovery="exclusive" rsc="ip-172.17.1.20">
+        <rule id="location-ip-172.17.1.20-rule" score="0">
+          <expression attribute="haproxy-role" id="location-ip-172.17.1.20-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-ip-172.17.1.11" resource-discovery="exclusive" rsc="ip-172.17.1.11">
+        <rule id="location-ip-172.17.1.11-rule" score="0">
+          <expression attribute="haproxy-role" id="location-ip-172.17.1.11-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-ip-172.17.3.16" resource-discovery="exclusive" rsc="ip-172.17.3.16">
+        <rule id="location-ip-172.17.3.16-rule" score="0">
+          <expression attribute="haproxy-role" id="location-ip-172.17.3.16-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-ip-172.17.4.15" resource-discovery="exclusive" rsc="ip-172.17.4.15">
+        <rule id="location-ip-172.17.4.15-rule" score="0">
+          <expression attribute="haproxy-role" id="location-ip-172.17.4.15-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-haproxy-bundle" resource-discovery="exclusive" rsc="haproxy-bundle">
+        <rule id="location-haproxy-bundle-rule" score="0">
+          <expression attribute="haproxy-role" id="location-haproxy-bundle-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+      <rsc_order first="ip-192.168.24.12" first-action="start" id="order-ip-192.168.24.12-haproxy-bundle-Optional" kind="Optional" then="haproxy-bundle" then-action="start"/>
+      <rsc_colocation id="colocation-ip-192.168.24.12-haproxy-bundle-INFINITY" rsc="ip-192.168.24.12" score="INFINITY" with-rsc="haproxy-bundle"/>
+      <rsc_order first="ip-10.0.0.101" first-action="start" id="order-ip-10.0.0.101-haproxy-bundle-Optional" kind="Optional" then="haproxy-bundle" then-action="start"/>
+      <rsc_colocation id="colocation-ip-10.0.0.101-haproxy-bundle-INFINITY" rsc="ip-10.0.0.101" score="INFINITY" with-rsc="haproxy-bundle"/>
+      <rsc_order first="ip-172.17.1.20" first-action="start" id="order-ip-172.17.1.20-haproxy-bundle-Optional" kind="Optional" then="haproxy-bundle" then-action="start"/>
+      <rsc_colocation id="colocation-ip-172.17.1.20-haproxy-bundle-INFINITY" rsc="ip-172.17.1.20" score="INFINITY" with-rsc="haproxy-bundle"/>
+      <rsc_order first="ip-172.17.1.11" first-action="start" id="order-ip-172.17.1.11-haproxy-bundle-Optional" kind="Optional" then="haproxy-bundle" then-action="start"/>
+      <rsc_colocation id="colocation-ip-172.17.1.11-haproxy-bundle-INFINITY" rsc="ip-172.17.1.11" score="INFINITY" with-rsc="haproxy-bundle"/>
+      <rsc_order first="ip-172.17.3.16" first-action="start" id="order-ip-172.17.3.16-haproxy-bundle-Optional" kind="Optional" then="haproxy-bundle" then-action="start"/>
+      <rsc_colocation id="colocation-ip-172.17.3.16-haproxy-bundle-INFINITY" rsc="ip-172.17.3.16" score="INFINITY" with-rsc="haproxy-bundle"/>
+      <rsc_order first="ip-172.17.4.15" first-action="start" id="order-ip-172.17.4.15-haproxy-bundle-Optional" kind="Optional" then="haproxy-bundle" then-action="start"/>
+      <rsc_colocation id="colocation-ip-172.17.4.15-haproxy-bundle-INFINITY" rsc="ip-172.17.4.15" score="INFINITY" with-rsc="haproxy-bundle"/>
+      <rsc_location id="location-openstack-cinder-volume" resource-discovery="exclusive" rsc="openstack-cinder-volume">
+        <rule id="location-openstack-cinder-volume-rule" score="0">
+          <expression attribute="cinder-volume-role" id="location-openstack-cinder-volume-rule-expr" operation="eq" value="true"/>
+        </rule>
+      </rsc_location>
+    </constraints>
+    <rsc_defaults>
+      <meta_attributes id="rsc_defaults-options">
+        <nvpair id="rsc_defaults-options-resource-stickiness" name="resource-stickiness" value="INFINITY"/>
+      </meta_attributes>
+    </rsc_defaults>
+  </configuration>
+  <status>
+    <node_state id="1" uname="controller-0" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="rabbitmq-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-docker-0_last_0" operation_key="rabbitmq-bundle-docker-0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="5:9:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:0;5:9:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-0" call-id="18" rc-code="0" op-status="0" interval="0" last-run="1540983900" last-rc-change="1540983900" exec-time="1083" queue-time="0" op-digest="ae040b82313c323e21c4670707a9780a"/>
+            <lrm_rsc_op id="rabbitmq-bundle-docker-0_monitor_60000" operation_key="rabbitmq-bundle-docker-0_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="1:9:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:0;1:9:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-0" call-id="21" rc-code="0" op-status="0" interval="60000" last-rc-change="1540983901" exec-time="337" queue-time="0" op-digest="3a23c9f953086b4add9203bf80f77e0f"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-docker-1" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-docker-1_last_0" operation_key="rabbitmq-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="3:6:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:7;3:6:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-0" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1540983868" last-rc-change="1540983868" exec-time="196" queue-time="0" op-digest="c9cf2c04cfd190d4d1d069c0891074fb"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-docker-2" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-docker-2_last_0" operation_key="rabbitmq-bundle-docker-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="4:6:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:7;4:6:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-0" call-id="13" rc-code="7" op-status="0" interval="0" last-run="1540983868" last-rc-change="1540983868" exec-time="195" queue-time="0" op-digest="c9cf2c04cfd190d4d1d069c0891074fb"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-2" type="remote" class="ocf" provider="pacemaker" container="rabbitmq-bundle-docker-2">
+            <lrm_rsc_op id="rabbitmq-bundle-2_last_0" operation_key="rabbitmq-bundle-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="10:9:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:7;10:9:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-0" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1540983901" last-rc-change="1540983901" exec-time="0" queue-time="0" op-digest="205c791aea96714f7aa1cb111c727e1b" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-1" type="remote" class="ocf" provider="pacemaker" container="rabbitmq-bundle-docker-1">
+            <lrm_rsc_op id="rabbitmq-bundle-1_last_0" operation_key="rabbitmq-bundle-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="9:9:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:7;9:9:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-0" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1540983901" last-rc-change="1540983901" exec-time="0" queue-time="0" op-digest="f1d68ab267df6867301fcff08041cd2f" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-0" type="remote" class="ocf" provider="pacemaker" container="rabbitmq-bundle-docker-0">
+            <lrm_rsc_op id="rabbitmq-bundle-0_last_0" operation_key="rabbitmq-bundle-0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="21:9:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:0;21:9:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-0" call-id="4" rc-code="0" op-status="0" interval="0" last-run="1540983901" last-rc-change="1540983901" exec-time="0" queue-time="0" op-digest="8dc3f9844e70d4458a7edcd7091ecf50" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="rabbitmq-bundle-0_monitor_30000" operation_key="rabbitmq-bundle-0_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="12:10:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:0;12:10:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-0" call-id="5" rc-code="0" op-status="0" interval="30000" last-rc-change="1540983902" exec-time="0" queue-time="0" op-digest="cca9d25863986607e6440270f0640ff5"/>
+          </lrm_resource>
+          <lrm_resource id="ip-192.168.24.12" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-192.168.24.12_last_0" operation_key="ip-192.168.24.12_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="157:41:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:0;157:41:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-0" call-id="69" rc-code="0" op-status="0" interval="0" last-run="1540984260" last-rc-change="1540984260" exec-time="199" queue-time="1" op-digest="b4014942f7386bbb0f624129d6226304"/>
+            <lrm_rsc_op id="ip-192.168.24.12_monitor_10000" operation_key="ip-192.168.24.12_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="158:41:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:0;158:41:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-0" call-id="70" rc-code="0" op-status="0" interval="10000" last-rc-change="1540984260" exec-time="77" queue-time="0" op-digest="62c2cc737006fd52cbe49b4d8368ef2c"/>
+          </lrm_resource>
+          <lrm_resource id="ip-10.0.0.101" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-10.0.0.101_last_0" operation_key="ip-10.0.0.101_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="32:42:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:7;32:42:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-0" call-id="74" rc-code="7" op-status="0" interval="0" last-run="1540984269" last-rc-change="1540984269" exec-time="78" queue-time="0" op-digest="cd1adb3084285dafcc7313900769abf2"/>
+          </lrm_resource>
+          <lrm_resource id="ip-172.17.1.20" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-172.17.1.20_last_0" operation_key="ip-172.17.1.20_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="33:45:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:7;33:45:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-0" call-id="78" rc-code="7" op-status="0" interval="0" last-run="1540984284" last-rc-change="1540984284" exec-time="117" queue-time="0" op-digest="1a1c49003092bcbbe8185669d9ca3980"/>
+          </lrm_resource>
+          <lrm_resource id="ip-172.17.1.11" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-172.17.1.11_last_0" operation_key="ip-172.17.1.11_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="166:50:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:0;166:50:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-0" call-id="83" rc-code="0" op-status="0" interval="0" last-run="1540984306" last-rc-change="1540984306" exec-time="165" queue-time="0" op-digest="7c6ed186ff8cdf7693b51ee42b4fc6e1"/>
+            <lrm_rsc_op id="ip-172.17.1.11_monitor_10000" operation_key="ip-172.17.1.11_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="167:50:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:0;167:50:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-0" call-id="84" rc-code="0" op-status="0" interval="10000" last-rc-change="1540984306" exec-time="59" queue-time="0" op-digest="37c8f827f04bb4d80e7fee9c98c84da2"/>
+          </lrm_resource>
+          <lrm_resource id="ip-172.17.3.16" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-172.17.3.16_last_0" operation_key="ip-172.17.3.16_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="35:51:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:7;35:51:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-0" call-id="88" rc-code="7" op-status="0" interval="0" last-run="1540984315" last-rc-change="1540984315" exec-time="102" queue-time="0" op-digest="95a6216103fdc21c7c2ebc7a129b5b2c"/>
+          </lrm_resource>
+          <lrm_resource id="ip-172.17.4.15" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-172.17.4.15_last_0" operation_key="ip-172.17.4.15_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="36:54:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:7;36:54:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-0" call-id="92" rc-code="7" op-status="0" interval="0" last-run="1540984330" last-rc-change="1540984330" exec-time="103" queue-time="0" op-digest="4f62c49dc50d6bdde262b2bbd44cd9b6"/>
+          </lrm_resource>
+          <lrm_resource id="haproxy-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="haproxy-bundle-docker-0_last_0" operation_key="haproxy-bundle-docker-0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="175:59:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:0;175:59:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-0" call-id="105" rc-code="0" op-status="0" interval="0" last-run="1540984348" last-rc-change="1540984348" exec-time="913" queue-time="0" op-digest="416854bcd50cb9d353ec34d0d1bec66f"/>
+            <lrm_rsc_op id="haproxy-bundle-docker-0_monitor_60000" operation_key="haproxy-bundle-docker-0_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="176:59:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:0;176:59:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-0" call-id="106" rc-code="0" op-status="0" interval="60000" last-rc-change="1540984349" exec-time="527" queue-time="0" op-digest="ce95c0cdd076935266f1acb8e1f8de41"/>
+          </lrm_resource>
+          <lrm_resource id="haproxy-bundle-docker-1" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="haproxy-bundle-docker-1_last_0" operation_key="haproxy-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="38:57:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:7;38:57:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-0" call-id="100" rc-code="7" op-status="0" interval="0" last-run="1540984342" last-rc-change="1540984342" exec-time="162" queue-time="0" op-digest="416854bcd50cb9d353ec34d0d1bec66f"/>
+          </lrm_resource>
+          <lrm_resource id="haproxy-bundle-docker-2" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="haproxy-bundle-docker-2_last_0" operation_key="haproxy-bundle-docker-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="39:57:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:7;39:57:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-0" call-id="104" rc-code="7" op-status="0" interval="0" last-run="1540984342" last-rc-change="1540984342" exec-time="177" queue-time="0" op-digest="416854bcd50cb9d353ec34d0d1bec66f"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-cinder-volume-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="openstack-cinder-volume-docker-0_last_0" operation_key="openstack-cinder-volume-docker-0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="188:77:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:0;188:77:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-0" call-id="111" rc-code="0" op-status="0" interval="0" last-run="1540985199" last-rc-change="1540985199" exec-time="1576" queue-time="0" op-digest="13e8c88fda0d2de2e026824b90a4acc3"/>
+            <lrm_rsc_op id="openstack-cinder-volume-docker-0_monitor_60000" operation_key="openstack-cinder-volume-docker-0_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="189:77:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:0;189:77:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-0" call-id="112" rc-code="0" op-status="0" interval="60000" last-rc-change="1540985201" exec-time="542" queue-time="0" op-digest="0e6bd23d2a96350c5b4c6b5578024885"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="1">
+        <instance_attributes id="status-1">
+          <nvpair id="status-1-rmq-node-attr-rabbitmq" name="rmq-node-attr-rabbitmq" value="rabbit@controller-0"/>
+          <nvpair id="status-1-shutdown" name="shutdown" value="1540986692"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="3" uname="controller-2" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="3">
+        <lrm_resources>
+          <lrm_resource id="rabbitmq-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-docker-0_last_0" operation_key="rabbitmq-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="8:6:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:7;8:6:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-2" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1540983868" last-rc-change="1540983868" exec-time="187" queue-time="0" op-digest="c9cf2c04cfd190d4d1d069c0891074fb"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-docker-1" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-docker-1_last_0" operation_key="rabbitmq-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="9:6:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:7;9:6:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-2" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1540983868" last-rc-change="1540983868" exec-time="106" queue-time="0" op-digest="c9cf2c04cfd190d4d1d069c0891074fb"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-docker-2" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-docker-2_last_0" operation_key="rabbitmq-bundle-docker-2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="6:9:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:0;6:9:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-2" call-id="18" rc-code="0" op-status="0" interval="0" last-run="1540983900" last-rc-change="1540983900" exec-time="1041" queue-time="0" op-digest="a598abeee324765f1126ada0550bfe50"/>
+            <lrm_rsc_op id="rabbitmq-bundle-docker-2_monitor_60000" operation_key="rabbitmq-bundle-docker-2_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="2:9:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:0;2:9:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-2" call-id="19" rc-code="0" op-status="0" interval="60000" last-rc-change="1540983901" exec-time="293" queue-time="0" op-digest="9b2e69608eaf664ce11b97a6e2a95a62"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-2" type="remote" class="ocf" provider="pacemaker" container="rabbitmq-bundle-docker-2">
+            <lrm_rsc_op id="rabbitmq-bundle-2_last_0" operation_key="rabbitmq-bundle-2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="27:9:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:0;27:9:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-2" call-id="4" rc-code="0" op-status="0" interval="0" last-run="1540983901" last-rc-change="1540983901" exec-time="0" queue-time="0" op-digest="205c791aea96714f7aa1cb111c727e1b" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="rabbitmq-bundle-2_monitor_30000" operation_key="rabbitmq-bundle-2_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="22:10:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:0;22:10:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-2" call-id="5" rc-code="0" op-status="0" interval="30000" last-rc-change="1540983902" exec-time="0" queue-time="0" op-digest="f765304166a359903e5aea671a7275d0"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-1" type="remote" class="ocf" provider="pacemaker" container="rabbitmq-bundle-docker-1">
+            <lrm_rsc_op id="rabbitmq-bundle-1_last_0" operation_key="rabbitmq-bundle-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="15:9:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:7;15:9:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-2" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1540983901" last-rc-change="1540983901" exec-time="0" queue-time="0" op-digest="f1d68ab267df6867301fcff08041cd2f" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-0" type="remote" class="ocf" provider="pacemaker" container="rabbitmq-bundle-docker-0">
+            <lrm_rsc_op id="rabbitmq-bundle-0_last_0" operation_key="rabbitmq-bundle-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="14:9:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:7;14:9:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-2" call-id="3" rc-code="7" op-status="0" interval="0" last-run="1540983901" last-rc-change="1540983901" exec-time="0" queue-time="0" op-digest="8dc3f9844e70d4458a7edcd7091ecf50" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="ip-192.168.24.12" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-192.168.24.12_last_0" operation_key="ip-192.168.24.12_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="33:39:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:7;33:39:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-2" call-id="68" rc-code="7" op-status="0" interval="0" last-run="1540984254" last-rc-change="1540984254" exec-time="111" queue-time="0" op-digest="b4014942f7386bbb0f624129d6226304"/>
+          </lrm_resource>
+          <lrm_resource id="ip-10.0.0.101" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-10.0.0.101_last_0" operation_key="ip-10.0.0.101_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="34:42:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:7;34:42:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-2" call-id="72" rc-code="7" op-status="0" interval="0" last-run="1540984269" last-rc-change="1540984269" exec-time="62" queue-time="0" op-digest="cd1adb3084285dafcc7313900769abf2"/>
+          </lrm_resource>
+          <lrm_resource id="ip-172.17.1.20" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-172.17.1.20_last_0" operation_key="ip-172.17.1.20_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="163:47:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:0;163:47:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-2" call-id="77" rc-code="0" op-status="0" interval="0" last-run="1540984291" last-rc-change="1540984291" exec-time="93" queue-time="0" op-digest="1a1c49003092bcbbe8185669d9ca3980"/>
+            <lrm_rsc_op id="ip-172.17.1.20_monitor_10000" operation_key="ip-172.17.1.20_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="164:47:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:0;164:47:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-2" call-id="78" rc-code="0" op-status="0" interval="10000" last-rc-change="1540984291" exec-time="81" queue-time="0" op-digest="326874e77f47e2c6e5ed34b617b539ea"/>
+          </lrm_resource>
+          <lrm_resource id="ip-172.17.1.11" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-172.17.1.11_last_0" operation_key="ip-172.17.1.11_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="36:48:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:7;36:48:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-2" call-id="82" rc-code="7" op-status="0" interval="0" last-run="1540984299" last-rc-change="1540984299" exec-time="78" queue-time="0" op-digest="7c6ed186ff8cdf7693b51ee42b4fc6e1"/>
+          </lrm_resource>
+          <lrm_resource id="ip-172.17.3.16" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-172.17.3.16_last_0" operation_key="ip-172.17.3.16_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="37:51:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:7;37:51:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-2" call-id="86" rc-code="7" op-status="0" interval="0" last-run="1540984315" last-rc-change="1540984315" exec-time="72" queue-time="0" op-digest="95a6216103fdc21c7c2ebc7a129b5b2c"/>
+          </lrm_resource>
+          <lrm_resource id="ip-172.17.4.15" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-172.17.4.15_last_0" operation_key="ip-172.17.4.15_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="172:56:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:0;172:56:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-2" call-id="91" rc-code="0" op-status="0" interval="0" last-run="1540984336" last-rc-change="1540984336" exec-time="134" queue-time="0" op-digest="4f62c49dc50d6bdde262b2bbd44cd9b6"/>
+            <lrm_rsc_op id="ip-172.17.4.15_monitor_10000" operation_key="ip-172.17.4.15_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="173:56:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:0;173:56:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-2" call-id="92" rc-code="0" op-status="0" interval="10000" last-rc-change="1540984336" exec-time="69" queue-time="0" op-digest="132812b94329474c80e2c7e421722bfa"/>
+          </lrm_resource>
+          <lrm_resource id="haproxy-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="haproxy-bundle-docker-0_last_0" operation_key="haproxy-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="43:57:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:7;43:57:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-2" call-id="96" rc-code="7" op-status="0" interval="0" last-run="1540984342" last-rc-change="1540984342" exec-time="101" queue-time="0" op-digest="416854bcd50cb9d353ec34d0d1bec66f"/>
+          </lrm_resource>
+          <lrm_resource id="haproxy-bundle-docker-1" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="haproxy-bundle-docker-1_last_0" operation_key="haproxy-bundle-docker-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="44:57:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:7;44:57:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-2" call-id="100" rc-code="7" op-status="0" interval="0" last-run="1540984342" last-rc-change="1540984342" exec-time="121" queue-time="0" op-digest="416854bcd50cb9d353ec34d0d1bec66f"/>
+          </lrm_resource>
+          <lrm_resource id="haproxy-bundle-docker-2" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="haproxy-bundle-docker-2_last_0" operation_key="haproxy-bundle-docker-2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="179:59:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:0;179:59:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-2" call-id="105" rc-code="0" op-status="0" interval="0" last-run="1540984348" last-rc-change="1540984348" exec-time="1248" queue-time="1" op-digest="416854bcd50cb9d353ec34d0d1bec66f"/>
+            <lrm_rsc_op id="haproxy-bundle-docker-2_monitor_60000" operation_key="haproxy-bundle-docker-2_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="180:59:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:0;180:59:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-2" call-id="106" rc-code="0" op-status="0" interval="60000" last-rc-change="1540984349" exec-time="430" queue-time="0" op-digest="ce95c0cdd076935266f1acb8e1f8de41"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-cinder-volume-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="openstack-cinder-volume-docker-0_last_0" operation_key="openstack-cinder-volume-docker-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="42:75:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:7;42:75:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-2" call-id="110" rc-code="7" op-status="0" interval="0" last-run="1540985187" last-rc-change="1540985187" exec-time="114" queue-time="1" op-digest="13e8c88fda0d2de2e026824b90a4acc3"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="3">
+        <instance_attributes id="status-3">
+          <nvpair id="status-3-rmq-node-attr-rabbitmq" name="rmq-node-attr-rabbitmq" value="rabbit@controller-2"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="2" uname="controller-1" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member">
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="rabbitmq-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-docker-0_last_0" operation_key="rabbitmq-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="5:6:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:7;5:6:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-1" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1540983868" last-rc-change="1540983868" exec-time="178" queue-time="0" op-digest="c9cf2c04cfd190d4d1d069c0891074fb"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-docker-1" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-docker-1_last_0" operation_key="rabbitmq-bundle-docker-1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="7:9:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:0;7:9:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-1" call-id="18" rc-code="0" op-status="0" interval="0" last-run="1540983900" last-rc-change="1540983900" exec-time="1136" queue-time="0" op-digest="96dff92057862df79b06a95f8d1a9b2e"/>
+            <lrm_rsc_op id="rabbitmq-bundle-docker-1_monitor_60000" operation_key="rabbitmq-bundle-docker-1_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="3:9:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:0;3:9:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-1" call-id="20" rc-code="0" op-status="0" interval="60000" last-rc-change="1540983901" exec-time="280" queue-time="0" op-digest="391eec1a0e54c3c419b584cbb13f79e8"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-docker-2" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq-bundle-docker-2_last_0" operation_key="rabbitmq-bundle-docker-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="7:6:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:7;7:6:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-1" call-id="13" rc-code="7" op-status="0" interval="0" last-run="1540983868" last-rc-change="1540983868" exec-time="164" queue-time="0" op-digest="c9cf2c04cfd190d4d1d069c0891074fb"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-2" type="remote" class="ocf" provider="pacemaker" container="rabbitmq-bundle-docker-2">
+            <lrm_rsc_op id="rabbitmq-bundle-2_last_0" operation_key="rabbitmq-bundle-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="13:9:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:7;13:9:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-1" call-id="1" rc-code="7" op-status="0" interval="0" last-run="1540983901" last-rc-change="1540983901" exec-time="0" queue-time="0" op-digest="205c791aea96714f7aa1cb111c727e1b" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-1" type="remote" class="ocf" provider="pacemaker" container="rabbitmq-bundle-docker-1">
+            <lrm_rsc_op id="rabbitmq-bundle-1_last_0" operation_key="rabbitmq-bundle-1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="24:9:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:0;24:9:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-1" call-id="4" rc-code="0" op-status="0" interval="0" last-run="1540983901" last-rc-change="1540983901" exec-time="0" queue-time="0" op-digest="f1d68ab267df6867301fcff08041cd2f" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="rabbitmq-bundle-1_monitor_30000" operation_key="rabbitmq-bundle-1_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="17:10:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:0;17:10:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-1" call-id="5" rc-code="0" op-status="0" interval="30000" last-rc-change="1540983902" exec-time="0" queue-time="0" op-digest="61c3a926b0d3bd428b481dd6e40b1745"/>
+          </lrm_resource>
+          <lrm_resource id="rabbitmq-bundle-0" type="remote" class="ocf" provider="pacemaker" container="rabbitmq-bundle-docker-0">
+            <lrm_rsc_op id="rabbitmq-bundle-0_last_0" operation_key="rabbitmq-bundle-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="11:9:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:7;11:9:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-1" call-id="3" rc-code="7" op-status="0" interval="0" last-run="1540983901" last-rc-change="1540983901" exec-time="0" queue-time="0" op-digest="8dc3f9844e70d4458a7edcd7091ecf50" op-force-restart=" server " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="ip-192.168.24.12" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-192.168.24.12_last_0" operation_key="ip-192.168.24.12_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="32:39:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:7;32:39:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-1" call-id="68" rc-code="7" op-status="0" interval="0" last-run="1540984254" last-rc-change="1540984254" exec-time="91" queue-time="0" op-digest="b4014942f7386bbb0f624129d6226304"/>
+          </lrm_resource>
+          <lrm_resource id="ip-10.0.0.101" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-10.0.0.101_last_0" operation_key="ip-10.0.0.101_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="160:44:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:0;160:44:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-1" call-id="73" rc-code="0" op-status="0" interval="0" last-run="1540984275" last-rc-change="1540984275" exec-time="150" queue-time="0" op-digest="cd1adb3084285dafcc7313900769abf2"/>
+            <lrm_rsc_op id="ip-10.0.0.101_monitor_10000" operation_key="ip-10.0.0.101_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="161:44:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:0;161:44:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-1" call-id="74" rc-code="0" op-status="0" interval="10000" last-rc-change="1540984275" exec-time="83" queue-time="0" op-digest="70a7b88579e4b905ecb297795e1f94a8"/>
+          </lrm_resource>
+          <lrm_resource id="ip-172.17.1.20" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-172.17.1.20_last_0" operation_key="ip-172.17.1.20_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="34:45:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:7;34:45:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-1" call-id="78" rc-code="7" op-status="0" interval="0" last-run="1540984284" last-rc-change="1540984284" exec-time="101" queue-time="0" op-digest="1a1c49003092bcbbe8185669d9ca3980"/>
+          </lrm_resource>
+          <lrm_resource id="ip-172.17.1.11" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-172.17.1.11_last_0" operation_key="ip-172.17.1.11_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="35:48:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:7;35:48:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-1" call-id="82" rc-code="7" op-status="0" interval="0" last-run="1540984299" last-rc-change="1540984299" exec-time="69" queue-time="0" op-digest="7c6ed186ff8cdf7693b51ee42b4fc6e1"/>
+          </lrm_resource>
+          <lrm_resource id="ip-172.17.3.16" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-172.17.3.16_last_0" operation_key="ip-172.17.3.16_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="169:53:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:0;169:53:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-1" call-id="87" rc-code="0" op-status="0" interval="0" last-run="1540984321" last-rc-change="1540984321" exec-time="290" queue-time="0" op-digest="95a6216103fdc21c7c2ebc7a129b5b2c"/>
+            <lrm_rsc_op id="ip-172.17.3.16_monitor_10000" operation_key="ip-172.17.3.16_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="170:53:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:0;170:53:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-1" call-id="88" rc-code="0" op-status="0" interval="10000" last-rc-change="1540984321" exec-time="113" queue-time="0" op-digest="85339a807a17f5e5caf2167def89d03d"/>
+          </lrm_resource>
+          <lrm_resource id="ip-172.17.4.15" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ip-172.17.4.15_last_0" operation_key="ip-172.17.4.15_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="37:54:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:7;37:54:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-1" call-id="92" rc-code="7" op-status="0" interval="0" last-run="1540984330" last-rc-change="1540984330" exec-time="99" queue-time="0" op-digest="4f62c49dc50d6bdde262b2bbd44cd9b6"/>
+          </lrm_resource>
+          <lrm_resource id="haproxy-bundle-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="haproxy-bundle-docker-0_last_0" operation_key="haproxy-bundle-docker-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="40:57:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:7;40:57:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-1" call-id="96" rc-code="7" op-status="0" interval="0" last-run="1540984342" last-rc-change="1540984342" exec-time="166" queue-time="0" op-digest="416854bcd50cb9d353ec34d0d1bec66f"/>
+          </lrm_resource>
+          <lrm_resource id="haproxy-bundle-docker-1" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="haproxy-bundle-docker-1_last_0" operation_key="haproxy-bundle-docker-1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="177:59:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:0;177:59:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-1" call-id="105" rc-code="0" op-status="0" interval="0" last-run="1540984348" last-rc-change="1540984348" exec-time="1077" queue-time="0" op-digest="416854bcd50cb9d353ec34d0d1bec66f"/>
+            <lrm_rsc_op id="haproxy-bundle-docker-1_monitor_60000" operation_key="haproxy-bundle-docker-1_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="178:59:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:0;178:59:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-1" call-id="106" rc-code="0" op-status="0" interval="60000" last-rc-change="1540984349" exec-time="692" queue-time="0" op-digest="ce95c0cdd076935266f1acb8e1f8de41"/>
+          </lrm_resource>
+          <lrm_resource id="haproxy-bundle-docker-2" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="haproxy-bundle-docker-2_last_0" operation_key="haproxy-bundle-docker-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="42:57:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:7;42:57:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-1" call-id="104" rc-code="7" op-status="0" interval="0" last-run="1540984342" last-rc-change="1540984342" exec-time="187" queue-time="0" op-digest="416854bcd50cb9d353ec34d0d1bec66f"/>
+          </lrm_resource>
+          <lrm_resource id="openstack-cinder-volume-docker-0" type="docker" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="openstack-cinder-volume-docker-0_last_0" operation_key="openstack-cinder-volume-docker-0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="41:75:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:7;41:75:7:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-1" call-id="110" rc-code="7" op-status="0" interval="0" last-run="1540985188" last-rc-change="1540985188" exec-time="145" queue-time="0" op-digest="13e8c88fda0d2de2e026824b90a4acc3"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="2">
+        <instance_attributes id="status-2">
+          <nvpair id="status-2-rmq-node-attr-rabbitmq" name="rmq-node-attr-rabbitmq" value="rabbit@controller-1"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state remote_node="true" id="rabbitmq-bundle-2" uname="rabbitmq-bundle-2" in_ccm="true" crm-debug-origin="do_update_resource" node_fenced="0">
+      <lrm id="rabbitmq-bundle-2">
+        <lrm_resources>
+          <lrm_resource id="rabbitmq" type="rabbitmq-cluster" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq_last_0" operation_key="rabbitmq_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="30:12:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:0;30:12:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-2" call-id="15" rc-code="0" op-status="0" interval="0" last-run="1540983948" last-rc-change="1540983948" exec-time="28858" queue-time="0" op-digest="780d433233eb4f94c1a151623d002e84"/>
+            <lrm_rsc_op id="rabbitmq_monitor_10000" operation_key="rabbitmq_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="32:13:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:0;32:13:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-2" call-id="54" rc-code="0" op-status="0" interval="10000" last-rc-change="1540983978" exec-time="5645" queue-time="0" op-digest="6b46cdf9111345cbd0460b2540d3b2c7"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state remote_node="true" id="rabbitmq-bundle-1" uname="rabbitmq-bundle-1" in_ccm="true" crm-debug-origin="do_update_resource" node_fenced="0">
+      <lrm id="rabbitmq-bundle-1">
+        <lrm_resources>
+          <lrm_resource id="rabbitmq" type="rabbitmq-cluster" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq_last_0" operation_key="rabbitmq_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="27:11:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:0;27:11:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-1" call-id="15" rc-code="0" op-status="0" interval="0" last-run="1540983923" last-rc-change="1540983923" exec-time="23986" queue-time="0" op-digest="780d433233eb4f94c1a151623d002e84"/>
+            <lrm_rsc_op id="rabbitmq_monitor_10000" operation_key="rabbitmq_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="29:13:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:0;29:13:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-1" call-id="55" rc-code="0" op-status="0" interval="10000" last-rc-change="1540983978" exec-time="5566" queue-time="0" op-digest="6b46cdf9111345cbd0460b2540d3b2c7"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state remote_node="true" id="rabbitmq-bundle-0" uname="rabbitmq-bundle-0" in_ccm="true" crm-debug-origin="do_update_resource" node_fenced="0">
+      <lrm id="rabbitmq-bundle-0">
+        <lrm_resources>
+          <lrm_resource id="rabbitmq" type="rabbitmq-cluster" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="rabbitmq_last_0" operation_key="rabbitmq_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="27:10:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:0;27:10:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-0" call-id="15" rc-code="0" op-status="0" interval="0" last-run="1540983906" last-rc-change="1540983906" exec-time="16479" queue-time="0" op-digest="780d433233eb4f94c1a151623d002e84"/>
+            <lrm_rsc_op id="rabbitmq_monitor_10000" operation_key="rabbitmq_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.14" transition-key="26:13:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" transition-magic="0:0;26:13:0:62f6c4c6-db69-4b50-b399-dd240c0fd7a1" exit-reason="" on_node="controller-0" call-id="52" rc-code="0" op-status="0" interval="10000" last-rc-change="1540983978" exec-time="5548" queue-time="0" op-digest="6b46cdf9111345cbd0460b2540d3b2c7"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

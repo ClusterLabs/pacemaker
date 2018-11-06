@@ -784,8 +784,9 @@ get_router_node(action_t *action)
     node_t *ended_on = NULL;
     node_t *router_node = NULL;
     bool partial_migration = FALSE;
+    const char *task = action->task;
 
-    if (safe_str_eq(action->task, CRM_OP_FENCE) || is_remote_node(action->node) == FALSE) {
+    if (safe_str_eq(task, CRM_OP_FENCE) || is_remote_node(action->node) == FALSE) {
         return NULL;
     }
 
@@ -831,11 +832,15 @@ get_router_node(action_t *action)
      *    moving to.
      */
 
+    if (safe_str_eq(task, "notify")) {
+        task = g_hash_table_lookup(action->meta, "notify_operation");
+    }
+
     /* 1. before connection rsc moves. */
-    if ((safe_str_eq(action->task, "stop") ||
-        safe_str_eq(action->task, "demote") ||
-        safe_str_eq(action->task, "migrate_from") ||
-        safe_str_eq(action->task, "migrate_to")) && !partial_migration) {
+    if ((safe_str_eq(task, "stop") ||
+        safe_str_eq(task, "demote") ||
+        safe_str_eq(task, "migrate_from") ||
+        safe_str_eq(task, "migrate_to")) && !partial_migration) {
 
         router_node = began_on;
 

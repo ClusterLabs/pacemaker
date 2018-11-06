@@ -112,7 +112,7 @@ void mainloop_clear_child_userdata(mainloop_child_t * child);
 gboolean mainloop_child_kill(pid_t pid);
 
 void pcmk_drain_main_loop(GMainLoop *mloop, guint timer_ms,
-                          bool (*check)(void));
+                          bool (*check)(guint));
 
 #  define G_PRIORITY_MEDIUM (G_PRIORITY_HIGH/2)
 
