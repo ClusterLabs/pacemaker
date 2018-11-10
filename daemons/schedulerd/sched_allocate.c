@@ -570,7 +570,7 @@ apply_placement_constraints(pe_working_set_t * data_set)
     crm_trace("Applying constraints...");
 
     for (gIter = data_set->placement_constraints; gIter != NULL; gIter = gIter->next) {
-        rsc_to_node_t *cons = (rsc_to_node_t *) gIter->data;
+        pe__location_t *cons = gIter->data;
 
         cons->rsc_lh->cmds->rsc_location(cons->rsc_lh, cons);
     }
@@ -1236,8 +1236,7 @@ stage5(pe_working_set_t * data_set)
     if (safe_str_neq(data_set->placement_strategy, "default")) {
         GListPtr nodes = g_list_copy(data_set->nodes);
 
-        nodes = g_list_sort_with_data(nodes, sort_node_weight, NULL);
-
+        nodes = sort_nodes_by_weight(nodes, NULL, data_set);
         data_set->resources =
             g_list_sort_with_data(data_set->resources, sort_rsc_process_order, nodes);
 
@@ -1650,7 +1649,8 @@ find_actions_by_task(GListPtr actions, resource_t * rsc, const char *original_ke
 }
 
 static void
-rsc_order_then(action_t * lh_action, resource_t * rsc, order_constraint_t * order)
+rsc_order_then(pe_action_t *lh_action, pe_resource_t *rsc,
+               pe__ordering_t *order)
 {
     GListPtr gIter = NULL;
     GListPtr rh_actions = NULL;
@@ -1705,7 +1705,8 @@ rsc_order_then(action_t * lh_action, resource_t * rsc, order_constraint_t * orde
 }
 
 static void
-rsc_order_first(resource_t * lh_rsc, order_constraint_t * order, pe_working_set_t * data_set)
+rsc_order_first(pe_resource_t *lh_rsc, pe__ordering_t *order,
+                pe_working_set_t *data_set)
 {
     GListPtr gIter = NULL;
     GListPtr lh_actions = NULL;
@@ -1768,8 +1769,8 @@ rsc_order_first(resource_t * lh_rsc, order_constraint_t * order, pe_working_set_
     g_list_free(lh_actions);
 }
 
-extern gboolean update_action(action_t * action);
-extern void update_colo_start_chain(action_t * action);
+extern void update_colo_start_chain(pe_action_t *action,
+                                    pe_working_set_t *data_set);
 
 static int
 is_recurring_action(action_t *action) 
@@ -2302,7 +2303,7 @@ stage7(pe_working_set_t * data_set)
     data_set->ordering_constraints = g_list_reverse(data_set->ordering_constraints);
 
     for (gIter = data_set->ordering_constraints; gIter != NULL; gIter = gIter->next) {
-        order_constraint_t *order = (order_constraint_t *) gIter->data;
+        pe__ordering_t *order = gIter->data;
         resource_t *rsc = order->lh_rsc;
 
         crm_trace("Applying ordering constraint: %d", order->id);
@@ -2327,7 +2328,7 @@ stage7(pe_working_set_t * data_set)
     for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
         action_t *action = (action_t *) gIter->data;
 
-        update_colo_start_chain(action);
+        update_colo_start_chain(action, data_set);
     }
 
     crm_trace("Ordering probes");
@@ -2337,7 +2338,7 @@ stage7(pe_working_set_t * data_set)
     for (gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
         action_t *action = (action_t *) gIter->data;
 
-        update_action(action);
+        update_action(action, data_set);
     }
 
     LogNodeActions(data_set, FALSE);
@@ -2494,34 +2495,4 @@ LogNodeActions(pe_working_set_t * data_set, gboolean terminal)
         free(node_name);
         free(task);
     }
-}
-
-void
-cleanup_alloc_calculations(pe_working_set_t * data_set)
-{
-    if (data_set == NULL) {
-        return;
-    }
-
-    crm_trace("deleting %d order cons: %p",
-              g_list_length(data_set->ordering_constraints), data_set->ordering_constraints);
-    pe_free_ordering(data_set->ordering_constraints);
-    data_set->ordering_constraints = NULL;
-
-    crm_trace("deleting %d node cons: %p",
-              g_list_length(data_set->placement_constraints), data_set->placement_constraints);
-    pe_free_rsc_to_node(data_set->placement_constraints);
-    data_set->placement_constraints = NULL;
-
-    crm_trace("deleting %d inter-resource cons: %p",
-              g_list_length(data_set->colocation_constraints), data_set->colocation_constraints);
-    g_list_free_full(data_set->colocation_constraints, free);
-    data_set->colocation_constraints = NULL;
-
-    crm_trace("deleting %d ticket deps: %p",
-              g_list_length(data_set->ticket_constraints), data_set->ticket_constraints);
-    g_list_free_full(data_set->ticket_constraints, free);
-    data_set->ticket_constraints = NULL;
-
-    cleanup_calculations(data_set);
 }

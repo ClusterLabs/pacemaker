@@ -23,7 +23,6 @@
 #define VARIANT_NATIVE 1
 #include <lib/pengine/variant.h>
 
-gboolean update_action(action_t * then);
 void native_rsc_colocation_rh_must(resource_t * rsc_lh, gboolean update_lh,
                                    resource_t * rsc_rh, gboolean update_rh);
 
@@ -93,8 +92,7 @@ native_choose_node(resource_t * rsc, node_t * prefer, pe_working_set_t * data_se
     }
     if (length > 0) {
         nodes = g_hash_table_get_values(rsc->allowed_nodes);
-        nodes = g_list_sort_with_data(nodes, sort_node_weight,
-                                      pe__current_node(rsc));
+        nodes = sort_nodes_by_weight(nodes, pe__current_node(rsc), data_set);
 
         // First node in sorted list has the best score
         best = g_list_nth_data(nodes, 0);
@@ -476,7 +474,7 @@ native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
             archive = node_hash_dup(rsc->allowed_nodes);
         }
         rsc_rh->cmds->allocate(rsc_rh, NULL, data_set);
-        rsc->cmds->rsc_colocation_lh(rsc, rsc_rh, constraint);
+        rsc->cmds->rsc_colocation_lh(rsc, rsc_rh, constraint, data_set);
         if (archive && can_run_any(rsc->allowed_nodes) == FALSE) {
             pe_rsc_info(rsc, "%s: Rolling back scores from %s", rsc->id, rsc_rh->id);
             g_hash_table_destroy(rsc->allowed_nodes);
@@ -1538,7 +1536,9 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
 }
 
 void
-native_rsc_colocation_lh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * constraint)
+native_rsc_colocation_lh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
+                         rsc_colocation_t *constraint,
+                         pe_working_set_t *data_set)
 {
     if (rsc_lh == NULL) {
         pe_err("rsc_lh was NULL for %s", constraint->id);
@@ -1552,7 +1552,7 @@ native_rsc_colocation_lh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocatio
     pe_rsc_trace(rsc_lh, "Processing colocation constraint between %s and %s", rsc_lh->id,
                  rsc_rh->id);
 
-    rsc_rh->cmds->rsc_colocation_rh(rsc_lh, rsc_rh, constraint);
+    rsc_rh->cmds->rsc_colocation_rh(rsc_lh, rsc_rh, constraint, data_set);
 }
 
 enum filter_colocation_res
@@ -1740,7 +1740,9 @@ colocation_match(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * co
 }
 
 void
-native_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * constraint)
+native_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
+                         rsc_colocation_t *constraint,
+                         pe_working_set_t *data_set)
 {
     enum filter_colocation_res filter_results;
 
@@ -1876,8 +1878,9 @@ native_action_flags(action_t * action, node_t * node)
 }
 
 enum pe_graph_flags
-native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_action_flags flags,
-                      enum pe_action_flags filter, enum pe_ordering type)
+native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
+                      enum pe_action_flags flags, enum pe_action_flags filter,
+                      enum pe_ordering type, pe_working_set_t *data_set)
 {
     /* flags == get_action_flags(first, then_node) called from update_action() */
     enum pe_graph_flags changed = pe_graph_none;
@@ -2050,7 +2053,7 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
 
         if(then->rsc && then->rsc->parent) {
             /* "X_stop then X_start" doesn't get handled for cloned groups unless we do this */
-            update_action(then);
+            update_action(then, data_set);
         }
     }
 
@@ -2066,7 +2069,7 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
 }
 
 void
-native_rsc_location(resource_t * rsc, rsc_to_node_t * constraint)
+native_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
 {
     GListPtr gIter = NULL;
     GHashTableIter iter;
