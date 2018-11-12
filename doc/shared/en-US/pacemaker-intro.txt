@@ -183,3 +183,19 @@ workload.
 
 .N to N Redundancy
 image::images/pcmk-active-active.png["N to N Redundancy",width="10cm",height="7.5cm",align="center"]
+
+== Configuration Precautions ==
+
+As a foreword prior to one's own experimentation and especially for production
+deployments, it's important to emphasize that pacemaker prioritizes quick
+responses to new circumstances (incl. configuration changes) to cluster-wide
+fully transactional, stepwise in-order serialization of the cluster's next
+turns.  It is hence not recommended to parallelize modifying the configuration
+of pacemaker amongst the cluster nodes without appropriate time-division
+multiplexing, because otherwise that verges on something that could be referred
+as "split-brain management", when some outcomes may not match the expectations.
+By the same token, various automation tools meant to cater configuring rather
+static hosts with barely any externally shared state may not be wise to employ
+without (the just established) deliberation.  Note that manual interventions
+by the (single or cooperating plural) cluster administrator entity clearly do
+not suffer from these "schizoid" splits.
