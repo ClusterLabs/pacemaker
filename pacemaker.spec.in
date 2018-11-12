@@ -286,6 +286,7 @@ License:       GPLv2+ and LGPLv2+
 Summary:       Core Pacemaker libraries
 Group:         System Environment/Daemons
 Requires(pre): shadow-utils
+Requires:      %{name}-schemas = %{version}-%{release}
 
 %description libs
 Pacemaker is an advanced, scalable High-Availability cluster resource
@@ -386,6 +387,17 @@ BuildArch:     noarch
 
 %description   doc
 Documentation for Pacemaker.
+
+Pacemaker is an advanced, scalable High-Availability cluster resource
+manager.
+
+%package       schemas
+License:       GPLv2+
+Summary:       Schemas and upgrade stylesheets for Pacemaker
+BuildArch:     noarch
+
+%description   schemas
+Schemas and upgrade stylesheets for Pacemaker
 
 Pacemaker is an advanced, scalable High-Availability cluster resource
 manager.
@@ -699,6 +711,8 @@ exit 0
 %exclude %{_datadir}/pacemaker/alerts
 %exclude %{_datadir}/pacemaker/tests
 %{_datadir}/pacemaker
+%exclude %{_datadir}/pacemaker/*.rng
+%exclude %{_datadir}/pacemaker/*.xsl
 %{_datadir}/snmp/mibs/PCMK-MIB.txt
 
 %exclude /usr/lib/ocf/resource.d/pacemaker/controld
@@ -800,6 +814,11 @@ exit 0
 %license licenses/LGPLv2.1
 %doc COPYING
 %doc ChangeLog
+
+%files schemas
+%license licenses/GPLv2
+%{_datadir}/pacemaker/*.rng
+%{_datadir}/pacemaker/*.xsl
 
 %changelog
 
