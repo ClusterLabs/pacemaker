@@ -43,9 +43,9 @@ char ticket_cmd = 'S';
 char *xml_file = NULL;
 int cib_options = cib_sync_call;
 
-#define CMD_ERR(fmt, args...) do {		\
-	crm_warn(fmt, ##args);			\
-	fprintf(stderr, fmt, ##args);		\
+#define CMD_ERR(fmt, args...) do {          \
+        crm_warn(fmt, ##args);              \
+        fprintf(stderr, fmt "\n", ##args);  \
     } while(0)
 
 static ticket_t *
@@ -501,7 +501,7 @@ static struct crm_option long_options[] = {
     {"attr-value", 1, 0, 'v', "\tAttribute value to use with -S"},
     {"default",    1, 0, 'd', "\t(Advanced) The default attribute value to display if none is found. For use with -G"},
     {"force",      0, 0, 'f', "\t\t(Advanced) Force the action to be performed"},
-    {"xml-file",   1, 0, 'x', NULL, 1},\
+    {"xml-file",   1, 0, 'x', NULL, 1},
 
     /* legacy options */
     {"set-name",   1, 0, 'n', "\t(Advanced) ID of the instance_attributes object to change"},
