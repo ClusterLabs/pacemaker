@@ -201,8 +201,8 @@ Group:         System Environment/Daemons
 # https://github.com/ClusterLabs/pacemaker/archive/e91769e5a39f5cb2f7b097d3c612368f0530535e/pacemaker-e91769e.tar.gz
 Source0:       https://github.com/%{github_owner}/%{name}/archive/%{commit}/%{name}-%{shortcommit}.tar.gz
 Requires:      resource-agents
-Requires:      %{name}-libs = %{version}-%{release}
-Requires:      %{name}-cluster-libs = %{version}-%{release}
+Requires:      %{name}-libs%{?_isa} = %{version}-%{release}
+Requires:      %{name}-cluster-libs%{?_isa} = %{version}-%{release}
 Requires:      %{name}-cli = %{version}-%{release}
 %if !%{defined _unitdir}
 Requires:      procps-ng
@@ -267,7 +267,7 @@ Available rpmbuild rebuild options:
 License:       GPLv2+ and LGPLv2+
 Summary:       Command line tools for controlling Pacemaker clusters
 Group:         System Environment/Daemons
-Requires:      %{name}-libs = %{version}-%{release}
+Requires:      %{name}-libs%{?_isa} = %{version}-%{release}
 Requires:      perl-TimeDate
 Requires:      procps-ng
 Requires:      psmisc
@@ -299,7 +299,7 @@ nodes and those just running the CLI tools.
 License:       GPLv2+ and LGPLv2+
 Summary:       Cluster Libraries used by Pacemaker
 Group:         System Environment/Daemons
-Requires:      %{name}-libs = %{version}-%{release}
+Requires:      %{name}-libs%{?_isa} = %{version}-%{release}
 
 %description cluster-libs
 Pacemaker is an advanced, scalable High-Availability cluster resource
@@ -317,7 +317,7 @@ License:       GPLv2+ and LGPLv2+ and BSD
 %endif
 Summary:       Pacemaker remote daemon for non-cluster nodes
 Group:         System Environment/Daemons
-Requires:      %{name}-libs = %{version}-%{release}
+Requires:      %{name}-libs%{?_isa} = %{version}-%{release}
 Requires:      %{name}-cli = %{version}-%{release}
 Requires:      resource-agents
 %if !%{defined _unitdir}
