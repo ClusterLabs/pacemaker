@@ -248,6 +248,8 @@ BuildRequires: inkscape asciidoc publican
 %endif
 %endif
 
+Provides:      pcmk-cluster-manager%{?_isa} = %{version}-%{release}
+
 %description
 Pacemaker is an advanced, scalable High-Availability cluster resource
 manager.
@@ -268,6 +270,9 @@ License:       GPLv2+ and LGPLv2+
 Summary:       Command line tools for controlling Pacemaker clusters
 Group:         System Environment/Daemons
 Requires:      %{name}-libs%{?_isa} = %{version}-%{release}
+%if 0%{?fedora} > 22 || 0%{?rhel} > 7
+Recommends:    pcmk-cluster-manager = %{version}-%{release}
+%endif
 Requires:      perl-TimeDate
 Requires:      procps-ng
 Requires:      psmisc
@@ -325,6 +330,7 @@ Requires:      procps-ng
 %endif
 # -remote can be fully independent of systemd
 %{?systemd_ordering}%{!?systemd_ordering:%{?systemd_requires}}
+Provides:      pcmk-cluster-manager%{?_isa} = %{version}-%{release}
 
 %description remote
 Pacemaker is an advanced, scalable High-Availability cluster resource
