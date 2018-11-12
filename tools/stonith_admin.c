@@ -14,10 +14,11 @@
 #include <unistd.h>
 #include <sys/utsname.h>
 
-#include <stdlib.h>
-#include <string.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
@@ -457,6 +458,7 @@ main(int argc, char **argv)
     int no_connect = 0;
     int tolerance = 0;
     int as_nodeid = FALSE;
+    bool required_agent = false;
 
     char *name = NULL;
     char *value = NULL;
@@ -496,6 +498,7 @@ main(int argc, char **argv)
             case 'I':
             case 'K':
                 no_connect = 1;
+                required_agent = true;
                 /* fall through */
             case 'L':
                 action = flag;
@@ -509,8 +512,10 @@ main(int argc, char **argv)
             case 'b':
                 broadcast = 1;
                 break;
-            case 'Q':
             case 'R':
+                required_agent = true;
+                /* fall through */
+            case 'Q':
             case 'D':
             case 's':
                 action = flag;
@@ -530,6 +535,7 @@ main(int argc, char **argv)
             case 'M':
                 no_connect = 1;
                 action = flag;
+                required_agent = true;
                 break;
             case 't':
                 timeout = crm_atoi(optarg, NULL);
@@ -601,11 +607,12 @@ main(int argc, char **argv)
         }
     }
 
-    if (optind > argc) {
+    if (optind > argc || action == 0) {
         ++argerr;
     }
 
-    if (action == 0) {
+    if (required_agent && agent == NULL) {
+        printf("Please specify an agent to query using -a,--agent [value]\n");
         ++argerr;
     }
 
@@ -701,11 +708,7 @@ main(int argc, char **argv)
             rc = handle_level(st, target, fence_level, devices, action == 'r');
             break;
         case 'M':
-            if (agent == NULL) {
-                printf("Please specify an agent to query using -a,--agent [value]\n");
-                exit_code = CRM_EX_USAGE;
-                goto done;
-            } else {
+            {
                 char *buffer = NULL;
 
                 rc = st->cmds->metadata(st, st_opt_sync_call, agent, NULL, &buffer, timeout);
@@ -749,11 +752,6 @@ main(int argc, char **argv)
                                 verbose, cleanup, broadcast);
             break;
         case 'K':
-            if (agent == NULL) {
-                printf("Please specify an agent to validate with --agent\n");
-                exit_code = CRM_EX_USAGE;
-                goto done;
-            }
             device = (devices? devices->key : NULL);
             rc = validate(st, agent, device, params, timeout, quiet);
             break;

@@ -900,13 +900,19 @@ xml2device_params(const char *name, xmlNode *dev)
 static stonith_device_t *
 build_device_from_xml(xmlNode * msg)
 {
-    const char *value = NULL;
+    const char *value;
     xmlNode *dev = get_xpath_object("//" F_STONITH_DEVICE, msg, LOG_ERR);
     stonith_device_t *device = NULL;
+    char *agent = crm_element_value_copy(dev, "agent");
+
+    CRM_CHECK(agent != NULL, return device);
 
     device = calloc(1, sizeof(stonith_device_t));
+
+    CRM_CHECK(device != NULL, {free(agent); return device;});
+
     device->id = crm_element_value_copy(dev, XML_ATTR_ID);
-    device->agent = crm_element_value_copy(dev, "agent");
+    device->agent = agent;
     device->namespace = crm_element_value_copy(dev, "namespace");
     device->params = xml2device_params(device->id, dev);
 
@@ -1163,6 +1169,8 @@ stonith_device_register(xmlNode * msg, const char **desc, gboolean from_cib)
 {
     stonith_device_t *dup = NULL;
     stonith_device_t *device = build_device_from_xml(msg);
+
+    CRM_CHECK(device != NULL, return -ENOMEM);
 
     dup = device_has_duplicate(device);
     if (dup) {
