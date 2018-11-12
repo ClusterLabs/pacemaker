@@ -539,12 +539,11 @@ profile_one(const char *xml_file, pe_working_set_t *data_set)
 #  define FILENAME_MAX 512
 #endif
 
-static int
+static void
 profile_all(const char *dir, pe_working_set_t *data_set)
 {
     struct dirent **namelist;
 
-    int lpc = 0;
     int file_num = scandir(dir, &namelist, 0, alphasort);
 
     if (file_num > 0) {
@@ -560,8 +559,6 @@ profile_all(const char *dir, pe_working_set_t *data_set)
                 free(namelist[file_num]);
                 continue;
             }
-
-            lpc++;
             snprintf(buffer, sizeof(buffer), "%s/%s", dir, namelist[file_num]->d_name);
             if (stat(buffer, &prop) == 0 && S_ISREG(prop.st_mode)) {
                 profile_one(buffer, data_set);
@@ -570,8 +567,6 @@ profile_all(const char *dir, pe_working_set_t *data_set)
         }
         free(namelist);
     }
-
-    return lpc;
 }
 
 static int
@@ -787,7 +782,8 @@ main(int argc, char **argv)
     }
 
     if (test_dir != NULL) {
-        return profile_all(test_dir, data_set);
+        profile_all(test_dir, data_set);
+        return CRM_EX_OK;
     }
 
     setup_input(xml_file, store ? xml_file : output_file);
