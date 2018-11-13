@@ -2201,6 +2201,25 @@ apply_remote_node_ordering(pe_working_set_t *data_set)
             continue;
         }
 
+        /* Another special case: if a resource is moving to a Pacemaker Remote
+         * node, order the stop on the original node after any start of the
+         * remote connection. This ensures that if the connection fails to
+         * start, we leave the resource running on the original node.
+         */
+        if (safe_str_eq(action->task, RSC_START)) {
+            for (GList *item = action->rsc->actions; item != NULL;
+                 item = item->next) {
+                pe_action_t *rsc_action = item->data;
+
+                if ((rsc_action->node->details != action->node->details)
+                    && safe_str_eq(rsc_action->task, RSC_STOP)) {
+                    custom_action_order(remote, start_key(remote), NULL,
+                                        action->rsc, NULL, rsc_action,
+                                        pe_order_optional, data_set);
+                }
+            }
+        }
+
         /* The action occurs across a remote connection, so create
          * ordering constraints that guarantee the action occurs while the node
          * is active (after start, before stop ... things like that).
