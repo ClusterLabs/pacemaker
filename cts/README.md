@@ -21,6 +21,24 @@ be run against a pre-existing cluster configuration or overwrite the existing
 configuration with a test configuration.
 
 
+## Helpers
+
+Some of the component regression tests and the cluster exerciser require
+certain helpers to be installed as root. This includes a dummy LSB init script,
+dummy systemd service, etc. The tests will install these as needed and
+uninstall them when done.
+
+This means that the cluster configuration created by the cluster exerciser
+will generate failures if started manually after the exerciser exits. However,
+the helper installer can be run manually to make the configuration usable, if
+you want to do your own further testing with it:
+
+    /usr/libexec/pacemaker/cts-support install
+
+As you might expect, you can also remove the helpers with:
+
+    /usr/libexec/pacemaker/cts-support uninstall
+
 ## Requirements
 
 * Three or more machines (one test exerciser and two or more test cluster
