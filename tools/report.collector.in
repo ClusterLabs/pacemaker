@@ -512,7 +512,11 @@ drbd_info() {
 
     if which drbdadm >/dev/null 2>&1; then
         echo "--- drbdadm dump:"
-        drbdadm dump 2>&1
+        if [ -z "$SANITIZE"]; then
+            drbdadm dump 2>&1
+        else
+            drbdadm dump 2>&1 | sed "s/\(shared-secret *\"\)[^\"]*\";/\1****\";/"
+        fi
         echo
 
         echo "--- drbdadm status:"
