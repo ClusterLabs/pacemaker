@@ -150,7 +150,7 @@ Daemon Status:
     <clone id="ClusterIP-clone">
       <primitive class="ocf" id="ClusterIP" provider="heartbeat" type="IPaddr2">
         <instance_attributes id="ClusterIP-instance_attributes">
-          <nvpair id="ClusterIP-instance_attributes-cidr_netmask" name="cidr_netmask" value="32"/>
+          <nvpair id="ClusterIP-instance_attributes-cidr_netmask" name="cidr_netmask" value="24"/>
           <nvpair id="ClusterIP-instance_attributes-ip" name="ip" value="192.168.122.120"/>
           <nvpair id="ClusterIP-instance_attributes-clusterip_hash" name="clusterip_hash" value="sourceip"/>
         </instance_attributes>
@@ -304,7 +304,7 @@ both.
  Clone: ClusterIP-clone
   Meta Attrs: clone-max=2 clone-node-max=2 globally-unique=true 
   Resource: ClusterIP (class=ocf provider=heartbeat type=IPaddr2)
-   Attributes: cidr_netmask=32 ip=192.168.122.120 clusterip_hash=sourceip
+   Attributes: cidr_netmask=24 ip=192.168.122.120 clusterip_hash=sourceip
    Meta Attrs: resource-stickiness=0 
    Operations: monitor interval=30s (ClusterIP-monitor-interval-30s)
                start interval=0s timeout=20s (ClusterIP-start-interval-0s)

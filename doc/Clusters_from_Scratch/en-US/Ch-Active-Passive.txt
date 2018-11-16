@@ -126,7 +126,7 @@ Do not reuse an IP address one of the nodes already has configured.
 
 ----
 [root@pcmk-1 ~]# pcs resource create ClusterIP ocf:heartbeat:IPaddr2 \ 
-    ip=192.168.122.120 cidr_netmask=32 op monitor interval=30s
+    ip=192.168.122.120 cidr_netmask=24 op monitor interval=30s
 ----
 
 Another important piece of information here is *ocf:heartbeat:IPaddr2*.
