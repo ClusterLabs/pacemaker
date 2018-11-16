@@ -538,7 +538,7 @@ unpack_resources 	error: Either configure some or disable STONITH with the stoni
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 pcmk__post_process_acl 	trace: Creation of nvpair=dummy-meta_attributes-target-role is allowed
 
-Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attributes name=target-role=Stopped
+Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attributes name=target-role value=Stopped
 =#=#=#= Current cib after: niceguy: Create a resource meta attribute =#=#=#=
 <cib epoch="10" num_updates="0" admin_epoch="0">
   <configuration>
@@ -706,7 +706,7 @@ unpack_resources 	error: Either configure some or disable STONITH with the stoni
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 pcmk__post_process_acl 	trace: Creation of nvpair=dummy-meta_attributes-target-role is allowed
 
-Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attributes name=target-role=Started
+Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attributes name=target-role value=Started
 =#=#=#= Current cib after: niceguy: Create a resource meta attribute =#=#=#=
 <cib epoch="12" num_updates="0" admin_epoch="0">
   <configuration>
@@ -1605,7 +1605,7 @@ unpack_resources 	error: Either configure some or disable STONITH with the stoni
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 pcmk__post_process_acl 	trace: Creation of nvpair=dummy-meta_attributes-target-role is allowed
 
-Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attributes name=target-role=Stopped
+Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attributes name=target-role value=Stopped
 =#=#=#= Current cib after: niceguy: Create a resource meta attribute =#=#=#=
 <cib epoch="11" num_updates="0" admin_epoch="0">
   <configuration>
@@ -1800,7 +1800,7 @@ unpack_resources 	error: Either configure some or disable STONITH with the stoni
 unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
 pcmk__post_process_acl 	trace: Creation of nvpair=dummy-meta_attributes-target-role is allowed
 
-Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attributes name=target-role=Started
+Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attributes name=target-role value=Started
 =#=#=#= Current cib after: niceguy: Create a resource meta attribute =#=#=#=
 <cib epoch="13" num_updates="0" admin_epoch="0">
   <configuration>
