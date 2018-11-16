@@ -20,7 +20,7 @@ libpe_rules_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
 libpe_rules_la_LIBADD	= $(top_builddir)/lib/common/libcrmcommon.la
 libpe_rules_la_SOURCES	= rules.c rules_alerts.c common.c
 
-libpe_status_la_LDFLAGS	= -version-info 27:0:0
+libpe_status_la_LDFLAGS	= -version-info 28:0:0
 
 libpe_status_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libpe_status_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)

@@ -1140,6 +1140,21 @@ unpack_status(xmlNode * status, pe_working_set_t * data_set)
     // Now catch any nodes we didn't see
     unpack_node_loop(status, is_set(data_set->flags, pe_flag_stonith_enabled), data_set);
 
+    /* Now that we know where resources are, we can schedule stops of containers
+     * with failed bundle connections
+     */
+    if (data_set->stop_needed != NULL) {
+        for (GList *item = data_set->stop_needed; item; item = item->next) {
+            pe_resource_t *container = item->data;
+            pe_node_t *node = pe__current_node(container);
+
+            if (node) {
+                stop_action(container, node, FALSE);
+            }
+        }
+        g_list_free(data_set->stop_needed);
+    }
+
     for (GListPtr gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
         node_t *this_node = gIter->data;
 
@@ -1927,7 +1942,15 @@ process_rsc_state(resource_t * rsc, node_t * node,
         case action_fail_restart_container:
             set_bit(rsc->flags, pe_rsc_failed);
 
-            if (rsc->container) {
+            if (rsc->container && pe_rsc_is_bundled(rsc)) {
+                /* A bundle's remote connection can run on a different node than
+                 * the bundle's container. We don't necessarily know where the
+                 * container is running yet, so remember it and add a stop
+                 * action for it later.
+                 */
+                data_set->stop_needed = g_list_prepend(data_set->stop_needed,
+                                                       rsc->container);
+            } else if (rsc->container) {
                 stop_action(rsc->container, node, FALSE);
             } else if (rsc->role != RSC_ROLE_STOPPED && rsc->role != RSC_ROLE_UNKNOWN) {
                 stop_action(rsc, node, FALSE);
@@ -2881,19 +2904,29 @@ static bool check_operation_expiry(resource_t *rsc, node_t *node, int rc, xmlNod
     } else if (strstr(ID(xml_op), "last_failure") &&
                ((strcmp(task, "start") == 0) || (strcmp(task, "monitor") == 0))) {
 
-        op_digest_cache_t *digest_data = NULL;
+        if (container_fix_remote_addr(rsc)) {
+            /* We haven't allocated resources yet, so we can't reliably
+             * substitute addr parameters for the REMOTE_CONTAINER_HACK.
+             * When that's needed, defer the check until later.
+             */
+            pe__add_param_check(xml_op, rsc, node, pe_check_last_failure,
+                                data_set);
 
-        digest_data = rsc_action_digest_cmp(rsc, xml_op, node, data_set);
+        } else {
+            op_digest_cache_t *digest_data = NULL;
 
-        if (digest_data->rc == RSC_DIGEST_UNKNOWN) {
-            crm_trace("rsc op %s/%s on node %s does not have a op digest to compare against", rsc->id,
-                      key, node->details->id);
-        } else if(container_fix_remote_addr(rsc) && digest_data->rc != RSC_DIGEST_MATCH) {
-            // We can't sanely check the changing 'addr' attribute. Yet
-            crm_trace("Ignoring rsc op %s/%s on node %s", rsc->id, key, node->details->id);
-
-        } else if (digest_data->rc != RSC_DIGEST_MATCH) {
-            clear_reason = "resource parameters have changed";
+            digest_data = rsc_action_digest_cmp(rsc, xml_op, node, data_set);
+            switch (digest_data->rc) {
+                case RSC_DIGEST_UNKNOWN:
+                    crm_trace("Resource %s history entry %s on %s has no digest to compare",
+                              rsc->id, key, node->details->id);
+                    break;
+                case RSC_DIGEST_MATCH:
+                    break;
+                default:
+                    clear_reason = "resource parameters have changed";
+                    break;
+            }
         }
     }
 

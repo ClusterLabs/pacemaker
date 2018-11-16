@@ -299,7 +299,19 @@ pe_get_failcount(node_t *node, resource_t *rsc, time_t *last_failure,
         }
     }
 
-    if (is_set(flags, pe_fc_fillers) && rsc->fillers) {
+    /* We never want the fail counts of a bundle container's fillers to
+     * count towards the container's fail count.
+     *
+     * Most importantly, a Pacemaker Remote connection to a bundle container
+     * is a filler of the container, but can reside on a different node than the
+     * container itself. Counting its fail count on its node towards the
+     * container's fail count on that node could lead to attempting to stop the
+     * container on the wrong node.
+     */
+
+    if (is_set(flags, pe_fc_fillers) && rsc->fillers
+        && !pe_rsc_is_bundled(rsc)) {
+
         GListPtr gIter = NULL;
 
         for (gIter = rsc->fillers; gIter != NULL; gIter = gIter->next) {
