@@ -515,7 +515,7 @@ drbd_info() {
         if [ -z "$SANITIZE"]; then
             drbdadm dump 2>&1
         else
-            drbdadm dump 2>&1 | sed "s/\(shared-secret *\"\)[^\"]*\";/\1****\";/"
+            drbdadm dump 2>&1 | sed "s/\(shared-secret[ 	]*\"\)[^\"]*\";/\1****\";/"
         fi
         echo
 
