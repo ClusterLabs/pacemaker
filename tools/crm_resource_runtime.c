@@ -230,8 +230,8 @@ cli_resource_update_attribute(resource_t *rsc, const char *requested_name,
 
     if(attr_id == NULL
        && do_force == FALSE
-       && pcmk_ok != find_resource_attr(
-           cib, XML_ATTR_ID, uber_parent(rsc)->id, NULL, NULL, NULL, attr_name, NULL)) {
+       && find_resource_attr(
+           cib, XML_ATTR_ID, uber_parent(rsc)->id, NULL, NULL, NULL, attr_name, NULL) == -EINVAL) {
         printf("\n");
     }
 
@@ -360,7 +360,7 @@ cli_resource_delete_attribute(resource_t *rsc, const char *requested_name,
     if(attr_id == NULL
        && do_force == FALSE
        && find_resource_attr(
-           cib, XML_ATTR_ID, uber_parent(rsc)->id, NULL, NULL, NULL, attr_name, NULL) != pcmk_ok) {
+           cib, XML_ATTR_ID, uber_parent(rsc)->id, NULL, NULL, NULL, attr_name, NULL) == -EINVAL) {
         printf("\n");
     }
 
