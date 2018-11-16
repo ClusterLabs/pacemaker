@@ -756,7 +756,6 @@ Deleted nodes attribute: id=nodes-node1-standby name=standby
 =#=#=#= End test: Create a resource - OK (0) =#=#=#=
 * Passed: cibadmin       - Create a resource
 =#=#=#= Begin test: Create a resource meta attribute =#=#=#=
-
 Set 'dummy' option: id=dummy-meta_attributes-is-managed set=dummy-meta_attributes name=is-managed val=false
 =#=#=#= Current cib after: Create a resource meta attribute =#=#=#=
 <cib epoch="15" num_updates="0" admin_epoch="1">
@@ -872,7 +871,6 @@ Deleted 'dummy' option: id=dummy-meta_attributes-is-managed name=is-managed
 =#=#=#= End test: Remove a resource meta attribute - OK (0) =#=#=#=
 * Passed: crm_resource   - Remove a resource meta attribute
 =#=#=#= Begin test: Create a resource attribute =#=#=#=
-
 Set 'dummy' option: id=dummy-instance_attributes-delay set=dummy-instance_attributes name=delay val=10s
 =#=#=#= Current cib after: Create a resource attribute =#=#=#=
 <cib epoch="17" num_updates="0" admin_epoch="1">
@@ -2331,7 +2329,6 @@ Online: [ node1 node2 node3 ]
 =#=#=#= End test: Create a clone - OK (0) =#=#=#=
 * Passed: cibadmin       - Create a clone
 =#=#=#= Begin test: Create a resource meta attribute =#=#=#=
-
 Performing update of 'is-managed' on 'test-clone', the parent of 'test-primitive'
 Set 'test-clone' option: id=test-clone-meta_attributes-is-managed set=test-clone-meta_attributes name=is-managed val=false
 =#=#=#= Current cib after: Create a resource meta attribute =#=#=#=
