@@ -298,7 +298,7 @@ cli_resource_update_attribute(resource_t *rsc, const char *requested_name,
 
     rc = cib->cmds->modify(cib, XML_CIB_TAG_RESOURCES, xml_top, cib_options);
     if (rc == pcmk_ok && BE_QUIET == FALSE) {
-        printf("Set '%s' option: id=%s%s%s%s%s=%s\n", lookup_id, local_attr_id,
+        printf("Set '%s' option: id=%s%s%s%s%s val=%s\n", lookup_id, local_attr_id,
                attr_set ? " set=" : "", attr_set ? attr_set : "",
                attr_name ? " name=" : "", attr_name ? attr_name : "", attr_value);
     }
