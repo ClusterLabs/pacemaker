@@ -412,13 +412,6 @@ create_notification_boundaries(resource_t * rsc, const char *action, action_t * 
     if (start && end) {
         order_actions(n_data->pre_done, n_data->post, pe_order_optional);
     }
-
-    if (safe_str_eq(action, RSC_STOP)) {
-        action_t *all_stopped = get_pseudo_op(ALL_STOPPED, data_set);
-
-        order_actions(n_data->post_done, all_stopped, pe_order_optional);
-    }
-
     return n_data;
 }
 

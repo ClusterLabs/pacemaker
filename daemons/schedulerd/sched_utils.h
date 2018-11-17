@@ -72,7 +72,6 @@ pe_action_t *pe_cancel_op(pe_resource_t *rsc, const char *name,
                           pe_working_set_t *data_set);
 
 #  define STONITH_DONE "stonith_complete"
-#  define ALL_STOPPED "all_stopped"
 #  define LOAD_STOPPED "load_stopped"
 
 #endif

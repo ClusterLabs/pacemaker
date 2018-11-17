@@ -1398,14 +1398,6 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
         return;
     }
 
-    {
-        action_t *all_stopped = get_pseudo_op(ALL_STOPPED, data_set);
-
-        custom_action_order(rsc, stop_key(rsc), NULL,
-                            NULL, strdup(all_stopped->task), all_stopped,
-                            pe_order_implies_then | pe_order_runnable_left, data_set);
-    }
-
     if (g_hash_table_size(rsc->utilization) > 0
         && safe_str_neq(data_set->placement_strategy, "default")) {
         GHashTableIter iter;
