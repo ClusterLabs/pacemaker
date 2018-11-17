@@ -66,7 +66,6 @@ pe_action_t *create_pseudo_resource_op(resource_t * rsc, const char *task, bool 
 
 #  define STONITH_UP "stonith_up"
 #  define STONITH_DONE "stonith_complete"
-#  define ALL_STOPPED "all_stopped"
 #  define LOAD_STOPPED "load_stopped"
 
 #endif

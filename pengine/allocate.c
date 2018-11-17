@@ -1556,7 +1556,6 @@ stage6(pe_working_set_t * data_set)
     action_t *stonith_op = NULL;
     action_t *last_stonith = NULL;
     gboolean integrity_lost = FALSE;
-    action_t *all_stopped = get_pseudo_op(ALL_STOPPED, data_set);
     action_t *done = get_pseudo_op(STONITH_DONE, data_set);
     gboolean need_stonith = TRUE;
     GListPtr gIter;
@@ -1705,8 +1704,6 @@ stage6(pe_working_set_t * data_set)
     } else if (last_stonith) {
         order_actions(last_stonith, done, pe_order_implies_then);
     }
-
-    order_actions(done, all_stopped, pe_order_implies_then);
 
     g_list_free(stonith_ops);
     return TRUE;

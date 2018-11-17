@@ -280,8 +280,6 @@ text2task(const char *task)
         return no_action;
     } else if (safe_str_eq(task, "stonith_complete")) {
         return no_action;
-    } else if (safe_str_eq(task, "all_stopped")) {
-        return no_action;
     }
     crm_trace("Unsupported action: %s", task);
 #endif
