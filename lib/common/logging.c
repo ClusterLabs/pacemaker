@@ -350,8 +350,15 @@ crm_add_logfile(const char *filename)
 static int blackbox_trigger = 0;
 static char *blackbox_file_prefix = NULL;
 
+#ifdef QB_FEATURE_LOG_HIRES_TIMESTAMPS
+typedef struct timespec *log_time_t;
+#else
+typedef time_t log_time_t;
+#endif
+
 static void
-blackbox_logger(int32_t t, struct qb_log_callsite *cs, time_t timestamp, const char *msg)
+blackbox_logger(int32_t t, struct qb_log_callsite *cs, log_time_t timestamp,
+                const char *msg)
 {
     if(cs && cs->priority < LOG_ERR) {
         crm_write_blackbox(SIGTRAP, cs); /* Bypass the over-dumping logic */

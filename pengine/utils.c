@@ -21,50 +21,12 @@
 #include <allocate.h>
 #include <utils.h>
 
-void
-pe_free_ordering(GListPtr constraints)
-{
-    GListPtr iterator = constraints;
-
-    while (iterator != NULL) {
-        order_constraint_t *order = iterator->data;
-
-        iterator = iterator->next;
-
-        free(order->lh_action_task);
-        free(order->rh_action_task);
-        free(order);
-    }
-    if (constraints != NULL) {
-        g_list_free(constraints);
-    }
-}
-
-void
-pe_free_rsc_to_node(GListPtr constraints)
-{
-    GListPtr iterator = constraints;
-
-    while (iterator != NULL) {
-        rsc_to_node_t *cons = iterator->data;
-
-        iterator = iterator->next;
-
-        g_list_free_full(cons->node_list_rh, free);
-        free(cons->id);
-        free(cons);
-    }
-    if (constraints != NULL) {
-        g_list_free(constraints);
-    }
-}
-
-rsc_to_node_t *
-rsc2node_new(const char *id, resource_t * rsc,
+pe__location_t *
+rsc2node_new(const char *id, pe_resource_t *rsc,
              int node_weight, const char *discover_mode,
-             node_t * foo_node, pe_working_set_t * data_set)
+             pe_node_t *foo_node, pe_working_set_t *data_set)
 {
-    rsc_to_node_t *new_con = NULL;
+    pe__location_t *new_con = NULL;
 
     if (rsc == NULL || id == NULL) {
         pe_err("Invalid constraint %s for rsc=%p", crm_str(id), rsc);
@@ -74,7 +36,7 @@ rsc2node_new(const char *id, resource_t * rsc,
         CRM_CHECK(node_weight == 0, return NULL);
     }
 
-    new_con = calloc(1, sizeof(rsc_to_node_t));
+    new_con = calloc(1, sizeof(pe__location_t));
     if (new_con != NULL) {
         new_con->id = strdup(id);
         new_con->rsc_lh = rsc;

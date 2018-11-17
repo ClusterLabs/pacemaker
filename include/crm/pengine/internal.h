@@ -22,6 +22,29 @@
 #  define pe_set_action_bit(action, bit) action->flags = crm_set_bit(__FUNCTION__, __LINE__, action->uuid, action->flags, bit)
 #  define pe_clear_action_bit(action, bit) action->flags = crm_clear_bit(__FUNCTION__, __LINE__, action->uuid, action->flags, bit)
 
+typedef struct pe__location_constraint_s {
+    char *id;                           // Constraint XML ID
+    pe_resource_t *rsc_lh;              // Resource being located
+    enum rsc_role_e role_filter;        // Role to locate
+    enum pe_discover_e discover_mode;   // Resource discovery
+    GListPtr node_list_rh;              // List of pe_node_t*
+} pe__location_t;
+
+typedef struct pe__order_constraint_s {
+    int id;
+    enum pe_ordering type;
+
+    void *lh_opaque;
+    resource_t *lh_rsc;
+    action_t *lh_action;
+    char *lh_action_task;
+
+    void *rh_opaque;
+    resource_t *rh_rsc;
+    action_t *rh_action;
+    char *rh_action_task;
+} pe__ordering_t;
+
 typedef struct notify_data_s {
     GHashTable *keys;
 
@@ -332,5 +355,11 @@ bool container_fix_remote_addr(resource_t *rsc);
 const char *container_fix_remote_addr_in(resource_t *rsc, xmlNode *xml, const char *field);
 const char *pe_node_attribute_calculated(pe_node_t *node, const char *name, resource_t *rsc);
 const char *pe_node_attribute_raw(pe_node_t *node, const char *name);
-
+void pe__add_param_check(xmlNode *rsc_op, pe_resource_t *rsc, pe_node_t *node,
+                         enum pe_check_parameters, pe_working_set_t *data_set);
+void pe__foreach_param_check(pe_working_set_t *data_set,
+                             void (*cb)(pe_resource_t*, pe_node_t*, xmlNode*,
+                                        enum pe_check_parameters,
+                                        pe_working_set_t*));
+void pe__free_param_checks(pe_working_set_t *data_set);
 #endif

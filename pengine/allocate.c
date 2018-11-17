@@ -376,6 +376,50 @@ check_action_definition(resource_t * rsc, node_t * active_node, xmlNode * xml_op
     return did_change;
 }
 
+/*!
+ * \internal
+ * \brief Do deferred action checks after allocation
+ *
+ * \param[in] data_set  Working set for cluster
+ */
+static void
+check_params(pe_resource_t *rsc, pe_node_t *node, xmlNode *rsc_op,
+             enum pe_check_parameters check, pe_working_set_t *data_set)
+{
+    const char *reason = NULL;
+    op_digest_cache_t *digest_data = NULL;
+
+    switch (check) {
+        case pe_check_active:
+            if (check_action_definition(rsc, node, rsc_op, data_set)
+                && pe_get_failcount(node, rsc, NULL, pe_fc_effective, NULL,
+                                    data_set)) {
+
+                reason = "action definition changed";
+            }
+            break;
+
+        case pe_check_last_failure:
+            digest_data = rsc_action_digest_cmp(rsc, rsc_op, node, data_set);
+            switch (digest_data->rc) {
+                case RSC_DIGEST_UNKNOWN:
+                    crm_trace("Resource %s history entry %s on %s has no digest to compare",
+                              rsc->id, ID(rsc_op), node->details->id);
+                    break;
+                case RSC_DIGEST_MATCH:
+                    break;
+                default:
+                    reason = "resource parameters have changed";
+                    break;
+            }
+            break;
+    }
+
+    if (reason) {
+        pe__clear_failcount(rsc, node, reason, data_set);
+    }
+}
+
 static void
 check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_working_set_t * data_set)
 {
@@ -458,10 +502,23 @@ check_actions_for(xmlNode * rsc_entry, resource_t * rsc, node_t * node, pe_worki
                    || safe_str_eq(task, RSC_START)
                    || safe_str_eq(task, RSC_PROMOTE)
                    || safe_str_eq(task, RSC_MIGRATED)) {
+
             /* If a resource operation failed, and the operation's definition
              * has changed, clear any fail count so they can be retried fresh.
              */
-            if (check_action_definition(rsc, node, rsc_op, data_set)
+
+            if (container_fix_remote_addr(rsc)) {
+                /* We haven't allocated resources to nodes yet, so if the
+                 * REMOTE_CONTAINER_HACK is used, we may calculate the digest
+                 * based on the literal "#uname" value rather than the properly
+                 * substituted value. That would mistakenly make the action
+                 * definition appear to have been changed. Defer the check until
+                 * later in this case.
+                 */
+                pe__add_param_check(rsc_op, rsc, node, pe_check_active,
+                                    data_set);
+
+            } else if (check_action_definition(rsc, node, rsc_op, data_set)
                 && pe_get_failcount(node, rsc, NULL, pe_fc_effective, NULL,
                                     data_set)) {
                 pe__clear_failcount(rsc, node, "action definition changed",
@@ -599,7 +656,7 @@ apply_placement_constraints(pe_working_set_t * data_set)
     crm_trace("Applying constraints...");
 
     for (gIter = data_set->placement_constraints; gIter != NULL; gIter = gIter->next) {
-        rsc_to_node_t *cons = (rsc_to_node_t *) gIter->data;
+        pe__location_t *cons = gIter->data;
 
         cons->rsc_lh->cmds->rsc_location(cons->rsc_lh, cons);
     }
@@ -721,7 +778,14 @@ common_apply_stickiness(resource_t * rsc, node_t * node, pe_working_set_t * data
     /* Check the migration threshold only if a failcount clear action
      * has not already been placed for this resource on the node.
      * There is no sense in potentially forcing the resource from this
-     * node if the failcount is being reset anyway. */
+     * node if the failcount is being reset anyway.
+     *
+     * @TODO A clear_failcount operation can be scheduled in stage4() via
+     * check_actions_for(), or in stage5() via check_params(). This runs in
+     * stage2(), so it cannot detect those, meaning we might check the migration
+     * threshold when we shouldn't -- worst case, we stop or move the resource,
+     * then move it back next transition.
+     */
     if (failcount_clear_action_exists(node, rsc) == FALSE) {
         check_migration_threshold(rsc, node, data_set);
     }
@@ -1292,6 +1356,10 @@ stage5(pe_working_set_t * data_set)
         dump_node_capacity(show_utilization ? 0 : utilization_log_level, "Remaining", node);
     }
 
+    // Process deferred action checks
+    pe__foreach_param_check(data_set, check_params);
+    pe__free_param_checks(data_set);
+
     if (is_set(data_set->flags, pe_flag_startup_probes)) {
         crm_trace("Calculating needed probes");
         /* This code probably needs optimization
@@ -1679,7 +1747,8 @@ find_actions_by_task(GListPtr actions, resource_t * rsc, const char *original_ke
 }
 
 static void
-rsc_order_then(action_t * lh_action, resource_t * rsc, order_constraint_t * order)
+rsc_order_then(pe_action_t *lh_action, pe_resource_t *rsc,
+               pe__ordering_t *order)
 {
     GListPtr gIter = NULL;
     GListPtr rh_actions = NULL;
@@ -1734,7 +1803,8 @@ rsc_order_then(action_t * lh_action, resource_t * rsc, order_constraint_t * orde
 }
 
 static void
-rsc_order_first(resource_t * lh_rsc, order_constraint_t * order, pe_working_set_t * data_set)
+rsc_order_first(pe_resource_t *lh_rsc, pe__ordering_t *order,
+                pe_working_set_t *data_set)
 {
     GListPtr gIter = NULL;
     GListPtr lh_actions = NULL;
@@ -2332,7 +2402,7 @@ stage7(pe_working_set_t * data_set)
     data_set->ordering_constraints = g_list_reverse(data_set->ordering_constraints);
 
     for (gIter = data_set->ordering_constraints; gIter != NULL; gIter = gIter->next) {
-        order_constraint_t *order = (order_constraint_t *) gIter->data;
+        pe__ordering_t *order = gIter->data;
         resource_t *rsc = order->lh_rsc;
 
         crm_trace("Applying ordering constraint: %d", order->id);
@@ -2524,34 +2594,4 @@ LogNodeActions(pe_working_set_t * data_set, gboolean terminal)
         free(node_name);
         free(task);
     }
-}
-
-void
-cleanup_alloc_calculations(pe_working_set_t * data_set)
-{
-    if (data_set == NULL) {
-        return;
-    }
-
-    crm_trace("deleting %d order cons: %p",
-              g_list_length(data_set->ordering_constraints), data_set->ordering_constraints);
-    pe_free_ordering(data_set->ordering_constraints);
-    data_set->ordering_constraints = NULL;
-
-    crm_trace("deleting %d node cons: %p",
-              g_list_length(data_set->placement_constraints), data_set->placement_constraints);
-    pe_free_rsc_to_node(data_set->placement_constraints);
-    data_set->placement_constraints = NULL;
-
-    crm_trace("deleting %d inter-resource cons: %p",
-              g_list_length(data_set->colocation_constraints), data_set->colocation_constraints);
-    g_list_free_full(data_set->colocation_constraints, free);
-    data_set->colocation_constraints = NULL;
-
-    crm_trace("deleting %d ticket deps: %p",
-              g_list_length(data_set->ticket_constraints), data_set->ticket_constraints);
-    g_list_free_full(data_set->ticket_constraints, free);
-    data_set->ticket_constraints = NULL;
-
-    cleanup_calculations(data_set);
 }

@@ -18,6 +18,12 @@
 #ifndef PENGINE_STATUS__H
 #  define PENGINE_STATUS__H
 
+/*!
+ * \file
+ * \brief Cluster status and scheduling
+ * \ingroup pengine
+ */
+
 #  include <glib.h>
 #  include <stdbool.h>
 #  include <crm/common/iso8601.h>
@@ -136,7 +142,21 @@ typedef struct pe_working_set_s {
     int blocked_resources;
     int disabled_resources;
 
+    GList *param_check; // History entries that need to be checked
+    GList *stop_needed; // Containers that need stop actions
 } pe_working_set_t;
+
+enum pe_check_parameters {
+    /* Clear fail count if parameters changed for un-expired start or monitor
+     * last_failure.
+     */
+    pe_check_last_failure,
+
+    /* Clear fail count if parameters changed for start, monitor, promote, or
+     * migrate_from actions for active resources.
+     */
+    pe_check_active,
+};
 
 struct node_shared_s {
     const char *id;
@@ -284,9 +304,10 @@ struct resource_s {
 
     unsigned long long flags;
 
+    // These fields should be treated as internal to Pacemaker
     GListPtr rsc_cons_lhs;      /* rsc_colocation_t* */
     GListPtr rsc_cons;          /* rsc_colocation_t* */
-    GListPtr rsc_location;      /* rsc_to_node_t*    */
+    GListPtr rsc_location;      // List of pe__location_t*
     GListPtr actions;           /* action_t*         */
     GListPtr rsc_tickets;       /* rsc_ticket*       */
 
@@ -470,8 +491,11 @@ struct action_wrapper_s {
 
 const char *rsc_printable_id(resource_t *rsc);
 gboolean cluster_status(pe_working_set_t * data_set);
+pe_working_set_t *pe_new_working_set(void);
+void pe_free_working_set(pe_working_set_t *data_set);
 void set_working_set_defaults(pe_working_set_t * data_set);
 void cleanup_calculations(pe_working_set_t * data_set);
+void pe_reset_working_set(pe_working_set_t *data_set);
 resource_t *pe_find_resource(GListPtr rsc_list, const char *id_rh);
 resource_t *pe_find_resource_with_flags(GListPtr rsc_list, const char *id, enum pe_find flags);
 node_t *pe_find_node(GListPtr node_list, const char *uname);

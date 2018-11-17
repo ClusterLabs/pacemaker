@@ -42,6 +42,8 @@ gboolean show_utilization = FALSE;
 int utilization_log_level = LOG_DEBUG_2;
 extern int transition_id;
 
+static pe_working_set_t *sched_data_set = NULL;
+
 #define get_series() 	was_processing_error?1:was_processing_warning?2:3
 
 typedef struct series_s {
@@ -91,7 +93,6 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender)
         int series_wrap = 0;
         char *digest = NULL;
         const char *value = NULL;
-        pe_working_set_t data_set;
         xmlNode *converted = NULL;
         xmlNode *reply = NULL;
         gboolean is_repoke = FALSE;
@@ -103,14 +104,17 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender)
         was_processing_error = FALSE;
         was_processing_warning = FALSE;
 
-        set_working_set_defaults(&data_set);
+        if (sched_data_set == NULL) {
+            sched_data_set = pe_new_working_set();
+            CRM_ASSERT(sched_data_set != NULL);
+        }
 
         digest = calculate_xml_versioned_digest(xml_data, FALSE, FALSE, CRM_FEATURE_SET);
         converted = copy_xml(xml_data);
         if (cli_config_update(&converted, NULL, TRUE) == FALSE) {
-            data_set.graph = create_xml_node(NULL, XML_TAG_GRAPH);
-            crm_xml_add_int(data_set.graph, "transition_id", 0);
-            crm_xml_add_int(data_set.graph, "cluster-delay", 0);
+            sched_data_set->graph = create_xml_node(NULL, XML_TAG_GRAPH);
+            crm_xml_add_int(sched_data_set->graph, "transition_id", 0);
+            crm_xml_add_int(sched_data_set->graph, "cluster-delay", 0);
             process = FALSE;
             free(digest);
 
@@ -125,12 +129,12 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender)
         }
 
         if (process) {
-            do_calculations(&data_set, converted, NULL);
+            do_calculations(sched_data_set, converted, NULL);
         }
 
         series_id = get_series();
         series_wrap = series[series_id].wrap;
-        value = pe_pref(data_set.config_hash, series[series_id].param);
+        value = pe_pref(sched_data_set->config_hash, series[series_id].param);
 
         if (value != NULL) {
             series_wrap = crm_int_helper(value, NULL);
@@ -147,8 +151,8 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender)
         crm_trace("Series %s: wrap=%d, seq=%d, pref=%s",
                   series[series_id].name, series_wrap, seq, value);
 
-        data_set.input = NULL;
-        reply = create_reply(msg, data_set.graph);
+        sched_data_set->input = NULL;
+        reply = create_reply(msg, sched_data_set->graph);
         CRM_ASSERT(reply != NULL);
 
         if (is_repoke == FALSE) {
@@ -176,7 +180,7 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender)
                     graph_file);
 
             crm_xml_add(reply, F_CRM_TGRAPH, graph_file);
-            write_xml_fd(data_set.graph, graph_file, graph_file_fd, FALSE);
+            write_xml_fd(sched_data_set->graph, graph_file, graph_file_fd, FALSE);
 
             free(graph_file);
             free_xml(first_named_child(reply, F_CRM_DATA));
@@ -184,7 +188,7 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender)
         }
 
         free_xml(reply);
-        cleanup_alloc_calculations(&data_set);
+        pe_reset_working_set(sched_data_set);
 
         if (was_processing_error) {
             crm_err("Calculated transition %d (with errors), saving inputs in %s",
@@ -217,6 +221,14 @@ process_pe_message(xmlNode * msg, xmlNode * xml_data, crm_client_t * sender)
     }
 
     return TRUE;
+}
+
+// only needed if process_pe_message() is called
+void
+libpengine_fini()
+{
+    pe_free_working_set(sched_data_set);
+    sched_data_set = NULL;
 }
 
 xmlNode *

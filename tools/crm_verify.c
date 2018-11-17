@@ -1,20 +1,8 @@
-
-/* 
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+/*
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ *
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
 #include <crm_internal.h>
@@ -40,7 +28,6 @@ gboolean USE_LIVE_CIB = FALSE;
 char *cib_save = NULL;
 void usage(const char *cmd, int exit_status);
 extern gboolean stage0(pe_working_set_t * data_set);
-extern void cleanup_alloc_calculations(pe_working_set_t * data_set);
 extern xmlNode *do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, crm_time_t * now);
 
 /* *INDENT-OFF* */
@@ -79,7 +66,7 @@ main(int argc, char **argv)
     int flag;
     int option_index = 0;
 
-    pe_working_set_t data_set;
+    pe_working_set_t *data_set = NULL;
     cib_t *cib_conn = NULL;
     int rc = pcmk_ok;
 
@@ -238,19 +225,24 @@ main(int argc, char **argv)
                 xml_latest_schema());
     }
 
-    set_working_set_defaults(&data_set);
+    data_set = pe_new_working_set();
+    if (data_set == NULL) {
+        rc = -errno;
+        crm_perror(LOG_CRIT, "Unable to allocate working set");
+        goto done;
+    }
+
     if (cib_object == NULL) {
     } else if (status != NULL || USE_LIVE_CIB) {
         /* live queries will always have a status section and can do a full simulation */
-        do_calculations(&data_set, cib_object, NULL);
-        cleanup_alloc_calculations(&data_set);
+        do_calculations(data_set, cib_object, NULL);
 
     } else {
-        data_set.now = crm_time_new(NULL);
-        data_set.input = cib_object;
-        stage0(&data_set);
-        cleanup_alloc_calculations(&data_set);
+        data_set->now = crm_time_new(NULL);
+        data_set->input = cib_object;
+        stage0(data_set);
     }
+    pe_free_working_set(data_set);
 
     if (crm_config_error) {
         fprintf(stderr, "Errors found during check: config not valid\n");

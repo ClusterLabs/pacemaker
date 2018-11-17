@@ -874,7 +874,7 @@ run_simulation(pe_working_set_t * data_set, cib_t *cib, GListPtr op_fail_list, b
         int rc = fake_cib->cmds->query(fake_cib, NULL, &cib_object, cib_sync_call | cib_scope_local);
 
         CRM_ASSERT(rc == pcmk_ok);
-        cleanup_alloc_calculations(data_set);
+        pe_reset_working_set(data_set);
         data_set->input = cib_object;
     }
 

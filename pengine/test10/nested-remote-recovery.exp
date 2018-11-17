@@ -1,0 +1,988 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <rsc_op id="108" operation="monitor" operation_key="galera_monitor_10000" internal_operation_key="galera:0_monitor_10000" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="controller-0">
+        <primitive id="galera" long-id="galera:0" class="ocf" provider="heartbeat" type="galera"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_interval="10000" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="monitor" CRM_meta_notify="false" CRM_meta_on_node="galera-bundle-0" CRM_meta_on_node_uuid="galera-bundle-0" CRM_meta_op_target_rc="8" CRM_meta_physical_host="database-0" CRM_meta_role="Master" CRM_meta_timeout="30000" additional_parameters="--open-files-limit=16384" cluster_host_map="database-0:database-0.internalapi.localdomain;database-1:database-1.internalapi.localdomain;database-2:database-2.internalapi.localdomain"  enable_creation="true" log="/var/log/mysql/mysqld.log" wsrep_cluster_address="gcomm://database-0.internalapi.localdomain,database-1.internalapi.localdomain,database-2.internalapi.localdomain"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="80" operation="start" operation_key="galera-bundle-0_start_0" on_node="controller-0" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="106" operation="start" operation_key="galera_start_0" internal_operation_key="galera:0_start_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="controller-0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="107" operation="promote" operation_key="galera_promote_0" internal_operation_key="galera:0_promote_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="controller-0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <rsc_op id="107" operation="promote" operation_key="galera_promote_0" internal_operation_key="galera:0_promote_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="controller-0">
+        <primitive id="galera" long-id="galera:0" class="ocf" provider="heartbeat" type="galera"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="promote" CRM_meta_notify="false" CRM_meta_on_fail="block" CRM_meta_on_node="galera-bundle-0" CRM_meta_on_node_uuid="galera-bundle-0" CRM_meta_physical_host="database-0" CRM_meta_timeout="300000" additional_parameters="--open-files-limit=16384" cluster_host_map="database-0:database-0.internalapi.localdomain;database-1:database-1.internalapi.localdomain;database-2:database-2.internalapi.localdomain"  enable_creation="true" log="/var/log/mysql/mysqld.log" wsrep_cluster_address="gcomm://database-0.internalapi.localdomain,database-1.internalapi.localdomain,database-2.internalapi.localdomain"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="78" operation="start" operation_key="galera-bundle-docker-0_start_0" on_node="database-0" on_node_uuid="database-0" router_node="controller-0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="80" operation="start" operation_key="galera-bundle-0_start_0" on_node="controller-0" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="104" operation="demote" operation_key="galera_demote_0" internal_operation_key="galera:0_demote_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="106" operation="start" operation_key="galera_start_0" internal_operation_key="galera:0_start_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="controller-0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="113" operation="promote" operation_key="galera-bundle-master_promote_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="250" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <rsc_op id="106" operation="start" operation_key="galera_start_0" internal_operation_key="galera:0_start_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="controller-0">
+        <primitive id="galera" long-id="galera:0" class="ocf" provider="heartbeat" type="galera"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="start" CRM_meta_notify="false" CRM_meta_on_node="galera-bundle-0" CRM_meta_on_node_uuid="galera-bundle-0" CRM_meta_physical_host="database-0" CRM_meta_timeout="120000" additional_parameters="--open-files-limit=16384" cluster_host_map="database-0:database-0.internalapi.localdomain;database-1:database-1.internalapi.localdomain;database-2:database-2.internalapi.localdomain"  enable_creation="true" log="/var/log/mysql/mysqld.log" wsrep_cluster_address="gcomm://database-0.internalapi.localdomain,database-1.internalapi.localdomain,database-2.internalapi.localdomain"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="78" operation="start" operation_key="galera-bundle-docker-0_start_0" on_node="database-0" on_node_uuid="database-0" router_node="controller-0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="80" operation="start" operation_key="galera-bundle-0_start_0" on_node="controller-0" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="105" operation="stop" operation_key="galera_stop_0" internal_operation_key="galera:0_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="109" operation="start" operation_key="galera-bundle-master_start_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="250" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <pseudo_event id="105" operation="stop" operation_key="galera_stop_0" internal_operation_key="galera:0_stop_0">
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="stop" CRM_meta_notify="false" CRM_meta_physical_host="database-0" CRM_meta_timeout="120000" additional_parameters="--open-files-limit=16384" cluster_host_map="database-0:database-0.internalapi.localdomain;database-1:database-1.internalapi.localdomain;database-2:database-2.internalapi.localdomain"  enable_creation="true" log="/var/log/mysql/mysqld.log" wsrep_cluster_address="gcomm://database-0.internalapi.localdomain,database-1.internalapi.localdomain,database-2.internalapi.localdomain"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="94" operation="stop" operation_key="galera-bundle_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="104" operation="demote" operation_key="galera_demote_0" internal_operation_key="galera:0_demote_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="111" operation="stop" operation_key="galera-bundle-master_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="4">
+    <action_set>
+      <pseudo_event id="104" operation="demote" operation_key="galera_demote_0" internal_operation_key="galera:0_demote_0">
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_container_attribute_target="host" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_name="demote" CRM_meta_notify="false" CRM_meta_physical_host="database-0" CRM_meta_timeout="120000" additional_parameters="--open-files-limit=16384" cluster_host_map="database-0:database-0.internalapi.localdomain;database-1:database-1.internalapi.localdomain;database-2:database-2.internalapi.localdomain"  enable_creation="true" log="/var/log/mysql/mysqld.log" wsrep_cluster_address="gcomm://database-0.internalapi.localdomain,database-1.internalapi.localdomain,database-2.internalapi.localdomain"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="115" operation="demote" operation_key="galera-bundle-master_demote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="5" priority="1000000">
+    <action_set>
+      <pseudo_event id="116" operation="demoted" operation_key="galera-bundle-master_demoted_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="104" operation="demote" operation_key="galera_demote_0" internal_operation_key="galera:0_demote_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="115" operation="demote" operation_key="galera-bundle-master_demote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="6">
+    <action_set>
+      <pseudo_event id="115" operation="demote" operation_key="galera-bundle-master_demote_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="119" operation="demote" operation_key="galera-bundle_demote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="7" priority="1000000">
+    <action_set>
+      <pseudo_event id="114" operation="promoted" operation_key="galera-bundle-master_promoted_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="107" operation="promote" operation_key="galera_promote_0" internal_operation_key="galera:0_promote_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="controller-0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="8">
+    <action_set>
+      <pseudo_event id="113" operation="promote" operation_key="galera-bundle-master_promote_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="110" operation="running" operation_key="galera-bundle-master_running_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="112" operation="stopped" operation_key="galera-bundle-master_stopped_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="116" operation="demoted" operation_key="galera-bundle-master_demoted_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="117" operation="promote" operation_key="galera-bundle_promote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="9" priority="1000000">
+    <action_set>
+      <pseudo_event id="112" operation="stopped" operation_key="galera-bundle-master_stopped_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="105" operation="stop" operation_key="galera_stop_0" internal_operation_key="galera:0_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="111" operation="stop" operation_key="galera-bundle-master_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="10">
+    <action_set>
+      <pseudo_event id="111" operation="stop" operation_key="galera-bundle-master_stop_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="94" operation="stop" operation_key="galera-bundle_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="116" operation="demoted" operation_key="galera-bundle-master_demoted_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="251" operation="stonith" operation_key="stonith-galera-bundle-0-reboot" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="11" priority="1000000">
+    <action_set>
+      <pseudo_event id="110" operation="running" operation_key="galera-bundle-master_running_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="106" operation="start" operation_key="galera_start_0" internal_operation_key="galera:0_start_0" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0" router_node="controller-0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="109" operation="start" operation_key="galera-bundle-master_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="12">
+    <action_set>
+      <pseudo_event id="109" operation="start" operation_key="galera-bundle-master_start_0">
+        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="3" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="92" operation="start" operation_key="galera-bundle_start_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="112" operation="stopped" operation_key="galera-bundle-master_stopped_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="116" operation="demoted" operation_key="galera-bundle-master_demoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="13">
+    <action_set>
+      <rsc_op id="78" operation="start" operation_key="galera-bundle-docker-0_start_0" on_node="database-0" on_node_uuid="database-0" router_node="controller-0">
+        <primitive id="galera-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="database-0" CRM_meta_on_node_uuid="database-0" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/rhosp13/openstack-mariadb:pcmklatest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/galera-bundle-0" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3123 -v /var/lib/kolla/config_files/mysql.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/puppet-generated/mysql/:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/mysql:/var/lib/mysql:rw -v /var/log/mariadb:/var/log/mariadb:rw -v /var/log/containers/mysql:/var/log/mysql:rw -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/galera-bundle-0:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="54" operation="stop" operation_key="galera-bundle-docker-0_stop_0" on_node="database-0" on_node_uuid="database-0" router_node="controller-0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="92" operation="start" operation_key="galera-bundle_start_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="250" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="14">
+    <action_set>
+      <rsc_op id="54" operation="stop" operation_key="galera-bundle-docker-0_stop_0" on_node="database-0" on_node_uuid="database-0" router_node="controller-0">
+        <primitive id="galera-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_on_node="database-0" CRM_meta_on_node_uuid="database-0" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/rhosp13/openstack-mariadb:pcmklatest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/galera-bundle-0" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3123 -v /var/lib/kolla/config_files/mysql.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/puppet-generated/mysql/:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/mysql:/var/lib/mysql:rw -v /var/log/mariadb:/var/log/mariadb:rw -v /var/log/containers/mysql:/var/log/mysql:rw -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/galera-bundle-0:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="79" operation="stop" operation_key="galera-bundle-0_stop_0" on_node="controller-0" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="94" operation="stop" operation_key="galera-bundle_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="15">
+    <action_set>
+      <rsc_op id="38" operation="monitor" operation_key="galera-bundle-docker-0_monitor_60000" on_node="database-0" on_node_uuid="database-0" router_node="controller-0">
+        <primitive id="galera-bundle-docker-0" class="ocf" provider="heartbeat" type="docker"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="database-0" CRM_meta_on_node_uuid="database-0" CRM_meta_timeout="20000" allow_pull="true"  force_kill="false" image="192.168.24.1:8787/rhosp13/openstack-mariadb:pcmklatest" monitor_cmd="/bin/true" mount_points="/var/log/pacemaker/bundles/galera-bundle-0" reuse="false" run_cmd="/bin/bash /usr/local/bin/kolla_start" run_opts=" --restart=no -e PCMK_stderr=1 --net=host -e PCMK_remote_port=3123 -v /var/lib/kolla/config_files/mysql.json:/var/lib/kolla/config_files/config.json:ro -v /var/lib/config-data/puppet-generated/mysql/:/var/lib/kolla/config_files/src:ro -v /etc/hosts:/etc/hosts:ro -v /etc/localtime:/etc/localtime:ro -v /var/lib/mysql:/var/lib/mysql:rw -v /var/log/mariadb:/var/log/mariadb:rw -v /var/log/containers/mysql:/var/log/mysql:rw -v /dev/log:/dev/log:rw -v /etc/pacemaker/authkey:/etc/pacemaker/authkey -v /var/log/pacemaker/bundles/galera-bundle-0:/var/log --user=root --log-driver=journald -e KOLLA_CONFIG_STRATEGY=COPY_ALWAYS "/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="78" operation="start" operation_key="galera-bundle-docker-0_start_0" on_node="database-0" on_node_uuid="database-0" router_node="controller-0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="16">
+    <action_set>
+      <rsc_op id="81" operation="monitor" operation_key="galera-bundle-0_monitor_60000" on_node="controller-0" on_node_uuid="1">
+        <primitive id="galera-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="galera-bundle-docker-0" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="controller-0" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" addr="database-0"  port="3123"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="80" operation="start" operation_key="galera-bundle-0_start_0" on_node="controller-0" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="17">
+    <action_set>
+      <rsc_op id="80" operation="start" operation_key="galera-bundle-0_start_0" on_node="controller-0" on_node_uuid="1">
+        <primitive id="galera-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="galera-bundle-docker-0" CRM_meta_on_node="controller-0" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" addr="database-0"  port="3123"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <crm_event id="65" operation="clear_failcount" operation_key="galera-bundle-0_clear_failcount_0" on_node="controller-0" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="78" operation="start" operation_key="galera-bundle-docker-0_start_0" on_node="database-0" on_node_uuid="database-0" router_node="controller-0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="79" operation="stop" operation_key="galera-bundle-0_stop_0" on_node="controller-0" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="18">
+    <action_set>
+      <rsc_op id="79" operation="stop" operation_key="galera-bundle-0_stop_0" on_node="controller-0" on_node_uuid="1">
+        <primitive id="galera-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="galera-bundle-docker-0" CRM_meta_on_node="controller-0" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" addr="database-0"  port="3123"/>
+        <downed>
+          <node id="galera-bundle-0"/>
+        </downed>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="19">
+    <action_set>
+      <crm_event id="65" operation="clear_failcount" operation_key="galera-bundle-0_clear_failcount_0" on_node="controller-0" on_node_uuid="1">
+        <primitive id="galera-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="galera-bundle-docker-0" CRM_meta_on_node="controller-0" CRM_meta_on_node_uuid="1" CRM_meta_op_no_wait="true" CRM_meta_timeout="20000" addr="database-0"  port="3123"/>
+      </crm_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="20">
+    <action_set>
+      <rsc_op id="1" operation="cancel" operation_key="galera-bundle-0_monitor_30000" on_node="controller-0" on_node_uuid="1">
+        <primitive id="galera-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_call_id="36" CRM_meta_container="galera-bundle-docker-0" CRM_meta_interval="30000" CRM_meta_on_node="controller-0" CRM_meta_on_node_uuid="1" CRM_meta_operation="monitor" CRM_meta_timeout="20000" addr="database-0"  port="3123"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="79" operation="stop" operation_key="galera-bundle-0_stop_0" on_node="controller-0" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="21">
+    <action_set>
+      <rsc_op id="86" operation="monitor" operation_key="galera-bundle-1_monitor_60000" on_node="controller-1" on_node_uuid="2">
+        <primitive id="galera-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="galera-bundle-docker-1" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" addr="database-1"  port="3123"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="22">
+    <action_set>
+      <rsc_op id="31" operation="cancel" operation_key="galera-bundle-1_monitor_30000" on_node="controller-1" on_node_uuid="2">
+        <primitive id="galera-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_call_id="24" CRM_meta_container="galera-bundle-docker-1" CRM_meta_interval="30000" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_operation="monitor" CRM_meta_timeout="20000" addr="database-1"  port="3123"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="23">
+    <action_set>
+      <rsc_op id="91" operation="monitor" operation_key="galera-bundle-2_monitor_60000" on_node="controller-2" on_node_uuid="3">
+        <primitive id="galera-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="galera-bundle-docker-2" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" addr="database-2"  port="3123"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="24">
+    <action_set>
+      <rsc_op id="15" operation="cancel" operation_key="galera-bundle-2_monitor_30000" on_node="controller-2" on_node_uuid="3">
+        <primitive id="galera-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_call_id="24" CRM_meta_container="galera-bundle-docker-2" CRM_meta_interval="30000" CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_operation="monitor" CRM_meta_timeout="20000" addr="database-2"  port="3123"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="25">
+    <action_set>
+      <rsc_op id="125" operation="monitor" operation_key="rabbitmq-bundle-0_monitor_60000" on_node="controller-2" on_node_uuid="3">
+        <primitive id="rabbitmq-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="rabbitmq-bundle-docker-0" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" addr="messaging-0"  port="3122"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="26">
+    <action_set>
+      <rsc_op id="8" operation="cancel" operation_key="rabbitmq-bundle-0_monitor_30000" on_node="controller-2" on_node_uuid="3">
+        <primitive id="rabbitmq-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_call_id="25" CRM_meta_container="rabbitmq-bundle-docker-0" CRM_meta_interval="30000" CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_operation="monitor" CRM_meta_timeout="20000" addr="messaging-0"  port="3122"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="27">
+    <action_set>
+      <rsc_op id="130" operation="monitor" operation_key="rabbitmq-bundle-1_monitor_60000" on_node="controller-1" on_node_uuid="2">
+        <primitive id="rabbitmq-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="rabbitmq-bundle-docker-1" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" addr="messaging-1"  port="3122"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="28">
+    <action_set>
+      <rsc_op id="26" operation="cancel" operation_key="rabbitmq-bundle-1_monitor_30000" on_node="controller-1" on_node_uuid="2">
+        <primitive id="rabbitmq-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_call_id="39" CRM_meta_container="rabbitmq-bundle-docker-1" CRM_meta_interval="30000" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_operation="monitor" CRM_meta_timeout="20000" addr="messaging-1"  port="3122"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="29">
+    <action_set>
+      <rsc_op id="135" operation="monitor" operation_key="rabbitmq-bundle-2_monitor_60000" on_node="controller-1" on_node_uuid="2">
+        <primitive id="rabbitmq-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="rabbitmq-bundle-docker-2" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" addr="messaging-2"  port="3122"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="30">
+    <action_set>
+      <rsc_op id="27" operation="cancel" operation_key="rabbitmq-bundle-2_monitor_30000" on_node="controller-1" on_node_uuid="2">
+        <primitive id="rabbitmq-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_call_id="25" CRM_meta_container="rabbitmq-bundle-docker-2" CRM_meta_interval="30000" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_operation="monitor" CRM_meta_timeout="20000" addr="messaging-2"  port="3122"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="31">
+    <action_set>
+      <rsc_op id="162" operation="monitor" operation_key="redis-bundle-0_monitor_60000" on_node="controller-0" on_node_uuid="1">
+        <primitive id="redis-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="redis-bundle-docker-0" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="controller-0" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" addr="controller-0"  port="3124"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="32">
+    <action_set>
+      <rsc_op id="2" operation="cancel" operation_key="redis-bundle-0_monitor_30000" on_node="controller-0" on_node_uuid="1">
+        <primitive id="redis-bundle-0" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_call_id="25" CRM_meta_container="redis-bundle-docker-0" CRM_meta_interval="30000" CRM_meta_on_node="controller-0" CRM_meta_on_node_uuid="1" CRM_meta_operation="monitor" CRM_meta_timeout="20000" addr="controller-0"  port="3124"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="33">
+    <action_set>
+      <rsc_op id="167" operation="monitor" operation_key="redis-bundle-1_monitor_60000" on_node="controller-1" on_node_uuid="2">
+        <primitive id="redis-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="redis-bundle-docker-1" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" addr="controller-1"  port="3124"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="34">
+    <action_set>
+      <rsc_op id="25" operation="cancel" operation_key="redis-bundle-1_monitor_30000" on_node="controller-1" on_node_uuid="2">
+        <primitive id="redis-bundle-1" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_call_id="31" CRM_meta_container="redis-bundle-docker-1" CRM_meta_interval="30000" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_operation="monitor" CRM_meta_timeout="20000" addr="controller-1"  port="3124"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="35">
+    <action_set>
+      <rsc_op id="172" operation="monitor" operation_key="redis-bundle-2_monitor_60000" on_node="controller-2" on_node_uuid="3">
+        <primitive id="redis-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_container="redis-bundle-docker-2" CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000" addr="controller-2"  port="3124"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="36">
+    <action_set>
+      <rsc_op id="11" operation="cancel" operation_key="redis-bundle-2_monitor_30000" on_node="controller-2" on_node_uuid="3">
+        <primitive id="redis-bundle-2" class="ocf" provider="pacemaker" type="remote"/>
+        <attributes CRM_meta_call_id="31" CRM_meta_container="redis-bundle-docker-2" CRM_meta_interval="30000" CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_operation="monitor" CRM_meta_timeout="20000" addr="controller-2"  port="3124"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="37">
+    <action_set>
+      <rsc_op id="241" operation="stop" operation_key="stonith-fence_ipmilan-5254005f9a33_stop_0" on_node="controller-2" on_node_uuid="3">
+        <primitive id="stonith-fence_ipmilan-5254005f9a33" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000"  ipaddr="172.16.0.1" ipport="6238" lanplus="true" login="admin" passwd="****" pcmk_host_list="database-0" privlvl="administrator"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="38">
+    <action_set>
+      <rsc_op id="59" operation="start" operation_key="stonith-fence_ipmilan-5254005f9a33_start_0" on_node="controller-2" on_node_uuid="3">
+        <primitive id="stonith-fence_ipmilan-5254005f9a33" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000"  ipaddr="172.16.0.1" ipport="6238" lanplus="true" login="admin" passwd="****" pcmk_host_list="database-0" privlvl="administrator"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="241" operation="stop" operation_key="stonith-fence_ipmilan-5254005f9a33_stop_0" on_node="controller-2" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="39">
+    <action_set>
+      <rsc_op id="14" operation="monitor" operation_key="stonith-fence_ipmilan-5254005f9a33_monitor_60000" on_node="controller-2" on_node_uuid="3">
+        <primitive id="stonith-fence_ipmilan-5254005f9a33" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000"  ipaddr="172.16.0.1" ipport="6238" lanplus="true" login="admin" passwd="****" pcmk_host_list="database-0" privlvl="administrator"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="59" operation="start" operation_key="stonith-fence_ipmilan-5254005f9a33_start_0" on_node="controller-2" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="40">
+    <action_set>
+      <rsc_op id="242" operation="stop" operation_key="stonith-fence_ipmilan-52540098c9ff_stop_0" on_node="controller-1" on_node_uuid="2">
+        <primitive id="stonith-fence_ipmilan-52540098c9ff" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000"  ipaddr="172.16.0.1" ipport="6237" lanplus="true" login="admin" passwd="****" pcmk_host_list="database-2" privlvl="administrator"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="41">
+    <action_set>
+      <rsc_op id="64" operation="start" operation_key="stonith-fence_ipmilan-52540098c9ff_start_0" on_node="controller-1" on_node_uuid="2">
+        <primitive id="stonith-fence_ipmilan-52540098c9ff" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000"  ipaddr="172.16.0.1" ipport="6237" lanplus="true" login="admin" passwd="****" pcmk_host_list="database-2" privlvl="administrator"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="242" operation="stop" operation_key="stonith-fence_ipmilan-52540098c9ff_stop_0" on_node="controller-1" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="42">
+    <action_set>
+      <rsc_op id="35" operation="monitor" operation_key="stonith-fence_ipmilan-52540098c9ff_monitor_60000" on_node="controller-1" on_node_uuid="2">
+        <primitive id="stonith-fence_ipmilan-52540098c9ff" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000"  ipaddr="172.16.0.1" ipport="6237" lanplus="true" login="admin" passwd="****" pcmk_host_list="database-2" privlvl="administrator"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="64" operation="start" operation_key="stonith-fence_ipmilan-52540098c9ff_start_0" on_node="controller-1" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="43">
+    <action_set>
+      <rsc_op id="243" operation="stop" operation_key="stonith-fence_ipmilan-5254000203a2_stop_0" on_node="controller-2" on_node_uuid="3">
+        <primitive id="stonith-fence_ipmilan-5254000203a2" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000"  ipaddr="172.16.0.1" ipport="6231" lanplus="true" login="admin" passwd="****" pcmk_host_list="messaging-0" privlvl="administrator"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="44">
+    <action_set>
+      <rsc_op id="57" operation="start" operation_key="stonith-fence_ipmilan-5254000203a2_start_0" on_node="controller-2" on_node_uuid="3">
+        <primitive id="stonith-fence_ipmilan-5254000203a2" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000"  ipaddr="172.16.0.1" ipport="6231" lanplus="true" login="admin" passwd="****" pcmk_host_list="messaging-0" privlvl="administrator"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="243" operation="stop" operation_key="stonith-fence_ipmilan-5254000203a2_stop_0" on_node="controller-2" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="45">
+    <action_set>
+      <rsc_op id="9" operation="monitor" operation_key="stonith-fence_ipmilan-5254000203a2_monitor_60000" on_node="controller-2" on_node_uuid="3">
+        <primitive id="stonith-fence_ipmilan-5254000203a2" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000"  ipaddr="172.16.0.1" ipport="6231" lanplus="true" login="admin" passwd="****" pcmk_host_list="messaging-0" privlvl="administrator"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="57" operation="start" operation_key="stonith-fence_ipmilan-5254000203a2_start_0" on_node="controller-2" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="46">
+    <action_set>
+      <rsc_op id="244" operation="stop" operation_key="stonith-fence_ipmilan-5254003296a5_stop_0" on_node="controller-1" on_node_uuid="2">
+        <primitive id="stonith-fence_ipmilan-5254003296a5" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000"  ipaddr="172.16.0.1" ipport="6233" lanplus="true" login="admin" passwd="****" pcmk_host_list="messaging-1" privlvl="administrator"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="47">
+    <action_set>
+      <rsc_op id="63" operation="start" operation_key="stonith-fence_ipmilan-5254003296a5_start_0" on_node="controller-1" on_node_uuid="2">
+        <primitive id="stonith-fence_ipmilan-5254003296a5" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000"  ipaddr="172.16.0.1" ipport="6233" lanplus="true" login="admin" passwd="****" pcmk_host_list="messaging-1" privlvl="administrator"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="244" operation="stop" operation_key="stonith-fence_ipmilan-5254003296a5_stop_0" on_node="controller-1" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="48">
+    <action_set>
+      <rsc_op id="24" operation="monitor" operation_key="stonith-fence_ipmilan-5254003296a5_monitor_60000" on_node="controller-1" on_node_uuid="2">
+        <primitive id="stonith-fence_ipmilan-5254003296a5" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000"  ipaddr="172.16.0.1" ipport="6233" lanplus="true" login="admin" passwd="****" pcmk_host_list="messaging-1" privlvl="administrator"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="63" operation="start" operation_key="stonith-fence_ipmilan-5254003296a5_start_0" on_node="controller-1" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="49">
+    <action_set>
+      <rsc_op id="245" operation="stop" operation_key="stonith-fence_ipmilan-52540066e27e_stop_0" on_node="controller-1" on_node_uuid="2">
+        <primitive id="stonith-fence_ipmilan-52540066e27e" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000"  ipaddr="172.16.0.1" ipport="6232" lanplus="true" login="admin" passwd="****" pcmk_host_list="messaging-2" privlvl="administrator"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="50">
+    <action_set>
+      <rsc_op id="61" operation="start" operation_key="stonith-fence_ipmilan-52540066e27e_start_0" on_node="controller-1" on_node_uuid="2">
+        <primitive id="stonith-fence_ipmilan-52540066e27e" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000"  ipaddr="172.16.0.1" ipport="6232" lanplus="true" login="admin" passwd="****" pcmk_host_list="messaging-2" privlvl="administrator"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="245" operation="stop" operation_key="stonith-fence_ipmilan-52540066e27e_stop_0" on_node="controller-1" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="51">
+    <action_set>
+      <rsc_op id="22" operation="monitor" operation_key="stonith-fence_ipmilan-52540066e27e_monitor_60000" on_node="controller-1" on_node_uuid="2">
+        <primitive id="stonith-fence_ipmilan-52540066e27e" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000"  ipaddr="172.16.0.1" ipport="6232" lanplus="true" login="admin" passwd="****" pcmk_host_list="messaging-2" privlvl="administrator"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="61" operation="start" operation_key="stonith-fence_ipmilan-52540066e27e_start_0" on_node="controller-1" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="52">
+    <action_set>
+      <rsc_op id="246" operation="stop" operation_key="stonith-fence_ipmilan-52540065418e_stop_0" on_node="controller-2" on_node_uuid="3">
+        <primitive id="stonith-fence_ipmilan-52540065418e" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000"  ipaddr="172.16.0.1" ipport="6235" lanplus="true" login="admin" passwd="****" pcmk_host_list="controller-1" privlvl="administrator"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="53">
+    <action_set>
+      <rsc_op id="58" operation="start" operation_key="stonith-fence_ipmilan-52540065418e_start_0" on_node="controller-2" on_node_uuid="3">
+        <primitive id="stonith-fence_ipmilan-52540065418e" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000"  ipaddr="172.16.0.1" ipport="6235" lanplus="true" login="admin" passwd="****" pcmk_host_list="controller-1" privlvl="administrator"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="246" operation="stop" operation_key="stonith-fence_ipmilan-52540065418e_stop_0" on_node="controller-2" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="54">
+    <action_set>
+      <rsc_op id="12" operation="monitor" operation_key="stonith-fence_ipmilan-52540065418e_monitor_60000" on_node="controller-2" on_node_uuid="3">
+        <primitive id="stonith-fence_ipmilan-52540065418e" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000"  ipaddr="172.16.0.1" ipport="6235" lanplus="true" login="admin" passwd="****" pcmk_host_list="controller-1" privlvl="administrator"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="58" operation="start" operation_key="stonith-fence_ipmilan-52540065418e_start_0" on_node="controller-2" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="55">
+    <action_set>
+      <rsc_op id="247" operation="stop" operation_key="stonith-fence_ipmilan-525400aab9d9_stop_0" on_node="controller-2" on_node_uuid="3">
+        <primitive id="stonith-fence_ipmilan-525400aab9d9" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000"  ipaddr="172.16.0.1" ipport="6239" lanplus="true" login="admin" passwd="****" pcmk_host_list="database-1" privlvl="administrator"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="56">
+    <action_set>
+      <rsc_op id="56" operation="start" operation_key="stonith-fence_ipmilan-525400aab9d9_start_0" on_node="controller-2" on_node_uuid="3">
+        <primitive id="stonith-fence_ipmilan-525400aab9d9" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000"  ipaddr="172.16.0.1" ipport="6239" lanplus="true" login="admin" passwd="****" pcmk_host_list="database-1" privlvl="administrator"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="247" operation="stop" operation_key="stonith-fence_ipmilan-525400aab9d9_stop_0" on_node="controller-2" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="57">
+    <action_set>
+      <rsc_op id="7" operation="monitor" operation_key="stonith-fence_ipmilan-525400aab9d9_monitor_60000" on_node="controller-2" on_node_uuid="3">
+        <primitive id="stonith-fence_ipmilan-525400aab9d9" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="controller-2" CRM_meta_on_node_uuid="3" CRM_meta_timeout="20000"  ipaddr="172.16.0.1" ipport="6239" lanplus="true" login="admin" passwd="****" pcmk_host_list="database-1" privlvl="administrator"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="56" operation="start" operation_key="stonith-fence_ipmilan-525400aab9d9_start_0" on_node="controller-2" on_node_uuid="3"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="58">
+    <action_set>
+      <rsc_op id="248" operation="stop" operation_key="stonith-fence_ipmilan-525400a16c0d_stop_0" on_node="controller-1" on_node_uuid="2">
+        <primitive id="stonith-fence_ipmilan-525400a16c0d" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000"  ipaddr="172.16.0.1" ipport="6234" lanplus="true" login="admin" passwd="****" pcmk_host_list="controller-2" privlvl="administrator"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="59">
+    <action_set>
+      <rsc_op id="62" operation="start" operation_key="stonith-fence_ipmilan-525400a16c0d_start_0" on_node="controller-1" on_node_uuid="2">
+        <primitive id="stonith-fence_ipmilan-525400a16c0d" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000"  ipaddr="172.16.0.1" ipport="6234" lanplus="true" login="admin" passwd="****" pcmk_host_list="controller-2" privlvl="administrator"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="248" operation="stop" operation_key="stonith-fence_ipmilan-525400a16c0d_stop_0" on_node="controller-1" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="60">
+    <action_set>
+      <rsc_op id="23" operation="monitor" operation_key="stonith-fence_ipmilan-525400a16c0d_monitor_60000" on_node="controller-1" on_node_uuid="2">
+        <primitive id="stonith-fence_ipmilan-525400a16c0d" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000"  ipaddr="172.16.0.1" ipport="6234" lanplus="true" login="admin" passwd="****" pcmk_host_list="controller-2" privlvl="administrator"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="62" operation="start" operation_key="stonith-fence_ipmilan-525400a16c0d_start_0" on_node="controller-1" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="61">
+    <action_set>
+      <rsc_op id="249" operation="stop" operation_key="stonith-fence_ipmilan-5254002f6d57_stop_0" on_node="controller-1" on_node_uuid="2">
+        <primitive id="stonith-fence_ipmilan-5254002f6d57" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000"  ipaddr="172.16.0.1" ipport="6236" lanplus="true" login="admin" passwd="****" pcmk_host_list="controller-0" privlvl="administrator"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="62">
+    <action_set>
+      <rsc_op id="60" operation="start" operation_key="stonith-fence_ipmilan-5254002f6d57_start_0" on_node="controller-1" on_node_uuid="2">
+        <primitive id="stonith-fence_ipmilan-5254002f6d57" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000"  ipaddr="172.16.0.1" ipport="6236" lanplus="true" login="admin" passwd="****" pcmk_host_list="controller-0" privlvl="administrator"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="249" operation="stop" operation_key="stonith-fence_ipmilan-5254002f6d57_stop_0" on_node="controller-1" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="63">
+    <action_set>
+      <rsc_op id="20" operation="monitor" operation_key="stonith-fence_ipmilan-5254002f6d57_monitor_60000" on_node="controller-1" on_node_uuid="2">
+        <primitive id="stonith-fence_ipmilan-5254002f6d57" class="stonith" type="fence_ipmilan"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_on_node="controller-1" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000"  ipaddr="172.16.0.1" ipport="6236" lanplus="true" login="admin" passwd="****" pcmk_host_list="controller-0" privlvl="administrator"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="60" operation="start" operation_key="stonith-fence_ipmilan-5254002f6d57_start_0" on_node="controller-1" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="64">
+    <action_set>
+      <pseudo_event id="251" operation="stonith" operation_key="stonith-galera-bundle-0-reboot" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0">
+        <attributes CRM_meta_on_node="galera-bundle-0" CRM_meta_on_node_uuid="galera-bundle-0" CRM_meta_stonith_action="reboot" />
+        <downed>
+          <node id="galera-bundle-0"/>
+        </downed>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="54" operation="stop" operation_key="galera-bundle-docker-0_stop_0" on_node="database-0" on_node_uuid="database-0" router_node="controller-0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="65">
+    <action_set>
+      <pseudo_event id="250" operation="stonith_complete" operation_key="stonith_complete">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="251" operation="stonith" operation_key="stonith-galera-bundle-0-reboot" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="66" priority="1000000">
+    <action_set>
+      <pseudo_event id="120" operation="demoted" operation_key="galera-bundle_demoted_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="116" operation="demoted" operation_key="galera-bundle-master_demoted_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="119" operation="demote" operation_key="galera-bundle_demote_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="67">
+    <action_set>
+      <pseudo_event id="119" operation="demote" operation_key="galera-bundle_demote_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="68" priority="1000000">
+    <action_set>
+      <pseudo_event id="118" operation="promoted" operation_key="galera-bundle_promoted_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="114" operation="promoted" operation_key="galera-bundle-master_promoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="69">
+    <action_set>
+      <pseudo_event id="117" operation="promote" operation_key="galera-bundle_promote_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="93" operation="running" operation_key="galera-bundle_running_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="95" operation="stopped" operation_key="galera-bundle_stopped_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="120" operation="demoted" operation_key="galera-bundle_demoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="70" priority="1000000">
+    <action_set>
+      <pseudo_event id="95" operation="stopped" operation_key="galera-bundle_stopped_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="54" operation="stop" operation_key="galera-bundle-docker-0_stop_0" on_node="database-0" on_node_uuid="database-0" router_node="controller-0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="112" operation="stopped" operation_key="galera-bundle-master_stopped_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="71">
+    <action_set>
+      <pseudo_event id="94" operation="stop" operation_key="galera-bundle_stop_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="120" operation="demoted" operation_key="galera-bundle_demoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="72" priority="1000000">
+    <action_set>
+      <pseudo_event id="93" operation="running" operation_key="galera-bundle_running_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="78" operation="start" operation_key="galera-bundle-docker-0_start_0" on_node="database-0" on_node_uuid="database-0" router_node="controller-0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="110" operation="running" operation_key="galera-bundle-master_running_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="73">
+    <action_set>
+      <pseudo_event id="92" operation="start" operation_key="galera-bundle_start_0">
+        <attributes CRM_meta_timeout="20000" />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="95" operation="stopped" operation_key="galera-bundle_stopped_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="120" operation="demoted" operation_key="galera-bundle_demoted_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="74">
+    <action_set>
+      <pseudo_event id="55" operation="all_stopped" operation_key="all_stopped">
+        <attributes />
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="54" operation="stop" operation_key="galera-bundle-docker-0_stop_0" on_node="database-0" on_node_uuid="database-0" router_node="controller-0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="79" operation="stop" operation_key="galera-bundle-0_stop_0" on_node="controller-0" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="105" operation="stop" operation_key="galera_stop_0" internal_operation_key="galera:0_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="241" operation="stop" operation_key="stonith-fence_ipmilan-5254005f9a33_stop_0" on_node="controller-2" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="242" operation="stop" operation_key="stonith-fence_ipmilan-52540098c9ff_stop_0" on_node="controller-1" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="243" operation="stop" operation_key="stonith-fence_ipmilan-5254000203a2_stop_0" on_node="controller-2" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="244" operation="stop" operation_key="stonith-fence_ipmilan-5254003296a5_stop_0" on_node="controller-1" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="245" operation="stop" operation_key="stonith-fence_ipmilan-52540066e27e_stop_0" on_node="controller-1" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="246" operation="stop" operation_key="stonith-fence_ipmilan-52540065418e_stop_0" on_node="controller-2" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="247" operation="stop" operation_key="stonith-fence_ipmilan-525400aab9d9_stop_0" on_node="controller-2" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="248" operation="stop" operation_key="stonith-fence_ipmilan-525400a16c0d_stop_0" on_node="controller-1" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="249" operation="stop" operation_key="stonith-fence_ipmilan-5254002f6d57_stop_0" on_node="controller-1" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="250" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+</transition_graph>

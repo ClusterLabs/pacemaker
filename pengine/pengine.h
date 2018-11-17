@@ -1,28 +1,16 @@
-/* 
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+/*
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ *
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+
 #ifndef PENGINE__H
 #  define PENGINE__H
 
-typedef struct rsc_to_node_s rsc_to_node_t;
 typedef struct rsc_colocation_s rsc_colocation_t;
 typedef struct rsc_ticket_s rsc_ticket_t;
 typedef struct lrm_agent_s lrm_agent_t;
-typedef struct order_constraint_s order_constraint_t;
 
 #  include <glib.h>
 #  include <crm/crm.h>
@@ -73,34 +61,6 @@ struct rsc_ticket_s {
     enum loss_ticket_policy_e loss_policy;
 
     int role_lh;
-};
-
-struct rsc_to_node_s {
-    char *id;
-    resource_t *rsc_lh;
-
-    enum rsc_role_e role_filter;
-    enum pe_discover_e discover_mode;
-    GListPtr node_list_rh;      /* node_t* */
-};
-
-struct order_constraint_s {
-    int id;
-    enum pe_ordering type;
-
-    void *lh_opaque;
-    resource_t *lh_rsc;
-    action_t *lh_action;
-    char *lh_action_task;
-
-    void *rh_opaque;
-    resource_t *rh_rsc;
-    action_t *rh_action;
-    char *rh_action_task;
-
-    /* (soon to be) variant specific */
-/* 		int   lh_rsc_incarnation; */
-/* 		int   rh_rsc_incarnation; */
 };
 
 extern gboolean stage0(pe_working_set_t * data_set);
