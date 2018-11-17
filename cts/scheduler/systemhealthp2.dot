@@ -10,11 +10,11 @@ digraph "g" {
 "nfs_1_monitor_20000 hs21c" [ style=bold color="green" fontcolor="black" ]
 "nfs_1_start_0 hs21c" -> "nfs_1_monitor_20000 hs21c" [ style = bold]
 "nfs_1_start_0 hs21c" [ style=bold color="green" fontcolor="black" ]
+"stonith 'reboot' hs21d" -> "apache_1_start_0 hs21c" [ style = bold]
+"stonith 'reboot' hs21d" -> "nfs_1_start_0 hs21c" [ style = bold]
 "stonith 'reboot' hs21d" -> "stonith_complete" [ style = bold]
 "stonith 'reboot' hs21d" [ style=bold color="green" fontcolor="black"]
 "stonith-1_monitor_0 hs21c" [ style=bold color="green" fontcolor="black" ]
 "stonith_complete" -> "all_stopped" [ style = bold]
-"stonith_complete" -> "apache_1_start_0 hs21c" [ style = bold]
-"stonith_complete" -> "nfs_1_start_0 hs21c" [ style = bold]
 "stonith_complete" [ style=bold color="green" fontcolor="orange" ]
 }

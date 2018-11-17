@@ -37,10 +37,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="14" operation="stop" operation_key="fake2_stop_0"/>
+        <crm_event id="4" operation="stonith" operation_key="stonith-c7auto4-reboot" on_node="c7auto4" on_node_uuid="c7auto4"/>
       </trigger>
       <trigger>
-        <pseudo_event id="23" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="14" operation="stop" operation_key="fake2_stop_0"/>
       </trigger>
     </inputs>
   </synapse>

@@ -24,7 +24,7 @@
         <rsc_op id="3" operation="stop" operation_key="rhel7-auto4_stop_0" on_node="rhel7-auto2" on_node_uuid="2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="5" operation="all_stopped" operation_key="all_stopped"/>
+        <crm_event id="4" operation="stonith" operation_key="stonith-rhel7-auto4-reboot" on_node="rhel7-auto4" on_node_uuid="rhel7-auto4"/>
       </trigger>
     </inputs>
   </synapse>
@@ -69,7 +69,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="26" operation="stonith_complete" operation_key="stonith_complete"/>
+        <crm_event id="4" operation="stonith" operation_key="stonith-rhel7-auto4-reboot" on_node="rhel7-auto4" on_node_uuid="rhel7-auto4"/>
       </trigger>
     </inputs>
   </synapse>
@@ -95,10 +95,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="12" operation="stop" operation_key="FAKE2_stop_0"/>
+        <crm_event id="4" operation="stonith" operation_key="stonith-rhel7-auto4-reboot" on_node="rhel7-auto4" on_node_uuid="rhel7-auto4"/>
       </trigger>
       <trigger>
-        <pseudo_event id="26" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="12" operation="stop" operation_key="FAKE2_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -154,10 +154,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="23" operation="stop" operation_key="FAKE6_stop_0"/>
+        <crm_event id="4" operation="stonith" operation_key="stonith-rhel7-auto4-reboot" on_node="rhel7-auto4" on_node_uuid="rhel7-auto4"/>
       </trigger>
       <trigger>
-        <pseudo_event id="26" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="23" operation="stop" operation_key="FAKE6_stop_0"/>
       </trigger>
     </inputs>
   </synapse>

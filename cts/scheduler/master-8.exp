@@ -21,10 +21,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="32" operation="stop" operation_key="DcIPaddr_stop_0"/>
+        <crm_event id="1" operation="stonith" operation_key="stonith-c001n01-reboot" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
       </trigger>
       <trigger>
-        <pseudo_event id="93" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="32" operation="stop" operation_key="DcIPaddr_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -124,13 +124,13 @@
     </action_set>
     <inputs>
       <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-c001n01-reboot" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
+      </trigger>
+      <trigger>
         <rsc_op id="35" operation="stop" operation_key="ocf_192.168.100.181_stop_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193"/>
       </trigger>
       <trigger>
         <pseudo_event id="44" operation="start" operation_key="group-1_start_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="93" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -176,6 +176,9 @@
     </action_set>
     <inputs>
       <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-c001n01-reboot" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
+      </trigger>
+      <trigger>
         <rsc_op id="36" operation="start" operation_key="ocf_192.168.100.181_start_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
       </trigger>
       <trigger>
@@ -183,9 +186,6 @@
       </trigger>
       <trigger>
         <pseudo_event id="44" operation="start" operation_key="group-1_start_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="93" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -229,6 +229,9 @@
     </action_set>
     <inputs>
       <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-c001n01-reboot" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
+      </trigger>
+      <trigger>
         <rsc_op id="39" operation="start" operation_key="heartbeat_192.168.100.182_start_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
       </trigger>
       <trigger>
@@ -236,9 +239,6 @@
       </trigger>
       <trigger>
         <pseudo_event id="44" operation="start" operation_key="group-1_start_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="93" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -277,10 +277,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="48" operation="stop" operation_key="lsb_dummy_stop_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+        <crm_event id="1" operation="stonith" operation_key="stonith-c001n01-reboot" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
       </trigger>
       <trigger>
-        <pseudo_event id="93" operation="stonith_complete" operation_key="stonith_complete"/>
+        <rsc_op id="48" operation="stop" operation_key="lsb_dummy_stop_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
       </trigger>
     </inputs>
   </synapse>
@@ -315,10 +315,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="51" operation="stop" operation_key="rsc_c001n01_stop_0"/>
+        <crm_event id="1" operation="stonith" operation_key="stonith-c001n01-reboot" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
       </trigger>
       <trigger>
-        <pseudo_event id="93" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="51" operation="stop" operation_key="rsc_c001n01_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -430,13 +430,13 @@
     </action_set>
     <inputs>
       <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-c001n01-reboot" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="72" operation="stop" operation_key="ocf_msdummy:0_stop_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="85" operation="start" operation_key="master_rsc_1_start_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="93" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>

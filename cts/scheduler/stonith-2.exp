@@ -21,7 +21,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="96" operation="stonith_complete" operation_key="stonith_complete"/>
+        <crm_event id="1" operation="stonith" operation_key="stonith-sles-5-reboot" on_node="sles-5" on_node_uuid="434915c6-7b40-4d30-95ff-dc0ff3dc005a"/>
       </trigger>
     </inputs>
   </synapse>

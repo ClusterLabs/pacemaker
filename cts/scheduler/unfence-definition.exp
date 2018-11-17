@@ -8,9 +8,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="1" operation="all_stopped" operation_key="all_stopped"/>
-      </trigger>
-      <trigger>
         <crm_event id="2" operation="stonith" operation_key="stonith-virt-1-on" on_node="virt-1" on_node_uuid="1"/>
       </trigger>
       <trigger>
@@ -21,6 +18,9 @@
       </trigger>
       <trigger>
         <rsc_op id="9" operation="monitor" operation_key="fencing_monitor_0" on_node="virt-3" on_node_uuid="3"/>
+      </trigger>
+      <trigger>
+        <crm_event id="31" operation="stonith" operation_key="stonith-virt-4-reboot" on_node="virt-4" on_node_uuid="4"/>
       </trigger>
     </inputs>
   </synapse>
@@ -77,7 +77,7 @@
         <pseudo_event id="18" operation="start" operation_key="dlm-clone_start_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="30" operation="stonith_complete" operation_key="stonith_complete"/>
+        <crm_event id="31" operation="stonith" operation_key="stonith-virt-4-reboot" on_node="virt-4" on_node_uuid="4"/>
       </trigger>
     </inputs>
   </synapse>
@@ -112,7 +112,7 @@
         <pseudo_event id="18" operation="start" operation_key="dlm-clone_start_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="30" operation="stonith_complete" operation_key="stonith_complete"/>
+        <crm_event id="31" operation="stonith" operation_key="stonith-virt-4-reboot" on_node="virt-4" on_node_uuid="4"/>
       </trigger>
     </inputs>
   </synapse>
@@ -210,7 +210,7 @@
         <pseudo_event id="26" operation="start" operation_key="clvmd-clone_start_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="30" operation="stonith_complete" operation_key="stonith_complete"/>
+        <crm_event id="31" operation="stonith" operation_key="stonith-virt-4-reboot" on_node="virt-4" on_node_uuid="4"/>
       </trigger>
     </inputs>
   </synapse>
@@ -242,7 +242,7 @@
         <pseudo_event id="26" operation="start" operation_key="clvmd-clone_start_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="30" operation="stonith_complete" operation_key="stonith_complete"/>
+        <crm_event id="31" operation="stonith" operation_key="stonith-virt-4-reboot" on_node="virt-4" on_node_uuid="4"/>
       </trigger>
     </inputs>
   </synapse>
@@ -276,7 +276,7 @@
         <pseudo_event id="26" operation="start" operation_key="clvmd-clone_start_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="30" operation="stonith_complete" operation_key="stonith_complete"/>
+        <crm_event id="31" operation="stonith" operation_key="stonith-virt-4-reboot" on_node="virt-4" on_node_uuid="4"/>
       </trigger>
     </inputs>
   </synapse>

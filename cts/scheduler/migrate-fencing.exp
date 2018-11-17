@@ -128,13 +128,13 @@
     </action_set>
     <inputs>
       <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-pcmk-4-reboot" on_node="pcmk-4" on_node_uuid="pcmk-4"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="32" operation="stop" operation_key="r192.168.101.181_stop_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="41" operation="start" operation_key="group-1_start_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="93" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -178,6 +178,9 @@
     </action_set>
     <inputs>
       <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-pcmk-4-reboot" on_node="pcmk-4" on_node_uuid="pcmk-4"/>
+      </trigger>
+      <trigger>
         <rsc_op id="33" operation="start" operation_key="r192.168.101.181_start_0" on_node="pcmk-1" on_node_uuid="pcmk-1"/>
       </trigger>
       <trigger>
@@ -185,9 +188,6 @@
       </trigger>
       <trigger>
         <pseudo_event id="41" operation="start" operation_key="group-1_start_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="93" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -231,6 +231,9 @@
     </action_set>
     <inputs>
       <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-pcmk-4-reboot" on_node="pcmk-4" on_node_uuid="pcmk-4"/>
+      </trigger>
+      <trigger>
         <rsc_op id="36" operation="start" operation_key="r192.168.101.182_start_0" on_node="pcmk-1" on_node_uuid="pcmk-1"/>
       </trigger>
       <trigger>
@@ -238,9 +241,6 @@
       </trigger>
       <trigger>
         <pseudo_event id="41" operation="start" operation_key="group-1_start_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="93" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -281,10 +281,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="51" operation="stop" operation_key="rsc_pcmk-4_stop_0"/>
+        <crm_event id="1" operation="stonith" operation_key="stonith-pcmk-4-reboot" on_node="pcmk-4" on_node_uuid="pcmk-4"/>
       </trigger>
       <trigger>
-        <pseudo_event id="93" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="51" operation="stop" operation_key="rsc_pcmk-4_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -322,13 +322,13 @@
     </action_set>
     <inputs>
       <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-pcmk-4-reboot" on_node="pcmk-4" on_node_uuid="pcmk-4"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="42" operation="running" operation_key="group-1_running_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="54" operation="stop" operation_key="lsb-dummy_stop_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="93" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -366,7 +366,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="93" operation="stonith_complete" operation_key="stonith_complete"/>
+        <crm_event id="1" operation="stonith" operation_key="stonith-pcmk-4-reboot" on_node="pcmk-4" on_node_uuid="pcmk-4"/>
       </trigger>
     </inputs>
   </synapse>
@@ -391,13 +391,13 @@
     </action_set>
     <inputs>
       <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-pcmk-4-reboot" on_node="pcmk-4" on_node_uuid="pcmk-4"/>
+      </trigger>
+      <trigger>
         <rsc_op id="57" operation="stop" operation_key="migrator_stop_0" on_node="pcmk-1" on_node_uuid="pcmk-1"/>
       </trigger>
       <trigger>
         <rsc_op id="61" operation="migrate_from" operation_key="migrator_migrate_from_0" on_node="pcmk-3" on_node_uuid="pcmk-3"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="93" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -511,10 +511,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="89" operation="promote" operation_key="master-1_promote_0"/>
+        <crm_event id="1" operation="stonith" operation_key="stonith-pcmk-4-reboot" on_node="pcmk-4" on_node_uuid="pcmk-4"/>
       </trigger>
       <trigger>
-        <pseudo_event id="93" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="89" operation="promote" operation_key="master-1_promote_0"/>
       </trigger>
     </inputs>
   </synapse>

@@ -33,10 +33,13 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="22" operation="all_stopped" operation_key="all_stopped"/>
+        <pseudo_event id="30" operation="stop" operation_key="galera-0_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="30" operation="stop" operation_key="galera-0_stop_0"/>
+        <crm_event id="126" operation="stonith" operation_key="stonith-galera-2-reboot" on_node="galera-2" on_node_uuid="galera-2"/>
+      </trigger>
+      <trigger>
+        <crm_event id="127" operation="stonith" operation_key="stonith-messaging-1-reboot" on_node="messaging-1" on_node_uuid="messaging-1"/>
       </trigger>
     </inputs>
   </synapse>
@@ -471,10 +474,16 @@
     </action_set>
     <inputs>
       <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-controller-1-reboot" on_node="controller-1" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="98" operation="stop" operation_key="ip-172.17.1.14_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="125" operation="stonith_complete" operation_key="stonith_complete"/>
+        <crm_event id="126" operation="stonith" operation_key="stonith-galera-2-reboot" on_node="galera-2" on_node_uuid="galera-2"/>
+      </trigger>
+      <trigger>
+        <crm_event id="127" operation="stonith" operation_key="stonith-messaging-1-reboot" on_node="messaging-1" on_node_uuid="messaging-1"/>
       </trigger>
     </inputs>
   </synapse>
@@ -515,10 +524,16 @@
     </action_set>
     <inputs>
       <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-controller-1-reboot" on_node="controller-1" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="101" operation="stop" operation_key="ip-172.17.1.17_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="125" operation="stonith_complete" operation_key="stonith_complete"/>
+        <crm_event id="126" operation="stonith" operation_key="stonith-galera-2-reboot" on_node="galera-2" on_node_uuid="galera-2"/>
+      </trigger>
+      <trigger>
+        <crm_event id="127" operation="stonith" operation_key="stonith-messaging-1-reboot" on_node="messaging-1" on_node_uuid="messaging-1"/>
       </trigger>
     </inputs>
   </synapse>
@@ -559,10 +574,16 @@
     </action_set>
     <inputs>
       <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-controller-1-reboot" on_node="controller-1" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="106" operation="stop" operation_key="ip-172.17.4.11_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="125" operation="stonith_complete" operation_key="stonith_complete"/>
+        <crm_event id="126" operation="stonith" operation_key="stonith-galera-2-reboot" on_node="galera-2" on_node_uuid="galera-2"/>
+      </trigger>
+      <trigger>
+        <crm_event id="127" operation="stonith" operation_key="stonith-messaging-1-reboot" on_node="messaging-1" on_node_uuid="messaging-1"/>
       </trigger>
     </inputs>
   </synapse>
@@ -641,10 +662,13 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="22" operation="all_stopped" operation_key="all_stopped"/>
+        <rsc_op id="120" operation="stop" operation_key="stonith-fence_ipmilan-525400bbf613_stop_0" on_node="controller-0" on_node_uuid="1"/>
       </trigger>
       <trigger>
-        <rsc_op id="120" operation="stop" operation_key="stonith-fence_ipmilan-525400bbf613_stop_0" on_node="controller-0" on_node_uuid="1"/>
+        <crm_event id="126" operation="stonith" operation_key="stonith-galera-2-reboot" on_node="galera-2" on_node_uuid="galera-2"/>
+      </trigger>
+      <trigger>
+        <crm_event id="127" operation="stonith" operation_key="stonith-messaging-1-reboot" on_node="messaging-1" on_node_uuid="messaging-1"/>
       </trigger>
     </inputs>
   </synapse>
@@ -679,10 +703,13 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="22" operation="all_stopped" operation_key="all_stopped"/>
+        <rsc_op id="121" operation="stop" operation_key="stonith-fence_ipmilan-525400b4f6bd_stop_0" on_node="controller-0" on_node_uuid="1"/>
       </trigger>
       <trigger>
-        <rsc_op id="121" operation="stop" operation_key="stonith-fence_ipmilan-525400b4f6bd_stop_0" on_node="controller-0" on_node_uuid="1"/>
+        <crm_event id="126" operation="stonith" operation_key="stonith-galera-2-reboot" on_node="galera-2" on_node_uuid="galera-2"/>
+      </trigger>
+      <trigger>
+        <crm_event id="127" operation="stonith" operation_key="stonith-messaging-1-reboot" on_node="messaging-1" on_node_uuid="messaging-1"/>
       </trigger>
     </inputs>
   </synapse>
@@ -721,10 +748,13 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="22" operation="all_stopped" operation_key="all_stopped"/>
+        <pseudo_event id="122" operation="stop" operation_key="stonith-fence_ipmilan-5254005bdbb5_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="122" operation="stop" operation_key="stonith-fence_ipmilan-5254005bdbb5_stop_0"/>
+        <crm_event id="126" operation="stonith" operation_key="stonith-galera-2-reboot" on_node="galera-2" on_node_uuid="galera-2"/>
+      </trigger>
+      <trigger>
+        <crm_event id="127" operation="stonith" operation_key="stonith-messaging-1-reboot" on_node="messaging-1" on_node_uuid="messaging-1"/>
       </trigger>
     </inputs>
   </synapse>

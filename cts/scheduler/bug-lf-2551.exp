@@ -60,10 +60,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="161" operation="stop" operation_key="dummy1_stop_0"/>
+        <crm_event id="1" operation="stonith" operation_key="stonith-hex-9-reboot" on_node="hex-9" on_node_uuid="hex-9"/>
       </trigger>
       <trigger>
-        <pseudo_event id="245" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="161" operation="stop" operation_key="dummy1_stop_0"/>
       </trigger>
     </inputs>
   </synapse>

@@ -57,6 +57,9 @@
     </action_set>
     <inputs>
       <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-c001n02-reboot" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+      </trigger>
+      <trigger>
         <rsc_op id="12" operation="monitor" operation_key="rsc_c001n02_monitor_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
       </trigger>
       <trigger>
@@ -67,9 +70,6 @@
       </trigger>
       <trigger>
         <pseudo_event id="31" operation="stop" operation_key="rsc_c001n02_stop_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="49" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>

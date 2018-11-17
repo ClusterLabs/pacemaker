@@ -114,7 +114,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="56" operation="all_stopped" operation_key="all_stopped"/>
+        <crm_event id="1" operation="stonith" operation_key="stonith-pcmk4-reboot" on_node="pcmk4" on_node_uuid="4"/>
       </trigger>
       <trigger>
         <rsc_op id="69" operation="stop" operation_key="pcmk_remote5_stop_0" on_node="pcmk1" on_node_uuid="1"/>
@@ -162,13 +162,13 @@
     </action_set>
     <inputs>
       <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-pcmk4-reboot" on_node="pcmk4" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
         <rsc_op id="67" operation="start" operation_key="pcmk_remote4_start_0" on_node="pcmk2" on_node_uuid="2"/>
       </trigger>
       <trigger>
         <rsc_op id="82" operation="stop" operation_key="FAKE5_stop_0" on_node="pcmk1" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="189" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -206,13 +206,13 @@
     </action_set>
     <inputs>
       <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-pcmk4-reboot" on_node="pcmk4" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
         <rsc_op id="67" operation="start" operation_key="pcmk_remote4_start_0" on_node="pcmk2" on_node_uuid="2"/>
       </trigger>
       <trigger>
         <rsc_op id="91" operation="stop" operation_key="FAKE9_stop_0" on_node="pcmk2" on_node_uuid="2"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="189" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -247,10 +247,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="98" operation="stop" operation_key="FAKE12_stop_0" on_node="pcmk1" on_node_uuid="1"/>
+        <crm_event id="1" operation="stonith" operation_key="stonith-pcmk4-reboot" on_node="pcmk4" on_node_uuid="4"/>
       </trigger>
       <trigger>
-        <pseudo_event id="189" operation="stonith_complete" operation_key="stonith_complete"/>
+        <rsc_op id="98" operation="stop" operation_key="FAKE12_stop_0" on_node="pcmk1" on_node_uuid="1"/>
       </trigger>
     </inputs>
   </synapse>
@@ -285,10 +285,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="103" operation="stop" operation_key="FAKE14_stop_0" on_node="pcmk2" on_node_uuid="2"/>
+        <crm_event id="1" operation="stonith" operation_key="stonith-pcmk4-reboot" on_node="pcmk4" on_node_uuid="4"/>
       </trigger>
       <trigger>
-        <pseudo_event id="189" operation="stonith_complete" operation_key="stonith_complete"/>
+        <rsc_op id="103" operation="stop" operation_key="FAKE14_stop_0" on_node="pcmk2" on_node_uuid="2"/>
       </trigger>
     </inputs>
   </synapse>
@@ -326,13 +326,13 @@
     </action_set>
     <inputs>
       <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-pcmk4-reboot" on_node="pcmk4" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
         <rsc_op id="67" operation="start" operation_key="pcmk_remote4_start_0" on_node="pcmk2" on_node_uuid="2"/>
       </trigger>
       <trigger>
         <rsc_op id="110" operation="stop" operation_key="FAKE17_stop_0" on_node="pcmk_remote1" on_node_uuid="pcmk_remote1" router_node="pcmk1"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="189" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -370,13 +370,13 @@
     </action_set>
     <inputs>
       <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-pcmk4-reboot" on_node="pcmk4" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
         <rsc_op id="67" operation="start" operation_key="pcmk_remote4_start_0" on_node="pcmk2" on_node_uuid="2"/>
       </trigger>
       <trigger>
         <rsc_op id="127" operation="stop" operation_key="FAKE25_stop_0" on_node="pcmk_remote1" on_node_uuid="pcmk_remote1" router_node="pcmk1"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="189" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -411,10 +411,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="134" operation="stop" operation_key="FAKE28_stop_0" on_node="pcmk3" on_node_uuid="3"/>
+        <crm_event id="1" operation="stonith" operation_key="stonith-pcmk4-reboot" on_node="pcmk4" on_node_uuid="4"/>
       </trigger>
       <trigger>
-        <pseudo_event id="189" operation="stonith_complete" operation_key="stonith_complete"/>
+        <rsc_op id="134" operation="stop" operation_key="FAKE28_stop_0" on_node="pcmk3" on_node_uuid="3"/>
       </trigger>
     </inputs>
   </synapse>
@@ -449,10 +449,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="139" operation="stop" operation_key="FAKE30_stop_0" on_node="pcmk1" on_node_uuid="1"/>
+        <crm_event id="1" operation="stonith" operation_key="stonith-pcmk4-reboot" on_node="pcmk4" on_node_uuid="4"/>
       </trigger>
       <trigger>
-        <pseudo_event id="189" operation="stonith_complete" operation_key="stonith_complete"/>
+        <rsc_op id="139" operation="stop" operation_key="FAKE30_stop_0" on_node="pcmk1" on_node_uuid="1"/>
       </trigger>
     </inputs>
   </synapse>
@@ -490,13 +490,13 @@
     </action_set>
     <inputs>
       <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-pcmk4-reboot" on_node="pcmk4" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
         <rsc_op id="67" operation="start" operation_key="pcmk_remote4_start_0" on_node="pcmk2" on_node_uuid="2"/>
       </trigger>
       <trigger>
         <rsc_op id="146" operation="stop" operation_key="FAKE33_stop_0" on_node="pcmk_remote1" on_node_uuid="pcmk_remote1" router_node="pcmk1"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="189" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -531,10 +531,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="157" operation="stop" operation_key="FAKE38_stop_0" on_node="pcmk2" on_node_uuid="2"/>
+        <crm_event id="1" operation="stonith" operation_key="stonith-pcmk4-reboot" on_node="pcmk4" on_node_uuid="4"/>
       </trigger>
       <trigger>
-        <pseudo_event id="189" operation="stonith_complete" operation_key="stonith_complete"/>
+        <rsc_op id="157" operation="stop" operation_key="FAKE38_stop_0" on_node="pcmk2" on_node_uuid="2"/>
       </trigger>
     </inputs>
   </synapse>
@@ -572,13 +572,13 @@
     </action_set>
     <inputs>
       <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-pcmk4-reboot" on_node="pcmk4" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="62" operation="start" operation_key="pcmk_remote2_start_0"/>
       </trigger>
       <trigger>
         <rsc_op id="160" operation="stop" operation_key="FAKE39_stop_0" on_node="pcmk1" on_node_uuid="1"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="189" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -616,13 +616,13 @@
     </action_set>
     <inputs>
       <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-pcmk4-reboot" on_node="pcmk4" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
         <rsc_op id="67" operation="start" operation_key="pcmk_remote4_start_0" on_node="pcmk2" on_node_uuid="2"/>
       </trigger>
       <trigger>
         <rsc_op id="165" operation="stop" operation_key="FAKE41_stop_0" on_node="pcmk_remote2" on_node_uuid="pcmk_remote2" router_node="pcmk1"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="189" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -664,13 +664,13 @@
     </action_set>
     <inputs>
       <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-pcmk4-reboot" on_node="pcmk4" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="62" operation="start" operation_key="pcmk_remote2_start_0"/>
       </trigger>
       <trigger>
         <rsc_op id="178" operation="stop" operation_key="FAKE47_stop_0" on_node="pcmk_remote1" on_node_uuid="pcmk_remote1" router_node="pcmk1"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="189" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -705,10 +705,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="181" operation="stop" operation_key="FAKE48_stop_0" on_node="pcmk1" on_node_uuid="1"/>
+        <crm_event id="1" operation="stonith" operation_key="stonith-pcmk4-reboot" on_node="pcmk4" on_node_uuid="4"/>
       </trigger>
       <trigger>
-        <pseudo_event id="189" operation="stonith_complete" operation_key="stonith_complete"/>
+        <rsc_op id="181" operation="stop" operation_key="FAKE48_stop_0" on_node="pcmk1" on_node_uuid="1"/>
       </trigger>
     </inputs>
   </synapse>
@@ -746,13 +746,13 @@
     </action_set>
     <inputs>
       <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-pcmk4-reboot" on_node="pcmk4" on_node_uuid="4"/>
+      </trigger>
+      <trigger>
         <rsc_op id="67" operation="start" operation_key="pcmk_remote4_start_0" on_node="pcmk2" on_node_uuid="2"/>
       </trigger>
       <trigger>
         <rsc_op id="184" operation="stop" operation_key="FAKE49_stop_0" on_node="pcmk_remote3" on_node_uuid="pcmk_remote3" router_node="pcmk3"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="189" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>

@@ -24,7 +24,7 @@
         <rsc_op id="2" operation="monitor" operation_key="prmIpPostgreSQLDB_monitor_0" on_node="rh5node2" on_node_uuid="fb62f5f4-015c-466a-8778-7b5c1c5639d6"/>
       </trigger>
       <trigger>
-        <pseudo_event id="19" operation="stonith_complete" operation_key="stonith_complete"/>
+        <crm_event id="20" operation="stonith" operation_key="stonith-rh5node1-reboot" on_node="rh5node1" on_node_uuid="286f4fcb-519e-4a23-b39f-9ab0017d0442"/>
       </trigger>
     </inputs>
   </synapse>
@@ -73,10 +73,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="1" operation="all_stopped" operation_key="all_stopped"/>
+        <pseudo_event id="7" operation="start" operation_key="grpStonith:0_start_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="7" operation="start" operation_key="grpStonith:0_start_0"/>
+        <crm_event id="20" operation="stonith" operation_key="stonith-rh5node1-reboot" on_node="rh5node1" on_node_uuid="286f4fcb-519e-4a23-b39f-9ab0017d0442"/>
       </trigger>
     </inputs>
   </synapse>

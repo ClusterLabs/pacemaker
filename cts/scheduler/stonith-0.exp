@@ -96,6 +96,12 @@
     </action_set>
     <inputs>
       <trigger>
+        <crm_event id="2" operation="stonith" operation_key="stonith-c001n03-reboot" on_node="c001n03" on_node_uuid="f5e1d2de-73da-432a-9d5c-37472253c2ee"/>
+      </trigger>
+      <trigger>
+        <crm_event id="14" operation="stonith" operation_key="stonith-c001n05-reboot" on_node="c001n05" on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="27" operation="stop" operation_key="ocf_192.168.100.181_stop_0"/>
       </trigger>
       <trigger>
@@ -103,9 +109,6 @@
       </trigger>
       <trigger>
         <pseudo_event id="38" operation="start" operation_key="group-1_start_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="105" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -171,6 +174,12 @@
     </action_set>
     <inputs>
       <trigger>
+        <crm_event id="2" operation="stonith" operation_key="stonith-c001n03-reboot" on_node="c001n03" on_node_uuid="f5e1d2de-73da-432a-9d5c-37472253c2ee"/>
+      </trigger>
+      <trigger>
+        <crm_event id="14" operation="stonith" operation_key="stonith-c001n05-reboot" on_node="c001n05" on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e"/>
+      </trigger>
+      <trigger>
         <rsc_op id="29" operation="start" operation_key="ocf_192.168.100.181_start_0" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5"/>
       </trigger>
       <trigger>
@@ -178,9 +187,6 @@
       </trigger>
       <trigger>
         <pseudo_event id="38" operation="start" operation_key="group-1_start_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="105" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -229,6 +235,12 @@
     </action_set>
     <inputs>
       <trigger>
+        <crm_event id="2" operation="stonith" operation_key="stonith-c001n03-reboot" on_node="c001n03" on_node_uuid="f5e1d2de-73da-432a-9d5c-37472253c2ee"/>
+      </trigger>
+      <trigger>
+        <crm_event id="14" operation="stonith" operation_key="stonith-c001n05-reboot" on_node="c001n05" on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e"/>
+      </trigger>
+      <trigger>
         <rsc_op id="32" operation="start" operation_key="heartbeat_192.168.100.182_start_0" on_node="c001n02" on_node_uuid="e8973f32-1c97-40cb-a84a-c489f49664a5"/>
       </trigger>
       <trigger>
@@ -239,9 +251,6 @@
       </trigger>
       <trigger>
         <pseudo_event id="38" operation="start" operation_key="group-1_start_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="105" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -297,10 +306,13 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="50" operation="stop" operation_key="rsc_c001n05_stop_0"/>
+        <crm_event id="2" operation="stonith" operation_key="stonith-c001n03-reboot" on_node="c001n03" on_node_uuid="f5e1d2de-73da-432a-9d5c-37472253c2ee"/>
       </trigger>
       <trigger>
-        <pseudo_event id="105" operation="stonith_complete" operation_key="stonith_complete"/>
+        <crm_event id="14" operation="stonith" operation_key="stonith-c001n05-reboot" on_node="c001n05" on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="50" operation="stop" operation_key="rsc_c001n05_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -338,10 +350,13 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="55" operation="stop" operation_key="rsc_c001n07_stop_0"/>
+        <crm_event id="2" operation="stonith" operation_key="stonith-c001n03-reboot" on_node="c001n03" on_node_uuid="f5e1d2de-73da-432a-9d5c-37472253c2ee"/>
       </trigger>
       <trigger>
-        <pseudo_event id="105" operation="stonith_complete" operation_key="stonith_complete"/>
+        <crm_event id="14" operation="stonith" operation_key="stonith-c001n05-reboot" on_node="c001n05" on_node_uuid="52a5ea5e-86ee-442c-b251-0bc9825c517e"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="55" operation="stop" operation_key="rsc_c001n07_stop_0"/>
       </trigger>
     </inputs>
   </synapse>

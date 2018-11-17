@@ -42,7 +42,7 @@
         <pseudo_event id="109" operation="promote" operation_key="galera-bundle-master_promote_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="240" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="241" operation="stonith" operation_key="stonith-galera-bundle-0-reboot" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -67,7 +67,7 @@
         <pseudo_event id="105" operation="start" operation_key="galera-bundle-master_start_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="240" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="241" operation="stonith" operation_key="stonith-galera-bundle-0-reboot" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -242,7 +242,7 @@
         <pseudo_event id="88" operation="start" operation_key="galera-bundle_start_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="240" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="241" operation="stonith" operation_key="stonith-galera-bundle-0-reboot" on_node="galera-bundle-0" on_node_uuid="galera-bundle-0"/>
       </trigger>
     </inputs>
   </synapse>
