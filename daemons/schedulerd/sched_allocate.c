@@ -1437,11 +1437,10 @@ any_managed_resources(pe_working_set_t * data_set)
  * \brief Create pseudo-op for guest node fence, and order relative to it
  *
  * \param[in] node      Guest node to fence
- * \param[in] done      STONITH_DONE operation
  * \param[in] data_set  Working set of CIB state
  */
 static void
-fence_guest(pe_node_t *node, pe_action_t *done, pe_working_set_t *data_set)
+fence_guest(pe_node_t *node, pe_working_set_t *data_set)
 {
     resource_t *container = node->details->remote_rsc->container;
     pe_action_t *stop = NULL;
@@ -1518,9 +1517,6 @@ fence_guest(pe_node_t *node, pe_action_t *done, pe_working_set_t *data_set)
 
     /* Order/imply other actions relative to pseudo-fence as with real fence */
     stonith_constraints(node, stonith_op, data_set);
-    if(done) {
-        order_actions(stonith_op, done, pe_order_implies_then);
-    }
 }
 
 /*
@@ -1530,11 +1526,9 @@ gboolean
 stage6(pe_working_set_t * data_set)
 {
     action_t *dc_down = NULL;
-    action_t *dc_fence = NULL;
     action_t *stonith_op = NULL;
     action_t *last_stonith = NULL;
     gboolean integrity_lost = FALSE;
-    action_t *done = get_pseudo_op(STONITH_DONE, data_set);
     gboolean need_stonith = TRUE;
     GListPtr gIter;
     GListPtr stonith_ops = NULL;
@@ -1565,7 +1559,7 @@ stage6(pe_working_set_t * data_set)
          */
         if (is_container_remote_node(node)) {
             if (node->details->remote_requires_reset && need_stonith) {
-                fence_guest(node, done, data_set);
+                fence_guest(node, data_set);
             }
             continue;
         }
@@ -1582,7 +1576,6 @@ stage6(pe_working_set_t * data_set)
 
             if (node->details->is_dc) {
                 dc_down = stonith_op;
-                dc_fence = stonith_op;
 
             } else if (is_set(data_set->flags, pe_flag_concurrent_fencing) == FALSE) {
                 if (last_stonith) {
@@ -1591,7 +1584,6 @@ stage6(pe_working_set_t * data_set)
                 last_stonith = stonith_op;
 
             } else {
-                order_actions(stonith_op, done, pe_order_implies_then);
                 stonith_ops = g_list_append(stonith_ops, stonith_op);
             }
 
@@ -1674,15 +1666,6 @@ stage6(pe_working_set_t * data_set)
             }
         }
     }
-
-
-    if (dc_fence) {
-        order_actions(dc_down, done, pe_order_implies_then);
-
-    } else if (last_stonith) {
-        order_actions(last_stonith, done, pe_order_implies_then);
-    }
-
     g_list_free(stonith_ops);
     return TRUE;
 }
