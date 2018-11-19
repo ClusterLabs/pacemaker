@@ -530,11 +530,12 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
     remote_ra_data_t *ra_data = NULL;
     remote_ra_cmd_t *cmd = NULL;
 
-    crm_debug("remote connection event - event_type:%s node:%s action:%s rc:%s op_status:%s",
-              lrmd_event_type2str(op->type),
-              op->remote_nodename,
-              op->op_type ? op->op_type : "none",
-              services_ocf_exitcode_str(op->rc), services_lrm_status_str(op->op_status));
+    crm_debug("Processing '%s%s%s' event on remote connection to %s: %s "
+              "(%d) status=%s (%d)",
+              (op->op_type? op->op_type : ""), (op->op_type? " " : ""),
+              lrmd_event_type2str(op->type), op->remote_nodename,
+              services_ocf_exitcode_str(op->rc), op->rc,
+              services_lrm_status_str(op->op_status), op->op_status);
 
     lrm_state = lrm_state_find(op->remote_nodename);
     if (!lrm_state || !lrm_state->remote_ra_data) {
@@ -569,16 +570,21 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
         return;
     }
 
-    if ((op->type == lrmd_event_disconnect) &&
-        (ra_data->cur_cmd == NULL) &&
-        (ra_data->active == TRUE)) {
+    if ((op->type == lrmd_event_disconnect) && (ra_data->cur_cmd == NULL)) {
 
-        if (!remote_ra_is_in_maintenance(lrm_state)) {
-            crm_err("Unexpected disconnect on remote-node %s", lrm_state->node_name);
+        if (ra_data->active == FALSE) {
+            crm_debug("Disconnection from Pacemaker Remote node %s complete",
+                      lrm_state->node_name);
+
+        } else if (!remote_ra_is_in_maintenance(lrm_state)) {
+            crm_err("Lost connection to Pacemaker Remote node %s",
+                    lrm_state->node_name);
             ra_data->recurring_cmds = fail_all_monitor_cmds(ra_data->recurring_cmds);
             ra_data->cmds = fail_all_monitor_cmds(ra_data->cmds);
+
         } else {
-            crm_notice("Disconnect on unmanaged remote-node %s", lrm_state->node_name);
+            crm_notice("Unmanaged Pacemaker Remote node %s disconnected",
+                       lrm_state->node_name);
             /* Do roughly what a 'stop' on the remote-resource would do */
             handle_remote_ra_stop(lrm_state, NULL);
             remote_node_down(lrm_state->node_name, DOWN_KEEP_LRM);
