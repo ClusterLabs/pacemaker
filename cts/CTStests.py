@@ -2814,7 +2814,7 @@ class RemoteDriver(CTSTest):
         watch.setwatch()
         pats.append(self.templates["Pat:RscOpOK"] % ("start", self.remote_node))
         if self.remote_rsc_added == 1:
-            pats.append(self.templates["Pat:RscRemoteOpOK"] % ("start", self.remote_rsc, self.remote_node))
+            pats.append(self.templates["Pat:RscRemoteOpOK"] % ("(start|probe)", self.remote_rsc, self.remote_node))
 
         # start the remote node again watch it integrate back into cluster.
         self.start_pcmk_remote(node)
