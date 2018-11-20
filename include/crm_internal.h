@@ -197,6 +197,7 @@ pid_t pcmk_locate_sbd(void);
 #  define F_ATTRD_RESOURCE          "attr_resource"
 #  define F_ATTRD_OPERATION         "attr_clear_operation"
 #  define F_ATTRD_INTERVAL          "attr_clear_interval"
+#  define F_ATTRD_IS_FORCE_WRITE "attrd_is_force_write"
 
 /* attrd operations */
 #  define ATTRD_OP_PEER_REMOVE   "peer-remove"
