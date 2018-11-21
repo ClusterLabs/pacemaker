@@ -713,6 +713,7 @@ exit 0
 %{_sbindir}/crm_mon
 %{_sbindir}/crm_node
 %{_sbindir}/crm_resource
+%{_sbindir}/crm_rule
 %{_sbindir}/crm_standby
 %{_sbindir}/crm_verify
 %{_sbindir}/crmadmin

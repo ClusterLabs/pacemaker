@@ -31,6 +31,7 @@ sbin_PROGRAMS		= attrd_updater \
 			  crm_mon \
 			  crm_node \
 			  crm_resource \
+			  crm_rule \
 			  crm_shadow \
 			  crm_verify \
 			  crm_ticket \
@@ -110,6 +111,12 @@ crm_resource_LDADD	= $(top_builddir)/lib/pengine/libpe_rules.la  	\
 			  $(top_builddir)/lib/internal/libpacemaker-internal.la	\
 			  $(top_builddir)/lib/transition/libtransitioner.la \
 			  $(top_builddir)/lib/cib/libcib.la		\
+			  $(top_builddir)/lib/common/libcrmcommon.la
+
+crm_rule_SOURCES 	= crm_rule.c
+crm_rule_LDADD		= $(top_builddir)/lib/cib/libcib.la		\
+			  $(top_builddir)/lib/pengine/libpe_rules.la   \
+			  $(top_builddir)/lib/pengine/libpe_status.la   \
 			  $(top_builddir)/lib/common/libcrmcommon.la
 
 iso8601_SOURCES		= test.iso8601.c
