@@ -627,6 +627,35 @@ The +ipmiservicelogd+ daemon sets node health attributes based on IPMI
 values (the +ocf:pacemaker:SystemHealth+ resource agent can be used to manage
 the daemon as a cluster resource).
 
+In order to take advantage of this feature - firstly add the resource to your cluster, preferably as a cloned resource to constantly measure health on all nodes:
+
+=====
+[source,XML]
+------------
+<clone id="resHealthIOWait-clone">
+  <primitive class="ocf" id="HealthIOWait" provider="pacemaker" type="HealthIOWait">
+    <instance_attributes id="resHealthIOWait-instance_attributes">
+      <nvpair id="resHealthIOWait-instance_attributes-red_limit" name="red_limit" value="30"/>
+      <nvpair id="resHealthIOWait-instance_attributes-yellow_limit" name="yellow_limit" value="10"/>
+    </instance_attributes>
+    <operations>
+      <op id="resHealthIOWait-monitor-interval-5" interval="5" name="monitor" timeout="5"/>
+      <op id="resHealthIOWait-start-interval-0s" interval="0s" name="start" timeout="10s"/>
+      <op id="resHealthIOWait-stop-interval-0s" interval="0s" name="stop" timeout="10s"/>
+    </operations>
+  </primitive>
+</clone>
+------------
+=====
+
+This way attrd_updater will set proper status for each node running this resource. Any attribute matching "#health-[a-zA-z]+" will force cluster to migrate all resources from unhealthy node and place it on other nodes according to all constraints defined in your cluster.
+
+When the node is no longer faulty you can force the cluster to restart the cloned resource on faulty node and make it available to take resources, in this case since we are using HealthIOWait provider:
+
+----
+# attrd_updater -n "#health-iowait" -U "green" --node="<nodename>" -d "60s"
+----
+
 == Reloading Services After a Definition Change ==
 
 The cluster automatically detects changes to the definition of

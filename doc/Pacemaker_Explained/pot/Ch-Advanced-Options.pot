@@ -848,7 +848,12 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Pacemaker provides examples that can be used directly or as a basis for custom code. The <literal>ocf:pacemaker:HealthCPU</literal> and <literal>ocf:pacemaker:HealthSMART</literal> resource agents set node health attributes based on CPU and disk parameters. The <literal>ipmiservicelogd</literal> daemon sets node health attributes based on IPMI values (the <literal>ocf:pacemaker:SystemHealth</literal> resource agent can be used to manage the daemon as a cluster resource)."
+msgid "Pacemaker provides examples that can be used directly or as a basis for custom code. The <literal>ocf:pacemaker:HealthCPU</literal> and <literal>ocf:pacemaker:HealthSMART</literal> resource agents set node health attributes based on CPU and disk parameters. The <literal>ipmiservicelogd</literal> daemon sets node health attributes based on IPMI values (the <literal>ocf:pacemaker:SystemHealth</literal> resource agent can be used to manage the daemon as a cluster resource). In order to take advantage of this feature - firstly add the resource to your cluster, preferably as a cloned resource to constatnly measure health on all nodes:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "This way <literal>attrd_updater</literal> will set proper status for each node running this resource. Any attribute matching <literal>#health-[a-zA-z]+</literal> will force cluster to migrate all resources from unhealthy node and place it on other nodes according to all constraints defined in your cluster. When the node is no longer faulty you can force the cluster to restart the cloned resource on faulty node and make it available to take resources, in this case since we are using HealthIOWait provider:"
 msgstr ""
 
 #. Tag: title
