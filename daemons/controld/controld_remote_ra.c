@@ -509,7 +509,7 @@ synthesize_lrmd_success(lrm_state_t *lrm_state, const char *rsc_id, const char *
     op.t_run = time(NULL);
     op.t_rcchange = op.t_run;
     op.call_id = generate_callid();
-    process_lrm_event(lrm_state, &op, NULL);
+    process_lrm_event(lrm_state, &op, NULL, NULL);
 }
 
 void
