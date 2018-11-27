@@ -161,4 +161,5 @@ gboolean remote_ra_is_in_maintenance(lrm_state_t * lrm_state);
 void remote_ra_process_maintenance_nodes(xmlNode *xml);
 gboolean remote_ra_controlling_guest(lrm_state_t * lrm_state);
 
-gboolean process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op, struct recurring_op_s *pending);
+void process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
+                       struct recurring_op_s *pending);

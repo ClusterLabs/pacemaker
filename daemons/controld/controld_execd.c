@@ -2501,7 +2501,7 @@ unescape_newlines(const char *string)
     return ret;
 }
 
-gboolean
+void
 process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op, struct recurring_op_s *pending)
 {
     char *op_id = NULL;
@@ -2512,8 +2512,8 @@ process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op, struct recurr
     gboolean removed = FALSE;
     lrmd_rsc_info_t *rsc = NULL;
 
-    CRM_CHECK(op != NULL, return FALSE);
-    CRM_CHECK(op->rsc_id != NULL, return FALSE);
+    CRM_CHECK(op != NULL, return);
+    CRM_CHECK(op->rsc_id != NULL, return);
 
     op_id = make_stop_id(op->rsc_id, op->call_id);
     op_key = generate_op_key(op->rsc_id, op->op_type, op->interval_ms);
@@ -2671,6 +2671,4 @@ process_lrm_event(lrm_state_t * lrm_state, lrmd_event_data_t * op, struct recurr
     lrmd_free_rsc_info(rsc);
     free(op_key);
     free(op_id);
-
-    return TRUE;
 }
