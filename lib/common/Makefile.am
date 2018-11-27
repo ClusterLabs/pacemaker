@@ -11,8 +11,9 @@ AM_CPPFLAGS		+= -I$(top_builddir)/lib/gnu -I$(top_srcdir)/lib/gnu -DPCMK_SCHEMAS
 ## libraries
 lib_LTLIBRARIES	= libcrmcommon.la
 
-# Can't use -Wcast-qual here because glib insists on pretending things are const  
-# when they're not and thus we need the crm_element_value_const() hack
+# Disable -Wcast-qual if used, because we do some hacky casting,
+# and because libxml2 has some signatures that should be const but aren't
+# for backward compatibility reasons.
 
 # s390 needs -fPIC 
 # s390-suse-linux/bin/ld: .libs/ipc.o: relocation R_390_PC32DBL against `__stack_chk_fail@@GLIBC_2.4' can not be used when making a shared object; recompile with -fPIC
