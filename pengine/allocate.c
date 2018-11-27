@@ -1079,6 +1079,13 @@ stage4(pe_working_set_t * data_set)
     return TRUE;
 }
 
+static void *
+convert_const_pointer(const void *ptr)
+{
+    /* Worst function ever */
+    return (void *)ptr;
+}
+
 static gint
 sort_rsc_process_order(gconstpointer a, gconstpointer b, gpointer data)
 {
@@ -1089,8 +1096,8 @@ sort_rsc_process_order(gconstpointer a, gconstpointer b, gpointer data)
     const char *reason = "existence";
 
     const GListPtr nodes = (GListPtr) data;
-    resource_t *resource1 = (resource_t *) convert_const_pointer(a);
-    resource_t *resource2 = (resource_t *) convert_const_pointer(b);
+    const resource_t *resource1 = a;
+    const resource_t *resource2 = b;
 
     node_t *r1_node = NULL;
     node_t *r2_node = NULL;
@@ -1127,13 +1134,14 @@ sort_rsc_process_order(gconstpointer a, gconstpointer b, gpointer data)
         goto done;
     }
 
-    r1_nodes =
-        rsc_merge_weights(resource1, resource1->id, NULL, NULL, 1,
-                          pe_weights_forward | pe_weights_init);
+    r1_nodes = rsc_merge_weights(convert_const_pointer(resource1),
+                                 resource1->id, NULL, NULL, 1,
+                                 pe_weights_forward | pe_weights_init);
     dump_node_scores(LOG_TRACE, NULL, resource1->id, r1_nodes);
-    r2_nodes =
-        rsc_merge_weights(resource2, resource2->id, NULL, NULL, 1,
-                          pe_weights_forward | pe_weights_init);
+
+    r2_nodes = rsc_merge_weights(convert_const_pointer(resource2),
+                                 resource2->id, NULL, NULL, 1,
+                                 pe_weights_forward | pe_weights_init);
     dump_node_scores(LOG_TRACE, NULL, resource2->id, r2_nodes);
 
     /* Current location score */
