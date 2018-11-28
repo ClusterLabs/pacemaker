@@ -1,5 +1,12 @@
 # How to Install Pacemaker
 
+The required components are provided as a generic hint since they
+are mostly in an RPM-centric notation (directly applicable only to
+the specific subset of respective Linux distributions, actually).
+When these are not outright available for a particular platform,
+searching for equivalents is left as an exercise to the keen users.
+Contributed refinements to this document are welcome, however.
+
 ## Build Dependencies
 * automake 1.11 or later
 * autoconf 2.64 or later
@@ -14,6 +21,7 @@
 * libxslt-devel 
 * bzip2-devel
 * libqb-devel
+* GNU-extended getopt (util-linux)
 
 ## Cluster Stack Dependencies (Pick at least one)
 * Corosync: corosynclib-devel
