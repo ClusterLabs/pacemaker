@@ -2981,9 +2981,9 @@ class RemoteDriver(CTSTest):
 
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
-        return [ """is running on remote.*which isn't allowed""",
-                 """Connection terminated""",
-                 """Failed to send remote""",
+        return [ r"""is running on remote.*which isn't allowed""",
+                 r"""Connection terminated""",
+                 r"""Could not send remote""",
                 ]
 
 # RemoteDriver is just a base class for other tests, so it is not added to AllTestClasses

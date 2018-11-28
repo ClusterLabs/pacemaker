@@ -85,7 +85,7 @@ fail_pending_op(gpointer key, gpointer value, gpointer user_data)
     event.remote_nodename = lrm_state->node_name;
     event.params = op->params;
 
-    process_lrm_event(lrm_state, &event, op);
+    process_lrm_event(lrm_state, &event, op, NULL);
     return TRUE;
 }
 
