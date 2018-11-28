@@ -230,8 +230,8 @@ cli_resource_update_attribute(resource_t *rsc, const char *requested_name,
 
     if(attr_id == NULL
        && do_force == FALSE
-       && pcmk_ok != find_resource_attr(
-           cib, XML_ATTR_ID, uber_parent(rsc)->id, NULL, NULL, NULL, attr_name, NULL)) {
+       && find_resource_attr(
+           cib, XML_ATTR_ID, uber_parent(rsc)->id, NULL, NULL, NULL, attr_name, NULL) == -EINVAL) {
         printf("\n");
     }
 
@@ -298,7 +298,7 @@ cli_resource_update_attribute(resource_t *rsc, const char *requested_name,
 
     rc = cib->cmds->modify(cib, XML_CIB_TAG_RESOURCES, xml_top, cib_options);
     if (rc == pcmk_ok && BE_QUIET == FALSE) {
-        printf("Set '%s' option: id=%s%s%s%s%s=%s\n", lookup_id, local_attr_id,
+        printf("Set '%s' option: id=%s%s%s%s%s value=%s\n", lookup_id, local_attr_id,
                attr_set ? " set=" : "", attr_set ? attr_set : "",
                attr_name ? " name=" : "", attr_name ? attr_name : "", attr_value);
     }
@@ -360,7 +360,7 @@ cli_resource_delete_attribute(resource_t *rsc, const char *requested_name,
     if(attr_id == NULL
        && do_force == FALSE
        && find_resource_attr(
-           cib, XML_ATTR_ID, uber_parent(rsc)->id, NULL, NULL, NULL, attr_name, NULL) != pcmk_ok) {
+           cib, XML_ATTR_ID, uber_parent(rsc)->id, NULL, NULL, NULL, attr_name, NULL) == -EINVAL) {
         printf("\n");
     }
 
