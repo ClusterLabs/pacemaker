@@ -174,7 +174,6 @@ Executing cluster transition:
  * Pseudo action:   redis-bundle_running_0
  * Pseudo action:   redis-bundle-master_pre_notify_promote_0
  * Pseudo action:   redis-bundle_promote_0
- * Resource action: redis           notify on redis-bundle-0
  * Resource action: redis           notify on redis-bundle-1
  * Resource action: redis           notify on redis-bundle-2
  * Pseudo action:   redis-bundle-master_confirmed-pre_notify_promote_0
@@ -182,7 +181,6 @@ Executing cluster transition:
  * Resource action: redis           promote on redis-bundle-1
  * Pseudo action:   redis-bundle-master_promoted_0
  * Pseudo action:   redis-bundle-master_post_notify_promoted_0
- * Resource action: redis           notify on redis-bundle-0
  * Resource action: redis           notify on redis-bundle-1
  * Resource action: redis           notify on redis-bundle-2
  * Pseudo action:   redis-bundle-master_confirmed-post_notify_promoted_0
