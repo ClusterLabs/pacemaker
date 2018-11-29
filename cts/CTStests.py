@@ -3028,9 +3028,9 @@ class RemoteDriver(CTSTest):
 
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
-        return [ """is running on remote.*which isn't allowed""",
-                 """Connection terminated""",
-                 """Failed to send remote""",
+        return [ r"""is running on remote.*which isn't allowed""",
+                 r"""Connection terminated""",
+                 r"""Could not send remote""",
                 ]
 
 # RemoteDriver is just a base class for other tests, so it is not added to AllTestClasses
@@ -3085,7 +3085,8 @@ class RemoteStonithd(RemoteDriver):
 
     def errorstoignore(self):
         ignore_pats = [
-            r"Unexpected disconnect on remote-node",
+            r"Lost connection to Pacemaker Remote node",
+            r"Software caused connection abort",
             r"crmd.*:\s+error.*: Operation remote-.*_monitor",
             r"crmd.*:\s+error.*: Result of monitor operation for remote-.*",
             r"pengine.*:\s+Recover remote-.*\s*\(.*\)",

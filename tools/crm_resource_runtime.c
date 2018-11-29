@@ -1311,13 +1311,13 @@ cli_resource_restart(pe_resource_t *rsc, const char *host, int timeout_ms,
     data_set = pe_new_working_set();
     if (data_set == NULL) {
         crm_perror(LOG_ERR, "Could not allocate working set");
-        return -ENOMEM;
+        rc = -ENOMEM;
+        goto done;
     }
     rc = update_dataset(cib, data_set, FALSE);
     if(rc != pcmk_ok) {
         fprintf(stdout, "Could not get new resource list: %s (%d)\n", pcmk_strerror(rc), rc);
-        free(rsc_id);
-        return rc;
+        goto done;
     }
 
     restart_target_active = get_active_resources(host, data_set->resources);
@@ -1352,8 +1352,7 @@ cli_resource_restart(pe_resource_t *rsc, const char *host, int timeout_ms,
         if (restart_target_active) {
             g_list_free_full(restart_target_active, free);
         }
-        free(rsc_id);
-        return crm_exit(rc);
+        goto done;
     }
 
     rc = update_dataset(cib, data_set, TRUE);
@@ -1428,8 +1427,7 @@ cli_resource_restart(pe_resource_t *rsc, const char *host, int timeout_ms,
 
     if(rc != pcmk_ok) {
         fprintf(stderr, "Could not unset target-role for %s: %s (%d)\n", rsc_id, pcmk_strerror(rc), rc);
-        free(rsc_id);
-        return crm_exit(rc);
+        goto done;
     }
 
     if (target_active) {
