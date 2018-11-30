@@ -222,7 +222,11 @@
         <attributes CRM_meta_name="stop" CRM_meta_on_node="pcmk1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <pseudo_event id="53" operation="start" operation_key="pcmk_remote3_start_0"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="18">
     <action_set>

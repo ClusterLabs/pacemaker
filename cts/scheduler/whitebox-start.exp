@@ -111,7 +111,11 @@
         <attributes CRM_meta_on_node="18node1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="41" operation="start" operation_key="lxc1_start_0" on_node="18node1" on_node_uuid="1"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="8">
     <action_set>

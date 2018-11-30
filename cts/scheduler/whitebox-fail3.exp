@@ -34,7 +34,11 @@
         <attributes CRM_meta_on_node="dvossel-laptop2" CRM_meta_on_node_uuid="24815808" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="33" operation="start" operation_key="18builder_start_0" on_node="dvossel-laptop2" on_node_uuid="24815808"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="3">
     <action_set>

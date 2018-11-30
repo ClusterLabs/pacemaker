@@ -179,7 +179,11 @@
         <attributes CRM_meta_name="stop" CRM_meta_on_node="pcmk1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="66" operation="start" operation_key="pcmk_remote4_start_0" on_node="pcmk2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="14">
     <action_set>
@@ -223,7 +227,11 @@
         <attributes CRM_meta_name="stop" CRM_meta_on_node="pcmk2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="66" operation="start" operation_key="pcmk_remote4_start_0" on_node="pcmk2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="17">
     <action_set>
@@ -343,7 +351,11 @@
         <attributes CRM_meta_name="stop" CRM_meta_on_node="pcmk_remote1" CRM_meta_on_node_uuid="pcmk_remote1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="66" operation="start" operation_key="pcmk_remote4_start_0" on_node="pcmk2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="26">
     <action_set>
@@ -387,7 +399,11 @@
         <attributes CRM_meta_name="stop" CRM_meta_on_node="pcmk_remote1" CRM_meta_on_node_uuid="pcmk_remote1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="66" operation="start" operation_key="pcmk_remote4_start_0" on_node="pcmk2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="29">
     <action_set>
@@ -507,7 +523,11 @@
         <attributes CRM_meta_name="stop" CRM_meta_on_node="pcmk_remote1" CRM_meta_on_node_uuid="pcmk_remote1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="66" operation="start" operation_key="pcmk_remote4_start_0" on_node="pcmk2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="38">
     <action_set>
@@ -589,7 +609,11 @@
         <attributes CRM_meta_name="stop" CRM_meta_on_node="pcmk1" CRM_meta_on_node_uuid="1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <pseudo_event id="61" operation="start" operation_key="pcmk_remote2_start_0"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="44">
     <action_set>
@@ -637,6 +661,9 @@
       <trigger>
         <pseudo_event id="61" operation="start" operation_key="pcmk_remote2_start_0"/>
       </trigger>
+      <trigger>
+        <rsc_op id="66" operation="start" operation_key="pcmk_remote4_start_0" on_node="pcmk2" on_node_uuid="2"/>
+      </trigger>
     </inputs>
   </synapse>
   <synapse id="47">
@@ -681,7 +708,11 @@
         <attributes CRM_meta_name="stop" CRM_meta_on_node="pcmk_remote1" CRM_meta_on_node_uuid="pcmk_remote1" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <pseudo_event id="61" operation="start" operation_key="pcmk_remote2_start_0"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="50">
     <action_set>
@@ -763,7 +794,11 @@
         <attributes CRM_meta_name="stop" CRM_meta_on_node="pcmk_remote3" CRM_meta_on_node_uuid="pcmk_remote3" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="66" operation="start" operation_key="pcmk_remote4_start_0" on_node="pcmk2" on_node_uuid="2"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="56">
     <action_set>

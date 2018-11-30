@@ -114,7 +114,11 @@
         <attributes CRM_meta_on_node="18node2" CRM_meta_on_node_uuid="2" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <rsc_op id="12" operation="start" operation_key="remote1_start_0" on_node="18builder" on_node_uuid="5"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="9">
     <action_set>
