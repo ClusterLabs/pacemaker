@@ -39,6 +39,7 @@ extern const char *attr_set_type;
 int cli_resource_prefer(const char *rsc_id, const char *host, cib_t * cib_conn);
 int cli_resource_ban(const char *rsc_id, const char *host, GListPtr allnodes, cib_t * cib_conn);
 int cli_resource_clear(const char *rsc_id, const char *host, GListPtr allnodes, cib_t * cib_conn);
+int cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, const char *rsc, const char *node, bool scope_master);
 
 /* print */
 void cli_resource_print_cts(resource_t * rsc);

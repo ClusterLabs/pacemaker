@@ -973,7 +973,10 @@ main(int argc, char **argv)
     } else if (rsc_cmd == 'U') {
         node_t *dest = NULL;
 
-        if (host_uname) {
+        if (clear_expired == TRUE) {
+            rc = cli_resource_clear_all_expired(data_set->input, cib_conn, rsc_id, host_uname, scope_master);
+
+        } else if (host_uname) {
             dest = pe_find_node(data_set->nodes, host_uname);
             if (dest == NULL) {
                 rc = -pcmk_err_node_unknown;
