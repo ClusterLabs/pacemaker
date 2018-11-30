@@ -1,5 +1,4 @@
 digraph "g" {
-"all_stopped" [ style=bold color="green" fontcolor="orange" ]
 "pingd:0_clear_failcount_0 cl-virt-1" [ style=bold color="green" fontcolor="black"]
 "pingd:0_clear_failcount_0 cl-virt-2" [ style=bold color="green" fontcolor="black"]
 "pingd:0_monitor_30000 cl-virt-1" [ style=bold color="green" fontcolor="black" ]
@@ -10,11 +9,9 @@ digraph "g" {
 "pingd:0_start_0 cl-virt-2" -> "pingd:0_monitor_30000 cl-virt-2" [ style = bold]
 "pingd:0_start_0 cl-virt-2" -> "pingdclone_running_0" [ style = bold]
 "pingd:0_start_0 cl-virt-2" [ style=bold color="green" fontcolor="black"]
-"pingd:0_stop_0 cl-virt-1" -> "all_stopped" [ style = bold]
 "pingd:0_stop_0 cl-virt-1" -> "pingd:0_start_0 cl-virt-1" [ style = bold]
 "pingd:0_stop_0 cl-virt-1" -> "pingdclone_stopped_0" [ style = bold]
 "pingd:0_stop_0 cl-virt-1" [ style=bold color="green" fontcolor="black" ]
-"pingd:0_stop_0 cl-virt-2" -> "all_stopped" [ style = bold]
 "pingd:0_stop_0 cl-virt-2" -> "pingd:0_start_0 cl-virt-2" [ style = bold]
 "pingd:0_stop_0 cl-virt-2" -> "pingdclone_stopped_0" [ style = bold]
 "pingd:0_stop_0 cl-virt-2" [ style=bold color="green" fontcolor="black"]

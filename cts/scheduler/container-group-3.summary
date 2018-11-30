@@ -15,7 +15,6 @@ Transition Summary:
 Executing cluster transition:
  * Pseudo action:   container-group_stop_0
  * Resource action: container1      stop on node1
- * Pseudo action:   all_stopped
  * Pseudo action:   container-group_stopped_0
  * Pseudo action:   container-group_start_0
  * Resource action: container1      start on node1

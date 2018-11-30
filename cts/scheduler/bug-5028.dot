@@ -1,5 +1,4 @@
 digraph "g" {
-"all_stopped" [ style=dashed color="red" fontcolor="orange"]
 "do_shutdown bl460g6a" [ style=dashed color="red" fontcolor="black"]
 "dummy-g_running_0" [ style=dashed color="red" fontcolor="orange"]
 "dummy-g_start_0" -> "dummy-g_running_0" [ style = dashed]
@@ -14,7 +13,6 @@ digraph "g" {
 "dummy01_start_0 bl460g6b" -> "dummy-g_running_0" [ style = dashed]
 "dummy01_start_0 bl460g6b" -> "dummy01_monitor_7000 bl460g6b" [ style = dashed]
 "dummy01_start_0 bl460g6b" [ style=dashed color="red" fontcolor="black"]
-"dummy01_stop_0 bl460g6a" -> "all_stopped" [ style = dashed]
 "dummy01_stop_0 bl460g6a" -> "do_shutdown bl460g6a" [ style = dashed]
 "dummy01_stop_0 bl460g6a" -> "dummy-g_stopped_0" [ style = dashed]
 "dummy01_stop_0 bl460g6a" -> "dummy01_start_0 bl460g6b" [ style = dashed]

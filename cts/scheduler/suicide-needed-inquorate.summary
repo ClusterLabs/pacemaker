@@ -16,8 +16,6 @@ Executing cluster transition:
  * Fencing node1 (reboot)
  * Fencing node3 (reboot)
  * Fencing node2 (reboot)
- * Pseudo action:   stonith_complete
- * Pseudo action:   all_stopped
 Using the original execution date of: 2017-08-21 17:12:54Z
 
 Revised cluster status:

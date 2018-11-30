@@ -51,7 +51,6 @@ Executing cluster transition:
  * Pseudo action:   cdev-pool-0-iscsi-export_stop_0
  * Resource action: cdev-pool-0-iscsi-lun-1 stop on sd01-1
  * Resource action: cdev-pool-0-iscsi-target stop on sd01-1
- * Pseudo action:   all_stopped
  * Pseudo action:   cdev-pool-0-iscsi-export_stopped_0
  * Pseudo action:   ms-cdev-pool-0-drbd_demote_0
  * Resource action: cdev-pool-0-drbd demote on sd01-1

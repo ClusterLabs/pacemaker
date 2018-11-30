@@ -18,8 +18,6 @@ Executing cluster transition:
  * Fencing rh73-01-snmp (reboot)
  * Pseudo action:   prmDummy_stop_0
  * Resource action: prmStonith2-1   start on rh73-02-snmp
- * Pseudo action:   stonith_complete
- * Pseudo action:   all_stopped
  * Resource action: prmDummy        start on rh73-02-snmp
  * Resource action: prmDummy        monitor=10000 on rh73-02-snmp
 Using the original execution date of: 2017-04-06 09:04:22Z

@@ -67,7 +67,6 @@ Executing cluster transition:
  * Resource action: prmApPostgreSQLDB1 monitor=5000 on sby1
  * Resource action: prmPingd:0      stop on act1
  * Pseudo action:   clnPingd_stopped_0
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Online: [ act1 act2 act3 sby1 sby2 ]

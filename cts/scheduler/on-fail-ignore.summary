@@ -18,7 +18,6 @@ Executing cluster transition:
  * Resource action: fence_db2       stop on 407888-db1
  * Resource action: fence_db2       start on 407888-db1
  * Resource action: fence_db2       monitor=60000 on 407888-db1
- * Pseudo action:   all_stopped
 Using the original execution date of: 2017-10-26 14:23:50Z
 
 Revised cluster status:

@@ -101,7 +101,6 @@ Executing cluster transition:
  * Pseudo action:   ip_voip_addresses_p_stopped_0
  * Resource action: fs_drbd         stop on asttest1
  * Pseudo action:   ms_drbd_demote_0
- * Pseudo action:   all_stopped
  * Resource action: drbd:0          demote on asttest1
  * Pseudo action:   ms_drbd_demoted_0
  * Pseudo action:   ms_drbd_post_notify_demoted_0

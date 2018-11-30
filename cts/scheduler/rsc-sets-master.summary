@@ -27,7 +27,6 @@ Executing cluster transition:
  * Pseudo action:   ms-rsc_stop_0
  * Resource action: rsc:0           stop on node1
  * Pseudo action:   ms-rsc_stopped_0
- * Pseudo action:   all_stopped
  * Pseudo action:   ms-rsc_promote_0
  * Resource action: rsc:1           promote on node2
  * Pseudo action:   ms-rsc_promoted_0

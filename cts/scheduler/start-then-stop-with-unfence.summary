@@ -26,7 +26,6 @@ Executing cluster transition:
  * Resource action: mpath-node1     start on rhel7-node1.example.com
  * Resource action: ip1             stop on rhel7-node2.example.com
  * Resource action: jrummy          monitor=10000 on rhel7-node1.example.com
- * Pseudo action:   all_stopped
  * Resource action: mpath-node1     monitor=60000 on rhel7-node1.example.com
  * Resource action: ip1             start on rhel7-node1.example.com
  * Resource action: ip1             monitor=10000 on rhel7-node1.example.com

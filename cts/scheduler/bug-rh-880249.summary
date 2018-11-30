@@ -16,7 +16,6 @@ Executing cluster transition:
  * Resource action: dummystateful   stop on 18node3
  * Resource action: dummystateful   stop on 18node1
  * Resource action: dummystateful   stop on 18node2
- * Pseudo action:   all_stopped
  * Resource action: dummystateful   start on 18node3
 
 Revised cluster status:

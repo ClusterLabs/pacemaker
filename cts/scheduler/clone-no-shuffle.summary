@@ -39,7 +39,6 @@ Executing cluster transition:
  * Pseudo action:   ms-drbd1_post_notify_stopped_0
  * Pseudo action:   ms-drbd1_confirmed-post_notify_stopped_0
  * Pseudo action:   ms-drbd1_pre_notify_start_0
- * Pseudo action:   all_stopped
  * Pseudo action:   ms-drbd1_confirmed-pre_notify_start_0
  * Pseudo action:   ms-drbd1_start_0
  * Resource action: drbd1:1         start on dktest1sles10

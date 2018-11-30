@@ -15,7 +15,6 @@ Executing cluster transition:
  * Resource action: rsc1            migrate_from on node2
  * Resource action: rsc1            stop on node1
  * Pseudo action:   load_stopped_node1
- * Pseudo action:   all_stopped
  * Resource action: rsc2            start on node1
  * Pseudo action:   rsc1_start_0
 

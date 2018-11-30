@@ -66,7 +66,6 @@ Executing cluster transition:
  * Resource action: ip-192.168.24.12 monitor=10000 on controller-2
  * Resource action: ip-172.17.1.11  monitor=10000 on controller-1
  * Pseudo action:   rabbitmq-bundle_stopped_0
- * Pseudo action:   all_stopped
  * Pseudo action:   rabbitmq-bundle-clone_confirmed-pre_notify_start_0
  * Pseudo action:   rabbitmq-bundle-clone_start_0
  * Pseudo action:   rabbitmq-bundle-clone_running_0

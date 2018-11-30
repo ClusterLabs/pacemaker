@@ -54,7 +54,6 @@ Executing cluster transition:
  * Pseudo action:   ocf_192.168.100.183_stop_0
  * Pseudo action:   rsc_c001n05_stop_0
  * Pseudo action:   rsc_c001n07_stop_0
- * Pseudo action:   stonith_complete
  * Pseudo action:   heartbeat_192.168.100.182_stop_0
  * Resource action: rsc_c001n05     start on c001n07
  * Resource action: rsc_c001n07     start on c001n07
@@ -62,7 +61,6 @@ Executing cluster transition:
  * Pseudo action:   ocf_192.168.100.181_stop_0
  * Resource action: rsc_c001n05     monitor=5000 on c001n07
  * Resource action: rsc_c001n07     monitor=5000 on c001n07
- * Pseudo action:   all_stopped
  * Pseudo action:   group-1_stopped_0
  * Pseudo action:   group-1_start_0
  * Resource action: ocf_192.168.100.181 start on c001n02

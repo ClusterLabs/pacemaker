@@ -46,7 +46,6 @@ Executing cluster transition:
  * Resource action: pingd:0         stop on cl-virt-2
  * Pseudo action:   pingdclone_stopped_0
  * Pseudo action:   pingdclone_start_0
- * Pseudo action:   all_stopped
  * Resource action: pingd:0         start on cl-virt-1
  * Resource action: pingd:0         monitor=30000 on cl-virt-1
  * Resource action: pingd:0         start on cl-virt-2

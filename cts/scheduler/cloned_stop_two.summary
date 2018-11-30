@@ -28,7 +28,6 @@ Executing cluster transition:
  * Resource action: FAKECLONE       stop on c7auto3
  * Pseudo action:   FAKECLONE-clone_stopped_0
  * Pseudo action:   FAKECLONE-clone_start_0
- * Pseudo action:   all_stopped
  * Pseudo action:   FAKECLONE-clone_running_0
 
 Revised cluster status:

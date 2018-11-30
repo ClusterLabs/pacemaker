@@ -1,63 +1,63 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
   <synapse id="0">
     <action_set>
-      <rsc_op id="2" operation="start" operation_key="cups_lsb:0_start_0" on_node="pcw2058.see.ed.ac.uk" on_node_uuid="pcw2058.see.ed.ac.uk">
+      <rsc_op id="1" operation="start" operation_key="cups_lsb:0_start_0" on_node="pcw2058.see.ed.ac.uk" on_node_uuid="pcw2058.see.ed.ac.uk">
         <primitive id="cups_lsb" long-id="cups_lsb:0" class="lsb" type="cups"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="pcw2058.see.ed.ac.uk" CRM_meta_on_node_uuid="pcw2058.see.ed.ac.uk" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="4" operation="start" operation_key="cups_clone_start_0"/>
+        <pseudo_event id="3" operation="start" operation_key="cups_clone_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="1">
     <action_set>
-      <rsc_op id="3" operation="start" operation_key="cups_lsb:1_start_0" on_node="pcw2059.see.ed.ac.uk" on_node_uuid="pcw2059.see.ed.ac.uk">
+      <rsc_op id="2" operation="start" operation_key="cups_lsb:1_start_0" on_node="pcw2059.see.ed.ac.uk" on_node_uuid="pcw2059.see.ed.ac.uk">
         <primitive id="cups_lsb" long-id="cups_lsb:1" class="lsb" type="cups"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_on_node="pcw2059.see.ed.ac.uk" CRM_meta_on_node_uuid="pcw2059.see.ed.ac.uk" CRM_meta_timeout="20000" />
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="4" operation="start" operation_key="cups_clone_start_0"/>
+        <pseudo_event id="3" operation="start" operation_key="cups_clone_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="2" priority="1000000">
     <action_set>
-      <pseudo_event id="5" operation="running" operation_key="cups_clone_running_0">
+      <pseudo_event id="4" operation="running" operation_key="cups_clone_running_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="2" operation="start" operation_key="cups_lsb:0_start_0" on_node="pcw2058.see.ed.ac.uk" on_node_uuid="pcw2058.see.ed.ac.uk"/>
+        <rsc_op id="1" operation="start" operation_key="cups_lsb:0_start_0" on_node="pcw2058.see.ed.ac.uk" on_node_uuid="pcw2058.see.ed.ac.uk"/>
       </trigger>
       <trigger>
-        <rsc_op id="3" operation="start" operation_key="cups_lsb:1_start_0" on_node="pcw2059.see.ed.ac.uk" on_node_uuid="pcw2059.see.ed.ac.uk"/>
+        <rsc_op id="2" operation="start" operation_key="cups_lsb:1_start_0" on_node="pcw2059.see.ed.ac.uk" on_node_uuid="pcw2059.see.ed.ac.uk"/>
       </trigger>
       <trigger>
-        <pseudo_event id="4" operation="start" operation_key="cups_clone_start_0"/>
+        <pseudo_event id="3" operation="start" operation_key="cups_clone_start_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="3">
     <action_set>
-      <pseudo_event id="4" operation="start" operation_key="cups_clone_start_0">
+      <pseudo_event id="3" operation="start" operation_key="cups_clone_start_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="8" operation="start" operation_key="smb_lsb_start_0" on_node="pcw2688.see.ed.ac.uk" on_node_uuid="pcw2688.see.ed.ac.uk"/>
+        <rsc_op id="7" operation="start" operation_key="smb_lsb_start_0" on_node="pcw2688.see.ed.ac.uk" on_node_uuid="pcw2688.see.ed.ac.uk"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="4">
     <action_set>
-      <rsc_op id="8" operation="start" operation_key="smb_lsb_start_0" on_node="pcw2688.see.ed.ac.uk" on_node_uuid="pcw2688.see.ed.ac.uk">
+      <rsc_op id="7" operation="start" operation_key="smb_lsb_start_0" on_node="pcw2688.see.ed.ac.uk" on_node_uuid="pcw2688.see.ed.ac.uk">
         <primitive id="smb_lsb" class="lsb" type="smb"/>
         <attributes CRM_meta_on_node="pcw2688.see.ed.ac.uk" CRM_meta_on_node_uuid="pcw2688.see.ed.ac.uk" CRM_meta_timeout="20000" />
       </rsc_op>

@@ -9,7 +9,6 @@
 "FAKECLONE2-clone_stop_0" [ style=bold color="green" fontcolor="orange"]
 "FAKECLONE2-clone_stopped_0" [ style=bold color="green" fontcolor="orange"]
 "FAKECLONE2_stop_0 c7auto3" -> "FAKECLONE2-clone_stopped_0" [ style = bold]
-"FAKECLONE2_stop_0 c7auto3" -> "all_stopped" [ style = bold]
 "FAKECLONE2_stop_0 c7auto3" [ style=bold color="green" fontcolor="black"]
 "FAKECLONE:1_monitor_10000 c7auto1" [ style=bold color="green" fontcolor="black"]
 "FAKECLONE:1_start_0 c7auto1" -> "FAKECLONE-clone_running_0" [ style = bold]
@@ -21,6 +20,5 @@
 "FAKECLONE_start_0 c7auto2" -> "FAKECLONE_monitor_10000 c7auto2" [ style = bold]
 "FAKECLONE_start_0 c7auto2" -> "clone-one-or-more:order-FAKECLONE-clone-FAKECLONE2-clone-mandatory" [ style = bold]
 "FAKECLONE_start_0 c7auto2" [ style=bold color="green" fontcolor="black"]
-"all_stopped" [ style=bold color="green" fontcolor="orange"]
 "clone-one-or-more:order-FAKECLONE-clone-FAKECLONE2-clone-mandatory" [ style=bold color="green" fontcolor="orange"]
 }

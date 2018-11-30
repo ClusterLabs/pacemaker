@@ -25,10 +25,8 @@ Executing cluster transition:
  * Resource action: Fencing         monitor on pcmk-1
  * Fencing pcmk-2 (reboot)
  * Pseudo action:   clvm-clone_stop_0
- * Pseudo action:   stonith_complete
  * Pseudo action:   clvm_stop_0
  * Pseudo action:   clvm-clone_stopped_0
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Node pcmk-3 (103): UNCLEAN (offline)

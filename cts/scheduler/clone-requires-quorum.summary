@@ -23,8 +23,6 @@ Executing cluster transition:
  * Fencing rhel7-5 (reboot)
  * Pseudo action:   dummy-crowd_stop_0
  * Pseudo action:   dummy-crowd-clone_stopped_0
- * Pseudo action:   stonith_complete
- * Pseudo action:   all_stopped
 Using the original execution date of: 2018-05-24 15:30:29Z
 
 Revised cluster status:

@@ -55,7 +55,6 @@ Executing cluster transition:
  * Resource action: evmsclone:1     notify on node2
  * Pseudo action:   evmscloneset_confirmed-post_notify_stopped_0
  * Pseudo action:   evmscloneset_pre_notify_start_0
- * Pseudo action:   all_stopped
  * Resource action: evmsclone:1     notify on node2
  * Pseudo action:   evmscloneset_confirmed-pre_notify_start_0
  * Pseudo action:   evmscloneset_start_0

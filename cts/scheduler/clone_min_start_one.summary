@@ -17,7 +17,6 @@ Transition Summary:
 Executing cluster transition:
  * Resource action: shooter         stop on c7auto1
  * Pseudo action:   FAKECLONE-clone_start_0
- * Pseudo action:   all_stopped
  * Resource action: shooter         start on c7auto3
  * Resource action: FAKECLONE       start on c7auto3
  * Pseudo action:   FAKECLONE-clone_running_0

@@ -12,8 +12,6 @@ Transition Summary:
 Executing cluster transition:
  * Fencing node2 (reboot)
  * Pseudo action:   rsc1_stop_0
- * Pseudo action:   stonith_complete
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Online: [ node1 ]

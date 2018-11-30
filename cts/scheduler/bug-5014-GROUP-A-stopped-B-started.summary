@@ -14,7 +14,6 @@ Transition Summary:
 Executing cluster transition:
  * Pseudo action:   group1_stop_0
  * Resource action: ClusterIP       stop on fc16-builder
- * Pseudo action:   all_stopped
  * Pseudo action:   group1_stopped_0
 
 Revised cluster status:
