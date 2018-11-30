@@ -1800,7 +1800,6 @@ Executing cluster transition:
  * Resource action: Fence           stop on node1
  * Resource action: Fence           monitor on node3
  * Resource action: Fence           monitor on node2
- * Pseudo action:   all_stopped
  * Resource action: Fence           start on node2
 
 Revised cluster status:
@@ -2069,7 +2068,6 @@ Transition Summary:
 
 Executing cluster transition:
  * Resource action: dummy           stop on node1
- * Pseudo action:   all_stopped
  * Resource action: dummy           start on node3
 
 Revised cluster status:
