@@ -28,7 +28,6 @@ Executing cluster transition:
  * Resource action: FAKECLONE       stop on c7auto2
  * Resource action: FAKECLONE       stop on c7auto3
  * Pseudo action:   FAKECLONE-clone_stopped_0
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Node c7auto1 (1): standby

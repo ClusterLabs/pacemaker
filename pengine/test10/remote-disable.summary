@@ -18,7 +18,6 @@ Transition Summary:
 Executing cluster transition:
  * Resource action: FAKE2           stop on remote1
  * Resource action: remote1         stop on 18builder
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Online: [ 18builder 18node1 18node2 ]

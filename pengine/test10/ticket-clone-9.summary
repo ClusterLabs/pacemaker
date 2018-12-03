@@ -18,11 +18,9 @@ Executing cluster transition:
  * Pseudo action:   rsc_stonith_stop_0
  * Fencing node2 (reboot)
  * Pseudo action:   clone1_stop_0
- * Pseudo action:   stonith_complete
  * Pseudo action:   rsc1:1_stop_0
  * Pseudo action:   rsc1:0_stop_0
  * Pseudo action:   clone1_stopped_0
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 OFFLINE: [ node1 node2 ]

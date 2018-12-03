@@ -23,7 +23,6 @@ Executing cluster transition:
  * Pseudo action:   lxc-ms-master_demote_0
  * Resource action: lxc1            stop on rhel7-1
  * Pseudo action:   stonith-lxc1-reboot on lxc1
- * Pseudo action:   stonith_complete
  * Resource action: container1      start on rhel7-1
  * Pseudo action:   lxc-ms_demote_0
  * Pseudo action:   lxc-ms-master_demoted_0
@@ -33,7 +32,6 @@ Executing cluster transition:
  * Pseudo action:   lxc-ms_stop_0
  * Pseudo action:   lxc-ms-master_stopped_0
  * Pseudo action:   lxc-ms-master_start_0
- * Pseudo action:   all_stopped
  * Resource action: lxc-ms          start on lxc1
  * Pseudo action:   lxc-ms-master_running_0
  * Pseudo action:   lxc-ms-master_promote_0

@@ -1,5 +1,3 @@
  digraph "g" {
-"A_stop_0 fc16-builder" -> "all_stopped" [ style = bold]
 "A_stop_0 fc16-builder" [ style=bold color="green" fontcolor="black"]
-"all_stopped" [ style=bold color="green" fontcolor="orange"]
 }

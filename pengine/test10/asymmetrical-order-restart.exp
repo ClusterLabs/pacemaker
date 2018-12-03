@@ -1,7 +1,7 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="0">
   <synapse id="0">
     <action_set>
-      <rsc_op id="6" operation="stop" operation_key="cesr104ipmi_stop_0" on_node="cesr105-p16" on_node_uuid="5">
+      <rsc_op id="5" operation="stop" operation_key="cesr104ipmi_stop_0" on_node="cesr105-p16" on_node_uuid="5">
         <primitive id="cesr104ipmi" class="stonith" type="fence_ipmilan"/>
         <attributes CRM_meta_on_node="cesr105-p16" CRM_meta_on_node_uuid="5" CRM_meta_timeout="20000"  ipaddr="192.168.48.21" login="admin" passwd="****" pcmk_host_list="cesr104-p16"/>
       </rsc_op>
@@ -10,14 +10,14 @@
   </synapse>
   <synapse id="1">
     <action_set>
-      <rsc_op id="5" operation="start" operation_key="cesr104ipmi_start_0" on_node="cesr105-p16" on_node_uuid="5">
+      <rsc_op id="4" operation="start" operation_key="cesr104ipmi_start_0" on_node="cesr105-p16" on_node_uuid="5">
         <primitive id="cesr104ipmi" class="stonith" type="fence_ipmilan"/>
         <attributes CRM_meta_on_node="cesr105-p16" CRM_meta_on_node_uuid="5" CRM_meta_timeout="20000"  ipaddr="192.168.48.21" login="admin" passwd="****" pcmk_host_list="cesr104-p16"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="6" operation="stop" operation_key="cesr104ipmi_stop_0" on_node="cesr105-p16" on_node_uuid="5"/>
+        <rsc_op id="5" operation="stop" operation_key="cesr104ipmi_stop_0" on_node="cesr105-p16" on_node_uuid="5"/>
       </trigger>
     </inputs>
   </synapse>
@@ -30,7 +30,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="5" operation="start" operation_key="cesr104ipmi_start_0" on_node="cesr105-p16" on_node_uuid="5"/>
+        <rsc_op id="4" operation="start" operation_key="cesr104ipmi_start_0" on_node="cesr105-p16" on_node_uuid="5"/>
       </trigger>
     </inputs>
   </synapse>
@@ -42,20 +42,5 @@
       </rsc_op>
     </action_set>
     <inputs/>
-  </synapse>
-  <synapse id="4">
-    <action_set>
-      <pseudo_event id="4" operation="all_stopped" operation_key="all_stopped">
-        <attributes />
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <rsc_op id="2" operation="stop" operation_key="sleep_b_stop_0" on_node="cesr109-p16" on_node_uuid="9"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="6" operation="stop" operation_key="cesr104ipmi_stop_0" on_node="cesr105-p16" on_node_uuid="5"/>
-      </trigger>
-    </inputs>
   </synapse>
 </transition_graph>

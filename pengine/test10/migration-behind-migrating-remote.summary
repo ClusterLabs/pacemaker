@@ -20,7 +20,6 @@ Executing cluster transition:
  * Resource action: rsc1            stop on remote1
  * Resource action: remote1         migrate_from on node2
  * Resource action: remote1         stop on node1
- * Pseudo action:   all_stopped
  * Pseudo action:   rsc1_start_0
  * Pseudo action:   remote1_start_0
  * Resource action: rsc1            monitor=10000 on remote2

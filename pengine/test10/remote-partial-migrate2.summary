@@ -122,8 +122,6 @@ Executing cluster transition:
  * Resource action: FAKE47          start on pcmk_remote2
  * Resource action: FAKE48          start on pcmk_remote3
  * Resource action: FAKE49          start on pcmk_remote4
- * Pseudo action:   stonith_complete
- * Pseudo action:   all_stopped
  * Resource action: pcmk_remote2    monitor=60000 on pcmk1
  * Pseudo action:   pcmk_remote5_start_0
  * Resource action: FAKE5           monitor=10000 on pcmk_remote4

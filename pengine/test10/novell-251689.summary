@@ -20,7 +20,6 @@ Transition Summary:
 
 Executing cluster transition:
  * Resource action: sles10          stop on node2
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Online: [ node1 node2 ]

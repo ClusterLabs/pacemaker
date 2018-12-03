@@ -33,7 +33,6 @@ Executing cluster transition:
  * Pseudo action:   ms1_confirmed-pre_notify_promote_0
  * Resource action: rsc2            migrate_from on node2
  * Resource action: rsc2            stop on node1
- * Pseudo action:   all_stopped
  * Pseudo action:   rsc2_start_0
  * Pseudo action:   ms1_promote_0
  * Resource action: rsc2            monitor=5000 on node2

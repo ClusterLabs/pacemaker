@@ -1,5 +1,4 @@
 digraph "g" {
-"all_stopped" [ style=bold color="green" fontcolor="orange" ]
 "bottom:0_monitor_0 dom0-01" -> "clone-bottom_start_0" [ style = bold]
 "bottom:0_monitor_0 dom0-01" [ style=bold color="green" fontcolor="black" ]
 "bottom:0_start_0 dom0-01" -> "clone-bottom_running_0" [ style = bold]
@@ -35,11 +34,9 @@ digraph "g" {
 "domU-test01_migrate_to_0 dom0-02" [ style=bold color="green" fontcolor="black" ]
 "domU-test01_start_0 dom0-01" -> "top_start_0 dom0-01" [ style = bold]
 "domU-test01_start_0 dom0-01" [ style=bold color="green" fontcolor="orange" ]
-"domU-test01_stop_0 dom0-02" -> "all_stopped" [ style = bold]
 "domU-test01_stop_0 dom0-02" -> "domU-test01_start_0 dom0-01" [ style = bold]
 "domU-test01_stop_0 dom0-02" [ style=bold color="green" fontcolor="black" ]
 "top_start_0 dom0-01" [ style=bold color="green" fontcolor="black" ]
-"top_stop_0 dom0-02" -> "all_stopped" [ style = bold]
 "top_stop_0 dom0-02" -> "domU-test01_migrate_to_0 dom0-02" [ style = bold]
 "top_stop_0 dom0-02" -> "domU-test01_stop_0 dom0-02" [ style = bold]
 "top_stop_0 dom0-02" -> "top_start_0 dom0-01" [ style = bold]

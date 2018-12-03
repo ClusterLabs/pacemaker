@@ -14,7 +14,6 @@ Executing cluster transition:
  * Pseudo action:   group_common_stop_0
  * Resource action: resource_idvscommon stop on ih02
  * Resource action: resource_ip_common stop on ih02
- * Pseudo action:   all_stopped
  * Pseudo action:   group_common_stopped_0
  * Pseudo action:   group_common_start_0
  * Resource action: resource_ip_common start on ih01

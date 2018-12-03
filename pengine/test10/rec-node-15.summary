@@ -46,7 +46,6 @@ Executing cluster transition:
  * Resource action: Filesystem_23   start on sapcl01
  * Resource action: oracle_24       start on sapcl01
  * Resource action: oralsnr_25      start on sapcl01
- * Pseudo action:   stonith_complete
  * Resource action: IPaddr_192_168_1_102 stop on sapcl02
  * Pseudo action:   oracle_running_0
  * Resource action: IPaddr_192_168_1_104 monitor=5000 on sapcl01
@@ -54,7 +53,6 @@ Executing cluster transition:
  * Resource action: Filesystem_23   monitor=120000 on sapcl01
  * Resource action: oracle_24       monitor=120000 on sapcl01
  * Resource action: oralsnr_25      monitor=120000 on sapcl01
- * Pseudo action:   all_stopped
  * Pseudo action:   app02_stopped_0
  * Pseudo action:   app02_start_0
  * Resource action: IPaddr_192_168_1_102 start on sapcl01

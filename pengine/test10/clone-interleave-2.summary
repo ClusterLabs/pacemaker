@@ -26,7 +26,6 @@ Executing cluster transition:
  * Resource action: dummy           start on pcmk-1
  * Resource action: child-2:2       stop on pcmk-1
  * Pseudo action:   clone-2_stopped_0
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Online: [ pcmk-1 pcmk-2 pcmk-3 ]

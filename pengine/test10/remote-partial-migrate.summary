@@ -114,7 +114,6 @@ Executing cluster transition:
  * Resource action: FAKE43          monitor=10000 on pcmk1
  * Resource action: FAKE44          start on pcmk2
  * Resource action: FAKE50          monitor=10000 on pcmk1
- * Pseudo action:   all_stopped
  * Resource action: pcmk_remote3    monitor=60000 on pcmk2
  * Resource action: FAKE4           monitor=10000 on pcmk_remote3
  * Resource action: FAKE9           start on pcmk1

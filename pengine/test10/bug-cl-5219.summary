@@ -21,7 +21,6 @@ Transition Summary:
 
 Executing cluster transition:
  * Resource action: child1-service  stop on ha2.test.anchor.net.au
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Online: [ ha1.test.anchor.net.au ha2.test.anchor.net.au ]

@@ -33,7 +33,6 @@ Executing cluster transition:
  * Resource action: domU-test01     migrate_to on dom0-02
  * Resource action: domU-test01     migrate_from on dom0-01
  * Resource action: domU-test01     stop on dom0-02
- * Pseudo action:   all_stopped
  * Pseudo action:   domU-test01_start_0
  * Resource action: top             start on dom0-01
 

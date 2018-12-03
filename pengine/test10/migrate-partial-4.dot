@@ -1,5 +1,4 @@
 digraph "g" {
-"all_stopped" [ style=bold color="green" fontcolor="orange"]
 "drbd-mgs:0_monitor_30000 lustre01-left" [ style=bold color="green" fontcolor="black"]
 "drbd-mgs:0_post_notify_start_0 lustre01-left" -> "ms-drbd-mgs_confirmed-post_notify_running_0" [ style = bold]
 "drbd-mgs:0_post_notify_start_0 lustre01-left" [ style=bold color="green" fontcolor="black"]
@@ -20,7 +19,6 @@ digraph "g" {
 "lustre_migrate_to_0 lustre03-left" -> "lustre_migrate_from_0 lustre04-left" [ style = bold]
 "lustre_migrate_to_0 lustre03-left" [ style=bold color="green" fontcolor="black"]
 "lustre_start_0 lustre04-left" [ style=bold color="green" fontcolor="orange"]
-"lustre_stop_0 lustre03-left" -> "all_stopped" [ style = bold]
 "lustre_stop_0 lustre03-left" -> "lustre_start_0 lustre04-left" [ style = bold]
 "lustre_stop_0 lustre03-left" [ style=bold color="green" fontcolor="black"]
 "ms-drbd-mgs_confirmed-post_notify_running_0" -> "drbd-mgs:0_monitor_30000 lustre01-left" [ style = bold]
@@ -48,10 +46,8 @@ digraph "g" {
 "testfs_migrate_to_0 lustre02-left" -> "testfs_migrate_from_0 lustre03-left" [ style = dashed]
 "testfs_migrate_to_0 lustre02-left" [ style=dashed color="red" fontcolor="black"]
 "testfs_start_0 lustre03-left" [ style=bold color="green" fontcolor="black"]
-"testfs_stop_0 lustre01-left" -> "all_stopped" [ style = bold]
 "testfs_stop_0 lustre01-left" -> "testfs_start_0 lustre03-left" [ style = bold]
 "testfs_stop_0 lustre01-left" [ style=bold color="green" fontcolor="black"]
-"testfs_stop_0 lustre02-left" -> "all_stopped" [ style = bold]
 "testfs_stop_0 lustre02-left" -> "testfs_start_0 lustre03-left" [ style = bold]
 "testfs_stop_0 lustre02-left" [ style=bold color="green" fontcolor="black"]
 }

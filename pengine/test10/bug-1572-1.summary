@@ -47,7 +47,6 @@ Executing cluster transition:
  * Pseudo action:   ms_drbd_7788_post_notify_stopped_0
  * Pseudo action:   ms_drbd_7788_confirmed-post_notify_stopped_0
  * Pseudo action:   ms_drbd_7788_pre_notify_start_0
- * Pseudo action:   all_stopped
  * Pseudo action:   ms_drbd_7788_confirmed-pre_notify_start_0
  * Pseudo action:   ms_drbd_7788_start_0
  * Resource action: rsc_drbd_7788:1 start on arc-tkincaidlx.wsicorp.com

@@ -73,7 +73,6 @@ Executing cluster transition:
  * Resource action: iso_mem1        monitor=60000 on rhel7-auto5
  * Resource action: iso_mem2        start on rhel7-auto5
  * Resource action: iso_mem2        monitor=60000 on rhel7-auto5
- * Pseudo action:   all_stopped
  * Pseudo action:   group_is_container_running_0
  * Pseudo action:   mygroup:0_stopped_0
  * Pseudo action:   mygroup:1_stopped_0

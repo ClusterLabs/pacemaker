@@ -104,7 +104,6 @@ Executing cluster transition:
  * Resource action: mgmt-vm         migrate_to on s01-0
  * Resource action: mgmt-vm         migrate_from on s01-1
  * Resource action: mgmt-vm         stop on s01-0
- * Pseudo action:   all_stopped
  * Pseudo action:   mgmt-vm_start_0
  * Resource action: mgmt-vm         monitor=10000 on s01-1
 

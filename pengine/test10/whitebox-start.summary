@@ -29,7 +29,6 @@ Executing cluster transition:
  * Resource action: B               stop on lxc2
  * Resource action: D               monitor on lxc2
  * Resource action: lxc1            start on 18node1
- * Pseudo action:   all_stopped
  * Resource action: M               start on lxc1
  * Pseudo action:   M-clone_running_0
  * Resource action: A               start on lxc1

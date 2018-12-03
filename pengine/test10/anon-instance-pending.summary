@@ -145,7 +145,6 @@ Executing cluster transition:
  * Resource action: clone5rsc1      start on node7
  * Resource action: clone5rsc2      start on node7
  * Resource action: clone5rsc3      start on node7
- * Pseudo action:   all_stopped
  * Resource action: clone1rsc       monitor=10000 on node8
  * Resource action: clone1rsc       monitor=10000 on node4
  * Resource action: clone1rsc       monitor=10000 on node9

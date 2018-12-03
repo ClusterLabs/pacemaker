@@ -70,7 +70,6 @@ Executing cluster transition:
  * Resource action: p-fs-gpfs       stop on cvmh03
  * Resource action: p-fs-gpfs       stop on cvmh04
  * Pseudo action:   c-fs-gpfs_stopped_0
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Node cvmh03: standby

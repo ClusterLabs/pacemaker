@@ -21,7 +21,6 @@ Executing cluster transition:
  * Pseudo action:   ms-sf_stop_0
  * Pseudo action:   group:0_stop_0
  * Resource action: stateful-1:0    stop on dl380g5b
- * Pseudo action:   all_stopped
  * Pseudo action:   group:0_stopped_0
  * Pseudo action:   ms-sf_stopped_0
  * Pseudo action:   ms-sf_promote_0

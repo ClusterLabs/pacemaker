@@ -15,8 +15,6 @@ Executing cluster transition:
  * Fencing rhel7-auto4 (reboot)
  * Resource action: rhel7-auto4     start on rhel7-auto1
  * Resource action: rhel7-auto4     monitor=60000 on rhel7-auto1
- * Pseudo action:   stonith_complete
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Online: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 ]

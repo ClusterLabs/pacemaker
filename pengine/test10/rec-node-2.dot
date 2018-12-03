@@ -1,5 +1,4 @@
 digraph "g" {
-"all_stopped" [ style=bold color="green" fontcolor="orange" ]
 "group1_running_0" [ style=bold color="green" fontcolor="orange" ]
 "group1_start_0" -> "group1_running_0" [ style = bold]
 "group1_start_0" -> "rsc3_start_0 node2" [ style = bold]
@@ -41,11 +40,8 @@ digraph "g" {
 "stonith 'reboot' node1" -> "rsc5_start_0 node2" [ style = bold]
 "stonith 'reboot' node1" -> "rsc6_start_0 node2" [ style = bold]
 "stonith 'reboot' node1" -> "stonith-1_start_0 node2" [ style = bold]
-"stonith 'reboot' node1" -> "stonith_complete" [ style = bold]
 "stonith 'reboot' node1" [ style=bold color="green" fontcolor="black"]
 "stonith-1_monitor_0 node2" -> "stonith-1_start_0 node2" [ style = bold]
 "stonith-1_monitor_0 node2" [ style=bold color="green" fontcolor="black" ]
 "stonith-1_start_0 node2" [ style=bold color="green" fontcolor="black" ]
-"stonith_complete" -> "all_stopped" [ style = bold]
-"stonith_complete" [ style=bold color="green" fontcolor="orange" ]
 }

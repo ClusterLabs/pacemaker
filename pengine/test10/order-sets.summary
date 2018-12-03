@@ -19,7 +19,6 @@ Executing cluster transition:
  * Resource action: world3          stop on ubuntu_2
  * Resource action: world2          stop on ubuntu_2
  * Resource action: world1          stop on ubuntu_2
- * Pseudo action:   all_stopped
  * Resource action: world1          start on ubuntu_1
  * Resource action: world2          start on ubuntu_1
  * Resource action: world3          start on ubuntu_1

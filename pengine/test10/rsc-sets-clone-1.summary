@@ -49,7 +49,6 @@ Executing cluster transition:
  * Resource action: stonithsys2     monitor on sys3
  * Pseudo action:   load_stopped_sys3
  * Pseudo action:   load_stopped_sys2
- * Pseudo action:   all_stopped
  * Pseudo action:   basegrp:1_start_0
  * Resource action: controld:1      start on sys3
  * Resource action: clvmd:1         start on sys3

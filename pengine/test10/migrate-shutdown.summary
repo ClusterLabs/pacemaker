@@ -72,7 +72,6 @@ Executing cluster transition:
  * Cluster action:  do_shutdown on pcmk-4
  * Cluster action:  do_shutdown on pcmk-2
  * Cluster action:  do_shutdown on pcmk-1
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Online: [ pcmk-1 pcmk-2 pcmk-3 pcmk-4 ]

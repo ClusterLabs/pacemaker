@@ -348,7 +348,6 @@ Executing cluster transition:
  * Resource action: keystone        stop on rhos6-node2
  * Resource action: keystone        stop on rhos6-node3
  * Pseudo action:   keystone-clone_stopped_0
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Online: [ rhos6-node1 rhos6-node2 rhos6-node3 ]

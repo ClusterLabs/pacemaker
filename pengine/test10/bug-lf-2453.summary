@@ -26,7 +26,6 @@ Executing cluster transition:
  * Resource action: apache:1        stop on domu1
  * Resource action: apache:0        stop on domu2
  * Pseudo action:   CloneResource1_stopped_0
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Online: [ domu1 domu2 ]

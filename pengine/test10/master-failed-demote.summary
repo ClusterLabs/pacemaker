@@ -32,7 +32,6 @@ Executing cluster transition:
  * Resource action: stateful-1:1    notify on dl380g5a
  * Resource action: stateful-2:1    notify on dl380g5a
  * Pseudo action:   ms-sf_confirmed-post_notify_stopped_0
- * Pseudo action:   all_stopped
  * Pseudo action:   ms-sf_pre_notify_promote_0
  * Resource action: stateful-1:1    notify on dl380g5a
  * Resource action: stateful-2:1    notify on dl380g5a
