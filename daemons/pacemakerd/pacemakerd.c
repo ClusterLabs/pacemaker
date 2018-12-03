@@ -87,7 +87,6 @@ static pcmk_child_t pcmk_children[] = {
 };
 
 static gboolean start_child(pcmk_child_t * child);
-static gboolean check_active_before_startup_processes(gpointer user_data);
 static gboolean update_node_processes(uint32_t id, const char *uname,
                                       uint32_t procs);
 void update_process_clients(crm_client_t *client);
@@ -399,9 +398,6 @@ pcmk_shutdown_worker(gpointer user_data)
     if (phase == 0) {
         crm_notice("Shutting down Pacemaker");
         phase = max;
-
-        /* Add a second, more frequent, check to speed up shutdown */
-        g_timeout_add_seconds(5, check_active_before_startup_processes, NULL);
     }
 
     for (; phase > 0; phase--) {
@@ -704,6 +700,7 @@ mcp_chown(const char *path, uid_t uid, gid_t gid)
     }
 }
 
+#if SUPPORT_PROCFS
 static gboolean
 check_active_before_startup_processes(gpointer user_data)
 {
@@ -736,6 +733,7 @@ check_active_before_startup_processes(gpointer user_data)
 
     return keep_tracking;
 }
+#endif // SUPPORT_PROCFS
 
 static void
 find_and_track_existing_processes(void)
