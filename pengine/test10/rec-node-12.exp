@@ -30,7 +30,7 @@
         <rsc_op id="20" operation="monitor" operation_key="DcIPaddr_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
       </trigger>
       <trigger>
-        <pseudo_event id="49" operation="stonith_complete" operation_key="stonith_complete"/>
+        <crm_event id="50" operation="stonith" operation_key="stonith-c001n02-reboot" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
       </trigger>
     </inputs>
   </synapse>
@@ -92,7 +92,7 @@
         <rsc_op id="21" operation="monitor" operation_key="rsc_c001n08_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
       </trigger>
       <trigger>
-        <pseudo_event id="49" operation="stonith_complete" operation_key="stonith_complete"/>
+        <crm_event id="50" operation="stonith" operation_key="stonith-c001n02-reboot" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
       </trigger>
     </inputs>
   </synapse>
@@ -154,7 +154,7 @@
         <rsc_op id="22" operation="monitor" operation_key="rsc_c001n02_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
       </trigger>
       <trigger>
-        <pseudo_event id="49" operation="stonith_complete" operation_key="stonith_complete"/>
+        <crm_event id="50" operation="stonith" operation_key="stonith-c001n02-reboot" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
       </trigger>
     </inputs>
   </synapse>
@@ -216,7 +216,7 @@
         <rsc_op id="23" operation="monitor" operation_key="rsc_c001n03_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
       </trigger>
       <trigger>
-        <pseudo_event id="49" operation="stonith_complete" operation_key="stonith_complete"/>
+        <crm_event id="50" operation="stonith" operation_key="stonith-c001n02-reboot" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
       </trigger>
     </inputs>
   </synapse>
@@ -278,7 +278,7 @@
         <rsc_op id="24" operation="monitor" operation_key="rsc_c001n01_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b"/>
       </trigger>
       <trigger>
-        <pseudo_event id="49" operation="stonith_complete" operation_key="stonith_complete"/>
+        <crm_event id="50" operation="stonith" operation_key="stonith-c001n02-reboot" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
       </trigger>
     </inputs>
   </synapse>

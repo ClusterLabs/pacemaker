@@ -21,10 +21,13 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="10" operation="all_stopped" operation_key="all_stopped"/>
+        <pseudo_event id="21" operation="stop" operation_key="fence-kiff-02_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="21" operation="stop" operation_key="fence-kiff-02_stop_0"/>
+        <pseudo_event id="69" operation="stonith" operation_key="stonith-lxc-01_kiff-01-reboot" on_node="lxc-01_kiff-01" on_node_uuid="lxc-01_kiff-01"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="70" operation="stonith" operation_key="stonith-lxc-02_kiff-01-reboot" on_node="lxc-02_kiff-01" on_node_uuid="lxc-02_kiff-01"/>
       </trigger>
     </inputs>
   </synapse>
@@ -256,10 +259,16 @@
     </action_set>
     <inputs>
       <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-kiff-01-reboot" on_node="kiff-01" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="45" operation="stop" operation_key="R-lxc-01_kiff-01_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="68" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="69" operation="stonith" operation_key="stonith-lxc-01_kiff-01-reboot" on_node="lxc-01_kiff-01" on_node_uuid="lxc-01_kiff-01"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="70" operation="stonith" operation_key="stonith-lxc-02_kiff-01-reboot" on_node="lxc-02_kiff-01" on_node_uuid="lxc-02_kiff-01"/>
       </trigger>
     </inputs>
   </synapse>
@@ -300,10 +309,16 @@
     </action_set>
     <inputs>
       <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-kiff-01-reboot" on_node="kiff-01" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="48" operation="stop" operation_key="R-lxc-02_kiff-01_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="68" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="69" operation="stonith" operation_key="stonith-lxc-01_kiff-01-reboot" on_node="lxc-01_kiff-01" on_node_uuid="lxc-01_kiff-01"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="70" operation="stonith" operation_key="stonith-lxc-02_kiff-01-reboot" on_node="lxc-02_kiff-01" on_node_uuid="lxc-02_kiff-01"/>
       </trigger>
     </inputs>
   </synapse>
@@ -347,6 +362,9 @@
     </action_set>
     <inputs>
       <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-kiff-01-reboot" on_node="kiff-01" on_node_uuid="1"/>
+      </trigger>
+      <trigger>
         <rsc_op id="14" operation="monitor" operation_key="vm-fs_monitor_0" on_node="lxc-01_kiff-02" on_node_uuid="lxc-01_kiff-02" router_node="kiff-02"/>
       </trigger>
       <trigger>
@@ -365,7 +383,10 @@
         <rsc_op id="59" operation="start" operation_key="lxc-01_kiff-01_start_0" on_node="kiff-02" on_node_uuid="2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="68" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="69" operation="stonith" operation_key="stonith-lxc-01_kiff-01-reboot" on_node="lxc-01_kiff-01" on_node_uuid="lxc-01_kiff-01"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="70" operation="stonith" operation_key="stonith-lxc-02_kiff-01-reboot" on_node="lxc-02_kiff-01" on_node_uuid="lxc-02_kiff-01"/>
       </trigger>
     </inputs>
   </synapse>
@@ -421,13 +442,16 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="10" operation="all_stopped" operation_key="all_stopped"/>
-      </trigger>
-      <trigger>
         <rsc_op id="46" operation="start" operation_key="R-lxc-01_kiff-01_start_0" on_node="kiff-02" on_node_uuid="2"/>
       </trigger>
       <trigger>
         <pseudo_event id="58" operation="stop" operation_key="lxc-01_kiff-01_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="69" operation="stonith" operation_key="stonith-lxc-01_kiff-01-reboot" on_node="lxc-01_kiff-01" on_node_uuid="lxc-01_kiff-01"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="70" operation="stonith" operation_key="stonith-lxc-02_kiff-01-reboot" on_node="lxc-02_kiff-01" on_node_uuid="lxc-02_kiff-01"/>
       </trigger>
     </inputs>
   </synapse>
@@ -461,13 +485,16 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="10" operation="all_stopped" operation_key="all_stopped"/>
-      </trigger>
-      <trigger>
         <rsc_op id="49" operation="start" operation_key="R-lxc-02_kiff-01_start_0" on_node="kiff-02" on_node_uuid="2"/>
       </trigger>
       <trigger>
         <pseudo_event id="61" operation="stop" operation_key="lxc-02_kiff-01_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="69" operation="stonith" operation_key="stonith-lxc-01_kiff-01-reboot" on_node="lxc-01_kiff-01" on_node_uuid="lxc-01_kiff-01"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="70" operation="stonith" operation_key="stonith-lxc-02_kiff-01-reboot" on_node="lxc-02_kiff-01" on_node_uuid="lxc-02_kiff-01"/>
       </trigger>
     </inputs>
   </synapse>

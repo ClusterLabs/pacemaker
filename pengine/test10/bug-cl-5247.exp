@@ -84,13 +84,13 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="8" operation="all_stopped" operation_key="all_stopped"/>
-      </trigger>
-      <trigger>
         <rsc_op id="17" operation="stop" operation_key="prmStonith1-2_stop_0" on_node="bl460g8n4" on_node_uuid="3232261400"/>
       </trigger>
       <trigger>
         <pseudo_event id="18" operation="start" operation_key="grpStonith1_start_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="72" operation="stonith" operation_key="stonith-pgsr02-off" on_node="pgsr02" on_node_uuid="pgsr02"/>
       </trigger>
     </inputs>
   </synapse>
@@ -179,13 +179,13 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="8" operation="all_stopped" operation_key="all_stopped"/>
-      </trigger>
-      <trigger>
         <rsc_op id="22" operation="stop" operation_key="prmStonith2-2_stop_0" on_node="bl460g8n3" on_node_uuid="3232261399"/>
       </trigger>
       <trigger>
         <pseudo_event id="23" operation="start" operation_key="grpStonith2_start_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="72" operation="stonith" operation_key="stonith-pgsr02-off" on_node="pgsr02" on_node_uuid="pgsr02"/>
       </trigger>
     </inputs>
   </synapse>
@@ -296,7 +296,7 @@
         <pseudo_event id="33" operation="start" operation_key="master-group_start_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="71" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="72" operation="stonith" operation_key="stonith-pgsr02-off" on_node="pgsr02" on_node_uuid="pgsr02"/>
       </trigger>
     </inputs>
   </synapse>
@@ -361,7 +361,7 @@
         <pseudo_event id="33" operation="start" operation_key="master-group_start_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="71" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="72" operation="stonith" operation_key="stonith-pgsr02-off" on_node="pgsr02" on_node_uuid="pgsr02"/>
       </trigger>
     </inputs>
   </synapse>

@@ -8,7 +8,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="8" operation="all_stopped" operation_key="all_stopped"/>
+        <crm_event id="1" operation="stonith" operation_key="stonith-sapcl03-reboot" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
       </trigger>
       <trigger>
         <rsc_op id="9" operation="monitor" operation_key="stonith-1_monitor_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
@@ -120,13 +120,13 @@
     </action_set>
     <inputs>
       <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-sapcl03-reboot" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
+      </trigger>
+      <trigger>
         <rsc_op id="22" operation="stop" operation_key="IPaddr_192_168_1_102_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
       </trigger>
       <trigger>
         <pseudo_event id="31" operation="start" operation_key="app02_start_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="49" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -168,6 +168,9 @@
     </action_set>
     <inputs>
       <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-sapcl03-reboot" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
+      </trigger>
+      <trigger>
         <rsc_op id="23" operation="start" operation_key="IPaddr_192_168_1_102_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
       </trigger>
       <trigger>
@@ -175,9 +178,6 @@
       </trigger>
       <trigger>
         <pseudo_event id="31" operation="start" operation_key="app02_start_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="49" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -219,6 +219,9 @@
     </action_set>
     <inputs>
       <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-sapcl03-reboot" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
+      </trigger>
+      <trigger>
         <rsc_op id="26" operation="start" operation_key="LVM_12_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
       </trigger>
       <trigger>
@@ -226,9 +229,6 @@
       </trigger>
       <trigger>
         <pseudo_event id="31" operation="start" operation_key="app02_start_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="49" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -302,10 +302,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="45" operation="start" operation_key="oracle_start_0"/>
+        <crm_event id="1" operation="stonith" operation_key="stonith-sapcl03-reboot" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
       </trigger>
       <trigger>
-        <pseudo_event id="49" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="45" operation="start" operation_key="oracle_start_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -331,13 +331,13 @@
     </action_set>
     <inputs>
       <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-sapcl03-reboot" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
+      </trigger>
+      <trigger>
         <rsc_op id="35" operation="start" operation_key="IPaddr_192_168_1_104_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
       </trigger>
       <trigger>
         <pseudo_event id="45" operation="start" operation_key="oracle_start_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="49" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -363,13 +363,13 @@
     </action_set>
     <inputs>
       <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-sapcl03-reboot" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
+      </trigger>
+      <trigger>
         <rsc_op id="37" operation="start" operation_key="LVM_22_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
       </trigger>
       <trigger>
         <pseudo_event id="45" operation="start" operation_key="oracle_start_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="49" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -395,13 +395,13 @@
     </action_set>
     <inputs>
       <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-sapcl03-reboot" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
+      </trigger>
+      <trigger>
         <rsc_op id="39" operation="start" operation_key="Filesystem_23_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
       </trigger>
       <trigger>
         <pseudo_event id="45" operation="start" operation_key="oracle_start_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="49" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -427,13 +427,13 @@
     </action_set>
     <inputs>
       <trigger>
+        <crm_event id="1" operation="stonith" operation_key="stonith-sapcl03-reboot" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750"/>
+      </trigger>
+      <trigger>
         <rsc_op id="41" operation="start" operation_key="oracle_24_start_0" on_node="sapcl01" on_node_uuid="85180fd0-70c9-4136-a5e0-90d89ea6079d"/>
       </trigger>
       <trigger>
         <pseudo_event id="45" operation="start" operation_key="oracle_start_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="49" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>

@@ -8,10 +8,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="6" operation="stop" operation_key="remote1_stop_0" on_node="18node1" on_node_uuid="1"/>
+        <crm_event id="5" operation="stonith" operation_key="stonith-remote1-reboot" on_node="remote1" on_node_uuid="remote1"/>
       </trigger>
       <trigger>
-        <pseudo_event id="8" operation="all_stopped" operation_key="all_stopped"/>
+        <rsc_op id="6" operation="stop" operation_key="remote1_stop_0" on_node="18node1" on_node_uuid="1"/>
       </trigger>
     </inputs>
   </synapse>
@@ -66,10 +66,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="14" operation="stop" operation_key="FAKE2_stop_0"/>
+        <crm_event id="5" operation="stonith" operation_key="stonith-remote1-reboot" on_node="remote1" on_node_uuid="remote1"/>
       </trigger>
       <trigger>
-        <pseudo_event id="23" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="14" operation="stop" operation_key="FAKE2_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -107,10 +107,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="17" operation="stop" operation_key="FAKE3_stop_0" on_node="18builder" on_node_uuid="5"/>
+        <crm_event id="5" operation="stonith" operation_key="stonith-remote1-reboot" on_node="remote1" on_node_uuid="remote1"/>
       </trigger>
       <trigger>
-        <pseudo_event id="23" operation="stonith_complete" operation_key="stonith_complete"/>
+        <rsc_op id="17" operation="stop" operation_key="FAKE3_stop_0" on_node="18builder" on_node_uuid="5"/>
       </trigger>
     </inputs>
   </synapse>
@@ -145,10 +145,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="20" operation="stop" operation_key="FAKE4_stop_0" on_node="18node1" on_node_uuid="1"/>
+        <crm_event id="5" operation="stonith" operation_key="stonith-remote1-reboot" on_node="remote1" on_node_uuid="remote1"/>
       </trigger>
       <trigger>
-        <pseudo_event id="23" operation="stonith_complete" operation_key="stonith_complete"/>
+        <rsc_op id="20" operation="stop" operation_key="FAKE4_stop_0" on_node="18node1" on_node_uuid="1"/>
       </trigger>
     </inputs>
   </synapse>

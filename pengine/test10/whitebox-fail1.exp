@@ -11,7 +11,7 @@
         <rsc_op id="5" operation="stop" operation_key="container1_stop_0" on_node="18node2" on_node_uuid="2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="48" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="49" operation="stonith" operation_key="stonith-lxc1-reboot" on_node="lxc1" on_node_uuid="lxc1"/>
       </trigger>
     </inputs>
   </synapse>
@@ -65,7 +65,7 @@
         <rsc_op id="45" operation="start" operation_key="lxc1_start_0" on_node="18node2" on_node_uuid="2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="48" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="49" operation="stonith" operation_key="stonith-lxc1-reboot" on_node="lxc1" on_node_uuid="lxc1"/>
       </trigger>
     </inputs>
   </synapse>
@@ -184,7 +184,7 @@
         <rsc_op id="45" operation="start" operation_key="lxc1_start_0" on_node="18node2" on_node_uuid="2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="48" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="49" operation="stonith" operation_key="stonith-lxc1-reboot" on_node="lxc1" on_node_uuid="lxc1"/>
       </trigger>
     </inputs>
   </synapse>
@@ -227,13 +227,13 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="11" operation="all_stopped" operation_key="all_stopped"/>
-      </trigger>
-      <trigger>
         <rsc_op id="15" operation="start" operation_key="container1_start_0" on_node="18node2" on_node_uuid="2"/>
       </trigger>
       <trigger>
         <rsc_op id="44" operation="stop" operation_key="lxc1_stop_0" on_node="18node2" on_node_uuid="2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="49" operation="stonith" operation_key="stonith-lxc1-reboot" on_node="lxc1" on_node_uuid="lxc1"/>
       </trigger>
     </inputs>
   </synapse>

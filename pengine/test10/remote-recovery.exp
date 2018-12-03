@@ -354,10 +354,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="105" operation="stop" operation_key="ip-172.17.1.14_stop_0"/>
+        <crm_event id="1" operation="stonith" operation_key="stonith-controller-1-reboot" on_node="controller-1" on_node_uuid="2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="132" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="105" operation="stop" operation_key="ip-172.17.1.14_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -398,10 +398,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="108" operation="stop" operation_key="ip-172.17.1.17_stop_0"/>
+        <crm_event id="1" operation="stonith" operation_key="stonith-controller-1-reboot" on_node="controller-1" on_node_uuid="2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="132" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="108" operation="stop" operation_key="ip-172.17.1.17_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -442,10 +442,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="113" operation="stop" operation_key="ip-172.17.4.11_stop_0"/>
+        <crm_event id="1" operation="stonith" operation_key="stonith-controller-1-reboot" on_node="controller-1" on_node_uuid="2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="132" operation="stonith_complete" operation_key="stonith_complete"/>
+        <pseudo_event id="113" operation="stop" operation_key="ip-172.17.4.11_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
