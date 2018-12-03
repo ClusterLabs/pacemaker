@@ -99,7 +99,7 @@ script:
         | { ! grep -Ev '^Binary file' && echo 'ALL OK'; };
     } && (
       cd xml;
-      ./regression.sh && ./regression.sh -B && ./regression.sh -S && {
+      ./regression.sh && ./regression.sh -B && {
         schemas=; for schema in *.rng; do
           case ${schema} in *cibtr*);; *)schemas="${schemas} ${schema}";; esac;
         done;
