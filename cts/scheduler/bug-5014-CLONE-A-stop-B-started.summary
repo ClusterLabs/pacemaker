@@ -15,7 +15,6 @@ Executing cluster transition:
  * Pseudo action:   clone1_stop_0
  * Resource action: ClusterIP:0     stop on fc16-builder
  * Pseudo action:   clone1_stopped_0
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Online: [ fc16-builder ]

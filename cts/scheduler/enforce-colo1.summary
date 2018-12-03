@@ -24,7 +24,6 @@ Executing cluster transition:
  * Resource action: keystone        stop on rhel7-auto3
  * Resource action: keystone        stop on rhel7-auto1
  * Pseudo action:   keystone-clone_stopped_0
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Online: [ rhel7-auto1 rhel7-auto2 rhel7-auto3 ]

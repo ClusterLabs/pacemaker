@@ -1398,14 +1398,6 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
         return;
     }
 
-    {
-        action_t *all_stopped = get_pseudo_op(ALL_STOPPED, data_set);
-
-        custom_action_order(rsc, stop_key(rsc), NULL,
-                            NULL, strdup(all_stopped->task), all_stopped,
-                            pe_order_implies_then | pe_order_runnable_left, data_set);
-    }
-
     if (g_hash_table_size(rsc->utilization) > 0
         && safe_str_neq(data_set->placement_strategy, "default")) {
         GHashTableIter iter;
@@ -2948,13 +2940,19 @@ rsc_is_known_on(pe_resource_t *rsc, const pe_node_t *node)
    return FALSE;
 }
 
+/*!
+ * \internal
+ * \brief Order a resource's start and promote actions relative to fencing
+ *
+ * \param[in] rsc         Resource to be ordered
+ * \param[in] stonith_op  Fence action
+ * \param[in] data_set    Cluster information
+ */
 static void
 native_start_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_t * data_set)
 {
     node_t *target;
     GListPtr gIter = NULL;
-    action_t *all_stopped = get_pseudo_op(ALL_STOPPED, data_set);
-    action_t *stonith_done = get_pseudo_op(STONITH_DONE, data_set);
 
     CRM_CHECK(stonith_op && stonith_op->node, return);
     target = stonith_op->node;
@@ -2962,34 +2960,35 @@ native_start_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set
     for (gIter = rsc->actions; gIter != NULL; gIter = gIter->next) {
         action_t *action = (action_t *) gIter->data;
 
-        if(action->needs == rsc_req_nothing) {
-            /* Anything other than start or promote requires nothing */
+        switch (action->needs) {
+            case rsc_req_nothing:
+                // Anything other than start or promote requires nothing
+                break;
 
-        } else if (action->needs == rsc_req_stonith) {
-            order_actions(stonith_done, action, pe_order_optional);
+            case rsc_req_stonith:
+                order_actions(stonith_op, action, pe_order_optional);
+                break;
 
-        } else if (safe_str_eq(action->task, RSC_START)
-                   && NULL != pe_hash_table_lookup(rsc->allowed_nodes, target->details->id)
-                   && !rsc_is_known_on(rsc, target)) {
-            /* if known == NULL, then we don't know if
-             *   the resource is active on the node
-             *   we're about to shoot
-             *
-             * in this case, regardless of action->needs,
-             *   the only safe option is to wait until
-             *   the node is shot before doing anything
-             *   to with the resource
-             *
-             * it's analogous to waiting for all the probes
-             *   for rscX to complete before starting rscX
-             *
-             * the most likely explanation is that the
-             *   DC died and took its status with it
-             */
+            case rsc_req_quorum:
+                if (safe_str_eq(action->task, RSC_START)
+                    && pe_hash_table_lookup(rsc->allowed_nodes, target->details->id)
+                    && !rsc_is_known_on(rsc, target)) {
 
-            pe_rsc_debug(rsc, "Ordering %s after %s recovery", action->uuid,
-                         target->details->uname);
-            order_actions(all_stopped, action, pe_order_optional | pe_order_runnable_left);
+                    /* If we don't know the status of the resource on the node
+                     * we're about to shoot, we have to assume it may be active
+                     * there. Order the resource start after the fencing. This
+                     * is analogous to waiting for all the probes for a resource
+                     * to complete before starting it.
+                     *
+                     * The most likely explanation is that the DC died and took
+                     * its status with it.
+                     */
+                    pe_rsc_debug(rsc, "Ordering %s after %s recovery", action->uuid,
+                                 target->details->uname);
+                    order_actions(stonith_op, action,
+                                  pe_order_optional | pe_order_runnable_left);
+                }
+                break;
         }
     }
 }

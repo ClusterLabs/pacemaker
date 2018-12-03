@@ -20,7 +20,6 @@ Executing cluster transition:
  * Resource action: FAKE3           monitor on remote1
  * Resource action: FAKE4           monitor on remote1
  * Resource action: remote1         stop on 18builder
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Online: [ 18builder 18node1 18node2 ]

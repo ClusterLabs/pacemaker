@@ -28,7 +28,6 @@ Executing cluster transition:
  * Resource action: configstoreclone:0 monitor=20000 on node2
  * Resource action: configstoreclone:1 monitor=20000 on node1
  * Resource action: sles10          stop on node2
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Online: [ node1 node2 ]

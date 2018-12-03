@@ -23,7 +23,6 @@ Executing cluster transition:
  * Resource action: rsc2:1          stop on node1
  * Pseudo action:   clone-rsc2_stopped_0
  * Pseudo action:   load_stopped_node1
- * Pseudo action:   all_stopped
  * Resource action: rsc4            start on node1
 
 Revised cluster status:

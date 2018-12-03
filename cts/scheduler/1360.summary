@@ -15,7 +15,6 @@ Executing cluster transition:
  * Resource action: dollies:0       stop on ssgtest1a
  * Pseudo action:   dolly_stopped_0
  * Pseudo action:   dolly_start_0
- * Pseudo action:   all_stopped
  * Resource action: dollies:0       start on ssgtest1b
  * Pseudo action:   dolly_running_0
 

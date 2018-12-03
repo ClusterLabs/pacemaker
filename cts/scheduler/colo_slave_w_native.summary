@@ -16,7 +16,6 @@ Executing cluster transition:
  * Resource action: A               stop on node1
  * Resource action: MS_RSC_NATIVE:1 cancel=15000 on node1
  * Pseudo action:   MS_RSC_pre_notify_demote_0
- * Pseudo action:   all_stopped
  * Resource action: A               start on node2
  * Resource action: MS_RSC_NATIVE:0 notify on node2
  * Resource action: MS_RSC_NATIVE:1 notify on node1

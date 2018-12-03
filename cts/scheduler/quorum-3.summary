@@ -18,7 +18,6 @@ Executing cluster transition:
  * Resource action: rsc2            monitor on node2
  * Resource action: rsc3            monitor on node2
  * Resource action: rsc3            monitor on node1
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Online: [ node1 node2 ]

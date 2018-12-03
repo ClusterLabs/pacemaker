@@ -1,5 +1,4 @@
 digraph "g" {
-"all_stopped" [ style=bold color="green" fontcolor="orange"]
 "clone1_running_0" [ style=bold color="green" fontcolor="orange"]
 "clone1_start_0" -> "clone1_running_0" [ style = bold]
 "clone1_start_0" -> "clone1rsc:10_start_0 node8" [ style = bold]
@@ -125,7 +124,6 @@ digraph "g" {
 "clone4_stop_0" -> "clone4rsc_stop_0 node9" [ style = bold]
 "clone4_stop_0" [ style=bold color="green" fontcolor="orange"]
 "clone4_stopped_0" [ style=bold color="green" fontcolor="orange"]
-"clone4rsc_stop_0 node9" -> "all_stopped" [ style = bold]
 "clone4rsc_stop_0 node9" -> "clone4_stopped_0" [ style = bold]
 "clone4rsc_stop_0 node9" [ style=bold color="green" fontcolor="black"]
 "clone5_running_0" [ style=bold color="green" fontcolor="orange"]

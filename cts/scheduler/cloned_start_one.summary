@@ -24,7 +24,6 @@ Executing cluster transition:
  * Resource action: FAKECLONE2      stop on c7auto3
  * Resource action: FAKECLONE2      stop on c7auto4
  * Pseudo action:   FAKECLONE2-clone_stopped_0
- * Pseudo action:   all_stopped
  * Resource action: FAKECLONE       monitor=10000 on c7auto1
 
 Revised cluster status:

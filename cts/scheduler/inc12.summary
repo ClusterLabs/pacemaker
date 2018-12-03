@@ -100,7 +100,6 @@ Executing cluster transition:
  * Cluster action:  do_shutdown on c001n04
  * Resource action: ocf_192.168.100.181 stop on c001n02
  * Cluster action:  do_shutdown on c001n02
- * Pseudo action:   all_stopped
  * Pseudo action:   group-1_stopped_0
  * Cluster action:  do_shutdown on c001n03
 

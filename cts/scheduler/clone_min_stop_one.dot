@@ -12,7 +12,5 @@
 "FAKECLONE_start_0 <none>" [ style=dashed color="red" fontcolor="black"]
 "FAKECLONE_stop_0 c7auto2" -> "FAKECLONE-clone_stopped_0" [ style = bold]
 "FAKECLONE_stop_0 c7auto2" -> "FAKECLONE_start_0 <none>" [ style = dashed]
-"FAKECLONE_stop_0 c7auto2" -> "all_stopped" [ style = bold]
 "FAKECLONE_stop_0 c7auto2" [ style=bold color="green" fontcolor="black"]
-"all_stopped" [ style=bold color="green" fontcolor="orange"]
 }

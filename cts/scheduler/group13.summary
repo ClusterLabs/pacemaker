@@ -13,7 +13,6 @@ Transition Summary:
 Executing cluster transition:
  * Pseudo action:   nfs_stop_0
  * Resource action: resource_nfs    stop on jamesltc
- * Pseudo action:   all_stopped
  * Pseudo action:   nfs_stopped_0
 
 Revised cluster status:

@@ -58,7 +58,6 @@ Executing cluster transition:
  * Pseudo action:   redis-bundle_start_0
  * Pseudo action:   galera-bundle_start_0
  * Pseudo action:   rabbitmq-bundle_start_0
- * Pseudo action:   all_stopped
  * Pseudo action:   rabbitmq-bundle-clone_confirmed-pre_notify_start_0
  * Pseudo action:   rabbitmq-bundle-clone_start_0
  * Pseudo action:   galera-bundle-master_start_0

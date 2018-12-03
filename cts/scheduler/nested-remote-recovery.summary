@@ -97,13 +97,11 @@ Executing cluster transition:
  * Pseudo action:   galera-bundle_stop_0
  * Resource action: galera-bundle-docker-0 stop on database-0
  * Pseudo action:   stonith-galera-bundle-0-reboot on galera-bundle-0
- * Pseudo action:   stonith_complete
  * Pseudo action:   galera-bundle-master_stop_0
  * Pseudo action:   galera_stop_0
  * Pseudo action:   galera-bundle-master_stopped_0
  * Pseudo action:   galera-bundle_stopped_0
  * Pseudo action:   galera-bundle_start_0
- * Pseudo action:   all_stopped
  * Pseudo action:   galera-bundle-master_start_0
  * Resource action: galera-bundle-docker-0 start on database-0
  * Resource action: galera-bundle-docker-0 monitor=60000 on database-0

@@ -106,7 +106,6 @@ Executing cluster transition:
  * Pseudo action:   ms_drbd_mysql_post_notify_stopped_0
  * Resource action: drbd_mysql:0    notify on wc01
  * Pseudo action:   ms_drbd_mysql_confirmed-post_notify_stopped_0
- * Pseudo action:   all_stopped
  * Pseudo action:   ms_drbd_mysql_pre_notify_promote_0
  * Resource action: drbd_mysql:0    notify on wc01
  * Pseudo action:   ms_drbd_mysql_confirmed-pre_notify_promote_0

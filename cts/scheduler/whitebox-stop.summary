@@ -32,7 +32,6 @@ Executing cluster transition:
  * Resource action: lxc1            stop on 18node2
  * Resource action: container1      stop on 18node2
  * Resource action: B               monitor=10000 on lxc2
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Online: [ 18node1 18node2 18node3 ]

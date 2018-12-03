@@ -18,11 +18,9 @@ Executing cluster transition:
  * Resource action: rsc1            monitor on node2
  * Resource action: rsc2            monitor on node2
  * Fencing node1 (reboot)
+ * Resource action: stonith-1       start on node2
  * Pseudo action:   rsc1_stop_0
  * Pseudo action:   rsc2_stop_0
- * Pseudo action:   stonith_complete
- * Pseudo action:   all_stopped
- * Resource action: stonith-1       start on node2
  * Resource action: rsc1            start on node2
  * Resource action: rsc2            start on node2
 

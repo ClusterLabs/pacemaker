@@ -35,7 +35,6 @@ Executing cluster transition:
  * Pseudo action:   ms_drbd_iscsivg01_post_notify_stopped_0
  * Resource action: res_drbd_iscsivg01:1 notify on alice
  * Pseudo action:   ms_drbd_iscsivg01_confirmed-post_notify_stopped_0
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Node bob (9a4cafd3-fcfc-4de9-9440-10bc8822d9af): standby

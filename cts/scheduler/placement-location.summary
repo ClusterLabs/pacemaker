@@ -13,7 +13,6 @@ Executing cluster transition:
  * Resource action: rsc1            stop on node1
  * Pseudo action:   load_stopped_node2
  * Pseudo action:   load_stopped_node1
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Node node1: standby

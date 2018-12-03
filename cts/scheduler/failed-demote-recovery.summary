@@ -24,7 +24,6 @@ Executing cluster transition:
  * Resource action: DB2_HADR        notify on fastvm-rhel-7-4-95
  * Pseudo action:   DB2_HADR-master_confirmed-post_notify_stopped_0
  * Pseudo action:   DB2_HADR-master_pre_notify_start_0
- * Pseudo action:   all_stopped
  * Resource action: DB2_HADR        notify on fastvm-rhel-7-4-95
  * Pseudo action:   DB2_HADR-master_confirmed-pre_notify_start_0
  * Pseudo action:   DB2_HADR-master_start_0

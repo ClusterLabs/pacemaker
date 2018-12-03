@@ -20,10 +20,8 @@ Executing cluster transition:
  * Pseudo action:   rsc1:1_demote_0
  * Pseudo action:   ms1_demoted_0
  * Pseudo action:   ms1_stop_0
- * Pseudo action:   stonith_complete
  * Pseudo action:   rsc1:1_stop_0
  * Pseudo action:   ms1_stopped_0
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Online: [ node2 ]

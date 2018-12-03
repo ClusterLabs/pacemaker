@@ -12,7 +12,6 @@ Transition Summary:
 Executing cluster transition:
  * Pseudo action:   group_common_stop_0
  * Resource action: resource_idvscommon stop on ih02
- * Pseudo action:   all_stopped
  * Pseudo action:   group_common_stopped_0
 
 Revised cluster status:

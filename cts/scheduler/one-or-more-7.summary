@@ -13,7 +13,6 @@ Transition Summary:
 
 Executing cluster transition:
  * Resource action: C               stop on fc16-builder
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Online: [ fc16-builder ]

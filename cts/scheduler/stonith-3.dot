@@ -1,6 +1,4 @@
 digraph "g" {
-"all_stopped" -> "prmStonith:0_start_0 rh5node2" [ style = bold]
-"all_stopped" [ style=bold color="green" fontcolor="orange" ]
 "clnStonith_running_0" [ style=bold color="green" fontcolor="orange" ]
 "clnStonith_start_0" -> "clnStonith_running_0" [ style = bold]
 "clnStonith_start_0" -> "grpStonith:0_start_0" [ style = bold]
@@ -19,9 +17,7 @@ digraph "g" {
 "prmStonith:0_monitor_0 rh5node2" [ style=bold color="green" fontcolor="black" ]
 "prmStonith:0_start_0 rh5node2" -> "grpStonith:0_running_0" [ style = bold]
 "prmStonith:0_start_0 rh5node2" [ style=bold color="green" fontcolor="black" ]
-"stonith 'reboot' rh5node1" -> "stonith_complete" [ style = bold]
+"stonith 'reboot' rh5node1" -> "prmIpPostgreSQLDB_start_0 rh5node2" [ style = bold]
+"stonith 'reboot' rh5node1" -> "prmStonith:0_start_0 rh5node2" [ style = bold]
 "stonith 'reboot' rh5node1" [ style=bold color="green" fontcolor="black"]
-"stonith_complete" -> "all_stopped" [ style = bold]
-"stonith_complete" -> "prmIpPostgreSQLDB_start_0 rh5node2" [ style = bold]
-"stonith_complete" [ style=bold color="green" fontcolor="orange" ]
 }

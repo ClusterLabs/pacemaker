@@ -56,7 +56,6 @@ Executing cluster transition:
  * Pseudo action:   group-1_stop_0
  * Resource action: r192.168.100.181 stop on c001n06
  * Pseudo action:   DoFencing_start_0
- * Pseudo action:   all_stopped
  * Pseudo action:   group-1_stopped_0
  * Pseudo action:   group-1_start_0
  * Resource action: child_DoFencing:0 start on c001n06

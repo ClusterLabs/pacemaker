@@ -48,14 +48,15 @@ Executing cluster transition:
  * Resource action: rsc_sles-4      monitor=5000 on sles-4
  * Pseudo action:   DoFencing_stop_0
  * Fencing sles-3 (reboot)
+ * Resource action: r192.168.100.183 start on sles-1
  * Pseudo action:   migrator_stop_0
  * Pseudo action:   rsc_sles-3_stop_0
  * Pseudo action:   child_DoFencing:2_stop_0
  * Pseudo action:   DoFencing_stopped_0
  * Pseudo action:   DoFencing_start_0
  * Pseudo action:   master_rsc_1_stop_0
- * Pseudo action:   stonith_complete
- * Resource action: r192.168.100.183 start on sles-1
+ * Pseudo action:   group-1_running_0
+ * Resource action: r192.168.100.183 monitor=5000 on sles-1
  * Resource action: migrator        start on sles-4
  * Resource action: rsc_sles-3      start on sles-4
  * Resource action: child_DoFencing:2 start on sles-4
@@ -64,9 +65,6 @@ Executing cluster transition:
  * Pseudo action:   ocf_msdummy:5_stop_0
  * Pseudo action:   master_rsc_1_stopped_0
  * Pseudo action:   master_rsc_1_start_0
- * Pseudo action:   all_stopped
- * Pseudo action:   group-1_running_0
- * Resource action: r192.168.100.183 monitor=5000 on sles-1
  * Resource action: migrator        monitor=10000 on sles-4
  * Resource action: rsc_sles-3      monitor=5000 on sles-4
  * Resource action: child_DoFencing:2 monitor=60000 on sles-4

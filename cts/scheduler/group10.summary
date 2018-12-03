@@ -36,7 +36,6 @@ Executing cluster transition:
  * Resource action: child_DoFencing:3 monitor on c001n01
  * Resource action: child_192.168.100.182 stop on c001n01
  * Resource action: child_192.168.100.181 stop on c001n01
- * Pseudo action:   all_stopped
  * Pseudo action:   group-1_stopped_0
  * Pseudo action:   group-1_start_0
  * Resource action: child_192.168.100.181 start on c001n01

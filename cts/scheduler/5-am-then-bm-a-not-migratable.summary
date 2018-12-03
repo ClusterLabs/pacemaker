@@ -12,7 +12,6 @@ Transition Summary:
 Executing cluster transition:
  * Resource action: B               stop on 18node2
  * Resource action: A               stop on 18node1
- * Pseudo action:   all_stopped
  * Resource action: A               start on 18node2
  * Resource action: B               start on 18node1
  * Resource action: A               monitor=60000 on 18node2
