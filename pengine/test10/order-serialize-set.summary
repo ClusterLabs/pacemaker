@@ -50,7 +50,6 @@ Executing cluster transition:
  * Pseudo action:   edge_start_0
  * Resource action: base            migrate_from on xen-b
  * Resource action: base            stop on xen-a
- * Pseudo action:   all_stopped
  * Resource action: edge            monitor=10000 on xen-b
  * Pseudo action:   base_start_0
  * Resource action: base            monitor=10000 on xen-b

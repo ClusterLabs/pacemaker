@@ -25,11 +25,9 @@ Executing cluster transition:
  * Pseudo action:   rsc3:1_demote_0
  * Pseudo action:   ms3_demoted_0
  * Pseudo action:   ms3_stop_0
- * Pseudo action:   stonith_complete
  * Resource action: rsc2            start on node1
  * Pseudo action:   rsc3:1_stop_0
  * Pseudo action:   ms3_stopped_0
- * Pseudo action:   all_stopped
  * Resource action: rsc2            monitor=10000 on node1
 
 Revised cluster status:

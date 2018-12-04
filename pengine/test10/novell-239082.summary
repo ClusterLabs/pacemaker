@@ -37,7 +37,6 @@ Executing cluster transition:
  * Pseudo action:   ms-drbd0_post_notify_stopped_0
  * Resource action: drbd0:0         notify on xen-2
  * Pseudo action:   ms-drbd0_confirmed-post_notify_stopped_0
- * Pseudo action:   all_stopped
  * Pseudo action:   ms-drbd0_pre_notify_promote_0
  * Resource action: drbd0:0         notify on xen-2
  * Pseudo action:   ms-drbd0_confirmed-pre_notify_promote_0

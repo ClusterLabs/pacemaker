@@ -33,7 +33,6 @@ Executing cluster transition:
  * Resource action: stateful-1:1    stop on pcmk-1
  * Pseudo action:   master-1_stopped_0
  * Pseudo action:   master-1_start_0
- * Pseudo action:   all_stopped
  * Resource action: stateful-1:1    start on pcmk-1
  * Pseudo action:   master-1_running_0
  * Resource action: stateful-1:1    monitor=15000 on pcmk-1

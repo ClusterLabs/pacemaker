@@ -11,7 +11,6 @@ Transition Summary:
 Executing cluster transition:
  * Resource action: rsc1            stop on node2
  * Resource action: rsc1            stop on node1
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Online: [ node1 node2 ]

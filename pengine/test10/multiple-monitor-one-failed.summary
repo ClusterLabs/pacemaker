@@ -9,7 +9,6 @@ Transition Summary:
 
 Executing cluster transition:
  * Resource action: Dummy-test2     stop on dhcp180
- * Pseudo action:   all_stopped
  * Resource action: Dummy-test2     start on dhcp180
  * Resource action: Dummy-test2     monitor=30000 on dhcp180
  * Resource action: Dummy-test2     monitor=10000 on dhcp180

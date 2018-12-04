@@ -41,7 +41,6 @@ Executing cluster transition:
  * Pseudo action:   clone-ping_stop_0
  * Resource action: prim-ping:0     stop on deglxen002
  * Pseudo action:   clone-ping_stopped_0
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Node deglxen002: standby

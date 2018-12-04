@@ -17,7 +17,6 @@ Executing cluster transition:
  * Pseudo action:   cl_tomcat_stop_0
  * Resource action: d_tomcat        stop on CSE-1
  * Pseudo action:   cl_tomcat_stopped_0
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Online: [ CSE-1 ]

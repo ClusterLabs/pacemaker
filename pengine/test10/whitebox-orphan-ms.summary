@@ -61,7 +61,6 @@ Executing cluster transition:
  * Resource action: container1      delete on 18node3
  * Resource action: container1      delete on 18node2
  * Resource action: container1      delete on 18node1
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Online: [ 18node1 18node2 18node3 ]

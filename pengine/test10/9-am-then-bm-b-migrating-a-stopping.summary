@@ -13,7 +13,6 @@ Transition Summary:
 Executing cluster transition:
  * Resource action: B               stop on 18node2
  * Resource action: A               stop on 18node1
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Online: [ 18node1 18node2 18node3 ]

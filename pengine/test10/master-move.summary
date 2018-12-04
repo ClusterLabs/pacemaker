@@ -27,7 +27,6 @@ Executing cluster transition:
  * Resource action: prmDRBD:0       notify on bl460g1n13
  * Resource action: prmDRBD:1       notify on bl460g1n14
  * Pseudo action:   msDRBD_confirmed-pre_notify_demote_0
- * Pseudo action:   all_stopped
  * Pseudo action:   grpDRBD_stopped_0
  * Pseudo action:   msDRBD_demote_0
  * Resource action: prmDRBD:0       demote on bl460g1n13

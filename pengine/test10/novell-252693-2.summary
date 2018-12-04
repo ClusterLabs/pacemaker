@@ -77,7 +77,6 @@ Executing cluster transition:
  * Resource action: configstoreclone:1 monitor=20000 on node1
  * Resource action: sles10          migrate_from on node1
  * Resource action: sles10          stop on node2
- * Pseudo action:   all_stopped
  * Pseudo action:   sles10_start_0
  * Resource action: sles10          monitor=10000 on node1
 

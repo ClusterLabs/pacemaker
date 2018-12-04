@@ -22,7 +22,6 @@ Executing cluster transition:
  * Pseudo action:   MASTER_RSC_A_post_notify_stopped_0
  * Pseudo action:   MASTER_RSC_A_confirmed-post_notify_stopped_0
  * Resource action: NATIVE_RSC_B    stop on fc16-builder
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Online: [ fc16-builder ]

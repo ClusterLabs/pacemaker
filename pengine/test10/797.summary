@@ -51,7 +51,6 @@ Executing cluster transition:
  * Pseudo action:   DoFencing_stopped_0
  * Pseudo action:   DoFencing_start_0
  * Cluster action:  do_shutdown on c001n02
- * Pseudo action:   all_stopped
  * Resource action: child_DoFencing:0 start on c001n01
  * Resource action: child_DoFencing:0 monitor=5000 on c001n01
  * Pseudo action:   DoFencing_running_0

@@ -68,7 +68,6 @@ Executing cluster transition:
  * Resource action: qpidd           stop on rhos4-node4
  * Resource action: qpidd           stop on rhos4-node3
  * Pseudo action:   qpidd-clone_stopped_0
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Online: [ rhos4-node3 rhos4-node4 ]

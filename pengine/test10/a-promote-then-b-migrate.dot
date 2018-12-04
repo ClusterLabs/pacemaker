@@ -1,7 +1,6 @@
 digraph "g" {
 "Cancel rsc1:1_monitor_10000 node2" -> "rsc1:1_promote_0 node2" [ style = bold]
 "Cancel rsc1:1_monitor_10000 node2" [ style=bold color="green" fontcolor="black"]
-"all_stopped" [ style=bold color="green" fontcolor="orange"]
 "ms1_confirmed-post_notify_promoted_0" -> "rsc1:1_monitor_5000 node2" [ style = bold]
 "ms1_confirmed-post_notify_promoted_0" -> "rsc2_migrate_to_0 node1" [ style = bold]
 "ms1_confirmed-post_notify_promoted_0" -> "rsc2_start_0 node2" [ style = bold]
@@ -41,7 +40,6 @@ digraph "g" {
 "rsc2_monitor_5000 node2" [ style=bold color="green" fontcolor="black"]
 "rsc2_start_0 node2" -> "rsc2_monitor_5000 node2" [ style = bold]
 "rsc2_start_0 node2" [ style=bold color="green" fontcolor="orange"]
-"rsc2_stop_0 node1" -> "all_stopped" [ style = bold]
 "rsc2_stop_0 node1" -> "rsc2_start_0 node2" [ style = bold]
 "rsc2_stop_0 node1" [ style=bold color="green" fontcolor="black"]
 }

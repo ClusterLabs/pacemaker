@@ -19,7 +19,6 @@ Executing cluster transition:
  * Resource action: A               migrate_to on 18node1
  * Resource action: A               migrate_from on 18node2
  * Resource action: A               stop on 18node1
- * Pseudo action:   all_stopped
  * Pseudo action:   thegroup_stopped_0
  * Pseudo action:   thegroup_start_0
  * Pseudo action:   A_start_0

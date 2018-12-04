@@ -75,7 +75,6 @@ Executing cluster transition:
  * Resource action: xu-test6        stop on xfc3
  * Resource action: xu-test7        monitor=10000 on xfc0
  * Pseudo action:   load_stopped_xfc3
- * Pseudo action:   all_stopped
  * Pseudo action:   xu-test12_start_0
  * Pseudo action:   xu-test5_start_0
  * Pseudo action:   xu-test6_start_0

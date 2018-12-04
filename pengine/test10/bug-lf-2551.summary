@@ -133,7 +133,6 @@ Executing cluster transition:
  * Pseudo action:   vm-53_stop_0
  * Pseudo action:   vm-57_stop_0
  * Pseudo action:   vm-61_stop_0
- * Pseudo action:   stonith_complete
  * Pseudo action:   load_stopped_hex-9
  * Resource action: dummy1          start on hex-0
  * Pseudo action:   base-clone_stop_0
@@ -145,7 +144,6 @@ Executing cluster transition:
  * Pseudo action:   clvm:3_stop_0
  * Pseudo action:   o2cb:3_stop_0
  * Pseudo action:   dlm:3_stop_0
- * Pseudo action:   all_stopped
  * Pseudo action:   base-group:3_stopped_0
  * Pseudo action:   base-clone_stopped_0
 

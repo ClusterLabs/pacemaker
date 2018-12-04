@@ -33,7 +33,6 @@ Executing cluster transition:
  * Resource action: rhel7-node1     migrate_from on rhel7-node3
  * Resource action: rhel7-node1     stop on rhel7-node2
  * Resource action: remote-rsc      stop on rhel7-node2
- * Pseudo action:   all_stopped
  * Pseudo action:   remote-rsc_start_0
  * Pseudo action:   rhel7-node1_start_0
  * Resource action: remote-rsc      monitor=10000 on rhel7-node3

@@ -15,7 +15,6 @@ Executing cluster transition:
  * Pseudo action:   group1_stop_0
  * Resource action: rsc2            stop on node2
  * Resource action: rsc1            stop on node2
- * Pseudo action:   all_stopped
  * Pseudo action:   group1_stopped_0
 
 Revised cluster status:

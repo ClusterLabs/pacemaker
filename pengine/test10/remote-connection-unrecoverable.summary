@@ -25,7 +25,8 @@ Executing cluster transition:
  * Resource action: rsc1            monitor on node2
  * Fencing node1 (reboot)
  * Fencing remote1 (reboot)
- * Pseudo action:   stonith_complete
+ * Resource action: killer          start on node2
+ * Resource action: killer          monitor=60000 on node2
  * Pseudo action:   rsc1_stop_0
  * Pseudo action:   rsc2-master_demote_0
  * Pseudo action:   remote1_stop_0
@@ -36,9 +37,6 @@ Executing cluster transition:
  * Resource action: rsc1            monitor=10000 on node2
  * Pseudo action:   rsc2_stop_0
  * Pseudo action:   rsc2-master_stopped_0
- * Pseudo action:   all_stopped
- * Resource action: killer          start on node2
- * Resource action: killer          monitor=60000 on node2
 
 Revised cluster status:
 Online: [ node2 ]

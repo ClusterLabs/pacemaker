@@ -15,7 +15,6 @@ Transition Summary:
 
 Executing cluster transition:
  * Resource action: dummy1          stop on sle12sp2-1
- * Pseudo action:   all_stopped
  * Pseudo action:   ms1_demote_0
  * Resource action: state1          demote on sle12sp2-1
  * Pseudo action:   ms1_demoted_0

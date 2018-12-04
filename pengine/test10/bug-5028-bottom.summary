@@ -13,7 +13,6 @@ Transition Summary:
 Executing cluster transition:
  * Pseudo action:   dummy-g_stop_0
  * Resource action: dummy02         stop on bl460g6a
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Online: [ bl460g6a bl460g6b ]

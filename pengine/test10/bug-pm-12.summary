@@ -25,7 +25,6 @@ Executing cluster transition:
  * Resource action: stateful-2:0    stop on node-b
  * Pseudo action:   group:1_stop_0
  * Resource action: stateful-2:1    stop on node-a
- * Pseudo action:   all_stopped
  * Pseudo action:   group:0_stopped_0
  * Pseudo action:   group:1_stopped_0
  * Pseudo action:   ms-sf_stopped_0

@@ -14,7 +14,5 @@ digraph "g" {
 "P:1_start_0 node2" [ style=bold color="green" fontcolor="black"]
 "P:1_stop_0 node1" -> "C_stopped_0" [ style = bold]
 "P:1_stop_0 node1" -> "P:1_start_0 node2" [ style = bold]
-"P:1_stop_0 node1" -> "all_stopped" [ style = bold]
 "P:1_stop_0 node1" [ style=bold color="green" fontcolor="black"]
-"all_stopped" [ style=bold color="green" fontcolor="orange"]
 }

@@ -20,7 +20,6 @@ Executing cluster transition:
  * Resource action: main_rsc        start on srv03
  * Resource action: prmPingd:0      stop on srv01
  * Pseudo action:   clnPingd_stopped_0
- * Pseudo action:   all_stopped
  * Resource action: main_rsc        monitor=10000 on srv03
 
 Revised cluster status:

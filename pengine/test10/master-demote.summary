@@ -29,7 +29,6 @@ Transition Summary:
 Executing cluster transition:
  * Resource action: named_address   stop on cxa1
  * Pseudo action:   named_drbd_pre_notify_promote_0
- * Pseudo action:   all_stopped
  * Resource action: named_address   start on cxb1
  * Resource action: named_drbd_node:1 notify on cxa1
  * Resource action: named_drbd_node:0 notify on cxb1

@@ -25,7 +25,6 @@ Executing cluster transition:
  * Resource action: test2           stop on star
  * Resource action: test1           stop on star
  * Cluster action:  do_shutdown on star
- * Pseudo action:   all_stopped
  * Pseudo action:   gr1_stopped_0
  * Pseudo action:   gr1_start_0
  * Pseudo action:   test1_start_0

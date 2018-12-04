@@ -15,7 +15,6 @@ Transition Summary:
 Executing cluster transition:
  * Resource action: SLAVE_IP        stop on fc16-builder
  * Resource action: MASTER_IP       stop on fc16-builder2
- * Pseudo action:   all_stopped
  * Resource action: SLAVE_IP        start on fc16-builder2
  * Resource action: MASTER_IP       start on fc16-builder
 

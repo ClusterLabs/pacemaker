@@ -51,7 +51,6 @@ Executing cluster transition:
  * Resource action: httpd-bundle-2  start on rh74-test
  * Resource action: httpd           delete on httpd-bundle-0
  * Pseudo action:   httpd-bundle_stopped_0
- * Pseudo action:   all_stopped
  * Resource action: httpd:0         monitor on httpd-bundle-0
  * Pseudo action:   httpd-bundle-clone_start_0
  * Resource action: httpd-bundle-0  monitor=60000 on rh74-test

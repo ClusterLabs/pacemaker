@@ -101,7 +101,6 @@ Executing cluster transition:
  * Resource action: galera-bundle-docker-2 stop on database-2
  * Pseudo action:   stonith-galera-bundle-2-reboot on galera-bundle-2
  * Pseudo action:   stonith-galera-bundle-0-reboot on galera-bundle-0
- * Pseudo action:   stonith_complete
  * Pseudo action:   galera-bundle-master_stop_0
  * Resource action: redis-bundle-docker-1 start on controller-1
  * Resource action: redis-bundle-1  monitor on controller-1
@@ -129,7 +128,6 @@ Executing cluster transition:
  * Resource action: haproxy-bundle-docker-1 monitor=60000 on controller-1
  * Pseudo action:   galera-bundle_stopped_0
  * Pseudo action:   galera-bundle_start_0
- * Pseudo action:   all_stopped
  * Pseudo action:   galera-bundle-master_start_0
  * Resource action: galera-bundle-docker-0 start on database-0
  * Resource action: galera-bundle-0 monitor on controller-1

@@ -33,7 +33,6 @@ Executing cluster transition:
  * Pseudo action:   clone4_stopped_0
  * Resource action: rsc5:1          demote on node1
  * Pseudo action:   ms5_demoted_0
- * Pseudo action:   all_stopped
  * Pseudo action:   group2_stopped_0
 
 Revised cluster status:

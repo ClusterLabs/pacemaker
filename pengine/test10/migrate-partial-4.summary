@@ -65,7 +65,6 @@ Executing cluster transition:
  * Resource action: testfs          start on lustre03-left
  * Pseudo action:   ms-drbd-mgs_confirmed-pre_notify_start_0
  * Pseudo action:   ms-drbd-mgs_start_0
- * Pseudo action:   all_stopped
  * Pseudo action:   lustre_start_0
  * Resource action: drbd-mgs:0      start on lustre01-left
  * Resource action: drbd-mgs:1      start on lustre02-left

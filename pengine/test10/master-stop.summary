@@ -12,7 +12,6 @@ Executing cluster transition:
  * Pseudo action:   m_stop_0
  * Resource action: dummy:2         stop on node3
  * Pseudo action:   m_stopped_0
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Online: [ node1 node2 node3 ]

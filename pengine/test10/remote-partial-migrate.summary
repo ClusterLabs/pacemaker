@@ -86,7 +86,6 @@ Executing cluster transition:
  * Resource action: FAKE10          start on pcmk1
  * Resource action: FAKE13          start on pcmk2
  * Resource action: FAKE15          start on pcmk3
- * Resource action: FAKE16          stop on pcmk1
  * Resource action: FAKE22          start on pcmk1
  * Resource action: FAKE23          stop on pcmk1
  * Resource action: FAKE26          start on pcmk1
@@ -103,7 +102,7 @@ Executing cluster transition:
  * Resource action: FAKE10          monitor=10000 on pcmk1
  * Resource action: FAKE13          monitor=10000 on pcmk2
  * Resource action: FAKE15          monitor=10000 on pcmk3
- * Resource action: FAKE16          start on pcmk_remote3
+ * Resource action: FAKE16          stop on pcmk1
  * Resource action: FAKE22          monitor=10000 on pcmk1
  * Resource action: FAKE23          start on pcmk_remote1
  * Resource action: FAKE26          monitor=10000 on pcmk1
@@ -114,16 +113,16 @@ Executing cluster transition:
  * Resource action: FAKE43          monitor=10000 on pcmk1
  * Resource action: FAKE44          start on pcmk2
  * Resource action: FAKE50          monitor=10000 on pcmk1
- * Pseudo action:   all_stopped
  * Resource action: pcmk_remote3    monitor=60000 on pcmk2
  * Resource action: FAKE4           monitor=10000 on pcmk_remote3
  * Resource action: FAKE9           start on pcmk1
- * Resource action: FAKE16          monitor=10000 on pcmk_remote3
+ * Resource action: FAKE16          start on pcmk_remote3
  * Resource action: FAKE23          monitor=10000 on pcmk_remote1
  * Resource action: FAKE30          monitor=10000 on pcmk_remote2
  * Resource action: FAKE37          monitor=10000 on pcmk2
  * Resource action: FAKE44          monitor=10000 on pcmk2
  * Resource action: FAKE9           monitor=10000 on pcmk1
+ * Resource action: FAKE16          monitor=10000 on pcmk_remote3
 
 Revised cluster status:
 Online: [ pcmk1 pcmk2 pcmk3 ]
