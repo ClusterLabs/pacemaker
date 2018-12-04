@@ -2905,14 +2905,14 @@ class RemoteDriver(CTSTest):
 
             # Remove dummy resource added for remote node tests
             self.debug("Cleaning up dummy rsc put on remote node")
-            self.rsh(node, "crm_resource -U -r %s" % self.remote_rsc)
+            self.rsh(self.get_othernode(node), "crm_resource -U -r %s" % self.remote_rsc)
             self.del_rsc(node, self.remote_rsc)
 
         if self.remote_node_added == 1:
 
             # Remove remote node's connection resource
             self.debug("Cleaning up remote node connection resource")
-            self.rsh(node, "crm_resource -U -r %s" % (self.remote_node))
+            self.rsh(self.get_othernode(node), "crm_resource -U -r %s" % (self.remote_node))
             self.del_rsc(node, self.remote_node)
 
         watch.lookforall()
