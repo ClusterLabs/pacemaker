@@ -2703,6 +2703,10 @@ class RemoteDriver(CTSTest):
         # We freeze the process.
         self.rsh(node, "killall -STOP pacemaker-remoted")
 
+    def resume_pcmk_remote(self, node):
+        # We resume the process.
+        self.rsh(node, "killall -CONT pacemaker-remoted")
+
     def start_metal(self, node):
         pcmk_started = 0
 
@@ -2890,6 +2894,8 @@ class RemoteDriver(CTSTest):
             pats.append(self.templates["Pat:RscOpOK"] % ("stop", self.remote_node))
 
         self.set_timer("remoteMetalCleanup")
+
+        self.resume_pcmk_remote(node)
 
         if self.remote_use_reconnect_interval:
             self.debug("Cleaning up re-check interval")
