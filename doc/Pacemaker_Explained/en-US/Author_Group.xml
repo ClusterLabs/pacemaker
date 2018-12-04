@@ -9,6 +9,12 @@
     <email>andrew@beekhof.net</email>
   </author>
   <othercredit>
+    <firstname>Ken</firstname><surname>Gaillot</surname>
+    <affiliation><orgname>Red Hat</orgname></affiliation>
+    <contrib>Co-author</contrib>
+    <email>kgaillot@redhat.com</email>
+  </othercredit>
+  <othercredit>
     <firstname>Philipp</firstname><surname>Marek</surname>
     <affiliation><orgname>LINBit</orgname></affiliation>
     <contrib>Style and formatting updates. Indexing.</contrib>

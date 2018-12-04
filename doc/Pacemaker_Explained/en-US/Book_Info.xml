@@ -7,12 +7,12 @@
   <productname>Pacemaker</productname>
   <productnumber>2.0</productnumber>
   <!--
-	EDITION-PUBSNUMBER should match REVNUMBER in Revision_History.xml.
-	Increment EDITION when the syntax of the documented software
-	changes (pacemaker), and PUBSNUMBER for
-	simple textual changes (corrections, translations, etc.).
+        EDITION-PUBSNUMBER should match REVNUMBER in Revision_History.xml.
+        Increment EDITION when the syntax of the documented software
+        changes (pacemaker), and PUBSNUMBER for
+        simple textual changes (corrections, translations, etc.).
   -->
-  <edition>11</edition>
+  <edition>12</edition>
   <pubsnumber>0</pubsnumber>
   <abstract>
     <para>
