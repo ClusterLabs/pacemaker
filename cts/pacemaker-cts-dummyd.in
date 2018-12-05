@@ -11,7 +11,12 @@ __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT AN
 import sys
 import time
 import signal
-import systemd.daemon
+import subprocess
+have_systemd_daemon = True
+try:
+    import systemd.daemon
+except ImportError:
+    have_systemd_daemon = False
 
 delay = None
 
@@ -43,7 +48,10 @@ if __name__ == "__main__":
     parse_args()
     signal.signal(signal.SIGTERM, bye)
     twiddle()
-    systemd.daemon.notify("READY=1")
+    if have_systemd_daemon:
+        systemd.daemon.notify("READY=1")
+    else:
+        subprocess.call(["systemd-notify", "READY=1"])
 
     # This isn't a "proper" daemon, but that would be overkill for testing purposes
     while True:
