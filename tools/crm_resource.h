@@ -89,6 +89,8 @@ int cli_resource_delete_attribute(resource_t *rsc, const char *requested_name,
                                   const char *attr_name, cib_t *cib,
                                   pe_working_set_t *data_set);
 
+GList* subtract_lists(GList *from, GList *items, GCompareFunc cmp);
+
 int update_working_set_xml(pe_working_set_t *data_set, xmlNode **xml);
 int wait_till_stable(int timeout_ms, cib_t * cib);
 void cli_resource_why(cib_t *cib_conn, GListPtr resources, resource_t *rsc,
