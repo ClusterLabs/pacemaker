@@ -83,6 +83,32 @@ resource_ipc_callback(const char *buffer, ssize_t length, gpointer userdata)
     return 0;
 }
 
+static int
+compare_id(gconstpointer a, gconstpointer b)
+{
+    return strcmp((const char *)a, (const char *)b);
+}
+
+static GListPtr
+build_constraint_list(xmlNode *root)
+{
+    GListPtr retval = NULL;
+    xmlNode *cib_constraints = NULL;
+    xmlXPathObjectPtr xpathObj = NULL;
+    int ndx = 0;
+
+    cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, root);
+    xpathObj = xpath_search(cib_constraints, "//" XML_CONS_TAG_RSC_LOCATION);
+
+    for (ndx = 0; ndx < numXpathResults(xpathObj); ndx++) {
+        xmlNode *match = getXpathResult(xpathObj, ndx);
+        retval = g_list_insert_sorted(retval, (gpointer) ID(match), compare_id);
+    }
+
+    freeXpathObject(xpathObj);
+    return retval;
+}
+
 struct ipc_client_callbacks crm_callbacks = {
     .dispatch = resource_ipc_callback,
     .destroy = resource_ipc_connection_destroy,
@@ -418,6 +444,7 @@ main(int argc, char **argv)
     char *xml_file = NULL;
     crm_ipc_t *crmd_channel = NULL;
     pe_working_set_t *data_set = NULL;
+    xmlNode *cib_xml_copy = NULL;
     cib_t *cib_conn = NULL;
     resource_t *rsc = NULL;
     bool recursive = FALSE;
@@ -799,8 +826,6 @@ main(int argc, char **argv)
 
     /* Populate working set from XML file if specified or CIB query otherwise */
     if (require_dataset) {
-        xmlNode *cib_xml_copy = NULL;
-
         if (xml_file != NULL) {
             cib_xml_copy = filename2xml(xml_file);
 
@@ -971,7 +996,15 @@ main(int argc, char **argv)
         rc = pcmk_ok;
 
     } else if (rsc_cmd == 'U') {
+        GListPtr before = NULL;
+        GListPtr after = NULL;
+        GListPtr remaining = NULL;
+        GListPtr ele = NULL;
         node_t *dest = NULL;
+
+        if (BE_QUIET == FALSE) {
+            before = build_constraint_list(data_set->input);
+        }
 
         if (clear_expired == TRUE) {
             rc = cli_resource_clear_all_expired(data_set->input, cib_conn, rsc_id, host_uname, scope_master);
@@ -980,12 +1013,38 @@ main(int argc, char **argv)
             dest = pe_find_node(data_set->nodes, host_uname);
             if (dest == NULL) {
                 rc = -pcmk_err_node_unknown;
+                if (BE_QUIET == FALSE) {
+                    g_list_free(before);
+                }
                 goto bail;
             }
             rc = cli_resource_clear(rsc_id, dest->details->uname, NULL, cib_conn);
 
         } else {
             rc = cli_resource_clear(rsc_id, NULL, data_set->nodes, cib_conn);
+        }
+
+        if (BE_QUIET == FALSE) {
+            rc = cib_conn->cmds->query(cib_conn, NULL, &cib_xml_copy, cib_scope_local | cib_sync_call);
+            if (rc != pcmk_ok) {
+                CMD_ERR("Could not get modified CIB: %s\n", pcmk_strerror(rc));
+                g_list_free(before);
+                goto bail;
+            }
+
+            data_set->input = cib_xml_copy;
+            cluster_status(data_set);
+
+            after = build_constraint_list(data_set->input);
+            remaining = subtract_lists(before, after, (GCompareFunc) strcmp);
+
+            for (ele = remaining; ele != NULL; ele = ele->next) {
+                printf("Removing constraint: %s\n", (char *) ele->data);
+            }
+
+            g_list_free(before);
+            g_list_free(after);
+            g_list_free(remaining);
         }
 
     } else if (rsc_cmd == 'M' && host_uname) {
