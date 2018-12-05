@@ -2697,13 +2697,15 @@ class RemoteDriver(CTSTest):
                 self.pcmk_started = 1
                 break
 
-    def kill_pcmk_remote(self, node):
+    def freeze_pcmk_remote(self, node):
         """ Simulate a Pacemaker Remote daemon failure. """
 
-        # We kill the process to prevent a graceful stop,
-        # then stop it to prevent the OS from restarting it.
-        self.rsh(node, "killall -9 pacemaker-remoted")
-        self.stop_pcmk_remote(node)
+        # We freeze the process.
+        self.rsh(node, "killall -STOP pacemaker-remoted")
+
+    def resume_pcmk_remote(self, node):
+        # We resume the process.
+        self.rsh(node, "killall -CONT pacemaker-remoted")
 
     def start_metal(self, node):
         pcmk_started = 0
@@ -2794,9 +2796,9 @@ class RemoteDriver(CTSTest):
         watch = self.create_watch(watchpats, 120)
         watch.setwatch()
 
-        # force stop the pcmk remote daemon. this will result in fencing
+        # freeze the pcmk remote daemon. this will result in fencing
         self.debug("Force stopped active remote node")
-        self.kill_pcmk_remote(node)
+        self.freeze_pcmk_remote(node)
 
         self.debug("Waiting for remote node to be fenced.")
         self.set_timer("remoteMetalFence")
@@ -2893,6 +2895,8 @@ class RemoteDriver(CTSTest):
 
         self.set_timer("remoteMetalCleanup")
 
+        self.resume_pcmk_remote(node)
+
         if self.remote_use_reconnect_interval:
             self.debug("Cleaning up re-check interval")
             self.rsh(self.get_othernode(node), self.templates["ClearCheckInterval"])
@@ -2901,14 +2905,14 @@ class RemoteDriver(CTSTest):
 
             # Remove dummy resource added for remote node tests
             self.debug("Cleaning up dummy rsc put on remote node")
-            self.rsh(node, "crm_resource -U -r %s" % self.remote_rsc)
+            self.rsh(self.get_othernode(node), "crm_resource -U -r %s" % self.remote_rsc)
             self.del_rsc(node, self.remote_rsc)
 
         if self.remote_node_added == 1:
 
             # Remove remote node's connection resource
             self.debug("Cleaning up remote node connection resource")
-            self.rsh(node, "crm_resource -U -r %s" % (self.remote_node))
+            self.rsh(self.get_othernode(node), "crm_resource -U -r %s" % (self.remote_node))
             self.del_rsc(node, self.remote_node)
 
         watch.lookforall()
