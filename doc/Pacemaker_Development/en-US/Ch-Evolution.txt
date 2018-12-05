@@ -47,6 +47,14 @@ notable commits are:
 * https://gitlab.com/poki/archived-heartbeat/commit/74573ac6182785820d765ec76c5d70086381931a[
   drop of now-detached Pacemaker code]
 
+Regarding the Pacemaker's split from heartbeat, it evolved stepwise
+(as opposed to one-off cut), and the last step of full dependency is depicted
+in https://www.kernel.org/doc/ols/2008/ols2008v1-pages-85-100.pdf#page=14[
+The Corosync Cluster Engine] paper, fig. 10.
+This article also provides a good reference regarding wider historical
+context of the tangentially (and deeper in some cases) meeting components
+around that time.
+
 === Influence of 'heartbeat' on Pacemaker ===
 
 On a closer look, we can identify these things in common:
