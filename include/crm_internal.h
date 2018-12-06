@@ -172,7 +172,6 @@ void set_daemon_option(const char *option, const char *value);
 gboolean daemon_option_enabled(const char *daemon, const char *option);
 void strip_text_nodes(xmlNode * xml);
 void pcmk_panic(const char *origin);
-void sysrq_init(void);
 pid_t pcmk_locate_sbd(void);
 
 #  define crm_config_err(fmt...) { crm_config_error = TRUE; crm_err(fmt); }
