@@ -62,15 +62,16 @@ attrd_handle_election_op(const crm_node_t *peer, xmlNode *xml)
             break;
 
         case election_lost:
-            /* Losing to this peer does not mean this peer definitely won
-             * (another peer may eventually win). However if we don't already
-             * have a writer, we tentatively record this peer as writer so that
-             * we don't enter "peer_writer == NULL" blocks after this point
-             * (which might start new elections).
+            /* The election API should really distinguish between "we just lost
+             * to this peer" and "we already lost previously, and we are
+             * discarding this vote for some reason", but it doesn't.
              *
-             * However, we don't do this if the state was already lost, because
-             * we may just be getting the current state back when processing a
-             * late no-vote.
+             * In the first case, we want to tentatively set the peer writer to
+             * this peer, even though another peer may eventually win (which we
+             * will learn via attrd_check_for_new_writer()), so
+             * attrd_start_election_if_needed() doesn't start a new election.
+             *
+             * Approximate a test for that case as best as possible.
              */
             if ((peer_writer == NULL) || (previous != election_lost)) {
                 free(peer_writer);
