@@ -3091,6 +3091,7 @@ class RemoteStonithd(RemoteDriver):
             r"pengine.*:\s+Recover remote-.*\s*\(.*\)",
             r"Calculated [Tt]ransition .* /var/lib/pacemaker/pengine/pe-error",
             r"error.*: Resource .*ocf::.* is active on 2 nodes attempting recovery",
+            r"error: Result of monitor operation for .* on remote-.*: Error",
         ]
 
         ignore_pats.extend(RemoteDriver.errorstoignore(self))
