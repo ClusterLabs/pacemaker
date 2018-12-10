@@ -2635,45 +2635,40 @@ class RemoteDriver(CTSTest):
 
     def add_primitive_rsc(self, node):
         rsc_xml = """
-<primitive class="ocf" id="%s" provider="heartbeat" type="Dummy">
-    <operations>
-      <op id="remote-rsc-monitor-interval-10s" interval="10s" name="monitor"/>
-    </operations>
-    <meta_attributes id="remote-meta_attributes"/>
-</primitive>""" % (self.remote_rsc)
+<primitive class="ocf" id="%(node)s" provider="heartbeat" type="Dummy">
+  <meta_attributes id="%(node)s-meta_attributes"/>
+  <operations>
+    <op id="%(node)s-monitor-interval-20s" interval="20s" name="monitor"/>
+  </operations>
+</primitive>""" % { "node": self.remote_rsc }
         self.add_rsc(node, rsc_xml)
         if not self.failed:
             self.remote_rsc_added = 1
 
     def add_connection_rsc(self, node):
+        rsc_xml = """
+<primitive class="ocf" id="%(node)s" provider="pacemaker" type="remote">
+  <instance_attributes id="%(node)s-instance_attributes">
+    <nvpair id="%(node)s-instance_attributes-server" name="server" value="%(server)s"/>
+""" % { "node": self.remote_node, "server": node }
+
         if self.remote_use_reconnect_interval:
-            # use reconnect interval and make sure to set cluster-recheck-interval as well.
-            rsc_xml = """
-<primitive class="ocf" id="%s" provider="pacemaker" type="remote">
-    <instance_attributes id="remote-instance_attributes"/>
-        <instance_attributes id="remote-instance_attributes">
-          <nvpair id="remote-instance_attributes-server" name="server" value="%s"/>
-          <nvpair id="remote-instance_attributes-reconnect_interval" name="reconnect_interval" value="60s"/>
-        </instance_attributes>
-    <operations>
-      <op id="remote-monitor-interval-60s" interval="60s" name="monitor"/>
-      <op id="remote-name-start-interval-0-timeout-120" interval="0" name="start" timeout="60"/>
-    </operations>
-</primitive>""" % (self.remote_node, node)
+            # Set cluster-recheck-interval lower
             self.rsh(self.get_othernode(node), self.templates["SetCheckInterval"] % ("45s"))
-        else:
-            # not using reconnect interval
-            rsc_xml = """
-<primitive class="ocf" id="%s" provider="pacemaker" type="remote">
-    <instance_attributes id="remote-instance_attributes"/>
-        <instance_attributes id="remote-instance_attributes">
-          <nvpair id="remote-instance_attributes-server" name="server" value="%s"/>
-        </instance_attributes>
-    <operations>
-      <op id="remote-monitor-interval-60s" interval="60s" name="monitor"/>
-      <op id="remote-name-start-interval-0-timeout-120" interval="0" name="start" timeout="120"/>
-    </operations>
-</primitive>""" % (self.remote_node, node)
+
+            # Set reconnect interval on resource
+            rsc_xml = rsc_xml + """
+    <nvpair id="%s-instance_attributes-reconnect_interval" name="reconnect_interval" value="60s"/>
+""" % (self.remote_node)
+
+        rsc_xml = rsc_xml + """
+  </instance_attributes>
+  <operations>
+    <op id="%(node)s-start"       name="start"   interval="0"   timeout="120s"/>
+    <op id="%(node)s-monitor-20s" name="monitor" interval="20s" timeout="45s"/>
+  </operations>
+</primitive>
+""" % { "node": self.remote_node }
 
         self.add_rsc(node, rsc_xml)
         if not self.failed:
