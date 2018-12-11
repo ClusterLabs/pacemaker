@@ -46,6 +46,8 @@ typedef struct attribute_s {
 
     char *user;
 
+    gboolean force_write; /* Flag for updating attribute by ignoring delay */
+
 } attribute_t;
 
 typedef struct attribute_value_s {
