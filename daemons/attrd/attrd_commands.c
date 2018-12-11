@@ -99,7 +99,7 @@ free_attribute(gpointer data)
 static xmlNode *
 build_attribute_xml(
     xmlNode *parent, const char *name, const char *set, const char *uuid, unsigned int timeout_ms, const char *user,
-    gboolean is_private, const char *peer, uint32_t peerid, const char *value)
+    gboolean is_private, const char *peer, uint32_t peerid, const char *value, gboolean is_force_write)
 {
     xmlNode *xml = create_xml_node(parent, __FUNCTION__);
 
@@ -112,6 +112,7 @@ build_attribute_xml(
     crm_xml_add(xml, F_ATTRD_VALUE, value);
     crm_xml_add_int(xml, F_ATTRD_DAMPEN, timeout_ms/1000);
     crm_xml_add_int(xml, F_ATTRD_IS_PRIVATE, is_private);
+    crm_xml_add_int(xml, F_ATTRD_IS_FORCE_WRITE, is_force_write);
 
     return xml;
 }
@@ -628,7 +629,7 @@ attrd_peer_sync(crm_node_t *peer, xmlNode *xml)
         while (g_hash_table_iter_next(&vIter, NULL, (gpointer *) & v)) {
             crm_debug("Syncing %s[%s] = %s to %s", a->id, v->nodename, v->current, peer?peer->uname:"everyone");
             build_attribute_xml(sync, a->id, a->set, a->uuid, a->timeout_ms, a->user, a->is_private,
-                                v->nodename, v->nodeid, v->current);
+                                v->nodename, v->nodeid, v->current, FALSE);
         }
     }
 
@@ -732,7 +733,7 @@ attrd_current_only_attribute_update(crm_node_t *peer, xmlNode *xml)
 
                 build = TRUE;
                 build_attribute_xml(sync, a->id, a->set, a->uuid, a->timeout_ms, a->user, a->is_private,
-                            v->nodename, v->nodeid, v->current);
+                            v->nodename, v->nodeid, v->current,  (a->timeout_ms && a->timer ? TRUE : FALSE));
             } else {
                 crm_trace("Local attribute(%s[%s] = %s) was ignore.(another host) : [%s]", a->id, v->nodename, v->current, attrd_cluster->uname);
                 continue;
@@ -753,10 +754,12 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
     bool update_both = FALSE;
     attribute_t *a;
     attribute_value_t *v = NULL;
+    gboolean is_force_write = FALSE;
 
     const char *op = crm_element_value(xml, F_ATTRD_TASK);
     const char *attr = crm_element_value(xml, F_ATTRD_ATTRIBUTE);
     const char *value = crm_element_value(xml, F_ATTRD_VALUE);
+    crm_element_value_int(xml, F_ATTRD_IS_FORCE_WRITE, &is_force_write);
 
     if (attr == NULL) {
         crm_warn("Could not update attribute: peer did not specify name");
@@ -847,7 +850,7 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
         crm_xml_add(sync, F_ATTRD_TASK, ATTRD_OP_SYNC_RESPONSE);
         v = g_hash_table_lookup(a->values, host);
         build_attribute_xml(sync, attr, a->set, a->uuid, a->timeout_ms, a->user,
-                            a->is_private, v->nodename, v->nodeid, v->current);
+                            a->is_private, v->nodename, v->nodeid, v->current, FALSE);
 
         attrd_xml_add_writer(sync);
 
@@ -871,7 +874,14 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
         }
 
     } else {
-        crm_trace("Unchanged %s[%s] from %s is %s", attr, host, peer->uname, value);
+        if (is_force_write && a->timeout_ms && a->timer) {
+ 	    /* Save forced writing and set change flag. */
+ 	    /* The actual attribute is written by Writer after election. */
+ 	    crm_trace("Unchanged %s[%s] from %s is %s(Set the forced write flag)", attr, host, peer->uname, value);
+ 	    a->force_write = TRUE;
+ 	} else {
+            crm_trace("Unchanged %s[%s] from %s is %s", attr, host, peer->uname, value);
+        }
     }
 
     /* Set the seen flag for attribute processing held only in the own node. */
@@ -1048,10 +1058,14 @@ write_attributes(bool all, bool ignore_delay)
         if (!all && a->unknown_peer_uuids) {
             // Try writing this attribute again, in case peer ID was learned
             a->changed = TRUE;
+        } else if (a->force_write) {
+            /* If the force_write flag is set, write the attribute. */
+            a->changed = TRUE;
         }
 
         if(all || a->changed) {
-            write_attribute(a, ignore_delay);
+            /* When forced write flag is set, ignore delay. */
+            write_attribute(a, (a->force_write ? TRUE : ignore_delay));
         } else {
             crm_debug("Skipping unchanged attribute %s", a->id);
         }
@@ -1182,6 +1196,9 @@ write_attribute(attribute_t *a, bool ignore_delay)
 
     /* We will check all peers' uuids shortly, so initialize this to false */
     a->unknown_peer_uuids = FALSE;
+
+    /* Attribute will be written shortly, so clear forced write flag */
+    a->force_write = FALSE;    
 
     /* Make the table for the attribute trap */
     alert_attribute_value = g_hash_table_new_full(crm_strcase_hash,
