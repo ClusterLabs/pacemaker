@@ -3,7 +3,7 @@ Current cluster status:
 Node node2 (1048225984): standby
 Online: [ node1 ]
 
- Master/Slave Set: MS_RSC [MS_RSC_NATIVE]
+ Clone Set: MS_RSC [MS_RSC_NATIVE] (promotable)
      Masters: [ node1 ]
      Stopped: [ node2 ]
 
@@ -16,7 +16,7 @@ Revised cluster status:
 Node node2 (1048225984): standby
 Online: [ node1 ]
 
- Master/Slave Set: MS_RSC [MS_RSC_NATIVE]
+ Clone Set: MS_RSC [MS_RSC_NATIVE] (promotable)
      Masters: [ node1 ]
      Stopped: [ node2 ]
 

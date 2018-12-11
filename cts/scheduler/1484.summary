@@ -10,7 +10,6 @@ Transition Summary:
 
 Executing cluster transition:
  * Resource action: the-future-of-vaj stop on hb2
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Online: [ hb1 hb2 ]

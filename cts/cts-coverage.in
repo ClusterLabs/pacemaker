@@ -1,17 +1,23 @@
 #!@BASH_PATH@
+#
+# Copyright 2012-2018 Andrew Beekhof <andrew@beekhof.net>
+#
+# This source code is licensed under the GNU General Public License version 2
+# or later (GPLv2+) WITHOUT ANY WARRANTY.
+#
 
-start=$PWD
-test_home=`dirname $0`
+start="$PWD"
+test_home=$(dirname "$0")
 test_dir="@datadir@/@PACKAGE@/tests"
 
 if [ "$test_home" != "$test_dir" ]; then
     # Running against the source tree
-    GCOV_BASE=@abs_top_srcdir@
+    GCOV_BASE="@abs_top_srcdir@"
     test_dir="@abs_top_srcdir@/cts"
-    cd @abs_top_srcdir@
+    cd "@abs_top_srcdir@" || exit 1
     
     grep with-gcov config.log
-    if [ $? = 0 ]; then
+    if [ $? -eq 0 ]; then
 	echo "Pacemaker was built with gcov support"
     else
 	echo "Re-building with gcov support"
@@ -34,8 +40,8 @@ else
 	exit 1
     fi
 
-    cd `dirname $top`
-    cd ..
+    cd "$(dirname "$top")" || exit 1
+    cd .. || exit 1
 
     echo "Creating the directory structure in $GCOV_BASE from $PWD"
     # The .gcno files will already be there for sources,
@@ -48,7 +54,7 @@ else
     find . -type f -name "*.debug" -exec ln -s $PWD/\{\} $GCOV_BASE\{\} \;
 fi
 
-cd $start
+cd "$start" || exit 1
 lcov -d $GCOV_BASE -z
 
 # Run all active regression tests

@@ -245,12 +245,12 @@
       <rsc_colocation id="servsyslog-on-ms-servsyslog" rsc="servsyslog" score="INFINITY" with-rsc="ms-servsyslog" with-rsc-role="Master"/>
       <rsc_colocation id="infotos-on-ms-infotos" rsc="infotos" score="INFINITY" with-rsc="ms-infotos" with-rsc-role="Master"/>
       <rsc_colocation id="medomus-cvs-on-ms-medomus-cvs" rsc="medomus-cvs" score="INFINITY" with-rsc="ms-medomus-cvs" with-rsc-role="Master"/>
-      <rsc_order first="ms-smsprod2" first-action="promote" id="ms-smsprod2-before-smsprod2" score="INFINITY" then="smsprod2" then-action="start"/>
-      <rsc_order first="ms-itwiki" first-action="promote" id="ms-itwiki-before-itwiki" score="INFINITY" then="itwiki" then-action="start"/>
-      <rsc_order first="ms-bugtrack" first-action="promote" id="ms-bugtrack-before-bugtrack" score="INFINITY" then="bugtrack" then-action="start"/>
-      <rsc_order first="ms-servsyslog" first-action="promote" id="ms-servsyslog-before-servsyslog" score="INFINITY" then="servsyslog" then-action="start"/>
-      <rsc_order first="ms-infotos" first-action="promote" id="ms-infotos-before-infotos" score="INFINITY" then="infotos" then-action="start"/>
-      <rsc_order first="ms-medomus-cvs" first-action="promote" id="ms-medomus-cvs-before-medomus-cvs" score="INFINITY" then="medomus-cvs" then-action="start"/>
+      <rsc_order first="ms-smsprod2" first-action="promote" id="ms-smsprod2-before-smsprod2" then="smsprod2" then-action="start"/>
+      <rsc_order first="ms-itwiki" first-action="promote" id="ms-itwiki-before-itwiki" then="itwiki" then-action="start"/>
+      <rsc_order first="ms-bugtrack" first-action="promote" id="ms-bugtrack-before-bugtrack" then="bugtrack" then-action="start"/>
+      <rsc_order first="ms-servsyslog" first-action="promote" id="ms-servsyslog-before-servsyslog" then="servsyslog" then-action="start"/>
+      <rsc_order first="ms-infotos" first-action="promote" id="ms-infotos-before-infotos" then="infotos" then-action="start"/>
+      <rsc_order first="ms-medomus-cvs" first-action="promote" id="ms-medomus-cvs-before-medomus-cvs" then="medomus-cvs" then-action="start"/>
       <rsc_location id="ssh-connected" rsc="ssh">
         <rule boolean-op="or" id="ssh-connected-rule" score="-INFINITY">
           <expression attribute="pingd" id="ssh-connected-expression" operation="not_defined"/>
@@ -299,11 +299,11 @@
       <rsc_location id="smsprod2-on-cl-virt-2-by-def" node="cl-virt-2" rsc="smsprod2" score="50"/>
       <rsc_location id="medomus-cvs-on-cl-virt-2-by-def" node="cl-virt-2" rsc="medomus-cvs" score="50"/>
       <rsc_location id="infotos-on-cl-virt-2-by-def" node="cl-virt-2" rsc="infotos" score="50"/>
-      <rsc_order first="itwiki" first-action="start" id="itwiki-before-bugtrack" score="0" symmetrical="false" then="bugtrack" then-action="start"/>
-      <rsc_order first="bugtrack" first-action="start" id="bugtrack-before-smsprod2" score="0" symmetrical="false" then="smsprod2" then-action="start"/>
-      <rsc_order first="smsprod2" first-action="start" id="smsprod2-before-servsyslog" score="0" symmetrical="false" then="servsyslog" then-action="start"/>
-      <rsc_order first="infotos" first-action="start" id="infotos-before-medomus-cvs" score="0" symmetrical="false" then="medomus-cvs" then-action="start"/>
-      <rsc_order first="servsyslog" first-action="start" id="servsyslog-before-infotos" score="0" symmetrical="false" then="infotos" then-action="start"/>
+      <rsc_order first="itwiki" first-action="start" id="itwiki-before-bugtrack" kind="Optional" symmetrical="false" then="bugtrack" then-action="start"/>
+      <rsc_order first="bugtrack" first-action="start" id="bugtrack-before-smsprod2" kind="Optional" symmetrical="false" then="smsprod2" then-action="start"/>
+      <rsc_order first="smsprod2" first-action="start" id="smsprod2-before-servsyslog" kind="Optional" symmetrical="false" then="servsyslog" then-action="start"/>
+      <rsc_order first="infotos" first-action="start" id="infotos-before-medomus-cvs" kind="Optional" symmetrical="false" then="medomus-cvs" then-action="start"/>
+      <rsc_order first="servsyslog" first-action="start" id="servsyslog-before-infotos" kind="Optional" symmetrical="false" then="infotos" then-action="start"/>
     </constraints>
     <rsc_defaults>
       <meta_attributes id="rsc-options">

@@ -118,10 +118,10 @@ itself, allowing for more sophistication down the road.
 1. `make -C xml clean; make -C xml all` to rebuild the schemas in the local
    source directory.
 1. The CIB validity regression tests will break after the schema is updated.
-   Run `tools/regression.sh` to get the new output,
-   `diff tools/regression.validity.{out,exp}` to ensure the changes look correct,
-   `cp tools/regression.validity.{out,exp}` to update the expected output,
-   then commit the change.
+   Run `cts/cts-cli -s` to make the referential outcomes reflect the transient
+   changes made so far, `git diff cts/cli/regression.validity.exp` to ensure
+   the these changes look sane, and `git add cts/cli/regression.validity.exp`
+   to enqueue this change for a subsequent commit.
 1. Similarly, with the new major version `${X}`, it's advisable to refresh
    scheduler tests at some point, see the instructions in `cts/README.md`.
 

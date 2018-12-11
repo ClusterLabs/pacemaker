@@ -60,7 +60,7 @@
     </resources>
     <constraints>
       <rsc_colocation id="colo-ocfs-o2stage" rsc="c-ocfs" score="INFINITY" with-rsc="c-o2stage"/>
-      <rsc_order first="c-o2stage" id="order-ocfs-o2stage" score="INFINITY" then="c-ocfs"/>
+      <rsc_order first="c-o2stage" id="order-ocfs-o2stage" then="c-ocfs"/>
     </constraints>
     <op_defaults>
       <meta_attributes id="op-options">

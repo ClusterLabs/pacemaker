@@ -14,4 +14,10 @@
     <contrib>Co-author</contrib>
     <email>kgaillot@redhat.com</email>
   </author>
+  <author>
+    <firstname>Jan</firstname><surname>Pokorný</surname>
+    <affiliation><orgname>Red Hat</orgname></affiliation>
+    <contrib>Co-author</contrib>
+    <email>poki@redhat.com</email>
+  </author>
 </authorgroup>

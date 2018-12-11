@@ -37,7 +37,7 @@
           <resource_ref id="rsc3"/>
         </resource_set>
       </rsc_colocation>
-      <rsc_order id="order-1" score="INFINITY">
+      <rsc_order id="order-1">
         <resource_set id="order-1-0" sequential="true">
           <resource_ref id="rsc1"/>
           <resource_ref id="rsc2"/>

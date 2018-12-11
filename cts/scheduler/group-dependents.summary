@@ -25,7 +25,7 @@ Online: [ asttest1 asttest2 ]
  Clone Set: cl_route [ip_voip_route_default]
      Started: [ asttest1 asttest2 ]
  fs_drbd	(ocf::heartbeat:Filesystem):	Started asttest1 
- Master/Slave Set: ms_drbd [drbd]
+ Clone Set: ms_drbd [drbd] (promotable)
      Masters: [ asttest1 ]
      Slaves: [ asttest2 ]
 
@@ -101,7 +101,6 @@ Executing cluster transition:
  * Pseudo action:   ip_voip_addresses_p_stopped_0
  * Resource action: fs_drbd         stop on asttest1
  * Pseudo action:   ms_drbd_demote_0
- * Pseudo action:   all_stopped
  * Resource action: drbd:0          demote on asttest1
  * Pseudo action:   ms_drbd_demoted_0
  * Pseudo action:   ms_drbd_post_notify_demoted_0
@@ -189,7 +188,7 @@ Online: [ asttest1 asttest2 ]
  Clone Set: cl_route [ip_voip_route_default]
      Started: [ asttest1 asttest2 ]
  fs_drbd	(ocf::heartbeat:Filesystem):	Started asttest2 
- Master/Slave Set: ms_drbd [drbd]
+ Clone Set: ms_drbd [drbd] (promotable)
      Masters: [ asttest2 ]
      Slaves: [ asttest1 ]
 

@@ -1,3 +1,4 @@
+:compat-mode: legacy
 = Guest Node Walk-through =
 
 *What this tutorial is:* An in-depth walk-through of how to get Pacemaker to

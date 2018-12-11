@@ -72,11 +72,11 @@
     </resources>
     <constraints>
       <rsc_colocation id="dlm-o2cb-colo" rsc="o2cb-clone" score="INFINITY" with-rsc="dlm-clone"/>
-      <rsc_order first="dlm-clone" id="dlm-o2cb-order" score="INFINITY" then="o2cb-clone"/>
+      <rsc_order first="dlm-clone" id="dlm-o2cb-order" then="o2cb-clone"/>
       <rsc_colocation id="ocfs2-colo-1" rsc="c-ocfs2-1" score="INFINITY" with-rsc="o2cb-clone"/>
       <rsc_colocation id="ocfs2-colo-2" rsc="c-ocfs2-1" score="INFINITY" with-rsc="clone-drbd0"/>
-      <rsc_order first="clone-drbd0" id="ocfs2-drbd0-order" score="INFINITY" then="c-ocfs2-1"/>
-      <rsc_order first="o2cb-clone" id="ocfs2-o2cb-order" score="INFINITY" then="c-ocfs2-1"/>
+      <rsc_order first="clone-drbd0" id="ocfs2-drbd0-order" then="c-ocfs2-1"/>
+      <rsc_order first="o2cb-clone" id="ocfs2-o2cb-order" then="c-ocfs2-1"/>
     </constraints>
   </configuration>
   <status>

@@ -123,9 +123,9 @@ You can also use the full class:provider:RA format if multiple RAs with the same
 ## Create a resource
 
     crmsh # crm configure primitive ClusterIP ocf:heartbeat:IPaddr2 \
-            params ip=192.168.122.120 cidr_netmask=32 \
+            params ip=192.168.122.120 cidr_netmask=24 \
             op monitor interval=30s 
-    pcs   # pcs resource create ClusterIP IPaddr2 ip=192.168.0.120 cidr_netmask=32
+    pcs   # pcs resource create ClusterIP IPaddr2 ip=192.168.0.120 cidr_netmask=24
 
 The standard and provider (`ocf:heartbeat`) are determined automatically since `IPaddr2` is unique.
 The monitor operation is automatically created based on the agent's metadata.

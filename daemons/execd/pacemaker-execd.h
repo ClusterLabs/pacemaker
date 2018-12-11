@@ -46,14 +46,9 @@ typedef struct lrmd_rsc_s {
 } lrmd_rsc_t;
 
 #  ifdef HAVE_GNUTLS_GNUTLS_H
-/* in remote_tls.c */
+// in remoted_tls.c
 int lrmd_init_remote_tls_server(void);
 void lrmd_tls_server_destroy(void);
-
-/* Hidden in lrmd client lib */
-extern int lrmd_tls_send_msg(crm_remote_t * session, xmlNode * msg, uint32_t id,
-                             const char *msg_type);
-extern int lrmd_tls_set_key(gnutls_datum_t * key);
 #  endif
 
 int lrmd_server_send_reply(crm_client_t * client, uint32_t id, xmlNode * reply);
@@ -98,6 +93,6 @@ int ipc_proxy_shutdown_req(crm_client_t *ipc_proxy);
 #endif
 
 int process_lrmd_alert_exec(crm_client_t *client, uint32_t id, xmlNode *request);
-void lrmd_drain_alerts(GMainContext *ctx);
+void lrmd_drain_alerts(GMainLoop *mloop);
 
 #endif // PACEMAKER_EXECD__H

@@ -48,7 +48,7 @@ dnl   - Manually edit include/crm_config.h.in to have configure include
 dnl     new defines
 dnl   - Should not include HAVE_* defines
 dnl   - Safe to include anywhere
-AM_CONFIG_HEADER(include/config.h include/crm_config.h)
+AC_CONFIG_HEADERS([include/config.h include/crm_config.h])
 
 AC_ARG_WITH(version,
     [  --with-version=version   Override package version (if you are a packager needing to pretend) ],
@@ -450,33 +450,41 @@ case "$host_cpu" in
         ;;
 esac
 
-AC_MSG_CHECKING(which format is needed to print uint64_t)
-
-cc_temp_flags "-Wall $WERROR"
-
-AC_COMPILE_IFELSE(
-    [AC_LANG_PROGRAM(
-        [
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
-        ],
-        [
-int max = 512;
-uint64_t bignum = 42;
-char *buffer = malloc(max);
-const char *random = "random";
-snprintf(buffer, max-1, "<quorum id=%lu quorate=%s/>", bignum, random);
-fprintf(stderr, "Result: %s\n", buffer);
-        ]
-    )],
-    [U64T="%lu"],
-    [U64T="%llu"]
+# C99 doesn't guarantee uint64_t type and related format specifiers, but
+# prerequisites, corosync + libqb, use that widely, so the target platforms
+# are already pre-constrained to those "64bit-clean" (doesn't imply native
+# bit width) and hence we deliberately refrain from artificial surrogates
+# (sans manipulation through cached values).
+AC_CACHE_VAL(
+    [pcmk_cv_decl_inttypes],
+    [
+        AC_CHECK_DECLS(
+            [PRIu64, PRIu32, PRIx32,
+             SCNu64],
+            [pcmk_cv_decl_inttypes="PRIu64 PRIu32 PRIx32 SCNu64"],
+            [
+                # test shall only react on "no" cached result & error out respectively
+                if test "x$ac_cv_have_decl_PRIu64" = xno; then
+                    AC_MSG_ERROR([lack of inttypes.h based specifier serving uint64_t (PRIu64)])
+                elif test "x$ac_cv_have_decl_PRIu32" = xno; then
+                    AC_MSG_ERROR([lack of inttypes.h based specifier serving uint32_t (PRIu32)])
+                elif test "x$ac_cv_have_decl_PRIx32" = xno; then
+                    AC_MSG_ERROR([lack of inttypes.h based hexa specifier serving uint32_t (PRIx32)])
+                elif test "x$ac_cv_have_decl_SCNu64" = xno; then
+                    AC_MSG_ERROR([lack of inttypes.h based specifier gathering uint64_t (SCNu64)])
+                fi
+            ],
+            [[#include <inttypes.h>]]
+        )
+    ]
 )
-cc_restore_flags
-
-AC_MSG_RESULT($U64T)
-AC_DEFINE_UNQUOTED(U64T, "$U64T", Correct printf format for logging uint64_t)
+(
+    set $pcmk_cv_decl_inttypes
+    AC_DEFINE_UNQUOTED([U64T],  [$1], [Correct format specifier for U64T])
+    AC_DEFINE_UNQUOTED([U32T],  [$2], [Correct format specifier for U32T])
+    AC_DEFINE_UNQUOTED([X32T],  [$3], [Correct format specifier for X32T])
+    AC_DEFINE_UNQUOTED([U64TS], [$4], [Correct format specifier for U64TS])
+)
 
 dnl ===============================================
 dnl Program Paths
@@ -499,7 +507,7 @@ dnl Ensure PYTHON is an absolute path
 AC_PATH_PROG([PYTHON], [$PYTHON])
 
 case "x$PYTHON" in
-    x*python3*)
+    x*python3*|x*platform-python*)
         dnl When used with Python 3, Pacemaker requires a minimum of 3.2
         AM_PATH_PYTHON([3.2])
         ;;
@@ -509,32 +517,20 @@ case "x$PYTHON" in
         ;;
 esac
 
-AC_CHECK_PROGS(MAKE, gmake make)
-AC_PATH_PROGS(HTML2TXT, lynx w3m)
-AC_PATH_PROGS(HELP2MAN, help2man)
-AC_PATH_PROGS(POD2MAN, pod2man, pod2man)
-AC_PATH_PROGS(ASCIIDOC, asciidoc)
-AC_PATH_PROGS(PUBLICAN, publican)
-AC_PATH_PROGS(INKSCAPE, inkscape)
-AC_PATH_PROGS(XSLTPROC, xsltproc)
-AC_PATH_PROGS(XMLCATALOG, xmlcatalog)
-AC_PATH_PROGS(FOP, fop)
-AC_PATH_PROGS(SSH, ssh, /usr/bin/ssh)
-AC_PATH_PROGS(SCP, scp, /usr/bin/scp)
-AC_PATH_PROGS(TAR, tar)
-AC_PATH_PROGS(MD5, md5)
+AC_PATH_PROGS([ASCIIDOC_CONV], [asciidoc asciidoctor])
+AC_PATH_PROG([HELP2MAN], [help2man])
+AC_PATH_PROG([PUBLICAN], [publican])
+AC_PATH_PROG([INKSCAPE], [inkscape])
+AC_PATH_PROG([XSLTPROC], [xsltproc])
+AC_PATH_PROG([XMLCATALOG], [xmlcatalog])
 dnl BASH is already an environment variable, so use something else
 AC_PATH_PROG([BASH_PATH], [bash])
-AC_PATH_PROGS(TEST, test)
 PKG_PROG_PKG_CONFIG
 AC_PATH_PROGS(VALGRIND_BIN, valgrind, /usr/bin/valgrind)
 AC_DEFINE_UNQUOTED(VALGRIND_BIN, "$VALGRIND_BIN", Valgrind command)
 
 if test x"${LIBTOOL}" = x""; then
     AC_MSG_ERROR(You need (g)libtool installed in order to build ${PACKAGE})
-fi
-if test x"${MAKE}" = x""; then
-    AC_MSG_ERROR(You need (g)make installed in order to build ${PACKAGE})
 fi
 
 dnl Bash is needed for building man pages and running regression tests
@@ -576,8 +572,9 @@ if test x"${MANPAGE_XSLT}" != x""; then
     PCMK_FEATURES="$PCMK_FEATURES agent-manpages"
 fi
 
-AM_CONDITIONAL(BUILD_ASCIIDOC, test x"${ASCIIDOC}" != x"")
-if test x"${ASCIIDOC}" != x""; then
+AM_CONDITIONAL([IS_ASCIIDOC], [echo "${ASCIIDOC_CONV}" | grep -Eq 'asciidoc$'])
+AM_CONDITIONAL([BUILD_ASCIIDOC], [test "x${ASCIIDOC_CONV}" != x])
+if test "x${ASCIIDOC_CONV}" != x; then
     PCMK_FEATURES="$PCMK_FEATURES ascii-docs"
 fi
 
@@ -903,16 +900,16 @@ if test X"$CURSESLIBS" != X"" && cc_supports_flag -Wcast-qual; then
                          ],
                          [printw((const char *)"Test");]
         )],
-        [ac_cv_compatible_printw=yes],
-        [ac_cv_compatible_printw=no]
+        [pcmk_cv_compatible_printw=yes],
+        [pcmk_cv_compatible_printw=no]
     )
 
     LIBS=$ac_save_LIBS
     cc_restore_flags
 
-    AC_MSG_RESULT([$ac_cv_compatible_printw])
+    AC_MSG_RESULT([$pcmk_cv_compatible_printw])
 
-    if test "$ac_cv_compatible_printw" = no; then
+    if test "$pcmk_cv_compatible_printw" = no; then
         AC_MSG_WARN([The printw() function of your ncurses or curses library is old, we will disable usage of the library. If you want to use this library anyway, please update to newer version of the library, ncurses 5.4 or later is recommended. You can get the library from http://www.gnu.org/software/ncurses/.])
         AC_MSG_NOTICE([Disabling curses])
         AC_DEFINE(HAVE_INCOMPATIBLE_PRINTW, 1, [Do we have incompatible printw() in curses library?])
@@ -1363,6 +1360,7 @@ dnl gnutls_priority_set_direct available since 2.1.7 (released 2007-11-29)
 AC_CHECK_LIB(gnutls, gnutls_priority_set_direct)
 if test "$ac_cv_lib_gnutls_gnutls_priority_set_direct" != ""; then
     AC_CHECK_HEADERS(gnutls/gnutls.h)
+    AC_CHECK_FUNCS([gnutls_sec_param_to_pk_bits]) dnl since 2.12.0 (2011-03-24)
 fi
 
 dnl ========================================================================
@@ -1663,20 +1661,19 @@ dnl Options for cleaning up the compiler output
 QUIET_LIBTOOL_OPTS=""
 QUIET_MAKE_OPTS=""
 if test "x${enable_quiet}" = "xyes"; then
-    QUIET_LIBTOOL_OPTS="--quiet"
-    QUIET_MAKE_OPTS="--quiet"
+    QUIET_LIBTOOL_OPTS="--silent"
+    QUIET_MAKE_OPTS="-s"  # POSIX compliant
 fi
 
-AC_MSG_RESULT(Supress make details: ${enable_quiet})
+AC_MSG_RESULT(Suppress make details: ${enable_quiet})
 
 dnl Put the above variables to use
 LIBTOOL="${LIBTOOL} --tag=CC \$(QUIET_LIBTOOL_OPTS)"
-MAKE="${MAKE} \$(QUIET_MAKE_OPTS)"
+MAKEFLAGS="${MAKEFLAGS} ${QUIET_MAKE_OPTS}"
 
 AC_SUBST(CC)
-AC_SUBST(MAKE)
+AC_SUBST(MAKEFLAGS)
 AC_SUBST(LIBTOOL)
-AC_SUBST(QUIET_MAKE_OPTS)
 AC_SUBST(QUIET_LIBTOOL_OPTS)
 AC_DEFINE_UNQUOTED(CRM_FEATURES, "$PCMK_FEATURES", Set of enabled features)
 AC_SUBST(PCMK_FEATURES)

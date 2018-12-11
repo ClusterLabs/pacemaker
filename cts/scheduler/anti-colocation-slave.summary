@@ -3,7 +3,7 @@ Current cluster status:
 Online: [ sle12sp2-1 sle12sp2-2 ]
 
  st_sbd	(stonith:external/sbd):	Started sle12sp2-1 
- Master/Slave Set: ms1 [state1]
+ Clone Set: ms1 [state1] (promotable)
      Masters: [ sle12sp2-1 ]
      Slaves: [ sle12sp2-2 ]
  dummy1	(ocf::pacemaker:Dummy):	Started sle12sp2-1 
@@ -15,7 +15,6 @@ Transition Summary:
 
 Executing cluster transition:
  * Resource action: dummy1          stop on sle12sp2-1
- * Pseudo action:   all_stopped
  * Pseudo action:   ms1_demote_0
  * Resource action: state1          demote on sle12sp2-1
  * Pseudo action:   ms1_demoted_0
@@ -28,7 +27,7 @@ Revised cluster status:
 Online: [ sle12sp2-1 sle12sp2-2 ]
 
  st_sbd	(stonith:external/sbd):	Started sle12sp2-1 
- Master/Slave Set: ms1 [state1]
+ Clone Set: ms1 [state1] (promotable)
      Masters: [ sle12sp2-2 ]
      Slaves: [ sle12sp2-1 ]
  dummy1	(ocf::pacemaker:Dummy):	Started sle12sp2-2 

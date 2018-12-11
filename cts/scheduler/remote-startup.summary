@@ -20,7 +20,6 @@ Executing cluster transition:
  * Resource action: remote1         monitor on 18node2
  * Resource action: remote1         monitor on 18node1
  * Resource action: remote1         monitor on 18builder
- * Pseudo action:   all_stopped
  * Resource action: shooter         start on 18node1
  * Resource action: remote1         start on 18builder
  * Resource action: shooter         monitor=60000 on 18node1

@@ -133,11 +133,16 @@ static char *
 get_schema_path(const char *name, const char *file)
 {
     const char *base = get_schema_root();
+    char *ret = NULL;
 
     if (file) {
-        return crm_strdup_printf("%s/%s", base, file);
+        ret = crm_strdup_printf("%s/%s", base, file);
+
+    } else if (name) {
+        ret = crm_strdup_printf("%s/%s.rng", base, name);
     }
-    return crm_strdup_printf("%s/%s.rng", base, name);
+
+    return ret;
 }
 
 static inline bool
@@ -286,7 +291,9 @@ add_schema(enum schema_validator_e validator, const schema_version_t *version,
  *     when not present: upgrade-enter.xsl
  * - "upgrade-leave":
  *   . like "upgrade-enter", but SHOULD be present whenever
- *     "upgrade-enter" is
+ *     "upgrade-enter" is (and vice versa, but that's only
+ *     to prevent confusion based on observing the files,
+ *     it would get ignored regardless)
  *   . name convention:  (see "upgrade-enter")
  */
 static int
@@ -319,7 +326,9 @@ add_schema_by_version(const schema_version_t *version, int next,
             /* or initially, at least a generic one */
             crm_debug("Upgrade-enter transform %s not found", xslt);
             free(xslt);
-            xslt = get_schema_path(NULL, "upgrade-enter.xsl");
+            free(transform_enter);
+            transform_enter = strdup("upgrade-enter.xsl");
+            xslt = get_schema_path(NULL, transform_enter);
             if (stat(xslt, &s) != 0) {
                 crm_debug("Upgrade-enter transform %s not found, either", xslt);
                 free(xslt);
@@ -979,6 +988,8 @@ apply_upgrade(xmlNode *xml, const struct schema_s *schema, gboolean to_logs)
 
     if (final != NULL && transform_onleave) {
         upgrade = final;
+        /* following condition ensured in add_schema_by_version */
+        CRM_ASSERT(schema->transform_enter != NULL);
         transform_leave = strdup(schema->transform_enter);
         /* enter -> leave */
         memcpy(strrchr(transform_leave, '-') + 1, "leave", sizeof("leave") - 1);

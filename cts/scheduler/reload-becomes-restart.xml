@@ -47,7 +47,7 @@
       </clone>
     </resources>
     <constraints>
-      <rsc_order id="rsc2-after-rsc1" score="INFINITY" first="cl-rsc1" first-action="start" then="cl-rsc2" then-action="start"/>
+      <rsc_order id="rsc2-after-rsc1" first="cl-rsc1" first-action="start" then="cl-rsc2" then-action="start"/>
     </constraints>
   </configuration>
   <status>

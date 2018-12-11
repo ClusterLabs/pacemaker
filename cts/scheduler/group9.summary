@@ -40,7 +40,6 @@ Executing cluster transition:
  * Resource action: rsc4            start on node1
  * Resource action: rsc5            start on node1
  * Resource action: rsc6            stop on node1
- * Pseudo action:   all_stopped
  * Pseudo action:   foo_running_0
  * Pseudo action:   bar_stopped_0
  * Pseudo action:   bar_start_0

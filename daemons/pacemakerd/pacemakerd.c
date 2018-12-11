@@ -21,20 +21,23 @@
 #include <crm/common/mainloop.h>
 #include <crm/cluster/internal.h>
 #include <crm/cluster.h>
+#ifdef SUPPORT_COROSYNC
+#include <corosync/cfg.h>
+#endif
 
 #include <dirent.h>
 #include <ctype.h>
 
-gboolean pcmk_quorate = FALSE;
-gboolean fatal_error = FALSE;
-GMainLoop *mainloop = NULL;
+static gboolean pcmk_quorate = FALSE;
+static gboolean fatal_error = FALSE;
+static GMainLoop *mainloop = NULL;
 
 #define PCMK_PROCESS_CHECK_INTERVAL 5
 
-const char *local_name = NULL;
-uint32_t local_nodeid = 0;
-crm_trigger_t *shutdown_trigger = NULL;
-const char *pid_file = "/var/run/pacemaker.pid";
+static const char *local_name = NULL;
+static uint32_t local_nodeid = 0;
+static crm_trigger_t *shutdown_trigger = NULL;
+static const char *pid_file = "/var/run/pacemaker.pid";
 
 typedef struct pcmk_child_s {
     int pid;
@@ -50,7 +53,7 @@ typedef struct pcmk_child_s {
 } pcmk_child_t;
 
 /* Index into the array below */
-#define pcmk_child_controld  3
+#define PCMK_CHILD_CONTROLD  3
 
 static pcmk_child_t pcmk_children[] = {
     {
@@ -84,7 +87,6 @@ static pcmk_child_t pcmk_children[] = {
 };
 
 static gboolean start_child(pcmk_child_t * child);
-static gboolean check_active_before_startup_processes(gpointer user_data);
 static gboolean update_node_processes(uint32_t id, const char *uname,
                                       uint32_t procs);
 void update_process_clients(crm_client_t *client);
@@ -137,6 +139,28 @@ pcmk_process_exit(pcmk_child_t * child)
         crm_notice("Respawning failed child process: %s", child->name);
         start_child(child);
     }
+}
+
+static void pcmk_exit_with_cluster(int exitcode)
+{
+#ifdef SUPPORT_COROSYNC
+    corosync_cfg_handle_t cfg_handle;
+    cs_error_t err;
+
+    if (exitcode == CRM_EX_FATAL) {
+	    crm_info("Asking Corosync to shut down");
+	    err = corosync_cfg_initialize(&cfg_handle, NULL);
+	    if (err != CS_OK) {
+		    crm_warn("Unable to open handle to corosync to close it down. err=%d", err);
+	    }
+	    err = corosync_cfg_try_shutdown(cfg_handle, COROSYNC_CFG_SHUTDOWN_FLAG_IMMEDIATE);
+	    if (err != CS_OK) {
+		    crm_warn("Corosync shutdown failed. err=%d", err);
+	    }
+	    corosync_cfg_finalize(cfg_handle);
+    }
+#endif
+    crm_exit(exitcode);
 }
 
 static void
@@ -374,9 +398,6 @@ pcmk_shutdown_worker(gpointer user_data)
     if (phase == 0) {
         crm_notice("Shutting down Pacemaker");
         phase = max;
-
-        /* Add a second, more frequent, check to speed up shutdown */
-        g_timeout_add_seconds(5, check_active_before_startup_processes, NULL);
     }
 
     for (; phase > 0; phase--) {
@@ -396,7 +417,7 @@ pcmk_shutdown_worker(gpointer user_data)
                     next_log = now + 30;
                     child->respawn = FALSE;
                     stop_child(child, SIGTERM);
-                    if (phase < pcmk_children[pcmk_child_controld].start_seq) {
+                    if (phase < pcmk_children[PCMK_CHILD_CONTROLD].start_seq) {
                         g_timeout_add(180000 /* 3m */ , escalate_shutdown, child);
                     }
 
@@ -430,7 +451,7 @@ pcmk_shutdown_worker(gpointer user_data)
 
     if (fatal_error) {
         crm_notice("Shutting down and staying down after fatal error");
-        crm_exit(CRM_EX_FATAL);
+        pcmk_exit_with_cluster(CRM_EX_FATAL);
     }
 
     return TRUE;
@@ -679,6 +700,7 @@ mcp_chown(const char *path, uid_t uid, gid_t gid)
     }
 }
 
+#if SUPPORT_PROCFS
 static gboolean
 check_active_before_startup_processes(gpointer user_data)
 {
@@ -711,6 +733,7 @@ check_active_before_startup_processes(gpointer user_data)
 
     return keep_tracking;
 }
+#endif // SUPPORT_PROCFS
 
 static void
 find_and_track_existing_processes(void)
@@ -1105,7 +1128,7 @@ main(int argc, char **argv)
         ipcs = NULL;
     }
 
-    g_main_destroy(mainloop);
+    g_main_loop_unref(mainloop);
 
     cluster_disconnect_cpg(&cluster);
     cluster_disconnect_cfg();

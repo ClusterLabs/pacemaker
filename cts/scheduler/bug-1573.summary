@@ -18,7 +18,6 @@ Executing cluster transition:
  * Pseudo action:   group_11_stop_0
  * Resource action: IPaddr_192_168_1_102 stop on xen-b
  * Cluster action:  do_shutdown on xen-b
- * Pseudo action:   all_stopped
  * Pseudo action:   group_11_stopped_0
 
 Revised cluster status:

@@ -9,7 +9,7 @@ Online: [ node1 node2 ]
      rsc3	(ocf::pacemaker:Dummy):	Started node1
  Clone Set: clone4 [rsc4]
      Started: [ node1 node2 ]
- Master/Slave Set: ms5 [rsc5]
+ Clone Set: ms5 [rsc5] (promotable)
      Masters: [ node1 ]
      Slaves: [ node2 ]
 
@@ -33,7 +33,6 @@ Executing cluster transition:
  * Pseudo action:   clone4_stopped_0
  * Resource action: rsc5:1          demote on node1
  * Pseudo action:   ms5_demoted_0
- * Pseudo action:   all_stopped
  * Pseudo action:   group2_stopped_0
 
 Revised cluster status:
@@ -46,6 +45,6 @@ Online: [ node1 node2 ]
      rsc3	(ocf::pacemaker:Dummy):	Stopped 
  Clone Set: clone4 [rsc4]
      Stopped: [ node1 node2 ]
- Master/Slave Set: ms5 [rsc5]
+ Clone Set: ms5 [rsc5] (promotable)
      Slaves: [ node1 node2 ]
 

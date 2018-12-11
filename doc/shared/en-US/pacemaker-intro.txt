@@ -1,13 +1,15 @@
+:compat-mode: legacy
 == What Is 'Pacemaker'? ==
 
 *Pacemaker* is a high-availability 'cluster resource manager' -- software that
-runs on a set of hosts (a 'cluster' of 'nodes') in order to minimize downtime of
-desired services ('resources').
+runs on a set of hosts (a 'cluster' of 'nodes') in order to preserve integrity
+and minimize downtime of desired services ('resources').
 footnote:[
 'Cluster' is sometimes used in other contexts to refer to hosts grouped
 together for other purposes, such as high-performance computing (HPC), but
 Pacemaker is not intended for those purposes.
 ]
+It is maintained by the https://www.ClusterLabs.org/[ClusterLabs] community.
 
 Pacemaker's key features include:
 
@@ -140,7 +142,7 @@ The Pacemaker daemons were renamed in version 2.0. You may still find
 references to the old names, especially in documentation targeted to version
 1.1.
 
-[cols="1,2",options="header",align="center"]
+[width="95%",cols="1,2",options="header",align="center"]
 |=========================================================
 | Old name | New name
 | attrd | pacemaker-attrd

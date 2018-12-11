@@ -27,7 +27,6 @@ Executing cluster transition:
  * Resource action: ip_mgmt         stop on DEM-1
  * Resource action: d_bird_subnet_state stop on DEM-1
  * Resource action: ipv6_dem_tas_dns stop on DEM-1
- * Pseudo action:   all_stopped
  * Pseudo action:   svc_stopped_0
  * Pseudo action:   svc_start_0
  * Resource action: ipv6_dem_tas_dns start on DEM-2

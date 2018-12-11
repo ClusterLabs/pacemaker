@@ -4,68 +4,66 @@
 %BOOK_ENTITIES;
 ]>
 <bookinfo id="book-Clusters_from_Scratch-Clusters_from_Scratch">
-	<title>Clusters from Scratch</title>
-	<subtitle>Step-by-Step Instructions for Building Your First High-Availability Cluster</subtitle>
-	<productname>Pacemaker</productname>
-	<productnumber>2.0</productnumber>
-	<!--
-		EDITION-PUBSNUMBER should match REVNUMBER in Revision_History.xml.
-		Increment EDITION when the syntax of the documented software
-		changes (OS, pacemaker, corosync, pcs), and PUBSNUMBER for
-		simple textual changes (corrections, translations, etc.).
-	-->
-	<edition>9</edition>
-	<pubsnumber>1</pubsnumber>
-	<abstract>
-		<para>
-			This document provides a step-by-step guide to building a simple high-availability cluster using Pacemaker.
-		</para>
-		<para>
-			The example cluster will use:
-			<orderedlist>
-				<listitem>
-					<para>
-						&DISTRO; &DISTRO_VERSION; as the host operating system
-					</para>
-				</listitem>
-				<listitem>
-					<para>
-						Corosync to provide messaging and membership services,
-					</para>
-				</listitem>
-				<listitem>
-					<para>
-						Pacemaker 1.1.16
-						<footnote><para>While this guide is part of the document set for
-						Pacemaker 2.0, it demonstrates the version available in
-						the standard &DISTRO; repositories</para></footnote>
-						to perform resource management,
-					</para>
-				</listitem>
-				<listitem>
-					<para>
-						DRBD as a cost-effective alternative to shared storage,
-					</para>
-				</listitem>
-				<listitem>
-					<para>
-						GFS2 as the cluster filesystem (in active/active mode)
-					</para>
-				</listitem>
-			</orderedlist>
-		</para>
-		<para>
-			Given the graphical nature of the install process, a number of screenshots are included. However the guide is primarily composed of commands, the reasons for executing them and their expected outputs.
-		</para>
-	</abstract>
-	<corpauthor>
-		<inlinemediaobject>
-			<imageobject>
-				<imagedata fileref="Common_Content/images/title_logo.svg" format="SVG" />
-			</imageobject>
-		</inlinemediaobject>
-	</corpauthor>
-	<xi:include href="Common_Content/Legal_Notice.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-	<xi:include href="Author_Group.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+        <title>Clusters from Scratch</title>
+        <subtitle>Step-by-Step Instructions for Building Your First High-Availability Cluster</subtitle>
+        <productname>Pacemaker</productname>
+        <productnumber>2.0</productnumber>
+        <!--
+                EDITION-PUBSNUMBER should match REVNUMBER in Revision_History.xml.
+                Increment EDITION when the syntax of the documented software
+                changes (OS, pacemaker, corosync, pcs), and PUBSNUMBER for
+                simple textual changes (corrections, translations, etc.).
+        -->
+        <edition>10</edition>
+        <pubsnumber>2</pubsnumber>
+        <abstract>
+                <para>
+                        This document provides a step-by-step guide to building a simple high-availability cluster using Pacemaker.
+                </para>
+                <para>
+                        The example cluster will use:
+                        <orderedlist>
+                                <listitem>
+                                        <para>
+                                                &DISTRO; &DISTRO_VERSION; as the host operating system
+                                        </para>
+                                </listitem>
+                                <listitem>
+                                        <para>
+                                                Corosync to provide messaging and membership services,
+                                        </para>
+                                </listitem>
+                                <listitem>
+                                        <para>
+                                                Pacemaker 1.1.18
+                                                <footnote><para>While this guide is part of the document set for
+                                                Pacemaker 2.0, it demonstrates the version available in
+                                                the standard &DISTRO; repositories.</para></footnote>
+                                        </para>
+                                </listitem>
+                                <listitem>
+                                        <para>
+                                                DRBD as a cost-effective alternative to shared storage,
+                                        </para>
+                                </listitem>
+                                <listitem>
+                                        <para>
+                                                GFS2 as the cluster filesystem (in active/active mode)
+                                        </para>
+                                </listitem>
+                        </orderedlist>
+                </para>
+                <para>
+                        Given the graphical nature of the install process, a number of screenshots are included. However the guide is primarily composed of commands, the reasons for executing them and their expected outputs.
+                </para>
+        </abstract>
+        <corpauthor>
+                <inlinemediaobject>
+                        <imageobject>
+                                <imagedata fileref="Common_Content/images/title_logo.svg" format="SVG" />
+                        </imageobject>
+                </inlinemediaobject>
+        </corpauthor>
+        <xi:include href="Common_Content/Legal_Notice.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+        <xi:include href="Author_Group.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 </bookinfo>
-

@@ -29,7 +29,7 @@
       <primitive class="lsb" id="smb_lsb" type="smb"/>
     </resources>
     <constraints>
-      <rsc_order id="smb_lsb-before-cups_clone" first="smb_lsb" then="cups_clone" score="INFINITY"/>
+      <rsc_order id="smb_lsb-before-cups_clone" first="smb_lsb" then="cups_clone"/>
     </constraints>
   </configuration>
   <status>

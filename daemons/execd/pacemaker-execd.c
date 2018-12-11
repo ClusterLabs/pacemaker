@@ -20,16 +20,21 @@
 #include <crm/common/mainloop.h>
 #include <crm/common/ipc.h>
 #include <crm/common/ipcs.h>
+#include <crm/common/remote_internal.h>
 
 #include "pacemaker-execd.h"
 
 #if defined(HAVE_GNUTLS_GNUTLS_H) && defined(SUPPORT_REMOTE)
 #  define ENABLE_PCMK_REMOTE
+
+// Hidden in liblrmd
+extern int lrmd_tls_send_msg(crm_remote_t *session, xmlNode *msg, uint32_t id,
+                             const char *msg_type);
 #endif
 
-GMainLoop *mainloop = NULL;
+static GMainLoop *mainloop = NULL;
 static qb_ipcs_service_t *ipcs = NULL;
-stonith_t *stonith_api = NULL;
+static stonith_t *stonith_api = NULL;
 int lrmd_call_id = 0;
 
 #ifdef ENABLE_PCMK_REMOTE
@@ -284,7 +289,7 @@ lrmd_exit(gpointer data)
     g_hash_table_destroy(rsc_list);
 
     if (mainloop) {
-        lrmd_drain_alerts(g_main_loop_get_context(mainloop));
+        lrmd_drain_alerts(mainloop);
     }
 
     crm_exit(CRM_EX_OK);

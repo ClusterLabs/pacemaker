@@ -35,7 +35,6 @@ Executing cluster transition:
  * Resource action: child_rsc3      stop on node1
  * Resource action: child_rsc2      stop on node1
  * Resource action: child_rsc1      stop on node1
- * Pseudo action:   all_stopped
  * Pseudo action:   rsc1_stopped_0
  * Pseudo action:   rsc1_start_0
  * Resource action: child_rsc1      start on node2

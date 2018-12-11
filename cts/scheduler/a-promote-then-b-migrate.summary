@@ -2,7 +2,7 @@
 Current cluster status:
 Online: [ node1 node2 ]
 
- Master/Slave Set: ms1 [rsc1]
+ Clone Set: ms1 [rsc1] (promotable)
      Masters: [ node1 ]
      Slaves: [ node2 ]
  rsc2	(ocf::pacemaker:Dummy):	Started node1 
@@ -28,14 +28,13 @@ Executing cluster transition:
  * Resource action: rsc1:1          monitor=5000 on node2
  * Resource action: rsc2            migrate_from on node2
  * Resource action: rsc2            stop on node1
- * Pseudo action:   all_stopped
  * Pseudo action:   rsc2_start_0
  * Resource action: rsc2            monitor=5000 on node2
 
 Revised cluster status:
 Online: [ node1 node2 ]
 
- Master/Slave Set: ms1 [rsc1]
+ Clone Set: ms1 [rsc1] (promotable)
      Masters: [ node1 node2 ]
  rsc2	(ocf::pacemaker:Dummy):	Started node2 
 

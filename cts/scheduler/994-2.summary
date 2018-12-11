@@ -17,7 +17,6 @@ Executing cluster transition:
  * Resource action: depends         stop on paul
  * Pseudo action:   group_1_stop_0
  * Resource action: postfix_9       stop on paul
- * Pseudo action:   all_stopped
  * Pseudo action:   group_1_stopped_0
  * Pseudo action:   group_1_start_0
  * Resource action: postfix_9       start on paul

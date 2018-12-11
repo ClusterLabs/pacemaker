@@ -5,7 +5,7 @@
 #	Starts crm_mon in background which logs cluster status as
 #	html to the specified file.
 #
-# Copyright (c) 2004 SUSE LINUX AG, Lars Marowsky-Brée
+# Copyright 2004-2018 SUSE LINUX AG, Lars Marowsky-Brée
 #                    All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -101,11 +101,11 @@ Location to write HTML output to.
 </parameters>
 
 <actions>
-<action name="start"   timeout="20" />
-<action name="stop"    timeout="20" />
-<action name="monitor" depth="0"  timeout="20" interval="10" />
-<action name="meta-data"  timeout="5" />
-<action name="validate-all"  timeout="30" />
+<action name="start"   timeout="20s" />
+<action name="stop"    timeout="20s" />
+<action name="monitor" depth="0"  timeout="20s" interval="10s" />
+<action name="meta-data"  timeout="5s" />
+<action name="validate-all"  timeout="30s" />
 </actions>
 </resource-agent>
 END
@@ -130,8 +130,6 @@ ClusterMon_exit() {
 }
 
 ClusterMon_start() {
-    cmd_prefix=""
-    cmd_suffix=""
     if [ ! -z $OCF_RESKEY_user ]; then
 	su - $OCF_RESKEY_user -c "$CMON_CMD"
     else

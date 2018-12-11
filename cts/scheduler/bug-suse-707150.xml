@@ -138,9 +138,9 @@
     </resources>
     <constraints>
       <rsc_colocation id="colo-vm-00" rsc="vm-00" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-00" score="INFINITY" then="vm-00"/>
+      <rsc_order first="base-clone" id="order-vm-00" then="vm-00"/>
       <rsc_colocation id="colo-vm-1" rsc="vm-01" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-1" score="INFINITY" then="vm-01"/>
+      <rsc_order first="base-clone" id="order-vm-1" then="vm-01"/>
     </constraints>
     <op_defaults>
       <meta_attributes id="op-options">

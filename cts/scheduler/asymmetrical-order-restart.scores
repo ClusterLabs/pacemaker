@@ -1,0 +1,8 @@
+Allocation scores:
+Using the original execution date of: 2018-08-09 18:55:41Z
+native_color: cesr104ipmi allocation score on cesr105-p16: 0
+native_color: cesr104ipmi allocation score on cesr109-p16: 0
+native_color: sleep_a allocation score on cesr105-p16: -INFINITY
+native_color: sleep_a allocation score on cesr109-p16: -INFINITY
+native_color: sleep_b allocation score on cesr105-p16: 0
+native_color: sleep_b allocation score on cesr109-p16: 0

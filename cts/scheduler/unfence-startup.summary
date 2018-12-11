@@ -21,9 +21,7 @@ Transition Summary:
 Executing cluster transition:
  * Resource action: clvmd           monitor on virt-2
  * Fencing virt-4 (reboot)
- * Pseudo action:   stonith_complete
  * Fencing virt-3 (on)
- * Pseudo action:   all_stopped
  * Resource action: fencing         monitor on virt-3
  * Resource action: dlm             monitor on virt-3
  * Pseudo action:   dlm-clone_start_0

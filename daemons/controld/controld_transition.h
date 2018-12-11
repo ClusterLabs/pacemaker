@@ -69,13 +69,13 @@ extern void abort_transition_graph(int abort_priority, enum transition_action ab
 
 extern gboolean te_connect_stonith(gpointer user_data);
 
+extern void te_trigger_stonith_history_sync(void);
+
 extern crm_trigger_t *transition_trigger;
 extern crm_trigger_t *stonith_reconnect;
 
 extern char *failed_stop_offset;
 extern char *failed_start_offset;
-extern int active_timeout;
-extern int stonith_op_active;
 
 void te_action_confirmed(crm_action_t * action);
 void te_reset_job_counts(void);

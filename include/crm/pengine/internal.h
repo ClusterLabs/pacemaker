@@ -22,6 +22,29 @@
 #  define pe_set_action_bit(action, bit) action->flags = crm_set_bit(__FUNCTION__, __LINE__, action->uuid, action->flags, bit)
 #  define pe_clear_action_bit(action, bit) action->flags = crm_clear_bit(__FUNCTION__, __LINE__, action->uuid, action->flags, bit)
 
+typedef struct pe__location_constraint_s {
+    char *id;                           // Constraint XML ID
+    pe_resource_t *rsc_lh;              // Resource being located
+    enum rsc_role_e role_filter;        // Role to locate
+    enum pe_discover_e discover_mode;   // Resource discovery
+    GListPtr node_list_rh;              // List of pe_node_t*
+} pe__location_t;
+
+typedef struct pe__order_constraint_s {
+    int id;
+    enum pe_ordering type;
+
+    void *lh_opaque;
+    resource_t *lh_rsc;
+    action_t *lh_action;
+    char *lh_action_task;
+
+    void *rh_opaque;
+    resource_t *rh_rsc;
+    action_t *rh_action;
+    char *rh_action_task;
+} pe__ordering_t;
+
 typedef struct notify_data_s {
     GHashTable *keys;
 
@@ -51,14 +74,13 @@ void add_hash_param(GHashTable * hash, const char *name, const char *value);
 
 char *native_parameter(resource_t * rsc, node_t * node, gboolean create, const char *name,
                        pe_working_set_t * data_set);
-node_t *native_location(resource_t * rsc, GListPtr * list, gboolean current);
+pe_node_t *native_location(const pe_resource_t *rsc, GList **list, int current);
 
 void pe_metadata(void);
 void verify_pe_options(GHashTable * options);
 
 void common_update_score(resource_t * rsc, const char *id, int score);
 void native_add_running(resource_t * rsc, node_t * node, pe_working_set_t * data_set);
-node_t *rsc_known_on(resource_t * rsc, GListPtr * list);
 
 gboolean native_unpack(resource_t * rsc, pe_working_set_t * data_set);
 gboolean group_unpack(resource_t * rsc, pe_working_set_t * data_set);
@@ -92,8 +114,6 @@ gboolean common_unpack(xmlNode * xml_obj, resource_t ** rsc, resource_t * parent
                        pe_working_set_t * data_set);
 void common_free(resource_t * rsc);
 
-extern pe_working_set_t *pe_dataset;
-
 extern node_t *node_copy(const node_t *this_node);
 extern time_t get_effective_time(pe_working_set_t * data_set);
 
@@ -110,6 +130,9 @@ int pe_get_failcount(node_t *node, resource_t *rsc, time_t *last_failure,
                      uint32_t flags, xmlNode *xml_op,
                      pe_working_set_t *data_set);
 
+pe_action_t *pe__clear_failcount(pe_resource_t *rsc, pe_node_t *node,
+                                 const char *reason,
+                                 pe_working_set_t *data_set);
 
 /* Functions for finding/counting a resource's active nodes */
 
@@ -320,5 +343,11 @@ const char *pe_node_attribute_calculated(const pe_node_t *node,
 const char *pe_node_attribute_raw(pe_node_t *node, const char *name);
 bool pe__is_universal_clone(pe_resource_t *rsc,
                             pe_working_set_t *data_set);
-
+void pe__add_param_check(xmlNode *rsc_op, pe_resource_t *rsc, pe_node_t *node,
+                         enum pe_check_parameters, pe_working_set_t *data_set);
+void pe__foreach_param_check(pe_working_set_t *data_set,
+                             void (*cb)(pe_resource_t*, pe_node_t*, xmlNode*,
+                                        enum pe_check_parameters,
+                                        pe_working_set_t*));
+void pe__free_param_checks(pe_working_set_t *data_set);
 #endif

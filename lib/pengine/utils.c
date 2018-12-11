@@ -11,14 +11,13 @@
 #include <crm/common/xml.h>
 #include <crm/common/util.h>
 
+#include <ctype.h>
 #include <glib.h>
 
 #include <crm/pengine/rules.h>
 #include <crm/pengine/internal.h>
 
 #include <unpack.h>
-
-pe_working_set_t *pe_dataset = NULL;
 
 extern xmlNode *get_object_root(const char *object_type, xmlNode * the_root);
 void print_str_str(gpointer key, gpointer value, gpointer user_data);
@@ -215,10 +214,53 @@ node_list_dup(GListPtr list1, gboolean reset, gboolean filter)
 gint
 sort_node_uname(gconstpointer a, gconstpointer b)
 {
-    const node_t *node_a = a;
-    const node_t *node_b = b;
+    const char *name_a = ((const node_t *) a)->details->uname;
+    const char *name_b = ((const node_t *) b)->details->uname;
 
-    return strcmp(node_a->details->uname, node_b->details->uname);
+    while (*name_a && *name_b) {
+        if (isdigit(*name_a) && isdigit(*name_b)) {
+            // If node names contain a number, sort numerically
+
+            char *end_a = NULL;
+            char *end_b = NULL;
+            long num_a = strtol(name_a, &end_a, 10);
+            long num_b = strtol(name_b, &end_b, 10);
+
+            // allow ordering e.g. 007 > 7
+            size_t len_a = end_a - name_a;
+            size_t len_b = end_b - name_b;
+
+            if (num_a < num_b) {
+                return -1;
+            } else if (num_a > num_b) {
+                return 1;
+            } else if (len_a < len_b) {
+                return -1;
+            } else if (len_a > len_b) {
+                return 1;
+            }
+            name_a = end_a;
+            name_b = end_b;
+        } else {
+            // Compare non-digits case-insensitively
+            int lower_a = tolower(*name_a);
+            int lower_b = tolower(*name_b);
+
+            if (lower_a < lower_b) {
+                return -1;
+            } else if (lower_a > lower_b) {
+                return 1;
+            }
+            ++name_a;
+            ++name_b;
+        }
+    }
+    if (!*name_a && *name_b) {
+        return -1;
+    } else if (*name_a && !*name_b) {
+        return 1;
+    }
+    return 0;
 }
 
 void
@@ -1886,7 +1928,8 @@ rsc_action_digest(resource_t * rsc, const char *task, const char *key,
 
         // REMOTE_CONTAINER_HACK: Allow remote nodes that start containers with pacemaker remote inside
         if (container_fix_remote_addr_in(rsc, data->params_all, "addr")) {
-            crm_trace("Fixed addr for %s on %s", rsc->id, node->details->uname);
+            crm_trace("Set address for bundle connection %s (on %s)",
+                      rsc->id, node->details->uname);
         }
 
         g_hash_table_foreach(local_rsc_params, hash2field, data->params_all);

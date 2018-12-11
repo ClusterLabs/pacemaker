@@ -12,6 +12,12 @@
 extern "C" {
 #endif
 
+/*!
+ * \file
+ * \brief Cluster status and scheduling
+ * \ingroup pengine
+ */
+
 #  include <glib.h>
 #  include <stdbool.h>
 #  include <crm/common/iso8601.h>
@@ -37,18 +43,20 @@ enum node_type {
     node_remote
 };
 
+//! \deprecated will be removed in a future release
 enum pe_restart {
     pe_restart_restart,
     pe_restart_ignore
 };
 
+//! Determine behavior of pe_find_resource_with_flags()
 enum pe_find {
-    pe_find_renamed  = 0x001, // match resource ID or LRM history ID
-    pe_find_anon     = 0x002, // match base name of anonymous clone instances
-    pe_find_clone    = 0x004, // match only clone instances
-    pe_find_current  = 0x008, // match resource active on specified node
-    pe_find_inactive = 0x010, // match resource not running anywhere
-    pe_find_any      = 0x020, // match base name of any clone instance
+    pe_find_renamed  = 0x001, //!< match resource ID or LRM history ID
+    pe_find_anon     = 0x002, //!< match base name of anonymous clone instances
+    pe_find_clone    = 0x004, //!< match only clone instances
+    pe_find_current  = 0x008, //!< match resource active on specified node
+    pe_find_inactive = 0x010, //!< match resource not running anywhere
+    pe_find_any      = 0x020, //!< match base name of any clone instance
 };
 
 #  define pe_flag_have_quorum           0x00000001ULL
@@ -124,6 +132,21 @@ struct pe_working_set_s {
 
     int blocked_resources;
     int disabled_resources;
+
+    GList *param_check; // History entries that need to be checked
+    GList *stop_needed; // Containers that need stop actions
+};
+
+enum pe_check_parameters {
+    /* Clear fail count if parameters changed for un-expired start or monitor
+     * last_failure.
+     */
+    pe_check_last_failure,
+
+    /* Clear fail count if parameters changed for start, monitor, promote, or
+     * migrate_from actions for active resources.
+     */
+    pe_check_active,
 };
 
 struct pe_node_shared_s {
@@ -155,7 +178,7 @@ struct pe_node_shared_s {
 
     GHashTable *attrs;          /* char* => char* */
     GHashTable *utilization;
-    GHashTable *digest_cache;   /*! cache of calculated resource digests */
+    GHashTable *digest_cache;   //!< cache of calculated resource digests
 };
 
 struct pe_node_s {
@@ -248,7 +271,9 @@ struct pe_resource_s {
     resource_alloc_functions_t *cmds;
 
     enum rsc_recovery_type recovery_type;
-    enum pe_restart restart_type;
+
+    // @TODO only pe_restart_restart is of interest, so merge into flags
+    enum pe_restart restart_type; //!< \deprecated will be removed in future release
 
     int priority;
     int stickiness;
@@ -264,11 +289,14 @@ struct pe_resource_s {
     gboolean is_remote_node;
     gboolean exclusive_discover;
 
-    GListPtr rsc_cons_lhs;      /* rsc_colocation_t* */
-    GListPtr rsc_cons;          /* rsc_colocation_t* */
-    GListPtr rsc_location;      /* rsc_to_node_t*    */
-    GListPtr actions;           /* pe_action_t*      */
-    GListPtr rsc_tickets;       /* rsc_ticket*       */
+    //!@{
+    //! This field should be treated as internal to Pacemaker
+    GListPtr rsc_cons_lhs;      // List of rsc_colocation_t*
+    GListPtr rsc_cons;          // List of rsc_colocation_t*
+    GListPtr rsc_location;      // List of pe__location_t*
+    GListPtr actions;           // List of pe_action_t*
+    GListPtr rsc_tickets;       // List of rsc_ticket*
+    //!@}
 
     pe_node_t *allocated_to;
     pe_node_t *partial_migration_target;
@@ -289,6 +317,8 @@ struct pe_resource_s {
 
     pe_resource_t *container;
     GListPtr fillers;
+
+    pe_node_t *pending_node;    // Node on which pending_task is happening
 
 #if ENABLE_VERSIONED_ATTRS
     xmlNode *versioned_parameters;
@@ -430,8 +460,11 @@ typedef struct pe_action_wrapper_s {
 
 const char *rsc_printable_id(pe_resource_t *rsc);
 gboolean cluster_status(pe_working_set_t * data_set);
+pe_working_set_t *pe_new_working_set(void);
+void pe_free_working_set(pe_working_set_t *data_set);
 void set_working_set_defaults(pe_working_set_t * data_set);
 void cleanup_calculations(pe_working_set_t * data_set);
+void pe_reset_working_set(pe_working_set_t *data_set);
 pe_resource_t *pe_find_resource(GListPtr rsc_list, const char *id_rh);
 pe_resource_t *pe_find_resource_with_flags(GListPtr rsc_list, const char *id, enum pe_find flags);
 pe_node_t *pe_find_node(GListPtr node_list, const char *uname);
@@ -483,6 +516,13 @@ pe_rsc_is_anon_clone(pe_resource_t *rsc)
     return pe_rsc_is_clone(rsc) && is_not_set(rsc->flags, pe_rsc_unique);
 }
 
+/*!
+ * \brief Check whether a resource is part of a bundle
+ *
+ * \param[in] rsc  Resource to check
+ *
+ * \return TRUE if resource is part of a bundle, FALSE otherwise
+ */
 static inline bool
 pe_rsc_is_bundled(pe_resource_t *rsc)
 {
@@ -490,13 +530,13 @@ pe_rsc_is_bundled(pe_resource_t *rsc)
 }
 
 // Deprecated type aliases
-typedef struct pe_action_s action_t;
-typedef struct pe_action_wrapper_s action_wrapper_t;
-typedef struct pe_node_s node_t;
-typedef struct pe_resource_s resource_t;
-typedef struct pe_tag_s tag_t;
-typedef struct pe_ticket_s ticket_t;
-typedef enum pe_quorum_policy no_quorum_policy_t;
+typedef struct pe_action_s action_t;                 //!< \deprecated Use pe_action_t instead
+typedef struct pe_action_wrapper_s action_wrapper_t; //!< \deprecated Use pe_action_wrapper_t instead
+typedef struct pe_node_s node_t;                     //!< \deprecated Use pe_node_t instead
+typedef struct pe_resource_s resource_t;             //!< \deprecated Use pe_resource_t instead
+typedef struct pe_tag_s tag_t;                       //!< \deprecated Use pe_tag_t instead
+typedef struct pe_ticket_s ticket_t;                 //!< \deprecated Use pe_ticket_t instead
+typedef enum pe_quorum_policy no_quorum_policy_t;    //!< \deprecated Use enum pe_quorum_policy instead
 
 #ifdef __cplusplus
 }

@@ -184,11 +184,11 @@ A catch all for any other options that need to be passed to pingd.
 </parameters>
 
 <actions>
-<action name="start"   timeout="90" />
-<action name="stop"    timeout="100" />
-<action name="monitor" depth="0"  timeout="20" interval="10" start-delay="1m" />
-<action name="meta-data"  timeout="5" />
-<action name="validate-all"  timeout="30" />
+<action name="start"   timeout="90s" />
+<action name="stop"    timeout="100s" />
+<action name="monitor" depth="0"  timeout="20s" interval="10s" start-delay="1m" />
+<action name="meta-data"  timeout="5s" />
+<action name="validate-all"  timeout="30s" />
 </actions>
 </resource-agent>
 END

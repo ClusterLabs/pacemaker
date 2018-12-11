@@ -35,7 +35,7 @@
       </primitive>
     </resources>
     <constraints>
-      <rsc_order first="ClusterIP" first-action="start" id="after1then2" score="INFINITY" symmetrical="false" then="ClusterIP2" then-action="start"/>
+      <rsc_order first="ClusterIP" first-action="start" id="after1then2" symmetrical="false" then="ClusterIP2" then-action="start"/>
     </constraints>
   </configuration>
   <status>

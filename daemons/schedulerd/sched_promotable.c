@@ -132,7 +132,7 @@ static void apply_master_location(resource_t *child, GListPtr location_constrain
     CRM_CHECK(child && chosen, return);
     for (GListPtr gIter = location_constraints; gIter; gIter = gIter->next) {
         pe_node_t *cons_node = NULL;
-        rsc_to_node_t *cons = (rsc_to_node_t *) gIter->data;
+        pe__location_t *cons = gIter->data;
 
         if (cons->role_filter == RSC_ROLE_MASTER) {
             pe_rsc_trace(child, "Applying %s to %s", cons->id, child->id);
@@ -710,7 +710,8 @@ color_promotable(resource_t *rsc, pe_working_set_t *data_set)
         for (gIter2 = child_rsc->rsc_cons; gIter2 != NULL; gIter2 = gIter2->next) {
             rsc_colocation_t *cons = (rsc_colocation_t *) gIter2->data;
 
-            child_rsc->cmds->rsc_colocation_lh(child_rsc, cons->rsc_rh, cons);
+            child_rsc->cmds->rsc_colocation_lh(child_rsc, cons->rsc_rh, cons,
+                                               data_set);
         }
 
         child_rsc->sort_index = child_rsc->priority;
@@ -947,7 +948,8 @@ node_hash_update_one(GHashTable * hash, node_t * other, const char *attr, int sc
 
 void
 promotable_colocation_rh(resource_t *rsc_lh, resource_t *rsc_rh,
-                         rsc_colocation_t *constraint)
+                         rsc_colocation_t *constraint,
+                         pe_working_set_t *data_set)
 {
     GListPtr gIter = NULL;
 
@@ -982,7 +984,9 @@ promotable_colocation_rh(resource_t *rsc_lh, resource_t *rsc_rh,
         g_list_free(rhs);
 
     } else if (constraint->role_lh == RSC_ROLE_MASTER) {
-        resource_t *rh_child = find_compatible_child(rsc_lh, rsc_rh, constraint->role_rh, FALSE);
+        pe_resource_t *rh_child = find_compatible_child(rsc_lh, rsc_rh,
+                                                        constraint->role_rh,
+                                                        FALSE, data_set);
 
         if (rh_child == NULL && constraint->score >= INFINITY) {
             pe_rsc_trace(rsc_lh, "%s can't be promoted %s", rsc_lh->id, constraint->id);

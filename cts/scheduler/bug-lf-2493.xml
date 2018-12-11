@@ -24,7 +24,7 @@
       </clone>
     </resources>
     <constraints>
-      <rsc_order id="o_dummy" score="INFINITY">
+      <rsc_order id="o_dummy">
         <resource_set action="start" id="o_dummy-0">
           <resource_ref id="p_dummy1"/>
         </resource_set>

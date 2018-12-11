@@ -21,6 +21,24 @@ be run against a pre-existing cluster configuration or overwrite the existing
 configuration with a test configuration.
 
 
+## Helpers
+
+Some of the component regression tests and the cluster exerciser require
+certain helpers to be installed as root. This includes a dummy LSB init script,
+dummy systemd service, etc. The tests will install these as needed and
+uninstall them when done.
+
+This means that the cluster configuration created by the cluster exerciser
+will generate failures if started manually after the exerciser exits. However,
+the helper installer can be run manually to make the configuration usable, if
+you want to do your own further testing with it:
+
+    /usr/libexec/pacemaker/cts-support install
+
+As you might expect, you can also remove the helpers with:
+
+    /usr/libexec/pacemaker/cts-support uninstall
+
 ## Requirements
 
 * Three or more machines (one test exerciser and two or more test cluster
@@ -80,7 +98,7 @@ Now assuming you did all this, what you need to do is run CTSlab.py:
 
 You must specify which nodes are part of the cluster with --nodes, e.g.:
 
-    --node "pcmk-1 pcmk-2 pcmk-3"
+    --nodes "pcmk-1 pcmk-2 pcmk-3"
 
 Most people will want to save the output with --outputfile, e.g.:
 
@@ -105,7 +123,7 @@ A complete command line might look like:
 For more options, use the --help option.
 
 NOTE: Perhaps more convenient way to compile a command line like above
-      is to use cluster_test script that, at least in the source repository,
+      is to use cluster\_test script that, at least in the source repository,
       sits in the same directory as this very file.
 
 To extract the result of a particular test, run:
@@ -145,17 +163,17 @@ Valgrind will put a text file for each process in the location specified by
 valgrind's --log-file option. For explanations of the messages valgrind
 generates, see http://valgrind.org/docs/manual/mc-manual.html
 
-Separately, if you are using the GNU C library, the G_SLICE, MALLOC_PERTURB_,
-and MALLOC_CHECK_ environment variables can be set to affect the library's
+Separately, if you are using the GNU C library, the G\_SLICE, MALLOC\_PERTURB\_,
+and MALLOC\_CHECK\_ environment variables can be set to affect the library's
 memory management functions.
 
-When using valgrind, G_SLICE should be set to "always-malloc", which helps
+When using valgrind, G\_SLICE should be set to "always-malloc", which helps
 valgrind track memory by always using the malloc() and free() routines
-directly. When not using valgrind, G_SLICE can be left unset, or set to
+directly. When not using valgrind, G\_SLICE can be left unset, or set to
 "debug-blocks", which enables the C library to catch many memory errors
 but may impact performance.
 
-If the MALLOC_PERTURB_ environment variable is set to an 8-bit integer, the C
+If the MALLOC\_PERTURB\_ environment variable is set to an 8-bit integer, the C
 library will initialize all newly allocated bytes of memory to the integer
 value, and will set all newly freed bytes of memory to the bitwise inverse of
 the integer value. This helps catch uses of uninitialized or freed memory
@@ -163,7 +181,7 @@ blocks that might otherwise go unnoticed. Example:
 
     MALLOC_PERTURB_=221
 
-If the MALLOC_CHECK_ environment variable is set, the C library will check for
+If the MALLOC\_CHECK\_ environment variable is set, the C library will check for
 certain heap corruption errors. The most useful value in testing is 3, which
 will cause the library to print a message to stderr and abort execution.
 Example:
@@ -189,13 +207,13 @@ with "remote-". For example, "pcmk-1" will become "remote-pcmk-1".
 
 The name change may require special stonith configuration, if the fence agent
 expects the node name to be the same as its hostname. A common approach is to
-specify the "remote-" names in pcmk_host_list. If you use pcmk_host_list=all,
+specify the "remote-" names in pcmk\_host\_list. If you use pcmk\_host\_list=all,
 CTS will expand that to all cluster nodes and their "remote-" names.
-You may additionally need a pcmk_host_map argument to map the "remote-" names
+You may additionally need a pcmk\_host\_map argument to map the "remote-" names
 to the hostnames. Example:
 
     --stonith xvm --stonith-args \
-    pcmk_arg_map=domain:uname,pcmk_host_list=all,pcmk_host_map=remote-pcmk-1:pcmk-1;remote-pcmk-2:pcmk-2
+    pcmk_host_list=all,pcmk_host_map=remote-pcmk-1:pcmk-1;remote-pcmk-2:pcmk-2
 
 ### Remote node testing with valgrind
 
@@ -204,13 +222,13 @@ nodes can be run under valgrind as described in the "Memory testing" section.
 However, pacemaker-remoted cannot be run under valgrind that way, because it is
 started by the OS's regular boot system and not by pacemaker.
 
-Details vary by system, but the goal is to set the VALGRIND_OPTS environment
+Details vary by system, but the goal is to set the VALGRIND\_OPTS environment
 variable and then start pacemaker-remoted by prefixing it with the path to
 valgrind.
 
 The init script and systemd service file provided with pacemaker-remoted will
 load the pacemaker environment variables from the same location used by other
-pacemaker components, so VALGRIND_OPTS will be set correctly if using one of
+pacemaker components, so VALGRIND\_OPTS will be set correctly if using one of
 those.
 
 For an OS using systemd, you can override the ExecStart parameter to run
@@ -257,7 +275,7 @@ without requiring a password to be entered each time:
 * On your test exerciser, create an SSH key if you do not already have one.
   Most commonly, SSH keys will be in your ~/.ssh directory, with the
   private key file not having an extension, and the public key file
-  named the same with the extension ".pub" (for example, ~/.ssh/id_rsa.pub).
+  named the same with the extension ".pub" (for example, ~/.ssh/id\_rsa.pub).
 
   If you don't already have a key, you can create one with:
 

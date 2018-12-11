@@ -42,8 +42,6 @@ Executing cluster transition:
  * Pseudo action:   rsc_c001n02_stop_0
  * Pseudo action:   child_DoFencing:0_stop_0
  * Pseudo action:   DoFencing_stopped_0
- * Pseudo action:   stonith_complete
- * Pseudo action:   all_stopped
  * Resource action: rsc_c001n02     start on c001n01
  * Resource action: rsc_c001n02     monitor=5000 on c001n01
 

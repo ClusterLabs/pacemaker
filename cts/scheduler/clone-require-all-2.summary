@@ -25,7 +25,6 @@ Executing cluster transition:
  * Resource action: A               stop on rhel7-auto1
  * Resource action: A               stop on rhel7-auto2
  * Pseudo action:   A-clone_stopped_0
- * Pseudo action:   all_stopped
  * Resource action: shooter         monitor=60000 on rhel7-auto3
 
 Revised cluster status:

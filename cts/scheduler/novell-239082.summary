@@ -3,7 +3,7 @@ Current cluster status:
 Online: [ xen-1 xen-2 ]
 
  fs_1	(ocf::heartbeat:Filesystem):	Started xen-1
- Master/Slave Set: ms-drbd0 [drbd0]
+ Clone Set: ms-drbd0 [drbd0] (promotable)
      Masters: [ xen-1 ]
      Slaves: [ xen-2 ]
 
@@ -37,7 +37,6 @@ Executing cluster transition:
  * Pseudo action:   ms-drbd0_post_notify_stopped_0
  * Resource action: drbd0:0         notify on xen-2
  * Pseudo action:   ms-drbd0_confirmed-post_notify_stopped_0
- * Pseudo action:   all_stopped
  * Pseudo action:   ms-drbd0_pre_notify_promote_0
  * Resource action: drbd0:0         notify on xen-2
  * Pseudo action:   ms-drbd0_confirmed-pre_notify_promote_0
@@ -53,7 +52,7 @@ Revised cluster status:
 Online: [ xen-1 xen-2 ]
 
  fs_1	(ocf::heartbeat:Filesystem):	Started xen-2
- Master/Slave Set: ms-drbd0 [drbd0]
+ Clone Set: ms-drbd0 [drbd0] (promotable)
      Masters: [ xen-2 ]
      Stopped: [ xen-1 ]
 

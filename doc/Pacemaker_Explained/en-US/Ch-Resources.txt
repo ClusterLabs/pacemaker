@@ -1,3 +1,4 @@
+:compat-mode: legacy
 = Cluster Resources =
 
 [[s-resource-primitive]]
@@ -90,10 +91,11 @@ indexterm:[Resource,LSB]
 indexterm:[LSB,Resources]
 indexterm:[Linux Standard Base,Resources]
 
-LSB resource agents are those found in +/etc/init.d+.
+'LSB' resource agents are more commonly known as 'init scripts'. If a full path
+is not given, they are assumed to be located in +/etc/init.d+.
 
-Generally, they are provided by the OS distribution and, in order to be used
-with the cluster, they must conform to the LSB Spec.
+Commonly, they are provided by the OS distribution. In order to be used
+with a Pacemaker cluster, they must conform to the LSB specification.
 footnote:[
 See
 http://refspecs.linux-foundation.org/LSB_3.0.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html
@@ -102,13 +104,15 @@ for the LSB Spec as it relates to init scripts.
 
 [WARNING]
 ====
-Many distributions claim LSB compliance but ship with broken init
-scripts.  For details on how to check whether your init script is
-LSB-compatible, see the 'Resource Agents' chapter of 'Pacemaker
-Administration'. Common problematic violations of the LSB standard include:
+Many distributions or particular software packages claim LSB compliance
+but ship with broken init scripts.  For details on how to check whether
+your init script is LSB-compatible, see the 'Resource Agents' chapter of
+'Pacemaker Administration'. Common problematic violations of the LSB
+standard include:
 
-* Not implementing the status operation at all
-* Not observing the correct exit status codes for `start/stop/status` actions
+* Not implementing the +status+ operation at all
+* Not observing the correct exit status codes for
+  +start+/+stop+/+status+ actions
 * Starting a started resource returns an error
 * Stopping a stopped resource returns an error
 ====
@@ -119,6 +123,7 @@ Remember to make sure the computer is _not_ configured to start any
 services at boot time -- that should be controlled by the cluster.
 ====
 
+[[s-resource-supported-systemd]]
 === Systemd ===
 indexterm:[Resource,Systemd]
 indexterm:[Systemd,Resources]
@@ -214,7 +219,7 @@ These values tell the cluster which resource agent to use for the resource,
 where to find that resource agent and what standards it conforms to.
 
 .Properties of a Primitive Resource
-[width="95%",cols="1m,6<",options="header",align="center"]
+[width="95%",cols="1m,<6",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -297,7 +302,7 @@ behave and can be easily set using the `--meta` option of the
 `crm_resource` command.
 
 .Meta-attributes of a Primitive Resource
-[width="95%",cols="2m,2,5<a",options="header",align="center"]
+[width="95%",cols="2m,2,<5",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -313,7 +318,7 @@ indexterm:[Resource,Option,priority]
 
 |target-role
 |Started
-|What state should the cluster attempt to keep this resource in? Allowed values:
+a|What state should the cluster attempt to keep this resource in? Allowed values:
 
 * +Stopped:+ Force the resource to be stopped
 * +Started:+ Allow the resource to be started (and in the case of
@@ -333,8 +338,11 @@ indexterm:[Resource,Option,target-role]
  indexterm:[Resource,Option,is-managed]
 
 |resource-stickiness
-|value of +resource-stickiness+ in the +rsc_defaults+ section
-|How much does the resource prefer to stay where it is?
+|1 for individual clone instances, 0 for all other resources
+|A score that will be added to the current node when a resource is already
+ active. This allows running resources to stay where they are, even if
+ they would be placed elsewhere if they were being started from a stopped
+ state.
  indexterm:[resource-stickiness,Resource Option]
  indexterm:[Resource,Option,resource-stickiness]
 
@@ -342,7 +350,7 @@ indexterm:[Resource,Option,target-role]
 |+quorum+ for resources with a +class+ of +stonith+,
  otherwise +unfencing+ if unfencing is active in the cluster,
  otherwise +fencing+ if +stonith-enabled+ is true, otherwise +quorum+
-|Conditions under which the resource can be started
+a|Conditions under which the resource can be started
 Allowed values:
 
 * +nothing:+ can always be started
@@ -366,9 +374,10 @@ indexterm:[Resource,Option,requires]
  node is marked ineligible to host this resource. A value of 0 indicates that
  this feature is disabled (the node will never be marked ineligible); by
  constrast, the cluster treats INFINITY (the default) as a very large but
- finite number. This option has an effect only if the failed operation has
- on-fail=restart (the default), and additionally for failed start operations,
- if the cluster property start-failure-is-fatal is false.
+ finite number. This option has an effect only if the failed operation
+ specifies +on-fail+ as +restart+ (the default), and additionally for
+ failed +start+ operations, if the cluster property +start-failure-is-fatal+
+ is +false+.
  indexterm:[migration-threshold,Resource Option]
  indexterm:[Resource,Option,migration-threshold]
 
@@ -385,7 +394,7 @@ indexterm:[Resource,Option,requires]
 
 |multiple-active
 |stop_start
-|What should the cluster do if it ever finds the resource active on
+a|What should the cluster do if it ever finds the resource active on
  more than one node? Allowed values:
 
 * +block:+ mark the resource as unmanaged
@@ -454,6 +463,14 @@ the resulting resource definition might be:
 </primitive>
 -------
 =====
+
+In addition to the cluster-defined meta-attributes described above, you may
+also configure arbitrary meta-attributes of your own choosing. Most commonly,
+this would be done for use in <<ch-rules,rules>>. For example, an IT department
+might define a custom meta-attribute to indicate which company department each
+resource is intended for. To reduce the chance of name collisions with
+cluster-defined meta-attributes added in the future, it is recommended to use
+a unique, organization-specific prefix for such attributes.
 
 [[s-resource-defaults]]
 === Setting Global Defaults for Resource Meta-Attributes ===
@@ -580,24 +597,20 @@ indexterm:[Resource,Action]
 
 'Operations' are actions the cluster can perform on a resource by calling the
 resource agent. Resource agents must support certain common operations such as
-start, stop and monitor, and may implement any others.
+start, stop, and monitor, and may implement any others.
 
-Some operations are generated by the cluster itself, for example, stopping and
-starting resources as needed.
+Operations may be explicitly configured for two purposes: to override defaults
+for options (such as timeout) that the cluster will use whenever it initiates
+the operation, and to run an operation on a recurring basis (for example, to
+monitor the resource for failure).
 
-You can configure operations in the cluster configuration. As an example, by
-default the cluster will 'not' ensure your resources stay healthy once they are
-started. footnote:[Currently, anyway. Automatic monitoring operations may be
-added in a future version of Pacemaker.] To instruct the cluster to do this,
-you need to add a +monitor+ operation to the resource's definition.
-
-.An OCF resource with a recurring health check
+.An OCF resource with a non-default start timeout
 =====
 [source,XML]
 -------
 <primitive id="Public-IP" class="ocf" type="IPaddr" provider="heartbeat">
   <operations>
-     <op id="public-ip-check" name="monitor" interval="60s"/>
+     <op id="Public-IP-start" name="start" timeout="60s"/>
   </operations>
   <instance_attributes id="params-public-ip">
      <nvpair id="public-ip-addr" name="ip" value="192.0.2.2"/>
@@ -606,8 +619,12 @@ you need to add a +monitor+ operation to the resource's definition.
 -------
 =====
 
+Pacemaker identifies operations by a combination of name and interval, so this
+combination must be unique for each resource. That is, you should not configure
+two operations for the same resource with the same name and interval.
+
 .Properties of an Operation
-[width="95%",cols="2m,3,6<a",options="header",align="center"]
+[width="95%",cols="2m,3,<6",options="header",align="center"]
 |=========================================================
 
 |Field
@@ -629,9 +646,9 @@ you need to add a +monitor+ operation to the resource's definition.
 
 |interval
 |0
-|How frequently (in seconds) to perform the operation. A value of 0 means never.
- A positive value defines a 'recurring action', which is typically used with
- <<s-resource-monitoring,monitor>>.
+|How frequently (in seconds) to perform the operation. A value of 0 means "when
+ needed". A positive value defines a 'recurring action', which is typically
+ used with <<s-resource-monitoring,monitor>>.
  indexterm:[interval,Action Property]
  indexterm:[Action,Property,interval]
 
@@ -642,9 +659,9 @@ you need to add a +monitor+ operation to the resource's definition.
  indexterm:[Action,Property,timeout]
 
 |on-fail
-|restart '(except for stop operations, which default to' fence 'when
+|restart '(except for +stop+ operations, which default to' fence 'when
  STONITH is enabled and' block 'otherwise)'
-|The action to take if this action ever fails. Allowed values:
+a|The action to take if this action ever fails. Allowed values:
 
 * +ignore:+ Pretend the resource did not fail.
 * +block:+ Don't perform any further operations on the resource.
@@ -659,7 +676,7 @@ indexterm:[Action,Property,on-fail]
 |enabled
 |TRUE
 |If +false+, ignore this operation definition.  This is typically used to pause
- a particular recurring monitor operation;  for instance, it can complement
+ a particular recurring +monitor+ operation; for instance, it can complement
  the respective resource being unmanaged (+is-managed=false+), as this alone
  will <<s-monitoring-unmanaged,not block any configured monitoring>>.
  Disabling the operation does not suppress all actions of the given type.
@@ -671,7 +688,7 @@ indexterm:[Action,Property,on-fail]
 |FALSE
 |If +true+, the intention to perform the operation is recorded so that
  GUIs and CLI tools can indicate that an operation is in progress.
- This is best set as an _operation default_ (see next section).
+ This is best set as an _operation default_ (see <<s-operation-defaults>>).
  Allowed values: +true+, +false+.
  indexterm:[enabled,Action Property]
  indexterm:[Action,Property,enabled]
@@ -679,7 +696,7 @@ indexterm:[Action,Property,on-fail]
 |role
 |
 |Run the operation only on node(s) that the cluster thinks should be in
- the specified role. This only makes sense for recurring monitor operations.
+ the specified role. This only makes sense for recurring +monitor+ operations.
  Allowed (case-sensitive) values: +Stopped+, +Started+, and in the
  case of <<s-resource-promotable,promotable clone resources>>, +Slave+ and +Master+.
  indexterm:[role,Action Property]
@@ -690,30 +707,54 @@ indexterm:[Action,Property,on-fail]
 [[s-resource-monitoring]]
 === Monitoring Resources for Failure ===
 
-When Pacemaker first starts a resource, it runs one-time monitor operations
+When Pacemaker first starts a resource, it runs one-time +monitor+ operations
 (referred to as 'probes') to ensure the resource is running where it's
 supposed to be, and not running where it's not supposed to be. (This behavior
 can be affected by the +resource-discovery+ location constraint property.)
 
-Other than those initial probes, Pacemaker will not (by default) check that
-the resource continues to stay healthy. As in the example above, you must
-configure monitor operations explicitly to perform these checks.
+Other than those initial probes, Pacemaker will 'not' (by default) check that
+the resource continues to stay healthy.
+footnote:[Currently, anyway. Automatic monitoring operations may be
+added in a future version of Pacemaker.]
+You must configure +monitor+ operations explicitly to perform these checks.
 
-By default, a monitor operation will ensure that the resource is running
+.An OCF resource with a recurring health check
+=====
+[source,XML]
+-------
+<primitive id="Public-IP" class="ocf" type="IPaddr" provider="heartbeat">
+  <operations>
+     <op id="Public-IP-start" name="start" timeout="60s"/>
+     <op id="Public-IP-monitor" name="monitor" interval="60s"/>
+  </operations>
+  <instance_attributes id="params-public-ip">
+     <nvpair id="public-ip-addr" name="ip" value="192.0.2.2"/>
+  </instance_attributes>
+</primitive>
+-------
+=====
+
+By default, a +monitor+ operation will ensure that the resource is running
 where it is supposed to. The +target-role+ property can be used for further
 checking.
 
-For example, if a resource has one monitor operation with
-+interval=10 role=Started+ and a second monitor operation with
+For example, if a resource has one +monitor+ operation with
++interval=10 role=Started+ and a second +monitor+ operation with
 +interval=11 role=Stopped+, the cluster will run the first monitor on any nodes
 it thinks 'should' be running the resource, and the second monitor on any nodes
 that it thinks 'should not' be running the resource (for the truly paranoid,
 who want to know when an administrator manually starts a service by mistake).
 
+[NOTE]
+====
+Currently, monitors with +role=Stopped+ are not implemented for
+<<s-resource-clone,clone>> resources.
+====
+
 [[s-monitoring-unmanaged]]
 === Monitoring Resources When Administration is Disabled ===
 
-Recurring monitor operations behave differently under various administrative
+Recurring +monitor+ operations behave differently under various administrative
 settings:
 
 * When a resource is unmanaged (by setting +is-managed=false+): No monitors
@@ -730,14 +771,16 @@ may require the resource's +target-role+ to be set to +Stopped+ then +Started+
 to be recovered.
 
 * When a node is put into standby: All resources will be moved away from the
-  node, and all monitor operations will be stopped on the node, except those
-  with +role=Stopped+. Monitor operations with +role=Stopped+ will be started
-  on the node if appropriate.
+  node, and all +monitor+ operations will be stopped on the node, except those
+  specifying +role+ as +Stopped+ (which will be newly initiated if
+  appropriate).
 
 * When the cluster is put into maintenance mode: All resources will be marked
-  as unmanaged. All monitor operations will be stopped, except those with
-  +role=Stopped+. As with single unmanaged resources, starting a resource
-  on a node other than where the cluster expects it to be will cause problems.
+  as unmanaged. All monitor operations will be stopped, except those
+  specifying +role+ as +Stopped+ (which will be newly initiated if
+  appropriate). As with single unmanaged resources, starting
+  a resource on a node other than where the cluster expects it to be will
+  cause problems.
 
 [[s-operation-defaults]]
 === Setting Global Defaults for Operations ===
@@ -782,8 +825,8 @@ then you can create an entry for them and specify a longer timeout.
 === Multiple Monitor Operations ===
 
 Provided no two operations (for a single resource) have the same name
-and interval, you can have as many monitor operations as you like.  In
-this way, you can do a superficial health check every minute and
+and interval, you can have as many +monitor+ operations as you like.
+In this way, you can do a superficial health check every minute and
 progressively more intense ones at higher intervals.
 
 To tell the resource agent what kind of check to perform, you need to
@@ -824,7 +867,7 @@ resource agent to look for the parameter and decide how to use it.
 
 The easiest way to stop a recurring monitor is to just delete it.
 However, there can be times when you only want to disable it
-temporarily.  In such cases, simply add +enabled="false"+ to the
+temporarily.  In such cases, simply add +enabled=false+ to the
 operation's definition.
 
 .Example of an OCF resource with a disabled health check

@@ -130,11 +130,11 @@ while true; do
 	--setup|setup) setup=1; shift;;
 	trace-ls|tls) cmd=$1; shift;;
 	trace-add|tadd|trace-rm|trm|trace-set|tset) cmd=$1; trace=$2; shift; shift;;
-	f*|fedora*)
+	f*)
 		target="fedora-`echo $1 | sed -e s/fedora// -e s/-// -e s/f//`"
 		shift;;
 	r|rhel) target="rhel-7"; shift;;
-	r*|rhel*)
+	r*)
 		target="rhel-`echo $1 | sed -e s/rhel// -e s/-// -e s/r//`"
 		shift;;
         init|local-init) local_init ;;
@@ -170,7 +170,7 @@ if [ $? != 0 ]; then
     exit 1
 fi
 
-if [ "x$cluster_name" = x -o "x$cluster_name" = xpick ]; then
+if [ "x$cluster_name" = x ] || [ "x$cluster_name" = xpick ]; then
     clusters=`ls -1 ~/.dsh/group/[a-z]+[0-9] | sed s/.*group.// | tr '\n' ' ' `
 
     echo "custom) interactively define a cluster"
@@ -222,7 +222,7 @@ if [ x$cmd != x ]; then
     exit 0
 fi
 
-if [ $build = 1 -a $run = 1 ]; then
+if [ $build = 1 ] && [ $run = 1 ]; then
     install=1
     clean=1
 fi
@@ -279,7 +279,7 @@ if [ ! -z $custom_log ]; then
     cluster_log=$custom_log
 fi
 
-if [ "x$tests" != x -a "x$tests" != "x " ]; then
+if [ "x$tests" != x ] && [ "x$tests" != "x " ]; then
     for t in $tests; do
 	echo "crm_report --cts-log $cluster_log -d -T $t"
 	crm_report --cts-log $cluster_log -d -T $t

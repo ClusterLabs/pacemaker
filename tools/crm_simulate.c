@@ -39,8 +39,6 @@ extern gboolean bringing_nodes_online;
 	}					\
     } while(0)
 
-extern void cleanup_alloc_calculations(pe_working_set_t * data_set);
-
 extern xmlNode *do_calculations(pe_working_set_t * data_set, xmlNode * xml_input, crm_time_t * now);
 
 char *use_date = NULL;
@@ -56,6 +54,10 @@ get_date(pe_working_set_t * data_set)
 
     if (use_date) {
         data_set->now = crm_time_new(use_date);
+        quiet_log(" + Setting effective cluster time: %s", use_date);
+        crm_time_log(LOG_NOTICE, "Pretending 'now' is", data_set->now,
+                     crm_time_log_date | crm_time_log_timeofday);
+
 
     } else if(original_date) {
         char *when = NULL;
@@ -468,12 +470,14 @@ static struct crm_option long_options[] = {
     {"op-inject",    1, 0, 'i', "\tGenerate a failure for the cluster to react to in the simulation"},
     {"-spacer-",     0, 0, '-', "\t\tValue is of the form ${resource}_${task}_${interval_in_ms}@${node}=${rc}."},
     {"-spacer-",     0, 0, '-', "\t\tEg. memcached_monitor_20000@bart.example.com=7"},
-    {"-spacer-",     0, 0, '-', "\t\tFor more information on OCF return codes, refer to: http://www.clusterlabs.org/doc/en-US/Pacemaker/1.1/html/Pacemaker_Explained/s-ocf-return-codes.html"},
+    {"-spacer-",     0, 0, '-', "\t\tFor more information on OCF return codes, refer to: https://clusterlabs.org/pacemaker/doc/en-US/Pacemaker/2.0/html/Pacemaker_Administration/ch07.html#s-ocf-return-codes"},
     {"op-fail",      1, 0, 'F', "\tIf the specified task occurs during the simulation, have it fail with return code ${rc}"},
     {"-spacer-",     0, 0, '-', "\t\tValue is of the form ${resource}_${task}_${interval_in_ms}@${node}=${rc}."},
     {"-spacer-",     0, 0, '-', "\t\tEg. memcached_stop_0@bart.example.com=1\n"},
     {"-spacer-",     0, 0, '-', "\t\tThe transition will normally stop at the failed action.  Save the result with --save-output and re-run with --xml-file"},
-    {"set-datetime", 1, 0, 't', "Set date/time"},
+    {   "set-datetime", required_argument, NULL, 't',
+        "Set date/time (ISO 8601 format, see https://en.wikipedia.org/wiki/ISO_8601)"
+    },
     {"quorum",       1, 0, 'q', "\tSpecify a value for quorum"},
     {"watchdog",     1, 0, 'w', "\tAssume a watchdog device is active"},
     {"ticket-grant",     1, 0, 'g', "Grant a ticket"},
@@ -505,10 +509,9 @@ static struct crm_option long_options[] = {
 /* *INDENT-ON* */
 
 static void
-profile_one(const char *xml_file)
+profile_one(const char *xml_file, pe_working_set_t *data_set)
 {
     xmlNode *cib_object = NULL;
-    pe_working_set_t data_set;
 
     printf("* Testing %s\n", xml_file);
     cib_object = filename2xml(xml_file);
@@ -526,25 +529,21 @@ profile_one(const char *xml_file)
         return;
     }
 
-    set_working_set_defaults(&data_set);
-
-    data_set.input = cib_object;
-    get_date(&data_set);
-    do_calculations(&data_set, cib_object, NULL);
-
-    cleanup_alloc_calculations(&data_set);
+    data_set->input = cib_object;
+    get_date(data_set);
+    do_calculations(data_set, cib_object, NULL);
+    pe_reset_working_set(data_set);
 }
 
 #ifndef FILENAME_MAX
 #  define FILENAME_MAX 512
 #endif
 
-static int
-profile_all(const char *dir)
+static void
+profile_all(const char *dir, pe_working_set_t *data_set)
 {
     struct dirent **namelist;
 
-    int lpc = 0;
     int file_num = scandir(dir, &namelist, 0, alphasort);
 
     if (file_num > 0) {
@@ -560,18 +559,14 @@ profile_all(const char *dir)
                 free(namelist[file_num]);
                 continue;
             }
-
-            lpc++;
             snprintf(buffer, sizeof(buffer), "%s/%s", dir, namelist[file_num]->d_name);
             if (stat(buffer, &prop) == 0 && S_ISREG(prop.st_mode)) {
-                profile_one(buffer);
+                profile_one(buffer, data_set);
             }
             free(namelist[file_num]);
         }
         free(namelist);
     }
-
-    return lpc;
 }
 
 static int
@@ -606,7 +601,7 @@ main(int argc, char **argv)
     gboolean all_actions = FALSE;
     gboolean have_stdout = FALSE;
 
-    pe_working_set_t data_set;
+    pe_working_set_t *data_set = NULL;
 
     const char *xml_file = "-";
     const char *quorum = NULL;
@@ -779,13 +774,19 @@ main(int argc, char **argv)
         crm_help('?', CRM_EX_USAGE);
     }
 
+    data_set = pe_new_working_set();
+    if (data_set == NULL) {
+        crm_perror(LOG_ERR, "Could not allocate working set");
+        rc = -ENOMEM;
+        goto done;
+    }
+
     if (test_dir != NULL) {
-        return profile_all(test_dir);
+        profile_all(test_dir, data_set);
+        return CRM_EX_OK;
     }
 
     setup_input(xml_file, store ? xml_file : output_file);
-
-    set_working_set_defaults(&data_set);
 
     global_cib = cib_new();
     rc = global_cib->cmds->signon(global_cib, crm_system_name, cib_command);
@@ -795,47 +796,43 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (data_set.now != NULL) {
-        quiet_log(" + Setting effective cluster time: %s", use_date);
-        crm_time_log(LOG_WARNING, "Set fake 'now' to", data_set.now,
-                     crm_time_log_date | crm_time_log_timeofday);
-    }
-
     rc = global_cib->cmds->query(global_cib, NULL, &input, cib_sync_call | cib_scope_local);
     if (rc != pcmk_ok) {
         fprintf(stderr, "Could not get local CIB: %s\n", pcmk_strerror(rc));
         goto done;
     }
 
-    data_set.input = input;
-    get_date(&data_set);
+    data_set->input = input;
+    get_date(data_set);
     if(xml_file) {
-        set_bit(data_set.flags, pe_flag_sanitized);
+        set_bit(data_set->flags, pe_flag_sanitized);
     }
-    set_bit(data_set.flags, pe_flag_stdout);
-    cluster_status(&data_set);
+    set_bit(data_set->flags, pe_flag_stdout);
+    cluster_status(data_set);
 
     if (quiet == FALSE) {
         int options = print_pending ? pe_print_pending : 0;
 
-        if(is_set(data_set.flags, pe_flag_maintenance_mode)) {
+        if (is_set(data_set->flags, pe_flag_maintenance_mode)) {
             quiet_log("\n              *** Resource management is DISABLED ***");
             quiet_log("\n  The cluster will not attempt to start, stop or recover services");
             quiet_log("\n");
         }
 
-        if(data_set.disabled_resources || data_set.blocked_resources) {
+        if (data_set->disabled_resources || data_set->blocked_resources) {
             quiet_log("%d of %d resources DISABLED and %d BLOCKED from being started due to failures\n",
-                      data_set.disabled_resources, count_resources(&data_set, NULL), data_set.blocked_resources);
+                      data_set->disabled_resources,
+                      count_resources(data_set, NULL),
+                      data_set->blocked_resources);
         }
 
         quiet_log("\nCurrent cluster status:\n");
-        print_cluster_status(&data_set, options);
+        print_cluster_status(data_set, options);
     }
 
     if (modified) {
         quiet_log("Performing requested modifications\n");
-        modify_configuration(&data_set, global_cib, quorum, watchdog, node_up, node_down, node_fail, op_inject,
+        modify_configuration(data_set, global_cib, quorum, watchdog, node_up, node_down, node_fail, op_inject,
                              ticket_grant, ticket_revoke, ticket_standby, ticket_activate);
 
         rc = global_cib->cmds->query(global_cib, NULL, &input, cib_sync_call);
@@ -844,15 +841,15 @@ main(int argc, char **argv)
             goto done;
         }
 
-        cleanup_calculations(&data_set);
-        data_set.input = input;
-        get_date(&data_set);
+        cleanup_calculations(data_set);
+        data_set->input = input;
+        get_date(data_set);
 
         if(xml_file) {
-            set_bit(data_set.flags, pe_flag_sanitized);
+            set_bit(data_set->flags, pe_flag_sanitized);
         }
-        set_bit(data_set.flags, pe_flag_stdout);
-        cluster_status(&data_set);
+        set_bit(data_set->flags, pe_flag_stdout);
+        cluster_status(data_set);
     }
 
     if (input_file != NULL) {
@@ -875,15 +872,15 @@ main(int argc, char **argv)
             printf("Utilization information:\n");
         }
 
-        do_calculations(&data_set, input, local_date);
+        do_calculations(data_set, input, local_date);
         input = NULL;           /* Don't try and free it twice */
 
         if (graph_file != NULL) {
-            write_xml_file(data_set.graph, graph_file, FALSE);
+            write_xml_file(data_set->graph, graph_file, FALSE);
         }
 
         if (dot_file != NULL) {
-            create_dotfile(&data_set, dot_file, all_actions);
+            create_dotfile(data_set, dot_file, all_actions);
         }
 
         if (quiet == FALSE) {
@@ -893,11 +890,11 @@ main(int argc, char **argv)
                       || modified ? "\n" : "");
             fflush(stdout);
 
-            LogNodeActions(&data_set, TRUE);
-            for (gIter = data_set.resources; gIter != NULL; gIter = gIter->next) {
+            LogNodeActions(data_set, TRUE);
+            for (gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
                 resource_t *rsc = (resource_t *) gIter->data;
 
-                LogActions(rsc, &data_set, TRUE);
+                LogActions(rsc, data_set, TRUE);
             }
         }
     }
@@ -905,22 +902,21 @@ main(int argc, char **argv)
     rc = pcmk_ok;
 
     if (simulate) {
-        if (run_simulation(&data_set, global_cib, op_fail, quiet) != pcmk_ok) {
+        if (run_simulation(data_set, global_cib, op_fail, quiet) != pcmk_ok) {
             rc = pcmk_err_generic;
         }
         if(quiet == FALSE) {
-            get_date(&data_set);
+            get_date(data_set);
 
             quiet_log("\nRevised cluster status:\n");
-            set_bit(data_set.flags, pe_flag_stdout);
-            cluster_status(&data_set);
-            print_cluster_status(&data_set, 0);
+            set_bit(data_set->flags, pe_flag_stdout);
+            cluster_status(data_set);
+            print_cluster_status(data_set, 0);
         }
     }
 
   done:
-    cleanup_alloc_calculations(&data_set);
-
+    pe_free_working_set(data_set);
     global_cib->cmds->signoff(global_cib);
     cib_delete(global_cib);
     free(use_date);

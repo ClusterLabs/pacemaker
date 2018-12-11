@@ -1,34 +1,21 @@
-/* 
- * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
- * 
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- * 
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+/*
+ * Copyright 2004-2018 Andrew Beekhof <andrew@beekhof.net>
+ *
+ * This source code is licensed under the GNU Lesser General Public License
+ * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+
 #ifndef PENGINE_AUTILS__H
 #  define PENGINE_AUTILS__H
 
 /* Constraint helper functions */
 extern rsc_colocation_t *invert_constraint(rsc_colocation_t * constraint);
 
-extern rsc_to_node_t *copy_constraint(rsc_to_node_t * constraint);
+pe__location_t *copy_constraint(pe__location_t *constraint);
 
-extern rsc_to_node_t *rsc2node_new(const char *id, resource_t * rsc, int weight,
-                                   const char *discovery_mode, node_t * node,
-                                   pe_working_set_t * data_set);
-
-extern void pe_free_rsc_to_node(GListPtr constraints);
-extern void pe_free_ordering(GListPtr constraints);
+pe__location_t *rsc2node_new(const char *id, pe_resource_t *rsc, int weight,
+                             const char *discovery_mode, pe_node_t *node,
+                             pe_working_set_t *data_set);
 
 extern gboolean rsc_colocation_new(const char *id, const char *node_attr, int score,
                                    resource_t * rsc_lh, resource_t * rsc_rh,
@@ -39,7 +26,8 @@ extern gboolean rsc_ticket_new(const char *id, resource_t * rsc_lh, ticket_t * t
                                const char *state_lh, const char *loss_policy,
                                pe_working_set_t * data_set);
 
-extern gint sort_node_weight(gconstpointer a, gconstpointer b, gpointer data_set);
+GList *sort_nodes_by_weight(GList *nodes, pe_node_t *active_node,
+                            pe_working_set_t *data_set);
 
 extern gboolean can_run_resources(const node_t * node);
 extern gboolean native_assign_node(resource_t * rsc, GListPtr candidates, node_t * chosen,
@@ -51,7 +39,10 @@ extern void log_action(unsigned int log_level, const char *pre_text,
 
 gboolean can_run_any(GHashTable * nodes);
 bool can_interleave_actions(pe_action_t *first, pe_action_t *then);
-resource_t *find_compatible_child(resource_t * local_child, resource_t * rsc, enum rsc_role_e filter, gboolean current);
+pe_resource_t *find_compatible_child(pe_resource_t *local_child,
+                                     pe_resource_t *rsc, enum rsc_role_e filter,
+                                     gboolean current,
+                                     pe_working_set_t *data_set);
 resource_t *find_compatible_child_by_node(resource_t * local_child, node_t * local_node, resource_t * rsc,
                                           enum rsc_role_e filter, gboolean current);
 gboolean is_child_compatible(resource_t *child_rsc, node_t * local_node, enum rsc_role_e filter, gboolean current);
@@ -80,8 +71,6 @@ pe_action_t *pe_cancel_op(pe_resource_t *rsc, const char *name,
                           guint interval_ms, pe_node_t *node,
                           pe_working_set_t *data_set);
 
-#  define STONITH_DONE "stonith_complete"
-#  define ALL_STOPPED "all_stopped"
 #  define LOAD_STOPPED "load_stopped"
 
 #endif

@@ -1,4 +1,15 @@
+:compat-mode: legacy
 = Resource Agents =
+
+== Resource Agent Actions ==
+
+If one resource depends on another resource via constraints, the cluster will
+interpret an expected result as sufficient to continue with dependent actions.
+This may cause timing issues if the resource agent start returns before the
+service is not only launched but fully ready to perform its function, or if the
+resource agent stop returns before the service has fully released all its
+claims on system resources. At a minimum, the start or stop should not return
+before a status command would return the expected (started or stopped) result.
 
 == OCF Resource Agents ==
 
@@ -160,7 +171,7 @@ Although counterintuitive, even actions that return 0
 the expected return value.
 
 .OCF Return Codes and their Recovery Types
-[width="95%",cols="1m,4<m,6<,1m",options="header",align="center"]
+[width="95%",cols="1m,<4m,<6,1m",options="header",align="center"]
 |=========================================================
 
 |RC
@@ -257,7 +268,9 @@ Exceptions to the recovery handling described above:
 * Recurring actions that return +OCF_ERR_UNIMPLEMENTED+
   do not cause any type of recovery.
 
-== Init Script LSB Compliance ==
+== LSB Resource Agents (Init Scripts) ==
+
+=== LSB Compliance ===
 
 The relevant part of the
 http://refspecs.linuxfoundation.org/lsb.shtml[LSB specifications]
@@ -274,7 +287,7 @@ LSB-compatible:
 ----
 +
   .. Did the service start?
-  .. Did the command print *result: 0* (in addition to its usual output)?
+  .. Did the echo command print *result: 0* (in addition to the init script's usual output)?
 +
 . Status (running):
 +
@@ -284,7 +297,7 @@ LSB-compatible:
 +
   .. Did the script accept the command?
   .. Did the script indicate the service was running?
-  .. Did the command print *result: 0* (in addition to its usual output)?
+  .. Did the echo command print *result: 0* (in addition to the init script's usual output)?
 +
 . Start (running):
 +
@@ -293,7 +306,7 @@ LSB-compatible:
 ----
 +
   .. Is the service still running?
-  .. Did the command print *result: 0* (in addition to its usual output)?
+  .. Did the echo command print *result: 0* (in addition to the init script's usual output)?
 +
 . Stop (running):
 +
@@ -302,7 +315,7 @@ LSB-compatible:
 ----
 +
   .. Was the service stopped?
-  .. Did the command print *result: 0* (in addition to its usual output)?
+  .. Did the echo command print *result: 0* (in addition to the init script's usual output)?
 +
 . Status (stopped):
 +
@@ -312,7 +325,7 @@ LSB-compatible:
 +
   .. Did the script accept the command?
   .. Did the script indicate the service was not running?
-  .. Did the command print *result: 3* (in addition to its usual output)?
+  .. Did the echo command print *result: 3* (in addition to the init script's usual output)?
 +
 . Stop (stopped):
 +
@@ -321,7 +334,7 @@ LSB-compatible:
 ----
 +
   .. Is the service still stopped?
-  .. Did the command print *result: 0* (in addition to its usual output)?
+  .. Did the echo command print *result: 0* (in addition to the init script's usual output)?
 +
 . Status (failed):
 +

@@ -84,7 +84,7 @@
           <expression id="expression.id22290" attribute="pingd" operation="lte" value="0"/>
         </rule>
       </rsc_location>
-      <rsc_order id="drbd_before_group" first="ms_drbd" then="group" then-action="start" first-action="promote" score="0"/>
+      <rsc_order id="drbd_before_group" first="ms_drbd" then="group" then-action="start" first-action="promote" kind="Optional"/>
       <rsc_colocation id="group_on_drbd" rsc="group" with-rsc="ms_drbd" with-rsc-role="Master" score="INFINITY"/>
     </constraints>
   </configuration>

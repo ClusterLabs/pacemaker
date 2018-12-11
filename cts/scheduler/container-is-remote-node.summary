@@ -16,7 +16,7 @@ Containers: [ RNVM1:VM1 ]
      Started: [ lama2 lama3 ]
      Stopped: [ RNVM1 ]
  Clone Set: gfs2-lv_1_2-clone [gfs2-lv_1_2]
-     Stopped (disabled): [ RNVM1 lama2 lama3 ]
+     Stopped (disabled): [ lama2 lama3 RNVM1 ]
  VM1	(ocf::heartbeat:VirtualDomain):	Started lama2 
  Resource Group: RES1
      FSdata1	(ocf::heartbeat:Filesystem):	Started RNVM1 
@@ -47,7 +47,7 @@ Containers: [ RNVM1:VM1 ]
      Started: [ lama2 lama3 ]
      Stopped: [ RNVM1 ]
  Clone Set: gfs2-lv_1_2-clone [gfs2-lv_1_2]
-     Stopped (disabled): [ RNVM1 lama2 lama3 ]
+     Stopped (disabled): [ lama2 lama3 RNVM1 ]
  VM1	(ocf::heartbeat:VirtualDomain):	Started lama2 
  Resource Group: RES1
      FSdata1	(ocf::heartbeat:Filesystem):	Started RNVM1 

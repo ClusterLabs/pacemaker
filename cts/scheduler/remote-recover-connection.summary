@@ -14,10 +14,10 @@ RemoteOnline: [ galera-0 galera-1 galera-2 messaging-0 messaging-1 messaging-2 ]
  Clone Set: rabbitmq-clone [rabbitmq]
      Started: [ messaging-0 messaging-1 messaging-2 ]
      Stopped: [ controller-0 controller-1 controller-2 galera-0 galera-1 galera-2 ]
- Master/Slave Set: galera-master [galera]
+ Clone Set: galera-master [galera] (promotable)
      Masters: [ galera-0 galera-1 galera-2 ]
      Stopped: [ controller-0 controller-1 controller-2 messaging-0 messaging-1 messaging-2 ]
- Master/Slave Set: redis-master [redis]
+ Clone Set: redis-master [redis] (promotable)
      redis	(ocf::heartbeat:redis):	Slave controller-1 (UNCLEAN)
      Masters: [ controller-0 ]
      Slaves: [ controller-2 ]
@@ -77,7 +77,6 @@ Executing cluster transition:
  * Pseudo action:   redis-master_stop_0
  * Pseudo action:   haproxy-clone_stop_0
  * Resource action: stonith-fence_ipmilan-5254005bdbb5 start on controller-2
- * Pseudo action:   stonith_complete
  * Resource action: messaging-1     monitor=20000 on controller-2
  * Resource action: galera-0        monitor=20000 on controller-2
  * Resource action: galera-2        monitor=20000 on controller-2
@@ -100,7 +99,6 @@ Executing cluster transition:
  * Resource action: ip-172.17.1.14  monitor=10000 on controller-2
  * Resource action: ip-172.17.1.17  monitor=10000 on controller-2
  * Resource action: ip-172.17.4.11  monitor=10000 on controller-2
- * Pseudo action:   all_stopped
 Using the original execution date of: 2017-05-03 13:33:24Z
 
 Revised cluster status:
@@ -117,10 +115,10 @@ RemoteOnline: [ galera-0 galera-1 galera-2 messaging-0 messaging-1 messaging-2 ]
  Clone Set: rabbitmq-clone [rabbitmq]
      Started: [ messaging-0 messaging-1 messaging-2 ]
      Stopped: [ controller-0 controller-1 controller-2 galera-0 galera-1 galera-2 ]
- Master/Slave Set: galera-master [galera]
+ Clone Set: galera-master [galera] (promotable)
      Masters: [ galera-0 galera-1 galera-2 ]
      Stopped: [ controller-0 controller-1 controller-2 messaging-0 messaging-1 messaging-2 ]
- Master/Slave Set: redis-master [redis]
+ Clone Set: redis-master [redis] (promotable)
      Masters: [ controller-0 ]
      Slaves: [ controller-2 ]
      Stopped: [ controller-1 galera-0 galera-1 galera-2 messaging-0 messaging-1 messaging-2 ]

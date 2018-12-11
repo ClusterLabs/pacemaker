@@ -60,8 +60,8 @@
       <rsc_location id="RL2_CloneResource1" node="domu2" rsc="CloneResource1" score="INFINITY"/>
       <rsc_location id="RL1_CloneResource2" node="domu1" rsc="CloneResource2" score="INFINITY"/>
       <rsc_location id="RL2_CloneResource2" node="domu2" rsc="CloneResource2" score="INFINITY"/>
-      <rsc_order first="CloneResource1" id="CLR1_vor_CRL2" score="INFINITY" then="CloneResource2"/>
-      <rsc_order first="CloneResource2" id="CLR2_vor_PR1" score="INFINITY" then="PrimitiveResource1"/>
+      <rsc_order first="CloneResource1" id="CLR1_vor_CRL2" then="CloneResource2"/>
+      <rsc_order first="CloneResource2" id="CLR2_vor_PR1" then="PrimitiveResource1"/>
     </constraints>
   </configuration>
   <status>

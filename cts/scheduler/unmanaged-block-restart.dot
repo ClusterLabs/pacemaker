@@ -1,5 +1,4 @@
 digraph "g" {
-"all_stopped" [ style=dashed color="red" fontcolor="orange"]
 "group1_running_0" [ style=dashed color="red" fontcolor="orange"]
 "group1_start_0" -> "group1_running_0" [ style = dashed]
 "group1_start_0" -> "rsc1_start_0 yingying.site" [ style = bold]
@@ -22,7 +21,6 @@ digraph "g" {
 "rsc2_start_0 yingying.site" -> "rsc2_monitor_10000 yingying.site" [ style = dashed]
 "rsc2_start_0 yingying.site" -> "rsc3_start_0 yingying.site" [ style = dashed]
 "rsc2_start_0 yingying.site" [ style=dashed color="red" fontcolor="black"]
-"rsc2_stop_0 yingying.site" -> "all_stopped" [ style = dashed]
 "rsc2_stop_0 yingying.site" -> "group1_stopped_0" [ style = dashed]
 "rsc2_stop_0 yingying.site" -> "rsc2_start_0 yingying.site" [ style = dashed]
 "rsc2_stop_0 yingying.site" [ style=dashed color="red" fontcolor="black"]
@@ -30,7 +28,6 @@ digraph "g" {
 "rsc3_start_0 yingying.site" -> "group1_running_0" [ style = dashed]
 "rsc3_start_0 yingying.site" -> "rsc3_monitor_10000 yingying.site" [ style = dashed]
 "rsc3_start_0 yingying.site" [ style=dashed color="red" fontcolor="black"]
-"rsc3_stop_0 yingying.site" -> "all_stopped" [ style = dashed]
 "rsc3_stop_0 yingying.site" -> "group1_stopped_0" [ style = dashed]
 "rsc3_stop_0 yingying.site" -> "rsc2_stop_0 yingying.site" [ style = dashed]
 "rsc3_stop_0 yingying.site" -> "rsc3_start_0 yingying.site" [ style = dashed]

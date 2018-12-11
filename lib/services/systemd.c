@@ -565,6 +565,100 @@ systemd_async_dispatch(DBusPendingCall *pending, void *user_data)
 
 #define SYSTEMD_OVERRIDE_ROOT "/run/systemd/system/"
 
+/* When the cluster manages a systemd resource, we create a unit file override
+ * to order the service "before" pacemaker. The "before" relationship won't
+ * actually be used, since systemd won't ever start the resource -- we're
+ * interested in the reverse shutdown ordering it creates, to ensure that
+ * systemd doesn't stop the resource at shutdown while pacemaker is still
+ * running.
+ *
+ * @TODO Add start timeout
+ */
+#define SYSTEMD_OVERRIDE_TEMPLATE                           \
+    "[Unit]\n"                                              \
+    "Description=Cluster Controlled %s\n"                   \
+    "Before=pacemaker.service pacemaker_remote.service\n"   \
+    "\n"                                                    \
+    "[Service]\n"                                           \
+    "Restart=no\n"
+
+// Temporarily use rwxr-xr-x umask when opening a file for writing
+static FILE *
+create_world_readable(const char *filename)
+{
+    mode_t orig_umask = umask(S_IWGRP | S_IWOTH);
+    FILE *fp = fopen(filename, "w");
+
+    umask(orig_umask);
+    return fp;
+}
+
+static void
+create_override_dir(const char *agent)
+{
+    char *override_dir = crm_strdup_printf(SYSTEMD_OVERRIDE_ROOT
+                                           "/%s.service.d", agent);
+
+    crm_build_path(override_dir, 0755);
+    free(override_dir);
+}
+
+static char *
+get_override_filename(const char *agent)
+{
+    return crm_strdup_printf(SYSTEMD_OVERRIDE_ROOT
+                             "/%s.service.d/50-pacemaker.conf", agent);
+}
+
+static void
+systemd_create_override(const char *agent, int timeout)
+{
+    FILE *file_strm = NULL;
+    char *override_file = get_override_filename(agent);
+
+    create_override_dir(agent);
+
+    /* Ensure the override file is world-readable. This is not strictly
+     * necessary, but it avoids a systemd warning in the logs.
+     */
+    file_strm = create_world_readable(override_file);
+    if (file_strm == NULL) {
+        crm_err("Cannot open systemd override file %s for writing",
+                override_file);
+    } else {
+        char *override = crm_strdup_printf(SYSTEMD_OVERRIDE_TEMPLATE, agent);
+
+        int rc = fprintf(file_strm, "%s\n", override);
+
+        free(override);
+        if (rc < 0) {
+            crm_perror(LOG_WARNING, "Cannot write to systemd override file %s",
+                       override_file);
+        }
+        fflush(file_strm);
+        fclose(file_strm);
+        systemd_daemon_reload(timeout);
+    }
+
+    free(override_file);
+}
+
+static void
+systemd_remove_override(const char *agent, int timeout)
+{
+    char *override_file = get_override_filename(agent);
+    int rc = unlink(override_file);
+
+    if (rc < 0) {
+        // Stop may be called when already stopped, which is fine
+        crm_perror(LOG_DEBUG, "Cannot remove systemd override file %s",
+                   override_file);
+    } else {
+        systemd_daemon_reload(timeout);
+    }
+    free(override_file);
+}
+
 static void
 systemd_unit_check(const char *name, const char *state, void *userdata)
 {
@@ -623,58 +717,12 @@ systemd_unit_exec_with_unit(svc_action_t * op, const char *unit)
         }
 
     } else if (g_strcmp0(method, "start") == 0) {
-        FILE *file_strm = NULL;
-        char *override_dir = crm_strdup_printf("%s/%s.service.d", SYSTEMD_OVERRIDE_ROOT, op->agent);
-        char *override_file = crm_strdup_printf("%s/%s.service.d/50-pacemaker.conf", SYSTEMD_OVERRIDE_ROOT, op->agent);
-        mode_t orig_umask;
-
         method = "StartUnit";
-        crm_build_path(override_dir, 0755);
-
-        /* Ensure the override file is world-readable. This is not strictly
-         * necessary, but it avoids a systemd warning in the logs.
-         */
-        orig_umask = umask(S_IWGRP | S_IWOTH);
-        file_strm = fopen(override_file, "w");
-        umask(orig_umask);
-
-        if (file_strm != NULL) {
-            /* TODO: Insert the start timeout in too */
-            char *override = crm_strdup_printf(
-                "[Unit]\n"
-                "Description=Cluster Controlled %s\n"
-                "Before=pacemaker.service\n"
-                "\n"
-                "[Service]\n"
-                "Restart=no\n",
-                op->agent);
-
-            int rc = fprintf(file_strm, "%s\n", override);
-
-            free(override);
-            if (rc < 0) {
-                crm_perror(LOG_ERR, "Cannot write to systemd override file %s", override_file);
-            }
-
-        } else {
-            crm_err("Cannot open systemd override file %s for writing", override_file);
-        }
-
-        if (file_strm != NULL) {
-            fflush(file_strm);
-            fclose(file_strm);
-        }
-        systemd_daemon_reload(op->timeout);
-        free(override_file);
-        free(override_dir);
+        systemd_create_override(op->agent, op->timeout);
 
     } else if (g_strcmp0(method, "stop") == 0) {
-        char *override_file = crm_strdup_printf("%s/%s.service.d/50-pacemaker.conf", SYSTEMD_OVERRIDE_ROOT, op->agent);
-
         method = "StopUnit";
-        unlink(override_file);
-        free(override_file);
-        systemd_daemon_reload(op->timeout);
+        systemd_remove_override(op->agent, op->timeout);
 
     } else if (g_strcmp0(method, "restart") == 0) {
         method = "RestartUnit";

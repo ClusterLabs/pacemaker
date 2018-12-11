@@ -13,20 +13,20 @@
 #include <crm/common/ipc.h>
 #include <crm/cib/internal.h>
 
-int message_timeout_ms = 30;
-int command_options = 0;
-int request_id = 0;
-int bump_log_num = 0;
+static int message_timeout_ms = 30;
+static int command_options = 0;
+static int request_id = 0;
+static int bump_log_num = 0;
 
-const char *host = NULL;
-const char *cib_user = NULL;
-const char *cib_action = NULL;
-const char *obj_type = NULL;
+static const char *host = NULL;
+static const char *cib_user = NULL;
+static const char *cib_action = NULL;
+static const char *obj_type = NULL;
 
-cib_t *the_cib = NULL;
-GMainLoop *mainloop = NULL;
-gboolean force_flag = FALSE;
-crm_exit_t exit_code = CRM_EX_OK;
+static cib_t *the_cib = NULL;
+static GMainLoop *mainloop = NULL;
+static gboolean force_flag = FALSE;
+static crm_exit_t exit_code = CRM_EX_OK;
 
 int do_init(void);
 int do_work(xmlNode *input, int command_options, xmlNode **output);
@@ -153,6 +153,17 @@ print_xml_output(xmlNode * xml)
         fprintf(stdout, "%s", crm_str(buffer));
         free(buffer);
     }
+}
+
+// Upgrade requested but already at latest schema
+static void
+report_schema_unchanged()
+{
+    const char *err = pcmk_strerror(pcmk_err_schema_unchanged);
+
+    crm_info("Upgrade unnecessary: %s\n", err);
+    printf("Upgrade unnecessary: %s\n", err);
+    exit_code = CRM_EX_OK;
 }
 
 int
@@ -425,10 +436,7 @@ main(int argc, char **argv)
 
     } else if ((rc == -pcmk_err_schema_unchanged)
                && crm_str_eq(cib_action, CIB_OP_UPGRADE, TRUE)) {
-
-        // Already at latest schema
-        crm_info("Upgrade unnecessary: %s\n", pcmk_strerror(rc));
-        printf("Upgrade unnecessary: %s\n", pcmk_strerror(rc));
+        report_schema_unchanged();
 
     } else if (rc < 0) {
         crm_err("Call failed: %s", pcmk_strerror(rc));
@@ -513,7 +521,10 @@ cibadmin_op_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void 
 {
     exit_code = crm_errno2exit(rc);
 
-    if (rc != 0) {
+    if (rc == -pcmk_err_schema_unchanged) {
+        report_schema_unchanged();
+
+    } else if (rc != pcmk_ok) {
         crm_warn("Call %s failed (%d): %s", cib_action, rc, pcmk_strerror(rc));
         fprintf(stderr, "Call %s failed (%d): %s\n", cib_action, rc, pcmk_strerror(rc));
         print_xml_output(output);

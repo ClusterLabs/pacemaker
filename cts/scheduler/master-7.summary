@@ -18,7 +18,7 @@ Online: [ c001n02 c001n03 c001n08 ]
      child_DoFencing:1	(stonith:ssh):	Started c001n03
      child_DoFencing:2	(stonith:ssh):	Started c001n02
      child_DoFencing:3	(stonith:ssh):	Started c001n08
- Master/Slave Set: master_rsc_1 [ocf_msdummy] (unique)
+ Clone Set: master_rsc_1 [ocf_msdummy] (promotable) (unique)
      ocf_msdummy:0	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Master c001n01 (UNCLEAN)
      ocf_msdummy:1	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Slave c001n03 
      ocf_msdummy:2	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Slave c001n02 
@@ -62,28 +62,26 @@ Executing cluster transition:
  * Fencing c001n01 (reboot)
  * Pseudo action:   DcIPaddr_stop_0
  * Resource action: heartbeat_192.168.100.182 stop on c001n03
+ * Resource action: lsb_dummy       start on c001n08
  * Pseudo action:   rsc_c001n01_stop_0
  * Pseudo action:   child_DoFencing:0_stop_0
  * Pseudo action:   DoFencing_stopped_0
  * Pseudo action:   ocf_msdummy:0_demote_0
  * Pseudo action:   master_rsc_1_demoted_0
  * Pseudo action:   master_rsc_1_stop_0
- * Pseudo action:   stonith_complete
  * Resource action: DcIPaddr        start on c001n03
  * Resource action: ocf_192.168.100.181 stop on c001n03
- * Resource action: lsb_dummy       start on c001n08
+ * Resource action: lsb_dummy       monitor=5000 on c001n08
  * Resource action: rsc_c001n01     start on c001n03
  * Pseudo action:   ocf_msdummy:0_stop_0
  * Pseudo action:   ocf_msdummy:4_stop_0
  * Pseudo action:   master_rsc_1_stopped_0
- * Pseudo action:   all_stopped
  * Resource action: DcIPaddr        monitor=5000 on c001n03
  * Pseudo action:   group-1_stopped_0
  * Pseudo action:   group-1_start_0
  * Resource action: ocf_192.168.100.181 start on c001n02
  * Resource action: heartbeat_192.168.100.182 start on c001n02
  * Resource action: ocf_192.168.100.183 start on c001n02
- * Resource action: lsb_dummy       monitor=5000 on c001n08
  * Resource action: rsc_c001n01     monitor=5000 on c001n03
  * Pseudo action:   group-1_running_0
  * Resource action: ocf_192.168.100.181 monitor=5000 on c001n02
@@ -109,7 +107,7 @@ OFFLINE: [ c001n01 ]
      child_DoFencing:1	(stonith:ssh):	Started c001n03
      child_DoFencing:2	(stonith:ssh):	Started c001n02
      child_DoFencing:3	(stonith:ssh):	Started c001n08
- Master/Slave Set: master_rsc_1 [ocf_msdummy] (unique)
+ Clone Set: master_rsc_1 [ocf_msdummy] (promotable) (unique)
      ocf_msdummy:0	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Stopped 
      ocf_msdummy:1	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Slave c001n03 
      ocf_msdummy:2	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Slave c001n02 

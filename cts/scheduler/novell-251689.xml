@@ -108,9 +108,9 @@
       </primitive>
     </resources>
     <constraints>
-      <rsc_order id="evmsdorderconstraints-01" first="evmsdcloneset" then="evmscloneset" then-action="start" first-action="start" score="0"/>
-      <rsc_order id="evmsorderconstraints-02" first="evmscloneset" then="configstorecloneset" then-action="start" first-action="start" score="0"/>
-      <rsc_order id="evmsorderconstraints-01" first="evmscloneset" then="imagestorecloneset" then-action="start" first-action="start" score="0"/>
+      <rsc_order id="evmsdorderconstraints-01" first="evmsdcloneset" then="evmscloneset" then-action="start" first-action="start" kind="Optional"/>
+      <rsc_order id="evmsorderconstraints-02" first="evmscloneset" then="configstorecloneset" then-action="start" first-action="start" kind="Optional"/>
+      <rsc_order id="evmsorderconstraints-01" first="evmscloneset" then="imagestorecloneset" then-action="start" first-action="start" kind="Optional"/>
     </constraints>
   </configuration>
   <status>

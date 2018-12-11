@@ -16,8 +16,6 @@ Executing cluster transition:
  * Fencing node1 (reboot)
  * Fencing node3 (reboot)
  * Fencing node2 (reboot)
- * Pseudo action:   stonith_complete
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 OFFLINE: [ node1 node2 node3 ]

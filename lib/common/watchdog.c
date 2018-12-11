@@ -33,7 +33,9 @@ enum pcmk_panic_flags
     pcmk_panic_shutdown = 0x04,
 };
 
-#define SYSRQ "/proc/sys/kernel/sysrq"
+#define SYSRQ  "/proc/sys/kernel/sysrq"
+/* 8 for debugging dumps of processes, 128 for reboot/poweroff */
+#define SYSRQ_CONTROLS_MASK  (8 | 128)
 
 void
 sysrq_init(void)
@@ -41,7 +43,7 @@ sysrq_init(void)
 #if SUPPORT_PROCFS
     static bool need_init = true;
     FILE* procf;
-    int c;
+    unsigned controls;
 
     if(need_init) {
         need_init = false;
@@ -54,22 +56,23 @@ sysrq_init(void)
         crm_perror(LOG_WARNING, "Cannot open "SYSRQ" for read");
         return;
     }
-    if (fscanf(procf, "%d", &c) != 1) {
+    if (fscanf(procf, "%u", &controls) != 1) {
         crm_perror(LOG_ERR, "Parsing "SYSRQ" failed");
-        c = 0;
+        controls = 0;
     }
     fclose(procf);
-    if (c == 1)
+    if (controls == 1
+            || (controls & SYSRQ_CONTROLS_MASK) == SYSRQ_CONTROLS_MASK) {
         return;
+    }
 
-    /* 8 for debugging dumps of processes, 128 for reboot/poweroff */
-    c |= 136;
+    controls |= SYSRQ_CONTROLS_MASK;
     procf = fopen(SYSRQ, "w");
     if (!procf) {
         crm_perror(LOG_ERR, "Cannot write to "SYSRQ);
         return;
     }
-    fprintf(procf, "%d", c);
+    fprintf(procf, "%u", controls);
     fclose(procf);
 #endif // SUPPORT_PROCFS
     return;

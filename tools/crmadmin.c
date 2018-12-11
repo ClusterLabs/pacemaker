@@ -26,12 +26,12 @@
 
 #include <crm/cib.h>
 
-int message_timer_id = -1;
-int message_timeout_ms = 30 * 1000;
+static int message_timer_id = -1;
+static int message_timeout_ms = 30 * 1000;
 
-GMainLoop *mainloop = NULL;
-crm_ipc_t *crmd_channel = NULL;
-char *admin_uuid = NULL;
+static GMainLoop *mainloop = NULL;
+static crm_ipc_t *crmd_channel = NULL;
+static char *admin_uuid = NULL;
 
 gboolean do_init(void);
 int do_work(void);
@@ -40,21 +40,21 @@ int admin_msg_callback(const char *buffer, ssize_t length, gpointer userdata);
 int do_find_node_list(xmlNode * xml_node);
 gboolean admin_message_timeout(gpointer data);
 
-gboolean BE_VERBOSE = FALSE;
-int expected_responses = 1;
-gboolean BASH_EXPORT = FALSE;
-gboolean DO_HEALTH = FALSE;
-gboolean DO_RESET = FALSE;
-gboolean DO_RESOURCE = FALSE;
-gboolean DO_ELECT_DC = FALSE;
-gboolean DO_WHOIS_DC = FALSE;
-gboolean DO_NODE_LIST = FALSE;
-gboolean BE_SILENT = FALSE;
-gboolean DO_RESOURCE_LIST = FALSE;
-const char *crmd_operation = NULL;
-char *dest_node = NULL;
-crm_exit_t exit_code = CRM_EX_OK;
-const char *sys_to = NULL;
+static gboolean BE_VERBOSE = FALSE;
+static int expected_responses = 1;
+static gboolean BASH_EXPORT = FALSE;
+static gboolean DO_HEALTH = FALSE;
+static gboolean DO_RESET = FALSE;
+static gboolean DO_RESOURCE = FALSE;
+static gboolean DO_ELECT_DC = FALSE;
+static gboolean DO_WHOIS_DC = FALSE;
+static gboolean DO_NODE_LIST = FALSE;
+static gboolean BE_SILENT = FALSE;
+static gboolean DO_RESOURCE_LIST = FALSE;
+static const char *crmd_operation = NULL;
+static char *dest_node = NULL;
+static crm_exit_t exit_code = CRM_EX_OK;
+static const char *sys_to = NULL;
 
 /* *INDENT-OFF* */
 static struct crm_option long_options[] = {

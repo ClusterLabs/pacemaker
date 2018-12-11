@@ -1,9 +1,7 @@
 digraph "g" {
-"all_stopped" [ style=bold color="green" fontcolor="orange"]
 "ip1_monitor_10000 rhel7-node1.example.com" [ style=bold color="green" fontcolor="black"]
 "ip1_start_0 rhel7-node1.example.com" -> "ip1_monitor_10000 rhel7-node1.example.com" [ style = bold]
 "ip1_start_0 rhel7-node1.example.com" [ style=bold color="green" fontcolor="black"]
-"ip1_stop_0 rhel7-node2.example.com" -> "all_stopped" [ style = bold]
 "ip1_stop_0 rhel7-node2.example.com" -> "ip1_start_0 rhel7-node1.example.com" [ style = bold]
 "ip1_stop_0 rhel7-node2.example.com" [ style=bold color="green" fontcolor="black"]
 "jrummy-clone_running_0" -> "ip1_stop_0 rhel7-node2.example.com" [ style = bold]

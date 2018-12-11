@@ -119,9 +119,8 @@ fatal() {
 # "@CRM_DAEMON_GROUP@" or one of the groups the effective user belongs to
 # (there's no business in probing any other processes)
 is_running() {
-    ps -G "0 $(getent group '@CRM_DAEMON_GROUP@' 2>/dev/null | cut -d: -f3) \
-           $(id -G)" \
-       -u "0 @CRM_DAEMON_USER@ $(id -u)" \
+    ps -G "0 $(getent group '@CRM_DAEMON_GROUP@' 2>/dev/null | cut -d: -f3) $(id -G)" \
+       -u "0 @CRM_DAEMON_USER@ $(id -u)" -f \
       | grep -Eqs  $(echo "$1" | sed -e 's/^\(.\)/[\1]/')
 }
 
@@ -188,7 +187,8 @@ detect_daemon_dir() {
 }
 
 detect_cib_dir() {
-    if [ "-f ${local_state_dir}/lib/pacemaker/cib/cib.xml" ]; then
+    d="${local_state_dir}/lib/pacemaker/cib" 
+    if [ -f "$d/cib.xml" ]; then
         found_dir "config files" "$d"
         return
     fi
@@ -306,10 +306,6 @@ get_time() {
 	'
 }
 
-get_time_() {
-    warning "Unknown time format used by: $*"
-}
-
 get_time_syslog() {
     awk '{print $1,$2,$3}'
 }
@@ -357,12 +353,27 @@ get_time_format() {
     echo $func
 }
 
+get_time_from_line() {
+    GTFL_FORMAT="$1"
+    shift
+    if [ "$GTFL_FORMAT" = "" ]; then
+        GTFL_FORMAT=$(get_time_format_for_string "$@")
+    fi
+    case $GTFL_FORMAT in
+        syslog|legacy|iso8601)
+            get_time $(echo "$@" | get_time_${GTFL_FORMAT})
+            ;;
+        *)
+            warning "Unknown time format in: $@"
+            ;;
+    esac
+}
+
 get_first_time() {
     l=""
     format=$1
     while read l; do
-	t=$(echo $l | get_time_$format)
-	ts=$(get_time $t)
+        ts=$(get_time_from_line "$format" "$l")
 	if [ "x$ts" != x ]; then
 	    echo "$ts"
 	    return
@@ -375,8 +386,7 @@ get_last_time() {
     best=`date +%s` # Now
     format=$1
     while read l; do
-	t=$(echo $l | get_time_$format)
-	ts=$(get_time $t)
+        ts=$(get_time_from_line "$format" "$l")
 	if [ "x$ts" != x ]; then
 	    best=$ts
 	fi
@@ -385,10 +395,7 @@ get_last_time() {
 }
 
 linetime() {
-    l=`tail -n +$2 $1 | grep -a ":[0-5][0-9]:" | head -n 1`
-    format=`get_time_format_for_string $l`
-    t=`echo $l | get_time_$format`
-    get_time "$t"
+    get_time_from_line "" $(tail -n +$2 $1 | grep -a ":[0-5][0-9]:" | head -n 1)
 }
 
 #
@@ -451,16 +458,17 @@ $f"
             # If we have enough hits, print them and return.
             found=$(($found+1))
             if [ $found -ge $max ]; then
-                debug "Pattern \'$pattern\' found in: [ $logfiles ]"
-                IFS=$SAVE_IFS
-                echo "$logfiles"
-                return
+                break
             fi
         fi
     done 2>/dev/null
     IFS=$SAVE_IFS
-
-    debug "Pattern \'$pattern\' not found in any system logs"
+    if [ -z "$logfiles" ]; then
+        debug "Pattern \'$pattern\' not found in any system logs"
+    else
+        debug "Pattern \'$pattern\' found in: [ $logfiles ]"
+        echo "$logfiles"
+    fi
 }
 
 node_events() {

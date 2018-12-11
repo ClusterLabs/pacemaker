@@ -3,7 +3,7 @@ Current cluster status:
 Online: [ srv01 srv02 ]
 
  A-master	(ocf::heartbeat:Dummy):	Started srv02 
- Master/Slave Set: msPostgresql [pgsql]
+ Clone Set: msPostgresql [pgsql] (promotable)
      Slaves: [ srv01 srv02 ]
 
 Transition Summary:
@@ -15,6 +15,6 @@ Revised cluster status:
 Online: [ srv01 srv02 ]
 
  A-master	(ocf::heartbeat:Dummy):	Started srv02 
- Master/Slave Set: msPostgresql [pgsql]
+ Clone Set: msPostgresql [pgsql] (promotable)
      Slaves: [ srv01 srv02 ]
 

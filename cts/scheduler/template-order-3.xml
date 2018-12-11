@@ -21,7 +21,7 @@
       <primitive id="rsc6" template="template2"/>
     </resources>
     <constraints>
-      <rsc_order id="template2-before-template2" first="template2" then="template1" first-action="start" then-action="start" score="INFINITY"/>
+      <rsc_order id="template2-before-template2" first="template2" then="template1" first-action="start" then-action="start"/>
     </constraints>
   </configuration>
   <status>

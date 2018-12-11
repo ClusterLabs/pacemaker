@@ -4,7 +4,7 @@ Node gluster03.h: standby
 Online: [ gluster01.h gluster02.h ]
 OFFLINE: [ gluster04.h ]
 
- Master/Slave Set: ms_stateful [g_stateful]
+ Clone Set: ms_stateful [g_stateful] (promotable)
      Resource Group: g_stateful:0
          p_stateful1	(ocf::pacemaker:Stateful):	Slave gluster01.h 
          p_stateful2	(ocf::pacemaker:Stateful):	Stopped 
@@ -67,7 +67,7 @@ Node gluster03.h: standby
 Online: [ gluster01.h gluster02.h ]
 OFFLINE: [ gluster04.h ]
 
- Master/Slave Set: ms_stateful [g_stateful]
+ Clone Set: ms_stateful [g_stateful] (promotable)
      Masters: [ gluster01.h ]
      Slaves: [ gluster02.h ]
  Clone Set: c_dummy [p_dummy1]

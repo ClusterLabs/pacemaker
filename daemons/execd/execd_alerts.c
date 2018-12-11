@@ -142,45 +142,32 @@ err:
     return rc;
 }
 
-static gboolean
-alert_drain_timeout_callback(gpointer user_data)
+static bool
+drain_check(guint remaining_timeout_ms)
 {
-    gboolean *timeout_popped = (gboolean *) user_data;
+    if (inflight_alerts != NULL) {
+        guint count = g_hash_table_size(inflight_alerts);
 
-    *timeout_popped = TRUE;
+        if (count > 0) {
+            crm_trace("%d alerts pending (%.3fs timeout remaining)",
+                      count, remaining_timeout_ms / 1000.0);
+            return TRUE;
+        }
+    }
     return FALSE;
 }
 
 void
-lrmd_drain_alerts(GMainContext *ctx)
+lrmd_drain_alerts(GMainLoop *mloop)
 {
-    guint timer, count;
-    gboolean timeout_popped = FALSE;
-    int timer_ms;
+    if (inflight_alerts != NULL) {
+        guint timer_ms = max_inflight_timeout() + 5000;
 
-    draining_alerts = TRUE;
-    if (inflight_alerts == NULL) {
-        return;
+        crm_trace("Draining in-flight alerts (timeout %.3fs)",
+                  timer_ms / 1000.0);
+        draining_alerts = TRUE;
+        pcmk_drain_main_loop(mloop, timer_ms, drain_check);
+        g_hash_table_destroy(inflight_alerts);
+        inflight_alerts = NULL;
     }
-
-    timer_ms = max_inflight_timeout() + 5000;
-    timer = g_timeout_add(timer_ms, alert_drain_timeout_callback,
-                          (gpointer) &timeout_popped);
-
-    while (!timeout_popped) {
-        count = g_hash_table_size(inflight_alerts);
-        if (count == 0) {
-            break;
-        }
-        crm_trace("Draining mainloop while still %d alerts are in flight (timeout=%dms)",
-                  count, timer_ms);
-        g_main_context_iteration(ctx, TRUE);
-    }
-
-    if (!timeout_popped && (timer > 0)) {
-        g_source_remove(timer);
-    }
-
-    g_hash_table_destroy(inflight_alerts);
-    inflight_alerts = NULL;
 }

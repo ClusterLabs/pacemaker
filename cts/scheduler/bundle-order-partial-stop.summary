@@ -103,7 +103,6 @@ Executing cluster transition:
  * Resource action: ip-192.168.122.247 stop on undercloud
  * Resource action: ip-192.168.122.248 stop on undercloud
  * Cluster action:  do_shutdown on undercloud
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Online: [ undercloud ]

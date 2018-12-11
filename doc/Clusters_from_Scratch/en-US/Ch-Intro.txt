@@ -1,3 +1,4 @@
+:compat-mode: legacy
 = Read-Me-First =
 
 == The Scope of this Document ==

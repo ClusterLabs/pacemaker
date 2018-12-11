@@ -49,7 +49,6 @@ Executing cluster transition:
  * Resource action: LVM_12          monitor=120000 on sapcl01
  * Resource action: Filesystem_13   monitor=120000 on sapcl01
  * Resource action: IPaddr_192_168_1_104 stop on sapcl03
- * Pseudo action:   all_stopped
  * Pseudo action:   oracle_stopped_0
  * Pseudo action:   oracle_start_0
  * Resource action: IPaddr_192_168_1_104 start on sapcl01

@@ -32,7 +32,7 @@
       </clone>
     </resources>
     <constraints>
-      <rsc_order id="order1" first="rsc1" then="rsc2" score="0"/>
+      <rsc_order id="order1" first="rsc1" then="rsc2" kind="Optional"/>
     </constraints>
   </configuration>
   <status>

@@ -19,7 +19,7 @@
       </clone>
     </resources>
     <constraints>
-      <rsc_order id="c-0" first="dummy1" then="cl_dummy" then-instance="1" score="INFINITY"/>
+      <rsc_order id="c-0" first="dummy1" then="cl_dummy" then-instance="1"/>
     </constraints>
     <rsc_defaults/>
     <op_defaults/>

@@ -31,11 +31,7 @@
 
 #include <pacemaker-based.h>
 
-extern const char *cib_root;
-
 crm_trigger_t *cib_writer = NULL;
-
-extern int cib_status;
 
 int write_cib_contents(gpointer p);
 

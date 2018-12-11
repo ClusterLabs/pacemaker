@@ -434,24 +434,24 @@
     </resources>
     <constraints>
       <rsc_colocation id="c_volume_on_glusterd" score="INFINITY" rsc="cl_p_bl_glusterfs" with-rsc="cl_glusterd"/>
-      <rsc_order id="o_before_mount" score="INFINITY" first="cl_glusterd" then="cl_p_bl_glusterfs"/>
-      <rsc_order id="xu-test1-depends-on-gluster" score="INFINITY" first="cl_p_bl_glusterfs" then="xu-test1"/>
-      <rsc_order id="xu-test2-depends-on-gluster" score="INFINITY" first="cl_p_bl_glusterfs" then="xu-test2"/>
-      <rsc_order id="xu-test3-depends-on-gluster" score="INFINITY" first="cl_p_bl_glusterfs" then="xu-test3"/>
-      <rsc_order id="xu-test4-depends-on-gluster" score="INFINITY" first="cl_p_bl_glusterfs" then="xu-test4"/>
-      <rsc_order id="xu-test5-depends-on-gluster" score="INFINITY" first="cl_p_bl_glusterfs" then="xu-test5"/>
-      <rsc_order id="xu-test6-depends-on-gluster" score="INFINITY" first="cl_p_bl_glusterfs" then="xu-test6"/>
-      <rsc_order id="xu-test7-depends-on-gluster" score="INFINITY" first="cl_p_bl_glusterfs" then="xu-test7"/>
-      <rsc_order id="xu-test8-depends-on-gluster" score="INFINITY" first="cl_p_bl_glusterfs" then="xu-test8"/>
-      <rsc_order id="xu-test9-depends-on-gluster" score="INFINITY" first="cl_p_bl_glusterfs" then="xu-test9"/>
-      <rsc_order id="xu-test10-depends-on-gluster" score="INFINITY" first="cl_p_bl_glusterfs" then="xu-test10"/>
-      <rsc_order id="xu-test11-depends-on-gluster" score="INFINITY" first="cl_p_bl_glusterfs" then="xu-test11"/>
-      <rsc_order id="xu-test12-depends-on-gluster" score="INFINITY" first="cl_p_bl_glusterfs" then="xu-test12"/>
-      <rsc_order id="xu-test13-depends-on-gluster" score="INFINITY" first="cl_p_bl_glusterfs" then="xu-test13"/>
-      <rsc_order id="xu-test14-depends-on-gluster" score="INFINITY" first="cl_p_bl_glusterfs" then="xu-test14"/>
-      <rsc_order id="xu-test15-depends-on-gluster" score="INFINITY" first="cl_p_bl_glusterfs" then="xu-test15"/>
-      <rsc_order id="xu-test16-depends-on-gluster" score="INFINITY" first="cl_p_bl_glusterfs" then="xu-test16"/>
-      <rsc_order id="xu-test17-depends-on-gluster" score="INFINITY" first="cl_p_bl_glusterfs" then="xu-test17"/>
+      <rsc_order id="o_before_mount" first="cl_glusterd" then="cl_p_bl_glusterfs"/>
+      <rsc_order id="xu-test1-depends-on-gluster" first="cl_p_bl_glusterfs" then="xu-test1"/>
+      <rsc_order id="xu-test2-depends-on-gluster" first="cl_p_bl_glusterfs" then="xu-test2"/>
+      <rsc_order id="xu-test3-depends-on-gluster" first="cl_p_bl_glusterfs" then="xu-test3"/>
+      <rsc_order id="xu-test4-depends-on-gluster" first="cl_p_bl_glusterfs" then="xu-test4"/>
+      <rsc_order id="xu-test5-depends-on-gluster" first="cl_p_bl_glusterfs" then="xu-test5"/>
+      <rsc_order id="xu-test6-depends-on-gluster" first="cl_p_bl_glusterfs" then="xu-test6"/>
+      <rsc_order id="xu-test7-depends-on-gluster" first="cl_p_bl_glusterfs" then="xu-test7"/>
+      <rsc_order id="xu-test8-depends-on-gluster" first="cl_p_bl_glusterfs" then="xu-test8"/>
+      <rsc_order id="xu-test9-depends-on-gluster" first="cl_p_bl_glusterfs" then="xu-test9"/>
+      <rsc_order id="xu-test10-depends-on-gluster" first="cl_p_bl_glusterfs" then="xu-test10"/>
+      <rsc_order id="xu-test11-depends-on-gluster" first="cl_p_bl_glusterfs" then="xu-test11"/>
+      <rsc_order id="xu-test12-depends-on-gluster" first="cl_p_bl_glusterfs" then="xu-test12"/>
+      <rsc_order id="xu-test13-depends-on-gluster" first="cl_p_bl_glusterfs" then="xu-test13"/>
+      <rsc_order id="xu-test14-depends-on-gluster" first="cl_p_bl_glusterfs" then="xu-test14"/>
+      <rsc_order id="xu-test15-depends-on-gluster" first="cl_p_bl_glusterfs" then="xu-test15"/>
+      <rsc_order id="xu-test16-depends-on-gluster" first="cl_p_bl_glusterfs" then="xu-test16"/>
+      <rsc_order id="xu-test17-depends-on-gluster" first="cl_p_bl_glusterfs" then="xu-test17"/>
       <rsc_order id="o_glusterfs_on_glusterd" first="cl_glusterd" then="cl_p_bl_glusterfs"/>
       <rsc_location id="cli-prefer-xu-test8" rsc="xu-test8" role="Started" node="xfc3" score="INFINITY"/>
       <rsc_colocation id="xu-test1-colo-cl_p_bl_glusterfs" score="INFINITY" rsc="xu-test1" with-rsc="cl_p_bl_glusterfs"/>

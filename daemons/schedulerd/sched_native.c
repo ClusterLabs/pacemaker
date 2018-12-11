@@ -23,7 +23,6 @@
 #define VARIANT_NATIVE 1
 #include <lib/pengine/variant.h>
 
-gboolean update_action(action_t * then);
 void native_rsc_colocation_rh_must(resource_t * rsc_lh, gboolean update_lh,
                                    resource_t * rsc_rh, gboolean update_rh);
 
@@ -93,8 +92,7 @@ native_choose_node(resource_t * rsc, node_t * prefer, pe_working_set_t * data_se
     }
     if (length > 0) {
         nodes = g_hash_table_get_values(rsc->allowed_nodes);
-        nodes = g_list_sort_with_data(nodes, sort_node_weight,
-                                      pe__current_node(rsc));
+        nodes = sort_nodes_by_weight(nodes, pe__current_node(rsc), data_set);
 
         // First node in sorted list has the best score
         best = g_list_nth_data(nodes, 0);
@@ -476,7 +474,7 @@ native_color(resource_t * rsc, node_t * prefer, pe_working_set_t * data_set)
             archive = node_hash_dup(rsc->allowed_nodes);
         }
         rsc_rh->cmds->allocate(rsc_rh, NULL, data_set);
-        rsc->cmds->rsc_colocation_lh(rsc, rsc_rh, constraint);
+        rsc->cmds->rsc_colocation_lh(rsc, rsc_rh, constraint, data_set);
         if (archive && can_run_any(rsc->allowed_nodes) == FALSE) {
             pe_rsc_info(rsc, "%s: Rolling back scores from %s", rsc->id, rsc_rh->id);
             g_hash_table_destroy(rsc->allowed_nodes);
@@ -1400,14 +1398,6 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
         return;
     }
 
-    {
-        action_t *all_stopped = get_pseudo_op(ALL_STOPPED, data_set);
-
-        custom_action_order(rsc, stop_key(rsc), NULL,
-                            NULL, strdup(all_stopped->task), all_stopped,
-                            pe_order_implies_then | pe_order_runnable_left, data_set);
-    }
-
     if (g_hash_table_size(rsc->utilization) > 0
         && safe_str_neq(data_set->placement_strategy, "default")) {
         GHashTableIter iter;
@@ -1456,6 +1446,26 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
     if (rsc->container) {
         resource_t *remote_rsc = NULL;
 
+        if (rsc->is_remote_node) {
+            // rsc is the implicit remote connection for a guest or bundle node
+
+            /* Do not allow a guest resource to live on a Pacemaker Remote node,
+             * to avoid nesting remotes. However, allow bundles to run on remote
+             * nodes.
+             */
+            if (is_not_set(rsc->flags, pe_rsc_allow_remote_remotes)) {
+                rsc_avoids_remote_nodes(rsc->container);
+            }
+
+            /* If someone cleans up a guest or bundle node's container, we will
+             * likely schedule a (re-)probe of the container and recovery of the
+             * connection. Order the connection stop after the container probe,
+             * so that if we detect the container running, we will trigger a new
+             * transition and avoid the unnecessary recovery.
+             */
+            new_rsc_order(rsc->container, RSC_STATUS, rsc, RSC_STOP,
+                          pe_order_optional, data_set);
+
         /* A user can specify that a resource must start on a Pacemaker Remote
          * node by explicitly configuring it with the container=NODENAME
          * meta-attribute. This is of questionable merit, since location
@@ -1463,16 +1473,15 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
          * we check whether a resource (that is not itself a remote connection)
          * has container set to a remote node or guest node resource.
          */
-        if (rsc->container->is_remote_node) {
+        } else if (rsc->container->is_remote_node) {
             remote_rsc = rsc->container;
-        } else if (rsc->is_remote_node == FALSE) {
+        } else  {
             remote_rsc = rsc_contains_remote_node(data_set, rsc->container);
         }
 
         if (remote_rsc) {
-            /* The container represents a Pacemaker Remote node, so force the
-             * resource on the Pacemaker Remote node instead of colocating the
-             * resource with the container resource.
+            /* Force the resource on the Pacemaker Remote node instead of
+             * colocating the resource with the container resource.
              */
             GHashTableIter iter;
             node_t *node = NULL;
@@ -1482,6 +1491,7 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
                     node->weight = -INFINITY;
                 }
             }
+
         } else {
             /* This resource is either a filler for a container that does NOT
              * represent a Pacemaker Remote node, or a Pacemaker Remote
@@ -1515,19 +1525,12 @@ native_internal_constraints(resource_t * rsc, pe_working_set_t * data_set)
          * or remote connection resources.*/
         rsc_avoids_remote_nodes(rsc);
     }
-
-    /* If this is a guest node's implicit remote connection, do not allow the
-     * guest resource to live on a Pacemaker Remote node, to avoid nesting
-     * remotes. However, allow bundles to run on remote nodes.
-     */
-    if (rsc->is_remote_node && rsc->container
-        && is_not_set(rsc->flags, pe_rsc_allow_remote_remotes)) {
-        rsc_avoids_remote_nodes(rsc->container);
-    }
 }
 
 void
-native_rsc_colocation_lh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * constraint)
+native_rsc_colocation_lh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
+                         rsc_colocation_t *constraint,
+                         pe_working_set_t *data_set)
 {
     if (rsc_lh == NULL) {
         pe_err("rsc_lh was NULL for %s", constraint->id);
@@ -1541,7 +1544,7 @@ native_rsc_colocation_lh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocatio
     pe_rsc_trace(rsc_lh, "Processing colocation constraint between %s and %s", rsc_lh->id,
                  rsc_rh->id);
 
-    rsc_rh->cmds->rsc_colocation_rh(rsc_lh, rsc_rh, constraint);
+    rsc_rh->cmds->rsc_colocation_rh(rsc_lh, rsc_rh, constraint, data_set);
 }
 
 enum filter_colocation_res
@@ -1729,7 +1732,9 @@ colocation_match(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * co
 }
 
 void
-native_rsc_colocation_rh(resource_t * rsc_lh, resource_t * rsc_rh, rsc_colocation_t * constraint)
+native_rsc_colocation_rh(pe_resource_t *rsc_lh, pe_resource_t *rsc_rh,
+                         rsc_colocation_t *constraint,
+                         pe_working_set_t *data_set)
 {
     enum filter_colocation_res filter_results;
 
@@ -1865,8 +1870,9 @@ native_action_flags(action_t * action, node_t * node)
 }
 
 enum pe_graph_flags
-native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_action_flags flags,
-                      enum pe_action_flags filter, enum pe_ordering type)
+native_update_actions(pe_action_t *first, pe_action_t *then, pe_node_t *node,
+                      enum pe_action_flags flags, enum pe_action_flags filter,
+                      enum pe_ordering type, pe_working_set_t *data_set)
 {
     /* flags == get_action_flags(first, then_node) called from update_action() */
     enum pe_graph_flags changed = pe_graph_none;
@@ -1888,11 +1894,15 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
              * then is already stopped, there is nothing to be done when non-symmetrical.  */
         } else if ((then_rsc_role >= RSC_ROLE_STARTED)
                    && safe_str_eq(then->task, RSC_START)
+                   && is_set(then->flags, pe_action_optional)
                    && then->node
                    && g_list_length(then_rsc->running_on) == 1
                    && then->node->details == ((node_t *) then_rsc->running_on->data)->details) {
-            /* ignore... if 'then' is supposed to be started after 'first', but
-             * then is already started, there is nothing to be done when non-symmetrical.  */
+            /* Ignore. If 'then' is supposed to be started after 'first', but
+             * 'then' is already started, there is nothing to be done when
+             * asymmetrical -- unless the start is mandatory, which indicates
+             * the resource is restarting, and the ordering is still needed.
+             */
         } else if (!(first->flags & pe_action_runnable)) {
             /* prevent 'then' action from happening if 'first' is not runnable and
              * 'then' has not yet occurred. */
@@ -2035,7 +2045,7 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
 
         if(then->rsc && then->rsc->parent) {
             /* "X_stop then X_start" doesn't get handled for cloned groups unless we do this */
-            update_action(then);
+            update_action(then, data_set);
         }
     }
 
@@ -2051,7 +2061,7 @@ native_update_actions(action_t * first, action_t * then, node_t * node, enum pe_
 }
 
 void
-native_rsc_location(resource_t * rsc, rsc_to_node_t * constraint)
+native_rsc_location(pe_resource_t *rsc, pe__location_t *constraint)
 {
     GListPtr gIter = NULL;
     GHashTableIter iter;
@@ -2678,116 +2688,6 @@ DeleteRsc(resource_t * rsc, node_t * node, gboolean optional, pe_working_set_t *
     return TRUE;
 }
 
-#include <../lib/pengine/unpack.h>
-#define set_char(x) last_rsc_id[lpc] = x; complete = TRUE;
-static char *
-increment_clone(char *last_rsc_id)
-{
-    int lpc = 0;
-    int len = 0;
-    char *tmp = NULL;
-    gboolean complete = FALSE;
-
-    CRM_CHECK(last_rsc_id != NULL, return NULL);
-    len = strlen(last_rsc_id);
-    lpc = len - 1;
-    while (complete == FALSE && lpc > 0) {
-        switch (last_rsc_id[lpc]) {
-            case 0:
-                lpc--;
-                break;
-            case '0':
-                set_char('1');
-                break;
-            case '1':
-                set_char('2');
-                break;
-            case '2':
-                set_char('3');
-                break;
-            case '3':
-                set_char('4');
-                break;
-            case '4':
-                set_char('5');
-                break;
-            case '5':
-                set_char('6');
-                break;
-            case '6':
-                set_char('7');
-                break;
-            case '7':
-                set_char('8');
-                break;
-            case '8':
-                set_char('9');
-                break;
-            case '9':
-                last_rsc_id[lpc] = '0';
-                lpc--;
-                break;
-            case ':':
-                tmp = last_rsc_id;
-                last_rsc_id = crm_strdup_printf("%s:10", tmp);
-                complete = TRUE;
-                free(tmp);
-                break;
-            default:
-                crm_err("Unexpected char: %c (%d)", last_rsc_id[lpc], lpc);
-                return NULL;
-                break;
-        }
-    }
-    return last_rsc_id;
-}
-
-static node_t *
-probe_anon_group_member(resource_t *rsc, node_t *node,
-                        pe_working_set_t *data_set)
-{
-    resource_t *top = uber_parent(rsc);
-
-    if (is_not_set(top->flags, pe_rsc_unique)) {
-        /* Annoyingly we also need to check any other clone instances
-         * Clumsy, but it will work.
-         *
-         * An alternative would be to update known_on for every peer
-         * during process_rsc_state()
-         *
-         * This code desperately needs optimization
-         * ptest -x with 100 nodes, 100 clones and clone-max=10:
-         *   No probes                          O(25s)
-         *   Detection without clone loop               O(3m)
-         *   Detection with clone loop                  O(8m)
-
-         ptest[32211]: 2010/02/18_14:27:55 CRIT: stage5: Probing for unknown resources
-         ptest[32211]: 2010/02/18_14:33:39 CRIT: stage5: Done
-         ptest[32211]: 2010/02/18_14:35:05 CRIT: stage7: Updating action states
-         ptest[32211]: 2010/02/18_14:35:05 CRIT: stage7: Done
-
-         */
-        char *clone_id = clone_zero(rsc->id);
-        resource_t *peer = pe_find_resource(top->children, clone_id);
-        node_t *running = NULL;
-
-        while (peer) {
-            running = pe_hash_table_lookup(peer->known_on, node->details->id);
-            if (running != NULL) {
-                /* we already know the status of the resource on this node */
-                pe_rsc_trace(rsc, "Skipping active clone: %s", rsc->id);
-                free(clone_id);
-                return running;
-            }
-            clone_id = increment_clone(clone_id);
-            peer = pe_find_resource(data_set->resources, clone_id);
-        }
-
-        free(clone_id);
-    }
-    return NULL;
-}
-
 gboolean
 native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
                     gboolean force, pe_working_set_t * data_set)
@@ -2857,20 +2757,8 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
         return FALSE;
     }
 
-    running = g_hash_table_lookup(rsc->known_on, node->details->id);
-    if (running == NULL && is_set(rsc->flags, pe_rsc_unique) == FALSE) {
-        /* Anonymous clones */
-        if (rsc->parent == top) {
-            running = g_hash_table_lookup(rsc->parent->known_on, node->details->id);
-
-        } else {
-            // Members of anonymous-cloned groups need special handling
-            running = probe_anon_group_member(rsc, node, data_set);
-        }
-    }
-
-    if (force == FALSE && running != NULL) {
-        /* we already know the status of the resource on this node */
+    // Check whether resource is already known on node
+    if (!force && g_hash_table_lookup(rsc->known_on, node->details->id)) {
         pe_rsc_trace(rsc, "Skipping known: %s on %s", rsc->id, node->details->uname);
         return FALSE;
     }
@@ -2930,7 +2818,7 @@ native_create_probe(resource_t * rsc, node_t * node, action_t * complete,
                 /* For safety, we order the 'rsc' start after 'remote'
                  * has been probed.
                  *
-                 * Using 'top' helps for groups, but in we may need to
+                 * Using 'top' helps for groups, but we may need to
                  * follow the start's ordering chain backwards.
                  */
                 custom_action_order(remote, generate_op_key(remote->id, RSC_STATUS, 0), NULL,
@@ -3052,13 +2940,19 @@ rsc_is_known_on(pe_resource_t *rsc, const pe_node_t *node)
    return FALSE;
 }
 
+/*!
+ * \internal
+ * \brief Order a resource's start and promote actions relative to fencing
+ *
+ * \param[in] rsc         Resource to be ordered
+ * \param[in] stonith_op  Fence action
+ * \param[in] data_set    Cluster information
+ */
 static void
 native_start_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set_t * data_set)
 {
     node_t *target;
     GListPtr gIter = NULL;
-    action_t *all_stopped = get_pseudo_op(ALL_STOPPED, data_set);
-    action_t *stonith_done = get_pseudo_op(STONITH_DONE, data_set);
 
     CRM_CHECK(stonith_op && stonith_op->node, return);
     target = stonith_op->node;
@@ -3066,34 +2960,35 @@ native_start_constraints(resource_t * rsc, action_t * stonith_op, pe_working_set
     for (gIter = rsc->actions; gIter != NULL; gIter = gIter->next) {
         action_t *action = (action_t *) gIter->data;
 
-        if(action->needs == rsc_req_nothing) {
-            /* Anything other than start or promote requires nothing */
+        switch (action->needs) {
+            case rsc_req_nothing:
+                // Anything other than start or promote requires nothing
+                break;
 
-        } else if (action->needs == rsc_req_stonith) {
-            order_actions(stonith_done, action, pe_order_optional);
+            case rsc_req_stonith:
+                order_actions(stonith_op, action, pe_order_optional);
+                break;
 
-        } else if (safe_str_eq(action->task, RSC_START)
-                   && NULL != pe_hash_table_lookup(rsc->allowed_nodes, target->details->id)
-                   && !rsc_is_known_on(rsc, target)) {
-            /* if known == NULL, then we don't know if
-             *   the resource is active on the node
-             *   we're about to shoot
-             *
-             * in this case, regardless of action->needs,
-             *   the only safe option is to wait until
-             *   the node is shot before doing anything
-             *   to with the resource
-             *
-             * it's analogous to waiting for all the probes
-             *   for rscX to complete before starting rscX
-             *
-             * the most likely explanation is that the
-             *   DC died and took its status with it
-             */
+            case rsc_req_quorum:
+                if (safe_str_eq(action->task, RSC_START)
+                    && pe_hash_table_lookup(rsc->allowed_nodes, target->details->id)
+                    && !rsc_is_known_on(rsc, target)) {
 
-            pe_rsc_debug(rsc, "Ordering %s after %s recovery", action->uuid,
-                         target->details->uname);
-            order_actions(all_stopped, action, pe_order_optional | pe_order_runnable_left);
+                    /* If we don't know the status of the resource on the node
+                     * we're about to shoot, we have to assume it may be active
+                     * there. Order the resource start after the fencing. This
+                     * is analogous to waiting for all the probes for a resource
+                     * to complete before starting it.
+                     *
+                     * The most likely explanation is that the DC died and took
+                     * its status with it.
+                     */
+                    pe_rsc_debug(rsc, "Ordering %s after %s recovery", action->uuid,
+                                 target->details->uname);
+                    order_actions(stonith_op, action,
+                                  pe_order_optional | pe_order_runnable_left);
+                }
+                break;
         }
     }
 }
@@ -3289,13 +3184,6 @@ rsc_stonith_ordering(resource_t * rsc, action_t * stonith_op, pe_working_set_t *
         native_stop_constraints(rsc, stonith_op, data_set);
     }
 }
-
-enum stack_activity {
-    stack_stable = 0,
-    stack_starting = 1,
-    stack_stopping = 2,
-    stack_middle = 4,
-};
 
 void
 ReloadRsc(resource_t * rsc, node_t *node, pe_working_set_t * data_set)

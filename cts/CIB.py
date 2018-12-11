@@ -264,7 +264,6 @@ class CIB12(ConfigBase):
 
                 # Create a Dummy agent that always passes for levels-and
                 if len(stt_nodes):
-                    self.CM.install_helper("fence_dummy", destdir="/usr/sbin", sourcedir=CTSvars.Fencing_home)
                     stt = Resource(self.Factory, "FencingPass", "fence_dummy", "stonith")
                     stt["pcmk_host_list"] = " ".join(stt_nodes)
                     # Wait this many seconds before doing anything, handy for letting disks get flushed too
@@ -274,7 +273,6 @@ class CIB12(ConfigBase):
 
                 # Create a Dummy agent that always fails for levels-or
                 if len(stf_nodes):
-                    self.CM.install_helper("fence_dummy", destdir="/usr/sbin", sourcedir=CTSvars.Fencing_home)
                     stf = Resource(self.Factory, "FencingFail", "fence_dummy", "stonith")
                     stf["pcmk_host_list"] = " ".join(stf_nodes)
                     # Wait this many seconds before doing anything, handy for letting disks get flushed too

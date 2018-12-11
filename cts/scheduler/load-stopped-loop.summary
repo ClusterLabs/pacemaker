@@ -183,7 +183,6 @@ Executing cluster transition:
  * Resource action: terminal0.anbriz.vds-ok.com-vm migrate_from on v03-b
  * Resource action: terminal0.anbriz.vds-ok.com-vm stop on v03-a
  * Pseudo action:   load_stopped_v03-a
- * Pseudo action:   all_stopped
  * Pseudo action:   license.anbriz.vds-ok.com-vm_start_0
  * Pseudo action:   terminal0.anbriz.vds-ok.com-vm_start_0
  * Resource action: vd01-d.cdev.ttc.prague.cz.vds-ok.com-vm start on v03-a

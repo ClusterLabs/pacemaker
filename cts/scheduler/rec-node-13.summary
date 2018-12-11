@@ -19,7 +19,7 @@ OFFLINE: [ c001n03 c001n05 ]
  rsc_c001n02	(ocf::heartbeat:IPaddr):	Started c001n02
  rsc_c001n07	(ocf::heartbeat:IPaddr):	Started c001n07
  rsc_c001n06	(ocf::heartbeat:IPaddr):	Started c001n06
- Master/Slave Set: master_rsc_1 [ocf_msdummy] (unique)
+ Clone Set: master_rsc_1 [ocf_msdummy] (promotable) (unique)
      ocf_msdummy:0	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Master c001n02
      ocf_msdummy:1	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Stopped 
      ocf_msdummy:2	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Stopped 
@@ -40,10 +40,8 @@ Transition Summary:
 Executing cluster transition:
  * Fencing c001n04 (reboot)
  * Pseudo action:   master_rsc_1_stop_0
- * Pseudo action:   stonith_complete
  * Pseudo action:   ocf_msdummy:6_stop_0
  * Pseudo action:   master_rsc_1_stopped_0
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Online: [ c001n02 c001n06 c001n07 ]
@@ -64,7 +62,7 @@ OFFLINE: [ c001n03 c001n04 c001n05 ]
  rsc_c001n02	(ocf::heartbeat:IPaddr):	Started c001n02
  rsc_c001n07	(ocf::heartbeat:IPaddr):	Started c001n07
  rsc_c001n06	(ocf::heartbeat:IPaddr):	Started c001n06
- Master/Slave Set: master_rsc_1 [ocf_msdummy] (unique)
+ Clone Set: master_rsc_1 [ocf_msdummy] (promotable) (unique)
      ocf_msdummy:0	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Master c001n02
      ocf_msdummy:1	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Stopped 
      ocf_msdummy:2	(ocf::heartbeat:/usr/lib/heartbeat/cts/OCFMSDummy):	Stopped 

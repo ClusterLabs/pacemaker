@@ -1,3 +1,4 @@
+:compat-mode: legacy
 = Installing Cluster Software =
 
 == Installing the Software ==

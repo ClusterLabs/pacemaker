@@ -17,9 +17,9 @@ Node hex-3: OFFLINE (standby)
  fs-xfs-1	(ocf::heartbeat:Filesystem):	Stopped 
  Clone Set: fs2 [fs-ocfs-2]
      Stopped: [ hex-1 hex-2 hex-3 ]
- Master/Slave Set: ms-r0 [drbd-r0]
+ Clone Set: ms-r0 [drbd-r0] (promotable)
      Stopped (disabled): [ hex-1 hex-2 hex-3 ]
- Master/Slave Set: ms-r1 [drbd-r1]
+ Clone Set: ms-r1 [drbd-r1] (promotable)
      Stopped (disabled): [ hex-1 hex-2 hex-3 ]
  Resource Group: md0-group
      md0	(ocf::heartbeat:Raid1):	Stopped 
@@ -46,7 +46,6 @@ Executing cluster transition:
  * Resource action: o2cb            stop on hex-2
  * Resource action: clvmd           stop on hex-2
  * Resource action: dlm             stop on hex-2
- * Pseudo action:   all_stopped
  * Pseudo action:   basegrp:0_stopped_0
  * Pseudo action:   baseclone_stopped_0
 
@@ -61,9 +60,9 @@ Node hex-3: OFFLINE (standby)
  fs-xfs-1	(ocf::heartbeat:Filesystem):	Stopped 
  Clone Set: fs2 [fs-ocfs-2]
      Stopped: [ hex-1 hex-2 hex-3 ]
- Master/Slave Set: ms-r0 [drbd-r0]
+ Clone Set: ms-r0 [drbd-r0] (promotable)
      Stopped (disabled): [ hex-1 hex-2 hex-3 ]
- Master/Slave Set: ms-r1 [drbd-r1]
+ Clone Set: ms-r1 [drbd-r1] (promotable)
      Stopped (disabled): [ hex-1 hex-2 hex-3 ]
  Resource Group: md0-group
      md0	(ocf::heartbeat:Raid1):	Stopped 

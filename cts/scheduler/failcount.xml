@@ -460,7 +460,7 @@
           <expression attribute="at-ping-sjim" id="lo-ldirectord-ping-expression-0" operation="lte" value="0"/>
         </rule>
       </rsc_location>
-      <rsc_order first="cl-ldirectord" id="or-wesbprod" score="INFINITY" then="cl-wesbprod"/>
+      <rsc_order first="cl-ldirectord" id="or-wesbprod" then="cl-wesbprod"/>
       <rsc_location id="lo-drdns-ping" rsc="re-drdns-ip">
         <rule boolean-op="or" id="re-drdns-ping-rule" score="-INFINITY">
           <expression attribute="at-ping-sjim" id="lo-drdns-ping-expression" operation="not_defined"/>
@@ -481,9 +481,9 @@
           <resource_ref id="cl-ldirectord"/>
         </resource_set>
       </rsc_colocation>
-      <rsc_order first="cl-ldirectord" id="or-cdeprod" score="INFINITY" then="cl-cdeprod"/>
-      <rsc_order first="cl-ldirectord" id="or-openfire" score="INFINITY" then="cl-openfire"/>
-      <rsc_order first="cl-ldirectord" id="or-haproxy" score="INFINITY" then="cl-haproxy"/>
+      <rsc_order first="cl-ldirectord" id="or-cdeprod" then="cl-cdeprod"/>
+      <rsc_order first="cl-ldirectord" id="or-openfire" then="cl-openfire"/>
+      <rsc_order first="cl-ldirectord" id="or-haproxy" then="cl-haproxy"/>
     </constraints>
   </configuration>
   <status>

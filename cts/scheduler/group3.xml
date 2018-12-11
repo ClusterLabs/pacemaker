@@ -27,7 +27,7 @@
       </group>
     </resources>
     <constraints>
-      <rsc_order id="order1" first="rsc1" then="rsc2" then-action="start" first-action="start" score="0"/>
+      <rsc_order id="order1" first="rsc1" then="rsc2" then-action="start" first-action="start" kind="Optional"/>
     </constraints>
   </configuration>
   <status>

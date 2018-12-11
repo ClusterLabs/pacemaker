@@ -5,6 +5,7 @@
     su hacluster haclient
     rotate 99
     maxage 365
+    maxsize 100M
     notifempty
     missingok
     copytruncate

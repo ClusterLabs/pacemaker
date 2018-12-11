@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2018 Andrew Beekhof <andrew@beekhof.net>
+ * Copyright 2012-2018 Andrew Beekhof <andrew@beekhof.net>
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -12,6 +12,7 @@ extern "C" {
 #endif
 
 #include <crm/msg_xml.h>
+#include <crm/pengine/complex.h> // enum pe_obj_types
 
 /* Heartbeat-specific definitions. Support for heartbeat has been removed
  * entirely, so any code branches relying on these should be deleted.

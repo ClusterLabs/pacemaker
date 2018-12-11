@@ -1039,7 +1039,7 @@ class BandwidthTest(CTSTest):
                 linessplit = line.split(" ")
                 for j in range(len(linessplit)-1):
                     if linessplit[j] == "udp": break
-                    if linesplit[j] == "length:": break
+                    if linessplit[j] == "length:": break
                 try:
                     sum = int(linessplit[j+1]) + sum
                 except ValueError:
@@ -2635,45 +2635,40 @@ class RemoteDriver(CTSTest):
 
     def add_primitive_rsc(self, node):
         rsc_xml = """
-<primitive class="ocf" id="%s" provider="heartbeat" type="Dummy">
-    <operations>
-      <op id="remote-rsc-monitor-interval-10s" interval="10s" name="monitor"/>
-    </operations>
-    <meta_attributes id="remote-meta_attributes"/>
-</primitive>""" % (self.remote_rsc)
+<primitive class="ocf" id="%(node)s" provider="heartbeat" type="Dummy">
+  <meta_attributes id="%(node)s-meta_attributes"/>
+  <operations>
+    <op id="%(node)s-monitor-interval-20s" interval="20s" name="monitor"/>
+  </operations>
+</primitive>""" % { "node": self.remote_rsc }
         self.add_rsc(node, rsc_xml)
         if not self.failed:
             self.remote_rsc_added = 1
 
     def add_connection_rsc(self, node):
+        rsc_xml = """
+<primitive class="ocf" id="%(node)s" provider="pacemaker" type="remote">
+  <instance_attributes id="%(node)s-instance_attributes">
+    <nvpair id="%(node)s-instance_attributes-server" name="server" value="%(server)s"/>
+""" % { "node": self.remote_node, "server": node }
+
         if self.remote_use_reconnect_interval:
-            # use reconnect interval and make sure to set cluster-recheck-interval as well.
-            rsc_xml = """
-<primitive class="ocf" id="%s" provider="pacemaker" type="remote">
-    <instance_attributes id="remote-instance_attributes"/>
-        <instance_attributes id="remote-instance_attributes">
-          <nvpair id="remote-instance_attributes-server" name="server" value="%s"/>
-          <nvpair id="remote-instance_attributes-reconnect_interval" name="reconnect_interval" value="60s"/>
-        </instance_attributes>
-    <operations>
-      <op id="remote-monitor-interval-60s" interval="60s" name="monitor"/>
-      <op id="remote-name-start-interval-0-timeout-120" interval="0" name="start" timeout="60"/>
-    </operations>
-</primitive>""" % (self.remote_node, node)
+            # Set cluster-recheck-interval lower
             self.rsh(self.get_othernode(node), self.templates["SetCheckInterval"] % ("45s"))
-        else:
-            # not using reconnect interval
-            rsc_xml = """
-<primitive class="ocf" id="%s" provider="pacemaker" type="remote">
-    <instance_attributes id="remote-instance_attributes"/>
-        <instance_attributes id="remote-instance_attributes">
-          <nvpair id="remote-instance_attributes-server" name="server" value="%s"/>
-        </instance_attributes>
-    <operations>
-      <op id="remote-monitor-interval-60s" interval="60s" name="monitor"/>
-      <op id="remote-name-start-interval-0-timeout-120" interval="0" name="start" timeout="120"/>
-    </operations>
-</primitive>""" % (self.remote_node, node)
+
+            # Set reconnect interval on resource
+            rsc_xml = rsc_xml + """
+    <nvpair id="%s-instance_attributes-reconnect_interval" name="reconnect_interval" value="60s"/>
+""" % (self.remote_node)
+
+        rsc_xml = rsc_xml + """
+  </instance_attributes>
+  <operations>
+    <op id="%(node)s-start"       name="start"   interval="0"   timeout="120s"/>
+    <op id="%(node)s-monitor-20s" name="monitor" interval="20s" timeout="45s"/>
+  </operations>
+</primitive>
+""" % { "node": self.remote_node }
 
         self.add_rsc(node, rsc_xml)
         if not self.failed:
@@ -2697,13 +2692,15 @@ class RemoteDriver(CTSTest):
                 self.pcmk_started = 1
                 break
 
-    def kill_pcmk_remote(self, node):
+    def freeze_pcmk_remote(self, node):
         """ Simulate a Pacemaker Remote daemon failure. """
 
-        # We kill the process to prevent a graceful stop,
-        # then stop it to prevent the OS from restarting it.
-        self.rsh(node, "killall -9 pacemaker-remoted")
-        self.stop_pcmk_remote(node)
+        # We freeze the process.
+        self.rsh(node, "killall -STOP pacemaker-remoted")
+
+    def resume_pcmk_remote(self, node):
+        # We resume the process.
+        self.rsh(node, "killall -CONT pacemaker-remoted")
 
     def start_metal(self, node):
         pcmk_started = 0
@@ -2794,9 +2791,9 @@ class RemoteDriver(CTSTest):
         watch = self.create_watch(watchpats, 120)
         watch.setwatch()
 
-        # force stop the pcmk remote daemon. this will result in fencing
+        # freeze the pcmk remote daemon. this will result in fencing
         self.debug("Force stopped active remote node")
-        self.kill_pcmk_remote(node)
+        self.freeze_pcmk_remote(node)
 
         self.debug("Waiting for remote node to be fenced.")
         self.set_timer("remoteMetalFence")
@@ -2893,6 +2890,8 @@ class RemoteDriver(CTSTest):
 
         self.set_timer("remoteMetalCleanup")
 
+        self.resume_pcmk_remote(node)
+
         if self.remote_use_reconnect_interval:
             self.debug("Cleaning up re-check interval")
             self.rsh(self.get_othernode(node), self.templates["ClearCheckInterval"])
@@ -2901,14 +2900,14 @@ class RemoteDriver(CTSTest):
 
             # Remove dummy resource added for remote node tests
             self.debug("Cleaning up dummy rsc put on remote node")
-            self.rsh(node, "crm_resource -U -r %s" % self.remote_rsc)
+            self.rsh(self.get_othernode(node), "crm_resource -U -r %s" % self.remote_rsc)
             self.del_rsc(node, self.remote_rsc)
 
         if self.remote_node_added == 1:
 
             # Remove remote node's connection resource
             self.debug("Cleaning up remote node connection resource")
-            self.rsh(node, "crm_resource -U -r %s" % (self.remote_node))
+            self.rsh(self.get_othernode(node), "crm_resource -U -r %s" % (self.remote_node))
             self.del_rsc(node, self.remote_node)
 
         watch.lookforall()
@@ -2981,9 +2980,9 @@ class RemoteDriver(CTSTest):
 
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
-        return [ """is running on remote.*which isn't allowed""",
-                 """Connection terminated""",
-                 """Failed to send remote""",
+        return [ r"""is running on remote.*which isn't allowed""",
+                 r"""Connection terminated""",
+                 r"""Could not send remote""",
                 ]
 
 # RemoteDriver is just a base class for other tests, so it is not added to AllTestClasses
@@ -3045,6 +3044,7 @@ class RemoteStonithd(RemoteDriver):
             r"schedulerd.*:\s+Recover remote-.*\s*\(.*\)",
             r"Calculated [Tt]ransition .*pe-error",
             r"error.*: Resource .*ocf::.* is active on 2 nodes attempting recovery",
+            r"error: Result of monitor operation for .* on remote-.*: Error",
         ]
 
         ignore_pats.extend(RemoteDriver.errorstoignore(self))

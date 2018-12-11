@@ -1162,135 +1162,135 @@
     </resources>
     <constraints>
       <rsc_colocation id="colo-vm-00" rsc="vm-00" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-00" score="INFINITY" then="vm-00"/>
+      <rsc_order first="base-clone" id="order-vm-00" then="vm-00"/>
       <rsc_colocation id="colo-vm-1" rsc="vm-01" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-1" score="INFINITY" then="vm-01"/>
+      <rsc_order first="base-clone" id="order-vm-1" then="vm-01"/>
       <rsc_colocation id="colo-vm-2" rsc="vm-02" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-2" score="INFINITY" then="vm-02"/>
+      <rsc_order first="base-clone" id="order-vm-2" then="vm-02"/>
       <rsc_colocation id="colo-vm-3" rsc="vm-03" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-3" score="INFINITY" then="vm-03"/>
+      <rsc_order first="base-clone" id="order-vm-3" then="vm-03"/>
       <rsc_colocation id="colo-vm-4" rsc="vm-04" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-4" score="INFINITY" then="vm-04"/>
+      <rsc_order first="base-clone" id="order-vm-4" then="vm-04"/>
       <rsc_colocation id="colo-vm-5" rsc="vm-05" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-5" score="INFINITY" then="vm-05"/>
+      <rsc_order first="base-clone" id="order-vm-5" then="vm-05"/>
       <rsc_colocation id="colo-vm-6" rsc="vm-06" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-6" score="INFINITY" then="vm-06"/>
+      <rsc_order first="base-clone" id="order-vm-6" then="vm-06"/>
       <rsc_colocation id="colo-vm-7" rsc="vm-07" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-7" score="INFINITY" then="vm-07"/>
+      <rsc_order first="base-clone" id="order-vm-7" then="vm-07"/>
       <rsc_colocation id="colo-vm-8" rsc="vm-08" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-8" score="INFINITY" then="vm-08"/>
+      <rsc_order first="base-clone" id="order-vm-8" then="vm-08"/>
       <rsc_colocation id="colo-vm-9" rsc="vm-09" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-9" score="INFINITY" then="vm-09"/>
+      <rsc_order first="base-clone" id="order-vm-9" then="vm-09"/>
       <rsc_colocation id="colo-vm-10" rsc="vm-10" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-10" score="INFINITY" then="vm-10"/>
+      <rsc_order first="base-clone" id="order-vm-10" then="vm-10"/>
       <rsc_colocation id="colo-vm-11" rsc="vm-11" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-11" score="INFINITY" then="vm-11"/>
+      <rsc_order first="base-clone" id="order-vm-11" then="vm-11"/>
       <rsc_colocation id="colo-vm-12" rsc="vm-12" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-12" score="INFINITY" then="vm-12"/>
+      <rsc_order first="base-clone" id="order-vm-12" then="vm-12"/>
       <rsc_colocation id="colo-vm-13" rsc="vm-13" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-13" score="INFINITY" then="vm-13"/>
+      <rsc_order first="base-clone" id="order-vm-13" then="vm-13"/>
       <rsc_colocation id="colo-vm-14" rsc="vm-14" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-14" score="INFINITY" then="vm-14"/>
+      <rsc_order first="base-clone" id="order-vm-14" then="vm-14"/>
       <rsc_colocation id="colo-vm-15" rsc="vm-15" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-15" score="INFINITY" then="vm-15"/>
+      <rsc_order first="base-clone" id="order-vm-15" then="vm-15"/>
       <rsc_colocation id="colo-vm-16" rsc="vm-16" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-16" score="INFINITY" then="vm-16"/>
+      <rsc_order first="base-clone" id="order-vm-16" then="vm-16"/>
       <rsc_colocation id="colo-vm-17" rsc="vm-17" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-17" score="INFINITY" then="vm-17"/>
+      <rsc_order first="base-clone" id="order-vm-17" then="vm-17"/>
       <rsc_colocation id="colo-vm-18" rsc="vm-18" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-18" score="INFINITY" then="vm-18"/>
+      <rsc_order first="base-clone" id="order-vm-18" then="vm-18"/>
       <rsc_colocation id="colo-vm-19" rsc="vm-19" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-19" score="INFINITY" then="vm-19"/>
+      <rsc_order first="base-clone" id="order-vm-19" then="vm-19"/>
       <rsc_colocation id="colo-vm-20" rsc="vm-20" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-20" score="INFINITY" then="vm-20"/>
+      <rsc_order first="base-clone" id="order-vm-20" then="vm-20"/>
       <rsc_colocation id="colo-vm-21" rsc="vm-21" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-21" score="INFINITY" then="vm-21"/>
+      <rsc_order first="base-clone" id="order-vm-21" then="vm-21"/>
       <rsc_colocation id="colo-vm-22" rsc="vm-22" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-22" score="INFINITY" then="vm-22"/>
+      <rsc_order first="base-clone" id="order-vm-22" then="vm-22"/>
       <rsc_colocation id="colo-vm-23" rsc="vm-23" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-23" score="INFINITY" then="vm-23"/>
+      <rsc_order first="base-clone" id="order-vm-23" then="vm-23"/>
       <rsc_colocation id="colo-vm-24" rsc="vm-24" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-24" score="INFINITY" then="vm-24"/>
+      <rsc_order first="base-clone" id="order-vm-24" then="vm-24"/>
       <rsc_colocation id="colo-vm-25" rsc="vm-25" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-25" score="INFINITY" then="vm-25"/>
+      <rsc_order first="base-clone" id="order-vm-25" then="vm-25"/>
       <rsc_colocation id="colo-vm-26" rsc="vm-26" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-26" score="INFINITY" then="vm-26"/>
+      <rsc_order first="base-clone" id="order-vm-26" then="vm-26"/>
       <rsc_colocation id="colo-vm-27" rsc="vm-27" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-27" score="INFINITY" then="vm-27"/>
+      <rsc_order first="base-clone" id="order-vm-27" then="vm-27"/>
       <rsc_colocation id="colo-vm-28" rsc="vm-28" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-28" score="INFINITY" then="vm-28"/>
+      <rsc_order first="base-clone" id="order-vm-28" then="vm-28"/>
       <rsc_colocation id="colo-vm-29" rsc="vm-29" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-29" score="INFINITY" then="vm-29"/>
+      <rsc_order first="base-clone" id="order-vm-29" then="vm-29"/>
       <rsc_colocation id="colo-vm-30" rsc="vm-30" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-30" score="INFINITY" then="vm-30"/>
+      <rsc_order first="base-clone" id="order-vm-30" then="vm-30"/>
       <rsc_colocation id="colo-vm-31" rsc="vm-31" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-31" score="INFINITY" then="vm-31"/>
+      <rsc_order first="base-clone" id="order-vm-31" then="vm-31"/>
       <rsc_colocation id="colo-vm-32" rsc="vm-32" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-32" score="INFINITY" then="vm-32"/>
+      <rsc_order first="base-clone" id="order-vm-32" then="vm-32"/>
       <rsc_colocation id="colo-vm-33" rsc="vm-33" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-33" score="INFINITY" then="vm-33"/>
+      <rsc_order first="base-clone" id="order-vm-33" then="vm-33"/>
       <rsc_colocation id="colo-vm-34" rsc="vm-34" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-34" score="INFINITY" then="vm-34"/>
+      <rsc_order first="base-clone" id="order-vm-34" then="vm-34"/>
       <rsc_colocation id="colo-vm-35" rsc="vm-35" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-35" score="INFINITY" then="vm-35"/>
+      <rsc_order first="base-clone" id="order-vm-35" then="vm-35"/>
       <rsc_colocation id="colo-vm-36" rsc="vm-36" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-36" score="INFINITY" then="vm-36"/>
+      <rsc_order first="base-clone" id="order-vm-36" then="vm-36"/>
       <rsc_colocation id="colo-vm-37" rsc="vm-37" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-37" score="INFINITY" then="vm-37"/>
+      <rsc_order first="base-clone" id="order-vm-37" then="vm-37"/>
       <rsc_colocation id="colo-vm-38" rsc="vm-38" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-38" score="INFINITY" then="vm-38"/>
+      <rsc_order first="base-clone" id="order-vm-38" then="vm-38"/>
       <rsc_colocation id="colo-vm-39" rsc="vm-39" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-39" score="INFINITY" then="vm-39"/>
+      <rsc_order first="base-clone" id="order-vm-39" then="vm-39"/>
       <rsc_colocation id="colo-vm-40" rsc="vm-40" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-40" score="INFINITY" then="vm-40"/>
+      <rsc_order first="base-clone" id="order-vm-40" then="vm-40"/>
       <rsc_colocation id="colo-vm-41" rsc="vm-41" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-41" score="INFINITY" then="vm-41"/>
+      <rsc_order first="base-clone" id="order-vm-41" then="vm-41"/>
       <rsc_colocation id="colo-vm-42" rsc="vm-42" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-42" score="INFINITY" then="vm-42"/>
+      <rsc_order first="base-clone" id="order-vm-42" then="vm-42"/>
       <rsc_colocation id="colo-vm-43" rsc="vm-43" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-43" score="INFINITY" then="vm-43"/>
+      <rsc_order first="base-clone" id="order-vm-43" then="vm-43"/>
       <rsc_colocation id="colo-vm-44" rsc="vm-44" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-44" score="INFINITY" then="vm-44"/>
+      <rsc_order first="base-clone" id="order-vm-44" then="vm-44"/>
       <rsc_colocation id="colo-vm-45" rsc="vm-45" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-45" score="INFINITY" then="vm-45"/>
+      <rsc_order first="base-clone" id="order-vm-45" then="vm-45"/>
       <rsc_colocation id="colo-vm-46" rsc="vm-46" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-46" score="INFINITY" then="vm-46"/>
+      <rsc_order first="base-clone" id="order-vm-46" then="vm-46"/>
       <rsc_colocation id="colo-vm-47" rsc="vm-47" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-47" score="INFINITY" then="vm-47"/>
+      <rsc_order first="base-clone" id="order-vm-47" then="vm-47"/>
       <rsc_colocation id="colo-vm-48" rsc="vm-48" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-48" score="INFINITY" then="vm-48"/>
+      <rsc_order first="base-clone" id="order-vm-48" then="vm-48"/>
       <rsc_colocation id="colo-vm-49" rsc="vm-49" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-49" score="INFINITY" then="vm-49"/>
+      <rsc_order first="base-clone" id="order-vm-49" then="vm-49"/>
       <rsc_colocation id="colo-vm-50" rsc="vm-50" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-50" score="INFINITY" then="vm-50"/>
+      <rsc_order first="base-clone" id="order-vm-50" then="vm-50"/>
       <rsc_colocation id="colo-vm-51" rsc="vm-51" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-51" score="INFINITY" then="vm-51"/>
+      <rsc_order first="base-clone" id="order-vm-51" then="vm-51"/>
       <rsc_colocation id="colo-vm-52" rsc="vm-52" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-52" score="INFINITY" then="vm-52"/>
+      <rsc_order first="base-clone" id="order-vm-52" then="vm-52"/>
       <rsc_colocation id="colo-vm-53" rsc="vm-53" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-53" score="INFINITY" then="vm-53"/>
+      <rsc_order first="base-clone" id="order-vm-53" then="vm-53"/>
       <rsc_colocation id="colo-vm-54" rsc="vm-54" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-54" score="INFINITY" then="vm-54"/>
+      <rsc_order first="base-clone" id="order-vm-54" then="vm-54"/>
       <rsc_colocation id="colo-vm-55" rsc="vm-55" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-55" score="INFINITY" then="vm-55"/>
+      <rsc_order first="base-clone" id="order-vm-55" then="vm-55"/>
       <rsc_colocation id="colo-vm-56" rsc="vm-56" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-56" score="INFINITY" then="vm-56"/>
+      <rsc_order first="base-clone" id="order-vm-56" then="vm-56"/>
       <rsc_colocation id="colo-vm-57" rsc="vm-57" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-57" score="INFINITY" then="vm-57"/>
+      <rsc_order first="base-clone" id="order-vm-57" then="vm-57"/>
       <rsc_colocation id="colo-vm-58" rsc="vm-58" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-58" score="INFINITY" then="vm-58"/>
+      <rsc_order first="base-clone" id="order-vm-58" then="vm-58"/>
       <rsc_colocation id="colo-vm-59" rsc="vm-59" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-59" score="INFINITY" then="vm-59"/>
+      <rsc_order first="base-clone" id="order-vm-59" then="vm-59"/>
       <rsc_colocation id="colo-vm-60" rsc="vm-60" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-60" score="INFINITY" then="vm-60"/>
+      <rsc_order first="base-clone" id="order-vm-60" then="vm-60"/>
       <rsc_colocation id="colo-vm-61" rsc="vm-61" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-61" score="INFINITY" then="vm-61"/>
+      <rsc_order first="base-clone" id="order-vm-61" then="vm-61"/>
       <rsc_colocation id="colo-vm-62" rsc="vm-62" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-62" score="INFINITY" then="vm-62"/>
+      <rsc_order first="base-clone" id="order-vm-62" then="vm-62"/>
       <rsc_colocation id="colo-vm-63" rsc="vm-63" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-63" score="INFINITY" then="vm-63"/>
+      <rsc_order first="base-clone" id="order-vm-63" then="vm-63"/>
       <rsc_colocation id="colo-vm-64" rsc="vm-64" score="INFINITY" with-rsc="base-clone"/>
-      <rsc_order first="base-clone" id="order-vm-64" score="INFINITY" then="vm-64"/>
+      <rsc_order first="base-clone" id="order-vm-64" then="vm-64"/>
     </constraints>
     <op_defaults>
       <meta_attributes id="op-options">

@@ -1,7 +1,5 @@
 digraph "g" {
-"all_stopped" [ style=dashed color="red" fontcolor="orange"]
 "rsc1_start_0 <none>" [ style=dashed color="red" fontcolor="black"]
-"rsc1_stop_0 yingying.site" -> "all_stopped" [ style = dashed]
 "rsc1_stop_0 yingying.site" -> "rsc1_start_0 <none>" [ style = dashed]
 "rsc1_stop_0 yingying.site" [ style=dashed color="red" fontcolor="black"]
 }

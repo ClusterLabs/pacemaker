@@ -24,7 +24,6 @@ Executing cluster transition:
  * Resource action: res_Dummy1:1    stop on xenserver1
  * Resource action: res_Dummy1:0    stop on xenserver2
  * Pseudo action:   cl_res_Dummy1_stopped_0
- * Pseudo action:   all_stopped
 
 Revised cluster status:
 Online: [ xenserver1 xenserver2 ]

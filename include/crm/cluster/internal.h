@@ -79,10 +79,6 @@ peer2text(enum crm_proc_flag proc)
 {
     const char *text = "unknown";
 
-    if (proc == (crm_proc_controld | crm_get_cluster_proc())) {
-        return "peer";
-    }
-
     switch (proc) {
         case crm_proc_none:
             text = "none";
@@ -110,21 +106,6 @@ peer2text(enum crm_proc_flag proc)
             break;
     }
     return text;
-}
-
-static inline enum crm_proc_flag
-text2proc(const char *proc)
-{
-    /* We only care about these two so far */
-
-    if (proc && strcmp(proc, "pacemaker-based") == 0) {
-        return crm_proc_based;
-
-    } else if (proc && strcmp(proc, "pacemaker-controld") == 0) {
-        return crm_proc_controld;
-    }
-
-    return crm_proc_none;
 }
 
 static inline const char *
@@ -347,5 +328,8 @@ gboolean node_name_is_valid(const char *key, const char *name);
 
 crm_node_t * crm_find_peer_full(unsigned int id, const char *uname, int flags);
 crm_node_t * crm_find_peer(unsigned int id, const char *uname);
+
+void crm_peer_caches_refresh(xmlNode *cib);
+crm_node_t *crm_find_known_peer_full(unsigned int id, const char *uname, int flags);
 
 #endif

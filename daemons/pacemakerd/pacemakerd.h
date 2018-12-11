@@ -20,8 +20,6 @@
 #define SIZEOF(a)   (sizeof(a) / sizeof(a[0]))
 #define MAX_RESPAWN		100
 
-extern uint32_t local_nodeid;
-
 gboolean mcp_read_config(void);
 
 gboolean cluster_connect_cfg(uint32_t * nodeid);

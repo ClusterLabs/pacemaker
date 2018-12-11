@@ -1,3 +1,4 @@
+:compat-mode: legacy
 = Alternative Configurations =
 
 These alternative configurations may be appropriate in limited cases, such as a

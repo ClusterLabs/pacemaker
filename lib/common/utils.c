@@ -987,9 +987,9 @@ void cib_ipc_servers_init(qb_ipcs_service_t **ipcs_ro,
         struct qb_ipcs_service_handlers *ro_cb,
         struct qb_ipcs_service_handlers *rw_cb)
 {
-    *ipcs_ro = mainloop_add_ipc_server(cib_channel_ro, QB_IPC_NATIVE, ro_cb);
-    *ipcs_rw = mainloop_add_ipc_server(cib_channel_rw, QB_IPC_NATIVE, rw_cb);
-    *ipcs_shm = mainloop_add_ipc_server(cib_channel_shm, QB_IPC_SHM, rw_cb);
+    *ipcs_ro = mainloop_add_ipc_server(CIB_CHANNEL_RO, QB_IPC_NATIVE, ro_cb);
+    *ipcs_rw = mainloop_add_ipc_server(CIB_CHANNEL_RW, QB_IPC_NATIVE, rw_cb);
+    *ipcs_shm = mainloop_add_ipc_server(CIB_CHANNEL_SHM, QB_IPC_SHM, rw_cb);
 
     if (*ipcs_ro == NULL || *ipcs_rw == NULL || *ipcs_shm == NULL) {
         crm_err("Failed to create the CIB manager: exiting and inhibiting respawn");
@@ -1037,98 +1037,6 @@ stonith_ipc_server_init(qb_ipcs_service_t **ipcs, struct qb_ipcs_service_handler
     }
 }
 
-bool
-pcmk_acl_required(const char *user) 
-{
-#if ENABLE_ACL
-    if(user == NULL || strlen(user) == 0) {
-        crm_trace("no user set");
-        return FALSE;
-
-    } else if (strcmp(user, CRM_DAEMON_USER) == 0) {
-        return FALSE;
-
-    } else if (strcmp(user, "root") == 0) {
-        return FALSE;
-    }
-    crm_trace("acls required for %s", user);
-    return TRUE;
-#else
-    crm_trace("acls not supported");
-    return FALSE;
-#endif
-}
-
-#if ENABLE_ACL
-char *
-uid2username(uid_t uid)
-{
-    struct passwd *pwent = getpwuid(uid);
-
-    if (pwent == NULL) {
-        crm_perror(LOG_ERR, "Cannot get password entry of uid: %d", uid);
-        return NULL;
-
-    } else {
-        return strdup(pwent->pw_name);
-    }
-}
-
-const char *
-crm_acl_get_set_user(xmlNode * request, const char *field, const char *peer_user)
-{
-    /* field is only checked for backwards compatibility */
-    static const char *effective_user = NULL;
-    const char *requested_user = NULL;
-    const char *user = NULL;
-
-    if(effective_user == NULL) {
-        effective_user = uid2username(geteuid());
-    }
-
-    requested_user = crm_element_value(request, XML_ACL_TAG_USER);
-    if(requested_user == NULL) {
-        requested_user = crm_element_value(request, field);
-    }
-
-    if (is_privileged(effective_user) == FALSE) {
-        /* We're not running as a privileged user, set or overwrite any existing value for $XML_ACL_TAG_USER */
-        user = effective_user;
-
-    } else if(peer_user == NULL && requested_user == NULL) {
-        /* No user known or requested, use 'effective_user' and make sure one is set for the request */
-        user = effective_user;
-
-    } else if(peer_user == NULL) {
-        /* No user known, trusting 'requested_user' */
-        user = requested_user;
-
-    } else if (is_privileged(peer_user) == FALSE) {
-        /* The peer is not a privileged user, set or overwrite any existing value for $XML_ACL_TAG_USER */
-        user = peer_user;
-
-    } else if (requested_user == NULL) {
-        /* Even if we're privileged, make sure there is always a value set */
-        user = peer_user;
-
-    } else {
-        /* Legal delegation to 'requested_user' */
-        user = requested_user;
-    }
-
-    // This requires pointer comparison, not string comparison
-    if(user != crm_element_value(request, XML_ACL_TAG_USER)) {
-        crm_xml_add(request, XML_ACL_TAG_USER, user);
-    }
-
-    if(field != NULL && user != crm_element_value(request, field)) {
-        crm_xml_add(request, field, user);
-    }
-
-    return requested_user;
-}
-#endif
-
 void *
 find_library_function(void **handle, const char *lib, const char *fn, gboolean fatal)
 {
@@ -1157,13 +1065,6 @@ find_library_function(void **handle, const char *lib, const char *fn, gboolean f
     }
 
     return a_function;
-}
-
-void *
-convert_const_pointer(const void *ptr)
-{
-    /* Worst function ever */
-    return (void *)ptr;
 }
 
 #ifdef HAVE_UUID_UUID_H
@@ -1281,96 +1182,6 @@ crm_gnutls_global_init(void)
     gnutls_global_init();
 }
 #endif
-
-char *
-crm_generate_ra_key(const char *standard, const char *provider, const char *type)
-{
-    if (!standard && !provider && !type) {
-        return NULL;
-    }
-
-    return crm_strdup_printf("%s%s%s:%s",
-                             (standard? standard : ""),
-                             (provider? ":" : ""), (provider? provider : ""),
-                             (type? type : ""));
-}
-
-/*!
- * \brief Check whether a resource standard requires a provider to be specified
- *
- * \param[in] standard  Standard name
- *
- * \return TRUE if standard requires a provider, FALSE otherwise
- */
-bool
-crm_provider_required(const char *standard)
-{
-    CRM_CHECK(standard != NULL, return FALSE);
-
-    /* @TODO
-     * - this should probably be case-sensitive, but isn't,
-     *   for backward compatibility
-     * - it might be nice to keep standards' capabilities (supports provider,
-     *   can be promotable, etc.) as structured data somewhere
-     */
-    if (!strcasecmp(standard, PCMK_RESOURCE_CLASS_OCF)) {
-        return TRUE;
-    }
-    return FALSE;
-}
-
-/*!
- * \brief Parse a "standard[:provider]:type" agent specification
- *
- * \param[in]  spec      Agent specification
- * \param[out] standard  Newly allocated memory containing agent standard (or NULL)
- * \param[out] provider  Newly allocated memory containing agent provider (or NULL)
- * \param[put] type      Newly allocated memory containing agent type (or NULL)
- *
- * \return pcmk_ok if the string could be parsed, -EINVAL otherwise
- *
- * \note It is acceptable for the type to contain a ':' if the standard supports
- *       that. For example, systemd supports the form "systemd:UNIT@A:B".
- * \note It is the caller's responsibility to free the returned values.
- */
-int
-crm_parse_agent_spec(const char *spec, char **standard, char **provider,
-                     char **type)
-{
-    char *colon;
-
-    CRM_CHECK(spec && standard && provider && type, return -EINVAL);
-    *standard = NULL;
-    *provider = NULL;
-    *type = NULL;
-
-    colon = strchr(spec, ':');
-    if ((colon == NULL) || (colon == spec)) {
-        return -EINVAL;
-    }
-
-    *standard = strndup(spec, colon - spec);
-    spec = colon + 1;
-
-    if (crm_provider_required(*standard)) {
-        colon = strchr(spec, ':');
-        if ((colon == NULL) || (colon == spec)) {
-            free(*standard);
-            return -EINVAL;
-        }
-        *provider = strndup(spec, colon - spec);
-        spec = colon + 1;
-    }
-
-    if (*spec == '\0') {
-        free(*standard);
-        free(*provider);
-        return -EINVAL;
-    }
-
-    *type = strdup(spec);
-    return pcmk_ok;
-}
 
 /*!
  * \brief Get the local hostname

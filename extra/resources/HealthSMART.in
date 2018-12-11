@@ -107,11 +107,11 @@ Number of deg C below/above the upper/lower temp limits at which point the statu
 </parameters>
 
 <actions>
-<action name="start"        timeout="10" />
-<action name="stop"         timeout="10" />
-<action name="monitor"      timeout="10" interval="10" start-delay="0" />
-<action name="meta-data"    timeout="5" />
-<action name="validate-all"   timeout="10" />
+<action name="start"        timeout="10s" />
+<action name="stop"         timeout="10s" />
+<action name="monitor"      timeout="10s" interval="10s" start-delay="0s" />
+<action name="meta-data"    timeout="5s" />
+<action name="validate-all"   timeout="10s" />
 </actions>
 </resource-agent>
 END
@@ -256,14 +256,14 @@ HealthSMART_monitor() {
             # Check drive temperature(s)
 	    if [ "${OCF_RESKEY_devices}" ]; then
 		for DEVICE in ${OCF_RESKEY_devices}; do
-		    check_temperature `$SMARTCTL -d $DEVICE -A ${DRIVE} | awk '/^194/ { print $10 }'`
-		    if [ $? != 0 ]; then
+		    check_temperature "$("$SMARTCTL" -d "$DEVICE" -A "${DRIVE}" | awk '/^194/ { print $10 }')"
+		    if [ $? -ne 0 ]; then
 			return $OCF_SUCCESS
 		    fi
 		done
 	    else
-		check_temperature `$SMARTCTL -A ${DRIVE} | awk '/^194/ { print $10 }'`
-		if [ $? != 0 ]; then
+		check_temperature "$("$SMARTCTL" -A "${DRIVE}" | awk '/^194/ { print $10 }')"
+		if [ $? -ne 0 ]; then
 		    return $OCF_SUCCESS
 		fi
 	    fi

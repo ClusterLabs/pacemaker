@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <inttypes.h>  /* U64T ~ PRIu64 */
 
 #include <crm/crm.h>
 #include <crm/cib.h>
@@ -22,8 +23,11 @@
 #include <crm/cluster/internal.h>
 
 #include <crm/common/xml.h>
+#include <crm/common/remote_internal.h>
 
 #include <pacemaker-based.h>
+
+#define EXIT_ESCALATION_MS 10000
 
 static unsigned long cib_local_bcast_num = 0;
 
@@ -283,7 +287,7 @@ cib_digester_cb(gpointer data)
         free(ping_digest);
         ping_digest = NULL;
         ping_modified_since = FALSE;
-        snprintf(buffer, 32, U64T, ping_seq);
+        snprintf(buffer, 32, "%" U64T, ping_seq);
         crm_trace("Requesting peer digests (%s)", buffer);
 
         crm_xml_add(ping, F_TYPE, "cib");
@@ -701,10 +705,18 @@ parse_peer_options_v2(int call_type, xmlNode * request,
          * limit on how far newer nodes will go
          */
         const char *max = crm_element_value(request, F_CIB_SCHEMA_MAX);
+        const char *upgrade_rc = crm_element_value(request, F_CIB_UPGRADE_RC);
 
-        crm_trace("Parsing %s operation%s for %s with max=%s",
-                  op, is_reply?" reply":"", cib_is_master?"master":"slave", max);
-        if(max == NULL && cib_is_master) {
+        crm_trace("Parsing %s operation%s for %s with max=%s and upgrade_rc=%s",
+                  op, (is_reply? " reply" : ""),
+                  (cib_is_master? "master" : "slave"),
+                  (max? max : "none"), (upgrade_rc? upgrade_rc : "none"));
+
+        if (upgrade_rc != NULL) {
+            // Our upgrade request was rejected by DC, notify clients of result
+            crm_xml_add(request, F_CIB_RC, upgrade_rc);
+
+        } else if ((max == NULL) && cib_is_master) {
             /* We are the DC, check if this upgrade is allowed */
             goto skip_is_reply;
 
@@ -713,7 +725,8 @@ parse_peer_options_v2(int call_type, xmlNode * request,
             goto skip_is_reply;
 
         } else {
-            return FALSE; /* Ignore */
+            // Ignore broadcast client requests when we're not DC
+            return FALSE;
         }
 
     } else if (crm_is_true(update)) {
@@ -1478,7 +1491,7 @@ initiate_exit(void)
     send_cluster_message(NULL, crm_msg_cib, leaving, TRUE);
     free_xml(leaving);
 
-    g_timeout_add(crm_get_msec("5s"), cib_force_exit, NULL);
+    g_timeout_add(EXIT_ESCALATION_MS, cib_force_exit, NULL);
 }
 
 extern int remote_fd;
@@ -1513,7 +1526,7 @@ terminate_cib(const char *caller, int fast)
         cib_ipc_servers_destroy(ipcs_ro, ipcs_rw, ipcs_shm);
         crm_exit(fast);
 
-    } else if ((mainloop != NULL) && g_main_is_running(mainloop)) {
+    } else if ((mainloop != NULL) && g_main_loop_is_running(mainloop)) {
         /* Quit via returning from the main loop. If fast == -1, we skip the
          * disconnect here, and it will be done when the main loop returns
          * (this allows the peer status callback to avoid messing with the
