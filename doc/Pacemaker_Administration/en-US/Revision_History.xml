@@ -10,6 +10,23 @@
     <revhistory>
 
       <revision>
+        <revnumber>1-1</revnumber>
+        <date>Tue Dec 4 2018</date>
+        <author>
+          <firstname>Ken</firstname><surname>Gaillot</surname>
+          <email>kgaillot@redhat.com</email>
+        </author>
+        <author>
+          <firstname>Jan</firstname><surname>Pokorný</surname>
+          <email>jpokorny@redhat.com</email>
+        </author>
+        <revdescription>
+          <simplelist><member>Add "Troubleshooting" chapter, minor
+                              clarifications and reformatting</member></simplelist>
+        </revdescription>
+      </revision>
+
+      <revision>
         <revnumber>1-0</revnumber>
         <date>Tue Jan 23 2018</date>
         <author>
@@ -18,8 +35,8 @@
         </author>
         <revdescription>
           <simplelist><member>Move administration-oriented information from
-			      Pacemaker Explained into its own
-			      book</member></simplelist>
+                              Pacemaker Explained into its own
+                              book</member></simplelist>
         </revdescription>
       </revision>
 

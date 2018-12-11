@@ -317,15 +317,16 @@ specified by the standard *$EDITOR* environment variable).
 +
 ------
 # crm_simulate --live-check --save-dotfile shadow.dot -S
-# graphviz shadow.dot
+# dot -Tsvg shadow.dot -o shadow.svg
 ------
 +
+You can then view shadow.svg with any compatible image viewer or web browser.
 Verify that either no resource actions will occur or that you are
 happy with any that are scheduled.  If the output contains actions you
 do not expect (possibly due to changes to the score calculations), you
 may need to make further manual changes.  See
 <<s-config-testing-changes>> for further details on how to interpret
-the output of `crm_simulate` and `graphviz`.
+the output of `crm_simulate` and `dot`.
 +
 . Upload the changes:
 +

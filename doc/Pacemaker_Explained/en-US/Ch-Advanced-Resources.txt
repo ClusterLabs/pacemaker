@@ -539,6 +539,14 @@ for the clone temporarily and let the cluster adjust, then set it back
 to 1 if you want the default behavior to apply again.
 ====
 
+[IMPORTANT]
+====
+If +resource-stickiness+ is set in the +rsc_defaults+ section, it will
+apply to clone instances as well. This means an explicit +resource-stickiness+
+of 0 in +rsc_defaults+ works differently from the implicit default used when
++resource-stickiness+ is not specified.
+====
+
 === Clone Resource Agent Requirements ===
 
 Any resource can be used as an anonymous clone, as it requires no
@@ -692,6 +700,11 @@ OCF_RESKEY_CRM_meta_notify_start_resource="clone:0 clone:2 clone:3"
 OCF_RESKEY_CRM_meta_notify_start_uname="sles-1 sles-3 sles-2"
 -------
 ======
+
+[NOTE]
+====
+Pacemaker will log but otherwise ignore failures of notify actions.
+====
 
 ==== Interpretation of Notification Variables ====
 

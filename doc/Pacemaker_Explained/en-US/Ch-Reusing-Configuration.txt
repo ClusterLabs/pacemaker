@@ -307,6 +307,9 @@ The same principle applies for +meta_attributes+ and
 -------
 =====
 
++id-ref+ can similarly be used with +resource_set+ (in any constraint type),
++nvpair+, and +operations+.
+
 == Tagging Configuration Elements ==
 
 Pacemaker allows you to 'tag' any configuration element that has an XML ID.
