@@ -892,11 +892,11 @@ attrd_peer_update(crm_node_t *peer, xmlNode *xml, const char *host, bool filter)
 
     } else {
         if (is_force_write && a->timeout_ms && a->timer) {
- 	    /* Save forced writing and set change flag. */
- 	    /* The actual attribute is written by Writer after election. */
- 	    crm_trace("Unchanged %s[%s] from %s is %s(Set the forced write flag)", attr, host, peer->uname, value);
- 	    a->force_write = TRUE;
- 	} else {
+            /* Save forced writing and set change flag. */
+            /* The actual attribute is written by Writer after election. */
+            crm_trace("Unchanged %s[%s] from %s is %s(Set the forced write flag)", attr, host, peer->uname, value);
+            a->force_write = TRUE;
+        } else {
             crm_trace("Unchanged %s[%s] from %s is %s", attr, host, peer->uname, value);
         }
     }
