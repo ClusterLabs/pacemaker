@@ -14,6 +14,7 @@ import sys
 import subprocess
 import shlex
 import time
+import tempfile
 
 # Where to find test binaries
 # Prefer the source tree if available
@@ -42,7 +43,7 @@ logging {
     to_syslog: no
     to_stderr: no
     to_logfile: yes
-    logfile: @CRM_LOG_DIR@/corosync.test.log
+    logfile: %s
 }
 """
 
@@ -1290,8 +1291,11 @@ class Tests(object):
 
         if use_corosync:
             if self.autogen_corosync_cfg:
+                (handle, self.autogen_corosync_log) = tempfile.mkstemp(prefix="cts-fencing-",
+                                                                       suffix=".corosync.log")
+                os.close(handle)
                 corosync_cfg = io.open("/etc/corosync/corosync.conf", "w")
-                corosync_cfg.write(AUTOGEN_COROSYNC_TEMPLATE % (localname()))
+                corosync_cfg.write(AUTOGEN_COROSYNC_TEMPLATE % (localname(), self.autogen_corosync_log))
                 corosync_cfg.close()
 
             ### make sure we are in control ###
@@ -1306,14 +1310,14 @@ class Tests(object):
         if use_corosync:
             killall("corosync")
 
-            if self.verbose and os.path.exists('@CRM_LOG_DIR@/corosync.test.log'):
-                print("Corosync output")
-                logfile = io.open('@CRM_LOG_DIR@/corosync.test.log', 'rt')
-                for line in logfile.readlines():
-                    print(line.strip())
-                os.remove('@CRM_LOG_DIR@/corosync.test.log')
-
             if self.autogen_corosync_cfg:
+                if self.verbose:
+                    print("Corosync output")
+                    logfile = io.open(self.autogen_corosync_log, 'rt')
+                    for line in logfile.readlines():
+                        print(line.strip())
+                    logfile.close()
+                os.remove(self.autogen_corosync_log)
                 os.remove("/etc/corosync/corosync.conf")
 
         subprocess.call(["cts-support", "uninstall"])
