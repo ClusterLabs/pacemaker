@@ -20,6 +20,32 @@ import time
 BUILD_DIR = "@abs_top_builddir@"
 TEST_DIR = sys.path[0]
 
+AUTOGEN_COROSYNC_TEMPLATE = """
+totem {
+    version: 2
+    cluster_name: cts-fencing
+    crypto_cipher: none
+    crypto_hash: none
+    transport: udp
+}
+
+nodelist {
+    node {
+        nodeid: 1
+        name: %s
+        ring0_addr: 127.0.0.1
+    }
+}
+
+logging {
+    debug: off
+    to_syslog: no
+    to_stderr: no
+    to_logfile: yes
+    logfile: @CRM_LOG_DIR@/corosync.test.log
+}
+"""
+
 # These values must be kept in sync with include/crm/crm.h
 class CrmExit(object):
     OK                   =   0
@@ -412,9 +438,7 @@ class Tests(object):
     def __init__(self, verbose=0):
         self.tests = []
         self.verbose = verbose
-        self.autogen_corosync_cfg = 0
-        if not os.path.exists("/etc/corosync/corosync.conf"):
-            self.autogen_corosync_cfg = 1
+        self.autogen_corosync_cfg = not os.path.exists("/etc/corosync/corosync.conf")
 
     def new_test(self, name, description, with_cpg=0):
         """ Create a named test """
@@ -1264,41 +1288,12 @@ class Tests(object):
     def setup_environment(self, use_corosync):
         """ Prepare the host before executing any tests """
 
-        if self.autogen_corosync_cfg and use_corosync:
-            corosync_conf = ("""
-totem {
-        version: 2
-        crypto_cipher: none
-        crypto_hash: none
-
-        nodeid:         101
-        secauth:        off
-
-        interface {
-                ttl: 1
-                ringnumber: 0
-                mcastport: 6666
-                mcastaddr: 226.94.1.1
-                bindnetaddr: 127.0.0.1
-        }
-}
-
-logging {
-        debug: off
-        fileline: off
-        to_syslog: no
-        to_stderr: no
-        syslog_facility: daemon
-        timestamp: on
-        to_logfile: yes
-        logfile: @CRM_LOG_DIR@/corosync.test.log
-        logfile_priority: info
-}
-""")
-
-            os.system("cat <<-END >>/etc/corosync/corosync.conf\n%s\nEND" % (corosync_conf))
-
         if use_corosync:
+            if self.autogen_corosync_cfg:
+                corosync_cfg = io.open("/etc/corosync/corosync.conf", "w")
+                corosync_cfg.write(AUTOGEN_COROSYNC_TEMPLATE % (localname()))
+                corosync_cfg.close()
+
             ### make sure we are in control ###
             killall("corosync")
             self.start_corosync()
@@ -1318,8 +1313,8 @@ logging {
                     print(line.strip())
                 os.remove('@CRM_LOG_DIR@/corosync.test.log')
 
-        if self.autogen_corosync_cfg:
-            os.system("rm -f /etc/corosync/corosync.conf")
+            if self.autogen_corosync_cfg:
+                os.remove("/etc/corosync/corosync.conf")
 
         subprocess.call(["cts-support", "uninstall"])
 
